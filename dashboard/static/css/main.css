@@ -1,0 +1,407 @@
+/* --- Base & Utilities --- */
+@import url('components/_base.css');
+@import url('components/_buttons.css');
+@import url('components/_forms.css');
+@import url('components/_modals.css');
+
+/* --- Core Layout Components --- */
+@import url('components/chat_input.css');
+@import url('components/console_output.css');
+@import url('components/conversation_log.css');
+@import url('components/header.css');
+
+/* --- Sidebar Components --- */
+@import url('components/sidebar_base.css');
+@import url('components/sidebar_left_agents.css');
+@import url('components/sidebar_left_systems.css');
+@import url('components/sidebar_right_fs.css');
+@import url('components/sidebar_right_memory.css');
+@import url('components/sidebar_right_permissions.css');
+@import url('components/sidebar_right_providers.css');
+@import url('components/sidebar_right_settings.css');
+
+@import url('components/status_bar.css');
+@import url('components/_tabs.css');
+/* --- Prompt Templates Table Styling --- */
+.prompts-table-container {
+    overflow-x: auto; /* Allow horizontal scrolling only for the table if it absolutely needs it */
+    flex-grow: 1; /* Allow it to take available space */
+    display: flex; /* Make it a flex container */
+    flex-direction: column; /* Stack children vertically */
+    padding: 15px 50px; /* Add some padding on the sides */
+    box-sizing: border-box; /* Include padding in the element's total width and height */
+    width: 100%; /* Ensure it takes full width of its parent */
+}
+
+#prompts-table {
+    width: 100%; /* Ensure the table fills its container */
+    table-layout: fixed; /* Fix table layout to prevent columns from expanding excessively */
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 0.9em;
+}
+#prompts-table tr {
+    background-color: #fff;
+}
+#prompts-table th,
+#prompts-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    border-top: 2px solid  #ddd;
+    word-wrap: break-word; /* Allow long words to break */
+}
+
+#prompts-table th {
+    background-color: var(--secondary-bg-color);
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+#prompts-table tbody tr.prompt-item-row:hover {
+    background-color: var(--hover-bg-color);
+}
+
+#prompts-table .prompt-value-row td {
+    background-color: var(--code-bg-color); /* Slightly different background for expanded content */
+    border-top: none;
+    padding: 10px 12px;
+    padding-bottom: 25px;
+}
+
+.prompt-value-row :hover  {
+    background-color: #fff !important;
+
+}
+
+#prompts-table .prompt-value-content {
+    white-space: pre-wrap; /* Wrap long lines */
+    word-break: break-all; /* Break words to prevent overflow */
+    overflow-y: auto; /* Add scrollbar if prompt value is too long */
+    padding: 5px;
+    box-shadow: 1px 1px 3px 1px lightgray;
+    border: 1px solid var(--border-color-light);
+    border-radius: 4px;
+    background-color: var(--secondary-bg-color);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    font-size: 0.85em;
+    color: var(--text-color);
+}
+
+#prompts-table .prompt-actions {
+    display: flex;
+    gap: 5px;
+    justify-content: center; /* Align action buttons to the right */
+}
+
+#prompts-table .prompt-meta {
+    font-size: 0.75em;
+    color: var(--text-color-light);
+    margin-top: 10px;
+    border-top: 1px dashed var(--border-color-light);
+    padding-top: 5px;
+}
+
+/* --- Systems Table Styling --- */
+.systems-table {
+    width: -webkit-fill-available;
+    margin-right: 50px;
+    margin-left: 50px;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 0.9em;
+}
+
+.systems-table th,
+.systems-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.systems-table th {
+    background-color: #f8f8f8;
+    font-weight: bold;
+    color: #333;
+}
+
+.systems-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.systems-table .system-details-row td {
+    background-color: #fcfcfc;
+    border-top: none;
+    padding: 15px;
+}
+
+.systems-table .system-details-content {
+    padding-left: 20px;
+    border-left: 3px solid #eee;
+}
+
+.systems-table .system-details-content p {
+    margin-bottom: 5px;
+}
+
+.systems-table .system-details-edit .form-group {
+    margin-bottom: 8px;
+}
+
+.systems-table .system-details-edit .form-control {
+    padding: 4px 8px;
+    font-size: 0.9em;
+    height: auto; /* Override default bootstrap height */
+}
+
+/* Status Badges within the table */
+.systems-table .system-status,
+.systems-table .deployment-status {
+    display: inline-block;
+    padding: 3px 7px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.systems-table .status-online { background-color: #28a745; } /* Green */
+.systems-table .status-offline { background-color: #dc3545; } /* Red */
+.systems-table .status-running { background-color: #17a2b8; } /* Info Blue */
+.systems-table .status-starting { background-color: #ffc107; color: #333; } /* Yellow */
+.systems-table .status-n/a { background-color: #6c757d; } /* Grey */
+.systems-table .status-success { background-color: #28a745; } /* Green */
+.systems-table .status-failed { background-color: #dc3545; } /* Red */
+.systems-table .status-pending { background-color: #ffc107; color: #333; } /* Yellow */
+.systems-table .status-in-progress { background-color: #17a2b8; } /* Info Blue */
+
+/* Actions buttons in table */
+.systems-table td .btn {
+    margin-left: 5px;
+}
+
+.systems-table .system-item.active {
+    background-color: #e6f7ff; /* Highlight for active row if needed */
+}
+
+/* --- Sidebar Navigation Ribbons --- */
+.sidebar-nav-ribbons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: auto; /* Pushes the ribbons to the bottom */
+    border-top: 1px solid var(--border-color);
+}
+
+.nav-ribbon {
+    width: 100%;
+    padding: 10px 15px;
+    color: var(--text-color);
+    border-left:none;
+    border-right: none;
+    background-color: white;
+    border-top: 1px solid lightgray;
+    border-bottom: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-ribbon:hover {
+    background-color: rgb(247, 247, 247);
+    color: var(--accent-color);
+}
+
+.nav-ribbon:last-child {
+    border-bottom: none;
+}
+
+/* --- Tab Close Button Styling --- */
+.tab-button .close-tab-btn {
+    margin-left: 10px;
+    font-size: 0.8em;
+    color: var(--text-color-light);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.tab-button .close-tab-btn:hover {
+    color: var(--danger-color); /* Red color on hover for close */
+}
+
+.tab-button span {
+    display: inline-block;
+    vertical-align: middle;
+}
+/* --- Split View Controls --- */
+.tab-controls-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0px;
+    background-color: var(--secondary-bg-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-controls-area .tab-bar {
+    flex-grow: 1; /* Allows the tab bar to take available space */
+    display: flex;/*
+    overflow-y: hidden;
+    overflow-x: auto; /* Allows horizontal scrolling for many tabs */
+    white-space: nowrap; /* Prevent tabs from wrapping */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    padding-bottom: 0; /* Adjust if needed */
+    min-height: 23px; /* Ensure a minimum height for drag-and-drop functionality */
+}
+
+.tab-controls-area .tab-actions {
+    display: flex;
+    gap: 5px; /* Space between action buttons */
+    margin-left: 10px; /* Space between tab bar and action buttons */
+    flex-shrink: 0; /* Prevent actions from shrinking */
+}
+
+.tab-actions .btn {
+    padding: 0px; /* Smaller padding for action buttons */
+    font-size: 0.85em;
+    border: none;
+}
+
+.remove-split-btn {
+    color: var(--danger-color); /* Red color for remove split button */
+}
+
+/* Default content for new split panels */
+.default-split-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+    color: var(--text-color-light);
+    background-color: var(--main-bg-color);
+    border: 1px dashed var(--border-color-light);
+    height: 100%;
+    flex-grow: 1;
+    text-align: center;
+}
+
+
+.tab-bar.drag-over {
+    background-color: rgba(0, 123, 255, 0.1); /* Light blue background when dragged over */
+    border: 1px dashed var(--accent-color); /* Highlight border */
+}
+
+/* --- Memory Editable Content Styling --- */
+.memory-editable-content:focus {
+    outline: none; /* Remove default blue outline on focus */
+    border: 1px dashed var(--accent-color); /* Optional: Add a subtle dashed border instead */
+    padding: 1px; /* Adjust padding if a border is added */
+}
+
+/* --- Memory Layer Item Editing Border --- */
+.memory-layer-items:has(.memory-editable-content:focus) {
+    border: 1px solid var(--border-color-light); /* Light border when content is focused */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); /* Subtle glow */
+}
+
+/* --- Agent Instance Description Editing Styling --- */
+.instance-description-container .instance-editable-description:focus {
+    outline: none; /* Remove default blue outline on focus */
+    border: 1px dashed var(--accent-color); /* Subtle dashed border */
+    padding: 1px; /* Adjust padding if a border is added */
+}
+
+.instance-description-container:has(.instance-editable-description:focus) {
+    border: 1px solid var(--border-color-light); /* Light border around container */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); /* Subtle glow */
+}
+
+/* --- Agent Instance Description Layout and Label Styling --- */
+.instance-description-container {
+    flex-grow: 1; /* Allow it to fill height within its flex parent */
+    display: flex; /* Make it a flex container to manage its children */
+    flex-direction: column; /* Stack children vertically */
+}
+
+.instance-description-container .instance-description-display-view {
+    flex-grow: 1; /* Allow the display view to fill height */
+    position: relative; /* Needed for absolute positioning of the inner label */
+    width: 100%;    
+    background-color: #f7f7f7;
+}
+
+.instance-description-container .instance-editable-description {
+    display: block; /* Ensure it takes full width/height for contenteditable */
+    width: 100%;
+    height: 100%; /* Fill the height of its parent display-view */
+    padding-bottom: 0px; /* Make space for the absolute positioned label */
+    box-sizing: border-box; /* Include padding in height calculation */
+    position: relative; /* Context for absolute positioning of inner label */
+    overflow-y: auto; /* Add scrollbar if content overflows */
+}
+
+.instance-description-container .description-bottom-right {
+    position: absolute;
+    bottom: 2px; /* Adjust as needed */
+    right: 5px; /* Adjust as needed */
+    font-size: 0.7em; /* Small text */
+    color: var(--text-color-light); /* Subtle color */
+    pointer-events: none; /* Make sure it's not clickable/editable */
+    user-select: none; /* Prevent selection */
+    opacity: 0.6; /* Slight transparency */
+}
+
+/* Adjust styling when description is focused/edited to maintain layout */
+.instance-description-container .instance-editable-description:focus {
+    padding-bottom: 0px; /* Keep space for label */
+}
+
+/* --- Agent Instance Name Editing Styling --- */
+.instance-name-container .instance-editable-name:focus {
+    outline: none; /* Remove default blue outline on focus */
+    border: 1px dashed var(--accent-color); /* Subtle dashed border */
+    padding: 1px; /* Adjust padding if a border is added */
+}
+
+.instance-name-container:has(.instance-editable-name:focus) {
+    border: 1px solid var(--border-color-light); /* Light border around container */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); /* Subtle glow */
+}
+
+/* --- Agent Instance Name Layout --- */
+.instance-name-container .instance-editable-name {
+    font-size: 0.9em; /* Smaller font size */
+    min-width: 50px; /* Ensure a minimum width for editing */
+    display: inline-block;
+    padding: 0; /* Remove extra padding */
+    margin-left: 5px; /* Space from the static "Instance:" label */
+}
+
+/* Ensure tab content takes all available vertical space */
+.tab-content {
+    flex-grow: 1;
+    display: flex; /* Maintain flex for internal layouts if needed */
+    flex-direction: column; /* Stack children vertically */
+    overflow: hidden; /* Prevent content from overflowing its boundaries */
+}
+
+
+
+
+#mainSplitViewContainer > .gutter-horizontal {
+    flex-basis: 7px !important;
+    border-left: 1px solid gray;
+    border-right: 1px solid gray;
+    margin-left: 3px;
+    margin-right: 2px;
+
+}
+.default-split-content.drag-over {
+    background-color: #e0f0ff; /* A light blue to indicate a valid drop target */
+    border: 2px dashed #a0c0ff;
+}

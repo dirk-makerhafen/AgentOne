@@ -1,0 +1,145 @@
+/* --- System List & Deployment Status Styling --- */
+.deployment-status {
+    padding-top: 5px;
+    margin-top: 5px;
+    border-top: 1px solid #aaa;
+}
+.deployment-status .status-label {
+    font-weight: bold;
+}
+.deployment-status .status-value.status-success {
+    color: #28a745; /* Green */
+    font-weight: bold;
+}
+.deployment-status .status-value.status-failed {
+    color: #dc3545; /* Red */
+    font-weight: bold;
+}
+.deployment-status .status-value.status-in-progress {
+    color: #ffc107; /* Yellow */
+    font-weight: bold;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+.deployment-status .timestamp {
+    color: #aaa;
+    font-style: italic;
+    display: block;
+    font-size: 0.9em;
+}
+.deploy-system-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    font-size: 0.8em;
+    border-radius: 4px;
+    cursor: pointer;
+    float: right;
+    margin-top: -2px;
+}
+.deploy-system-btn:hover {
+    background-color: #0056b3;
+}
+.deploy-system-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+.system-logs-container {
+    margin-top: 5px;
+}
+.toggle-logs-btn {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 5px;
+}
+.system-logs-output {
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #2b2b2b;
+    color: #f1f1f1;
+    border: 1px solid #444;
+    padding: 5px;
+    font-family: monospace;
+    font-size: 11px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+}
+.system-logs-output .log-entry {
+    border-bottom: 1px solid #3a3a3a;
+    padding: 2px 0;
+}
+.system-logs-output .log-entry:last-child {
+    border-bottom: none;
+}
+.system-logs-output .log-entry.log-error {
+    color: #ff8b8b;
+}
+.system-logs-output .log-entry.log-warning {
+    color: #ffc58b;
+}
+.log-timestamp {
+    color: #999;
+}
+
+/* --- New System List Redesign --- */
+.system-item {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    padding: 8px;
+    background-color: #fff;
+    box-shadow: none;
+}
+.system-item-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.status-indicator {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+.status-indicator.status-online { background-color: #28a745; }
+.status-indicator.status-offline { background-color: #dc3545; }
+.status-indicator.status-maintenance { background-color: #ffc107; }
+.system-status.status-online { color: #28a745; }
+.system-status.status-offline { color: #dc3545; }
+.system-status.status-maintenance { color: #ffc107; }
+.system-name {
+    font-weight: bold;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.system-item-actions {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+}
+.system-item-actions .btn {
+    padding: 2px 6px;
+}
+.system-item-details {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e9ecef;
+    font-size: 0.85em;
+    color: #6c757d;
+}
+.system-item-details > div {
+    margin-bottom: 4px;
+}
+.system-item-details > div:last-child {
+    margin-bottom: 0;
+}

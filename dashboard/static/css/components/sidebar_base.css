@@ -1,0 +1,142 @@
+
+.sidebar-section {
+    width: 100%;
+}
+/* Base Sidebar Styles */
+.sidebar_left_body { 
+    max-height: 100%; 
+}
+
+.sidebar_left_footer {
+    /* placeholder for later */
+}
+
+.sidebar-content {
+    background-color: #f8f9fa;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+    height: 100%;
+}
+
+/* --- Standardized Sidebar List Header --- */
+.sidebar-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    padding-bottom: 0px;    
+    font-weight: bold;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa; /* Matches sidebar background */
+}
+
+.sidebar-list-body {
+    overflow-y: auto;
+    flex-grow: 1; /* Allows the body to fill the available space */
+}
+
+/* --- Right Sidebar Tab Styling --- */
+.sidebar-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 0px;
+    background-color: #f8f9fa;
+    overflow-wrap: anywhere;
+}
+
+.sidebar-tab-btn {
+    padding: 8px 4px;
+    flex: auto;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #6c757d;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px; /* Overlap the container's border-bottom */
+    transition: all 0.2s ease-in-out;
+}
+
+.sidebar-tab-btn:hover {
+    background-color: #e9ecef;
+    color: #0056b3;
+}
+
+.sidebar-tab-btn.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+}
+
+/* --- Unified Right Sidebar Content Item Styling --- */
+.sidebar-content-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    margin: 4px 0;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    background-color: #ffffff;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    font-size: 0.9em;
+}
+
+.sidebar-content-item:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.sidebar-content-item .item-icon {
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.sidebar-content-item .item-text {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-content-item .item-actions {
+    margin-left: 10px;
+}
+
+.sidebar-content-item .item-actions i {
+    cursor: pointer;
+    color: #6c757d;
+  
+}
+
+.sidebar-content-item .item-actions i:hover {
+    color: #dc3545; /* Red for destructive action */
+}
+
+.item-actions {
+    display: flex;
+    flex-direction: row;
+}
+
+/* --- Right Sidebar Flex Layout --- */
+.sidebar-right {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensure it fills its resizable-panel parent */
+    overflow: hidden; /* Prevent its children from overflowing it */
+}
+
+.sidebar-tabs {
+    flex-shrink: 0; /* Header tabs should not shrink */
+}
+
+.sidebar-tab-content {
+    flex-grow: 1; /* The active tab content should fill the remaining space */
+    min-height: 0; /* Crucial for flex children with overflow content */
+    /* display is handled by JS, but we ensure it's not flex by default */
+}
+
+/* Overwrite existing rule to ensure active tabs work with flex */
+.sidebar-tab-content.active {
+    display: block; /* Or 'flex' if the content itself is a flex container */
+}

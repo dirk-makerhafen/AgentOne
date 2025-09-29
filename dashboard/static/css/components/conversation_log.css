@@ -1,0 +1,391 @@
+/* --- Conversation Log & Message Bubbles --- */
+.conversation-log {
+    background-color: #ffffff;
+    overflow-y: auto;
+    flex-grow: 1;
+    gap: 10px;
+    padding: 5px;
+    position: relative;
+}
+
+/* General conversation styling */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+    /*  transform: translate(20px);*/
+    }
+    to {
+        opacity: 1;
+     /*   transform: translateY(0);*/
+    }
+}
+
+.conversation-log-item {
+    border-radius: 5px;
+    max-width: 100%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    clear: both;
+    margin-left: auto;
+    text-align: left;
+    width: 100%;
+}
+
+.conversation-log-item:not(.no-animate) {
+    animation: fadeInUp 0.2s ease-in;
+}
+
+.conversation-log-item .message-header {
+    font-size: 0.9em;
+    color: #777;
+    padding: 2px 0px 5px 0px;
+    display: flex;
+    flex-wrap: wrap;
+    word-break: break-word;
+}
+
+.conversation-log-item .message-content {
+    padding-left: 0px;
+}
+
+.conversation-log-item .message-toolcall {
+    margin: 0px;
+}
+
+
+.conversation-log-item .message-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    padding: 3px;
+    padding-right: 10px;
+}
+
+.conversation-log-item .message-actions .pin-icon,
+
+.conversation-log-item .message-actions .hide-icon {
+    cursor: pointer;
+    color: #c5c5c5;
+}
+
+.conversation-log-item .message-actions .pin-icon.pinned {
+    color: #007bff; /* Blue for pinned */
+}
+
+.conversation-log-item .message-actions .hide-icon.fa-eye-slash {
+
+}
+.conversation-log-item .message-actions .hide-icon.hide_from_context {
+    color: #080001;
+}
+
+.conversation-log-item.user-log-item { background-color: #dcf8c6; }
+.conversation-log-item.assistant-log-item { background-color: #e2f0fb; }
+.conversation-log-item.filesystem-log-item { background-color: #f2fbf2; }
+.conversation-log-item.debug-log-item { background-color: #f8f9fa; }
+.conversation-log-item.tool-log-item { background-color: #f0f8ff; }
+
+.conversation-log-item.filesystem-log-item .message-content {
+    white-space: normal;
+}
+.conversation-log-item.filesystem-log-item .message-content .d2h-file-header{
+    display: none;
+}
+.conversation-log-item.filesystem-log-item .message-content .diff-wrapper-reset {
+    all: initial;
+    display: block;
+    box-sizing: border-box;
+    position: relative;
+}
+.item-deleted > i {
+    color:#ff0000a3;
+}
+
+/* --- Tool Call Styling --- */
+.log-toolcall {
+    background-color: #f2f6fa;
+    margin: 15px 0;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.toolcall-header {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    word-break: auto-phrase;
+    line-break: auto;
+}
+.toolcall-header b { font-size: 1em; }
+.toolcall-header a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+.toolcall-header a:hover { text-decoration: underline; }
+.toolcall-header-args {
+    display: flex;
+    line-break: anywhere;
+}
+
+.toolcall-args, .toolcall-result {
+    background-color: #e9eff5;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', 'Menlo', monospace;
+    font-size: 0.88em;
+    line-height: 1.4;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+}
+
+/* --- Filesystem & Debug Log Specifics --- */
+.filesystem-header {
+    font-weight: 600;
+    color: #28a745;
+    margin-bottom: 5px;
+}
+.filesystem-content-wrapper .hidden { display: none; }
+.filesystem-content a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+.filesystem-content a:hover { text-decoration: underline; }
+.filesystem-content pre {
+    /*background-color: #eafbea;*/
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #c3e6cb;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', 'Menlo', monospace;
+    font-size: 0.85em;
+    /*max-height: 150px;*/
+    overflow-y: auto;
+    margin-top: 5px;
+}
+
+.debug-log-header {
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+.debug-log-header a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+.debug-log-header a:hover { text-decoration: underline; }
+.debug-log-full pre {
+    background-color: #e9ecef;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', 'Menlo', monospace;
+    font-size: 0.8em;
+    margin-top: 5px;
+    white-space: break-spaces;
+}
+
+/* --- Log Status Colors & Text --- */
+.status-pending, .toolcall-status-pending { color: #ffc107; font-weight: bold; }
+.status-success, .toolcall-status-success, .log-success { color: #28a745; font-weight: bold; }
+.status-failed, .toolcall-status-failed, .log-error { color: #dc3545; font-weight: bold; }
+.status-ready { color: #17a2b8; font-weight: bold; }
+.status-running { color: #007bff; font-weight: bold; }
+.toolcall-status-active { color: #007bff; }
+.log-info { color: rgb(177, 131, 14); }
+.log-warning { color: orange; }
+.log-status { color: #17a2b8; }
+.log-client-status { color: #28a745; }
+
+/* --- Log Area Filter --- */
+.log-filter-container {
+    position: sticky;
+    float: right;
+    right: 10px;
+    top: 0px;
+    z-index: 10;
+    border-radius: 0 0 5px 3px;
+    padding: 0px 5px;
+    display: flex;
+    gap: 4px;
+    flex-direction: row-reverse;
+}
+
+.log-filter-btn {
+    background-color: #fff4;
+    border: 1px solid #ccc4;
+    border-radius: 3px;
+    padding: 0px 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #555;
+    transition: all 0.2s ease-in-out;
+}
+.log-filter-btn:hover {
+    background-color: #e9ecef44;
+    border-color: #bbb4;
+}
+.log-filter-btn.active {
+    background-color: #007bff44;
+    color: white;
+    border-color: #0056b344;
+}
+.log-filter-btn.active:hover { background-color: #0056b344; }
+
+/* Log Filtering Rules */
+.logArea.hide-conversation .log-type-conversation { display: none; }
+.logArea.hide-tool .log-type-tool { display: none; }
+.logArea.hide-fs .log-type-fs { display: none; }
+.logArea.hide-llm .log-type-llm { display: none; }
+.logArea.hide-debug .log-type-debug { display: none; }
+.logArea.hide-pyvar .log-type-pyvar { display: none; }
+
+/* --- Python VARS Log Item --- */
+.log-type-pyvar { background-color: #ddb30729; }
+
+.pyvar-details-container {
+    margin-top: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+.pyvar-detail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.pyvar-detail-item:last-child { border-bottom: none; margin-bottom: 0; }
+.pyvar-detail-key {
+    font-weight: bold;
+    text-align: right;
+    color: #555;
+    padding-top: 5px;
+}
+.pyvar-detail-value pre {
+    margin: 0;
+    padding: 5px 8px;
+    background-color: #f7f7f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+.pyvar-keys span {
+    background-color: #eef;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+    color: inherit;
+    background-color: inherit;
+}
+.pyvar-details-value {
+    width: 100%;
+    padding-right: 5px;
+}
+.toggle-details-btn {
+    padding: 1px 6px;
+    font-size: 0.9em;
+}
+.message-part {
+    padding-left: 5px;
+    word-break: break-word;
+    line-break: auto;
+    display: block;
+    padding-right: 5px;
+}
+
+.message-part-chat .token-count-display {
+    margin-right:5px;
+}
+/* --- LLM Query Highlighting --- */
+
+.message-part.source-highlighted, .conversation-log-item.source-highlighted {
+    border-left: 5px solid #005dd8;
+    border-radius: 4px;
+    padding-left: 2px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.highlight-query-parts.active-highlighter {
+    background-color: #007bff !important;
+    color: white !important;
+    border-color: #0056b3 !important;
+}
+
+.source-highlighted-tokens { display: none; }
+.source-highlighted .source-highlighted-tokens {
+    display: inline;
+    color: #005dd8;
+}
+
+/* --- History Loading Indicator --- */
+#history-loading-indicator {
+    margin: 0px;
+    position: sticky;
+    top: -5px;
+    width: 100%;
+    background-color: #7cff8096;
+    text-align: center;
+    font-weight: bold;
+    color: black;
+}
+/* --- Buttons in Message Log --- */
+.log-btn { 
+    margin-left: 8px;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    border-radius: 3px;
+    line-height: 1; 
+}
+.log-btn > i {
+    font-size: 0.8em;
+} 
+.log-btn-right { 
+    float:right;
+} 
+.log-revert-btn {
+    color: #007bff;
+    border-color: #007bff;
+}
+.log-btn:hover {
+    background-color: #007bff;
+    color: white;
+}
+.log-all-btn {
+    color: #007bff;
+    border-color: #007bff;
+    float:right;
+}
+.log-all-btn:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+
+/* --- Token Count Display on Highlight --- */
+.token-count-display {
+    font-weight: bold;
+    color: #005dd8;
+    background-color: #d4e7fb;
+    padding: 0px 0px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    margin-right: 0px;
+    display: inline-block;
+}

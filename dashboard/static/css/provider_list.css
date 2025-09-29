@@ -1,0 +1,256 @@
+/* dashboard/static/css/provider_list.css - Modern, Clean Design */
+
+/* Overall Provider Block (Card) */
+.provider-block {
+    width: -webkit-fill-available;
+    margin: 15px 50px; /* Consistent margin */
+    display: flex;
+    flex-direction: column;
+    background-color: #fcfcfc; /* Very light background for the card */
+    border-radius: 4px; /* Subtle, modern rounded corners */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); /* Light, gentle shadow for depth */
+    transition: box-shadow 0.2s ease-in-out, transform 0.1s ease-in-out;
+    overflow: hidden; /* Ensures child elements respect border-radius */
+    border: 1px solid #e0e0e0; /* Very light border for definition */
+}
+
+.provider-block:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.09); /* Slightly more pronounced shadow on hover */
+    transform: translateY(-1px); /* Gentle lift effect */
+}
+
+/* Provider Summary Header */
+.provider-summary {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #ffffff; /* White background for header area */
+    border-bottom: 1px solid #eeeeee; /* Minimal separator */
+    gap: 20px;
+}
+
+.provider-summary .provider-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.provider-summary .provider-name {
+    font-weight: 700;
+    font-size: 1.5em; /* Refined font size */
+    color: #333333; /* Dark gray for primary text */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px; /* Reduced space between name and URL */
+}
+
+.provider-summary .provider-url {
+    color: #777777; /* Muted gray for URL */
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.provider-summary .provider-url:hover {
+    text-decoration: underline;
+    color: #555555; /* Slightly darker on hover */
+}
+
+.provider-stats {
+    display: flex;
+    gap: 10px;
+    color: #888888;
+    width: -webkit-fill-available;
+    justify-content: center;
+}
+
+.provider-stats span {
+    white-space: nowrap;
+    position: relative;
+    padding-left: 10px;
+}
+
+.provider-stats span:not(:first-child)::before {
+    content: '|';
+    position: absolute;
+    left: 0;
+    color: #cccccc;
+
+}
+
+.provider-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 15px;
+}
+
+.provider-actions .btn {
+    padding: 6px 10px;
+    font-size: 0.8em; /* Smaller button font */
+    border-radius: 3px; /* Crisper button corners */
+    background-color: #e74c3c; /* A slightly softer red for delete */
+    border: 1px solid #e74c3c;
+    color: #ffffff;
+    box-shadow: none;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.provider-actions .btn:hover {
+    background-color: #c0392b; /* Darker red on hover */
+    border-color: #c0392b;
+}
+
+/* Details Content (Models and API Keys sections) */
+.provider-details-content {
+    display: flex;
+    flex-direction: row;
+    padding: 5px;
+    background-color: #f8f8f8; /* Light gray background for details area */
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.provider-section {
+    flex: 1;
+    padding: 18px;
+    background-color: #ffffff; /* White background for individual sections */
+    border-radius: 4px;
+    border: 1px solid #e9e9e9; /* Very light, subtle border */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); /* Even more subtle section shadow */
+}
+
+.provider-section h4 {
+    margin-top: 0;
+    margin-bottom: 0px; /* Slightly reduced margin */
+    color: #555555; /* Medium gray for headings */
+    border-bottom: 1px solid #f0f0f0; /* Fainter separator */
+    padding-bottom: 5px;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+.provider-detail-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0; /* Adjusted margin */
+    overflow-y: auto;
+    border: 1px solid #f5f5f5; /* Very light border */
+    border-radius: 3px;
+    background-color: #ffffff; /* White background for list */
+}
+
+.provider-detail-item {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 12px; /* Adjusted padding */
+    border-bottom: 1px solid #f9f9f9; /* Extremely subtle item separator */
+    transition: background-color 0.1s ease-in-out;
+}
+
+.provider-detail-item:hover {
+    background-color: #f5f7f9; /* Gentle hover effect */
+}
+
+.provider-detail-item:last-child {
+    border-bottom: none;
+}
+
+.provider-detail-item-name {
+    flex-grow: 1;
+    color: #343a40;
+}
+
+/* Styles for Model and API Key Stats within list items */
+.model-stats,
+.apikey-stats {
+    display: flex;
+    gap: 10px;
+    color: #999999; /* Even lighter gray for these stats */
+    width: 100%;
+    font-size: 0.9em;
+}
+
+.model-stats span,
+.apikey-stats span {
+    white-space: nowrap;
+    position: relative;
+}
+
+.model-stats span:not(:first-child)::before,
+.apikey-stats span:not(:first-child)::before {
+    content: '/'; /* Use a slash as separator for tighter space */
+    position: absolute;
+    left: 0;
+    color: #dddddd;
+
+}
+
+
+.table-item-actions {
+    margin-left: 10px; /* Space between stats and action button */
+}
+
+.table-item-actions .btn {
+    padding: 3px 7px;
+    font-size: 0.7em; /* Even smaller action buttons */
+    border-radius: 3px;
+    background-color: #e74c3c; /* Matching softer red */
+    border: 1px solid #e74c3c;
+    color: #fff;
+    box-shadow: none;
+}
+
+.table-item-actions .btn:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+/* Add Item Container (Input + Button) */
+.add-item-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.add-item-container .form-control {
+    flex-grow: 1;
+    border-radius: 3px; /* Crisper input corners */
+    border: 1px solid #cccccc; /* Neutral gray border */
+    padding: 8px 12px;
+    font-size: 0.9em;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.03); /* Very light inner shadow */
+}
+
+.add-item-container .btn {
+    border-radius: 3px;
+    padding: 8px 15px;
+    font-size: 0.9em;
+    background-color: #6c757d; /* Muted gray for add button */
+    border: 1px solid #6c757d;
+    color: #ffffff;
+    box-shadow: none;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.add-item-container .btn:hover {
+    background-color: #5a6268; /* Darker gray on hover */
+    border-color: #545b62;
+}
+
+.no-items-message {
+    padding: 15px;
+    color: #a0a0a0; /* Lighter gray for info text */
+    font-style: italic;
+    text-align: center;
+    background-color: #fefefe;
+    border-radius: 3px;
+    border: 1px solid #f0f0f0;
+}

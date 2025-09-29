@@ -1,0 +1,16 @@
+[Unit]
+Description=Celery Worker for {service_name}
+After=network.target
+
+[Service]
+Type=simple
+User={username}
+Group={username}
+WorkingDirectory={project_path}
+Environment="SYSTEM_PK={system_pk}"
+ExecStart={project_path}/venv/bin/celery -A agent.celery worker --loglevel=info -Q {queue_name}
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

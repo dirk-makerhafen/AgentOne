@@ -1,0 +1,37 @@
+/* --- Generic Button Styles --- */
+.btn-primary { background-color: #007bff; border-color: #007bff; color: white; }
+.btn-primary:hover { background-color: #0056b3; border-color: #0056b3; }
+.btn-success { background-color: #28a745; border-color: #28a745; color: white; }
+.btn-success:hover { background-color: #1e7e34; border-color: #1e7e34; }
+.btn-info { background-color: #17a2b8; border-color: #17a2b8; color: white; }
+.btn-info:hover { background-color: #117a8b; border-color: #117a8b; }
+
+/* Styles for buttons (reusing bootstrap .btn classes) */
+.btn {
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: 1px solid #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}

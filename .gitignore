@@ -1,0 +1,36 @@
+# Byte-code files
+*.pyc
+__pycache__/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Editor/IDE files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Database
+db.sqlite3
+db.sqlite3_old
+db.sqlite3-journal
+# Logs
+*.log
+
+# Celery
+celerybeat-schedule
+
+# Environment variables
+.env
+
+# Project specific test/dev files
+testfile.txt
+testfile1.txt
+getdir.py
+parse.py
+test.py
+td.py
+td1.py

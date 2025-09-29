@@ -1,0 +1,18 @@
+/* --- System Edit Form --- */
+.system-details-edit .form-group {
+    margin-bottom: 5px;
+}
+.system-details-edit .form-group label {
+    display: block;
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+.system-details-edit .form-control {
+    width: 100%;
+    padding: 2px 4px;
+    font-size: 0.9em;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box; /* Ensures padding doesn't affect width */
+}

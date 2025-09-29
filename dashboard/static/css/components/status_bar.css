@@ -1,0 +1,44 @@
+/* --- Permanent Agent Status Bar --- */
+.agent-status-bar {
+    background-color: #6c757d; /* Default: Gray for idle/unselected */
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    transition: background-color 0.3s ease, opacity 0.3s ease, height 0.3s ease, padding 0.3s ease;
+    opacity: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* Prevent the bar from shrinking */
+}
+
+.agent-status-bar-hidden {
+    opacity: 0;
+    height: 0;
+    padding: 0 10px;
+    overflow: hidden;
+}
+
+.agent-status-bar .status-text {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9em;
+}
+
+/* Background colors based on status */
+.status-bg-IDLE,
+.status-bg-READY,
+.status-bg-COMPLETED,
+.status-bg-FAILED {
+    background-color: #6c757d; /* Gray */
+}
+
+.status-bg-THINKING,
+.status-bg-EXECUTING_TOOLS {
+    background-color: #007bff; /* Blue */
+}
+
+.status-bg-AWAITING_USER_INPUT,
+.status-bg-AWAITING_AGENT_MESSAGE {
+    background-color: #fd7e14; /* Orange */
+}

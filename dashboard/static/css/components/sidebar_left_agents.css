@@ -1,0 +1,147 @@
+/* --- Agent & Instance List Styling --- */
+.sidebar-agent {
+    border-left: 3px solid blue;
+    border-top: 1px solid blue;
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    padding: 3px;
+    margin: 3px;
+    border-radius: 3px 0px 2px 0px;
+}
+
+.sidebar-agent-name {
+    margin: 0 0 8px;
+    font-size: 1.1em;
+}
+.sidebar-agent-name a {
+    text-decoration: none;
+}
+.sidebar-agent-name a:hover { text-decoration: underline; }
+
+.sidebar-agent-description {
+    font-size: 0.88em;
+    color: #6c757d;
+    margin-bottom: 12px;
+}
+
+.sidebar-agent-instances h6 {
+    margin: 15px 0 8px;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 5px;
+    font-size: 0.95em;
+    font-weight: 600;
+}
+
+
+
+.sidebar-instance {
+    margin: 4px;
+    padding: 4px;
+    padding-top:2px;
+    padding-bottom: 2px;
+    border-left: 2px solid #007bff;
+    background-color: #e6f7ff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-instance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.sidebar-instance-header  .burgerbtn {
+    background-color: #ffffff00;
+}
+.sidebar-instance-header > p {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+
+
+.sidebar-instance.selected-instance {
+    background-color: #d0efff; 
+}
+.sidebar-instance:hover { background-color: #d0efff; }
+
+.sidebar-instance p {
+    margin: 0;
+    font-size: 0.85em;
+    line-height: 1.5;
+    color: #343a40;
+}
+.sidebar-instance a {
+    color: #0056b3;
+    text-decoration: none;
+}
+.sidebar-instance a:hover { text-decoration: underline; }
+
+/* Agent Actions Menu */
+.sidebar-agent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 5px; /* Add some space for the menu button */
+    padding-left: 4px;
+}
+
+.agent-actions-menu {
+    position: relative; /* Needed for the dropdown positioning */
+}
+
+.agent-menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%; /* Position below the button */
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 120px; /* Set a minimum width */
+    padding: 5px 0;
+}
+
+.agent-menu-dropdown a {
+    display: block;
+    padding: 2px 10px;
+    color: #333;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.agent-menu-dropdown a:hover {
+    background-color: #f5f5f5;
+}
+
+/* --- Agent List Style Adjustments --- */
+#agents-list-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-left: 4px;
+    padding-top: 5px;
+}
+
+.agent-actions-menu .btn {
+    padding: 0px 5px;
+    border:none;
+}
+
+.agent-actions-menu .btn .fa-bars {
+    font-size: 0.9em;
+}
+
+#add-agent-btn, #add-system-btn, #add-provider-btn, .add-model-btn,
+.edit-provider-btn, .delete-apikey-btn, .delete-provider-btn, .delete-model-btn {
+    padding: 0px 5px;
+}
+
+.sidebar-agent-item {
+    border-left: 2px solid blue;
+    border-radius: 4px;
+}

@@ -1,0 +1,31 @@
+/* Core Layout & Reset */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Manage scrolling within specific containers */
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    font-size: 15px;
+    color: #333;
+    background-color: white; /* Light grey for app background */
+    box-sizing: border-box; /* Global box-sizing */
+}
+* {
+    scrollbar-width: thin;
+
+}
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+.d3-flame-graph {
+    width: 100%;
+    padding-right: 5px;
+}
+
+/* Utility class */
+.hidden { display: none !important; }
+
+.nomargin {
+    margin: 0;
+}
