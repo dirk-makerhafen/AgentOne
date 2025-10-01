@@ -153,12 +153,12 @@ TRACKS = {
             "LT": "Stable predictive models or recurring long-term expectations. Anticipated future events or states far ahead in the roadmap.",
         }
     },
-    "MEMORY": {
-        "description": "Important factual events and context that must not be forgotten. Raw historical facts, reference points, or non-trivial data points. Not interpretation or lessons — just “what happened.”",
+    "MEMORY":  {
+        "description": "Stores critical factual context. This includes both historical events ('what happened') and enduring project-specific guidelines ('what is'), such as coding styles, architectural patterns, and key technical decisions. This track is for raw reference points, not interpretations or lessons learned (which belong in INSIGHTS).",
         "layers": {
-            "ST": "Recent events or facts to keep temporarily.",
-            "MT": "Summary of multiple ST memories that may be needed across tasks.",
-            "LT": "Permanent historical record — major past events and their key facts.",
+            "ST": "Recent events, facts, or temporary project-specific notes to keep temporarily.",
+            "MT": "Summaries of ST memories or project guidelines relevant across multiple tasks (e.g., 'Use snake_case for all functions in this feature').",
+            "LT": "Permanent project records. Includes foundational architectural decisions, core coding standards, and major historical project milestones.",
         }
     },
 }

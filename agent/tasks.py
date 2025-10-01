@@ -16,6 +16,7 @@ from tools_common.tool_parser import extract_tool_call_parts
 from tools_filesystem.fsutils import get_relative_path
 from tools_filesystem.models import FsLogEntry
 from agent.history_limiter import HistoryLimiter
+from tools_subscriptions.models import ToolSubscription
 
 @shared_task
 def celery_create_query(agentinstance_id):
@@ -61,6 +62,50 @@ def celery_create_query(agentinstance_id):
         for tool in agentInstance.available_tools:
             toolcontentparts.extend(tool(agentInstance).get_content_parts())
         messages.append({"role": "user", "parts": toolcontentparts })
+
+        # Execute active tool subscriptions and inject their output into the context
+        subscription_parts = []
+        subscriptions = ToolSubscription.objects.filter(agentInstance=agentInstance, is_active=True)
+        if subscriptions:
+            try:
+                subscriptionResultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source="Tools.Subscription", key="SubscriptionResultInjection")
+                for subscription in subscriptions:
+                    try:
+                        tool_function = agentInstance.get_tool_function(subscription.tool_name)
+                        if tool_function:
+                            # We don't want the subscription execution to create another subscription, so we force one-shot mode.
+                            args = subscription.arguments
+                            if 'mode' in args:
+                                args['mode'] = 'one-shot' 
+                            
+                            success, result = tool_function['callable'](**args)
+                            
+                            # Consolidate output from stdout or other result fields
+                            output = result.get('stdout', '') or result.get('content', '')
+                            if result.get('stderr'):
+                                output += f"\nSTDERR:\n{result.get('stderr')}"
+
+                            subscription_parts.append({
+                                'tpId': subscriptionResultInjectionTemplate.pk,
+                                "tags": ["Tool", "Subscription", subscription.tool_name],
+                                'data': {
+                                    'subscription_id': subscription.subscription_id,
+                                    'tool_name': subscription.tool_name,
+                                    'arguments': {k: v for k, v in subscription.arguments.items() if k != 'source'},
+                                    'output': output.strip(),
+                                    'status': 'success' if success else 'failed'
+                                }
+                            })
+                    except Exception as e:
+                        # Log the error but do not crash the entire query generation process
+                        debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": f'Error executing subscription {subscription.id}: {e}\n{traceback.format_exc()}'})
+                        debugLogEntry.save()
+                if subscription_parts:
+                    messages.append({'role': 'user', 'parts': subscription_parts})
+            except PromptString.DoesNotExist:
+                debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": "SubscriptionResultInjection prompt template not found. Subscriptions will not be executed."})
+                debugLogEntry.save()
+
 
         cmessages = get_chat_messages(agentInstance=agentInstance)
         messages.extend(cmessages)
@@ -161,7 +206,7 @@ def get_chat_messages(agentInstance):
                     "tags": ["Tool", "FsTool" if toolCall.function_name.startswith("fs_") else "MemoryTool" if toolCall.function_name.startswith("memory_") else f"{toolCall.function_name}", "ToolResult"],
                     'data': {
                         'function_name': toolCall.function_name, 
-                        'arguments': {k: v for k, v in toolCall.arguments.items() if k in ['path', 'action', 'track', 'layer', 'index']}, 
+                        'arguments': {k: v for k, v in toolCall.arguments.items() if k in ['path', 'action', 'track', 'layer', 'index', "subscription_id"]}, 
                         'status': toolCall.status
                     }
                 })

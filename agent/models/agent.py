@@ -6,6 +6,8 @@ from tools_memory.memory import SMLMemoryTool
 from tools_python.pythontool import PythonTool
 from tools_a2a.tool import A2ATool
 from tools_userinteraction.tool import UserInteractionTool
+from tools_shell.shelltool import ShellTool
+from tools_subscriptions.tool import SubscriptionsTool
 from tools_a2a.models import AgentInstanceDescriptionLog
 import os
 from django.db.models import Q, Sum
@@ -64,7 +66,7 @@ class AgentInstance(ModelWithJsonData):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filesystemTool = FilesystemTool(self)
-        self.available_tools = [FilesystemTool, A2ATool, UserInteractionTool, PythonTool, SMLMemoryTool]
+        self.available_tools = [FilesystemTool, A2ATool, UserInteractionTool, PythonTool, ShellTool, SubscriptionsTool, SMLMemoryTool]
         self.toolname_to_class = {}
         for available_tool in self.available_tools:
             for fname in available_tool.functions.keys():

@@ -100,3 +100,4 @@ class ToolResponse(ModelWithJsonData):
         # The ToolCall object's update includes the result, so sending the response separately is redundant.
         # if send_to_client:
         #     send_object_to_clients(self)
+

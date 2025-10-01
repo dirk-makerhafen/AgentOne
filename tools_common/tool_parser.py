@@ -18,7 +18,7 @@ def clean_first_msg_start(message):
 def extract_tool_call_parts(response_string):
     parsed_output = []
     
-    for tname in ["memory_add", "memory_correct", "memory_reposition", "fs_load", "fs_unload", "fs_write", "fs_append", "fs_replace", "fs_python_edit", "python", "agent_send_message"]:
+    for tname in ["memory_add", "memory_correct", "memory_reposition", "fs_load", "fs_unload", "fs_write", "fs_append", "fs_replace", "fs_python_edit", "python", "agent_send_message", "await_user_input"]:
         response_string = response_string.replace(')@@@\n@%s(' % tname, ')@@@\n@@@%s(' % tname)
         response_string = response_string.replace('.@@@%s(' % tname, '.\n@@@%s(' % tname)
         
@@ -122,7 +122,8 @@ def generate_function_stub(func_name: str, func_def: dict) -> str:
 
     for param_name, param_info in params.items():
         required = param_info.get("required", False)
-        default_value = "" if required else " = None"
+        
+        default_value = "" if required else " = %s" % param_info.get("default", "None")
         param_str_list.append(f"{param_name}{default_value}")
 
         type_str = param_info.get("type", "Any")

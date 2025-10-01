@@ -28,6 +28,8 @@ INSTALLED_APPS = (
     'tools_filesystem',
     'tools_memory',
     'tools_python',
+    'tools_shell',
+    'tools_subscriptions',
     'tools_userinteraction',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -112,3 +114,4 @@ CHANNEL_LAYERS = {
 
 # Secret key for new agent/executor registration
 AGENT_SERVER_SECRET_KEY = "change-me-to-a-very-secure-secret"
+

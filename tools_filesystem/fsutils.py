@@ -4,8 +4,6 @@ import time
 from rapidfuzz.distance import Levenshtein
 from itertools import combinations
 import diff_match_patch as dmp_module
-import ast
-import re
 from collections import defaultdict
 from pathlib import Path
 

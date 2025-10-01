@@ -3,6 +3,7 @@ from executor.primitives import run_python_code
 from tools_common.models import BaseTool
 from tools_python.models import PythonToolVar
 from tools_python.prompts import FUNCTIONS
+from tools_subscriptions.models import ToolSubscription
 
 class PythonTool(BaseTool):
     functions = FUNCTIONS
@@ -18,7 +19,27 @@ class PythonTool(BaseTool):
             {"tpId": sharedVarsInjection.pk, "tags": ['Tool', 'Python', 'Vars']       , "data": {"keys": [v.key for v in existing_vars]}}
         ]
         
-    def python(self, source, toolCall=None):
+    def python(self, source, mode="one-shot", subscription_id=None, toolCall=None):
+        if mode == "subscribe":
+            if not subscription_id:
+                return (False, {"status": "error", "message": "A unique 'subscription_id' is required when mode is 'subscribe'."})
+
+            subscription_args = {
+                "source": source,
+            }
+
+            ToolSubscription.objects.update_or_create(
+                agentInstance=self.agentInstance,
+                subscription_id=subscription_id,
+                defaults={
+                    'agent': self.agentInstance.agent,
+                    'creating_tool_call': toolCall,
+                    'tool_name': 'python',
+                    'arguments': subscription_args,
+                    'is_active': True
+                }
+            )
+
         existing_vars = PythonToolVar.objects.filter(agentInstance=self.agentInstance, next_version=None).order_by('-created_at')
         original_vars = {}
         for existing_var in existing_vars:
@@ -26,14 +47,21 @@ class PythonTool(BaseTool):
                 original_vars[existing_var.key] = existing_var.value
 
         result = run_python_code(agentInstance=self.agentInstance, python_code_string=source, locals_dict={'VARS': original_vars}, locals_to_return=["VARS"])
+        
         returned_vars = result.get("vars",{})
         if "VARS" in returned_vars and len(returned_vars["VARS"]) == 0:
             del returned_vars["VARS"]
         if "vars" in result and len(result["vars"]) == 0:
             del result["vars"]
+        
         updated_var_names = self.handle_results_vars(original_vars, result.get("vars",{}).get("VARS",{}), toolCall)
         if updated_var_names:
             result['updated_vars'] = list(updated_var_names)
+
+        if mode == "subscribe":
+            if "message" not in result:
+                result["message"] = ""
+            result["message"] += f"\nSuccessfully created/updated subscription with ID '{subscription_id}'."
 
         return ( result.get("status")=="success", result)
 

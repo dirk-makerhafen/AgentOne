@@ -49,8 +49,8 @@ FUNCTIONS = {
         "description": "Load the content of a file or list the contents of a directory into your context memory.",
         "parameters": {
             "path": {"type": "string", "description": "Path to the file or directory (POSIX-style).", "required": True },
-            "recursive": {"type": "boolean", "description": "List directories recursively. Ignored for files.", "required": False },
-            "mode": {"type": "string", "description": "'full' to load the entire file content, 'summary' to load a outline (for supported files like Python, JavaScript/JSX, CSS, C/C++/Arduino, Java, Go, C#, TypeScript/TSX, Ruby, JSON, and YAML). Defaults to 'full'.", "required": False }
+            "recursive": {"type": "boolean", "description": "List directories recursively. Ignored for files.", "required": False, 'default': False },
+            "mode": {"type": "string", "description": "'full' to load the entire file content, 'summary' to load a outline (for supported files like Python, JavaScript/JSX, CSS, C/C++/Arduino, Java, Go, C#, TypeScript/TSX, Ruby, JSON, and YAML). Defaults to 'full'.", "required": False, 'default': 'full' }
         },
     },
     "fs_unload": {

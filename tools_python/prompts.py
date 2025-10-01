@@ -49,11 +49,27 @@ del VARS['my_string']
 
 FUNCTIONS = {
     'python': {
-        'description': 'execute python source code', 
+        'description': 'Executes Python source code. Can be run once or as a recurring subscription.',
         'parameters': {
-            'source': {'type': 'string', 'description': 'source to run', 'required': True },
+            'source': {
+                'type': 'string',
+                'description': 'The Python source code to run.',
+                'required': True
+            },
+            'subscription_id': {
+                'type': 'string',
+                'description': "A unique identifier for the subscription if mode is 'subscribe'. This will be used to unsubscribe later.",
+                'required': False
+            },
+            'mode': {
+                'type': 'string',
+                'enum': ['one-shot', 'subscribe'],
+                'description': "Execution mode: 'one-shot' executes the code once (default), 'subscribe' executes it before every LLM query.",
+                'required': False,
+                'default': 'one-shot'
+            }
         }
-    },
+    }
 }
 
 LIST_OF_SHARED_VARS = '''
