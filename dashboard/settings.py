@@ -14,7 +14,7 @@ SESSION_COOKIE_AGE = 999*24*3600
 
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_BROKER_URL = 'redis://localhost:6379'
-
+CELERY_WORKER_REDIRECT_STDOUTS = False
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
 INSTALLED_APPS = (
@@ -31,6 +31,7 @@ INSTALLED_APPS = (
     'tools_shell',
     'tools_subscriptions',
     'tools_userinteraction',
+    'tools_mcp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

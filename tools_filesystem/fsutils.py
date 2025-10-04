@@ -175,8 +175,9 @@ def get_relative_path(workingdir, path):
         path = path[len(workingdir):]
         if len(path) > 0 and path[0] == '/':
             path = path[1:]
+        if not path.startswith('./'):
+            path = f"./{path}"
     if path == "": path = "./"
-    if path[:2] != "./": path = f"./{path}"
     return path
 
 def clean_path(workingdir, path):

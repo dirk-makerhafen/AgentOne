@@ -1,5 +1,5 @@
 
-DESCRIPTION = '''
+INSTRUCTIONS = '''
 # User Interaction Tool
 This tool allows you to pause your autonomous operation and wait for input from the user.
 

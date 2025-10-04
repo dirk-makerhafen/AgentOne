@@ -1,5 +1,7 @@
 from django.contrib import admin
 from .models import ToolCall, ToolResponse
+from django.contrib import admin
+from .models import ToolDefinition, ToolInstallation, ToolInstallationLog
 
 @admin.register(ToolCall)
 class ToolCallAdmin(admin.ModelAdmin):
@@ -20,3 +22,23 @@ class ToolResponseAdmin(admin.ModelAdmin):
     autocomplete_fields = ('toolCall',)
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')
+
+@admin.register(ToolDefinition)
+class ToolDefinitionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'display_name', 'is_builtin', 'repository_url')
+    search_fields = ('name', 'display_name', 'description')
+    list_filter = ('is_builtin',)
+
+@admin.register(ToolInstallation)
+class ToolInstallationAdmin(admin.ModelAdmin):
+    list_display = ('tool_definition', 'system', 'status', 'local_path', 'process_id', 'assigned_port')
+    list_filter = ('status', 'system', 'tool_definition__is_builtin')
+    search_fields = ('tool_definition__name', 'tool_definition__display_name', 'system__name', 'local_path')
+    raw_id_fields = ('tool_definition', 'system', 'mcp_server') # Use raw_id_fields for FKs to improve admin performance
+
+@admin.register(ToolInstallationLog)
+class ToolInstallationLogAdmin(admin.ModelAdmin):
+    list_display = ('timestamp', 'tool_installation', 'level', 'message')
+    list_filter = ('level', 'tool_installation__system__name')
+    search_fields = ('message', 'tool_installation__tool_definition__name')
+    raw_id_fields = ('tool_installation',)

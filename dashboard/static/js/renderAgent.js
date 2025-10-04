@@ -11,6 +11,7 @@ const agentTemplate = Handlebars.compile(`
                 </button>
                 <div id="agent-menu-{{id}}" class="agent-menu-dropdown" style="display: none;">
                     <a href="#" onclick="event.preventDefault(); createAgentInstance(event, '{{id}}')">Add Instance</a>
+                    <a href="#" onclick="event.preventDefault(); openEditAgentModal('{{id}}')">Edit Agent</a>
                     <a href="#" onclick="event.preventDefault(); requestAgentDeletion(event, '{{id}}', '{{name}}')">Delete Agent</a>
                 </div>
             </div>
@@ -46,7 +47,7 @@ function toggleAgentInstances(agentId) {
 
 function createAgentInstance(event, agentId) {
     event.stopPropagation();
-    closeAgentMenu(agentId);
+    closeAgentMenu(`agent-menu-${agentId}`); // Pass the correct menu ID
 
     if (websocket && websocket.readyState === WebSocket.OPEN) {
         // Find the instance list and expand it so the user sees the new instance appear.
@@ -67,20 +68,17 @@ function createAgentInstance(event, agentId) {
 }
 
 function toggleAgentMenu(event, menuId) {
-    event.stopPropagation(); // Prevent the click from propagating to parent elements, which might close the menu immediately
+    event.stopPropagation();
     const menu = document.getElementById(menuId);
     if (menu) {
-        // Toggle display of the specific menu
         if (menu.style.display === 'block') {
             menu.style.display = 'none';
         } else {
-            // Close all other open menus first, regardless of which parent they belong to
             document.querySelectorAll('.agent-menu-dropdown').forEach(openMenu => {
                 if (openMenu.id !== menuId) {
                     openMenu.style.display = 'none';
                 }
             });
-
             menu.style.display = 'block';
         }
     }
@@ -95,7 +93,7 @@ function closeAgentMenu(menuId) {
 
 function requestAgentDeletion(event, agentId, agentName) {
     event.stopPropagation();
-    closeAgentMenu(agentId);
+    closeAgentMenu(`agent-menu-${agentId}`); // Pass the correct menu ID
     
     if (confirm(`Are you sure you want to permanently delete the agent "${agentName}" (ID: ${agentId}) and all of its instances? This action cannot be undone.`)) {
         if (websocket && websocket.readyState === WebSocket.OPEN) {
@@ -111,19 +109,94 @@ function requestAgentDeletion(event, agentId, agentName) {
     }
 }
 
-function createAgent(event){
-    event.preventDefault();
-    const agentName = prompt("Please enter a name for the new agent:");
-    if (agentName && agentName.trim() !== '') {
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({
-                type: 'create_agent',
-                payload: {
-                    name: agentName.trim()
-                }
-            }));
-        } else {
-            alert("Cannot create agent. WebSocket is not connected.");
-        }
-    }
+// New functions for Agent Modal
+function openAddAgentModal() {
+    $('#agentModalTitle').text('Add New Agent');
+    $('#agentId').val('');
+    $('#agentName').val('');
+    $('#agentDescription').val('');
+    populateToolDefinitions([]); // No tools selected for new agent
+    $('#saveAgentBtn').off('click').on('click', saveAgent); // Rebind to prevent multiple handlers
+    $('#agentModal').show();
 }
+
+function openEditAgentModal(agentId) {
+    const agent = websocket.object_cache['Agent'][agentId];
+    if (!agent) {
+        addToConsoleArea('Agent not found in cache for editing: ' + agentId, 'error');
+        return;
+    }
+
+    $('#agentModalTitle').text('Edit Agent');
+    $('#agentId').val(agent.id);
+    $('#agentName').val(agent.name);
+    $('#agentDescription').val(agent.description);
+    populateToolDefinitions(agent.available_tools || []); // Populate with current tools
+    $('#saveAgentBtn').off('click').on('click', saveAgent); // Rebind
+    $('#agentModal').show();
+}
+
+function closeAgentModal() {
+    $('#agentModal').hide();
+    $('#agentForm')[0].reset(); // Reset form fields
+}
+
+function populateToolDefinitions(selectedToolIds = []) {
+    const toolSelect = $('#agentAvailableTools');
+    toolSelect.empty(); // Clear existing options
+
+    const toolDefinitions = window.allToolDefinitions || {};
+    const sortedToolDefs = Object.values(toolDefinitions).sort((a, b) => a.name.localeCompare(b.name));
+
+    sortedToolDefs.forEach(toolDef => {
+        const option = $('<option></option>')
+            .val(toolDef.id)
+            .text(`${toolDef.name} (${toolDef.is_builtin ? 'Built-in' : 'External'})`);
+        if (selectedToolIds.includes(toolDef.id)) {
+            option.prop('selected', true);
+        }
+        toolSelect.append(option);
+    });
+}
+
+function saveAgent() {
+    const agentId = $('#agentId').val();
+    const name = $('#agentName').val();
+    const description = $('#agentDescription').val();
+    const selectedToolIds = $('#agentAvailableTools').val() || []; // Array of selected tool IDs
+
+    if (!name.trim()) {
+        alert('Agent Name cannot be empty.');
+        return;
+    }
+
+    const payload = {
+        name: name.trim(),
+        description: description,
+        available_tool_ids: selectedToolIds
+    };
+
+    if (agentId) {
+        // Update existing agent
+        payload.agent_pk = agentId;
+        websocket.send(JSON.stringify({
+            type: 'update_agent',
+            payload: payload
+        }));
+    } else {
+        // Create new agent
+        websocket.send(JSON.stringify({
+            type: 'create_agent',
+            payload: payload
+        }));
+    }
+    closeAgentModal();
+}
+
+// Bind the "Add New Agent" button in dashboard.html to openAddAgentModal
+$(document).ready(function() {
+    $('#add-agent-btn').off('click').on('click', function(event) {
+        event.preventDefault();
+        openAddAgentModal();
+    });
+});

@@ -1,0 +1,21 @@
+    <!-- Revert File Changes Modal -->
+    <div id="revertFileModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" onclick="cancelRevert()">×</span>
+                <h2>Revert File Changes</h2>
+            </div>
+            <div class="modal-body">
+                <p>You are about to revert changes for file: <strong id="revertFilePath"></strong></p>
+                <p>This will write the previous version of the file back to the filesystem.</p>
+                <div class="form-group">
+                    <label for="revertComment">Reason for reverting (For LLM):</label>
+                    <textarea id="revertComment" class="form-control" rows="3" placeholder="E.g., 'Agent introduced a bug', 'Incorrect change', 'Experiment failed'"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cancelRevert()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmRevert()">Revert</button>
+            </div>
+        </div>
+    </div>

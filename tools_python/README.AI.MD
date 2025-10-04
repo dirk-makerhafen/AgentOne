@@ -59,7 +59,7 @@ This directory provides the agent with the capability to execute arbitrary Pytho
 
 ## Python Tool Prompts (`tools_python/prompts.py`)
 
-*   **`DESCRIPTION`**: Detailed explanation of the Python tool, its purpose, the `VARS` dictionary (persistence, capacity, management, access methods), and how to interpret execution feedback. Includes an example code block.
+*   **`INSTRUCTIONS`**: Detailed explanation of the Python tool, its purpose, the `VARS` dictionary (persistence, capacity, management, access methods), and how to interpret execution feedback. Includes an example code block.
 *   **`FUNCTIONS`**: A dictionary defining the schema for the `python` tool call, including `source`, `subscription_id`, and `mode`.
 *   **`LIST_OF_SHARED_VARS`**: A Jinja2 template for injecting the list of currently existing `VARS` keys into the LLM's context.
 

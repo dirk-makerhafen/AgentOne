@@ -1,0 +1,30 @@
+    <!-- Add/Edit MCP Server Modal -->
+    <div id="mcpServerModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" onclick="closeMcpServerModal()">&times;</span>
+                <h2 id="mcpServerModalTitle">Add MCP Server</h2>
+            </div>
+            <div class="modal-body">
+                <form id="mcpServerForm">
+                    <input type="hidden" id="mcpServerId">
+                    <div class="form-group">
+                        <label for="mcpServerName">Server Name:</label>
+                        <input type="text" id="mcpServerName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mcpServerEndpoint">Endpoint URL:</label>
+                        <input type="url" id="mcpServerEndpoint" class="form-control" placeholder="https://mcp.example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="checkbox" id="mcpServerEnabled" checked>
+                        <label for="mcpServerEnabled">Enabled</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeMcpServerModal()">Cancel</button>
+                <button id="saveMcpServerBtn" class="btn btn-primary">Save Server</button>
+            </div>
+        </div>
+    </div>

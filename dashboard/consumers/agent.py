@@ -2,13 +2,9 @@ import json
 from django.contrib.auth.models import User
 from agent.models.agent import Agent
 from asgiref.sync import async_to_sync
-import json
-from agent.models.agent import Agent
-from django.contrib.auth.models import User
-import json
-from django.contrib.auth.models import User
 from providers.models import Model
 from systems.models import System
+from tools_common.models  import ToolDefinition
 
 
 def handle_agent_create(consumer, user_pk, payload):
@@ -20,13 +16,47 @@ def handle_agent_create(consumer, user_pk, payload):
 
     try:
         agent_name = payload.get('name', 'New Agent')
+        description = payload.get('description', '')
+        available_tool_ids = payload.get('available_tool_ids', [])
+
         new_agent = Agent()
         new_agent.name = agent_name
-        new_agent.save(send_to_client=False)
+        new_agent.description = description
+        new_agent.save(send_to_client=False) # Save without sending to client yet
+
         new_agent.owners.add(user)
-        new_agent.save(send_to_client=True)
+        
+        if available_tool_ids:
+            tools = ToolDefinition.objects.filter(pk__in=available_tool_ids)
+            new_agent.available_tools.set(tools)
+
+        new_agent.save(send_to_client=True) # Now save and send to client
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create agent: {e}'}))
+
+def handle_agent_update(consumer, user_pk, payload):
+    agent_pk = payload.get('agent_pk')
+    if not agent_pk:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': 'agent_pk is required for update.'}))
+        return
+
+    try:
+        user = User.objects.get(pk=user_pk)
+        agent = Agent.objects.get(pk=agent_pk, owners=user)
+
+        agent.name = payload.get('name', agent.name)
+        agent.description = payload.get('description', agent.description)
+        
+        available_tool_ids = payload.get('available_tool_ids')
+        if available_tool_ids is not None: # Only update if provided
+            tools = ToolDefinition.objects.filter(pk__in=available_tool_ids)
+            agent.available_tools.set(tools)
+
+        agent.save(send_to_client=True)
+    except Agent.DoesNotExist:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Agent with pk {agent_pk} not found or permission denied.'}))
+    except Exception as e:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update agent: {e}'}))
 
 
 def handle_agent_delete(consumer, user_pk, payload):

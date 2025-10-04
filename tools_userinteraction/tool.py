@@ -3,13 +3,14 @@ from tools_common.models import BaseTool
 from tools_userinteraction.prompts import FUNCTIONS
 
 class UserInteractionTool(BaseTool):
+    DESCRIPTION = "Allows the agent to pause its operation and wait for direct input from the user. Essential for seeking clarification, confirmation, or further instructions before proceeding with a task."
     functions = FUNCTIONS
 
     def get_header_parts(self):
-        descriptionTemplate = PromptString.get_template(self.agentInstance, source="Tools.UserInteraction", key="Description")
+        instructionTemplate = PromptString.get_template(self.agentInstance, source="Tools.UserInteraction", key="Instructions")
         functionsTemplate = PromptString.get_template(self.agentInstance, source="Tools.UserInteraction", key="Functions")
         return [
-            {"tpId": descriptionTemplate.pk, "data": {}, 'tags': ['Prompts', 'UserInteraction'] },
+            {"tpId": instructionTemplate.pk, "data": {}, 'tags': ['Prompts', 'UserInteraction'] },
             {"tpId": functionsTemplate.pk  , "data": {}, 'tags': ['Prompts', 'UserInteraction'] },
         ]
 

@@ -7,6 +7,7 @@ from tools_memory.prompts import TRACKS, FUNCTIONS
 
 
 class SMLMemoryTool(BaseTool):
+    DESCRIPTION = "Accesses a persistent, structured memory system with multiple tracks (e.g., plans, insights) and time horizons. Crucial for retaining context, learning from past actions, and managing long-term goals."
     functions = FUNCTIONS
     
     @property
@@ -135,8 +136,11 @@ class SMLMemoryTool(BaseTool):
         if not existing_entry:
             return (False, {'status': 'error', 'message': 'Memory item not found'})
         if existing_entry.value == content:
-            return False, {"status":"warning", "message": "Alread up to date, be carefull when using memory_correct"}
-        
+            return False, {"status":"warning", "message": "Memory content not changed. Be carefull when using memory_correct, dont call memory_correct when the memory content does not need correction."}
+        content_stripped = content.strip()
+        if content_stripped.startswith('[') and content_stripped.endswith(']'):
+            return False, {"status":"warning", "message": "Don't overwrite old memory items. Add tags if you need, but don't overwrite memories."}
+
         newmi = MemoryItem()
         newmi.agent = self.agentInstance.agent
         newmi.agentInstance = self.agentInstance

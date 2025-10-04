@@ -2,8 +2,9 @@ import json
 import asyncio
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
-from dashboard.consumers.agent import handle_agent_create, handle_agent_delete, handle_agent_list
+from dashboard.consumers.agent import handle_agent_create, handle_agent_delete, handle_agent_list, handle_agent_update
 from dashboard.consumers.agentinstance import handle_agentinstance_create, handle_agentinstance_delete, handle_agentinstance_detail, handle_agentinstance_update, handle_agentinstance_getvars
+from dashboard.consumers.tool_definition import handle_create_tool_definition, handle_update_tool_definition, handle_delete_tool_definition, handle_tool_definition_list
 from dashboard.consumers.conversation import handle_conversation_add, handle_conversation_get
 from dashboard.consumers.conversationmessage import handle_conversationmessage_flags
 from dashboard.consumers.direct_tool_call import handle_direct_tool_call
@@ -16,6 +17,17 @@ from dashboard.consumers.provider_apikey import handle_provider_apikey_create, h
 from dashboard.consumers.provider_model import handle_provider_model_create, handle_provider_model_delete
 from dashboard.consumers.provider import handle_provider_create, handle_provider_delete, handle_provider_list, handle_provider_update
 from dashboard.consumers.system import handle_system_create, handle_system_update, handle_system_list 
+from dashboard.consumers.mcp import list_mcp_servers, create_mcp_server, update_mcp_server, delete_mcp_server, refresh_mcp_server_tools
+from dashboard.consumers.tool_installation import (
+    handle_tool_installation_list, 
+    handle_tool_installation_create, 
+    handle_tool_installation_start, 
+    handle_tool_installation_stop, 
+    handle_tool_installation_update, 
+    handle_tool_installation_delete,
+    handle_tool_installation_logs_request,
+    handle_request_tool_installation_logs
+)
 
 class AgentConsumer(WebsocketConsumer):
     def connect(self):
@@ -49,6 +61,8 @@ class AgentConsumer(WebsocketConsumer):
             handle_agent_list(self, self.user_pk)
         elif message_type == 'create_agent':
             handle_agent_create(self, self.user_pk, payload)
+        elif message_type == 'update_agent':
+            handle_agent_update(self, self.user_pk, payload)
         elif message_type == 'delete_agent':
             handle_agent_delete(self, self.user_pk, payload)
 
@@ -149,6 +163,41 @@ class AgentConsumer(WebsocketConsumer):
         elif message_type == 'update_system_details':
             handle_system_update(self, self.user_pk, payload)
 
+        elif message_type == 'list_mcp_servers':
+            list_mcp_servers(self, payload)
+        elif message_type == 'create_mcp_server':
+            create_mcp_server(self, payload)
+        elif message_type == 'update_mcp_server':
+            update_mcp_server(self, payload)
+        elif message_type == 'delete_mcp_server':
+            delete_mcp_server(self, payload)
+        elif message_type == 'refresh_mcp_server_tools':
+            refresh_mcp_server_tools(self, payload)
+
+        elif message_type == 'create_tool_definition':
+            handle_create_tool_definition(self, payload)
+        elif message_type == 'update_tool_definition':
+            handle_update_tool_definition(self, payload)
+        elif message_type == 'delete_tool_definition':
+            handle_delete_tool_definition(self, payload)
+        elif message_type == 'request_tool_definition_list':
+            handle_tool_definition_list(self, payload)
+
+        elif message_type == 'request_tool_installation_list':
+            handle_tool_installation_list(self, payload)
+        elif message_type == 'create_tool_installation':
+            handle_tool_installation_create(self, self.user_pk, payload)
+        elif message_type == 'tool_installation_start':
+            handle_tool_installation_start(self, self.user_pk, payload)
+        elif message_type == 'tool_installation_stop':
+            handle_tool_installation_stop(self, self.user_pk, payload)
+        elif message_type == 'request_tool_installation_logs':
+            handle_request_tool_installation_logs(self, payload)
+        elif message_type == 'update_tool_installation':
+            handle_tool_installation_update(self, self.user_pk, payload)
+        elif message_type == 'delete_tool_installation':
+            handle_tool_installation_delete(self, self.user_pk, payload)
+
         elif message_type == 'subscribe':
             try:
                 async_to_sync(self.channel_layer.group_add)(f'agentInstance_{payload.get("instance_pk")}', self.channel_name)
@@ -162,8 +211,8 @@ class AgentConsumer(WebsocketConsumer):
                 print(f"Unsubscription for agent instance {payload.get("instance_pk")} was cancelled for user {self.user_pk}.")
 
         else:
-            self.send(text_data=json.dumps({'object': 'error', 'message': f'Unknown message type {message_type}'}))
-
+            self.send(text_data=json.dumps({'object': 'error', 'message': f'Unknown message type {message_type}, {data}'}))
+            
         
     def agent_message(self, event):
         self.send(text_data=json.dumps(event['payload']))

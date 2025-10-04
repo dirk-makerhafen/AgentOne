@@ -48,6 +48,7 @@ def check_permission(agent_instance, absolute_path, action):
     rules = _parse_rules(agent_instance.access_rules)
     # Rules are checked in order like iptables rules
     for rule in rules:
+        print("RULE", rule)
         # We need to check against the relative path if the rule is relative,
         # or absolute if the rule is absolute. For simplicity, we'll assume
         # rules are relative to the working directory.
@@ -55,11 +56,7 @@ def check_permission(agent_instance, absolute_path, action):
             relative_target_path = target_path.relative_to(working_dir)
             path_to_check = str(relative_target_path)
         except ValueError:
-            # The target path is outside the working directory, so relative path fails.
-            # We will handle this in the default permission checks later.
-            # A relative rule cannot match an external path.
-            path_to_check = None
-
+            path_to_check = absolute_path
         if path_to_check and _matches(path_to_check, rule['pattern']):
             if rule['permission'] == '!': # deny
                 return False   

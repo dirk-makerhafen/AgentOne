@@ -78,7 +78,7 @@ async def execute_shell_command(item: ShellExecution):
 
 @app.post("/python", dependencies=[Depends(get_api_key)])
 async def execute_python_code(item: ScriptExecution):
-    result = run_python_code(agentInstance=None, python_code_string = item.source, locals_dict=item.locals_dict, locals_to_return=item.locals_to_return)
+    result = run_python_code(python_code_string = item.source, locals_dict=item.locals_dict, locals_to_return=item.locals_to_return)
     return JSONResponse(content=result)
 
 

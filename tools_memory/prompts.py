@@ -1,5 +1,5 @@
 
-DESCRIPTION = '''
+INSTRUCTIONS = '''
 # Memory Tools
 You have access to external memory tool that help you remember things. Because your context length is limited, you must use this memory 
 for all information thats valid for more than a few rounds of conversation. Old messages in our conversation will be tagged with @@@TO_BE_FORGOTTEN@@@.

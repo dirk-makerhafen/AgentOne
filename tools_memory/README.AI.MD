@@ -66,7 +66,7 @@ This directory implements the core memory system for the AI agent, allowing it t
 
 ## Memory Prompts (`tools_memory/prompts.py`)
 
-*   **`DESCRIPTION`**: Detailed explanation of the memory system, memory tracks and layers, rules for memorizing/not memorizing, and the expected output format for memory content.
+*   **`INSTRUCTIONS`**: Detailed explanation of the memory system, memory tracks and layers, rules for memorizing/not memorizing, and the expected output format for memory content.
 *   **`FUNCTIONS`**: Dictionary defining the schema for `memory_add`, `memory_correct`, and `memory_reposition`.
 *   **`TRACKS`**: A Python dictionary (also defined in `memory.py`) that serves as the canonical definition of all memory tracks (e.g., `REVIEW`, `SELF`) and their associated layers (e.g., `ST`, `MT`, `LT`), along with their descriptions.
 *   **`STALLED_WARNING`**: Jinja2 template for the warning message when memory tracks/layers are detected as outdated.

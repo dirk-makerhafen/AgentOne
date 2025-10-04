@@ -1,0 +1,21 @@
+    <!-- Revert ALL File Changes Modal -->
+    <div id="revertAllFsModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" onclick="cancelRevertAll()">×</span>
+                <h2>Revert ALL Filesystem Changes</h2>
+            </div>
+            <div class="modal-body">
+                <p>You are about to revert the ENTIRE filesystem managed by this agent instance to the state it was in at <strong id="revertAllFsTimestamp"></strong>, corresponding to the log entry for file: <strong id="revertAllFsFilePath"></strong></p>
+                <p>This action will revert all files that were modified, created, or deleted by the agent up to this historical point. This is a potentially destructive action.</p>
+                <div class="form-group">
+                    <label for="revertAllFsComment">Reason for reverting (optional, for LLM):</label>
+                    <textarea id="revertAllFsComment" class="form-control" rows="3" placeholder="E.g., 'Agent introduced a major bug', 'Rollback to stable state', 'Clean slate for new task'"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cancelRevertAll()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmRevertAll()">Revert All Changes</button>
+            </div>
+        </div>
+    </div>

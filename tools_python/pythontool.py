@@ -6,6 +6,7 @@ from tools_python.prompts import FUNCTIONS
 from tools_subscriptions.models import ToolSubscription
 
 class PythonTool(BaseTool):
+    DESCRIPTION = "Provides a Python execution environment. Allows the agent to run code for calculations, data manipulation, and complex logic, with access to a persistent 'VARS' dictionary for state management."
     functions = FUNCTIONS
 
     def get_header_parts(self):

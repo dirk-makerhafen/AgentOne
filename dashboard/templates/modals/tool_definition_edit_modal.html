@@ -1,0 +1,57 @@
+    <!-- Edit Tool Definition Modal -->
+    <div id="editToolDefinitionModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" onclick="closeToolDefinitionModal()">&times;</span>
+                <h2 id="editToolDefinitionModalTitle">Edit Tool Definition</h2>
+            </div>
+            <div class="modal-body">
+                <form id="editToolDefinitionForm">
+                    <input type="hidden" id="editToolDefinitionId">
+                    <div class="form-group">
+                        <label for="editToolDefinitionDisplayName">Display Name:</label>
+                        <input type="text" id="editToolDefinitionDisplayName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editToolDefinitionName">Internal Name:</label>
+                        <input type="text" id="editToolDefinitionName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editToolDefinitionDescription">Description:</label>
+                        <textarea id="editToolDefinitionDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <input type="checkbox" id="editToolDefinitionIsBuiltin" disabled>
+                        <label for="editToolDefinitionIsBuiltin">Built-in Tool (cannot be changed)</label>
+                    </div>
+                    <div class="form-group external-tool-fields">
+                        <label for="editToolDefinitionTransportType">Transport Type (for external tools):</label>
+                        <select id="editToolDefinitionTransportType" class="form-control" required>
+                            <option value="tcp">TCP Socket (HTTP/S)</option>
+                            <option value="stdin_stdout">Standard I/O (stdin/stdout)</option>
+                        </select>
+                    </div>
+                    <div class="form-group external-tool-fields">
+                        <label for="editToolDefinitionRepoUrl">Repository URL (for external tools):</label>
+                        <input type="url" id="editToolDefinitionRepoUrl" class="form-control" placeholder="https://github.com/org/repo">
+                    </div>
+                    <div class="form-group external-tool-fields">
+                        <label for="editToolDefinitionCommand">Command to run (for external tools):</label>
+                        <input type="text" id="editToolDefinitionCommand" class="form-control" placeholder="python main.py">
+                    </div>
+                    <div class="form-group external-tool-fields">
+                        <label for="editToolDefinitionArgs">Arguments (for external tools, JSON array):</label>
+                        <input type="text" id="editToolDefinitionArgs" class="form-control" placeholder='["--port", "8080"]'>
+                    </div>
+                    <div class="form-group external-tool-fields">
+                        <label for="editToolDefinitionPlatforms">Platforms (for external tools, comma-separated):</label>
+                        <input type="text" id="editToolDefinitionPlatforms" class="form-control" placeholder="linux,windows">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeToolDefinitionModal()">Cancel</button>
+                <button id="updateToolDefinitionBtn" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>

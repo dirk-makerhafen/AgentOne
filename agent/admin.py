@@ -32,7 +32,7 @@ class ConversationMessageAdmin(admin.ModelAdmin):
     list_display = ('pk', 'created_at', 'agentInstance', 'role', 'raw_data')
     list_display_links = ('pk', 'agentInstance')
     list_filter = ('role', 'agentInstance__name', "pin_to_context", "hide_from_context")
-    search_fields = ('data', 'raw_data', 'agentInstance__name')
+    search_fields = ('raw_data', 'agentInstance__name')
     autocomplete_fields = ('agentInstance', 'llmResponse')
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')
@@ -42,7 +42,7 @@ class DebugLogAdmin(admin.ModelAdmin):
     list_display = ('pk', 'created_at', 'agentInstance', 'event', 'status', 'raw_data')
     list_display_links = ('pk', 'agentInstance')
     list_filter = ('event', 'status', 'agentInstance__name')
-    search_fields = ('event', 'data', 'raw_data', 'agentInstance__name')
+    search_fields = ('event', 'raw_data', 'agentInstance__name')
     autocomplete_fields = ('agentInstance',)
     list_per_page = 50
     readonly_fields = ('created_at', 'updated_at')
@@ -52,7 +52,7 @@ class LLMQueryAdmin(admin.ModelAdmin):
     list_display = ('pk', 'created_at', 'agentInstance', 'model', 'raw_data')
     list_display_links = ('pk', 'agentInstance', 'model')
     list_filter = ('model', 'agentInstance__name')
-    search_fields = ('data', 'raw_data', 'agentInstance__name')
+    search_fields = ('raw_data', 'agentInstance__name')
     autocomplete_fields = ('agentInstance', 'model', 'apikey')
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')
@@ -62,7 +62,7 @@ class LLMResponseAdmin(admin.ModelAdmin):
     list_display = ('pk', 'created_at', 'agentInstance', 'llmQuery', 'completion_tokens', 'prompt_tokens', 'raw_data')
     list_display_links = ('pk', 'agentInstance', 'llmQuery')
     list_filter = ('agentInstance__name', 'llmQuery__model__name')
-    search_fields = ('data', 'raw_data', 'agentInstance__name')
+    search_fields = ('raw_data', 'agentInstance__name')
     autocomplete_fields = ('agentInstance', 'llmQuery')
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')

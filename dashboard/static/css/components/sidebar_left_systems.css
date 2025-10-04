@@ -143,3 +143,110 @@
 .system-item-details > div:last-child {
     margin-bottom: 0;
 }
+
+/* Tool Installation Styles */
+.system-installed-tools {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e9ecef;
+}
+
+.system-installed-tools h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tool-installation-list {
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: #f9f9f9;
+}
+
+.tool-installation-item {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* Allows details to wrap below name/status */
+    padding: 8px 5px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
+}
+
+.tool-installation-item:last-child {
+    border-bottom: none;
+}
+
+.tool-installation-name {
+    font-weight: bold;
+    margin-right: 8px;
+    flex-basis: 30%; /* Give name some fixed space */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tool-installation-status {
+    padding: 2px 6px;
+    border-radius: 3px;
+
+    font-weight: bold;
+    text-transform: capitalize;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+/* Status specific colors */
+.tool-installation-status.status-not-installed { background-color: #f0ad4e; color: #fff; } /* Orange */
+.tool-installation-status.status-installing { background-color: #5bc0de; color: #fff; animation: pulse 1.5s infinite; } /* Blue */
+.tool-installation-status.status-running { background-color: #5cb85c; color: #fff; } /* Green */
+.tool-installation-status.status-stopped { background-color: #d9534f; color: #fff; } /* Red */
+.tool-installation-status.status-error { background-color: #f44336; color: #fff; } /* Deeper Red */
+
+.tool-installation-actions {
+    margin-left: auto; /* Push actions to the right */
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.tool-installation-item p {
+    margin: 2px 0 0;
+
+    color: #6c757d;
+    min-width: fit-content;
+    flex-basis: 100%; /* Make details take full width below header */
+    padding-left: 5px; /* Indent details slightly */
+}
+
+.no-installations-message {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Add/Edit Tool Installation Modal */
+#toolInstallationModal .form-group {
+    margin-bottom: 15px;
+}
+#toolInstallationModal .form-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+#toolInstallationModal .form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Include padding in width */
+}
+#toolInstallationModal .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}

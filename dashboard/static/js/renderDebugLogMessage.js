@@ -2,7 +2,7 @@ const debugLogMessageTemplate = Handlebars.compile(`
 <div id="debug_log_message_{{message.id}}" class="conversation-log-item log-type-debug debug-log-item"
      data-id="{{message.id}}" data-created-at="{{message.created_at}}">
     <div class="message-header">
-        <strong>[{{formattedTimestamp}}]</strong> {{message.id}} <strong>Debug Log ({{message.event}}):</strong>
+        <strong>[{{formattedTimestamp}}]</strong> <strong>Debug Log ({{message.event}}):</strong>
         <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('debug_log_full_{{message.id}}')"><i class="fa fa-plus"></i> More </button>
     </div>
     <div id="debug_log_full_{{message.id}}" class="debug-log-full message-content hidden">

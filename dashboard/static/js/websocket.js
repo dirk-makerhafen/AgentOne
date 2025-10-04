@@ -1,6 +1,14 @@
 let websocket;
 let wsPath;
 
+// Global caches for various objects, following the existing pattern
+window.allAgents = window.allAgents || {};
+window.allAgentInstances = window.allAgentInstances || {};
+window.allAvailableModels = window.allAvailableModels || {};
+window.allAvailableSystems = window.allAvailableSystems || {};
+window.allToolInstallations = window.allToolInstallations || {};
+window.allToolDefinitions = window.allToolDefinitions || {};
+
 // Function to connect WebSocket, now takes targetType ('user') and targetPk (user_pk)
 function connectWebSocket(user_pk) {
     if (!user_pk) {
@@ -25,8 +33,11 @@ function connectWebSocket(user_pk) {
              }));
             requestProviderList();
             requestSystemList(); // Request systems list on WebSocket open
+            requestMcpList(); // Request MCP servers list on WebSocket open
+            requestToolDefinitionList()
          }
     };
+   
 
     websocket.onmessage = function(e) {
         const payload = JSON.parse(e.data);
@@ -46,9 +57,7 @@ function connectWebSocket(user_pk) {
                     // Clear the list before rendering to ensure any orphaned elements are removed.
                     agentListContainer.innerHTML = '';
                     payload.agents.forEach(agentData => {
-                        if (typeof allAgents !== 'undefined') {
-                            allAgents[agentData.id] = agentData;
-                        }
+                        window.allAgents[agentData.id] = agentData;
                         renderAgent(agentData);
                     });
                 }
@@ -62,9 +71,7 @@ function connectWebSocket(user_pk) {
                 break;
 
             case 'AgentInstance':
-                if (typeof allAgentInstances !== 'undefined') {
-                    allAgentInstances[payload.id] = payload;
-                }
+                window.allAgentInstances[payload.id] = payload;
                 // renderAgentInstance now handles all UI updates for an instance payload,
                 // including the header, settings, sidebar item, and instance-specific status bar.
                 // This ensures that even non-active tabs receive updates.
@@ -80,9 +87,7 @@ function connectWebSocket(user_pk) {
 
             case 'AgentInstanceList':
                 payload.instances.forEach(instanceData => { 
-                    if (typeof allAgentInstances !== 'undefined') {
-                        allAgentInstances[instanceData.id] = instanceData;
-                    }
+                    window.allAgentInstances[instanceData.id] = instanceData;
                     renderAgentInstance(instanceData)
                 });
                 break;
@@ -123,6 +128,14 @@ function connectWebSocket(user_pk) {
                 renderSingleProvider(payload, document.querySelector('#providers-list-body'));
                 break;
 
+            case 'MCPServer':
+                renderSingleMcpServer(payload);
+                break;
+
+            case 'list_mcp_servers': // This 'type' matches the message sent by consumer
+                renderMcpList(payload.data);
+                break;
+
             case 'ProviderDeleted':
                 const providerElement = document.getElementById(`provider_${payload.provider_pk}`);
                 if (providerElement) {
@@ -135,8 +148,71 @@ function connectWebSocket(user_pk) {
                 }
                 break;
 
+            case 'MCPServerDeleted':
+                const mcpServerElement = document.querySelector(`.mcp-server-item[data-id="${payload.mcp_server_pk}"]`);
+                if (mcpServerElement) {
+                    mcpServerElement.remove();
+                    addToConsoleArea(`MCP Server with ID ${payload.mcp_server_pk} has been deleted.`, 'info');
+                }
+                const mcpListBody = document.getElementById('mcp-list-body');
+                if (mcpListBody && mcpListBody.childElementCount === 0) {
+                    mcpListBody.innerHTML = '<p>No MCP Servers configured.</p>';
+                }
+                break;
+
             case 'System':
                 renderSystem(payload); // Assuming payload.system holds the single system object
+                break;
+
+            case 'ToolDefinitionList':
+                window.allToolDefinitions = {}; // Clear existing cache
+                payload.tool_definitions.forEach(td => {
+                    window.allToolDefinitions[td.id] = td;
+                });
+                renderToolDefinitionList(payload.tool_definitions);
+                break;
+
+            case 'ToolDefinition':
+                // This handles single object updates (e.g., after create or edit)
+                window.allToolDefinitions[payload.id] = payload;
+                // Re-render the entire list to reflect the change.
+                renderToolDefinitionList(Object.values(window.allToolDefinitions));
+                break;
+
+
+
+            case 'ToolInstallation':
+                // Update or add a single ToolInstallation
+                window.allToolInstallations[payload.id] = payload;
+                // Trigger re-rendering of the system that this installation belongs to
+                // We need to re-render the specific system's tool list
+                if (payload.system_id) {
+                    renderToolInstallationList(Object.values(window.allToolInstallations).filter(inst => inst.system_id === payload.system_id), payload.system_id);
+                }
+                break;
+
+            case 'ToolInstallationList':
+                // Clear cache for installations belonging to the requested system to avoid stale data
+                const systemIdForList = payload.tool_installations.length > 0 ? payload.tool_installations[0].system_id : null;
+                if (systemIdForList) {
+                    for (const key in window.allToolInstallations) {
+                        if (window.allToolInstallations[key].system_id === systemIdForList) {
+                            delete window.allToolInstallations[key];
+                        }
+                    }
+                }
+                payload.tool_installations.forEach(installation => {
+                    window.allToolInstallations[installation.id] = installation;
+                });
+                // Now render the list for the specific system
+                if (systemIdForList) {
+                    renderToolInstallationList(payload.tool_installations, systemIdForList);
+                }
+                break;
+
+            case 'ToolInstallationLogList':
+                // This message is handled by the new renderer
+                renderToolInstallationLogsInline(payload.logs);
                 break;
            
 
@@ -246,6 +322,7 @@ function connectWebSocket(user_pk) {
             default:
                 addToConsoleArea(`Unknown Payload Object: ${JSON.stringify(payload)}`, 'error');
         }
+        $(document).trigger('websocketMessage', [payload]);
     };
 
     websocket.onclose = function(e) {
@@ -280,5 +357,11 @@ function requestProviderList() {
 function requestSystemList() {
     if (websocket && websocket.readyState === WebSocket.OPEN) {
         websocket.send(JSON.stringify({ type: 'request_system_list' }));
+    }
+}
+
+function requestToolDefinitionList() {
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.send(JSON.stringify({ type: 'request_tool_definition_list' }));
     }
 }

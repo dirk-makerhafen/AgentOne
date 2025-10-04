@@ -4,6 +4,7 @@ from tools_subscriptions.models import ToolSubscription
 from .prompts import FUNCTIONS
 
 class SubscriptionsTool(BaseTool):
+    DESCRIPTION = "Create and manage subscriptions to recurring shell commands or Python scripts. This allows the agent to maintain situational awareness by receiving automatic, live updates of contextual information."
     functions = FUNCTIONS
 
     def get_header_parts(self):

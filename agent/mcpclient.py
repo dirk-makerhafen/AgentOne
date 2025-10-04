@@ -1,109 +1,82 @@
-"""
+import json
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from executor.primitives import manage_tool_process
+from tools_mcp.models import MCPServer
 
-COPY OF:
-
-MCP SSE Client - A Python client for interacting with Model Context Protocol (MCP) endpoints.
-
-This module provides a client for connecting to MCP endpoints using Server-Sent Events (SSE),
-listing available tools, and invoking tools with parameters.
-"""
-
-from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
-from dataclasses import dataclass
-from mcp import ClientSession
-from mcp.client.sse import sse_client
-from pydantic import BaseModel
-import asyncio
-
-@dataclass
-class ToolParameter:
-    """Represents a parameter for a tool.
-    
-    Attributes:
-        name: Parameter name
-        parameter_type: Parameter type (e.g., "string", "number")
-        description: Parameter description
-        required: Whether the parameter is required
-        default: Default value for the parameter
-    """
-    name: str
-    parameter_type: str
-    description: str
-    required: bool = False
-    default: Any = None
-
-
-@dataclass
-class ToolDef:
-    """Represents a tool definition.
-    
-    Attributes:
-        name: Tool name
-        description: Tool description
-        input_schema: The full JSON schema for the tool's input parameters.
-        metadata: Optional dictionary of additional metadata
-        identifier: Tool identifier (defaults to name)
-    """
-    name: str
-    description: str
-    input_schema: Dict[str, Any]
-    metadata: Optional[Dict[str, Any]] = None
-    identifier: str = ""
+if TYPE_CHECKING:
+    from agent.models.agent import AgentInstance
 
 class MCPClient:
-    """Client for interacting with Model Context Protocol (MCP) endpoints"""
-    
-    def __init__(self, name, endpoint: str):
-        """Initialize MCP client with endpoint URL
-        
-        Args:
-            endpoint: The MCP endpoint URL (must be http or https)
-        """
-        if urlparse(endpoint).scheme not in ("http", "https"):
-            raise ValueError(f"Endpoint {endpoint} is not a valid HTTP(S) URL")
-        self.endpoint = endpoint
+    """
+    A thin proxy client that dispatches MCP calls to the stateful client
+    living on the remote executor via the 'manage_tool_process' primitive.
+    """
+    def __init__(self, name: str, mcp_server: MCPServer, agent_instance: 'AgentInstance'):
         self.name = name
-
-    def list_tools(self):
-        return asyncio.run(self._list_tools_async())
-
-    def invoke_tool(self, tool_name: str, kwargs: Dict[str, Any]):
-        return asyncio.run(self._invoke_tool_async(tool_name, kwargs))
-
-    async def _list_tools_async(self):
-        """List available tools from the MCP endpoint
+        self.mcp_server = mcp_server
+        self.agent_instance = agent_instance
+        self.system = agent_instance.system
         
-        Returns:
-            List of ToolDef objects describing available tools
-        """
-        tools = []
-        async with sse_client(self.endpoint) as streams:
-            async with ClientSession(*streams) as session:
-                await session.initialize()
-                tools_result = await session.list_tools()
-                for tool in tools_result.tools:
-                    # Convert ToolDef to OpenAI function tool format
-                    openai_parameters = {"type": "object", "properties": tool.inputSchema["properties"]}
-                    required_params = tool.inputSchema.get("required", []) # Get required params from schema
-                    if required_params:
-                        openai_parameters["required"] = required_params
-                    openai_tool_format = {
-                        "type": "function",
-                        "function": {
-                            "name": f"{self.name}.{tool.name}",
-                            "description": tool.description if tool.description is not None else "",
-                            "parameters": openai_parameters
-                        }
-                    }
-                    tools.append(openai_tool_format)
-        return tools
+        if not self.system:
+            raise ValueError("MCPClient requires an agent_instance with an assigned system.")
+        if not mcp_server.tool_installation:
+            raise ValueError("MCPServer is not linked to a ToolInstallation.")
+            
+        self.process_id = str(mcp_server.tool_installation.pk)
 
-    async def _invoke_tool_async(self, tool_name: str, kwargs: Dict[str, Any]):
-        async with sse_client(self.endpoint) as streams:
-            async with ClientSession(*streams) as session:
-                await session.initialize()
-                result = await session.call_tool(tool_name, kwargs) 
-                content = "\n".join([result.model_dump_json() for result in result.content])
-                success = False if result.isError else True,
-                return success, content
+    def list_tools(self) -> List[Dict[str, Any]]:
+        """Dispatches a 'list_tools' call to the remote executor."""
+        result = manage_tool_process(
+            system=self.system,
+            action='list_tools',
+            process_id=self.process_id
+        )
+
+        if result.get('status') == 'success' and result.get('data'):
+            mcp_tools_raw = result['data'].get('tools', [])
+            # Store the raw tools in the MCPServer model for caching/display
+            self.mcp_server.tools = mcp_tools_raw
+            self.mcp_server.save(send_to_client=True)
+            return self._format_tools_for_openai(mcp_tools_raw)
+        else:
+            print(f"Error listing tools for {self.name}: {result.get('message')}")
+            return []
+
+    def invoke_tool(self, tool_name: str, kwargs: Dict[str, Any]) -> (bool, str):
+        """Dispatches an 'invoke_tool' call to the remote executor."""
+        method_name = tool_name.split('.', 1)[-1]
+
+        result = manage_tool_process(
+            system=self.system,
+            action='invoke_tool',
+            process_id=self.process_id,
+            tool_name=method_name,
+            tool_kwargs=kwargs
+        )
+
+        if result.get('status') == 'success':
+            return True, json.dumps(result.get('data', ''))
+        else:
+            return False, f"Error invoking tool {tool_name}: {result.get('message')}"
+
+    def _format_tools_for_openai(self, mcp_tools: list) -> List[Dict[str, Any]]:
+        """Converts a list of raw MCP tool definitions to the OpenAI function tool format."""
+        openai_tools = []
+        for tool in mcp_tools:
+            input_schema = tool.get('inputSchema', {})
+            properties = input_schema.get('properties', {})
+            
+            openai_parameters = {"type": "object", "properties": properties}
+            required = input_schema.get("required", [])
+            if required:
+                openai_parameters["required"] = required
+            
+            openai_tools.append({
+                "type": "function",
+                "function": {
+                    "name": f"{self.name}.{tool.get('name')}",
+                    "description": tool.get('description', ''),
+                    "parameters": openai_parameters
+                }
+            })
+        return openai_tools

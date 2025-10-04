@@ -11,6 +11,7 @@ from .permissions import check_permission
 from tools_filesystem.prompts import FUNCTIONS
 
 class FilesystemTool(BaseTool):
+    DESCRIPTION = "Offers a comprehensive set of functions to interact with the file system. The agent can read, write, append, and modify files, as well as list directory contents."
     functions = FUNCTIONS
 
     def get_header_parts(self):
@@ -106,7 +107,6 @@ class FilesystemTool(BaseTool):
         except Exception as e:
             return False, {"status": "error", "message": f"An unexpected error occurred: {type(e).__name__}: {e}\n{traceback.format_exc()}"}
     
-
     def fs_python_edit(self, toolCall, path, source, classname = None, functionname = None):
         try:
             abs_path, rel_path = clean_path(toolCall.agentInstance.workingdir, path)
@@ -145,7 +145,11 @@ class FilesystemTool(BaseTool):
                         indent = ""
                     for i, node in enumerate(target_scope.body):
                         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == functionname:
-                            start, end = node.lineno - 1, node.end_lineno
+                            # Correctly determine the start line, accounting for decorators.
+                            start_node = node.decorator_list[0] if node.decorator_list else node
+                            start = start_node.lineno - 1
+                            end = node.end_lineno
+
                             lines[start:end] = [textwrap.indent(dedented_source, indent)]
                             replaced = True
                             break
@@ -159,7 +163,10 @@ class FilesystemTool(BaseTool):
                     indent = ""
                     for i, node in enumerate(tree.body):
                         if isinstance(node, ast.ClassDef) and node.name == classname:
-                            start, end = node.lineno - 1, node.end_lineno
+                            # Correctly determine start line for classes, accounting for decorators.
+                            start_node = node.decorator_list[0] if node.decorator_list else node
+                            start = start_node.lineno - 1
+                            end = node.end_lineno
                             lines[start:end] = [dedented_source]
                             replaced = True
                             break
@@ -178,7 +185,7 @@ class FilesystemTool(BaseTool):
             return True, {}
         except Exception as e:
             return False, {"status": "error", "message": f"An unexpected error occurred: {type(e).__name__}: {e}\n{traceback.format_exc()}"}
-    
+
     def get_history_limiting_rules(self):
         limit = self.agentInstance.limit_max_conversation_messages
         loaded_paths = {item.path for item in self.get_loaded_items()}

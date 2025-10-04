@@ -2,7 +2,7 @@ const llmResponseMessageTemplate = Handlebars.compile(`
 <div id="llm_response_message_{{id}}" class="conversation-log-item log-type-llm llm-response-item"
         data-id="{{id}}" data-created-at="{{created_at}}">
     <div class="message-header">
-        <strong>[{{formattedTimestamp}}]</strong> {{id}} <strong>{{object}} : </strong>
+        <strong>[{{formattedTimestamp}}]</strong> <strong>{{object}} : </strong>
         {{tokens_display}}
         <button class="btn btn-xs btn-default log-btn toggle-raw-json" data-target="llm_response_{{id}}" title="Show Raw JSON"><i class="fa fa-code"></i> raw</button>
     </div>

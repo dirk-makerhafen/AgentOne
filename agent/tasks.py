@@ -10,6 +10,7 @@ from agent.models.conversation import ConversationMessage
 from agent.models.agent import  AgentInstance
 from agent.models.debug import DebugLogEntry
 from common.models import PromptString
+from systems.tool_lifecycle_manager import get_tool_status,  install_tool, start_tool
 from tools_common.models import ToolCall
 from dashboard.tasks import send_object_to_clients
 from tools_common.tool_parser import extract_tool_call_parts
@@ -17,6 +18,8 @@ from tools_filesystem.fsutils import get_relative_path
 from tools_filesystem.models import FsLogEntry
 from agent.history_limiter import HistoryLimiter
 from tools_subscriptions.models import ToolSubscription
+from tools_common.models import ToolDefinition, ToolInstallation
+from tools_mcp.models import MCPServer
 
 @shared_task
 def celery_create_query(agentinstance_id):
@@ -53,14 +56,25 @@ def celery_create_query(agentinstance_id):
                 'tpId': toolInstructions.id, 
         }]})
 
+        # Collect unique tool classes that are active for this agentInstance to get header/content parts
+        from agent.models.agent import BUILTIN_TOOL_CLASS_MAP
+        unique_active_tool_classes = set()
+        for tool_def in agentInstance.toolname_to_definition.values(): # Iterate over ToolDefinition objects
+            if tool_def.is_builtin and tool_def.name in BUILTIN_TOOL_CLASS_MAP:
+                unique_active_tool_classes.add(BUILTIN_TOOL_CLASS_MAP[tool_def.name])
+            # For non-builtin tools, if they expose classmethods for header/content, they would be added here.
+            # This part will be refined as external tool integration progresses.
+
         toolheaderparts = []
-        for tool in agentInstance.available_tools:
-            toolheaderparts.extend(tool(agentInstance).get_header_parts())
+        for tool_class in unique_active_tool_classes:
+            if hasattr(tool_class, 'get_header_parts') and callable(getattr(tool_class, 'get_header_parts')):
+                toolheaderparts.extend(tool_class(agentInstance).get_header_parts())
         messages.append({"role": "user", "parts": toolheaderparts })
 
         toolcontentparts = []
-        for tool in agentInstance.available_tools:
-            toolcontentparts.extend(tool(agentInstance).get_content_parts())
+        for tool_class in unique_active_tool_classes:
+            if hasattr(tool_class, 'get_content_parts') and callable(getattr(tool_class, 'get_content_parts')):
+                toolcontentparts.extend(tool_class(agentInstance).get_content_parts())
         messages.append({"role": "user", "parts": toolcontentparts })
 
         # Execute active tool subscriptions and inject their output into the context
@@ -156,8 +170,17 @@ def get_chat_messages(agentInstance):
     all_entries.sort(key=lambda x: x.created_at, reverse=True) # Sort descending for HistoryLimiter processing
 
     # Collect history limiting rule templates from all available tools
+
+    from agent.models.agent import BUILTIN_TOOL_CLASS_MAP
+    unique_active_tool_classes = set()
+    for tool_def in agentInstance.toolname_to_definition.values(): # Iterate over ToolDefinition objects
+        if tool_def.is_builtin and tool_def.name in BUILTIN_TOOL_CLASS_MAP:
+            unique_active_tool_classes.add(BUILTIN_TOOL_CLASS_MAP[tool_def.name])
+        # For non-builtin tools, if they expose classmethods for header/content, they would be added here.
+        # This part will be refined as external tool integration progresses.
+
     tool_call_rule_templates = []
-    for tool_class in agentInstance.available_tools:
+    for tool_class in unique_active_tool_classes:
         tool_instance = tool_class(agentInstance)
         if hasattr(tool_instance, 'get_history_limiting_rules'):
             tool_call_rule_templates.extend(tool_instance.get_history_limiting_rules())
@@ -414,3 +437,38 @@ def decide_next_step(agent_instance):
     agent_instance.status = 'IDLE'
     agent_instance.automated_step_count = 0  # Reset counter, just in case
     agent_instance.save()
+
+
+@shared_task
+def celery_trigger_tool_lifecycle_task(agentinstance_pk):
+    try:
+        agent_instance = AgentInstance.objects.get(instance_pk=agentinstance_pk)
+        if not agent_instance.agent or not agent_instance.system:
+            print(f"AgentInstance {agent_instance.pk} has no agent or system assigned. Skipping tool lifecycle trigger.")
+            return
+
+        # Iterate through tools available to the Agent (defined on the Agent model)
+        for tool_def in agent_instance.agent.available_tools.filter(is_builtin=False):
+            # Check for existing installation on the assigned system
+            installation, created = ToolInstallation.objects.get_or_create(
+                tool_definition=tool_def,
+                system=agent_instance.system,
+                defaults={'status': ToolInstallation.Status.NOT_INSTALLED}
+            )
+
+            current_status = get_tool_status.delay(installation) # Get real-time status from system
+            if current_status != ToolInstallation.Status.RUNNING: # If not running, attempt to install/start
+                print(f"Tool '{tool_def.name}' is not running (current status: {current_status}) on system '{agent_instance.system.name}'. Triggering lifecycle action.")
+                if current_status == ToolInstallation.Status.NOT_INSTALLED:
+                    install_tool.delay(installation.pk)
+                elif current_status == ToolInstallation.Status.STOPPED or current_status == ToolInstallation.Status.ERROR or current_status == ToolInstallation.Status.INSTALLED:
+                    start_tool.delay(installation.pk)
+            else:
+                print(f"Tool '{tool_def.name}' is already {current_status} on system '{agent_instance.system.name}'.")
+
+
+    except AgentInstance.DoesNotExist:
+        print(f"AgentInstance with pk {agentinstance_pk} not found for tool lifecycle trigger.")
+    except Exception as e:
+        print(f"Error in celery_trigger_tool_lifecycle_task for AgentInstance {agentinstance_pk}: {e}")
+        traceback.print_exc()

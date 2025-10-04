@@ -1,5 +1,5 @@
 
-DESCRIPTION = '''
+INSTRUCTIONS = '''
 # Python Tool and VARS Dictionary
 
 **Purpose:** The `python` tool allows you to execute arbitrary Python code. This is mandatory for all deterministic and procedural tasks, including but not limited to:

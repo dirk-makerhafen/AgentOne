@@ -5,6 +5,7 @@ from tools_subscriptions.models import ToolSubscription
 from .prompts import FUNCTIONS
 
 class ShellTool(BaseTool):
+    DESCRIPTION = "Executes arbitrary shell commands and scripts in bash, PowerShell, or cmd. Fundamental for interacting with the operating system, running programs, and managing system-level tasks."
     functions = FUNCTIONS
 
     def get_header_parts(self):

@@ -22,6 +22,9 @@
 
 @import url('components/status_bar.css');
 @import url('components/_tabs.css');
+@import url("components/mcp.css");
+@import url("components/tool_registry.css");
+
 /* --- Prompt Templates Table Styling --- */
 .prompts-table-container {
     overflow-x: auto; /* Allow horizontal scrolling only for the table if it absolutely needs it */
@@ -160,7 +163,7 @@
     display: inline-block;
     padding: 3px 7px;
     border-radius: 3px;
-    font-size: 0.8em;
+
     font-weight: bold;
     color: #fff;
     text-transform: uppercase;
@@ -404,4 +407,95 @@
 .default-split-content.drag-over {
     background-color: #e0f0ff; /* A light blue to indicate a valid drop target */
     border: 2px dashed #a0c0ff;
+}
+
+
+
+/* --- Tool Installation Logs Modal --- */
+.logs-container {
+    height: 60vh; /* Good height for log viewing */
+    overflow-y: auto;
+    background-color: #1e1e1e; /* Dark background for logs */
+    color: #d4d4d4; /* Light text */
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    font-size: 0.85em;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.logs-table th, .logs-table td {
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #333;
+}
+
+.logs-table th {
+    background-color: #252526;
+    position: sticky;
+    top: 0;
+}
+
+.logs-table .log-message pre {
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    color: inherit;
+}
+
+.logs-table .log-level-info {
+    color: #3e9f3e; /* Green */
+    font-weight: bold;
+}
+
+.logs-table .log-level-error {
+    color: #d16969; /* Red */
+    font-weight: bold;
+}
+
+.logs-table .log-level-row-error {
+    background-color: rgba(210, 105, 105, 0.1); /* Slight red highlight for error rows */
+}
+
+
+/* Inline Tool Installation Logs */
+.tool-installation-item {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+.tool-installation-item-header, .tool-installation-details {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.tool-installation-details {
+    margin-top: 5px;
+
+    color: #b0b0b0;
+}
+.tool-installation-name {
+    font-weight: bold;
+    flex-grow: 1;
+}
+.tool-installation-actions {
+    margin-left: auto;
+}
+.tool-installation-logs {
+
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 12px;
 }

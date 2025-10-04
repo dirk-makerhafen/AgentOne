@@ -31,15 +31,16 @@ def handle_system_update(consumer, user_pk, payload):
         system_pk = payload.get('system_pk')
         data = payload.get('data', {})
         system = System.objects.get(pk=system_pk)
-        system.host = data.get('host', system.host)
-        system.port = data.get('port', system.port)
-        system.username = data.get('username', system.username)
-        system.ssh_key_path = data.get('ssh_key_path', system.ssh_key_path)
-        system.project_path = data.get('project_path', system.project_path)
-        system.celery_service_name = data.get('celery_service_name', system.celery_service_name)
+
+        # Update fields from the payload if they exist
+        system.name = data.get('name', system.name)
+        system.description = data.get('description', system.description)
+        system.is_remote_executor = data.get('is_remote_executor', system.is_remote_executor)
+        system.executor_url = data.get('executor_url', system.executor_url)
+        system.executor_api_key = data.get('executor_api_key', system.executor_api_key)
+        system.executor_mode = data.get('executor_mode', system.executor_mode)
         system.os = data.get('os', system.os)
-        if data.get('password'):
-            system.password = data['password']
+
         system.save()
 
     except System.DoesNotExist:

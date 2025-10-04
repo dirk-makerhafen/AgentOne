@@ -14,8 +14,7 @@ from dashboard.consumers import consumers
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": AuthMiddlewareStack(
-        URLRouter(            [
-            re_path(r'ws/agent/(?P<instance_pk>\d+)/$', consumers.AgentConsumer.as_asgi()),
+        URLRouter([
             re_path(r'ws/(?P<user_pk>\d+)/$', consumers.AgentConsumer.as_asgi()),
         ])
     ),

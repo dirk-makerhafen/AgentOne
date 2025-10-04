@@ -79,6 +79,22 @@ function updateTabContentForPanel(tabId, parentPanelId) {
             }
             addToConsoleArea("Could not load Prompt Templates. WebSocket not connected.", 'warning');
         }
+    } else if (tabId === 'tabContent_mcp') {
+        const mcpTabContent = parentElement.querySelector(`#${tabId}`);
+        if (mcpTabContent && websocket && websocket.readyState === WebSocket.OPEN) {
+            requestMcpList();
+            const mcpListBody = mcpTabContent.querySelector('#mcp-list-body');
+            if (mcpListBody) {
+                mcpListBody.innerHTML = '<p class="log-info">Loading MCP Servers...</p>';
+            }
+            addToConsoleArea("Client: Requesting MCP Servers...", 'info');
+        } else if (mcpTabContent) {
+            const mcpListBody = mcpTabContent.querySelector('#mcp-list-body');
+            if (mcpListBody) {
+                mcpListBody.innerHTML = '<p class="log-warning">Could not load MCP Servers. WebSocket not connected.</p>';
+            }
+            addToConsoleArea("Could not load MCP Servers. WebSocket not connected.", 'warning');
+        }
     }
 }
 
@@ -130,14 +146,14 @@ function openMainTab(evt, tabId, parentPanelId = 'mainTabPanel') {
 
     // Find and activate the corresponding tab button within the current panel's tab bar
     if (tabBar) {
-        tabBar.querySelectorAll('.tab-button').forEach(button => {
-            const buttonOnClick = button.getAttribute('onclick');
-            // Check if the onclick event targets the current tabId and the same parentPanelId
-            if (buttonOnClick && buttonOnClick.includes(`openMainTab(event, '${tabId}'`)) {
-                button.classList.add("active");
-                button.style.display = "inline-block"; // Ensure the button is visible
-            }
-        });
+        // Construct the expected button ID from the tab content ID
+        // e.g., 'tabContent_systems' -> 'tabButton_systems'
+        const buttonId = tabId.replace('tabContent_', 'tabButton_');
+        const tabButton = document.getElementById(buttonId);
+        if (tabButton) {
+            tabButton.classList.add("active");
+            tabButton.style.display = "inline-block"; // Ensure the button is visible
+        }
     }
 
     reinitializeAllSplits();

@@ -5,6 +5,7 @@ from django.db.models import Q
 from tools_a2a.prompts import FUNCTIONS
 
 class A2ATool(BaseTool):
+    DESCRIPTION = "Facilitates communication between different agent instances. Allows an agent to send messages to other agents and manage its own public description to inform others of its current status."
     functions = FUNCTIONS
 
     def get_header_parts(self):

@@ -117,7 +117,7 @@ This directory provides a robust and version-controlled filesystem interaction l
 
 ## Filesystem Prompts (`tools_filesystem/prompts.py`)
 
-*   **`DESCRIPTION`**: Comprehensive text describing the filesystem tools, core principles, best practices, available tools (`fs_load`, `fs_unload`, etc.), and how to interpret `FS_TOOL_CONTENT` messages.
+*   **`INSTRUCTIONS`**: Comprehensive text describing the filesystem tools, core principles, best practices, available tools (`fs_load`, `fs_unload`, etc.), and how to interpret `FS_TOOL_CONTENT` messages.
 *   **`CONTENT_INJECTION`**: Jinja2 template for formatting `FsLogEntry` data when injected into the LLM's context.
 *   **`FUNCTIONS`**: A dictionary defining the schema for all `fs_*` tool calls, including descriptions and parameters.
 

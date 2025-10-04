@@ -3,7 +3,7 @@ const toolCallMessageTemplate = Handlebars.compile(`
 <div id="tool_call_message_{{message.id}}" class="conversation-log-item log-type-tool tool-log-item"
      data-id="{{message.id}}" data-created-at="{{message.created_at}}">
     <div class="message-header">
-        <strong>[{{formattedTimestamp}}]</strong> {{message.id}} <strong>Tool Call ({{message.function_name}}):</strong> Status: <strong class="status-{{message.status}}">{{message.status}}</strong>
+        <strong>[{{formattedTimestamp}}]</strong> <strong>Tool Call ({{message.function_name}}):</strong> Status: <strong class="status-{{message.status}}">{{message.status}}</strong>
         <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('tool_call_full_message_{{message.id}}')" title="Show Details"><i class="fa fa-plus"></i> More </button>
     </div>
     <div id="tool_call_full_message_{{message.id}}" class="toolcall-full message-content hidden">

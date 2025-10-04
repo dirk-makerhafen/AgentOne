@@ -2,7 +2,7 @@ const interAgentMessageTemplate = Handlebars.compile(`
 <div id="inter_agent_message_{{message.id}}" class="conversation-log-item log-type-debug inter-agent-message-item"
      data-id="{{message.id}}" data-created-at="{{message.created_at}}">
     <div class="message-header">
-        <strong>[{{formattedTimestamp}}]</strong> {{message.id}} <strong>{{message.object}} : </strong>
+        <strong>[{{formattedTimestamp}}]</strong> <strong>{{message.object}} : </strong>
         <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('inter_agent_message_full_{{message.id}}', {{message.agentInstance_id}})">
             <i class="fa fa-plus"></i> More 
         </button>

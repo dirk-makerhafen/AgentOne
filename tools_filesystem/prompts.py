@@ -1,7 +1,7 @@
 
 MARKER = 'FS_TOOL_CONTENT'
 
-DESCRIPTION = """
+INSTRUCTIONS = """
 # Filesystem Tools: File and Directory Management
 
 You have access to a set of external `fs_*` tools to manage file and directory context. Use them to load, unload, write, append, or update files and directories during your tasks.

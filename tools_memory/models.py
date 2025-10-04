@@ -7,8 +7,8 @@ class MemoryItem(ModelWithJsonData):
     agent = models.ForeignKey("agent.Agent", on_delete=models.CASCADE, related_name='memoryItems')
     agentInstance = models.ForeignKey("agent.AgentInstance", on_delete=models.CASCADE, related_name='memoryItems')
     conversationMessage = models.ForeignKey("agent.ConversationMessage", null=True, default=None, on_delete=models.CASCADE, related_name='memoryItems')
-    toolCall = models.ForeignKey("tools_common.ToolCall", on_delete=models.CASCADE, related_name='memoryItems', default=None, null=True)
-    next_version = models.OneToOneField("MemoryItem", on_delete=models.CASCADE, related_name='prev_version', null=True, default=None)
+    toolCall = models.ForeignKey("tools_common.ToolCall", on_delete=models.SET_DEFAULT, related_name='memoryItems', default=None, null=True)
+    next_version = models.OneToOneField("MemoryItem", on_delete=models.SET_DEFAULT, related_name='prev_version', null=True, default=None)
  
     track = models.CharField(max_length=128, null=True, blank=True) # New field
     layer = models.CharField(max_length=128, null=True, blank=True) # New field

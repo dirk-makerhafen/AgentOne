@@ -43,6 +43,12 @@
                     <button class="nav-ribbon" onclick="openMainTab(event, 'tabContent_prompts', 'mainTabPanel')">
                         <i class="fa fa-pencil-square-o"></i> Prompts
                     </button>
+                    <button class="nav-ribbon" onclick="openMainTab(event, 'tabContent_mcp', 'mainTabPanel')">
+                        <i class="fa fa-server"></i> MCP
+                    </button>
+                    <button class="nav-ribbon" onclick="openMainTab(event, 'tabContent_tool_registry', 'mainTabPanel')">
+                        <i class="fa fa-wrench"></i> Tool Registry
+                    </button>
                 </div>
             </div>   
             <div class="resizable-panel flex-column global-console-output-area" id="consoleOutputArea" data-size-pc=30>
@@ -68,6 +74,14 @@
                         <button class="tab-button" id="tabButton_prompts" data-tab-id="tabButton_prompts" data-tab-content-id="tabContent_prompts" draggable="true" ondragstart="dragTab(event, 'tabButton_prompts', 'tabContent_prompts')" onclick="openMainTab(event, 'tabContent_prompts', 'mainTabPanel')">
                             <span>Prompts</span>
                             <i class="fa fa-times close-tab-btn" onclick="event.stopPropagation(); closeMainTab('tabContent_prompts')"></i>
+                        </button>
+                        <button class="tab-button" id="tabButton_mcp" data-tab-id="tabButton_mcp" data-tab-content-id="tabContent_mcp" draggable="true" ondragstart="dragTab(event, 'tabButton_mcp', 'tabContent_mcp')" onclick="openMainTab(event, 'tabContent_mcp', 'mainTabPanel')" style="display: none;">
+                            <span>MCP</span>
+                            <i class="fa fa-times close-tab-btn" onclick="event.stopPropagation(); closeMainTab('tabContent_mcp')"></i>
+                        </button>
+                        <button class="tab-button" id="tabButton_tool_registry" data-tab-id="tabButton_tool_registry" data-tab-content-id="tabContent_tool_registry" draggable="true" ondragstart="dragTab(event, 'tabButton_tool_registry', 'tabContent_tool_registry')" onclick="openMainTab(event, 'tabContent_tool_registry', 'mainTabPanel')" style="display: none;">
+                            <span>Tool Registry</span>
+                            <i class="fa fa-times close-tab-btn" onclick="event.stopPropagation(); closeMainTab('tabContent_tool_registry')"></i>
                         </button>
                         <div class="split-controls-container" style="display: flex; margin-left: auto; gap: 5px; padding-top: 2px;">
 
@@ -126,6 +140,28 @@
                         </table>
                     </div>
                 </div>
+                <div id="tabContent_mcp" class="resizable-container tab-content" data-orientation="vertical" style="display: none;">
+                    <div id="mcp-list-header" class="sidebar-list-header">
+                        <span>MCP Servers</span>
+                        <button id="add-mcp-server-btn" class="btn btn-xs btn-default" title="Add New MCP Server">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="mcp-list-body" class="sidebar-list-body">
+                        <!-- MCP server list will be rendered here by renderMcpList.js -->
+                    </div>
+                </div>
+                <div id="tabContent_tool_registry" class="resizable-container tab-content" data-orientation="vertical" style="display: none;">
+                    <div id="tool-registry-list-header" class="sidebar-list-header">
+                        <span>Tool Registry</span>
+                        <button id="add-tool-definition-btn" class="btn btn-xs btn-default" title="Register New Tool">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="tool-registry-list-body" class="sidebar-list-body">
+                        <!-- Tool Definitions will be rendered here by renderToolDefinitionList.js -->
+                    </div>
+                </div>
                 <!-- Dynamic agent instance tabs will be appended here by renderAgentInstanceTabContent.js -->
 
             </div>
@@ -163,6 +199,7 @@
     <script src="{% static 'js/renderInterAgentMessage.js' %}"></script>
     <script src="{% static 'js/renderLLMQueryMessage.js' %}"></script>
     <script src="{% static 'js/renderLLMResponseMessage.js' %}"></script>
+    <script src="{% static 'js/renderMcpList.js' %}"></script>
 
     <script src="{% static 'js/renderPromptList.js' %}"></script>
     <script src="{% static 'js/renderProviderList.js' %}"></script>
@@ -175,6 +212,8 @@
     <script src="{% static 'js/renderSidebarVars.js' %}"></script>
     <script src="{% static 'js/renderSystemList.js' %}"></script>    
     <script src="{% static 'js/renderToolCallMessage.js' %}"></script>
+    <script src="{% static 'js/renderToolDefinitionList.js' %}"></script>
+
 
     <script src="{% static 'js/resizable.js' %}"></script>
     <script src="{% static 'js/splitpanel.js' %}"></script>
@@ -223,125 +262,58 @@
     </script>
 </body>
 </html>
-    <!-- Revert File Changes Modal -->
-    <div id="revertFileModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close-button" onclick="cancelRevert()">×</span>
-                <h2>Revert File Changes</h2>
-            </div>
-            <div class="modal-body">
-                <p>You are about to revert changes for file: <strong id="revertFilePath"></strong></p>
-                <p>This will write the previous version of the file back to the filesystem.</p>
-                <div class="form-group">
-                    <label for="revertComment">Reason for reverting (For LLM):</label>
-                    <textarea id="revertComment" class="form-control" rows="3" placeholder="E.g., 'Agent introduced a bug', 'Incorrect change', 'Experiment failed'"></textarea>
+    {% include 'modals/revert_file_modal.html' %}
+    {% include 'modals/revert_all_fs_modal.html' %}
+    {% include 'modals/provider_add_modal.html' %}
+    {% include 'modals/provider_edit_modal.html' %}
+    {% include 'modals/api_key_add_modal.html' %}
+
+    <!-- Handlebars Template for MCP Server List Items (produces syntax errors.) -->
+    {% verbatim %}
+    <script id="mcp-server-list-template" type="text/x-handlebars-template">
+        {{#each this}}
+            <div class="mcp-server-item" data-id="{{this.id}}">
+                <div class="mcp-server-header">
+                    <span class="mcp-server-name">{{this.name}}</span>
+                    <span class="mcp-server-status status-{{this.status}}">{{this.status}}</span>
+                    <div class="mcp-server-actions">
+                        <button class="btn btn-xs btn-default refresh-mcp-server-btn" title="Refresh Tools">
+                            <i class="fa fa-refresh"></i>
+                        </button>
+                        <button class="btn btn-xs btn-default edit-mcp-server-btn" title="Edit Server">
+                            <i class="fa fa-pencil"></i>
+                        </button>
+                        <button class="btn btn-xs btn-danger delete-mcp-server-btn" title="Delete Server">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button class="btn btn-xs btn-default toggle-tools-btn" title="Toggle Tools">
+                            <i class="fa fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mcp-server-details">
+                    <p><strong>Endpoint:</strong> <span class="endpoint-url">{{this.endpoint_url}}</span></p>
+                    {{#if this.last_error}}
+                        <p class="error-message"><strong>Last Error:</strong> {{this.last_error}}</p>
+                    {{/if}}
+                    <div class="mcp-server-tools" style="display: none;">
+                        <h4>Available Tools:</h4>
+                         {{#if this.tools}}
+                            <ul>
+                                
+                            </ul>
+                        {{else}}
+                            <p>No tools discovered or connected.</p>
+                        {{/if}}
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="cancelRevert()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmRevert()">Revert</button>
-            </div>
-        </div>
-    </div>
-    <!-- Revert ALL File Changes Modal -->
-    <div id="revertAllFsModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close-button" onclick="cancelRevertAll()">×</span>
-                <h2>Revert ALL Filesystem Changes</h2>
-            </div>
-            <div class="modal-body">
-                <p>You are about to revert the ENTIRE filesystem managed by this agent instance to the state it was in at <strong id="revertAllFsTimestamp"></strong>, corresponding to the log entry for file: <strong id="revertAllFsFilePath"></strong></p>
-                <p>This action will revert all files that were modified, created, or deleted by the agent up to this historical point. This is a potentially destructive action.</p>
-                <div class="form-group">
-                    <label for="revertAllFsComment">Reason for reverting (optional, for LLM):</label>
-                    <textarea id="revertAllFsComment" class="form-control" rows="3" placeholder="E.g., 'Agent introduced a major bug', 'Rollback to stable state', 'Clean slate for new task'"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="cancelRevertAll()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmRevertAll()">Revert All Changes</button>
-            </div>
-        </div>
-    </div>   
-    <!-- Add Provider Modal -->
-    <div id="addProviderModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close-button" onclick="document.getElementById('addProviderModal').style.display='none'">&times;</span>
-                <h2>Add New API Provider</h2>
-            </div>
-            <div class="modal-body">
-                <form id="addProviderForm">
-                    <div class="form-group">
-                        <label for="providerName">Provider Name:</label>
-                        <input type="text" id="providerName" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="providerUrl">Provider URL:</label>
-                        <input type="url" id="providerUrl" class="form-control" placeholder="https://api.example.com/v1">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="document.getElementById('addProviderModal').style.display='none'">Cancel</button>
-                <button id="saveProviderBtn" class="btn btn-primary">Save Provider</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Provider Modal -->
-    <div id="editProviderModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close-button" onclick="document.getElementById('editProviderModal').style.display='none'">&times;</span>
-                <h2>Edit API Provider</h2>
-            </div>
-            <div class="modal-body">
-                <form id="editProviderForm">
-                    <input type="hidden" id="editProviderId">
-                    <div class="form-group">
-                        <label for="editProviderName">Provider Name:</label>
-                        <input type="text" id="editProviderName" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editProviderUrl">Provider URL:</label>
-                        <input type="url" id="editProviderUrl" class="form-control" placeholder="https://api.example.com/v1">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="document.getElementById('editProviderModal').style.display='none'">Cancel</button>
-                <button id="updateProviderBtn" class="btn btn-primary">Save Changes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add API Key Modal -->
-    <div id="addApiKeyModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close-button" onclick="document.getElementById('addApiKeyModal').style.display='none'">&times;</span>
-                <h2>Add API Key for <span id="addApiKeyProviderName"></span></h2>
-            </div>
-            <div class="modal-body">
-                <form id="addApiKeyForm">
-                    <input type="hidden" id="addApiKeyProviderId">
-                    <div class="form-group">
-                        <label for="apiKeyInput">API Key:</label>
-                        <input type="text" id="apiKeyInput" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="apiKeyComment">Comment (Optional):</label>
-                        <input type="text" id="apiKeyComment" class="form-control" placeholder="e.g., Personal Key, Test Key">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="document.getElementById('addApiKeyModal').style.display='none'">Cancel</button>
-                <button id="saveApiKeyBtn" class="btn btn-primary">Save Key</button>
-            </div>
-        </div>
-    </div>
-   
+        {{/each}}
+    </script>
+    {% endverbatim %}
+ 
+    {% include 'modals/mcp_server_modal.html' %}
+    {% include 'modals/tool_definition_add_modal.html' %}
+    {% include 'modals/tool_definition_edit_modal.html' %}
+    {% include 'modals/agent_modal.html' %}
+    {% include 'modals/tool_installation_modal.html' %}

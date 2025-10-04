@@ -63,7 +63,7 @@ All models here inherit from `common.models.ModelWithJsonData` or `django.db.mod
 
 ## Tool Prompts (`tools_a2a/prompts.py`)
 
-*   **`DESCRIPTION`**: General introduction to the Inter-Agent Tool.
+*   **`INSTRUCTIONS`**: General introduction to the Inter-Agent Tool.
 *   **`FUNCTIONS`**: A dictionary defining the schema for `agent_send_message` and `set_agent_description` tool calls, including descriptions and parameters.
 *   **`AGENTLIST`**: A Jinja2 template for formatting a list of other available agent instances to be injected into the LLM's context.
 

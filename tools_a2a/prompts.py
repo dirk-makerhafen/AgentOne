@@ -1,4 +1,4 @@
-DESCRIPTION = '''
+INSTRUCTIONS = '''
 # Inter-Agent Tool
 This tool allows you to send messages to other agent instances and manage your public description.
 It is important to keep your description updated to reflect your current task, so other agents know what you are doing.

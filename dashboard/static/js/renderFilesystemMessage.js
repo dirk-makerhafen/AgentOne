@@ -15,7 +15,7 @@ const filesystemMessageTemplate = Handlebars.compile(`
      {{/unless}}
      data-is-directory="{{message.is_directory}}">
     <div class="message-header">
-        <strong>[{{formattedTimestamp}}]</strong> {{message.id}} <strong>{{message.object}} {{message.action}}:</strong> {{message.path}}
+        <strong>[{{formattedTimestamp}}]</strong> <strong>{{message.object}} {{message.action}}:</strong> {{message.path}}
         {{#if (eq message.load_mode "summary")}}
             <button class="btn btn-xs btn-default log-btn log-btn-right" onclick="event.preventDefault(); toggleFilesystemSummary('filesystem_message_{{message.object}}_{{message.id}}', '{{message.agentInstance_id}}');"><i class="fa fa-list-ul"></i> Summary</button>
         {{/if}}

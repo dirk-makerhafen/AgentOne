@@ -16,7 +16,7 @@ This directory provides the agent with the capability to execute arbitrary shell
 *   **Purpose**: Implements the `shell` tool function exposed to the LLM. Inherits from `tools_common.models.BaseTool`.
 *   **`functions` Dictionary (`tools_shell/shelltool.py:8`)**: Defines the `shell` tool's function and its parameters, sourced from `tools_shell.prompts.FUNCTIONS`.
 *   **`get_header_parts()` (`tools_shell/shelltool.py:11`)**:
-    *   **Context Injection**: Injects the Shell tool's `Description` and `Functions` (definitions) into the LLM's context using `PromptString` templates.
+    *   **Context Injection**: Injects the Shell tool's `INSTRUCTIONS` and `Functions` (definitions) into the LLM's context using `PromptString` templates.
 *   **`shell(self, source, interpreter="auto", subscription_id=None, mode="one-shot", toolCall=None)` (`tools_shell/shelltool.py:21`)**:
     *   **Core Execution**: Executes the shell `source` code.
     *   **Subscription Mode (`mode="subscribe"`)**:
@@ -32,7 +32,7 @@ This directory provides the agent with the capability to execute arbitrary shell
 
 ## Shell Tool Prompts (`tools_shell/prompts.py`)
 
-*   **`DESCRIPTION`**: Detailed explanation of the Shell tool, its purpose, execution environment (temporary file, interpreter options), and how to interpret its output (`stdout`, `stderr`, `return_code`).
+*   **`INSTRUCTIONS`**: Detailed explanation of the Shell tool, its purpose, execution environment (temporary file, interpreter options), and how to interpret its output (`stdout`, `stderr`, `return_code`).
 *   **`FUNCTIONS`**: A dictionary defining the schema for the `shell` tool call, including `source`, `interpreter`, `subscription_id`, and `mode`.
 
 ---
@@ -40,5 +40,5 @@ This directory provides the agent with the capability to execute arbitrary shell
 ## Application Configuration
 
 ### `tools_shell.apps.py` (`tools_shell/apps.py:3`)
-*   **Prompt Registration (`tools_shell/apps.py:9`):** In its `ready()` method, it uses `common.models.PromptString.objects.get_or_create()` to seed the database with the tool's `Description` and `Functions` prompt templates. It specifically extracts the single function definition for the `shell` tool.
+*   **Prompt Registration (`tools_shell/apps.py:9`):** In its `ready()` method, it uses `common.models.PromptString.objects.get_or_create()` to seed the database with the tool's `INSTRUCTIONS` and `Functions` prompt templates. It specifically extracts the single function definition for the `shell` tool.
 *   **Hidden Marker (`tools_shell/apps.py:7`):** Contains a commented-out line `##THIS_IS_A_MARKER` that was used as a target for a previous `grep` search.

@@ -1,4 +1,4 @@
-DESCRIPTION = """
+INSTRUCTIONS = """
 # Shell Tool
 
 **Purpose:** The `shell` tool allows you to execute arbitrary shell commands or scripts.

@@ -5,7 +5,7 @@ const llmQueryMessageTemplate = Handlebars.compile(`
         data-total-prompt-tokens="{{total_prompt_tokens}}"
         data-total-completion-tokens="{{total_completion_tokens}}">
     <div class="message-header">
-        <strong>[{{formattedTimestamp}}]</strong> {{id}} <strong>{{object}} : </strong>
+        <strong>[{{formattedTimestamp}}]</strong> <strong>{{object}} : </strong>
         {{tokens_display}}
         <button class="btn btn-xs btn-default log-btn toggle-raw-json"  data-target="llm_query_{{id}}" title="Show Raw JSON"><i class="fa fa-code"></i> raw</button>
         {{#if hasUsage}}

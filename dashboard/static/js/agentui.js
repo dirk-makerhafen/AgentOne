@@ -65,7 +65,13 @@ Handlebars.registerHelper('not', function(value) {
     return !value;
 });
 
-
+Handlebars.registerHelper('formatTimestamp', function(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    // Format to a more readable string like: YYYY-MM-DD HH:MM:SS
+    const pad = (num) => num.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+});
 
 
 

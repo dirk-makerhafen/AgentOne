@@ -1,0 +1,25 @@
+    <!-- Add Provider Modal -->
+    <div id="addProviderModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" onclick="document.getElementById('addProviderModal').style.display='none'">&times;</span>
+                <h2>Add New API Provider</h2>
+            </div>
+            <div class="modal-body">
+                <form id="addProviderForm">
+                    <div class="form-group">
+                        <label for="providerName">Provider Name:</label>
+                        <input type="text" id="providerName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="providerUrl">Provider URL:</label>
+                        <input type="url" id="providerUrl" class="form-control" placeholder="https://api.example.com/v1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="document.getElementById('addProviderModal').style.display='none'">Cancel</button>
+                <button id="saveProviderBtn" class="btn btn-primary">Save Provider</button>
+            </div>
+        </div>
+    </div>

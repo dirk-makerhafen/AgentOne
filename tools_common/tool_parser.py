@@ -21,7 +21,19 @@ def extract_tool_call_parts(response_string):
     for tname in ["memory_add", "memory_correct", "memory_reposition", "fs_load", "fs_unload", "fs_write", "fs_append", "fs_replace", "fs_python_edit", "python", "agent_send_message", "await_user_input"]:
         response_string = response_string.replace(')@@@\n@%s(' % tname, ')@@@\n@@@%s(' % tname)
         response_string = response_string.replace('.@@@%s(' % tname, '.\n@@@%s(' % tname)
-        
+        if f'- `{tname}' in response_string:
+            parts = response_string.split("\n")
+            for index, part in enumerate(parts):
+                if part.startswith(f'- `{tname}') and part.endswith('`'):
+                    parts[index] = "@@@" + part[3:-1] + "@@@"
+            response_string = "\n".join(parts)
+        if f'- `@@@{tname}' in response_string:
+            parts = response_string.split("\n")
+            for index, part in enumerate(parts):
+                if part.startswith(f'- `@@@{tname}') and part.endswith('@@@`'):
+                    parts[index] = part[3:-1]
+            response_string = "\n".join(parts)
+            
     tool_call_line_pattern = re.compile(r'(^|\n|```|```python|```python\n|```tool_code|```tool_code\n)@@@(\w+)\s*\((.*?)\)@@@(?=$|\n|```)', re.DOTALL)
 
     last_end_index = 0

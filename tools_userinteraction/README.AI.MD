@@ -16,7 +16,7 @@ This directory provides the agent with a crucial capability: to explicitly pause
 *   **Purpose**: Implements the `await_user_input` function exposed to the LLM. Inherits from `tools_common.models.BaseTool`.
 *   **`functions` Dictionary (`tools_userinteraction/tool.py:8`)**: Defines the `await_user_input` function and its parameters, sourced from `tools_userinteraction.prompts.FUNCTIONS`.
 *   **`get_header_parts()` (`tools_userinteraction/tool.py:11`)**:
-    *   **Context Injection**: Injects the User Interaction tool's `Description` and `Functions` (definitions) into the LLM's context using `PromptString` templates.
+    *   **Context Injection**: Injects the User Interaction tool's `INSTRUCTIONS` and `Functions` (definitions) into the LLM's context using `PromptString` templates.
 *   **`await_user_input(self, toolCall, reason="")` (`tools_userinteraction/tool.py:19`)**:
     *   **Action**: Sets the `require_user_interaction` flag on the current `AgentInstance` to `True`.
     *   **State Machine Integration**: This flag is critical for the agent's state machine (`agent.tasks.decide_next_step`) to transition the agent into an `AWAITING_USER_INPUT` status, effectively pausing its autonomous execution.
@@ -29,7 +29,7 @@ This directory provides the agent with a crucial capability: to explicitly pause
 
 ## User Interaction Prompts (`tools_userinteraction/prompts.py`)
 
-*   **`DESCRIPTION`**: Explains the purpose of the User Interaction tool, the `await_user_input()` function, its effect (pausing the agent), and when to use it (clarification, decisions, further instructions). Includes an example.
+*   **`INSTRUCTIONS`**: Explains the purpose of the User Interaction tool, the `await_user_input()` function, its effect (pausing the agent), and when to use it (clarification, decisions, further instructions). Includes an example.
 *   **`FUNCTIONS`**: A dictionary defining the schema for the `await_user_input` tool call, including an optional `reason` parameter.
 
 ---
@@ -37,4 +37,4 @@ This directory provides the agent with a crucial capability: to explicitly pause
 ## Application Configuration
 
 ### `tools_userinteraction.apps.py` (`tools_userinteraction/apps.py:3`)
-*   **Prompt Registration (`tools_userinteraction/apps.py:9`):** In its `ready()` method, it uses `common.models.PromptString.objects.get_or_create()` to seed the database with the tool's `Description` and `Functions` prompt templates.
+*   **Prompt Registration (`tools_userinteraction/apps.py:9`):** In its `ready()` method, it uses `common.models.PromptString.objects.get_or_create()` to seed the database with the tool's `INSTRUCTIONS` and `Functions` prompt templates.
