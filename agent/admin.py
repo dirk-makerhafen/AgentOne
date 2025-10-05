@@ -13,7 +13,7 @@ class AgentAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description')
     list_filter = ('model',)
     autocomplete_fields = ('model',)
-    filter_horizontal = ('owners',)
+    filter_horizontal = ('owners', "available_tools")
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')
 

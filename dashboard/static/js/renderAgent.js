@@ -11,7 +11,7 @@ const agentTemplate = Handlebars.compile(`
                 </button>
                 <div id="agent-menu-{{id}}" class="agent-menu-dropdown" style="display: none;">
                     <a href="#" onclick="event.preventDefault(); createAgentInstance(event, '{{id}}')">Add Instance</a>
-                    <a href="#" onclick="event.preventDefault(); openEditAgentModal('{{id}}')">Edit Agent</a>
+                    <a href="#" onclick="event.preventDefault(); openAgentEditTab({{id}})">Edit Agent</a>
                     <a href="#" onclick="event.preventDefault(); requestAgentDeletion(event, '{{id}}', '{{name}}')">Delete Agent</a>
                 </div>
             </div>
@@ -29,11 +29,21 @@ function renderAgent(agentData) {
         return;
     }
 
-    const html = agentTemplate(agentData);
-    const existingElement = document.getElementById(`agent_${agentData.id}`);
-    if (existingElement) {
-        existingElement.outerHTML = html;
+    const existingAgentItem = document.getElementById(`agent_${agentData.id}`);
+
+    if (existingAgentItem) {
+        // Update existing agent item in-place to preserve child elements like instance list
+        const agentNameElement = existingAgentItem.querySelector('.sidebar-agent-name a');
+        if (agentNameElement) {
+            agentNameElement.textContent = `${agentData.name} (ID: ${agentData.id})`;
+        }
+        // If needed, update the menu button's onclick to ensure event handlers are fresh.
+        // For now, the current setup of toggleAgentMenu and closeAgentMenu uses IDs directly
+        // so re-binding isn't strictly necessary if the menu structure/IDs don't change.
+        // If the agent name is part of the menu button's innerHTML, it would also need updating here.
     } else {
+        // If agent doesn't exist, append the new item as before
+        const html = agentTemplate(agentData);
         container.insertAdjacentHTML('beforeend', html);
     }
 }

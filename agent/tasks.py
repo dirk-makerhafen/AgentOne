@@ -7,7 +7,7 @@ import json
 import random
 from agent.models.llm import LLMQuery, LLMResponse
 from agent.models.conversation import ConversationMessage
-from agent.models.agent import  AgentInstance
+from agent.models.agent import  Agent, AgentInstance
 from agent.models.debug import DebugLogEntry
 from common.models import PromptString
 from systems.tool_lifecycle_manager import get_tool_status,  install_tool, start_tool
@@ -472,3 +472,5 @@ def celery_trigger_tool_lifecycle_task(agentinstance_pk):
     except Exception as e:
         print(f"Error in celery_trigger_tool_lifecycle_task for AgentInstance {agentinstance_pk}: {e}")
         traceback.print_exc()
+
+

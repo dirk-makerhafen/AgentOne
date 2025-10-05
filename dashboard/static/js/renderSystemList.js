@@ -152,7 +152,14 @@ function renderToolInstallationLogsInline(logs) {
     }
 }
 
+// Initialize the global cache
+window.systemCache = window.systemCache || {};
+
 function renderSystemList(systems) {
+    // Populate the global cache
+    systems.forEach(system => {
+        window.systemCache[system.id] = system;
+    });
     const container = $('#tabContent_systems');
     if (container.length === 0) return;
 
@@ -177,6 +184,10 @@ function renderSystemList(systems) {
 }
 
 function renderSystem(system) {
+    // Update the cache with the single system object
+    if (system && system.id) {
+        window.systemCache[system.id] = system;
+    }
     const tableBody = $('#tabContent_systems').find('tbody');
 
     // Check if system already exists to preserve state

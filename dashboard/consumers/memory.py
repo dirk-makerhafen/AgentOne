@@ -1,6 +1,4 @@
 import json
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from agent.models.agent import AgentInstance
 from tools_memory.models import MemoryItem
 from tools_memory.prompts import TRACKS

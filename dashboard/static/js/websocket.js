@@ -49,6 +49,26 @@ function connectWebSocket(user_pk) {
             
             case 'Agent': 
                 renderAgent(payload);
+                // After saving, the server sends back the updated agent object.
+                // We need to find the open edit tab (if any) and update its UI.
+                const timestampEl = document.getElementById(`last-updated-${payload.id}`);
+                if (timestampEl && payload.updated_at) {
+                    const date = new Date(payload.updated_at);
+                    if (!isNaN(date)) { // Check if date is valid
+                        timestampEl.textContent = `Last updated: ${date.toLocaleString()}`;
+                    } else {
+                        timestampEl.textContent = `Last updated: Invalid Date (Received: ${payload.updated_at})`;
+                        console.error("Invalid date received for agent updated_at:", payload.updated_at);
+                    }
+                }
+                const agentNameInTab = document.querySelector(`#agent-edit-button-${payload.id} span`);
+                if (agentNameInTab) {
+                    agentNameInTab.innerHTML = `<i class="fa fa-user-circle-o"></i> ${payload.name}`;
+                }
+                const agentEditTabTitle = document.querySelector(`#agent-edit-button-${payload.id} span`);
+                if (agentEditTabTitle) {
+                    agentEditTabTitle.innerHTML = `<i class="fa fa-user-circle-o"></i> ${payload.name}`;
+                }
                 break;
                 
             case 'AgentList':
@@ -173,10 +193,22 @@ function connectWebSocket(user_pk) {
                 break;
 
             case 'ToolDefinition':
-                // This handles single object updates (e.g., after create or edit)
-                window.allToolDefinitions[payload.id] = payload;
-                // Re-render the entire list to reflect the change.
-                renderToolDefinitionList(Object.values(window.allToolDefinitions));
+                if (payload.action === 'deleted') {
+                    // Handle deletion
+                    if (window.handleToolDefinitionDelete) {
+                        window.handleToolDefinitionDelete(payload.id);
+                    }
+                } else {
+                    // This handles single object updates (e.g., after create or edit)
+                    if (window.handleToolDefinitionUpdate) {
+                        // Use the new in-place update handler which also updates the cache
+                        window.handleToolDefinitionUpdate(payload);
+                    } else {
+                        // Fallback to full re-render if the new handler isn't available
+                        window.allToolDefinitions[payload.id] = payload;
+                        renderToolDefinitionList(Object.values(window.allToolDefinitions));
+                    }
+                }
                 break;
 
 

@@ -1,20 +1,5 @@
 import re, ast 
 
-def clean_msg_ending(message):
-    while len(message) > 0 and message[-1] in ["'", '"', '`', '\n', '"\r', " "]:
-        message = message[:-1]
-    return message
-
-def clean_msg_start(message):
-    while len(message) > 0 and message[0] in ["'", '"', '`', '\n', '"\r', " "]:
-        message = message[1:]
-    return message
-
-def clean_first_msg_start(message):
-    while len(message) > 0 and message[0] in ['\n', '"\r', " "]:
-        message = message[1:]
-    return message
-
 def extract_tool_call_parts(response_string):
     parsed_output = []
     
@@ -53,12 +38,12 @@ def extract_tool_call_parts(response_string):
         func_name = match.group(2) # Changed from group(2) to group(1)
         args_str = match.group(3).strip() # Changed from group(3) to group(2)
         
-        chat_message_segment = clean_msg_ending(response_string[last_end_index:full_match_start])
+        chat_message_segment = _clean_msg_ending(response_string[last_end_index:full_match_start])
         if chat_message_segment != "":
             if len(parsed_output) == 0:  # first message
-                chat_message_segment = clean_first_msg_start(chat_message_segment)
+                chat_message_segment = _clean_first_msg_start(chat_message_segment)
             else:
-                chat_message_segment = clean_msg_start(chat_message_segment)
+                chat_message_segment = _clean_msg_start(chat_message_segment)
             parsed_output.append({"content": f"{chat_message_segment}\n"})
 
         arguments = {}
@@ -105,14 +90,12 @@ def extract_tool_call_parts(response_string):
 
     remaining_chat_message = response_string[last_end_index:].strip()
     #if len(parsed_output) > 0:  # first message
-    remaining_chat_message = clean_msg_ending(clean_msg_start(remaining_chat_message))
+    remaining_chat_message = _clean_msg_ending(_clean_msg_start(remaining_chat_message))
     if remaining_chat_message != "":
         parsed_output.append({"content": remaining_chat_message})
 
     return parsed_output
 
-
-#@functools.lru_cache(maxsize=200) 
 def generate_function_stub(func_name: str, func_def: dict) -> str:
     """
     Generate a Python function stub from a dictionary definition.
@@ -151,4 +134,19 @@ def generate_function_stub(func_name: str, func_def: dict) -> str:
     # Build the full function stub
     function_code = f"def {func_name}({params_str}):\n    {docstring}\n    pass\n"
     return function_code
+
+def _clean_msg_ending(message):
+    while len(message) > 0 and message[-1] in ["'", '"', '`', '\n', '"\r', " "]:
+        message = message[:-1]
+    return message
+
+def _clean_msg_start(message):
+    while len(message) > 0 and message[0] in ["'", '"', '`', '\n', '"\r', " "]:
+        message = message[1:]
+    return message
+
+def _clean_first_msg_start(message):
+    while len(message) > 0 and message[0] in ['\n', '"\r', " "]:
+        message = message[1:]
+    return message
 

@@ -14,7 +14,7 @@ from django.db.models import Q, Sum
 from providers.models import Model
 from django.contrib.auth.models import User
 from systems.models import System
-from tools_common.models  import ToolDefinition
+from tools_common.models  import ToolDefinition, ToolInstallation
 from agent.mcpclient import MCPClient
 
 # Map built-in tool names (as they appear in ToolDefinition.name) to their Python classes.
@@ -52,8 +52,10 @@ class Agent(ModelWithJsonData):
             'object': 'Agent', 
             'id': self.agent_pk, 
             'created_at': self.created_at.isoformat(), 
+            'updated_at': self.updated_at.isoformat(), # Added updated_at
             'name': self.name, 
-            'description': self.description
+            'description': self.description,
+            'available_tools': list(self.available_tools.values_list('pk', flat=True)), # Include available_tools
         }
 
 class AgentInstance(ModelWithJsonData):
@@ -336,57 +338,75 @@ class AgentInstance(ModelWithJsonData):
         celery_create_query.apply_async(args=[self.instance_pk])
         
     def _setup_tools(self):
-        print("_setup_tools", self)
-        self.tool_instances = {} # Maps full_function_name to tool instance for built-in, or tool_def.name to MCPClient instance
-        self.toolname_to_definition = {} # Maps full_function_name (or tool_def.name for MCPClient) to ToolDefinition object
+            print(f"_setup_tools called for AgentInstance {self.instance_pk}")
 
-        # Always load all built-in tools
-        from tools_common.models  import ToolDefinition as TS_ToolDefinition # Alias to avoid conflict with agent.ToolDefinition if it existed
-        for tool_name, tool_class in BUILTIN_TOOL_CLASS_MAP.items():
-            try:
-                instance = tool_class(self)
-                # Try to find the ToolDefinition for this built-in tool
-                tool_def, created = TS_ToolDefinition.objects.get_or_create(
-                    name=tool_name,
-                    defaults={'display_name': tool_name.replace('_', ' ').title(), 'is_builtin': True, 'description': f"Built-in {tool_name} tool."}
-                )
-                if created:
-                    print(f"Created ToolDefinition for built-in tool: {tool_name}")
+            self.tool_instances = {} # Maps full_function_name to tool instance for built-in, or tool_def.name to MCPClient instance
+            self.toolname_to_definition = {} # Maps full_function_name (or tool_def.name for MCPClient) to ToolDefinition object
 
-                for func_name, func_details in instance.functions.items():
-                    # Map the full function name (e.g., 'filesystem_read') to the tool instance and its definition
-                    self.tool_instances[func_name] = instance
-                    self.toolname_to_definition[func_name] = tool_def
-            except Exception as e:
-                print(f"Error initializing built-in tool {tool_name} for AgentInstance {self.instance_pk}: {e}")
-
-        print("foobr", self.tool_instances)
-        # Load external MCP tools only if the agent has them selected AND they are installed and running on the system
-        if self.agent and self.system:
-            from tools_mcp.models import MCPServer # Import here to avoid circular dependency
-
-            for tool_def in self.agent.available_tools.filter(is_builtin=False):
+            # Always load all built-in tools
+            from tools_common.models import ToolDefinition as TS_ToolDefinition
+            for tool_name, tool_class in BUILTIN_TOOL_CLASS_MAP.items():
                 try:
-                    # Find the active installation for this tool_def on this system
-                    installation = self.system.tool_installations.get(tool_definition=tool_def, status='running')
+                    instance = tool_class(self)
+                    tool_def, created = TS_ToolDefinition.objects.get_or_create(
+                        name=tool_name,
+                        defaults={'display_name': tool_name.replace('_', ' ').title(), 'is_builtin': True, 'description': f"Built-in {tool_name} tool."}
+                    )
+                    if created:
+                        print(f"Created ToolDefinition for built-in tool: {tool_name}")
 
-                    # An installation must exist and have an associated MCPServer record
-                    if installation and hasattr(installation, 'mcp_server_connection'):
-                        mcp_server_record = installation.mcp_server_connection
-                        client = MCPClient(name=tool_def.name, mcp_server=mcp_server_record, agent_instance=self)
-
-                        # Store the MCPClient instance keyed by the tool_def.name (e.g., 'apple-mcp')
-                        self.tool_instances[tool_def.name] = client
-                        self.toolname_to_definition[tool_def.name] = tool_def
-                    else:
-                        print(f"Warning: MCP tool '{tool_def.name}' installation or its MCPServer record not found or not running on system '{self.system.name}'. Skipping.")
-
-                except installation._meta.model.DoesNotExist:
-                    print(f"Warning: MCP tool '{tool_def.name}' not installed on system '{self.system.name}'. Skipping.")
+                    for func_name, func_details in instance.functions.items():
+                        self.tool_instances[func_name] = instance
+                        self.toolname_to_definition[func_name] = tool_def
                 except Exception as e:
-                    print(f"Error initializing MCP tool {tool_def.name} for AgentInstance {self.instance_pk}: {e}")
-        elif self.agent and not self.system:
-            # If agent has MCP tools but no system is assigned, log a warning
-            if self.agent.available_tools.filter(is_builtin=False).exists():
-                print(f"Warning: Agent {self.agent.name} has external MCP tools selected, but AgentInstance {self.instance_pk} has no system assigned. Skipping MCP tool loading.")
+                    print(f"Error initializing built-in tool {tool_name} for AgentInstance {self.instance_pk}: {e}")
+
+            # Load external MCP tools only if the agent has them selected AND they are installed and running on the system
+            if self.agent and self.system:
+                from tools_common.models import ToolInstallation, ToolDefinition # Re-import for clarity on type
+
+                for tool_def in self.agent.available_tools.filter(is_builtin=False):
+                    try:
+                        installation = None
+                        if tool_def.execution_mode == ToolDefinition.ExecutionMode.SHARED:
+                            # For shared tools, look for an installation on the system with no specific agent instance
+                            installation = self.system.tool_installations.filter(
+                                tool_definition=tool_def,
+                                agent_instance__isnull=True, # Important: Must be null for shared
+                                status=ToolInstallation.Status.RUNNING
+                            ).first()
+                            if not installation:
+                                print(f"Info: Shared MCP tool '{tool_def.name}' not found running on system '{self.system.name}'. Triggering lifecycle task.")
+                                from agent.tasks import celery_trigger_tool_lifecycle_task
+                                celery_trigger_tool_lifecycle_task.apply_async(args=[self.instance_pk, tool_def.pk, None], countdown=1) # No agent_instance_pk for shared
+                                continue
+
+                        elif tool_def.execution_mode == ToolDefinition.ExecutionMode.DEDICATED:
+                            # For dedicated tools, look for an installation specifically for this agent instance
+                            installation = self.system.tool_installations.filter(
+                                tool_definition=tool_def,
+                                agent_instance=self, # Important: Must be this instance
+                                status=ToolInstallation.Status.RUNNING
+                            ).first()
+                            if not installation:
+                                print(f"Info: Dedicated MCP tool '{tool_def.name}' not found running for AgentInstance {self.instance_pk} on system '{self.system.name}'. Triggering lifecycle task.")
+                                from agent.tasks import celery_trigger_tool_lifecycle_task
+                                celery_trigger_tool_lifecycle_task.apply_async(args=[self.instance_pk, tool_def.pk, self.instance_pk], countdown=1) # Pass agent_instance_pk
+                                continue
+
+                        if installation and hasattr(installation, 'mcp_server_connection'):
+                            mcp_server_record = installation.mcp_server_connection
+                            client = MCPClient(name=tool_def.name, mcp_server=mcp_server_record, agent_instance=self)
+                            self.tool_instances[tool_def.name] = client
+                            self.toolname_to_definition[tool_def.name] = tool_def
+                            print(f"MCP tool '{tool_def.name}' ({tool_def.execution_mode}) loaded successfully for AgentInstance {self.instance_pk}.")
+                        else:
+                            print(f"Warning: MCP tool '{tool_def.name}' installation or its MCPServer record not found or not running for AgentInstance {self.instance_pk} on system '{self.system.name}'. Skipping.")
+
+                    except Exception as e:
+                        print(f"Error initializing MCP tool {tool_def.name} for AgentInstance {self.instance_pk}: {e}")
+            elif self.agent and not self.system:
+                if self.agent.available_tools.filter(is_builtin=False).exists():
+                    print(f"Warning: Agent {self.agent.name} has external MCP tools selected, but AgentInstance {self.instance_pk} has no system assigned. Skipping MCP tool loading.")
+            print(f"_setup_tools completed for AgentInstance {self.instance_pk}.")
 

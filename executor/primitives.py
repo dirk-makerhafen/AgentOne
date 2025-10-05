@@ -551,7 +551,7 @@ def manage_tool_process(
     """
     import asyncio
     import traceback
-    
+    return
     try:
         loop = _get_async_loop()
         coro = _manage_tool_process_async(
@@ -568,6 +568,7 @@ def manage_tool_process(
 def _get_async_loop():
     """Starts and returns the global asyncio event loop running in a background thread."""
     global _async_loop, _loop_thread
+    return
     if _loop_thread is None:
         import asyncio
         import threading

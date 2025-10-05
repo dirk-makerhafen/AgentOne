@@ -6,8 +6,6 @@ class Agent_Config(AppConfig):
     name = 'agent'
 
     def ready(self):
-        # Import signals to ensure they are registered
-        import agent.signals 
 
         if not 'manage.py' in sys.argv:
             from common.models import PromptString

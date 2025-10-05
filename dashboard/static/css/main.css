@@ -25,6 +25,9 @@
 @import url("components/mcp.css");
 @import url("components/tool_registry.css");
 
+@import url("components/provider_list.css");
+@import url("components/agent_edit_tab.css");
+
 /* --- Prompt Templates Table Styling --- */
 .prompts-table-container {
     overflow-x: auto; /* Allow horizontal scrolling only for the table if it absolutely needs it */

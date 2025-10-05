@@ -55,31 +55,7 @@ def handle_agentinstance_detail(consumer, payload):
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {payload.get('instance_pk')} not found.'}))
         return
     send_object_to_clients(agent_instance)
-    '''
-    latest_files = list(FsLogEntry.objects.filter(agentInstance=agent_instance, is_newest_version=True))
-    sorted_items = sorted(latest_files , key=lambda x:x.path)
-    fs_items = []
-    for item in sorted_items:
-        client_dict = item.as_client_dict()
-        client_dict['is_initial_state'] = True
-        fs_items.append(client_dict)
-    consumer.send(text_data=json.dumps({'object': 'InitialFilesystemState', 'items': fs_items, 'agentInstance_id': agent_instance.instance_pk}))
-    latest_memories = []
-    for track, trackitem in TRACKS.items():                   
-        for layer, layer_description in trackitem['layers'].items():# dont use distinct, not supported by db.
-            latest_memories.extend([x for x in MemoryItem.objects.filter(track=track, layer=layer, next_version=None, agentInstance=agent_instance).order_by('-index')[:agent_instance.limit_max_memory_items]])
-            
-    memory_items = []
-    for item in latest_memories:
-        client_dict = item.as_client_dict()
-        client_dict['is_initial_state'] = True
-        memory_items.append(client_dict)
-    consumer.send(text_data=json.dumps({'object': 'InitialMemoryState', 'items': memory_items, 'agentInstance_id': agent_instance.instance_pk}))
-    
-    latest_vars = PythonToolVar.objects.filter(agentInstance=agent_instance, next_version=None).order_by('key')
-    vars_items = [item.as_client_dict() for item in latest_vars]
-    consumer.send(text_data=json.dumps({'object': 'InitialVarsState', 'items': vars_items, 'agentInstance_id': agent_instance.instance_pk}))
-    '''
+
 
 def handle_agentinstance_getvars(consumer, payload):
     try:

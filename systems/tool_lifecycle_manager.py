@@ -22,10 +22,11 @@ def _log(installation: ToolInstallation, level: str, message: str):
     )
 
 @shared_task
-def install_tool(tool_installation_id):
+def install_tool(tool_installation_id, agent_instance_pk=None):
     """
     Orchestrates the installation of a tool on its assigned system, with detailed logging.
     This includes support for Node.js (npm) and Python (venv) build processes.
+    If agent_instance_pk is provided, the ToolInstallation will be linked to that specific instance.
     """
     tool_installation = ToolInstallation.objects.get(pk=tool_installation_id)
     _log(tool_installation, 'info', 'Installation process started.')
@@ -34,6 +35,20 @@ def install_tool(tool_installation_id):
 
     system = tool_installation.system
     tool_def = tool_installation.tool_definition
+    agent_instance = None
+
+    if agent_instance_pk:
+        try:
+            agent_instance = AgentInstance.objects.get(pk=agent_instance_pk)
+            # Link the installation to the agent instance for dedicated tools
+            tool_installation.agent_instance = agent_instance
+            tool_installation.save()
+            _log(tool_installation, 'info', f'ToolInstallation linked to AgentInstance {agent_instance_pk}.')
+        except AgentInstance.DoesNotExist:
+            _log(tool_installation, 'error', f'AgentInstance with pk {agent_instance_pk} not found for dedicated tool installation.')
+            tool_installation.status = ToolInstallation.Status.ERROR
+            tool_installation.save()
+            return
 
     if not system or not tool_def or not tool_def.repository_url:
         _log(tool_installation, 'error', 'System, ToolDefinition, or Repository URL not found.')
@@ -52,7 +67,13 @@ def install_tool(tool_installation_id):
 
     home_dir = Path(home_dir_result['vars']['home'])
     install_base_dir = home_dir / ".carna" / "tools"
-    install_path = install_base_dir / tool_def.name
+
+    # For dedicated tools, create a subdirectory based on the AgentInstance PK
+    if agent_instance:
+        install_path = install_base_dir / tool_def.name / f"instance_{agent_instance_pk}"
+    else:
+        install_path = install_base_dir / tool_def.name
+
     tool_installation.local_path = str(install_path)
 
     rm(system=system, path=str(install_path), recursive=True)
@@ -179,7 +200,13 @@ def start_tool(tool_installation_id):
     tool_installation.assigned_port = port
     tool_installation.status = ToolInstallation.Status.RUNNING
 
-    mcp_server, created = MCPServer.objects.get_or_create(tool_installation=tool_installation, defaults={'name': tool_def.display_name, 'endpoint_url': endpoint_url, 'transport_type': transport_type, 'enabled': True})
+    # Pass agent_instance to MCPServer if it's a dedicated tool
+    mcp_server_defaults = {'name': tool_def.display_name, 'endpoint_url': endpoint_url, 'transport_type': transport_type, 'enabled': True}
+    if tool_installation.agent_instance:
+        mcp_server, created = MCPServer.objects.get_or_create(tool_installation=tool_installation, agent_instance=tool_installation.agent_instance, defaults=mcp_server_defaults)
+    else:
+        mcp_server, created = MCPServer.objects.get_or_create(tool_installation=tool_installation, defaults=mcp_server_defaults)
+
     if not created:
         mcp_server.endpoint_url, mcp_server.transport_type, mcp_server.enabled = endpoint_url, transport_type, True
         mcp_server.save()
@@ -236,3 +263,6 @@ def get_tool_status(tool_installation_id):
         _log(tool_installation, 'warning', f"Health check failed for running tool: {result.get('message')}")
         tool_installation.status = ToolInstallation.Status.ERROR
         tool_installation.save()
+
+from agent.models.agent import AgentInstance
+from tools_common.models import ToolDefinition

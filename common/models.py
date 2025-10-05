@@ -102,6 +102,7 @@ class ModelWithJsonData(DirtyFieldsMixin, models.Model):
         now = timezone.now()
         if not self.pk and self.created_at is None:
             self.created_at = now
+        
         _dirty_fields = self.get_dirty_fields(check_relationship=True)
         self.updated_at = now
         if hasattr(self, '_data'):

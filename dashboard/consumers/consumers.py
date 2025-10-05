@@ -4,7 +4,7 @@ from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 from dashboard.consumers.agent import handle_agent_create, handle_agent_delete, handle_agent_list, handle_agent_update
 from dashboard.consumers.agentinstance import handle_agentinstance_create, handle_agentinstance_delete, handle_agentinstance_detail, handle_agentinstance_update, handle_agentinstance_getvars
-from dashboard.consumers.tool_definition import handle_create_tool_definition, handle_update_tool_definition, handle_delete_tool_definition, handle_tool_definition_list
+from dashboard.consumers.tool_definition import handle_create_tool_definition, handle_update_tool_definition, handle_delete_tool_definition, handle_tool_definition_list, toggle_tool_definition_active, handle_refresh_tool_definition_manifest, handle_assign_system_to_tool, handle_unassign_system_from_tool
 from dashboard.consumers.conversation import handle_conversation_add, handle_conversation_get
 from dashboard.consumers.conversationmessage import handle_conversationmessage_flags
 from dashboard.consumers.direct_tool_call import handle_direct_tool_call
@@ -129,7 +129,7 @@ class AgentConsumer(WebsocketConsumer):
         elif message_type == 'create_custom_prompt_version':
             handle_prompt_create(self, self.user_pk, payload)
         elif message_type == 'update_prompt':
-           handle_prompt_update(self, self.user_pk, payload)
+            handle_prompt_update(self, self.user_pk, payload)
         elif message_type == 'delete_prompt':
             handle_prompt_delete(self, self.user_pk, payload)
 
@@ -182,6 +182,14 @@ class AgentConsumer(WebsocketConsumer):
             handle_delete_tool_definition(self, payload)
         elif message_type == 'request_tool_definition_list':
             handle_tool_definition_list(self, payload)
+        elif message_type == 'toggle_tool_definition_active':
+            toggle_tool_definition_active(self, payload.get('tool_definition_id'))
+        elif message_type == 'request_refresh_tool_definition_manifest':
+            handle_refresh_tool_definition_manifest(self, payload)
+        elif message_type == 'assign_system_to_tool':
+            handle_assign_system_to_tool(self, payload)
+        elif message_type == 'unassign_system_from_tool':
+            handle_unassign_system_from_tool(self, payload)
 
         elif message_type == 'request_tool_installation_list':
             handle_tool_installation_list(self, payload)
@@ -203,7 +211,7 @@ class AgentConsumer(WebsocketConsumer):
                 async_to_sync(self.channel_layer.group_add)(f'agentInstance_{payload.get("instance_pk")}', self.channel_name)
             except asyncio.CancelledError:
                 print(f"Subscription for agent instance {payload.get("instance_pk")} was cancelled for user {self.user_pk}.")
-        
+
         elif message_type == 'unsubscribe':
             try:
                 async_to_sync(self.channel_layer.group_discard)(f'agentInstance_{payload.get("instance_pk")}', self.channel_name)
@@ -212,7 +220,7 @@ class AgentConsumer(WebsocketConsumer):
 
         else:
             self.send(text_data=json.dumps({'object': 'error', 'message': f'Unknown message type {message_type}, {data}'}))
-            
+
         
     def agent_message(self, event):
         self.send(text_data=json.dumps(event['payload']))

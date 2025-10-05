@@ -61,7 +61,7 @@ In your response please do the following:
 
 1) Keep your memory up-to-date:
 {% if chat_forget %}- Review all messages starting with @@@TO_BE_FORGOTTEN@@@ and verify that important information from these messages is reflected in your memory tracks.
-{% endif %}{% if memory_forget %}- Review all memory items starting with [to be forgotten, review now!]. If they are still needed or are part of a larger pattern make sure you don't forget them.
+{% endif %}{% if memory_forget %}- Review all memory items starting with [to be forgotten, review now!]. and verify that important information from these messages is reflected in your memory even when these specific memory items are no longer available.
 {% endif %}{% if st_tracks %}- Make sure your Short-Term (ST) memory tracks like REVIEW, SELF, STATUS, INSIGHTS, GOALS, SYSTEM, PLANS, MEMORY and PREDICTIONS are up-to-date.
 {% endif %}{% if st2mt %}- Review your Short-Term (ST) memory tracks and derive information to update your Medium-Term (MT) memory if usefull.
 {% endif %}{% if mt_tracks %}- Make sure your Medium-Term (MT) memory tracks like REVIEW, SELF, STATUS, INSIGHTS, GOALS, SYSTEM, PLANS, MEMORY and PREDICTIONS are up-to-date.

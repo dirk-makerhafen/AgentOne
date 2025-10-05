@@ -183,7 +183,6 @@
 .tool-installation-name {
     font-weight: bold;
     margin-right: 8px;
-    flex-basis: 30%; /* Give name some fixed space */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

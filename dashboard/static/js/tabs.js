@@ -146,13 +146,13 @@ function openMainTab(evt, tabId, parentPanelId = 'mainTabPanel') {
 
     // Find and activate the corresponding tab button within the current panel's tab bar
     if (tabBar) {
-        // Construct the expected button ID from the tab content ID
-        // e.g., 'tabContent_systems' -> 'tabButton_systems'
-        const buttonId = tabId.replace('tabContent_', 'tabButton_');
-        const tabButton = document.getElementById(buttonId);
+        // Find the button by its onclick handler, which is more robust for dynamic tabs
+        const tabButton = tabBar.querySelector(`.tab-button[onclick*="'${tabId}'"]`);
         if (tabButton) {
             tabButton.classList.add("active");
             tabButton.style.display = "inline-block"; // Ensure the button is visible
+        } else {
+             console.warn(`Tab button for content ID ${tabId} not found in tab bar.`);
         }
     }
 

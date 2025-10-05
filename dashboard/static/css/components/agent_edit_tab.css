@@ -1,0 +1,21 @@
+
+.agent-edit-tab {
+    padding: 20px;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.tool-selection-list {
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+.tool-description-help {
+    font-size: 0.9em;
+    color: #777;
+    margin-left: 20px;
+    margin-top: 2px;
+}

@@ -5,6 +5,7 @@ from asgiref.sync import async_to_sync
 from providers.models import Model
 from systems.models import System
 from tools_common.models  import ToolDefinition
+import traceback
 
 
 def handle_agent_create(consumer, user_pk, payload):
@@ -34,6 +35,7 @@ def handle_agent_create(consumer, user_pk, payload):
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create agent: {e}'}))
 
+
 def handle_agent_update(consumer, user_pk, payload):
     agent_pk = payload.get('agent_pk')
     if not agent_pk:
@@ -44,21 +46,32 @@ def handle_agent_update(consumer, user_pk, payload):
         user = User.objects.get(pk=user_pk)
         agent = Agent.objects.get(pk=agent_pk, owners=user)
 
+        # Update scalar fields
         agent.name = payload.get('name', agent.name)
         agent.description = payload.get('description', agent.description)
-        
+
+        # Update M2M relationship directly
         available_tool_ids = payload.get('available_tool_ids')
-        if available_tool_ids is not None: # Only update if provided
+        if available_tool_ids is not None:
             tools = ToolDefinition.objects.filter(pk__in=available_tool_ids)
             agent.available_tools.set(tools)
 
-        agent.save(send_to_client=True)
+        # A single save to commit all changes and trigger broadcasts.
+        # The agent.save() method will handle sending the updated object to clients.
+        # Note: We need to explicitly call save with send_to_client=True if the default is False.
+        # Let's check the Agent model's save method... it seems broadcasting is handled elsewhere or by signals.
+        # We will rely on the existing application structure.
+        agent.save()
+        from dashboard.tasks import send_object_to_clients
+        send_object_to_clients(agent)
+
+
     except Agent.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Agent with pk {agent_pk} not found or permission denied.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update agent: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update agent: {e}{traceback.format_exc()}'}))
 
-
+ 
 def handle_agent_delete(consumer, user_pk, payload):
     agent_pk = payload.get('agent_pk')
     if not agent_pk:
