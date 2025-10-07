@@ -1,0 +1,40 @@
+{% verbatim %}
+<script id="FilesystemLogTemplate" type="text/x-handlebars-template">
+    <div id="filesystem_message_{{message.object}}_{{message.id}}" class="conversation-log-item log-type-fs filesystem-log-item"
+         data-id="{{message.id}}"
+         data-created-at="{{message.created_at}}"
+         data-object="{{message.object}}"
+         data-action="{{message.action}}"
+         data-path="{{message.path}}"
+         data-load-mode="{{message.load_mode}}"
+         {{#unless (isUndefined message.content)}}
+         data-content="{{escape message.content}}"
+         data-prev-content="{{escape message.prev_content}}"
+         data-summary="{{escape message.summary}}"
+         {{/unless}}
+         data-is-directory="{{message.is_directory}}">
+        <div class="message-header">
+            <strong>[{{formattedTimestamp}}]</strong> <strong>{{message.object}} {{message.action}}:</strong> {{message.path}}
+            {{#if (eq message.load_mode "summary")}}
+                <button class="btn btn-xs btn-default log-btn log-btn-right" onclick="event.preventDefault(); toggleFilesystemSummary('filesystem_message_{{message.object}}_{{message.id}}', '{{message.agentInstance_id}}');"><i class="fa fa-list-ul"></i> Summary</button>
+            {{/if}}
+            
+            {{#if (eq message.action "unload")}}
+                <button class="btn btn-xs btn-default log-btn log-btn-right" onclick="event.stopPropagation(); loadFileFromLog('{{message.path}}', {{message.agentInstance_id}}); " title="Load this file again"><i class="fa fa-upload"></i> Load </button>
+            {{else}}
+                <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleFilesystemDetails('filesystem_message_{{message.object}}_{{message.id}}', '{{message.agentInstance_id}}');"><i class="fa fa-plus"></i> Details </button>
+                {{#unless (eq message.action "load")}}
+                    <button class="btn btn-xs btn-default log-btn log-btn-right" onclick="event.stopPropagation(); showRevertAllDialog('{{message.id}}', '{{message.path}}', '{{formattedTimestamp}}', {{message.agentInstance_id}}); " title="Revert ALL filesystem changes to this point"><i class="fa fa-history"></i>Undo all</button>
+                    <button class="btn btn-xs btn-default log-btn log-btn-right" onclick="event.stopPropagation(); showRevertDialog('{{message.id}}', '{{message.action}}', '{{message.path}}', {{message.agentInstance_id}}); " title="Restore previous version of this file"><i class="fa fa-undo"></i> Undo </button>
+                {{/unless}}
+            {{/if}}
+        </div>
+        <div class="message-content">
+            <div id="filesystem_full_{{message.object}}_{{message.id}}" class="filesystem-content hidden">
+                <!-- Diff or content will be loaded here dynamically -->
+                <pre>Loading details...</pre>
+            </div>
+        </div>
+    </div>
+</script>
+{% endverbatim %}

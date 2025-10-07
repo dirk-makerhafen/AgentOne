@@ -1,0 +1,30 @@
+{% verbatim %}
+<script id="LLMQueryTemplate" type="text/x-handlebars-template">
+    <div id="llm_query_message_{{id}}" class="conversation-log-item log-type-llm llm-query-item"
+            data-id="{{id}}" data-created-at="{{created_at}}"
+            {{#if flamegraph_data}}data-flamegraph-data="{{jsonStringify flamegraph_data}}"{{/if}}
+            data-total-prompt-tokens="{{total_prompt_tokens}}"
+            data-total-completion-tokens="{{total_completion_tokens}}">
+        <div class="message-header">
+            <strong>[{{formattedTimestamp}}]</strong> <strong>{{object}} : </strong>
+            {{tokens_display}}
+            <button class="btn btn-xs btn-default log-btn" onclick="toggleElementVisibility(event, 'raw_json_container_llm_query_{{id}}')" title="Show Raw JSON"><i class="fa fa-code"></i> raw</button>
+            {{#if hasUsage}}
+            <button class="btn btn-xs btn-default log-btn toggle-flame-graph"  data-target="llm_query_{{id}}" onclick="event.preventDefault(); toggleFlameGraph('llm_query_{{id}}', '{{instancePk}}')" title="Show Usage Flamegraph"><i class="fa fa-fire"></i> Usage</button>
+            {{/if}}
+            {{#if hasPartsToHighlight}}
+            <button class="btn btn-xs btn-default log-btn highlight-query-parts" data-parts-json="{{partsJson}}" onclick="event.preventDefault(); toggleQueryHighlight(this, '{{instancePk}}')" title="Highlight Source Parts"><i class="fa fa-eye"></i></button>
+            {{/if}}
+        </div>
+        <div id="raw_json_container_llm_query_{{id}}" class="message-content hidden">
+            <pre>{{raw_json}}</pre>
+            <a href="#" onclick="toggleElementVisibility(event, 'raw_json_container_llm_query_{{id}}')">Hide raw</a>
+        </div>
+        {{#if hasUsage}}
+        <div id="flame_graph_container_llm_query_{{id}}" class="message-content flame-graph-container hidden">
+            <!-- Flame graph will be rendered here -->
+        </div>
+        {{/if}}
+    </div>
+</script>
+{% endverbatim %}

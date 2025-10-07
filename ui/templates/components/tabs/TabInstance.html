@@ -1,0 +1,73 @@
+{% verbatim %}
+<script id="TabInstanceTemplate" type="text/x-handlebars-template">
+    <div id="tabContent_agentInstance_{{instancePk}}" class="tab-content resizable-container active" data-orientation="vertical">
+        
+        <!-- Header Panel -->
+        <div class="resizable-panel agentInstanceHeader" id="agentInstanceHeader_{{instancePk}}" data-size-pc="5">
+            <!-- Content will be rendered by renderAgentInstanceHeader.js -->
+        </div>
+
+        <!-- Main Content Area (Chat + Right Sidebar) -->
+        <div class="resizable-panel resizable-container" data-orientation="horizontal" data-size-pc="95">
+            
+            <!-- Chat Area Panel -->
+            <div class="resizable-panel" data-orientation="vertical" data-size-pc="70">
+                <div class="resizable-container" data-orientation="vertical">
+                    <div id="logArea_{{instancePk}}" class="logArea resizable-panel conversation-log flex-column hide-tool" data-size-pc="80">
+                        <!-- Log messages and filter controls will be rendered here by JavaScript -->
+                        <div id="agent-status-ribbon_{{instancePk}}" class="agent-status-ribbon agent-status-ribbon-hidden">
+                            <span class="status-text"></span>
+                        </div>
+                    </div>
+                    <div class="resizable-panel flex-row" data-size-pc="20">
+                        <div class="chat_user_input">
+                            <textarea id="messageInput_{{instancePk}}" name="user_input" rows="4" cols="50" placeholder="Enter your message..." onkeydown="handleMessageInputKeydown(event, {{instancePk}})"></textarea>
+                        </div>
+                        <div class="chat-actions">
+                            <button id="sendMessageBtn_{{instancePk}}" class="submit_button btn btn-success" type="submit" onclick="sendMessage(event, {{instancePk}})">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar Panel -->
+            <div class="resizable-panel resizable-container" data-orientation="vertical" data-size-pc="30">
+                <div class="resizable-panel resizable-container" data-orientation="vertical"  id="sidebar-right_{{instancePk}}">
+                    <div class="sidebar-tabs">
+                        <button class="sidebar-tab-btn active" onclick="showSidebarTabForInstance('filesystem', this, {{instancePk}})">Filesystem</button>
+                        <button class="sidebar-tab-btn" onclick="showSidebarTabForInstance('memory', this, {{instancePk}})">Memory</button>
+                        <button class="sidebar-tab-btn" onclick="showSidebarTabForInstance('vars', this, {{instancePk}})">VARS</button>
+                        <button class="sidebar-tab-btn" onclick="showSidebarTabForInstance('settings', this, {{instancePk}})">Settings</button>
+                        <button class="sidebar-tab-btn" onclick="showSidebarTabForInstance('permissions', this, {{instancePk}})">Permissions</button>
+                    </div>
+
+                    <div id="sidebar-tab-filesystem_{{instancePk}}" class="sidebar-tab-content active">
+                        <!-- Filesystem content will be rendered here by renderSidebarFilesystem.js -->
+                    </div>
+
+                    <div id="sidebar-tab-memory_{{instancePk}}" class="sidebar-tab-content flex-column" style="display: none;">
+                        <!-- Memory content will be rendered here by renderSidebarMemory.js -->
+                    </div>
+
+                    <div id="sidebar-tab-permissions_{{instancePk}}" class="sidebar-tab-content" style="display: none;">
+                        <!-- Permissions content will be rendered here by renderSidebarPermissions.js -->
+                    </div>
+
+                    <div id="sidebar-tab-settings_{{instancePk}}" class="sidebar-tab-content" style="display: none;">
+                        <!-- Settings content will be rendered here by renderSidebarSettings.js -->
+                    </div>
+
+                    <div id="sidebar-tab-vars_{{instancePk}}" class="sidebar-tab-content" style="display: none;">
+                        <!-- VARS content will be rendered here by renderSidebarVars.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instance-specific Agent Status Bar -->
+        <div id="agent-status-bar_{{instancePk}}" class="agent-status-bar agent-status-bar-hidden">
+            <span id="agent-status-text_{{instancePk}}" class="status-text"></span>
+        </div>
+    </div>
+</script>
+{% endverbatim %}

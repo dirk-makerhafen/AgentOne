@@ -1,0 +1,60 @@
+{% verbatim %}
+<script id="SidebarAgentsListItemTemplate" type="text/x-handlebars-template">
+    <div id="agent_{{id}}" class="sidebar-agent-item">
+        <div class="sidebar-agent-header">
+            <h5 class="sidebar-agent-name">
+                <a href="#" onclick="toggleAgentInstances(event, '{{id}}')">{{name}} (ID: {{id}})</a>
+            </h5>
+            <div class="agent-header-controls">
+                <div class="agent-actions-menu" onmouseleave="closeAgentMenu(event, 'agent-menu-{{id}}')">
+                    <button class="btn btn-xs btn-default" onclick="toggleAgentMenu(event, 'agent-menu-{{id}}')" title="Agent Actions">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <div id="agent-menu-{{id}}" class="agent-menu-dropdown" style="display: none;">
+                        <a href="#" onclick="createAgentInstance(event, '{{id}}')">Add Instance</a>
+                        <a href="#" onclick="openAgentEditTab(event, {{id}})">Edit Agent</a>
+                        <a href="#" onclick="requestAgentDeletion(event, '{{id}}', '{{name}}')">Delete Agent</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="agent-instances-{{id}}" class="sidebar-instance-list" style="display: none;">
+            <!-- Instances will be dynamically added here -->
+        </div>
+    </div>
+</script>
+
+
+<script id="SidebarAgentsAddAgentTemplate" type="text/x-handlebars-template">
+    <div class="add-agent-form-container" id="add-agent-form-{{id}}">
+        <h3>Add New Agent</h3>
+        <form>
+            <div class="form-group">
+                <label for="new-agent-name">Agent Name</label>
+                <input type="text" class="form-control" id="new-agent-name" placeholder="Enter agent name">
+            </div>
+            <div class="form-group">
+                <label for="new-agent-description">Description</label>
+                <textarea class="form-control" id="new-agent-description" rows="3" placeholder="Enter agent description"></textarea>
+            </div>
+            <div class="form-group">
+                <h4>Available Tools</h4>
+                <div class="tool-selection-list" id="new-agent-available-tools">
+                    <!-- Tools will be dynamically loaded here -->
+                    {{#each tools}}
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="available_tools" value="{{this.id}}">
+                            <strong>{{this.display_name}}</strong> ({{this.name}})
+                            <p class="tool-description-help">{{this.description}}</p>
+                        </label>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="createAgentFromForm(event)">Create Agent</button>
+            <button type="button" class="btn btn-default" onclick="hideAddAgentForm(event)">Cancel</button>
+        </form>
+    </div>
+</script>
+{% endverbatim %}

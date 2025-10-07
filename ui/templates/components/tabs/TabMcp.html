@@ -1,0 +1,93 @@
+{% verbatim %}
+
+<script id="TabMcpTemplate" type="text/x-handlebars-template">
+    <div id="tabContent_mcp" class="resizable-container tab-content" data-orientation="vertical" style="display: none;">
+        <div id="mcp-list-header" class="sidebar-list-header">
+            <span>MCP Servers</span>
+            <button id="add-mcp-server-btn" class="btn btn-xs btn-default" title="Add New MCP Server">
+                <i class="fa fa-plus"></i>
+            </button>
+        </div>
+        <div id="mcp-list-body" class="sidebar-list-body">
+            <!-- MCP server list will be rendered here by renderMcpList.js -->
+        </div>
+    </div>
+</script>
+
+<script id="mcp-server-list-template" type="text/x-handlebars-template">
+    {{#each this}}
+        <div class="mcp-server-item" data-id="{{this.id}}">
+            <div class="mcp-server-header">
+                <span class="mcp-server-name">{{this.name}}</span>
+                <span class="mcp-server-status status-{{this.status}}">{{this.status}}</span>
+                <div class="mcp-server-actions">
+                    <button class="btn btn-xs btn-default refresh-mcp-server-btn" title="Refresh Tools">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                    <button class="btn btn-xs btn-default edit-mcp-server-btn" title="Edit Server">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                    <button class="btn btn-xs btn-danger delete-mcp-server-btn" title="Delete Server">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                    <button class="btn btn-xs btn-default toggle-tools-btn" title="Toggle Tools">
+                        <i class="fa fa-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="mcp-server-details">
+                <p><strong>Endpoint:</strong> <span class="endpoint-url">{{this.endpoint_url}}</span></p>
+                {{#if this.last_error}}
+                    <p class="error-message"><strong>Last Error:</strong> {{this.last_error}}</p>
+                {{/if}}
+                <div class="mcp-server-tools" style="display: none;">
+                    <h4>Available Tools:</h4>
+                     {{#if this.tools}}
+                        <ul>
+                            {{#each this.tools}}
+                                <li>{{this.display_name}} ({{this.name}})</li>
+                            {{/each}}
+                        </ul>
+                    {{else}}
+                        <p>No tools discovered or connected.</p>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    {{/each}}
+</script>
+
+
+<script id="TabMcpServerModal" type="text/x-handlebars-template">
+    <div id="mcpServerModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" onclick="closeMcpServerModal()">&times;</span>
+                <h2 id="mcpServerModalTitle">Add MCP Server</h2>
+            </div>
+            <div class="modal-body">
+                <form id="mcpServerForm">
+                    <input type="hidden" id="mcpServerId">
+                    <div class="form-group">
+                        <label for="mcpServerName">Server Name:</label>
+                        <input type="text" id="mcpServerName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mcpServerEndpoint">Endpoint URL:</label>
+                        <input type="url" id="mcpServerEndpoint" class="form-control" placeholder="https://mcp.example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="checkbox" id="mcpServerEnabled" checked>
+                        <label for="mcpServerEnabled">Enabled</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeMcpServerModal()">Cancel</button>
+                <button id="saveMcpServerBtn" class="btn btn-primary">Save Server</button>
+            </div>
+        </div>
+    </div>
+</script>
+
+{% endverbatim %}

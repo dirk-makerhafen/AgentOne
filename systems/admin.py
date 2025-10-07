@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import System
+
+from systems.models.system import System
 
 @admin.register(System)
 class SystemAdmin(admin.ModelAdmin):

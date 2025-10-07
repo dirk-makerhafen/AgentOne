@@ -1,0 +1,52 @@
+<!-- Add/Edit Tool Installation Modal -->
+<div id="toolInstallationModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close-button" onclick="closeToolInstallationModal()">&times;</span>
+            <h2 id="toolInstallationModalTitle">Install Tool</h2>
+        </div>
+        <div class="modal-body">
+            <form id="toolInstallationForm">
+                <input type="hidden" id="toolInstallationId">
+                <input type="hidden" id="toolInstallationSystemId">
+                
+                <div class="form-group">
+                    <label for="toolInstallationToolDefinitionId">Tool Definition:</label>
+                    <select id="toolInstallationToolDefinitionId" class="form-control" required>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="toolInstallationStatus">Status:</label>
+                    <select id="toolInstallationStatus" class="form-control" disabled>
+                        <option value="not_installed">Not Installed</option>
+                        <option value="installing">Installing</option>
+                        <option value="running">Running</option>
+                        <option value="stopped">Stopped</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="toolInstallationLocalPath">Local Path (Executor):</label>
+                    <input type="text" id="toolInstallationLocalPath" class="form-control" placeholder="/opt/tools/my-tool" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label for="toolInstallationProcessId">Process ID:</label>
+                    <input type="text" id="toolInstallationProcessId" class="form-control" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label for="toolInstallationAssignedPort">Assigned Port:</label>
+                    <input type="number" id="toolInstallationAssignedPort" class="form-control" disabled>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeToolInstallationModal()">Cancel</button>
+            <button id="saveToolInstallationBtn" class="btn btn-primary">Save Installation</button>
+        </div>
+    </div>
+</div>

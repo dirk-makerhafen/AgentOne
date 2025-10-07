@@ -1,0 +1,20 @@
+{% verbatim %}
+<script id="SidebarVarsTemplate" type="text/x-handlebars-template">
+<div class="sidebar-vars-container">
+    {{#if (isEmpty vars)}}
+        <div class="sidebar-vars-empty">No variables set.</div>
+    {{else}}
+        <ul class="sidebar-vars-list">
+            {{#each vars}}
+            <li class="sidebar-var-item" data-var-key="{{@key}}">
+                <div class="sidebar-var-key">{{@key}}</div>
+                <div class="sidebar-var-value">
+                    <pre>{{json this}}</pre>
+                </div>
+            </li>
+            {{/each}}
+        </ul>
+    {{/if}}
+</div>
+</script>
+{% endverbatim %}

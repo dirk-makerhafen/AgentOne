@@ -1,0 +1,45 @@
+{% verbatim %}
+<script id="SidebarMemoryTemplate" type="text/x-handlebars-template">
+    <div class="sidebar-memory-controls">
+        <div class="sidebar-memory-filters" id="sidebar-memory-filters_{{instancePk}}">
+            <!-- Filter buttons will be rendered here -->
+        </div>
+    </div>
+    <div class="sidebar-memory-list" id="sidebar-memory-list-{{instancePk}}">
+        <!-- Memory items will be rendered here -->
+    </div>
+</script>
+
+<script id="SidebarMemoryFilterButtonTemplate" type="text/x-handlebars-template">
+    <button class="memory-filter-btn {{#if isActive}}active{{/if}}" data-layer="{{layer}}" onclick="toggleMemoryFilter(this, '{{layer}}', {{instancePk}})">{{layer}}</button>
+</script>
+
+<script id="SidebarMemoryItemTemplate" type="text/x-handlebars-template">
+<li class="memory-item layer-{{this.item.layer}}" id="memory-item-{{this.item.id}}">
+    <div class="memory-item-header">
+        <span class="memory-item-track">{{this.item.track}}</span>
+        <span class="memory-item-index">[{{this.item.id}}]</span>
+        <div class="memory-item-actions-main">
+            <button class="btn btn-xs btn-default add-memory-btn" title="Add new item here" data-item-id="{{this.item.id}}" data-item-track="{{this.item.track}}" data-item-layer="{{this.item.layer}}" onclick="addMemoryItem(event, {{../instancePk}})"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-xs btn-default delete-memory-btn" title="Delete this item" data-item-id="{{this.item.id}}" data-item-track="{{this.item.track}}" data-item-layer="{{this.item.layer}}" onclick="deleteMemoryItem(event, {{../instancePk}})"><i class="fa fa-trash"></i></button>
+            <button class="btn btn-xs btn-default reposition-memory-btn" title="Move up" data-item-id="{{this.item.id}}" data-item-track="{{this.item.track}}" data-item-layer="{{this.item.layer}}" data-direction="up" onclick="repositionMemoryItem(event, {{../instancePk}})"><i class="fa fa-arrow-up"></i></button>
+            <button class="btn btn-xs btn-default reposition-memory-btn" title="Move down" data-item-id="{{this.item.id}}" data-item-track="{{this.item.track}}" data-item-layer="{{this.item.layer}}" data-direction="down" onclick="repositionMemoryItem(event, {{../instancePk}})"><i class="fa fa-arrow-down"></i></button>
+        </div>
+    </div>
+    <div class="memory-item-body">
+        <pre class="memory-item-content"
+             id="memory-item-content-{{this.item.id}}"
+             contenteditable="true"
+             data-item-id="{{this.item.id}}"
+             data-item-track="{{this.item.track}}"
+             data-item-layer="{{this.item.layer}}"
+             onfocus="handleMemoryFocus(event)"
+             onblur="handleMemoryBlur(event)">{{this.item.content}}</pre>
+        <div class="memory-edit-actions hidden" id="memory-edit-actions-{{this.item.id}}">
+            <button class="btn btn-xs btn-success save-memory-btn" data-item-id="{{this.item.id}}" onclick="saveMemoryEdit(event, {{../instancePk}})">Save</button>
+            <button class="btn btn-xs btn-default cancel-memory-btn" data-item-id="{{this.item.id}}" onclick="cancelMemoryEdit(event)">Cancel</button>
+        </div>
+    </div>
+</li>
+</script>
+{% endverbatim %}

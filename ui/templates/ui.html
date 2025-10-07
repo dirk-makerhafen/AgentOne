@@ -1,0 +1,206 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="{% static 'css3party/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css3party/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css3party/d3-flamegraph.css' %}">
+    <link rel="stylesheet" href="{% static 'css3party/diff2html.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/resizable.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <title>Agent Ui</title>
+</head>
+
+<body>
+
+    <div class="resizable-container" data-orientation="horizontal">
+        
+        <div class="resizable-panel resizable-container " data-orientation="vertical" data-size-pc=15>
+            {% include 'components/sidebar/Sidebar.html' %}
+        </div>
+
+        <div class="resizable-panel resizable-container" data-orientation="horizontal" data-size-pc=85 id="mainSplitViewContainer">
+
+            <div class="resizable-panel flex-column" id="mainTabPanel"  data-size-pc=100 >
+                <div class="tab-controls-area">
+                    <div class="tab-bar" id="mainTabBar" ondragover="allowDrop(event)" ondrop="dropTab(event, 'mainTabBar')" ondragenter="event.target.classList.add('drag-over')" ondragleave="event.target.classList.remove('drag-over')">
+                        <div class="split-controls-container" style="display: flex; margin-left: auto; gap: 5px; padding-top: 2px;">
+
+                        </div>
+                    </div>
+                </div>
+                <div id="no-instance-selected-content" class="tab-content active">
+                    <p>Select an agent instance from the left sidebar to open its dedicated tab.</p>
+                </div>
+                <!-- Dynamic tab content will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+    <!-- Global Console Output Area (outside of the main split view, always visible) -->
+    <div id="consoleOutputArea" class="global-console-output-area">
+        <div style="text-align: left; font-weight: bold;">Global Console Output</div>
+    </div>
+    
+    {% include 'modals/revert_file_modal.html' %}
+    {% include 'modals/revert_all_fs_modal.html' %} 
+
+
+
+    {% include 'components/chat/ConversationMessage.html' %}
+    {% include 'components/chat/DebugLog.html' %}
+    {% include 'components/chat/FilesystemLog.html' %}
+    {% include 'components/chat/InterAgentLog.html' %}
+    {% include 'components/chat/LLMQuery.html' %}
+    {% include 'components/chat/LLMResponse.html' %}
+    {% include 'components/chat/PythonVarLog.html' %}
+    {% include 'components/chat/ToolCall.html' %}
+
+    {% include 'components/tabs/TabAgent.html' %}
+    {% include 'components/tabs/TabPrompts.html' %}
+    {% include 'components/tabs/TabProviders.html' %}
+    {% include 'components/tabs/TabInstance.html' %}
+    {% include 'components/tabs/TabSystems.html' %}
+    {% include 'components/tabs/TabTools.html' %}    
+    {% include 'components/tabs/TabMcp.html' %}    
+
+    {% include 'components/instance/InstanceHeader.html' %}
+    {% include 'components/instance/SidebarFilesystem.html' %}
+    {% include 'components/instance/SidebarFilesystemHeader.html' %}
+    {% include 'components/instance/SidebarMemory.html' %}
+    {% include 'components/instance/SidebarPermissions.html' %}
+    {% include 'components/instance/SidebarSettings.html' %}
+    {% include 'components/instance/SidebarVars.html' %}
+
+    {% include 'components/sidebar/SidebarAgents.html' %}
+    {% include 'components/sidebar/SidebarInstances.html' %}
+
+
+
+    <script src="{% static 'js3party/jquery-3.6.0.min.js' %}"></script>
+    <script src="{% static 'js3party/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js3party/split.js' %}"></script>
+
+    <script src="{% static 'js3party/diff.min.js' %}"></script>
+    <script src="{% static 'js3party/diff2html.min.js' %}"></script>
+    <script src="{% static 'js3party/handlebars.js' %}"></script>
+
+    <script src="{% static 'js3party/d3.v7.js' %}"></script>
+    <script src="{% static 'js3party/d3-flamegraph.min.js' %}"></script>
+    
+    <script src="{% static 'js/utils/utils.js' %}"></script>
+    <script src="{% static 'js/utils/resizable.js' %}"></script>
+    <script src="{% static 'js/utils/splitpanel.js' %}"></script>
+    <script src="{% static 'js/utils/tabs.js' %}"></script>
+
+    <!-- Agent APIs -->
+    <script src="{% static 'js/services/agents/agentApi.js' %}"></script>
+    <script src="{% static 'js/services/agents/agentInstanceApi.js' %}"></script>
+    <script src="{% static 'js/services/agents/conversationApi.js' %}"></script>
+    <script src="{% static 'js/services/agents/limitsApi.js' %}"></script>
+    <!-- Core APIs -->
+    <script src="{% static 'js/services/core/promptsApi.js' %}"></script>
+    <!-- Provider APIs -->
+    <script src="{% static 'js/services/providers/apiProviderApi.js' %}"></script>
+    <script src="{% static 'js/services/providers/aiModelApi.js' %}"></script>
+    <script src="{% static 'js/services/providers/apiKeyApi.js' %}"></script>
+    <!-- System APIs -->
+    <script src="{% static 'js/services/systems/systemApi.js' %}"></script>
+    <!-- Tool APIs -->
+    <script src="{% static 'js/services/tools/a2aPermissionsApi.js' %}"></script>
+    <script src="{% static 'js/services/tools/directToolCallApi.js' %}"></script>
+    <script src="{% static 'js/services/tools/filesystemApi.js' %}"></script>
+    <script src="{% static 'js/services/tools/memoryApi.js' %}"></script>
+    <script src="{% static 'js/services/tools/toolDefinitionApi.js' %}"></script>
+    <script src="{% static 'js/services/tools/toolInstallationApi.js' %}"></script>
+    <script src="{% static 'js/services/tools/toolInstanceApi.js' %}"></script>
+    <script src="{% static 'js/services/agentApi.js' %}"></script>
+    <script src="{% static 'js/services/conversationApi.js' %}"></script>
+    <script src="{% static 'js/services/promptApi.js' %}"></script>
+    <script src="{% static 'js/services/providerApi.js' %}"></script>
+    <script src="{% static 'js/services/systemApi.js' %}"></script>
+    <script src="{% static 'js/services/toolApi.js' %}"></script>
+    <script src="{% static 'js/services/websocket.js' %}"></script>
+
+    <script src="{% static 'js/components/sidebar/SidebarAgents.js' %}"></script>
+    <script src="{% static 'js/components/sidebar/SidebarInstances.js' %}"></script>
+    <script src="{% static 'js/components/sidebar/SidebarClientLog.js' %}"></script>
+
+    <script src="{% static 'js/components/chat/ChatWindow.js' %}"></script>
+    <script src="{% static 'js/components/chat/ConversationMessage.js' %}"></script>
+    <script src="{% static 'js/components/chat/DebugLog.js' %}"></script>
+    <script src="{% static 'js/components/chat/FilesystemLog.js' %}"></script>
+    <script src="{% static 'js/components/chat/InterAgentLog.js' %}"></script>
+    <script src="{% static 'js/components/chat/LLMQuery.js' %}"></script>
+    <script src="{% static 'js/components/chat/LLMResponse.js' %}"></script>
+    <script src="{% static 'js/components/chat/PythonVarLog.js' %}"></script>
+    <script src="{% static 'js/components/chat/ToolCall.js' %}"></script>
+
+    <script src="{% static 'js/components/tabs/TabInstance.js' %}"></script>
+    <script src="{% static 'js/components/tabs/TabMcp.js' %}"></script>
+    <script src="{% static 'js/components/tabs/TabAgent.js' %}"></script>
+    <script src="{% static 'js/components/tabs/TabPrompts.js' %}"></script>
+    <script src="{% static 'js/components/tabs/TabProviders.js' %}"></script>
+    <script src="{% static 'js/components/tabs/TabSystems.js' %}"></script>    
+    <script src="{% static 'js/components/tabs/TabTools.js' %}"></script>
+
+    <script src="{% static 'js/components/instance/InstanceHeader.js' %}"></script>
+    <script src="{% static 'js/components/instance/SidebarFilesystem.js' %}"></script>
+    <script src="{% static 'js/components/instance/SidebarFilesystemHeader.js' %}"></script>
+    <script src="{% static 'js/components/instance/SidebarMemory.js' %}"></script>
+    <script src="{% static 'js/components/instance/SidebarPermissions.js' %}"></script>
+    <script src="{% static 'js/components/instance/SidebarSettings.js' %}"></script>
+    <script src="{% static 'js/components/instance/SidebarVars.js' %}"></script>
+
+
+
+    <script>
+
+        // Global variables for accessibility across scripts
+        let currentAgentInstancePk = null; // To track which instance's chat is currently displayed
+        let oldestMessageId = null; // To track for pagination
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Initialize the main split layout
+            if (typeof reinitializeAllSplits === 'function') {
+                reinitializeAllSplits();
+                if (typeof updateSplitControlButtons === 'function') {
+                    updateSplitControlButtons();
+                } else {
+                    console.error("updateSplitControlButtons function not found on DOMContentLoaded.");
+                }
+            } else {
+                console.error("reinitializeAllSplits function not found. Split.js setup failed.");
+            }
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => { 
+                    reinitializeAllSplits(); 
+                    if (typeof updateSplitControlButtons === 'function') {
+                        updateSplitControlButtons();
+                    }
+                }, 100);
+            });
+            // Connect to WebSocket using the user_pk from Django context
+            const userPk = "{{ user_pk }}";
+            if (userPk) {
+                connectWebSocket(userPk);
+            } else {
+                addToClientLog("User PK not found. WebSocket connection not established.", 'error');
+            }
+        });
+
+        
+    </script>
+
+
+
+</body>
+</html>
+

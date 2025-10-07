@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import ApiProvider, ApiKey, Model
+
+from providers.models.ai_model import AiModel
+from providers.models.api_key import ApiKey
+from providers.models.api_provider import ApiProvider
 
 @admin.register(ApiProvider)
 class ApiProviderAdmin(admin.ModelAdmin):
@@ -19,7 +22,7 @@ class ApiKeyAdmin(admin.ModelAdmin):
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')
 
-@admin.register(Model)
+@admin.register(AiModel)
 class ModelAdmin(admin.ModelAdmin):
     list_display = ('pk', 'created_at', 'name', 'apiProvider', 'enabled', 'max_tokens', 'free_limit_per_day', 'raw_data')
     list_display_links = ('pk', 'name', 'apiProvider')

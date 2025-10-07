@@ -310,9 +310,94 @@ def append_file(path, content):
     except Exception as e:
         return {'status': 'error', 'message': f"Error appending to file {path}: {str(e)}"}
 
+import sys, subprocess, json, textwrap, tempfile, os
 
 @dispatched_primitive_operation
-def run_python_code(python_code_string: str, locals_dict={}, locals_to_return=[]):
+def run_python_code(python_code_string: str, locals_dict={}, locals_to_return=[], workingdir=None):
+    """
+    Executes Python code in an isolated subprocess, with its own working directory.
+    Adds the original working directory to sys.path so local modules can still be imported.
+    Returns the same structured result dict as the original function.
+    """
+
+    original_cwd = os.getcwd()
+
+    runner_code = f"""
+import sys, io, traceback, json, os
+import re, subprocess, math, threading, copy, pathlib
+import datetime, random, itertools, time, requests, inspect, functools
+from copy import deepcopy
+from pathlib import Path
+
+# Ensure original working directory is still in sys.path for imports
+orig_cwd = {json.dumps(original_cwd)}
+if orig_cwd not in sys.path:
+    sys.path.insert(0, orig_cwd)
+
+from executor.primitives import *
+from executor import primitives
+
+# Load initial locals
+locals_dict = json.loads(sys.stdin.readline())
+locals_dict_copy = deepcopy(locals_dict)
+
+old_stdout, old_stderr = sys.stdout, sys.stderr
+sys.stdout, sys.stderr = io.StringIO(), io.StringIO()
+caught_exception = None
+
+try:
+    # Read the actual user code from stdin after the JSON
+    code = sys.stdin.read()
+    exec(code, globals(), locals_dict_copy)
+except Exception as e:
+    caught_exception = str(e)
+    traceback.print_exc(file=sys.stderr)
+
+stdout_val = sys.stdout.getvalue().strip()
+stderr_val = sys.stderr.getvalue().strip()
+sys.stdout, sys.stderr = old_stdout, old_stderr
+
+result = {{
+    "status": "success" if not caught_exception else "error",
+}}
+if caught_exception:
+    result["message"] = f"Exception: {{caught_exception}}"
+if stdout_val:
+    result["stdout"] = stdout_val
+if stderr_val:
+    result["stderr"] = stderr_val
+result["vars"] = {{k: locals_dict_copy[k] for k in {locals_to_return!r} if k in locals_dict_copy}}
+
+print(json.dumps(result))
+"""
+
+    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as tmpfile:
+        tmpfile.write(textwrap.dedent(runner_code))
+        tmpname = tmpfile.name
+
+    try:
+        # First line: locals_dict as JSON, then the user code itself
+        stdin_data = json.dumps(locals_dict) + "\n" + python_code_string
+
+        proc = subprocess.run(
+            [sys.executable, tmpname],
+            cwd=workingdir or os.getcwd(),
+            input=stdin_data,
+            capture_output=True,
+            text=True
+        )
+        if proc.returncode != 0:
+            return {
+                "status": "error",
+                "message": f"Subprocess failed with code {proc.returncode}",
+                "stdout": proc.stdout.strip(),
+                "stderr": proc.stderr.strip(),
+            }
+        return json.loads(proc.stdout.strip())
+    finally:
+        os.unlink(tmpname)
+
+def run_python_code_old(python_code_string: str, locals_dict={}, locals_to_return=[]):
     """
     Executes a Python code string within a controlled environment, providing common imports
     and initial variables. It specifically tracks changes made to a dictionary named 'VARS'
@@ -428,7 +513,7 @@ def run_shell_script(script: str, interpreter: str = "auto", env: dict = None, t
             return {'status': 'error', 'message': f"Unsupported interpreter: {interpreter}"}
 
         # Execute the command
-        full_env = os.environ.copy()
+        full_env = {} #os.environ.copy()
         if env:
             full_env.update(env)
 

@@ -1,0 +1,77 @@
+{% verbatim %}
+
+<script id="TabPromptsTemplate" type="text/x-handlebars-template">
+    <div id="tabContent_prompts" class="resizable-container tab-content" data-orientation="vertical" style="display: none;">
+        <div id="prompts-list-header" class="sidebar-list-header">
+            <span>Prompt Templates</span>
+            <button id="add-prompt-btn" class="btn btn-xs btn-default" title="Add New Prompt Template">
+                <i class="fa fa-plus"></i>
+            </button>
+        </div>
+        <div class="prompts-table-container sidebar-list-body">
+            <table id="prompts-table" class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Owner</th>
+                        <th>Source</th>
+                        <th>Key</th>
+                        <th>Versions</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="prompts-table-body">
+                    <!-- Prompt list items will be rendered here by renderPromptList.js -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</script>
+
+
+<script id="TabPromptsListItemTemplate" type="text/x-handlebars-template">
+    <tr class="prompt-item-row" id="prompt-row-{{id}}" data-prompt-pk="{{id}}" onclick="event.preventDefault(); togglePromptValueRow(this, '{{id}}', event)">
+        <td {{#if is_editable}}style="margin-left: 15px;display: flex;"{{/if}}>
+            {{#if is_editable}}<b>{{/if}}
+                {{owner_username}}
+            {{#if is_editable}}</b>{{/if}}
+        </td>
+        <td>{{source}}</td>
+        <td>{{key}}</td>
+        <td>{{version_count}}</td>
+        <td>
+            <div class="prompt-actions">
+                {{#if is_deleteable}}
+                <button class="btn btn-xs btn-default delete-prompt-btn" data-prompt-pk="{{id}}" title="Delete prompt" onclick="event.stopPropagation(); deletePrompt('{{id}}', '{{key}}')">
+                    <i class="fa fa-trash"></i>
+                </button>
+                {{/if}}
+                {{#if is_editable}}
+
+                {{else}}
+                <button class="btn btn-xs btn-default create-custom-version-btn" data-prompt-pk="{{id}}" title="Create a custom, editable version of this system prompt" onclick="event.stopPropagation(); createCustomPromptVersion('{{id}}')">
+                    <i class="fa fa-copy"></i> Copy
+                </button>
+                {{/if}}
+                <i class="fa fa-chevron-down expand-icon" id="expand-icon-{{id}}" title="Toggle details"></i>
+
+            </div>
+        </td>
+    </tr>
+    <tr class="prompt-value-row hidden" id="prompt-value-row-{{id}}">
+        <td colspan="5"  {{#if is_editable}}style="padding-left: 20px;"{{/if}}>
+            <div class="prompt-value-editor-container">
+                <pre class="prompt-value-content" {{#if is_editable}}contenteditable="true"{{/if}} data-prompt-pk="{{id}}" id="prompt-value-editable-{{id}}">{{value}}</pre>
+                {{#if is_editable}}
+                <div class="prompt-edit-actions hidden" id="prompt-edit-actions-{{id}}">
+                    <button class="btn btn-primary btn-xs save-prompt-value-btn" data-prompt-pk="{{id}}" onclick="event.stopPropagation(); savePromptChanges('{{id}}')"><i class="fa fa-check"></i> Save</button>
+                    <button class="btn btn-secondary btn-xs cancel-prompt-value-btn" data-prompt-pk="{{id}}" onclick="event.stopPropagation(); cancelPromptChanges('{{id}}')"><i class="fa fa-times"></i> Cancel</button>
+                </div>
+                {{/if}}
+            </div>
+            <div class="prompt-meta">
+                <span class="prompt-timestamps">Created: {{formatDateTime created_at}}</span>
+            </div>
+        </td>
+    </tr>
+</script>
+{% endverbatim %}

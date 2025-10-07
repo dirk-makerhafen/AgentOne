@@ -1,0 +1,58 @@
+{% verbatim %}
+<script id="SidebarSettingsTemplate" type="text/x-handlebars-template">
+<div class="sidebar-settings-container">
+    <h5>Instance Limits</h5>
+    <div class="setting-item">
+        <label for="limit-convo-input_{{id}}">Conversation History Limit:</label>
+        <div class="editable-setting">
+            <span class="editable-limit" id="limit-convo-text_{{id}}" onclick="showLimitEdit('convo', '{{id}}')">{{limit_max_conversation_messages}}</span>
+            <i class="fa fa-pencil-square-o" onclick="showLimitEdit('convo', '{{id}}')"></i>
+            <input type="number" id="limit-convo-input_{{id}}" value="{{limit_max_conversation_messages}}" style="display:none; width: 70px;" onkeydown="handleLimitKeydown(event, 'convo', '{{id}}')" onblur="saveLimit('convo', '{{id}}')"/>
+        </div>
+    </div>
+    <div class="setting-item">
+        <label for="limit-mem-input_{{id}}">Memory Items per Track/Layer:</label>
+        <div class="editable-setting">
+            <span class="editable-limit" id="limit-mem-text_{{id}}" onclick="showLimitEdit('mem', '{{id}}')">{{limit_max_memory_items}}</span>
+            <i class="fa fa-pencil-square-o" onclick="showLimitEdit('mem', '{{id}}')"></i>
+            <input type="number" id="limit-mem-input_{{id}}" value="{{limit_max_memory_items}}" style="display:none; width: 70px;" onkeydown="handleLimitKeydown(event, 'mem', '{{id}}')" onblur="saveLimit('mem', '{{id}}')"/>
+        </div>
+    </div>
+    <div class="setting-item">
+        <label for="limit-steps-input_{{id}}">Max Automatic Steps:</label>
+        <div class="editable-setting">
+            <span class="editable-limit" id="limit-steps-text_{{id}}" onclick="showLimitEdit('steps', '{{id}}')">{{limit_max_automated_steps}}</span>
+            <i class="fa fa-pencil-square-o" onclick="showLimitEdit('steps', '{{id}}')"></i>
+            <input type="number" id="limit-steps-input_{{id}}" value="{{limit_max_automated_steps}}" style="display:none; width: 70px;" onkeydown="handleLimitKeydown(event, 'steps', '{{id}}')" onblur="saveLimit('steps', '{{id}}')"/>
+            <span class="current-step-count">(Current: {{automated_step_count}})</span>
+        </div>
+    </div>
+    <h5>History Limiting Rules <i class="fa fa-info-circle" title="Override default tool history limits. Empty fields will revert to the tool's default value."></i></h5>
+    {{#each history_limiting_rules as |toolRules toolName|}}
+    <div class="tool-history-rules-group">
+        <h6>{{toolName}}</h6>
+        <div class="history-limits-grid">
+            <div class="history-limits-header">Rule</div>
+            <div class="history-limits-header"></div> <!-- Header for reset button -->
+            <div class="history-limits-header">Success</div>
+            <div class="history-limits-header">Failed</div>
+            <div class="history-limits-header">Pending</div>
+            <div class="history-limits-header">Total(max)</div>
+            {{#each toolRules}}
+            <div class="history-limit-rule-name" title="{{this.description}}">
+                {{this.display_name}}
+            </div>
+            <div class="history-limit-actions">          
+                <i class="fa fa-undo reset-limit-btn {{#if this.db_id}}{{else}}hidden{{/if}}" title="Reset to default" onclick="resetHistoryLimit('{{this.full_rule_name}}', '{{../../id}}')"></i>   
+            </div>
+            <div><input type="number" class="history-limit-input {{#unless this.db_id}}is-default-limit{{/unless}}" value="{{this.success}}" placeholder="-" data-rule-full-name="{{this.full_rule_name}}" data-limit-type="success" onchange="handleHistoryLimitChange(event, '{{../../id}}')"></div>
+            <div><input type="number" class="history-limit-input {{#unless this.db_id}}is-default-limit{{/unless}}" value="{{this.failed}}" placeholder="-" data-rule-full-name="{{this.full_rule_name}}" data-limit-type="failed" onchange="handleHistoryLimitChange(event, '{{../../id}}')"></div>
+            <div><input type="number" class="history-limit-input {{#unless this.db_id}}is-default-limit{{/unless}}" value="{{this.pending}}" placeholder="-" data-rule-full-name="{{this.full_rule_name}}" data-limit-type="pending" onchange="handleHistoryLimitChange(event, '{{../../id}}')"></div>
+            <div><input type="number" class="history-limit-input {{#unless this.db_id}}is-default-limit{{/unless}}" value="{{this.max}}" placeholder="-" data-rule-full-name="{{this.full_rule_name}}" data-limit-type="max" onchange="handleHistoryLimitChange(event, '{{../../id}}')"></div>
+            {{/each}}
+        </div>
+    </div>
+    {{/each}}
+</div>
+</script>
+{% endverbatim %}

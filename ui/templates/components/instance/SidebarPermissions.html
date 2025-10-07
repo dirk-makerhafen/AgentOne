@@ -1,0 +1,113 @@
+{% verbatim %}
+<script id="SidebarPermissionsTemplate" type="text/x-handlebars-template">
+<div class="permissions-container" id="permissions-container_{{instancePk}}">
+    <h4>Outbound Permissions</h4>
+    <p class="text-muted"><small>Define which agents this instance can communicate with.</small></p>
+
+    <div class="permission-search-container">
+        <input type="text" id="permission-search-input_{{instancePk}}" onkeyup="filterAvailableInstances(this.value, {{instancePk}})" placeholder="Search agents to add to matrix...">
+        <div id="permission-search-results_{{instancePk}}"></div>
+    </div>
+
+    <div class="permissions-matrix-container">
+        {{#if outbound_permissions.length}}
+        <table class="permissions-matrix" id="permissions-matrix-table_{{instancePk}}">
+            <thead>
+                <tr>
+                    <th>Target Agent</th>
+                    <th class="permission-checkbox-cell">Can Send</th>
+                    <th class="permission-checkbox-cell">Can Receive</th>
+                    <th class="actions-cell">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each outbound_permissions}}
+                <tr id="perm-row-{{this.target_instance_pk}}_{{../instancePk}}">
+                    <td class="agent-name-cell">{{this.target_instance_name}}</td>
+                    <td class="permission-checkbox-cell">
+                        <input type="checkbox" data-target-pk="{{this.target_instance_pk}}" data-permission-type="can_send" {{#if this.can_send}}checked{{/if}} onchange="handlePermissionChange(this, {{../instancePk}})">
+                    </td>
+                    <td class="permission-checkbox-cell">
+                        <input type="checkbox" data-target-pk="{{this.target_instance_pk}}" data-permission-type="can_receive" {{#if this.can_receive}}checked{{/if}} onchange="handlePermissionChange(this, {{../instancePk}})">
+                    </td>
+                    <td class="actions-cell">
+                        <button class="remove-permission-btn" title="Remove from matrix" onclick="removeInstanceFromMatrix('{{this.target_instance_pk}}', {{../instancePk}})">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+            <div id="permissions-empty-state_{{instancePk}}" class="permissions-empty-state">
+                <p>No outbound permissions configured.</p>
+                <p><small>Use the search bar above to find and add agents to the matrix.</small></p>
+            </div>
+        {{/if}}
+    </div>
+    <hr class="permission-divider"/>
+    <h4>Inbound Permissions</h4>
+    <p class="text-muted"><small>Shows which agents have permission to communicate with this instance.</small></p>
+    <div class="permissions-matrix-container">
+        {{#if inbound_permissions.length}}
+        <table class="permissions-matrix readonly">
+            <thead>
+                <tr>
+                    <th>Source Agent</th>
+                    <th class="permission-checkbox-cell">Can Send to Me</th>
+                    <th class="permission-checkbox-cell">Can Receive from Me</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each inbound_permissions}}
+                <tr>
+                    <td class="agent-name-cell">{{this.source_instance_name}}</td>
+                    <td class="permission-checkbox-cell">
+                        <i class="fa {{#if this.can_send}}fa-check-square-o text-success{{else}}fa-square-o{{/if}}"></i>
+                    </td>
+                    <td class="permission-checkbox-cell">
+                         <i class="fa {{#if this.can_receive}}fa-check-square-o text-success{{else}}fa-square-o{{/if}}"></i>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+            <div class="permissions-empty-state">
+                <p>No other agents have permissions configured for this instance.</p>
+            </div>
+        {{/if}}
+    </div>
+</div>
+</script>
+
+
+<script id="SearchResultItemTemplate" type="text/x-handlebars-template">
+    <div class="search-result-item">
+        <div class="search-result-info">
+            <div class="name">{{target_instance_name}}</div>
+            <div class="description">{{target_instance_description || 'No description'}}</div>
+        </div>
+        <button class="add-permission-btn" onclick="addInstanceToMatrix({{target_instance_pk}}, {{instancePk}})">Add</button>
+    </div>
+</script>
+
+
+<script id="PermissionMatrixRowTemplate" type="text/x-handlebars-template">
+    <tr id="perm-row-{{target_instance_pk}}_{{instancePk}}">
+        <td class="agent-name-cell">{{target_instance_name}}</td>
+        <td class="permission-checkbox-cell">
+            <input type="checkbox" data-target-pk="{{target_instance_pk}}" data-permission-type="can_send" onchange="handlePermissionChange(this, {{instancePk}})">
+        </td>
+        <td class="permission-checkbox-cell">
+            <input type="checkbox" data-target-pk="{{target_instance_pk}}" data-permission-type="can_receive" onchange="handlePermissionChange(this, {{instancePk}})">
+        </td>
+        <td class="actions-cell">
+            <button class="remove-permission-btn" title="Remove from matrix" onclick="removeInstanceFromMatrix('{{target_instance_pk}}', {{instancePk}})">
+                <i class="fa fa-trash-o"></i>
+            </button>
+        </td>
+    </tr>
+</script>
+{% endverbatim %}

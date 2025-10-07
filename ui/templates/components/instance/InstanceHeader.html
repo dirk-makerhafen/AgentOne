@@ -1,0 +1,63 @@
+{% verbatim %}
+<script id="AgentInstanceHeaderTemplate" type="text/x-handlebars-template">
+    <div class="instance-header-container">
+        <div class="header-column">
+            <div class="header-item"><i class="fa fa-user-circle header-icon" title="Agent"></i> <b>Agent:</b> <span class="header-value" id="instance-agent-name_{{message.id}}">{{message.agent_name}}</span></div>
+            <div class="header-item instance-name-container" id="instance-name-container">
+                <i class="fa fa-hashtag header-icon" title="Instance"></i> <b>Instance:</b>
+                <span class="header-value instance-editable-name" contenteditable="true" onblur="handleInstanceNameEdit(this, '{{message.id}}')" data-original-value="{{message.name}}">
+                    {{#if message.name}}{{message.name}}{{else}}Unnamed Instance{{/if}}
+                </span>
+            </div>
+            <div class="header-item" id="instance-model-container">
+                <i class="fa fa-microchip header-icon" title="Model"></i> <b>Model:</b>
+                <select id="instance-model-select_{{message.id}}" 
+                        onchange="handleInstanceModelChange(this, '{{message.id}}')" 
+                        onblur="handleInstanceModelChange(this, '{{message.id}}')" 
+                        class="header-value edit-select">
+                    {{#each all_available_models}}
+                        <option value="{{this.id}}" {{#if (eq this.id ../message.model_id)}}selected{{/if}}>{{this.name}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+        <div class="header-column">
+            <div class="header-item" id="instance-autorun-container">
+                <i class="fa fa-cogs header-icon" title="Auto-Run Steps"></i> <b>Auto-Run:</b>
+                <span class="header-value" id="instance-autorun-count_{{message.id}}">{{message.automated_step_count}} / </span>
+                <input type="number" 
+                       id="limit-max-automated-steps-input_{{message.id}}" 
+                       value="{{message.limit_max_automated_steps}}" 
+                       onchange="handleAutoRunLimitChange(this, '{{message.id}}')" 
+                       onblur="handleAutoRunLimitChange(this, '{{message.id}}')" 
+                       class="edit-input"/>
+            </div>
+            <div class="header-item" id="instance-system-container">
+                <i class="fa fa-server header-icon" title="System"></i> <b>System:</b>
+                <select id="instance-system-select_{{message.id}}" 
+                        onchange="handleInstanceSystemChange(this, '{{message.id}}')" 
+                        onblur="handleInstanceSystemChange(this, '{{message.id}}')" 
+                        class="header-value edit-select">
+                    {{#each all_available_systems}}
+                        <option value="{{this.id}}" {{#if (eq this.id ../message.system_id)}}selected{{/if}}>{{this.name}}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="header-item">
+                <i class="fa fa-arrow-circle-o-up header-icon" title="Tokens Sent (Prompt)"></i> <span class="header-value" id="instance-tokens-sent_{{message.id}}">{{message.total_prompt_tokens}}</span>
+                <i class="fa fa-arrow-circle-o-down header-icon" title="Tokens Received (Completion)" style="margin-left: 10px;"></i><span class="header-value" id="instance-tokens-received_{{message.id}}">{{message.total_completion_tokens}}</span>
+            </div>
+        </div>
+        <div class="header-column">
+            <div class="header-item full-width instance-description-container" id="instance-description-container">
+                <div class="display-view instance-description-display-view">
+                    <span class="header-value instance-editable-description" contenteditable="true" onblur="handleInstanceDescriptionEdit(this, '{{message.id}}')" data-original-value="{{message.description}}">
+                        {{#if message.description}}{{message.description}}{{else}}No description provided.{{/if}}
+                        <span class="description-bottom-right">Description</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+{% endverbatim %}

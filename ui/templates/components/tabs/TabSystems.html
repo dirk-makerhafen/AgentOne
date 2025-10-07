@@ -1,0 +1,194 @@
+{% verbatim %}
+<script id="TabSystemsTemplate" type="text/x-handlebars-template">
+    <div id="tabContent_systems" class="resizable-container tab-content" data-orientation="vertical" style="display: none;">
+        <div id="systems-list-header" class="sidebar-list-header">
+            <span>Systems</span>
+            <button id="add-system-btn" class="btn btn-xs btn-default" title="Create New System" onclick="systemCreate(event)">
+                <i class="fa fa-plus"></i>
+            </button>
+        </div>
+        <div id="systems-list-body" class="sidebar-list-body">
+            <table class="systems-table table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Executor Mode</th>
+                        <th>Executor URL</th>
+                        <th>Last Heartbeat</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- System rows will be appended here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</script>
+
+<script id="TabSystemsListItemTemplate" type="text/x-handlebars-template">
+    <tr class="system-item" data-system-id="{{id}}">
+        <td><span class="system-name">{{name}}</span></td>
+        <td><span class="system-status status-{{statusClass}}">{{status}}</span></td>
+        <td>{{executor_mode_display}}</td>
+        <td>{{executor_url_display}}</td>
+        <td><span class="heartbeat-time">{{last_heartbeat_display}}</span></td>
+        <td>
+            <button class="btn btn-xs btn-default toggle-details-btn" title="Show Details" onclick="systemToggleDetails(event, '{{id}}')">
+                <i class="fa fa-chevron-{{detailsIcon}}"></i>
+            </button>
+            <button class="btn btn-xs btn-default deploy-system-btn" title="Deploy" disabled>
+                <i class="fa fa-upload"></i>
+            </button>
+        </td>
+    </tr>
+</script>
+
+<script id="TabSystemsExecutorModeOptionTemplate" type="text/x-handlebars-template">
+    <option value="{{value}}" {{#if isSelected}}selected{{/if}}>{{text}}</option>
+</script>
+
+<script id="TabSystemsOSOptionTemplate" type="text/x-handlebars-template">
+    <option value="{{value}}" {{#if isSelected}}selected{{/if}}>{{text}}</option>
+</script>
+
+<script id="TabSystemsDetailsTemplate" type="text/x-handlebars-template">
+    <tr class="system-details-row {{#if isHidden}}hidden{{/if}}" data-system-id="{{id}}">
+        <td colspan="6">
+            <div class="system-details-content">
+                <!-- Display View -->
+                <div class="system-details-display" style="display: {{#if isEditing}}none{{else}}block{{/if}};">
+                    <p>Description: <b>{{description_display}}</b></p>
+                    <p>Operating System: <b>{{os_display}}</b></p>
+                    <p>Is Remote Executor: <b>{{is_remote_executor_display}}</b></p>
+                    <p>Executor URL: <b>{{executor_url_display}}</b></p>
+                    <p>Executor API Key: <b>{{executor_api_key_display}}</b></p>
+                    <p>Executor Mode: <b>{{executor_mode_display}}</b></p>
+                    <button class="btn btn-xs btn-info edit-system-btn" style="margin-top: 10px;" onclick="systemShowEditForm(event, '{{id}}')">Edit</button>
+                </div>
+                <div class="system-installed-tools">
+                    <h4>Installed Tools
+                        <button class="btn btn-xs btn-default add-tool-installation-btn" title="Install Tool" onclick="toolInstallationOpenModal(event, '{{id}}')">
+                            <i class="fa fa-plus"></i> Install Tool
+                        </button>
+                    </h4>
+                    <div class="tool-installation-list" id="tool-installation-list-{{id}}">
+                        <!-- Tool installations for this system will be rendered here -->
+                        <p class="no-installations-message">No tools installed on this system.</p>
+                    </div>
+                </div>
+
+                <!-- Edit View -->
+                <div class="system-details-edit" style="display: {{#if isEditing}}block{{else}}none{{/if}};">
+                    <div class="form-group"><label>Description:</label><textarea class="form-control" name="description">{{description}}</textarea></div>
+                    <div class="form-group"><label>Is Remote Executor:</label><input type="checkbox" name="is_remote_executor" {{#if is_remote_executor}}checked{{/if}}></div>
+                    <div class="form-group"><label>Executor URL:</label><input type="url" class="form-control" name="executor_url" value="{{executor_url}}"></div>
+                    <div class="form-group"><label>Executor API Key:</label><input type="text" class="form-control" name="executor_api_key" value="{{executor_api_key}}"></div>
+                    <div class="form-group"><label>Operating System:</label><select class="form-control" name="os">
+                        {{#each osOptions}}
+                            {{> TabSystemsOSOptionTemplate this}}
+                        {{/each}}
+                    </select></div>
+                    <div class="form-group"><label>Executor Mode:</label><select class="form-control" name="executor_mode">
+                        {{#each executorModeOptions}}
+                            {{> TabSystemsExecutorModeOptionTemplate this}}
+                        {{/each}}
+                    </select></div>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-xs btn-success save-system-btn" onclick="systemSaveChanges(event, '{{id}}')">Save</button>
+                        <button class="btn btn-xs btn-default cancel-edit-system-btn" onclick="systemCancelEdit(event, '{{id}}')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</script>
+
+<script id="TabSystemsToolInstallationItemTemplate" type="text/x-handlebars-template">
+    <div class="tool-installation-item" data-installation-id="{{id}}" data-system-id="{{system_id}}" data-tool-definition-id="{{tool_definition_id}}">
+        <div class="tool-installation-item-header">
+            <span class="tool-installation-name">{{tool_definition_name}}</span>
+            <span class="tool-installation-status status-{{status}}">{{status_display}}</span>
+        </div>
+        <div class="tool-installation-details">
+            {{#if local_path}}<p class="tool-installation-path">Path: <code>{{local_path}}</code></p>{{/if}}
+            {{#if assigned_port}}<p class="tool-installation-port">Port: <b>{{assigned_port}}</b></p>{{/if}}
+            {{#if process_id}}<p class="tool-installation-pid">PID: <b>{{process_id}}</b></p>{{/if}}
+        </div>
+        <div class="tool-installation-actions">
+            {{#if can_start}}
+                <button class="btn btn-xs btn-success start-tool-installation-btn" title="Start Tool" onclick="toolInstallationStart(event, '{{id}}')"><i class="fa fa-play"></i></button>
+            {{/if}}
+            {{#if can_stop}}
+                <button class="btn btn-xs btn-warning stop-tool-installation-btn" title="Stop Tool" onclick="toolInstallationStop(event, '{{id}}')"><i class="fa fa-stop"></i></button>
+            {{/if}}
+            <button class="btn btn-xs btn-info view-tool-logs-btn" title="View/Hide Logs" onclick="toolInstallationToggleLogs(event, '{{id}}')"><i class="fa fa-file-text-o"></i></button>
+            <button class="btn btn-xs btn-danger delete-tool-installation-btn" title="Uninstall Tool" onclick="toolInstallationDelete(event, '{{id}}', '{{tool_definition_name}}')"><i class="fa fa-trash"></i></button>
+        </div>
+        <div class="tool-installation-logs" style="display: none;"></div>
+    </div>
+</script>
+
+<script id="TabSystemsToolInstallationLogEntryTemplate" type="text/x-handlebars-template">
+    <div class="log-entry log-{{this.level}}">
+        <span class="log-timestamp">{{this.formatted_timestamp}}</span>
+        <span class="log-message">{{this.message}}</span>
+    </div>
+</script>
+
+
+<script id="TabSystemsToolInstallationModal" type="text/x-handlebars-template">
+<div id="toolInstallationModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close-button" onclick="toolInstallationCloseModal(event)">&times;</span>
+            <h2 id="toolInstallationModalTitle">Install Tool</h2>
+        </div>
+        <div class="modal-body">
+            <form id="toolInstallationForm">
+                <input type="hidden" id="toolInstallationId">
+                <input type="hidden" id="toolInstallationSystemId">
+
+                <div class="form-group">
+                    <label for="toolInstallationToolDefinitionId">Tool Definition:</label>
+                    <select id="toolInstallationToolDefinitionId" class="form-control" required>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="toolInstallationStatus">Status:</label>
+                    <select id="toolInstallationStatus" class="form-control" disabled>
+                        <option value="not_installed">Not Installed</option>
+                        <option value="installing">Installing</option>
+                        <option value="running">Running</option>
+                        <option value="stopped">Stopped</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="toolInstallationLocalPath">Local Path (Executor):</label>
+                    <input type="text" id="toolInstallationLocalPath" class="form-control" placeholder="/opt/tools/my-tool" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="toolInstallationProcessId">Process ID:</label>
+                    <input type="text" id="toolInstallationProcessId" class="form-control" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="toolInstallationAssignedPort">Assigned Port:</label>
+                    <input type="number" id="toolInstallationAssignedPort" class="form-control" disabled>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="toolInstallationCloseModal(event)">Cancel</button>
+            <button id="saveToolInstallationBtn" class="btn btn-primary" onclick="toolInstallationSave(event)">Save Installation</button>
+        </div>
+    </div>
+</div>
+</script>
+{% endverbatim %}
