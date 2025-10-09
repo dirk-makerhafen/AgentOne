@@ -1,13 +1,19 @@
 {% verbatim %}
 <script id="SidebarAgentsListItemTemplate" type="text/x-handlebars-template">
-    <div id="agent_{{id}}" class="sidebar-agent-item">
-        <div class="sidebar-agent-header">
+    <div id="agent_{{id}}" class="sidebar-agent-item" data-agent-id="{{id}}">
+        <div class="sidebar-agent-header" onclick="toggleAgentInstances(event, '{{id}}')">
             <h5 class="sidebar-agent-name">
-                <a href="#" onclick="toggleAgentInstances(event, '{{id}}')">{{name}} (ID: {{id}})</a>
+                <i class="fa fa-{{chevron_icon}} toggle-instances-icon"></i>
+                <a href="#">{{name}} (ID: {{id}})</a>
+                {{#if total_instances}}
+                    <span class="agent-instance-count"><i class="fa fa-user-circle-o"></i> {{total_instances}}</span>
+                {{else}}
+                    <span class="agent-instance-count"><i class="fa fa-user-circle-o"></i> 0</span>
+                {{/if}}
             </h5>
             <div class="agent-header-controls">
-                <div class="agent-actions-menu" onmouseleave="closeAgentMenu(event, 'agent-menu-{{id}}')">
-                    <button class="btn btn-xs btn-default" onclick="toggleAgentMenu(event, 'agent-menu-{{id}}')" title="Agent Actions">
+                <div class="agent-actions-menu" onmouseleave="hideAgentMenu(event, 'agent-menu-{{id}}')">
+                    <button class="btn btn-xs btn-default" onclick="showAgentMenu(event, 'agent-menu-{{id}}')" title="Agent Actions">
                         <i class="fa fa-bars"></i>
                     </button>
                     <div id="agent-menu-{{id}}" class="agent-menu-dropdown" style="display: none;">
@@ -26,7 +32,7 @@
 
 
 <script id="SidebarAgentsAddAgentTemplate" type="text/x-handlebars-template">
-    <div class="add-agent-form-container" id="add-agent-form-{{id}}">
+    <div class="add-agent-form-container" id="add-agent-form">
         <h3>Add New Agent</h3>
         <form>
             <div class="form-group">

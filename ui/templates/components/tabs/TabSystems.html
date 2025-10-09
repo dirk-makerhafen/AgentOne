@@ -109,24 +109,41 @@
     <div class="tool-installation-item" data-installation-id="{{id}}" data-system-id="{{system_id}}" data-tool-definition-id="{{tool_definition_id}}">
         <div class="tool-installation-item-header">
             <span class="tool-installation-name">{{tool_definition_name}}</span>
-            <span class="tool-installation-status status-{{status}}">{{status_display}}</span>
+            <span class="tool-installation-status installation-status-{{installation_status_class}}">
+                {{installation_status_display}}
+                <span class="instance-status-tag instance-status-{{instance_status_class}}">
+                    Running: {{running_instances_count}}/{{max_parallel_instances}}
+                </span>
+            </span>
         </div>
         <div class="tool-installation-details">
             {{#if local_path}}<p class="tool-installation-path">Path: <code>{{local_path}}</code></p>{{/if}}
-            {{#if assigned_port}}<p class="tool-installation-port">Port: <b>{{assigned_port}}</b></p>{{/if}}
-            {{#if process_id}}<p class="tool-installation-pid">PID: <b>{{process_id}}</b></p>{{/if}}
         </div>
         <div class="tool-installation-actions">
             {{#if can_start}}
-                <button class="btn btn-xs btn-success start-tool-installation-btn" title="Start Tool" onclick="toolInstallationStart(event, '{{id}}')"><i class="fa fa-play"></i></button>
+                <button class="btn btn-xs btn-success start-tool-installation-btn" title="Start New Instance" onclick="toolInstallationStart(event, '{{id}}')"><i class="fa fa-play"></i> Start</button>
             {{/if}}
-            {{#if can_stop}}
-                <button class="btn btn-xs btn-warning stop-tool-installation-btn" title="Stop Tool" onclick="toolInstallationStop(event, '{{id}}')"><i class="fa fa-stop"></i></button>
-            {{/if}}
-            <button class="btn btn-xs btn-info view-tool-logs-btn" title="View/Hide Logs" onclick="toolInstallationToggleLogs(event, '{{id}}')"><i class="fa fa-file-text-o"></i></button>
-            <button class="btn btn-xs btn-danger delete-tool-installation-btn" title="Uninstall Tool" onclick="toolInstallationDelete(event, '{{id}}', '{{tool_definition_name}}')"><i class="fa fa-trash"></i></button>
+            <button class="btn btn-xs btn-info view-tool-logs-btn" title="View/Hide Logs" onclick="toolInstallationToggleLogs(event, '{{id}}')"><i class="fa fa-file-text-o"></i> Logs</button>
+            <button class="btn btn-xs btn-danger delete-tool-installation-btn" title="Uninstall Tool" onclick="toolInstallationDelete(event, '{{id}}', '{{tool_definition_name}}')"><i class="fa fa-trash"></i> Uninstall</button>
+        </div>
+        <div class="tool-instance-list-container">
+             <!-- Running instances will be rendered here by JS -->
         </div>
         <div class="tool-installation-logs" style="display: none;"></div>
+    </div>
+</script>
+
+<script id="TabSystemsToolInstanceItemTemplate" type="text/x-handlebars-template">
+    <div class="tool-instance-item" data-instance-id="{{id}}">
+        <span class="instance-details">
+            Instance #{{id}} (PID: {{process_id}}) - Started: {{created_at_display}}
+        </span>
+        <span class="instance-status-tag instance-status-{{status_class}}">{{status}}</span>
+        <div class="instance-actions">
+            <button class="btn btn-xs btn-warning stop-tool-instance-btn" title="Stop this instance" onclick="toolInstallationStop(event, '{{id}}')">
+                <i class="fa fa-stop"></i> Stop
+            </button>
+        </div>
     </div>
 </script>
 
@@ -136,7 +153,6 @@
         <span class="log-message">{{this.message}}</span>
     </div>
 </script>
-
 
 <script id="TabSystemsToolInstallationModal" type="text/x-handlebars-template">
 <div id="toolInstallationModal" class="modal" style="display:none;">
@@ -155,6 +171,11 @@
                     <select id="toolInstallationToolDefinitionId" class="form-control" required>
                         <!-- Options populated by JS -->
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="toolInstallationMaxParallelInstances">Max Parallel Instances (1-64):</label>
+                    <input type="number" name="max_parallel_instances" id="toolInstallationMaxParallelInstances" class="form-control" value="1" min="1" max="64" required>
                 </div>
 
                 <div class="form-group">

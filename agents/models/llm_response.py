@@ -43,7 +43,7 @@ class LLMResponse(BaseModel):
             "id": self.id,
             "created_at": self.created_at.isoformat(),
             "status": "completed",
-            "model_name": self.llmQuery.model.name if self.llmQuery else "N/A",
+            "model_name": self.llmQuery.aimodel.name if self.llmQuery else "N/A",
             "total_tokens": total_tokens,
             "usage": usage_data,
             "raw_data": self.data,

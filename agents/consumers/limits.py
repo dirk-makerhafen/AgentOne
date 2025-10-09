@@ -4,46 +4,51 @@ from agents.models.history_limit import HistoryLimit
 from ui.router import register_handler
 
 @register_handler('historylimit_reset')
-def handle_historylimit_reset(consumer, user_pk, payload):
+def handle_historylimit_reset(consumer, instance_pk, rule_name):
     try:
-        agent_instance = AgentInstance.objects.get(instance_pk=payload.get('instance_pk'))
+        agent_instance = AgentInstance.objects.get(instance_pk=instance_pk)
     except AgentInstance.DoesNotExist:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {payload.get("instance_pk", None)} not found.'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
         return
-    full_rule_name = payload.get('rule_name')
-    if not full_rule_name:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': 'full_rule_name is required for reset.'}))
+
+    if not rule_name:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': 'rule_name is required for reset.'}))
         return
-    parts = full_rule_name.split(':', 1)
+
+    parts = rule_name.split(':', 1)
     if len(parts) != 2:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Invalid full_rule_name format: {full_rule_name}. Expected "group_name:rule_name".'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Invalid rule_name format: {rule_name}. Expected "group_name:rule_name".'}))
         return
-    group_name, rule_name = (parts[0], parts[1])
+
+    group_name, rule_name_part = (parts[0], parts[1])
     try:
-        HistoryLimit.objects.filter(agentInstance=agent_instance, group_name=group_name, rule_name=rule_name).delete()
-        agent_instance.send_object_to_clients(user_pk=user_pk)
+        HistoryLimit.objects.filter(agentInstance=agent_instance, group_name=group_name, rule_name=rule_name_part).delete()
+        agent_instance.send_object_to_clients()
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to reset history limit rule: {e}'}))
 
 @register_handler('historylimit_update')
-def handle_historylimit_update(consumer, user_pk, payload):
+def handle_historylimit_update(consumer, instance_pk, rule_name, limits=None):
+    if limits is None:
+        limits = {}
     try:
-        agent_instance = AgentInstance.objects.get(instance_pk=payload.get('instance_pk'))
+        agent_instance = AgentInstance.objects.get(instance_pk=instance_pk)
     except AgentInstance.DoesNotExist:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {payload.get("instance_pk", None)} not found.'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
         return
-    full_rule_name = payload.get('rule_name')
-    limits = payload.get('limits', {})
-    if not full_rule_name:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': 'full_rule_name is required.'}))
+
+    if not rule_name:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': 'rule_name is required.'}))
         return
-    parts = full_rule_name.split(':', 1)
+
+    parts = rule_name.split(':', 1)
     if len(parts) != 2:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Invalid full_rule_name format: {full_rule_name}. Expected "group_name:rule_name".'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Invalid rule_name format: {rule_name}. Expected "group_name:rule_name".'}))
         return
-    group_name, rule_name = (parts[0], parts[1])
+
+    group_name, rule_name_part = (parts[0], parts[1])
     try:
-        rule, created = HistoryLimit.objects.get_or_create(agentInstance=agent_instance, group_name=group_name, rule_name=rule_name, defaults={'is_active': True})
+        rule, created = HistoryLimit.objects.get_or_create(agentInstance=agent_instance, group_name=group_name, rule_name=rule_name_part, defaults={'is_active': True})
         changed = False
         limit_fields = ['success', 'failed', 'pending', 'max']
         for field in limit_fields:
@@ -62,6 +67,6 @@ def handle_historylimit_update(consumer, user_pk, payload):
                     changed = True
         if changed:
             rule.save()
-        agent_instance.send_object_to_clients(user_pk=user_pk)
+        agent_instance.send_object_to_clients()
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update history limit rule: {e}'}))

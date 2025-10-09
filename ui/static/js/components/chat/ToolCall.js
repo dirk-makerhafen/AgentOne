@@ -1,12 +1,7 @@
 // This file manages the rendering of standalone ToolCall messages, and also updates embedded tool call statuses.
 
-function renderToolCallMessage(payload, instancePk) {
+function renderToolCallMessage(payload) {
     const toolCallMessageTemplate = getTemplate('ToolCallTemplate');
-
-    if (!instancePk) {
-        console.error("renderToolCallMessage: instancePk is required.");
-        return;
-    }
 
     // --- Part 1: Handle updates to tool calls that might be embedded inside a ConversationMessage. ---
     // This allows live status/result updates without re-rendering the whole conversation message.
@@ -27,7 +22,7 @@ ${JSON.stringify(payload.result, null, 2)}`;
         formattedTimestamp: new Date(payload.created_at).toLocaleTimeString(),
         arguments_json: JSON.stringify(payload.arguments, null, 2),
         result_json: payload.result ? JSON.stringify(payload.result, null, 2) : null,
-        instancePk: instancePk // Pass instancePk to the template
+        instancePk: payload.agentInstance_id, // Pass instancePk to the template
     });
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = renderedHtml.trim();
@@ -35,7 +30,7 @@ ${JSON.stringify(payload.result, null, 2)}`;
     
     const existingElement = document.getElementById(newElement.id);
     if (existingElement) {
-        const parentLogArea = existingElement.closest(`#logArea_${instancePk}`);
+        const parentLogArea = existingElement.closest(`#logArea_${ payload.agentInstance_id}`);
         const detailsView = existingElement.querySelector('.toolcall-full');
         const isExpanded = detailsView && !detailsView.classList.contains('hidden');
         if (isExpanded) {
@@ -48,6 +43,6 @@ ${JSON.stringify(payload.result, null, 2)}`;
         // ReplaceChild is safer than replaceWith if the element is part of a live NodeList
         parentLogArea.replaceChild(newElement, existingElement);
     } else {
-        addToChatArea(newElement, instancePk);
+        addToChatArea(newElement,  payload.agentInstance_id);
     }
 };

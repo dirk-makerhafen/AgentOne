@@ -67,8 +67,7 @@ function generateAndInjectFsContent(item, detailsDiv, instancePk, displayMode) {
     const action = item.dataset.action;
     const isDirectory = item.dataset.isDirectory === 'true';
 
-    const unescape = (str) => str ? String(str).replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&#96;/g, '`').replace(/&#10;/g, '
-').replace(/&#13;/g, '') : '';
+    const unescape = (str) => str ? String(str).replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&#96;/g, '`').replace(/&#10;/g, '\n').replace(/&#13;/g, '\r') : '';
     const content = unescape(item.dataset.content);
     const prevContent = unescape(item.dataset.prevContent);
     const summaryContent = unescape(item.dataset.summary);

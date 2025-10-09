@@ -52,11 +52,11 @@ class DebugLogAdmin(admin.ModelAdmin):
 
 @admin.register(LLMQuery)
 class LLMQueryAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'created_at', 'agentInstance', 'model', 'raw_data')
-    list_display_links = ('pk', 'agentInstance', 'model')
-    list_filter = ('model', 'agentInstance__name')
+    list_display = ('pk', 'created_at', 'agentInstance', 'aimodel', 'raw_data')
+    list_display_links = ('pk', 'agentInstance', 'aimodel')
+    list_filter = ('aimodel', 'agentInstance__name')
     search_fields = ('raw_data', 'agentInstance__name')
-    autocomplete_fields = ('agentInstance', 'model', 'apikey')
+    autocomplete_fields = ('agentInstance', 'aimodel', 'apikey')
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')
 
@@ -64,7 +64,7 @@ class LLMQueryAdmin(admin.ModelAdmin):
 class LLMResponseAdmin(admin.ModelAdmin):
     list_display = ('pk', 'created_at', 'agentInstance', 'llmQuery', 'completion_tokens', 'prompt_tokens', 'raw_data')
     list_display_links = ('pk', 'agentInstance', 'llmQuery')
-    list_filter = ('agentInstance__name', 'llmQuery__model__name')
+    list_filter = ('agentInstance__name', 'llmQuery__aimodel__name')
     search_fields = ('raw_data', 'agentInstance__name')
     autocomplete_fields = ('agentInstance', 'llmQuery')
     list_per_page = 25

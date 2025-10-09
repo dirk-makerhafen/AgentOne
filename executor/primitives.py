@@ -626,7 +626,7 @@ def manage_tool_process(
     args: list = None,
     cwd: str = None, 
     env: dict = None,
-    mcp_server_config: dict = None, # For starting the client
+    tool_config: dict = None, # For starting the client
     tool_name: str = None, # For invoking a tool
     tool_kwargs: dict = None # For invoking a tool
 ):
@@ -640,7 +640,7 @@ def manage_tool_process(
     try:
         loop = _get_async_loop()
         coro = _manage_tool_process_async(
-            action, process_id, command, args, cwd, env, mcp_server_config, tool_name, tool_kwargs
+            action, process_id, command, args, cwd, env, tool_config, tool_name, tool_kwargs
         )
         future = asyncio.run_coroutine_threadsafe(coro, loop)
         result = future.result(timeout=60)  # Add a timeout for safety
@@ -671,7 +671,7 @@ async def _manage_tool_process_async(
     args: list = None,
     cwd: str = None, 
     env: dict = None,
-    mcp_server_config: dict = None,
+    tool_config: dict = None,
     tool_name: str = None,
     tool_kwargs: dict = None
 ):
@@ -694,8 +694,8 @@ async def _manage_tool_process_async(
             except Exception:
                 pass # Ignore errors during cleanup of potentially broken clients
 
-        if not all([command, cwd, mcp_server_config]):
-            return {'status': 'error', 'message': "'command', 'cwd', and 'mcp_server_config' are required for start."}
+        if not all([command, cwd, tool_config]):
+            return {'status': 'error', 'message': "'command', 'cwd', and 'tool_config' are required for start."}
 
         try:
             server_params = StdioServerParameters(command=command, args=args or [], cwd=cwd, env=env)

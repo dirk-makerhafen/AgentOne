@@ -5,10 +5,10 @@ from core.models.base_model import BaseModel
 
 class PromptStringManager(models.Manager):
     def get_or_create(self, **kwargs):
-        owner = kwargs.get('owner', None)
-        source = kwargs.get('source')
-        key = kwargs.get('key')
-        value = kwargs.get('value')
+        owner = kwargs.get('owner', kwargs.get("defaults",{}).get("owner"))
+        source = kwargs.get('source', kwargs.get("defaults",{}).get("source"))
+        key = kwargs.get('key', kwargs.get("defaults",{}).get("key"))
+        value = kwargs.get('value', kwargs.get("defaults",{}).get("value"))
 
         # Try to find the latest version of an existing prompt
         try:
@@ -19,7 +19,7 @@ class PromptStringManager(models.Manager):
                     source=source,
                     key=key,
                     value=value,
-                    **{k: v for k, v in kwargs.items() if k not in ['owner','source','key','value']} # Apply other defaults
+                    **{k: v for k, v in kwargs.items() if k not in ['owner','source','key','value', 'defaults']} # Apply other defaults
                 )
                 if latest_prompt:
                     latest_prompt.next_version = new_prompt
@@ -41,7 +41,7 @@ class PromptString(BaseModel):
     key = models.CharField(max_length=200, default='')
     value = models.TextField(max_length=1 * 1024 * 1024, default='')
     next_version = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='prev_version')
-
+    
     objects = PromptStringManager()
 
     def as_client_dict(self):
@@ -57,8 +57,15 @@ class PromptString(BaseModel):
             'is_deleteable': self.owner != None,
             'is_editable':  self.owner != None,
             'is_newest_version': self.next_version is None,
+            'system_parent_id': self.system_parent_pk,
+            'prev_version_id':  self.prev_version.pk if hasattr(self, "prev_version") else None
         }
     
+    @property
+    def system_parent_pk(self):
+        system_prompt =  PromptString.objects.filter(owner=None, source=self.source, key=self.key, next_version__isnull=True).order_by("-pk").first()
+        return system_prompt.pk if system_prompt else None
+
     @staticmethod
     def get_template(agentInstance, source, key):
         return PromptString.objects.filter(owner=None, source=source, key=key, next_version=None).order_by("-pk").first()

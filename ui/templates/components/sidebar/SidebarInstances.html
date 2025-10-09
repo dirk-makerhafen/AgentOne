@@ -5,8 +5,8 @@
         <div class="sidebar-instance-header" >
             <p><strong>{{name}}</strong> <span class="instance-status instance-status-{{status}}">{{status_display}}</span></p>
             <div class="agent-header-controls">
-                <div class="agent-actions-menu" onmouseleave="closeAgentMenu(event, 'agent-instance-menu-{{id}}')">
-                    <button class="btn btn-xs btn-default burgerbtn" onclick="toggleAgentMenu(event, 'agent-instance-menu-{{id}}')" title="Agent Instance Actions">
+                <div class="agent-actions-menu" onmouseleave="hideAgentMenu(event, 'agent-instance-menu-{{id}}')">
+                    <button class="btn btn-xs btn-default burgerbtn" onclick="showAgentMenu(event, 'agent-instance-menu-{{id}}')" title="Agent Instance Actions">
                         <i class="fa fa-bars"></i>
                     </button>
                     <div id="agent-instance-menu-{{id}}" class="agent-menu-dropdown" style="display: none;">

@@ -7,8 +7,8 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 class BaseModel(DirtyFieldsMixin, models.Model):
-    created_at = models.DateTimeField(db_index=True, editable=False, default=datetime.now)
-    updated_at = models.DateTimeField(editable=False, default=datetime.now)
+    created_at = models.DateTimeField(db_index=True, editable=False)
+    updated_at = models.DateTimeField(editable=False)
     raw_data = models.TextField(max_length=100 * 1024 * 1024, default='')
 
     @property
@@ -37,18 +37,21 @@ class BaseModel(DirtyFieldsMixin, models.Model):
                 self.raw_data = new_raw_data
                 _dirty_fields['raw_data'] = self.raw_data
 
-        update_fields = kwargs.get('update_fields')
         if self.pk is not None:
-            if update_fields is None:
-                update_fields = list(_dirty_fields.keys())
-            
-            if 'updated_at' not in update_fields:
-                update_fields.append('updated_at')
-            if 'raw_data' in _dirty_fields and 'raw_data' not in update_fields:
-                update_fields.append('raw_data')
-            
-            kwargs['update_fields'] = update_fields
-
+            if 'update_fields' not in kwargs:
+                fields_to_update = list(_dirty_fields.keys())
+                if 'updated_at' not in fields_to_update:
+                    fields_to_update.append('updated_at')
+                if 'raw_data' not in fields_to_update and 'raw_data' in _dirty_fields:
+                    fields_to_update.append('raw_data')
+                if fields_to_update:
+                    kwargs['update_fields'] = fields_to_update
+            else:
+                if 'updated_at' not in kwargs['update_fields']:
+                    kwargs['update_fields'].append('updated_at')
+                if 'raw_data' in _dirty_fields and 'raw_data' not in kwargs['update_fields']:
+                    kwargs['update_fields'].append('raw_data')
+        
         r = super().save(*args, **kwargs)
         reset_state(sender=self.__class__, instance=self, update_fields=kwargs.get("update_fields",[]))
         if send_to_client:
@@ -61,6 +64,8 @@ class BaseModel(DirtyFieldsMixin, models.Model):
         from agents.models.agent_instance import AgentInstance
         from core.models.prompt_string import PromptString
         from core.tasks.send_websocket_update import celery_send_websocket_update
+        from providers.models.ai_model import AiModel
+        from providers.models.api_key import ApiKey
         from providers.models.api_provider import ApiProvider
         from systems.models.system import System
         from tools.definitions.models.tool_definition import ToolDefinition
@@ -83,7 +88,7 @@ class BaseModel(DirtyFieldsMixin, models.Model):
             target_user_pks.update(self.agent.owners.values_list('pk', flat=True))
         elif isinstance(self, PromptString):
             target_user_pks.add(self.owner_id)
-        elif isinstance(self, (System, ApiProvider, ToolInstance, ToolDefinition, ToolInstallation)): # Added ToolInstallation
+        elif isinstance(self, (AiModel, ApiKey, System, ApiProvider, ToolInstance, ToolDefinition, ToolInstallation)): # Added ToolInstallation
             # Global objects are broadcast to all users
             target_user_pks.update(User.objects.values_list('pk', flat=True))
         else:
@@ -107,3 +112,4 @@ class BaseModel(DirtyFieldsMixin, models.Model):
 
     class Meta:
         abstract = True
+

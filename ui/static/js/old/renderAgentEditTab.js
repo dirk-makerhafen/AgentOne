@@ -49,7 +49,7 @@ function openAgentEditTab(agentId) {
     }
 
     const tabId = `agent-edit-tab-${agentId}`;
-    const tabContentId = `agent-edit-content-${agentId}`;
+    const tabContentId = `tabContent_edit_agent_${agentId}`;
     const tabButtonId = `tabButton_${tabContentId}`; // Align with tabs.js's expected ID format
 
     // Check if tab is already open

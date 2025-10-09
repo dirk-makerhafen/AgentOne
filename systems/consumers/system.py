@@ -3,19 +3,18 @@ from systems.models.system import System
 from ui.router import register_handler
 
 @register_handler('system_create')
-def handle_system_create(consumer, user_pk, payload):
+def handle_system_create(consumer, name='New System'):
     try:
-        system_name = payload.get('name', 'New System')
-        system = System(name=system_name)
+        system = System(name=name)
         system.save()
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create system: {e}'}))
 
 @register_handler('system_update')
-def handle_system_update(consumer, user_pk, payload):
+def handle_system_update(consumer, system_pk, data=None):
+    if data is None:
+        data = {}
     try:
-        system_pk = payload.get('system_pk')
-        data = payload.get('data', {})
         system = System.objects.get(pk=system_pk)
 
         system.name = data.get('name', system.name)
@@ -34,7 +33,7 @@ def handle_system_update(consumer, user_pk, payload):
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update system: {e}'}))
 
 @register_handler('system_list')
-def handle_system_list(consumer, user_pk, payload):
+def handle_system_list(consumer, **kwargs):
     try:
         systems = System.objects.all().order_by('name')
         system_list = [s.as_client_dict() for s in systems]

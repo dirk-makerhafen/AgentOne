@@ -13,10 +13,11 @@ function renderAgentInstanceHeader(payload, instancePk) {
     headerContainer.innerHTML = agentInstanceHeaderTemplate(context);
 }
 
-function handleInstanceDescriptionEdit(element, instanceId) {
-    const newDescription = element.textContent.trim();
-    if (newDescription !== element.dataset.originalValue) {
-        agentInstanceApi.update(instanceId, { "description": newDescription });
+function handleInstanceDescriptionTextEdit(element, instanceId) {
+    const newDescriptionText = element.textContent.trim();
+    if (newDescriptionText !== element.dataset.originalValue) {
+        agentInstanceApi.update(instanceId, { "description_text": newDescriptionText });
+        element.dataset.originalValue = newDescriptionText; // Update original value after successful save
     }
 }
 

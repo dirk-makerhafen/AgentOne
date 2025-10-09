@@ -12,8 +12,11 @@ ALLOWED_HOSTS = ["*"]
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 999*24*3600
 
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_BROKER_URL = 'redis://localhost:6379'
+REDIS_URL = 'redis://localhost:6379/1'
+
+
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_BROKER_URL = REDIS_URL
 CELERY_WORKER_REDIRECT_STDOUTS = False
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
@@ -23,17 +26,17 @@ INSTALLED_APPS = (
     'core',
     'providers',
     'systems',
-    'tools',
+    'tools.base',
     'tools.calls',
     'tools.definitions',
     'tools.instances',
-    'tools.buildin_a2a',
-    'tools.buildin_filesystem',
-    'tools.buildin_memory',
-    'tools.buildin_python',
-    'tools.buildin_shell',
-    'tools.buildin_subscriptions',
-    'tools.buildin_userinteraction',
+    'tools.builtin_a2a',
+    'tools.builtin_filesystem',
+    'tools.builtin_memory',
+    'tools.builtin_python',
+    'tools.builtin_shell',
+    'tools.builtin_subscriptions',
+    'tools.builtin_userinteraction',
     'ui',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -111,7 +114,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)], # Assumes Redis is running on localhost:6379
+            "hosts": [{ "address": REDIS_URL }], # Assumes Redis is running on localhost:6379
         },
         }
     }

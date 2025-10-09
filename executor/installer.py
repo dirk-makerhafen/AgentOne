@@ -6,7 +6,7 @@ import socket
 import subprocess
 import sys
 import requests
-
+import traceback
 # --- Configuration ---
 CONFIG_FILE = 'client_config.json'
 SERVICE_NAME = 'carna_executor'
@@ -214,7 +214,7 @@ def uninstall_service_linux():
             print(f"NOTE: The client configuration file '{CONFIG_FILE}' was not removed.")
 
     except (subprocess.CalledProcessError, IOError) as e:
-        print(f"\nAn error occurred during uninstallation: {e}")
+        print(f"\nAn error occurred during uninstallation: {e}{traceback.format_exc()}")
 
 def get_service_status_linux():
     try:
@@ -292,7 +292,7 @@ def uninstall_service_macos():
             print(f"NOTE: The client configuration file '{CONFIG_FILE}' was not removed.")
 
     except (subprocess.CalledProcessError, IOError) as e:
-        print(f"\nAn error occurred during uninstallation: {e}")
+        print(f"\nAn error occurred during uninstallation: {e}{traceback.format_exc()}")
 
 def get_service_status_macos():
     service_label = f"com.carna.{SERVICE_NAME}"
@@ -372,7 +372,7 @@ def uninstall_service_windows():
         if "does not exist" in stderr_output:
              print("Service does not appear to be installed. Nothing to do.")
         else:
-            print(f"\nAn error occurred during uninstallation: {e}")
+            print(f"\nAn error occurred during uninstallation: {e}{traceback.format_exc()}")
             print(f"Stderr: {stderr_output}")
     except FileNotFoundError:
         print("\nError: 'sc.exe' command not found.")

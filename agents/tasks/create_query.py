@@ -4,20 +4,22 @@ from celery import shared_task
 import traceback
 import random
 from agents.history_limiter import HistoryLimiter
-from agents.models.agent_instance import BUILTIN_TOOL_CLASS_MAP, AgentInstance
+from agents.models.agent_instance import BUILTIN_TOOL_CLASS_MAP
 from agents.models.conversation_message import ConversationMessage
 from agents.models.debug_log_entry import DebugLogEntry
 from agents.models.llm_query import LLMQuery
 from agents.tasks.execute_query import execute_query
 from core.models.prompt_string import PromptString
-from tools.buildin_filesystem.models.fs_log_entry import FsLogEntry
-from tools.buildin_filesystem.utils.fsutils import get_relative_path
-from tools.buildin_subscriptions.models.tool_subscription import ToolSubscription
+from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
+from tools.builtin_filesystem.utils.fsutils import get_relative_path
+from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription
 from tools.calls.models.tool_call import ToolCall
 from agents.apps import AgentsConfig
 
 @shared_task
 def celery_create_query(agentinstance_id):
+    from agents.models.agent_instance import AgentInstance, BUILTIN_TOOL_CLASS_MAP
+
     agentInstance = AgentInstance.objects.get(instance_pk=agentinstance_id)
     agentInstance.status = 'THINKING'
     agentInstance.save()
@@ -25,10 +27,10 @@ def celery_create_query(agentinstance_id):
     try:
         messages = []
         systemPrompt = PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="System")
-        toolInstructions = PromptString.get_template(agentInstance=agentInstance, source="tools.calls", key="Instructions")
+        mainInstructions =  PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="Instructions")
+        toolInstructions = PromptString.get_template(agentInstance=agentInstance, source="tools", key="Instructions")
         outputFormat = PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="OutputFormat")
         outputFormatReminder = PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="OutputFormatReminder")
-        agentDescription = PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="Description")
         
         messages.append({"role": "system", "parts": [{
                 "tags": ["Prompts", "System"] ,
@@ -43,7 +45,7 @@ def celery_create_query(agentinstance_id):
 
         messages.append({"role": "user", "parts": [{
                 "tags": ["Prompts", "MainInstructions"] ,
-                'tpId': agentDescription.id, 
+                'tpId': mainInstructions.id, 
         }]})
 
         messages.append({"role": "user", "parts": [{
@@ -91,7 +93,7 @@ def celery_create_query(agentinstance_id):
                 'data': reminder_props
             }]})
             
-        llmQuery = LLMQuery(agent=agentInstance.agent, agentInstance=agentInstance, model=agentInstance.model if agentInstance.model else agentInstance.agent.aimodel)
+        llmQuery = LLMQuery(agent=agentInstance.agent, agentInstance=agentInstance, aimodel=agentInstance.aimodel if agentInstance.aimodel else agentInstance.agent.aimodel)
         llmQuery.messages = messages
         llmQuery.save()
         execute_query.delay(llmQuery.pk)    # not celery for now, keep it that way.
@@ -138,7 +140,7 @@ def get_chat_messages(agentInstance):
     limiter = HistoryLimiter(agentInstance, all_entries, all_loaded_paths, tool_call_rule_templates)
     
     resultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source="tools.calls", key="ResultInjection")
-    filesystemInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.buildin_filesystem', key="ContentInjection")
+    filesystemInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.builtin_filesystem', key="ContentInjection")
 
     for entry in all_entries:
         if type(entry) == ConversationMessage:
@@ -213,43 +215,45 @@ def get_tool_subscription_messages(agentInstance):
     # Execute active tool subscriptions and inject their output into the context
     subscription_parts = []
     subscriptions = ToolSubscription.objects.filter(agentInstance=agentInstance, is_active=True)
-    if subscriptions:
-        try:
-            subscriptionResultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.buildin_subscriptions', key="SubscriptionResultInjection")
-            for subscription in subscriptions:
-                try:
-                    tool_function = agentInstance.get_tool_function(subscription.tool_name)
-                    if tool_function:
-                        # We don't want the subscription execution to create another subscription, so we force one-shot mode.
-                        args = subscription.arguments
-                        if 'mode' in args:
-                            args['mode'] = 'one-shot' 
-                        
-                        success, result = tool_function['callable'](**args)
-                        
-                        # Consolidate output from stdout or other result fields
-                        output = result.get('stdout', '') or result.get('content', '')
-                        if result.get('stderr'):
-                            output += f"\nSTDERR:\n{result.get('stderr')}"
+    if not subscriptions:
+        return []
 
-                        subscription_parts.append({
-                            'tpId': subscriptionResultInjectionTemplate.pk,
-                            "tags": ["Tool", "Subscription", subscription.tool_name],
-                            'data': {
-                                'subscription_id': subscription.subscription_id,
-                                'tool_name': subscription.tool_name,
-                                'arguments': {k: v for k, v in subscription.arguments.items() if k != 'source'},
-                                'output': output.strip(),
-                                'status': 'success' if success else 'failed'
-                            }
-                        })
-                except Exception as e:
-                    # Log the error but do not crash the entire query generation process
-                    debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": f'Error executing subscription {subscription.id}: {e}\n{traceback.format_exc()}'})
-                    debugLogEntry.save()
-            if subscription_parts:
-                messages.append({'role': 'user', 'parts': subscription_parts})
-        except PromptString.DoesNotExist:
-            debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": "SubscriptionResultInjection prompt template not found. Subscriptions will not be executed."})
-            debugLogEntry.save()
-        return messages
+    try:
+        subscriptionResultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.builtin_subscriptions', key="SubscriptionResultInjection")
+        for subscription in subscriptions:
+            try:
+                tool_function = agentInstance.get_tool_function(subscription.tool_name)
+                if tool_function:
+                    # We don't want the subscription execution to create another subscription, so we force one-shot mode.
+                    args = subscription.arguments
+                    if 'mode' in args:
+                        args['mode'] = 'one-shot' 
+                    
+                    success, result = tool_function['callable'](**args)
+                    
+                    # Consolidate output from stdout or other result fields
+                    output = result.get('stdout', '') or result.get('content', '')
+                    if result.get('stderr'):
+                        output += f"\nSTDERR:\n{result.get('stderr')}"
+
+                    subscription_parts.append({
+                        'tpId': subscriptionResultInjectionTemplate.pk,
+                        "tags": ["Tool", "Subscription", subscription.tool_name],
+                        'data': {
+                            'subscription_id': subscription.subscription_id,
+                            'tool_name': subscription.tool_name,
+                            'arguments': {k: v for k, v in subscription.arguments.items() if k != 'source'},
+                            'output': output.strip(),
+                            'status': 'success' if success else 'failed'
+                        }
+                    })
+            except Exception as e:
+                # Log the error but do not crash the entire query generation process
+                debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": f'Error executing subscription {subscription.id}: {e}\n{traceback.format_exc()}'})
+                debugLogEntry.save()
+        if subscription_parts:
+            messages.append({'role': 'user', 'parts': subscription_parts})
+    except PromptString.DoesNotExist:
+        debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": "SubscriptionResultInjection prompt template not found. Subscriptions will not be executed."})
+        debugLogEntry.save()
+    return messages

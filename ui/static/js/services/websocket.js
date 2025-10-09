@@ -1,7 +1,6 @@
 let websocket;
 let wsPath;
 
-// Global caches for various objects, following the existing pattern
 window.allAgents = window.allAgents || {};
 window.allAgentInstances = window.allAgentInstances || {};
 window.allAvailableModels = window.allAvailableModels || {};
@@ -9,352 +8,217 @@ window.allAvailableSystems = window.allAvailableSystems || {};
 window.allToolInstallations = window.allToolInstallations || {};
 window.allToolDefinitions = window.allToolDefinitions || {};
 
+
+
 function connectWebSocket(user_pk) {
     if (!user_pk) {
-        addToClientLog("Invalid WebSocket user_pk. Cannot establish connection.", 'error');
+        addToClientLog("Invalid WebSocket user_pk.", 'error');
         return;
     }
     const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
     wsPath = protocol + window.location.host + `/ws/${user_pk}/`;
     websocket = new WebSocket(wsPath);
 
-    websocket.onopen = function(e) {
+    websocket.onopen = () => {
         addToClientLog("WebSocket connection established.", 'success');
-        // Once connected, request the list of agents for this user
-        // This will trigger renderAgent and renderAgentInstance when the data comes back
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-             websocket.send(JSON.stringify({
-                 type: 'request_agent_list',
-                 payload: {}
-             }));
-            requestProviderList()             
-            requestSystemList(); // Request systems list on WebSocket open
-            requestMcpList(); // Request MCP servers list on WebSocket open
-            requestToolDefinitionList();
-            window.initializeAgentListTemplates(); // Initialize agent list templates
-         }
+        agentApi.list();
     };
-   
 
-    websocket.onmessage = function(e) {
+    websocket.onmessage = (e) => {
         const payload = JSON.parse(e.data);
-
-        // All incoming messages from the user group will contain an agentInstance_pk if they pertain to an instance.
-        // We need to check if this message is for the currently selected agent instance.
-        //console.log("ON MESSAGE", payload)
-        switch (payload.object) {
-            
-            case 'Agent': 
-                window.renderAgent(payload);
-                // After saving, the server sends back the updated agent object.
-                // We need to find the open edit tab (if any) and update its UI.
-                const agentNameInTab = document.querySelector(`#agent-edit-button-${payload.id} span`);
-                if (agentNameInTab) {
-                    agentNameInTab.innerHTML = `<i class="fa fa-user-circle-o"></i> ${payload.name}`;
-                }
-                const agentEditTabTitle = document.querySelector(`#agent-edit-button-${payload.id} span`);
-                if (agentEditTabTitle) {
-                    agentEditTabTitle.innerHTML = `<i class="fa fa-user-circle-o"></i> ${payload.name}`;
-                }
-                break;
-                
-            case 'AgentList':
-                payload.agents.forEach(agentData => { 
-                    window.allAgents[agentData.id] = agentData;
-                    renderAgent(agentData)
-                });
-                //window.renderAgentList(payload.agents); // Delegate to AgentList.js
-                break;
-
-            case 'AgentDeleted':
-                const agentElement = document.getElementById(`agent_${payload.agent_pk}`);
-                if (agentElement) {
-                    agentElement.remove();
-                }
-                break;
-
-            case 'AgentInstance':
-                window.allAgentInstances[payload.id] = payload;
-                // renderAgentInstance now handles all UI updates for an instance payload,
-                // including the header, settings, sidebar item, and instance-specific status bar.
-                // This ensures that even non-active tabs receive updates.
-                renderAgentInstance(payload);
-                break;
-
-            case 'AgentInstanceDeleted':
-                const agentInstanceElement = document.getElementById(`agent_instance_${payload.agent_pk}`);
-                if (agentInstanceElement) {
-                    agentInstanceElement.remove();
-                }
-                break;
-
-            case 'AgentInstanceList':
-                payload.instances.forEach(instanceData => { 
-                    window.allAgentInstances[instanceData.id] = instanceData;
-                    renderAgentInstance(instanceData)
-                });
-                break;
-
-            case 'ModelList':
-                window.allAvailableModels = payload.models; // for dropdowns
-                if (window.currentAgentInstancePk) {
-                    //console.log("WebSocket: ModelList received, re-requesting instance details for:", window.currentAgentInstancePk);
-                    websocket.send(JSON.stringify({
-                        type: 'request_instance_details',
-                        payload: { instance_pk: window.currentAgentInstancePk }
-                    }));
-                }
-                break;
-            
-            case 'SystemList':
-                window.allAvailableSystems = payload.systems; // for dropdowns
-                renderSystemList(payload.systems); // This also triggers rendering of the Systems tab
-                if (window.currentAgentInstancePk) {
-                    //console.log("WebSocket: SystemList received, re-requesting instance details for:", window.currentAgentInstancePk);
-                    websocket.send(JSON.stringify({
-                        type: 'request_instance_details',
-                        payload: { instance_pk: window.currentAgentInstancePk }
-                    }));
-                }
-                break;
-            case 'PromptList':
-                renderPromptList(payload.payload);
-                break;
-
-            case 'ApiProviderList':
-                renderProviderList(payload.providers);
-                break;
-
-            case 'ApiProvider':
-                renderSingleProvider(payload, document.querySelector('#providers-list-body'));
-                break;
-
-            case 'ToolInstance':
-                renderSingleMcpServer(payload);
-                break;
-
-            case 'list_mcp_servers': // This 'type' matches the message sent by consumer
-                renderMcpList(payload.data);
-                break;
-
-            case 'ProviderDeleted':
-                const providerElement = document.getElementById(`provider_${payload.provider_pk}`);
-                if (providerElement) {
-                    providerElement.remove();
-                    addToClientLog(`Provider with ID ${payload.provider_pk} has been deleted.`, 'info');
-                }
-                const providersListBody = document.getElementById('providers-list-body');
-                if (providersListBody && providersListBody.childElementCount === 0) {
-                    providersListBody.innerHTML = '<div class="alert alert-info" role="alert">No API providers found. Click the "+" button to add one.</div>';
-                }
-                break;
-
-            case 'MCPServerDeleted':
-                const mcpServerElement = document.querySelector(`.mcp-server-item[data-id="${payload.mcp_server_pk}"]`);
-                if (mcpServerElement) {
-                    mcpServerElement.remove();
-                    addToClientLog(`MCP Server with ID ${payload.mcp_server_pk} has been deleted.`, 'info');
-                }
-                const mcpListBody = document.getElementById('mcp-list-body');
-                if (mcpListBody && mcpListBody.childElementCount === 0) {
-                    mcpListBody.innerHTML = '<p>No MCP Servers configured.</p>';
-                }
-                break;
-
-            case 'System':
-                renderSystem(payload); // Assuming payload.system holds the single system object
-                break;
-
-            case 'ToolDefinitionList':
-                window.allToolDefinitions = {}; // Clear existing cache
-                payload.tool_definitions.forEach(td => {
-                    window.allToolDefinitions[td.id] = td;
-                });
-                renderToolDefinitionList(payload.tool_definitions);
-                break;
-
-            case 'ToolDefinition':
-                if (payload.action === 'deleted') {
-                    // Handle deletion
-                    if (window.handleToolDefinitionDelete) {
-                        window.handleToolDefinitionDelete(payload.id);
-                    }
-                } else {
-                    // This handles single object updates (e.g., after create or edit)
-                    if (window.handleToolDefinitionUpdate) {
-                        // Use the new in-place update handler which also updates the cache
-                        window.handleToolDefinitionUpdate(payload);
-                    } else {
-                        // Fallback to full re-render if the new handler isn't available
-                        window.allToolDefinitions[payload.id] = payload;
-                        renderToolDefinitionList(Object.values(window.allToolDefinitions));
-                    }
-                }
-                break;
-
-
-
-            case 'ToolInstallation':
-                // Update or add a single ToolInstallation
-                window.allToolInstallations[payload.id] = payload;
-                // Trigger re-rendering of the system that this installation belongs to
-                // We need to re-render the specific system's tool list
-                if (payload.system_id) {
-                    renderToolInstallationList(Object.values(window.allToolInstallations).filter(inst => inst.system_id === payload.system_id), payload.system_id);
-                }
-                break;
-
-            case 'ToolInstallationList':
-                // Clear cache for installations belonging to the requested system to avoid stale data
-                const systemIdForList = payload.tool_installations.length > 0 ? payload.tool_installations[0].system_id : null;
-                if (systemIdForList) {
-                    for (const key in window.allToolInstallations) {
-                        if (window.allToolInstallations[key].system_id === systemIdForList) {
-                            delete window.allToolInstallations[key];
-                        }
-                    }
-                }
-                payload.tool_installations.forEach(installation => {
-                    window.allToolInstallations[installation.id] = installation;
-                });
-                // Now render the list for the specific system
-                if (systemIdForList) {
-                    renderToolInstallationList(payload.tool_installations, systemIdForList);
-                }
-                break;
-
-            case 'ToolInstallationLogList':
-                // This message is handled by the new renderer
-                renderToolInstallationLogsInline(payload.logs);
-                break;
-           
-
-
-
-
-            case 'InstancePermissionList':
-                renderSidebarPermissions(payload);
-                break;
-
-            case 'InstancePermissionUpdate':
-                updatePermissionCardUI(payload); // updatePermissionCardUI internally checks currentAgentInstancePk
-                break;
-
-            case 'HistoryLoadResult':
-                const historyInstancePk = payload.agentInstance_id;
-                const instanceLogState = getInstanceLogState(historyInstancePk);
-
-                // Remove the loading indicator
-                const loadingIndicator = document.getElementById(`history-loading-indicator_${historyInstancePk}`);
-                if (loadingIndicator) {
-                    loadingIndicator.remove();
-                }
-
-                // Adjust scroll position after all history messages have been prepended
-                const logArea = document.getElementById(`logArea_${historyInstancePk}`);
-                if (instanceLogState.scrollHeightBeforeHistoryLoad !== null && logArea) {
-                    const newScrollHeight = logArea.scrollHeight;
-                    logArea.scrollTop = newScrollHeight - instanceLogState.scrollHeightBeforeHistoryLoad;
-                    instanceLogState.scrollHeightBeforeHistoryLoad = null; // Reset after use
-                }
-                applyActiveHighlight(historyInstancePk); 
-                instanceLogState.isLoadingHistory = false;
-                if (payload.count === 0) {
-                    instanceLogState.hasMoreHistory = false;
-                    addToClientLog("No more history to load.", 'info', null, historyInstancePk);
-                }
-                break;
-
-            case 'InitialFilesystemState':
-                resetFilesystemState(payload.agentInstance_id);
-                // Then, render each item from the initial state
-                payload.items.forEach(item => {
-                    renderSidebarFilesystem(item, payload.agentInstance_id);
-                });
-                break;
-            
-            case 'InitialMemoryState':
-                payload.items.forEach(item => {
-                    renderSidebarMemory(item, payload.agentInstance_id); // Corrected field name
-                });
-                break;
-
-            case 'InitialVarsState':
-                renderSidebarVars(payload.items, payload.agentInstance_id); // Corrected field name
-                break;
-
-            case 'MemoryItem':
-                renderSidebarMemory(payload, payload.agentInstance_id); // Corrected field name
-                break;
-
-            case 'PythonToolVar':
-                renderPythonToolVarMessage(payload, payload.agentInstance_id); // Corrected field name
-                updateSidebarVar(payload, payload.agentInstance_id); // Corrected field name
-                break;
-
-            case 'ConversationMessage':
-                renderConversationMessage(payload); // Corrected field name
-                break;
-            case 'ToolCall':
-                renderToolCallMessage(payload, payload.agentInstance_id); // Corrected field name
-                break;
-
-            case 'FsLogEntry':
-                renderSidebarFilesystem(payload, payload.agentInstance_id); // Corrected field name
-                renderFilesystemMessage(payload); // Corrected field name
-                break;
-
-            case 'DebugLogEntry':
-                renderDebugLogMessage(payload); // Corrected field name
-                break;
-                
-            case 'LLMQuery':
-                renderLLMQueryMessage(payload, payload.agentInstance_id); // Corrected field name
-                break;
-            
-            case 'LLMResponse':
-                renderLLMResponseMessage(payload); // Corrected field name
-                break;
-
-            case 'AgentToAgentMessage':
-                renderInterAgentMessage(payload); // Corrected field name
-                break;
-
-             case 'error': // Generic error, possibly sent directly from consumer
-                // If an instance_pk is available, route to its console, else to global
-                const errorTarget = payload.agentInstance_id; // Corrected field name
-                if (errorTarget) {
-                    addToClientLog(`Error: ${payload.message}`, 'error');
-                } else {
-                    addToClientLog(`Error: ${payload.message}`, 'error');
-                }
-                break;
-
-             case 'info': // Generic info, possibly sent directly from consumer
-                // If an instance_pk is available, route to its console, else to global
-                const infoTarget = payload.agentInstance_id; // Corrected field name
-                if (infoTarget) {
-                    addToClientLog(`Info: ${payload.message}`, 'info');
-                } else {
-                    addToClientLog(`Info: ${payload.message}`, 'info');
-                }
-                break;
-
-            default:
-                addToClientLog(`Unknown Payload Object: ${JSON.stringify(payload)}`, 'error');
+        const handler = messageHandlers[payload.object];
+        if (handler) {
+            handler(payload);
+        } else {
+            addToClientLog(`Unknown Payload Object: ${JSON.stringify(payload)}`, 'error');
         }
-        $(document).trigger('websocketMessage', [payload]);
     };
 
-    websocket.onclose = function(e) {
-        addToClientLog(`WebSocket connection closed. Code: ${e.code}, Reason: ${e.reason || 'No Reason'}`, 'error');
-        // Reconnection logic, assuming targetType and targetPk are still valid
-        setTimeout(() => connectWebSocket(user_pk), 5000); // Pass user_pk for reconnection
+    websocket.onclose = (e) => {
+        addToClientLog(`WebSocket connection closed. Code: ${e.code}, Reason: ${e.reason || 'N/A'}. Reconnecting...`, 'error');
+        setTimeout(() => connectWebSocket(user_pk), 5000);
     };
 
-    websocket.onerror = function(e) {
-        addToClientLog("WebSocket Error: " + e.message, 'error');
+    websocket.onerror = (e) => {
+        addToClientLog("WebSocket Error", 'error');
+        console.error("WebSocket Error:", e);
         websocket.close();
     };
 }
 
+const messageHandlers = {
+    'Agent': (payload) => {
+        addOrUpdateAgentInSidebar(payload);
+        updateAgentEditTab(payload);
+    },
+    'AgentList': (payload) => {
+        // Clear existing agents from cache before repopulating
+        window.allAgents = {}; 
+        payload.agents.forEach(agentData => {
+            addOrUpdateAgentInSidebar(agentData);
+        });
+    },
+    'AgentDeleted': (payload) => {
+        removeAgentFromSidebar(payload.agent_pk);
+    },
+    'AgentInstance': (payload) => {
+        window.allAgentInstances[payload.id] = payload;
+        renderAgentInstance(payload); // Updates the sidebar list item
+        renderAgentInstanceHeader(payload, payload.id); // Updates the tab header
+        renderSidebarSettings(payload); // Updates the settings sidebar
+        renderSidebarFilesystemHeader(payload); // Renders the filesystem header
+
+        // After an instance update, refresh the parent agent's sidebar entry to update instance counts
+        if (payload.agent_id && window.allAgents[payload.agent_id]) {
+            addOrUpdateAgentInSidebar(window.allAgents[payload.agent_id]);
+        }
+    },
+    'AgentInstanceDeleted': (payload) => {
+        const instanceElement = document.getElementById(`agent_instance_${payload.instance_pk}`);
+        if (instanceElement) instanceElement.remove();
+        delete window.allAgentInstances[payload.instance_pk];
+
+        // After an instance is deleted, refresh the parent agent's sidebar entry to update instance counts
+        if (payload.agent_pk && window.allAgents[payload.agent_pk]) {
+            addOrUpdateAgentInSidebar(window.allAgents[payload.agent_pk]);
+        }
+    },
+    'AgentInstanceList': (payload) => {
+        // Clear existing instances from cache before repopulating
+        window.allAgentInstances = {};
+        payload.instances.forEach(instanceData => {
+            window.allAgentInstances[instanceData.id] = instanceData;
+            // Note: We don't call renderAgentInstance here directly to avoid redundant renders if already present.
+            // Individual AgentInstance messages will handle specific instance updates.
+        });
+        // After updating all agent instances, refresh all agent sidebar items to reflect new counts
+        Object.values(window.allAgents).forEach(agentData => {
+            addOrUpdateAgentInSidebar(agentData);
+        });
+        // Now, re-render all instances from the updated cache into their respective agent containers
+        Object.values(window.allAgentInstances).forEach(instanceData => {
+            renderAgentInstance(instanceData);
+        });
+    },
+    'ModelList': (payload) => {
+        window.allAvailableModels = payload.models;
+        if (window.currentAgentInstancePk) {
+            agentInstanceApi.get(window.currentAgentInstancePk);
+        }
+    },
+    'SystemList': (payload) => {
+        window.allAvailableSystems = payload.systems;
+        renderSystemList(payload.systems);
+        if (window.currentAgentInstancePk) {
+            agentInstanceApi.get(window.currentAgentInstancePk);
+        }
+    },
+    'PromptList': (payload) => renderPromptList(payload.payload),
+    'PromptString': (payload) => renderSinglePrompt(payload),
+
+    'PromptDeleted': (payload) => {
+        const promptRow = document.getElementById(`prompt-row-${payload.prompt_pk}`);
+        const promptValueRow = document.getElementById(`prompt-value-row-${payload.prompt_pk}`);
+        if (promptRow) promptRow.remove();
+        if (promptValueRow) promptValueRow.remove();
+    },
+    'ApiProviderList': (payload) => renderProviderList(payload.providers),
+    'ApiProvider': (payload) => renderSingleProvider(payload, document.querySelector('#providers-list-body')),
+    'ProviderDeleted': (payload) => {
+        const providerEl = document.getElementById(`provider_${payload.provider_pk}`);
+        if(providerEl) providerEl.remove();
+    },
+    'AiModel': (payload) => renderSingleAiModel(payload),
+    'AiModelDeleted': (payload) => removeAiModel(payload),
+    'ApiKey': (payload) => renderSingleApiKey(payload),
+    'ApiKeyDeleted': (payload) => removeApiKey(payload),
+    'System': (payload) => renderSystem(payload),
+    'ToolDefinitionList': (payload) => {
+        window.allToolDefinitions = {};
+        payload.tool_definitions.forEach(td => { window.allToolDefinitions[td.id] = td; });
+        renderToolDefinitionList(payload.tool_definitions);
+    },
+    'ToolDefinition': (payload) => {
+        // This handler now only processes updates for existing ToolDefinitions
+        handleToolDefinitionUpdate(payload);
+    },
+    'ToolDefinitionDeleted': (payload) => {
+        // This new handler processes explicit deletion messages
+        handleToolDefinitionDelete(payload.tool_def_pk);
+    },
+    'ToolInstallation': (payload) => {
+        window.allToolInstallations[payload.id] = payload;
+        if (payload.system_id) {
+            renderToolInstallationList(Object.values(window.allToolInstallations).filter(inst => inst.system_id === payload.system_id), payload.system_id);
+        }
+    },
+    'ToolInstallationList': (payload) => {
+        const systemId = payload.tool_installations.length > 0 ? payload.tool_installations[0].system_id : null;
+        if (systemId) {
+            Object.keys(window.allToolInstallations).forEach(key => {
+                if (window.allToolInstallations[key].system_id === systemId) delete window.allToolInstallations[key];
+            });
+        }
+        payload.tool_installations.forEach(inst => { window.allToolInstallations[inst.id] = inst; });
+        if (systemId) renderToolInstallationList(payload.tool_installations, systemId);
+    },
+    'ToolInstallationLogList': (payload) => renderToolInstallationLogsInline(payload.logs),
+    'ToolInstallationDeleted': (payload) => {
+        // Remove from global cache
+        delete window.allToolInstallations[payload.installation_pk];
+        // Re-render the list for the affected system
+        if (payload.system_pk) {
+            const installationsForSystem = Object.values(window.allToolInstallations)
+                                                .filter(inst => inst.system_id === payload.system_pk);
+            renderToolInstallationList(installationsForSystem, payload.system_pk);
+        }
+    },
+    'ToolInstanceDeleted': (payload) => {
+        // We don't remove the instance from a global cache directly,
+        // but instead trigger a refresh of its parent installation's list
+        // to correctly update the running instance count.
+        const installation = window.allToolInstallations[payload.tool_installation_pk];
+        if (installation) {
+            toolInstallationApi.list(installation.system_id);
+        }
+    },
+    'InstancePermissionList': (payload) => renderSidebarPermissions(payload),
+    'HistoryLoadResult': (payload) => {
+        const instancePk = payload.agentInstance_id;
+        const state = getInstanceLogState(instancePk);
+        const loadingIndicator = document.getElementById(`history-loading-indicator_${instancePk}`);
+        if (loadingIndicator) loadingIndicator.remove();
+        
+        const logArea = document.getElementById(`logArea_${instancePk}`);
+        if (state.scrollHeightBeforeHistoryLoad !== null && logArea) {
+            logArea.scrollTop = logArea.scrollHeight - state.scrollHeightBeforeHistoryLoad;
+            state.scrollHeightBeforeHistoryLoad = null;
+        }
+        applyActiveHighlight(instancePk);
+        state.isLoadingHistory = false;
+        if (payload.count === 0) state.hasMoreHistory = false;
+    },
+    'InitialFilesystemState': (payload) => {
+        resetFilesystemState(payload.agentInstance_id);
+        renderSidebarFilesystem(payload.items, payload.agentInstance_id);
+    },
+    'InitialMemoryState': (payload) => renderSidebarMemory(payload.items, payload.agentInstance_id),
+    'InitialVarsState': (payload) => renderSidebarVars(payload.items, payload.agentInstance_id),
+    'MemoryItem': (payload) => renderSidebarMemory(payload, payload.agentInstance_id),
+    'PythonToolVar': (payload) => {
+        renderPythonToolVarMessage(payload);
+        updateSidebarVar(payload);
+    },
+    'ConversationMessage': (payload) => renderConversationMessage(payload),
+    'ToolCall': (payload) => renderToolCallMessage(payload),
+    'FsLogEntry': (payload) => {
+        renderSidebarFilesystem(payload, payload.agentInstance_id);
+        renderFilesystemMessage(payload);
+    },
+    'DebugLogEntry': (payload) => renderDebugLogMessage(payload),
+    'LLMQuery': (payload) => renderLLMQueryMessage(payload, payload.agentInstance_id),
+    'LLMResponse': (payload) => renderLLMResponseMessage(payload, payload.agentInstance_id),
+    'AgentToAgentMessage': (payload) => renderInterAgentMessage(payload),
+    'error': (payload) => addToClientLog(`Error: ${payload.message}`, 'error', null, payload.agentInstance_id),
+    'info': (payload) => addToClientLog(`Info: ${payload.message}`, 'info', null, payload.agentInstance_id)
+};

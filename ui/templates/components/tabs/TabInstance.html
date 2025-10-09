@@ -34,11 +34,11 @@
             <div class="resizable-panel resizable-container" data-orientation="vertical" data-size-pc="30">
                 <div class="resizable-panel resizable-container" data-orientation="vertical"  id="sidebar-right_{{instancePk}}">
                     <div class="sidebar-tabs">
-                        <button class="sidebar-tab-btn active" onclick="showSidebarTabForInstance('filesystem', this, {{instancePk}})">Filesystem</button>
-                        <button class="sidebar-tab-btn" onclick="showSidebarTabForInstance('memory', this, {{instancePk}})">Memory</button>
-                        <button class="sidebar-tab-btn" onclick="showSidebarTabForInstance('vars', this, {{instancePk}})">VARS</button>
-                        <button class="sidebar-tab-btn" onclick="showSidebarTabForInstance('settings', this, {{instancePk}})">Settings</button>
-                        <button class="sidebar-tab-btn" onclick="showSidebarTabForInstance('permissions', this, {{instancePk}})">Permissions</button>
+                        <button class="sidebar-tab-btn active" data-tab-name="filesystem" onclick="showSidebarTabForInstance('filesystem', this, {{instancePk}})">Filesystem</button>
+                        <button class="sidebar-tab-btn" data-tab-name="memory" onclick="showSidebarTabForInstance('memory', this, {{instancePk}})">Memory</button>
+                        <button class="sidebar-tab-btn" data-tab-name="vars" onclick="showSidebarTabForInstance('vars', this, {{instancePk}})">VARS</button>
+                        <button class="sidebar-tab-btn" data-tab-name="settings" onclick="showSidebarTabForInstance('settings', this, {{instancePk}})">Settings</button>
+                        <button class="sidebar-tab-btn" data-tab-name="permissions" onclick="showSidebarTabForInstance('permissions', this, {{instancePk}})">Permissions</button>
                     </div>
 
                     <div id="sidebar-tab-filesystem_{{instancePk}}" class="sidebar-tab-content active">

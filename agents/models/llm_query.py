@@ -8,7 +8,7 @@ from core.models.base_model import BaseModel
 class LLMQuery(BaseModel):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="llmqueries")
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="llmqueries")
-    model = models.ForeignKey("providers.AiModel", on_delete=models.CASCADE, related_name="llmqueries")
+    aimodel = models.ForeignKey("providers.AiModel", on_delete=models.CASCADE, related_name="llmqueries")
     apikey = models.ForeignKey("providers.ApiKey", on_delete=models.SET_NULL, related_name="llmqueries", default=None, null=True)
     status = models.CharField(default="pending", max_length=255)
 
@@ -26,7 +26,7 @@ class LLMQuery(BaseModel):
             "id": self.id,
             "created_at": self.created_at.isoformat(),
             "status": self.status,
-            "model_name": self.model.name,
+            "model_name": self.aimodel.name,
             "total_tokens": self.data.get("tokens", 0),
             "usage": self.data.get("usage", {}),
             "raw_data": self.data,
@@ -37,8 +37,8 @@ class LLMQuery(BaseModel):
     def compile(self):
         from core.models.prompt_string import PromptString
         from agents.models.conversation_message import ConversationMessage
-        from tools.buildin_filesystem.models.fs_log_entry import FsLogEntry
-        from tools.buildin_memory.models.memory_item import MemoryItem
+        from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
+        from tools.builtin_memory.models.memory_item import MemoryItem
         from tools.calls.models.tool_response import ToolResponse
 
         new_messages = []

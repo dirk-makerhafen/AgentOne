@@ -22,7 +22,6 @@
 
 @import url('components/status_bar.css');
 @import url('components/_tabs.css');
-@import url("components/mcp.css");
 @import url("components/tool_registry.css");
 
 @import url("components/provider_list.css");
@@ -501,4 +500,9 @@
     overflow-y: auto;
     font-family: monospace;
     font-size: 12px;
+}
+
+
+.agent-instance-count {
+    font-size: 0.8em;
 }

@@ -5,9 +5,10 @@ import json
 from pathlib import Path
 import git
 
+from tools.definitions.models.tool_definition import ToolDefinition
+
 @shared_task
 def fetch_and_update_tool_definition_manifest(tool_definition_id):
-    from .models.tool_installation import ToolDefinition
     from django.utils import timezone
 
     """

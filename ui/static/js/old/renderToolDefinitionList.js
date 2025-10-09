@@ -70,12 +70,12 @@ function openAddToolDefinitionModal() {
                 <small class="form-text text-muted">Leave empty for manual definition.</small>
             </div>
             <div class="form-group">
-                <label for="addToolDefinitionDisplayName">Display Name <span class="required">*</span></label>
-                <input type="text" class="form-control" id="addToolDefinitionDisplayName" required>
+                <label for="addToolDefinitionDisplayName">Display Name </label>
+                <input type="text" class="form-control" id="addToolDefinitionDisplayName">
             </div>
             <div class="form-group">
-                <label for="addToolDefinitionName">Internal Name <span class="required">*</span></label>
-                <input type="text" class="form-control" id="addToolDefinitionName" required>
+                <label for="addToolDefinitionName">Internal Name</label>
+                <input type="text" class="form-control" id="addToolDefinitionName">
                 <small class="form-text text-muted">Unique identifier (snake_case, no spaces).</small>
             </div>
             <div class="form-group full-width">
@@ -85,9 +85,9 @@ function openAddToolDefinitionModal() {
             <div class="form-group">
                 <label for="addToolDefinitionTransportType">Transport Type</label>
                 <select class="form-control" id="addToolDefinitionTransportType">
-                    <option value="tcp">TCP</option>
                     <option value="stdio">STDIO</option>
-                </select>
+                    <option value="tcp">TCP</option>
+                    </select>
             </div>
             <div class="form-group">
                 <label for="addToolDefinitionExecutionMode">Execution Mode</label>

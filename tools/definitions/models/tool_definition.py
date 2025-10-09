@@ -22,7 +22,7 @@ class ToolDefinition(BaseModel):
     is_active = models.BooleanField(default=True, help_text="Globally enable or disable this tool for all agents.")
     
     TRANSPORT_CHOICES = [('tcp', 'TCP Socket (HTTP/S)'), ('stdin_stdout', 'Standard I/O (stdin/stdout)')]
-    transport_type = models.CharField(max_length=20, choices=TRANSPORT_CHOICES, default='tcp', help_text="The communication transport type for this tool.")
+    transport_type = models.CharField(max_length=20, choices=TRANSPORT_CHOICES, default='stdin_stdout', help_text="The communication transport type for this tool.")
     execution_mode = models.CharField(max_length=20, choices=ExecutionMode.choices, default=ExecutionMode.SHARED, help_text="Determines if one process is shared across a system or if each agent instance gets a dedicated process.")
 
     repository_url = models.URLField(blank=True, null=True, help_text="The Git repository URL for external tools.")
@@ -33,9 +33,7 @@ class ToolDefinition(BaseModel):
 
     available_on_all_systems = models.BooleanField(default=True, help_text="If true, this tool is available on all compatible systems by default.")
     available_on_systems = models.ManyToManyField('systems.System', blank=True, related_name='tool_definitions', help_text="A specific list of systems where this tool is available.")
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    
 
     def __str__(self):
         return f"{self.display_name} ({self.name})"
@@ -54,13 +52,10 @@ class ToolDefinition(BaseModel):
         elif self.repository_url and url_changed:
             self.status = self.Status.UPDATING
 
-        super().save(*args, **kwargs)
+        super().save(send_to_client=send_to_client, *args, **kwargs)
 
         if self.repository_url and url_changed and not self.is_builtin:
             fetch_and_update_tool_definition_manifest.delay(self.pk)
-
-        if send_to_client:
-            self.send_object_to_clients()
 
     def as_client_dict(self):
         return {
@@ -82,3 +77,19 @@ class ToolDefinition(BaseModel):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
         }
+    def delete(self, *args, **kwargs):
+        from django.contrib.auth.models import User
+        from core.tasks.send_websocket_update import celery_send_websocket_update
+
+        tool_def_pk_to_broadcast = self.pk
+
+        super().delete(*args, **kwargs)
+
+        # After deletion, broadcast the update to all users
+        message_data = {
+            'object': 'ToolDefinitionDeleted',
+            'tool_def_pk': tool_def_pk_to_broadcast
+        }
+        all_user_pks = User.objects.values_list('pk', flat=True)
+        for pk in all_user_pks:
+            celery_send_websocket_update.delay(message_data, user_pk=pk)

@@ -92,12 +92,11 @@
 
 /* Hide/Show Unloaded Items */
 .sidebar-fs-list .fs-item-unloaded {
-    max-height: 0;
+    max-height: fit-content;
     display: None;
     margin-top: 0;
     margin-bottom: 0;
     overflow: hidden;
-    pointer-events: none;
 }
 .sidebar-fs-list.show-all-fs-items .fs-item-unloaded {
     max-height: 50px;
@@ -284,4 +283,19 @@
 .sidebar-fs-input-container,
 .sidebar-fs-rules-container {
     flex-shrink: 0;
+}
+
+
+/* By default, hide unloaded filesystem items */
+.sidebar-fs-list .fs-item-unloaded {
+    display: none;
+}
+
+/* When the container has the special class, show the unloaded items */
+.sidebar-fs-list.show-unloaded .fs-item-unloaded {
+    display: flex;
+}
+
+.fs-view-toggle.active {
+    color: #337ab7; /* Bootstrap's primary blue color */
 }

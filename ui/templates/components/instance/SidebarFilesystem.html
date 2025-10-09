@@ -31,7 +31,7 @@ Rules are checked in order. Wildcards (*) are supported. Default is deny."></i>
 
 
 <script id="SidebarFilesystemItemTemplate" type="text/x-handlebars-template">
-    <div id="fs-item-{{id}}" class="sidebar-fs-item {{#unless is_loaded}}fs-item-unloaded{{/unless}}" data-timestamp="{{created_at}}" data-is-loaded="{{is_loaded}}" data-instance-pk="{{instancePk}}" data-load-mode="{{load_mode}}">
+    <div id="fs-item-{{id}}" class="sidebar-fs-item {{#unless is_loaded}}fs-item-unloaded{{/unless}}" data-path="{{path}}" data-timestamp="{{created_at}}" data-is-loaded="{{is_loaded}}" data-instance-pk="{{instancePk}}" data-load-mode="{{load_mode}}">
         <i class="fa {{#if is_dir}}fa-folder-o{{else}}{{#if is_summary}}fa-file{{else}}fa-file-o{{/if}}{{/if}} item-icon"></i>
         
         <span class="fs-path item-text" title="{{path}}">{{path}}</span>

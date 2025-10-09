@@ -7,6 +7,9 @@ class AgentsConfig(AppConfig):
 
     def ready(self):
         if 'manage.py' not in sys.argv and 'migrate' not in sys.argv:
+            # Import signals here so they are registered at app startup.
+            import agents.signals
+
             from core.models.prompt_string import PromptString
             from .prompts import SYSTEM_PROMPT, INSTRUCTIONS, OUTPUT_FORMAT_RULES, OUTPUT_FORMAT_RULES_REMINDER
             

@@ -1,4 +1,4 @@
-// API functions for tools/buildin_filesystem/consumers/filesystem.py
+// API functions for tools/builtin_filesystem/consumers/filesystem.py
 const filesystemApi = {
     list: function(instance_pk) {
         sendRequest('filesystem_list', { instance_pk });

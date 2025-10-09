@@ -41,15 +41,9 @@
             </div>
         </div>
     </div>
-    <!-- Global Console Output Area (outside of the main split view, always visible) -->
-    <div id="consoleOutputArea" class="global-console-output-area">
-        <div style="text-align: left; font-weight: bold;">Global Console Output</div>
-    </div>
     
     {% include 'modals/revert_file_modal.html' %}
     {% include 'modals/revert_all_fs_modal.html' %} 
-
-
 
     {% include 'components/chat/ConversationMessage.html' %}
     {% include 'components/chat/DebugLog.html' %}
@@ -66,7 +60,6 @@
     {% include 'components/tabs/TabInstance.html' %}
     {% include 'components/tabs/TabSystems.html' %}
     {% include 'components/tabs/TabTools.html' %}    
-    {% include 'components/tabs/TabMcp.html' %}    
 
     {% include 'components/instance/InstanceHeader.html' %}
     {% include 'components/instance/SidebarFilesystem.html' %}
@@ -97,7 +90,9 @@
     <script src="{% static 'js/utils/splitpanel.js' %}"></script>
     <script src="{% static 'js/utils/tabs.js' %}"></script>
 
+
     <!-- Agent APIs -->
+    <script src="{% static 'js/services/websocket.js' %}"></script>
     <script src="{% static 'js/services/agents/agentApi.js' %}"></script>
     <script src="{% static 'js/services/agents/agentInstanceApi.js' %}"></script>
     <script src="{% static 'js/services/agents/conversationApi.js' %}"></script>
@@ -118,18 +113,13 @@
     <script src="{% static 'js/services/tools/toolDefinitionApi.js' %}"></script>
     <script src="{% static 'js/services/tools/toolInstallationApi.js' %}"></script>
     <script src="{% static 'js/services/tools/toolInstanceApi.js' %}"></script>
-    <script src="{% static 'js/services/agentApi.js' %}"></script>
-    <script src="{% static 'js/services/conversationApi.js' %}"></script>
-    <script src="{% static 'js/services/promptApi.js' %}"></script>
-    <script src="{% static 'js/services/providerApi.js' %}"></script>
-    <script src="{% static 'js/services/systemApi.js' %}"></script>
-    <script src="{% static 'js/services/toolApi.js' %}"></script>
-    <script src="{% static 'js/services/websocket.js' %}"></script>
 
+    <!-- Sidebar -->
     <script src="{% static 'js/components/sidebar/SidebarAgents.js' %}"></script>
     <script src="{% static 'js/components/sidebar/SidebarInstances.js' %}"></script>
     <script src="{% static 'js/components/sidebar/SidebarClientLog.js' %}"></script>
 
+    <!-- Chat Window -->
     <script src="{% static 'js/components/chat/ChatWindow.js' %}"></script>
     <script src="{% static 'js/components/chat/ConversationMessage.js' %}"></script>
     <script src="{% static 'js/components/chat/DebugLog.js' %}"></script>
@@ -140,14 +130,15 @@
     <script src="{% static 'js/components/chat/PythonVarLog.js' %}"></script>
     <script src="{% static 'js/components/chat/ToolCall.js' %}"></script>
 
+    <!-- Tabs -->
     <script src="{% static 'js/components/tabs/TabInstance.js' %}"></script>
-    <script src="{% static 'js/components/tabs/TabMcp.js' %}"></script>
     <script src="{% static 'js/components/tabs/TabAgent.js' %}"></script>
     <script src="{% static 'js/components/tabs/TabPrompts.js' %}"></script>
     <script src="{% static 'js/components/tabs/TabProviders.js' %}"></script>
     <script src="{% static 'js/components/tabs/TabSystems.js' %}"></script>    
     <script src="{% static 'js/components/tabs/TabTools.js' %}"></script>
 
+    <!-- Agent Instance Tab-->
     <script src="{% static 'js/components/instance/InstanceHeader.js' %}"></script>
     <script src="{% static 'js/components/instance/SidebarFilesystem.js' %}"></script>
     <script src="{% static 'js/components/instance/SidebarFilesystemHeader.js' %}"></script>
@@ -195,11 +186,8 @@
                 addToClientLog("User PK not found. WebSocket connection not established.", 'error');
             }
         });
-
         
     </script>
-
-
 
 </body>
 </html>

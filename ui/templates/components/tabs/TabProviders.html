@@ -35,17 +35,7 @@
                 <ul class="provider-detail-list">
                     {{#if models.length}}
                         {{#each models}}
-                            <li class="provider-detail-item" data-model-id="{{this.id}}">
-                                <span class="provider-detail-item-name">{{this.name}}</span>
-                                <div class="table-item-actions">
-                                    <button class="btn btn-xs btn-danger delete-model-btn" title="Delete Model" onclick="modelDelete(event, '{{../id}}', '{{this.id}}', '{{this.name}}')"><i class="fa fa-trash"></i></button>
-                                </div>
-                                <div class="model-stats">
-                                    <span title="Total LLM Queries">Q: {{formatNumber this.total_llm_queries}}</span>
-                                    <span title="Total Prompt Tokens">P: {{formatNumber this.total_prompt_tokens}}</span>
-                                    <span title="Total Completion Tokens">C: {{formatNumber this.total_completion_tokens}}</span>
-                                </div>
-                            </li>
+                            {{> TabProvidersModelItemTemplate this}}
                         {{/each}}
                     {{else}}
                         <li class="no-items-message">No models configured.</li>
@@ -61,18 +51,7 @@
                 <ul class="provider-detail-list">
                     {{#if apikeys.length}}
                         {{#each apikeys}}
-                            <li class="provider-detail-item" data-key-id="{{this.id}}">
-                                
-                                <span class="provider-detail-item-name">{{defaultIfEmpty this.comment 'API Key'}}</span>
-                                <div class="table-item-actions">
-                                    <button class="btn btn-xs btn-danger delete-apikey-btn" title="Delete API Key" onclick="apiKeyDelete(event, '{{../id}}', '{{this.id}}', '{{defaultIfEmpty this.comment 'API Key'}}')"><i class="fa fa-trash"></i></button>
-                                </div>
-                                <div class="apikey-stats">
-                                    <span title="Total LLM Queries">Q: {{formatNumber this.total_llm_queries}}</span>
-                                    <span title="Total Prompt Tokens">P: {{formatNumber this.total_prompt_tokens}}</span>
-                                    <span title="Total Completion Tokens">C: {{formatNumber this.total_completion_tokens}}</span>
-                                </div>
-                            </li>
+                            {{> TabProvidersApiKeyItemTemplate this}}
                         {{/each}}
                     {{else}}
                         <li class="no-items-message">No API keys configured.</li>
@@ -170,5 +149,31 @@
     </div>
 </script>
 
+<script id="TabProvidersModelItemTemplate" type="text/x-handlebars-template">
+    <li class="provider-detail-item" data-model-id="{{id}}">
+        <span class="provider-detail-item-name">{{name}}</span>
+        <div class="table-item-actions">
+            <button class="btn btn-xs btn-danger delete-model-btn" title="Delete Model" onclick="modelDelete(event, '{{apiProvider_id}}', '{{id}}', '{{name}}')"><i class="fa fa-trash"></i></button>
+        </div>
+        <div class="model-stats">
+            <span title="Total LLM Queries">Q: {{formatNumber total_llm_queries}}</span>
+            <span title="Total Prompt Tokens">P: {{formatNumber total_prompt_tokens}}</span>
+            <span title="Total Completion Tokens">C: {{formatNumber total_completion_tokens}}</span>
+        </div>
+    </li>
+</script>
 
+<script id="TabProvidersApiKeyItemTemplate" type="text/x-handlebars-template">
+    <li class="provider-detail-item" data-key-id="{{id}}">
+        <span class="provider-detail-item-name">{{defaultIfEmpty comment 'API Key'}}</span>
+        <div class="table-item-actions">
+            <button class="btn btn-xs btn-danger delete-apikey-btn" title="Delete API Key" onclick="apiKeyDelete(event, '{{apiProvider_id}}', '{{id}}', '{{defaultIfEmpty comment 'API Key'}}')"><i class="fa fa-trash"></i></button>
+        </div>
+        <div class="apikey-stats">
+            <span title="Total LLM Queries">Q: {{formatNumber total_llm_queries}}</span>
+            <span title="Total Prompt Tokens">P: {{formatNumber total_prompt_tokens}}</span>
+            <span title="Total Completion Tokens">C: {{formatNumber total_completion_tokens}}</span>
+        </div>
+    </li>
+</script>
 {% endverbatim %}

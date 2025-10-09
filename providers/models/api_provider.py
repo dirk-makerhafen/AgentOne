@@ -12,15 +12,15 @@ class ApiProvider(BaseModel):
 
     @property
     def total_llm_queries(self):
-        return LLMQuery.objects.filter(model__apiProvider=self).count()
+        return LLMQuery.objects.filter(aimodel__apiProvider=self).count()
 
     @property
     def total_prompt_tokens(self):
-        return LLMResponse.objects.filter(llmQuery__model__apiProvider=self).aggregate(total=Sum('prompt_tokens'))['total'] or 0
+        return LLMResponse.objects.filter(llmQuery__aimodel__apiProvider=self).aggregate(total=Sum('prompt_tokens'))['total'] or 0
 
     @property
     def total_completion_tokens(self):
-        return LLMResponse.objects.filter(llmQuery__model__apiProvider=self).aggregate(total=Sum('completion_tokens'))['total'] or 0
+        return LLMResponse.objects.filter(llmQuery__aimodel__apiProvider=self).aggregate(total=Sum('completion_tokens'))['total'] or 0
 
     def __str__(self):
         return "ApiProvider:" + self.name
@@ -36,7 +36,7 @@ class ApiProvider(BaseModel):
             'id': self.pk, 
             'name': self.name,
             'url': self.url,
-            'models': [model.as_client_dict() for model in self.models.all()],
+            'models': [model.as_client_dict() for model in self.aimodels.all()],
             'apikeys': [key.as_client_dict() for key in self.apikeys.all()],
             'total_llm_queries': self.total_llm_queries,
             'total_prompt_tokens': self.total_prompt_tokens,

@@ -5,6 +5,14 @@ function openMainTab(evt, tabId, parentPanelId = 'mainTabPanel', tabName, tabCon
         evt.preventDefault();
     }
     
+    // Force re-creation of ephemeral tabs like "Add Agent" to prevent stale content.
+    if (tabId === 'tabContent_add_agent') {
+        const oldTabContent = document.getElementById('tabContent_add_agent');
+        if (oldTabContent) oldTabContent.remove();
+        const oldTabButton = document.getElementById('tabButton_add_agent');
+        if (oldTabButton) oldTabButton.remove();
+    }
+    
     const parentPanel = document.getElementById(parentPanelId);
     if (!parentPanel) {
         console.error(`Error: Parent panel with ID ${parentPanelId} not found for tab ${tabId}.`);
@@ -108,6 +116,7 @@ function closeMainTab(tabId) {
 
     const instancePkMatch = tabId.match(/tabContent_agentInstance_(\d+)/);
     const instancePk = instancePkMatch ? parseInt(instancePkMatch[1], 10) : null;
+    const isEphemeralTab = tabId === 'tabContent_add_agent'; // Future ephemeral tabs can be added here
 
     if (instancePk) {
         if (websocket && websocket.readyState === WebSocket.OPEN) {
@@ -117,19 +126,20 @@ function closeMainTab(tabId) {
             }));
             addToClientLog(`Client: Unsubscribed from instance ${instancePk}`, 'client-status');
         }
-
         if (instanceLogStates[instancePk]) delete instanceLogStates[instancePk];
         if (window.currentAgentInstancePk === instancePk) window.currentAgentInstancePk = null;
         if (window.lastSelectedInstancePk === instancePk) window.lastSelectedInstancePk = null;
+    }
 
+    if (instancePk || isEphemeralTab) {
+        // Remove instance tabs and ephemeral tabs from the DOM completely
         tabContent.remove();
         if (tabButton) tabButton.remove();
-
     } else {
+        // Hide singleton tabs (like Systems, Tools) instead of removing them
         tabContent.style.display = "none";
         tabContent.classList.remove('active');
         if (tabButton) {
-            // For singleton tabs, we hide the button instead of removing it
             tabButton.style.display = "none";
             tabButton.classList.remove("active");
         }

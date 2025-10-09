@@ -29,4 +29,22 @@ class ApiKey(BaseModel):
             'total_llm_queries': self.total_llm_queries,
             'total_prompt_tokens': self.total_prompt_tokens,
             'total_completion_tokens': self.total_completion_tokens,
+            'apiProvider_id': self.apiProvider_id
         }
+    def delete(self, *args, **kwargs):
+        from django.contrib.auth.models import User
+        from core.tasks.send_websocket_update import celery_send_websocket_update
+
+        key_pk_to_broadcast = self.pk
+        provider_pk_to_broadcast = self.apiProvider.pk
+
+        super().delete(*args, **kwargs)
+
+        message_data = {
+            'object': 'ApiKeyDeleted',
+            'key_pk': key_pk_to_broadcast,
+            'provider_pk': provider_pk_to_broadcast
+        }
+        all_user_pks = User.objects.values_list('pk', flat=True)
+        for pk in all_user_pks:
+            celery_send_websocket_update.delay(message_data, user_pk=pk)

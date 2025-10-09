@@ -1,77 +1,137 @@
 // This file manages the rendering and interactions for the Prompts list tab.
 
-// Assume getTemplate is provided globally by ui/static/js/core/utils.js
 let promptItemTemplate;
 
 function initializePromptTemplates() {
     promptItemTemplate = getTemplate('TabPromptsListItemTemplate');
+    Handlebars.registerPartial('PromptListItemTemplate', promptItemTemplate);
 }
 
 function renderPromptList(prompts) {
-    if (!promptItemTemplate) {
-        initializePromptTemplates();
-    }
     const promptsTableBody = document.getElementById('prompts-table-body');
-    if (!promptsTableBody) {
-        console.error("Prompts table body element not found.");
+    if (!promptsTableBody) return;
+
+    promptsTableBody.innerHTML = ''; 
+
+    if (!prompts || prompts.length === 0) {
+        promptsTableBody.innerHTML = '<tr><td colspan="5"><p class="log-info">No prompt templates found.</p></td></tr>';
         return;
     }
 
-    promptsTableBody.innerHTML = ''; // Clear existing content
+    const systemPrompts = prompts.filter(p => p.owner_username === 'system');
+    const userPrompts = prompts.filter(p => p.owner_username !== 'system');
 
-    if (prompts.length === 0) {
-        promptsTableBody.innerHTML = '<tr><td colspan="5"><p class="log-info">No prompt templates found.</p></td></tr>'; // Adjusted colspan
-        return;
+    const userPromptsByParent = userPrompts.reduce((acc, prompt) => {
+        const parentId = prompt.system_parent_id;
+        if (parentId) {
+            if (!acc[parentId]) {
+                acc[parentId] = [];
+            }
+            acc[parentId].push(prompt);
+        }
+        return acc;
+    }, {});
+    
+    const renderedUserPromptIds = new Set();
+
+    systemPrompts.sort((a, b) => `${a.source}-${a.key}`.localeCompare(`${b.source}-${b.key}`));
+
+    systemPrompts.forEach(sysPrompt => {
+        promptsTableBody.insertAdjacentHTML('beforeend', promptItemTemplate(sysPrompt));
+        if (userPromptsByParent[sysPrompt.id]) {
+            const children = userPromptsByParent[sysPrompt.id];
+            children.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+            children.forEach(userPrompt => {
+                promptsTableBody.insertAdjacentHTML('beforeend', promptItemTemplate(userPrompt));
+                renderedUserPromptIds.add(userPrompt.id);
+            });
+        }
+    });
+
+    const orphanUserPrompts = userPrompts.filter(p => !renderedUserPromptIds.has(p.id));
+    orphanUserPrompts.sort((a, b) => `${a.source}-${a.key}`.localeCompare(`${b.source}-${b.key}`));
+    orphanUserPrompts.forEach(userPrompt => {
+        promptsTableBody.insertAdjacentHTML('beforeend', promptItemTemplate(userPrompt));
+    });
+    
+    attachAllPromptEventListeners(promptsTableBody);
+}
+
+function renderSinglePrompt(prompt) {
+    const promptsTableBody = document.getElementById('prompts-table-body');
+    if (!promptsTableBody) return;
+
+    const newHtml = promptItemTemplate(prompt);
+    const tempContainer = document.createElement('tbody');
+    tempContainer.innerHTML = newHtml;
+    const newPromptRow = tempContainer.firstElementChild;
+    const newPromptValueRow = tempContainer.lastElementChild;
+
+    // Case 1: Replace a previous version
+    if (prompt.prev_version_id) {
+        const oldRow = document.getElementById(`prompt-row-${prompt.prev_version_id}`);
+        const oldValueRow = document.getElementById(`prompt-value-row-${prompt.prev_version_id}`);
+        if (oldRow && oldValueRow) {
+            oldRow.replaceWith(newPromptRow);
+            oldValueRow.replaceWith(newPromptValueRow);
+            attachPromptEventListeners(newPromptRow);
+            return;
+        }
     }
 
-    // Sort prompts by source and then by key for consistent display
-    prompts.sort((a, b) => {
-        if (a.source < b.source) return -1;
-        if (a.source > b.source) return 1;
-        if (a.key < b.key) return -1;
-        if (a.key > b.key) return 1;
-        return 0;
-    });
+    // Case 2: Insert a custom prompt below its system parent
+    if (prompt.system_parent_id) {
+        const parentValueRow = document.getElementById(`prompt-value-row-${prompt.system_parent_id}`);
+        if (parentValueRow) {
+            parentValueRow.insertAdjacentElement('afterend', newPromptRow);
+            newPromptRow.insertAdjacentElement('afterend', newPromptValueRow);
+            attachPromptEventListeners(newPromptRow);
+            return;
+        }
+    }
 
-    prompts.forEach(prompt => {
-        const promptHtml = promptItemTemplate(prompt);
-        promptsTableBody.insertAdjacentHTML('beforeend', promptHtml);
-    });
+    // Case 3: Fallback - append to the end
+    promptsTableBody.appendChild(newPromptRow);
+    promptsTableBody.appendChild(newPromptValueRow);
+    attachPromptEventListeners(newPromptRow);
+}
 
-    // Attach event listeners for the contenteditable fields
-    promptsTableBody.querySelectorAll('.prompt-value-content[contenteditable="true"]').forEach(editableElement => {
-        const promptPk = editableElement.dataset.promptPk;
+function attachAllPromptEventListeners(container) {
+    container.querySelectorAll('.prompt-item-row').forEach(row => {
+        attachPromptEventListeners(row);
+    });
+}
+
+function attachPromptEventListeners(promptRow) {
+    const promptPk = promptRow.dataset.promptPk;
+    const valueRow = document.getElementById(`prompt-value-row-${promptPk}`);
+    if (!valueRow) return;
+
+    const editableElement = valueRow.querySelector('.prompt-value-content[contenteditable="true"]');
+    if (editableElement) {
         const editActions = document.getElementById(`prompt-edit-actions-${promptPk}`);
 
         editableElement.addEventListener('focus', function() {
             if (editActions) {
                 editActions.classList.remove('hidden');
-                this.dataset.originalValue = this.textContent; // Store original value on focus
+                this.dataset.originalValue = this.textContent;
             }
         });
 
         editableElement.addEventListener('blur', function() {
+            // Delay hiding to allow click events on save/cancel buttons
             setTimeout(() => {
                 if (editActions && !editActions.contains(document.activeElement)) {
                     editActions.classList.add('hidden');
                 }
-            }, 100); // Small delay to allow click event on buttons
+            }, 150);
         });
-    });
+    }
 }
 
+
 function createCustomPromptVersion(promptPk) {
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({
-            type: 'create_custom_prompt_version',
-            payload: {
-                original_prompt_pk: promptPk
-            }
-        }));
-        addToClientLog(`Client: Requesting custom version for prompt PK ${promptPk}`, 'info');
-    } else {
-        addToClientLog('WebSocket is not connected. Cannot create custom prompt version.', 'error');
-    }
+    promptsApi.create(promptPk);
 }
 
 function savePromptChanges(promptPk) {
@@ -83,22 +143,8 @@ function savePromptChanges(promptPk) {
         const originalValue = editableValue.dataset.originalValue;
 
         if (newValue !== originalValue) {
-            if (websocket && websocket.readyState === WebSocket.OPEN) {
-                websocket.send(JSON.stringify({
-                    type: 'update_prompt',
-                    payload: {
-                        prompt_pk: promptPk,
-                        value: newValue
-                    }
-                }));
-                addToClientLog(`Client: Saving changes for prompt PK ${promptPk}`, 'info');
-            } else {
-                addToClientLog('WebSocket is not connected. Cannot save prompt changes.', 'error');
-            }
-        } else {
-            addToClientLog(`Client: No changes detected for prompt PK ${promptPk}.`, 'info');
+            promptsApi.update(promptPk, newValue);
         }
-        
         editableValue.blur();
         editActions.classList.add('hidden');
     }
@@ -107,72 +153,37 @@ function savePromptChanges(promptPk) {
 function cancelPromptChanges(promptPk) {
     const editableValue = document.getElementById(`prompt-value-editable-${promptPk}`);
     const editActions = document.getElementById(`prompt-edit-actions-${promptPk}`);
-
     if (editableValue && editActions) {
-        // Revert to original value
         editableValue.textContent = editableValue.dataset.originalValue || editableValue.textContent;
-        
         editableValue.blur();
         editActions.classList.add('hidden');
-        addToClientLog(`Client: Canceled changes for prompt PK ${promptPk}.`, 'info');
     }
 }
 
 function deletePrompt(promptPk, promptKey) {
-    if (confirm(`Are you sure you want to delete prompt "${promptKey}" (PK: ${promptPk}) and all its versions? This action cannot be undone.`)) {
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({
-                type: 'delete_prompt',
-                payload: {
-                    prompt_pk: promptPk
-                }
-            }));
-            addToClientLog(`Client: Requesting deletion for prompt PK ${promptPk}`, 'info');
-        } else {
-            addToClientLog('WebSocket is not connected. Cannot delete prompt.', 'error');
-        }
-    } else {
-        addToClientLog(`Client: Deletion of prompt PK ${promptPk} canceled.`, 'info');
+    if (confirm(`Are you sure you want to delete your custom version of prompt "${promptKey}"?`)) {
+        promptsApi.delete(promptPk);
     }
 }
 
 function togglePromptValueRow(clickedRow, pk, event) {
-    if (event.target.closest('.prompt-actions button') || 
-        event.target.closest('[contenteditable="true"]')) {
+    if (event.target.closest('.prompt-actions button') || event.target.closest('[contenteditable="true"]')) {
         return; 
     }
-
     const valueRow = document.getElementById(`prompt-value-row-${pk}`);
     const icon = document.getElementById(`expand-icon-${pk}`);
-
     if (valueRow && icon) {
-        if (valueRow.classList.contains('hidden')) {
-            valueRow.classList.remove('hidden');
-            icon.classList.remove('fa-chevron-down');
-            icon.classList.add('fa-chevron-up');
-        } else {
-            valueRow.classList.add('hidden');
-            icon.classList.remove('fa-chevron-up');
-            icon.classList.add('fa-chevron-down');
-        }
+        valueRow.classList.toggle('hidden');
+        icon.classList.toggle('fa-chevron-down');
+        icon.classList.toggle('fa-chevron-up');
     }
 };
-
-// This function will be called by openMainTab when 'Prompts' tab is opened
-function requestPromptList() {
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({ type: 'request_prompt_list', payload: {} }));
-        addToClientLog("Client: Requesting prompt list.", 'info');
-    } else {
-        addToClientLog("WebSocket not connected. Cannot fetch prompt list.", 'error');
-    }
-}
 
 function openPromptsTab(targetPanelId = 'mainTabPanel') {
     const tabContentId = 'tabContent_prompts';
     const tabName = 'Prompts';
-
     const existingTab = document.getElementById(tabContentId);
+
     if (existingTab) {
         openMainTab(null, tabContentId, targetPanelId);
     } else {
@@ -181,5 +192,5 @@ function openPromptsTab(targetPanelId = 'mainTabPanel') {
         const tabContentHtml = tabPromptsTemplate({});
         openMainTab(null, tabContentId, targetPanelId, tabName, tabContentHtml);
     }
-    requestPromptList();
+    promptsApi.list();
 }

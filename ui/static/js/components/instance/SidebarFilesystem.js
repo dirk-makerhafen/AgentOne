@@ -2,38 +2,94 @@
 
 let instanceFilesystemStates = {};
 
-// --- STATE MANAGEMENT ---
-
 function resetFilesystemState(instancePk) {
     instanceFilesystemStates[instancePk] = {
-        items: {},
+        items: {}, // Keyed by path, storing the newest FsLogEntry object
         sortColumn: 'path',
-        sortDirection: 'asc'
+        sortDirection: 'asc',
+        showUnloaded: false // Flag to control visibility of unloaded items
     };
 };
 
 function getInstanceFilesystemState(instancePk) {
-    if (!instanceFilesystemStates[instancePk]) {
-        resetFilesystemState(instancePk);
-    }
+    if (!instanceFilesystemStates[instancePk]) resetFilesystemState(instancePk);
     return instanceFilesystemStates[instancePk];
 }
 
-// --- RENDERING ---
+function sidebarFsToggleView(event, instancePk) {
+    event.stopPropagation();
+    const state = getInstanceFilesystemState(instancePk);
+    state.showUnloaded = !state.showUnloaded;
+
+    const icon = document.getElementById(`fs-view-toggle_${instancePk}`);
+    if (icon) {
+        icon.classList.toggle('fa-eye', !state.showUnloaded);
+        icon.classList.toggle('fa-eye-slash', state.showUnloaded);
+        icon.classList.toggle('active', state.showUnloaded);
+    }
+    
+    const listContainer = document.getElementById(`sidebar-filesystem-list-${instancePk}`);
+    if (listContainer) {
+        listContainer.classList.toggle('show-unloaded', state.showUnloaded);
+    }
+}
 
 function renderSidebarFilesystem(payload, instancePk) {
     const state = getInstanceFilesystemState(instancePk);
-    
-    const itemsToProcess = Array.isArray(payload) ? payload : [payload];
-
-    itemsToProcess.forEach(item => {
-        state.items[item.id] = item;
-    });
-
     initializeFilesystemSidebarUI(instancePk);
-    sortAndRenderFilesystemItems(instancePk);
+
+    // Defensive Rendering: Ensure the header content exists before we proceed.
+    // This prevents a race condition where updateTotalTokensDisplay runs before
+    // renderSidebarFilesystemHeader has created the target DOM element.
+    const headerContainer = document.getElementById(`sidebar-filesystem-header-container_${instancePk}`);
+    if (headerContainer && headerContainer.children.length === 0) {
+        const instanceData = window.allAgentInstances[instancePk];
+        if (instanceData) {
+            renderSidebarFilesystemHeader(instanceData);
+        }
+    }
+
+    if (Array.isArray(payload)) {
+        // Initial load of the list
+        state.items = {}; // Clear existing items for a fresh list load
+        payload.forEach(item => {
+            // Only store the newest version for each path
+            if (!state.items[item.path] || item.id > state.items[item.path].id) {
+                state.items[item.path] = item;
+            }
+        });
+        sortAndRenderFilesystemItems(instancePk);
+    } else {
+        // Single item update
+        if (!state.items[payload.path] || payload.id > state.items[payload.path].id) {
+            state.items[payload.path] = payload;
+            renderSingleFilesystemItem(payload, instancePk);
+        }
+    }
+    // Update tokens after any change (initial load or single update)
     updateTotalTokensDisplay(instancePk);
-};
+}
+
+
+function renderSingleFilesystemItem(item, instancePk) {
+    const sidebarFilesystemItemTemplate = getTemplate('SidebarFilesystemItemTemplate');
+    const listContainer = document.getElementById(`sidebar-filesystem-list-${instancePk}`);
+    if (!listContainer) return;
+
+    // Use data-path to find the existing item for replacement
+    const existingItem = listContainer.querySelector(`.sidebar-fs-item[data-path="${item.path}"]`);
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = sidebarFilesystemItemTemplate({...item, instancePk});
+    const newItemElement = tempDiv.firstElementChild;
+
+    if (existingItem) {
+        existingItem.replaceWith(newItemElement);
+    } else {
+        // If it's a new path, add it to the list and re-sort to maintain order
+        listContainer.appendChild(newItemElement);
+        sortAndRenderFilesystemItems(instancePk);
+    }
+}
 
 function initializeFilesystemSidebarUI(instancePk) {
     const sidebarFilesystemContainerTemplate = getTemplate('SidebarFilesystemTemplate');
@@ -44,43 +100,60 @@ function initializeFilesystemSidebarUI(instancePk) {
 }
 
 function sortAndRenderFilesystemItems(instancePk) {
-    const sidebarFilesystemItemTemplate = getTemplate('SidebarFilesystemItemTemplate');
     const state = getInstanceFilesystemState(instancePk);
     const listContainer = document.getElementById(`sidebar-filesystem-list-${instancePk}`);
     if (!listContainer) return;
 
+    listContainer.classList.toggle('show-unloaded', state.showUnloaded);
+
     const itemsArray = Object.values(state.items);
-
     itemsArray.sort((a, b) => {
-        let compareA = a[state.sortColumn];
-        let compareB = b[state.sortColumn];
-
-        if (state.sortColumn === 'size') {
-            compareA = a.tokens || 0;
-            compareB = b.tokens || 0;
-        }
-
-        if (compareA < compareB) return state.sortDirection === 'asc' ? -1 : 1;
-        if (compareA > compareB) return state.sortDirection === 'asc' ? 1 : -1;
+        let valA = a[state.sortColumn] || (state.sortColumn === 'size' ? 0 : '');
+        let valB = b[state.sortColumn] || (state.sortColumn === 'size' ? 0 : '');
+        if (state.sortColumn === 'size') { valA = a.tokens; valB = b.tokens; }
+        if (valA < valB) return state.sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return state.sortDirection === 'asc' ? 1 : -1;
         return 0;
     });
 
-    listContainer.innerHTML = '';
-    itemsArray.forEach(item => {
-        listContainer.insertAdjacentHTML('beforeend', sidebarFilesystemItemTemplate({...item, instancePk}));
+    // Get current DOM elements to compare paths
+    const currentDomPaths = new Set();
+    listContainer.querySelectorAll('.sidebar-fs-item').forEach(el => {
+        currentDomPaths.add(el.dataset.path);
     });
+
+    const newDomPaths = new Set(itemsArray.map(item => item.path));
+
+    // Remove items from DOM that are no longer in state.items
+    currentDomPaths.forEach(domPath => {
+        if (!newDomPaths.has(domPath)) {
+            const elToRemove = listContainer.querySelector(`.sidebar-fs-item[data-path="${domPath}"]`);
+            if (elToRemove) elToRemove.remove();
+        }
+    });
+
+    // Now, clear the list container and re-add all items from the sorted state
+    // This ensures correct order and replaces any existing items with their newest versions
+    listContainer.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    itemsArray.forEach(item => {
+        const sidebarFilesystemItemTemplate = getTemplate('SidebarFilesystemItemTemplate');
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = sidebarFilesystemItemTemplate({...item, instancePk});
+        fragment.appendChild(tempDiv.firstElementChild);
+    });
+    listContainer.appendChild(fragment);
 }
+
 
 function updateTotalTokensDisplay(instancePk) {
     const state = getInstanceFilesystemState(instancePk);
-    const totalTokens = Object.values(state.items).reduce((sum, item) => sum + (item.tokens || 0), 0);
+    const totalTokens = Object.values(state.items)
+        .filter(item => item.is_loaded)
+        .reduce((sum, item) => sum + (item.tokens || 0), 0);
     const tokenDisplay = document.getElementById(`total-fs-tokens_${instancePk}`);
-    if (tokenDisplay) {
-        tokenDisplay.textContent = totalTokens;
-    }
+    if (tokenDisplay) tokenDisplay.textContent = totalTokens;
 }
-
-// --- INLINE EVENT HANDLERS ---
 
 function handleFilesystemSort(column, instancePk) {
     const state = getInstanceFilesystemState(instancePk);
@@ -94,116 +167,58 @@ function handleFilesystemSort(column, instancePk) {
 };
 
 function saveSidebarFsPermission(instancePk, key, value) {
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        let payloadData = {};
-        payloadData[key] = value;
-        websocket.send(JSON.stringify({
-            type: 'update_agent_instance',
-            payload: {
-                instance_pk: instancePk,
-                ...payloadData
-            }
-        }));
-    }
+    agentInstanceApi.update(instancePk, { [key]: value });
 }
 
 function sidebarFsLoad(event, instancePk) {
     event.stopPropagation();
-    const container = document.getElementById(`sidebar-tab-filesystem_${instancePk}`);
-    if (!container) return;
-
-    const pathInput = container.querySelector(`#sidebar-fs-path-input_${instancePk}`);
-    
+    const pathInput = document.querySelector(`#sidebar-fs-path-input_${instancePk}`);
     const paths = pathInput.value.split('\n').map(p => p.trim()).filter(Boolean);
-
     if (paths.length > 0) {
-        paths.forEach(path => {
-            if (websocket && websocket.readyState === WebSocket.OPEN) {
-                websocket.send(JSON.stringify({
-                    type: 'direct_tool_call',
-                    payload: {
-                        tool_calls: [{
-                            function_name: 'fs_load',
-                            arguments: { path: path, recursive: false, mode: 'full' }
-                        }],
-                        instance_pk: instancePk
-                    }
-                }));
+        const tool_calls = paths.map(rawPath => {
+            let path = rawPath;
+            let recursive = false;
+
+            if (path.endsWith('*')) {
+                recursive = true;
+                path = path.slice(0, -1); // Remove the '*'
             }
+
+            if (path === '') {
+                path = '.';
+            }
+
+            return {
+                function_name: 'fs_load',
+                arguments: { path, recursive, mode: 'full' }
+            };
         });
+        directToolCallApi.call(instancePk, tool_calls);
         pathInput.value = '';
     }
 }
 
 function sidebarFsPin(event, instancePk) {
     event.stopPropagation();
-    const target = event.currentTarget;
-    const fslogentryPk = target.dataset.fslogentryPk;
-    const isPinned = target.dataset.isPinned === 'true';
-
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({
-            type: 'update_fslogentry_flags',
-            payload: {
-                instance_pk: instancePk,
-                fslogentry_pk: fslogentryPk,
-                pin_to_context: !isPinned
-            }
-        }));
-    }
+    const path = event.currentTarget.dataset.path;
+    filesystemApi.togglePin(instancePk, path);
 }
 
 function sidebarFsToggleLoadMode(event, instancePk) {
     event.stopPropagation();
-    const target = event.currentTarget;
-    const path = target.dataset.path;
-    const currentMode = target.dataset.loadMode;
-    const newMode = currentMode === 'full' ? 'summary' : 'full';
-
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({
-            type: 'direct_tool_call',
-            payload: {
-                tool_calls: [{
-                    function_name: 'fs_load',
-                    arguments: { path: path, mode: newMode }
-                }],
-                instance_pk: instancePk
-            }
-        }));
-    }
+    const { path, loadMode } = event.currentTarget.dataset;
+    const newMode = loadMode === 'full' ? 'summary' : 'full';
+    directToolCallApi.call(instancePk, [{ function_name: 'fs_load', arguments: { path, mode: newMode } }]);
 }
 
 function sidebarFsUnload(event, instancePk) {
     event.stopPropagation();
     const path = event.currentTarget.dataset.path;
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({
-            type: 'direct_tool_call',
-            payload: {
-                tool_calls: [{
-                    function_name: 'fs_unload',
-                    arguments: { path: path }
-                }],
-                instance_pk: instancePk
-            }
-        }));
-    }
+    directToolCallApi.call(instancePk, [{ function_name: 'fs_unload', arguments: { path } }]);
 }
 
 function sidebarFsLoadItem(event, instancePk) {
     event.stopPropagation();
     const path = event.currentTarget.dataset.path;
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({
-            type: 'direct_tool_call',
-            payload: {
-                tool_calls: [{
-                    function_name: 'fs_load',
-                    arguments: { path: path, mode: 'full' } // Always load full when clicking the load icon
-                }],
-                instance_pk: instancePk
-            }
-        }));
-    }
+    directToolCallApi.call(instancePk, [{ function_name: 'fs_load', arguments: { path, mode: 'full' } }]);
 }

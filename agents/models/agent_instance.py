@@ -1,17 +1,19 @@
 from django.db import models
 from django.db.models import Sum
+import os
 
 from agents.models.conversation_message import ConversationMessage
-from agents.tasks.trigger_tool_lifecycle import celery_trigger_tool_lifecycle_task
+
 from core.models.base_model import BaseModel
-from tools.buildin_a2a.a2a_tool import A2ATool
-from tools.buildin_a2a.models.a2a_description import AgentToAgentDescription
-from tools.buildin_filesystem.filesystem_tool import FilesystemTool
-from tools.buildin_memory.memory_tool import MemoryTool
-from tools.buildin_python.python_tool import PythonTool
-from tools.buildin_shell.shell_tool import ShellTool
-from tools.buildin_subscriptions.subscriptions_tool import SubscriptionsTool
-from tools.buildin_userinteraction.user_interaction_tool import UserInteractionTool
+from tools.builtin_a2a.a2a_tool import A2ATool
+from tools.builtin_a2a.models.a2a_description import AgentToAgentDescription
+from tools.builtin_filesystem.filesystem_tool import FilesystemTool
+from tools.builtin_memory.memory_tool import MemoryTool
+from tools.builtin_python.python_tool import PythonTool
+from tools.builtin_shell.shell_tool import ShellTool
+from tools.builtin_subscriptions.subscriptions_tool import SubscriptionsTool
+from tools.builtin_userinteraction.user_interaction_tool import UserInteractionTool
+from tools.instances.mcpclient import MCPClient
 from tools.instances.models.tool_instance import ToolInstance
 
 # Map built-in tool names (as they appear in ToolDefinition.name) to their Python classes.
@@ -32,6 +34,7 @@ class AgentInstance(BaseModel):
     system = models.ForeignKey("systems.System", on_delete=models.SET_NULL, null=True, blank=True, related_name='agent_instances', help_text= 'The system this instance is assigned to run on.')
     aimodel = models.ForeignKey("providers.AiModel", default=None, null=True, on_delete= models.CASCADE, related_name='agent_instances')
     name = models.CharField(max_length=255, default='', blank=True)
+    description_text = models.TextField(blank=True, default='', help_text="A description of this specific agent instance.") # New field
     STATUS_CHOICES = [('IDLE', 'Idle'), ('IDLE_AUTOMATED',
         'Idle (Automated)'), ('THINKING', 'Thinking'), ('EXECUTING_TOOLS',
         'Executing Tools'), ('AWAITING_USER_INPUT', 'Awaiting User Input'),
@@ -68,13 +71,13 @@ class AgentInstance(BaseModel):
                 self.toolname_to_class[f"{fname}"] = tool_class # Map function name to class, not instance
 
     @property
-    def description(self):
+    def a2a_description_latest(self): # Renamed property
         latest_log = self.description_logs.order_by('-created_at').first()
         return latest_log.description if latest_log else ''
     
-    @description.setter
-    def description(self, description, toolCall=None):
-        from tools.buildin_a2a.models.a2a_description import AgentToAgentDescription
+    @a2a_description_latest.setter # Renamed setter
+    def a2a_description_latest(self, description, toolCall=None):
+        from tools.builtin_a2a.models.a2a_description import AgentToAgentDescription
         d = AgentToAgentDescription(
             agent=self.agent,
             agent_instance=self,
@@ -85,102 +88,51 @@ class AgentInstance(BaseModel):
         self.send_object_to_clients()
 
     def get_tool_function(self, full_function_name):
-            
-            # Ensure tools are set up
-            # This is called here to guarantee tool_instances and toolname_to_definition are populated
-            # before as_client_dict accesses history_limiting_rules or other tool-related data.
-            self._setup_tools()
-            # First, check if it's a built-in tool function (e.g., 'fs_read')
-            # Built-in tools are stored in self.tool_instances by their full function name (e.g., 'filesystem_read')
-            # and self.toolname_to_definition maps them to their ToolDefinition.
-            print("get_tool_function", full_function_name, self)
-            print(self.tool_instances)
-            if full_function_name in self.tool_instances:
-                tool_instance = self.tool_instances[full_function_name]
-                tool_def = self.toolname_to_definition[full_function_name]
+        self._setup_tools()
 
-                # For built-in tools, the function name directly maps to a method on the instance
-                # We need to get the arguments from the tool_instance's 'functions' dictionary
-                # and the callable method using getattr.
-                if hasattr(tool_instance, 'functions') and full_function_name in tool_instance.functions:
+        # Check built-in tools first
+        if full_function_name in self.tool_instances:
+            tool_instance_or_client = self.tool_instances[full_function_name]
+            # Check if it's a direct callable (built-in tool)
+            if hasattr(tool_instance_or_client, 'functions') and full_function_name in tool_instance_or_client.functions:
+                tool_def = self.toolname_to_definition[full_function_name]
+                return {
+                    "arguments": tool_instance_or_client.functions[full_function_name]["parameters"],
+                    "callable": getattr(tool_instance_or_client, full_function_name),
+                    "tool_definition_id": tool_def.pk
+                }
+
+        # Check for external MCP tools (e.g., 'my-tool.do_something')
+        if '.' in full_function_name:
+            tool_name, method_name = full_function_name.split('.', 1)
+            if tool_name in self.tool_instances:
+                mcp_client = self.tool_instances[tool_name]
+                tool_def = self.toolname_to_definition[tool_name]
+                if isinstance(mcp_client, MCPClient):
+                    # The schema for the method's arguments should be fetched from the tool.
+                    # For now, we assume a generic dict. A future improvement would be to
+                    # have mcp_client.get_method_schema(method_name).
                     return {
-                        "arguments": tool_instance.functions[full_function_name]["parameters"],
-                        "callable": getattr(tool_instance, full_function_name),
+                        "arguments": {"type": "object", "properties": {}},
+                        "callable": lambda **kwargs: mcp_client.invoke_tool(method_name, kwargs),
                         "tool_definition_id": tool_def.pk
                     }
-                else:
-                    raise ValueError(f"Built-in tool function '{full_function_name}' found, but its definition or callable method is missing on the instance.")
 
-            # If not a direct built-in function, check if it's an MCP tool function (e.g., 'apple-mcp.list_files')
-            # MCP clients are stored in self.tool_instances keyed by their tool_def.name (e.g., 'apple-mcp').
-            if '.' in full_function_name:
-                mcp_client_name, mcp_tool_method_name = full_function_name.split('.', 1)
-                if mcp_client_name in self.tool_instances:
-                    mcp_client_instance = self.tool_instances[mcp_client_name]
-                    tool_def = self.toolname_to_definition[mcp_client_name] # MCPClient instances are mapped by tool_def.name
-
-                    if isinstance(mcp_client_instance, MCPClient):
-                        # For MCPClient, the callable is always `invoke_tool`,
-                        # and the actual tool method name is passed as an argument.
-                        # The arguments for the specific MCP tool method need to be dynamically
-                        # fetched via the MCPClient itself, which typically involves an async call.
-                        # For now, we return a placeholder, acknowledging this needs future refinement.
-                        # TODO: Implement a mechanism to dynamically fetch the input schema for mcp_tool_method_name
-                        #       from the MCPClient instance when the tool function is requested.
-                        return {
-                            "arguments": {"type": "object", "properties": {}}, # Placeholder, actual schema needs to be fetched from MCPClient.list_tools()
-                            "callable": lambda **kwargs: mcp_client_instance.invoke_tool(mcp_tool_method_name, kwargs),
-                            "tool_definition_id": tool_def.pk
-                        }
-
-            raise ValueError(f"Tool function '{full_function_name}' not found or not enabled for this agent instance.")
-
-    def save(self, send_to_client=True, *args, **kwargs):
-        from agents.tasks.trigger_tool_lifecycle import celery_trigger_tool_lifecycle_task
-        is_new = self.pk is None
-        old_system_pk = None
-        if not is_new:
-            # Fetch the old system pk before the save to detect changes
-            try:
-                old_system_pk = AgentInstance.objects.values_list('system_id', flat=True).get(pk=self.pk)
-            except AgentInstance.DoesNotExist:
-                pass # This can happen if the object is being created in a weird state
-
-        print(f"AgentInstance.save() called for pk={self.pk}, is_new={is_new}")
-        super().save(*args, **kwargs)
-
-        # Trigger tool lifecycle check if the system was newly assigned or changed
-        current_system_pk = self.system.pk if self.system else None
-        print(f"AgentInstance.save(): old_system_pk={old_system_pk}, current_system_pk={current_system_pk}")
-        if self.system and (is_new or old_system_pk != current_system_pk):
-            print(f"AgentInstance.save(): Triggering celery_trigger_tool_lifecycle_task for instance {self.instance_pk}")
-            from agent.tasks import celery_trigger_tool_lifecycle_task
-            # Add a small delay to ensure the save transaction is committed before the task runs
-            celery_trigger_tool_lifecycle_task.apply_async(args=[self.instance_pk], countdown=1)
-        else:
-            print(f"AgentInstance.save(): Not triggering celery_trigger_tool_lifecycle_task for instance {self.instance_pk}. Condition: self.system={bool(self.system)}, is_new={is_new}, old_system_pk={old_system_pk}, current_system_pk={current_system_pk}")
-
-        if send_to_client:
-            self.send_object_to_clients()
+        raise ValueError(f"Tool function '{full_function_name}' not found or not enabled for this agent instance.")
 
     def as_client_dict(self):
         model = self.aimodel or self.agent.aimodel
         model_name = model.name if model else 'N/A'
         model_id = model.pk if model else None
 
-        # Ensure tools are set up
-        # This is called here to guarantee tool_instances and toolname_to_definition are populated
-        # before as_client_dict accesses history_limiting_rules or other tool-related data.
         self._setup_tools()
 
         all_rule_templates = []
-        for tool_instance_or_client in self.tool_instances.values():
-            if hasattr(tool_instance_or_client, 'get_history_limiting_rules'):
-                all_rule_templates.extend(tool_instance_or_client.get_history_limiting_rules())
-            #TODO elif isinstance(tool_instance_or_client, MCPClient):
-            #    # MCPClient does not expose history limiting rules directly in the same way.
-            #    # If MCP tools eventually have their own limiting rules, this logic would need to be extended.
-            #    pass # Currently, MCPClient does not provide history limiting rules this way
+        # Use set() to get unique tool instances, preventing duplicates for tools with multiple functions.
+        unique_tool_instances = set(self.tool_instances.values())
+        for tool_instance in unique_tool_instances:
+            if hasattr(tool_instance, 'get_history_limiting_rules'):
+                all_rule_templates.extend(tool_instance.get_history_limiting_rules())
 
         db_rules = self.history_limiting_rules.filter(is_active=True)
         db_rules_map = {f'{rule.group_name}:{rule.rule_name}': rule for rule in db_rules}
@@ -190,14 +142,14 @@ class AgentInstance(BaseModel):
             rule_name = template['name']
             rule_key = f'{group_name}:{rule_name}'
             rule_data = {
-                'group_name': group_name, 
-                'full_rule_name': rule_key, 
-                'display_name': rule_name, 
-                'description': template.get('description', ''), 
-                'success': template['limits'].get('success'), 
-                'failed': template['limits'].get('failed'), 
+                'group_name': group_name,
+                'full_rule_name': rule_key,
+                'display_name': rule_name,
+                'description': template.get('description', ''),
+                'success': template['limits'].get('success'),
+                'failed': template['limits'].get('failed'),
                 'pending': template['limits'].get('pending'),
-                'max': template['limits'].get('max'), 
+                'max': template['limits'].get('max'),
                 'db_id': None
             }
             if rule_key in db_rules_map:
@@ -228,29 +180,29 @@ class AgentInstance(BaseModel):
         total_completion = token_totals.get('total_completion_tokens') or 0
 
         return {
-            'object': 'AgentInstance', 
-            'id': self.instance_pk,
-            'agent_id': self.agent.agent_pk, 
-            'created_at': self.created_at.isoformat(), 
-            'name': self.name, 
-            'description': self.description,
-            'status': self.status, 
-            'status_display': self.get_status_display(), 
+            'object': 'AgentInstance',
+            'id': self.pk,
+            'agent_id': self.agent.agent_pk,
+            'created_at': self.created_at.isoformat(),
+            'name': self.name,
+            'description_text': self.description_text, # Use the new description_text field
+            'status': self.status,
+            'status_display': self.get_status_display(),
             'agent_name': self.agent.name,
-            'agent_description': self.agent.description, 
-            'model_name': model_name, 
-            'model_id': model_id, 
-            'system_name': self.system.name if self.system else 'Unassigned', 
-            'system_id': self.system.pk if self.system else None, 
+            'agent_description': self.agent.description,
+            'model_name': model_name,
+            'model_id': model_id,
+            'system_name': self.system.name if self.system else 'Unassigned',
+            'system_id': self.system.pk if self.system else None,
             'workingdir': self.workingdir,
-            'limit_max_conversation_messages': self.limit_max_conversation_messages, 
-            'limit_max_memory_items': self.limit_max_memory_items, 
-            'limit_max_automated_steps': self.limit_max_automated_steps, 
-            'automated_step_count': self.automated_step_count, 
-            'workingdir_write_allowed': self.workingdir_write_allowed, 
+            'limit_max_conversation_messages': self.limit_max_conversation_messages,
+            'limit_max_memory_items': self.limit_max_memory_items,
+            'limit_max_automated_steps': self.limit_max_automated_steps,
+            'automated_step_count': self.automated_step_count,
+            'workingdir_write_allowed': self.workingdir_write_allowed,
             'access_rules': self.access_rules,
-            'history_limiting_rules': grouped_rules, 
-            'total_prompt_tokens': total_prompt, 
+            'history_limiting_rules': grouped_rules,
+            'total_prompt_tokens': total_prompt,
             'total_completion_tokens': total_completion
         }
 
@@ -260,13 +212,14 @@ class AgentInstance(BaseModel):
     def clone(self):
         newInstance = AgentInstance()
         newInstance.agent = self.agent
-        newInstance.model = self.model
+        newInstance.aimodel = self.aimodel
         newInstance.name = f'Cloned {self.name}'
+        newInstance.description_text = self.description_text # Clone the new description_text
         newInstance.status = self.status
         newInstance.workingdir = self.workingdir
         newInstance.save()
-        if self.description:
-            AgentToAgentDescription.objects.create(agent_instance=newInstance, description=self.description)
+        if self.a2a_description_latest: # Check the A2A specific description
+            AgentToAgentDescription.objects.create(agent_instance=newInstance, description=self.a2a_description_latest)
         paths = set()
         for ctxitem in self.filesystemTool.get_loaded_items():
             paths.add(ctxitem.path)
@@ -306,73 +259,81 @@ class AgentInstance(BaseModel):
         celery_create_query.apply_async(args=[self.instance_pk])
         
     def _setup_tools(self):
-            print(f"_setup_tools called for AgentInstance {self.instance_pk}")
+        # This method discovers available tools (both built-in and running external tools)
+        # and prepares client instances for them.
 
-            self.tool_instances = {} # Maps full_function_name to tool instance for built-in, or tool_def.name to MCPClient instance
-            self.toolname_to_definition = {} # Maps full_function_name (or tool_def.name for MCPClient) to ToolDefinition object
+        self.tool_instances = {}
+        self.toolname_to_definition = {}
 
-            # Always load all built-in tools
-            from tools.definitions.models.tool_definition import ToolDefinition
-            for tool_name, tool_class in BUILTIN_TOOL_CLASS_MAP.items():
-                try:
-                    instance = tool_class(self)
-                    tool_def, created = ToolDefinition.objects.get_or_create(
-                        name=tool_name,
-                        defaults={'display_name': tool_name.replace('_', ' ').title(), 'is_builtin': True, 'description': f"Built-in {tool_name} tool."}
-                    )
-                    if created:
-                        print(f"Created ToolDefinition for built-in tool: {tool_name}")
+        from tools.definitions.models.tool_definition import ToolDefinition
+        
+        # 1. Load all built-in tools
+        for tool_name, tool_class in BUILTIN_TOOL_CLASS_MAP.items():
+            try:
+                instance = tool_class(self)
+                tool_def = ToolDefinition.objects.get(name=tool_name, is_builtin=True)
+                for func_name in instance.functions:
+                    self.tool_instances[func_name] = instance
+                    self.toolname_to_definition[func_name] = tool_def
+            except ToolDefinition.DoesNotExist:
+                print(f"Error: Built-in ToolDefinition '{tool_name}' not found.")
+            except Exception as e:
+                print(f"Error initializing built-in tool {tool_name}: {e}")
 
-                    for func_name, func_details in instance.functions.items():
-                        self.tool_instances[func_name] = instance
-                        self.toolname_to_definition[func_name] = tool_def
-                except Exception as e:
-                    print(f"Error initializing built-in tool {tool_name} for AgentInstance {self.instance_pk}: {e}")
+        # 2. Discover running external (MCP) tools
+        if not (self.agent and self.system):
+            return # Cannot discover external tools without an agent and an assigned system.
 
-            # Load external MCP tools only if the agent has them selected AND they are installed and running on the system
-            if self.agent and self.system:
-                from tools.definitions.models.tool_installation import ToolInstallation 
+        from tools.definitions.models.tool_installation import ToolInstallation
+        for tool_def in self.agent.available_tools.filter(is_builtin=False):
+            installation = None
+            if tool_def.execution_mode == ToolDefinition.ExecutionMode.SHARED:
+                installation = self.system.tool_installations.filter(
+                    tool_definition=tool_def,
+                    agent_instance__isnull=True
+                ).first()
+            elif tool_def.execution_mode == ToolDefinition.ExecutionMode.DEDICATED:
+                installation = self.system.tool_installations.filter(
+                    tool_definition=tool_def,
+                    agent_instance=self
+                ).first()
 
-                for tool_def in self.agent.available_tools.filter(is_builtin=False):
-                    try:
-                        installation = None
-                        if tool_def.execution_mode == ToolDefinition.ExecutionMode.SHARED:
-                            # For shared tools, look for an installation on the system with no specific agent instance
-                            installation = self.system.tool_installations.filter(
-                                tool_definition=tool_def,
-                                agent_instance__isnull=True, # Important: Must be null for shared
-                                status=ToolInstallation.Status.RUNNING
-                            ).first()
-                            if not installation:
-                                print(f"Info: Shared MCP tool '{tool_def.name}' not found running on system '{self.system.name}'. Triggering lifecycle task.")
-                                celery_trigger_tool_lifecycle_task.apply_async(args=[self.instance_pk, tool_def.pk, None], countdown=1) # No agent_instance_pk for shared
-                                continue
+            if not installation:
+                continue
 
-                        elif tool_def.execution_mode == ToolDefinition.ExecutionMode.DEDICATED:
-                            # For dedicated tools, look for an installation specifically for this agent instance
-                            installation = self.system.tool_installations.filter(
-                                tool_definition=tool_def,
-                                agent_instance=self, # Important: Must be this instance
-                                status=ToolInstallation.Status.RUNNING
-                            ).first()
-                            if not installation:
-                                print(f"Info: Dedicated MCP tool '{tool_def.name}' not found running for AgentInstance {self.instance_pk} on system '{self.system.name}'. Triggering lifecycle task.")
-                                celery_trigger_tool_lifecycle_task.apply_async(args=[self.instance_pk, tool_def.pk, self.instance_pk], countdown=1) # Pass agent_instance_pk
-                                continue
+            # Find all running instances for this installation
+            running_instances = installation.instances.filter(status=ToolInstance.Status.RUNNING)
+            if not running_instances.exists():
+                continue
 
-                        if installation and hasattr(installation, 'mcp_server_connection'):
-                            mcp_server_record = installation.mcp_server_connection
-                            client = ToolInstance(name=tool_def.name, mcp_server=mcp_server_record, agent_instance=self)
-                            self.tool_instances[tool_def.name] = client
-                            self.toolname_to_definition[tool_def.name] = tool_def
-                            print(f"MCP tool '{tool_def.name}' ({tool_def.execution_mode}) loaded successfully for AgentInstance {self.instance_pk}.")
-                        else:
-                            print(f"Warning: MCP tool '{tool_def.name}' installation or its ToolInstance record not found or not running for AgentInstance {self.instance_pk} on system '{self.system.name}'. Skipping.")
+            # For now, we connect to the most recently started running instance.
+            # A future enhancement could involve load balancing or round-robin.
+            latest_running_instance = running_instances.order_by('-created_at').first()
 
-                    except Exception as e:
-                        print(f"Error initializing MCP tool {tool_def.name} for AgentInstance {self.instance_pk}: {e}")
-            elif self.agent and not self.system:
-                if self.agent.available_tools.filter(is_builtin=False).exists():
-                    print(f"Warning: Agent {self.agent.name} has external MCP tools selected, but AgentInstance {self.instance_pk} has no system assigned. Skipping MCP tool loading.")
-            print(f"_setup_tools completed for AgentInstance {self.instance_pk}.")
+            try:
+                # The MCPClient is the object that knows how to communicate with the tool
+                client = MCPClient(tool_instance=latest_running_instance)
+                self.tool_instances[tool_def.name] = client
+                self.toolname_to_definition[tool_def.name] = tool_def
+                print(f"Connected to running tool '{tool_def.name}' via instance {latest_running_instance.pk}.")
+            except Exception as e:
+                print(f"Error creating MCPClient for tool '{tool_def.name}': {e}")
+            
+    def delete(self, *args, **kwargs):
+        from django.contrib.auth.models import User
+        from core.tasks.send_websocket_update import celery_send_websocket_update
 
+        instance_pk_to_broadcast = self.instance_pk
+        agent_pk_to_broadcast = self.agent.agent_pk # Also send parent agent_pk for sidebar updates
+
+        super().delete(*args, **kwargs)
+
+        # After deletion, broadcast the update to all users
+        message_data = {
+            'object': 'AgentInstanceDeleted',
+            'instance_pk': instance_pk_to_broadcast,
+            'agent_pk': agent_pk_to_broadcast # Include agent_pk for efficient UI updates in SidebarAgents
+        }
+        all_user_pks = User.objects.values_list('pk', flat=True)
+        for pk in all_user_pks:
+            celery_send_websocket_update.delay(message_data, user_pk=pk)

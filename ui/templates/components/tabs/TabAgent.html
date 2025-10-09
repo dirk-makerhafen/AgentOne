@@ -1,18 +1,22 @@
 {% verbatim %}
 <script id="TabAgentTemplate" type="text/x-handlebars-template">
-    <div  id="agent-edit-content-{{agent.id}}" class="tab-content agent-edit-tab active" style="display: flex;" >
-
+    <div id="{{#if agent.is_new}}tabContent_add_agent{{else}}tabContent_edit_agent_{{agent.id}}{{/if}}" class="tab-content agent-edit-tab active" style="display: flex;">
         <div class="agent-edit-container">
-            <h3>Edit Agent: {{agent.name}}</h3>
-            <form id="edit-agent-form-{{agent.id}}" oninput="agentUpdate({{agent.id}})">
+            <h3>{{#if agent.is_new}}Create New Agent{{else}}Edit Agent: {{agent.name}}{{/if}}</h3>
+            
+            <form id="{{#if agent.is_new}}add-agent-form-tab{{else}}edit-agent-form-{{agent.id}}{{/if}}" 
+                  {{#unless agent.is_new}}oninput="agentUpdate({{agent.id}})"{{/unless}}>
+                
                 <div class="form-group">
-                    <label for="agent-name-{{agent.id}}">Agent Name</label>
-                    <input type="text" class="form-control" id="agent-name-{{agent.id}}" value="{{agent.name}}">
+                    <label for="agent-name-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Agent Name</label>
+                    <input type="text" class="form-control" id="agent-name-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.name}}">
                 </div>
+                
                 <div class="form-group">
-                    <label for="agent-description-{{agent.id}}">Description</label>
-                    <textarea class="form-control" id="agent-description-{{agent.id}}" rows="3">{{agent.description}}</textarea>
+                    <label for="agent-description-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Description</label>
+                    <textarea class="form-control" id="agent-description-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" rows="3">{{agent.description}}</textarea>
                 </div>
+                
                 <div class="form-group">
                     <h4>Available Tools</h4>
                     <div class="tool-selection-list">
@@ -27,8 +31,14 @@
                         {{/each}}
                     </div>
                 </div>
+                
                 <div class="agent-edit-footer">
-                    <p class="last-updated-timestamp text-muted" id="last-updated-{{agent.id}}">Last updated: {{agent.updated_at_formatted}}</p>
+                    {{#if agent.is_new}}
+                        <button type="button" class="btn btn-success" onclick="agentCreateFromTab(event)">Save & Close</button>
+                        <button type="button" class="btn btn-default" onclick="closeMainTab('tabContent_add_agent')">Cancel</button>
+                    {{else}}
+                        <p class="last-updated-timestamp text-muted" id="last-updated-{{agent.id}}">Last updated: {{agent.updated_at_formatted}}</p>
+                    {{/if}}
                 </div>
             </form>
         </div>

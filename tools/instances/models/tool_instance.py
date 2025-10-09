@@ -6,96 +6,83 @@ from django.utils import timezone
 from core.models.base_model import BaseModel
 
 class ToolInstance(BaseModel):
-    STATUS_CHOICES = [
-        ('connected', 'Connected'),
-        ('disconnected', 'Disconnected'),
-        ('error', 'Error'),
-        ('connecting', 'Connecting...'),
-    ]
+    class Status(models.TextChoices):
+        STARTING = 'starting', 'Starting'
+        RUNNING = 'running', 'Running'
+        STOPPING = 'stopping', 'Stopping'
+        STOPPED = 'stopped', 'Stopped'
+        ERROR = 'error', 'Error'
 
-    TRANSPORT_CHOICES = [
-        ('tcp', 'TCP Socket (HTTP/S)'),
-        ('stdin_stdout', 'Standard I/O (stdin/stdout)'),
-    ]
-
-    name = models.CharField(max_length=255, unique=True, help_text="A user-friendly name for the MCP server.")
-    endpoint_url = models.URLField(
-        max_length=2000,
-        validators=[URLValidator(schemes=['http', 'https'])],
-        help_text="The full URL of the MCP endpoint (must be HTTP or HTTPS). Required for TCP transport.",
-        blank=True,
-        null=True
-    )
-    transport_type = models.CharField(
-        max_length=20,
-        choices=TRANSPORT_CHOICES,
-        default='tcp',
-        help_text="The communication transport type for the MCP server."
+    tool_installation = models.ForeignKey(
+        "definitions.ToolInstallation",
+        on_delete=models.CASCADE,
+        related_name='instances',
+        help_text="The ToolInstallation this instance belongs to."
     )
     status = models.CharField(
         max_length=20,
-        choices=STATUS_CHOICES,
-        default='disconnected',
-        help_text="Current connection status of the MCP server."
+        choices=Status.choices,
+        default=Status.STARTING,
+        help_text="Current runtime status of the tool instance."
+    )
+    process_id = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="The PID of the running tool process on the remote system."
+    )
+    endpoint_url = models.URLField(
+        max_length=2000,
+        validators=[URLValidator(schemes=['http', 'https'])],
+        help_text="The full URL of the tool's endpoint (if applicable).",
+        blank=True,
+        null=True
     )
     last_error = models.TextField(
         blank=True,
         null=True,
-        help_text="Stores the last connection or tool-listing error message."
-    )
-    tools = models.JSONField(
-        default=list,
-        blank=True,
-        help_text="JSON list of available tools discovered from the endpoint."
-    )
-    enabled = models.BooleanField(
-        default=True,
-        help_text="Whether this MCP server's tools are enabled for agents."
-    )
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    tool_installation = models.OneToOneField(
-        "definitions.ToolInstallation", 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='mcp_server_connection',
-        help_text="The ToolInstallation that manages this MCP server instance."
+        help_text="Stores the last runtime error message."
     )
 
-    def clean(self):
-        super().clean()
-        if self.transport_type == 'tcp':
-            if not self.endpoint_url:
-                raise ValidationError({'endpoint_url': 'Endpoint URL is required for TCP transport.'})
-        elif self.transport_type == 'stdin_stdout':
-            if self.endpoint_url:
-                raise ValidationError({'endpoint_url': 'Endpoint URL must be null for stdin/stdout transport.'})
+    class Meta:
+        ordering = ['-created_at']
 
     def save(self, send_to_client=True, *args, **kwargs):
-        self.full_clean()
         super().save(*args, **kwargs)
         if send_to_client:
-            self.send_object_to_clients()
+            # When an instance changes, we notify the client by sending the parent installation,
+            # which now includes the latest instance status in its as_client_dict.
+            self.tool_installation.send_object_to_clients()
 
     def as_client_dict(self):
         return {
             "object": "ToolInstance",
             "id": self.pk,
-            "name": self.name,
-            "endpoint_url": self.endpoint_url,
-            "transport_type": self.transport_type,
+            "tool_installation_id": self.tool_installation.pk,
             "status": self.status,
+            "process_id": self.process_id,
+            "endpoint_url": self.endpoint_url,
             "last_error": self.last_error,
-            "tools": self.tools,
-            "enabled": self.enabled,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
         }
 
     def __str__(self):
-        if self.transport_type == 'tcp':
-            return f"{self.name} (TCP: {self.endpoint_url})"
-        else:
-            return f"{self.name} (STDIO)"
+        return f"Instance of {self.tool_installation.tool_definition.display_name} on {self.tool_installation.system.name} - Run at {self.created_at.strftime('%Y-%m-%d %H:%M')} [{self.status}]"
+    def delete(self, *args, **kwargs):
+        from django.contrib.auth.models import User
+        from core.tasks.send_websocket_update import celery_send_websocket_update
+
+        tool_instance_pk_to_broadcast = self.pk
+        tool_installation_pk_to_broadcast = self.tool_installation.pk
+
+        super().delete(*args, **kwargs)
+
+        # After deletion, broadcast the update to all users
+        message_data = {
+            'object': 'ToolInstanceDeleted',
+            'tool_instance_pk': tool_instance_pk_to_broadcast,
+            'tool_installation_pk': tool_installation_pk_to_broadcast # Include for UI updates
+        }
+        all_user_pks = User.objects.values_list('pk', flat=True)
+        for pk in all_user_pks:
+            celery_send_websocket_update.delay(message_data, user_pk=pk)

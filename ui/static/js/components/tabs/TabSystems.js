@@ -13,6 +13,7 @@ function initializeSystemTemplates() {
     Handlebars.registerPartial('SystemItemRowTemplate', getTemplate('TabSystemsListItemTemplate'));
     Handlebars.registerPartial('SystemDetailsTemplate', getTemplate('TabSystemsDetailsTemplate'));
     Handlebars.registerPartial('ToolInstallationItemTemplate', getTemplate('TabSystemsToolInstallationItemTemplate'));
+    Handlebars.registerPartial('ToolInstanceItemTemplate', getTemplate('TabSystemsToolInstanceItemTemplate')); // Register new partial
     Handlebars.registerPartial('ToolInstallationLogEntryTemplate', getTemplate('TabSystemsToolInstallationLogEntryTemplate'));
 }
 
@@ -62,8 +63,11 @@ function renderSystem(system, tableBody) {
     if (existingItemRow) {
         const existingDetailsRow = existingItemRow.nextElementSibling;
         if (existingDetailsRow && existingDetailsRow.classList.contains('system-details-row')) {
+            // Capture the *current* visibility state from the DOM
             detailsAreVisible = !existingDetailsRow.classList.contains('hidden');
-            isEditing = existingDetailsRow.querySelector('.system-details-edit') && existingDetailsRow.querySelector('.system-details-edit').style.display !== 'none';
+            // Also capture the editing state
+            const editForm = existingDetailsRow.querySelector('.system-details-edit');
+            isEditing = editForm && editForm.style.display !== 'none';
         }
     }
 
@@ -95,44 +99,80 @@ function renderSystem(system, tableBody) {
     const systemItemHtml = systemItemRowTemplate(systemData);
     const systemDetailsHtml = systemDetailsTemplate(systemData);
     
+    // Use a temporary tbody element to correctly parse the <tr> HTML strings
     const tempContainer = document.createElement('tbody');
     tempContainer.innerHTML = systemItemHtml + systemDetailsHtml;
-    
+    const newItemRow = tempContainer.children[0];
+    const newDetailsRow = tempContainer.children[1];
+
     if (existingItemRow) {
         const existingDetailsRow = existingItemRow.nextElementSibling;
-        existingItemRow.replaceWith(tempContainer.firstChild);
+        
+        existingItemRow.replaceWith(newItemRow);
+        
         if (existingDetailsRow && existingDetailsRow.classList.contains('system-details-row')) {
-            existingDetailsRow.replaceWith(tempContainer.lastChild);
+            existingDetailsRow.replaceWith(newDetailsRow);
+        } else {
+            // Insert the details row if it was missing for some reason
+            newItemRow.after(newDetailsRow);
         }
     } else {
-        tableBody.appendChild(tempContainer.firstChild);
-        tableBody.appendChild(tempContainer.firstChild);
+        // If the system row is new, append both children
+        tableBody.appendChild(newItemRow);
+        tableBody.appendChild(newDetailsRow);
     }
 }
 
 function renderToolInstallationList(toolInstallations, systemId) {
     const toolInstallationItemTemplate = getTemplate('TabSystemsToolInstallationItemTemplate');
+    const toolInstanceItemTemplate = getTemplate('TabSystemsToolInstanceItemTemplate');
     const container = document.getElementById(`tool-installation-list-${systemId}`);
-    if (!container) { 
-        // Details row might be closed
-        return; 
-    }
+    if (!container) { return; } // Details row might be closed
     container.innerHTML = '';
 
     if (toolInstallations && toolInstallations.length > 0) {
         toolInstallations.forEach(installation => {
-            const statusLower = installation.status.toLowerCase();
-            const html = toolInstallationItemTemplate({
+            const installationStatusLower = installation.status.toLowerCase();
+            const runningInstances = installation.instances.filter(
+                instance => ['running', 'starting'].includes(instance.status)
+            );
+
+            // Data for the main installation item
+            const installationData = {
                 ...installation,
-                status: statusLower.replace(/_/g, '-'),
-                status_display: installation.status.replace(/_/g, ' ').replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
-                can_start: statusLower === 'stopped' || statusLower === 'installed' || statusLower === 'error',
-                can_stop: statusLower === 'running'
-            });
-            container.insertAdjacentHTML('beforeend', html);
+                installation_status_display: installationStatusLower.replace(/_/g, ' ').replace(/(?:^|\s)\S/g, a => a.toUpperCase()),
+                installation_status_class: installationStatusLower.replace(/_/g, '-'),
+                running_instances_count: runningInstances.length,
+                instance_status_class: runningInstances.length > 0 ? 'running' : 'stopped', // Simplified status for the tag
+                can_start: installationStatusLower === 'installed' && runningInstances.length < installation.max_parallel_instances,
+            };
+
+            // Render the main installation item
+            const installationHtml = toolInstallationItemTemplate(installationData);
+            container.insertAdjacentHTML('beforeend', installationHtml);
+
+            // Now, find the container within the newly added element and render the instances
+            const newInstallationElement = container.lastElementChild;
+            const instanceListContainer = newInstallationElement.querySelector('.tool-instance-list-container');
+            
+            if (instanceListContainer && runningInstances.length > 0) {
+                let instancesHtml = '';
+                // Sort to show newest running instance first
+                runningInstances.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                
+                runningInstances.forEach(instance => {
+                    const instanceData = {
+                        ...instance,
+                        created_at_display: new Date(instance.created_at).toLocaleString(),
+                        status_class: instance.status.toLowerCase().replace(/_/g, '-')
+                    };
+                    instancesHtml += toolInstanceItemTemplate(instanceData);
+                });
+                instanceListContainer.innerHTML = instancesHtml;
+            }
         });
     } else {
-        container.insertAdjacentHTML('beforeend', '<p class="no-installations-message">No tools installed on this system.</p>');
+        container.innerHTML = '<p class="no-installations-message">No tools installed on this system.</p>';
     }
 }
 
@@ -155,29 +195,18 @@ function openSystemsTab(targetPanelId = 'mainTabPanel') {
         openMainTab(null, tabContentId, targetPanelId, tabName, finalHtml);
     }
     
-    requestSystemList();
+    systemApi.list();
     addToClientLog(`Client: Opened Systems tab.`, 'info');
 }
 
 
 // --- System Actions ---
 
-function requestSystemList() {
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({ type: 'request_system_list' }));
-    }
-}
-
 function systemCreate(event) {
     event.stopPropagation();
     const systemName = prompt("Enter a name for the new system:", "New System");
     if (systemName) {
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({ type: 'create_system', payload: { name: systemName } }));
-            addToClientLog(`Client: Requesting creation of system "${systemName}".`, 'info');
-        } else {
-            addToClientLog("WebSocket not connected. Cannot create system.", 'error');
-        }
+        systemApi.create(systemName);
     }
 }
 
@@ -193,12 +222,7 @@ function systemToggleDetails(event, systemId) {
     icon.classList.toggle('fa-chevron-up', isHidden);
 
     if (isHidden) { // If it WAS hidden, it's now visible
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({ type: 'request_tool_installation_list', payload: { system_pk: systemId } }));
-            addToClientLog(`Client: Requesting tool installation list for system ${systemId}.`, 'info');
-        } else {
-            addToClientLog("WebSocket not connected. Cannot fetch tool installations.", 'error');
-        }
+        toolInstallationApi.list(systemId);
     }
 }
 
@@ -231,12 +255,7 @@ function systemSaveChanges(event, systemId) {
         os: editForm.querySelector('select[name="os"]').value,
         executor_mode: editForm.querySelector('select[name="executor_mode"]').value
     };
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({ type: 'update_system_details', payload: { system_pk: systemId, data: data } }));
-        addToClientLog(`Client: Requesting update for system ${systemId} details.`, 'info');
-    } else {
-        addToClientLog("WebSocket not connected. Cannot save system details.", 'error');
-    }
+    systemApi.update(systemId, data);
 }
 
 
@@ -256,7 +275,9 @@ function toolInstallationOpenModal(event, systemId) {
 }
 
 function toolInstallationCloseModal(event) {
-    event.stopPropagation();
+    if (event) {
+        event.stopPropagation();
+    }
     const modal = document.querySelector('#toolInstallationModal');
     if (modal) {
         modal.style.display = 'none';
@@ -268,49 +289,37 @@ function toolInstallationSave(event) {
     const modal = document.querySelector('#toolInstallationModal');
     const systemId = modal.querySelector('#toolInstallationSystemId').value;
     const toolDefinitionId = modal.querySelector('#toolInstallationToolDefinitionId').value;
+    const maxParallelInstances = parseInt(modal.querySelector('input[name="max_parallel_instances"]').value, 10);
 
     if (!toolDefinitionId) { alert('Please select a Tool Definition.'); return; }
     if (!systemId) { alert('System ID is missing. This is an internal error.'); return; }
-
-    const payload = { tool_definition_pk: toolDefinitionId, system_pk: systemId };
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({ type: 'create_tool_installation', payload: payload }));
-        addToClientLog(`Client: Requesting creation of tool installation for tool ${toolDefinitionId} on system ${systemId}.`, 'info');
-    } else {
-        addToClientLog("WebSocket not connected. Cannot save tool installation.", 'error');
+    if (isNaN(maxParallelInstances) || maxParallelInstances < 1 || maxParallelInstances > 64) {
+        alert('Max Parallel Instances must be a number between 1 and 64.');
+        return;
     }
+
+    toolInstallationApi.create(toolDefinitionId, systemId, maxParallelInstances); // Pass new parameter
     toolInstallationCloseModal(event);
 }
 
 function toolInstallationStart(event, installationId) {
     event.stopPropagation();
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({ type: 'tool_installation_start', payload: { installation_pk: installationId } }));
-        addToClientLog(`Client: Requesting to start tool installation ${installationId}.`, 'info');
-    } else {
-        addToClientLog(`Cannot start installation. WebSocket is not connected.`, 'error');
-    }
+    toolInstallationApi.start(installationId);
 }
 
-function toolInstallationStop(event, installationId) {
+function toolInstallationStop(event, instancePkToStop) {
     event.stopPropagation();
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({ type: 'tool_installation_stop', payload: { installation_pk: installationId } }));
-        addToClientLog(`Client: Requesting to stop tool installation ${installationId}.`, 'info');
+    if (instancePkToStop) {
+        toolInstanceApi.stop(instancePkToStop);
     } else {
-        addToClientLog(`Cannot stop installation. WebSocket is not connected.`, 'error');
+        addToClientLog("Error: No ToolInstance PK provided to stop.", 'error');
     }
 }
 
 function toolInstallationDelete(event, installationId, toolName) {
     event.stopPropagation();
     if (confirm(`Are you sure you want to uninstall "${toolName}"?`)) {
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({ type: 'delete_tool_installation', payload: { installation_pk: installationId } }));
-            addToClientLog(`Client: Requesting deletion of tool installation ${installationId} ("${toolName}").`, 'info');
-        } else {
-            addToClientLog("Cannot delete installation. WebSocket is not connected.", 'error');
-        }
+        toolInstallationApi.delete(installationId);
     }
 }
 
@@ -324,13 +333,7 @@ function toolInstallationToggleLogs(event, installationId) {
 
     if (!isVisible && logsContainer.innerHTML.trim() === '') {
         logsContainer.innerHTML = '<p class="log-message">Loading logs...</p>';
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({ type: 'request_tool_installation_logs', payload: { installation_id: installationId } }));
-            addToClientLog(`Client: Requesting logs for tool installation ${installationId}.`, 'info');
-        } else {
-            logsContainer.innerHTML = '<p class="log-message log-error">WebSocket is not connected.</p>';
-            addToClientLog("WebSocket not connected. Cannot fetch logs.", 'error');
-        }
+        toolInstallationApi.getLogs(installationId);
     }
 }
 

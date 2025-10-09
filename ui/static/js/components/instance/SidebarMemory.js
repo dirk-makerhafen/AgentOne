@@ -7,7 +7,7 @@ let instanceMemoryStates = {};
 function resetMemoryState(instancePk) {
     instanceMemoryStates[instancePk] = {
         items: {},
-        activeFilters: new Set(['ST', 'MT', 'LT']), // Default to all active
+        activeTrack: 'REVIEW', // Default to REVIEW track
     };
 }
 
@@ -23,6 +23,7 @@ function getInstanceMemoryState(instancePk) {
 function renderSidebarMemory(payload, instancePk) {
     const state = getInstanceMemoryState(instancePk);
 
+    // Process incoming payload(s)
     const itemsToProcess = Array.isArray(payload) ? payload : [payload];
     itemsToProcess.forEach(item => {
         if (item.content === '[DELETED]') {
@@ -33,70 +34,112 @@ function renderSidebarMemory(payload, instancePk) {
     });
 
     initializeSidebarMemoryUI(instancePk);
-    filterAndRenderMemoryItems(instancePk);
+    renderMemoryTrackButtons(instancePk); // Render track buttons first
+    renderMemoryItemsForActiveTrack(instancePk); // Then render items for the active track
 }
 
 function initializeSidebarMemoryUI(instancePk) {
     const sidebarMemoryContainerTemplate = getTemplate('SidebarMemoryTemplate');
     const tabContent = document.getElementById(`sidebar-tab-memory_${instancePk}`);
-    if (tabContent && tabContent.children.length === 0) {
+    if (tabContent) { // Removed the children.length check here
         tabContent.innerHTML = sidebarMemoryContainerTemplate({ instancePk });
-        renderMemoryFilters(instancePk);
     }
 }
 
-function renderMemoryFilters(instancePk) {
-    const memoryFilterButtonTemplate = getTemplate('SidebarMemoryFilterButtonTemplate');
+function renderMemoryTrackButtons(instancePk) {
     const state = getInstanceMemoryState(instancePk);
-    const filterContainer = document.getElementById(`sidebar-memory-filters_${instancePk}`);
-    if (!filterContainer) return;
+    const tabsContainer = document.getElementById(`sidebar-memory-track-buttons_${instancePk}`);
+    if (!tabsContainer) return;
 
-    filterContainer.innerHTML = '';
-    const layers = ['ST', 'MT', 'LT'];
-    layers.forEach(layer => {
-        filterContainer.insertAdjacentHTML('beforeend', memoryFilterButtonTemplate({
-            layer: layer,
-            isActive: state.activeFilters.has(layer),
-            instancePk: instancePk
-        }));
+    tabsContainer.innerHTML = '';
+    const uniqueTracks = Array.from(new Set(Object.values(state.items).map(item => item.track))).sort();
+    const allPossibleTracks = ['REVIEW', 'SELF', 'INSIGHTS', 'GOALS', 'STATUS', 'SYSTEMS', 'PLANS', 'PREDICTIONS', 'MEMORY'];
+
+    // Ensure default tracks are present even if no items exist for them
+    const tracksToShow = Array.from(new Set([...allPossibleTracks, ...uniqueTracks])).sort();
+
+    tracksToShow.forEach(track => {
+        const button = document.createElement('button');
+        button.className = `memory-tab-btn ${state.activeTrack === track ? 'active' : ''}`;
+        button.dataset.trackName = track;
+        button.onclick = (event) => toggleMemoryTrack(event, track, instancePk);
+        button.textContent = track;
+        tabsContainer.appendChild(button);
     });
 }
 
-function filterAndRenderMemoryItems(instancePk) {
+function renderMemoryItemsForActiveTrack(instancePk) {
     const memoryItemTemplate = getTemplate('SidebarMemoryItemTemplate');
     const state = getInstanceMemoryState(instancePk);
-    const listContainer = document.getElementById(`sidebar-memory-list-${instancePk}`);
-    if (!listContainer) return;
+    const itemsListContainer = document.getElementById(`memory-items-actual-list_${instancePk}`); // Updated target ID
+    const noItemsMessage = document.getElementById(`no-memory-items-message_${instancePk}`);
 
-    const itemsArray = Object.values(state.items);
-    itemsArray.sort((a, b) => {
-        const layerOrder = { 'LT': 0, 'MT': 1, 'ST': 2 };
-        if (layerOrder[a.layer] !== layerOrder[b.layer]) return layerOrder[a.layer] - layerOrder[b.layer];
-        return b.id - a.id;
-    });
+    if (!itemsListContainer || !noItemsMessage) return;
 
-    let html = '<ul>';
-    itemsArray.forEach(item => {
-        if (state.activeFilters.has(item.layer)) {
-            html += memoryItemTemplate({ item: item, instancePk: instancePk });
+    const itemsForActiveTrack = Object.values(state.items).filter(item => item.track === state.activeTrack);
+
+    if (itemsForActiveTrack.length === 0) {
+        itemsListContainer.innerHTML = ''; // Clear actual list
+        noItemsMessage.style.display = 'block'; // Show no items message
+        return;
+    } else {
+        noItemsMessage.style.display = 'none'; // Hide no items message
+    }
+
+    // Group items by layer
+    const groupedByLayer = { 'LT': [], 'MT': [], 'ST': [] };
+    itemsForActiveTrack.forEach(item => {
+        if (groupedByLayer[item.layer]) {
+            groupedByLayer[item.layer].push(item);
         }
     });
-    html += '</ul>';
-    listContainer.innerHTML = html;
+
+    // Sort items within each layer (newest first for ST/MT, oldest for LT might make sense, but consistency for now)
+    for (const layer in groupedByLayer) {
+        groupedByLayer[layer].sort((a, b) => b.id - a.id); // Sort by ID descending (newest first)
+    }
+
+    // Build HTML for all layers within the active track
+    let htmlContent = '';
+    const layerOrder = ['LT', 'MT', 'ST']; // Display order for layers
+    layerOrder.forEach(layer => {
+        if (groupedByLayer[layer].length > 0) {
+            htmlContent += `<div class="memory-layer-group">`;
+            htmlContent += `<h5 class="memory-layer-header">${layer} Layer</h5>`;
+            htmlContent += `<ul>`;
+            groupedByLayer[layer].forEach(item => {
+                htmlContent += memoryItemTemplate({ item: item, instancePk: instancePk });
+            });
+            htmlContent += `</ul>`;
+            htmlContent += `</div>`;
+        }
+    });
+
+    itemsListContainer.innerHTML = htmlContent; // Render into the new target div
 }
 
 // --- INLINE EVENT HANDLERS ---
-
-function toggleMemoryFilter(button, layer, instancePk) {
+function toggleMemoryTrack(event, track, instancePk) {
+    event.stopPropagation();
     const state = getInstanceMemoryState(instancePk);
-    if (state.activeFilters.has(layer)) {
-        state.activeFilters.delete(layer);
-        button.classList.remove('active');
-    } else {
-        state.activeFilters.add(layer);
-        button.classList.add('active');
+
+    // Update active track in state
+    state.activeTrack = track;
+
+    // Update button active states
+    const tabsContainer = document.getElementById(`sidebar-memory-track-buttons_${instancePk}`);
+    if (tabsContainer) {
+        tabsContainer.querySelectorAll('.memory-tab-btn').forEach(button => {
+            if (button.dataset.trackName === track) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
     }
-    filterAndRenderMemoryItems(instancePk);
+
+    // Re-render memory items for the newly active track
+    renderMemoryItemsForActiveTrack(instancePk);
 }
 
 function handleMemoryFocus(event) {
@@ -126,24 +169,16 @@ function saveMemoryEdit(event, instancePk) {
     const itemId = button.dataset.itemId;
     const editableValueElement = document.getElementById(`memory-item-content-${itemId}`);
     const newValue = editableValueElement.textContent;
-
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({
-            type: 'direct_tool_call',
-            payload: {
-                tool_calls: [{
-                    function_name: 'memory_correct',
-                    arguments: {
-                        track: editableValueElement.dataset.itemTrack,
-                        layer: editableValueElement.dataset.itemLayer,
-                        index: itemId,
-                        content: newValue
-                    }
-                }],
-                instance_pk: instancePk
+    directToolCallApi.call(instancePk, [{
+            function_name: 'memory_correct',
+            arguments: {
+                track: editableValueElement.dataset.itemTrack,
+                layer: editableValueElement.dataset.itemLayer,
+                index: itemId,
+                content: newValue
             }
-        }));
-    }
+        }]
+    )
     editableValueElement.blur();
 }
 
@@ -165,18 +200,11 @@ function addMemoryItem(event, instancePk) {
     const layer = button.dataset.itemLayer;
     const newContent = prompt(`Enter new memory content for ${track} - ${layer}:`);
     if (newContent) {
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({
-                type: 'direct_tool_call',
-                payload: {
-                    tool_calls: [{
-                        function_name: 'memory_add',
-                        arguments: { track: track, layer: layer, content: newContent }
-                    }],
-                    instance_pk: instancePk
-                }
-            }));
-        }
+        directToolCallApi.call(instancePk,  [{
+                function_name: 'memory_add',
+                arguments: { track: track, layer: layer, content: newContent }
+            }]
+        );
     }
 }
 
@@ -187,23 +215,14 @@ function deleteMemoryItem(event, instancePk) {
     const track = button.dataset.itemTrack;
     const layer = button.dataset.itemLayer;
     if (confirm(`Are you sure you want to delete memory item ${itemId} from ${track} - ${layer}?`)) {
-        if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.send(JSON.stringify({
-                type: 'direct_tool_call',
-                payload: {
-                    tool_calls: [{
-                        function_name: 'memory_correct',
-                        arguments: {
-                            track: track,
-                            layer: layer,
-                            index: itemId,
-                            content: '[DELETED]'
-                        }
-                    }],
-                    instance_pk: instancePk
-                }
-            }));
-        }
+        directToolCallApi.call(instancePk,[{
+                function_name: 'memory_correct',
+                arguments: {
+                    track: track,
+                    layer: layer,
+                    index: itemId,
+                    content: '[DELETED]'
+                }}]);
     }
 }
 
@@ -214,19 +233,11 @@ function repositionMemoryItem(event, instancePk) {
     const track = button.dataset.itemTrack;
     const layer = button.dataset.itemLayer;
     const steps = button.dataset.direction === 'up' ? -1 : 1;
-
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send(JSON.stringify({
-            type: 'direct_tool_call',
-            payload: {
-                tool_calls: [{
-                    function_name: 'memory_reposition',
-                    arguments: {
-                        track: track, layer: layer, index: itemId, steps: steps
-                    }
-                }],
-                instance_pk: instancePk
+    directToolCallApi.call(instancePk, [{
+            function_name: 'memory_reposition',
+            arguments: {
+                track: track, layer: layer, index: itemId, steps: steps
             }
-        }));
-    }
+        }],
+    );
 }

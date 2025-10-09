@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 import sys
 
-class ToolsBuildinUserinteractionConfig(AppConfig):
+class ToolsBuiltinUserinteractionConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'tools'
 

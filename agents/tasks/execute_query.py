@@ -9,16 +9,18 @@ from agents.models.conversation_message import ConversationMessage
 from agents.models.debug_log_entry import DebugLogEntry
 from agents.models.llm_query import LLMQuery
 from agents.models.llm_response import LLMResponse
+from tools.calls.models.tool_call import ToolCall
+from tools.calls.tool_parser import extract_tool_call_parts
 
 
 @shared_task
 def execute_query(llmQuery_id, streaming=True  ):
-    llmQuery = LLMQuery.objects.get(llmQuery_id)
+    llmQuery = LLMQuery.objects.get(pk=llmQuery_id)
     print("execute_query %s" % llmQuery)
     if not llmQuery:
         return 
 
-    llmQuery.apikey = random.choice([x for x in llmQuery.model.apiProvider.apikeys.all()])
+    llmQuery.apikey = random.choice([x for x in llmQuery.aimodel.apiProvider.apikeys.all()])
     llmQuery.status = "active"
     llmQuery.save()
 
@@ -38,12 +40,12 @@ def execute_query(llmQuery_id, streaming=True  ):
         debugLogEntry = DebugLogEntry(agentInstance = llmQuery.agentInstance, event = 'raw_query_messages', data = {"messages": messages, "llmQuery_id": llmQuery.id})
         debugLogEntry.save()
 
-    client = OpenAI(api_key=llmQuery.apikey.key, base_url=llmQuery.model.apiProvider.url)
+    client = OpenAI(api_key=llmQuery.apikey.key, base_url=llmQuery.aimodel.apiProvider.url)
     toolCalls = []
     response_string_full = ""
     try:
         if not streaming:
-            response = client.chat.completions.create(model=llmQuery.model.name, messages=messages)
+            response = client.chat.completions.create(model=llmQuery.aimodel.name, messages=messages)
             response = json.loads(response.model_dump_json())   
             llmResponse = LLMResponse()
             llmResponse.agent = llmQuery.agent
@@ -60,7 +62,7 @@ def execute_query(llmQuery_id, streaming=True  ):
             conversationMessage.save(send_to_client=False)
             response_string_full = (response['choices'][0].get('message', "") if len(response['choices']) > 0 else {}).get("content", "")
         else:
-            with client.chat.completions.stream(model=llmQuery.model.name, messages=messages, stream_options= {"include_usage": True}) as stream:
+            with client.chat.completions.stream(model=llmQuery.aimodel.name, messages=messages, stream_options= {"include_usage": True}) as stream:
                 llmResponse = LLMResponse()
                 llmResponse.agent = llmQuery.agent
                 llmResponse.agentInstance = llmQuery.agentInstance
@@ -169,7 +171,6 @@ def decide_next_step(agent_instance):
         agent_instance.status = 'AWAITING_USER_INPUT'
         agent_instance.automated_step_count = 0
         agent_instance.save()
-        send_object_to_clients(agent_instance)
         return  # Stop the loop and wait.
 
     # If we are not waiting for a user, check if we can and should continue automatically.

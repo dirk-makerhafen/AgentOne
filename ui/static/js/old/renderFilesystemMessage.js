@@ -135,7 +135,7 @@ function generateAndInjectFsContent(item, detailsDiv, instancePk, displayMode) {
                   .replace(/&quot;/g, '"')
                   .replace(/&#96;/g, '`')
                   .replace(/&#10;/g, '\n')
-                  .replace(/&#13;/g, '\n');
+                  .replace(/&#13;/g, '\r');
     };
     const content = unescape(item.dataset.content);
     const prevContent = unescape(item.dataset.prevContent);

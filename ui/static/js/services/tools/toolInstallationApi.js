@@ -1,7 +1,7 @@
 // API functions for tools/definitions/consumers/tool_installation.py
 const toolInstallationApi = {
-    create: function(tool_definition_pk, system_pk) {
-        sendRequest('toolinstallation_create', { tool_definition_pk, system_pk });
+    create: function(tool_definition_pk, system_pk, max_parallel_instances) {
+        sendRequest('toolinstallation_create', { tool_definition_pk, system_pk, max_parallel_instances });
     },
     getLogs: function(installation_id) {
         sendRequest('toolinstallation_get_logs', { installation_id });
@@ -14,8 +14,5 @@ const toolInstallationApi = {
     },
     start: function(installation_pk) {
         sendRequest('toolinstallation_start', { installation_pk });
-    },
-    stop: function(installation_pk) {
-        sendRequest('toolinstallation_stop', { installation_pk });
     }
 };

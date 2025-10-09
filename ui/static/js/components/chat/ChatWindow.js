@@ -119,15 +119,7 @@ function attachLogAreaScrollListener(logArea, instancePk) {
 
                 // Record the scroll height *before* we add new content
                 instanceLogState.scrollHeightBeforeHistoryLoad = logArea.scrollHeight; 
-                
-                websocket.send(JSON.stringify({
-                    type: 'load_history',
-                    payload: {
-                        max_id: oldestVisibleId,
-                        limit: 20,
-                        instance_pk: instancePk
-                    }
-                })); 
+                conversationApi.listMessages(instancePk=instancePk, max_id=oldestVisibleId, limit=20);
                 addToClientLog(`Client: Loading more history for instance ${instancePk}`, 'info');
             } else {
                 addToClientLog("Cannot load history. WebSocket not open.", 'warning');

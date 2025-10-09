@@ -2,14 +2,13 @@ from django.db import models
 from core.models.base_model import BaseModel
 from systems.models.system import System
 from .tool_definition import ToolDefinition
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 class ToolInstallation(BaseModel):
     class Status(models.TextChoices):
-        NOT_INSTALLED = 'not_installed', 'Not Installed'
         INSTALLING = 'installing', 'Installing'
-        INSTALLED = 'installed', 'Installed'
-        RUNNING = 'running', 'Running'
-        STOPPED = 'stopped', 'Stopped'
+        INSTALLED = 'installed', 'installed'
+        UNINSTALLING = 'uninstalling', 'Uninstalling'
         ERROR = 'error', 'Error'
 
     tool_definition = models.ForeignKey(ToolDefinition, on_delete=models.CASCADE, related_name='installations')
@@ -22,28 +21,21 @@ class ToolInstallation(BaseModel):
         related_name='tool_installations',
         help_text="The specific agent instance this installation is dedicated to. Null for shared tools."
     )
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NOT_INSTALLED)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.INSTALLING)
     local_path = models.CharField(max_length=1024, blank=True, null=True, help_text="The installation path on the remote system.")
-    process_id = models.IntegerField(blank=True, null=True, help_text="The PID of the running tool process on the remote system.")
-    assigned_port = models.IntegerField(blank=True, null=True, help_text="The network port assigned to the running service.")
-    mcp_server = models.OneToOneField(
-        'instances.ToolInstance', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='installation',
-        help_text="The ToolInstance that this ToolInstallation manages the connection for."
+    max_parallel_instances = models.IntegerField(
+        default=1,
+        validators=[MinValueValidator(1), MaxValueValidator(64)],
+        help_text="Maximum number of parallel instances allowed for this tool installation."
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('tool_definition', 'system', 'agent_instance')
+        ordering = ['-created_at']
 
     def __str__(self):
-        if self.agent_instance:
-            return f"{self.tool_definition.display_name} on {self.system.name} for Instance {self.agent_instance.pk} [{self.status}]"
-        return f"{self.tool_definition.display_name} on {self.system.name} (Shared) [{self.status}]"
+        instance_str = f" for Instance {self.agent_instance.pk}" if self.agent_instance else " (Shared)"
+        return f"{self.tool_definition.display_name} on {self.system.name}{instance_str} [{self.status}]"
 
     def save(self, send_to_client=True, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -51,6 +43,11 @@ class ToolInstallation(BaseModel):
             self.send_object_to_clients()
 
     def as_client_dict(self):
+        # Find the latest running or stopped instance for this installation to report to the client
+        # This logic needs to be updated to consider max_parallel_instances for client display
+        # For now, we still report the *latest* status, but the client might need to query for all running instances.
+        latest_instance = self.instances.order_by('-created_at').first()
+
         return {
             'object': 'ToolInstallation',
             'id': self.pk,
@@ -61,9 +58,28 @@ class ToolInstallation(BaseModel):
             'agent_instance_id': self.agent_instance.pk if self.agent_instance else None,
             'status': self.status,
             'local_path': self.local_path,
-            'process_id': self.process_id,
-            'assigned_port': self.assigned_port,
-            'mcp_server_id': self.mcp_server.pk if self.mcp_server else None,
+            'max_parallel_instances': self.max_parallel_instances, # Add the new field
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
+            # Include details from the latest associated instance
+            'instance_status': latest_instance.status if latest_instance else 'not_run',
+            'instance_id': latest_instance.pk if latest_instance else None,
         }
+def delete(self, *args, **kwargs):
+    from django.contrib.auth.models import User
+    from core.tasks.send_websocket_update import celery_send_websocket_update
+
+    installation_pk_to_broadcast = self.pk
+    system_pk_to_broadcast = self.system.pk
+
+    super().delete(*args, **kwargs)
+
+    # After deletion, broadcast the update to all users
+    message_data = {
+        'object': 'ToolInstallationDeleted',
+        'installation_pk': installation_pk_to_broadcast,
+        'system_pk': system_pk_to_broadcast # Include system_pk for efficient UI updates
+    }
+    all_user_pks = User.objects.values_list('pk', flat=True)
+    for pk in all_user_pks:
+        celery_send_websocket_update.delay(message_data, user_pk=pk)
