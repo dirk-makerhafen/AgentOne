@@ -1,5 +1,6 @@
 from django.db import models
 from core.models.base_model import BaseModel
+from tools.calls.models.tool_call import ToolCall
 
 class ConversationMessage(BaseModel):
     agent = models.ForeignKey("agents.Agent", default=None, null=True, on_delete=models.CASCADE, related_name='conversationMessages')
@@ -37,7 +38,7 @@ class ConversationMessage(BaseModel):
 
             try:
                 tcid = conversationMessagePart.get('tcId',conversationMessagePart.get("toolCall__id")) 
-                toolCall = self.toolCalls.get(id=int(tcid))
+                toolCall = ToolCall.objects.get(id=int(tcid))
                 content = conversationMessagePart.get("content","")
                 tool_call_part_data = {'content': content, "pnr": index, 'tool_call_id': toolCall.id, 'function_name': toolCall.function_name, 'arguments': toolCall.arguments, 'status': toolCall.status, "tokens": len(content) // 3.8, 'result': toolCall.toolResponses.last().data if toolCall.toolResponses.last() else None}
                 parts.append(tool_call_part_data)

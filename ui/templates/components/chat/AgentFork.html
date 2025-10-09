@@ -1,0 +1,31 @@
+{% verbatim %}
+<script id="AgentForkTemplate" type="text/x-handlebars-template">
+    <div id="agent_fork_message_{{targetInstanceId}}_{{id}}"
+         class="conversation-log-item log-type-agent-fork agent-fork-message"
+         data-id="{{id}}"
+         data-created-at="{{created_at}}"
+         data-instance-id="{{child_instance_id}}"
+         data-parent-instance-id="{{parent_instance_id}}"
+         onclick="toggleElementVisibility('agent_fork_details_{{id}}')">
+        <div class="message-header">
+            <span class="timestamp">{{formattedTimestamp}}</span>
+            <span class="message-sender">System</span>
+            <span class="message-type">Agent Forked</span>
+        </div>
+        <div class="message-content">
+            {{#if isParent}}
+            <p>You forked a new instance: <strong><a href="#" onclick="event.stopPropagation(); selectAgentInstance(event, {{child_instance_id}});">{{child_instance_name}} ({{child_instance_id}})</a></strong></p>
+            {{else if isChild}}
+            <p>You were forked from instance: <strong><a href="#" onclick="event.stopPropagation(); selectAgentInstance(event, {{parent_instance_id}});">{{parent_instance_name}} ({{parent_instance_id}})</a></strong></p>
+            {{else}}
+            <p><strong>Agent Instance <a href="#" onclick="event.stopPropagation(); selectAgentInstance(event, {{parent_instance_id}});">{{parent_instance_id}}</a></strong> forked a new instance: <strong><a href="#" onclick="event.stopPropagation(); selectAgentInstance(event, {{child_instance_id}});">{{child_instance_name}} ({{child_instance_id}})</a></strong></p>
+            {{/if}}
+            <div id="agent_fork_details_{{id}}" class="agent-fork-details hidden">
+                <p>A new agent instance was created from {{#if isParent}}this instance{{else if isChild}}the parent instance{{else}}the specified parent instance{{/if}}, inheriting its context up to this point.</p>
+                <p>Parent Instance ID: <a href="#" onclick="event.stopPropagation(); selectAgentInstance(event, {{parent_instance_id}});">{{parent_instance_id}}</a></p>
+                <p>Child Instance ID: <a href="#" onclick="event.stopPropagation(); selectAgentInstance(event, {{child_instance_id}});">{{child_instance_id}}</a></p>
+            </div>
+        </div>
+    </div>
+</script>
+{% endverbatim %}

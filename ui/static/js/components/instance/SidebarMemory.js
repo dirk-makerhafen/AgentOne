@@ -225,19 +225,3 @@ function deleteMemoryItem(event, instancePk) {
                 }}]);
     }
 }
-
-function repositionMemoryItem(event, instancePk) {
-    event.stopPropagation();
-    const button = event.currentTarget;
-    const itemId = button.dataset.itemId;
-    const track = button.dataset.itemTrack;
-    const layer = button.dataset.itemLayer;
-    const steps = button.dataset.direction === 'up' ? -1 : 1;
-    directToolCallApi.call(instancePk, [{
-            function_name: 'memory_reposition',
-            arguments: {
-                track: track, layer: layer, index: itemId, steps: steps
-            }
-        }],
-    );
-}

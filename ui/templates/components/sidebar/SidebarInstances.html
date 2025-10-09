@@ -10,6 +10,7 @@
                         <i class="fa fa-bars"></i>
                     </button>
                     <div id="agent-instance-menu-{{id}}" class="agent-menu-dropdown" style="display: none;">
+                        <a href="#" onclick="agentInstanceApi.fork('{{id}}'); hideAgentMenu(event, 'agent-instance-menu-{{id}}');">Fork Instance</a>
                         <a href="#" onclick="requestAgentInstanceDeletion(event, '{{id}}', '{{name}}')">Delete Instance</a>
                     </div>
                 </div>

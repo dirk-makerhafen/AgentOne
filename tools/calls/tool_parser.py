@@ -3,7 +3,7 @@ import re, ast
 def extract_tool_call_parts(response_string):
     parsed_output = []
     
-    for tname in ["memory_add", "memory_correct", "memory_reposition", "fs_load", "fs_unload", "fs_write", "fs_append", "fs_replace", "fs_python_edit", "python", "agent_send_message", "await_user_input"]:
+    for tname in ["memory_add", "memory_correct", "fs_load", "fs_unload", "fs_write", "fs_append", "fs_replace", "fs_python_edit", "python", "agent_send_message", "await_user_input"]:
         response_string = response_string.replace(')@@@\n@%s(' % tname, ')@@@\n@@@%s(' % tname)
         response_string = response_string.replace('.@@@%s(' % tname, '.\n@@@%s(' % tname)
         if f'- `{tname}' in response_string:

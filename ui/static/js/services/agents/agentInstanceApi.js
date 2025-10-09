@@ -14,5 +14,8 @@ const agentInstanceApi = {
     },
     delete: function(instance_pk) {
         sendRequest('agentinstance_delete', { instance_pk });
+    },
+    fork: function(instance_pk) {
+        sendRequest('agentinstance_fork', { instance_pk });
     }
 };

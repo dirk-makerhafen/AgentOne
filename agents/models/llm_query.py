@@ -6,10 +6,10 @@ import json
 from core.models.base_model import BaseModel
 
 class LLMQuery(BaseModel):
-    agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="llmqueries")
-    agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="llmqueries")
-    aimodel = models.ForeignKey("providers.AiModel", on_delete=models.CASCADE, related_name="llmqueries")
-    apikey = models.ForeignKey("providers.ApiKey", on_delete=models.SET_NULL, related_name="llmqueries", default=None, null=True)
+    agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="llmQueries")
+    agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="llmQueries")
+    aimodel = models.ForeignKey("providers.AiModel", on_delete=models.CASCADE, related_name="llmQueries")
+    apikey = models.ForeignKey("providers.ApiKey", on_delete=models.SET_NULL, related_name="llmQueries", default=None, null=True)
     status = models.CharField(default="pending", max_length=255)
 
     @property

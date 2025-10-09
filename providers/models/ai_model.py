@@ -11,15 +11,15 @@ class AiModel(BaseModel):
 
     @property
     def total_llm_queries(self):
-        return self.llmqueries.count()
+        return self.llmQueries.count()
 
     @property
     def total_prompt_tokens(self):
-        return self.llmqueries.aggregate(total=Sum('llmResponses__prompt_tokens'))['total'] or 0
+        return self.llmQueries.aggregate(total=Sum('llmResponses__prompt_tokens'))['total'] or 0
 
     @property
     def total_completion_tokens(self):
-        return self.llmqueries.aggregate(total=Sum('llmResponses__completion_tokens'))['total'] or 0
+        return self.llmQueries.aggregate(total=Sum('llmResponses__completion_tokens'))['total'] or 0
 
     def __str__(self):
         return "Model:" + self.name

@@ -76,16 +76,7 @@ FUNCTIONS = {
             "index": { "type": "string", "description": "Index of item to correct", "required": True},
             "content": {"type": "string", "description": "Updated content for memory index", "required": True}
         },
-    },
-    "memory_reposition": {
-        "description": "Reposition a memory entry",
-        "parameters": {
-            "track": { "type": "string", "description": "Target memory track", "required": True},
-            "layer": { "type": "string", "description": "Target memory layer", "required": True},                
-            "index": { "type": "string", "description": "Index of item to reposition", "required": True},
-            "steps": { "type": "number", "description": "How many index positions we move up or down (positive or negative number)", "required": True }
-        },
-    },       
+    },    
 }
 
 TRACKS = {

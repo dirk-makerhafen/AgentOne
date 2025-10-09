@@ -75,7 +75,7 @@ class MemoryTool(BaseTool):
                 if len(memory[trackname][layername]["memories"]) >= limit * 0.9:
                     for i in range(max(math.ceil(limit * 0.15), 3)):
                         memory[trackname][layername]["memories"][i]["warn_forget"] = True
-                for m in memory[trackname][layername]["memories"]: # clean to save storage later, create_at is not needed anymore
+                for m in memory[trackname][layername]["memories"]: # clean to save storage later, created_at is not needed anymore
                     del m["created_at"]
             if memory[trackname].get("ST",{}).get("warn_stall", False) is True:
                 stalled.append([trackname, "ST"])  

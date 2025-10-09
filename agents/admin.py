@@ -22,7 +22,7 @@ class AgentAdmin(admin.ModelAdmin):
 
 @admin.register(AgentInstance)
 class AgentInstanceAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'created_at', 'name', 'agent', 'system', 'aimodel', 'status')
+    list_display = ('pk', 'created_at', 'name', 'agent', 'system', 'aimodel', 'status', 'raw_data_reference')
     list_display_links = ('pk', 'name', 'agent', 'system', 'aimodel')
     readonly_fields = ('created_at', 'updated_at')
     list_filter = ('status', 'system', 'agent', 'aimodel')
@@ -32,7 +32,7 @@ class AgentInstanceAdmin(admin.ModelAdmin):
 
 @admin.register(ConversationMessage)
 class ConversationMessageAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'created_at', 'agentInstance', 'role', 'raw_data')
+    list_display = ('pk', 'created_at', 'agentInstance', 'role', 'raw_data', 'raw_data_reference')
     list_display_links = ('pk', 'agentInstance')
     list_filter = ('role', 'agentInstance__name', "pin_to_context", "hide_from_context")
     search_fields = ('raw_data', 'agentInstance__name')
@@ -81,3 +81,12 @@ class HistoryLimitAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = ((None, {'fields': ('agentInstance', 'group_name', 'rule_name', 'description')}), ('Status & Priority', {'fields': ('is_active', 'priority')}), ('Limit Overrides (leave blank to use tool default)', {'fields': ('limit_success', 'limit_failed', 'limit_pending', 'limit_max'), 'classes': ('collapse',)}), ('Timestamps', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}))
 
+
+from .models.agent_fork import AgentFork
+
+@admin.register(AgentFork)
+class AgentForkAdmin(admin.ModelAdmin):
+    list_display = ('id', 'parent_instance', 'child_instance', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('parent_instance__name', 'child_instance__name')
+    autocomplete_fields = ('parent_instance', 'child_instance')

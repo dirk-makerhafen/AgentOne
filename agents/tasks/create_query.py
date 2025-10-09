@@ -107,12 +107,9 @@ def celery_create_query(agentinstance_id):
       
 def get_chat_messages(agentInstance):
     cmessages = []
-    limit = agentInstance.limit_max_conversation_messages
 
-    pinned_messages = agentInstance.conversationMessages.filter(hide_from_context=False, pin_to_context=True).order_by('created_at').all()
-    recent_nonpinned_messages = agentInstance.conversationMessages.filter(hide_from_context=False, pin_to_context=False).order_by('-created_at').all()[:limit]
-    combined_messages = list(pinned_messages) + list(recent_nonpinned_messages)
-    conversationMessages = sorted({msg.id: msg for msg in combined_messages}.values(), key=lambda msg: msg.created_at)
+    conversationMessages = agentInstance.get_conversation_messages(limit=agentInstance.limit_max_conversation_messages)
+    conversationMessages = sorted({msg.id: msg for msg in conversationMessages}.values(), key=lambda msg: msg.created_at)
 
     fs_entries = agentInstance.filesystemTool.get_loaded_items(refresh_from_disk=True)
     all_loaded_paths = [e.path for e in fs_entries]
@@ -139,7 +136,7 @@ def get_chat_messages(agentInstance):
 
     limiter = HistoryLimiter(agentInstance, all_entries, all_loaded_paths, tool_call_rule_templates)
     
-    resultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source="tools.calls", key="ResultInjection")
+    resultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source="tools", key="ResultInjection")
     filesystemInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.builtin_filesystem', key="ContentInjection")
 
     for entry in all_entries:

@@ -68,4 +68,7 @@ class PromptString(BaseModel):
 
     @staticmethod
     def get_template(agentInstance, source, key):
-        return PromptString.objects.filter(owner=None, source=source, key=key, next_version=None).order_by("-pk").first()
+        ps = PromptString.objects.filter(owner=None, source=source, key=key, next_version=None).order_by("-pk").first()
+        if not ps:
+            raise Exception(f"No Prompt found for source '{source}' and key '{key}'")
+        return ps

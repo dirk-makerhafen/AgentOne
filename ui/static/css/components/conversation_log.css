@@ -83,7 +83,7 @@
 .conversation-log-item.filesystem-log-item { background-color: #f2fbf2; }
 .conversation-log-item.debug-log-item { background-color: #f8f9fa; }
 .conversation-log-item.tool-log-item { background-color: #f0f8ff; }
-
+.conversation-log-item.agent-fork-message { background-color: #fbf0c6; }
 .conversation-log-item.filesystem-log-item .message-content {
     white-space: normal;
 }

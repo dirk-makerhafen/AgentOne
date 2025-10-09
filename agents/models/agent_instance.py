@@ -9,12 +9,15 @@ from tools.builtin_a2a.a2a_tool import A2ATool
 from tools.builtin_a2a.models.a2a_description import AgentToAgentDescription
 from tools.builtin_filesystem.filesystem_tool import FilesystemTool
 from tools.builtin_memory.memory_tool import MemoryTool
+from tools.builtin_memory.prompts import TRACKS
 from tools.builtin_python.python_tool import PythonTool
 from tools.builtin_shell.shell_tool import ShellTool
 from tools.builtin_subscriptions.subscriptions_tool import SubscriptionsTool
 from tools.builtin_userinteraction.user_interaction_tool import UserInteractionTool
 from tools.instances.mcpclient import MCPClient
 from tools.instances.models.tool_instance import ToolInstance
+from agents.models.agent_fork import AgentFork
+from django.utils import timezone
 
 # Map built-in tool names (as they appear in ToolDefinition.name) to their Python classes.
 BUILTIN_TOOL_CLASS_MAP = {
@@ -207,33 +210,101 @@ class AgentInstance(BaseModel):
         }
 
     def __str__(self):
-        return f'Instance {self.instance_pk} of Agent {self.agent.name}'
+            return f'Instance {self.instance_pk} of Agent {self.agent.name}'
 
     def clone(self):
-        newInstance = AgentInstance()
-        newInstance.agent = self.agent
-        newInstance.aimodel = self.aimodel
-        newInstance.name = f'Cloned {self.name}'
-        newInstance.description_text = self.description_text # Clone the new description_text
-        newInstance.status = self.status
-        newInstance.workingdir = self.workingdir
-        newInstance.save()
-        if self.a2a_description_latest: # Check the A2A specific description
-            AgentToAgentDescription.objects.create(agent_instance=newInstance, description=self.a2a_description_latest)
-        paths = set()
-        for ctxitem in self.filesystemTool.get_loaded_items():
-            paths.add(ctxitem.path)
-        for path in paths:
-            if os.path.isdir(path):
-                newInstance.filesystemTool.directories.load(path=path)
-            else:
-                newInstance.filesystemTool.load(path=path)
-        for message in self.get_conversation_messages(30):
-            if message['role'] in ['assistant', 'user'
-                ] and 'content' in message:
-                newInstance.add_to_conversation(role=message['role'],
-                    content=message['content'])
-        return newInstance
+        from django.db import transaction
+        from tools.builtin_memory.models.memory_item import MemoryItem
+        from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
+        from tools.calls.models.tool_call import ToolCall
+        from tools.builtin_python.models.python_tool_var import PythonToolVar
+        from tools.builtin_a2a.models.a2a_description import AgentToAgentDescription
+        from tools.builtin_memory.prompts import TRACKS
+
+        child_instance = None
+        with transaction.atomic():
+            child_instance = AgentInstance.objects.create(
+                agent=self.agent, system=self.system, aimodel=self.aimodel,
+                name=f'Fork of {self.name or f"Instance {self.pk}"}',
+                description_text=self.description_text, status='IDLE',
+                workingdir=self.workingdir, workingdir_write_allowed=self.workingdir_write_allowed,
+                access_rules=self.access_rules,
+                limit_max_conversation_messages=self.limit_max_conversation_messages,
+                limit_max_memory_items=self.limit_max_memory_items,
+                limit_max_automated_steps=self.limit_max_automated_steps
+            )
+
+            fork_record = AgentFork.objects.create(
+                parent_instance=self, child_instance=child_instance
+            )
+            fork_time = fork_record.created_at
+
+            # 1. ConversationMessages: Get the latest 'limit' messages to fork.
+            parent_messages_to_fork = self.conversationMessages.filter(
+                created_at__lt=fork_time
+            ).order_by('-created_at')[:self.limit_max_conversation_messages]
+            message_ids_to_fork = {msg.id for msg in parent_messages_to_fork}
+
+            # 2. FsLogEntries: Get only the latest version of currently loaded files.
+            fs_entries_to_fork = self.fsLogEntries.filter(
+                created_at__lt=fork_time, is_newest_version=True
+            ).exclude(load_mode=None)
+
+            # 3. ToolCalls: Only fork calls related to the messages being forked.
+            tool_calls_to_fork = self.toolCalls.filter(
+                created_at__lt=fork_time, conversationMessage_id__in=message_ids_to_fork
+            )
+
+            # 4. PythonToolVars: Fork the latest version of each variable.
+            python_vars_to_fork = self.python_tool_vars.filter(
+                created_at__lt=fork_time, next_version=None
+            )
+
+            # 5. AgentToAgentDescription: Fork only the single most recent description.
+            description_to_fork = self.description_logs.filter(
+                created_at__lt=fork_time
+            ).order_by('-created_at').first()
+
+            # 6. MemoryItems: Fork the latest 'limit' items per track and layer.
+            memory_items_to_fork = []
+            for trackname in TRACKS.keys():
+                for layername in TRACKS[trackname]['layers'].keys():
+                    items = MemoryItem.objects.filter(
+                        agentInstance=self, track=trackname, layer=layername,
+                        next_version=None, created_at__lt=fork_time
+                    ).order_by('-index')[:self.limit_max_memory_items]
+                    memory_items_to_fork.extend(items)
+
+            # Combine all objects to be forked into a single structure
+            all_objects_to_fork = {
+                ConversationMessage: parent_messages_to_fork,
+                FsLogEntry: fs_entries_to_fork,
+                ToolCall: tool_calls_to_fork,
+                PythonToolVar: python_vars_to_fork,
+                MemoryItem: memory_items_to_fork,
+            }
+            if description_to_fork:
+                all_objects_to_fork[AgentToAgentDescription] = [description_to_fork]
+
+            # Process and bulk_create ghost objects for each model type
+            for model_class, parent_queryset in all_objects_to_fork.items():
+                new_child_objects = []
+                for parent_obj in parent_queryset:
+                    child_obj = model_class()
+                    # Copy fields
+                    for field in parent_obj._meta.fields:
+                        if not field.primary_key and field.name not in ['id', 'pk', 'agentinstance', 'agent_instance']:
+                            setattr(child_obj, field.name, getattr(parent_obj, field.name))
+
+                    child_obj.agentInstance = child_instance
+                    child_obj.fork_of = parent_obj
+                    child_obj.raw_data_reference = parent_obj
+                    new_child_objects.append(child_obj)
+
+                if new_child_objects:
+                    model_class.objects.bulk_create(new_child_objects)
+
+        return child_instance
 
     def add_to_conversation(self, role, content):
         c = ConversationMessage()
@@ -337,3 +408,27 @@ class AgentInstance(BaseModel):
         all_user_pks = User.objects.values_list('pk', flat=True)
         for pk in all_user_pks:
             celery_send_websocket_update.delay(message_data, user_pk=pk)
+
+    def get_conversation_messages(self, limit=None, max_timestamp=None, max_id=None):
+        """
+        Retrieves conversation messages for this instance. Thanks to the new
+        forking model, this is now a simple query on the instance's own
+        related messages, as forked messages are copied as "ghost" objects.
+        """
+        if limit is None:
+            limit = self.limit_max_conversation_messages
+        if max_timestamp==None:
+            max_timestamp = timezone.datetime.max
+
+        pinned_messages = self.conversationMessages.filter(hide_from_context=False, pin_to_context=True).order_by('created_at').all()
+        recent_nonpinned_messages_query = self.conversationMessages.filter(hide_from_context=False, pin_to_context=False, created_at__lt=max_timestamp).order_by('-created_at')
+        if max_id:
+            recent_nonpinned_messages_query = recent_nonpinned_messages_query.filter(id__lt=max_id)        
+        recent_nonpinned_messages = recent_nonpinned_messages_query.all()[:limit]
+        combined_messages = list(pinned_messages) + list(recent_nonpinned_messages)
+        if len(combined_messages) < limit: # need more messages
+            missing_cnt = limit - len(combined_messages) 
+            if hasattr(self, 'fork_origin') and self.fork_origin:  # has fork, use for messages
+                combined_messages.extend(self.fork_origin.parent_instance.get_conversation_messages(limit=missing_cnt, max_timestamp = self.fork_origin.created_at))
+        print("result", combined_messages)
+        return combined_messages

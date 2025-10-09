@@ -5,6 +5,7 @@ from agents.models.agent_instance import AgentInstance
 from agents.models.conversation_message import ConversationMessage
 from tools.builtin_a2a.models.a2a_message import AgentToAgentMessage
 from ui.router import register_handler
+from django.utils import timezone
 
 @register_handler('conversationmessage_add')
 def handle_conversationmessage_add(consumer, instance_pk, message):
@@ -25,20 +26,18 @@ def handle_conversationmessage_get(consumer, instance_pk, max_id=None, limit=20)
     except AgentInstance.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
         return
+    print("conversationmessage_list")
+    conversation_messages = agent_instance.get_conversation_messages(max_id=max_id, limit=limit)
+    if conversation_messages:
+        # find next message after the current highest, so we can receive stuff related to the last conversation message 
+        next_message = agent_instance.conversationMessages.filter(created_at__gt=conversation_messages[0].created_at).order_by('created_at').first()
+        datetime_limit = next_message.created_at if next_message else datetime.max
+        oldest_msg_created_at = conversation_messages[-1].created_at
+    else:
+        datetime_limit =  timezone.datetime.max
+        oldest_msg_created_at = timezone.datetime.min
 
     all_client_dicts = []
-    conversation_query = agent_instance.conversationMessages.all()
-    if max_id:
-        conversation_query = conversation_query.filter(id__lt=max_id)
-    conversation_messages = list(conversation_query.order_by('-created_at')[:limit])
-
-    if not conversation_messages:
-        consumer.send(text_data=json.dumps({'object': 'HistoryLoadResult', 'count': 0, 'agentInstance_id': agent_instance.instance_pk}))
-        return
-
-    oldest_msg_created_at = conversation_messages[-1].created_at
-    next_message = agent_instance.conversationMessages.filter(created_at__gt=conversation_messages[0].created_at).order_by('created_at').first()
-    datetime_limit = next_message.created_at if next_message else datetime.max
 
     for msg in conversation_messages:
         all_client_dicts.append(msg.as_client_dict())
@@ -46,13 +45,13 @@ def handle_conversationmessage_get(consumer, instance_pk, max_id=None, limit=20)
     debug_log_entries = list(agent_instance.debugLogEntries.filter(Q(created_at__gte=oldest_msg_created_at, created_at__lt=datetime_limit)).order_by('-created_at'))
     all_client_dicts.extend([entry.as_client_dict() for entry in debug_log_entries])
 
-    fs_file_entries = list(agent_instance.fsFileLogEntries.filter(Q(created_at__gte=oldest_msg_created_at, created_at__lte=datetime_limit)).order_by('-created_at'))
+    fs_file_entries = list(agent_instance.fsLogEntries.filter(Q(created_at__gte=oldest_msg_created_at, created_at__lte=datetime_limit)).order_by('-created_at'))
     all_client_dicts.extend([entry.as_client_dict() for entry in fs_file_entries])
 
     tool_calls = list(agent_instance.toolCalls.filter(Q(created_at__gte=oldest_msg_created_at, created_at__lt=datetime_limit)).order_by('-created_at'))
     all_client_dicts.extend([entry.as_client_dict() for entry in tool_calls])
 
-    llm_queries = list(agent_instance.llmqueries.filter(Q(created_at__gte=oldest_msg_created_at, created_at__lt=datetime_limit)).order_by('-created_at'))
+    llm_queries = list(agent_instance.llmQueries.filter(Q(created_at__gte=oldest_msg_created_at, created_at__lt=datetime_limit)).order_by('-created_at'))
     all_client_dicts.extend([query_obj.as_client_dict() for query_obj in llm_queries])
 
     llm_responses = list(agent_instance.llmResponses.filter(Q(created_at__gte=oldest_msg_created_at, created_at__lt=datetime_limit)).order_by('-created_at'))

@@ -99,4 +99,15 @@ def handle_agentinstance_delete(consumer, instance_pk):
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Error deleting agent instance {instance_pk}: {str(e)}"}))
 
-
+@register_handler('agentinstance_fork')
+def handle_agentinstance_fork(consumer, instance_pk):
+    try:
+        agent_instance = AgentInstance.objects.get(instance_pk=instance_pk)
+        child_instance = agent_instance.clone() # The method is currently named clone
+        # The clone method already creates the new instance and the fork record.
+        # The save() methods on those models will trigger WebSocket updates,
+        # so the new instance will automatically appear in the UI.
+    except AgentInstance.DoesNotExist:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
+    except Exception as e:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to fork agent instance: {e}'}))

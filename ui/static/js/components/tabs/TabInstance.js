@@ -67,11 +67,10 @@ function sendMessage(event, instancePk) {
     event.preventDefault();
     const messageInput = document.querySelector(`#messageInput_${instancePk}`);
     const message = messageInput.value.trim();
-    if (message) {
-        conversationApi.addMessage(instancePk, message);
-        messageInput.value = '';
-        messageInput.focus();
-    }
+    conversationApi.addMessage(instancePk, message);
+    messageInput.value = '';
+    messageInput.focus();
+
 }
 
 function handleMessageInputKeydown(event, instancePk) {

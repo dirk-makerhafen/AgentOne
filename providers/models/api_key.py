@@ -10,7 +10,7 @@ class ApiKey(BaseModel):
 
     @property
     def total_llm_queries(self):
-        return self.llmqueries.count()
+        return self.llmQueries.count()
 
     @property
     def total_prompt_tokens(self):
