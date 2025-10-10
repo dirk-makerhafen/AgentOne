@@ -25,7 +25,7 @@ Handlebars.registerHelper('isUndefined', function(value) {
 Handlebars.registerHelper('escape', function(value) {
     if (value === undefined || value === null) { return ''}
     // Normalize all line endings (CRLF, CR) to LF, then escape LF for the HTML attribute.
-    return value.replace(/'/g, '&apos;').replace(/"/g, '&quot;').replace(/`/g, '&#96;').replace(/\n|/g, '\r').replace(/\r/g, '&#10;');
+    return value.replace(/'/g, '&apos;').replace(/"/g, '&quot;').replace(/`/g, '&#96;').replace(/\n/g, '\r').replace(/\r/g, '&#10;');
 });
 
 Handlebars.registerHelper('defaultIfEmpty', function(value, defaultValue) {

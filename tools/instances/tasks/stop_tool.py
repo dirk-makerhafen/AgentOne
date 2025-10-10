@@ -1,7 +1,7 @@
 from celery import shared_task
 from django.db import transaction
 
-from executor.primitives import (
+from tools.primitives import (
     rm,
     manage_tool_process
 )

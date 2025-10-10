@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import traceback
-from .dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_primitive_operation
 
 
 @dispatched_primitive_operation

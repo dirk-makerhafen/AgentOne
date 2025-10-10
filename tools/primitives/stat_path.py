@@ -1,6 +1,6 @@
 
 from pathlib import Path
-from .dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_primitive_operation
 
 
 

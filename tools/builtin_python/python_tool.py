@@ -1,5 +1,5 @@
 from core.models.prompt_string import PromptString
-from executor.primitives import run_python_code
+from tools.primitives import run_python_code
 from tools.base.base_tool import BaseTool
 from tools.builtin_python.models.python_tool_var import PythonToolVar
 from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription

@@ -3,7 +3,7 @@ import functools
 import time
 from django.db import models
 from core.models.base_model import BaseModel
-from executor.primitives import append_file, list_directory, mkdir, read_file, rm, stat_path, write_file
+from tools.primitives import append_file, list_directory, mkdir, read_file, rm, stat_path, write_file
 from tools.builtin_filesystem.utils import summarize
 from tools.builtin_filesystem.utils.fsutils import apply_patch, format_directory_listing, get_relative_path, make_patch
 

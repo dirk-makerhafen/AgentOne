@@ -1,6 +1,6 @@
 import json
 from typing import Any, Dict, List
-from executor.primitives import manage_tool_process
+from tools.primitives import manage_tool_process
 from tools.instances.models.tool_instance import ToolInstance
 
 class MCPClient:

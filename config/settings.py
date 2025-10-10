@@ -1,24 +1,33 @@
 import os
-import pymysql
-pymysql.install_as_MySQLdb()
+#import pymysql
+#pymysql.install_as_MySQLdb()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+SYSTEM_REGISTER_KEY = "change-me-to-a-very-secure-secret"
 SECRET_KEY = 'fo15rp=#xbqzp$4w07r%b^tl34707gxoa8zbr51a@lc&kp3s&e'
+REDIS_URL = 'redis://localhost:6379/1'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 999*24*3600
+SESSION_COOKIE_AGE = 99*24*3600
 
-REDIS_URL = 'redis://localhost:6379/1'
-
-
-CELERY_RESULT_BACKEND = REDIS_URL
-CELERY_BROKER_URL = REDIS_URL
-CELERY_WORKER_REDIRECT_STDOUTS = False
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [{ "address": REDIS_URL }], # Assumes Redis is running on localhost:6379
+        },
+    }
+}
 
 INSTALLED_APPS = (
     'config',
@@ -49,8 +58,15 @@ INSTALLED_APPS = (
     'django_celery_beat'
 )
 
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_BROKER_URL = REDIS_URL
+CELERY_WORKER_REDIRECT_STDOUTS = False
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+
+
 MIDDLEWARE = (
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Add WhiteNoise here
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,8 +74,6 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
-
-ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -77,14 +91,9 @@ TEMPLATES = [
     },
 ]
 
+ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
+ASGI_APPLICATION = 'config.asgi.application'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
@@ -94,12 +103,11 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATICFILES_DIRS = [
-    BASE_DIR + "/dashboard/static",
-]
+STATICFILES_DIRS = [BASE_DIR + "/ui/static",]
 STATIC_URL = '/static/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'ui', 'static')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 
 DJANGORESIZED_DEFAULT_SIZE = [1920, 1280]
 DJANGORESIZED_DEFAULT_QUALITY = 90
@@ -108,19 +116,7 @@ DJANGORESIZED_DEFAULT_FORCE_FORMAT = 'JPEG'
 DJANGORESIZED_DEFAULT_FORMAT_EXTENSIONS = {'JPEG': ".jpg"}
 DJANGORESIZED_DEFAULT_NORMALIZE_ROTATION = True
 
-ASGI_APPLICATION = 'config.asgi.application'
-
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [{ "address": REDIS_URL }], # Assumes Redis is running on localhost:6379
-        },
-        }
-    }
-
-# Secret key for new agent/executor registration
-AGENT_SERVER_SECRET_KEY = "change-me-to-a-very-secure-secret"
-
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+

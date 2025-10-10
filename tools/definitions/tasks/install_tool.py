@@ -1,7 +1,7 @@
 from celery import shared_task
 
 from agents.models.agent_instance import AgentInstance
-from executor.primitives import (
+from tools.primitives import (
     mkdir,
     read_file,
     rm,

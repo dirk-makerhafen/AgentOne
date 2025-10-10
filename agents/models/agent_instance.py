@@ -369,9 +369,6 @@ class AgentInstance(BaseModel):
                     agent_instance=self
                 ).first()
 
-            if not installation:
-                continue
-
             # Find all running instances for this installation
             running_instances = installation.instances.filter(status=ToolInstance.Status.RUNNING)
             if not running_instances.exists():

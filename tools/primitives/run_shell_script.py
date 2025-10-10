@@ -4,7 +4,7 @@ import traceback
 import subprocess
 import tempfile
 import sys, subprocess, tempfile, os
-from .dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_primitive_operation
 
 
 

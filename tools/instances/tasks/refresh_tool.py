@@ -1,5 +1,5 @@
 from celery import shared_task
-from executor.primitives import manage_tool_process
+from tools.primitives import manage_tool_process
 from tools.instances.models.tool_instance import ToolInstance
 
 

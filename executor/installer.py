@@ -147,7 +147,7 @@ def handle_status():
     else:
         print(f"Unsupported operating system: {system}")
 
-# --- OS-Specific Implementations (Placeholders) ---
+# --- OS-Specific Implementations ---
 
 def install_service_linux(venv_python, install_path):
     """Installs the systemd service for Linux."""

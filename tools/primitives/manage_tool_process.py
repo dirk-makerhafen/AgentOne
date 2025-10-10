@@ -1,4 +1,4 @@
-from .dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_primitive_operation
 
 # Global state for managing long-running tool processes launched by this executor.
 # Key: process_id (string), Value: dict containing the live async session and context managers.

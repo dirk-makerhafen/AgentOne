@@ -1,5 +1,5 @@
 from core.models.prompt_string import PromptString
-from executor.primitives import run_shell_script
+from tools.primitives import run_shell_script
 from tools.base.base_tool import BaseTool
 from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription
 from .prompts import FUNCTIONS

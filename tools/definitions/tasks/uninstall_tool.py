@@ -1,7 +1,7 @@
 from celery import shared_task
 from django.db import transaction
 
-from executor.primitives import rm, manage_tool_process
+from tools.primitives import rm, manage_tool_process
 from tools.definitions.models.tool_installation import ToolInstallation
 from tools.definitions.models.tool_installation_log import ToolInstallationLog
 
