@@ -2,12 +2,18 @@ from django.db import models
 from core.models.base_model import BaseModel
 
 class LLMResponse(BaseModel):
+    class LLMResponseStatusChoices(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        ACTIVE = 'ACTIVE', 'Active'
+        SUCCESS = 'SUCCESS', 'successfull'
+        FAILED = 'FAILED', 'Failed'
+
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="llmResponses")
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="llmResponses")
     llmQuery = models.ForeignKey("agents.LLMQuery", on_delete=models.CASCADE, related_name="llmResponses")
     completion_tokens = models.IntegerField(default=0)
     prompt_tokens = models.IntegerField(default=0)
-    status = models.CharField(default="pending", max_length=255)
+    status = models.CharField(max_length=255, choices=LLMResponseStatusChoices.choices, default=LLMResponseStatusChoices.PENDING)
 
     def save(self, send_to_client=True, *args, **kwargs):
         usage_data = self.data.get("usage", {})

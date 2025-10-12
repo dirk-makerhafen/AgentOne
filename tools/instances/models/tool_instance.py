@@ -6,7 +6,7 @@ from django.utils import timezone
 from core.models.base_model import BaseModel
 
 class ToolInstance(BaseModel):
-    class Status(models.TextChoices):
+    class ToolInstanceStatusChoices(models.TextChoices):
         STARTING = 'starting', 'Starting'
         RUNNING = 'running', 'Running'
         STOPPING = 'stopping', 'Stopping'
@@ -21,8 +21,8 @@ class ToolInstance(BaseModel):
     )
     status = models.CharField(
         max_length=20,
-        choices=Status.choices,
-        default=Status.STARTING,
+        choices=ToolInstanceStatusChoices.choices,
+        default=ToolInstanceStatusChoices.STARTING,
         help_text="Current runtime status of the tool instance."
     )
     process_id = models.IntegerField(
@@ -68,21 +68,9 @@ class ToolInstance(BaseModel):
 
     def __str__(self):
         return f"Instance of {self.tool_installation.tool_definition.display_name} on {self.tool_installation.system.name} - Run at {self.created_at.strftime('%Y-%m-%d %H:%M')} [{self.status}]"
-    def delete(self, *args, **kwargs):
-        from django.contrib.auth.models import User
-        from core.tasks.send_websocket_update import celery_send_websocket_update
-
-        tool_instance_pk_to_broadcast = self.pk
-        tool_installation_pk_to_broadcast = self.tool_installation.pk
-
-        super().delete(*args, **kwargs)
-
-        # After deletion, broadcast the update to all users
-        message_data = {
+    def get_delete_broadcast_payload(self):
+        return {
             'object': 'ToolInstanceDeleted',
-            'tool_instance_pk': tool_instance_pk_to_broadcast,
-            'tool_installation_pk': tool_installation_pk_to_broadcast # Include for UI updates
+            'tool_instance_pk': self.pk,
+            'tool_installation_pk': self.tool_installation.pk
         }
-        all_user_pks = User.objects.values_list('pk', flat=True)
-        for pk in all_user_pks:
-            celery_send_websocket_update.delay(message_data, user_pk=pk)

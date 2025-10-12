@@ -1,6 +1,7 @@
 import json
 from agents.models.agent import Agent
 from agents.models.agent_instance import AgentInstance
+from agents.tasks.clone_agentinstance import celery_clone_agentinstance
 from tools.builtin_python.models.python_tool_var import PythonToolVar
 from providers.models.ai_model import AiModel
 from systems.models.system import System
@@ -102,11 +103,7 @@ def handle_agentinstance_delete(consumer, instance_pk):
 @register_handler('agentinstance_fork')
 def handle_agentinstance_fork(consumer, instance_pk):
     try:
-        agent_instance = AgentInstance.objects.get(instance_pk=instance_pk)
-        child_instance = agent_instance.clone() # The method is currently named clone
-        # The clone method already creates the new instance and the fork record.
-        # The save() methods on those models will trigger WebSocket updates,
-        # so the new instance will automatically appear in the UI.
+        celery_clone_agentinstance.delay(instance_pk)
     except AgentInstance.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
     except Exception as e:

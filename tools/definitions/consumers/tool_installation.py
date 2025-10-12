@@ -21,7 +21,7 @@ def handle_toolinstallation_create(consumer, tool_definition_pk, system_pk, max_
         new_installation = ToolInstallation(
             tool_definition=tool_definition,
             system=system,
-            status=ToolInstallation.Status.INSTALLING,
+            status=ToolInstallation.ToolInstallationStatusChoices.INSTALLING,
             max_parallel_instances=max_parallel_instances
         )
         new_installation.save()

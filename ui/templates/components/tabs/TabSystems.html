@@ -61,7 +61,6 @@
                 <div class="system-details-display" style="display: {{#if isEditing}}none{{else}}block{{/if}};">
                     <p>Description: <b>{{description_display}}</b></p>
                     <p>Operating System: <b>{{os_display}}</b></p>
-                    <p>Is Remote Executor: <b>{{is_remote_executor_display}}</b></p>
                     <p>Executor URL: <b>{{executor_url_display}}</b></p>
                     <p>Executor API Key: <b>{{executor_api_key_display}}</b></p>
                     <p>Executor Mode: <b>{{executor_mode_display}}</b></p>
@@ -82,7 +81,6 @@
                 <!-- Edit View -->
                 <div class="system-details-edit" style="display: {{#if isEditing}}block{{else}}none{{/if}};">
                     <div class="form-group"><label>Description:</label><textarea class="form-control" name="description">{{description}}</textarea></div>
-                    <div class="form-group"><label>Is Remote Executor:</label><input type="checkbox" name="is_remote_executor" {{#if is_remote_executor}}checked{{/if}}></div>
                     <div class="form-group"><label>Executor URL:</label><input type="url" class="form-control" name="executor_url" value="{{executor_url}}"></div>
                     <div class="form-group"><label>Executor API Key:</label><input type="text" class="form-control" name="executor_api_key" value="{{executor_api_key}}"></div>
                     <div class="form-group"><label>Operating System:</label><select class="form-control" name="os">

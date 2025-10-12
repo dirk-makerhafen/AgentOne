@@ -40,12 +40,16 @@ class Command(BaseCommand):
         import json
         import socket
         import requests
+        import platform # Added for OS detection
 
         self.stdout.write(self.style.SUCCESS("--- Carna Client Registration ---"))
 
         config_dir = self._get_config_path(options)
         os.makedirs(config_dir, exist_ok=True)
         config_path = os.path.join(config_dir, 'client_config.json')
+
+        # Get OS information
+        current_os = platform.system()
 
         # Check for non-interactive mode
         if options.get('server_url') and options.get('server_secret'):
@@ -68,10 +72,11 @@ class Command(BaseCommand):
         payload = {
             'server_secret': config['server_secret'], 
             'client_name': config['client_name'], 
-            'client_port': config['client_port']
+            'client_port': config['client_port'],
+            'platform_os': current_os # Added operating system here
         }
 
-        self.stdout.write(f"\nAttempting to register with {registration_endpoint}...")
+        self.stdout.write(f"Attempting to register with {registration_endpoint}...")
         try:
             response = requests.post(registration_endpoint, json=payload)
             response.raise_for_status()
@@ -93,7 +98,8 @@ class Command(BaseCommand):
                 'client_api_key': client_api_key,
                 'server_url': config['server_url'].rstrip('/'),
                 'client_port': config['client_port'],
-                'client_listen': config['client_listen']
+                'client_listen': config['client_listen'],
+                'platform_os': current_os # Also store in local config
             }
 
             with open(config_path, 'w') as f:
@@ -101,23 +107,14 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Client configuration saved to '{config_path}'."))
 
         except requests.exceptions.RequestException as e:
-            self.stdout.write(self.style.ERROR(f"\nCould not connect to the server. Details: {e}"))
+            self.stdout.write(self.style.ERROR(f"Could not connect to the server. Details: {e}"))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"\nAn unexpected error occurred: {e}"))
+            self.stdout.write(self.style.ERROR(f"An unexpected error occurred: {e}"))
             if 'response' in locals():
                 self.stdout.write(f"Server response: {response.status_code} - {response.text}")
     def _get_config_path(self, options):
-        import os
-        import platform
-
-        if options.get('path'):
-            return os.path.abspath(options['path'])
-
-        system = platform.system()
-        if system == 'Windows':
-            return os.path.join(os.environ.get('ProgramData', 'C:\ProgramData'), 'CarnaExecutor')
-        else: # Linux/macOS
-            return '/etc/carna_executor'
+        config_info = self._determine_paths_and_permissions(options)
+        return config_info['config_dir']
     def _get_config_from_options(self, options):
         import socket
         return {
@@ -199,29 +196,45 @@ class Command(BaseCommand):
         from launcher.services.linux import LinuxService
         from launcher.services.macos import MacOSService
         from launcher.services.windows import WindowsService
+        import sys
 
         action = options["action"]
+        config_info = self._determine_paths_and_permissions(options)
 
-        # We define a unique service name for the client
         service_name = "carna_executor"
         display_name = "Carna Client Executor"
 
-        system = platform.system()
+        system = config_info['system']
+        config_dir = config_info['config_dir']
+        is_admin = config_info['is_admin']
+        current_user = config_info['current_user']
+
         service_manager = None
 
+        # Check for admin privileges when installing/uninstalling/starting/stopping system services
+        if action in ["install", "uninstall", "start", "stop"]:
+            if not is_admin:
+                self.stdout.write(self.style.ERROR(f"ERROR: Service '{action}' requires administrative privileges."))
+                if system == 'Windows':
+                    self.stdout.write(self.style.WARNING("Please re-run this command as an Administrator."))
+                else:
+                    self.stdout.write(self.style.WARNING("Please re-run this command with 'sudo'."))
+                sys.exit(1)
+
         if system == "Linux":
-            service_manager = LinuxService(service_name, display_name, self)
+            service_manager = LinuxService(service_name, display_name, self, config_dir, current_user)
         elif system == "Darwin":
-            service_manager = MacOSService(service_name, display_name, self)
+            service_manager = MacOSService(service_name, display_name, self, config_dir, current_user)
         elif system == "Windows":
-            service_manager = WindowsService(service_name, display_name, self)
+            service_manager = WindowsService(service_name, display_name, self, config_dir, current_user)
         else:
             self.stdout.write(self.style.ERROR(f"Unsupported operating system for service management: {system}"))
             return
 
         try:
             if action == "install":
-                service_manager.install(command_args=['client', 'run'])
+                # Pass the config_dir as --path to the 'client run' command
+                service_manager.install(command_args=['client', 'run', '--path', config_dir])
             elif action == "uninstall":
                 service_manager.uninstall()
             elif action == "start":
@@ -229,8 +242,60 @@ class Command(BaseCommand):
             elif action == "stop":
                 service_manager.stop()
             elif action == "status":
+                # Status check can be done without admin privileges in some cases,
+                # but the service manager will handle specific OS requirements.
                 service_manager.status()
         except NotImplementedError:
              self.stdout.write(self.style.ERROR(f"The '{action}' action is not yet implemented for {system}."))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"An error occurred during the '{action}' operation: {e}"))
+    def _determine_paths_and_permissions(self, options):
+        import os
+        import platform
+        import getpass
+
+        system = platform.system()
+
+        # Determine if running with admin privileges
+        is_admin_user = False
+        if system == 'Windows':
+            try:
+                import ctypes
+                is_admin_user = (ctypes.windll.shell32.IsUserAnAdmin() != 0)
+            except AttributeError:
+                pass # Not on Windows or ctypes not available
+        else: # Linux/macOS
+            is_admin_user = (os.getuid() == 0)
+
+        # Get the effective user for config paths
+        # For non-root, this is the current user.
+        # For root, if sudo was used, this might be SUDO_USER, otherwise it's root.
+        current_user = getpass.getuser()
+
+        # Determine base config directory
+        if options.get('path'):
+            base_config_dir = os.path.abspath(options['path'])
+        elif is_admin_user and system != 'Windows': # Linux/macOS as root
+            self.stdout.write(self.style.WARNING("WARNING: You are running this command with administrative privileges (root)."))
+            self.stdout.write(self.style.WARNING("The Carna client will have root access to the filesystem and can modify system-wide settings."))
+            confirm = input("Do you understand and wish to proceed with root access installation? (y/n): ").lower()
+            if confirm != 'y':
+                self.stdout.write(self.style.ERROR("Installation cancelled by user."))
+                exit(1) # Exit cleanly, not with an error code
+            base_config_dir = '/etc/carna_executor'
+        elif is_admin_user and system == 'Windows': # Windows as Administrator
+            base_config_dir = os.path.join(os.environ.get('ProgramData', r'C:\ProgramData'), 'CarnaExecutor')
+        else: # Non-root user
+            if system == 'Windows':
+                base_config_dir = os.path.join(os.environ.get('APPDATA', r'C:\Users\Default\AppData\Roaming'), 'CarnaExecutor')
+            elif system == 'Darwin': # macOS
+                base_config_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'CarnaExecutor')
+            else: # Linux (non-root)
+                base_config_dir = os.path.join(os.path.expanduser('~'), '.config', 'carna_executor')
+
+        return {
+            'is_admin': is_admin_user,
+            'config_dir': base_config_dir,
+            'current_user': current_user,
+            'system': system
+        }

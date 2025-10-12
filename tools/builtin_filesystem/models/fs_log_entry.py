@@ -4,11 +4,8 @@ import time
 from django.db import models
 from core.models.base_model import BaseModel
 from tools.primitives import append_file, list_directory, mkdir, read_file, rm, stat_path, write_file
-from tools.builtin_filesystem.utils import summarize
+from tools.builtin_filesystem.utils.summarize import summarize
 from tools.builtin_filesystem.utils.fsutils import apply_patch, format_directory_listing, get_relative_path, make_patch
-
-
-
 
 
 class FsLogEntryManager(models.Manager):
@@ -228,6 +225,86 @@ class FsLogEntry(BaseModel):
         )
         return True, new_snapshot
 
+    def undo(self, toolCall=None):
+        """
+        Reverts the file to the state *before* this entry (self) was created.
+        This action creates a new 'revert' FsLogEntry, which becomes the new newest version.
+        Its 'prev_version' points to the FsLogEntry representing the state *before* 'self'.
+        """
+        # Step 1: Determine the target content and existence state to revert to.
+        # This is the state of the file *before* 'self' was created.
+        # use self in case used did click to revert the very first entry
+        revert_to_item = self.prev_version if self.prev_version else self 
+        content_to_restore = revert_to_item.content if revert_to_item else ""
+
+        # Step 2: Perform the actual file system operation (delete, create dir, or write file).
+        if not revert_to_item.exists_on_fs: # If reverting to a state where the file/dir didn't exist
+            try:
+                stat_result = stat_path(agentInstance=self.agentInstance, path=self.path)
+                if stat_result.get("status") != "success":
+                    return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
+
+                if stat_result.get("exists", False): # Check if it actually exists on disk before trying to remove
+                    rm_result = rm(agentInstance=self.agentInstance, path=self.path, recursive=True)
+                    if rm_result.get("status") != "success":
+                        return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
+                write_result = {'status': 'success'} # Simulate success for deletion, stat will confirm non-existence
+            except OSError as e:
+                return False, {'status': 'failed', "message": f"Failed to delete {self.path} during revert: {e}"}
+
+        else: # did exist
+            if revert_to_item.is_directory:
+                stat_result = stat_path(agentInstance=self.agentInstance, path=self.path)
+                if stat_result.get("status") != "success":
+                    return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
+
+                if not stat_result.get("exists", False):  # did exist but no longer, restore dir
+                    try:
+                        mkdir_result = mkdir(self.path, parents=True, exist_ok=True) 
+                        if mkdir_result.get("status") != "success":
+                            return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
+                        write_result = {'status': 'success'}
+                    except OSError as e:
+                        return False, {'status': 'failed', "message": f"Failed to create directory {self.path} during revert: {e}"}
+                else:
+                    write_result = {'status': 'success'} # Directory already exists
+            
+            else: # Reverting to a file state with content
+                write_result = write_file(agentInstance=self.agentInstance, path=self.path, content=content_to_restore)
+                if write_result.get("status") != "success":
+                    return False, {'status': 'failed', "message": f"Failed to write file during revert for {self.path}: {write_result}"}
+
+        # Step 3: Get the new file stats from the disk after writing/deleting.
+        stat_result = stat_path(agentInstance=self.agentInstance, path=self.path)
+        if stat_result.get("status") != "success":
+            return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
+
+        # Step 4: Update `is_newest_version` flags and create the new 'revert' FsLogEntry.
+        # Find the *current* newest entry for this path and mark it as not newest. (use all in case for some bug multiple got marked(should never happen)))
+        current_newest_entries_for_path = FsLogEntry.objects.filter(agentInstance=self.agentInstance, path=self.path, is_newest_version=True).all()
+        for current_newest_entry_for_path in current_newest_entries_for_path:
+            current_newest_entry_for_path.is_newest_version = False
+            current_newest_entry_for_path.save(send_to_client=False) # Don't send object update twice
+        if self in current_newest_entries_for_path: # because code above doe not reload these items
+            self.is_newest_version = False
+        if revert_to_item in current_newest_entries_for_path:
+            revert_to_item.is_newest_version = False
+
+        new_snapshot = revert_to_item.create_next_version(
+            toolCall=toolCall,
+            action="revert",
+            is_directory=stat_result.get("is_dir", False),
+            exists_on_fs=stat_result.get("exists", False), # This should be consistent with stat_result
+            fs_created=datetime.fromtimestamp(stat_result.get("ctime", time.time()), tz=timezone.utc),
+            fs_modified=datetime.fromtimestamp(stat_result.get("mtime", time.time()), tz=timezone.utc),
+            fs_lastread=datetime.now(tz=timezone.utc),
+            fs_size=stat_result.get("size", 0) if stat_result.get("is_file", False) else len(content_to_restore),
+            stored_as="", 
+            content_diff=""# content is same a in version_to_restore (prev_version)
+        )
+        print(new_snapshot, new_snapshot.is_newest_version)
+        return True, new_snapshot
+
     def refresh_from_disk(self, toolCall=None, recursive=None, filter=None, load_mode=None, action=None):
         """
         Compares the current snapshot with the on-disk state and creates a new version if there are changes in the file's state or the requested view.
@@ -403,88 +480,18 @@ class FsLogEntry(BaseModel):
 
         return data
 
+    def as_query_dict(self):
+        return {
+            "is_directory":  self.is_directory,
+            "refreshed_from_fs": self.action == "refresh",
+            "exist_on_fs": self.exists_on_fs,
+            'path': get_relative_path(self.agentInstance.workingdir, self.path),
+            'fs_content_type': f'{self.__class__.__name__}',
+            'fs_content_id': f'{self.id}',
+            'load_mode': self.load_mode,
+        }
+    
     def __str__(self):
         return f"FS:{self.pk} {self.path}"
-
-    def undo(self, toolCall=None):
-        """
-        Reverts the file to the state *before* this entry (self) was created.
-        This action creates a new 'revert' FsLogEntry, which becomes the new newest version.
-        Its 'prev_version' points to the FsLogEntry representing the state *before* 'self'.
-        """
-        # Step 1: Determine the target content and existence state to revert to.
-        # This is the state of the file *before* 'self' was created.
-        # use self in case used did click to revert the very first entry
-        revert_to_item = self.prev_version if self.prev_version else self 
-        content_to_restore = revert_to_item.content if revert_to_item else ""
-
-        # Step 2: Perform the actual file system operation (delete, create dir, or write file).
-        if not revert_to_item.exists_on_fs: # If reverting to a state where the file/dir didn't exist
-            try:
-                stat_result = stat_path(agentInstance=self.agentInstance, path=self.path)
-                if stat_result.get("status") != "success":
-                    return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
-
-                if stat_result.get("exists", False): # Check if it actually exists on disk before trying to remove
-                    rm_result = rm(agentInstance=self.agentInstance, path=self.path, recursive=True)
-                    if rm_result.get("status") != "success":
-                        return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
-                write_result = {'status': 'success'} # Simulate success for deletion, stat will confirm non-existence
-            except OSError as e:
-                return False, {'status': 'failed', "message": f"Failed to delete {self.path} during revert: {e}"}
-
-        else: # did exist
-            if revert_to_item.is_directory:
-                stat_result = stat_path(agentInstance=self.agentInstance, path=self.path)
-                if stat_result.get("status") != "success":
-                    return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
-
-                if not stat_result.get("exists", False):  # did exist but no longer, restore dir
-                    try:
-                        mkdir_result = mkdir(self.path, parents=True, exist_ok=True) 
-                        if mkdir_result.get("status") != "success":
-                            return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
-                        write_result = {'status': 'success'}
-                    except OSError as e:
-                        return False, {'status': 'failed', "message": f"Failed to create directory {self.path} during revert: {e}"}
-                else:
-                    write_result = {'status': 'success'} # Directory already exists
-            
-            else: # Reverting to a file state with content
-                write_result = write_file(agentInstance=self.agentInstance, path=self.path, content=content_to_restore)
-                if write_result.get("status") != "success":
-                    return False, {'status': 'failed', "message": f"Failed to write file during revert for {self.path}: {write_result}"}
-
-        # Step 3: Get the new file stats from the disk after writing/deleting.
-        stat_result = stat_path(agentInstance=self.agentInstance, path=self.path)
-        if stat_result.get("status") != "success":
-            return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
-
-        # Step 4: Update `is_newest_version` flags and create the new 'revert' FsLogEntry.
-        # Find the *current* newest entry for this path and mark it as not newest. (use all in case for some bug multiple got marked(should never happen)))
-        current_newest_entries_for_path = FsLogEntry.objects.filter(agentInstance=self.agentInstance, path=self.path, is_newest_version=True).all()
-        for current_newest_entry_for_path in current_newest_entries_for_path:
-            current_newest_entry_for_path.is_newest_version = False
-            current_newest_entry_for_path.save(send_to_client=False) # Don't send object update twice
-        if self in current_newest_entries_for_path: # because code above doe not reload these items
-            self.is_newest_version = False
-        if revert_to_item in current_newest_entries_for_path:
-            revert_to_item.is_newest_version = False
-
-        new_snapshot = revert_to_item.create_next_version(
-            toolCall=toolCall,
-            action="revert",
-            is_directory=stat_result.get("is_dir", False),
-            exists_on_fs=stat_result.get("exists", False), # This should be consistent with stat_result
-            fs_created=datetime.fromtimestamp(stat_result.get("ctime", time.time()), tz=timezone.utc),
-            fs_modified=datetime.fromtimestamp(stat_result.get("mtime", time.time()), tz=timezone.utc),
-            fs_lastread=datetime.now(tz=timezone.utc),
-            fs_size=stat_result.get("size", 0) if stat_result.get("is_file", False) else len(content_to_restore),
-            stored_as="", 
-            content_diff=""# content is same a in version_to_restore (prev_version)
-        )
-        print(new_snapshot, new_snapshot.is_newest_version)
-        return True, new_snapshot
-
 
 

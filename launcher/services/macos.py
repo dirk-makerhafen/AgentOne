@@ -14,10 +14,6 @@ class MacOSService(BaseService):
 
         self.command.stdout.write(self.command.style.SUCCESS(f"--- Installing {self.display_name} launchd service ---"))
 
-        if os.geteuid() != 0:
-            self.command.stdout.write(self.command.style.ERROR("This command must be run as root or with sudo."))
-            return
-
         python_executable = sys.executable
         manage_py_path = os.path.join(settings.BASE_DIR, "manage.py")
 
@@ -28,28 +24,28 @@ class MacOSService(BaseService):
         plist_path = f"/Library/LaunchDaemons/{service_label}.plist"
 
         plist_content = f"""<?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-        <key>Label</key>
-        <string>{service_label}</string>
-        <key>ProgramArguments</key>
-        <array>
-    {program_arguments_xml}
-        </array>
-        <key>WorkingDirectory</key>
-        <string>{settings.BASE_DIR}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <true/>
-        <key>StandardOutPath</key>
-        <string>/tmp/{self.service_name}.out.log</string>
-        <key>StandardErrorPath</key>
-        <string>/tmp/{self.service_name}.err.log</string>
-    </dict>
-    </plist>
-    """
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>{service_label}</string>
+    <key>ProgramArguments</key>
+    <array>
+{program_arguments_xml}
+    </array>
+    <key>WorkingDirectory</key>
+    <string>{self.config_dir}</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/{self.service_name}.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/{self.service_name}.err.log</string>
+</dict>
+</plist>
+"""
         try:
             self.command.stdout.write(f"Writing launchd plist to {plist_path}...")
             with open(plist_path, 'w') as f:

@@ -8,7 +8,7 @@ import git
 from tools.definitions.models.tool_definition import ToolDefinition
 
 @shared_task
-def fetch_and_update_tool_definition_manifest(tool_definition_id):
+def refresh_definition_manifest(tool_definition_id):
     from django.utils import timezone
 
     """
@@ -24,7 +24,7 @@ def fetch_and_update_tool_definition_manifest(tool_definition_id):
         return
 
     if not tool_def.repository_url:
-        tool_def.status = ToolDefinition.Status.ERROR
+        tool_def.status = ToolDefinition.ToolDefinitionStatusChoices.ERROR
         tool_def.save()
         return
 
@@ -50,7 +50,7 @@ def fetch_and_update_tool_definition_manifest(tool_definition_id):
             tool_def.description = manifest_content['description']
 
         tool_def.manifest_version = manifest_content.get('version')
-        tool_def.status = ToolDefinition.Status.UP_TO_DATE
+        tool_def.status = ToolDefinition.ToolDefinitionStatusChoices.UP_TO_DATE
         tool_def.last_checked_at = timezone.now()
 
         # The model's save() method will broadcast the update to clients
@@ -59,7 +59,7 @@ def fetch_and_update_tool_definition_manifest(tool_definition_id):
     except Exception as e:
         # Log the error and update the model with an error status.
         print(f"Error fetching manifest for ToolDefinition {tool_definition_id}: {e}")
-        tool_def.status = ToolDefinition.Status.ERROR
+        tool_def.status = ToolDefinition.ToolDefinitionStatusChoices.ERROR
         tool_def.last_checked_at = timezone.now()
         tool_def.save()
     finally:

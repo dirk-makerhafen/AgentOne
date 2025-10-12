@@ -25,11 +25,6 @@ class ApiProvider(BaseModel):
     def __str__(self):
         return "ApiProvider:" + self.name
     
-    def save(self, send_to_client=True, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if send_to_client:
-            self.send_object_to_clients()
-
     def as_client_dict(self):
         return {
             'object': 'ApiProvider', 

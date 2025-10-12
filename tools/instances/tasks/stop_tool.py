@@ -34,14 +34,14 @@ def stop_tool(tool_instance_id):
         return
 
     _log(tool_installation, 'info', 'Tool stop process initiated.', tool_instance)
-    tool_instance.status = ToolInstance.Status.STOPPING
+    tool_instance.status = ToolInstance.ToolInstanceStatusChoices.STOPPING
     tool_instance.save()
 
     system = tool_installation.system
     if not system:
         error_message = 'Cannot stop: System not found for installation.'
         _log(tool_installation, 'error', error_message, tool_instance)
-        tool_instance.status = ToolInstance.Status.ERROR
+        tool_instance.status = ToolInstance.ToolInstanceStatusChoices.ERROR
         tool_instance.last_error = error_message
         tool_instance.save()
         return
@@ -51,7 +51,7 @@ def stop_tool(tool_instance_id):
 
     if stop_result.get('status') == 'success':
         _log(tool_installation, 'info', f"Executor confirmed stop for ToolInstance {tool_instance.pk}.", tool_instance)
-        tool_instance.status = ToolInstance.Status.STOPPED
+        tool_instance.status = ToolInstance.ToolInstanceStatusChoices.STOPPED
         # Clear runtime-specific fields
         tool_instance.process_id = None
         tool_instance.endpoint_url = None
@@ -59,7 +59,7 @@ def stop_tool(tool_instance_id):
         error_message = f"Executor stop command failed or was not necessary: {stop_result.get('message', 'Unknown error')}"
         _log(tool_installation, 'warning', error_message, tool_instance)
         # If the stop command failed, the instance might still be running or in an unknown state
-        tool_instance.status = ToolInstance.Status.ERROR
+        tool_instance.status = ToolInstance.ToolInstanceStatusChoices.ERROR
         tool_instance.last_error = error_message
 
     tool_instance.save()

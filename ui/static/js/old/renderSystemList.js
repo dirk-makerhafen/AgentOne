@@ -55,7 +55,6 @@ const systemDetailsTemplate = Handlebars.compile(`
                 <div class="system-details-display" style="display: {{#if isEditing}}none{{else}}block{{/if}};">
                     <p>Description: <b>{{description_display}}</b></p>
                     <p>Operating System: <b>{{os_display}}</b></p>
-                    <p>Is Remote Executor: <b>{{is_remote_executor_display}}</b></p>
                     <p>Executor URL: <b>{{executor_url_display}}</b></p>
                     <p>Executor API Key: <b>{{executor_api_key_display}}</b></p>
                     <p>Executor Mode: <b>{{executor_mode_display}}</b></p>
@@ -76,7 +75,6 @@ const systemDetailsTemplate = Handlebars.compile(`
                 <!-- Edit View -->
                 <div class="system-details-edit" style="display: {{#if isEditing}}block{{else}}none{{/if}};">
                     <div class="form-group"><label>Description:</label><textarea class="form-control" name="description">{{description}}</textarea></div>
-                    <div class="form-group"><label>Is Remote Executor:</label><input type="checkbox" name="is_remote_executor" {{#if is_remote_executor}}checked{{/if}}></div>
                     <div class="form-group"><label>Executor URL:</label><input type="url" class="form-control" name="executor_url" value="{{executor_url}}"></div>
                     <div class="form-group"><label>Executor API Key:</label><input type="text" class="form-control" name="executor_api_key" value="{{executor_api_key}}"></div>
                     <div class="form-group"><label>Operating System:</label><select class="form-control" name="os">
@@ -232,7 +230,6 @@ function renderSystem(system) {
         isEditing: isEditing,
         os_display: system.os ? system.os.charAt(0).toUpperCase() + system.os.slice(1) : 'N/A',
         description_display: system.description || 'N/A',
-        is_remote_executor_display: system.is_remote_executor ? 'Yes' : 'No',
         executor_api_key_display: system.executor_api_key ? '********' : 'N/A',
         osOptions: osOptionsData,
         executorModeOptions: executorModeOptionsData
@@ -469,11 +466,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const editForm = systemDetailsRow.find('.system-details-edit');
             const data = {
                 description: editForm.find('textarea[name="description"]').val(),
-                is_remote_executor: editForm.find('input[name="is_remote_executor"]').is(':checked'),
+                executor_mode: editForm.find('select[name="executor_mode"]').val(),
                 executor_url: editForm.find('input[name="executor_url"]').val(),
                 executor_api_key: editForm.find('input[name="executor_api_key"]').val(),
                 os: editForm.find('select[name="os"]').val(),
-                executor_mode: editForm.find('select[name="executor_mode"]').val()
             };
             if (websocket && websocket.readyState === WebSocket.OPEN) {
                 websocket.send(JSON.stringify({

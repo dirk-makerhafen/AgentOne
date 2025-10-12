@@ -14,7 +14,7 @@ class Command(BaseCommand):
         for agentInstance in agentInstances:
             toolCalls = agentInstance.toolCalls.filter(status="pending")
             if toolCalls.count() > 0:
-                agentInstance.status = 'EXECUTING_TOOLS'
+                agentInstance.status = AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS
                 agentInstance.save()
                 for tc in toolCalls:
                     try:

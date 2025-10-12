@@ -4,7 +4,7 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-
+from django.utils import timezone
 from systems.models.system import System
 
 @csrf_exempt
@@ -47,6 +47,7 @@ def register_client(request):
             'description': f'Automatically registered client: {client_name}',
             'status': 'offline',
             'executor_mode': 'http',
+            'platform_os': data.get('platform_os') # Add platform_os
         }
     )
 
@@ -56,6 +57,8 @@ def register_client(request):
 
     # 5. Update the client's URL and save
     system.executor_url = resolved_client_url
+    system.last_heartbeat = timezone.now()
+    system.status = System.SystemStatusChoices.ONLINE
     system.save()
 
     # 6. Return credentials and the resolved URL

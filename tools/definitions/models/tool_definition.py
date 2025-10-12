@@ -4,7 +4,7 @@ from django.utils import timezone
 from core.models.base_model import BaseModel
 
 class ToolDefinition(BaseModel):
-    class Status(models.TextChoices):
+    class ToolDefinitionStatusChoices(models.TextChoices):
         NEW = 'new', 'New'
         UPDATING = 'updating', 'Updating'
         UP_TO_DATE = 'up_to_date', 'Up to Date'
@@ -15,31 +15,30 @@ class ToolDefinition(BaseModel):
         SHARED = 'shared', 'Shared Process'
         DEDICATED = 'dedicated', 'Dedicated Process per Instance'
 
+    class TransportChoices(models.TextChoices):
+        TCP = 'tcp', 'TCP Socket (HTTP/S)'
+        STDIN_STDOUT = 'stdin_stdout', 'Standard I/O (stdin/stdout)'
+
     name = models.CharField(max_length=255, unique=True, help_text="Unique identifier for the tool, e.g., 'apple-mcp'.")
     display_name = models.CharField(max_length=255, help_text="User-friendly name, e.g., 'Apple MCP'.")
     description = models.TextField(blank=True, help_text="A brief description of what the tool does.")
     is_builtin = models.BooleanField(default=False, help_text="True if this is an internal tool (Python, Shell), False for external MCP tools.")
     is_active = models.BooleanField(default=True, help_text="Globally enable or disable this tool for all agents.")
     
-    TRANSPORT_CHOICES = [('tcp', 'TCP Socket (HTTP/S)'), ('stdin_stdout', 'Standard I/O (stdin/stdout)')]
-    transport_type = models.CharField(max_length=20, choices=TRANSPORT_CHOICES, default='stdin_stdout', help_text="The communication transport type for this tool.")
+    transport_type = models.CharField(max_length=20, choices=TransportChoices, default=TransportChoices.STDIN_STDOUT, help_text="The communication transport type for this tool.")
     execution_mode = models.CharField(max_length=20, choices=ExecutionMode.choices, default=ExecutionMode.SHARED, help_text="Determines if one process is shared across a system or if each agent instance gets a dedicated process.")
 
     repository_url = models.URLField(blank=True, null=True, help_text="The Git repository URL for external tools.")
     manifest = models.JSONField(blank=True, null=True, help_text="The parsed manifest.json file from the repository.")
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
+    status = models.CharField(max_length=20, choices=ToolDefinitionStatusChoices.choices, default=ToolDefinitionStatusChoices.NEW)
     manifest_version = models.CharField(max_length=50, blank=True, null=True, help_text="The version from the tool's manifest file.")
     last_checked_at = models.DateTimeField(null=True, blank=True, help_text="When the manifest was last checked for updates.")
 
     available_on_all_systems = models.BooleanField(default=True, help_text="If true, this tool is available on all compatible systems by default.")
     available_on_systems = models.ManyToManyField('systems.System', blank=True, related_name='tool_definitions', help_text="A specific list of systems where this tool is available.")
-    
-
-    def __str__(self):
-        return f"{self.display_name} ({self.name})"
-
+ 
     def save(self, send_to_client=True, *args, **kwargs):
-        from tools.definitions.tasks.refresh_tool_definition import fetch_and_update_tool_definition_manifest
+        from tools.definitions.tasks.refresh_definition_manifest import refresh_definition_manifest
         is_new = self.pk is None
         old_url = None
         if not is_new:
@@ -48,14 +47,14 @@ class ToolDefinition(BaseModel):
 
         url_changed = (is_new and self.repository_url) or (not is_new and self.repository_url != old_url)
         if self.is_builtin:
-            self.status = self.Status.UP_TO_DATE
+            self.status = ToolDefinition.ToolDefinitionStatusChoices.UP_TO_DATE
         elif self.repository_url and url_changed:
-            self.status = self.Status.UPDATING
+            self.status = ToolDefinition.ToolDefinitionStatusChoices.UPDATING
 
         super().save(send_to_client=send_to_client, *args, **kwargs)
 
         if self.repository_url and url_changed and not self.is_builtin:
-            fetch_and_update_tool_definition_manifest.delay(self.pk)
+            refresh_definition_manifest.delay(self.pk)
 
     def as_client_dict(self):
         return {
@@ -77,19 +76,12 @@ class ToolDefinition(BaseModel):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
         }
-    def delete(self, *args, **kwargs):
-        from django.contrib.auth.models import User
-        from core.tasks.send_websocket_update import celery_send_websocket_update
-
-        tool_def_pk_to_broadcast = self.pk
-
-        super().delete(*args, **kwargs)
-
-        # After deletion, broadcast the update to all users
-        message_data = {
+    
+    def get_delete_broadcast_payload(self):
+        return {
             'object': 'ToolDefinitionDeleted',
-            'tool_def_pk': tool_def_pk_to_broadcast
+            'tool_def_pk': self.pk
         }
-        all_user_pks = User.objects.values_list('pk', flat=True)
-        for pk in all_user_pks:
-            celery_send_websocket_update.delay(message_data, user_pk=pk)
+
+    def __str__(self):
+        return f"{self.display_name} ({self.name})"

@@ -6,11 +6,17 @@ import json
 from core.models.base_model import BaseModel
 
 class LLMQuery(BaseModel):
+    class LLMQueryStatusChoices(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        ACTIVE = 'ACTIVE', 'Active'
+        SUCCESS = 'SUCCESS', 'successfull'
+        FAILED = 'FAILED', 'Failed'
+
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="llmQueries")
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="llmQueries")
     aimodel = models.ForeignKey("providers.AiModel", on_delete=models.CASCADE, related_name="llmQueries")
     apikey = models.ForeignKey("providers.ApiKey", on_delete=models.SET_NULL, related_name="llmQueries", default=None, null=True)
-    status = models.CharField(default="pending", max_length=255)
+    status = models.CharField(max_length=255, choices=LLMQueryStatusChoices.choices, default=LLMQueryStatusChoices.PENDING)
 
     @property
     def messages(self):

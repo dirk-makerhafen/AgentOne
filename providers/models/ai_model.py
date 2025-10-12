@@ -6,8 +6,13 @@ class AiModel(BaseModel):
     apiProvider = models.ForeignKey("providers.ApiProvider", on_delete=models.CASCADE, related_name='aimodels')
     name = models.CharField(max_length=512)
     enabled = models.BooleanField(default=True)
-    max_tokens =  models.IntegerField(default=10000)
-    free_limit_per_day =  models.IntegerField()
+    max_prompt_tokens =  models.IntegerField(default=1000000)
+    max_response_tokens = models.IntegerField(default=1000000)
+    limit_request_per_day =  models.IntegerField(default=0)
+    limit_request_per_minute =  models.IntegerField(default=0)
+    limit_tokens_per_day =  models.IntegerField(default=0)
+    limit_tokens_per_minute =  models.IntegerField(default=0)
+    
 
     @property
     def total_llm_queries(self):
@@ -30,27 +35,19 @@ class AiModel(BaseModel):
             'id': self.pk, 
             'name': self.name,
             'enabled': self.enabled,
-            'max_tokens': self.max_tokens,
-            'free_limit_per_day': self.free_limit_per_day,
+            'max_prompt_tokens': self.max_prompt_tokens,
+            'limit_request_per_day': self.limit_request_per_day,
+            'limit_request_per_minute': self.limit_request_per_minute,
+            'limit_tokens_per_day': self.limit_tokens_per_day,
+            'limit_tokens_per_minute': self.limit_tokens_per_minute,
             'total_llm_queries': self.total_llm_queries,
             'total_prompt_tokens': self.total_prompt_tokens,
             'total_completion_tokens': self.total_completion_tokens,
             'apiProvider_id': self.apiProvider_id
         }
-    def delete(self, *args, **kwargs):
-        from django.contrib.auth.models import User
-        from core.tasks.send_websocket_update import celery_send_websocket_update
-
-        model_pk_to_broadcast = self.pk
-        provider_pk_to_broadcast = self.apiProvider.pk
-
-        super().delete(*args, **kwargs)
-
-        message_data = {
+    def get_delete_broadcast_payload(self):
+        return {
             'object': 'AiModelDeleted',
-            'model_pk': model_pk_to_broadcast,
-            'provider_pk': provider_pk_to_broadcast
+            'model_pk': self.pk,
+            'provider_pk': self.apiProvider.pk
         }
-        all_user_pks = User.objects.values_list('pk', flat=True)
-        for pk in all_user_pks:
-            celery_send_websocket_update.delay(message_data, user_pk=pk)

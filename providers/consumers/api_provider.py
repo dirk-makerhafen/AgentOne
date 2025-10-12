@@ -57,7 +57,7 @@ def handle_provider_delete(consumer, provider_pk):
         # message to ensure clients are in sync, in case they missed it.
         message_data = {
             'object': 'ProviderDeleted',
-            'provider_pk': provider_pk
+            'provider_pk': int(provider_pk)
         }
         all_user_pks = User.objects.values_list('pk', flat=True)
         for pk in all_user_pks:

@@ -26,19 +26,8 @@ class Agent(BaseModel):
             'available_tools':  [tool.pk for tool in self.available_tools.all()],
         }
 
-    def delete(self, *args, **kwargs):
-        from django.contrib.auth.models import User
-        from core.tasks.send_websocket_update import celery_send_websocket_update
-
-        agent_pk_to_broadcast = self.agent_pk
-
-        super().delete(*args, **kwargs)
-
-        # After deletion, broadcast the update to all users
-        message_data = {
+    def get_delete_broadcast_payload(self):
+        return {
             'object': 'AgentDeleted',
-            'agent_pk': agent_pk_to_broadcast
+            'agent_pk': self.agent_pk
         }
-        all_user_pks = User.objects.values_list('pk', flat=True)
-        for pk in all_user_pks:
-            celery_send_websocket_update.delay(message_data, user_pk=pk)

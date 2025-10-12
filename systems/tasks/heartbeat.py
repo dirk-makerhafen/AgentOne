@@ -24,8 +24,8 @@ def poll_remote_executors_for_heartbeat():
     # 1. Poll remote executors and update last_heartbeat
     remote_executors_to_poll = System.objects.filter(
         ~Q(executor_url__exact=''),
-        is_remote_executor=True,
-        executor_url__isnull=False
+        ~Q(executor_mode="local"),
+        executor_url__isnull=False,
     )
 
     logger.info(f"Identified {remote_executors_to_poll.count()} remote executor(s) for polling.")
@@ -82,7 +82,7 @@ def poll_remote_executors_for_heartbeat():
     if online_and_stale_systems.exists():
         logger.info(f"Found {online_and_stale_systems.count()} stale system(s) to mark as offline.")
         for system in online_and_stale_systems:
-            system.status = 'offline'
+            system.status = System.SystemStatusChoices.OFFLINE
             system.save(update_fields=['status'])
             logger.info(f"Marked system '{system.name}' (ID: {system.pk}) as offline.")
     else:
@@ -97,7 +97,7 @@ def poll_remote_executors_for_heartbeat():
     if offline_but_fresh_systems.exists():
         logger.info(f"Found {offline_but_fresh_systems.count()} system(s) marked offline but with a recent heartbeat. Marking them online.")
         for system in offline_but_fresh_systems:
-            system.status = 'online'
+            system.status = System.SystemStatusChoices.ONLINE
             system.save(update_fields=['status'])
             logger.info(f"Marked system '{system.name}' (ID: {system.pk}) as online.")
 

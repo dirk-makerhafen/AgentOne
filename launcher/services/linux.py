@@ -10,17 +10,13 @@ class LinuxService(BaseService):
         from django.conf import settings
 
         if command_args is None:
-            command_args = ['server', 'run'] # Default to server for backward compatibility
+            command_args = ['client', 'run'] # Default to client run
 
         self.command.stdout.write(self.command.style.SUCCESS(f"--- Installing {self.display_name} systemd service ---"))
 
-        if os.geteuid() != 0:
-            self.command.stdout.write(self.command.style.ERROR("This command must be run as root or with sudo."))
-            return
-
-        user = os.getenv("SUDO_USER") or os.getenv("USER")
-        if not user:
-            self.command.stdout.write(self.command.style.ERROR("Could not determine the non-root user to run the service."))
+        user_to_run_as = self.current_user
+        if not user_to_run_as:
+            self.command.stdout.write(self.command.style.ERROR("Could not determine the user to run the service. Aborting."))
             return
 
         python_executable = sys.executable
@@ -30,20 +26,20 @@ class LinuxService(BaseService):
         exec_start_str = ' '.join(exec_start_command)
 
         service_file_content = f"""[Unit]
-    Description={self.display_name}
-    After=network.target
+Description={self.display_name}
+After=network.target
 
-    [Service]
-    User={user}
-    Group={user}
-    WorkingDirectory={settings.BASE_DIR}
-    ExecStart={exec_start_str}
-    Restart=always
-    RestartSec=3
+[Service]
+User={user_to_run_as}
+Group={user_to_run_as}
+WorkingDirectory={self.config_dir}
+ExecStart={exec_start_str}
+Restart=always
+RestartSec=3
 
-    [Install]
-    WantedBy=multi-user.target
-    """
+[Install]
+WantedBy=multi-user.target
+"""
         service_path = f"/etc/systemd/system/{self.service_name}.service"
         try:
             self.command.stdout.write(f"Writing service file to {service_path}...")
@@ -55,13 +51,15 @@ class LinuxService(BaseService):
             subprocess.run(['systemctl', 'enable', f'{self.service_name}.service'], check=True, capture_output=True)
             subprocess.run(['systemctl', 'start', f'{self.service_name}.service'], check=True, capture_output=True)
 
-            self.command.stdout.write(self.command.style.SUCCESS("\nService installation completed successfully."))
+            self.command.stdout.write(self.command.style.SUCCESS("
+Service installation completed successfully."))
             self.status()
 
         except (subprocess.CalledProcessError, IOError) as e:
-            self.command.stdout.write(self.command.style.ERROR(f"\nError during service installation: {e}"))
+            self.command.stdout.write(self.command.style.ERROR(f"
+Error during service installation: {e}"))
             if hasattr(e, 'stderr') and e.stderr:
-                self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))
+                self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))))
 
     def uninstall(self, *args, **kwargs):
         import os

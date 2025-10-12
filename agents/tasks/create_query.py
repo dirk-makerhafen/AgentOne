@@ -21,7 +21,7 @@ def celery_create_query(agentinstance_id):
     from agents.models.agent_instance import AgentInstance, BUILTIN_TOOL_CLASS_MAP
 
     agentInstance = AgentInstance.objects.get(instance_pk=agentinstance_id)
-    agentInstance.status = 'THINKING'
+    agentInstance.status = AgentInstance.AgentInstanceStatusChoices.THINKING
     agentInstance.save()
 
     try:
@@ -53,45 +53,24 @@ def celery_create_query(agentinstance_id):
                 'tpId': toolInstructions.id, 
         }]})
 
-        # Collect unique tool classes that are active for this agentInstance to get header/content parts
-        unique_active_tool_classes = set()
-        for tool_def in agentInstance.toolname_to_definition.values(): # Iterate over ToolDefinition objects
-            if tool_def.is_builtin and tool_def.name in BUILTIN_TOOL_CLASS_MAP:
-                unique_active_tool_classes.add(BUILTIN_TOOL_CLASS_MAP[tool_def.name])
-            # For non-builtin tools, if they expose classmethods for header/content, they would be added here.
-            # This part will be refined as external tool integration progresses.
 
         toolheaderparts = []
-        for tool_class in unique_active_tool_classes:
-            if hasattr(tool_class, 'get_header_parts') and callable(getattr(tool_class, 'get_header_parts')):
-                toolheaderparts.extend(tool_class(agentInstance).get_header_parts())
-        messages.append({"role": "user", "parts": toolheaderparts })
-
         toolcontentparts = []
-        for tool_class in unique_active_tool_classes:
-            if hasattr(tool_class, 'get_content_parts') and callable(getattr(tool_class, 'get_content_parts')):
-                toolcontentparts.extend(tool_class(agentInstance).get_content_parts())
+
+        for tool_definition in  agentInstance.agent.available_tools.all():
+            tool_call_instance = BUILTIN_TOOL_CLASS_MAP[tool_definition.name](agentInstance)
+            toolheaderparts.extend(tool_call_instance.get_header_parts())
+            toolcontentparts.extend(tool_call_instance.get_content_parts())
+
+        messages.append({"role": "user", "parts": toolheaderparts })
         messages.append({"role": "user", "parts": toolcontentparts })
-
         messages.extend(get_tool_subscription_messages(agentInstance=agentInstance))
-
         messages.extend(get_chat_messages(agentInstance=agentInstance))
 
-        reminder_props = {
-            "chat_forget":   random.random() < 1/3, 
-            "memory_forget": random.random() < 1/5, 
-            "st_tracks":     random.random() < 1/5, 
-            "mt_tracks":     random.random() < 1/50, 
-            "lt_tracks":     random.random() < 1/100,
-            "st2mt":     random.random() < 1/50, 
-            "mt2lt":     random.random() < 1/100, 
-        }
-        if True in reminder_props.values():
-            messages.append({"role": "user", "parts": [{
-                "tags": ["Prompts", "OutputRules"],
-                'tpId': outputFormatReminder.id, 
-                'data': reminder_props
-            }]})
+        messages.append({"role": "user", "parts": [{
+            "tags": ["Prompts", "OutputRules"],
+            'tpId': outputFormatReminder.id, 
+        }]})
             
         llmQuery = LLMQuery(agent=agentInstance.agent, agentInstance=agentInstance, aimodel=agentInstance.aimodel if agentInstance.aimodel else agentInstance.agent.aimodel)
         llmQuery.messages = messages
@@ -101,7 +80,7 @@ def celery_create_query(agentinstance_id):
         print(e)
         debugLogEntry = DebugLogEntry(agentInstance = agentInstance, event = 'exception', data = {"exception": f'{e}\n{traceback.format_exc()}'})
         debugLogEntry.save() 
-        agentInstance.status = 'ERROR'
+        agentInstance.status = AgentInstance.AgentInstanceStatusChoices.ERROR
         agentInstance.save()
 
       
@@ -111,7 +90,7 @@ def get_chat_messages(agentInstance):
     conversationMessages = agentInstance.get_conversation_messages(limit=agentInstance.limit_max_conversation_messages)
     conversationMessages = sorted({msg.id: msg for msg in conversationMessages}.values(), key=lambda msg: msg.created_at)
 
-    fs_entries = agentInstance.filesystemTool.get_loaded_items(refresh_from_disk=True)
+    fs_entries = agentInstance.filesystem.get_loaded_items(refresh_from_disk=True)
     all_loaded_paths = [e.path for e in fs_entries]
     all_loaded_paths.extend([get_relative_path(agentInstance.workingdir, x) for x in all_loaded_paths])
     all_loaded_paths = set(all_loaded_paths)
@@ -121,21 +100,16 @@ def get_chat_messages(agentInstance):
 
     # Collect history limiting rule templates from all available tools
 
-    unique_active_tool_classes = set()
-    for tool_def in agentInstance.toolname_to_definition.values(): # Iterate over ToolDefinition objects
-        if tool_def.is_builtin and tool_def.name in BUILTIN_TOOL_CLASS_MAP:
-            unique_active_tool_classes.add(BUILTIN_TOOL_CLASS_MAP[tool_def.name])
-        # For non-builtin tools, if they expose classmethods for header/content, they would be added here.
-        # This part will be refined as external tool integration progresses.
-
     tool_call_rule_templates = []
-    for tool_class in unique_active_tool_classes:
-        tool_instance = tool_class(agentInstance)
-        if hasattr(tool_instance, 'get_history_limiting_rules'):
-            tool_call_rule_templates.extend(tool_instance.get_history_limiting_rules())
+    for tool_definition in agentInstance.available_tools.all(): # Iterate over ToolDefinition objects
+        if tool_definition.is_builtin and tool_definition.name in BUILTIN_TOOL_CLASS_MAP:
+            tool_instance = BUILTIN_TOOL_CLASS_MAP[tool_definition.name](agentInstance)
+            if hasattr(tool_instance, 'get_history_limiting_rules'):
+                tool_call_rule_templates.extend(tool_instance.get_history_limiting_rules())
+        elif tool_definition.is_builtin is False:
+            pass # TODO MCP client
 
-    limiter = HistoryLimiter(agentInstance, all_entries, all_loaded_paths, tool_call_rule_templates)
-    
+    limiter = HistoryLimiter(agentInstance, all_entries, all_loaded_paths)
     resultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source="tools", key="ResultInjection")
     filesystemInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.builtin_filesystem', key="ContentInjection")
 
@@ -167,7 +141,7 @@ def get_chat_messages(agentInstance):
                     "pnr": index
                 })
                 
-                if toolCall.function_name.startswith("memory_") and toolCall.status == "success":
+                if toolCall.function_name.startswith("memory_") and toolCall.status == ToolCall.ToolCallStatusChoices.SUCCESS:
                     continue
 
                 toolResponse = toolCall.toolResponses.last()
@@ -190,22 +164,16 @@ def get_chat_messages(agentInstance):
                 cmessages.append({'role': entry.role, 'parts': msg_parts, 'warn_forget': limiter.is_general_message_limited('messages_dont_warn_forget', entry)})
 
         elif type(entry) == FsLogEntry:
-            cmessages.append({'role': "user", 'parts': [{
-                'tpId':  filesystemInjectionTemplate.pk,
+            cmessages.append({"role": "user", "parts": [{
                 "tags": ["Tool", "FsTool", 'Loaded', 'Directories' if entry.is_directory else 'Files'],
-                'data': {
-                    "is_directory":  entry.is_directory,
-                    "refreshed_from_fs": entry.action == "refresh",
-                    "exist_on_fs": entry.exists_on_fs,
-                    'path': get_relative_path(agentInstance.workingdir, entry.path),
-                    'fs_content_type': f'{entry.__class__.__name__}',
-                    'fs_content_id': f'{entry.id}',
-                    'load_mode': entry.load_mode,
-                },
+                'tpId': filesystemInjectionTemplate.pk, 
+                'data': entry.as_query_dict(),
             }]})
+
 
     cmessages = list(reversed(cmessages))
     return cmessages
+
 
 def get_tool_subscription_messages(agentInstance):
     messages = []

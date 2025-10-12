@@ -6,7 +6,7 @@ from core.models.base_model import BaseModel
 class ApiKey(BaseModel):
     apiProvider = models.ForeignKey("providers.ApiProvider", on_delete=models.CASCADE, related_name='apikeys')
     key = models.CharField(max_length=512)
-    comment = models.CharField(max_length=512)
+    comment = models.CharField(max_length=512, default="", null=True)
 
     @property
     def total_llm_queries(self):
@@ -31,20 +31,9 @@ class ApiKey(BaseModel):
             'total_completion_tokens': self.total_completion_tokens,
             'apiProvider_id': self.apiProvider_id
         }
-    def delete(self, *args, **kwargs):
-        from django.contrib.auth.models import User
-        from core.tasks.send_websocket_update import celery_send_websocket_update
-
-        key_pk_to_broadcast = self.pk
-        provider_pk_to_broadcast = self.apiProvider.pk
-
-        super().delete(*args, **kwargs)
-
-        message_data = {
+    def get_delete_broadcast_payload(self):
+        return {
             'object': 'ApiKeyDeleted',
-            'key_pk': key_pk_to_broadcast,
-            'provider_pk': provider_pk_to_broadcast
+            'key_pk': self.pk,
+            'provider_pk': self.apiProvider.pk
         }
-        all_user_pks = User.objects.values_list('pk', flat=True)
-        for pk in all_user_pks:
-            celery_send_websocket_update.delay(message_data, user_pk=pk)

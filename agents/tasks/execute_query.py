@@ -5,12 +5,14 @@ import traceback
 import json
 import random
 
+from agents.models.agent_instance import AgentInstance
 from agents.models.conversation_message import ConversationMessage
 from agents.models.debug_log_entry import DebugLogEntry
 from agents.models.llm_query import LLMQuery
 from agents.models.llm_response import LLMResponse
+from systems.models.system import System
 from tools.calls.models.tool_call import ToolCall
-from tools.calls.tool_parser import extract_tool_call_parts
+from tools.calls.tool_parser import parse_responsestring
 
 
 @shared_task
@@ -21,7 +23,7 @@ def execute_query(llmQuery_id, streaming=True  ):
         return 
 
     llmQuery.apikey = random.choice([x for x in llmQuery.aimodel.apiProvider.apikeys.all()])
-    llmQuery.status = "active"
+    llmQuery.status = LLMQuery.LLMQueryStatusChoices.ACTIVE
     llmQuery.save()
 
     try:
@@ -29,9 +31,9 @@ def execute_query(llmQuery_id, streaming=True  ):
     except Exception as e:
         debugLogEntry = DebugLogEntry(agentInstance = llmQuery.agentInstance, event = 'exception', data = {"exception": f'{e}\n{traceback.format_exc()}', "llmQuery_id": llmQuery.pk })
         debugLogEntry.save()
-        llmQuery.status = "failed"
+        llmQuery.status = LLMQuery.LLMQueryStatusChoices.FAILED
         llmQuery.save()
-        llmQuery.agentInstance.status = 'ERROR'
+        llmQuery.agentInstance.status = AgentInstance.AgentInstanceStatusChoices.ERROR
         llmQuery.agentInstance.save()
         return
 
@@ -52,7 +54,7 @@ def execute_query(llmQuery_id, streaming=True  ):
             llmResponse.agentInstance = llmQuery.agentInstance
             llmResponse.llmQuery = llmQuery
             llmResponse.data = response
-            llmResponse.status = "success"
+            llmResponse.status = LLMResponse.LLMResponseStatusChoices.SUCCESS
             llmResponse.save()
             conversationMessage = ConversationMessage()
             conversationMessage.agent = llmResponse.agent
@@ -68,7 +70,7 @@ def execute_query(llmQuery_id, streaming=True  ):
                 llmResponse.agentInstance = llmQuery.agentInstance
                 llmResponse.llmQuery = llmQuery
                 llmResponse.data = {"stream":[]}
-                llmResponse.status = "active"
+                llmResponse.status =  LLMResponse.LLMResponseStatusChoices.ACTIVE
                 llmResponse.save()
 
                 conversationMessage = ConversationMessage()
@@ -108,10 +110,10 @@ def execute_query(llmQuery_id, streaming=True  ):
                     conversationMessage.data["parts"][0]["content"] += buffered_content
                     conversationMessage.save()
 
-                llmResponse.status = "success"
+                llmResponse.status =  LLMResponse.LLMResponseStatusChoices.SUCCESS
                 llmResponse.save()
 
-        parts = extract_tool_call_parts(response_string_full)
+        parts = parse_responsestring(response_string_full)
 
         for part in parts:
             if "tool" in part:
@@ -127,15 +129,15 @@ def execute_query(llmQuery_id, streaming=True  ):
 
         conversationMessage.data["parts"] = parts
         conversationMessage.save()
-        llmQuery.status = "success"
+        llmQuery.status = LLMQuery.LLMQueryStatusChoices.SUCCESS
         llmQuery.save()
 
     except Exception as e:
         debugLogEntry = DebugLogEntry(agentInstance = llmQuery.agentInstance, event = 'exception', data = {"exception": f"{e}\n{traceback.format_exc()}", "llmQuery_id": llmQuery.pk })
         debugLogEntry.save()
-        llmQuery.status = "failed"
+        llmQuery.status = LLMQuery.LLMQueryStatusChoices.FAILED
         llmQuery.save()
-        llmQuery.agentInstance.status = 'ERROR'
+        llmQuery.agentInstance.status = AgentInstance.AgentInstanceStatusChoices.ERROR
         llmQuery.agentInstance.save()
         return # Stop execution
 
@@ -144,9 +146,9 @@ def execute_query(llmQuery_id, streaming=True  ):
         decide_next_step(instance)
         return
     
-    if not instance.system  or (instance.system and instance.system.status == 'online'):
+    if not instance.system  or (instance.system and instance.system.status == System.SystemStatusChoices.ONLINE):
         # Set status to EXECUTING_TOOLS before running them
-        instance.status = 'EXECUTING_TOOLS'
+        instance.status = AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS
         instance.save()
         for toolCall in toolCalls:
             try:
@@ -157,7 +159,7 @@ def execute_query(llmQuery_id, streaming=True  ):
         return 
     
     print(f"Cannot execute tool calls for instance {instance.pk}. Its assigned system is offline or not set.")
-    instance.status = 'SYSTEM_OFFLINE'
+    instance.status = AgentInstance.AgentInstanceStatusChoices.SYSTEM_OFFLINE
     instance.save()
 
 
@@ -168,7 +170,7 @@ def decide_next_step(agent_instance):
     """
     # The `await_user_input` tool sets this flag. If it's true, we must wait.
     if agent_instance.require_user_interaction:
-        agent_instance.status = 'AWAITING_USER_INPUT'
+        agent_instance.status = AgentInstance.AgentInstanceStatusChoices.AWAITING_USER_INPUT
         agent_instance.automated_step_count = 0
         agent_instance.save()
         return  # Stop the loop and wait.
@@ -176,20 +178,20 @@ def decide_next_step(agent_instance):
     # If we are not waiting for a user, check if we can and should continue automatically.
     if agent_instance.limit_max_automated_steps > 0:
         if agent_instance.automated_step_count < agent_instance.limit_max_automated_steps:
-            agent_instance.status = 'IDLE_AUTOMATED'
+            agent_instance.status = AgentInstance.AgentInstanceStatusChoices.IDLE_AUTOMATED
             agent_instance.automated_step_count += 1
             agent_instance.save()
             agent_instance.start_or_continue()  # Trigger the next automated cycle.
             return 
         # has reached its limit, or the task is complete.
         # For now, we default to IDLE. A future tool could set a 'FINISHED' state.
-        agent_instance.status = 'AWAITING_USER_INPUT'
+        agent_instance.status = AgentInstance.AgentInstanceStatusChoices.AWAITING_USER_INPUT
         agent_instance.automated_step_count = 0  # Reset counter
         agent_instance.save()
         return 
     
     # If automation is disabled, 
-    agent_instance.status = 'IDLE'
+    agent_instance.status = AgentInstance.AgentInstanceStatusChoices.IDLE
     agent_instance.automated_step_count = 0  # Reset counter, just in case
     agent_instance.save()
 

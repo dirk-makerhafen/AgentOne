@@ -90,7 +90,6 @@ function renderSystem(system, tableBody) {
         isEditing: isEditing,
         os_display: system.os ? system.os.charAt(0).toUpperCase() + system.os.slice(1) : 'N/A',
         description_display: system.description || 'N/A',
-        is_remote_executor_display: system.is_remote_executor ? 'Yes' : 'No',
         executor_api_key_display: system.executor_api_key ? '********' : 'N/A',
         osOptions: osOptionsData,
         executorModeOptions: executorModeOptionsData
@@ -249,7 +248,6 @@ function systemSaveChanges(event, systemId) {
     const editForm = detailsRow.querySelector('.system-details-edit');
     const data = {
         description: editForm.querySelector('textarea[name="description"]').value,
-        is_remote_executor: editForm.querySelector('input[name="is_remote_executor"]').checked,
         executor_url: editForm.querySelector('input[name="executor_url"]').value,
         executor_api_key: editForm.querySelector('input[name="executor_api_key"]').value,
         os: editForm.querySelector('select[name="os"]').value,

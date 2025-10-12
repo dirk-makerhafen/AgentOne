@@ -12,7 +12,6 @@ def handle_apikey_create(consumer, provider_pk, key, comment=None):
     try:
         provider = ApiProvider.objects.get(pk=provider_pk)
         ApiKey.objects.create(apiProvider=provider, key=key, comment=comment)
-        provider.send_object_to_clients()
     except ApiProvider.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Provider with PK {provider_pk} not found.'}))
     except Exception as e:
@@ -27,7 +26,6 @@ def handle_apikey_delete(consumer, provider_pk, apikey_pk):
         provider = ApiProvider.objects.get(pk=provider_pk)        
         apikey = ApiKey.objects.get(pk=apikey_pk)
         apikey.delete()
-        provider.send_object_to_clients()
     except ApiKey.DoesNotExist:
         provider.send_object_to_clients()
     except ApiProvider.DoesNotExist:

@@ -3,13 +3,17 @@ import traceback
 from core.models.base_model import BaseModel
 
 class ToolCall(BaseModel):
+    class ToolCallStatusChoices(models.TextChoices):
+        PENDING = 'IDLE', 'Idle'
+        SUCCESS = 'SUCCESS', 'Success'
+        FAILED = 'FAILED', 'Failed'
+
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name='toolCalls')
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name='toolCalls')
     conversationMessage = models.ForeignKey("agents.ConversationMessage", null=True, default=None, on_delete=models.CASCADE, related_name='toolCalls')
-    
     tool_name = models.CharField(max_length=255, default="")
     function_name = models.CharField(max_length=64)
-    status = models.CharField(max_length=10, default='pending')
+    status = models.CharField(max_length=10, default=ToolCallStatusChoices.PENDING, choices=ToolCallStatusChoices.choices)
 
     @property
     def arguments(self):
@@ -35,7 +39,7 @@ class ToolCall(BaseModel):
 
     def run(self):
         from tools.calls.models.tool_response import ToolResponse
-        if self.status != 'pending':
+        if self.status != ToolCall.ToolCallStatusChoices.PENDING:
             raise Exception('Tool call not pending, cant run')
         success = False
         result = None
@@ -63,8 +67,8 @@ class ToolCall(BaseModel):
         toolresponse.agent = self.agentInstance.agent
         toolresponse.agentInstance = self.agentInstance
         toolresponse.toolCall = self
-        toolresponse.status = 'success' if success else 'failed'
+        toolresponse.status = ToolResponse.ToolResponseStatusChoices.SUCCESS if success else ToolResponse.ToolResponseStatusChoices.FAILED
         toolresponse.data = result
         toolresponse.save()
-        self.status = 'success' if success else 'failed'
+        self.status =  ToolCall.ToolCallStatusChoices.SUCCESS if success else ToolCall.ToolCallStatusChoices.FAILED
         self.save()

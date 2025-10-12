@@ -37,14 +37,14 @@ def start_tool(tool_installation_id):
 
     if not all([system, tool_def, tool_installation.local_path, tool_def.manifest]):
         _log(tool_installation, 'error', 'Cannot start: missing system, tool definition, local path, or manifest.')
-        tool_installation.status = ToolInstallation.Status.ERROR # Still relevant for installation status
+        tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR # Still relevant for installation status
         tool_installation.save()
         return
 
     # Check for max_parallel_instances limit
     current_running_instances = ToolInstance.objects.filter(
         tool_installation=tool_installation,
-        status__in=[ToolInstance.Status.STARTING, ToolInstance.Status.RUNNING]
+        status__in=[ToolInstance.ToolInstanceStatusChoices.STARTING, ToolInstance.ToolInstanceStatusChoices.RUNNING]
     ).count()
 
     if current_running_instances >= tool_installation.max_parallel_instances:
@@ -56,7 +56,7 @@ def start_tool(tool_installation_id):
     # Create a new ToolInstance record (ephemeral model)
     tool_instance = ToolInstance.objects.create(
         tool_installation=tool_installation,
-        status=ToolInstance.Status.STARTING
+        status=ToolInstance.ToolInstanceStatusChoices.STARTING
     )
     _log(tool_installation, 'info', 'New ToolInstance record created.', tool_instance)
 
@@ -68,7 +68,7 @@ def start_tool(tool_installation_id):
 
     if not tool_command:
         _log(tool_installation, 'error', 'Tool manifest is missing "server.command".', tool_instance)
-        tool_instance.status = ToolInstance.Status.ERROR
+        tool_instance.status = ToolInstance.ToolInstanceStatusChoices.ERROR
         tool_instance.last_error = 'Missing "server.command" in manifest.'
         tool_instance.save()
         return
@@ -87,7 +87,7 @@ def start_tool(tool_installation_id):
         if not (port_result.get('status') == 'success' and port_result.get('vars', {}).get('port')):
             error_message = f"Failed to find free port: {port_result.get('message', 'Unknown error')}"
             _log(tool_installation, 'error', error_message, tool_instance)
-            tool_instance.status = ToolInstance.Status.ERROR
+            tool_instance.status = ToolInstance.ToolInstanceStatusChoices.ERROR
             tool_instance.last_error = error_message
             tool_instance.save()
             return
@@ -123,7 +123,7 @@ def start_tool(tool_installation_id):
     if start_result.get('status') != 'success':
         error_message = start_result.get('message', 'Failed to start process via primitive.')
         _log(tool_installation, 'error', error_message, tool_instance)
-        tool_instance.status = ToolInstance.Status.ERROR
+        tool_instance.status = ToolInstance.ToolInstanceStatusChoices.ERROR
         tool_instance.last_error = error_message
         tool_instance.save()
         return
@@ -133,7 +133,7 @@ def start_tool(tool_installation_id):
     # Update ToolInstance with runtime details
     tool_instance.process_id = start_result.get('process_id') # The actual PID from the executor
     tool_instance.endpoint_url = endpoint_url
-    tool_instance.status = ToolInstance.Status.RUNNING
+    tool_instance.status = ToolInstance.ToolInstanceStatusChoices.RUNNING
     tool_instance.save()
     
     _log(tool_installation, 'info', "ToolInstance record updated with runtime details. Tool is now RUNNING.", tool_instance)

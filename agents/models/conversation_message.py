@@ -11,7 +11,6 @@ class ConversationMessage(BaseModel):
     pin_to_context = models.BooleanField(default=False)
 
     def save(self, send_to_client=True, *args, **kwargs):
-        is_new = self.pk is None
         if self.hide_from_context is True and self.pin_to_context is True:
             self.pin_to_context = False
         super().save(send_to_client=send_to_client, *args, **kwargs)

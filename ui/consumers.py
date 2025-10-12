@@ -3,6 +3,7 @@ from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 from ui.router import MESSAGE_HANDLERS
 import traceback
+
 # Import all consumer modules to ensure their @register_handler decorators run
 from agents.consumers import agent, agent_instance, conversation, limits
 from core.consumers import prompts
@@ -53,7 +54,6 @@ class UiConsumer(WebsocketConsumer):
             # Main message handler dispatch
             handler = MESSAGE_HANDLERS.get(message_type)
             if handler:
-                # Unpack payload into keyword arguments for clearer handler signatures
                 handler(self, **payload)
             else:
                 self.send(text_data=json.dumps({'object': 'error', 'message': f'Unknown message type: {message_type}. Available:\n{"\n".join(MESSAGE_HANDLERS.keys())}'}))
@@ -61,8 +61,6 @@ class UiConsumer(WebsocketConsumer):
         except json.JSONDecodeError:
             self.send(text_data=json.dumps({'object': 'error', 'message': 'Invalid JSON format.'}))
         except Exception as e:
-            # Optionally log the full traceback to the server console for debugging
-            import traceback
             traceback.print_exc()
             self.send(text_data=json.dumps({'object': 'error', 'message': f'An error occurred: {str(e)}{traceback.format_exc()}'}))
 

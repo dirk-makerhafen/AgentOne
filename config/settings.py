@@ -1,13 +1,12 @@
 import os
-#import pymysql
-#pymysql.install_as_MySQLdb()
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SYSTEM_REGISTER_KEY = "change-me-to-a-very-secure-secret"
-SECRET_KEY = 'fo15rp=#xbqzp$4w07r%b^tl34707gxoa8zbr51a@lc&kp3s&e'
+AGENT_SERVER_SECRET_KEY = "change_me"
+SECRET_KEY = 'change_me'
 REDIS_URL = 'redis://localhost:6379/1'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -35,6 +34,7 @@ INSTALLED_APPS = (
     'core',
     'providers',
     'systems',
+    'launcher',
     'tools.base',
     'tools.calls',
     'tools.definitions',
@@ -103,11 +103,11 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATICFILES_DIRS = [BASE_DIR + "/ui/static",]
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'ui', 'static')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_DIRS = [BASE_DIR + "/ui/static",]
+STATIC_ROOT = os.path.join(BASE_DIR, '_staticfiles')
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 DJANGORESIZED_DEFAULT_SIZE = [1920, 1280]
 DJANGORESIZED_DEFAULT_QUALITY = 90
@@ -120,3 +120,10 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 
+import warnings
+
+warnings.filterwarnings(
+    'ignore',
+    message='Accessing the database during app initialization is discouraged',
+    category=RuntimeWarning
+)

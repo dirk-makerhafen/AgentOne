@@ -121,11 +121,11 @@ def handle_tooldefinition_manifest_refresh(consumer, tool_definition_id):
             consumer.send(text_data=json.dumps({'object': 'error', 'message': 'Cannot refresh manifest for a tool without a repository URL.'}))
             return
 
-        tool_def.status = ToolDefinition.Status.UPDATING
+        tool_def.status = ToolDefinition.ToolDefinitionStatusChoices.UPDATING
         tool_def.save() 
 
-        from tools.definitions.tasks.refresh_tool_definition import fetch_and_update_tool_definition_manifest
-        fetch_and_update_tool_definition_manifest.delay(tool_def.pk)
+        from tools.definitions.tasks.refresh_definition_manifest import refresh_definition_manifest
+        refresh_definition_manifest.delay(tool_def.pk)
 
     except ToolDefinition.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'ToolDefinition with ID {tool_definition_id} not found.'}))

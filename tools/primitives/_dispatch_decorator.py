@@ -10,19 +10,19 @@ def dispatched_primitive_operation(func):
     The wrapper function created by this decorator will have the signature: wrapper(agentInstance, **kwargs)
     """
 
-    def _run_local(func, **kwargs):
+    def _run_local(*args, func, **kwargs):
         try:
-            return func(**kwargs)
+            return func(*args, **kwargs)
         except Exception as e:
             return {'status': 'error', 'message': f"Local execution error in '{func.__name__}': {str(e)} {traceback.format_exc()}"}
 
-    def _run_remote(system, func, **kwargs):
+    def _run_remote(*args, func, system, **kwargs):
         try:
             response = requests.post(
                 url = f"{system.executor_url.rstrip('/')}/python", 
                 json= {
-                    "source": f'FUNC_RESULT={func.__name__}(**kwargs)', 
-                    "locals_dict": { "kwargs": kwargs }, 
+                    "source": f'FUNC_RESULT={func.__name__}(*args, **kwargs)', 
+                    "locals_dict": { "kwargs": kwargs, "args": args[1:] }, 
                     "locals_to_return":["FUNC_RESULT", "VARS"]
                 }, 
                 headers={ 
@@ -37,20 +37,20 @@ def dispatched_primitive_operation(func):
             return {'status': 'error', 'message': f"Remote dispatch error for '{func.__name__}': {str(e)} {traceback.format_exc()}"}
 
     @functools.wraps(func)
-    def wrapper(agentInstance=None, system=None, **kwargs): # Added 'system' argument
+    def wrapper(*args, agentInstance=None, system=None, **kwargs): # Added 'system' argument
         is_remote = False
         target_system = None
 
         if system: # Prioritize system if explicitly passed
-            target_system = system
+            target_system = system                
         elif agentInstance: # Fallback to agentInstance.system
             target_system = agentInstance.system
 
         if target_system:
-            is_remote = target_system.is_remote_executor and target_system.executor_url and target_system.executor_api_key
+            is_remote = target_system.executor_mode != "local"
 
         if is_remote:
-            return _run_remote(system=target_system, func=func, **kwargs)
-        return _run_local(func=func, **kwargs)
+            return _run_remote(*args, system=target_system, func=func, **kwargs)
+        return _run_local(*args, func=func, **kwargs)
          
     return wrapper

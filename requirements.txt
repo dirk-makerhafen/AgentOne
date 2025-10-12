@@ -18,3 +18,7 @@ whitenoise
 requests
 httpx
 mcp
+# Testing
+pytest
+pytest-django
+pytest-asyncio

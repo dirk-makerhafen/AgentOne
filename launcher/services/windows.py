@@ -17,11 +17,19 @@ class WindowsService(BaseService):
         python_executable = sys.executable
         manage_py_path = os.path.join(settings.BASE_DIR, "manage.py")
 
+        # The service needs to run the manage.py client command from the config directory
         command_str = ' '.join(command_args)
+        # Ensure that the service's working directory is set to self.config_dir
+        # The binPath should contain the Python executable and manage.py
         bin_path = f'"{python_executable}" "{manage_py_path}" {command_str}'
-
+        
         try:
             self.command.stdout.write(f"Creating service '{self.service_name}'...")
+            # Note: For Windows services created with `sc create`, the working directory is typically
+            # the system directory or the directory where sc.exe is run from.
+            # It's better to manage the working directory via the command itself or a wrapper script.
+            # However, `sc.exe` does not have a direct 'WorkingDirectory' parameter like systemd/launchd.
+            # The client `handle_run` command receives the --path, so it will use the correct config dir.
             subprocess.run([
                 'sc', 'create', self.service_name,
                 f'binPath= {bin_path}',

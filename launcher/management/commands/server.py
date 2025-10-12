@@ -62,14 +62,27 @@ class Command(BaseCommand):
             with open(path, 'r') as f:
                 for line in f:
                     line = line.strip()
-                    if not line or line.startswith('#') or '=' not in line:
+                    if not line or line.startswith('#'):
                         continue
+
+                    # Remove inline comments before processing
+                    if '#' in line:
+                        line = line.split('#', 1)[0].strip()
+                        if not line:
+                            continue
+
+                    if '=' not in line:
+                        continue
+
                     key, value = line.split('=', 1)
                     key = key.strip()
                     value = value.strip()
+
+                    # Robustly strip quotes
                     if (value.startswith("'") and value.endswith("'")) or \
                        (value.startswith('"') and value.endswith('"')):
                         value = value[1:-1]
+
                     config[key] = value
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Could not read config file: {e}"))
@@ -128,11 +141,11 @@ class Command(BaseCommand):
         self.stdout.write(f" - Daphne listening on: {self.style.SUCCESS(listen_address + ':' + listen_port)}")
         self.stdout.write(f" - Celery Worker & Beat starting...")
         self.stdout.write(f"Type {self.style.ERROR('.exit')} and press Enter to quit.")
-
+        log_level = "WARNING"
         commands = {
             "daphne": ['daphne', '-b', listen_address, '-p', listen_port, 'config.asgi:application'],
-            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', 'info', '-E', '--concurrency', '10'],
-            "celery_beat": ['celery', '-A', 'config', 'beat', '-l', 'info']
+            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '10'],
+            "celery_beat": ['celery', '-A', 'config', 'beat', '-l', log_level]
         }
 
         processes = {}
@@ -219,4 +232,4 @@ class Command(BaseCommand):
              self.stdout.write(self.style.ERROR(f"The '{action}' action is not yet implemented for {system}."))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"An error occurred during the '{action}' operation: {e}"))
-        # Implementation will go here
+

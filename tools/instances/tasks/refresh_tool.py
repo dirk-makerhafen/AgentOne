@@ -33,7 +33,7 @@ def refresh_tool_instance(tool_instance_id):
             tool_instance.status = 'connected'
             tool_instance.last_error = None
         else:
-            tool_instance.status = 'error'
+            tool_instance.status = ToolInstance.ToolInstanceStatusChoices.ERROR
             tool_instance.last_error = result.get('message', 'Failed to list tools from executor.')
             
         tool_instance.save()
@@ -44,7 +44,7 @@ def refresh_tool_instance(tool_instance_id):
         print(f"Error refreshing ToolInstance {tool_instance_id}: {e}")
         try:
             tool_instance = ToolInstance.objects.get(id=tool_instance_id)
-            tool_instance.status = 'error'
+            tool_instance.status = ToolInstance.ToolInstanceStatusChoices.ERROR
             tool_instance.last_error = str(e)
             tool_instance.save()
         except ToolInstance.DoesNotExist:

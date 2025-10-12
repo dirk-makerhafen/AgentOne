@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
-from systems.models import System
+from systems.models.system import System
 import logging
 from django.db.models import Q # Import Q
 
@@ -26,7 +26,7 @@ class Command(BaseCommand):
             if stale_count > 0:
                 self.stdout.write(f"Found {stale_count} stale system(s) to mark as offline.")
                 for system in online_and_stale_systems:
-                    system.status = 'offline'
+                    system.status =  System.SystemStatusChoices.OFFLINE
                     system.save() 
                     self.stdout.write(f"Marked system '{system.name}' (ID: {system.pk}) as offline.")
             else:
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             if fresh_count > 0:
                 self.stdout.write(f"Found {fresh_count} system(s) marked offline but with a recent heartbeat. Marking them online.")
                 for system in offline_but_fresh_systems:
-                    system.status = 'online'
+                    system.status = System.SystemStatusChoices.ONLINE
                     system.save()
                     self.stdout.write(f"Marked system '{system.name}' (ID: {system.pk}) as online.")
 

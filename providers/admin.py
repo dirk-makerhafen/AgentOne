@@ -24,7 +24,7 @@ class ApiKeyAdmin(admin.ModelAdmin):
 
 @admin.register(AiModel)
 class ModelAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'created_at', 'name', 'apiProvider', 'enabled', 'max_tokens', 'free_limit_per_day', 'raw_data')
+    list_display = ('pk', 'created_at', 'name', 'apiProvider', 'enabled', 'max_prompt_tokens', 'limit_request_per_day', 'limit_request_per_minute', 'limit_tokens_per_day', 'limit_tokens_per_minute', 'raw_data')
     list_display_links = ('pk', 'name', 'apiProvider')
     list_filter = ('apiProvider', 'enabled')
     search_fields = ('name', 'raw_data')

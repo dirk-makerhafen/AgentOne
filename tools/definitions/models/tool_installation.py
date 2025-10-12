@@ -5,7 +5,7 @@ from .tool_definition import ToolDefinition
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 class ToolInstallation(BaseModel):
-    class Status(models.TextChoices):
+    class ToolInstallationStatusChoices(models.TextChoices):
         INSTALLING = 'installing', 'Installing'
         INSTALLED = 'installed', 'installed'
         UNINSTALLING = 'uninstalling', 'Uninstalling'
@@ -21,7 +21,7 @@ class ToolInstallation(BaseModel):
         related_name='tool_installations',
         help_text="The specific agent instance this installation is dedicated to. Null for shared tools."
     )
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.INSTALLING)
+    status = models.CharField(max_length=20, choices=ToolInstallationStatusChoices.choices, default=ToolInstallationStatusChoices.INSTALLING)
     local_path = models.CharField(max_length=1024, blank=True, null=True, help_text="The installation path on the remote system.")
     max_parallel_instances = models.IntegerField(
         default=1,
@@ -65,21 +65,9 @@ class ToolInstallation(BaseModel):
             'instance_status': latest_instance.status if latest_instance else 'not_run',
             'instance_id': latest_instance.pk if latest_instance else None,
         }
-def delete(self, *args, **kwargs):
-    from django.contrib.auth.models import User
-    from core.tasks.send_websocket_update import celery_send_websocket_update
-
-    installation_pk_to_broadcast = self.pk
-    system_pk_to_broadcast = self.system.pk
-
-    super().delete(*args, **kwargs)
-
-    # After deletion, broadcast the update to all users
-    message_data = {
-        'object': 'ToolInstallationDeleted',
-        'installation_pk': installation_pk_to_broadcast,
-        'system_pk': system_pk_to_broadcast # Include system_pk for efficient UI updates
-    }
-    all_user_pks = User.objects.values_list('pk', flat=True)
-    for pk in all_user_pks:
-        celery_send_websocket_update.delay(message_data, user_pk=pk)
+    def get_delete_broadcast_payload(self):
+        return {
+            'object': 'ToolInstallationDeleted',
+            'installation_pk': self.pk,
+            'system_pk': self.system.pk
+        }

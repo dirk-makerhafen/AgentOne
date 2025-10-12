@@ -68,6 +68,30 @@ class BaseModel(DirtyFieldsMixin, models.Model):
             self.send_object_to_clients()
         return r
 
+    def get_delete_broadcast_payload(self):
+        """
+        Subclasses should override this method to return a dictionary payload
+        for the WebSocket broadcast upon deletion. If it returns None, no
+        broadcast is sent.
+        """
+        return None
+
+    def delete(self, *args, **kwargs):
+        from core.tasks.send_websocket_update import celery_send_websocket_update
+        from django.contrib.auth.models import User
+
+        # Get the model-specific payload *before* the object is deleted.
+        message_data = self.get_delete_broadcast_payload()
+
+        # Perform the actual deletion.
+        super().delete(*args, **kwargs)
+
+        # If a payload was provided, broadcast it to all users.
+        if message_data:
+            all_user_pks = User.objects.values_list('pk', flat=True)
+            for pk in all_user_pks:
+                celery_send_websocket_update.delay(message_data, user_pk=pk)
+
 
     def send_object_to_clients(self, instance_pk=None):
         from agents.models.agent import Agent

@@ -4,11 +4,26 @@ import datetime, random, itertools, time, requests, inspect, functools
 from copy import deepcopy
 from pathlib import Path
 
-script_dir = pathlib.Path(__file__).parent.resolve()
-if script_dir not in sys.path:
-    sys.path.insert(0, script_dir)
+# Determine the project root and add it to sys.path
+# This script is in <project_root>/tools/primitives/
+script_dir = pathlib.Path(__file__).parent.resolve() # <project_root>/tools/primitives
+tools_dir = script_dir.parent.resolve() # <project_root>/tools
+project_root = tools_dir.parent.resolve() # <project_root>
 
-from . import *  # import primitives
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+# Explicitly import primitive functions using their absolute paths from the project root
+from tools.primitives.append_file import append_file
+from tools.primitives.list_directory import list_directory
+from tools.primitives.manage_tool_process import manage_tool_process
+from tools.primitives.mkdir import mkdir
+from tools.primitives.read_file import read_file
+from tools.primitives.rm import rm
+from tools.primitives.run_python_code import run_python_code
+from tools.primitives.run_shell_script import run_shell_script
+from tools.primitives.stat_path import stat_path
+from tools.primitives.write_file import write_file
 
 # Load data from stdin
 data_transfered = json.loads(sys.stdin.readline())

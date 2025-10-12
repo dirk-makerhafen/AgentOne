@@ -32,8 +32,11 @@ def list_directory(path, recursive=False, filter={}):
             return {'status': 'error', 'message': 'Path not provided'}
 
         base_path = Path(path)
-        if not base_path.is_dir():
+        if not base_path.exists():
             return {'status': 'error', 'message': f"Directory not found: {path}"}
+
+        if not base_path.is_dir():
+            return {'status': 'error', 'message': f"Not a Directory, path is file: {path}"}
 
         items = []
 

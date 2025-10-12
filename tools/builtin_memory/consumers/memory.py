@@ -6,9 +6,6 @@ from ui.router import register_handler
 
 @register_handler('memoryitem_update')
 def handle_memoryitem_update(consumer, track=None, layer=None, index=None, content=None, instance_pk=None):
-    if not all([track, layer, index, content, instance_pk]):
-        return # Fail silently
-
     try:
         agent_instance = AgentInstance.objects.get(pk=instance_pk)
         # Directly update the memory item instead of going through the tool
@@ -23,9 +20,6 @@ def handle_memoryitem_update(consumer, track=None, layer=None, index=None, conte
         if item.content != content:
             item.content = content
             item.save()
-
-    except (AgentInstance.DoesNotExist, MemoryItem.DoesNotExist, ValueError):
-        pass # Fail silently
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update memory item: {str(e)}'}))
 

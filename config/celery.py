@@ -18,7 +18,7 @@ def debug_task(self):
 # Celery Beat scheduled tasks
 app.conf.beat_schedule = {
     'poll-remote-executors-every-30-seconds': {
-        'task': 'systems.tasks.poll_remote_executors_for_heartbeat',
+        'task': 'systems.tasks.heartbeat.poll_remote_executors_for_heartbeat',
         'schedule': 30.0, # Run every 30 seconds
         'options': {
             'queue': 'celery' # Ensure this runs on the main server's default queue

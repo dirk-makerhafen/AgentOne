@@ -33,7 +33,7 @@ def install_tool(tool_installation_id, agent_instance_pk=None):
     """
     tool_installation = ToolInstallation.objects.get(pk=tool_installation_id)
     _log(tool_installation, 'info', 'Installation process started.')
-    tool_installation.status = ToolInstallation.Status.INSTALLING
+    tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.INSTALLING
     tool_installation.save()
 
     system = tool_installation.system
@@ -49,13 +49,13 @@ def install_tool(tool_installation_id, agent_instance_pk=None):
             _log(tool_installation, 'info', f'ToolInstallation linked to AgentInstance {agent_instance_pk}.')
         except AgentInstance.DoesNotExist:
             _log(tool_installation, 'error', f'AgentInstance with pk {agent_instance_pk} not found for dedicated tool installation.')
-            tool_installation.status = ToolInstallation.Status.ERROR
+            tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
             tool_installation.save()
             return
 
     if not system or not tool_def or not tool_def.repository_url:
         _log(tool_installation, 'error', 'System, ToolDefinition, or Repository URL not found.')
-        tool_installation.status = ToolInstallation.Status.ERROR
+        tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
         tool_installation.save()
         return
 
@@ -64,7 +64,7 @@ def install_tool(tool_installation_id, agent_instance_pk=None):
     if not (home_dir_result.get('status') == 'success' and 'vars' in home_dir_result and 'home' in home_dir_result['vars']):
         error_msg = f"Could not determine home directory on remote system: {home_dir_result.get('message')}"
         _log(tool_installation, 'error', error_msg)
-        tool_installation.status = ToolInstallation.Status.ERROR
+        tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
         tool_installation.save()
         return
 
@@ -83,7 +83,7 @@ def install_tool(tool_installation_id, agent_instance_pk=None):
     mkdir_result = mkdir(system=system, path=str(install_path), parents=True)
     if mkdir_result.get('status') == 'error':
         _log(tool_installation, 'error', f"Failed to create directory: {mkdir_result.get('message')}")
-        tool_installation.status = ToolInstallation.Status.ERROR
+        tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
         tool_installation.save()
         return
 
@@ -92,7 +92,7 @@ def install_tool(tool_installation_id, agent_instance_pk=None):
     if clone_result.get('return_code') != 0:
         error_msg = clone_result.get('stderr') or clone_result.get('stdout')
         _log(tool_installation, 'error', f"Git clone failed: {clone_result}")
-        tool_installation.status = ToolInstallation.Status.ERROR
+        tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
         tool_installation.save()
         return
 
@@ -128,10 +128,10 @@ def install_tool(tool_installation_id, agent_instance_pk=None):
             build_successful = False
 
     if build_successful:
-        tool_installation.status = ToolInstallation.Status.INSTALLED
+        tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.INSTALLED
         _log(tool_installation, 'info', "Installation process completed successfully.")
     else:
-        tool_installation.status = ToolInstallation.Status.ERROR
+        tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
         _log(tool_installation, 'error', "Installation process failed during build step.")
     tool_installation.save()
 
