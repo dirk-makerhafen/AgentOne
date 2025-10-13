@@ -171,14 +171,14 @@
     text-transform: uppercase;
 }
 
-.systems-table .status-online { background-color: #28a745; } /* Green */
-.systems-table .status-offline { background-color: #dc3545; } /* Red */
-.systems-table .status-running { background-color: #17a2b8; } /* Info Blue */
-.systems-table .status-starting { background-color: #ffc107; color: #333; } /* Yellow */
+.systems-table .status-ONLINE { background-color: #28a745; } /* Green */
+.systems-table .status-OFFLINE { background-color: #dc3545; } /* Red */
+.systems-table .status-RUNNING { background-color: #17a2b8; } /* Info Blue */
+.systems-table .status-STARTING { background-color: #ffc107; color: #333; } /* Yellow */
 .systems-table .status-n/a { background-color: #6c757d; } /* Grey */
-.systems-table .status-success { background-color: #28a745; } /* Green */
-.systems-table .status-failed { background-color: #dc3545; } /* Red */
-.systems-table .status-pending { background-color: #ffc107; color: #333; } /* Yellow */
+.systems-table .status-SUCCESS { background-color: #28a745; } /* Green */
+.systems-table .status-FAILED { background-color: #dc3545; } /* Red */
+.systems-table .status-PENDING { background-color: #ffc107; color: #333; } /* Yellow */
 .systems-table .status-in-progress { background-color: #17a2b8; } /* Info Blue */
 
 /* Actions buttons in table */

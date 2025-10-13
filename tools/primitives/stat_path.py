@@ -1,10 +1,10 @@
 
 from pathlib import Path
-from ._dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_detached
 
 
 
-@dispatched_primitive_operation
+@dispatched_detached
 def stat_path(path):
     """
     Gets metadata for a file or directory.

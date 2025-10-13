@@ -1,5 +1,5 @@
 from celery import shared_task
-from tools.primitives import manage_tool_process
+from tools.primitives import call_tool_session
 from tools.definitions.models.tool_installation import ToolInstallation
 from tools.definitions.models.tool_installation_log import ToolInstallationLog
 
@@ -25,7 +25,7 @@ def get_tool_status(tool_installation_id):
     system = tool_installation.system
     if not system: return
 
-    result = manage_tool_process(system=system, action='list_tools', process_id=str(tool_installation.pk))
+    result = call_tool_session(system=system, function_name='list_tools', process_id=tool_installation.pk)
     if result.get('status') != 'success' and tool_installation.status == ToolInstallation.ToolInstallationStatusChoices.INSTALLED:
         _log(tool_installation, 'warning', f"Health check failed for running tool: {result.get('message')}")
         tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR

@@ -2,7 +2,7 @@ from celery import shared_task
 from django.db import transaction
 
 from tools.instances.models.tool_instance import ToolInstance
-from tools.primitives import rm, manage_tool_process
+from tools.primitives import rm, stop_tool_process
 from tools.definitions.models.tool_installation import ToolInstallation
 from tools.definitions.models.tool_installation_log import ToolInstallationLog
 
@@ -44,7 +44,7 @@ def uninstall_tool(tool_installation_id, delete_record=True):
         _log(tool_installation, 'info', f"Found {running_instances.count()} running instance(s) to stop.")
         for toolinstance in running_instances:
             _log(tool_installation, 'info', f"Stopping instance {toolinstance.pk} (PID: {toolinstance.process_id}).")
-            stop_result = manage_tool_process(system=system, action='stop', process_id=str(toolinstance.pk))
+            stop_result = stop_tool_process(system=system, process_id=toolinstance.pk)
             if stop_result.get('status') == 'success':
                 _log(tool_installation, 'info', f"Instance {toolinstance.pk} stopped successfully.")
                 toolinstance.status = ToolInstance.ToolInstanceStatusChoices.STOPPED

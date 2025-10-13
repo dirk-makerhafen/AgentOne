@@ -70,6 +70,7 @@ class ToolDefinition(BaseModel):
             'repository_url': self.repository_url,
             'manifest': self.manifest,
             'status': self.status,
+            'status_display': self.get_status_display(),
             'manifest_version': self.manifest_version,
             'available_on_all_systems': self.available_on_all_systems,
             'available_on_systems': list(self.available_on_systems.values_list('pk', flat=True)),

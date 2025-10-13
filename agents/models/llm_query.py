@@ -32,6 +32,7 @@ class LLMQuery(BaseModel):
             "id": self.id,
             "created_at": self.created_at.isoformat(),
             "status": self.status,
+            'status_display': self.get_status_display(),
             "model_name": self.aimodel.name,
             "total_tokens": self.data.get("tokens", 0),
             "usage": self.data.get("usage", {}),

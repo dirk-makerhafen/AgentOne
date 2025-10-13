@@ -7,11 +7,11 @@ import pathlib
 import traceback
 import subprocess
 import sys, subprocess, json, os
-from ._dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_detached
 
 
-@dispatched_primitive_operation
-def run_python_code(python_code_string: str, locals_dict={}, locals_to_return=[], workingdir=None):
+@dispatched_detached
+def run_python_code(python_code_string: str, locals_dict={}, locals_to_return=[], workingdir=None, env=None):
     """
     Executes Python code in an isolated subprocess, with its own working directory.
     Adds the original working directory to sys.path so local modules can still be imported.
@@ -19,6 +19,9 @@ def run_python_code(python_code_string: str, locals_dict={}, locals_to_return=[]
     """
     script_dir = pathlib.Path(__file__).parent.resolve()
     script_file = os.path.join(script_dir, "_python_runner.py")
+    full_env = {"PATH": os.environ["PATH"]} 
+    if env:
+        full_env.update(env)
     try:
         # First line: locals_dict as JSON, then the user code itself
         stdin_data = json.dumps({
@@ -29,7 +32,8 @@ def run_python_code(python_code_string: str, locals_dict={}, locals_to_return=[]
             cwd = workingdir or os.getcwd(),
             input = stdin_data,
             capture_output = True,
-            text = True
+            text = True,
+            env=full_env,
         )
         if proc.returncode != 0:
             return {
@@ -70,7 +74,7 @@ def run_python_code_old(python_code_string: str, locals_dict={}, locals_to_retur
         'from copy import deepcopy\n' \
         'from pathlib import Path\n' \
         'from tools.primitives import *\n' \
-        'from executor import primitives\n', common_globals)
+        '\n', common_globals)
     except Exception as e:
         return {'status': 'error', 'message':  f'Error during common imports setup: {e}'}
 

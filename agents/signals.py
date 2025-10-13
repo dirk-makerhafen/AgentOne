@@ -37,7 +37,7 @@ def handle_agent_tool_change(sender, instance, action, reverse, model, pk_set, *
                 )
                 if created:
                     log_to_clients(f"  - Creating and starting installation for instance {agent_instance.pk} on system {agent_instance.system.name}", level='info', users=agent_owners)
-                    workflow = chain(install_tool.s(installation.pk), start_tool.s(installation.pk))
+                    workflow = chain(install_tool.s(installation.pk), start_tool.s())
                     workflow.delay()
         elif action == "post_remove":
             log_to_clients(f"LIFECYCLE: Dedicated tool '{tool_def.name}' removed from Agent '{instance.name}'. Uninstalling from all instances.", level='info', users=agent_owners)

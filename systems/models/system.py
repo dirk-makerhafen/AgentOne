@@ -39,6 +39,7 @@ class System(BaseModel):
             'name': self.name,
             'description': self.description,
             'status': self.status,
+            'status_display': self.get_status_display(),
             'last_heartbeat': self.last_heartbeat.isoformat() if self.last_heartbeat else None,
             'executor_mode': self.executor_mode,
             'executor_url': self.executor_url,

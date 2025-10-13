@@ -33,7 +33,7 @@ def handle_agent_create(consumer, name='New Agent', description='', available_to
         # print("new_agent.available_tools", new_agent.available_tools)
         new_agent.save()
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create agent: {e}{traceback.format_exc()}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create agent: {e} {traceback.format_exc()}'}))
 
 @register_handler('agent_update')
 def handle_agent_update(consumer, agent_pk, name=None, description=None, available_tool_ids=None):
@@ -58,7 +58,7 @@ def handle_agent_update(consumer, agent_pk, name=None, description=None, availab
     except Agent.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Agent with pk {agent_pk} not found or permission denied.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update agent: {e}{traceback.format_exc()}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update agent: {e} {traceback.format_exc()}'}))
  
 @register_handler('agent_delete')
 def handle_agent_delete(consumer, agent_pk):

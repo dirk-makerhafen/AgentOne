@@ -4,11 +4,11 @@ import traceback
 import subprocess
 import tempfile
 import sys, subprocess, tempfile, os
-from ._dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_detached
 
 
 
-@dispatched_primitive_operation
+@dispatched_detached
 def run_shell_script(script: str, interpreter: str = "auto", env: dict = None, timeout: int = 60, cwd: str= None):
     """
     Executes a shell script using the specified interpreter, with auto-detection for Windows.
@@ -58,7 +58,7 @@ def run_shell_script(script: str, interpreter: str = "auto", env: dict = None, t
             return {'status': 'error', 'message': f"Unsupported interpreter: {interpreter}"}
 
         # Execute the command
-        full_env = {} #os.environ.copy()
+        full_env = {"PATH": os.environ["PATH"]} 
         if env:
             full_env.update(env)
 

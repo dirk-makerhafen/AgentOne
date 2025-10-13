@@ -141,7 +141,7 @@ class Command(BaseCommand):
         self.stdout.write(f" - Daphne listening on: {self.style.SUCCESS(listen_address + ':' + listen_port)}")
         self.stdout.write(f" - Celery Worker & Beat starting...")
         self.stdout.write(f"Type {self.style.ERROR('.exit')} and press Enter to quit.")
-        log_level = "WARNING"
+        log_level = "DEBUG"
         commands = {
             "daphne": ['daphne', '-b', listen_address, '-p', listen_port, 'config.asgi:application'],
             "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '10'],

@@ -7,11 +7,11 @@
 .deployment-status .status-label {
     font-weight: bold;
 }
-.deployment-status .status-value.status-success {
+.deployment-status .status-value.status-SUCCESS {
     color: #28a745; /* Green */
     font-weight: bold;
 }
-.deployment-status .status-value.status-failed {
+.deployment-status .status-value.status-FAILED {
     color: #dc3545; /* Red */
     font-weight: bold;
 }
@@ -109,12 +109,12 @@
     margin-right: 8px;
     flex-shrink: 0;
 }
-.status-indicator.status-online { background-color: #28a745; }
-.status-indicator.status-offline { background-color: #dc3545; }
-.status-indicator.status-maintenance { background-color: #ffc107; }
-.system-status.status-online { color: #28a745; }
-.system-status.status-offline { color: #dc3545; }
-.system-status.status-maintenance { color: #ffc107; }
+.status-indicator.status-ONLINE { background-color: #28a745; }
+.status-indicator.status-OFFLINE { background-color: #dc3545; }
+.status-indicator.status-MAINTENANCE { background-color: #ffc107; }
+.system-status.status-ONLINE { color: #28a745; }
+.system-status.status-OFFLINE { color: #dc3545; }
+.system-status.status-MAINTENANCE { color: #ffc107; }
 .system-name {
     font-weight: bold;
     flex-grow: 1;
@@ -200,10 +200,10 @@
 
 /* Status specific colors */
 .tool-installation-status.status-not-installed { background-color: #f0ad4e; color: #fff; } /* Orange */
-.tool-installation-status.status-installing { background-color: #5bc0de; color: #fff; animation: pulse 1.5s infinite; } /* Blue */
-.tool-installation-status.status-running { background-color: #5cb85c; color: #fff; } /* Green */
-.tool-installation-status.status-stopped { background-color: #d9534f; color: #fff; } /* Red */
-.tool-installation-status.status-error { background-color: #f44336; color: #fff; } /* Deeper Red */
+.tool-installation-status.status-INSTALLING { background-color: #5bc0de; color: #fff; animation: pulse 1.5s infinite; } /* Blue */
+.tool-installation-status.status-RUNNING { background-color: #5cb85c; color: #fff; } /* Green */
+.tool-installation-status.status-STOPPED { background-color: #d9534f; color: #fff; } /* Red */
+.tool-installation-status.status-ERROR { background-color: #f44336; color: #fff; } /* Deeper Red */
 
 .tool-installation-actions {
     margin-left: auto; /* Push actions to the right */

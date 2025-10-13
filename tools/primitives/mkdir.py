@@ -1,8 +1,8 @@
 import os
 import traceback
-from ._dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_detached
 
-@dispatched_primitive_operation
+@dispatched_detached
 def mkdir(path, parents=False, exist_ok=True):
     """
     Creates a directory, including any necessary parent directories.

@@ -25,8 +25,8 @@ def handle_tool_definition_update(sender, instance, created, **kwargs):
         log_to_clients(f"  - Queueing update for installation {installation.pk} on system {installation.system.name}.", level='info')
         workflow = chain(
             uninstall_tool.s(tool_installation_id=installation.pk, delete_record=False),
-            install_tool.s(tool_installation_id=installation.pk),
-            start_tool.s(tool_installation_id=installation.pk)
+            install_tool.s(),
+            start_tool.s()
         )
         workflow.delay()
 

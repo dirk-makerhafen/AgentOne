@@ -1,8 +1,8 @@
 from pathlib import Path
 import traceback
-from ._dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_detached
 
-@dispatched_primitive_operation
+@dispatched_detached
 def write_file(path, content):
     """
     Writes (overwrites) content to a file. Creates parent directories if they don't exist.

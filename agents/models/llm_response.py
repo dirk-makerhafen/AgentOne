@@ -5,7 +5,7 @@ class LLMResponse(BaseModel):
     class LLMResponseStatusChoices(models.TextChoices):
         PENDING = 'PENDING', 'Pending'
         ACTIVE = 'ACTIVE', 'Active'
-        SUCCESS = 'SUCCESS', 'successfull'
+        SUCCESS = 'SUCCESS', 'Successfull'
         FAILED = 'FAILED', 'Failed'
 
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="llmResponses")
@@ -20,7 +20,7 @@ class LLMResponse(BaseModel):
         self.completion_tokens = usage_data.get("completion_tokens", 0)
         self.prompt_tokens = usage_data.get("prompt_tokens", 0)
         super().save(send_to_client=False, *args, **kwargs)
-        if self.status=="success" and self.llmQuery:
+        if self.status==LLMResponse.LLMResponseStatusChoices.SUCCESS and self.llmQuery:
             query = self.llmQuery
             estimated_total = query.data.get("tokens", 0)
             actual_total = self.prompt_tokens
@@ -48,7 +48,8 @@ class LLMResponse(BaseModel):
             "object": "LLMResponse",
             "id": self.id,
             "created_at": self.created_at.isoformat(),
-            "status": "completed",
+            "status": self.status,
+            'status_display': self.get_status_display(),
             "model_name": self.llmQuery.aimodel.name if self.llmQuery else "N/A",
             "total_tokens": total_tokens,
             "usage": usage_data,

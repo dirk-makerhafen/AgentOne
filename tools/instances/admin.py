@@ -3,7 +3,7 @@ from tools.instances.models.tool_instance import ToolInstance
 
 @admin.register(ToolInstance)
 class ToolInstanceAdmin(admin.ModelAdmin):
-    list_display = ('tool_installation', 'status', 'process_id', 'endpoint_url', 'created_at')
+    list_display = ('tool_installation', 'status', 'process_id', 'endpoint_url', 'created_at', 'data')
     list_filter = ('status', 'tool_installation__system', 'tool_installation__tool_definition')
     search_fields = (
         'tool_installation__tool_definition__name',

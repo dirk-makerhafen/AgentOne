@@ -5,7 +5,7 @@ from fastapi.security.api_key import APIKeyHeader
 from fastapi import FastAPI, Depends, HTTPException, status, Security
 from tools.primitives.run_python_code import run_python_code
 from tools.primitives.run_shell_script import run_shell_script
-
+from tools.primitives import start_tool_process, stop_tool_process, call_tool_session
 import json
 import sys
 import socket
@@ -21,7 +21,6 @@ if not APIKEY:
     print("FATAL: CARNA_CLIENT_API_KEY environment variable not set. Cannot start.")
     sys.exit(1)
 
-
 class ScriptExecution(BaseModel):
     source: str
     locals_dict: dict = {}
@@ -31,6 +30,10 @@ class ShellExecution(BaseModel):
     command: str
     env: dict[str, str] = {}
     timeout: int = 60
+
+class DirectExecution(BaseModel):
+    function_name: str
+    kwargs: dict
 
 app = FastAPI(title=HOSTNAME, description="A lightweight agent for remote python and shell execution.", version="1.0.0")
 
@@ -55,6 +58,12 @@ async def execute_python_code(item: ScriptExecution):
     result = run_python_code(python_code_string = item.source, locals_dict=item.locals_dict, locals_to_return=item.locals_to_return)
     return JSONResponse(content=result)
 
+@app.post("/direct", dependencies=[Depends(get_api_key)])
+async def direct(item: DirectExecution):
+    print(item)
+    f = globals().get(item.function_name, lambda *args,**kwargs: {"status": "error", "message": f"unkown function '{item.function_name}'"})
+    result = f(**item.kwargs)
+    return JSONResponse(content=result)
 
 if __name__ == "__main__":
     import uvicorn

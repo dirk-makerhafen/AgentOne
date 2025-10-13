@@ -16,7 +16,7 @@ if str(project_root) not in sys.path:
 # Explicitly import primitive functions using their absolute paths from the project root
 from tools.primitives.append_file import append_file
 from tools.primitives.list_directory import list_directory
-from tools.primitives.manage_tool_process import manage_tool_process
+from tools.primitives.manage_tool_process import start_tool_process, stop_tool_process, call_tool_session
 from tools.primitives.mkdir import mkdir
 from tools.primitives.read_file import read_file
 from tools.primitives.rm import rm

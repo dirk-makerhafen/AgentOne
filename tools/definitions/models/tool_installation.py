@@ -43,9 +43,6 @@ class ToolInstallation(BaseModel):
             self.send_object_to_clients()
 
     def as_client_dict(self):
-        # Find the latest running or stopped instance for this installation to report to the client
-        # This logic needs to be updated to consider max_parallel_instances for client display
-        # For now, we still report the *latest* status, but the client might need to query for all running instances.
         latest_instance = self.instances.order_by('-created_at').first()
 
         return {
@@ -57,14 +54,16 @@ class ToolInstallation(BaseModel):
             'system_name': self.system.name,
             'agent_instance_id': self.agent_instance.pk if self.agent_instance else None,
             'status': self.status,
+            'status_display': self.get_status_display(),
             'local_path': self.local_path,
-            'max_parallel_instances': self.max_parallel_instances, # Add the new field
+            'max_parallel_instances': self.max_parallel_instances,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
-            # Include details from the latest associated instance
             'instance_status': latest_instance.status if latest_instance else 'not_run',
             'instance_id': latest_instance.pk if latest_instance else None,
+            'instances': [x.as_client_dict() for x in self.instances.all()]
         }
+
     def get_delete_broadcast_payload(self):
         return {
             'object': 'ToolInstallationDeleted',

@@ -1,7 +1,7 @@
 from pathlib import Path
-from ._dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_detached
 
-@dispatched_primitive_operation
+@dispatched_detached
 def read_file(path):
     """
     Reads the content of a file.

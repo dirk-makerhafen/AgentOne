@@ -1,7 +1,7 @@
 from pathlib import Path
-from ._dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_detached
 
-@dispatched_primitive_operation
+@dispatched_detached
 def append_file(path, content):
     """
     Appends content to a file. Creates the file and parent directories if they don't exist.

@@ -1,60 +1,48 @@
 import json
 from typing import Any, Dict, List
-from tools.primitives import manage_tool_process
-from tools.instances.models.tool_instance import ToolInstance
+from systems.models.system import System
+from tools.primitives.manage_tool_process import call_tool_session
+from mcp import ClientSession
 
-class MCPClient:
+class MCPClient(ClientSession):
     """
     A thin proxy client that dispatches MCP calls to the stateful client
     living on the remote executor via the 'manage_tool_process' primitive.
     """
-    def __init__(self, name: str, tool_instance: ToolInstance, agent_instance):
-        self.name = name
+    def __init__(self, tool_instance, system: System):
         self.tool_instance = tool_instance
-        self.agent_instance = agent_instance
-        self.system = agent_instance.system
-        
-        if not self.system:
-            raise ValueError("MCPClient requires an agent_instance with an assigned system.")
+        self.system = system
+        self.name = self.tool_instance.tool_installation.tool_definition.name
         if not tool_instance.tool_installation:
             raise ValueError("ToolInstance is not linked to a ToolInstallation.")
             
-        self.process_id = str(tool_instance.tool_installation.pk)
+    def __getattribute__(self, name):
+        print("getattr", name)
+        return super().__getattribute__(name)
+    
+    def _remote_call(self, function_name, kwargs={}):
+        return call_tool_session(system=self.system, function_name=function_name, process_id=self.tool_instance.pk, kwargs=kwargs)
 
     def list_tools(self) -> List[Dict[str, Any]]:
-        """Dispatches a 'list_tools' call to the remote executor."""
-        result = manage_tool_process(
-            system=self.system,
-            action='list_tools',
-            process_id=self.process_id
-        )
+        return self._remote_call("list_tools")
+    
+    def list_prompts(self, cursor = None):
+        return self._remote_call("list_prompts", kwargs={"cursor":cursor})
+    
+    def list_resources(self, cursor = None):
+        return self._remote_call("list_resources", kwargs={"cursor":cursor})
+    
+    def list_resource_templates(self, cursor = None):
+        return self._remote_call("list_resource_templates", kwargs={"cursor":cursor})
 
-        if result.get('status') == 'success' and result.get('data'):
-            mcp_tools_raw = result['data'].get('tools', [])
-            # Store the raw tools in the ToolInstance model for caching/display
-            self.tool_instance.tools = mcp_tools_raw
-            self.tool_instance.save(send_to_client=True)
-            return self._format_tools_for_openai(mcp_tools_raw)
-        else:
-            print(f"Error listing tools for {self.name}: {result.get('message')}")
-            return []
+    def read_resource(self, uri):
+        return self._remote_call("read_resource", kwargs={"uri":uri})
 
-    def invoke_tool(self, tool_name: str, kwargs: Dict[str, Any]):
-        """Dispatches an 'invoke_tool' call to the remote executor."""
-        method_name = tool_name.split('.', 1)[-1]
+    def get_prompt(self, name, arguments = None):
+        return self._remote_call('get_prompt', kwargs={"name":name, "arguments": arguments})
 
-        result = manage_tool_process(
-            system=self.system,
-            action='invoke_tool',
-            process_id=self.process_id,
-            tool_name=method_name,
-            tool_kwargs=kwargs
-        )
-
-        if result.get('status') == 'success':
-            return True, json.dumps(result.get('data', ''))
-        else:
-            return False, f"Error invoking tool {tool_name}: {result.get('message')}"
+    def call_tool(self, name, arguments = None, read_timeout_seconds = None, progress_callback = None):  
+        return self._remote_call('call_tool', kwargs={"name": name, "arguments": arguments, "read_timeout_seconds":read_timeout_seconds})
 
     def _format_tools_for_openai(self, mcp_tools: list) -> List[Dict[str, Any]]:
         """Converts a list of raw MCP tool definitions to the OpenAI function tool format."""

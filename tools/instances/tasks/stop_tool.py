@@ -3,7 +3,8 @@ from django.db import transaction
 
 from tools.primitives import (
     rm,
-    manage_tool_process
+    manage_tool_process,
+    stop_tool_process
 )
 import json
 from pathlib import Path
@@ -47,7 +48,7 @@ def stop_tool(tool_instance_id):
         return
 
     _log(tool_installation, 'info', f"Requesting client and process stop for ToolInstance ID: {tool_instance.pk}.", tool_instance)
-    stop_result = manage_tool_process(system=system, action='stop', process_id=str(tool_instance.pk))
+    stop_result = stop_tool_process(system=system,process_id=tool_instance.pk)
 
     if stop_result.get('status') == 'success':
         _log(tool_installation, 'info', f"Executor confirmed stop for ToolInstance {tool_instance.pk}.", tool_instance)

@@ -3,7 +3,8 @@ from django.db import transaction
 
 from tools.primitives import (
     run_python_code,
-    manage_tool_process
+    manage_tool_process,
+    start_tool_process
 )
 import json
 from pathlib import Path
@@ -62,9 +63,9 @@ def start_tool(tool_installation_id):
 
     transport_type = tool_def.transport_type
     tool_manifest_server_config = tool_def.manifest.get('server', {})
-    tool_command = tool_manifest_server_config.get('command')
-    tool_args = tool_manifest_server_config.get('args', [])
-    tool_env_vars = tool_manifest_server_config.get('env', {})
+    tool_command = tool_manifest_server_config.get('mcp_config').get('command')
+    tool_args = tool_manifest_server_config.get('mcp_config').get('args', [])
+    tool_env_vars = tool_manifest_server_config.get('mcp_config').get('env', {})
 
     if not tool_command:
         _log(tool_installation, 'error', 'Tool manifest is missing "server.command".', tool_instance)
@@ -109,10 +110,9 @@ def start_tool(tool_installation_id):
 
     _log(tool_installation, 'info', f"Requesting tool start with command: '{tool_command}' and args: {processed_args}", tool_instance)
     
-    start_result = manage_tool_process(
+    start_result = start_tool_process(
         system=system,
-        action='start',
-        process_id=str(tool_instance.pk), # Use ToolInstance PK as unique process ID
+        process_id=tool_instance.pk, # Use ToolInstance PK as unique process ID
         command=tool_command,
         args=processed_args,
         cwd=local_path_str,
@@ -127,8 +127,9 @@ def start_tool(tool_installation_id):
         tool_instance.last_error = error_message
         tool_instance.save()
         return
+    _log(tool_installation, 'debug',  json.dumps(start_result), tool_instance)
 
-    _log(tool_installation, 'info', "Tool client started successfully on executor.", tool_instance)
+    _log(tool_installation, 'info',  start_result.get('message', "Tool client started successfully on executor."), tool_instance)
 
     # Update ToolInstance with runtime details
     tool_instance.process_id = start_result.get('process_id') # The actual PID from the executor

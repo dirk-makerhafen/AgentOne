@@ -133,15 +133,25 @@
 
 <script id="TabSystemsToolInstanceItemTemplate" type="text/x-handlebars-template">
     <div class="tool-instance-item" data-instance-id="{{id}}">
-        <span class="instance-details">
-            Instance #{{id}} (PID: {{process_id}}) - Started: {{created_at_display}}
-        </span>
-        <span class="instance-status-tag instance-status-{{status_class}}">{{status}}</span>
-        <div class="instance-actions">
-            <button class="btn btn-xs btn-warning stop-tool-instance-btn" title="Stop this instance" onclick="toolInstallationStop(event, '{{id}}')">
-                <i class="fa fa-stop"></i> Stop
-            </button>
+        <div class="tool-instance-item-main-line">
+            <span class="instance-details">
+                Instance #{{id}} (PID: {{process_id}}) - Started: {{created_at_display}}
+            </span>
+            <span class="instance-status-tag instance-status-{{status_class}}">{{status}}</span>
+            <div class="instance-actions">
+                {{#if raw_data}}
+                    <button class="btn btn-xs btn-primary view-mcp-details-btn" title="View MCP Details" onclick="toggleElementVisibility('mcp-details-{{id}}')"><i class="fa fa-info-circle"></i> Details</button>
+                {{/if}}
+                <button class="btn btn-xs btn-warning stop-tool-instance-btn" title="Stop this instance" onclick="toolInstallationStop(event, '{{id}}')">
+                    <i class="fa fa-stop"></i> Stop
+                </button>
+            </div>
         </div>
+        {{#if raw_data}}
+            <div id="mcp-details-{{id}}" class="mcp-details-container">
+                <pre>{{raw_data}}</pre>
+            </div>
+        {{/if}}
     </div>
 </script>
 
@@ -210,4 +220,5 @@
     </div>
 </div>
 </script>
+
 {% endverbatim %}

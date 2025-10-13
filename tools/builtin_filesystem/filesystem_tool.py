@@ -41,7 +41,6 @@ class FilesystemTool(BaseTool):
         except Exception as e:
             return False, {"status": "error", "message": f"An unexpected error occurred: {type(e).__name__}: {e}\n{traceback.format_exc()}"}
     
-
     def fs_unload(self, toolCall, path):
         try:
             abs_path, rel_path = clean_path(toolCall.agentInstance.workingdir, path)

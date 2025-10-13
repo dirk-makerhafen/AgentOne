@@ -2,14 +2,13 @@ import json
 from django.core.exceptions import ValidationError
 from tools.instances.models.tool_instance import ToolInstance
 from ui.router import register_handler
-from tools.instances.tasks.refresh_tool import refresh_tool_instance
+from tools.instances.tasks.fetch_mcp_tool_details import fetch_mcp_tool_details
 
 
 @register_handler('toolinstance_create')
 def handle_toolinstance_create(consumer, name, endpoint_url=None):
     try:
         server = ToolInstance.objects.create(name=name, endpoint_url=endpoint_url, transport_type='tcp')
-        refresh_tool_instance.delay(server.id)
     except (ValidationError, Exception) as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': str(e)}))
 
@@ -31,13 +30,8 @@ def handle_toolinstance_update(consumer, id, name=None, endpoint_url=None, enabl
 def handle_toolinstance_delete(consumer, id):
     try:
         tool_instance = ToolInstance.objects.get(id=id)
-        # The model's delete method will now handle broadcasting the deletion
         tool_instance.delete()
     except ToolInstance.DoesNotExist:
-        # If the instance doesn't exist, it's already deleted, so no action needed.
-        # The UI update for an already-deleted item will be handled by the model's
-        # delete signal (or lack thereof if not found) when a list refresh occurs,
-        # or by an explicit deletion message if the PK is known.
         pass
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Failed to delete tool instance: {str(e)}"}))
@@ -53,7 +47,7 @@ def handle_toolinstance_list(consumer, **kwargs):
 @register_handler('toolinstance_tools_refresh')
 def handle_toolinstance_tools_refresh(consumer, id):
     try:
-        refresh_tool_instance.delay(id)
+        fetch_mcp_tool_details.delay(id)
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Failed to queue refresh task: {e}"}))
 

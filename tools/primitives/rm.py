@@ -2,9 +2,9 @@ import os
 from pathlib import Path
 import shutil
 import traceback
-from ._dispatch_decorator import dispatched_primitive_operation
+from ._dispatch_decorator import dispatched_detached
 
-@dispatched_primitive_operation
+@dispatched_detached
 def rm(path, recursive=False):
     """
     Deletes a file or directory.

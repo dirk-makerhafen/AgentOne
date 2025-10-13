@@ -51,7 +51,6 @@ class MemoryItem(BaseModel):
     def content(self, data): self.data["value"] = data  
 
 
-
     def as_client_dict(self):
         return {
             'object': 'MemoryItem',

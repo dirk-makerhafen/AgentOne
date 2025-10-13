@@ -8,7 +8,7 @@ def test_manage_tool_process_validation():
     validates the presence of required arguments for the 'start' action
     BEFORE dispatching to the async function.
     """
-    from tools.primitives.manage_tool_process import manage_tool_process
+    from tools.primitives.manage_tool_process import managed_processes
     
     # We call the function with missing arguments.
     # We expect it to fail validation immediately.

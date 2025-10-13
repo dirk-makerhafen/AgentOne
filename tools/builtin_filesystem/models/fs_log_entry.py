@@ -107,10 +107,6 @@ class FsLogEntryManager(models.Manager):
     
 
 
-
-
-
-
 class FsLogEntry(BaseModel):
 
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name='fsLogEntries')
