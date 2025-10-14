@@ -13,69 +13,44 @@ class ToolInstance(BaseModel):
         STOPPING = 'stopping', 'Stopping'
         STOPPED = 'stopped', 'Stopped'
         ERROR = 'error', 'Error'
-
-    tool_installation = models.ForeignKey(
-        "definitions.ToolInstallation",
-        on_delete=models.CASCADE,
-        related_name='instances',
-        help_text="The ToolInstallation this instance belongs to."
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=ToolInstanceStatusChoices.choices,
-        default=ToolInstanceStatusChoices.STARTING,
-        help_text="Current runtime status of the tool instance."
-    )
-    process_id = models.IntegerField(
-        blank=True,
-        null=True,
-        help_text="The PID of the running tool process on the remote system."
-    )
-    endpoint_url = models.URLField(
-        max_length=2000,
-        validators=[URLValidator(schemes=['http', 'https'])],
-        help_text="The full URL of the tool's endpoint (if applicable).",
-        blank=True,
-        null=True
-    )
-    last_error = models.TextField(
-        blank=True,
-        null=True,
-        help_text="Stores the last runtime error message."
-    )
+    tool_installation = models.ForeignKey("definitions.ToolInstallation", on_delete=models.CASCADE, related_name='instances', help_text="The ToolInstallation this instance belongs to.")
+    status = models.CharField(max_length=20, choices=ToolInstanceStatusChoices.choices, default=ToolInstanceStatusChoices.STARTING, help_text="Current runtime status of the tool instance.")
+    process_id = models.IntegerField( blank=True, null=True, help_text="The PID of the running tool process on the remote system.")
+    endpoint_url = models.URLField(max_length=2000, validators=[URLValidator(schemes=['http', 'https'])], help_text="The full URL of the tool's endpoint (if applicable).", blank=True, null=True)
+    last_error = models.TextField(blank=True, null=True, help_text="Stores the last runtime error message.")
 
     @property
-    def mcp_tools(self):
-        return self.data.get("mcp_tools", [])
-    @mcp_tools.setter
-    def mcp_tools(self, tools):
-        self.data["mcp_tools"] = tools
+    def tools(self):
+        return self.data.get("tools", [])
+    @tools.setter
+    def tools(self, new_tools):
+        self.data["tools"] = new_tools
     
     @property
-    def mcp_prompts(self):
-        return self.data.get("mcp_prompts", [])
-    @mcp_prompts.setter
-    def mcp_prompts(self, prompts):
-        self.data["mcp_prompts"] = prompts
+    def prompts(self):
+        return self.data.get("prompts", [])
+    @prompts.setter
+    def prompts(self, new_prompts):
+        self.data["prompts"] = new_prompts
     
     @property
-    def mcp_templates(self):
-        return self.data.get("mcp_templates", [])
-    @mcp_templates.setter
-    def mcp_templates(self, templates):
-        self.data["mcp_templates"] = templates
+    def templates(self):
+        return self.data.get("templates", [])
+    @templates.setter
+    def templates(self, new_templates):
+        self.data["templates"] = new_templates
     
     @property
-    def mcp_resources(self):
-        return self.data.get("mcp_resources", [])
-    @mcp_resources.setter
-    def mcp_resources(self, tools):
-        self.data["mcp_resources"] = tools
+    def resources(self):
+        return self.data.get("resources", [])
+    @resources.setter
+    def resources(self, new_resources):
+        self.data["resources"] = new_resources
 
     @property
     def mcp_client(self):
         if not hasattr(self, "_mcpclient"):
-            self._mcp_client = MCPClient(tool_instance=self, system=self.tool_installation.system)
+            self._mcp_client = MCPClient(system=self.tool_installation.system, process_id=self.pk )
         return self._mcp_client
     
     class Meta:

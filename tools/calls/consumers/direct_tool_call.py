@@ -17,14 +17,13 @@ def handle_toolcall_direct(consumer, instance_pk, tool_calls=None):
         function_name = tc_data.get('function_name')
         arguments = tc_data.get('arguments')
         if function_name and arguments is not None:
-            if agent_instance.get_tool_function(function_name):
-                tool_call = ToolCall(
-                    agent=agent_instance.agent, 
-                    agentInstance=agent_instance, 
-                    function_name=function_name, 
-                    arguments=arguments
-                )
-                tool_call.save()
-                tool_call.run()
-            else:
-                consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Tool '{function_name}' is not available to this agent."}))
+            tool_call = ToolCall(
+                agent=agent_instance.agent, 
+                agentInstance=agent_instance, 
+                function_name=function_name, 
+                arguments=arguments
+            )
+            tool_call.save()
+            tool_call.run()
+        else:
+            consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Tool '{function_name}' is not available to this agent."}))

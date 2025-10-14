@@ -99,16 +99,6 @@ def get_chat_messages(agentInstance):
     all_entries.sort(key=lambda x: x.created_at, reverse=True) # Sort descending for HistoryLimiter processing
 
     # Collect history limiting rule templates from all available tools
-
-    tool_call_rule_templates = []
-    for tool_definition in agentInstance.available_tools.all(): # Iterate over ToolDefinition objects
-        if tool_definition.is_builtin and tool_definition.name in BUILTIN_TOOL_CLASS_MAP:
-            tool_instance = BUILTIN_TOOL_CLASS_MAP[tool_definition.name](agentInstance)
-            if hasattr(tool_instance, 'get_history_limiting_rules'):
-                tool_call_rule_templates.extend(tool_instance.get_history_limiting_rules())
-        elif tool_definition.is_builtin is False:
-            pass # TODO MCP client
-
     limiter = HistoryLimiter(agentInstance, all_entries, all_loaded_paths)
     resultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source="tools", key="ResultInjection")
     filesystemInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.builtin_filesystem', key="ContentInjection")

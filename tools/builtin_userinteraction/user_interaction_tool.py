@@ -1,13 +1,14 @@
 
 from core.models.prompt_string import PromptString
 from tools.base.base_tool import BaseTool
-from .prompts import FUNCTIONS
+from .prompts import TOOLS, PROMPTS
 from .apps import ToolsBuiltinUserinteractionConfig
 import traceback
 
 class UserInteractionTool(BaseTool):
     DESCRIPTION = "Allows the agent to pause its operation and wait for direct input from the user. Essential for seeking clarification, confirmation, or further instructions before proceeding with a task."
-    functions = FUNCTIONS
+    TOOLS = TOOLS
+    PROMPTS = PROMPTS
 
     def get_header_parts(self):
         instructionTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinUserinteractionConfig.name, key="Instructions")

@@ -145,9 +145,7 @@ class BaseModel(DirtyFieldsMixin, models.Model):
                 print(f'Warning: send_object_to_clients received unhandled object type: {type(self)} with no clear target.')
                 return
 
-        # Dispatch messages via Celery
         for instance_pk_target in target_instance_pks:
-            # Create a copy and add target_instance_id before sending
             dispatch_message_data = dict(base_message_data)
             dispatch_message_data['target_instance_id'] = instance_pk_target
             celery_send_websocket_update.delay(dispatch_message_data, instance_pk=instance_pk_target)

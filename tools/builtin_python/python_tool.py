@@ -3,12 +3,13 @@ from tools.primitives import run_python_code
 from tools.base.base_tool import BaseTool
 from tools.builtin_python.models.python_tool_var import PythonToolVar
 from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription
-from .prompts import FUNCTIONS
+from .prompts import TOOLS, PROMPTS
 from .apps import ToolsBuiltinPythonConfig
 
 class PythonTool(BaseTool):
     DESCRIPTION = "Provides a Python execution environment. Allows the agent to run code for calculations, data manipulation, and complex logic, with access to a persistent 'VARS' dictionary for state management."
-    functions = FUNCTIONS
+    TOOLS = TOOLS
+    PROMPTS = PROMPTS
 
     def get_header_parts(self):
         instructionsTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="Instructions")
@@ -26,10 +27,6 @@ class PythonTool(BaseTool):
             if not subscription_id:
                 return (False, {"status": "error", "message": "A unique 'subscription_id' is required when mode is 'subscribe'."})
 
-            subscription_args = {
-                "source": source,
-            }
-
             ToolSubscription.objects.update_or_create(
                 agentInstance=self.agentInstance,
                 subscription_id=subscription_id,
@@ -37,7 +34,7 @@ class PythonTool(BaseTool):
                     'agent': self.agentInstance.agent,
                     'creating_tool_call': toolCall,
                     'tool_name': 'python',
-                    'arguments': subscription_args,
+                    'arguments': { "source": source },
                     'is_active': True
                 }
             )

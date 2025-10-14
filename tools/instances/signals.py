@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models.tool_instance import ToolInstance
-from tools.instances.tasks.fetch_mcp_tool_details import fetch_mcp_tool_details
+from tools.instances.tasks.tool_fetch_details import fetch_mcp_tool_details
 
 @receiver(post_save, sender=ToolInstance)
 def trigger_mcp_details_fetch(sender, instance, created, **kwargs):

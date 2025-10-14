@@ -1,7 +1,6 @@
 from tools.base.prompts import TOOL_RESPONSE_MARKER
 
-
-INSTRUCTIONS = """
+PROMPT_INSTRUCTIONS = """
 # Tool Subscriptions for Advanced Situational Awareness
 
 Subscriptions give you live, auto-updating context. Instead of static snapshots, you attach recurring commands that refresh before every prompt.
@@ -51,7 +50,7 @@ print(f"Remaining TODOs: {todo_count}")
 
 
 
-SUBSCRIPTION_RESULT_INJECTION = """
+PROMPT_SUBSCRIPTION_RESULT_INJECTION = """
 # The following is the output of a recurring command subscription you created.
 # Subscription ID: {{subscription_id}}
 # Status: {{status}}
@@ -62,16 +61,38 @@ SUBSCRIPTION_RESULT_INJECTION = """
 """ % {"marker":TOOL_RESPONSE_MARKER}
 
 
-FUNCTIONS = {
+PROMPTS = [
+    {
+        "name": "instructions",
+        "title": "Subscriptions tool instructions",
+        "description": "",
+        "arguments": [],
+        'template': PROMPT_INSTRUCTIONS,
+    },
+    {
+        "name": "subscription_result_injection",
+        "title": "TODO",
+        "description": "TODO",
+        "arguments": [],
+        'template': PROMPT_SUBSCRIPTION_RESULT_INJECTION,
+    },
+]
+
+TOOLS = {
     "unsubscribe": {
         "name": "unsubscribe",
+        "title": "Unsubscribe from Tool subscription",
         "description": "Removes an active tool subscription, stopping it from being executed before future LLM queries.",
-        "parameters": {
-            "subscription_id": {
-                "type": "string",
-                "description": "The unique identifier of the subscription to be removed.",
-                "required": True
-            }
+        "inputSchema": {
+            "type": "object",
+            "parameters": {
+                "subscription_id": {
+                    "type": "string",
+                    "description": "The unique identifier of the subscription to be removed.",
+                    "required": True
+                }
+            },
+            "required" : ["subscription_id"],
         }
     }
 }

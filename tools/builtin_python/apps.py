@@ -1,7 +1,8 @@
 from django.apps import AppConfig
 import sys
+from .prompts import TOOLS, PROMPTS
 
-class ToolsBuiltinPythonConfig(AppConfig):
+class ToolsBuiltinPythonConfig(AppConfig):    
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'tools.builtin_python'
 
@@ -11,7 +12,6 @@ class ToolsBuiltinPythonConfig(AppConfig):
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .python_tool import PythonTool
-            from .prompts import FUNCTIONS, INSTRUCTIONS, LIST_OF_SHARED_VARS
 
             ToolDefinition.objects.get_or_create(
                 name='python',
@@ -22,8 +22,9 @@ class ToolsBuiltinPythonConfig(AppConfig):
                     'is_active': True,
                 }
             )
-
-            function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in FUNCTIONS.items()])
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Instructions", value=INSTRUCTIONS)
+            for prompt in PROMPTS:
+                PromptString.objects.get_or_create(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
+            
+            function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in TOOLS.items()])
             PromptString.objects.get_or_create(owner=None, source=self.name, key="Functions", value=function_python_string)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="SharedVarsInjection", value=LIST_OF_SHARED_VARS)
+        

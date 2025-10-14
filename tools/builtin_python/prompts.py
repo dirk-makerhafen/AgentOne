@@ -1,5 +1,5 @@
 
-INSTRUCTIONS = '''
+PROMPT_INSTRUCTIONS = '''
 # Python Tool and VARS Dictionary
 
 **Purpose:** The `python` tool allows you to execute arbitrary Python code. This is mandatory for all deterministic and procedural tasks, including but not limited to:
@@ -47,35 +47,66 @@ del VARS['my_string']
 
 '''
 
-FUNCTIONS = {
-    'python': {
-        'description': 'Executes Python source code. Can be run once or as a recurring subscription.',
-        'parameters': {
-            'source': {
-                'type': 'string',
-                'description': 'The Python source code to run.',
-                'required': True
-            },
-            'subscription_id': {
-                'type': 'string',
-                'description': "A unique identifier for the subscription if mode is 'subscribe'. This will be used to unsubscribe later.",
-                'required': False
-            },
-            'mode': {
-                'type': 'string',
-                'enum': ['one-shot', 'subscribe'],
-                'description': "Execution mode: 'one-shot' executes the code once (default), 'subscribe' executes it before every LLM query.",
-                'required': False,
-                'default': 'one-shot'
-            }
-        }
-    }
-}
-
-LIST_OF_SHARED_VARS = '''
+PROMPT_LIST_OF_SHARED_VARS = '''
 # Existing keys in your shared VARS dict:
 {% for key in keys %}
 - {{key | safe}}
 {% endfor %}
 
 '''
+
+PROMPTS = [
+    {
+        "name": "instructions",
+        "title": "Python tool instructions",
+        "description": "Contains general usage instructions for the python tool",
+        "arguments": [],
+        'template': PROMPT_INSTRUCTIONS,
+    },
+    {
+        "name": "list_of_shared_vars",
+        "title": "Python tool list of vars",
+        "description": "todo",
+        "arguments": [
+            {
+                "name": "keys",
+                "description": "list of key for VARS dict",
+                "required": True,
+            }
+        ],
+        'template': PROMPT_LIST_OF_SHARED_VARS,
+    },
+]
+
+
+TOOLS = {
+    'python': {
+        "name": "python",
+        "title": "Execute Python script",
+        'description': 'Executes Python source code. Can be run once or as a recurring subscription.',
+        "inputSchema": {
+            "type": "object",
+            'parameters': {
+                'source': {
+                    'type': 'string',
+                    'description': 'The Python source code to run.',
+                    'required': True,
+                },
+                'subscription_id': {
+                    'type': 'string',
+                    'description': "A unique identifier for the subscription if mode is 'subscribe'. This will be used to unsubscribe later.",
+                    'required': False,
+                },
+                'mode': {
+                    'type': 'string',
+                    'enum': ['one-shot', 'subscribe'],
+                    'description': "Execution mode: 'one-shot' executes the code once (default), 'subscribe' executes it before every LLM query.",
+                    'required': False,
+                    'default': 'one-shot',
+                },
+            },
+            "required" : ["source"],
+        }
+    }
+}
+

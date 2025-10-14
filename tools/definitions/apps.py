@@ -5,5 +5,4 @@ class DefinitionsConfig(AppConfig):
     name = 'tools.definitions'
 
     def ready(self):
-        # Import signals to ensure they are connected when the app is ready.
         from . import signals

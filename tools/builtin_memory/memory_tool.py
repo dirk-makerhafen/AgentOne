@@ -4,13 +4,14 @@ import math
 from core.models.prompt_string import PromptString
 from tools.base.base_tool import BaseTool
 from .models.memory_item import MemoryItem
-from .prompts import FUNCTIONS, TRACKS
+from .prompts import TOOLS, PROMPTS, TRACKS
 from .apps import ToolsBuiltinMemoryConfig
 
 class MemoryTool(BaseTool):
     DESCRIPTION = "Accesses a persistent, structured memory system with multiple tracks (e.g., plans, insights) and time horizons. Crucial for retaining context, learning from past actions, and managing long-term goals."
-    functions = FUNCTIONS
-    
+    TOOLS = TOOLS
+    PROMPTS = PROMPTS
+
     @property
     def tracks(self):
         return [f'{k}' for k in TRACKS.keys()]

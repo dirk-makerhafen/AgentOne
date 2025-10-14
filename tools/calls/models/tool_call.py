@@ -1,6 +1,10 @@
+from ast import arguments
 from django.db import models
 import traceback
+import random
 from core.models.base_model import BaseModel
+from tools.definitions.models.tool_installation import ToolInstallation
+from tools.instances.models.tool_instance import ToolInstance
 
 class ToolCall(BaseModel):
     class ToolCallStatusChoices(models.TextChoices):
@@ -39,28 +43,55 @@ class ToolCall(BaseModel):
 
     def run(self):
         from tools.calls.models.tool_response import ToolResponse
+        from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
+
         if self.status != ToolCall.ToolCallStatusChoices.PENDING:
             raise Exception('Tool call not pending, cant run')
         success = False
         result = None
         try:
-            _function = self.agentInstance.get_tool_function(self.function_name)
-            if _function is None:
-                result = {'status': 'failed', 'message': f"No such function '{self.function_name}'"}
+            if "." in self.function_name:
+                tool_name, method_name = self.function_name.split('.', 1)
+                available_tool_definitions = list(self.agent.available_tools.filter(name= tool_name, is_active= True))
             else:
-                err = None
-                for arg in self.arguments:
-                    if arg not in _function['arguments']:
-                        err = f"Unknown argument '{arg}'"
+                method_name = self.function_name
+                available_tool_definitions = list(self.agent.available_tools.filter(is_builtin=True, is_active= True))
+
+            tool_installations = []
+            builtin_function = None
+            for tool_definition in available_tool_definitions:
+                if tool_definition.has_tool_name(method_name):
+                    if tool_definition.is_builtin:
+                        builtin_tool_instance = BUILTIN_TOOL_CLASS_MAP[tool_definition.name](agentInstance=self.agentInstance)
+                        builtin_function = builtin_tool_instance.call_tool
                         break
-                for arg in _function['arguments']:
-                    if _function['arguments'][arg]['required'] == True and arg not in self.arguments:
-                        err = f'Missing required argument {arg}'
-                        break
-                if err is not None:
-                    result = {'status': 'failed', 'message': err}
-                else:
-                    success, result = _function['callable'](toolCall=self, **self.arguments)
+                    else:
+                        per_agent_installations = tool_definition.installations.filter(status=ToolInstallation.ToolInstallationStatusChoices.INSTALLED, agent_instance=self, system=self.system).all()
+                        per_system_installations = tool_definition.installations.filter(status=ToolInstallation.ToolInstallationStatusChoices.INSTALLED, agent_instance=None, system=self.system).all()
+                        tool_installations.extend(per_agent_installations)
+                        tool_installations.extend(per_system_installations)
+            
+            if builtin_function:
+                success, result = builtin_function(toolCall=self, name=method_name, arguments = self.arguments)
+            else:
+                tool_instances = []
+                for tool_installation in tool_installations:
+                    tool_instances.extend(tool_installation.instances.filter(status=ToolInstance.ToolInstanceStatusChoices.RUNNING))
+                tool_instances = list(set(tool_installations))
+                if tool_instances:
+                    mcp_client = random.choice(tool_instances).mcp_client
+                    mcp_result =  mcp_client.call_tool(name=method_name, arguments=arguments)
+                    if "result" in mcp_result:
+                        result = mcp_result["result"]
+                        success = True 
+                    elif "error" in mcp_result:
+                        result = {"status": "error"}
+                        success = False 
+                        if "message" in mcp_result:
+                            result["message"] = mcp_result["message"]
+                        if "data" in mcp_result:
+                            result["data"] = mcp_result["data"]
+                   
         except Exception as e:
             result = {'status': 'failed', 'exception': f'{e} - {traceback.format_exc()}'}
         toolresponse = ToolResponse()

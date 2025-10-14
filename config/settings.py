@@ -1,11 +1,10 @@
 import os
-
+import warnings
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 AGENT_SERVER_SECRET_KEY = "change_me"
 SECRET_KEY = 'change_me'
 REDIS_URL = 'redis://localhost:6379/1'
-
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
@@ -63,7 +62,6 @@ CELERY_BROKER_URL = REDIS_URL
 CELERY_WORKER_REDIRECT_STDOUTS = False
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
-
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', # Add WhiteNoise here
@@ -118,9 +116,6 @@ DJANGORESIZED_DEFAULT_NORMALIZE_ROTATION = True
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
-
-
-import warnings
 
 warnings.filterwarnings(
     'ignore',

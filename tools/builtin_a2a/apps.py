@@ -11,7 +11,7 @@ class ToolsBuiltinA2aConfig(AppConfig):
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .a2a_tool import A2ATool
-            from .prompts import FUNCTIONS, INSTRUCTIONS, AGENTLIST
+            from .prompts import TOOLS, PROMPTS
 
             ToolDefinition.objects.get_or_create(
                 name='a2a',
@@ -22,8 +22,8 @@ class ToolsBuiltinA2aConfig(AppConfig):
                     'is_active': True,
                 }
             )
-
-            function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in FUNCTIONS.items()])
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Instructions", value=INSTRUCTIONS)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="AgentList", value=AGENTLIST)
+            for prompt in PROMPTS:
+                PromptString.objects.get_or_create(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
+            
+            function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in TOOLS.items()])
             PromptString.objects.get_or_create(owner=None, source=self.name, key="Functions", value=function_python_string)

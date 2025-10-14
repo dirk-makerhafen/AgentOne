@@ -2,7 +2,7 @@ import json
 from django.core.exceptions import ValidationError
 from tools.instances.models.tool_instance import ToolInstance
 from ui.router import register_handler
-from tools.instances.tasks.fetch_mcp_tool_details import fetch_mcp_tool_details
+from tools.instances.tasks.tool_fetch_details import fetch_mcp_tool_details
 
 
 @register_handler('toolinstance_create')

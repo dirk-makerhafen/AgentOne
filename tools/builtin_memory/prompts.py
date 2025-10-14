@@ -1,5 +1,5 @@
 
-INSTRUCTIONS = '''
+PROMPT_INSTRUCTIONS = '''
 # Memory Tools
 You have access to external memory tool that help you remember things. Because your context length is limited, you must use this memory 
 for all information thats valid for more than a few rounds of conversation. Old messages in our conversation will be tagged with @@@TO_BE_FORGOTTEN@@@.
@@ -59,23 +59,113 @@ Never output memory content without wrapping it in a memory tool call.
 
 '''
 
-FUNCTIONS = {
+PROMPT_STALLED_WARNING = '''
+# Warning:
+Some of your memory has not been updated for a long time, please review the following memory tracks:
+{% for stall in stalled %}
+Track:{{stall.0}} Layer:{{stall.1}}
+{% endfor %}
+'''
+
+PROMPT_CONTENT_HEADER = '''
+# Current Memory Content ({{current_time}}):
+'''
+
+PROMPT_CONTENT = '''{% if warn_stall %}!ATTENTION: {{ trackname }} {{ layername }} not updated for a long time.\n{% endif %}{% for item in memories %}
+- [{{item.index}}]{% if item.warn_forget %}[to be forgotten, review now!]{% endif %} {{item.content | safe}}
+{% endfor %}{% if not memories %}!Attention, no entries yet{% endif %}
+'''
+
+
+PROMPTS = [
+    {
+        "name": "instructions",
+        "title": "Memory tool instructions",
+        "description": "Contains general usage instructions for the memory tool",
+        "arguments": [],
+        'template': PROMPT_INSTRUCTIONS,
+    },
+    {
+        "name": "stall_warning",
+        "title": "Memory tool stall warning",
+        "description": "TODO",
+        "arguments": [],
+        'template': PROMPT_STALLED_WARNING,
+    },
+    {
+        "name": "content_header",
+        "title": "Memory tool instructions",
+        "description": "TODO",
+        "arguments": [],
+        'template': PROMPT_CONTENT_HEADER,
+    },
+    {
+        "name": "content",
+        "title": "Memory tool instructions",
+        "description": "TODO",
+        "arguments": [],
+        'template': PROMPT_CONTENT,
+    },
+]
+
+
+TOOLS = {
     "memory_add": {
+        "name": "memory_add",
+        "title": "Add to memory",
         "description": "Add content to memory",
-        "parameters": {
-            "track": { "type": "string", "description": "Target memory track", "required": True},
-            "layer": { "type": "string", "description": "Target memory layer", "required": True},
-            "content": { "type": "string", "description": "Content to add to memory", "required": True}
-        },
+        "inputSchema": {
+            "type": "object",
+            "parameters": {
+                "track": { 
+                    "type": "string", 
+                    "description": "Target memory track", 
+                    "required": True
+                },
+                "layer": { 
+                    "type": "string", 
+                    "description": "Target memory layer", 
+                    "required": True
+                },
+                "content": { 
+                    "type": "string", 
+                    "description": "Content to add to memory", 
+                    "required": True
+                },
+            },
+            "required" : ["track", "layer", "content"],
+        }
     },
     "memory_correct": {
+        "name": "memory_correct",
+        "title": "Correct memory entry",
         "description": "Correct a memory entry if it contains incorrect information or is confusing. Use sparsely only to correct memory entries. To add to your memory, use memory_add",
-        "parameters": {
-            "track": { "type": "string", "description": "Target memory track", "required": True},
-            "layer": { "type": "string", "description": "Target memory layer", "required": True},                
-            "index": { "type": "string", "description": "Index of item to correct", "required": True},
-            "content": {"type": "string", "description": "Updated content for memory index", "required": True}
-        },
+        "inputSchema": {
+            "type": "object",
+            "parameters": {
+                "track": { 
+                    "type": "string", 
+                    "description": "Target memory track", 
+                    "required": True,
+                },
+                "layer": { 
+                    "type": "string", 
+                    "description": "Target memory layer", 
+                    "required": True,
+                },                
+                "index": { 
+                    "type": "string", 
+                    "description": "Index of item to correct", 
+                    "required": True,
+                },
+                "content": {
+                    "type": "string", 
+                    "description": "Updated content for memory index", 
+                    "required": True,
+                },
+            },
+            "required" : ["track", "layer", "index", "content"],
+        }
     },    
 }
 
@@ -154,30 +244,3 @@ TRACKS = {
     },
 }
 
-STALLED_WARNING = '''
-# Warning:
-Some of your memory has not been updated for a long time, please review the following memory tracks:
-{% for stall in stalled %}
-Track:{{stall.0}} Layer:{{stall.1}}
-{% endfor %}
-'''
-
-CONTENT_HEADER = '''
-# Current Memory Content ({{current_time}}):
-'''
-
-CONTENT = '''{% if warn_stall %}!ATTENTION: {{ trackname }} {{ layername }} not updated for a long time.\n{% endif %}{% for item in memories %}
-- [{{item.index}}]{% if item.warn_forget %}[to be forgotten, review now!]{% endif %} {{item.content | safe}}
-{% endfor %}{% if not memories %}!Attention, no entries yet{% endif %}
-'''
-
-
-
-helpfullexample = '''
-
-## MEMORY - Important factual events and context that must not be forgotten. Raw historical facts, reference points, or non-trivial data points. Not interpretation or lessons — just “what happened”.
-### MEMORY ST - Recent events or facts to keep temporarily.
-- [23] ...
-### MEMORY MT - Summary of multiple ST memories that may be needed across tasks.
-### MEMORY LT - Permanent historical record — major past events and their key facts.
-'''

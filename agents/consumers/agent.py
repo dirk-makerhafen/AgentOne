@@ -24,13 +24,11 @@ def handle_agent_create(consumer, name='New Agent', description='', available_to
         new_agent.name = name
         new_agent.description = description
         new_agent.save(send_to_client=False)
-
         new_agent.owners.add(user)
-
-        #if available_tool_ids:
-        #    tools = ToolDefinition.objects.filter(pk__in=available_tool_ids)
-        #    new_agent.available_tools.set(tools)
-        # print("new_agent.available_tools", new_agent.available_tools)
+        if available_tool_ids:
+            tools = ToolDefinition.objects.filter(pk__in=available_tool_ids)
+            new_agent.available_tools.set(tools)
+            print("new_agent.available_tools", new_agent.available_tools)
         new_agent.save()
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create agent: {e} {traceback.format_exc()}'}))

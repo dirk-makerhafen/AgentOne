@@ -1,7 +1,5 @@
 
 from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
-from tools.definitions.models.tool_installation import ToolInstallation
-from tools.instances.mcpclient import MCPClient
 
 class HistoryLimiter:
     def __init__(self, agentInstance, all_entries=None, all_loaded_paths=None):
@@ -12,30 +10,10 @@ class HistoryLimiter:
         
         # Populate tool instances based on the agent's available tools
         self.tool_instances = {}
-        available_tool_definitions = self.agentInstance.available_tools.all()
+        available_tool_definitions = self.agentInstance.agent.available_tools.filter(is_builtin=True)
         for toolDefinition in available_tool_definitions:
-            if toolDefinition.is_builtin:
-                self.tool_instances[toolDefinition.name] = BUILTIN_TOOL_CLASS_MAP.get(toolDefinition.name)(agentInstance)
-            else:
-                try:
-                    installation = ToolInstallation.objects.get(
-                        tool_definition=toolDefinition,
-                        system=agentInstance.system,
-                        agent_instance=agentInstance # Dedicated tool
-                    )
-                except ToolInstallation.DoesNotExist:
-                    try:
-                        installation = ToolInstallation.objects.get(
-                            tool_definition=toolDefinition,
-                            system=agentInstance.system,
-                            agent_instance__isnull=True # Shared tool
-                        )
-                    except ToolInstallation.DoesNotExist:
-                        # Log or handle case where installation isn't found
-                        continue
-                
-                self.tool_instances[toolDefinition.name] = MCPClient(agentInstance, installation)
-        
+            self.tool_instances[toolDefinition.name] = BUILTIN_TOOL_CLASS_MAP.get(toolDefinition.name)(agentInstance)
+
         self._define_general_rules()
 
     def _define_general_rules(self):
@@ -106,32 +84,7 @@ class HistoryLimiter:
 
     def is_tool_call_limited(self, toolcall, message):
         """Checks if a specific tool call should be excluded based on the defined rules."""
-        # This part of the logic needs self.tool_call_rules to be populated,
-        # which it currently is in the __init__. This method is for internal
-        # limiting during agent operation, not for client display.
-        # The logic below refers to self.tool_call_rules which is built in __init__
-        # I need to ensure get_merged_history_limiting_rules is not conflated with this.
 
-        # Re-initialize tool_call_rules from templates for actual limiting if not done
-        # This will be different from the client-display version.
-        
-        # This method is not using the `merged_rules` from `get_merged_history_limiting_rules`
-        # and has its own merging logic based on `tool_call_rule_templates` passed to __init__.
-        # For a truly cleaner design, HistoryLimiter's __init__ should call
-        # get_merged_history_limiting_rules and store the processed rules in self.tool_call_rules
-        # in a format suitable for `is_tool_call_limited`.
-        # However, for now, I'll only add the client display method as requested.
-
-        # To avoid circular import, HistoryLimiter's __init__ will need to be passed `tool_call_rule_templates`.
-        # AgentInstance will need to collect them from its tools first and pass them.
-
-        # For the purpose of THIS task (refactoring as_client_dict), I will move the
-        # rule parsing for client display to a new method. The current __init__ in
-        # HistoryLimiter uses a simplified merging, which is fine for internal limiting.
-
-        # A more extensive refactor would unify rule generation and merging entirely.
-        
-        # Fetch initial templates for internal limiting purposes
         all_rule_templates = []
         unique_tool_instances = set(self.tool_instances.values())
         for tool_instance in unique_tool_instances:

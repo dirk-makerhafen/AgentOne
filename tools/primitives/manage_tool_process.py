@@ -1,7 +1,9 @@
 from ._dispatch_decorator import dispatched_inprocess
 import asyncio
 import traceback
-
+from mcp import McpError
+import asyncio
+import threading
 # Global state for managing long-running tool processes launched by this executor.
 # Key: process_id (string), Value: dict containing the live async session and context managers.
 managed_processes = {}
@@ -90,7 +92,7 @@ async def _start_tool_process_async(
 def stop_tool_process(process_id: int):
     try:
         loop = _get_async_loop()
-        coro = _stop_tool_process_async(process_id)
+        coro = _stop_tool_process_async(process_id=process_id)
         future = asyncio.run_coroutine_threadsafe(coro, loop)
         result = future.result(timeout=60)  # Add a timeout for safety
         return result
@@ -114,7 +116,7 @@ async def _stop_tool_process_async(process_id: int):
 def call_tool_session(process_id: int, function_name: str, kwargs: dict = {}, args: list = []):
     try:
         loop = _get_async_loop()
-        coro = _call_tool_session_async(process_id, function_name, kwargs, args)
+        coro = _call_tool_session_async(process_id=process_id, function_name=function_name, kwargs=kwargs, args=args)
         future = asyncio.run_coroutine_threadsafe(coro, loop)
         result = future.result(timeout=60)  # Add a timeout for safety
         return result
@@ -126,20 +128,15 @@ async def _call_tool_session_async(process_id: int, function_name: str, kwargs: 
     if process_id not in managed_processes: return {'status': 'error', 'message': f'Client {process_id} not found or not running.'}
     session = managed_processes[process_id]['session']
     result = await getattr(session, function_name)(*args, **kwargs)
-    print(result)
-    if result:
-        return {'status': 'success', 'data': result.dict()}
-    return {'status': 'success', 'data': None}
+    return {'status': 'success', 'data': result.dict()}
 
 
 
-# HELPER FUNCTIONS 
+# HELPER TOOLS 
 def _get_async_loop():
     """Starts and returns the global asyncio event loop running in a background thread."""
     global _async_loop, _loop_thread
     if _loop_thread is None:
-        import asyncio
-        import threading
         print("Starting new event loop")
         _async_loop = asyncio.new_event_loop()
         _loop_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)

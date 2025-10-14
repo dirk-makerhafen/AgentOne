@@ -10,10 +10,10 @@ def fetch_mcp_tool_details(tool_instance_pk):
     """
     try:
         instance = ToolInstance.objects.get(pk=tool_instance_pk)    
-        instance.mcp_tools = instance.mcp_client.list_tools()
-        instance.mcp_prompts = instance.mcp_client.list_prompts()
-        instance.mcp_templates = instance.mcp_client.list_resource_templates()
-        instance.mcp_resources = instance.mcp_client.list_resources()
+        instance.tools = instance.mcp_client.list_tools()
+        instance.prompts = instance.mcp_client.list_prompts()
+        instance.templates = instance.mcp_client.list_resource_templates()
+        instance.resources = instance.mcp_client.list_resources()
         instance.save()
         print(f"Successfully fetched and cached MCP details for instance {tool_instance_pk}.")
     except ToolInstance.DoesNotExist:

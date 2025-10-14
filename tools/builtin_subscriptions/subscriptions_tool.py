@@ -1,12 +1,13 @@
 from core.models.prompt_string import PromptString
 from tools.base.base_tool import BaseTool
 from .models.tool_subscription import ToolSubscription
-from .prompts import FUNCTIONS
+from .prompts import TOOLS, PROMPTS
 from .apps import ToolsBuiltinSubscriptionsConfig
 
 class SubscriptionsTool(BaseTool):
     DESCRIPTION = "Create and manage subscriptions to recurring shell commands or Python scripts. This allows the agent to maintain situational awareness by receiving automatic, live updates of contextual information."
-    functions = FUNCTIONS
+    TOOLS = TOOLS
+    PROMPTS = PROMPTS
 
     def get_header_parts(self):
         instructionsTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="Instructions")

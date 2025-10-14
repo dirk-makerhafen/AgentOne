@@ -5,12 +5,14 @@ from tools.base.base_tool import BaseTool
 from .models.a2a_description import AgentToAgentDescription
 from .models.a2a_message import AgentToAgentMessage
 from .models.a2a_permission import AgentToAgentPermission
-from .prompts import FUNCTIONS
+from .prompts import TOOLS, PROMPTS
 from .apps import ToolsBuiltinA2aConfig
 
 class A2ATool(BaseTool):
     DESCRIPTION = "Facilitates communication between different agent instances. Allows an agent to send messages to other agents and manage its own public description to inform others of its current status."
-    functions = FUNCTIONS
+    TOOLS = TOOLS
+    PROMPTS = PROMPTS
+
 
     def get_header_parts(self):
         from agents.models.agent_instance import AgentInstance

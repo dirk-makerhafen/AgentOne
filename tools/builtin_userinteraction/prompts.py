@@ -1,5 +1,5 @@
 
-INSTRUCTIONS = '''
+PROMPT_INSTRUCTIONS = '''
 # User Interaction Tool
 This tool allows you to pause your autonomous operation and wait for input from the user.
 
@@ -18,12 +18,31 @@ I have located the file 'test.txt'. Should I proceed with deleting it?
 
 '''
 
+PROMPTS = [
+    {
+        "name": "instructions",
+        "title": "User interaction tool instructions",
+        "description": "Contains general usage instructions for the User interaction tool",
+        "arguments": [],
+        'template': PROMPT_INSTRUCTIONS,
+    },
+]
 
-FUNCTIONS = {
+TOOLS = {
     'await_user_input': {
+        "name": "await_user_input",
+        "title": "Wait for user Input",
         'description': 'Pauses the agents autonomous operation. The agent will stop executing further steps and wait for the user to provide the next message or instruction. This is useful when you need feedback, a decision, or more information from the user before proceeding.', 
-        'parameters': {
-            "reason": { "type": "string", "description": "Optionally provide a reason why user input is expected", "required": False},
+        "inputSchema": {
+            "type": "object",
+            'parameters': {
+                "reason": { 
+                    "type": "string", 
+                    "description": "Optionally provide a reason why user input is expected", 
+                    "required": False,
+                },
+            },
+            "required" : []
         }
     },
 }

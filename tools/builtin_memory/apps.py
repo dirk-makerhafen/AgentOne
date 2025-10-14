@@ -11,7 +11,7 @@ class ToolsBuiltinMemoryConfig(AppConfig):
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .memory_tool import MemoryTool
-            from .prompts import INSTRUCTIONS, CONTENT, CONTENT_HEADER, FUNCTIONS, STALLED_WARNING, TRACKS
+            from .prompts import PROMPTS, TOOLS, TRACKS
 
             ToolDefinition.objects.get_or_create(
                 name='memory',
@@ -22,12 +22,10 @@ class ToolsBuiltinMemoryConfig(AppConfig):
                     'is_active': True,
                 }
             )
-
-            function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in FUNCTIONS.items()])
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Instructions", value=INSTRUCTIONS)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="StalledWarning", value=STALLED_WARNING)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="ContentHeader", value=CONTENT_HEADER)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Content", value=CONTENT)
+            for prompt in PROMPTS:
+                PromptString.objects.get_or_create(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
+            
+            function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in TOOLS.items()])
             PromptString.objects.get_or_create(owner=None, source=self.name, key="Functions", value=function_python_string)
 
             for trackname, trackitem in TRACKS.items():

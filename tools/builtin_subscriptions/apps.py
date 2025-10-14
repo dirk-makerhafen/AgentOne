@@ -11,7 +11,7 @@ class ToolsBuiltinSubscriptionsConfig(AppConfig):
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .subscriptions_tool import SubscriptionsTool
-            from .prompts import INSTRUCTIONS, FUNCTIONS, SUBSCRIPTION_RESULT_INJECTION
+            from .prompts import PROMPTS, TOOLS
             
             ToolDefinition.objects.get_or_create(
                 name='subscriptions',
@@ -23,7 +23,8 @@ class ToolsBuiltinSubscriptionsConfig(AppConfig):
                 }
             )
             
-            function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in FUNCTIONS.items()])
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Instructions", value=INSTRUCTIONS)
+            for prompt in PROMPTS:
+                PromptString.objects.get_or_create(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
+            
+            function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in TOOLS.items()])
             PromptString.objects.get_or_create(owner=None, source=self.name, key="Functions", value=function_python_string)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="SubscriptionResultInjection", value=SUBSCRIPTION_RESULT_INJECTION)

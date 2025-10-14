@@ -1,11 +1,12 @@
 from django.db import models
 from django.db.models import Sum
-
+import random
 from agents.history_limiter import HistoryLimiter
 from agents.models.conversation_message import ConversationMessage
 from core.models.base_model import BaseModel
 from systems.models.system import System
 from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
+from tools.definitions.models.tool_definition import ToolDefinition
 from tools.definitions.models.tool_installation import ToolInstallation
 from django.utils import timezone
 
@@ -48,40 +49,6 @@ class AgentInstance(BaseModel):
         if not self._filesystem:
             self._filesystem = BUILTIN_TOOL_CLASS_MAP["filesystem"](self)
         return self._filesystem
-
-    def available_tool_installations(self, **kwargs):
-        toolInstallations = []
-        for toolDefinition in self.agent.available_tools.filter(**kwargs):
-            per_agent_installations = toolDefinition.installations.filter(status=ToolInstallation.ToolInstallationStatusChoices.INSTALLED, agent_instance=self, system=self.system).all()
-            per_system_installations = toolDefinition.installations.filter(status=ToolInstallation.ToolInstallationStatusChoices.INSTALLED, agent_instance=None, system=self.system).all()
-            toolInstallations.extend(per_agent_installations)
-            toolInstallations.extend(per_system_installations)
-        return  list(set(toolInstallations))
-
-    def get_tool_function(self, full_function_name):
-        if not "." in full_function_name: # is builtin
-            for toolDefinition in self.available_tools.filter(is_builtin=True):
-                buildin_tool_class = BUILTIN_TOOL_CLASS_MAP[toolDefinition.name]
-                if full_function_name in buildin_tool_class.functions:
-                    buildin_tool_instance = buildin_tool_class(self)
-                    return {
-                        "arguments": buildin_tool_class.functions[full_function_name]["parameters"],
-                        "callable": getattr(buildin_tool_instance, full_function_name),
-                        "tool_definition_id": toolDefinition.pk
-                    }
-        else:    
-            tool_name, method_name = full_function_name.split('.', 1)
-            for tool_installation in self.available_tool_installations(name=tool_name):
-                tool_instance = tool_installation.instances.filter(status=ToolInstance.ToolInstanceStatusChoices.RUNNING).first()
-                functions = [t for t in tool_instance.mcp_tools if t["name"] == method_name]
-                if functions:
-                    return {
-                        "arguments": {"type": "object", "properties": {}},
-                        "callable": lambda **kwargs: tool_instance.mcp_client.call_tool(method_name, arguments=kwargs),
-                        "tool_definition_id": tool_installation.tool_definition_id
-                    }
-        
-        raise ValueError(f"Tool function '{full_function_name}' not found or not enabled for this agent instance.")
 
     def add_to_conversation(self, role, content):
         c = ConversationMessage()

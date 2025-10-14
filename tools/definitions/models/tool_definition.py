@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils import timezone
 
 from core.models.base_model import BaseModel
 
@@ -29,7 +28,6 @@ class ToolDefinition(BaseModel):
     execution_mode = models.CharField(max_length=20, choices=ExecutionMode.choices, default=ExecutionMode.SHARED, help_text="Determines if one process is shared across a system or if each agent instance gets a dedicated process.")
 
     repository_url = models.URLField(blank=True, null=True, help_text="The Git repository URL for external tools.")
-    manifest = models.JSONField(blank=True, null=True, help_text="The parsed manifest.json file from the repository.")
     status = models.CharField(max_length=20, choices=ToolDefinitionStatusChoices.choices, default=ToolDefinitionStatusChoices.NEW)
     manifest_version = models.CharField(max_length=50, blank=True, null=True, help_text="The version from the tool's manifest file.")
     last_checked_at = models.DateTimeField(null=True, blank=True, help_text="When the manifest was last checked for updates.")
@@ -37,6 +35,20 @@ class ToolDefinition(BaseModel):
     available_on_all_systems = models.BooleanField(default=True, help_text="If true, this tool is available on all compatible systems by default.")
     available_on_systems = models.ManyToManyField('systems.System', blank=True, related_name='tool_definitions', help_text="A specific list of systems where this tool is available.")
  
+    @property
+    def manifest(self):
+        return self.data.get("manifest", {})
+    @manifest.setter
+    def manifest(self, manifest):
+        self.data["manifest"] = manifest
+    
+    def has_tool_name(self, name):
+        if self.is_builtin:
+            from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
+            return True if  BUILTIN_TOOL_CLASS_MAP[self.name].TOOLS.get(name, None) else False
+        else:
+            return len([x for x in self.manifest.get("tools",[]) if x["name"] == name]) > 0
+       
     def save(self, send_to_client=True, *args, **kwargs):
         from tools.definitions.tasks.refresh_definition_manifest import refresh_definition_manifest
         is_new = self.pk is None

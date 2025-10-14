@@ -14,16 +14,16 @@ def generate_function_stub(func_name: str, func_def: dict) -> str:
     description = func_def.get("description", "").strip()
 
     # Extract parameters
-    params = func_def.get("parameters", {})
+    params = func_def.get("inputSchema",{}).get("parameters", {}) 
+    required_params = func_def.get("inputSchema",{}).get("required", []) 
+
     param_str_list = []
     docstring_params = []
 
     for param_name, param_info in params.items():
-        required = param_info.get("required", False)
-        
+        required = param_info.get("required", False) or param_name in required_params
         default_value = "" if required else " = %s" % param_info.get("default", "None")
         param_str_list.append(f"{param_name}{default_value}")
-
         type_str = param_info.get("type", "Any")
         param_desc = param_info.get("description", "")
         docstring_params.append(f"    {param_name} ({type_str}): {param_desc}")

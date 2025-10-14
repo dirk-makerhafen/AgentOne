@@ -8,12 +8,13 @@ from .models.fs_log_entry import FsLogEntry
 from .utils.fsutils import clean_path, get_abs_path
 from .utils.permissions import check_permission
 from .utils.fuzzymatch import find_fuzzy_match
-from .prompts import FUNCTIONS
+from .prompts import TOOLS, PROMPTS
 from .apps import ToolsBuiltinFilesystemConfig
 
 class FilesystemTool(BaseTool):
     DESCRIPTION = "Offers a comprehensive set of functions to interact with the file system. The agent can read, write, append, and modify files, as well as list directory contents."
-    functions = FUNCTIONS
+    TOOLS = TOOLS
+    PROMPTS = PROMPTS
 
     def get_header_parts(self):
         instructionsTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="Instructions")

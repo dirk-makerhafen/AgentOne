@@ -3,6 +3,7 @@ import logging
 
 from agents.models.agent_instance import AgentInstance
 from agents.tasks.execute_query import decide_next_step
+from tools.calls.models.tool_call import ToolCall
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ class Command(BaseCommand):
 
         agentInstances = AgentInstance.objects.all()
         for agentInstance in agentInstances:
-            toolCalls = agentInstance.toolCalls.filter(status="pending")
+            toolCalls = agentInstance.toolCalls.filter(status=ToolCall.ToolCallStatusChoices.PENDING)
             if toolCalls.count() > 0:
                 agentInstance.status = AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS
                 agentInstance.save()
