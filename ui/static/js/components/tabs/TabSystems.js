@@ -51,6 +51,13 @@ function renderSystemList(systems) {
 }
 
 function renderSystem(system, tableBody) {
+    // If tableBody isn't provided, find it. This happens on single-system updates.
+    if (!tableBody) {
+        const container = document.getElementById('tabContent_systems');
+        if (!container) return; // Tab might be closed
+        tableBody = container.querySelector('#systems-list-body > table > tbody');
+        if (!tableBody) return; // tbody not found
+    }
     const systemItemRowTemplate = getTemplate('TabSystemsListItemTemplate');
     const systemDetailsTemplate = getTemplate('TabSystemsDetailsTemplate');
 

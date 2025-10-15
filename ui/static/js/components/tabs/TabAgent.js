@@ -10,7 +10,10 @@ function agentUpdate(agentId) {
         const name = form.querySelector(`#agent-name-${agentId}`).value;
         const description = form.querySelector(`#agent-description-${agentId}`).value;
         const available_tool_ids = Array.from(form.querySelectorAll('input[name="available_tools"]:checked')).map(cb => cb.value);
-        agentApi.update(agentId, name, description, available_tool_ids);
+        const limit_max_conversation_messages = form.querySelector(`#agent-limit-conversation-${agentId}`).value;
+        const limit_max_memory_items = form.querySelector(`#agent-limit-memory-${agentId}`).value;
+        const limit_max_automated_steps = form.querySelector(`#agent-limit-steps-${agentId}`).value;
+        agentApi.update(agentId, name, description, available_tool_ids, limit_max_conversation_messages, limit_max_memory_items, limit_max_automated_steps);
     }, 500);
 }
 
@@ -23,13 +26,16 @@ function agentCreateFromTab(event) {
     const name = form.querySelector('#agent-name-new').value.trim();
     const description = form.querySelector('#agent-description-new').value.trim();
     const availableToolIds = Array.from(form.querySelectorAll('input[name="available_tools"]:checked')).map(cb => parseInt(cb.value));
+    const limit_max_conversation_messages = form.querySelector('#agent-limit-conversation-new').value;
+    const limit_max_memory_items = form.querySelector('#agent-limit-memory-new').value;
+    const limit_max_automated_steps = form.querySelector('#agent-limit-steps-new').value;
 
     if (!name) { 
         alert('Agent name is required.'); 
         return; 
     }
     
-    agentApi.create(name, description, availableToolIds);
+    agentApi.create(name, description, availableToolIds, limit_max_conversation_messages, limit_max_memory_items, limit_max_automated_steps);
     closeMainTab('tabContent_add_agent');
 }
 

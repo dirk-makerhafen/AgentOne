@@ -3,6 +3,7 @@ from tools.base.base_tool import BaseTool
 from .models.tool_subscription import ToolSubscription
 from .prompts import TOOLS, PROMPTS
 from .apps import ToolsBuiltinSubscriptionsConfig
+import traceback
 
 class SubscriptionsTool(BaseTool):
     DESCRIPTION = "Create and manage subscriptions to recurring shell commands or Python scripts. This allows the agent to maintain situational awareness by receiving automatic, live updates of contextual information."
@@ -26,4 +27,4 @@ class SubscriptionsTool(BaseTool):
         except ToolSubscription.DoesNotExist:
             return (False, {"status": "error", "message": f"No active subscription found with ID '{subscription_id}'."})
         except Exception as e:
-            return (False, {"status": "error", "message": f"An unexpected error occurred: {str(e)}"})
+            return (False, {"status": "error", "message": f"An unexpected error occurred: {str(e)} {traceback.format_exc()}"})

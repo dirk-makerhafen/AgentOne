@@ -33,9 +33,9 @@ class AgentInstance(BaseModel):
     status = models.CharField(max_length=30, choices=AgentInstanceStatusChoices.choices, default=AgentInstanceStatusChoices.IDLE)
     workingdir = models.CharField(max_length=1024, default='')
     require_user_interaction = models.BooleanField(default=False)
-    limit_max_conversation_messages = models.IntegerField(default=20)
-    limit_max_memory_items = models.IntegerField(default=15)
-    limit_max_automated_steps = models.IntegerField(default=0)
+    limit_max_conversation_messages = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of messages in conversation history.")
+    limit_max_memory_items = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of items in memory.")
+    limit_max_automated_steps = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of automated steps.")
     automated_step_count = models.IntegerField(default=0)
     workingdir_write_allowed = models.BooleanField(default=False, help_text ='Allow write operations within the working directory.')
     access_rules = models.TextField(blank=True, default='', help_text= "Fine-grained access rules, one per line. E.g., '!path/to/deny', '>path/to/allow', '</path/to/readonly'.")
@@ -49,6 +49,18 @@ class AgentInstance(BaseModel):
         if not self._filesystem:
             self._filesystem = BUILTIN_TOOL_CLASS_MAP["filesystem"](self)
         return self._filesystem
+
+    @property
+    def effective_limit_max_conversation_messages(self):
+        return self.limit_max_conversation_messages if self.limit_max_conversation_messages is not None else self.agent.limit_max_conversation_messages
+
+    @property
+    def effective_limit_max_memory_items(self):
+        return self.limit_max_memory_items if self.limit_max_memory_items is not None else self.agent.limit_max_memory_items
+
+    @property
+    def effective_limit_max_automated_steps(self):
+        return self.limit_max_automated_steps if self.limit_max_automated_steps is not None else self.agent.limit_max_automated_steps
 
     def add_to_conversation(self, role, content):
         c = ConversationMessage()
@@ -132,6 +144,12 @@ class AgentInstance(BaseModel):
             'limit_max_conversation_messages': self.limit_max_conversation_messages,
             'limit_max_memory_items': self.limit_max_memory_items,
             'limit_max_automated_steps': self.limit_max_automated_steps,
+            'default_limit_max_conversation_messages': self.agent.limit_max_conversation_messages,
+            'default_limit_max_memory_items': self.agent.limit_max_memory_items,
+            'default_limit_max_automated_steps': self.agent.limit_max_automated_steps,
+            'effective_limit_max_conversation_messages': self.effective_limit_max_conversation_messages,
+            'effective_limit_max_memory_items': self.effective_limit_max_memory_items,
+            'effective_limit_max_automated_steps': self.effective_limit_max_automated_steps,
             'automated_step_count': self.automated_step_count,
             'workingdir_write_allowed': self.workingdir_write_allowed,
             'access_rules': self.access_rules,

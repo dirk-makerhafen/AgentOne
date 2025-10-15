@@ -46,14 +46,14 @@ Rules are checked in order. Wildcards (*) are supported. Default is deny."></i>
             {{#unless is_dir}}
                 {{#if is_loaded}}
                     {{#if is_summary}}
-                        <i class="fa fa-expand fs-toggle-load-mode-btn" data-path="{{path}}" data-load-mode="summary" onclick="sidebarFsToggleLoadMode(event, {{instancePk}})" title="Switch to Full Load Mode"></i>
+                        <i class="fa fa-expand fs-toggle-load-mode-btn" data-path="{{path}}" data-id="{{id}}" data-load-mode="summary" onclick="sidebarFsToggleLoadMode(event, {{instancePk}})" title="Switch to Full Load Mode"></i>
                     {{else}}
-                        <i class="fa fa-compress fs-toggle-load-mode-btn" data-path="{{path}}" data-load-mode="full" onclick="sidebarFsToggleLoadMode(event, {{instancePk}})" title="Switch to Summary Load Mode"></i>
+                        <i class="fa fa-compress fs-toggle-load-mode-btn" data-path="{{path}}"data-id="{{id}}"  data-load-mode="full" onclick="sidebarFsToggleLoadMode(event, {{instancePk}})" title="Switch to Summary Load Mode"></i>
                     {{/if}}
                 {{/if}}
             {{/unless}}
-            <i class="fa fa-sign-out fs-unload-btn" data-path="{{path}}" onclick="sidebarFsUnload(event, {{instancePk}})" title="Unload this item" style="{{#unless is_loaded}}display: none;{{/unless}}"></i>
-            <i class="fa fa-sign-in fs-load-btn" data-path="{{path}}" onclick="sidebarFsLoadItem(event, {{instancePk}})" title="Load this item" style="{{#if is_loaded}}display: none;{{/if}}"></i>
+            <i class="fa fa-sign-out fs-unload-btn" data-path="{{path}}" data-path="{{id}}" onclick="sidebarFsUnload(event, {{instancePk}})" title="Unload this item" style="{{#unless is_loaded}}display: none;{{/unless}}"></i>
+            <i class="fa fa-sign-in fs-load-btn" data-path="{{path}}"    data-path="{{id}}" onclick="sidebarFsLoadItem(event, {{instancePk}})" title="Load this item" style="{{#if is_loaded}}display: none;{{/if}}"></i>
         </div>
     </div>
 </script>

@@ -1,5 +1,6 @@
 from pathlib import Path
 from ._dispatch_decorator import dispatched_detached
+import traceback
 
 @dispatched_detached
 def append_file(path, content):
@@ -26,4 +27,4 @@ def append_file(path, content):
             f.write(content)
         return {'status': 'success', 'message': f"Appended to file '{path}' successfully."}
     except Exception as e:
-        return {'status': 'error', 'message': f"Error appending to file {path}: {str(e)}"}
+        return {'status': 'error', 'message': f"Error appending to file {path}: {str(e)} {traceback.format_exc()}"}

@@ -1,6 +1,6 @@
 from agents.models.agent_instance import AgentInstance
 from agents.models.conversation_message import ConversationMessage
-from agents.models.agent_fork import AgentFork
+from agents.models.agent_instance_fork import AgentInstanceFork
 from celery import shared_task
 from django.db import transaction
 from tools.builtin_memory.models.memory_item import MemoryItem
@@ -9,7 +9,7 @@ from tools.calls.models.tool_call import ToolCall
 from tools.builtin_python.models.python_tool_var import PythonToolVar
 from tools.builtin_a2a.models.a2a_description import AgentToAgentDescription
 from tools.builtin_memory.prompts import TRACKS
-
+import traceback
 
 @shared_task
 def celery_clone_agentinstance(agentinstance_id):
@@ -27,8 +27,8 @@ def celery_clone_agentinstance(agentinstance_id):
             limit_max_memory_items=source.limit_max_memory_items,
             limit_max_automated_steps=source.limit_max_automated_steps
         )
-
-        fork_record = AgentFork.objects.create(
+        
+        fork_record = AgentInstanceFork.objects.create(
             parent_instance=source, child_instance=child_instance
         )
         fork_time = fork_record.created_at
@@ -64,9 +64,9 @@ def celery_clone_agentinstance(agentinstance_id):
         for trackname in TRACKS.keys():
             for layername in TRACKS[trackname]['layers'].keys():
                 items = MemoryItem.objects.filter(
-                    agentInstance=self, track=trackname, layer=layername,
+                    agentInstance=source, track=trackname, layer=layername,
                     next_version=None, created_at__lt=fork_time
-                ).order_by('-index')[:source.limit_max_memory_items]
+                ).order_by('-index')[:source.effective_limit_max_memory_items]
                 memory_items_to_fork.extend(items)
 
         # Combine all objects to be forked into a single structure
@@ -87,7 +87,7 @@ def celery_clone_agentinstance(agentinstance_id):
                 child_obj = model_class()
                 # Copy fields
                 for field in parent_obj._meta.fields:
-                    if not field.primary_key and field.name not in ['id', 'pk', 'agentinstance', 'agent_instance']:
+                    if not field.primary_key and field.name not in ['id', 'pk', 'agentinstance', 'agent_instance', 'agentInstance']:
                         setattr(child_obj, field.name, getattr(parent_obj, field.name))
 
                 child_obj.agentInstance = child_instance
@@ -97,5 +97,3 @@ def celery_clone_agentinstance(agentinstance_id):
 
             if new_child_objects:
                 model_class.objects.bulk_create(new_child_objects)
-
-    return child_instance

@@ -5,25 +5,34 @@
     <div class="setting-item">
         <label for="limit-convo-input_{{id}}">Conversation History Limit:</label>
         <div class="editable-setting">
-            <span class="editable-limit" id="limit-convo-text_{{id}}" onclick="showLimitEdit('convo', '{{id}}')">{{limit_max_conversation_messages}}</span>
-            <i class="fa fa-pencil-square-o" onclick="showLimitEdit('convo', '{{id}}')"></i>
-            <input type="number" id="limit-convo-input_{{id}}" value="{{limit_max_conversation_messages}}" style="display:none; width: 70px;" onkeydown="handleLimitKeydown(event, 'convo', '{{id}}')" onblur="saveLimit('convo', '{{id}}')"/>
+            <span class="editable-limit" id="limit-convo-text_{{id}}" onclick="showLimitEdit('convo', '{{id}}')">{{effective_limit_max_conversation_messages}}</span>
+            <i class="fa fa-pencil-square-o edit-limit-btn" onclick="showLimitEdit('convo', '{{id}}')"></i>
+            {{#if limit_max_conversation_messages}}
+            <i class="fa fa-undo reset-limit-btn" title="Reset to default" onclick="resetInstanceLimit('convo', '{{id}}')"></i>
+            {{/if}}
+            <input type="number" id="limit-convo-input_{{id}}" value="{{limit_max_conversation_messages}}" placeholder="{{default_limit_max_conversation_messages}}" style="display:none; width: 60px;" onkeydown="handleLimitKeydown(event, 'convo', '{{id}}')" onblur="saveLimit('convo', '{{id}}')"/>
         </div>
     </div>
     <div class="setting-item">
         <label for="limit-mem-input_{{id}}">Memory Items per Track/Layer:</label>
         <div class="editable-setting">
-            <span class="editable-limit" id="limit-mem-text_{{id}}" onclick="showLimitEdit('mem', '{{id}}')">{{limit_max_memory_items}}</span>
-            <i class="fa fa-pencil-square-o" onclick="showLimitEdit('mem', '{{id}}')"></i>
-            <input type="number" id="limit-mem-input_{{id}}" value="{{limit_max_memory_items}}" style="display:none; width: 70px;" onkeydown="handleLimitKeydown(event, 'mem', '{{id}}')" onblur="saveLimit('mem', '{{id}}')"/>
+            <span class="editable-limit" id="limit-mem-text_{{id}}" onclick="showLimitEdit('mem', '{{id}}')">{{effective_limit_max_memory_items}}</span>
+            <i class="fa fa-pencil-square-o edit-limit-btn" onclick="showLimitEdit('mem', '{{id}}')"></i>
+            {{#if limit_max_memory_items}}
+            <i class="fa fa-undo reset-limit-btn" title="Reset to default" onclick="resetInstanceLimit('mem', '{{id}}')"></i>
+            {{/if}}
+            <input type="number" id="limit-mem-input_{{id}}" value="{{limit_max_memory_items}}" placeholder="{{default_limit_max_memory_items}}" style="display:none; width: 60px;" onkeydown="handleLimitKeydown(event, 'mem', '{{id}}')" onblur="saveLimit('mem', '{{id}}')"/>
         </div>
     </div>
     <div class="setting-item">
         <label for="limit-steps-input_{{id}}">Max Automatic Steps:</label>
         <div class="editable-setting">
-            <span class="editable-limit" id="limit-steps-text_{{id}}" onclick="showLimitEdit('steps', '{{id}}')">{{limit_max_automated_steps}}</span>
-            <i class="fa fa-pencil-square-o" onclick="showLimitEdit('steps', '{{id}}')"></i>
-            <input type="number" id="limit-steps-input_{{id}}" value="{{limit_max_automated_steps}}" style="display:none; width: 70px;" onkeydown="handleLimitKeydown(event, 'steps', '{{id}}')" onblur="saveLimit('steps', '{{id}}')"/>
+            <span class="editable-limit" id="limit-steps-text_{{id}}" onclick="showLimitEdit('steps', '{{id}}')">{{effective_limit_max_automated_steps}}</span>
+            <i class="fa fa-pencil-square-o edit-limit-btn" onclick="showLimitEdit('steps', '{{id}}')"></i>
+            {{#if limit_max_automated_steps}}
+            <i class="fa fa-undo reset-limit-btn" title="Reset to default" onclick="resetInstanceLimit('steps', '{{id}}')"></i>
+            {{/if}}
+            <input type="number" id="limit-steps-input_{{id}}" value="{{limit_max_automated_steps}}" placeholder="{{default_limit_max_automated_steps}}" style="display:none; width: 60px;" onkeydown="handleLimitKeydown(event, 'steps', '{{id}}')" onblur="saveLimit('steps', '{{id}}')"/>
             <span class="current-step-count">(Current: {{automated_step_count}})</span>
         </div>
     </div>

@@ -1,4 +1,5 @@
 from .base import BaseService
+import traceback
 
 class LinuxService(BaseService):
     """Manages systemd services on Linux."""
@@ -56,8 +57,7 @@ Service installation completed successfully."))
             self.status()
 
         except (subprocess.CalledProcessError, IOError) as e:
-            self.command.stdout.write(self.command.style.ERROR(f"
-Error during service installation: {e}"))
+            self.command.stdout.write(self.command.style.ERROR(f"Error during service installation: {e} {traceback.format_exc()}"))
             if hasattr(e, 'stderr') and e.stderr:
                 self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))))
 
@@ -92,10 +92,10 @@ Error during service installation: {e}"))
             self.command.stdout.write(self.command.style.SUCCESS("\nService uninstalled successfully."))
 
         except subprocess.CalledProcessError as e:
-            self.command.stdout.write(self.command.style.ERROR(f"\nError during service uninstallation: {e}"))
+            self.command.stdout.write(self.command.style.ERROR(f"\nError during service uninstallation: {e} {traceback.format_exc()}"))
             self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))
         except IOError as e:
-            self.command.stdout.write(self.command.style.ERROR(f"\nFile Error during service uninstallation: {e}"))
+            self.command.stdout.write(self.command.style.ERROR(f"\nFile Error during service uninstallation: {e} {traceback.format_exc()}"))
 
     def start(self, *args, **kwargs):
         import os
@@ -108,7 +108,7 @@ Error during service installation: {e}"))
             subprocess.run(['systemctl', 'start', f'{self.service_name}.service'], check=True)
             self.command.stdout.write(self.command.style.SUCCESS("Service started successfully."))
         except subprocess.CalledProcessError as e:
-            self.command.stdout.write(self.command.style.ERROR(f"Failed to start service: {e}"))
+            self.command.stdout.write(self.command.style.ERROR(f"Failed to start service: {e} {traceback.format_exc()}"))
             self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))
 
     def stop(self, *args, **kwargs):
@@ -122,7 +122,7 @@ Error during service installation: {e}"))
             subprocess.run(['systemctl', 'stop', f'{self.service_name}.service'], check=True)
             self.command.stdout.write(self.command.style.SUCCESS("Service stopped successfully."))
         except subprocess.CalledProcessError as e:
-            self.command.stdout.write(self.command.style.ERROR(f"Failed to stop service: {e}"))
+            self.command.stdout.write(self.command.style.ERROR(f"Failed to stop service: {e} {traceback.format_exc()}"))
             self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))
 
     def status(self, *args, **kwargs):

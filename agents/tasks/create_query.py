@@ -87,7 +87,7 @@ def celery_create_query(agentinstance_id):
 def get_chat_messages(agentInstance):
     cmessages = []
 
-    conversationMessages = agentInstance.get_conversation_messages(limit=agentInstance.limit_max_conversation_messages)
+    conversationMessages = agentInstance.get_conversation_messages(limit=agentInstance.effective_limit_max_conversation_messages)
     conversationMessages = sorted({msg.id: msg for msg in conversationMessages}.values(), key=lambda msg: msg.created_at)
 
     fs_entries = agentInstance.filesystem.get_loaded_items(refresh_from_disk=True)

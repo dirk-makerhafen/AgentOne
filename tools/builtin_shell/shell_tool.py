@@ -48,7 +48,7 @@ class ShellTool(BaseTool):
         return (success, result)
 
     def get_history_limiting_rules(self):
-        limit = self.agentInstance.limit_max_conversation_messages
+        limit = self.agentInstance.effective_limit_max_conversation_messages
         return [
             {'group_name': "Shell", 'name': 'any', 'description': 'General limit for all shell tool calls.', 'match': lambda tc: tc.function_name == 'shell', 'key': lambda tc: '', 'limits': {'pending': limit, 'success': limit, 'failed': 3, 'max': limit}},
         ]

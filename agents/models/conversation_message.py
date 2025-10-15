@@ -5,7 +5,7 @@ from tools.calls.models.tool_call import ToolCall
 class ConversationMessage(BaseModel):
     agent = models.ForeignKey("agents.Agent", default=None, null=True, on_delete=models.CASCADE, related_name='conversationMessages')
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name='conversationMessages')
-    llmResponse = models.ForeignKey("agents.LLMResponse", default=None, null=True, on_delete=models.CASCADE, related_name='conversationMessages')
+    llmResponse = models.ForeignKey("agents.LLMResponse", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='conversationMessages')
     role = models.CharField(max_length=32)
     hide_from_context = models.BooleanField(default=False)
     pin_to_context = models.BooleanField(default=False)

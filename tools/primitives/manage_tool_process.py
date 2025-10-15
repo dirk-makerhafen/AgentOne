@@ -108,7 +108,7 @@ async def _stop_tool_process_async(process_id: int):
             await client_info['exit_stack'].aclose()
             return {'status': 'success', 'message': f'Client {process_id} stopped.'}
         except Exception as e:
-            return {'status': 'warning', 'message': f'Error during client stop for {process_id}: {e}'}
+            return {'status': 'warning', 'message': f'Error during client stop for {process_id}: {e} {traceback.format_exc()}'}
     return {'status': 'success', 'message': f'Client {process_id} was not running.'}
 
 

@@ -39,7 +39,7 @@ class UserInteractionTool(BaseTool):
                 'match': lambda tc: tc.function_name == 'await_user_input',
                 'key': lambda tc: '',
                 'limits': {
-                    'pending': self.agentInstance.limit_max_conversation_messages, 
+                    'pending': self.agentInstance.effective_limit_max_conversation_messages, 
                     'success': 5, 
                     'failed': 3, 
                     'max': 8

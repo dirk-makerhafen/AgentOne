@@ -31,7 +31,7 @@ class MemoryTool(BaseTool):
         ] 
      
         memory = {}
-        limit = self.agentInstance.limit_max_memory_items
+        limit = self.agentInstance.effective_limit_max_memory_items
         for trackname, trackitem in TRACKS.items():
             memory[trackname] = {}
             for layername, layerdesription in trackitem['layers'].items():      
@@ -203,7 +203,7 @@ class MemoryTool(BaseTool):
         return mi
 
     def get_history_limiting_rules(self):
-        limit = self.agentInstance.limit_max_conversation_messages
+        limit = self.agentInstance.effective_limit_max_conversation_messages
         return [
             {
                 'group_name': "Memory",

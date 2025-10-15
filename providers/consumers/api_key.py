@@ -2,6 +2,7 @@ import json
 from ui.router import register_handler
 from providers.models.api_provider import ApiProvider
 from providers.models.api_key import ApiKey
+import traceback
 
 @register_handler('apikey_create')
 def handle_apikey_create(consumer, provider_pk, key, comment=None):
@@ -15,7 +16,7 @@ def handle_apikey_create(consumer, provider_pk, key, comment=None):
     except ApiProvider.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Provider with PK {provider_pk} not found.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error creating provider API key: {str(e)}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error creating provider API key: {str(e)} {traceback.format_exc()}'}))
 
 @register_handler('apikey_delete')
 def handle_apikey_delete(consumer, provider_pk, apikey_pk):
@@ -31,4 +32,4 @@ def handle_apikey_delete(consumer, provider_pk, apikey_pk):
     except ApiProvider.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Provider with PK {provider_pk} not found.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message':  f'Error deleting provider API key: {str(e)}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message':  f'Error deleting provider API key: {str(e)} {traceback.format_exc()}'}))

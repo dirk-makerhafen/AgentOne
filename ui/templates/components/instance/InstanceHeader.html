@@ -27,7 +27,7 @@
                 <span class="header-value" id="instance-autorun-count_{{message.id}}">{{message.automated_step_count}} / </span>
                 <input type="number" 
                        id="limit-max-automated-steps-input_{{message.id}}" 
-                       value="{{message.limit_max_automated_steps}}" 
+                       value="{{message.effective_limit_max_automated_steps}}" 
                        onchange="handleAutoRunLimitChange(this, '{{message.id}}')" 
                        onblur="handleAutoRunLimitChange(this, '{{message.id}}')" 
                        class="edit-input"/>

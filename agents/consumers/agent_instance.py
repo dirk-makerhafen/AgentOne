@@ -6,6 +6,7 @@ from tools.builtin_python.models.python_tool_var import PythonToolVar
 from providers.models.ai_model import AiModel
 from systems.models.system import System
 from ui.router import register_handler
+import traceback
 
 @register_handler('agentinstance_create')
 def handle_agentinstance_create(consumer, agent_pk):
@@ -98,7 +99,7 @@ def handle_agentinstance_delete(consumer, instance_pk):
     except AgentInstance.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Agent instance with PK {instance_pk} not found."}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Error deleting agent instance {instance_pk}: {str(e)}"}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Error deleting agent instance {instance_pk}: {str(e)} {traceback.format_exc()}"}))
 
 @register_handler('agentinstance_fork')
 def handle_agentinstance_fork(consumer, instance_pk):
@@ -107,4 +108,4 @@ def handle_agentinstance_fork(consumer, instance_pk):
     except AgentInstance.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to fork agent instance: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to fork agent instance: {e} {traceback.format_exc()}'}))

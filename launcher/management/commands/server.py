@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+import traceback
 
 class Command(BaseCommand):
     help = "Manages the Carna server application (setup, run, services)."
@@ -85,7 +86,7 @@ class Command(BaseCommand):
 
                     config[key] = value
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Could not read config file: {e}"))
+            self.stdout.write(self.style.ERROR(f"Could not read config file: {e} {traceback.format_exc()}"))
         return config
 
     def _ask_question(self, question, default):
@@ -105,7 +106,7 @@ class Command(BaseCommand):
         try:
             call_command('createsuperuser', interactive=True)
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Could not create superuser: {e}"))
+            self.stdout.write(self.style.ERROR(f"Could not create superuser: {e} {traceback.format_exc()}"))
 
     def _write_local_config(self, path, config):
         self.stdout.write(f"\nWriting configuration to {path}...")
@@ -119,7 +120,7 @@ class Command(BaseCommand):
             with open(path, 'w') as f:
                 f.write(content)
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Failed to write config file: {e}"))
+            self.stdout.write(self.style.ERROR(f"Failed to write config file: {e} {traceback.format_exc()}"))
 
     def handle_run(self, **options):
         import subprocess
@@ -231,5 +232,5 @@ class Command(BaseCommand):
         except NotImplementedError:
              self.stdout.write(self.style.ERROR(f"The '{action}' action is not yet implemented for {system}."))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"An error occurred during the '{action}' operation: {e}"))
+            self.stdout.write(self.style.ERROR(f"An error occurred during the '{action}' operation: {e} {traceback.format_exc()}"))
 

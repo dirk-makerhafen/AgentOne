@@ -1,6 +1,7 @@
 import json
 from systems.models.system import System
 from ui.router import register_handler
+import traceback
 
 @register_handler('system_create')
 def handle_system_create(consumer, name='New System'):
@@ -36,4 +37,4 @@ def handle_system_list(consumer, **kwargs):
         system_list = [s.as_client_dict() for s in systems]
         consumer.send(text_data=json.dumps({'object': 'SystemList', 'systems': system_list}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error fetching Systems: {str(e)}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error fetching Systems: {str(e)} {traceback.format_exc()}'}))

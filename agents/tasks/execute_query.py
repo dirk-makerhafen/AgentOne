@@ -154,7 +154,7 @@ def execute_query(llmQuery_id, streaming=True  ):
             try:
                 toolCall.run()
             except Exception as e:
-                print(f"Error running tool call {toolCall.id}: {e}")
+                print(f"Error running tool call {toolCall.id}: {e} {traceback.format_exc()}")
         decide_next_step(instance)
         return 
     
@@ -176,8 +176,8 @@ def decide_next_step(agent_instance):
         return  # Stop the loop and wait.
 
     # If we are not waiting for a user, check if we can and should continue automatically.
-    if agent_instance.limit_max_automated_steps > 0:
-        if agent_instance.automated_step_count < agent_instance.limit_max_automated_steps:
+    if agent_instance.effective_limit_max_automated_steps > 0:
+        if agent_instance.automated_step_count < agent_instance.effective_limit_max_automated_steps:
             agent_instance.status = AgentInstance.AgentInstanceStatusChoices.IDLE_AUTOMATED
             agent_instance.automated_step_count += 1
             agent_instance.save()

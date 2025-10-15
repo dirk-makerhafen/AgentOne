@@ -1,15 +1,17 @@
 from django.db import models
 from core.models.base_model import BaseModel
 
-class AgentFork(BaseModel):
+class AgentInstanceFork(BaseModel):
     parent_instance = models.ForeignKey(
         'agents.AgentInstance',
         on_delete=models.CASCADE,
+        null=True,
         related_name='forks_created'
     )
     child_instance = models.OneToOneField(
         'agents.AgentInstance',
         on_delete=models.CASCADE,
+        null=True,
         related_name='fork_origin'
     )
     # The 'forked_at' timestamp is the 'created_at' field inherited from BaseModel.
@@ -22,7 +24,7 @@ class AgentFork(BaseModel):
         Provides a dictionary representation of the object for client-side rendering.
         """
         return {
-            'object': 'AgentFork',
+            'object': 'AgentInstanceFork',
             'id': self.pk,
             'created_at': self.created_at.isoformat(),
             'parent_instance_id': self.parent_instance.pk,

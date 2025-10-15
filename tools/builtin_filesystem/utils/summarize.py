@@ -1,6 +1,7 @@
 import ast
 import re
 import json
+import traceback
 try:
     import yaml
 except ImportError:
@@ -318,7 +319,7 @@ def summarize_yaml_json(source_code, is_json=False):
             summarized_data = _summarize_data_structure(data)
             return yaml.dump(summarized_data, indent=2, default_flow_style=False)
     except (json.JSONDecodeError, yaml.YAMLError, TypeError) as e:
-        return f"# Could not parse {'JSON' if is_json else 'YAML'} content: {e}"
+        return f"# Could not parse {'JSON' if is_json else 'YAML'} content: {e} {traceback.format_exc()}"
 
 
 # Common Helpers

@@ -83,7 +83,8 @@ const messageHandlers = {
             addOrUpdateAgentInSidebar(window.allAgents[payload.agent_pk]);
         }
     },
-    'AgentFork': (payload) => renderAgentForkMessage(payload),
+    'AgentInstanceFork': (payload) => renderAgentInstanceForkMessage(payload),
+    'AgentInstanceView': (payload) => renderInstanceView(payload),
     'AgentInstanceList': (payload) => {
         // Clear existing instances from cache before repopulating
         window.allAgentInstances = {};

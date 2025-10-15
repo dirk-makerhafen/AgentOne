@@ -18,6 +18,25 @@
                 </div>
                 
                 <div class="form-group">
+                    <h4>Default Instance Limits</h4>
+                    <p class="help-block">Set the default limits for any new instances created from this agent. These can be overridden on a per-instance basis.</p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="agent-limit-conversation-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Conversation Messages</label>
+                            <input type="number" class="form-control" id="agent-limit-conversation-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_conversation_messages}}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="agent-limit-memory-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Memory Items</label>
+                            <input type="number" class="form-control" id="agent-limit-memory-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_memory_items}}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="agent-limit-steps-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Automated Steps</label>
+                            <input type="number" class="form-control" id="agent-limit-steps-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_automated_steps}}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <h4>Available Tools</h4>
                     <div class="tool-selection-list">
                         {{#each tools}}

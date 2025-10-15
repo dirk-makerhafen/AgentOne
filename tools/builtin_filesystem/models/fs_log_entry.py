@@ -6,7 +6,7 @@ from core.models.base_model import BaseModel
 from tools.primitives import append_file, list_directory, mkdir, read_file, rm, stat_path, write_file
 from tools.builtin_filesystem.utils.summarize import summarize
 from tools.builtin_filesystem.utils.fsutils import apply_patch, format_directory_listing, get_relative_path, make_patch
-
+import traceback
 
 class FsLogEntryManager(models.Manager):
     def get_or_create_latest(self, agentInstance, path, toolCall=None, action="init", load_mode=None, filter=None, recursive=None, must_be_file=False, must_exist=False):
@@ -246,7 +246,7 @@ class FsLogEntry(BaseModel):
                         return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
                 write_result = {'status': 'success'} # Simulate success for deletion, stat will confirm non-existence
             except OSError as e:
-                return False, {'status': 'failed', "message": f"Failed to delete {self.path} during revert: {e}"}
+                return False, {'status': 'failed', "message": f"Failed to delete {self.path} during revert: {e} {traceback.format_exc()}"}
 
         else: # did exist
             if revert_to_item.is_directory:
@@ -261,7 +261,7 @@ class FsLogEntry(BaseModel):
                             return False, {'status': 'failed', "message": f"Failed to read file stats after revert-write/delete for {self.path}: {stat_result}"}
                         write_result = {'status': 'success'}
                     except OSError as e:
-                        return False, {'status': 'failed', "message": f"Failed to create directory {self.path} during revert: {e}"}
+                        return False, {'status': 'failed', "message": f"Failed to create directory {self.path} during revert: {e} {traceback.format_exc()}"}
                 else:
                     write_result = {'status': 'success'} # Directory already exists
             
@@ -436,6 +436,7 @@ class FsLogEntry(BaseModel):
             calculated_tokens = len(self.content) // 3.8
         elif not self.is_directory and self.exists_on_fs:
             calculated_tokens = self.fs_size
+        print("WORKINGDIR", self.agentInstance.workingdir)
 
         data = {
             'object': 'FsLogEntry', 
@@ -477,6 +478,7 @@ class FsLogEntry(BaseModel):
         return data
 
     def as_query_dict(self):
+        print("WORKINGDIR", self.agentInstance.workingdir)
         return {
             "is_directory":  self.is_directory,
             "refreshed_from_fs": self.action == "refresh",

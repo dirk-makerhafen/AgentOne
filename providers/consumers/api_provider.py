@@ -11,7 +11,7 @@ def handle_provider_create(consumer, name, url=None):
         provider = ApiProvider(name=name, url=url)
         provider.save()
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error creating API Provider: {str(e)}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error creating API Provider: {str(e)} {traceback.format_exc()}'}))
 
 @register_handler('provider_update')
 def handle_provider_update(consumer, provider_pk, name, url=None):
@@ -27,7 +27,7 @@ def handle_provider_update(consumer, provider_pk, name, url=None):
     except ApiProvider.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Provider with PK {provider_pk} not found.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error updating API Provider: {str(e)}{traceback.format_exc()}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error updating API Provider: {str(e)} {traceback.format_exc()}'}))
 
 @register_handler('provider_delete')
 def handle_provider_delete(consumer, provider_pk):
@@ -64,7 +64,7 @@ def handle_provider_delete(consumer, provider_pk):
             celery_send_websocket_update.delay(message_data, user_pk=pk)
 
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error deleting API Provider: {str(e)}{traceback.format_exc()}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error deleting API Provider: {str(e)} {traceback.format_exc()}'}))
 
 @register_handler('provider_list')
 def handle_provider_list(consumer, **kwargs):
@@ -73,4 +73,4 @@ def handle_provider_list(consumer, **kwargs):
         provider_list = [p.as_client_dict() for p in providers]
         consumer.send(text_data=json.dumps({'object': 'ApiProviderList', 'providers': provider_list}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error fetching API Providers: {str(e)}{traceback.format_exc()}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error fetching API Providers: {str(e)} {traceback.format_exc()}'}))

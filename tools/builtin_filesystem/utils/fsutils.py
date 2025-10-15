@@ -23,27 +23,23 @@ def apply_patch(original_content, patching):
     return new_content
 
 def get_abs_path(workingdir, path):
-    if path.startswith("./"): path = path[2:]
-    workingdir = os.path.expandvars(os.path.expanduser(workingdir))
+    workingdir = os.path.realpath(os.path.abspath(os.path.expandvars(os.path.expanduser(workingdir))))
     path = os.path.expandvars(os.path.expanduser(path))
     if not os.path.isabs(path):
         path = os.path.join(workingdir, path)
-    return os.path.abspath(path)
+    path = os.path.realpath(os.path.abspath(path))
+    return path
     
 def get_relative_path(workingdir, path):
-    workingdir = os.path.expandvars(os.path.expanduser(workingdir))
-    if workingdir.endswith("/"):
-        workingdir = workingdir[:-1]
-    path = os.path.expandvars(os.path.expanduser(path))
-    if path[:2] == "./": path = path[1:]
-    if path.startswith(workingdir):
-        path = path[len(workingdir):]
-        if len(path) > 0 and path[0] == '/':
-            path = path[1:]
-        if not path.startswith('./'):
-            path = f"./{path}"
-    if path == "": path = "./"
-    return path
+    workingdir = os.path.realpath(os.path.abspath(os.path.expandvars(os.path.expanduser(workingdir))))
+    path = os.path.realpath(os.path.abspath(os.path.expandvars(os.path.expanduser(path))))
+    try:
+        rel = os.path.relpath(path, start=workingdir)
+    except ValueError: # Handles Windows case when on different drives, fallback to abs
+        rel = path
+    if rel == ".":
+        rel = "./"
+    return rel
 
 def clean_path(workingdir, path):
     abs_path = get_abs_path(workingdir, path)

@@ -2,6 +2,7 @@ import json
 from systems.models.system import System
 from tools.definitions.models.tool_definition import ToolDefinition
 from ui.router import register_handler
+import traceback
 
 @register_handler('tooldefinition_create')
 def handle_tooldefinition_create(consumer, name=None, display_name=None, description='', is_builtin=False, transport_type='stdin_stdout', repository_url=None, execution_mode='shared', manifest=None): # Added manifest
@@ -24,7 +25,7 @@ def handle_tooldefinition_create(consumer, name=None, display_name=None, descrip
             manifest=manifest # Added this line
         )
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create tool definition: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create tool definition: {e} {traceback.format_exc()}'}))
 
 @register_handler('tooldefinition_update')
 def handle_tooldefinition_update(consumer, tool_definition_id, updates=None):
@@ -59,7 +60,7 @@ def handle_tooldefinition_update(consumer, tool_definition_id, updates=None):
     except ToolDefinition.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'ToolDefinition with ID {tool_definition_id} not found.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update tool definition: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update tool definition: {e} {traceback.format_exc()}'}))
 
 @register_handler('tooldefinition_delete')
 def handle_tooldefinition_delete(consumer, tool_definition_id):
@@ -80,7 +81,7 @@ def handle_tooldefinition_delete(consumer, tool_definition_id):
         # as the UI update will be handled by the model's delete signal (or lack thereof if not found).
         pass
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to delete tool definition: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to delete tool definition: {e} {traceback.format_exc()}'}))
 
 @register_handler('tooldefinition_list')
 def handle_tooldefinition_list(consumer, **kwargs):
@@ -89,7 +90,7 @@ def handle_tooldefinition_list(consumer, **kwargs):
         tool_defs_data = [tool_def.as_client_dict() for tool_def in tool_definitions]
         consumer.send(text_data=json.dumps({'object': 'ToolDefinitionList', 'tool_definitions': tool_defs_data}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to retrieve tool definitions: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to retrieve tool definitions: {e} {traceback.format_exc()}'}))
 
 @register_handler('tooldefinition_system_assign')
 def handle_tooldefinition_system_assign(consumer, tool_definition_id, system_id):
@@ -130,4 +131,4 @@ def handle_tooldefinition_manifest_refresh(consumer, tool_definition_id):
     except ToolDefinition.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'ToolDefinition with ID {tool_definition_id} not found.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to trigger tool definition refresh: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to trigger tool definition refresh: {e} {traceback.format_exc()}'}))

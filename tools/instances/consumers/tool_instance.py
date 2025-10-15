@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from tools.instances.models.tool_instance import ToolInstance
 from ui.router import register_handler
 from tools.instances.tasks.tool_fetch_details import fetch_mcp_tool_details
+import traceback
 
 
 @register_handler('toolinstance_create')
@@ -34,7 +35,7 @@ def handle_toolinstance_delete(consumer, id):
     except ToolInstance.DoesNotExist:
         pass
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Failed to delete tool instance: {str(e)}"}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Failed to delete tool instance: {str(e)} {traceback.format_exc()}"}))
 
 @register_handler('toolinstance_list')
 def handle_toolinstance_list(consumer, **kwargs):
@@ -49,7 +50,7 @@ def handle_toolinstance_tools_refresh(consumer, id):
     try:
         fetch_mcp_tool_details.delay(id)
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Failed to queue refresh task: {e}"}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f"Failed to queue refresh task: {e} {traceback.format_exc()}"}))
 
 from tools.instances.tasks.stop_tool import stop_tool
 
@@ -59,4 +60,4 @@ def handle_toolinstance_stop(consumer, tool_instance_pk):
     try:
         stop_tool.delay(tool_instance_pk)
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to queue tool stop task for instance {tool_instance_pk}: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to queue tool stop task for instance {tool_instance_pk}: {e} {traceback.format_exc()}'}))

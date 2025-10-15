@@ -6,6 +6,7 @@ from tools.definitions.tasks.install_tool import install_tool
 from tools.definitions.tasks.uninstall_tool import uninstall_tool
 from tools.instances.tasks.start_tool import start_tool
 from ui.router import register_handler
+import traceback
 
 @register_handler('toolinstallation_create')
 def handle_toolinstallation_create(consumer, tool_definition_pk, system_pk, max_parallel_instances=1):
@@ -29,7 +30,7 @@ def handle_toolinstallation_create(consumer, tool_definition_pk, system_pk, max_
     except (ToolDefinition.DoesNotExist, System.DoesNotExist) as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': str(e)}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create tool installation: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create tool installation: {e} {traceback.format_exc()}'}))
 
 @register_handler('toolinstallation_get_logs')
 def handle_toolinstallation_get_logs(consumer, installation_id):
@@ -56,7 +57,7 @@ def handle_toolinstallation_delete(consumer, installation_pk):
         uninstall_tool.delay(installation_pk)
     except Exception as e:
         # Log error if the task couldn't be queued.
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to queue tool uninstallation: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to queue tool uninstallation: {e} {traceback.format_exc()}'}))
 
 @register_handler('toolinstallation_list')
 def handle_toolinstallation_list(consumer, system_pk=None):
@@ -69,11 +70,11 @@ def handle_toolinstallation_list(consumer, system_pk=None):
         installations_data = [inst.as_client_dict() for inst in installations]
         consumer.send(text_data=json.dumps({'object': 'ToolInstallationList', 'tool_installations': installations_data}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to retrieve tool installations: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to retrieve tool installations: {e} {traceback.format_exc()}'}))
 
 @register_handler('toolinstallation_start')
 def handle_toolinstallation_start(consumer, installation_pk):
     try:
         start_tool.delay(installation_pk)
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to start tool installation {installation_pk}: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to start tool installation {installation_pk}: {e} {traceback.format_exc()}'}))

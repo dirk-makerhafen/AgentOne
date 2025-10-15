@@ -5,15 +5,16 @@ from django.db import models
 import json
 from django.utils import timezone
 from django.contrib.auth.models import User
+import traceback
 
 class BaseModel(DirtyFieldsMixin, models.Model):
     created_at = models.DateTimeField(db_index=True, editable=False)
     updated_at = models.DateTimeField(editable=False)
-    raw_data = models.TextField(max_length=100 * 1024 * 1024, default='')
+    raw_data = models.TextField(max_length=100 * 1024 * 1024, default='', blank=True)
 
     # Forking and Data Deduplication fields
-    fork_of = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='forks')
-    raw_data_reference = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='data_references')
+    fork_of = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, default=None, related_name='forks')
+    raw_data_reference = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, default=None, related_name='data_references')
 
     @property
     def data(self):
@@ -24,7 +25,7 @@ class BaseModel(DirtyFieldsMixin, models.Model):
             try:
                 self._data = json.loads(source_raw_data) if source_raw_data else {}
             except Exception as e:
-                self._data = {'__error': f'Failed to load data for {self}: {e}'}
+                self._data = {'__error': f'Failed to load data for {self}: {e} {traceback.format_exc()}'}
         return self._data
 
     @data.setter
@@ -96,7 +97,7 @@ class BaseModel(DirtyFieldsMixin, models.Model):
     def send_object_to_clients(self, instance_pk=None):
         from agents.models.agent import Agent
         from agents.models.agent_instance import AgentInstance
-        from agents.models.agent_fork import AgentFork # Import AgentFork
+        from agents.models.agent_instance_fork import AgentInstanceFork 
         from core.models.prompt_string import PromptString
         from core.tasks.send_websocket_update import celery_send_websocket_update
         from providers.models.ai_model import AiModel
@@ -107,7 +108,7 @@ class BaseModel(DirtyFieldsMixin, models.Model):
         from tools.definitions.models.tool_installation import ToolInstallation
         from tools.instances.models.tool_instance import ToolInstance
         from django.contrib.auth.models import User
-
+        print("HEHRE",  self)
         # Ensure message_data is always a dictionary and copy it if it's already one
         base_message_data = self.as_client_dict() if not isinstance(self, dict) else dict(self)
 
@@ -116,8 +117,8 @@ class BaseModel(DirtyFieldsMixin, models.Model):
 
         if instance_pk: # Explicit override via instance_pk parameter
             target_instance_pks.add(instance_pk)
-        elif isinstance(self, AgentFork):
-            # AgentFork needs to be sent to both parent and child instances
+        elif isinstance(self, AgentInstanceFork):
+            # AgentInstanceFork needs to be sent to both parent and child instances
             target_instance_pks.add(self.parent_instance.pk)
             target_instance_pks.add(self.child_instance.pk)
         elif hasattr(self, 'agentInstance') and self.agentInstance:
@@ -144,7 +145,7 @@ class BaseModel(DirtyFieldsMixin, models.Model):
             else:
                 print(f'Warning: send_object_to_clients received unhandled object type: {type(self)} with no clear target.')
                 return
-
+        print("FOO",base_message_data )
         for instance_pk_target in target_instance_pks:
             dispatch_message_data = dict(base_message_data)
             dispatch_message_data['target_instance_id'] = instance_pk_target

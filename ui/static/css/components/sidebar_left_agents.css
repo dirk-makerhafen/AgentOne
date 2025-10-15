@@ -145,3 +145,105 @@
     border-left: 2px solid blue;
     border-radius: 4px;
 }
+
+
+/* --- Explorer-Style Tree View --- */
+.tree-view-list {
+    list-style-type: none;
+    padding-left: 15px;
+    margin: 0;
+}
+
+.tree-view-list li {
+    padding: 2px 0;
+}
+
+.tree-node-header, .tree-leaf-instance {
+    cursor: pointer;
+    padding: 3px 5px;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tree-node-header:hover, .tree-leaf-instance:hover {
+    background-color: #f0f0f0;
+}
+
+.tree-leaf-instance.selected-instance {
+    background-color: #d0efff;
+    font-weight: bold;
+}
+
+.tree-node-icon {
+    margin-right: 6px;
+    color: #666;
+}
+
+.tree-node-name {
+    flex-grow: 1;
+    font-size: 0.9em;
+}
+
+.tree-node-children {
+    border-left: 1px solid #e0e0e0;
+    margin-left: 8px;
+}
+
+.tree-leaf-header {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.tree-leaf-header .instance-status {
+    margin-left: auto;
+    padding: 1px 5px;
+    font-size: 0.8em;
+    border-radius: 8px;
+    font-weight: normal;
+}
+
+
+/* --- Common Base Path Display --- */
+.common-base-path-container {
+    padding: 4px 8px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 0.8em;
+    color: #6c757d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.base-path-label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+/* --- New Tree View Styles --- */
+.tree-node-toggle {
+    width: 12px;
+    text-align: center;
+    margin-right: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.tree-node-spacer {
+    width: 12px;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+.tree-leaf-instance {
+    align-items: center;
+}
+.tree-node-children {
+    padding-left: 10px;
+    margin-left: 10px;
+    border-left: 1px solid #e0e0e0;
+}

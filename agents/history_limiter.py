@@ -18,7 +18,7 @@ class HistoryLimiter:
 
     def _define_general_rules(self):
         """Defines non-tool-specific limiting rules."""
-        limit = self.agentInstance.limit_max_conversation_messages
+        limit = self.agentInstance.effective_limit_max_conversation_messages
         self.general_rules = {
             'messages_dont_warn_forget': max(4, limit * 0.80) # Warn for the last 20% or 4 messages
         }
@@ -35,7 +35,7 @@ class HistoryLimiter:
             if hasattr(tool_instance, 'get_history_limiting_rules'):
                 all_rule_templates.extend(tool_instance.get_history_limiting_rules())
 
-        db_rules = self.agentInstance.history_limiting_rules.filter(is_active=True)
+        db_rules = self.agentInstance.agent.history_limiting_rules.filter(is_active=True)
         db_rules_map = {f'{rule.group_name}:{rule.rule_name}': rule for rule in db_rules}
         
         merged_rules = []
@@ -91,7 +91,7 @@ class HistoryLimiter:
             if hasattr(tool_instance, 'get_history_limiting_rules'):
                 all_rule_templates.extend(tool_instance.get_history_limiting_rules())
 
-        db_rules = self.agentInstance.history_limiting_rules.filter(is_active=True)
+        db_rules = self.agentInstance.agent.history_limiting_rules.filter(is_active=True)
         db_rules_map = {rule.rule_name: rule for rule in db_rules}
 
         internal_merged_rules = []

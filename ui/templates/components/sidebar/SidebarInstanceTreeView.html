@@ -1,0 +1,57 @@
+{% verbatim %}
+<script id="SidebarInstanceHierarchyTreeViewNodeTemplate" type="text/x-handlebars-template">
+    <ul class="tree-view-list">
+        {{#each nodes}}
+            <li>
+                <div id="agent_instance_{{id}}" class="tree-leaf-instance {{#if isSelected}}selected-instance{{/if}}" 
+                     data-instance-id="{{id}}" onclick="selectAgentInstance(event, {{id}}, '{{name}}')">
+                    
+                    {{#if children}}
+                        <i class="fa fa-caret-right tree-node-toggle" onclick="toggleTreeNode(event)"></i>
+                    {{else}}
+                        <span class="tree-node-spacer"></span>
+                    {{/if}}
+
+                    <i class="fa fa-file-o tree-node-icon"></i>
+                    <span class="tree-node-name">{{name}}</span>
+                    <span class="instance-status instance-status-{{status}}">{{status_display}}</span>
+                </div>
+                {{#if children}}
+                    <div class="tree-node-children" style="display: none;">
+                        {{> SidebarInstanceHierarchyTreeViewNodeTemplate nodes=children}}
+                    </div>
+                {{/if}}
+            </li>
+        {{/each}}
+    </ul>
+</script>
+
+<script id="SidebarInstanceDirectoryTreeViewNodeTemplate" type="text/x-handlebars-template">
+    <ul class="tree-view-list">
+        {{#each nodes}}
+            <li>
+                {{#if children}}
+                    <div class="tree-node-header" onclick="toggleTreeNode(event)">
+                        <i class="fa fa-folder tree-node-icon"></i>
+                        <span class="tree-node-name">{{name}}</span>
+                    </div>
+                {{else}}
+                    <div id="agent_instance_{{id}}" class="tree-leaf-instance {{#if isSelected}}selected-instance{{/if}}" 
+                         data-instance-id="{{id}}" onclick="selectAgentInstance(event, {{id}}, '{{name}}')">
+                        <div class="tree-leaf-header">
+                            <i class="fa fa-file-o tree-node-icon"  onclick="toggleTreeNode(event)"></i>
+                            <span class="tree-node-name">{{name}}</span>
+                            <span class="instance-status instance-status-{{status}}">{{status_display}}</span>
+                        </div>
+                    </div>
+                {{/if}}
+                {{#if children}}
+                    <div class="tree-node-children" style="display: none;">
+                        {{> SidebarInstanceDirectoryTreeViewNodeTemplate nodes=children}}
+                    </div>
+                {{/if}}
+            </li>
+        {{/each}}
+    </ul>
+</script>
+{% endverbatim %}

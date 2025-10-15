@@ -181,14 +181,14 @@ class FilesystemTool(BaseTool):
                     return False, uresult
 
             except SyntaxError as e:
-                return False, {"status": "error", "message": f"Error: Syntax error in file or provided source: {e}"}
+                return False, {"status": "error", "message": f"Error: Syntax error in file or provided source: {e} {traceback.format_exc()}"}
 
             return True, {}
         except Exception as e:
-            return False, {"status": "error", "message": f"An unexpected error occurred: {type(e).__name__}: {e}\n{traceback.format_exc()}"}
+            return False, {"status": "error", "message": f"An unexpected error occurred: {type(e).__name__}: {e} {traceback.format_exc()}"}
 
     def get_history_limiting_rules(self):
-        limit = self.agentInstance.limit_max_conversation_messages
+        limit = self.agentInstance.effective_limit_max_conversation_messages
         loaded_paths = {item.path for item in self.get_loaded_items()}
         return [
             {

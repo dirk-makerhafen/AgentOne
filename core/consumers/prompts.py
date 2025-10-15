@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 import json
 from core.models.prompt_string import PromptString
 from ui.router import register_handler
+import traceback
 
 @register_handler('prompt_create')
 def handle_prompt_create(consumer, original_prompt_pk):
@@ -40,7 +41,7 @@ def handle_prompt_create(consumer, original_prompt_pk):
     except PromptString.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message':  f'Original prompt with pk {original_prompt_pk} not found.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message':  f'Error creating custom prompt version: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message':  f'Error creating custom prompt version: {e} {traceback.format_exc()}'}))
 
 @register_handler('prompt_update')
 def handle_prompt_update(consumer, prompt_pk, value):
@@ -66,7 +67,7 @@ def handle_prompt_update(consumer, prompt_pk, value):
     except PromptString.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Prompt with pk {prompt_pk} not found or permission denied.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error updating prompt: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error updating prompt: {e} {traceback.format_exc()}'}))
 
 @register_handler('prompt_delete')
 def handle_prompt_delete(consumer, prompt_pk):
@@ -99,7 +100,7 @@ def handle_prompt_delete(consumer, prompt_pk):
         }
         celery_send_websocket_update.delay(message_data, user_pk=consumer.user_pk)
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message':  f'Error deleting prompt: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message':  f'Error deleting prompt: {e} {traceback.format_exc()}'}))
 
 @register_handler('prompt_list')
 def handle_prompt_list(consumer, **kwargs):
@@ -122,7 +123,7 @@ def handle_prompt_list(consumer, **kwargs):
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'User with pk {consumer.user_pk} not found.'}))
         return
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error fetching prompt list: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error fetching prompt list: {e} {traceback.format_exc()}'}))
         return
 
     all_prompts_data.sort(key=lambda p: (p.owner_id, p.source, p.key) if p.owner_id else (-1, p.source, p.key) )

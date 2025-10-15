@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+import traceback
 
 class Command(BaseCommand):
     help = "Manages the Carna client application (register, run, services)."
@@ -107,9 +108,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Client configuration saved to '{config_path}'."))
 
         except requests.exceptions.RequestException as e:
-            self.stdout.write(self.style.ERROR(f"Could not connect to the server. Details: {e}"))
+            self.stdout.write(self.style.ERROR(f"Could not connect to the server. Details: {e} {traceback.format_exc()}"))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"An unexpected error occurred: {e}"))
+            self.stdout.write(self.style.ERROR(f"An unexpected error occurred: {e} {traceback.format_exc()}"))
             if 'response' in locals():
                 self.stdout.write(f"Server response: {response.status_code} - {response.text}")
     def _get_config_path(self, options):
@@ -248,7 +249,7 @@ class Command(BaseCommand):
         except NotImplementedError:
              self.stdout.write(self.style.ERROR(f"The '{action}' action is not yet implemented for {system}."))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"An error occurred during the '{action}' operation: {e}"))
+            self.stdout.write(self.style.ERROR(f"An error occurred during the '{action}' operation: {e} {traceback.format_exc()}"))
     def _determine_paths_and_permissions(self, options):
         import os
         import platform

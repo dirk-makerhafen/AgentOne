@@ -105,7 +105,11 @@ def manage_dedicated_tools_on_save(sender, instance, created, **kwargs):
                     workflow.delay()
 
 @receiver(pre_delete, sender=AgentInstance)
-def cleanup_dedicated_tools_on_deletion(sender, instance, **kwargs):
+def cleanup_references(sender, instance, **kwargs):
+    for fork in instance.forks_created.all():
+        fork.delete()
+    if hasattr(instance, "fork_origin"):
+        instance.fork_origin.delete()
     agent_owners = instance.agent.owners.all()
     dedicated_installations = ToolInstallation.objects.filter(agent_instance=instance)
     for installation in dedicated_installations:

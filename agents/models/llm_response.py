@@ -10,7 +10,7 @@ class LLMResponse(BaseModel):
 
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="llmResponses")
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="llmResponses")
-    llmQuery = models.ForeignKey("agents.LLMQuery", on_delete=models.CASCADE, related_name="llmResponses")
+    llmQuery = models.ForeignKey("agents.LLMQuery", on_delete=models.SET_DEFAULT, default=None, null=True, related_name="llmResponses")
     completion_tokens = models.IntegerField(default=0)
     prompt_tokens = models.IntegerField(default=0)
     status = models.CharField(max_length=255, choices=LLMResponseStatusChoices.choices, default=LLMResponseStatusChoices.PENDING)

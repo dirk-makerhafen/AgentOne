@@ -19,6 +19,8 @@
     margin-right: 4px; /* Small space between tabs */
     font-size: 0.9em;
     color: #333;
+    max-width: calc-size(min-content, size * 1.5);
+    flex-grow: 1;
     outline: none; /* Remove focus outline */
 }
 

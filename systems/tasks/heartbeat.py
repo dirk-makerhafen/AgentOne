@@ -3,6 +3,7 @@ from celery import shared_task
 from django.utils import timezone
 import logging
 import asyncio
+import traceback
 import httpx
 from django.db.models import Q
 from asgiref.sync import async_to_sync, sync_to_async
@@ -47,11 +48,11 @@ def poll_remote_executors_for_heartbeat():
                 else:
                     logger.warning(f"Heartbeat poll for system '{system.name}' (PK: {system.pk}) returned non-ok status: {data}.")
         except httpx.RequestError as e:
-            logger.error(f"Network or request error while polling system '{system.name}' (PK: {system.pk}): {e}")
+            logger.error(f"Network or request error while polling system '{system.name}' (PK: {system.pk}): {e} {traceback.format_exc()}")
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error while polling system '{system.name}' (PK: {system.pk}) - Status {e.response.status_code}: {e.response.text}")
         except Exception as e:
-            logger.error(f"Unexpected error while polling system '{system.name}' (PK: {system.pk}): {e}", exc_info=True)
+            logger.error(f"Unexpected error while polling system '{system.name}' (PK: {system.pk}): {e} {traceback.format_exc()}", exc_info=True)
 
     async def _run_all_polls():
         if remote_executors_to_poll.exists():
@@ -65,7 +66,7 @@ def poll_remote_executors_for_heartbeat():
     try:
         async_to_sync(_run_all_polls)()
     except Exception as e:
-        logger.error(f"Error during async_to_sync execution of polling tasks: {e}", exc_info=True)
+        logger.error(f"Error during async_to_sync execution of polling tasks: {e} {traceback.format_exc()}", exc_info=True)
 
 
     # 2. Update system statuses based on heartbeats

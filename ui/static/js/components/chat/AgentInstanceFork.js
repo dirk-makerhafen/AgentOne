@@ -1,12 +1,12 @@
-function renderAgentForkMessage(payload) {
-    const agentForkTemplate = getTemplate('AgentForkTemplate');
+function renderAgentInstanceForkMessage(payload) {
+    const agentInstanceForkTemplate = getTemplate('AgentInstanceForkTemplate');
     const targetInstanceId = payload.target_instance_id;
 
     const isParent = targetInstanceId === payload.parent_instance_id;
     const isChild = targetInstanceId === payload.child_instance_id;
     
     const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = agentForkTemplate({
+    tempDiv.innerHTML = agentInstanceForkTemplate({
         id: payload.id,
         targetInstanceId: targetInstanceId,
         created_at: payload.created_at,

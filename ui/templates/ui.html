@@ -47,7 +47,7 @@
 
     {% include 'components/chat/ConversationMessage.html' %}
     {% include 'components/chat/DebugLog.html' %}
-    {% include 'components/chat/AgentFork.html' %}
+    {% include 'components/chat/AgentInstanceFork.html' %}
     {% include 'components/chat/FilesystemLog.html' %}
     {% include 'components/chat/InterAgentLog.html' %}
     {% include 'components/chat/LLMQuery.html' %}
@@ -72,8 +72,7 @@
 
     {% include 'components/sidebar/SidebarAgents.html' %}
     {% include 'components/sidebar/SidebarInstances.html' %}
-
-
+    {% include 'components/sidebar/SidebarInstanceTreeView.html' %}
 
     <script src="{% static 'js3party/jquery-3.6.0.min.js' %}"></script>
     <script src="{% static 'js3party/bootstrap.min.js' %}"></script>
@@ -98,6 +97,9 @@
     <script src="{% static 'js/services/agents/agentInstanceApi.js' %}"></script>
     <script src="{% static 'js/services/agents/conversationApi.js' %}"></script>
     <script src="{% static 'js/services/agents/limitsApi.js' %}"></script>
+    <script src="{% static 'js/services/agents/instanceViewApi.js' %}"></script>
+
+    
     <!-- Core APIs -->
     <script src="{% static 'js/services/core/promptsApi.js' %}"></script>
     <!-- Provider APIs -->
@@ -130,7 +132,7 @@
     <script src="{% static 'js/components/chat/LLMResponse.js' %}"></script>
     <script src="{% static 'js/components/chat/PythonVarLog.js' %}"></script>
     <script src="{% static 'js/components/chat/ToolCall.js' %}"></script>
-    <script src="{% static 'js/components/chat/AgentFork.js' %}"></script>
+    <script src="{% static 'js/components/chat/AgentInstanceFork.js' %}"></script>
 
     <!-- Tabs -->
     <script src="{% static 'js/components/tabs/TabInstance.js' %}"></script>

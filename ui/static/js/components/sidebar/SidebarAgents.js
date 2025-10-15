@@ -22,11 +22,18 @@ function initializeAgentListTemplates() {
  * @param {object} agentData The agent object.
  */
 function addOrUpdateAgentInSidebar(agentData) {
+    // ALWAYS update the cache, regardless of the current view.
+    window.allAgents[agentData.id] = agentData;
+
+    // ONLY update the DOM if the 'Agents' view is the active one.
+    const agentViewButton = document.getElementById('view-by-agent-btn');
+    if (!agentViewButton || !agentViewButton.classList.contains('active')) {
+        return; // Do not modify the DOM if not in agent view.
+    }
+
     if (!agentListTemplate) initializeAgentListTemplates();
     const agentsListBody = document.getElementById('agents-list-body');
     if (!agentsListBody) return;
-
-    window.allAgents[agentData.id] = agentData; // Update global cache
 
     // Calculate instance counts for this agent
     const instancesForAgent = Object.values(window.allAgentInstances).filter(

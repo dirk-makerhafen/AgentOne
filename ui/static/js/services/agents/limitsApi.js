@@ -5,5 +5,8 @@ const limitsApi = {
     },
     update: function(instance_pk, rule_name, limits) {
         sendRequest('historylimit_update', { instance_pk, rule_name, limits });
+    },
+    update_instance_limits: function(instance_pk, limits) {
+        sendRequest('instance_limits_update', { instance_pk, ...limits });
     }
 };

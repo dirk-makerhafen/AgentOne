@@ -233,6 +233,9 @@
     color: var(--text-color-light);
     cursor: pointer;
     transition: color 0.2s ease;
+    float:right;
+padding: 5px;
+    margin-right: -5px;
 }
 
 .tab-button .close-tab-btn:hover {
@@ -255,7 +258,9 @@
 
 .tab-controls-area .tab-bar {
     flex-grow: 1; /* Allows the tab bar to take available space */
-    display: flex;/*
+    display: flex;
+    flex-wrap: wrap;
+    /*
     overflow-y: hidden;
     overflow-x: auto; /* Allows horizontal scrolling for many tabs */
     white-space: nowrap; /* Prevent tabs from wrapping */

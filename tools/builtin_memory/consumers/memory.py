@@ -3,6 +3,7 @@ from agents.models.agent_instance import AgentInstance
 from tools.builtin_memory.models.memory_item import MemoryItem
 from tools.builtin_memory.prompts import TRACKS
 from ui.router import register_handler
+import traceback
 
 @register_handler('memoryitem_update')
 def handle_memoryitem_update(consumer, track=None, layer=None, index=None, content=None, instance_pk=None):
@@ -21,7 +22,7 @@ def handle_memoryitem_update(consumer, track=None, layer=None, index=None, conte
             item.content = content
             item.save()
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update memory item: {str(e)}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to update memory item: {str(e)} {traceback.format_exc()}'}))
 
 @register_handler('memoryitem_list')
 def handle_memoryitem_list(consumer, instance_pk):
@@ -36,7 +37,7 @@ def handle_memoryitem_list(consumer, instance_pk):
                     layer=layer, 
                     next_version=None, 
                     agentInstance=agent_instance
-                ).order_by('-index')[:agent_instance.limit_max_memory_items]
+                ).order_by('-index')[:agent_instance.effective_limit_max_memory_items]
                 latest_memories.extend(items)
 
         memory_items = [item.as_client_dict() for item in latest_memories]

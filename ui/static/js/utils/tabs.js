@@ -127,7 +127,7 @@ function closeMainTab(tabId) {
             addToClientLog(`Client: Unsubscribed from instance ${instancePk}`, 'client-status');
         }
         if (instanceLogStates[instancePk]) delete instanceLogStates[instancePk];
-        if (window.currentAgentInstancePk === instancePk) window.currentAgentInstancePk = null;
+        deselectAgentInstance(instancePk);
         if (window.lastSelectedInstancePk === instancePk) window.lastSelectedInstancePk = null;
     }
 

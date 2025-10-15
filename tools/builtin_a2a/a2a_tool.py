@@ -90,7 +90,7 @@ class A2ATool(BaseTool):
         return True, f"Message successfully sent to agent instance {id}."
 
     def get_history_limiting_rules(self):
-        limit = self.agentInstance.limit_max_conversation_messages
+        limit = self.agentInstance.effective_limit_max_conversation_messages
         return [
             {
                 'group_name': "Agent2Agent",

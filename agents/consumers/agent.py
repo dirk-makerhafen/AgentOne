@@ -9,7 +9,9 @@ from tools.definitions.models.tool_definition import ToolDefinition
 from ui.router import register_handler
 
 @register_handler('agent_create')
-def handle_agent_create(consumer, name='New Agent', description='', available_tool_ids=None):
+def handle_agent_create(consumer, name='New Agent', description='', available_tool_ids=None,
+                        limit_max_conversation_messages=None, limit_max_memory_items=None,
+                        limit_max_automated_steps=None):
 
     if available_tool_ids is None:
         available_tool_ids = []
@@ -23,6 +25,12 @@ def handle_agent_create(consumer, name='New Agent', description='', available_to
         new_agent = Agent()
         new_agent.name = name
         new_agent.description = description
+        if limit_max_conversation_messages is not None and limit_max_conversation_messages != '':
+            new_agent.limit_max_conversation_messages = int(limit_max_conversation_messages)
+        if limit_max_memory_items is not None and limit_max_memory_items != '':
+            new_agent.limit_max_memory_items = int(limit_max_memory_items)
+        if limit_max_automated_steps is not None and limit_max_automated_steps != '':
+            new_agent.limit_max_automated_steps = int(limit_max_automated_steps)
         new_agent.save(send_to_client=False)
         new_agent.owners.add(user)
         if available_tool_ids:
@@ -34,7 +42,9 @@ def handle_agent_create(consumer, name='New Agent', description='', available_to
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create agent: {e} {traceback.format_exc()}'}))
 
 @register_handler('agent_update')
-def handle_agent_update(consumer, agent_pk, name=None, description=None, available_tool_ids=None):
+def handle_agent_update(consumer, agent_pk, name=None, description=None, available_tool_ids=None,
+                        limit_max_conversation_messages=None, limit_max_memory_items=None,
+                        limit_max_automated_steps=None):
     if not agent_pk:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': 'agent_pk is required for update.'}))
         return
@@ -50,6 +60,13 @@ def handle_agent_update(consumer, agent_pk, name=None, description=None, availab
         if available_tool_ids is not None:
             tools = ToolDefinition.objects.filter(pk__in=available_tool_ids)
             agent.available_tools.set(tools)
+        
+        if limit_max_conversation_messages is not None and limit_max_conversation_messages != '':
+            agent.limit_max_conversation_messages = int(limit_max_conversation_messages)
+        if limit_max_memory_items is not None and limit_max_memory_items != '':
+            agent.limit_max_memory_items = int(limit_max_memory_items)
+        if limit_max_automated_steps is not None and limit_max_automated_steps != '':
+            agent.limit_max_automated_steps = int(limit_max_automated_steps)
 
         agent.save()
 

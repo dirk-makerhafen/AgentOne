@@ -2,6 +2,7 @@ import json
 from tools.builtin_a2a.models.a2a_permission import AgentToAgentPermission
 from agents.models.agent_instance import AgentInstance
 from ui.router import register_handler
+import traceback
 
 @register_handler('a2a_permission_set')
 def handle_permission_set(consumer, instance_pk, target_instance_pk=None, can_send=None, can_receive=None):
@@ -30,9 +31,9 @@ def handle_permission_set(consumer, instance_pk, target_instance_pk=None, can_se
         handle_permission_list(consumer, instance_pk=source_instance.instance_pk)
 
     except AgentInstance.DoesNotExist as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance not found: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance not found: {e} {traceback.format_exc()}'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error setting permission: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error setting permission: {e} {traceback.format_exc()}'}))
 
 @register_handler('a2a_permission_list')
 def handle_permission_list(consumer, instance_pk):
@@ -86,4 +87,4 @@ def handle_permission_list(consumer, instance_pk):
     except AgentInstance.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
     except Exception as e:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error getting permissions: {e}'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error getting permissions: {e} {traceback.format_exc()}'}))

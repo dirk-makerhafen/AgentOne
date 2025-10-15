@@ -112,7 +112,7 @@ class PythonTool(BaseTool):
         return not tool_response.data.get('stdout', '').strip() and (not tool_response.data.get('stderr', '').strip()) and tool_response.data.get('updated_vars')
 
     def get_history_limiting_rules(self):
-        limit = self.agentInstance.limit_max_conversation_messages
+        limit = self.agentInstance.effective_limit_max_conversation_messages
         return [
             {'group_name': "Python", 'name': 'any', 'description': 'General limit for all python tool calls.', 'match': lambda tc: tc.function_name == 'python', 'key': lambda tc: '', 'limits': {'pending': limit, 'success': limit, 'failed': 3, 'max': limit}},
             {'group_name': "Python", 'name': 'nooutput,novars', 'description': 'Limit for python calls that produced no output and did not change any VARS.', 'match': self._is_python_with_no_output_and_no_vars, 'key': lambda tc: '', 'limits': {'pending': limit, 'success': 5, 'failed': 3, 'max': 8}},

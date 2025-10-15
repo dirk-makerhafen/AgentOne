@@ -23,7 +23,7 @@ function saveLimit(limitType, instanceId) {
         'steps': 'limit_max_automated_steps'
     };
     if (keyMap[limitType]) {
-        agentInstanceApi.update(instanceId, { [keyMap[limitType]]: value });
+        limitsApi.update_instance_limits(instanceId, { [keyMap[limitType]]: value });
     }
     cancelLimitEdit(limitType, instanceId);
 }
@@ -49,4 +49,15 @@ function handleHistoryLimitChange(event, instanceId) {
 
 function resetHistoryLimit(ruleName, instanceId) {
     limitsApi.reset(instanceId, ruleName);
+}
+
+function resetInstanceLimit(limitType, instanceId) {
+    const keyMap = {
+        'convo': 'limit_max_conversation_messages',
+        'mem': 'limit_max_memory_items',
+        'steps': 'limit_max_automated_steps'
+    };
+    if (keyMap[limitType]) {
+        limitsApi.update_instance_limits(instanceId, { [keyMap[limitType]]: null });
+    }
 }

@@ -72,20 +72,20 @@ class LLMResponseAdmin(admin.ModelAdmin):
 
 @admin.register(HistoryLimit)
 class HistoryLimitAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'created_at', 'agentInstance', 'group_name', 'rule_name', 'is_active', 'priority', 'limit_success', 'limit_failed', 'limit_max', 'updated_at')
+    list_display = ('pk', 'created_at', 'agent', 'group_name', 'rule_name', 'is_active', 'priority', 'limit_success', 'limit_failed', 'limit_max', 'updated_at')
     list_display_links = ('pk', 'group_name', 'rule_name')
-    list_filter = ('agentInstance', 'group_name', 'rule_name', 'is_active')
-    search_fields = ('group_name', 'rule_name', 'description', 'agentInstance__name')
-    autocomplete_fields = ('agentInstance',)
+    list_filter = ('agent', 'group_name', 'rule_name', 'is_active')
+    search_fields = ('group_name', 'rule_name', 'description', 'agent__name')
+    autocomplete_fields = ('agent',)
     list_per_page = 50
     readonly_fields = ('created_at', 'updated_at')
-    fieldsets = ((None, {'fields': ('agentInstance', 'group_name', 'rule_name', 'description')}), ('Status & Priority', {'fields': ('is_active', 'priority')}), ('Limit Overrides (leave blank to use tool default)', {'fields': ('limit_success', 'limit_failed', 'limit_pending', 'limit_max'), 'classes': ('collapse',)}), ('Timestamps', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}))
+    fieldsets = ((None, {'fields': ('agent', 'group_name', 'rule_name', 'description')}), ('Status & Priority', {'fields': ('is_active', 'priority')}), ('Limit Overrides (leave blank to use tool default)', {'fields': ('limit_success', 'limit_failed', 'limit_pending', 'limit_max'), 'classes': ('collapse',)}), ('Timestamps', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}))
 
 
-from .models.agent_fork import AgentFork
+from .models.agent_instance_fork import AgentInstanceFork
 
-@admin.register(AgentFork)
-class AgentForkAdmin(admin.ModelAdmin):
+@admin.register(AgentInstanceFork)
+class AgentInstanceForkAdmin(admin.ModelAdmin):
     list_display = ('id', 'parent_instance', 'child_instance', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('parent_instance__name', 'child_instance__name')

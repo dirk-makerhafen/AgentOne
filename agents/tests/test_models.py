@@ -2,7 +2,7 @@ import pytest
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
 from agents.models.agent import Agent
-from agents.models.agent_fork import AgentFork
+from agents.models.agent_instance_fork import AgentInstanceFork
 from agents.models.agent_instance import AgentInstance
 from agents.models.conversation_message import ConversationMessage
 from agents.models.debug_log_entry import DebugLogEntry
@@ -18,8 +18,8 @@ class TestAgentModel:
         assert True # Replace with actual test logic for Agent model methods
 
 @pytest.mark.django_db
-class TestAgentForkModel:
-    """Placeholder tests for the AgentFork model."""
+class TestAgentInstanceForkModel:
+    """Placeholder tests for the AgentInstanceFork model."""
     def test_placeholder(self):
         assert True
 

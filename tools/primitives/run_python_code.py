@@ -76,7 +76,7 @@ def run_python_code_old(python_code_string: str, locals_dict={}, locals_to_retur
         'from tools.primitives import *\n' \
         '\n', common_globals)
     except Exception as e:
-        return {'status': 'error', 'message':  f'Error during common imports setup: {e}'}
+        return {'status': 'error', 'message':  f'Error during common imports setup: {e} {traceback.format_exc()}'}
 
     locals_dict_copy = deepcopy(locals_dict)
     

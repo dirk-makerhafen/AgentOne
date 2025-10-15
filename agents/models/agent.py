@@ -9,8 +9,13 @@ class Agent(BaseModel):
     owners = models.ManyToManyField(User, related_name='owned_agents', blank=True)
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, default='')
-    aimodel = models.ForeignKey("providers.AiModel", default=None, on_delete=models.CASCADE, related_name='agents', null=True)
+    aimodel = models.ForeignKey("providers.AiModel", default=None, on_delete=models.CASCADE, related_name='agents', null=True, blank=True)
     available_tools = models.ManyToManyField(ToolDefinition, blank=True, related_name='agents')
+
+    # Default limits for instances of this agent
+    limit_max_conversation_messages = models.IntegerField(default=20, null=True, blank=True, help_text="Default maximum number of messages in an agent's conversation history.")
+    limit_max_memory_items = models.IntegerField(default=10, null=True, blank=True, help_text="Default maximum number of items in an agent's memory.")
+    limit_max_automated_steps = models.IntegerField(default=0, null=True, blank=True, help_text="Default maximum number of automated steps an agent can take.")
 
     def __str__(self):
         return f'Agent: {self.name}'
@@ -24,6 +29,9 @@ class Agent(BaseModel):
             'name': self.name, 
             'description': self.description,
             'available_tools':  [tool.pk for tool in self.available_tools.all()],
+            'limit_max_conversation_messages': self.limit_max_conversation_messages,
+            'limit_max_memory_items': self.limit_max_memory_items,
+            'limit_max_automated_steps': self.limit_max_automated_steps,
         }
 
     def get_delete_broadcast_payload(self):
@@ -31,3 +39,4 @@ class Agent(BaseModel):
             'object': 'AgentDeleted',
             'agent_pk': self.agent_pk
         }
+
