@@ -123,6 +123,11 @@
 
 .instance-status {
     padding-left: 5px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 /* Status specific colors (kept as vibrant indicators) */

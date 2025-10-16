@@ -10,7 +10,7 @@ class MemoryItem(BaseModel):
     conversationMessage = models.ForeignKey("agents.ConversationMessage", null=True, default=None, on_delete=models.CASCADE, related_name='memoryItems')
 
     toolCall = models.ForeignKey(ToolCall, on_delete=models.CASCADE, related_name='memoryItem', null=True, blank=True)    
-    next_version = models.ForeignKey("self", on_delete=models.SET_DEFAULT, related_name='prev_version', null=True, default=None)
+    next_version = models.OneToOneField("self", on_delete=models.SET_DEFAULT, related_name='prev_version', null=True, default=None)
     
     track = models.CharField(max_length=128, null=True, blank=True) # New field
     layer = models.CharField(max_length=128, null=True, blank=True) # New field

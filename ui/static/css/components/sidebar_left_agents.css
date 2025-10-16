@@ -130,6 +130,7 @@
 .agent-actions-menu .btn {
     padding: 0px 5px;
     border:none;
+   background-color:  #00000000;
 }
 
 .agent-actions-menu .btn .fa-bars {
@@ -150,7 +151,7 @@
 /* --- Explorer-Style Tree View --- */
 .tree-view-list {
     list-style-type: none;
-    padding-left: 15px;
+    padding-left: 5px;
     margin: 0;
 }
 
@@ -160,13 +161,12 @@
 
 .tree-node-header, .tree-leaf-instance {
     cursor: pointer;
-    padding: 3px 5px;
+    padding: 3px 0px;
     border-radius: 3px;
     transition: background-color 0.2s ease;
     display: flex;
     align-items: center;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 
@@ -176,22 +176,27 @@
 
 .tree-leaf-instance.selected-instance {
     background-color: #d0efff;
-    font-weight: bold;
 }
 
 .tree-node-icon {
-    margin-right: 6px;
-    color: #666;
+    margin-right: 1px;
+    color: #444;
+}
+.tree-node-count {
+    margin-top: 4px;
+    font-size: 0.9em;
+    color: gray;
 }
 
 .tree-node-name {
     flex-grow: 1;
     font-size: 0.9em;
-}
-
-.tree-node-children {
-    border-left: 1px solid #e0e0e0;
-    margin-left: 8px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-left: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .tree-leaf-header {
@@ -217,7 +222,6 @@
     font-size: 0.8em;
     color: #6c757d;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 
@@ -235,15 +239,99 @@
     flex-shrink: 0;
 }
 .tree-node-spacer {
-    width: 12px;
-    margin-right: 4px;
+    width: 0px;
+    margin-right: 2px;
     flex-shrink: 0;
 }
 .tree-leaf-instance {
     align-items: center;
 }
+
+.tree-leaf-instance .instance-status {
+    margin-left: auto;
+    padding: 1px 5px;
+    font-size: 0.8em;
+    border-radius: 8px;
+    font-weight: normal;
+    text-align: right;
+}
+
 .tree-node-children {
-    padding-left: 10px;
-    margin-left: 10px;
+    padding-left: 0px;
+    margin-left: 5px;
     border-left: 1px solid #e0e0e0;
+}
+
+/* --- Action Menu Positioning for Tree View --- */
+.agent-actions-menu-container {
+    margin-left: auto;
+    position: relative; /* This is the anchor for the dropdown */
+    flex-shrink: 0; /* Prevent the container from shrinking */
+}
+
+.agent-actions-menu-container .agent-menu-dropdown {
+    right: 0; /* Align to the right of the container */
+    top: 100%; /* Position below the button */
+    z-index: 1050; /* Ensure it's above other elements */
+}
+
+/* Ensure consistent alignment for tree-node-header content */
+.tree-node-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Space out content and menu */
+}
+
+.tree-node-header .tree-node-name {
+    flex-grow: 1; /* Allow name to take available space */
+    text-overflow: ellipsis; /* Add ellipsis for long names */
+}
+
+.tree-leaf-instance.selected-instance .tree-node-name {
+    font-weight: bold;
+}
+.agent-menu-dropdown a {
+    font-weight: normal; /* Ensure menu items are not bold */
+}
+
+/* --- Instance View Controls Styling --- */
+.instance-view-controls {
+    display: flex;
+    flex-wrap: nowrap; /* Prevent buttons from wrapping to multiple lines */
+    gap: 5px; /* Add space between buttons */
+    padding: 5px 0 5px 4px; /* Adjust padding as needed */
+    overflow-x: auto; /* Allow horizontal scrolling if buttons overflow */
+    -webkit-overflow-scrolling: touch; /* For smoother scrolling on touch devices */
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+}
+
+/* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+.instance-view-controls::-webkit-scrollbar {
+    display: none;
+}
+
+.instance-view-controls button {
+    font-size: 0.9em;
+    padding: 4px 8px;
+    display: flex; /* Make button a flex container */
+    align-items: center; /* Vertically center icon and text */
+    flex-grow: 1;   /* Allow buttons to grow to fill space */
+    flex-shrink: 1; /* Allow buttons to shrink as needed */
+    min-width: 0; /* Crucial for ellipsis on flex items */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.instance-view-controls button i {
+    flex-shrink: 0; /* Prevent icon from shrinking */
+    margin-right: 5px; /* Space between icon and text */
+}
+.instance-view-controls button span {
+    flex-grow: 1; /* Allow the text span to take available space */
+    flex-shrink:  1;
+    overflow: hidden; /* Hide overflowing text */
+    white-space: nowrap; /* Prevent text from wrapping */
+    text-overflow: ellipsis; /* Display ellipsis for truncated text */
 }

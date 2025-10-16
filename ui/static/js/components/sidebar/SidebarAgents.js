@@ -1,100 +1,90 @@
 // This file manages the rendering and interactions for the list of agents in the sidebar.
 
 window.allAgents = window.allAgents || {}; // Initialize or use existing global cache
-let agentListTemplate;
-let addAgentFormTemplate;
-
-function initializeAgentListTemplates() {
-    agentListTemplate = getTemplate('SidebarAgentsListItemTemplate');
-    addAgentFormTemplate = getTemplate('SidebarAgentsAddAgentTemplate');
-}
 
 /**
- * Adds or updates an agent in the global cache and re-renders its sidebar entry.
- * @param {object} agentData The agent object from the WebSocket payload.
+ * Renders the complete agent tree view.
+ * This function rebuilds the entire tree from the global caches, preserving expanded node state.
  */
-/**
- * Renders or updates an agent's entry in the sidebar and updates the global cache.
- * @param {object} agentData The agent object.
- */
-/**
- * Renders or updates an agent's entry in the sidebar and updates the global cache.
- * @param {object} agentData The agent object.
- */
-function addOrUpdateAgentInSidebar(agentData) {
-    // ALWAYS update the cache, regardless of the current view.
-    window.allAgents[agentData.id] = agentData;
-
-    // ONLY update the DOM if the 'Agents' view is the active one.
+function renderAgentTreeView() {
     const agentViewButton = document.getElementById('view-by-agent-btn');
     if (!agentViewButton || !agentViewButton.classList.contains('active')) {
-        return; // Do not modify the DOM if not in agent view.
+        return; // Only render if the agent view is active
     }
 
-    if (!agentListTemplate) initializeAgentListTemplates();
     const agentsListBody = document.getElementById('agents-list-body');
     if (!agentsListBody) return;
 
-    // Calculate instance counts for this agent
-    const instancesForAgent = Object.values(window.allAgentInstances).filter(
-        instance => instance.agent_id === agentData.id
-    );
-    const totalInstances = instancesForAgent.length;
-    const runningInstances = instancesForAgent.filter(
-        instance => ['running', 'starting'].includes(instance.status.toLowerCase())
-    ).length;
+    // --- State Preservation: Start ---
+    const expandedAgentIds = new Set();
+    // Find all list items (li) that contain a visible children container
+    agentsListBody.querySelectorAll('li').forEach(item => {
+        const childrenContainer = item.querySelector('.tree-node-children');
+        if (childrenContainer && childrenContainer.style.display === 'block') {
+            // Find the agent menu within this list item to get the ID
+            const agentMenu = item.querySelector('[id^="agent-menu-"]');
+            if (agentMenu) {
+                const agentId = agentMenu.id.replace('agent-menu-', '');
+                expandedAgentIds.add(agentId);
+            }
+        }
+    });
+    // --- State Preservation: End ---
 
-    // Determine initial chevron icon state
-    const existingAgentElement = document.getElementById(`agent_${agentData.id}`);
-    let chevronIcon = 'right'; // Default to collapsed
-    if (existingAgentElement) {
-        const instancesContainer = existingAgentElement.querySelector('.sidebar-instance-list');
-        if (instancesContainer && instancesContainer.style.display === 'block') {
-            chevronIcon = 'down'; // If already expanded, keep it expanded
+    const agents = Object.values(window.allAgents).sort((a, b) => a.name.localeCompare(b.name));
+    const instances = Object.values(window.allAgentInstances);
+
+    const nodes = agents.map(agent => {
+        const children = instances
+            .filter(inst => inst.agent_id === agent.id)
+            .map(inst => ({...inst, isSelected: window.currentAgentInstancePk === inst.id}))
+            .sort((a, b) => a.name.localeCompare(b.name));
+        return {
+            agent: agent,
+            children: children
+        };
+    });
+    
+    const agentTreeTemplate = getTemplate('SidebarAgentsTreeViewNodeTemplate');
+    agentsListBody.innerHTML = agentTreeTemplate({ nodes });
+
+    // --- State Restoration: Start ---
+    expandedAgentIds.forEach(agentId => {
+        const agentMenu = agentsListBody.querySelector(`#agent-menu-${agentId}`);
+        if (agentMenu) {
+            const agentNode = agentMenu.closest('li'); // Find the parent <li>
+            if(agentNode) {
+                const childrenContainer = agentNode.querySelector('.tree-node-children');
+                const icon = agentNode.querySelector('.tree-node-header .tree-node-icon');
+                if (childrenContainer) {
+                    childrenContainer.style.display = 'block';
+                }
+                if (icon) {
+                    icon.classList.remove('fa-folder');
+                    icon.classList.add('fa-folder-open');
+                }
+            }
+        }
+    });
+    // --- State Restoration: End ---
+
+    // After rendering, re-apply selection status to the new elements
+    if (window.currentAgentInstancePk) {
+        const selectedInstance = document.getElementById(`agent_instance_${window.currentAgentInstancePk}`);
+        if (selectedInstance) {
+            selectedInstance.classList.add('selected-instance');
         }
     }
+}
 
-    const context = {
-        ...agentData,
-        total_instances: totalInstances,
-        running_instances: runningInstances,
-        chevron_icon: chevronIcon
-    };
 
-    const newAgentElementHtml = agentListTemplate(context);
-
-    if (existingAgentElement) {
-        // Create a temporary element to parse the new HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = newAgentElementHtml;
-        const newHeader = tempDiv.querySelector('.sidebar-agent-header');
-        const newInstanceListContainer = tempDiv.querySelector('.sidebar-instance-list'); // This is the empty container from template
-
-        const existingHeader = existingAgentElement.querySelector('.sidebar-agent-header');
-        const existingInstanceListContainer = existingAgentElement.querySelector('.sidebar-instance-list');
-
-        if (existingHeader) {
-            // Replace the header content, but keep the existing instance list container
-            existingHeader.replaceWith(newHeader);
-        } else {
-            // If header is missing, something is very wrong, but try to append.
-            existingAgentElement.prepend(newHeader);
-        }
-        
-        // Critically, DO NOT replace existingInstanceListContainer.
-        // Its children (the actual instances) are managed by renderAgentInstance.
-        // We only ensure the main agent element's data attributes and id are correct.
-        existingAgentElement.id = `agent_${agentData.id}`;
-        existingAgentElement.dataset.agentId = agentData.id;
-
-    } else {
-        const addFormContainer = document.getElementById('add-agent-form-container');
-        if (addFormContainer) {
-            addFormContainer.insertAdjacentHTML('afterend', newAgentElementHtml);
-        } else {
-            agentsListBody.innerHTML += newAgentElementHtml;
-        }
-    }
+/**
+ * Adds or updates an agent in the global cache and re-renders the entire tree view.
+ * @param {object} agentData The agent object from the WebSocket payload.
+ */
+function addOrUpdateAgentInSidebar(agentData) {
+    window.allAgents[agentData.id] = agentData;
+    renderAgentTreeView(); // Re-render the whole tree on any update
 }
 
 /**
@@ -102,41 +92,28 @@ function addOrUpdateAgentInSidebar(agentData) {
  * @param {number} agentPk The primary key of the agent to remove.
  */
 function removeAgentFromSidebar(agentPk) {
-    const agentElement = document.getElementById(`agent_${agentPk}`);
-    if (agentElement) agentElement.remove();
     delete window.allAgents[agentPk]; // Remove from global cache
+    renderAgentTreeView(); // Re-render the whole tree
 }
-
 
 function showAgentMenu(event, menuId) {
     event.preventDefault();
     event.stopPropagation();
+    // Hide all other menus first
+    document.querySelectorAll('.agent-menu-dropdown').forEach(menu => {
+        if (menu.id !== menuId) {
+            menu.style.display = 'none';
+        }
+    });
     const menu = document.getElementById(menuId);
     if (menu) menu.style.display = 'block';
 }
+
 function hideAgentMenu(event, menuId) {
     event.preventDefault();
     event.stopPropagation();
     const menu = document.getElementById(menuId);
-    if (menu) menu.style.display = 'none'
-}
-
-
-function toggleAgentInstances(event, agentId) {
-    event.preventDefault();
-    event.stopPropagation();
-    const instancesContainer = document.querySelector(`#agent_${agentId} .sidebar-instance-list`);
-    const toggleIcon = document.querySelector(`#agent_${agentId} .toggle-instances-icon`);
-
-    if (instancesContainer) {
-        const isHidden = instancesContainer.style.display === 'none' || instancesContainer.style.display === '';
-        instancesContainer.style.display = isHidden ? 'block' : 'none';
-
-        if (toggleIcon) {
-            toggleIcon.classList.toggle('fa-chevron-right', !isHidden);
-            toggleIcon.classList.toggle('fa-chevron-down', isHidden);
-        }
-    }
+    if (menu) menu.style.display = 'none';
 }
 
 function showAddAgentForm(event) {
@@ -177,7 +154,7 @@ function openAgentEditTab(event, agentId) {
     event?.preventDefault();
     event?.stopPropagation();
     const tabAgentTemplate = getTemplate('TabAgentTemplate');
-    const agent = window.allAgents[agentId]; // Now correctly pulls from the updated global cache
+    const agent = window.allAgents[agentId];
     if (!agent) { 
         console.error(`Agent with ID ${agentId} not found in cache.`);
         return;

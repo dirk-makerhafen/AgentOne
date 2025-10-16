@@ -12,9 +12,21 @@
                         <span class="tree-node-spacer"></span>
                     {{/if}}
 
-                    <i class="fa fa-file-o tree-node-icon"></i>
+                    <i class="fa fa-users tree-node-icon"></i>
                     <span class="tree-node-name">{{name}}</span>
                     <span class="instance-status instance-status-{{status}}">{{status_display}}</span>
+                    
+                    <div class="agent-actions-menu-container">
+                        <div class="agent-actions-menu" onmouseleave="hideAgentMenu(event, 'agent-instance-menu-{{id}}')">
+                            <button class="btn btn-xs btn-default burgerbtn" onclick="showAgentMenu(event, 'agent-instance-menu-{{id}}')" title="Agent Instance Actions">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <div id="agent-instance-menu-{{id}}" class="agent-menu-dropdown" style="display: none;">
+                                <a href="#" onclick="agentInstanceApi.fork('{{id}}'); hideAgentMenu(event, 'agent-instance-menu-{{id}}');">Fork Instance</a>
+                                <a href="#" onclick="requestAgentInstanceDeletion(event, '{{id}}', '{{name}}')">Delete Instance</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 {{#if children}}
                     <div class="tree-node-children" style="display: none;">
@@ -39,9 +51,20 @@
                     <div id="agent_instance_{{id}}" class="tree-leaf-instance {{#if isSelected}}selected-instance{{/if}}" 
                          data-instance-id="{{id}}" onclick="selectAgentInstance(event, {{id}}, '{{name}}')">
                         <div class="tree-leaf-header">
-                            <i class="fa fa-file-o tree-node-icon"  onclick="toggleTreeNode(event)"></i>
+                            <i class="fa fa-user tree-node-icon"></i>
                             <span class="tree-node-name">{{name}}</span>
                             <span class="instance-status instance-status-{{status}}">{{status_display}}</span>
+                             <div class="agent-actions-menu-container">
+                                <div class="agent-actions-menu" onmouseleave="hideAgentMenu(event, 'agent-instance-menu-{{id}}')">
+                                    <button class="btn btn-xs btn-default burgerbtn" onclick="showAgentMenu(event, 'agent-instance-menu-{{id}}')" title="Agent Instance Actions">
+                                        <i class="fa fa-bars"></i>
+                                    </button>
+                                    <div id="agent-instance-menu-{{id}}" class="agent-menu-dropdown" style="display: none;">
+                                        <a href="#" onclick="agentInstanceApi.fork('{{id}}'); hideAgentMenu(event, 'agent-instance-menu-{{id}}');">Fork Instance</a>
+                                        <a href="#" onclick="requestAgentInstanceDeletion(event, '{{id}}', '{{name}}')">Delete Instance</a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 {{/if}}

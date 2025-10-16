@@ -13,32 +13,6 @@ function renderAgentInstance(payload) {
             statusElement.classList.add(`instance-status-${payload.status}`);
             statusElement.textContent = payload.status_display;
         }
-    } else {
-        // --- Full Replace for Agent View ---
-        const agentInstanceTemplate = getTemplate('SidebarInstancesListItemTemplate');
-        const instanceContainer = document.getElementById(`agent-instances-${payload.agent_id}`);
-        if (!instanceContainer) return; // No container to render into
-
-        const dataForTemplate = {
-            id: payload.id,
-            agent_id: payload.agent_id,
-            name: payload.name || `Instance ${payload.id}`,
-            status: payload.status,
-            status_display: payload.status_display,
-            model_name: payload.model_name,
-            system_name: payload.system_name || 'Unassigned',
-            isSelected: (window.currentAgentInstancePk === payload.id)
-        };
-
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = agentInstanceTemplate(dataForTemplate);
-        const newElement = tempDiv.firstElementChild;
-
-        if (existingInstance) {
-            existingInstance.replaceWith(newElement);
-        } else {
-            instanceContainer.appendChild(newElement);
-        }
     }
 
     // Update status bar in the main tab content if the tab is open
@@ -75,7 +49,7 @@ function switchInstanceView(viewType) {
 
     // Call the appropriate API
     if (viewType === 'agent') {
-        instanceViewApi.getByAgent();
+        renderAgentTreeView();
     } else if (viewType === 'dir') {
         instanceViewApi.getByWorkingDirectory();
     } else if (viewType === 'fork') {
@@ -158,4 +132,15 @@ function deselectAgentInstance(instancePk) {
         selected.classList.remove('selected-instance');
     }
     window.currentAgentInstancePk = null;
+}
+
+
+
+
+function requestAgentInstanceDeletion(event, instanceId, instanceName) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (confirm(`Are you sure you want to delete instance "${instanceName}"?`)) {
+        agentInstanceApi.delete(instanceId);
+    }
 }

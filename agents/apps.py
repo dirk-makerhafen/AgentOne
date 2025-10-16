@@ -11,9 +11,8 @@ class AgentsConfig(AppConfig):
             import agents.signals
 
             from core.models.prompt_string import PromptString
-            from .prompts import SYSTEM_PROMPT, INSTRUCTIONS, OUTPUT_FORMAT_RULES, OUTPUT_FORMAT_RULES_REMINDER
+            from .prompts import SYSTEM_PROMPT, INSTRUCTIONS, OUTPUT_FORMAT_RULES_REMINDER
             
             PromptString.objects.get_or_create(owner=None, source=self.name, key="System", value=SYSTEM_PROMPT)
             PromptString.objects.get_or_create(owner=None, source=self.name, key="Instructions", value=INSTRUCTIONS)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="OutputFormat", value=OUTPUT_FORMAT_RULES)
             PromptString.objects.get_or_create(owner=None, source=self.name, key="OutputFormatReminder", value=OUTPUT_FORMAT_RULES_REMINDER)
