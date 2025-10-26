@@ -8,7 +8,7 @@ class ToolsBuiltinUserinteractionConfig(AppConfig):
     def ready(self):
         # Only run this code if not during a migration or initial Django setup
         if 'migrate' not in sys.argv and 'makemigrations' not in sys.argv:
-            from core.models.prompt_string import PromptString
+            from core.models.prompt_string import Prompt
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .user_interaction_tool import UserInteractionTool
@@ -25,7 +25,7 @@ class ToolsBuiltinUserinteractionConfig(AppConfig):
                 }
             )
             for prompt in PROMPTS:
-                PromptString.objects.get_or_create(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
+                Prompt.get_or_create_template(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
             
             function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in TOOLS.items()])
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Functions", value=function_python_string)
+            Prompt.get_or_create_template(owner=None, source=self.name, key="functions", value=function_python_string)

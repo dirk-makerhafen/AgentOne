@@ -22,3 +22,4 @@ mcp
 pytest
 pytest-django
 pytest-asyncio
+django-redis

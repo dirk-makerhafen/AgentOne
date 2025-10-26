@@ -45,6 +45,8 @@ INSTALLED_APPS = (
     'tools.builtin_shell',
     'tools.builtin_subscriptions',
     'tools.builtin_userinteraction',
+    'tools.builtin_subagents',
+    'tools.builtin_kv_storage',
     'ui',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -114,8 +116,17 @@ DJANGORESIZED_DEFAULT_FORCE_FORMAT = 'JPEG'
 DJANGORESIZED_DEFAULT_FORMAT_EXTENSIONS = {'JPEG': ".jpg"}
 DJANGORESIZED_DEFAULT_NORMALIZE_ROTATION = True
 
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 2000
+
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': REDIS_URL, # Assumes Redis is running on localhost:6379
+    }
+}
 
 warnings.filterwarnings(
     'ignore',

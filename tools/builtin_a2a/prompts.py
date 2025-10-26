@@ -9,10 +9,9 @@ It is important to keep your description updated to reflect your current task, s
 PROMPT_AGENTLIST = '''
 ## Available Agent Instances for Communication
 
-{% for agent in agents %}
-### Agent: {{agent.name}} ID: {{agent.id}} 
-Description: {{agent.description}}  
-
+{% for agentInstance in agentInstances %}
+### Agent: {{agentInstance.name}} ID: {{agentInstance.id}} 
+Description: {{agentInstance.description}}  
 {% endfor %}
 
 '''
@@ -33,7 +32,7 @@ PROMPTS = [
         "arguments": [
             {
                 "name": "agents",
-                "description": "list of agent dicts with name, description and id",
+                "description": "list of agent dicts with name, description and agent_id",
                 "required": True,
             }
         ],
@@ -48,10 +47,10 @@ TOOLS = {
         "description":  "Sends a message to another agent instance.",
         "inputSchema": {
             "type": "object",
-            "properties": {
-                'id': {
+            "parameters": {
+                'agent_id': {
                     'type': 'int', 
-                    'description': 'The id of the agent instance to receive the message.', 
+                    'description': 'The agent_id of the agent instance to receive the message.', 
                     'required': True
                 },
                 'message': {
@@ -60,7 +59,7 @@ TOOLS = {
                     'required': True
                 },
             },
-            "required" : ["id", "message"],
+            "required" : ["agent_id", "message"],
         }
     },
     "set_agent_description": {   
@@ -69,7 +68,7 @@ TOOLS = {
         "description": "Sets or updates the public description of the current agent instance. This description is visible to other agents and users. It should be a concise summary of the agent's current task or status.",
         "inputSchema": {
             "type": "object",
-            "properties": {
+            "parameters": {
                 "description": {
                     "type": "string", 
                     "description": "A brief summary of the agent's current activity. Max 2-3 sentences, abbreviations/keywords are encouraged.",

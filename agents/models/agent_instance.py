@@ -20,6 +20,8 @@ class AgentInstance(BaseModel):
         EXECUTING_TOOLS = 'EXECUTING_TOOLS', 'Executing Tools'
         AWAITING_USER_INPUT = 'AWAITING_USER_INPUT', 'Awaiting User Input'
         AWAITING_AGENT_MESSAGE = 'AWAITING_AGENT_MESSAGE', 'Awaiting Agent Message'
+        AWAITING_RATE_LIMIT = 'AWAITING_RATE_LIMIT', 'Awaiting Rate Limit'
+        QUEUED = 'QUEUED', 'Queued'
         FINISHED = 'FINISHED','Finished'
         ERROR = 'ERROR', 'Error'
         SYSTEM_OFFLINE = 'SYSTEM_OFFLINE', 'System Offline'
@@ -39,6 +41,8 @@ class AgentInstance(BaseModel):
     automated_step_count = models.IntegerField(default=0)
     workingdir_write_allowed = models.BooleanField(default=False, help_text ='Allow write operations within the working directory.')
     access_rules = models.TextField(blank=True, default='', help_text= "Fine-grained access rules, one per line. E.g., '!path/to/deny', '>path/to/allow', '</path/to/readonly'.")
+    max_requests_per_minute = models.IntegerField(default=None, null=True, blank=True, help_text="Maximum requests per minute for this instance or its subtree. Null means inheriting from parent.")
+    max_token_per_minute = models.IntegerField(default=None, null=True, blank=True, help_text="Maximum tokens per minute for this instance or its subtree. Null means inheriting from parent.")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -62,6 +66,35 @@ class AgentInstance(BaseModel):
     def effective_limit_max_automated_steps(self):
         return self.limit_max_automated_steps if self.limit_max_automated_steps is not None else self.agent.limit_max_automated_steps
 
+    @property
+    def effective_max_requests_per_minute(self):
+        if self.max_requests_per_minute is not None:
+            return self.pk, self.max_requests_per_minute
+        if hasattr(self, 'fork_origin') and self.fork_origin:
+            return self.fork_origin.parent_instance.effective_max_requests_per_minute
+        if hasattr(self, 'supervisor_link') and self.supervisor_link:
+            return self.supervisor_link.supervisor_instance.effective_max_requests_per_minute
+        return None # No explicit limit found up the hierarchy
+
+    @property
+    def effective_max_token_per_minute(self):
+        if self.max_token_per_minute is not None:
+            return self.pk, self.max_token_per_minute
+        if hasattr(self, 'fork_origin') and self.fork_origin:
+            return self.fork_origin.parent_instance.effective_max_token_per_minute
+        if hasattr(self, 'supervisor_link') and self.supervisor_link:
+            return self.supervisor_link.supervisor_instance.effective_max_token_per_minute
+    
+        return None # No explicit limit found up the hierarchy
+
+    def set_workingdir(self, workingdir):
+        if workingdir != self.workingdir:
+            loaded_items = self.filesystem.get_loaded_items()
+            for loaded_item in loaded_items:
+                self.filesystem.fs_unload(path=loaded_item.path, toolCall=None)
+            self.workingdir = workingdir
+            self.save()
+
     def add_to_conversation(self, role, content):
         c = ConversationMessage()
         c.agent = self.agent
@@ -75,9 +108,10 @@ class AgentInstance(BaseModel):
         from agents.tasks.create_query import celery_create_query
         if self.status in [AgentInstance.AgentInstanceStatusChoices.THINKING, AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS]:
             return
-        self.status =  AgentInstance.AgentInstanceStatusChoices.THINKING
-        self.require_user_interaction = False
-        self.save()
+        if self.require_user_interaction != False:
+            self.require_user_interaction = False
+            self.save()
+
         if self.system and self.system.status != System.SystemStatusChoices.ONLINE:
             self.status = AgentInstance.AgentInstanceStatusChoices.SYSTEM_OFFLINE
             self.save()
@@ -102,8 +136,8 @@ class AgentInstance(BaseModel):
         if max_timestamp==None:
             max_timestamp = timezone.datetime.max
 
-        pinned_messages = self.conversationMessages.filter(hide_from_context=False, pin_to_context=True).order_by('created_at').all()
-        recent_nonpinned_messages_query = self.conversationMessages.filter(hide_from_context=False, pin_to_context=False, created_at__lt=max_timestamp).order_by('-created_at')
+        pinned_messages = self.conversationMessages.filter( pin_to_context=True).order_by('created_at').all()
+        recent_nonpinned_messages_query = self.conversationMessages.filter(pin_to_context=False, created_at__lt=max_timestamp).order_by('-created_at')
         if max_id:
             recent_nonpinned_messages_query = recent_nonpinned_messages_query.filter(id__lt=max_id)        
         recent_nonpinned_messages = recent_nonpinned_messages_query.all()[:limit]
@@ -155,9 +189,10 @@ class AgentInstance(BaseModel):
             'access_rules': self.access_rules,
             'history_limiting_rules': grouped_rules,
             'total_prompt_tokens': total_prompt,
-            'total_completion_tokens': total_completion
+            'total_completion_tokens': total_completion,
+            'max_requests_per_minute': self.max_requests_per_minute,
+            'max_token_per_minute': self.max_token_per_minute
         }
 
     def __str__(self):
             return f'Instance {self.instance_pk} of Agent {self.agent.name}'
-

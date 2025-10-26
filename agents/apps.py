@@ -10,9 +10,9 @@ class AgentsConfig(AppConfig):
             # Import signals here so they are registered at app startup.
             import agents.signals
 
-            from core.models.prompt_string import PromptString
+            from core.models.prompt_string import Prompt
             from .prompts import SYSTEM_PROMPT, INSTRUCTIONS, OUTPUT_FORMAT_RULES_REMINDER
             
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="System", value=SYSTEM_PROMPT)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Instructions", value=INSTRUCTIONS)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="OutputFormatReminder", value=OUTPUT_FORMAT_RULES_REMINDER)
+            Prompt.get_or_create_template(owner=None, source=self.name, key="system", value=SYSTEM_PROMPT)
+            Prompt.get_or_create_template(owner=None, source=self.name, key="instructions", value=INSTRUCTIONS)
+            Prompt.get_or_create_template(owner=None, source=self.name, key="OutputFormatReminder", value=OUTPUT_FORMAT_RULES_REMINDER)

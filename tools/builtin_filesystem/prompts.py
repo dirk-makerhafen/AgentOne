@@ -53,7 +53,7 @@ PROMPTS = [
         'template': PROMPT_INSTRUCTIONS,
     },
     {
-        "name": "contentinjection",
+        "name": "content_injection",
         "title": "Ls",
         "description": "TODO",
         "arguments": [

@@ -36,6 +36,29 @@
             <span class="current-step-count">(Current: {{automated_step_count}})</span>
         </div>
     </div>
+    <h5>Rate Limiting</h5>
+    <div class="setting-item">
+        <label for="limit-requests-input_{{id}}">Max Requests / Minute:</label>
+        <div class="editable-setting">
+            <span class="editable-limit" id="limit-requests-text_{{id}}" onclick="showLimitEdit('requests', '{{id}}')">{{#if max_requests_per_minute}}{{max_requests_per_minute}}{{else}}None{{/if}}</span>
+            <i class="fa fa-pencil-square-o edit-limit-btn" onclick="showLimitEdit('requests', '{{id}}')"></i>
+            {{#if max_requests_per_minute}}
+            <i class="fa fa-undo reset-limit-btn" title="Reset to default" onclick="resetInstanceLimit('requests', '{{id}}')"></i>
+            {{/if}}
+            <input type="number" id="limit-requests-input_{{id}}" value="{{max_requests_per_minute}}" placeholder="None" style="display:none; width: 60px;" onkeydown="handleLimitKeydown(event, 'requests', '{{id}}')" onblur="saveLimit('requests', '{{id}}')"/>
+        </div>
+    </div>
+    <div class="setting-item">
+        <label for="limit-tokens-input_{{id}}">Max Tokens / Minute:</label>
+        <div class="editable-setting">
+            <span class="editable-limit" id="limit-tokens-text_{{id}}" onclick="showLimitEdit('tokens', '{{id}}')">{{#if max_token_per_minute}}{{max_token_per_minute}}{{else}}None{{/if}}</span>
+            <i class="fa fa-pencil-square-o edit-limit-btn" onclick="showLimitEdit('tokens', '{{id}}')"></i>
+            {{#if max_token_per_minute}}
+            <i class="fa fa-undo reset-limit-btn" title="Reset to default" onclick="resetInstanceLimit('tokens', '{{id}}')"></i>
+            {{/if}}
+            <input type="number" id="limit-tokens-input_{{id}}" value="{{max_token_per_minute}}" placeholder="None" style="display:none; width: 60px;" onkeydown="handleLimitKeydown(event, 'tokens', '{{id}}')" onblur="saveLimit('tokens', '{{id}}')"/>
+        </div>
+    </div>
     <h5>History Limiting Rules <i class="fa fa-info-circle" title="Override default tool history limits. Empty fields will revert to the tool's default value."></i></h5>
     {{#each history_limiting_rules as |toolRules toolName|}}
     <div class="tool-history-rules-group">

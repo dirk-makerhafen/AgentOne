@@ -9,3 +9,13 @@ class AgentToAgentDescription(BaseModel):
 
     def __str__(self):
         return f'Description for {self.agent_instance} at {self.created_at}'
+
+    def as_client_dict(self):
+        return {
+            'object': 'AgentToAgentDescription',
+            'id': self.pk,
+            'created_at': self.created_at.isoformat(),
+            'agent_id': self.agent_id,
+            'agent_instance_id': self.agent_instance_id,
+            'descriptions': self.description,
+        }

@@ -41,7 +41,9 @@
 .tab-content {
 
 }
-
+.tabpanel {
+    width: 100%;
+}
 /* Hide content for inactive tabs - handled by JS, but good to have a default */
 .tab-content.hidden {
     display: none;

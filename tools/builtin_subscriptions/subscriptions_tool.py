@@ -1,4 +1,4 @@
-from core.models.prompt_string import PromptString
+from core.models.prompt_string import Prompt
 from tools.base.base_tool import BaseTool
 from .models.tool_subscription import ToolSubscription
 from .prompts import TOOLS, PROMPTS
@@ -11,8 +11,8 @@ class SubscriptionsTool(BaseTool):
     PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="Instructions")
-        functionsTemplate    = PromptString.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="Functions")
+        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="instructions")
+        functionsTemplate    = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="functions")
         return [
             {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Subscriptions"], "data": {} },
             {"tpId": functionsTemplate.pk, "tags": ["Prompts", "Subscriptions"], "data": {} },

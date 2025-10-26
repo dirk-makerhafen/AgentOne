@@ -168,7 +168,7 @@ def decide_next_step(agent_instance):
     The core of the new state machine. Determines the agent's next status after a cycle.
     A cycle is defined as one LLM query and the execution of any resulting tool calls.
     """
-    # The `await_user_input` tool sets this flag. If it's true, we must wait.
+    # The `await_input` tool sets this flag. If it's true, we must wait.
     if agent_instance.require_user_interaction:
         agent_instance.status = AgentInstance.AgentInstanceStatusChoices.AWAITING_USER_INPUT
         agent_instance.automated_step_count = 0

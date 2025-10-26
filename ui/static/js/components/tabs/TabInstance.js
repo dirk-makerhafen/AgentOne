@@ -59,6 +59,7 @@ function selectAgentInstanceTab(instancePk, instanceName, targetPanelId = 'mainT
             websocket.send(JSON.stringify({ type: 'subscribe', payload: { instance_pk: instancePk } }));
             conversationApi.listMessages(instancePk, null, 20);
             agentInstanceApi.get(instancePk);
+            agentInstanceApi.getSubAgents(instancePk);
         }
     }
 }
@@ -129,6 +130,7 @@ function showSidebarTabForInstance(tabName, clickedButton, instancePk) {
         case 'vars': agentInstanceApi.getVars(instancePk); break;
         case 'permissions': a2aPermissionsApi.list(instancePk); break;
         case 'settings': agentInstanceApi.get(instancePk); break;
+        case 'subagents': agentInstanceApi.getSubAgents(instancePk); break;
     }
 }
 

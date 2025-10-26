@@ -20,7 +20,9 @@ function saveLimit(limitType, instanceId) {
     const keyMap = {
         'convo': 'limit_max_conversation_messages',
         'mem': 'limit_max_memory_items',
-        'steps': 'limit_max_automated_steps'
+        'steps': 'limit_max_automated_steps',
+        'requests': 'max_requests_per_minute',
+        'tokens': 'max_token_per_minute'
     };
     if (keyMap[limitType]) {
         limitsApi.update_instance_limits(instanceId, { [keyMap[limitType]]: value });
@@ -55,7 +57,9 @@ function resetInstanceLimit(limitType, instanceId) {
     const keyMap = {
         'convo': 'limit_max_conversation_messages',
         'mem': 'limit_max_memory_items',
-        'steps': 'limit_max_automated_steps'
+        'steps': 'limit_max_automated_steps',
+        'requests': 'max_requests_per_minute',
+        'tokens': 'max_token_per_minute'
     };
     if (keyMap[limitType]) {
         limitsApi.update_instance_limits(instanceId, { [keyMap[limitType]]: null });

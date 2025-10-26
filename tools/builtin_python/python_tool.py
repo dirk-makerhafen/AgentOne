@@ -1,4 +1,4 @@
-from core.models.prompt_string import PromptString
+from core.models.prompt_string import Prompt
 from tools.primitives import run_python_code
 from tools.base.base_tool import BaseTool
 from tools.builtin_python.models.python_tool_var import PythonToolVar
@@ -12,14 +12,14 @@ class PythonTool(BaseTool):
     PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="Instructions")
-        functionsTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="Functions")
-        sharedVarsInjection = PromptString.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="SharedVarsInjection")
+        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="functions")
+        #sharedVarsInjection = Prompt.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="list_of_shared_vars")
         existing_vars = PythonToolVar.objects.filter(agentInstance=self.agentInstance, next_version=None).order_by('-created_at')[:20]
         return [
             {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Python"], "data": {} },
             {"tpId": functionsTemplate.pk  , "tags": ["Prompts", "Python"], "data": {} },
-            {"tpId": sharedVarsInjection.pk, "tags": ['Tool', 'Python', 'Vars']       , "data": {"keys": [v.key for v in existing_vars]}}
+            #{"tpId": sharedVarsInjection.pk, "tags": ['Tool', 'Python', 'Vars']       , "data": {"keys": [v.key for v in existing_vars]}}
         ]
         
     def python(self, source, mode="one-shot", subscription_id=None, toolCall=None):

@@ -1,14 +1,15 @@
 let websocket;
 let wsPath;
 
-window.allAgents = window.allAgents || {};
-window.allAgentInstances = window.allAgentInstances || {};
-window.allAvailableModels = window.allAvailableModels || {};
-window.allAvailableSystems = window.allAvailableSystems || {};
-window.allToolInstallations = window.allToolInstallations || {};
-window.allToolDefinitions = window.allToolDefinitions || {};
-
-
+// --- Global Caches ---
+window.allAgents = {};
+window.allAgentInstances = {};
+window.allAvailableModels = {};
+window.allAvailableSystems = {};
+window.allToolInstallations = {};
+window.allToolDefinitions = {};
+window.globalPromptCache = [];
+window.agentPromptCache = {}; // Keyed by agent_id
 
 function connectWebSocket(user_pk) {
     if (!user_pk) {
@@ -52,7 +53,6 @@ const messageHandlers = {
         updateAgentEditTab(payload);
     },
     'AgentList': (payload) => {
-        // Clear existing agents from cache before repopulating
         window.allAgents = {}; 
         payload.agents.forEach(agentData => {
             addOrUpdateAgentInSidebar(agentData);
@@ -63,12 +63,10 @@ const messageHandlers = {
     },
     'AgentInstance': (payload) => {
         window.allAgentInstances[payload.id] = payload;
-        renderAgentInstance(payload); // Updates the sidebar list item
-        renderAgentInstanceHeader(payload, payload.id); // Updates the tab header
-        renderSidebarSettings(payload); // Updates the settings sidebar
-        renderSidebarFilesystemHeader(payload); // Renders the filesystem header
-
-        // After an instance update, refresh the parent agent's sidebar entry to update instance counts
+        renderAgentInstance(payload);
+        renderAgentInstanceHeader(payload, payload.id);
+        renderSidebarSettings(payload);
+        renderSidebarFilesystemHeader(payload);
         if (payload.agent_id && window.allAgents[payload.agent_id]) {
             addOrUpdateAgentInSidebar(window.allAgents[payload.agent_id]);
         }
@@ -77,8 +75,6 @@ const messageHandlers = {
         const instanceElement = document.getElementById(`agent_instance_${payload.instance_pk}`);
         if (instanceElement) instanceElement.remove();
         delete window.allAgentInstances[payload.instance_pk];
-
-        // After an instance is deleted, refresh the parent agent's sidebar entry to update instance counts
         if (payload.agent_pk && window.allAgents[payload.agent_pk]) {
             addOrUpdateAgentInSidebar(window.allAgents[payload.agent_pk]);
         }
@@ -86,18 +82,13 @@ const messageHandlers = {
     'AgentInstanceFork': (payload) => renderAgentInstanceForkMessage(payload),
     'AgentInstanceView': (payload) => renderInstanceView(payload),
     'AgentInstanceList': (payload) => {
-        // Clear existing instances from cache before repopulating
         window.allAgentInstances = {};
         payload.instances.forEach(instanceData => {
             window.allAgentInstances[instanceData.id] = instanceData;
-            // Note: We don't call renderAgentInstance here directly to avoid redundant renders if already present.
-            // Individual AgentInstance messages will handle specific instance updates.
         });
-        // After updating all agent instances, refresh all agent sidebar items to reflect new counts
         Object.values(window.allAgents).forEach(agentData => {
             addOrUpdateAgentInSidebar(agentData);
         });
-        // Now, re-render all instances from the updated cache into their respective agent containers
         Object.values(window.allAgentInstances).forEach(instanceData => {
             renderAgentInstance(instanceData);
         });
@@ -115,9 +106,42 @@ const messageHandlers = {
             agentInstanceApi.get(window.currentAgentInstancePk);
         }
     },
-    'PromptList': (payload) => renderPromptList(payload.payload),
-    'PromptString': (payload) => renderSinglePrompt(payload),
-
+    'PromptDefinitionList': (payload) => {
+        // This is for the new hierarchical global Prompts Tab
+        renderPromptDefinitionList(payload.payload);
+    },
+    'PromptVariantList': (payload) => {
+        // This is the new on-demand variant list
+        renderPromptVariants(payload.prompt_pk, payload.system_variants, payload.user_variants);
+    },
+    'PromptList': (payload) => {
+        // This is for the agent-specific prompt list used in the Agent Edit Tab
+        if (payload.agent_id) {
+            window.agentPromptCache[payload.agent_id] = payload.payload;
+            const agentPrompts = window.agentPromptCache[payload.agent_id];
+            
+            // The Agent Edit tab needs both the agent-specific variants AND the global ones (as defaults)
+            // So we'll request the global list if it's not cached yet.
+            if (!window.globalPromptCache || window.globalPromptCache.length === 0) {
+                promptsApi.list(); // This will fetch the PromptDefinitionList
+            }
+            
+            // We can proceed to render the agent's core prompt section
+            // The rendering function is designed to handle this, looking up defaults from the global cache.
+            handleAgentPromptList(payload.agent_id, agentPrompts);
+        }
+    },
+    'PromptVariant': (payload) => {
+        // When a single PromptVariant is updated or created, re-fetch the entire prompt list
+        // to ensure the hierarchical view (PromptDefinitionList) is fully refreshed with new counts and variants.
+        promptsApi.list(); 
+        
+        // If the payload is for an agent-specific prompt, also refresh that agent's prompt list
+        // This ensures the agent-specific prompt section in TabAgent.js also updates.
+        if (payload.agent_id) {
+            promptsApi.list(payload.agent_id); 
+        }
+    },
     'PromptDeleted': (payload) => {
         const promptRow = document.getElementById(`prompt-row-${payload.prompt_pk}`);
         const promptValueRow = document.getElementById(`prompt-value-row-${payload.prompt_pk}`);
@@ -140,14 +164,8 @@ const messageHandlers = {
         payload.tool_definitions.forEach(td => { window.allToolDefinitions[td.id] = td; });
         renderToolDefinitionList(payload.tool_definitions);
     },
-    'ToolDefinition': (payload) => {
-        // This handler now only processes updates for existing ToolDefinitions
-        handleToolDefinitionUpdate(payload);
-    },
-    'ToolDefinitionDeleted': (payload) => {
-        // This new handler processes explicit deletion messages
-        handleToolDefinitionDelete(payload.tool_def_pk);
-    },
+    'ToolDefinition': (payload) => handleToolDefinitionUpdate(payload),
+    'ToolDefinitionDeleted': (payload) => handleToolDefinitionDelete(payload.tool_def_pk),
     'ToolInstallation': (payload) => {
         window.allToolInstallations[payload.id] = payload;
         if (payload.system_id) {
@@ -166,9 +184,7 @@ const messageHandlers = {
     },
     'ToolInstallationLogList': (payload) => renderToolInstallationLogsInline(payload.logs),
     'ToolInstallationDeleted': (payload) => {
-        // Remove from global cache
         delete window.allToolInstallations[payload.installation_pk];
-        // Re-render the list for the affected system
         if (payload.system_pk) {
             const installationsForSystem = Object.values(window.allToolInstallations)
                                                 .filter(inst => inst.system_id === payload.system_pk);
@@ -176,9 +192,6 @@ const messageHandlers = {
         }
     },
     'ToolInstanceDeleted': (payload) => {
-        // We don't remove the instance from a global cache directly,
-        // but instead trigger a refresh of its parent installation's list
-        // to correctly update the running instance count.
         const installation = window.allToolInstallations[payload.tool_installation_pk];
         if (installation) {
             toolInstallationApi.list(installation.system_id);
@@ -221,6 +234,15 @@ const messageHandlers = {
     'LLMQuery': (payload) => renderLLMQueryMessage(payload, payload.agentInstance_id),
     'LLMResponse': (payload) => renderLLMResponseMessage(payload, payload.agentInstance_id),
     'AgentToAgentMessage': (payload) => renderInterAgentMessage(payload),
+    'SubAgentLink': (payload) => {
+        if (payload.supervisor_instance_id === window.currentAgentInstancePk) {
+            // If the message is for the currently active instance, refresh its sub-agents
+            agentInstanceApi.getSubAgents(payload.supervisor_instance_id);
+        }
+    },
+    'SubAgentLinkList': (payload) => {
+        renderSidebarSubagents(payload.sub_agents, payload.instance_pk);
+    },
     'error': (payload) => addToClientLog(`Error: ${payload.message}`, 'error', null, payload.agentInstance_id),
     'info': (payload) => addToClientLog(`Info: ${payload.message}`, 'info', null, payload.agentInstance_id)
 };

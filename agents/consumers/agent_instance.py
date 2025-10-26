@@ -54,7 +54,7 @@ def handle_agentinstance_update(consumer, instance_pk, data=None):
     if 'description_text' in data:
         agent_instance.description_text = data['description_text']
     if 'workingdir' in data:
-        agent_instance.workingdir = data['workingdir']
+        agent_instance.set_workingdir(data['workingdir'])
     if 'description' in data:
         agent_instance.description = data['description']
     if 'limit_max_conversation_messages' in data:
@@ -109,3 +109,22 @@ def handle_agentinstance_fork(consumer, instance_pk):
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to fork agent instance: {e} {traceback.format_exc()}'}))
+
+@register_handler('agent_instance_get_subagents')
+def handle_agent_instance_get_subagents(consumer, instance_pk):
+    try:
+        agent_instance = AgentInstance.objects.get(instance_pk=instance_pk)
+        sub_agent_links = agent_instance.subordinates.all().select_related('subordinate_instance')
+        
+        sub_agents_data = [link.as_client_dict() for link in sub_agent_links]
+        
+        consumer.send(text_data=json.dumps({
+            'object': 'SubAgentLinkList',
+            'instance_pk': instance_pk,
+            'sub_agents': sub_agents_data
+        }))
+
+    except AgentInstance.DoesNotExist:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
+    except Exception as e:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Error fetching sub-agents: {e} {traceback.format_exc()}'}))

@@ -9,7 +9,7 @@ from agents.models.conversation_message import ConversationMessage
 from agents.models.debug_log_entry import DebugLogEntry
 from agents.models.llm_query import LLMQuery
 from agents.tasks.execute_query import execute_query
-from core.models.prompt_string import PromptString
+from core.models.prompt_string import Prompt
 from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
 from tools.builtin_filesystem.utils.fsutils import get_relative_path
 from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription
@@ -19,28 +19,41 @@ from agents.apps import AgentsConfig
 @shared_task
 def celery_create_query(agentinstance_id):
     from agents.models.agent_instance import AgentInstance, BUILTIN_TOOL_CLASS_MAP
-
+    from agents.rate_limiter import rate_limiter, RateLimitExceeded
     agentInstance = AgentInstance.objects.get(instance_pk=agentinstance_id)
-    agentInstance.status = AgentInstance.AgentInstanceStatusChoices.THINKING
-    agentInstance.save()
+
+    try:
+        # Check and record requests rate limit before proceeding with query creation
+        rate_limiter.check_and_record_usage(agentInstance, requests_cost=1, tokens_cost=0)
+    except RateLimitExceeded as e:
+        # Set status to AWAITING_RATE_LIMIT and reschedule the task
+        if agentInstance.status != AgentInstance.AgentInstanceStatusChoices.AWAITING_RATE_LIMIT:
+            agentInstance.status = AgentInstance.AgentInstanceStatusChoices.AWAITING_RATE_LIMIT
+            agentInstance.save()
+        # Reschedule the task
+        celery_create_query.apply_async(args=[agentinstance_id], countdown=e.time_to_reset)
+        return # Stop execution in current task, it will be retried
+
+    if agentInstance.status != AgentInstance.AgentInstanceStatusChoices.THINKING:
+        agentInstance.status = AgentInstance.AgentInstanceStatusChoices.THINKING
+        agentInstance.save()
 
     try:
         messages = []
-        systemPrompt = PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="System")
-        mainInstructions =  PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="Instructions")
-        toolInstructions = PromptString.get_template(agentInstance=agentInstance, source="tools", key="Instructions")
-        outputFormat = PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="OutputFormat")
-        outputFormatReminder = PromptString.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="OutputFormatReminder")
+        systemPrompt = Prompt.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="system")
+        mainInstructions =  Prompt.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="instructions")
+        toolInstructions = Prompt.get_template(agentInstance=agentInstance, source="tools", key="instructions")
+        outputFormatReminder = Prompt.get_template(agentInstance=agentInstance, source=AgentsConfig.name, key="OutputFormatReminder")
         
         messages.append({"role": "system", "parts": [{
                 "tags": ["Prompts", "System"] ,
                 'tpId': systemPrompt.id, 
-                'data': { 'workingdir': agentInstance.workingdir, 'current_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'current_timestamp': int(time.time())},
-        }]})
-
-        messages.append({"role": "system", "parts": [{
-            "tags": ["Prompts", "OutputRules"],
-            'tpId': outputFormat.id, 
+                'data': { 
+                    'workingdir': agentInstance.workingdir, 
+                    'current_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
+                    'current_timestamp': int(time.time()),
+                    'agent_instance_id': agentinstance_id
+                },
         }]})
 
         messages.append({"role": "user", "parts": [{
@@ -96,12 +109,12 @@ def get_chat_messages(agentInstance):
     all_loaded_paths = set(all_loaded_paths)
 
     all_entries = conversationMessages + fs_entries
-    all_entries.sort(key=lambda x: x.created_at, reverse=True) # Sort descending for HistoryLimiter processing
+    all_entries.sort(key=lambda x: x.updated_at if type(x) == FsLogEntry else x.created_at, reverse=True) # Sort descending for HistoryLimiter processing
 
     # Collect history limiting rule templates from all available tools
     limiter = HistoryLimiter(agentInstance, all_entries, all_loaded_paths)
-    resultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source="tools", key="ResultInjection")
-    filesystemInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.builtin_filesystem', key="ContentInjection")
+    resultInjectionTemplate = Prompt.get_template(agentInstance=agentInstance, source="tools", key="ResultInjection")
+    filesystemInjectionTemplate = Prompt.get_template(agentInstance=agentInstance, source='tools.builtin_filesystem', key="content_injection")
 
     for entry in all_entries:
         if type(entry) == ConversationMessage:
@@ -174,7 +187,7 @@ def get_tool_subscription_messages(agentInstance):
         return []
 
     try:
-        subscriptionResultInjectionTemplate = PromptString.get_template(agentInstance=agentInstance, source='tools.builtin_subscriptions', key="SubscriptionResultInjection")
+        subscriptionResultInjectionTemplate = Prompt.get_template(agentInstance=agentInstance, source='tools.builtin_subscriptions', key="SubscriptionResultInjection")
         for subscription in subscriptions:
             try:
                 tool_function = agentInstance.get_tool_function(subscription.tool_name)
@@ -208,7 +221,7 @@ def get_tool_subscription_messages(agentInstance):
                 debugLogEntry.save()
         if subscription_parts:
             messages.append({'role': 'user', 'parts': subscription_parts})
-    except PromptString.DoesNotExist:
+    except Prompt.DoesNotExist:
         debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": "SubscriptionResultInjection prompt template not found. Subscriptions will not be executed."})
         debugLogEntry.save()
     return messages

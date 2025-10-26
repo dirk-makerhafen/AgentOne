@@ -4,9 +4,10 @@ def parse_responsestring(response_string):
     response_string = response_string.replace('_@_@_', '@@@')
 
     parsed_output = []
-    
+     
+
     # fix common errors llm make when outputing tool calls. 
-    for tname in ["memory_add", "memory_correct", "fs_load", "fs_unload", "fs_write", "fs_append", "fs_replace", "fs_python_edit", "python", "agent_send_message", "await_user_input"]:
+    for tname in ["memory_add", "memory_correct", "fs_load", "fs_unload", "fs_write", "fs_append", "fs_replace", "fs_python_edit", "python", "agent_send_message", "await_input","kv_storage.set", "kv_storage.get", "kv_storage.list", "kv_storage.delete"]:
         response_string = response_string.replace(')@@@\n@%s(' % tname, ')@@@\n@@@%s(' % tname)
         response_string = response_string.replace('.@@@%s(' % tname, '.\n@@@%s(' % tname)
         if f'- `{tname}' in response_string:
@@ -21,9 +22,20 @@ def parse_responsestring(response_string):
                 if part.startswith(f'- `@@@{tname}') and part.endswith('@@@`'):
                     parts[index] = part[3:-1]
             response_string = "\n".join(parts)
-            
+        if f'\n    @@@{tname}(' in  response_string:
+            parts = response_string.split("\n")
+            for index, part in enumerate(parts):
+                if part.startswith(f'    @@@{tname}') and part.endswith('@@@'):
+                    parts[index] = part[4:]
+            response_string = "\n".join(parts) 
+        if f'\n  @@@{tname}(' in  response_string:
+            parts = response_string.split("\n")
+            for index, part in enumerate(parts):
+                if part.startswith(f'  @@@{tname}') and part.endswith('@@@'):
+                    parts[index] = part[2:]
+            response_string = "\n".join(parts) 
     # capture some common output mistakes llms make in addition to the correct tool call syntax
-    tool_call_line_pattern = re.compile(r'(^|\n|```|```python|```python\n|```tool_code|```tool_code\n)@@@(\w+)\s*\((.*?)\)@@@(?=$|\n|```)', re.DOTALL)
+    tool_call_line_pattern = re.compile(r'(^|\n|```|```python|```python\n|```tool_code|```tool_code\n)@@@([\w.]+)\s*\((.*?)\)@@@(?=$|\n|```)', re.DOTALL)
 
     last_end_index = 0
 
@@ -39,7 +51,7 @@ def parse_responsestring(response_string):
         while full_match_content[-3:] != "@@@":
             full_match_content = f"{full_match_content}@"
 
-        func_name = match.group(2) # Changed from group(2) to group(1)
+        func_name = match.group(2).strip() # Changed from group(2) to group(1)
         args_str = match.group(3).strip() # Changed from group(3) to group(2)
         
         chat_message_segment = _clean_msg_ending(response_string[last_end_index:full_match_start])
@@ -73,23 +85,23 @@ def parse_responsestring(response_string):
                 for arg_match in arg_kv_pattern.finditer(args_str):
                     key = arg_match.group(1)
                     value_str = arg_match.group(2)
-                    print("value_str", value_str)
                     try:
                         value = ast.literal_eval(value_str)
-                        print("value1", value)
                     except (ValueError, SyntaxError):
                         # If literal_eval fails, check if it's a triple-quoted string that needs stripping
                         if (value_str.startswith('"""') and value_str.endswith('"""')) or \
                            (value_str.startswith("'''") and value_str.endswith("'''")):
                             value = value_str[3:-3] # Strip outer triple quotes
-                            print("vlaue2", value)
                             try:
                                 value = ast.literal_eval(value_str)
                             except:
                                 pass
                         else:
-                            print("value3") 
                             value = value_str # Keep as raw string if evaluation failed and not triple-quoted
+                    if func_name in [ "agent_send_message", "update_working_dir"]:
+                        if key in ["recipient_agent_id", "target_agent_id"]: 
+                            key = "agent_id"
+                  
                     temp_args[key] = value
                 arguments = temp_args
             except Exception:

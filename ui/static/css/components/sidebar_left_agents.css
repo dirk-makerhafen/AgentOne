@@ -161,7 +161,7 @@
 
 .tree-node-header, .tree-leaf-instance {
     cursor: pointer;
-    padding: 3px 0px;
+    padding: 0px 0px;
     border-radius: 3px;
     transition: background-color 0.2s ease;
     display: flex;
@@ -239,7 +239,7 @@
     flex-shrink: 0;
 }
 .tree-node-spacer {
-    width: 0px;
+    width: 14px;
     margin-right: 2px;
     flex-shrink: 0;
 }
@@ -304,6 +304,7 @@
     -webkit-overflow-scrolling: touch; /* For smoother scrolling on touch devices */
     scrollbar-width: none; /* Hide scrollbar for Firefox */
     -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+    min-height: min-content;
 }
 
 /* Hide scrollbar for Webkit browsers (Chrome, Safari) */

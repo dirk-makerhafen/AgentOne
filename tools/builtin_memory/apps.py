@@ -7,7 +7,7 @@ class ToolsBuiltinMemoryConfig(AppConfig):
 
     def ready(self):
         if 'migrate' not in sys.argv and 'makemigrations' not in sys.argv:
-            from core.models.prompt_string import PromptString
+            from core.models.prompt_string import Prompt
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .memory_tool import MemoryTool
@@ -23,15 +23,15 @@ class ToolsBuiltinMemoryConfig(AppConfig):
                 }
             )
             for prompt in PROMPTS:
-                PromptString.objects.get_or_create(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
+                Prompt.get_or_create_template(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
             
             function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in TOOLS.items()])
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Functions", value=function_python_string)
+            Prompt.get_or_create_template(owner=None, source=self.name, key="functions", value=function_python_string)
 
             for trackname, trackitem in TRACKS.items():
                 header = f'## {trackname} - {trackitem["description"]}\n'
-                PromptString.objects.get_or_create(owner=None, source=self.name, key=f"ContentHeader.{trackname}", value=header)
+                Prompt.get_or_create_template(owner=None, source=self.name, key=f"content_header.{trackname}", value=header)
 
                 for layername, layerdescription in trackitem['layers'].items():
                     header = f'### {trackname} {layername} - {layerdescription}\n'
-                    PromptString.objects.get_or_create(owner=None, source=self.name, key=f"ContentHeader.{trackname}.{layername}", value=header)
+                    Prompt.get_or_create_template(owner=None, source=self.name, key=f"content_header.{trackname}.{layername}", value=header)

@@ -1,6 +1,11 @@
 // This file manages the interaction of the "Edit Agent" tab.
 
 let agentUpdateTimers = {};
+const corePromptKeys = [
+    { source: 'agents', key: 'System' },
+    { source: 'agents', key: 'Instructions' },
+    { source: 'tools', key: 'Instructions' }
+];
 
 function agentUpdate(agentId) {
     clearTimeout(agentUpdateTimers[agentId]);
@@ -39,33 +44,107 @@ function agentCreateFromTab(event) {
     closeMainTab('tabContent_add_agent');
 }
 
+// Main function to render the core prompts section for an agent
+function renderAgentCorePrompts(agentId, agentPrompts) {
+    const container = document.getElementById(`core-prompts-container-${agentId}`);
+    if (!container) return;
 
-/**
- * Updates the content of an open "Edit Agent" tab with new agent data.
- * @param {object} updatedAgent The updated agent object from the WebSocket payload.
- */
+    container.innerHTML = ''; // Clear previous content
+    const corePromptTemplate = getTemplate('AgentCorePromptTemplate');
+
+    corePromptKeys.forEach(coreKey => {
+        // Find if this agent has a custom override for this core prompt
+        const agentOverride = agentPrompts.find(p => p.source === coreKey.source && p.key === coreKey.key);
+
+        let context;
+        if (agentOverride) {
+            // Agent has a custom version
+            context = {
+                prompt: agentOverride,
+                is_override: true,
+                agent_id: agentId
+            };
+        } else {
+            // Agent uses the global default, find it in the cache
+            const globalDefault = window.globalPromptCache.find(p => p.source === coreKey.source && p.key === coreKey.key && p.owner_username === 'System');
+            if (globalDefault) {
+                context = {
+                    prompt: globalDefault,
+                    is_override: false,
+                    agent_id: agentId
+                };
+            } else {
+                // Could not find a global default to base the override on
+                console.warn(`Could not find global default for ${coreKey.source}/${coreKey.key}`);
+                return; // Skip rendering this card
+            }
+        }
+        
+        container.insertAdjacentHTML('beforeend', corePromptTemplate(context));
+        // Attach event listeners for the new card
+        attachAgentPromptEventListeners(container.lastElementChild.querySelector('.core-prompt-body'));
+    });
+}
+
+
+function attachAgentPromptEventListeners(container) {
+    const editableElement = container.querySelector('.prompt-value-content[contenteditable="true"]');
+    if (editableElement) {
+        const promptPk = editableElement.dataset.promptPk;
+        const editActions = document.getElementById(`prompt-edit-actions-${promptPk}`);
+        
+        editableElement.addEventListener('focus', function() {
+            if (editActions) {
+                editActions.classList.remove('hidden');
+                this.dataset.originalValue = this.textContent;
+            }
+        });
+
+        editableElement.addEventListener('blur', function() {
+            setTimeout(() => {
+                if (editActions && !editActions.contains(document.activeElement)) {
+                    editActions.classList.add('hidden');
+                }
+            }, 150);
+        });
+    }
+
+    // Attach listener for the enabled toggle switch
+    const toggle = container.parentElement.querySelector(`.prompt-enabled-toggle`);
+    if (toggle) {
+        const promptPk = toggle.dataset.promptPk;
+        toggle.addEventListener('change', function(event) {
+            event.stopPropagation();
+            const isEnabled = this.checked;
+            promptsApi.update(promptPk, undefined, isEnabled);
+        });
+    }
+}
+
+
 function updateAgentEditTab(updatedAgent) {
     const agentId = updatedAgent.id;
-    const activeTabContent = document.querySelector(`.tab-content.active`);
+    const tabContent = document.getElementById(`tabContent_edit_agent_${agentId}`);
 
-    // Only update if the tab is currently active and matches the agent ID.
-    if (activeTabContent && activeTabContent.id === `tabContent_edit_agent_${agentId}`) {
+    if (tabContent) {
         // Update timestamp
-        const timestampElement = activeTabContent.querySelector(`#last-updated-${agentId}`);
+        const timestampElement = tabContent.querySelector(`#last-updated-${agentId}`);
         if (timestampElement) {
             const formattedTimestamp = new Date(updatedAgent.updated_at).toLocaleString();
             timestampElement.textContent = `Last updated: ${formattedTimestamp}`;
         }
 
         // Update tab button name
-        const tabButton = document.querySelector(`#tabButton_edit_agent_${agentId}`);
+        const tabButton = document.querySelector(`#mainTabBar > .tab-button[data-tab-content-id='tabContent_edit_agent_${agentId}']`);
         if (tabButton) {
-            for (let node of tabButton.childNodes) {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    node.textContent = `Edit: ${updatedAgent.name} `;
-                    break;
-                }
-            }
+            const textNode = Array.from(tabButton.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+            if(textNode) textNode.textContent = `Edit: ${updatedAgent.name} `;
         }
     }
+}
+
+// This function now replaces the old renderAgentPromptList
+// It will be called when an agent's prompt list is received
+function handleAgentPromptList(agentId, prompts) {
+    renderAgentCorePrompts(agentId, prompts);
 }

@@ -153,20 +153,36 @@ function requestAgentDeletion(event, agentId, agentName) {
 function openAgentEditTab(event, agentId) {
     event?.preventDefault();
     event?.stopPropagation();
-    const tabAgentTemplate = getTemplate('TabAgentTemplate');
+
+    const tabId = `tabContent_edit_agent_${agentId}`;
+    const existingTab = document.getElementById(tabId);
+
+    if (existingTab) {
+        openMainTab(null, tabId, 'mainTabPanel');
+        return;
+    }
+
     const agent = window.allAgents[agentId];
     if (!agent) { 
         console.error(`Agent with ID ${agentId} not found in cache.`);
         return;
     }
 
+    const tabAgentTemplate = getTemplate('TabAgentTemplate');
     const allTools = Object.values(window.allToolDefinitions || {});
     const selectedToolIds = new Set(agent.available_tools || []);
     const toolsForTemplate = allTools.map(tool => ({ ...tool, isSelected: selectedToolIds.has(tool.id) }));
-
     const context = { agent: { ...agent, updated_at_formatted: new Date(agent.updated_at).toLocaleString() }, tools: toolsForTemplate };
     const tabContentHtml = tabAgentTemplate(context);
-    const tabId = `tabContent_edit_agent_${agentId}`;
     const tabName = `Edit: ${agent.name}`;
+    
     openMainTab(null, tabId, 'mainTabPanel', tabName, tabContentHtml);
+    
+    // Fetch agent-specific prompts to trigger the rendering logic
+    promptsApi.list(agentId);
+    
+    // Also ensure global prompts are available for defaults, if not already cached
+    if (!window.globalPromptCache || window.globalPromptCache.length === 0) {
+        promptsApi.list();
+    }
 }

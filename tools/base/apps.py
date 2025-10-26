@@ -8,9 +8,9 @@ class ToolsBuiltinUserinteractionConfig(AppConfig):
     def ready(self):
         # Only run this code if not during a migration or initial Django setup
         if 'migrate' not in sys.argv and 'makemigrations' not in sys.argv:
-            from core.models.prompt_string import PromptString
+            from core.models.prompt_string import Prompt
             from .prompts import INSTRUCTIONS, TOOL_RESULT_INJECTION
 
             # Register prompts
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="Instructions", value=INSTRUCTIONS)
-            PromptString.objects.get_or_create(owner=None, source=self.name, key="ResultInjection", value=TOOL_RESULT_INJECTION)
+            Prompt.get_or_create_template(owner=None, source=self.name, key="instructions", value=INSTRUCTIONS)
+            Prompt.get_or_create_template(owner=None, source=self.name, key="ResultInjection", value=TOOL_RESULT_INJECTION)

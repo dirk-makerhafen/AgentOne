@@ -17,5 +17,8 @@ const agentInstanceApi = {
     },
     fork: function(instance_pk) {
         sendRequest('agentinstance_fork', { instance_pk });
+    },
+    getSubAgents: function(instancePk) {
+        sendRequest('agent_instance_get_subagents', { 'instance_pk': instancePk });
     }
 };

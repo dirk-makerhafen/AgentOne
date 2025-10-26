@@ -42,7 +42,7 @@ class LLMQuery(BaseModel):
         }
 
     def compile(self):
-        from core.models.prompt_string import PromptString
+        from core.models.prompt_string import PromptVariant
         from agents.models.conversation_message import ConversationMessage
         from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
         from tools.builtin_memory.models.memory_item import MemoryItem
@@ -65,7 +65,7 @@ class LLMQuery(BaseModel):
                     c = c[tag]
                 part_content = ""
                 if "tpId" in part:
-                    template = PromptString.objects.get(pk=part["tpId"]).value
+                    template = PromptVariant.objects.get(pk=part["tpId"]).value
                     rtemplate = Environment(loader=BaseLoader).from_string(template)
                     data = part.get("data", {})
                     if "memories" in data:

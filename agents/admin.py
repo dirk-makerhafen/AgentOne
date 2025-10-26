@@ -22,8 +22,25 @@ class AgentAdmin(admin.ModelAdmin):
 
 @admin.register(AgentInstance)
 class AgentInstanceAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'created_at', 'name', 'agent', 'system', 'aimodel', 'status', 'raw_data_reference')
+    list_display = ('pk', 'created_at', 'name', 'agent', 'system', 'aimodel', 'status', 'max_requests_per_minute', 'max_token_per_minute', 'raw_data_reference')
     list_display_links = ('pk', 'name', 'agent', 'system', 'aimodel')
+    fieldsets = (
+        (None, {
+            'fields': ('agent', 'system', 'aimodel', 'name', 'description_text', 'status', 'workingdir', 'require_user_interaction', 'workingdir_write_allowed', 'access_rules')
+        }),
+        ('Rate Limiting', {
+            'fields': ('max_requests_per_minute', 'max_token_per_minute'),
+            'description': 'Set instance-specific rate limits. If null, limits are inherited from the parent agent.'
+        }),
+        ('Limits Overrides', {
+            'fields': ('limit_max_conversation_messages', 'limit_max_memory_items', 'limit_max_automated_steps'),
+            'classes': ('collapse',)
+        }),
+        ('History', {
+            'fields': ('automated_step_count', 'raw_data_reference', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
     readonly_fields = ('created_at', 'updated_at')
     list_filter = ('status', 'system', 'agent', 'aimodel')
     search_fields = ('name', 'description', 'agent__name')
@@ -90,3 +107,16 @@ class AgentInstanceForkAdmin(admin.ModelAdmin):
     list_filter = ('created_at',)
     search_fields = ('parent_instance__name', 'child_instance__name')
     autocomplete_fields = ('parent_instance', 'child_instance')
+
+
+from .models.query_queue import QueryQueue
+
+@admin.register(QueryQueue)
+class QueryQueueAdmin(admin.ModelAdmin):
+    list_display = ('agent_instance', 'status', 'created_at')
+    list_display_links = ('agent_instance',)
+    list_filter = ('status',)
+    search_fields = ('agent_instance__name',)
+    autocomplete_fields = ('agent_instance',)
+    readonly_fields = ('created_at', 'updated_at')
+    list_per_page = 50

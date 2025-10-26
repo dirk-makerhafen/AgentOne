@@ -101,7 +101,7 @@ class FsLogEntryManager(models.Manager):
         # Post-refresh logic
         if result and result.load_mode == 'summary' and result.summary is None:
             result.summary = summarize(result.path, result.content)
-            result.save(send_to_client=False)
+        result.save(send_to_client=False)
 
         return True, result
     

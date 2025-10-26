@@ -50,6 +50,14 @@
                         {{/each}}
                     </div>
                 </div>
+
+                <!-- Core Prompts Section -->
+                <div class="form-group">
+                    <h4>Core Prompts</h4>
+                    <div id="core-prompts-container-{{agent.id}}">
+                        <!-- Core prompts will be rendered here by JavaScript -->
+                    </div>
+                </div>
                 
                 <div class="agent-edit-footer">
                     {{#if agent.is_new}}
@@ -64,4 +72,41 @@
     </div>
 </script>
 
+<script id="AgentCorePromptTemplate" type="text/x-handlebars-template">
+    <div class="core-prompt-card" id="core-prompt-card-{{prompt.id}}">
+        <div class="core-prompt-header">
+            <strong>{{prompt.source}} / {{prompt.key}}</strong>
+            <span class="prompt-status-badge {{#if is_override}}status-override{{else}}status-default{{/if}}">
+                {{#if is_override}}Custom Override{{else}}Global Default{{/if}}
+            </span>
+        </div>
+        <div class="core-prompt-body">
+            <div class="prompt-value-editor-container">
+                 <pre class="prompt-value-content" {{#if is_override}}contenteditable="true"{{/if}} data-prompt-pk="{{prompt.id}}" id="prompt-value-editable-{{prompt.id}}">{{prompt.value}}</pre>
+                {{#if is_override}}
+                <div class="prompt-edit-actions hidden" id="prompt-edit-actions-{{prompt.id}}">
+                    <button class="btn btn-primary btn-xs" onclick="event.preventDefault(); event.stopPropagation(); savePromptChanges('{{prompt.id}}')"><i class="fa fa-check"></i> Save</button>
+                    <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation(); cancelPromptChanges('{{prompt.id}}')"><i class="fa fa-times"></i> Cancel</button>
+                </div>
+                {{/if}}
+            </div>
+        </div>
+        <div class="core-prompt-footer">
+            {{#if is_override}}
+                <label class="switch">
+                    <input type="checkbox" class="prompt-enabled-toggle" data-prompt-pk="{{prompt.id}}" {{#if prompt.is_enabled}}checked{{/if}}>
+                    <span class="slider round"></span>
+                </label>
+                <span class="switch-label">Enabled</span>
+                <button class="btn btn-xs btn-default delete-prompt-btn pull-right" data-prompt-pk="{{prompt.id}}" title="Delete this custom override" onclick="event.stopPropagation(); deletePrompt('{{prompt.id}}', '{{prompt.key}}')">
+                    <i class="fa fa-trash"></i> Delete Override
+                </button>
+            {{else}}
+                <button class="btn btn-xs btn-default" onclick="event.preventDefault(); promptsApi.createVariant('{{prompt.id}}', '{{agent_id}}');" title="Create a custom, editable version of this prompt for this agent">
+                    <i class="fa fa-copy"></i> Create Override
+                </button>
+            {{/if}}
+        </div>
+    </div>
+</script>
 {% endverbatim %}

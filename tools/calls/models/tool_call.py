@@ -59,6 +59,7 @@ class ToolCall(BaseModel):
 
             tool_installations = []
             builtin_function = None
+            
             for tool_definition in available_tool_definitions:
                 if tool_definition.has_tool_name(method_name):
                     if tool_definition.is_builtin:
@@ -74,24 +75,27 @@ class ToolCall(BaseModel):
             if builtin_function:
                 success, result = builtin_function(toolCall=self, name=method_name, arguments = self.arguments)
             else:
-                tool_instances = []
-                for tool_installation in tool_installations:
-                    tool_instances.extend(tool_installation.instances.filter(status=ToolInstance.ToolInstanceStatusChoices.RUNNING))
-                tool_instances = list(set(tool_installations))
-                if tool_instances:
-                    mcp_client = random.choice(tool_instances).mcp_client
-                    mcp_result =  mcp_client.call_tool(name=method_name, arguments=arguments)
-                    if "result" in mcp_result:
-                        result = mcp_result["result"]
-                        success = True 
-                    elif "error" in mcp_result:
-                        result = {"status": "error"}
-                        success = False 
-                        if "message" in mcp_result:
-                            result["message"] = mcp_result["message"]
-                        if "data" in mcp_result:
-                            result["data"] = mcp_result["data"]
-                   
+                if tool_installations:
+                    tool_instances = []
+                    for tool_installation in tool_installations:
+                        tool_instances.extend(tool_installation.instances.filter(status=ToolInstance.ToolInstanceStatusChoices.RUNNING))
+                    tool_instances = list(set(tool_installations))
+                    if tool_instances:
+                        mcp_client = random.choice(tool_instances).mcp_client
+                        mcp_result =  mcp_client.call_tool(name=method_name, arguments=arguments)
+                        if "result" in mcp_result:
+                            result = mcp_result["result"]
+                            success = True 
+                        elif "error" in mcp_result:
+                            result = {"status": "error"}
+                            success = False 
+                            if "message" in mcp_result:
+                                result["message"] = mcp_result["message"]
+                            if "data" in mcp_result:
+                                result["data"] = mcp_result["data"]
+                else:
+                    success = False
+                    result = {"status": "error", "message": f"no tool named {self.function_name} found"}
         except Exception as e:
             result = {'status': 'failed', 'exception': f'{e} - {traceback.format_exc()}'}
         toolresponse = ToolResponse()

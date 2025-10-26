@@ -2,7 +2,7 @@ import traceback
 import ast
 import textwrap
 
-from core.models.prompt_string import PromptString
+from core.models.prompt_string import Prompt
 from tools.base.base_tool import BaseTool
 from .models.fs_log_entry import FsLogEntry
 from .utils.fsutils import clean_path, get_abs_path
@@ -17,8 +17,8 @@ class FilesystemTool(BaseTool):
     PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="Instructions")
-        functionsTemplate = PromptString.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="Functions")
+        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="functions")
         return [
             {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Filesystem"], "data":{"workingdir": self.agentInstance.workingdir}},
             {"tpId": functionsTemplate.pk, "tags": ["Prompts", "Filesystem"], "data":{}},
@@ -32,8 +32,8 @@ class FilesystemTool(BaseTool):
 
     def fs_load(self, toolCall, path, filter = "", recursive=False, mode="full"):
         try:
-            abs_path, rel_path = clean_path(toolCall.agentInstance.workingdir, path)
-            if not check_permission(toolCall.agentInstance, abs_path, 'read'):
+            abs_path, rel_path = clean_path(self.agentInstance.workingdir, path)
+            if not check_permission(self.agentInstance, abs_path, 'read'):
                 return (False, {'status': 'failed', 'message': f"Read access denied for: {rel_path}"})
             success, item = FsLogEntry.objects.get_or_create_latest(agentInstance = self.agentInstance, toolCall = toolCall, action="load", load_mode = mode, path = abs_path, filter = filter, recursive = recursive, must_exist = True )
             if not success:
@@ -44,7 +44,7 @@ class FilesystemTool(BaseTool):
     
     def fs_unload(self, toolCall, path):
         try:
-            abs_path, rel_path = clean_path(toolCall.agentInstance.workingdir, path)
+            abs_path, rel_path = clean_path(self.agentInstance.workingdir, path)
             item = FsLogEntry.objects.filter(agentInstance=self.agentInstance, path=abs_path, is_newest_version=True).exclude(load_mode=None).order_by("-pk").first()
             if not item:
                 return True, {}
@@ -57,8 +57,8 @@ class FilesystemTool(BaseTool):
 
     def fs_write(self, toolCall, path, content):
         try:
-            abs_path, rel_path = clean_path(toolCall.agentInstance.workingdir, path)
-            if not check_permission(toolCall.agentInstance, abs_path, 'write'):
+            abs_path, rel_path = clean_path(self.agentInstance.workingdir, path)
+            if not check_permission(self.agentInstance, abs_path, 'write'):
                 return (False, {'status': 'failed', 'message': f"Write access denied for {rel_path}"})
             success, item = FsLogEntry.objects.get_or_create_latest(agentInstance=self.agentInstance, toolCall = toolCall, action="write", path = abs_path, must_be_file = True, must_exist = False)
             if not success:
@@ -73,8 +73,8 @@ class FilesystemTool(BaseTool):
 
     def fs_append(self, toolCall, path, content):
         try:
-            abs_path, rel_path = clean_path(toolCall.agentInstance.workingdir, path)
-            if not check_permission(toolCall.agentInstance, abs_path, 'write'):
+            abs_path, rel_path = clean_path(self.agentInstance.workingdir, path)
+            if not check_permission(self.agentInstance, abs_path, 'write'):
                 return (False, {'status': 'failed', 'message': f"Write access denied for {rel_path}"})
             success, item = FsLogEntry.objects.get_or_create_latest(agentInstance = self.agentInstance, toolCall = toolCall, action="append", path = abs_path, must_be_file = True, must_exist = False)
             if not success:

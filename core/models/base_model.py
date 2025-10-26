@@ -98,7 +98,7 @@ class BaseModel(DirtyFieldsMixin, models.Model):
         from agents.models.agent import Agent
         from agents.models.agent_instance import AgentInstance
         from agents.models.agent_instance_fork import AgentInstanceFork 
-        from core.models.prompt_string import PromptString
+        from core.models.prompt_string import Prompt
         from core.tasks.send_websocket_update import celery_send_websocket_update
         from providers.models.ai_model import AiModel
         from providers.models.api_key import ApiKey
@@ -107,7 +107,9 @@ class BaseModel(DirtyFieldsMixin, models.Model):
         from tools.definitions.models.tool_definition import ToolDefinition
         from tools.definitions.models.tool_installation import ToolInstallation
         from tools.instances.models.tool_instance import ToolInstance
+        from core.models.prompt_string import PromptVariant
         from django.contrib.auth.models import User
+
         print("HEHRE",  self)
         # Ensure message_data is always a dictionary and copy it if it's already one
         base_message_data = self.as_client_dict() if not isinstance(self, dict) else dict(self)
@@ -127,12 +129,13 @@ class BaseModel(DirtyFieldsMixin, models.Model):
             target_user_pks.update(self.owners.values_list('pk', flat=True))
         elif isinstance(self, AgentInstance):
             target_user_pks.update(self.agent.owners.values_list('pk', flat=True))
-        elif isinstance(self, PromptString):
-            # PromptString can be owned by a user or an agent.
-            if self.owner_id:
-                target_user_pks.add(self.owner_id)
-            if hasattr(self, 'agent') and self.agent: # If associated with an agent, broadcast to its owners
+        elif isinstance(self, PromptVariant):
+            if self.agent: # Agent-specific prompt variant
                 target_user_pks.update(self.agent.owners.values_list('pk', flat=True))
+            elif self.owner: # Global user-owned prompt variant
+                target_user_pks.add(self.owner.pk)
+            else: # Global system-owned prompt variant (broadcast to all users)
+                target_user_pks.update(User.objects.values_list('pk', flat=True))
         elif isinstance(self, (AiModel, ApiKey, System, ApiProvider, ToolInstance, ToolDefinition, ToolInstallation)):
             # Global objects are broadcast to all users
             target_user_pks.update(User.objects.values_list('pk', flat=True))
@@ -145,7 +148,6 @@ class BaseModel(DirtyFieldsMixin, models.Model):
             else:
                 print(f'Warning: send_object_to_clients received unhandled object type: {type(self)} with no clear target.')
                 return
-        print("FOO",base_message_data )
         for instance_pk_target in target_instance_pks:
             dispatch_message_data = dict(base_message_data)
             dispatch_message_data['target_instance_id'] = instance_pk_target

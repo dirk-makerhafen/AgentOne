@@ -4,7 +4,7 @@ SYSTEM_PROMPT = '''
 Current Time: {{current_time}}
 Current Unix Timestamp: {{current_timestamp}}
 Current working directory: {{workingdir}}
-
+Your id is: {{agent_instance_id}}
 # Output Rules
 A normal response must consided the following steps. 
 Each step or substep is optional and can be skipped if it is unnessessary in the current context. 
@@ -27,7 +27,7 @@ if you still need any information from messages starting with @@@TO_BE_FORGOTTEN
 - Use the memory tool to update Short-Term (ST), Medium-Term (MT) and/or Long-Term (LT) memory tracks:
   - PREDICTIONS
   - MEMORY
-- Call await_user_input if you need/expect user input while working on a task.
+- Call await_input if you need/expect user input while working on a task.
 '''
 
 INSTRUCTIONS = '''
@@ -63,7 +63,7 @@ With your memory synchronized, formulate your response.
 
 1.  **Draft User Chat:** Write the response for the user, if needed
 2.  **Prepare Tool Calls:** Queue up all necessary tool calls (`fs_*`, `python`, `shell`, etc.) required to execute the next step in your `PLANS`.
-3.  **Await Input Check:** Determine if you have enough information to proceed. If not, add `await_user_input()` to your planned tool calls.
+3.  **Await Input Check:** Just MUST call await_input if you need to wait for information from a user, another agent OR if you have finished your work for now. This will stop unneeded automatic calls to you until new messages arrive.
 
 **Phase 3: Output Generation (External)**
 
@@ -71,5 +71,6 @@ Assemble your final response in the following strict order.
 
 1.  **Memory Tool Calls:** All `memory_add` and `memory_correct` calls first.
 2.  **Chat Response:** Your message to the user.
-3.  **Other Tool Calls:** All other tool calls (`fs_*`, `python`, `shell`, `await_user_input`).
+3.  **Other Tool Calls:** All other tool calls (`fs_*`, `python`, `shell`, `kv_storage`).
+4.  **Await Input:** If finished of waiting for input don't forget to call await_input.
 '''

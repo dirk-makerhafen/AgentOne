@@ -1,183 +1,177 @@
-// This file manages the rendering and interactions for the Prompts list tab.
+// This file manages the rendering and interactions for the hierarchical Prompts list tab using on-demand loading.
 
-let promptItemTemplate;
+let templates = {};
 
 function initializePromptTemplates() {
-    promptItemTemplate = getTemplate('TabPromptsListItemTemplate');
-    Handlebars.registerPartial('PromptListItemTemplate', promptItemTemplate);
+    templates.definitionRow = getTemplate('PromptDefinitionRowTemplate');
+    templates.variantGroupRow = getTemplate('PromptVariantGroupRowTemplate');
+    templates.variantRow = getTemplate('PromptVariantRowTemplate');
+    Handlebars.registerPartial('PromptVariantRowTemplate', templates.variantRow);
 }
 
-function renderPromptList(prompts) {
-    const promptsTableBody = document.getElementById('prompts-table-body');
-    if (!promptsTableBody) return;
+function renderPromptDefinitionList(promptDefinitions) {
+    const tableBody = document.getElementById('prompts-table-body');
+    if (!tableBody) return;
 
-    promptsTableBody.innerHTML = ''; 
+    // Preserve expanded state
+    const expandedDefIds = new Set();
+    tableBody.querySelectorAll('.prompt-definition-row').forEach(row => {
+        if (row.dataset.variantsLoaded === "true") {
+            expandedDefIds.add(row.dataset.promptDefinitionId);
+        }
+    });
 
-    if (!prompts || prompts.length === 0) {
-        promptsTableBody.innerHTML = '<tr><td colspan="5"><p class="log-info">No prompt templates found.</p></td></tr>';
+    tableBody.innerHTML = ''; // Clear existing content
+
+    if (!promptDefinitions || promptDefinitions.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5"><p class="log-info">No prompt templates with system variants found.</p></td></tr>';
         return;
     }
 
-    const systemPrompts = prompts.filter(p => p.owner_username === 'system');
-    const userPrompts = prompts.filter(p => p.owner_username !== 'system');
-
-    const userPromptsByParent = userPrompts.reduce((acc, prompt) => {
-        const parentId = prompt.system_parent_id;
-        if (parentId) {
-            if (!acc[parentId]) {
-                acc[parentId] = [];
-            }
-            acc[parentId].push(prompt);
-        }
-        return acc;
-    }, {});
-    
-    const renderedUserPromptIds = new Set();
-
-    systemPrompts.sort((a, b) => `${a.source}-${a.key}`.localeCompare(`${b.source}-${b.key}`));
-
-    systemPrompts.forEach(sysPrompt => {
-        promptsTableBody.insertAdjacentHTML('beforeend', promptItemTemplate(sysPrompt));
-        if (userPromptsByParent[sysPrompt.id]) {
-            const children = userPromptsByParent[sysPrompt.id];
-            children.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
-            children.forEach(userPrompt => {
-                promptsTableBody.insertAdjacentHTML('beforeend', promptItemTemplate(userPrompt));
-                renderedUserPromptIds.add(userPrompt.id);
-            });
-        }
+    promptDefinitions.forEach(def => {
+        tableBody.insertAdjacentHTML('beforeend', templates.definitionRow(def));
     });
 
-    const orphanUserPrompts = userPrompts.filter(p => !renderedUserPromptIds.has(p.id));
-    orphanUserPrompts.sort((a, b) => `${a.source}-${a.key}`.localeCompare(`${b.source}-${b.key}`));
-    orphanUserPrompts.forEach(userPrompt => {
-        promptsTableBody.insertAdjacentHTML('beforeend', promptItemTemplate(userPrompt));
-    });
-    
-    attachAllPromptEventListeners(promptsTableBody);
-}
-
-function renderSinglePrompt(prompt) {
-    const promptsTableBody = document.getElementById('prompts-table-body');
-    if (!promptsTableBody) return;
-
-    const newHtml = promptItemTemplate(prompt);
-    const tempContainer = document.createElement('tbody');
-    tempContainer.innerHTML = newHtml;
-    const newPromptRow = tempContainer.firstElementChild;
-    const newPromptValueRow = tempContainer.lastElementChild;
-
-    // Case 1: Replace a previous version
-    if (prompt.prev_version_id) {
-        const oldRow = document.getElementById(`prompt-row-${prompt.prev_version_id}`);
-        const oldValueRow = document.getElementById(`prompt-value-row-${prompt.prev_version_id}`);
-        if (oldRow && oldValueRow) {
-            oldRow.replaceWith(newPromptRow);
-            oldValueRow.replaceWith(newPromptValueRow);
-            attachPromptEventListeners(newPromptRow);
-            return;
+    // Restore expanded state by re-fetching variants
+    expandedDefIds.forEach(id => {
+        const row = tableBody.querySelector(`.prompt-definition-row[data-prompt-definition-id="${id}"]`);
+        if (row) {
+            const icon = row.querySelector('.expand-icon');
+            icon.classList.remove('fa-chevron-right');
+            icon.classList.add('fa-chevron-down');
+            promptsApi.getVariants(id); 
         }
-    }
-
-    // Case 2: Insert a custom prompt below its system parent
-    if (prompt.system_parent_id) {
-        const parentValueRow = document.getElementById(`prompt-value-row-${prompt.system_parent_id}`);
-        if (parentValueRow) {
-            parentValueRow.insertAdjacentElement('afterend', newPromptRow);
-            newPromptRow.insertAdjacentElement('afterend', newPromptValueRow);
-            attachPromptEventListeners(newPromptRow);
-            return;
-        }
-    }
-
-    // Case 3: Fallback - append to the end
-    promptsTableBody.appendChild(newPromptRow);
-    promptsTableBody.appendChild(newPromptValueRow);
-    attachPromptEventListeners(newPromptRow);
-}
-
-function attachAllPromptEventListeners(container) {
-    container.querySelectorAll('.prompt-item-row').forEach(row => {
-        attachPromptEventListeners(row);
     });
 }
 
-function attachPromptEventListeners(promptRow) {
-    const promptPk = promptRow.dataset.promptPk;
-    const valueRow = document.getElementById(`prompt-value-row-${promptPk}`);
-    if (!valueRow) return;
+function renderPromptVariants(promptPk, systemVariants, userVariants) {
+    const container = document.getElementById('prompts-table-body');
+    const definitionRow = container.querySelector(`.prompt-definition-row[data-prompt-definition-id="${promptPk}"]`);
+    if (!definitionRow) return;
 
-    const editableElement = valueRow.querySelector('.prompt-value-content[contenteditable="true"]');
-    if (editableElement) {
-        const editActions = document.getElementById(`prompt-edit-actions-${promptPk}`);
+    // Mark as loaded to prevent re-fetching
+    definitionRow.dataset.variantsLoaded = "true";
 
-        editableElement.addEventListener('focus', function() {
-            if (editActions) {
-                editActions.classList.remove('hidden');
-                this.dataset.originalValue = this.textContent;
-            }
-        });
+    const systemGroupHtml = templates.variantGroupRow({
+        prompt_definition_id: promptPk,
+        group_title: 'System Variants',
+        variants: systemVariants,
+        no_variants_message: 'No system variants found.'
+    });
+    const userGroupHtml = templates.variantGroupRow({
+        prompt_definition_id: promptPk,
+        group_title: 'Your Global Variants',
+        variants: userVariants,
+        no_variants_message: 'No global variants created by you. Click "Create" on a system version to start.'
+    });
 
-        editableElement.addEventListener('blur', function() {
-            // Delay hiding to allow click events on save/cancel buttons
-            setTimeout(() => {
-                if (editActions && !editActions.contains(document.activeElement)) {
-                    editActions.classList.add('hidden');
-                }
-            }, 150);
-        });
+    // Insert the newly rendered HTML. User variants should come after system variants.
+    definitionRow.insertAdjacentHTML('afterend', userGroupHtml);
+    definitionRow.insertAdjacentHTML('afterend', systemGroupHtml);
+}
+
+
+// --- Inline Event Handlers ---
+
+function togglePromptDefinition(rowElement) {
+    const definitionId = rowElement.dataset.promptDefinitionId;
+    const icon = rowElement.querySelector('.expand-icon');
+    const container = rowElement.closest('tbody');
+    const variantsLoaded = rowElement.dataset.variantsLoaded === "true";
+
+    // Action: If icon is 'right' (closed), we want to open it.
+    if (icon.classList.contains('fa-chevron-right')) {
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+
+        if (variantsLoaded) {
+            // Content is loaded but hidden, just show it.
+            container.querySelectorAll(`.prompt-variant-group-row[data-parent-definition-id="${definitionId}"]`).forEach(row => row.classList.remove('hidden'));
+        } else {
+            // Content not loaded, fetch it.
+            promptsApi.getVariants(definitionId);
+            // The websocket handler will add it, and it will be visible by default.
+        }
+    } 
+    // Action: If icon is 'down' (open), we want to close it.
+    else {
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+        // Just hide the content.
+        container.querySelectorAll(`.prompt-variant-group-row[data-parent-definition-id="${definitionId}"]`).forEach(row => row.classList.add('hidden'));
     }
 }
 
+function togglePromptVariantValue(rowElement, event) {
+    if (event.target.closest('button, a, input, label')) {
+        return; // Ignore clicks on interactive elements
+    }
+    const variantId = rowElement.dataset.promptVariantId;
+    const valueRow = document.querySelector(`.prompt-value-row[data-parent-variant-id="${variantId}"]`);
+    const icon = rowElement.querySelector('.expand-icon');
 
-function createCustomPromptVersion(promptPk) {
-    promptsApi.create(promptPk);
+    if (valueRow) {
+        valueRow.classList.toggle('hidden');
+        icon.classList.toggle('fa-chevron-right');
+        icon.classList.toggle('fa-chevron-down');
+    }
 }
+
+function togglePromptEnabled(checkbox, event) {
+    event.stopPropagation();
+    const promptPk = checkbox.dataset.promptPk;
+    const isEnabled = checkbox.checked;
+    promptsApi.update(promptPk, undefined, isEnabled);
+}
+
+function showPromptEditActions(promptPk) {
+    const editActions = document.getElementById(`prompt-edit-actions-${promptPk}`);
+    const editable = document.querySelector(`.prompt-value-content[data-prompt-pk="${promptPk}"]`);
+    if (editActions) {
+        editActions.classList.remove('hidden');
+        if (editable && !editable.dataset.originalValue) {
+            editable.dataset.originalValue = editable.textContent;
+        }
+    }
+}
+
+function hidePromptEditActions(promptPk) {
+    const editActions = document.getElementById(`prompt-edit-actions-${promptPk}`);
+    setTimeout(() => {
+        if (editActions && !editActions.contains(document.activeElement)) {
+            editActions.classList.add('hidden');
+        }
+    }, 150);
+}
+
+
+// --- API Interaction Functions ---
 
 function savePromptChanges(promptPk) {
-    const editableValue = document.getElementById(`prompt-value-editable-${promptPk}`);
-    const editActions = document.getElementById(`prompt-edit-actions-${promptPk}`);
-
-    if (editableValue && editActions) {
+    const editableValue = document.querySelector(`.prompt-value-content[data-prompt-pk="${promptPk}"]`);
+    if (editableValue) {
         const newValue = editableValue.textContent;
         const originalValue = editableValue.dataset.originalValue;
-
         if (newValue !== originalValue) {
             promptsApi.update(promptPk, newValue);
         }
         editableValue.blur();
-        editActions.classList.add('hidden');
     }
 }
 
 function cancelPromptChanges(promptPk) {
-    const editableValue = document.getElementById(`prompt-value-editable-${promptPk}`);
-    const editActions = document.getElementById(`prompt-edit-actions-${promptPk}`);
-    if (editableValue && editActions) {
+    const editableValue = document.querySelector(`.prompt-value-content[data-prompt-pk="${promptPk}"]`);
+    if (editableValue) {
         editableValue.textContent = editableValue.dataset.originalValue || editableValue.textContent;
         editableValue.blur();
-        editActions.classList.add('hidden');
     }
 }
 
 function deletePrompt(promptPk, promptKey) {
-    if (confirm(`Are you sure you want to delete your custom version of prompt "${promptKey}"?`)) {
+    if (confirm(`Are you sure you want to delete this version of prompt "${promptKey}"? This action cannot be undone.`)) {
         promptsApi.delete(promptPk);
     }
 }
-
-function togglePromptValueRow(clickedRow, pk, event) {
-    if (event.target.closest('.prompt-actions button') || event.target.closest('[contenteditable="true"]')) {
-        return; 
-    }
-    const valueRow = document.getElementById(`prompt-value-row-${pk}`);
-    const icon = document.getElementById(`expand-icon-${pk}`);
-    if (valueRow && icon) {
-        valueRow.classList.toggle('hidden');
-        icon.classList.toggle('fa-chevron-down');
-        icon.classList.toggle('fa-chevron-up');
-    }
-};
 
 function openPromptsTab(targetPanelId = 'mainTabPanel') {
     const tabContentId = 'tabContent_prompts';

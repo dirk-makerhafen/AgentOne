@@ -2,6 +2,7 @@ from django.db import models
 from core.models.base_model import BaseModel
 from tools.calls.models.tool_call import ToolCall
 
+
 class ConversationMessage(BaseModel):
     agent = models.ForeignKey("agents.Agent", default=None, null=True, on_delete=models.CASCADE, related_name='conversationMessages')
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name='conversationMessages')
@@ -45,3 +46,11 @@ class ConversationMessage(BaseModel):
                 pass
         message['parts'] = parts
         return message
+
+class ConversationMessagePart(BaseModel):
+    conversationMessage = models.ForeignKey(ConversationMessage, default=None, null=True, on_delete=models.SET_DEFAULT, related_name='parts')
+    toolCall = models.ForeignKey(ToolCall, default=None, null=True, on_delete=models.SET_DEFAULT, related_name='conversationMessagePart')
+    toolResponse = models.ForeignKey("calls.ToolResponse",  default=None, null=True, on_delete=models.SET_DEFAULT, related_name='conversationMessagePart')
+    promptVariant = models.ForeignKey("core.PromptVariant",  default=None, null=True, on_delete=models.SET_DEFAULT, related_name='conversationMessageParts')
+    index =  models.IntegerField(default=0)
+    content = models.CharField(max_length=32)
