@@ -3,10 +3,13 @@ from django.contrib.auth.models import User
 import traceback
 
 from agents.models.agent import Agent
+from core.models.prompt import Prompt
+from core.models.prompt_relation import AgentPromptRelation
 from providers.models.ai_model import AiModel
 from systems.models.system import System
 from tools.definitions.models.tool_definition import ToolDefinition
 from ui.router import register_handler
+
 
 @register_handler('agent_create')
 def handle_agent_create(consumer, name='New Agent', description='', available_tool_ids=None,
@@ -36,8 +39,21 @@ def handle_agent_create(consumer, name='New Agent', description='', available_to
         if available_tool_ids:
             tools = ToolDefinition.objects.filter(pk__in=available_tool_ids)
             new_agent.available_tools.set(tools)
-            print("new_agent.available_tools", new_agent.available_tools)
-        new_agent.save()
+
+        # This save will broadcast the 'Agent' object to all clients, updating sidebars
+        new_agent.save() 
+        # add default prompts
+        AgentPromptRelation.objects.create(role="system", prompt=Prompt.objects.get_or_create(source="agents", key="system"              )[0], insert_at="TOP" , index=1, agent=new_agent)
+        AgentPromptRelation.objects.create(role="user"  , prompt=Prompt.objects.get_or_create(source="agents", key="instructions"        )[0], insert_at="POST_TOP" , index=1, agent=new_agent)
+        AgentPromptRelation.objects.create(role="user"  , prompt=Prompt.objects.get_or_create(source="tools",  key="instructions"        )[0], insert_at="POST_TOP" , index=1, agent=new_agent)
+        AgentPromptRelation.objects.create(role="user"  , prompt=Prompt.objects.get_or_create(source="agents", key="OutputFormatReminder")[0], insert_at="POST_CHAT", index=1, agent=new_agent)
+    
+        # Send a specific message back to the creator to trigger the tab transformation
+        consumer.send(text_data=json.dumps({
+            'object': 'AgentCreated',
+            **new_agent.as_client_dict()
+        }))
+
     except Exception as e:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Failed to create agent: {e} {traceback.format_exc()}'}))
 

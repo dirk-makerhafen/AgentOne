@@ -48,6 +48,30 @@ TOOLS = {
             "required" : ["key"],
         }
     },
+    "subscribe": {
+        "name": "kv_storage.subscribe",
+        "title": "Subscribe to kv_storage key changes",
+        "description": "Creates a new subscription for a specific KVStore key. This allows an agent to be notified of changes to the key. ",
+        "inputSchema": {
+            "type": "object",
+            "parameters": {
+                "key": {"type": "string", "description": "The KVStore key to subscribe to.", "required": True},
+            },
+            "required": ["key"],
+        }
+    },
+    "unsubscribe": {
+        "name": "kv_storage.unsubscribe",
+        "title": "Unsubscribe from kv_storage key changes",
+        "description": "Removes an active subscription for a KVStore key.",
+        "inputSchema": {
+            "type": "object",
+            "parameters": {
+                "key": {"type": "string", "description": "The key of the subscription to be removed.", "required": True}
+            },
+            "required": ["key"],
+        }
+    },
 }
 
 PROMPTS = [
@@ -68,6 +92,10 @@ Purpose:
 - Use `kv_storage.list` to discover keys (e.g., other agents' registered data).
 - Use `kv_storage.delete` to remove outdated information.
 
+**Subscription Functions for Advanced Situational Awareness:**
+- Use `kv_storage.subscribe` to create live, auto-updating subscriptions that provide real-time context
+- Use `kv_storage.unsubscribe` to remove subscriptions when no longer needed
+
 Example Usage for Agent Registration and Discovery:
 - To register yourself for other agents to discover:
   `kv_storage.set(key="team:agents:<your_agent_id>:info", value='{"name": "<your_agent_name>", "purpose": "<your_purpose>"}')`
@@ -75,6 +103,10 @@ Example Usage for Agent Registration and Discovery:
   `kv_storage.list(prefix="team:agents:")`
 - To get information about a specific agent:
   `kv_storage.get(key="team:agents:30:info")`
+- To create a subscription for monitoring:
+  `kv_storage.subscribe(key="team:agents:30:info")`
+- To remove a subscription:
+  `kv_storage.unsubscribe(key="team:agents:30:info")`
 """
     }
 ]

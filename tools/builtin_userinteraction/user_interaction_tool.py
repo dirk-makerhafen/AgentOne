@@ -1,5 +1,6 @@
 
-from core.models.prompt_string import Prompt
+from agents.models.llm_query import QueryMessagePart
+from core.models.prompt import Prompt
 from tools.base.base_tool import BaseTool
 from .prompts import TOOLS, PROMPTS
 from .apps import ToolsBuiltinUserinteractionConfig
@@ -14,9 +15,13 @@ class UserInteractionTool(BaseTool):
         instructionTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinUserinteractionConfig.name, key="instructions")
         functionsTemplate   = Prompt.get_template(self.agentInstance, source=ToolsBuiltinUserinteractionConfig.name, key="functions")
         return [
-            {"tpId": instructionTemplate.pk, "data": {}, 'tags': ['Prompts', 'UserInteraction'] },
-            {"tpId": functionsTemplate.pk  , "data": {}, 'tags': ['Prompts', 'UserInteraction'] },
+            QueryMessagePart(promptVariant=instructionTemplate, tags=["Prompts", "UserInteraction"]),
+            QueryMessagePart(promptVariant=functionsTemplate  , tags=["Prompts", "UserInteraction"])
         ]
+        #return [
+        #    {"tpId": instructionTemplate.pk, "data": {}, 'tags': ['Prompts', 'UserInteraction'] },
+        #    {"tpId": functionsTemplate.pk  , "data": {}, 'tags': ['Prompts', 'UserInteraction'] },
+        #]
 
     def await_input(self, toolCall, reason = ""):
         """

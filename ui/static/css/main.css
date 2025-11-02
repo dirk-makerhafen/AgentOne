@@ -79,7 +79,7 @@
 
 }
 
-#prompts-table .prompt-value-content {
+.prompt-value-content {
     white-space: pre-wrap; /* Wrap long lines */
     word-break: break-all; /* Break words to prevent overflow */
     overflow-y: auto; /* Add scrollbar if prompt value is too long */
@@ -400,8 +400,13 @@ padding: 5px;
     overflow: hidden; /* Prevent content from overflowing its boundaries */
 }
 
+.table-hover>tbody>tr:hover {
+    background-color: unset;
+}
 
-
+.variant-group-container {
+    padding-left: 20px !important; 
+}
 
 #mainSplitViewContainer > .gutter-horizontal {
     flex-basis: 7px !important;

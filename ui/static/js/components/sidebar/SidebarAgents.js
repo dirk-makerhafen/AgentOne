@@ -159,12 +159,16 @@ function openAgentEditTab(event, agentId) {
 
     if (existingTab) {
         openMainTab(null, tabId, 'mainTabPanel');
+        // For existing tabs, the container is already there. Fetch fresh data.
+        initializeAgentTab(agentId); 
         return;
     }
 
+    // --- Tab does not exist, create it ---
+    // Rely on the global cache, which is now guaranteed to be updated by the 'AgentCreated' handler.
     const agent = window.allAgents[agentId];
     if (!agent) { 
-        console.error(`Agent with ID ${agentId} not found in cache.`);
+        console.error(`Agent with ID ${agentId} not found in cache. The 'AgentCreated' handler should have populated this.`);
         return;
     }
 
@@ -176,12 +180,13 @@ function openAgentEditTab(event, agentId) {
     const tabContentHtml = tabAgentTemplate(context);
     const tabName = `Edit: ${agent.name}`;
     
+    // 1. Create the tab and add its HTML to the DOM.
     openMainTab(null, tabId, 'mainTabPanel', tabName, tabContentHtml);
     
-    // Fetch agent-specific prompts to trigger the rendering logic
-    promptsApi.list(agentId);
+    // 2. NOW that the tab's HTML is in the DOM, call the initializer.
+    initializeAgentTab(agentId); 
     
-    // Also ensure global prompts are available for defaults, if not already cached
+    // 3. Also ensure the global prompt list for the dropdown is available.
     if (!window.globalPromptCache || window.globalPromptCache.length === 0) {
         promptsApi.list();
     }

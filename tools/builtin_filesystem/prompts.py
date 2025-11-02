@@ -42,7 +42,7 @@ They end with `</%(marker)s>`.
     "marker": MARKER
 }
 
-PROMPT_CONTENT_INJECTION = '''<%s path='{{path}}' {%% if is_directory %%}is_directory=True{%% endif %%} status='{%% if exist_on_fs %%}{%% if refreshed_from_fs %%}(Updated by user){%% else %%}up-to-data{%% endif %%}{%% else %%}Deleted, path does not exist{%% endif %%}'>{{content | safe}}</%s>''' % (MARKER, MARKER)
+PROMPT_CONTENT_INJECTION = '''<%s path='{{path}}' {%% if is_directory %%}is_directory=True{%% endif %%} mode='{{load_mode}}' status='{%% if exist_on_fs %%}{%% if refreshed_from_fs %%}(Updated by user){%% else %%}up-to-data{%% endif %%}{%% else %%}Deleted, path does not exist{%% endif %%}'>{{content | safe}}</%s>''' % (MARKER, MARKER)
 
 PROMPTS = [
     {

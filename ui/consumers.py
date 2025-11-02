@@ -35,6 +35,7 @@ class UiConsumer(WebsocketConsumer):
     def receive(self, text_data):
         try:
             data = json.loads(text_data)
+            print("websocket received:", data)
             message_type = data.get('type')
             payload = data.get('payload', {})
 
@@ -50,7 +51,7 @@ class UiConsumer(WebsocketConsumer):
                 if instance_pk:
                     async_to_sync(self.channel_layer.group_discard)(f'agentInstance_{instance_pk}', self.channel_name)
                 return
-
+            
             # Main message handler dispatch
             handler = MESSAGE_HANDLERS.get(message_type)
             if handler:

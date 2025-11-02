@@ -8,7 +8,7 @@ class ToolsBuiltinUserinteractionConfig(AppConfig):
     def ready(self):
         # Only run this code if not during a migration or initial Django setup
         if 'migrate' not in sys.argv and 'makemigrations' not in sys.argv:
-            from core.models.prompt_string import Prompt
+            from core.models.prompt import Prompt
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .user_interaction_tool import UserInteractionTool

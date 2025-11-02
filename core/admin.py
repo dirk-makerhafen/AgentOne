@@ -1,8 +1,10 @@
 from django.contrib import admin
 
-from core.models.prompt_string import Prompt
+from core.models.prompt import Prompt
 from django.contrib import admin
-from .models.prompt_string import Prompt, PromptVariant
+from .models.prompt import Prompt
+from .models.prompt_variant import PromptVariant
+from .models.prompt_relation import AgentPromptRelation
 
 
 @admin.register(Prompt)
@@ -26,4 +28,11 @@ class PromptVariantAdmin(admin.ModelAdmin):
             return f'#{obj.next_version.pk}'
         return None
     next_version_link.short_description = 'Next Version'
+
+@admin.register(AgentPromptRelation)
+class AgentPromptRelationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'agent', 'prompt', 'role', 'insert_at', 'index')
+    list_filter = ('agent', 'prompt', 'role', 'insert_at')
+    search_fields = ('agent__name', 'prompt__key')
+    autocomplete_fields = ('agent', 'prompt')
 

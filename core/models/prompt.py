@@ -1,8 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import User
-from agents.models.agent import Agent
 from core.models.base_model import BaseModel
 import random
+
+from core.models.prompt_variant import PromptVariant
+from django.contrib.auth.models import User
+from core.models.prompt_relation import AgentPromptRelation
 
 class Prompt(BaseModel):
     """
@@ -12,7 +14,9 @@ class Prompt(BaseModel):
     source = models.CharField(max_length=200)
     key = models.CharField(max_length=200)
     description = models.TextField(blank=True, default='', help_text="A description of what this prompt is for.")
-    
+    data_lambda = models.TextField(blank=True, default='', help_text="A lambda function that return the data to render")
+    owner = models.ForeignKey(User, related_name='owned_prompts', default=None, null=True, blank=True, on_delete=models.SET_NULL)
+
     class Meta:
         #unique_together = ('source', 'key')
         ordering = ['source', 'key']
@@ -24,11 +28,13 @@ class Prompt(BaseModel):
         return {
             'object': 'Prompt',
             'id': self.pk,
+            'owner_id': self.owner_id,
             'source': self.source,
             'key': self.key,
             'description': self.description,
+            'data_lambda': self.data_lambda,
+            'nr_of_variants': self.variants.filter(next_version=None).count(),  
         }
-
 
     @staticmethod
     def get_or_create_template(owner, source, key, value, agent=None):
@@ -107,42 +113,4 @@ class Prompt(BaseModel):
         except Prompt.DoesNotExist:
             raise Prompt.DoesNotExist(f"Prompt with source='{source}' and key='{key}' does not exist.")
 
-
-
-
-class PromptVariant(BaseModel):
-    """
-    Represents a specific implementation or version of a Prompt.
-    A variant can be global (system or user-owned) or agent-specific.
-    It holds the actual prompt content and versioning information.
-    """
-    prompt = models.ForeignKey(Prompt, on_delete=models.CASCADE, related_name='variants')
-    owner = models.ForeignKey(User, related_name='owned_prompt_variants', default=None, null=True, on_delete=models.SET_NULL)
-    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True, related_name='prompt_variants')
-    is_enabled = models.BooleanField(default=True)
-    value = models.TextField(max_length=1 * 1024 * 1024, default='')
-    next_version = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='prev_version')
-    # created_at and updated_at are inherited from BaseModel
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def as_client_dict(self):
-        return {
-            'object': 'PromptVariant',
-            'id': self.pk,
-            'prompt_id': self.prompt_id,
-            'source': self.prompt.source, # Denormalized for convenience
-            'key': self.prompt.key,       # Denormalized for convenience
-            'owner_id': self.owner_id,
-            'owner_username': self.owner.username if self.owner else "System",
-            'agent_id': self.agent_id,
-            'is_enabled': self.is_enabled,
-            'created_at': self.created_at.isoformat(),
-            'value': self.value,
-            'is_deleteable': self.owner is not None,
-            'is_editable': self.owner is not None,
-            'is_newest_version': self.next_version is None,
-            'prev_version_id': self.prev_version.pk if hasattr(self, "prev_version") else None,
-        }
 

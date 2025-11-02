@@ -1,4 +1,5 @@
-from core.models.prompt_string import Prompt
+from agents.models.llm_query import QueryMessagePart
+from core.models.prompt import Prompt
 from tools.primitives import run_python_code
 from tools.base.base_tool import BaseTool
 from tools.builtin_python.models.python_tool_var import PythonToolVar
@@ -17,10 +18,14 @@ class PythonTool(BaseTool):
         #sharedVarsInjection = Prompt.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="list_of_shared_vars")
         existing_vars = PythonToolVar.objects.filter(agentInstance=self.agentInstance, next_version=None).order_by('-created_at')[:20]
         return [
-            {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Python"], "data": {} },
-            {"tpId": functionsTemplate.pk  , "tags": ["Prompts", "Python"], "data": {} },
-            #{"tpId": sharedVarsInjection.pk, "tags": ['Tool', 'Python', 'Vars']       , "data": {"keys": [v.key for v in existing_vars]}}
+            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Python"]),
+            QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "Python"])
         ]
+        #return [
+        #    {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Python"], "data": {} },
+        #    {"tpId": functionsTemplate.pk  , "tags": ["Prompts", "Python"], "data": {} },
+        #    #{"tpId": sharedVarsInjection.pk, "tags": ['Tool', 'Python', 'Vars']       , "data": {"keys": [v.key for v in existing_vars]}}
+        #]
         
     def python(self, source, mode="one-shot", subscription_id=None, toolCall=None):
         if mode == "subscribe":

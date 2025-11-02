@@ -61,6 +61,21 @@ const messageHandlers = {
     'AgentDeleted': (payload) => {
         removeAgentFromSidebar(payload.agent_pk);
     },
+    'AgentCreated': (payload) => {
+        // This handler provides a seamless and robust create-to-edit workflow.
+        
+        // 1. Immediately update the sidebar and global cache with the new agent data.
+        // This makes this handler self-sufficient and removes the race condition with
+        // the generic 'Agent' broadcast message.
+        addOrUpdateAgentInSidebar(payload);
+
+        // 2. Close the 'Create Agent' tab.
+        closeMainTab('tabContent_add_agent');
+        
+        // 3. Open the 'Edit' tab for the new agent, which can now reliably find the
+        // agent's data in the global cache.
+        openAgentEditTab(null, payload.id);
+    },
     'AgentInstance': (payload) => {
         window.allAgentInstances[payload.id] = payload;
         renderAgentInstance(payload);
@@ -108,32 +123,28 @@ const messageHandlers = {
     },
     'PromptDefinitionList': (payload) => {
         // This is for the new hierarchical global Prompts Tab
-        renderPromptDefinitionList(payload.payload);
+        // It also populates the global cache used for default prompts in the Agent tab.
+        window.globalPromptCache = payload.payload;
+        renderPromptList(payload.payload); // Update main Prompts tab
+
+        // Re-render relations for any agent whose relations have been loaded.
+        // This ensures dropdowns in the Agent Edit tab are updated immediately.
+        Object.keys(window.agentPromptCache).forEach(agentId => {
+            const container = document.getElementById(`agent-prompt-relations-container-${agentId}`);
+            if (container) {
+                renderAgentPromptRelations(agentId, window.agentPromptCache[agentId]);
+            }
+        });
     },
+
     'PromptVariantList': (payload) => {
         // This is the new on-demand variant list
-        renderPromptVariants(payload.prompt_pk, payload.system_variants, payload.user_variants);
+        renderPromptVariants(payload);
     },
-    'PromptList': (payload) => {
-        // This is for the agent-specific prompt list used in the Agent Edit Tab
-        if (payload.agent_id) {
-            window.agentPromptCache[payload.agent_id] = payload.payload;
-            const agentPrompts = window.agentPromptCache[payload.agent_id];
-            
-            // The Agent Edit tab needs both the agent-specific variants AND the global ones (as defaults)
-            // So we'll request the global list if it's not cached yet.
-            if (!window.globalPromptCache || window.globalPromptCache.length === 0) {
-                promptsApi.list(); // This will fetch the PromptDefinitionList
-            }
-            
-            // We can proceed to render the agent's core prompt section
-            // The rendering function is designed to handle this, looking up defaults from the global cache.
-            handleAgentPromptList(payload.agent_id, agentPrompts);
-        }
-    },
+
     'PromptVariant': (payload) => {
         // When a single PromptVariant is updated or created, re-fetch the entire prompt list
-        // to ensure the hierarchical view (PromptDefinitionList) is fully refreshed with new counts and variants.
+        // to ensure the hierarchical view (PromptList) is fully refreshed with new counts and variants.
         promptsApi.list(); 
         
         // If the payload is for an agent-specific prompt, also refresh that agent's prompt list
@@ -147,6 +158,12 @@ const messageHandlers = {
         const promptValueRow = document.getElementById(`prompt-value-row-${payload.prompt_pk}`);
         if (promptRow) promptRow.remove();
         if (promptValueRow) promptValueRow.remove();
+    },
+    'AgentPromptRelationList': (payload) => {
+        // Cache the relations for this agent. This allows us to re-render the component
+        // later if the global prompt list changes, ensuring the dropdown is always up-to-date.
+        window.agentPromptCache[payload.agent_id] = payload.relations;
+        renderAgentPromptRelations(payload.agent_id, payload.relations);
     },
     'ApiProviderList': (payload) => renderProviderList(payload.providers),
     'ApiProvider': (payload) => renderSingleProvider(payload, document.querySelector('#providers-list-body')),
@@ -225,6 +242,7 @@ const messageHandlers = {
         updateSidebarVar(payload);
     },
     'ConversationMessage': (payload) => renderConversationMessage(payload),
+    'ConversationMessagePart': (payload) => renderConversationMessagePart(payload),
     'ToolCall': (payload) => renderToolCallMessage(payload),
     'FsLogEntry': (payload) => {
         renderSidebarFilesystem(payload, payload.agentInstance_id);
@@ -232,6 +250,9 @@ const messageHandlers = {
     },
     'DebugLogEntry': (payload) => renderDebugLogMessage(payload),
     'LLMQuery': (payload) => renderLLMQueryMessage(payload, payload.agentInstance_id),
+    'QueryMessage': (payload) => renderQueryMessage(payload),
+    'QueryMessagePart': (payload) => renderQueryMessagePart(payload),
+
     'LLMResponse': (payload) => renderLLMResponseMessage(payload, payload.agentInstance_id),
     'AgentToAgentMessage': (payload) => renderInterAgentMessage(payload),
     'SubAgentLink': (payload) => {

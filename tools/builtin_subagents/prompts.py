@@ -45,7 +45,7 @@ Available Agents:
 You currently have the following sub-agent instances under your supervision:
 
 {% for subagent in subagents %}
-- Name: '{{subagent.name}}' (agent_id: {{subagent.id}})
+- Name: '{{subagent.name}}' (agent_id: {{subagent.pk}})
   Status: {{subagent.status}}
   Description: {{subagent.description}}
 {% endfor %}
@@ -69,7 +69,7 @@ You currently have the following sub-agent instances under your supervision:
 You are currently operating as a sub-agent under the supervision of another agent.
 Your supervisor's details are as follows:
 
-- Name: {{supervisor.name}} (ID: {{supervisor.id}})
+- Name: {{supervisor.name}} (ID: {{supervisor.pk}})
 - Agent Type: {{supervisor.agent_name}}
 - Description: {{supervisor.description_text}}
 - Status: {{supervisor.status_display}}

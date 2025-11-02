@@ -9,15 +9,14 @@ from django.utils import timezone
 import traceback
 
 @register_handler('conversationmessage_add')
-def handle_conversationmessage_add(consumer, instance_pk, message):
+def handle_conversationmessage_add(consumer, instance_pk, parts):
     try:
         agent_instance = AgentInstance.objects.get(instance_pk=instance_pk)
     except AgentInstance.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
         return
-
-    if message:
-        agent_instance.add_to_conversation(role='user', content=message)
+    if parts:
+        agent_instance.add_to_conversation(role='user', parts=parts)
     agent_instance.start_or_continue()
 
 @register_handler('conversationmessage_list')

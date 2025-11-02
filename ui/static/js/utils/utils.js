@@ -126,3 +126,4 @@ function sendRequest(type, payload = {}) {
         addToClientLog(`Client Error: ${errorMessage}`, 'error');
     }
 }
+

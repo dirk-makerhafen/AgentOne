@@ -98,7 +98,6 @@ class BaseModel(DirtyFieldsMixin, models.Model):
         from agents.models.agent import Agent
         from agents.models.agent_instance import AgentInstance
         from agents.models.agent_instance_fork import AgentInstanceFork 
-        from core.models.prompt_string import Prompt
         from core.tasks.send_websocket_update import celery_send_websocket_update
         from providers.models.ai_model import AiModel
         from providers.models.api_key import ApiKey
@@ -107,10 +106,9 @@ class BaseModel(DirtyFieldsMixin, models.Model):
         from tools.definitions.models.tool_definition import ToolDefinition
         from tools.definitions.models.tool_installation import ToolInstallation
         from tools.instances.models.tool_instance import ToolInstance
-        from core.models.prompt_string import PromptVariant
+        from core.models.prompt import PromptVariant
         from django.contrib.auth.models import User
 
-        print("HEHRE",  self)
         # Ensure message_data is always a dictionary and copy it if it's already one
         base_message_data = self.as_client_dict() if not isinstance(self, dict) else dict(self)
 

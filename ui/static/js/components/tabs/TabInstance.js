@@ -22,6 +22,14 @@ function renderAgentInstanceTabContent(instancePk, parentPanelId) {
     if (newLogArea && typeof attachLogAreaScrollListener === 'function') {
         attachLogAreaScrollListener(newLogArea, instancePk);
     }
+
+    // Attach event listeners for the new rich-text input
+    const messageInput = newTabContentElement.querySelector(`#messageInput_${instancePk}`);
+    if (messageInput) {
+        messageInput.addEventListener('paste', handlePaste);
+        messageInput.addEventListener('drop', handleDrop);
+        messageInput.addEventListener('dragover', (e) => e.preventDefault()); // Necessary to allow drop
+    }
 }
 
 function selectAgentInstanceTab(instancePk, instanceName, targetPanelId = 'mainTabPanel') {
@@ -64,22 +72,104 @@ function selectAgentInstanceTab(instancePk, instanceName, targetPanelId = 'mainT
     }
 }
 
+// --- Multi-modal Input Handlers ---
+
+function handlePaste(event) {
+    // Prevent the default paste action to stop rich text from being inserted.
+    event.preventDefault();
+
+    const items = (event.clipboardData || window.clipboardData).items;
+    let foundImage = false;
+
+    // First, check for images and handle them.
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            const file = items[i].getAsFile();
+            if (file) {
+                insertImageFile(file, event.target);
+                foundImage = true;
+            }
+        }
+    }
+
+    // If no image was pasted, handle plain text.
+    if (!foundImage) {
+        const text = (event.clipboardData || window.clipboardData).getData('text/plain');
+        if (text) {
+            // Use execCommand to insert text at the cursor position. This is a widely supported
+            // method for inserting plain text into a contenteditable element.
+            document.execCommand('insertText', false, text);
+        }
+    }
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    for (let i = 0; i < files.length; i++) {
+        if (files[i].type.indexOf('image') !== -1) {
+            insertImageFile(files[i], event.target);
+        }
+    }
+}
+
+function insertImageFile(file, targetEditor) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = document.createElement('img');
+        img.src = event.target.result;
+        targetEditor.focus();
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(img);
+        range.collapse(false); // Move cursor after the image
+    };
+    reader.readAsDataURL(file);
+}
+
+// --- Sending Logic ---
+
 function sendMessage(event, instancePk) {
     event.preventDefault();
     const messageInput = document.querySelector(`#messageInput_${instancePk}`);
-    const message = messageInput.value.trim();
-    conversationApi.addMessage(instancePk, message);
-    messageInput.value = '';
-    messageInput.focus();
+    if (!messageInput) return;
 
+    const parts = [];
+    messageInput.childNodes.forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent.trim();
+            if (text) {
+                parts.push({ type: "TEXT", content: text });
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'IMG') {
+            parts.push({ type: 'image', content: node.src }); // src is the Base64 data URL
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'DIV') {
+            // Handle text within divs (from pressing enter)
+             const text = node.textContent.trim();
+            if (text) {
+                parts.push({ type: "TEXT", content: text });
+            }
+        }
+    });
+
+    conversationApi.addMessage(instancePk, parts);
+    if (parts.length > 0) {
+        messageInput.innerHTML = ''; // Clear the input
+        messageInput.focus();
+    }
 }
 
 function handleMessageInputKeydown(event, instancePk) {
+    // Submit on Ctrl+Enter
     if (event.key === 'Enter' && event.ctrlKey) {
         event.preventDefault();
         sendMessage(event, instancePk);
     }
 }
+
+
+// --- Other Functions ---
 
 function initializeLogFilterControlsForInstance(instancePk, tabContentElement) {
     const logAreaContainer = tabContentElement.querySelector(`#logArea_${instancePk}`);
@@ -93,7 +183,6 @@ function initializeLogFilterControlsForInstance(instancePk, tabContentElement) {
         logAreaContainer.prepend(filterControls);
     }
 
-    // Initialize buttons. The 'tool' filter starts inactive to match 'hide-tool' class on logArea.
     filterControls.innerHTML = `
         <button class="log-filter-btn active" data-log-type="conversation" title="Toggle User/Agent Messages"><i class="fa fa-comments-o"></i></button>
         <button class="log-filter-btn" data-log-type="tool" title="Toggle Tool Calls & Responses"><i class="fa fa-wrench"></i></button>

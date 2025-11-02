@@ -8,7 +8,7 @@ class ToolsBuiltinKvStorageConfig(AppConfig):
     def ready(self):
         # We only want to run this code outside of migration operations
         if 'migrate' not in sys.argv and 'makemigrations' not in sys.argv:
-            from core.models.prompt_string import Prompt
+            from core.models.prompt import Prompt
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .kv_storage_tool import KVStorageTool # Corrected class name here

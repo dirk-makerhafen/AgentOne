@@ -1,6 +1,8 @@
 from django.db.models import Q
 
-from core.models.prompt_string import Prompt
+from agents.models.conversation_message import ConversationMessagePart
+from agents.models.llm_query import QueryMessagePart
+from core.models.prompt import Prompt
 from tools.base.base_tool import BaseTool
 from .models.a2a_description import AgentToAgentDescription
 from .models.a2a_message import AgentToAgentMessage
@@ -17,6 +19,10 @@ class A2ATool(BaseTool):
     def get_header_parts(self):
         instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="instructions")
         functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="functions")
+        return [
+            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "A2A"]),
+            QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "A2A"])
+        ]
         return [
             {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "A2A"], "data":{}},
             {"tpId": functionsTemplate.pk,   "tags": ["Prompts", "A2A"], "data":{}},
@@ -95,10 +101,16 @@ class A2ATool(BaseTool):
         agents_data.sort(key=lambda x: (x['relationship'], x['name']))
 
         agentListTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="agentlist")
-
         return [
-            {"tpId": agentListTemplate.pk,   "tags": ["Prompts", "A2A"], "data":{"agents": agents_data}}
+            QueryMessagePart(
+                promptVariant=agentListTemplate, 
+                tags=["Prompts", "A2A"], 
+                template_data={"agents": agents_data}
+            ),
         ]
+        #return [
+        #    {"tpId": agentListTemplate.pk,   "tags": ["Prompts", "A2A"], "data":{"agents": agents_data}}
+        #]
 
     def agent_send_message(self, toolCall, agent_id: int, message: str):
         from agents.models.agent_instance import AgentInstance
@@ -146,7 +158,7 @@ class A2ATool(BaseTool):
         # 1. Inject the message into the recipient's conversation history
         # This message is what the recipient agent will "see"
         content = f"""Message from {sender_instance.name} (Instance PK: {sender_instance.pk}):\n{message}"""
-        recipient_message = recipient_instance.add_to_conversation(role="user", content=content)
+        recipient_message = recipient_instance.add_to_conversation(role="user", parts=[{"type": ConversationMessagePart.ConversationMessagePartContentType.TEXT, "content": content}])
 
         # 2. Create the AgentToAgentMessage to log the full transaction
         iam = AgentToAgentMessage()

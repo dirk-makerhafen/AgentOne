@@ -21,29 +21,32 @@ class LLMResponse(BaseModel):
         self.prompt_tokens = usage_data.get("prompt_tokens", 0)
         super().save(send_to_client=False, *args, **kwargs)
         if self.status==LLMResponse.LLMResponseStatusChoices.SUCCESS and self.llmQuery:
-            query = self.llmQuery
-            estimated_total = query.data.get("tokens", 0)
+            llmQuery = self.llmQuery
+            estimated_total = llmQuery.tokens
             actual_total = self.prompt_tokens
             if estimated_total > 0 and actual_total > 0:
                 correction_factor = actual_total / estimated_total
-                recalculated_total = 0
-                for message in query.data.get("messages", []):
-                    recalculated_message_total = 0
-                    for part in message.get("parts", []):
-                        estimated_part_tokens = part.get("tokens", 0)
-                        corrected_tokens = round(estimated_part_tokens * correction_factor)
-                        part["tokens"] = corrected_tokens
-                        recalculated_message_total += corrected_tokens
-                    message["tokens"] = recalculated_message_total
-                    recalculated_total += recalculated_message_total
-                query.data["tokens"] = recalculated_total
-                query.save()
+                if correction_factor > 1.01 or correction_factor < 0.99:
+                    recalculated_total = 0
+                    for queryMessage in llmQuery.queryMessages.all():
+                        recalculated_message_total = 0
+                        for queryMessagePart in queryMessage.queryMessageParts.all():
+                            corrected_tokens = int(round(queryMessagePart.tokens * correction_factor))
+                            if queryMessagePart.tokens != corrected_tokens:
+                                queryMessagePart.tokens = corrected_tokens
+                                queryMessagePart.save(send_to_client=False)
+                            recalculated_message_total += corrected_tokens
+                        if queryMessage.tokens != recalculated_message_total:
+                            queryMessage.tokens = recalculated_message_total
+                            queryMessage.save(send_to_client=False)
+                        recalculated_total += recalculated_message_total
+                    if llmQuery.tokens != recalculated_total:
+                        llmQuery.tokens = recalculated_total
+                        llmQuery.save()
         if send_to_client:
             self.send_object_to_clients()
 
     def as_client_dict(self):
-        usage_data = self.data.get("usage", {})
-        total_tokens = usage_data.get("total_tokens", 0) if usage_data else 0
         return {
             "object": "LLMResponse",
             "id": self.id,
@@ -51,8 +54,9 @@ class LLMResponse(BaseModel):
             "status": self.status,
             'status_display': self.get_status_display(),
             "model_name": self.llmQuery.aimodel.name if self.llmQuery else "N/A",
-            "total_tokens": total_tokens,
-            "usage": usage_data,
+            "completion_tokens": self.completion_tokens,
+            "prompt_tokens": self.prompt_tokens,
+            "usage": self.data.get("usage", {}),
             "raw_data": self.data,
             "agentInstance_id": self.agentInstance_id,
             "agentId": self.agent_id,

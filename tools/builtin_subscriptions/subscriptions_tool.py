@@ -1,4 +1,5 @@
-from core.models.prompt_string import Prompt
+from agents.models.llm_query import QueryMessagePart
+from core.models.prompt import Prompt
 from tools.base.base_tool import BaseTool
 from .models.tool_subscription import ToolSubscription
 from .prompts import TOOLS, PROMPTS
@@ -14,9 +15,13 @@ class SubscriptionsTool(BaseTool):
         instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="instructions")
         functionsTemplate    = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="functions")
         return [
-            {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Subscriptions"], "data": {} },
-            {"tpId": functionsTemplate.pk, "tags": ["Prompts", "Subscriptions"], "data": {} },
+            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Subscriptions"]),
+            QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "Subscriptions"])
         ]
+        #return [
+        #    {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Subscriptions"], "data": {} },
+        #    {"tpId": functionsTemplate.pk, "tags": ["Prompts", "Subscriptions"], "data": {} },
+        #]
 
     def unsubscribe(self, subscription_id: str, toolCall=None):
         try:

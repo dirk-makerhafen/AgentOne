@@ -7,7 +7,7 @@ class ToolsBuiltinSubagentsConfig(AppConfig):
 
     def ready(self):
         if 'migrate' not in sys.argv and 'makemigrations' not in sys.argv:
-            from core.models.prompt_string import Prompt
+            from core.models.prompt import Prompt
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .subagents_tool import SubAgentTool # Corrected import

@@ -1,4 +1,5 @@
 {% verbatim %}
+<!-- Main template for a full ConversationMessage with all its initial parts -->
 <script id="ConversationMessageTemplate" type="text/x-handlebars-template">
     <div id="message_id_{{message.id}}" class="conversation-log-item log-type-conversation {{message.role}}-log-item"
          data-id="{{message.id}}" data-created-at="{{message.created_at}}">
@@ -8,38 +9,48 @@
                 <i title="{{#if message.pin_to_context}}Unpin from context{{else}}Pin to context{{/if}}" class="fa fa-thumb-tack pin-icon {{#if message.pin_to_context}}pinned{{/if}}" 
                    data-message-id="{{message.id}}" 
                    onclick="event.stopPropagation(); togglePinToContext({{message.id}}, {{message.agentInstance_id}})"></i>
-                  <i title="{{#if message.hide_from_context}}Unhide{{else}}Hide{{/if}} this message from context" class="fa fa-eye-slash hide-icon {{#if message.hide_from_context}}hide_from_context{{/if}}" 
+                <i title="{{#if message.hide_from_context}}Unhide{{else}}Hide{{/if}} this message from context" class="fa fa-eye-slash hide-icon {{#if message.hide_from_context}}hide_from_context{{/if}}" 
                    data-message-id="{{message.id}}" 
                    onclick="event.stopPropagation(); toggleHideFromContext({{message.id}}, {{message.agentInstance_id}})"></i>
             </span>
         </div>
-        <div class="message-content">
+        <div class="message-content" id="message_parts_container_{{message.id}}">
             {{#each message.parts}}
-                <div class="message-part" id="message_{{../message.id}}_part_{{this.pnr}}">
-                    {{#if this.content}}
-                        {{#if this.tool_call_id}}
-                            {{!-- This is content associated with a tool call, rendered within the tool call block below --}}
-                        {{else}}
-                            <p class="message-part-chat" style="white-space: pre;text-wrap:auto">{{this.content}}</p>
-                        {{/if}}
-                    {{/if}}
-                    {{#if this.tool_call_id}}
-                        <div class="message-toolcall">
-                            <div class="toolcall-header">
-                                <b class="status-{{this.status}}" id="tool_call_status_{{this.tool_call_id}}">{{this.status}}</b><b>{{this.function_name}}</b>&nbsp;<span class="toolcall-header-args">{{formatArgsForHeader this.arguments}}</span>
-                                <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('tool_call_full_{{this.tool_call_id}}')" title="Show Details"><i class="fa fa-plus"></i> More </button>
-                            </div>
-                            <div class="toolcall-full hidden" id="tool_call_full_{{this.tool_call_id}}">
-                                <pre>Arguments:
-    {{jsonStringify this.arguments}}</pre>
-                                <pre id="tool_call_result_{{this.tool_call_id}}">Response:
-    {{jsonStringify this.result}}</pre>
-                            </div>
-                        </div>
-                    {{/if}}
-                 </div>
+                {{> ConversationMessagePartTemplate this}}
             {{/each}}
         </div>
+    </div>
+</script>
+
+<!-- Partial template for rendering a single ConversationMessagePart -->
+<script id="ConversationMessagePartTemplate" type="text/x-handlebars-template">
+    <div class="message-part" id="message_part_{{id}}" data-part-id="{{id}}" data-part-index="{{index}}">
+        {{#if (eq content_type 'image')}}
+            <img src="{{content}}" class="chat-log-image" alt="User uploaded image">
+        {{else}}
+            {{#if content}}
+                {{#if tool_call_id}}
+                    {{!-- Content for a tool call is handled within the tool call block --}}
+                {{else}}
+                    <p class="message-part-chat" style="white-space: pre;text-wrap:auto">{{content}}</p>
+                {{/if}}
+            {{/if}}
+        {{/if}}
+
+        {{#if tool_call_id}}
+            <div class="message-toolcall">
+                <div class="toolcall-header">
+                    <b class="status-{{status}}" id="tool_call_status_{{tool_call_id}}">{{status}}</b><b>{{function_name}}</b>&nbsp;<span class="toolcall-header-args">{{formatArgsForHeader arguments}}</span>
+                    <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('tool_call_full_{{tool_call_id}}')" title="Show Details"><i class="fa fa-plus"></i> More </button>
+                </div>
+                <div class="toolcall-full hidden" id="tool_call_full_{{tool_call_id}}">
+                    <pre>Arguments:
+{{jsonStringify arguments}}</pre>
+                    <pre id="tool_call_result_{{tool_call_id}}">Response:
+{{jsonStringify result}}</pre>
+                </div>
+            </div>
+        {{/if}}
     </div>
 </script>
 {% endverbatim %}

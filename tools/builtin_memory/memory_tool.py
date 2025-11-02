@@ -1,7 +1,8 @@
 from datetime import datetime
 import math
 
-from core.models.prompt_string import Prompt
+from agents.models.llm_query import QueryMessagePart
+from core.models.prompt import Prompt
 from tools.base.base_tool import BaseTool
 from .models.memory_item import MemoryItem
 from .prompts import TOOLS, PROMPTS, TRACKS
@@ -20,15 +21,26 @@ class MemoryTool(BaseTool):
         instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="instructions")
         functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="functions")
         return [
-            {"tpId": instructionsTemplate.pk, "data": {}, 'tags': ['Prompts', 'Memory'] },
-            {"tpId": functionsTemplate.pk, "data": {}, 'tags': ['Prompts', 'Memory'] },
+            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Memory"]),
+            QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "Memory"])
         ]
+        #return [
+        #    {"tpId": instructionsTemplate.pk, "data": {}, 'tags': ['Prompts', 'Memory'] },
+        #    {"tpId": functionsTemplate.pk, "data": {}, 'tags': ['Prompts', 'Memory'] },
+        #]
     
     def get_content_parts(self):
         memoryContentHeaderPrompt = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="content_header")  
         parts = [
-            {"tpId": memoryContentHeaderPrompt.pk, "data": { "current_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, 'tags': ['Prompts', 'Memory'] }, 
-        ] 
+            QueryMessagePart(
+                promptVariant=memoryContentHeaderPrompt, 
+                tags=["Prompts", "Memory"], 
+                template_data={ "current_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            )
+        ]
+        #parts = [
+        #    {"tpId": memoryContentHeaderPrompt.pk, "data": { "current_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, 'tags': ['Prompts', 'Memory'] }, 
+        #] 
      
         memory = {}
         limit = self.agentInstance.effective_limit_max_memory_items
@@ -36,7 +48,13 @@ class MemoryTool(BaseTool):
             memory[trackname] = {}
             for layername, layerdesription in trackitem['layers'].items():      
                 memory[trackname][layername] = {
-                    "memories":sorted([{ "tackname": trackname, "layername": layername, "created_at":x.created_at.timestamp(), "pk":x.pk, "index": x.index} for x in MemoryItem.objects.filter(track=trackname, layer=layername, next_version=None, agentInstance=self.agentInstance).order_by('-index')[:limit]],key=lambda v:v["index"]),
+                    "memories":sorted([{ 
+                        "tackname": trackname, 
+                        "layername": layername, 
+                        "created_at":x.created_at.timestamp(), 
+                        "pk":x.pk, 
+                        "index": x.index
+                    } for x in MemoryItem.objects.filter(track=trackname, layer=layername, next_version=None, agentInstance=self.agentInstance).order_by('-index')[:limit]],key=lambda v:v["index"]),
                 }
         _l = []
         for trackname, trackitem in TRACKS.items():
@@ -89,29 +107,47 @@ class MemoryTool(BaseTool):
 
         for trackname, trackitem in TRACKS.items():
             trackHeaderPrompt = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key= f"content_header.{trackname}")
-            parts.append({
-                "tpId": trackHeaderPrompt.pk, 
-                'tags': ['Prompts', 'Memory', trackname] 
-            }) 
+            parts.append(QueryMessagePart(
+                promptVariant=trackHeaderPrompt, 
+                tags=["Prompts", "Memory", trackname])
+            ) 
+            #parts.append({
+            #    "tpId": trackHeaderPrompt.pk, 
+            #    'tags': ['Prompts', 'Memory', trackname] 
+            #}) 
             for layername, layerdesription in trackitem['layers'].items():
                 layerHeaderPrompt = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key= f"content_header.{trackname}.{layername}")
-                parts.append({
-                    "tpId": layerHeaderPrompt.pk, 
-                    'tags': ['Prompts', 'Memory', trackname, layername] 
-                }) 
-                parts.append({
-                    'tags': ['Tool', 'MemoryTool', 'Content', f'{trackname}', f'{layername}'],
-                    "tpId": memoryContentPrompt.pk, 
-                    "data":  memory[trackname][layername],
-                })
+                parts.append(QueryMessagePart(
+                    promptVariant=layerHeaderPrompt   , 
+                    tags=["Prompts", "Memory", trackname, layername])
+                    ) 
+                #parts.append({
+                #    "tpId": layerHeaderPrompt.pk, 
+                #    'tags': ['Prompts', 'Memory', trackname, layername] 
+                #}) 
+                parts.append(QueryMessagePart(
+                    promptVariant=memoryContentPrompt   , 
+                    tags=['Tool', 'MemoryTool', 'Content', f'{trackname}', f'{layername}'], 
+                    template_data= memory[trackname][layername])
+                )
+                #parts.append({
+                #    'tags': ['Tool', 'MemoryTool', 'Content', f'{trackname}', f'{layername}'],
+                #    "tpId": memoryContentPrompt.pk, 
+                #    "data":  memory[trackname][layername],
+                #})
 
         if len(stalled) > 0:
             stalledWarningHeader = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="stall_warning")
-            parts.append({
-                'tags': ['Prompts', 'Memory'],
-                "tpId": stalledWarningHeader.id, 
-                "data": {"stalled": stalled},
-            })
+            parts.append(QueryMessagePart(
+                promptVariant=stalledWarningHeader   , 
+                tags=['Prompts', 'Memory'], 
+                template_data={"stalled": stalled},
+            ))
+            #parts.append({
+            #    'tags': ['Prompts', 'Memory'],
+            #    "tpId": stalledWarningHeader.id, 
+            #    "data": {"stalled": stalled},
+            #})
             
         return parts
 

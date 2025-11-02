@@ -1,5 +1,8 @@
 // This file manages the rendering of conversation messages (user, assistant, etc.) in the log.
 
+const partTemplate = document.getElementById('ConversationMessagePartTemplate');
+    Handlebars.registerPartial('ConversationMessagePartTemplate', partTemplate.innerHTML);
+
 function renderConversationMessage(payload) {    
     const conversationMessageTemplate = getTemplate('ConversationMessageTemplate');
     
@@ -30,6 +33,56 @@ function renderConversationMessage(payload) {
         addToChatArea(newElement, payload.agentInstance_id);
     }
 };
+
+function renderConversationMessagePart(payload) {
+    const partTemplate = getTemplate('ConversationMessagePartTemplate');
+    if (!partTemplate) {
+        console.error("ConversationMessagePartTemplate not found!");
+        return;
+    }
+
+    const parentContainer = document.getElementById(`message_parts_container_${payload.conversationMessage_id}`);
+    if (!parentContainer) {
+        // The parent message might not have been rendered yet.
+        // This can happen in high-frequency streaming scenarios.
+        // We will rely on the full ConversationMessage re-render to catch up.
+        return;
+    }
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = partTemplate(payload).trim();
+    const newPartElement = tempDiv.firstChild;
+    
+    const existingPartElement = document.getElementById(`message_part_${payload.id}`);
+    
+    if (existingPartElement) {
+        // Preserve tool call expanded state if it exists
+        const oldToolCall = existingPartElement.querySelector('.toolcall-full');
+        if (oldToolCall && !oldToolCall.classList.contains('hidden')) {
+            const newToolCall = newPartElement.querySelector('.toolcall-full');
+            if (newToolCall) {
+                newToolCall.classList.remove('hidden');
+            }
+        }
+        existingPartElement.replaceWith(newPartElement);
+    } else {
+        // To ensure parts are always in the correct order, we find the right place to insert.
+        const existingParts = parentContainer.querySelectorAll('.message-part');
+        let inserted = false;
+        for (let i = 0; i < existingParts.length; i++) {
+            const partIndex = parseInt(existingParts[i].getAttribute('data-part-index'), 10);
+            if (payload.index < partIndex) {
+                parentContainer.insertBefore(newPartElement, existingParts[i]);
+                inserted = true;
+                break;
+            }
+        }
+        if (!inserted) {
+            parentContainer.appendChild(newPartElement);
+        }
+    }
+}
+
 
 function togglePinToContext(messageId, instancePk) {
     const pinIcon = document.querySelector(`.pin-icon[data-message-id="${messageId}"]`);

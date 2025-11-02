@@ -12,7 +12,6 @@ class SubAgentLink(BaseModel):
         on_delete=models.CASCADE,
         related_name='supervisor_link'
     )
-    # created_at is inherited from BaseModel.
 
     class Meta:
         ordering = ['-created_at']

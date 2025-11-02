@@ -3,7 +3,7 @@ import uuid
 from channels.testing import WebsocketCommunicator
 from config.asgi import application
 from django.contrib.auth.models import User
-from core.models.prompt_string import Prompt
+from core.models.prompt import Prompt
 from unittest.mock import patch
 
 pytestmark = pytest.mark.django_db(transaction=True)

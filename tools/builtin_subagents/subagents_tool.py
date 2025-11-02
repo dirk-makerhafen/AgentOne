@@ -1,8 +1,9 @@
+from agents.models.llm_query import QueryMessagePart
 from tools.base.base_tool import BaseTool
 from tools.builtin_filesystem.utils.fsutils import get_abs_path
 from .prompts import TOOLS, PROMPTS, REGISTRATION_INSTRUCTION_TEMPLATE
 from .apps import ToolsBuiltinSubagentsConfig
-from core.models.prompt_string import Prompt
+from core.models.prompt import Prompt
 import traceback
 import json
 from datetime import datetime
@@ -14,19 +15,20 @@ class SubAgentTool(BaseTool):
     PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructions_template = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="instructions")
-        functions_template = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="functions")
+        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="functions")
         return [
-            {"tpId": instructions_template.pk, "data": {}, 'tags': ['Prompts', 'SubAgents'] },
-            {"tpId": functions_template.pk, "data": {}, 'tags': ['Prompts', 'SubAgents'] },
+            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "SubAgents"]),
+            QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "SubAgents"])
         ]
+        #return [
+        #    {"tpId": instructionsTemplate.pk, "data": {}, 'tags': ['Prompts', 'SubAgents'] },
+        #    {"tpId": functionsTemplate.pk, "data": {}, 'tags': ['Prompts', 'SubAgents'] },
+        #]
 
     def get_content_parts(self):
         from agents.models.agent import Agent
         from agents.models.sub_agent_link import SubAgentLink
-        from agents.models.agent_instance import AgentInstance
-        from django.contrib.auth.models import User
-
         parts = []
         user = None
         if self.agentInstance.agent.owners.exists():
@@ -38,37 +40,55 @@ class SubAgentTool(BaseTool):
             available_agents = Agent.objects.filter(owners=user).order_by('name')
             agents_data = [{'pk': agent.pk, 'name': agent.name, 'description': agent.description} for agent in available_agents]
             if agents_data:
-                parts.append({
-                    'tags': ['Tool', 'SubAgentTool', 'AvailableAgents'],
-                    'tpId': available_agents_prompt_template.pk,
-                    'data': {'available_agents': agents_data}
-                })
+                parts.append(QueryMessagePart(
+                    promptVariant=available_agents_prompt_template   , 
+                    tags=['Tool', 'SubAgentTool', 'AvailableAgents'], 
+                    template_data={'available_agents': agents_data})
+                )
+                #parts.append({
+                #    'tags': ['Tool', 'SubAgentTool', 'AvailableAgents'],
+                #    'tpId': available_agents_prompt_template.pk,
+                #    'data': {'available_agents': agents_data}
+                #})
 
         # 2. Inject current sub-agents
         current_subagents_prompt_template = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="current_subagents_content")
         sub_agent_links = SubAgentLink.objects.filter(supervisor_instance=self.agentInstance).order_by('created_at')
         subagents_data = [{
-            'agent_id': link.subordinate_instance.pk, 'name': link.subordinate_instance.name, 'status': link.subordinate_instance.status,
+            'pk': link.subordinate_instance.pk, 'name': link.subordinate_instance.name, 'status': link.subordinate_instance.status,
             'description': link.subordinate_instance.description_text,
         } for link in sub_agent_links]
         if subagents_data:
-            parts.append({
-                'tags': ['Tool', 'SubAgentTool', 'CurrentSubagents'],
-                'tpId': current_subagents_prompt_template.pk,
-                'data': {'subagents': subagents_data}
-            })
+            parts.append(QueryMessagePart(
+                promptVariant=current_subagents_prompt_template, 
+                tags=['Tool', 'SubAgentTool', 'CurrentSubagents'], 
+                template_data={'subagents': subagents_data})
+            )
+            #parts.append({
+            #    'tags': ['Tool', 'SubAgentTool', 'CurrentSubagents'],
+            #    'tpId': current_subagents_prompt_template.pk,
+            #    'data': {'subagents': subagents_data}
+            #})
 
         # 3. Inject supervisor agent info
         try:
             supervisor_link = SubAgentLink.objects.get(subordinate_instance=self.agentInstance)
             supervisor_instance = supervisor_link.supervisor_instance
             supervisor_info_prompt_template = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="supervisor_info_content")
-            supervisor_data = supervisor_instance.as_client_dict()
-            parts.append({
-                'tags': ['Tool', 'SubAgentTool', 'SupervisorInfo'],
-                'tpId': supervisor_info_prompt_template.pk,
-                'data': {'supervisor': supervisor_data}
-            })
+            supervisor_data = {
+                'pk': supervisor_info_prompt_template.subordinate_instance.pk, 'name': supervisor_info_prompt_template.subordinate_instance.name, 'status': supervisor_info_prompt_template.subordinate_instance.status,
+                'description': supervisor_info_prompt_template.subordinate_instance.description_text,
+            }
+            parts.append(QueryMessagePart(
+                promptVariant=current_subagents_prompt_template, 
+                tags=['Tool', 'SubAgentTool', 'SupervisorInfo'], 
+                template_data={'supervisor': supervisor_data})
+            )
+            #parts.append({
+            #    'tags': ['Tool', 'SubAgentTool', 'SupervisorInfo'],
+            #    'tpId': supervisor_info_prompt_template.pk,
+            #    'data': {'supervisor': supervisor_data}
+            #})
         except SubAgentLink.DoesNotExist:
             pass
         except Exception as e:

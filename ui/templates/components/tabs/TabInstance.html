@@ -21,7 +21,7 @@
                     </div>
                     <div class="resizable-panel flex-row" data-size-pc="20">
                         <div class="chat_user_input">
-                            <textarea id="messageInput_{{instancePk}}" name="user_input" rows="4" cols="50" placeholder="Enter your message..." onkeydown="handleMessageInputKeydown(event, {{instancePk}})"></textarea>
+                            <div id="messageInput_{{instancePk}}" class="rich-text-input" contenteditable="true" data-placeholder="Enter your message..." onkeydown="handleMessageInputKeydown(event, {{instancePk}})"></div>
                         </div>
                         <div class="chat-actions">
                             <button id="sendMessageBtn_{{instancePk}}" class="submit_button btn btn-success" type="submit" onclick="sendMessage(event, {{instancePk}})">Send</button>

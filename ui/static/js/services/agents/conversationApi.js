@@ -1,7 +1,7 @@
 // API functions for agents/consumers/conversation.py
 const conversationApi = {
-    addMessage: function(instance_pk, message) {
-        sendRequest('conversationmessage_add', { instance_pk, message });
+    addMessage: function(instance_pk, parts) {
+        sendRequest('conversationmessage_add', { instance_pk, parts });
     },
     listMessages: function(instance_pk, max_id = null, limit = 20) {
         sendRequest('conversationmessage_list', { instance_pk, max_id, limit });

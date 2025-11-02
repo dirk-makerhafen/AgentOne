@@ -3,7 +3,7 @@
 function renderLLMQueryMessage(payload, instancePk) {
     const llmQueryMessageTemplate = getTemplate('LLMQueryTemplate');
     // --- Prepare Template Data ---
-    const tokens_display = `~${payload.total_tokens} Tokens`;
+    const tokens_display = `~${payload.tokens} Tokens`;
     const partsToHighlight = [];
     if (payload.raw_data && payload.raw_data.messages) {
         payload.raw_data.messages.forEach(message => {
@@ -40,7 +40,7 @@ function renderLLMQueryMessage(payload, instancePk) {
         hasUsage: hasUsage,
         hasPartsToHighlight: hasPartsToHighlight,
         partsJson: JSON.stringify(partsToHighlight), // Use JSON.stringify for data-attribute
-        raw_json: JSON.stringify(payload.raw_data, null, 2),
+        raw_json: JSON.stringify(payload, null, 2),
         total_prompt_tokens: payload.total_prompt_tokens || 0,
         total_completion_tokens: payload.total_completion_tokens || 0,
         flamegraph_data: flamegraph_data_source,
@@ -229,4 +229,76 @@ function toggleQueryHighlight(button, instancePk) {
 
     // Apply the changes (either highlighting or clearing) to the DOM for this instance
     applyActiveHighlight(instancePk);
+}
+
+
+
+// This file provides render functions for nested QueryMessage and QueryMessagePart objects.
+
+document.addEventListener('DOMContentLoaded', () => {
+    const qmPartTemplate = document.getElementById('QueryMessagePartTemplate');
+    if (qmPartTemplate) {
+        Handlebars.registerPartial('QueryMessagePartTemplate', qmPartTemplate.innerHTML);
+    } else {
+        console.error("Could not find QueryMessagePartTemplate. Ensure it is loaded in ui.html.");
+    }
+
+    const qmTemplate = document.getElementById('QueryMessageTemplate');
+    if(qmTemplate) {
+        Handlebars.registerPartial('QueryMessageTemplate', qmTemplate.innerHTML);
+    } else {
+        console.error("Could not find QueryMessageTemplate. Ensure it is loaded in ui.html.");
+    }
+});
+
+function renderQueryMessage(payload) {
+    const parentContainer = document.querySelector(`#llm_query_message_${payload.query_id} #query_messages_container_${payload.query_id}`);
+    if (!parentContainer) {
+        return; // Parent LLMQuery not rendered yet. It will be handled by the full render.
+    }
+
+    const template = getTemplate('QueryMessageTemplate');
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = template(payload).trim();
+    const newElement = tempDiv.firstChild;
+
+    const existingElement = document.getElementById(newElement.id);
+    if (existingElement) {
+        const partsContainer = existingElement.querySelector('.query-message-parts-container');
+        const isPartsVisible = partsContainer && !partsContainer.classList.contains('hidden');
+
+        const newPartsContainer = newElement.querySelector('.query-message-parts-container');
+        if (isPartsVisible && newPartsContainer) {
+            newPartsContainer.classList.remove('hidden');
+        }
+        existingElement.replaceWith(newElement);
+    } else {
+        insertElementOrdered(parentContainer, newElement, (el) => parseInt(el.dataset.index, 10), payload.index);
+    }
+}
+
+function renderQueryMessagePart(payload) {
+    const parentContainer = document.getElementById(`query_message_parts_container_${payload.query_message_id}`);
+    if (!parentContainer) {
+        return; // Parent QueryMessage not rendered yet.
+    }
+
+    const template = getTemplate('QueryMessagePartTemplate');
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = template(payload).trim();
+    const newElement = tempDiv.firstChild;
+
+    const existingElement = document.getElementById(newElement.id);
+    if (existingElement) {
+        const contentContainer = existingElement.querySelector('.message-content');
+        const isContentVisible = contentContainer && !contentContainer.classList.contains('hidden');
+
+        const newContentContainer = newElement.querySelector('.message-content');
+        if (isContentVisible && newContentContainer) {
+            newContentContainer.classList.remove('hidden');
+        }
+        existingElement.replaceWith(newElement);
+    } else {
+        insertElementOrdered(parentContainer, newElement, (el) => parseInt(el.dataset.partIndex, 10), payload.index);
+    }
 }

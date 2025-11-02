@@ -1,104 +1,165 @@
 {% verbatim %}
 <script id="TabPromptsTemplate" type="text/x-handlebars-template">
-    <div id="tabContent_prompts" class="resizable-container tab-content" data-orientation="vertical" style="display: none;">
-        <div id="prompts-list-header" class="sidebar-list-header">
-            <span>Prompt Templates</span>
+ 
+    <div class="tab-content" id="tabContent_prompts">
+    <div id="systems-list-header" class="sidebar-list-header">
+            <span>Prompts</span>
+            <button id="add-system-btn" class="btn btn-xs btn-default" title="Create New Prompt" onclick="toggleAddPromptForm(true)">
+                <i class="fa fa-plus"></i>
+            </button>
         </div>
-        <div class="prompts-table-container sidebar-list-body">
-            <table id="prompts-table" class="table table-hover">
-                <thead>
-                    <tr>
-                        <th style="width: 20px;"></th>
-                        <th>Source</th>
-                        <th>Key</th>
-                        <th class="text-center">System Variants</th>
-                        <th class="text-center">Your Global Variants</th>
-                    </tr>
-                </thead>
-                <tbody id="prompts-table-body">
-                    <!-- Prompt definitions will be rendered here -->
-                </tbody>
-            </table>
+        <div id="add-prompt-form-container" class="add-prompt-form hidden">
+            <h4>Create New Prompt Template</h4>
+            <form id="add-prompt-form">
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="new-prompt-source">Source</label>
+                            <input type="text" class="form-control" id="new-prompt-source" placeholder="e.g., agents, tools" required="">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label for="new-prompt-key">Key</label>
+                            <input type="text" class="form-control" id="new-prompt-key" placeholder="e.g., System, Instructions" required="">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="new-prompt-description">Description</label>
+                        <textarea class="form-control" id="new-prompt-description" rows="2" placeholder="A brief description of what this prompt is used for."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="new-prompt-data-lambda">Data Lambda</label>
+                        <textarea class="form-control" id="new-prompt-data-lambda" rows="2" placeholder="e.g., lambda agent_instance: {'key': 'value'}"></textarea>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="new-prompt-value">Initial Value</label>
+                        <textarea class="form-control" id="new-prompt-value" rows="5" placeholder="Enter the initial content for this prompt variant." required=""></textarea>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-success" onclick="saveNewPrompt()">Save Prompt</button>
+                    <button type="button" class="btn btn-default" onclick="toggleAddPromptForm(false)">Cancel</button>
+                </div>
+            </form>
         </div>
+
+        <p class="help-block">Click on a prompt definition to expand it and see its system and user-specific variants.</p>
+        <table class="table table-hover prompts-table" id="">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Source</th>
+                    <th>Key</th>
+                    <th>Description</th>
+                    <th>Variants</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="prompts-table-body">
+                <!-- Prompt definitions will be rendered here by JavaScript -->
+            </tbody>
+        </table>
     </div>
 </script>
 
 <script id="PromptDefinitionRowTemplate" type="text/x-handlebars-template">
     <tr class="prompt-definition-row" data-prompt-definition-id="{{id}}" onclick="togglePromptDefinition(this)">
-        <td><i class="fa fa-chevron-right expand-icon"></i></td>
-        <td>{{source}}</td>
-        <td>{{key}}</td>
-        <td class="text-center">{{system_variants_count}}</td>
-        <td class="text-center">{{user_variants_count}}</td>
+        <td><i class="fa fa-chevron-right expand-icon"></i> </td>
+        <td><strong>{{source}}</strong></td>
+        <td><strong>{{key}}</strong></td>
+        <td>
+            <div class="editable-prompt-field" data-field="description" data-pk="{{id}}" contenteditable="true" oninput="debouncePromptDefinitionUpdate({{id}})" onkeydown="handlePromptEditKeydown(event, {{id}})">{{description}}</div>
+        </td>
+        <td><span class="badge badge-secondary">{{nr_of_variants}}</span></td>
+        <td>
+            <button class="btn btn-xs btn-danger delete-prompt-btn" 
+                    title="Delete this version"
+                    onclick="event.stopPropagation(); deletePrompt('{{id}}', '{{key}}')">
+                <i class="fa fa-trash"></i>
+            </button>
+        </td>
     </tr>
 </script>
 
 <script id="PromptVariantGroupRowTemplate" type="text/x-handlebars-template">
-    <tr class="prompt-variant-group-row" data-parent-definition-id="{{prompt_definition_id}}">
-        <td colspan="5" class="variant-group-container">
+    <div class="variant-group-container-split">
+        <div class="variant-group">
             {{#if variants}}
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th style="width: 20px;"></th>
-                        <th>{{group_title}}</th>
-                        <th>Created</th>
-                        <th>Enabled</th>
-                        <th class="text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {{#each variants}}
-                    {{> PromptVariantRowTemplate}}
-                {{/each}}
-                </tbody>
-            </table>
+                <table class="table table-hover variant-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Id</th>
+                            <th>Owner</th>
+                            <th>Version</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each variants}}
+                            {{> PromptVariantRowTemplate .}}
+                        {{/each}}
+                    </tbody>
+                </table>
             {{else}}
-            <div class="no-variants-message">{{no_variants_message}}</div>
+                <p class="no-variants-message text-muted">{{no_variants_message}}</p>
             {{/if}}
-        </td>
-    </tr>
+        </div>
+    </div>
 </script>
 
+
 <script id="PromptVariantRowTemplate" type="text/x-handlebars-template">
-    <tr class="prompt-variant-row" data-prompt-variant-id="{{id}}" onclick="togglePromptVariantValue(this, event)">
-        <td><i class="fa fa-chevron-right expand-icon"></i></td>
+    <tr class="prompt-variant-row {{#unless is_newest_version}}archived-version{{/unless}}" 
+        data-prompt-variant-id="{{id}}" 
+        onclick="togglePromptVariantValue(this, event)">
         <td>
-            {{#if is_newest_version}}
-                <span class="latest-version-badge">LATEST</span>
-            {{/if}}
-            Version from {{formatDateTime created_at}}
+            <i class="fa fa-chevron-right expand-icon"></i> 
+        </td>
+         <td>
+           {{id}}
+        </td>
+        <td> 
+            <strong>{{owner_username}}</strong>
+        </td>
+        <td> 
+            <strong>{{version_nr}}</strong>
         </td>
         <td>{{formatDateTime created_at}}</td>
         <td>
             <label class="switch">
-                <input type="checkbox" class="prompt-enabled-toggle" data-prompt-pk="{{id}}" onchange="togglePromptEnabled(this, event)" {{#if is_enabled}}checked{{/if}} {{#unless is_editable}}disabled{{/unless}}>
+                <input type="checkbox" class="prompt-enabled-toggle" data-prompt-variant-pk="{{id}}" {{#if is_enabled}}checked{{/if}}>
                 <span class="slider round"></span>
             </label>
-        </td>
-        <td class="text-right">
-             <button class="btn btn-xs btn-default" title="View Version History (Not Implemented)">
-                <i class="fa fa-history"></i>
-            </button>
+        
             {{#if is_editable}}
-            <button class="btn btn-xs btn-default" title="Delete this version" onclick="event.stopPropagation(); deletePrompt('{{id}}', '{{key}}')">
-                <i class="fa fa-trash"></i>
-            </button>
+                {{#if is_newest_version}}
+                    <button class="btn btn-xs btn-danger delete-prompt-btn" 
+                            title="Delete this version"
+                            onclick="event.stopPropagation(); deletePromptVariant('{{id}}', '{{key}}')">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                {{else}}
+                    <span class="badge badge-light">Archived</span>
+                {{/if}}
             {{/if}}
-            <button class="btn btn-xs btn-default" title="Create a new version based on this one" onclick="event.preventDefault(); promptsApi.createVariant('{{id}}');">
-                 <i class="fa fa-copy"></i>
-            </button>
         </td>
     </tr>
     <tr class="prompt-value-row hidden" data-parent-variant-id="{{id}}">
-        <td colspan="5" class="prompt-value-container">
-            <pre class="prompt-value-content" {{#if is_editable}}contenteditable="true"{{/if}} data-prompt-pk="{{id}}" onfocus="showPromptEditActions('{{id}}')" onblur="hidePromptEditActions('{{id}}')">{{value}}</pre>
-            {{#if is_editable}}
-            <div class="prompt-edit-actions hidden" id="prompt-edit-actions-{{id}}">
-                <button class="btn btn-primary btn-xs" onclick="event.preventDefault(); event.stopPropagation(); savePromptChanges('{{id}}')"><i class="fa fa-check"></i> Save</button>
-                <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation(); cancelPromptChanges('{{id}}')"><i class="fa fa-times"></i> Cancel</button>
+        <td colspan="4">
+            <div class="prompt-value-editor-container">
+                <pre class="prompt-value-content" 
+                     {{#if is_editable}}contenteditable="true" onfocus="showPromptEditActions('{{id}}')" onblur="hidePromptEditActions('{{id}}')"{{/if}} 
+                     data-prompt-variant-pk="{{id}}">{{value}}</pre>
+                {{#if is_editable}}
+                <div class="prompt-edit-actions hidden" id="prompt-edit-actions-{{id}}">
+                    <button class="btn btn-primary" onclick="event.preventDefault(); event.stopPropagation(); savePromptChanges('{{id}}')"><i class="fa fa-check"></i> Save</button>
+                    <button class="btn btn-secondary" onclick="event.stopPropagation(); cancelPromptChanges('{{id}}')"><i class="fa fa-times"></i> Cancel</button>
+                </div>
+                {{/if}}
             </div>
-            {{/if}}
         </td>
     </tr>
 </script>

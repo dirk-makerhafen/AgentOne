@@ -87,8 +87,8 @@
 .core-prompt-body .prompt-value-content {
     max-height: 200px;
     overflow-y: auto;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    white-space: pre-line;
+
     background-color: #fdfdfd;
     padding: 8px;
     border-radius: 3px;

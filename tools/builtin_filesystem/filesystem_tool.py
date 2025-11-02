@@ -2,7 +2,8 @@ import traceback
 import ast
 import textwrap
 
-from core.models.prompt_string import Prompt
+from agents.models.llm_query import QueryMessagePart
+from core.models.prompt import Prompt
 from tools.base.base_tool import BaseTool
 from .models.fs_log_entry import FsLogEntry
 from .utils.fsutils import clean_path, get_abs_path
@@ -20,9 +21,17 @@ class FilesystemTool(BaseTool):
         instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="instructions")
         functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="functions")
         return [
-            {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Filesystem"], "data":{"workingdir": self.agentInstance.workingdir}},
-            {"tpId": functionsTemplate.pk, "tags": ["Prompts", "Filesystem"], "data":{}},
+            QueryMessagePart(
+                promptVariant=instructionsTemplate, 
+                tags=["Prompts", "Filesystem"], 
+                template_data = {"workingdir": self.agentInstance.workingdir}
+            ),
+            QueryMessagePart(promptVariant=functionsTemplate, tags=["Prompts", "Filesystem"])
         ]
+        #return [
+        #    {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Filesystem"], "data":{"workingdir": self.agentInstance.workingdir}},
+        #    {"tpId": functionsTemplate.pk, "tags": ["Prompts", "Filesystem"], "data":{}},
+        #]
         
     def get_loaded_items(self, refresh_from_disk=False):
         r = []
@@ -70,7 +79,6 @@ class FilesystemTool(BaseTool):
         except Exception as e:
             return False, {"status": "error", "message": f"An unexpected error occurred: {type(e).__name__}: {e}\n{traceback.format_exc()}"}
        
-
     def fs_append(self, toolCall, path, content):
         try:
             abs_path, rel_path = clean_path(self.agentInstance.workingdir, path)
@@ -86,7 +94,6 @@ class FilesystemTool(BaseTool):
         except Exception as e:
             return False, {"status": "error", "message": f"An unexpected error occurred: {type(e).__name__}: {e}\n{traceback.format_exc()}"}
        
-
     def fs_replace(self, toolCall, path, search, replace):
         try:
             abs_path, rel_path = clean_path(toolCall.agentInstance.workingdir, path)

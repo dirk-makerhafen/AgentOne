@@ -4,20 +4,19 @@
         <div class="agent-edit-container">
             <h3>{{#if agent.is_new}}Create New Agent{{else}}Edit Agent: {{agent.name}}{{/if}}</h3>
             
-            <form id="{{#if agent.is_new}}add-agent-form-tab{{else}}edit-agent-form-{{agent.id}}{{/if}}" 
-                  {{#unless agent.is_new}}oninput="agentUpdate({{agent.id}})"{{/unless}}>
+            <form id="{{#if agent.is_new}}add-agent-form-tab{{else}}edit-agent-form-{{agent.id}}{{/if}}">
                 
-                <div class="form-group">
+                <div class="form-group"  oninput="agentUpdate({{agent.id}})">
                     <label for="agent-name-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Agent Name</label>
                     <input type="text" class="form-control" id="agent-name-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.name}}">
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group"  oninput="agentUpdate({{agent.id}})">
                     <label for="agent-description-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Description</label>
                     <textarea class="form-control" id="agent-description-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" rows="3">{{agent.description}}</textarea>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group"  oninput="agentUpdate({{agent.id}})">
                     <h4>Default Instance Limits</h4>
                     <p class="help-block">Set the default limits for any new instances created from this agent. These can be overridden on a per-instance basis.</p>
                     <div class="row">
@@ -36,7 +35,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group"  oninput="agentUpdate({{agent.id}})">
                     <h4>Available Tools</h4>
                     <div class="tool-selection-list">
                         {{#each tools}}
@@ -51,13 +50,11 @@
                     </div>
                 </div>
 
-                <!-- Core Prompts Section -->
-                <div class="form-group">
-                    <h4>Core Prompts</h4>
-                    <div id="core-prompts-container-{{agent.id}}">
-                        <!-- Core prompts will be rendered here by JavaScript -->
-                    </div>
+                <!-- Agent Prompt Relations Section -->
+                <div id="agent-prompt-relations-container-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">
+                    <!-- This container will be populated by JS after the agent is created or loaded -->
                 </div>
+                
                 
                 <div class="agent-edit-footer">
                     {{#if agent.is_new}}
@@ -68,44 +65,6 @@
                     {{/if}}
                 </div>
             </form>
-        </div>
-    </div>
-</script>
-
-<script id="AgentCorePromptTemplate" type="text/x-handlebars-template">
-    <div class="core-prompt-card" id="core-prompt-card-{{prompt.id}}">
-        <div class="core-prompt-header">
-            <strong>{{prompt.source}} / {{prompt.key}}</strong>
-            <span class="prompt-status-badge {{#if is_override}}status-override{{else}}status-default{{/if}}">
-                {{#if is_override}}Custom Override{{else}}Global Default{{/if}}
-            </span>
-        </div>
-        <div class="core-prompt-body">
-            <div class="prompt-value-editor-container">
-                 <pre class="prompt-value-content" {{#if is_override}}contenteditable="true"{{/if}} data-prompt-pk="{{prompt.id}}" id="prompt-value-editable-{{prompt.id}}">{{prompt.value}}</pre>
-                {{#if is_override}}
-                <div class="prompt-edit-actions hidden" id="prompt-edit-actions-{{prompt.id}}">
-                    <button class="btn btn-primary btn-xs" onclick="event.preventDefault(); event.stopPropagation(); savePromptChanges('{{prompt.id}}')"><i class="fa fa-check"></i> Save</button>
-                    <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation(); cancelPromptChanges('{{prompt.id}}')"><i class="fa fa-times"></i> Cancel</button>
-                </div>
-                {{/if}}
-            </div>
-        </div>
-        <div class="core-prompt-footer">
-            {{#if is_override}}
-                <label class="switch">
-                    <input type="checkbox" class="prompt-enabled-toggle" data-prompt-pk="{{prompt.id}}" {{#if prompt.is_enabled}}checked{{/if}}>
-                    <span class="slider round"></span>
-                </label>
-                <span class="switch-label">Enabled</span>
-                <button class="btn btn-xs btn-default delete-prompt-btn pull-right" data-prompt-pk="{{prompt.id}}" title="Delete this custom override" onclick="event.stopPropagation(); deletePrompt('{{prompt.id}}', '{{prompt.key}}')">
-                    <i class="fa fa-trash"></i> Delete Override
-                </button>
-            {{else}}
-                <button class="btn btn-xs btn-default" onclick="event.preventDefault(); promptsApi.createVariant('{{prompt.id}}', '{{agent_id}}');" title="Create a custom, editable version of this prompt for this agent">
-                    <i class="fa fa-copy"></i> Create Override
-                </button>
-            {{/if}}
         </div>
     </div>
 </script>

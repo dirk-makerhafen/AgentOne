@@ -2,15 +2,11 @@ from django.db import models
 from django.db.models import Sum
 import random
 from agents.history_limiter import HistoryLimiter
-from agents.models.conversation_message import ConversationMessage
+from agents.models.conversation_message import ConversationMessage, ConversationMessagePart
 from core.models.base_model import BaseModel
 from systems.models.system import System
 from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
-from tools.definitions.models.tool_definition import ToolDefinition
-from tools.definitions.models.tool_installation import ToolInstallation
 from django.utils import timezone
-
-from tools.instances.models.tool_instance import ToolInstance
 
 class AgentInstance(BaseModel):
     class AgentInstanceStatusChoices(models.TextChoices):
@@ -21,8 +17,9 @@ class AgentInstance(BaseModel):
         AWAITING_USER_INPUT = 'AWAITING_USER_INPUT', 'Awaiting User Input'
         AWAITING_AGENT_MESSAGE = 'AWAITING_AGENT_MESSAGE', 'Awaiting Agent Message'
         AWAITING_RATE_LIMIT = 'AWAITING_RATE_LIMIT', 'Awaiting Rate Limit'
+        AWAITING_AUTOMATION_CONFIRMATION = 'AWAITING_USER_CONFIRM', 'Awaiting user confirmation'
         QUEUED = 'QUEUED', 'Queued'
-        FINISHED = 'FINISHED','Finished'
+        #not used, keep comment for now: FINISHED = 'FINISHED','Finished' 
         ERROR = 'ERROR', 'Error'
         SYSTEM_OFFLINE = 'SYSTEM_OFFLINE', 'System Offline'
 
@@ -93,15 +90,33 @@ class AgentInstance(BaseModel):
             for loaded_item in loaded_items:
                 self.filesystem.fs_unload(path=loaded_item.path, toolCall=None)
             self.workingdir = workingdir
-            self.save()
+            AgentInstance.objects.filter(instance_pk=self.instance_pk).update(workingdir=workingdir)
+            self.send_object_to_clients()
 
-    def add_to_conversation(self, role, content):
+    def set_status(self, status):
+        if status != self.status:
+            self.status = status
+            AgentInstance.objects.filter(instance_pk=self.instance_pk).update(status=status)
+            self.send_object_to_clients()
+
+    def set_automated_step_count(self, steps):
+        if steps != self.automated_step_count:
+            self.automated_step_count = steps
+            AgentInstance.objects.filter(instance_pk=self.instance_pk).update(automated_step_count=steps)
+            self.send_object_to_clients()
+
+    def add_to_conversation(self, role, parts):
         c = ConversationMessage()
         c.agent = self.agent
         c.agentInstance = self
         c.role = role
-        c.data = {'parts': [{'content': content}]}
         c.save()
+        for part in parts:
+            cp = ConversationMessagePart()
+            cp.content = part["content"]
+            cp.content_type = part["type"]
+            cp.conversationMessage = c
+            cp.save()
         return c
 
     def start_or_continue(self):
@@ -113,8 +128,7 @@ class AgentInstance(BaseModel):
             self.save()
 
         if self.system and self.system.status != System.SystemStatusChoices.ONLINE:
-            self.status = AgentInstance.AgentInstanceStatusChoices.SYSTEM_OFFLINE
-            self.save()
+            self.set_status(AgentInstance.AgentInstanceStatusChoices.SYSTEM_OFFLINE) 
             return
         celery_create_query.delay(self.instance_pk)
         

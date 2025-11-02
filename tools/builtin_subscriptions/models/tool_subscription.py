@@ -10,6 +10,19 @@ class ToolSubscription(BaseModel):
     tool_name = models.CharField(max_length=64, help_text="The name of the tool to execute (e.g., 'python', 'shell').")
     is_active = models.BooleanField(default=True)
 
+
+    def as_client_dict(self):
+        return {
+            'object': 'ToolSubscription',
+            'id': self.id,
+            'created_at': self.created_at.isoformat(),
+            'agent_id': self.agent_id,
+            'agentInstance_id': self.agentInstance_id,
+            'subscription_id': self.subscription_id,
+            'tool_name': self.tool_name,
+            'is_active': self.is_active,
+        }
+
     class Meta:
         unique_together = ('agentInstance', 'subscription_id')
 

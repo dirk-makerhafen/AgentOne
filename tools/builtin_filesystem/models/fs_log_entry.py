@@ -414,7 +414,6 @@ class FsLogEntry(BaseModel):
         return new_version
 
     def _get_storage_method(self, existing_content, new_content):
-        print("_get_storage_method", existing_content, new_content)
         if existing_content == new_content:
             return "", ""
         methods = [["full", new_content], ]
@@ -436,7 +435,6 @@ class FsLogEntry(BaseModel):
             calculated_tokens = len(self.content) // 3.8
         elif not self.is_directory and self.exists_on_fs:
             calculated_tokens = self.fs_size
-        print("WORKINGDIR", self.agentInstance.workingdir)
 
         data = {
             'object': 'FsLogEntry', 
@@ -459,6 +457,7 @@ class FsLogEntry(BaseModel):
             'is_loaded': self.load_mode in ['full', 'summary'],
             'is_pinned': self.is_pinned,
             'is_directory': self.is_directory,
+            'is_summary': self.load_mode == "summary",
             'exists_on_fs': self.exists_on_fs,
 
             'fs_created': self.fs_created.isoformat(), 
@@ -478,14 +477,13 @@ class FsLogEntry(BaseModel):
         return data
 
     def as_query_dict(self):
-        print("WORKINGDIR", self.agentInstance.workingdir)
         return {
             "is_directory":  self.is_directory,
             "refreshed_from_fs": self.action == "refresh",
             "exist_on_fs": self.exists_on_fs,
-            'path': get_relative_path(self.agentInstance.workingdir, self.path),
-            'fs_content_type': f'{self.__class__.__name__}',
-            'fs_content_id': f'{self.id}',
+            'rel_path': get_relative_path(self.agentInstance.workingdir, self.path),
+            #'fs_content_type': f'{self.__class__.__name__}',
+            #'fs_content_id': f'{self.id}',
             'load_mode': self.load_mode,
         }
     

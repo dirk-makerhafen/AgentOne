@@ -15,6 +15,8 @@ class ToolCall(BaseModel):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name='toolCalls')
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name='toolCalls')
     conversationMessage = models.ForeignKey("agents.ConversationMessage", null=True, default=None, on_delete=models.CASCADE, related_name='toolCalls')
+    conversationMessagePart = models.ForeignKey("agents.ConversationMessagePart", null=True, default=None, blank=True, on_delete=models.SET_DEFAULT, related_name='toolCalls')
+
     tool_name = models.CharField(max_length=255, default="")
     function_name = models.CharField(max_length=64)
     status = models.CharField(max_length=10, default=ToolCallStatusChoices.PENDING, choices=ToolCallStatusChoices.choices)

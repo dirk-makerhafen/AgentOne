@@ -1,4 +1,5 @@
-from core.models.prompt_string import Prompt
+from agents.models.llm_query import QueryMessagePart
+from core.models.prompt import Prompt
 from tools.primitives import run_shell_script
 from tools.base.base_tool import BaseTool
 from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription
@@ -14,9 +15,13 @@ class ShellTool(BaseTool):
         instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinShellConfig.name, key="instructions")
         functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinShellConfig.name, key="functions")
         return [
-            {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Shell"], "data": {} },
-            {"tpId": functionsTemplate.pk, "tags": ["Prompts", "Shell"], "data": {} },
+            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Shell"]),
+            QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "Shell"])
         ]
+        #return [
+        #    {"tpId": instructionsTemplate.pk, "tags": ["Prompts", "Shell"], "data": {} },
+        #    {"tpId": functionsTemplate.pk, "tags": ["Prompts", "Shell"], "data": {} },
+        #]
 
     def shell(self, source, interpreter="auto", subscription_id=None, mode="one-shot", toolCall=None):
         if mode == "subscribe":
