@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from core.models.base_model import BaseModel
 from tools.definitions.models.tool_definition import ToolDefinition
 
+
 class Agent(BaseModel):
     agent_pk = models.AutoField(primary_key=True)
     owners = models.ManyToManyField(User, related_name='owned_agents', blank=True)
@@ -14,6 +15,30 @@ class Agent(BaseModel):
 
     # Default limits for instances of this agent
     limit_max_conversation_messages = models.IntegerField(default=20, null=True, blank=True, help_text="Default maximum number of messages in an agent's conversation history.")
+    limit_max_new_conversation_messages = models.IntegerField(default=None, null=True, blank=True, help_text="Default maximum number of new messages in conversation history send in llm requests. If larger than limit_max_conversation_messages messages can be skipped")
+    graceperiods = {
+        "human_user_message": {
+            "min_delay_time": 0,
+            "max_delay_time": 0,
+            "min_delay_count": 0,
+            "max_delay_count": 0,
+        },
+        "a2a_message": {
+            "min_delay_time": 0,
+            "max_delay_time": 0,
+            "min_delay_count": 0,
+            "max_delay_count": 0,
+        },
+        "assistant_message": {
+            "min_delay_time": 0,
+            "max_delay_time": 0,
+            "min_delay_count": 0,
+            "max_delay_count": 0,
+        }
+       
+       
+    }
+
     limit_max_memory_items = models.IntegerField(default=10, null=True, blank=True, help_text="Default maximum number of items in an agent's memory.")
     limit_max_automated_steps = models.IntegerField(default=0, null=True, blank=True, help_text="Default maximum number of automated steps an agent can take.")
 
@@ -39,4 +64,3 @@ class Agent(BaseModel):
             'object': 'AgentDeleted',
             'agent_pk': self.agent_pk
         }
-

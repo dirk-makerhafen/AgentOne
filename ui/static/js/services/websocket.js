@@ -214,6 +214,20 @@ const messageHandlers = {
             toolInstallationApi.list(installation.system_id);
         }
     },
+    'AgentEventReceiverList': (payload) => {
+        renderAgentEventReceiversList(payload.agent_pk, payload.receivers);
+    },
+    'AgentEventSubscriptionList': (payload) =>  {
+        renderAgentEventSubscriptionsList(payload.agent_pk, payload.assignments);
+    },
+    'PublicEventReceiverList': (payload) => {
+        handlePublicEventReceiverList(payload.receivers);
+        handlePublicEventReceiverListForInstance(payload.receivers);
+     } ,
+    'InstanceEventReceiverList': (payload) => renderInstanceEventReceiversList(payload.instance_pk, payload.receivers),
+    'InstanceEventSubscriptionList': (payload) => renderInstanceEventSubscriptionsList(payload.instance_pk, payload.assignments),
+
+
     'InstancePermissionList': (payload) => renderSidebarPermissions(payload),
     'HistoryLoadResult': (payload) => {
         const instancePk = payload.agentInstance_id;
@@ -267,3 +281,4 @@ const messageHandlers = {
     'error': (payload) => addToClientLog(`Error: ${payload.message}`, 'error', null, payload.agentInstance_id),
     'info': (payload) => addToClientLog(`Info: ${payload.message}`, 'info', null, payload.agentInstance_id)
 };
+

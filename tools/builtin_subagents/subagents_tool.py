@@ -1,3 +1,4 @@
+from agents.models.debug_log_entry import DebugLogEntry
 from agents.models.llm_query import QueryMessagePart
 from tools.base.base_tool import BaseTool
 from tools.builtin_filesystem.utils.fsutils import get_abs_path
@@ -8,6 +9,7 @@ import traceback
 import json
 from datetime import datetime
 from tools.builtin_a2a.a2a_tool import A2ATool
+from django.db.models import Q
 
 class SubAgentTool(BaseTool):
     DESCRIPTION = "Create and manage sub-agents to delegate tasks. Sub-agents run independently and can be communicated with via the a2a_tool."
@@ -21,10 +23,6 @@ class SubAgentTool(BaseTool):
             QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "SubAgents"]),
             QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "SubAgents"])
         ]
-        #return [
-        #    {"tpId": instructionsTemplate.pk, "data": {}, 'tags': ['Prompts', 'SubAgents'] },
-        #    {"tpId": functionsTemplate.pk, "data": {}, 'tags': ['Prompts', 'SubAgents'] },
-        #]
 
     def get_content_parts(self):
         from agents.models.agent import Agent
@@ -45,11 +43,6 @@ class SubAgentTool(BaseTool):
                     tags=['Tool', 'SubAgentTool', 'AvailableAgents'], 
                     template_data={'available_agents': agents_data})
                 )
-                #parts.append({
-                #    'tags': ['Tool', 'SubAgentTool', 'AvailableAgents'],
-                #    'tpId': available_agents_prompt_template.pk,
-                #    'data': {'available_agents': agents_data}
-                #})
 
         # 2. Inject current sub-agents
         current_subagents_prompt_template = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="current_subagents_content")
@@ -64,11 +57,7 @@ class SubAgentTool(BaseTool):
                 tags=['Tool', 'SubAgentTool', 'CurrentSubagents'], 
                 template_data={'subagents': subagents_data})
             )
-            #parts.append({
-            #    'tags': ['Tool', 'SubAgentTool', 'CurrentSubagents'],
-            #    'tpId': current_subagents_prompt_template.pk,
-            #    'data': {'subagents': subagents_data}
-            #})
+
 
         # 3. Inject supervisor agent info
         try:
@@ -84,11 +73,7 @@ class SubAgentTool(BaseTool):
                 tags=['Tool', 'SubAgentTool', 'SupervisorInfo'], 
                 template_data={'supervisor': supervisor_data})
             )
-            #parts.append({
-            #    'tags': ['Tool', 'SubAgentTool', 'SupervisorInfo'],
-            #    'tpId': supervisor_info_prompt_template.pk,
-            #    'data': {'supervisor': supervisor_data}
-            #})
+
         except SubAgentLink.DoesNotExist:
             pass
         except Exception as e:
@@ -161,7 +146,9 @@ class SubAgentTool(BaseTool):
                 log_to_clients(f"Sub-agent '{agent_name}' (ID: {sub_agent_instance.pk}) created and instructed to register itself in KV store.", level='info', users=[user])
             else:
                 log_to_clients(f"Sub-agent '{agent_name}' (ID: {sub_agent_instance.pk}) created, but failed to send KV registration instruction: {result_send_msg.get('message', 'Unknown error')}", level='warning', users=[user])
-
+            
+            from agents.models.agentevents import EventDispatcher
+            EventDispatcher.event_agentinstance_created(base_agent, sub_agent_instance)
             return (True, {
                 "status": "success", "sub_agent_instance_id": sub_agent_instance.pk, "sub_agent_instance_name": sub_agent_instance.name,
                 "message": f"Sub-agent '{agent_name}' created and linked successfully. KV registration instruction sent."

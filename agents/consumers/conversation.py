@@ -26,7 +26,6 @@ def handle_conversationmessage_get(consumer, instance_pk, max_id=None, limit=20)
     except AgentInstance.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
         return
-    print("conversationmessage_list")
     conversation_messages = agent_instance.get_conversation_messages(max_id=max_id, limit=limit)
     if conversation_messages:
         # find next message after the current highest, so we can receive stuff related to the last conversation message 

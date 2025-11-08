@@ -117,3 +117,30 @@
 .delete-prompt-btn {
     margin-left: auto; /* Pushes the delete button to the right */
 }
+
+
+/* Agent Sub-Tabs */
+.agent-sub-tabs {
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 15px;
+}
+
+.agent-sub-tabs .btn {
+    border-radius: 4px 4px 0 0;
+    margin-bottom: -1px;
+    border-bottom: 1px solid #ddd;
+}
+
+.agent-sub-tabs .btn.active {
+    background-color: #fff;
+    border-bottom-color: transparent;
+    font-weight: bold;
+}
+
+.agent-sub-tab-pane {
+    display: none;
+}
+
+.agent-sub-tab-pane.active {
+    display: block;
+}

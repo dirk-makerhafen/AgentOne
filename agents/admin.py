@@ -179,3 +179,21 @@ class SubAgentLinkAdmin(admin.ModelAdmin):
     list_display = ('id', 'supervisor_instance', 'subordinate_instance', 'created_at')
     search_fields = ('supervisor_instance__name', 'subordinate_instance__name')
     autocomplete_fields = ('supervisor_instance', 'subordinate_instance')
+
+from .models.agentevents import EventExecution, EventHandler, EventSubscription
+
+@admin.register(EventHandler)
+class EventHandlerAdmin(admin.ModelAdmin):
+    list_display = ('name', 'agent', 'agentInstance', 'eventtype', 'is_public', 'enabled')
+    list_filter = ('agent', 'agentInstance', 'eventtype', 'is_public', 'enabled')
+    search_fields = ('name', 'description', 'source')
+
+@admin.register(EventSubscription)
+class EventSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('description', 'agent', 'agentInstance', 'eventHandler')
+    list_filter = ('agent', 'agentInstance',  'eventHandler__name')
+    search_fields = ('description',)
+
+@admin.register(EventExecution)
+class EventEventExecutionAdmin(admin.ModelAdmin):
+    pass

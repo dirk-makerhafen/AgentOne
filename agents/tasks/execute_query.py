@@ -4,6 +4,7 @@ from celery import shared_task
 import traceback
 import json
 import random
+from django.db.models import Q
 
 from agents.models.agent_instance import AgentInstance
 from agents.models.conversation_message import ConversationMessage, ConversationMessagePart
@@ -24,35 +25,40 @@ def execute_query(llmQuery_id, streaming=True):
     llmQuery.apikey = random.choice([x for x in llmQuery.aimodel.apiProvider.apikeys.all()])
     llmQuery.status = LLMQuery.LLMQueryStatusChoices.ACTIVE
     llmQuery.save()
-
+    agentInstance = llmQuery.agentInstance
     try:
         messages = llmQuery.compile()
     except Exception as e:
-        debugLogEntry = DebugLogEntry(agentInstance=llmQuery.agentInstance, event='exception',
+        debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception',
                                       data={"exception": f'{e}\n{traceback.format_exc()}', "llmQuery_id": llmQuery.pk})
         debugLogEntry.save()
         llmQuery.status = LLMQuery.LLMQueryStatusChoices.FAILED
         llmQuery.save()
-        llmQuery.agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.ERROR)
+        agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.ERROR)
         return
 
     log_raw_query = True
     if log_raw_query:
-        debugLogEntry = DebugLogEntry(agentInstance=llmQuery.agentInstance, event='raw_query_messages', data={"messages": messages, "llmQuery_id": llmQuery.id})
+        debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='raw_query_messages', data={"messages": messages, "llmQuery_id": llmQuery.id})
         debugLogEntry.save()
 
     client = OpenAI(api_key=llmQuery.apikey.key, base_url=llmQuery.aimodel.apiProvider.url)
     toolCalls = []
+    llmResponse = None
     response_string_full = ""
+    conversationMessage = None
     firstConversationMessagePart = None
+    from agents.models.agentevents import EventDispatcher
 
     try:
+        EventDispatcher.event_llmquery_pre_execute( llmQuery.agent, agentInstance, llmQuery)
+
         if not streaming:
             response = client.chat.completions.create(model=llmQuery.aimodel.name, messages=messages)
             response = json.loads(response.model_dump_json())
             llmResponse = LLMResponse.objects.create(
                 agent=llmQuery.agent,
-                agentInstance=llmQuery.agentInstance,
+                agentInstance=agentInstance,
                 llmQuery=llmQuery,
                 data=response,
                 status=LLMResponse.LLMResponseStatusChoices.SUCCESS
@@ -69,7 +75,7 @@ def execute_query(llmQuery_id, streaming=True):
                                                stream_options={"include_usage": True}) as stream:
                 llmResponse = LLMResponse.objects.create(
                     agent=llmQuery.agent,
-                    agentInstance=llmQuery.agentInstance,
+                    agentInstance=agentInstance,
                     llmQuery=llmQuery,
                     data={"stream": []},
                     status=LLMResponse.LLMResponseStatusChoices.ACTIVE
@@ -116,93 +122,85 @@ def execute_query(llmQuery_id, streaming=True):
                 llmResponse.status = LLMResponse.LLMResponseStatusChoices.SUCCESS
                 llmResponse.save()
 
+        EventDispatcher.event_llmresponse_pre_parse(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage)
         parts = parse_responsestring(response_string_full)
 
         for index, part in enumerate(parts):
-            if index == 0:
-                # If a streaming part exists, update it. Otherwise, create it.
-                conversationMessagePart = firstConversationMessagePart
-                if not conversationMessagePart:
-                     conversationMessagePart = conversationMessage.conversationMessageParts.create(content="", index=0)
-                
-                conversationMessagePart.content = part["content"]
-                conversationMessagePart.tokens = len(part["content"]) // 3.8
-                conversationMessagePart.index = index
-            else:
-                # Create subsequent parts via the manager
-                conversationMessagePart = conversationMessage.conversationMessageParts.create(
-                    content=part["content"],
-                    tokens=len(part["content"]) // 3.8,
-                    index=index
-                )
-
+            conversationMessagePart = firstConversationMessagePart if firstConversationMessagePart and index==0 else ConversationMessagePart()
+            conversationMessagePart.content = part["content"]
+            conversationMessagePart.tokens = len(part["content"]) // 3.8
+            conversationMessagePart.index = index
+            conversationMessagePart.conversationMessage = conversationMessage
             if "tool" in part:
-                # Save part to get an ID before creating the related tool call
+                # Save part to get an ID before creating the related tool call                
                 conversationMessagePart.save(send_to_client=False)
-                
                 toolCall = ToolCall.objects.create(
                     function_name=part["tool"],
                     arguments=part["arguments"],
                     conversationMessage=conversationMessage,
                     conversationMessagePart=conversationMessagePart,
                     agent=llmResponse.agent,
-                    agentInstance=llmQuery.agentInstance
+                    agentInstance=agentInstance
                 )
                 toolCalls.append(toolCall)
-            
-            # Save the final state of the part (with tool call relation if any)
-            # This will trigger the broadcast with the correct context.
             conversationMessagePart.save()
-
+        EventDispatcher.event_llmresponse_post_parse(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage)
+        
+        EventDispatcher.event_conversationMessage_added(llmQuery.agent, agentInstance, conversationMessage)
         llmQuery.status = LLMQuery.LLMQueryStatusChoices.SUCCESS
         llmQuery.save()
+        EventDispatcher.event_llmquery_successfull(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage)
 
     except Exception as e:
-        debugLogEntry = DebugLogEntry(agentInstance=llmQuery.agentInstance, event='exception',
-                                      data={"exception": f"{e}\n{traceback.format_exc()}", "llmQuery_id": llmQuery.pk})
+        debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": f"{e}\n{traceback.format_exc()}", "llmQuery_id": llmQuery.pk})
         debugLogEntry.save()
         llmQuery.status = LLMQuery.LLMQueryStatusChoices.FAILED
         llmQuery.save()
-        llmQuery.agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.ERROR)
+        agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.ERROR)
+        EventDispatcher.event_llmquery_failed(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage)
         return
 
-    instance = llmQuery.agentInstance
-    if not toolCalls:
-        decide_next_step(instance)
-        return
+    try:
+        decide_next = True
+        if not toolCalls:
+            pass
+        elif not agentInstance.system or (agentInstance.system and agentInstance.system.status == System.SystemStatusChoices.ONLINE):
+            agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS)
+            EventDispatcher.event_llmresponse_pre_tool_calls(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage)
+            for toolCall in toolCalls:
+                EventDispatcher.event_llmresponse_pre_tool_call(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage, toolCall)
+                try:
+                    toolCall.run()
+                except Exception as e:
+                    print(f"Error running tool call {toolCall.id}: {e} {traceback.format_exc()}")
+                EventDispatcher.event_llmresponse_post_tool_call(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage, toolCall)
+            EventDispatcher.event_llmresponse_post_tool_calls(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage)
+        else:
+            decide_next = False
+            agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.SYSTEM_OFFLINE)
+        
+        if decide_next:
+            agentInstance.refresh_from_db()
+            if agentInstance.require_user_interaction:
+                agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.AWAITING_USER_INPUT)
+                agentInstance.set_automated_step_count(0)
+            elif agentInstance.effective_limit_max_automated_steps > 0:
+                if agentInstance.automated_step_count < agentInstance.effective_limit_max_automated_steps:
+                    agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.IDLE_AUTOMATED)
+                    agentInstance.set_automated_step_count(agentInstance.automated_step_count + 1)
+                else:
+                    agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.AWAITING_AUTOMATION_CONFIRMATION)
+                    agentInstance.set_automated_step_count(0)
+            else:
+                agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.IDLE)
+                agentInstance.set_automated_step_count(0)
 
-    if not instance.system or (instance.system and instance.system.status == System.SystemStatusChoices.ONLINE):
-        instance.set_status(AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS)
-        for toolCall in toolCalls:
-            try:
-                toolCall.run()
-            except Exception as e:
-                print(f"Error running tool call {toolCall.id}: {e} {traceback.format_exc()}")
-        decide_next_step(instance)
-        return
+        EventDispatcher.event_llmresponse_finished(llmQuery.agent, agentInstance, llmQuery, llmResponse, conversationMessage)
+        if agentInstance.status == AgentInstance.AgentInstanceStatusChoices.IDLE_AUTOMATED:
+            agentInstance.start_or_continue()
 
-    print(f"Cannot execute tool calls for instance {instance.pk}. Its assigned system is offline or not set.")
-    instance.set_status(AgentInstance.AgentInstanceStatusChoices.SYSTEM_OFFLINE)
+    except Exception as e:
+        debugLogEntry = DebugLogEntry(agentInstance=agentInstance, event='exception', data={"exception": f"{e}\n{traceback.format_exc()}", "llmQuery_id": llmQuery.pk})
+        debugLogEntry.save()
 
 
-def decide_next_step(agent_instance):
-    agent_instance.refresh_from_db()
-    if agent_instance.require_user_interaction:
-        agent_instance.set_status(AgentInstance.AgentInstanceStatusChoices.AWAITING_USER_INPUT)
-        agent_instance.set_automated_step_count(0)
-        return
-
-    if agent_instance.effective_limit_max_automated_steps > 0:
-        if agent_instance.automated_step_count < agent_instance.effective_limit_max_automated_steps:
-            agent_instance.set_status(AgentInstance.AgentInstanceStatusChoices.IDLE_AUTOMATED)
-            agent_instance.set_automated_step_count(agent_instance.automated_step_count + 1)
-            agent_instance.start_or_continue()
-            return
-
-        agent_instance.set_status(AgentInstance.AgentInstanceStatusChoices.AWAITING_AUTOMATION_CONFIRMATION)
-        agent_instance.set_automated_step_count(0)
-        return
-
-    agent_instance.set_status(AgentInstance.AgentInstanceStatusChoices.IDLE)
-    agent_instance.set_automated_step_count(0)
-    agent_instance.save()

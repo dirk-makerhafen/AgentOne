@@ -7,6 +7,7 @@ from core.models.base_model import BaseModel
 from systems.models.system import System
 from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
 from django.utils import timezone
+from django.db.models import Q
 
 class AgentInstance(BaseModel):
     class AgentInstanceStatusChoices(models.TextChoices):
@@ -32,7 +33,8 @@ class AgentInstance(BaseModel):
     status = models.CharField(max_length=30, choices=AgentInstanceStatusChoices.choices, default=AgentInstanceStatusChoices.IDLE)
     workingdir = models.CharField(max_length=1024, default='')
     require_user_interaction = models.BooleanField(default=False)
-    limit_max_conversation_messages = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of messages in conversation history.")
+    limit_max_conversation_messages = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of messages in conversation history send in llm requests.")
+    limit_max_new_conversation_messages= models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of new messages in conversation history send in llm requests.")
     limit_max_memory_items = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of items in memory.")
     limit_max_automated_steps = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of automated steps.")
     automated_step_count = models.IntegerField(default=0)
@@ -40,6 +42,8 @@ class AgentInstance(BaseModel):
     access_rules = models.TextField(blank=True, default='', help_text= "Fine-grained access rules, one per line. E.g., '!path/to/deny', '>path/to/allow', '</path/to/readonly'.")
     max_requests_per_minute = models.IntegerField(default=None, null=True, blank=True, help_text="Maximum requests per minute for this instance or its subtree. Null means inheriting from parent.")
     max_token_per_minute = models.IntegerField(default=None, null=True, blank=True, help_text="Maximum tokens per minute for this instance or its subtree. Null means inheriting from parent.")
+
+    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,6 +58,10 @@ class AgentInstance(BaseModel):
     @property
     def effective_limit_max_conversation_messages(self):
         return self.limit_max_conversation_messages if self.limit_max_conversation_messages is not None else self.agent.limit_max_conversation_messages
+    
+    @property
+    def effective_limit_max_new_conversation_messages(self):
+        return self.limit_max_new_conversation_messages if self.limit_max_new_conversation_messages is not None else self.agent.limit_max_new_conversation_messages
 
     @property
     def effective_limit_max_memory_items(self):
@@ -105,20 +113,24 @@ class AgentInstance(BaseModel):
             AgentInstance.objects.filter(instance_pk=self.instance_pk).update(automated_step_count=steps)
             self.send_object_to_clients()
 
-    def add_to_conversation(self, role, parts):
-        c = ConversationMessage()
-        c.agent = self.agent
-        c.agentInstance = self
-        c.role = role
-        c.save()
+    def add_to_conversation(self, role, parts, start_or_continue=False):
+        conversationMessage = ConversationMessage()
+        conversationMessage.agent = self.agent
+        conversationMessage.agentInstance = self
+        conversationMessage.role = role
+        conversationMessage.save()
         for part in parts:
             cp = ConversationMessagePart()
             cp.content = part["content"]
             cp.content_type = part["type"]
-            cp.conversationMessage = c
+            cp.conversationMessage = conversationMessage
             cp.save()
-        return c
-
+        from agents.models.agentevents import EventDispatcher
+        EventDispatcher.event_conversationMessage_added(self.agent, self, conversationMessage) 
+        if start_or_continue:
+            self.start_or_continue()
+        return conversationMessage
+    
     def start_or_continue(self):
         from agents.tasks.create_query import celery_create_query
         if self.status in [AgentInstance.AgentInstanceStatusChoices.THINKING, AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS]:

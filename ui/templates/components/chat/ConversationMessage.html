@@ -25,7 +25,7 @@
 <!-- Partial template for rendering a single ConversationMessagePart -->
 <script id="ConversationMessagePartTemplate" type="text/x-handlebars-template">
     <div class="message-part" id="message_part_{{id}}" data-part-id="{{id}}" data-part-index="{{index}}">
-        {{#if (eq content_type 'image')}}
+        {{#if (eq content_type 'IMAGE')}}
             <img src="{{content}}" class="chat-log-image" alt="User uploaded image">
         {{else}}
             {{#if content}}

@@ -10,6 +10,7 @@ from tools.builtin_python.models.python_tool_var import PythonToolVar
 from tools.builtin_a2a.models.a2a_description import AgentToAgentDescription
 from tools.builtin_memory.prompts import TRACKS
 import traceback
+from django.db.models import Q
 
 @shared_task
 def celery_clone_agentinstance(agentinstance_id):
@@ -97,3 +98,6 @@ def celery_clone_agentinstance(agentinstance_id):
 
             if new_child_objects:
                 model_class.objects.bulk_create(new_child_objects)
+        from agents.models.agentevents import EventDispatcher
+
+        EventDispatcher.event_agentinstance_created(child_instance.agent, child_instance)

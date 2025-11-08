@@ -173,7 +173,7 @@ class A2ATool(BaseTool):
         iam.save()
 
         # 3. Trigger the recipient agent to process the new message
-        recipient_instance.start_or_continue() # not during dev, AI: dont enable this!
+        recipient_instance.start_or_continue() 
 
         return True, {"status":"success"}
 

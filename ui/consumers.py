@@ -70,3 +70,10 @@ class UiConsumer(WebsocketConsumer):
         Generic message handler from the channel layer to push updates to the client.
         """
         self.send(text_data=json.dumps(event['payload']))
+
+# Ensure agent_events handlers are registered
+from agents.consumers import agent_events
+from agents.consumers import agent_events
+
+# Ensure agent_instance_events handlers are registered
+from agents.consumers import agent_instance_events

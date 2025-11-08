@@ -40,6 +40,7 @@
                         <button class="sidebar-tab-btn" data-tab-name="settings" onclick="showSidebarTabForInstance('settings', this, {{instancePk}})">Settings</button>
                         <button class="sidebar-tab-btn" data-tab-name="permissions" onclick="showSidebarTabForInstance('permissions', this, {{instancePk}})">Permissions</button>
                         <button class="sidebar-tab-btn" data-tab-name="subagents" onclick="showSidebarTabForInstance('subagents', this, {{instancePk}})">Sub-agents</button>
+                        <button class="sidebar-tab-btn" data-tab-name="events" onclick="showSidebarTabForInstance('events', this, {{instancePk}})">Events</button>
                     </div>
 
                     <div id="sidebar-tab-filesystem_{{instancePk}}" class="sidebar-tab-content active">
@@ -64,6 +65,10 @@
 
                     <div id="sidebar-tab-subagents_{{instancePk}}" class="sidebar-tab-content" style="display: none;">
                         <!-- Sub-agents content will be rendered here by renderSidebarSubagents.js -->
+                    </div>
+
+                    <div id="sidebar-tab-events_{{instancePk}}" class="sidebar-tab-content flex-column" style="display: none;">
+                        <!-- Events content will be rendered here by SidebarEvents.js -->
                     </div>
                 </div>
             </div>

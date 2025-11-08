@@ -56,6 +56,7 @@
     {% include 'components/chat/ToolCall.html' %}
 
     {% include 'components/tabs/TabAgent.html' %}
+    {% include 'components/tabs/TabAgent_Events.html' %}
     {% include 'components/tabs/TabAgent_PromptRelations.html' %}
 
     {% include 'components/tabs/TabPrompts.html' %}
@@ -76,6 +77,7 @@
     {% include 'components/sidebar/SidebarInstances.html' %}
     {% include 'components/sidebar/SidebarInstanceTreeView.html' %}
     {% include 'components/instance/SidebarSubagents.html' %}    
+    {% include 'components/instance/SidebarEvents.html' %}
 
     <script src="{% static 'js3party/jquery-3.6.0.min.js' %}"></script>
     <script src="{% static 'js3party/bootstrap.min.js' %}"></script>
@@ -97,6 +99,8 @@
     <!-- Agent APIs -->
     <script src="{% static 'js/services/websocket.js' %}"></script>
     <script src="{% static 'js/services/agents/agentApi.js' %}"></script>
+    <script src="{% static 'js/services/agents/agentEventsApi.js' %}"></script>
+    <script src="{% static 'js/services/agentInstanceEventsApi.js' %}"></script>
     <script src="{% static 'js/services/agents/agentInstanceApi.js' %}"></script>
     <script src="{% static 'js/services/agents/conversationApi.js' %}"></script>
     <script src="{% static 'js/services/agents/limitsApi.js' %}"></script>
@@ -140,6 +144,7 @@
     <!-- Tabs -->
     <script src="{% static 'js/components/tabs/TabInstance.js' %}"></script>
     <script src="{% static 'js/components/tabs/TabAgent.js' %}"></script>
+    <script src="{% static 'js/components/tabs/TabAgent_Events.js' %}"></script>
     <script src="{% static 'js/components/tabs/TabAgent_PromptRelations.js' %}"></script>
 
     <script src="{% static 'js/components/tabs/TabPrompts.js' %}"></script>
@@ -156,6 +161,7 @@
     <script src="{% static 'js/components/instance/SidebarSettings.js' %}"></script>
     <script src="{% static 'js/components/instance/SidebarVars.js' %}"></script>
     <script src="{% static 'js/components/instance/SidebarSubagents.js' %}"></script>
+    <script src="{% static 'js/components/instance/SidebarEvents.js' %}"></script>
 
     <script>
 

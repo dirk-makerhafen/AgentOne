@@ -2,7 +2,7 @@ import copy
 from django.db import models
 from jinja2 import BaseLoader, Environment
 import json
-
+import base64
 from core.models.base_model import BaseModel
 from tools.builtin_memory.models.memory_item import MemoryItem
 
@@ -144,6 +144,7 @@ class QueryMessage(BaseModel):
     index =  models.IntegerField(default=0)
     content_prefix = models.CharField(max_length=10000, blank=True, null=True, default=None)
     content_postfix = models.CharField(max_length=10000, blank=True, null=True, default=None)
+    conversationMessage = models.ForeignKey("agents.ConversationMessage", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='used_in_queryMessages')
 
     def as_client_dict(self):
         return {
@@ -183,8 +184,15 @@ class QueryMessage(BaseModel):
                     new_parts.append(part_content)
             elif queryMessagePart.content_type.lower() == "image":
                 part_content_tokens = 0
+                
+                if part_content.startswith("data:"):
+                    img = part_content
+                elif part_content.startswith("path:"):
+                    with open(part_content.split(":",1)[1], "rb") as f:
+                        encoded = base64.b64encode(f.read()).decode("ascii")
+                        img = f"data:image/jpeg;base64,{encoded}"
                 new_parts.append({"type": "image_url", "image_url": {
-                    "url": part_content
+                    "url": img
                 }})
             else:
                 raise Exception(f"unknown content type {queryMessagePart.content_type }")
@@ -205,6 +213,9 @@ class QueryMessage(BaseModel):
 
 
 class QueryMessagePart(BaseModel):
+    class QueryMessagePartContentType(models.TextChoices):
+        TEXT = 'TEXT', 'Text'
+        IMAGE = 'IMAGE', 'Image'
     queryMessage = models.ForeignKey(QueryMessage, default=None, null=True, on_delete=models.SET_DEFAULT, related_name='queryMessageParts')
     toolCall = models.ForeignKey("calls.ToolCall", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='queryMessageParts')
     toolResponse = models.ForeignKey("calls.ToolResponse",  default=None, null=True, on_delete=models.SET_DEFAULT, related_name='queryMessageParts')
@@ -218,9 +229,6 @@ class QueryMessagePart(BaseModel):
     content = models.CharField(max_length=1000000, blank=True, null=True, default=None)
     content_prefix = models.CharField(max_length=10000, blank=True, null=True, default=None)
     content_postfix = models.CharField(max_length=10000, blank=True, null=True, default=None)
-    class QueryMessagePartContentType(models.TextChoices):
-            TEXT = 'TEXT', 'Text'
-            IMAGE = 'IMAGE', 'Image'
     content_type = models.CharField(max_length=255, choices=QueryMessagePartContentType.choices, default=QueryMessagePartContentType.TEXT)
 
     tags = models.JSONField(default=list, null=True, blank=True, help_text="List of tags used")

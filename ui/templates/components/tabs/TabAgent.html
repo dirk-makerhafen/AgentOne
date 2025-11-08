@@ -6,55 +6,69 @@
             
             <form id="{{#if agent.is_new}}add-agent-form-tab{{else}}edit-agent-form-{{agent.id}}{{/if}}">
                 
-                <div class="form-group"  oninput="agentUpdate({{agent.id}})">
-                    <label for="agent-name-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Agent Name</label>
-                    <input type="text" class="form-control" id="agent-name-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.name}}">
-                </div>
-                
-                <div class="form-group"  oninput="agentUpdate({{agent.id}})">
-                    <label for="agent-description-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Description</label>
-                    <textarea class="form-control" id="agent-description-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" rows="3">{{agent.description}}</textarea>
-                </div>
-                
-                <div class="form-group"  oninput="agentUpdate({{agent.id}})">
-                    <h4>Default Instance Limits</h4>
-                    <p class="help-block">Set the default limits for any new instances created from this agent. These can be overridden on a per-instance basis.</p>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label for="agent-limit-conversation-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Conversation Messages</label>
-                            <input type="number" class="form-control" id="agent-limit-conversation-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_conversation_messages}}">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="agent-limit-memory-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Memory Items</label>
-                            <input type="number" class="form-control" id="agent-limit-memory-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_memory_items}}">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="agent-limit-steps-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Automated Steps</label>
-                            <input type="number" class="form-control" id="agent-limit-steps-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_automated_steps}}">
-                        </div>
-                    </div>
+                <!-- Agent Sub-Tabs Navigation -->
+                <div class="agent-sub-tabs">
+                    <button class="btn btn-default active" onclick="showAgentSubTab(event, 'details', '{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}')">Details</button>
+                    <button class="btn btn-default" onclick="showAgentSubTab(event, 'prompts', '{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}')">Prompts</button>
+                    <button class="btn btn-default" onclick="showAgentSubTab(event, 'events', '{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}')">Events</button>
                 </div>
 
-                <div class="form-group"  oninput="agentUpdate({{agent.id}})">
-                    <h4>Available Tools</h4>
-                    <div class="tool-selection-list">
-                        {{#each tools}}
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="available_tools" value="{{this.id}}" {{#if this.isSelected}}checked{{/if}}>
-                                <strong>{{this.display_name}}</strong> ({{this.name}})
-                                <p class="tool-description-help">{{this.description}}</p>
-                            </label>
+                <!-- Sub-Tab Content Panes -->
+                <div id="agent-sub-tab-content-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">
+                    <div id="agent-sub-tab-details-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" class="agent-sub-tab-pane active">
+                        <div class="form-group" oninput="agentUpdate({{agent.id}})">
+                            <label for="agent-name-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Agent Name</label>
+                            <input type="text" class="form-control" id="agent-name-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.name}}">
                         </div>
-                        {{/each}}
+                        
+                        <div class="form-group" oninput="agentUpdate({{agent.id}})">
+                            <label for="agent-description-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Description</label>
+                            <textarea class="form-control" id="agent-description-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" rows="3">{{agent.description}}</textarea>
+                        </div>
+                        
+                        <div class="form-group" oninput="agentUpdate({{agent.id}})">
+                            <h4>Default Instance Limits</h4>
+                            <p class="help-block">Set the default limits for any new instances created from this agent. These can be overridden on a per-instance basis.</p>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="agent-limit-conversation-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Conversation Messages</label>
+                                    <input type="number" class="form-control" id="agent-limit-conversation-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_conversation_messages}}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="agent-limit-memory-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Memory Items</label>
+                                    <input type="number" class="form-control" id="agent-limit-memory-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_memory_items}}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="agent-limit-steps-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">Max Automated Steps</label>
+                                    <input type="number" class="form-control" id="agent-limit-steps-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" value="{{agent.limit_max_automated_steps}}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" oninput="agentUpdate({{agent.id}})">
+                            <h4>Available Tools</h4>
+                            <div class="tool-selection-list">
+                                {{#each tools}}
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="available_tools" value="{{this.id}}" {{#if this.isSelected}}checked{{/if}}>
+                                        <strong>{{this.display_name}}</strong> ({{this.name}})
+                                        <p class="tool-description-help">{{this.description}}</p>
+                                    </label>
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                    </div>
+                    <div id="agent-sub-tab-prompts-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" class="agent-sub-tab-pane">
+                        <div id="agent-prompt-relations-container-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">
+                            <!-- This container will be populated by JS -->
+                        </div>
+                    </div>
+                    <div id="agent-sub-tab-events-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}" class="agent-sub-tab-pane">
+                        <!-- This container will be populated by renderAgentEvents -->
                     </div>
                 </div>
-
-                <!-- Agent Prompt Relations Section -->
-                <div id="agent-prompt-relations-container-{{#if agent.is_new}}new{{else}}{{agent.id}}{{/if}}">
-                    <!-- This container will be populated by JS after the agent is created or loaded -->
-                </div>
-                
                 
                 <div class="agent-edit-footer">
                     {{#if agent.is_new}}

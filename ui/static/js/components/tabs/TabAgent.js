@@ -64,18 +64,49 @@ function updateAgentEditTab(updatedAgent) {
             if(textNode) textNode.textContent = `Edit: ${updatedAgent.name} `;
         }
         
-        // Fetch and render the prompt relations
+        // Fetch and render the prompt relations asynchronously. The response will trigger the render.
         promptsApi.getRelations(agentId);
-        fetchAllPrompts();
+        
+        // Fetch and render the events
+        const eventContainerId = `agent-sub-tab-events-${agentId}`;
+        renderAgentEvents(agentId, eventContainerId);
     }
 }
 
 
 
 function initializeAgentTab(agentId) {
-    // This function is triggered by an onload event in the TabAgent.html template
-    // when an existing agent's tab is rendered. It ensures that all necessary
-    // dynamic data, like prompt relations, is fetched on tab open.
+    // This function is triggered when an existing agent's tab is rendered for the first time.
+    // It ensures that all necessary dynamic data is fetched and rendered on tab open.
+    
+    // Fetch and render the prompt relations asynchronously. The response will trigger the render.
     promptsApi.getRelations(agentId);
-    fetchAllPrompts();
+    
+    // Render the events tab structure and fetch its data.
+    const eventContainerId = `agent-sub-tab-events-${agentId}`;
+    if (document.getElementById(eventContainerId)) {
+        renderAgentEvents(agentId, eventContainerId);
+    }
+}
+function showAgentSubTab(event, tabName, agentId) {
+    event.preventDefault();
+    const tabContentContainer = document.getElementById(`agent-sub-tab-content-${agentId}`);
+    if (!tabContentContainer) return;
+
+    // Hide all panes
+    tabContentContainer.querySelectorAll('.agent-sub-tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+    });
+
+    // Deactivate all buttons
+    event.target.closest('.agent-sub-tabs').querySelectorAll('.btn').forEach(button => {
+        button.classList.remove('active');
+    });
+
+    // Show the selected pane and activate the button
+    const selectedPane = document.getElementById(`agent-sub-tab-${tabName}-${agentId}`);
+    if (selectedPane) {
+        selectedPane.classList.add('active');
+    }
+    event.target.classList.add('active');
 }

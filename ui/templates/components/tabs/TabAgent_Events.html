@@ -1,0 +1,143 @@
+{% verbatim %}
+<!-- Main container for the Events tab -->
+<script id="TabAgent_EventsTemplate" type="text/x-handlebars-template">
+    <div class="agent-events-container">
+        <!-- Event Receiver Functions Section -->
+        <div class="event-section">
+            <h4>Event Receiver Functions</h4>
+            <p class="small text-muted">Functions defined by this agent that can be triggered by system events.</p>
+            <button type="button" class="btn btn-sm btn-success" onclick="event.preventDefault(); renderAgentEventReceiverForm({{agent.pk}})">
+                <i class="fa fa-plus"></i> Create New Receiver
+            </button>
+            <div id="agent-event-receivers-list_{{agent.pk}}">
+                <!-- List of receivers will be rendered here -->
+            </div>
+            <div id="agent-event-receiver-form-container_{{agent.pk}}">
+                <!-- Form for creating/editing a receiver will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Event Assignments Section -->
+        <div class="event-section">
+            <h4>Event Assignments</h4>
+            <p class="small text-muted">Events this agent is subscribed to, triggering a specific receiver function.</p>
+            <button type="button" class="btn btn-sm btn-success" onclick="event.preventDefault(); renderAgentEventSubscriptionForm({{agent.pk}})">
+                <i class="fa fa-plus"></i> Create New Assignment
+            </button>
+            <div id="agent-event-assignments-list_{{agent.pk}}">
+                <!-- List of assignments will be rendered here -->
+            </div>
+            <div id="agent-event-assignment-form-container_{{agent.pk}}">
+                <!-- Form for creating/editing an assignment will be rendered here -->
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- Template for a single Event Receiver Function -->
+<script id="TabAgent_EventReceiverTemplate" type="text/x-handlebars-template">
+    {{#each receivers}}
+    <div class="list-item">
+        <strong>{{name}}</strong> (Event: <code>{{event}}</code>)
+        <p>{{description}}</p>
+        <div class="item-actions">
+            <button type="button" class="btn btn-xs btn-primary" onclick="event.preventDefault(); renderAgentEventReceiverForm({{../agent_pk}}, {{id}})">Edit</button>
+            <button type="button" class="btn btn-xs btn-danger" onclick="event.preventDefault(); agentEventsApi.deleteReceiver({{id}})">Delete</button>
+        </div>
+    </div>
+    {{/each}}
+</script>
+
+<!-- Template for a single Event Assignment -->
+<script id="TabAgent_EventSubscriptionTemplate" type="text/x-handlebars-template">
+    {{#each assignments}}
+    <div class="list-item">
+        <p>Subscribed to <strong>{{eventHandler.name}}</strong></p>
+        <p>{{description}}</p>
+        <div class="item-actions">
+            <button type="button" class="btn btn-xs btn-primary" onclick="event.preventDefault(); renderAgentEventSubscriptionForm({{../agent_pk}}, {{id}})">Edit</button>
+            <button type="button" class="btn btn-xs btn-danger" onclick="event.preventDefault(); agentEventsApi.deleteAssignment({{id}})">Delete</button>
+        </div>
+    </div>
+    {{/each}}
+</script>
+
+<!-- Template for the Event Receiver Function form -->
+<script id="TabAgent_EventReceiverFormTemplate" type="text/x-handlebars-template">
+    <div class="sub-form-container">
+        <h5>{{#if receiver.id}}Edit{{else}}Create{{/if}} Event Receiver</h5>
+        <div id="event-receiver-form-{{agent_pk}}">
+            <input type="hidden" name="id" value="{{receiver.id}}">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" class="form-control" name="name" value="{{receiver.name}}" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-control" name="description">{{receiver.description}}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Event Type</label>
+                <select class="form-control" name="eventtype">
+                    <option value="event_agentinstance_created" {{#if (eq receiver.event 'event_agentinstance_created')}}selected{{/if}}>event_agentinstance_created(agent, agentInstance)</option>
+                    <option value="event_conversationMessage_added" {{#if (eq receiver.event 'event_conversationMessage_added')}}selected{{/if}}>event_conversationMessage_added(agent, agentInstance, conversationMessage)</option>
+                    <option value="event_llmquery_pre_execute" {{#if (eq receiver.event 'event_llmquery_pre_execute')}}selected{{/if}}>event_llmquery_pre_execute(agent, agentInstance, llmQuery)</option>
+                    <option value="event_llmquery_successfull" {{#if (eq receiver.event 'event_llmquery_successfull')}}selected{{/if}}>event_llmquery_successfull(..., llmQuery, llmResponse, conversationMessage)</option>
+                    <option value="event_llmquery_failed" {{#if (eq receiver.event 'event_llmquery_failed')}}selected{{/if}}>event_llmquery_failed(llmQuery, llmResponse, conversationMessage)</option>
+                    <option value="event_llmresponse_pre_parse" {{#if (eq receiver.event 'event_llmresponse_pre_parse')}}selected{{/if}}>event_llmresponse_pre_parse(..., response_string_full)</option>
+                    <option value="event_llmresponse_post_parse" {{#if (eq receiver.event 'event_llmresponse_post_parse')}}selected{{/if}}>event_llmresponse_post_parse(..., response_string_full, parts)</option>
+                    <option value="event_llmresponse_pre_tool_calls" {{#if (eq receiver.event 'event_llmresponse_pre_tool_calls')}}selected{{/if}}>event_llmresponse_pre_tool_calls(..., conversationMessage, toolcalls)</option>
+                    <option value="event_llmresponse_pre_tool_call" {{#if (eq receiver.event 'event_llmresponse_pre_tool_call')}}selected{{/if}}>event_llmresponse_pre_tool_call(..., conversationMessage, toolcall)</option>
+                    <option value="event_llmresponse_post_tool_call" {{#if (eq receiver.event 'event_llmresponse_post_tool_call')}}selected{{/if}}>event_llmresponse_post_tool_call(..., conversationMessage, toolcall)</option>
+                    <option value="event_llmresponse_post_tool_calls" {{#if (eq receiver.event 'event_llmresponse_post_tool_calls')}}selected{{/if}}>event_llmresponse_post_tool_calls(..., conversationMessage, toolcalls)</option>
+                    <option value="event_llmresponse_finished" {{#if (eq receiver.event 'event_llmresponse_finished')}}selected{{/if}}>event_llmresponse_finished(llmQuery, llmResponse, conversationMessage)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Source Code</label>
+                <textarea class="form-control" name="source" rows="6">{{receiver.source}}</textarea>
+            </div>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="is_public" {{#if receiver.is_public}}checked{{/if}}> Is Public
+                </label>
+            </div>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="enabled" {{#if receiver.enabled}}checked{{/if}}> Enabled
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="save-receiver-btn-{{agent_pk}}" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-default" onclick="closeAgentEventReceiverForm({{agent_pk}})">Cancel</button>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!-- Template for the Event Assignment form -->
+<script id="TabAgent_EventSubscriptionFormTemplate" type="text/x-handlebars-template">
+    <div class="sub-form-container">
+        <h5>{{#if assignment.id}}Edit{{else}}Create{{/if}} Event Assignment</h5>
+        <div id="event-assignment-form-{{agent_pk}}">
+            <input type="hidden" name="id" value="{{assignment.id}}">
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-control" name="description">{{assignment.description}}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Receiver Function</label>
+                <select class="form-control" name="eventHandler_id">
+                    {{#each publicReceivers}}
+                        <option value="{{this.id}}" {{#if (eq this.id ../assignment.eventHandler.id)}}selected{{/if}}>{{this.name}} (by {{this.agent.name}})</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="save-assignment-btn-{{agent_pk}}" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-default" onclick="closeAgentEventSubscriptionForm({{agent_pk}})">Cancel</button>
+            </div>
+        </div>
+    </div>
+</script>
+{% endverbatim %}

@@ -220,6 +220,7 @@ function showSidebarTabForInstance(tabName, clickedButton, instancePk) {
         case 'permissions': a2aPermissionsApi.list(instancePk); break;
         case 'settings': agentInstanceApi.get(instancePk); break;
         case 'subagents': agentInstanceApi.getSubAgents(instancePk); break;
+        case 'events': renderInstanceEvents(instancePk); break;
     }
 }
 
