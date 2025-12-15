@@ -18,7 +18,7 @@ class PromptAdmin(admin.ModelAdmin):
 
 @admin.register(PromptVariant)
 class PromptVariantAdmin(admin.ModelAdmin):
-    list_display = ('prompt', 'owner', 'agent', 'is_enabled', 'created_at', 'next_version_link')
+    list_display = ('prompt', 'owner', 'agent', 'is_enabled', 'created_at', 'next_version_link', 'data_lambda', 'value')
     list_filter = ('is_enabled', 'owner', 'agent', 'prompt__source', 'prompt__key')
     search_fields = ('value',)
     raw_id_fields = ('prompt', 'owner', 'agent', 'next_version')

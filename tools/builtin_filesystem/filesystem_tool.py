@@ -18,8 +18,8 @@ class FilesystemTool(BaseTool):
     PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="instructions")
-        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="functions")
+        instructionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinFilesystemConfig.name, key="functions")
         return [
             QueryMessagePart(
                 promptVariant=instructionsTemplate, 

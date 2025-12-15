@@ -14,8 +14,8 @@ class AgentInstanceFork(BaseModel):
         null=True,
         related_name='fork_origin'
     )
+    
     # The 'forked_at' timestamp is the 'created_at' field inherited from BaseModel.
-
     class Meta:
         ordering = ['-created_at']
 

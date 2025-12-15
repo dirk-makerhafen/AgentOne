@@ -66,8 +66,7 @@ def celery_undo_all_filesystem_changes(instance_pk, log_entry_pk, comment=''):
         if comment: 
             summary_parts.append(f"Reason: {comment}")
         
-        final_message = '\n'.join(summary_parts)
-        agent_instance.add_to_conversation(role='user', parts=[{"type": ConversationMessagePart.ConversationMessagePartContentType.TEXT, "content": final_message}])
+        agent_instance.add_to_conversation(role='user', message='\n'.join(summary_parts))
 
         print(f"Bulk undo for instance {instance_pk} completed. Undone actions: {total_undone_actions}, Failed: {total_failed_actions}.")
         
@@ -93,4 +92,4 @@ def celery_undo_all_filesystem_changes(instance_pk, log_entry_pk, comment=''):
                 status='failed', 
                 data={'error': error_message, 'log_entry_pk': log_entry_pk, 'comment': comment}
             )
-            agent_instance.add_to_conversation(role='user' , parts=[{"type": ConversationMessagePart.ConversationMessagePartContentType.TEXT, "content": f"SYSTEM ERROR: Failed to perform bulk undo starting from FsLogEntry {log_entry_pk} due to an internal error."}])
+            agent_instance.add_to_conversation(role='user' , message= f"SYSTEM ERROR: Failed to perform bulk undo starting from FsLogEntry {log_entry_pk} due to an internal error.")

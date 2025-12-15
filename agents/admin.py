@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models.agent import Agent
-from .models.agent_instance import AgentInstance
+from .models.agent_instance import AgentInstance, AgentTask
 from .models.conversation_message import ConversationMessage, ConversationMessagePart
 from .models.debug_log_entry import DebugLogEntry
 from .models.history_limit import HistoryLimit
@@ -11,13 +11,16 @@ from .models.query_queue import QueryQueue
 from .models.sub_agent_link import SubAgentLink
 
 # --- Inlines for nested structures ---
+@admin.register(AgentTask)
+class AgentTaskAdmin(admin.ModelAdmin):
+     list_display = ('agent', 'agentInstance', 'status', 'arguments', 'result', 'raw_data')
+
 
 class ConversationMessagePartInline(admin.TabularInline):
     model = ConversationMessagePart
     extra = 0
     # Corrected fields based on the ConversationMessagePart model
-    fields = ('index', 'content', 'toolCall', 'tokens')
-    autocomplete_fields = ('toolCall',)
+    fields = ('index', 'content', 'tokens')
     readonly_fields = ('created_at', 'updated_at')
     ordering = ('index',)
 
@@ -25,9 +28,9 @@ class QueryMessagePartInline(admin.TabularInline):
     model = QueryMessagePart
     extra = 0
     # These fields are correct for the QueryMessagePart model
-    fields = ('index', 'content', 'tokens', 'tags', 'toolCall', 'promptVariant', 'conversationMessagePart')
-    autocomplete_fields = ('toolCall', 'promptVariant', 'conversationMessagePart')
-    readonly_fields = ('created_at', 'updated_at')
+    fields = ('index', 'content', 'tokens', 'tags', 'promptVariant', 'conversationMessagePart')
+    autocomplete_fields = ( 'promptVariant', 'conversationMessagePart')
+    readonly_fields = ('created_at', 'updated_at','conversationMessagePart')
     ordering = ('index',)
 
 class QueryMessageInline(admin.TabularInline):
@@ -58,7 +61,7 @@ class AgentInstanceAdmin(admin.ModelAdmin):
     list_display_links = ('instance_pk', 'name', 'agent')
     fieldsets = (
         (None, {
-            'fields': ('agent', 'system', 'aimodel', 'name', 'description_text', 'status', 'workingdir', 'require_user_interaction', 'workingdir_write_allowed', 'access_rules')
+            'fields': ('agent', 'system', 'aimodel', 'name', 'description_text', 'status', 'workingdir', 'require_user_interaction', 'workingdir_write_allowed', 'access_rules', 'parent')
         }),
         ('Rate Limiting', {
             'fields': ('max_requests_per_minute', 'max_token_per_minute'),
@@ -93,11 +96,9 @@ class ConversationMessageAdmin(admin.ModelAdmin):
 
 @admin.register(ConversationMessagePart)
 class ConversationMessagePartAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'conversationMessage', 'index', 'content', 'toolCall')
+    list_display = ('pk', 'conversationMessage', 'index', 'content')
     list_display_links = ('pk',)
     search_fields = ('content',)
-    # Corrected autocomplete fields based on the model
-    autocomplete_fields = ('conversationMessage', 'toolCall')
 
 @admin.register(DebugLogEntry)
 class DebugLogAdmin(admin.ModelAdmin):
@@ -131,10 +132,10 @@ class QueryMessageAdmin(admin.ModelAdmin):
 
 @admin.register(QueryMessagePart)
 class QueryMessagePartAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'queryMessage', 'index', 'tokens', 'content')
+    list_display = ('pk', 'queryMessage', 'index', 'tokens', 'content', "conversationMessage", "conversationMessagePart")
     list_display_links = ('pk',)
     # These autocomplete fields are correct for this model
-    autocomplete_fields = ('queryMessage', 'toolCall', 'promptVariant', 'conversationMessagePart')
+    readonly_fields = ('queryMessage','promptVariant', 'conversationMessagePart')
 
 @admin.register(LLMResponse)
 class LLMResponseAdmin(admin.ModelAdmin):
@@ -180,20 +181,3 @@ class SubAgentLinkAdmin(admin.ModelAdmin):
     search_fields = ('supervisor_instance__name', 'subordinate_instance__name')
     autocomplete_fields = ('supervisor_instance', 'subordinate_instance')
 
-from .models.agentevents import EventExecution, EventHandler, EventSubscription
-
-@admin.register(EventHandler)
-class EventHandlerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'agent', 'agentInstance', 'eventtype', 'is_public', 'enabled')
-    list_filter = ('agent', 'agentInstance', 'eventtype', 'is_public', 'enabled')
-    search_fields = ('name', 'description', 'source')
-
-@admin.register(EventSubscription)
-class EventSubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('description', 'agent', 'agentInstance', 'eventHandler')
-    list_filter = ('agent', 'agentInstance',  'eventHandler__name')
-    search_fields = ('description',)
-
-@admin.register(EventExecution)
-class EventEventExecutionAdmin(admin.ModelAdmin):
-    pass

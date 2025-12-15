@@ -1,6 +1,5 @@
 from django.db.models import Q
 
-from agents.models.conversation_message import ConversationMessagePart
 from agents.models.llm_query import QueryMessagePart
 from core.models.prompt import Prompt
 from tools.base.base_tool import BaseTool
@@ -17,8 +16,8 @@ class A2ATool(BaseTool):
 
 
     def get_header_parts(self):
-        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="instructions")
-        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="functions")
+        instructionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="functions")
         return [
             QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "A2A"]),
             QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "A2A"])
@@ -100,7 +99,7 @@ class A2ATool(BaseTool):
 
         agents_data.sort(key=lambda x: (x['relationship'], x['name']))
 
-        agentListTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="agentlist")
+        agentListTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinA2aConfig.name, key="agentlist")
         return [
             QueryMessagePart(
                 promptVariant=agentListTemplate, 
@@ -158,7 +157,7 @@ class A2ATool(BaseTool):
         # 1. Inject the message into the recipient's conversation history
         # This message is what the recipient agent will "see"
         content = f"""Message from {sender_instance.name} (Instance PK: {sender_instance.pk}):\n{message}"""
-        recipient_message = recipient_instance.add_to_conversation(role="user", parts=[{"type": ConversationMessagePart.ConversationMessagePartContentType.TEXT, "content": content}])
+        recipient_message = recipient_instance.add_to_conversation(role="user", message= content)
 
         # 2. Create the AgentToAgentMessage to log the full transaction
         iam = AgentToAgentMessage()
@@ -173,7 +172,7 @@ class A2ATool(BaseTool):
         iam.save()
 
         # 3. Trigger the recipient agent to process the new message
-        recipient_instance.start_or_continue() 
+        # TODO recipient_instance.start_or_continue() 
 
         return True, {"status":"success"}
 

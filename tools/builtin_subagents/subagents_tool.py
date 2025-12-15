@@ -17,10 +17,10 @@ class SubAgentTool(BaseTool):
     PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="instructions")
-        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="functions")
+        #instructionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="functions")
         return [
-            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "SubAgents"]),
+        #    QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "SubAgents"]),
             QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "SubAgents"])
         ]
 
@@ -34,7 +34,7 @@ class SubAgentTool(BaseTool):
 
         # 1. Inject available Agent templates
         if user:
-            available_agents_prompt_template = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="available_agents_content")
+            available_agents_prompt_template = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="available_agents_content")
             available_agents = Agent.objects.filter(owners=user).order_by('name')
             agents_data = [{'pk': agent.pk, 'name': agent.name, 'description': agent.description} for agent in available_agents]
             if agents_data:
@@ -45,7 +45,7 @@ class SubAgentTool(BaseTool):
                 )
 
         # 2. Inject current sub-agents
-        current_subagents_prompt_template = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="current_subagents_content")
+        current_subagents_prompt_template = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="current_subagents_content")
         sub_agent_links = SubAgentLink.objects.filter(supervisor_instance=self.agentInstance).order_by('created_at')
         subagents_data = [{
             'pk': link.subordinate_instance.pk, 'name': link.subordinate_instance.name, 'status': link.subordinate_instance.status,
@@ -63,7 +63,7 @@ class SubAgentTool(BaseTool):
         try:
             supervisor_link = SubAgentLink.objects.get(subordinate_instance=self.agentInstance)
             supervisor_instance = supervisor_link.supervisor_instance
-            supervisor_info_prompt_template = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="supervisor_info_content")
+            supervisor_info_prompt_template = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinSubagentsConfig.name, key="supervisor_info_content")
             supervisor_data = {
                 'pk': supervisor_info_prompt_template.subordinate_instance.pk, 'name': supervisor_info_prompt_template.subordinate_instance.name, 'status': supervisor_info_prompt_template.subordinate_instance.status,
                 'description': supervisor_info_prompt_template.subordinate_instance.description_text,
@@ -119,7 +119,7 @@ class SubAgentTool(BaseTool):
             sub_agent_instance = AgentInstance.objects.create(
                 agent=base_agent, name=agent_name, description_text=agent_description, workingdir=sub_agent_workingdir,
                 workingdir_write_allowed=supervisor_instance.workingdir_write_allowed, access_rules=supervisor_instance.access_rules,
-                system=supervisor_instance.system, aimodel=supervisor_instance.aimodel
+                system=supervisor_instance.system, aimodel=supervisor_instance.current_aimodel
             )
 
             SubAgentLink.objects.create(supervisor_instance=supervisor_instance, subordinate_instance=sub_agent_instance)
@@ -147,7 +147,7 @@ class SubAgentTool(BaseTool):
             else:
                 log_to_clients(f"Sub-agent '{agent_name}' (ID: {sub_agent_instance.pk}) created, but failed to send KV registration instruction: {result_send_msg.get('message', 'Unknown error')}", level='warning', users=[user])
             
-            from agents.models.agentevents import EventDispatcher
+            from events.event_dispatcher import EventDispatcher
             EventDispatcher.event_agentinstance_created(base_agent, sub_agent_instance)
             return (True, {
                 "status": "success", "sub_agent_instance_id": sub_agent_instance.pk, "sub_agent_instance_name": sub_agent_instance.name,

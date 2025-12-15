@@ -15,7 +15,10 @@ class ToolCall(BaseModel):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name='toolCalls')
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name='toolCalls')
     conversationMessage = models.ForeignKey("agents.ConversationMessage", null=True, default=None, on_delete=models.CASCADE, related_name='toolCalls')
-    conversationMessagePart = models.ForeignKey("agents.ConversationMessagePart", null=True, default=None, blank=True, on_delete=models.SET_DEFAULT, related_name='toolCalls')
+    #conversationMessagePart = models.ForeignKey("agents.ConversationMessagePart", null=True, default=None, blank=True, on_delete=models.SET_DEFAULT, related_name='toolCalls')
+
+    # For standard LLM tool calls, this stores the unique ID from the API response.
+    tool_call_id = models.CharField(max_length=255, null=True, blank=True, db_index=True)
 
     tool_name = models.CharField(max_length=255, default="")
     function_name = models.CharField(max_length=64)
@@ -46,11 +49,14 @@ class ToolCall(BaseModel):
     def run(self):
         from tools.calls.models.tool_response import ToolResponse
         from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
+        from events.event_dispatcher import EventDispatcher
 
         if self.status != ToolCall.ToolCallStatusChoices.PENDING:
             raise Exception('Tool call not pending, cant run')
         success = False
         result = None
+        #EventDispatcher.toolcall_pre_execute(self.agent, self.agentInstance, self)
+
         try:
             if "." in self.function_name:
                 tool_name, method_name = self.function_name.split('.', 1)
@@ -109,3 +115,5 @@ class ToolCall(BaseModel):
         toolresponse.save()
         self.status =  ToolCall.ToolCallStatusChoices.SUCCESS if success else ToolCall.ToolCallStatusChoices.FAILED
         self.save()
+
+        #EventDispatcher.toolcall_post_execute(self.agent, self.agentInstance, self)

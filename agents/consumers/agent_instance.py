@@ -1,7 +1,6 @@
 import json
 from agents.models.agent import Agent
 from agents.models.agent_instance import AgentInstance
-from agents.tasks.clone_agentinstance import celery_clone_agentinstance
 from tools.builtin_python.models.python_tool_var import PythonToolVar
 from providers.models.ai_model import AiModel
 from systems.models.system import System
@@ -103,6 +102,8 @@ def handle_agentinstance_delete(consumer, instance_pk):
 
 @register_handler('agentinstance_fork')
 def handle_agentinstance_fork(consumer, instance_pk):
+    from agents.tasks.clone_agentinstance import celery_clone_agentinstance
+
     try:
         celery_clone_agentinstance.delay(instance_pk)
     except AgentInstance.DoesNotExist:

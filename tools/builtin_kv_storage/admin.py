@@ -3,6 +3,6 @@ from .models.kv_item import KVItem
 
 @admin.register(KVItem)
 class KVItemAdmin(admin.ModelAdmin):
-    list_display = ('key', 'value', 'agent', 'created_at')
+    list_display = ('key', 'value', 'agentInstance', 'created_at')
     search_fields = ('key', 'value')
-    list_filter = ('agent', 'created_at')
+    list_filter = ('agentInstance', 'created_at')

@@ -26,18 +26,22 @@ def handle_memoryitem_update(consumer, track=None, layer=None, index=None, conte
 
 @register_handler('memoryitem_list')
 def handle_memoryitem_list(consumer, instance_pk):
+    print("handle_memoryitem_listhandle_memoryitem_list")
     try:
         agent_instance = AgentInstance.objects.get(instance_pk=instance_pk)
 
         latest_memories = []
         for track, trackitem in TRACKS.items():
+            print("TRACK", track, trackitem)
             for layer, _ in trackitem['layers'].items():
+                print("LAYER", track, trackitem)
                 items = MemoryItem.objects.filter(
                     track=track, 
                     layer=layer, 
                     next_version=None, 
                     agentInstance=agent_instance
                 ).order_by('-index')[:agent_instance.effective_limit_max_memory_items]
+                print("ITEMS", items)
                 latest_memories.extend(items)
 
         memory_items = [item.as_client_dict() for item in latest_memories]

@@ -11,7 +11,7 @@ class ToolsBuiltinShellConfig(AppConfig):
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .shell_tool import ShellTool
-            from .prompts import TOOLS, PROMPTS
+            from .prompts import TOOLS
 
             ToolDefinition.objects.get_or_create(
                 name='shell',
@@ -22,8 +22,5 @@ class ToolsBuiltinShellConfig(AppConfig):
                     'is_active': True,
                 }
             )
-            for prompt in PROMPTS:
-                Prompt.get_or_create_template(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
-            
             function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in TOOLS.items()])
             Prompt.get_or_create_template(owner=None, source=self.name, key="functions", value=function_python_string)

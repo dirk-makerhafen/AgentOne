@@ -4,13 +4,13 @@
          data-id="{{message.id}}" data-created-at="{{message.created_at}}">
         <div class="message-header">
             <strong>[{{formattedTimestamp}}]</strong> <strong>{{message.object}} : </strong>
-            <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('inter_agent_message_full_{{message.id}}')">
+            <button class="btn btn-xs btn-default log-btn" onclick="toggleElementVisibility(event, 'inter_agent_message_full_{{message.id}}')">
                 <i class="fa fa-plus"></i> More 
             </button>
         </div>
         <div id="inter_agent_message_full_{{message.id}}" class="message-content hidden">
             <pre>{{data}}</pre>
-            <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('inter_agent_message_full_{{message.id}}')">
+            <button class="btn btn-xs btn-default log-btn" onclick="toggleElementVisibility(event, 'inter_agent_message_full_{{message.id}}')">
                 <i class="fa fa-minus"></i> Hide 
             </button>
         </div>

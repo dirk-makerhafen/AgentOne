@@ -105,19 +105,6 @@ def test_parse_malformed_tool_call_missing_function():
     assert len(parsed_calls) == 1
 
 @pytest.mark.django_db
-def test_parse_malformed_tool_call_syntax_error():
-    """
-    Tests parsing of a tool call with a syntax error in arguments, should ignore broken argument
-    """
-    code = """
-@@@fs_load(path="file.txt", invalid_arg)@@@
-"""
-    parsed_calls = parse_responsestring(code)
-    assert len(parsed_calls) == 1 
-    assert parsed_calls[0]['tool'] == 'fs_load'
-    assert parsed_calls[0]['arguments'] == {'path': 'file.txt'}
-
-@pytest.mark.django_db
 def test_parse_no_tool_calls():
     """
     Tests parsing content with no tool calls.

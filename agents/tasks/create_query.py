@@ -21,25 +21,26 @@ from tools.calls.models.tool_call import ToolCall
 def celery_create_query(agentinstance_id):
     from agents.models.agent_instance import AgentInstance, BUILTIN_TOOL_CLASS_MAP
     from agents.rate_limiter import rate_limiter, RateLimitExceeded
-    from agents.models.agentevents import EventDispatcher
+    from events.event_dispatcher import EventDispatcher
 
     agentInstance = AgentInstance.objects.get(instance_pk=agentinstance_id)
-    agent = agentInstance.agent
+    agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.QUERY_CREATE)
 
+    agent = agentInstance.agent
+    '''
     try:
         # Check and record requests rate limit before proceeding with query creation
         rate_limiter.check_and_record_usage(agentInstance, requests_cost=1, tokens_cost=0)
     except RateLimitExceeded as e:
-        # Set status to AWAITING_RATE_LIMIT and reschedule the task
-        agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.AWAITING_RATE_LIMIT)
+        # Set status to QUERY_PENDING and reschedule the task
+        agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.QUERY_PENDING)
         celery_create_query.apply_async(args=[agentinstance_id], countdown=e.time_to_reset)
         return # Stop execution in current task, it will be retried
-
-    agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.THINKING)
+    '''
     
     try:
         EventDispatcher.event_llmquery_pre_create(agentInstance.agent, agentInstance)
-        llmQuery = LLMQuery(agent=agent, agentInstance=agentInstance, aimodel=agentInstance.aimodel if agentInstance.aimodel else agentInstance.agent.aimodel)
+        llmQuery = LLMQuery(agent=agent, agentInstance=agentInstance, aimodel=agentInstance.current_aimodel)
         messages = []
         agent = agentInstance.agent
         top_prompt_relations = []
@@ -48,38 +49,39 @@ def celery_create_query(agentinstance_id):
         post_chat_relations = []
         if hasattr(agent, "agent_prompt_relations"):
             top_prompt_relations = list(agent.agent_prompt_relations.filter(insert_at="TOP").order_by("index"))
-            post_top_relations = list(agent.agent_prompt_relations.filter(insert_at="POST_TOP").order_by("index"))
-            pre_chat_relations = list(agent.agent_prompt_relations.filter(insert_at="PRE_CHAT").order_by("index"))
-            post_chat_relations = list(agent.agent_prompt_relations.filter(insert_at="POST_CHAT").order_by("index"))
+            post_top_relations   = list(agent.agent_prompt_relations.filter(insert_at="POST_TOP").order_by("index"))
+            pre_chat_relations   = list(agent.agent_prompt_relations.filter(insert_at="PRE_CHAT").order_by("index"))
+            post_chat_relations  = list(agent.agent_prompt_relations.filter(insert_at="POST_CHAT").order_by("index"))
 
         for top_prompt_relation in top_prompt_relations:
             queryMessage = QueryMessage(role=top_prompt_relation.role, agent=agent, agentInstance=agentInstance, llmQuery=llmQuery)
+            
+            promptVariant = Prompt.get_template(source=top_prompt_relation.prompt.source, key=top_prompt_relation.prompt.key, agent=agent, agentInstance=agentInstance)
             queryMessage._parts_to_save = [QueryMessagePart(
                 tags = ["Prompts", top_prompt_relation.prompt.source, top_prompt_relation.prompt.key],
-                promptVariant = random.choice(list(top_prompt_relation.prompt.variants.filter(is_enabled=True))),
-                template_data = eval(top_prompt_relation.prompt.data_lambda)(agentInstance) if top_prompt_relation.prompt.data_lambda else {},
+                template_data = eval(promptVariant.data_lambda)(agentInstance) if promptVariant.data_lambda else {},
+                promptVariant=promptVariant,
                 queryMessage = queryMessage
             )]
             messages.append(queryMessage)
 
         for post_top_relation in post_top_relations:
             queryMessage = QueryMessage(role=post_top_relation.role, agent=agent, agentInstance=agentInstance, llmQuery=llmQuery)
+            promptVariant = Prompt.get_template(source=post_top_relation.prompt.source, key=post_top_relation.prompt.key, agent=agent, agentInstance=agentInstance)
             queryMessage._parts_to_save = [QueryMessagePart(
                 tags = ["Prompts", post_top_relation.prompt.source, post_top_relation.prompt.key],
-                promptVariant = random.choice(list(post_top_relation.prompt.variants.filter(is_enabled=True))),
-                template_data = eval(post_top_relation.prompt.data_lambda)(agentInstance) if post_top_relation.prompt.data_lambda else {},
+                promptVariant = promptVariant,
+                template_data = eval(promptVariant.data_lambda)(agentInstance) if promptVariant.data_lambda else {},
                 queryMessage = queryMessage
             )]
             messages.append(queryMessage)
 
         toolheaderparts = []
         toolcontentparts = []
-
         for tool_definition in agentInstance.agent.available_tools.all():
             tool_call_instance = BUILTIN_TOOL_CLASS_MAP[tool_definition.name](agentInstance)
-            toolheaderparts.extend(tool_call_instance.get_header_parts())
             toolcontentparts.extend(tool_call_instance.get_content_parts())
-        
+            
         if toolheaderparts:
             queryMessage = QueryMessage(role="user", agent=agent, agentInstance=agentInstance, llmQuery=llmQuery)
             queryMessage._parts_to_save = []
@@ -87,7 +89,7 @@ def celery_create_query(agentinstance_id):
                 toolheaderpart.queryMessage = queryMessage
                 queryMessage._parts_to_save.append(toolheaderpart)
             messages.append(queryMessage)
-        
+    
         if toolcontentparts:
             queryMessage = QueryMessage(role="user", agent=agent, agentInstance=agentInstance, llmQuery=llmQuery)
             queryMessage._parts_to_save = []
@@ -100,10 +102,11 @@ def celery_create_query(agentinstance_id):
         
         for pre_chat_relation in pre_chat_relations:
             queryMessage = QueryMessage(role=pre_chat_relation.role, agent=agent, agentInstance=agentInstance, llmQuery=llmQuery)
+            promptVariant = Prompt.get_template(source=pre_chat_relation.prompt.source, key=pre_chat_relation.prompt.key, agent=agent, agentInstance=agentInstance)
             queryMessage._parts_to_save = [QueryMessagePart(
                 tags = ["Prompts", pre_chat_relation.prompt.source, pre_chat_relation.prompt.key],
-                promptVariant = random.choice(list(pre_chat_relation.prompt.variants.filter(is_enabled=True))),
-                template_data = eval(pre_chat_relation.prompt.data_lambda)(agentInstance) if pre_chat_relation.prompt.data_lambda else {},
+                promptVariant = promptVariant,
+                template_data = eval(promptVariant.data_lambda)(agentInstance) if promptVariant.data_lambda else {},
                 queryMessage = queryMessage
             )] 
             messages.append(queryMessage)
@@ -112,10 +115,11 @@ def celery_create_query(agentinstance_id):
 
         for post_chat_relation in post_chat_relations:
             queryMessage = QueryMessage(role=post_chat_relation.role, agent=agent, agentInstance=agentInstance, llmQuery=llmQuery)
+            promptVariant =  Prompt.get_template(source=post_chat_relation.prompt.source, key=post_chat_relation.prompt.key, agent=agent, agentInstance=agentInstance)
             queryMessage._parts_to_save = [QueryMessagePart(
                 tags = ["Prompts", post_chat_relation.prompt.source, post_chat_relation.prompt.key],
-                promptVariant = random.choice(list(post_chat_relation.prompt.variants.filter(is_enabled=True))),
-                template_data = eval(post_chat_relation.prompt.data_lambda)(agentInstance) if post_chat_relation.prompt.data_lambda else {},
+                promptVariant = promptVariant,
+                template_data = eval(promptVariant.data_lambda)(agentInstance) if promptVariant.data_lambda else {},
                 queryMessage = queryMessage
             )]
             messages.append(queryMessage)
@@ -127,12 +131,18 @@ def celery_create_query(agentinstance_id):
             for index1, part_to_save in enumerate(message._parts_to_save):
                 part_to_save.index = index1
                 part_to_save.save()
+            if hasattr(message, "_tool_calls"):
+                for tc in message._tool_calls:
+                    message.toolCalls.add(tc)
         EventDispatcher.event_llmquery_post_create(agentInstance.agent, agentInstance, llmQuery)
-        execute_query.delay(llmQuery.pk)    # not celery for now, keep it that way.
     except Exception as e:
         print(e)
         DebugLogEntry.objects.create(agentInstance = agentInstance, event = 'exception', data = {"exception": f'{e}\n{traceback.format_exc()}'})
         agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.ERROR)
+    schedule_query(llmQuery=llmQuery)
+
+def schedule_query(llmQuery):
+    execute_query.delay(llmQuery.pk)    # not celery for now, keep it that way.
 
       
 
@@ -161,12 +171,14 @@ def get_conversation_messages(agentInstance, limit, limit_new, max_timestamp=Non
         if max_timestamp:
             query_nonpinned = query_nonpinned.filter(created_at__lt=max_timestamp)   
         messages = list(query_nonpinned.all()[:limit])
+        print("MESSAGES", messages)
         if len(messages) == 0: 
             break
         all_messages.extend(messages)
         all_messages.sort(key=lambda msg: msg.created_at)
         is_new_counts =  [1 if c.used_in_queryMessages.count()== 0 else 0 for c in messages]
         while sum(is_new_counts) > limit_new and len(all_messages) > 0:
+            print("is_new_counts", is_new_counts, limit_new)
             all_messages.pop()
             is_new_counts.pop()
         if missing_cnt := limit - len(all_messages) > 0:
@@ -182,6 +194,8 @@ def get_conversation_messages(agentInstance, limit, limit_new, max_timestamp=Non
             all_messages.extend(agentInstance.fork_origin.parent_instance.get_conversation_messages(limit=missing_cnt, max_timestamp = agentInstance.fork_origin.created_at))
     return all_messages
 
+
+
 def get_chat_messages(agentInstance, llmQuery):
     cmessages = []    
     conversationMessages = get_conversation_messages(
@@ -189,6 +203,7 @@ def get_chat_messages(agentInstance, llmQuery):
         limit = agentInstance.effective_limit_max_conversation_messages,
         limit_new = agentInstance.effective_limit_max_new_conversation_messages,
     )
+    print("conversationMessages1", conversationMessages)
     conversationMessages = sorted({msg.id: msg for msg in conversationMessages}.values(), key=lambda msg: msg.created_at)
 
     fs_entries = agentInstance.filesystem.get_loaded_items(refresh_from_disk=True)
@@ -201,7 +216,6 @@ def get_chat_messages(agentInstance, llmQuery):
 
     # Collect history limiting rule templates from all available tools
     limiter = HistoryLimiter(agentInstance, all_entries, all_loaded_paths)
-    resultInjectionTemplate = Prompt.get_template(agentInstance=agentInstance, source="tools", key="ResultInjection")
     filesystemInjectionTemplate = Prompt.get_template(agentInstance=agentInstance, source='tools.builtin_filesystem', key="content_injection")
 
     for entry in all_entries:
@@ -210,60 +224,28 @@ def get_chat_messages(agentInstance, llmQuery):
                 continue
 
             msg_parts = []
-            tool_result_parts = []
             for conversationMessagePart in entry.conversationMessageParts.all():
-                if not conversationMessagePart.toolCall:
-                    msg_parts.append(QueryMessagePart( 
-                        conversationMessage = entry,
-                        conversationMessagePart = conversationMessagePart,
-                        tags = ["ChatMessage", f"{entry.role}"],
-                        content_type=conversationMessagePart.content_type,
-                    ))
-                    #msg_parts.append({"cmId": entry.id, "pnr": index, "tags": ["ChatMessage", f"{entry.role}"], })
-                    continue
-
-                toolCall = conversationMessagePart.toolCall
-                if limiter.is_tool_call_limited(toolCall, entry):
-                    continue
-                msg_parts.append(QueryMessagePart(
+                msg_parts.append(QueryMessagePart( 
                     conversationMessage = entry,
                     conversationMessagePart = conversationMessagePart,
-                    toolCall = toolCall,
-                    tags = ["Tool",  "FsTool" if toolCall.function_name.startswith("fs_") else "MemoryTool" if toolCall.function_name.startswith("memory_") else f"{toolCall.function_name}", "ToolCall", toolCall.function_name],
+                    tags = ["ChatMessage", f"{entry.role}"],
+                    content_type=conversationMessagePart.content_type,
                 ))
-                
-                if toolCall.function_name.startswith("memory_") and toolCall.status == ToolCall.ToolCallStatusChoices.SUCCESS:
-                    continue
+            tool_calls = [tool_call for tool_call in entry.toolCalls.all() if not limiter.is_tool_call_limited(tool_call, entry)]
+            
+            tool_responses = [x for x in [tool_call.toolResponses.last() for tool_call in tool_calls ] if x]
 
-                toolResponse = toolCall.toolResponses.last()
-                tool_result_parts.append(QueryMessagePart(
-                    toolCall = toolCall,
-                    conversationMessage = entry,
-                    conversationMessagePart = conversationMessagePart,
-                    toolResponse = toolResponse,
-                    promptVariant = resultInjectionTemplate,
-                    tags = ["Tool",  "FsTool" if toolCall.function_name.startswith("fs_") else "MemoryTool" if toolCall.function_name.startswith("memory_") else f"{toolCall.function_name}", "ToolCall", toolCall.function_name],
-                    template_data =  {
-                        'function_name': toolCall.function_name, 
-                        'arguments': {k: v for k, v in toolCall.arguments.items() if k in ['path', 'action', 'track', 'layer', 'index', "subscription_id"]}, 
-                        'status': toolCall.status
-                    }
-                ))
+            if tool_responses:
+                for i, tool_response in enumerate(tool_responses):
+                    queryMessage = QueryMessage(role="tool", agent=agentInstance.agent, agentInstance=agentInstance, llmQuery=llmQuery, conversationMessage=entry)
+                    queryMessage.toolResponse = tool_response
+                    queryMessage._parts_to_save = []
+                    cmessages.append(queryMessage)
 
-            if tool_result_parts:
-                queryMessage = QueryMessage(role='user', agent=agentInstance.agent, agentInstance=agentInstance, llmQuery=llmQuery, conversationMessage=entry)
-                queryMessage._parts_to_save = []
-                for i, tool_result_part in enumerate(tool_result_parts):
-                    tool_result_part.queryMessage = queryMessage
-                    tool_result_part.index = i
-                    queryMessage._parts_to_save.append(tool_result_part)
-                cmessages.append(queryMessage)
-                if limiter.is_general_message_limited('messages_dont_warn_forget', entry):
-                    queryMessage.content_prefix = '@@@TO_BE_FORGOTTEN@@@'
-                
-            if msg_parts:
+            if msg_parts or tool_calls:
                 queryMessage = QueryMessage(role= entry.role, agent=agentInstance.agent, agentInstance=agentInstance, llmQuery=llmQuery, conversationMessage=entry)
                 queryMessage._parts_to_save = []
+                queryMessage._tool_calls = tool_calls
                 for i, msg_part in enumerate(msg_parts):
                     msg_part.queryMessage = queryMessage
                     msg_part.index = i
@@ -271,7 +253,7 @@ def get_chat_messages(agentInstance, llmQuery):
                 cmessages.append(queryMessage)
                 if limiter.is_general_message_limited('messages_dont_warn_forget', entry):
                     queryMessage.content_prefix = '@@@TO_BE_FORGOTTEN@@@'
-                
+
         elif type(entry) == FsLogEntry:
             queryMessage = QueryMessage(role="user", agent=agentInstance.agent, agentInstance=agentInstance, llmQuery=llmQuery)
             queryMessagePart = QueryMessagePart(
@@ -289,7 +271,6 @@ def get_chat_messages(agentInstance, llmQuery):
 
     cmessages = list(reversed(cmessages))
     return cmessages
-
 
 def get_tool_subscription_messages(agentInstance, llmQuery):
     messages = []

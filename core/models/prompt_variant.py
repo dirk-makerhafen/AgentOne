@@ -12,9 +12,11 @@ class PromptVariant(BaseModel):
     prompt = models.ForeignKey("core.Prompt", on_delete=models.CASCADE, related_name='variants')
     owner = models.ForeignKey(User, related_name='owned_prompt_variants', default=None, null=True, on_delete=models.SET_NULL)
     agent = models.ForeignKey(Agent, on_delete=models.CASCADE, null=True, blank=True, related_name='prompt_variants')
+    agentInstance = models.ForeignKey("agents.agentInstance", on_delete=models.CASCADE, null=True, blank=True, related_name='prompt_variants')
     is_enabled = models.BooleanField(default=True)
     value = models.TextField(max_length=1 * 1024 * 1024, default='')
     version_nr = models.IntegerField(default=1)
+    data_lambda = models.TextField(blank=True, default='', help_text="A lambda function that return the data to render")
 
     next_version = models.OneToOneField('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='prev_version')
     # created_at and updated_at are inherited from BaseModel
@@ -32,6 +34,7 @@ class PromptVariant(BaseModel):
             'owner_id': self.owner_id,
             'owner_username': self.owner.username if self.owner else "System",
             'agent_id': self.agent_id,
+            'agentInstance_id': self.agentInstance_id,
             'is_enabled': self.is_enabled,
             'created_at': self.created_at.isoformat(),
             'value': self.value,
@@ -54,6 +57,7 @@ class PromptVariant(BaseModel):
             prompt=self.prompt,
             owner=self.owner,
             agent=self.agent,
+            agentInstance=self.agentInstance,
             is_enabled=self.is_enabled,
             value=new_value,
             version_nr=self.version_nr + 1

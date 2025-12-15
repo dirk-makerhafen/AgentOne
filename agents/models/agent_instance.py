@@ -1,33 +1,48 @@
 from django.db import models
 from django.db.models import Sum
 import random
+
+from jinja2 import BaseLoader, Environment
 from agents.history_limiter import HistoryLimiter
+from agents.models.agent_task import AgentTask
 from agents.models.conversation_message import ConversationMessage, ConversationMessagePart
 from core.models.base_model import BaseModel
+from core.models.prompt import Prompt
 from systems.models.system import System
 from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
 from django.utils import timezone
 from django.db.models import Q
+import re
+
+
+
+
 
 class AgentInstance(BaseModel):
     class AgentInstanceStatusChoices(models.TextChoices):
         IDLE = 'IDLE', 'Idle'
-        IDLE_AUTOMATED = 'IDLE_AUTOMATED', 'Idle (Automated)'
-        THINKING = 'THINKING', 'Thinking'
-        EXECUTING_TOOLS = 'EXECUTING_TOOLS', 'Executing Tools'
+        PROCESSING_MESSAGE = 'PROCESSING_MESSAGE', 'Processing Message'
+
+        QUERY_CREATE = 'QUERY_CREATE', 'QUERY_CREATE'
+        QUERY_PENDING = 'QUERY_PENDING', 'QUERY_PENDING'
+        QUERY_COMPILE = 'QUERY_COMPILE', 'QUERY_COMPILE'
+        QUERY_ACTIVE = 'QUERY_ACTIVE', 'QUERY_ACTIVE'
+
+        RESPONSE_PROCESS = 'RESPONSE_PROCESS', 'RESPONSE_PROCESS'
+
+        TOOLCALLS_PENDING = 'TOOLCALLS_PENDING', 'TOOLCALLS_PENDING'
+        TOOLCALLS_ACTIVE = 'TOOLCALLS_ACTIVE', 'TOOLCALLS_ACTIVE'
+
         AWAITING_USER_INPUT = 'AWAITING_USER_INPUT', 'Awaiting User Input'
-        AWAITING_AGENT_MESSAGE = 'AWAITING_AGENT_MESSAGE', 'Awaiting Agent Message'
-        AWAITING_RATE_LIMIT = 'AWAITING_RATE_LIMIT', 'Awaiting Rate Limit'
-        AWAITING_AUTOMATION_CONFIRMATION = 'AWAITING_USER_CONFIRM', 'Awaiting user confirmation'
-        QUEUED = 'QUEUED', 'Queued'
-        #not used, keep comment for now: FINISHED = 'FINISHED','Finished' 
+
         ERROR = 'ERROR', 'Error'
         SYSTEM_OFFLINE = 'SYSTEM_OFFLINE', 'System Offline'
+
 
     instance_pk = models.AutoField(primary_key=True)
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name ='instances')
     system = models.ForeignKey("systems.System", on_delete=models.SET_NULL, null=True, blank=True, related_name='agent_instances', help_text= 'The system this instance is assigned to run on.')
-    aimodel = models.ForeignKey("providers.AiModel", default=None, null=True, on_delete= models.CASCADE, related_name='agent_instances')
+    aimodel = models.ForeignKey("providers.AiModel", blank=True, default=None, null=True, on_delete= models.CASCADE, related_name='agent_instances')
     name = models.CharField(max_length=255, default='', blank=True)
     description_text = models.TextField(blank=True, default='', help_text="A description of this specific agent instance.") # New field
     status = models.CharField(max_length=30, choices=AgentInstanceStatusChoices.choices, default=AgentInstanceStatusChoices.IDLE)
@@ -38,17 +53,20 @@ class AgentInstance(BaseModel):
     limit_max_memory_items = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of items in memory.")
     limit_max_automated_steps = models.IntegerField(default=None, null=True, blank=True, help_text="Override the agent's default maximum number of automated steps.")
     automated_step_count = models.IntegerField(default=0)
-    workingdir_write_allowed = models.BooleanField(default=False, help_text ='Allow write operations within the working directory.')
+    workingdir_write_allowed = models.BooleanField(default=True, help_text ='Allow write operations within the working directory.')
     access_rules = models.TextField(blank=True, default='', help_text= "Fine-grained access rules, one per line. E.g., '!path/to/deny', '>path/to/allow', '</path/to/readonly'.")
     max_requests_per_minute = models.IntegerField(default=None, null=True, blank=True, help_text="Maximum requests per minute for this instance or its subtree. Null means inheriting from parent.")
     max_token_per_minute = models.IntegerField(default=None, null=True, blank=True, help_text="Maximum tokens per minute for this instance or its subtree. Null means inheriting from parent.")
-
-    
+    parent = models.ForeignKey("agents.AgentInstance",  default=None, null=True, blank=True, on_delete=models.CASCADE, related_name='children')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._filesystem = None
 
+    @property
+    def current_aimodel(self):
+        return self.aimodel if self.aimodel is not None else self.agent.aimodel
+    
     @property
     def filesystem(self):
         if not self._filesystem:
@@ -102,48 +120,101 @@ class AgentInstance(BaseModel):
             self.send_object_to_clients()
 
     def set_status(self, status):
-        if status != self.status:
-            self.status = status
-            AgentInstance.objects.filter(instance_pk=self.instance_pk).update(status=status)
+        self.status = status
+        if AgentInstance.objects.filter(~Q(status=status), instance_pk=self.instance_pk).update(status=status):
             self.send_object_to_clients()
 
     def set_automated_step_count(self, steps):
-        if steps != self.automated_step_count:
-            self.automated_step_count = steps
-            AgentInstance.objects.filter(instance_pk=self.instance_pk).update(automated_step_count=steps)
+        self.automated_step_count = steps
+        if AgentInstance.objects.filter(~Q(automated_step_count=steps), instance_pk=self.instance_pk).update(automated_step_count=steps):
             self.send_object_to_clients()
 
-    def add_to_conversation(self, role, parts, start_or_continue=False):
-        conversationMessage = ConversationMessage()
-        conversationMessage.agent = self.agent
-        conversationMessage.agentInstance = self
-        conversationMessage.role = role
-        conversationMessage.save()
+    def _split_injected_messages(self, parts):
+        print("_split_injected_messages", parts)
+        new_parts = []
+        INJECT_RE = re.compile(r"""!(IMAGE|FILE):("(?:[^"\\]|\\.)*" | '(?:[^'\\]|\\.)*' | (?:[^\s'"]|\\ )+)""", re.VERBOSE)
+        for p in parts:
+            if p["type"] != "TEXT":
+                new_parts.append(p) # FILE or IMAGE part already parsed — pass through unchanged
+            else:
+                last = 0
+                for match in INJECT_RE.finditer(p["content"]):
+                    start, end = match.span()
+                    typ, raw_path = match.groups()
+                    if start > last: # text before the injection
+                        new_parts.append({"type": "TEXT", "content": p["content"][last:start]})
+                    path = bytes(raw_path.strip('"\'').replace("\\ ", " "), "utf8").decode("unicode_escape") # normalize the path
+                    new_parts.append({"type": typ, "content": f"path:{path}"})
+                    last = end
+                if last < len(p["content"]): # tail text
+                    new_parts.append({"type": "TEXT", "content": p["content"][last:]})
+        print("NEW PARTS:", new_parts)
+        return new_parts
+
+    def add_to_conversation(self, role, parts=None, message=None, trigger_query= False, is_human_input=False):
+        from events.event_dispatcher import EventDispatcher
+        from agents.tasks.create_query import celery_create_query
+
+        if parts is None and message is not None:
+            parts = [{"content": message, "type": "TEXT"}]
+        parts = self._split_injected_messages(parts)
+
+        is_our_process = False
+        if is_human_input:
+            if self.require_user_interaction:
+                self.require_user_interaction = False
+            if self.status in [ AgentInstance.AgentInstanceStatusChoices.AWAITING_USER_INPUT,  AgentInstance.AgentInstanceStatusChoices.ERROR]:
+                self.set_status(AgentInstance.AgentInstanceStatusChoices.PROCESSING_MESSAGE)
+                is_our_process = True
+            self.set_automated_step_count(0)
+
+        if self.status == AgentInstance.AgentInstanceStatusChoices.IDLE:
+            self.set_status(AgentInstance.AgentInstanceStatusChoices.PROCESSING_MESSAGE)
+            is_our_process = True
+
+        conversationMessage= None
+        conversationMessage = ConversationMessage.objects.create(role = role, agent = self.agent, agentInstance = self, trigger_query = trigger_query)
         for part in parts:
-            cp = ConversationMessagePart()
-            cp.content = part["content"]
-            cp.content_type = part["type"]
-            cp.conversationMessage = conversationMessage
-            cp.save()
-        from agents.models.agentevents import EventDispatcher
-        EventDispatcher.event_conversationMessage_added(self.agent, self, conversationMessage) 
-        if start_or_continue:
-            self.start_or_continue()
+            ConversationMessagePart.objects.create(content = part["content"], content_type = part["type"], conversationMessage = conversationMessage)
+        EventDispatcher.event_conversationMessage_added(self.agent, self, conversationMessage)
+        conversationMessage.refresh_from_db()
+        if not parts:
+            if self.status in [  AgentInstance.AgentInstanceStatusChoices.IDLE, AgentInstance.AgentInstanceStatusChoices.PROCESSING_MESSAGE]:
+                self.process_next_task()
+
+        self.refresh_from_db()
+        if (not conversationMessage and trigger_query is True) or conversationMessage.trigger_query is True:
+            celery_create_query.delay(self.instance_pk)
+        else:
+            self.set_status(AgentInstance.AgentInstanceStatusChoices.IDLE)
         return conversationMessage
     
-    def start_or_continue(self):
-        from agents.tasks.create_query import celery_create_query
-        if self.status in [AgentInstance.AgentInstanceStatusChoices.THINKING, AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS]:
-            return
-        if self.require_user_interaction != False:
-            self.require_user_interaction = False
-            self.save()
+    def add_task(self, arguments=None, status=AgentTask.AgentInstanceTaskStatusChoices.PENDING, group=None, parent_task=None ):
+        new_task = AgentTask.objects.create(agent=self.agent, agentInstance = self, arguments=arguments, status=status, group=group, parent=parent_task)
+        if self.status == AgentInstance.AgentInstanceStatusChoices.IDLE:
+            self.process_next_task()
 
-        if self.system and self.system.status != System.SystemStatusChoices.ONLINE:
-            self.set_status(AgentInstance.AgentInstanceStatusChoices.SYSTEM_OFFLINE) 
-            return
-        celery_create_query.delay(self.instance_pk)
-        
+    def process_next_task(self):
+        from events.event_dispatcher import EventDispatcher
+        if self.status != AgentInstance.AgentInstanceStatusChoices.IDLE and  self.status != AgentInstance.AgentInstanceStatusChoices.PROCESSING_MESSAGE  :
+            raise Exception(f"status if agentInstance:{self.pk} must be idle or idle automated to process next task but is {self.status}")
+        current_task = self.get_active_task()
+        if current_task:
+            raise Exception(f"Some task is already active {current_task}")
+        next_task = self.get_next_pending_task()
+        if not next_task:
+            self.set_status(AgentInstance.AgentInstanceStatusChoices.IDLE)
+            return 
+        next_task.status = "ACTIVE"
+        next_task.save()
+        EventDispatcher.event_agenttask_activated(self.agent, self, next_task)
+        print("NEXT TASK", next_task, next_task.data)
+        p = Prompt.get_template(key="task", source="Agent", agentInstance=self, agent=self.agent)
+        rtemplate = Environment(loader=BaseLoader).from_string(p.value)                
+        part_content = rtemplate.render({"task": next_task})
+        print("GOT FROM TASK", part_content)
+        self.add_to_conversation(role="user", message=part_content, trigger_query=True)
+
     def get_delete_broadcast_payload(self):
         return {
             'object': 'AgentInstanceDeleted',
@@ -174,8 +245,14 @@ class AgentInstance(BaseModel):
                 combined_messages.extend(self.fork_origin.parent_instance.get_conversation_messages(limit=missing_cnt, max_timestamp = self.fork_origin.created_at))
         return combined_messages
       
+    def get_active_task(self):
+        return self.tasks.filter(status="ACTIVE").first()
+
+    def get_next_pending_task(self):
+        return self.tasks.filter(status="PENDING").first()
+
     def as_client_dict(self):
-        model = self.aimodel or self.agent.aimodel
+        model = self.current_aimodel
         model_name = model.name if model else 'N/A'
         model_id = model.pk if model else None
         history_limiter = HistoryLimiter(self)
@@ -221,4 +298,5 @@ class AgentInstance(BaseModel):
         }
 
     def __str__(self):
-            return f'Instance {self.instance_pk} of Agent {self.agent.name}'
+            return f'Instance:{self.instance_pk}:{self.name} Agent:{self.agent.name}:{self.agent.pk}:'
+    

@@ -18,10 +18,10 @@ class MemoryTool(BaseTool):
         return [f'{k}' for k in TRACKS.keys()]
 
     def get_header_parts(self):
-        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="instructions")
-        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="functions")
+        #instructionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="functions")
         return [
-            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Memory"]),
+        #    QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Memory"]),
             QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "Memory"])
         ]
         #return [
@@ -30,7 +30,7 @@ class MemoryTool(BaseTool):
         #]
     
     def get_content_parts(self):
-        memoryContentHeaderPrompt = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="content_header")  
+        memoryContentHeaderPrompt = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="content_header")  
         parts = [
             QueryMessagePart(
                 promptVariant=memoryContentHeaderPrompt, 
@@ -103,10 +103,10 @@ class MemoryTool(BaseTool):
             if memory[trackname].get("LT",{}).get("warn_stall", False) is True:
                 stalled.append([trackname, "LT"])  
 
-        memoryContentPrompt = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="content")
+        memoryContentPrompt = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="content")
 
         for trackname, trackitem in TRACKS.items():
-            trackHeaderPrompt = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key= f"content_header.{trackname}")
+            trackHeaderPrompt = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key= f"content_header.{trackname}")
             parts.append(QueryMessagePart(
                 promptVariant=trackHeaderPrompt, 
                 tags=["Prompts", "Memory", trackname])
@@ -116,7 +116,7 @@ class MemoryTool(BaseTool):
             #    'tags': ['Prompts', 'Memory', trackname] 
             #}) 
             for layername, layerdesription in trackitem['layers'].items():
-                layerHeaderPrompt = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key= f"content_header.{trackname}.{layername}")
+                layerHeaderPrompt = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key= f"content_header.{trackname}.{layername}")
                 parts.append(QueryMessagePart(
                     promptVariant=layerHeaderPrompt   , 
                     tags=["Prompts", "Memory", trackname, layername])
@@ -137,7 +137,7 @@ class MemoryTool(BaseTool):
                 #})
 
         if len(stalled) > 0:
-            stalledWarningHeader = Prompt.get_template(self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="stall_warning")
+            stalledWarningHeader = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinMemoryConfig.name, key="stall_warning")
             parts.append(QueryMessagePart(
                 promptVariant=stalledWarningHeader   , 
                 tags=['Prompts', 'Memory'], 

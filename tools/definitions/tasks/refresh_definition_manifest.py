@@ -27,10 +27,12 @@ def refresh_definition_manifest(tool_definition_id):
 
     temp_dir = None
     try:
-        temp_dir = Path(tempfile.mkdtemp())
-        git.Repo.clone_from(tool_def.repository_url, temp_dir, depth=1)
+        if tool_def.repository_url.startswith("file://"):
+            manifest_path = Path(tool_def.repository_url[7:]) / "manifest.json"
+        else:
+            temp_dir = Path(tempfile.mkdtemp())
+            git.Repo.clone_from(tool_def.repository_url, temp_dir, depth=1)
 
-        manifest_path = temp_dir / "manifest.json"
         if not manifest_path.exists():
             raise FileNotFoundError("manifest.json not found in the repository root.")
 

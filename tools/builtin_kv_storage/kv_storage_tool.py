@@ -7,17 +7,16 @@ from tools.base.base_tool import BaseTool
 from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription
 from .apps import ToolsBuiltinKvStorageConfig
 
-from .prompts import TOOLS, PROMPTS
+from .prompts import TOOLS
 
 
 class KVStorageTool(BaseTool):
     DESCRIPTION = "Manages a shared key-value store for inter-agent communication and state management."
     TOOLS = TOOLS
-    PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinKvStorageConfig.name, key="instructions")
-        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinKvStorageConfig.name   , key="functions")
+        instructionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinKvStorageConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinKvStorageConfig.name   , key="functions")
         return [
             QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "KVStorage"]),
             QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "KVStorage"])
@@ -53,12 +52,12 @@ class KVStorageTool(BaseTool):
             return (False, {"status": "error", "message": message})
 
         try:
-            agent = toolCall.agentInstance
-            effective_key = self.get_effective_key(key, agent.pk)
+            agentInstance = toolCall.agentInstance
+            effective_key = self.get_effective_key(key, agentInstance.pk)
 
             kv_item, created = KVItem.objects.update_or_create(
                 key=effective_key,
-                defaults={'value': parsed_value, 'agent': agent}
+                defaults={'value': parsed_value, 'agentInstance': agentInstance}
             )
             if created:
                 message = f"Key '{key}' set (effective: '{effective_key}')."
@@ -172,36 +171,36 @@ class KVStorageTool(BaseTool):
         ]
     
     def subscribe(self, toolCall, key: str):
-            """
-            Creates a new subscription for a specific KVStore key. This allows an agent to be notified of changes to the key.
-            The subscription_id must be unique for the agent instance.
-            Args:
-                key (str): The KVStore key to subscribe to.
-                subscription_id (str): A unique identifier for this subscription. If None, one will be generated.
-            Returns:
-                tuple: (success_bool, dict_result) where dict_result contains status, message, and the generated/used subscription_id.
-            """
-            agent_instance_id = toolCall.agentInstance.pk
-            effective_key = self.get_effective_key(key, agent_instance_id)
-            subscription_id = f"kv_storage:{effective_key}"
-            ToolSubscription.objects.update_or_create(
-                agentInstance=self.agentInstance,
-                subscription_id=subscription_id,
-                defaults={
-                    'agent': self.agentInstance.agent,
-                    'creating_tool_call': toolCall,
-                    'tool_name': 'kv',
-                    'arguments': { "key": key },
-                    'is_active': True
-                }
-            )
-            try:
-                message = f"Subscription for key '{key}' (effective: '{effective_key}')"
-                return (True, {"status": "success", "message": message, "subscription_id": subscription_id})
-            except Exception as e:
-                message = f"An unexpected error occurred while subscribing to key '{key}': {type(e).__name__}: {e}\n{traceback.format_exc()}"
-                return (False, {"status": "error", "message": message})
-            
+        """
+        Creates a new subscription for a specific KVStore key. This allows an agent to be notified of changes to the key.
+        The subscription_id must be unique for the agent instance.
+        Args:
+            key (str): The KVStore key to subscribe to.
+            subscription_id (str): A unique identifier for this subscription. If None, one will be generated.
+        Returns:
+            tuple: (success_bool, dict_result) where dict_result contains status, message, and the generated/used subscription_id.
+        """
+        agent_instance_id = toolCall.agentInstance.pk
+        effective_key = self.get_effective_key(key, agent_instance_id)
+        subscription_id = f"kv_storage:{effective_key}"
+        ToolSubscription.objects.update_or_create(
+            agentInstance=self.agentInstance,
+            subscription_id=subscription_id,
+            defaults={
+                'agent': self.agentInstance.agent,
+                'creating_tool_call': toolCall,
+                'tool_name': 'kv',
+                'arguments': { "key": key },
+                'is_active': True
+            }
+        )
+        try:
+            message = f"Subscription for key '{key}' (effective: '{effective_key}')"
+            return (True, {"status": "success", "message": message, "subscription_id": subscription_id})
+        except Exception as e:
+            message = f"An unexpected error occurred while subscribing to key '{key}': {type(e).__name__}: {e}\n{traceback.format_exc()}"
+            return (False, {"status": "error", "message": message})
+        
     def unsubscribe(self, toolCall, key: str):
         agent_instance_id = toolCall.agentInstance.pk
         effective_key = self.get_effective_key(key, agent_instance_id)

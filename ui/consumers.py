@@ -72,8 +72,7 @@ class UiConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps(event['payload']))
 
 # Ensure agent_events handlers are registered
-from agents.consumers import agent_events
-from agents.consumers import agent_events
+from events.consumers import agent_events
 
 # Ensure agent_instance_events handlers are registered
-from agents.consumers import agent_instance_events
+from events.consumers import agent_instance_events

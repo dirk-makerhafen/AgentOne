@@ -19,7 +19,7 @@ def celery_clone_agentinstance(agentinstance_id):
     child_instance = None
     with transaction.atomic():
         child_instance = AgentInstance.objects.create(
-            agent=source.agent, system=source.system, aimodel=source.aimodel,
+            agent=source.agent, system=source.system, aimodel=source.current_aimodel,
             name=f'Fork of {source.name or f"Instance {source.pk}"}',
             description_text=source.description_text, status='IDLE',
             workingdir=source.workingdir, workingdir_write_allowed=source.workingdir_write_allowed,
@@ -98,6 +98,6 @@ def celery_clone_agentinstance(agentinstance_id):
 
             if new_child_objects:
                 model_class.objects.bulk_create(new_child_objects)
-        from agents.models.agentevents import EventDispatcher
+        from events.event_dispatcher import EventDispatcher
 
         EventDispatcher.event_agentinstance_created(child_instance.agent, child_instance)

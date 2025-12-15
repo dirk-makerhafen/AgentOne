@@ -5,6 +5,7 @@ import json
 from urllib.parse import urlparse
 from tools.definitions.models.tool_installation import ToolInstallation
 from tools.instances.models.tool_instance import ToolInstance
+import os
 
 @shared_task
 def start_tool(tool_installation_id):
@@ -46,9 +47,15 @@ def start_tool(tool_installation_id):
 
     transport_type = tool_def.transport_type
     tool_manifest_server_config = tool_def.manifest.get('server', {})
-    tool_command = tool_manifest_server_config.get('mcp_config').get('command')
-    tool_args = tool_manifest_server_config.get('mcp_config').get('args', [])
-    tool_env_vars = tool_manifest_server_config.get('mcp_config').get('env', {})
+    mcp_json = {}
+    try:
+        mcp_json = json.loads(open(os.path.join(tool_installation.local_path, "mcp.json"),"r").read())
+    except Exception as e:
+        print(e)
+
+    tool_command = tool_manifest_server_config.get('mcp_config', {}).get('command', mcp_json.get("command"))
+    tool_args = tool_manifest_server_config.get('mcp_config', {}).get('args', mcp_json.get("args", []))
+    tool_env_vars = tool_manifest_server_config.get('mcp_config', {}).get('env',  mcp_json.get("env", {}))
 
     if not tool_command:
         add_toolinstallation_log(tool_installation, 'error', 'Tool manifest is missing "server.command".', tool_instance)

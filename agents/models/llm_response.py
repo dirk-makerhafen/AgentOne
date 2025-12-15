@@ -4,9 +4,9 @@ from core.models.base_model import BaseModel
 class LLMResponse(BaseModel):
     class LLMResponseStatusChoices(models.TextChoices):
         PENDING = 'PENDING', 'Pending'
-        ACTIVE = 'ACTIVE', 'Active'
+        ACTIVE  = 'ACTIVE', 'Active'
         SUCCESS = 'SUCCESS', 'Successfull'
-        FAILED = 'FAILED', 'Failed'
+        FAILED  = 'FAILED', 'Failed'
 
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="llmResponses")
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="llmResponses")

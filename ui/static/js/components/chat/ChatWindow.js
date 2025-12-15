@@ -227,18 +227,6 @@ function applyActiveHighlight(instancePk) {
 
 
 
-/**
- * Toggles the 'hidden' class on a DOM element.
- * @param {string} elementId The ID of the element to toggle.
- */
-function toggleElementVisibility(elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.classList.toggle('hidden');
-    }
-}
-
-
 // Instance-specific state management for chat areas
 let instanceLogStates = {};
 function getInstanceLogState(instancePk) {

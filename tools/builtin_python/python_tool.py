@@ -4,21 +4,20 @@ from tools.primitives import run_python_code
 from tools.base.base_tool import BaseTool
 from tools.builtin_python.models.python_tool_var import PythonToolVar
 from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription
-from .prompts import TOOLS, PROMPTS
+from .prompts import TOOLS
 from .apps import ToolsBuiltinPythonConfig
 
 class PythonTool(BaseTool):
     DESCRIPTION = "Provides a Python execution environment. Allows the agent to run code for calculations, data manipulation, and complex logic, with access to a persistent 'VARS' dictionary for state management."
     TOOLS = TOOLS
-    PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="instructions")
-        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="functions")
-        #sharedVarsInjection = Prompt.get_template(self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="list_of_shared_vars")
+        #instructionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="functions")
+        #sharedVarsInjection = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinPythonConfig.name, key="list_of_shared_vars")
         existing_vars = PythonToolVar.objects.filter(agentInstance=self.agentInstance, next_version=None).order_by('-created_at')[:20]
         return [
-            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Python"]),
+            #QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Python"]),
             QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "Python"])
         ]
         #return [

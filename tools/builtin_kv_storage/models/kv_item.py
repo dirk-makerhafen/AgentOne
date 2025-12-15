@@ -5,11 +5,11 @@ import json
 class KVItem(BaseModel):
     key = models.CharField(max_length=255, unique=True, db_index=True)
     value = models.JSONField()
-    agent = models.ForeignKey(
+    agentInstance = models.ForeignKey(
         "agents.AgentInstance",
-        on_delete=models.CASCADE,
-        related_name='kv_items',
-        help_text="The agent instance that owns this key-value item."
+        on_delete = models.CASCADE,
+        related_name = 'kv_items',
+        help_text = "The agent instance that owns this key-value item."
     )
 
     class Meta:
@@ -26,5 +26,5 @@ class KVItem(BaseModel):
             'id': self.id,
             'key': self.key,
             'value': self.value,
-            'agent_instance_id': self.agent_id,
+            'agent_instance_id': self.agentInstance_id,
         }

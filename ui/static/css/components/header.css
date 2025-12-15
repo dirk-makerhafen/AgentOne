@@ -132,7 +132,6 @@
 
 /* Status specific colors (kept as vibrant indicators) */
 .instance-status-IDLE { color: #6c757d; font-weight: bold;} /* Gray */
-.instance-status-IDLE_AUTOMATED { color: #17a2b8; font-weight: bold;} /* Info blue */
 .instance-status-THINKING { color: #007bff; font-weight: bold;} /* Warning yellow */
 .instance-status-EXECUTING_TOOLS { color: #0661c3; font-weight: bold;} /* Primary blue */
 .instance-status-AWAITING_USER_INPUT { color: #fd7e14; font-weight: bold;} /* Orange */

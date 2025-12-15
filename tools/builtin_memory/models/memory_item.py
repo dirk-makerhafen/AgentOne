@@ -1,15 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import User
-
 from core.models.base_model import BaseModel
-from tools.calls.models.tool_call import ToolCall
 
 class MemoryItem(BaseModel):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name='memoryItems', null=True, blank=True)
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name='memoryItems', null=True, blank=True)
     conversationMessage = models.ForeignKey("agents.ConversationMessage", null=True, default=None, on_delete=models.CASCADE, related_name='memoryItems')
 
-    toolCall = models.ForeignKey(ToolCall, on_delete=models.CASCADE, related_name='memoryItem', null=True, blank=True)    
+    toolCall = models.ForeignKey("calls.ToolCall", on_delete=models.CASCADE, related_name='memoryItem', null=True, blank=True)    
     next_version = models.OneToOneField("self", on_delete=models.SET_DEFAULT, related_name='prev_version', null=True, default=None)
     
     track = models.CharField(max_length=128, null=True, blank=True) # New field

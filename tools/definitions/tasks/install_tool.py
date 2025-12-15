@@ -4,9 +4,10 @@ import json
 from pathlib import Path
 from tools.base.log_tool_output import add_toolinstallation_log
 from tools.definitions.models.tool_installation import ToolInstallation
+import os
 from tools.primitives import (
     mkdir,
-    read_file,
+    read_file,write_file,
     rm,
     run_shell_script,
     run_python_code,
@@ -77,15 +78,28 @@ def install_tool(tool_installation_id, agent_instance_pk=None):
         tool_installation.save()
         return
 
-    add_toolinstallation_log(tool_installation, 'info', f"Cloning repository from '{tool_def.repository_url}' into '{install_path}'.")
-    clone_result = run_shell_script(system=system, script=f"git clone {tool_def.repository_url} .", env={'GIT_TERMINAL_PROMPT': '0'}, timeout=300, cwd=str(install_path))
-    if clone_result.get('return_code') != 0:
-        error_msg = clone_result.get('stderr') or clone_result.get('stdout')
-        add_toolinstallation_log(tool_installation, 'error', f"Git clone failed: {clone_result}")
-        tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
-        tool_installation.save()
-        return
-
+    if tool_def.repository_url.startswith("file://"):
+        repo_path = tool_def.repository_url[7:]
+        add_toolinstallation_log(tool_installation, 'info', f"Creating tar.gz of local path")
+        os.system(f'tar -cvzf /tmp/{tool_def.name}.tar.gz -C {repo_path} .')
+        print(write_file(f"{install_path}/{tool_def.name}.tar.gz", content=open(f'/tmp/{tool_def.name}.tar.gz', "rb").read()))
+        unpack_result = run_shell_script(system=system, script=f"tar -xvzf {tool_def.name}.tar.gz", env={}, timeout=300, cwd=str(install_path))
+        if unpack_result.get('return_code') != 0:
+            error_msg = unpack_result.get('stderr') or unpack_result.get('stdout')
+            add_toolinstallation_log(tool_installation, 'error', f"Unpack failed: {unpack_result}")
+            tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
+            tool_installation.save()
+            return
+    else:
+        add_toolinstallation_log(tool_installation, 'info', f"Cloning repository from '{tool_def.repository_url}' into '{install_path}'.")
+        clone_result = run_shell_script(system=system, script=f"git clone {tool_def.repository_url} .", env={'GIT_TERMINAL_PROMPT': '0'}, timeout=300, cwd=str(install_path))
+        if clone_result.get('return_code') != 0:
+            error_msg = clone_result.get('stderr') or clone_result.get('stdout')
+            add_toolinstallation_log(tool_installation, 'error', f"Git clone failed: {clone_result}")
+            tool_installation.status = ToolInstallation.ToolInstallationStatusChoices.ERROR
+            tool_installation.save()
+            return
+        
     manifest_server_type = tool_def.manifest.get('server', {}).get('type')
     print("manifest_server_typemanifest_server_typemanifest_server_type", manifest_server_type)
     build_successful = True

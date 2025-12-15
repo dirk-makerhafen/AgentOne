@@ -5,7 +5,7 @@ def generate_function_stub(func_name: str, func_def: dict) -> str:
 
     Args:
         func_name (str): Name of the function to generate.
-        func_def (dict): Dictionary containing description and parameters.
+        func_def (dict): Dictionary containing description and properties.
 
     Returns:
         str: The generated Python function code as a string.
@@ -14,8 +14,8 @@ def generate_function_stub(func_name: str, func_def: dict) -> str:
     description = func_def.get("description", "").strip()
 
     # Extract parameters
-    params = func_def.get("inputSchema",{}).get("parameters", {}) 
-    required_params = func_def.get("inputSchema",{}).get("required", []) 
+    params = func_def.get("parameters",{}).get("properties", {}) 
+    required_params = func_def.get("parameters",{}).get("required", []) 
 
     param_str_list = []
     docstring_params = []

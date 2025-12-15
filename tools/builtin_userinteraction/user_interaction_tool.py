@@ -2,18 +2,17 @@
 from agents.models.llm_query import QueryMessagePart
 from core.models.prompt import Prompt
 from tools.base.base_tool import BaseTool
-from .prompts import TOOLS, PROMPTS
+from .prompts import TOOLS
 from .apps import ToolsBuiltinUserinteractionConfig
 import traceback
 
 class UserInteractionTool(BaseTool):
     DESCRIPTION = "Allows the agent to pause its operation and wait for direct input from the user or other agents. Essential for seeking clarification, confirmation, or further instructions before proceeding with a task."
     TOOLS = TOOLS
-    PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinUserinteractionConfig.name, key="instructions")
-        functionsTemplate   = Prompt.get_template(self.agentInstance, source=ToolsBuiltinUserinteractionConfig.name, key="functions")
+        instructionTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinUserinteractionConfig.name, key="instructions")
+        functionsTemplate   = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinUserinteractionConfig.name, key="functions")
         return [
             QueryMessagePart(promptVariant=instructionTemplate, tags=["Prompts", "UserInteraction"]),
             QueryMessagePart(promptVariant=functionsTemplate  , tags=["Prompts", "UserInteraction"])

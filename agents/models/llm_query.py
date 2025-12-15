@@ -1,4 +1,6 @@
 import copy
+import datetime
+import time
 from django.db import models
 from jinja2 import BaseLoader, Environment
 import json
@@ -37,81 +39,19 @@ class LLMQuery(BaseModel):
             "messages": [m.as_client_dict() for m in self.queryMessages.order_by("index", "created_at").all()]
         }
 
-    def compile_old(self):
-        from core.models.prompt import PromptVariant
-        from agents.models.conversation_message import ConversationMessage
-        from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
-        from tools.builtin_memory.models.memory_item import MemoryItem
-        from tools.calls.models.tool_response import ToolResponse
-
-        new_messages = []
-        self.data["tokens"] = 0
-        self.data["usage"] = {}
-        for message in self.data.get("messages", []):
-            new_parts = []
-            message["tokens"] = 0
-            msg_cache = {}
-            for originalpart in message.get("parts", []):
-                part = copy.deepcopy(originalpart)
-                tags = originalpart.get("tags", ["Other"])
-                c = self.data["usage"]
-                for tag in tags:
-                    if tag not in c:
-                        c[tag] = {"tokens": 0}
-                    c = c[tag]
-                part_content = ""
-                if "tpId" in part:
-                    template = PromptVariant.objects.get(pk=part["tpId"]).value
-                    rtemplate = Environment(loader=BaseLoader).from_string(template)
-                    data = part.get("data", {})
-                    if "memories" in data:
-                        for m in data["memories"]:
-                            m["content"] = MemoryItem.objects.get(pk=m["pk"]).value
-                    if "trId" in part:
-                        try:
-                            data["result"] = ToolResponse.objects.get(id=part["trId"]).data
-                        except ToolResponse.DoesNotExist:
-                            data["result"] = None
-                    if "data" in part and "fs_content_type" in part["data"]:
-                        item = FsLogEntry.objects.get(id=int(part["data"]["fs_content_id"]))
-                        if part["data"]["load_mode"] == "summary":
-                            data["content"] = json.dumps(item.summary)
-                        else:
-                            data["content"] = item.content
-                    part_content = rtemplate.render(**data)
-                elif "cmId" in originalpart and "pnr" in originalpart:
-                    if originalpart["cmId"] not in msg_cache:
-                        msg_cache[originalpart["cmId"]] = ConversationMessage.objects.get(id=originalpart["cmId"])
-                    part_content = msg_cache[originalpart["cmId"]].data["parts"][originalpart["pnr"]]["content"]
-                else:
-                    raise Exception(f"unable to render {originalpart}")
-                if part_content != "":
-                    if originalpart.get("warn_forget", False) is True:
-                        part_content = f"@@@TO_BE_FORGOTTEN@@@{part_content}"
-                    new_parts.append(part_content)
-                originalpart["tokens"] = len(part_content) // 3.8
-                c = self.data["usage"]
-                for tag in tags:
-                    c[tag]["tokens"] += originalpart["tokens"]
-                    c = c[tag]
-                message["tokens"] += originalpart["tokens"]
-            self.data["tokens"] += message["tokens"]
-            new_content = "".join(new_parts)
-            if message.get("warn_forget", False) is True:
-                new_content = f"@@@TO_BE_FORGOTTEN@@@{new_content}"
-            new_messages.append({"role": message["role"], "content": new_content})
-        self.save()
-        return new_messages
-
     def compile(self):
         messages = []
         tokens = 0
         tags_token_usages = []
         for message in self.queryMessages.all():
-            qm =  message.compile()
-            messages.append(qm)
-            tokens += message.tokens
-            tags_token_usages.append(message.tags_token_usage)
+            try:
+                qm =  message.compile()
+                messages.append(qm)
+                tokens += message.tokens
+                tags_token_usages.append(message.tags_token_usage)
+            except Exception as e:
+                print("Failed to compile", message)
+                raise 
         tags_token_usage = self.merge_tag_usage(tags_token_usages)
         if self.tokens != tokens:
             self.tokens = tokens
@@ -133,7 +73,6 @@ class LLMQuery(BaseModel):
             merge_into(result, d)
         return result
     
-
 class QueryMessage(BaseModel):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="queryMessages")
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="queryMessages")
@@ -145,7 +84,9 @@ class QueryMessage(BaseModel):
     content_prefix = models.CharField(max_length=10000, blank=True, null=True, default=None)
     content_postfix = models.CharField(max_length=10000, blank=True, null=True, default=None)
     conversationMessage = models.ForeignKey("agents.ConversationMessage", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='used_in_queryMessages')
-
+    toolCalls = models.ManyToManyField("calls.ToolCall", default=None, related_name='used_in_queryMessage')
+    toolResponse = models.ForeignKey("calls.ToolResponse",  on_delete=models.CASCADE,  default=None, null=True, related_name='used_in_queryMessage')
+    
     def as_client_dict(self):
         return {
             'object': 'QueryMessage',
@@ -165,10 +106,10 @@ class QueryMessage(BaseModel):
         tokens = 0
         tags_token_usage = {}
         queryMessageParts = list(self.queryMessageParts.all())
-        is_mixed = True in [p.content_type.lower() != "text" for p in queryMessageParts]
+        is_mixed = True in [p.content_type.lower() != "text" and p.content_type.lower() != "file" for p in queryMessageParts]
         for queryMessagePart in queryMessageParts:
             part_content = queryMessagePart.compile()
-            print(queryMessagePart.content_type )
+
             if queryMessagePart.content_type.lower() == "text":
                 if self.content_prefix:
                     part_content = f'{self.content_prefix}{part_content}'
@@ -184,16 +125,18 @@ class QueryMessage(BaseModel):
                     new_parts.append(part_content)
             elif queryMessagePart.content_type.lower() == "image":
                 part_content_tokens = 0
-                
-                if part_content.startswith("data:"):
-                    img = part_content
-                elif part_content.startswith("path:"):
-                    with open(part_content.split(":",1)[1], "rb") as f:
-                        encoded = base64.b64encode(f.read()).decode("ascii")
-                        img = f"data:image/jpeg;base64,{encoded}"
-                new_parts.append({"type": "image_url", "image_url": {
-                    "url": img
-                }})
+                new_parts.append(part_content)
+            elif queryMessagePart.content_type.lower() == "file":
+                part_content_tokens = len(part_content) // 3.8
+                new_parts.append(part_content)
+                if is_mixed:
+                    if len(new_parts) > 0 and new_parts[-1]["type"] == "TEXT":
+                        new_parts[-1]["content"] += part_content
+                    else: 
+                        new_parts.append({"type": "text", "text": part_content})
+                else:
+                    new_parts.append(part_content)
+
             else:
                 raise Exception(f"unknown content type {queryMessagePart.content_type }")
             tokens += part_content_tokens
@@ -202,23 +145,42 @@ class QueryMessage(BaseModel):
                 if tag not in c: c[tag] = {"tokens":0}
                 c[tag]["tokens"] += part_content_tokens
                 c = c[tag]
-       
+
         content_to_send = new_parts if is_mixed else  "".join(new_parts)
 
         if self.tokens != tokens:
             self.tags_token_usage = tags_token_usage
             self.tokens = tokens
             self.save()
-        return {"role": self.role, "content": content_to_send}
+
+        tool_calls = [{
+            "id": toolCall.tool_call_id if toolCall.tool_call_id else f"tc-{toolCall.pk}",
+            "type": "function",
+            "function": {
+                "name": toolCall.function_name,
+                "arguments": json.dumps(toolCall.arguments),
+            }
+        } for toolCall in list(self.toolCalls.all())]
+        
+        message =  {"role": self.role, "content": content_to_send}
+
+        if self.toolResponse and self.role == "tool":
+            message["tool_call_id"] = self.toolResponse.toolCall.tool_call_id if self.toolResponse.toolCall.tool_call_id  else f"tc-{self.toolResponse.toolCall.pk}" 
+            message["content"] = json.dumps(self.toolResponse.data)
+            message["name"] =  self.toolResponse.toolCall.function_name
+
+        elif tool_calls:
+            message["tool_calls"] = tool_calls
+        return message
 
 
 class QueryMessagePart(BaseModel):
     class QueryMessagePartContentType(models.TextChoices):
         TEXT = 'TEXT', 'Text'
         IMAGE = 'IMAGE', 'Image'
+        FILE = 'FILE', 'File'
+
     queryMessage = models.ForeignKey(QueryMessage, default=None, null=True, on_delete=models.SET_DEFAULT, related_name='queryMessageParts')
-    toolCall = models.ForeignKey("calls.ToolCall", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='queryMessageParts')
-    toolResponse = models.ForeignKey("calls.ToolResponse",  default=None, null=True, on_delete=models.SET_DEFAULT, related_name='queryMessageParts')
     promptVariant = models.ForeignKey("core.PromptVariant",  default=None, null=True, on_delete=models.SET_DEFAULT, related_name='queryMessageParts')
     conversationMessage = models.ForeignKey("agents.ConversationMessage", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='used_in_queryMessageParts')
     conversationMessagePart = models.ForeignKey("agents.ConversationMessagePart", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='used_in_queryMessageParts')
@@ -239,8 +201,8 @@ class QueryMessagePart(BaseModel):
             'object': 'QueryMessagePart',
             "id": self.id,  
             "query_message_id": self.queryMessage_id, 
-            "tool_call_id": self.toolCall_id,
-            "tool_response_id": self.toolResponse_id,
+            #"tool_call_id": self.toolCall_id,
+            #"tool_response_id": self.toolResponse_id,
             'prompt_variant_id': self.promptVariant_id,
             'conversationMessage_id': self.conversationMessage_id,
             'conversation_message_part_id': self.conversationMessagePart_id,
@@ -256,6 +218,7 @@ class QueryMessagePart(BaseModel):
 
     def compile(self):
         part_content = ""
+        content_type = "text"
         if self.promptVariant:
             template = self.promptVariant.value
             rtemplate = Environment(loader=BaseLoader).from_string(template)
@@ -263,16 +226,17 @@ class QueryMessagePart(BaseModel):
             if "memories" in data:
                 for m in data["memories"]:
                     m["content"] = MemoryItem.objects.get(pk=m["pk"]).value
-            if self.toolResponse:
-                data["result"] = self.toolResponse.data if self.toolResponse else None
-            if self.fsLogEntry:
+            elif self.fsLogEntry:
                 if self.fsLogEntry.load_mode == "summary":
                     data["content"] = self.fsLogEntry.summary
                 else:
                     data["content"] = self.fsLogEntry.content
+
+            agentInstance = self.queryMessage.agentInstance
             part_content = rtemplate.render(**data)
         elif self.conversationMessagePart:
             part_content = self.conversationMessagePart.content if self.conversationMessagePart else ""
+            content_type = self.conversationMessagePart.content_type
         else:
             raise Exception(f"unable to render QueryMessagePart ID:{self.pk}")
 
@@ -285,5 +249,21 @@ class QueryMessagePart(BaseModel):
         if self.tokens != tokens:
             self.tokens = tokens
             self.save()
+
+        if content_type.lower() == "image":
+            if part_content.startswith("data:"):
+                img = part_content
+            elif part_content.startswith("path:"):
+                with open(part_content.split(":",1)[1], "rb") as f:
+                    encoded = base64.b64encode(f.read()).decode("ascii")
+                    img = f"data:image/jpeg;base64,{encoded}"
+            return {"type": "image_url", "image_url": {
+                "url": img
+            }}
+        if content_type.lower() == "file":
+            if part_content.startswith("path:"):
+                with open(part_content.split(":",1)[1], "r") as f:
+                    return f.read()
+                   
         return part_content
        

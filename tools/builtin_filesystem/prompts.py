@@ -72,24 +72,21 @@ TOOLS = {
         "name": "",
         "title": "",
         "description": "Load the content of a file or list the contents of a directory into your context memory.",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "path": {
                     "type": "string",
                     "description": "Path to the file or directory (POSIX-style).", 
-                    "required": True,
                 },
                 "recursive": {
                     "type": "boolean", 
                     "description": "List directories recursively. Ignored for files.", 
-                    "required": False, 
                     'default': False,
                 },
                 "mode": {
                     "type": "string", 
                     "description": "'full' to load the entire file content, 'summary' to load a outline (for supported files like Python, JavaScript/JSX, CSS, C/C++/Arduino, Java, Go, C#, TypeScript/TSX, Ruby, JSON, and YAML). Defaults to 'full'.", 
-                    "required": False, 
                     'default': 'full',
                 }
             },
@@ -100,13 +97,12 @@ TOOLS = {
         "name": "",
         "title": "",
         "description": "Remove a file or directory from your context memory to free resources.",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "path": { 
                     "type": "string", 
                     "description": "Path to unload.", 
-                    "required": True,
                 },
             },
             "required" : ["path"],
@@ -116,18 +112,16 @@ TOOLS = {
         "name": "",
         "title": "",
         "description": "Overwrite an entire file with new content, replacing any existing data.",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "path": { 
                     "type": "string", 
                     "description": "Path to the file.", 
-                    "required": True,
                 },
                 "content": { 
                     "type": "string", 
                     "description": "New file content.", 
-                    "required": True,
                 }
             },
             "required" : ["path", "content"],
@@ -137,16 +131,14 @@ TOOLS = {
         "name": "",
         "title": "",
         "description": "Append content to the end of a file. No newline is added automatically.",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "path": { 
                     "type": "string", "description": "Path to the file.", 
-                    "required": True,
                 },
                 "content": { 
                     "type": "string", "description": "Content to append.", 
-                    "required": True,
                 }
             },
             "required" : ["path", "content"],
@@ -157,23 +149,20 @@ TOOLS = {
         "name": "",
         "title": "",
         "description": "Search for and replace content within a file and replace them with a new string.",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "path": { 
                     "type": "string", 
                     "description": "Path to the file.", 
-                    "required": True,
                 },
                 "search": { 
                     "type": "string", 
                     "description": "Text to search for.", 
-                    "required": True,
                 },
                 "replace": { 
                     "type": "string", 
                     "description": "Replacement text.", 
-                    "required": True,
                 }
             },
             "required" : ["path", "search", "replace"],
@@ -183,28 +172,24 @@ TOOLS = {
         "name": "",
         "title": "",
         "description":  "Inserts or replaces a Python function or method within a specified file and (optionally) class. If the function/method does not exist, it will be added. If it exists, its entire definition will be replaced. Automatic indentation correction is applied to the provided source code. For python code this is more efficient than fs_write or fs_replace. ",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "path": { 
                     "type": "string", 
                     "description": "The path to the Python file to be modified.", 
-                    "required":  True,
                 },
                 "classname": { 
                     "type": "string", 
                     "description": "The name of the class where the function/method is located. Omit or provide an empty string for top-level (module-level) functions. The tool will fail if the specified class does not exist.", 
-                    "required": False,
                 },
                 "functionname": {
                     "type": "string", 
                     "description": "The name of the function or method to be inserted or replaced. Must be unique within its scope (class or module level). if Omited or empty and classname is provided, attempts to replace the entire class", 
-                    "required":  False,
                 },
                 "source": {
                     "type": "string", 
                     "description": "The complete source code for the function or method. The tool will automatically adjust its indentation to fit the target location. Example: 'def my_func(self, arg):\\n    pass'", 
-                    "required":  True,
                 },
             },
             "required" : ["path", "source"],

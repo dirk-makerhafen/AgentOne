@@ -6,7 +6,7 @@
          data-created-at="{{created_at}}"
          data-instance-id="{{child_instance_id}}"
          data-parent-instance-id="{{parent_instance_id}}"
-         onclick="toggleElementVisibility('agent_fork_details_{{id}}')">
+         onclick="toggleElementVisibility(event, 'agent_fork_details_{{id}}')">
         <div class="message-header">
             <span class="timestamp">{{formattedTimestamp}}</span>
             <span class="message-sender">System</span>

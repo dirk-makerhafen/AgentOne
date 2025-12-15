@@ -12,7 +12,7 @@ class ToolsBuiltinUserinteractionConfig(AppConfig):
             from tools.base.utils import generate_function_stub
             from tools.definitions.models.tool_definition import ToolDefinition
             from .user_interaction_tool import UserInteractionTool
-            from .prompts import TOOLS, PROMPTS
+            from .prompts import TOOLS
 
             # Register the ToolDefinition for the User Interaction tool
             ToolDefinition.objects.get_or_create(
@@ -23,9 +23,6 @@ class ToolsBuiltinUserinteractionConfig(AppConfig):
                     'is_builtin': True,
                     'is_active': True,
                 }
-            )
-            for prompt in PROMPTS:
-                Prompt.get_or_create_template(owner=None, source=self.name, key=prompt["name"], value=prompt["template"])
-            
+            )            
             function_python_string =  "\n".join([f"{generate_function_stub(fname, fdef)}\n" for fname, fdef in TOOLS.items()])
             Prompt.get_or_create_template(owner=None, source=self.name, key="functions", value=function_python_string)

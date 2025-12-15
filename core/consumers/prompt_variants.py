@@ -88,18 +88,18 @@ def handle_prompt_variant_update(consumer, prompt_variant_pk, value=None, is_ena
 
 
 @register_handler('prompt_variant_delete')
-def handle_prompt_delete(consumer, prompt_pk):
+def handle_prompt_delete(consumer, prompt_variant_pk):
     from core.tasks.send_websocket_update import celery_send_websocket_update
     from core.models.prompt import PromptVariant
 
-    if prompt_pk is None:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': 'Missing prompt_pk for delete_prompt.'}))
+    if prompt_variant_pk is None:
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': 'Missing prompt_variant_pk for delete_prompt.'}))
         return
 
     try:
         user = User.objects.get(pk=consumer.user_pk)
         # Only allow deleting user-owned variants that are the latest version
-        prompt_variant_to_delete = PromptVariant.objects.get(pk=prompt_pk, owner=user, next_version__isnull=True)
+        prompt_variant_to_delete = PromptVariant.objects.get(pk=prompt_variant_pk, owner=user, next_version__isnull=True)
         
         # If this variant was linked as a next_version, clear that link
         if hasattr(prompt_variant_to_delete, 'prev_version'):
@@ -126,11 +126,11 @@ def handle_prompt_delete(consumer, prompt_pk):
     except User.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'User with pk {consumer.user_pk} not found.'}))
     except PromptVariant.DoesNotExist:
-        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Prompt variant with pk {prompt_pk} not found, not owned by user, or not the latest version.'}))
+        consumer.send(text_data=json.dumps({'object': 'error', 'message': f'Prompt variant with pk {prompt_variant_pk} not found, not owned by user, or not the latest version.'}))
         # If it's already gone or inaccessible, we can still send a delete message to the client to ensure sync
         message_data = {
             'object': 'PromptDeleted',
-            'prompt_pk': int(prompt_pk)
+            'prompt_pk': int(prompt_variant_pk)
         }
         celery_send_websocket_update.delay(message_data, user_pk=consumer.user_pk)
     except Exception as e:

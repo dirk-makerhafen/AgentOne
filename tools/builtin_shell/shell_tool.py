@@ -3,19 +3,18 @@ from core.models.prompt import Prompt
 from tools.primitives import run_shell_script
 from tools.base.base_tool import BaseTool
 from tools.builtin_subscriptions.models.tool_subscription import ToolSubscription
-from .prompts import TOOLS, PROMPTS
+from .prompts import TOOLS
 from .apps import ToolsBuiltinShellConfig
 
 class ShellTool(BaseTool):
     DESCRIPTION = "Executes arbitrary shell commands and scripts in bash, PowerShell, or cmd. Fundamental for interacting with the operating system, running programs, and managing system-level tasks."
     TOOLS = TOOLS
-    PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinShellConfig.name, key="instructions")
-        functionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinShellConfig.name, key="functions")
+        #instructionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinShellConfig.name, key="instructions")
+        functionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinShellConfig.name, key="functions")
         return [
-            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Shell"]),
+        #    QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Shell"]),
             QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "Shell"])
         ]
         #return [

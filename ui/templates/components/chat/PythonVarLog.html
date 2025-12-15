@@ -6,7 +6,7 @@
             <strong>[{{created_at_formatted_time}}]</strong>
             <strong><span class="pyvar-count">1</span> VARS Update:</strong>
             <span class="pyvar-keys"><span>{{key}}</span></span>
-            <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('pyvar_full_{{toolCall_id}}', {{instancePk}})">
+            <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility(event, 'pyvar_full_{{toolCall_id}}', {{instancePk}})">
                 <i class="fa fa-plus"></i> More
             </button>
         </div>
@@ -18,7 +18,7 @@
                     <div class="pyvar-detail-value"><pre>{{nice_string}}</pre></div>
                 </div>
             </div>
-            <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('pyvar_full_{{toolCall_id}}', {{instancePk}})">
+            <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility(event, 'pyvar_full_{{toolCall_id}}', {{instancePk}})">
                 <i class="fa fa-minus"></i> Hide
             </button>
         </div>

@@ -5,8 +5,8 @@ from core.models.base_model import BaseModel
 
 class ApiKey(BaseModel):
     apiProvider = models.ForeignKey("providers.ApiProvider", on_delete=models.CASCADE, related_name='apikeys')
-    key = models.CharField(max_length=512)
     comment = models.CharField(max_length=512, default="", null=True)
+    key = models.CharField(max_length=512)
 
     @property
     def total_llm_queries(self):

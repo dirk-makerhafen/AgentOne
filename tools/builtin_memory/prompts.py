@@ -113,24 +113,21 @@ TOOLS = {
     "memory_add": {
         "name": "memory_add",
         "title": "Add to memory",
-        "description": "Add content to memory",
-        "inputSchema": {
+        "description": "Add content to the external memory. Use this function for information that is valid for more than a few rounds of conversation: preferences, goals, plans, important events, learned behaviors, and other facts that must persist beyond the immediate context. Memory is an append-only log organized into tracks (SELF, REVIEW, INSIGHTS, GOALS, STATUS, SYSTEMS, PLANS, PREDICTIONS, MEMORY) and time layers (ST = Short-Term, MT = Medium-Term, LT = Long-Term). \n\nRules for using memory_add:\n- Store information that is important and would be lost otherwise.\n- Store items that clearly fit a memory track and impact future decisions, goals, or processes.\n- If a message begins with @@@TO_BE_FORGOTTEN@@@ but contains unsaved info, save it.\n- Prefer the shortest time layer that will last long enough (ST → MT → LT).\n\nNever store:\n- Trivial chit-chat, pleasantries, or common knowledge available elsewhere.\n- Full file/tool outputs — only save concise summaries or paths.\n- Outdated or irrelevant information.\n\nOperational note: Your backend must apply defaults for optional parameters. Never output memory directly; always call memory_add to write memory.",
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "track": { 
                     "type": "string", 
                     "description": "Target memory track", 
-                    "required": True
                 },
                 "layer": { 
                     "type": "string", 
                     "description": "Target memory layer", 
-                    "required": True
                 },
                 "content": { 
                     "type": "string", 
                     "description": "Content to add to memory", 
-                    "required": True
                 },
             },
             "required" : ["track", "layer", "content"],
@@ -139,29 +136,25 @@ TOOLS = {
     "memory_correct": {
         "name": "memory_correct",
         "title": "Correct memory entry",
-        "description": "Correct a memory entry if it contains incorrect information or is confusing. Use sparsely only to correct memory entries. To add to your memory, use memory_add",
-        "inputSchema": {
+        "description": "Correct or mark recent memory entries. Use memory_correct only to fix actually incorrect or confusing recent entries, or to mark items as completed (e.g., append [done], [completed], [failed]). memory_correct is NOT for adding new memories or overwriting older items in the append-only log. \n\nRules for using memory_correct:\n- Call only when the user explicitly requests a correction, or when you detect a clear contradiction or error in recent memory.\n- Only correct the last few items (recent ST entries) — do not rewrite older MT/LT entries.\n- Do not change tense from future/current to past; instead tag the item (e.g., [done]).\n- Do not use memory_correct to erase or replace historical entries — memory is append-only.\n\nUse this sparingly and only for true corrections or completion markers. Never output memory directly; use memory_correct to update memory instead.",
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "track": { 
                     "type": "string", 
                     "description": "Target memory track", 
-                    "required": True,
                 },
                 "layer": { 
                     "type": "string", 
                     "description": "Target memory layer", 
-                    "required": True,
                 },                
                 "index": { 
                     "type": "string", 
                     "description": "Index of item to correct", 
-                    "required": True,
                 },
                 "content": {
                     "type": "string", 
                     "description": "Updated content for memory index", 
-                    "required": True,
                 },
             },
             "required" : ["track", "layer", "index", "content"],

@@ -12,10 +12,10 @@ class SubscriptionsTool(BaseTool):
     PROMPTS = PROMPTS
 
     def get_header_parts(self):
-        instructionsTemplate = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="instructions")
-        functionsTemplate    = Prompt.get_template(self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="functions")
+        #instructionsTemplate = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="instructions")
+        functionsTemplate    = Prompt.get_template(agentInstance=self.agentInstance, source=ToolsBuiltinSubscriptionsConfig.name, key="functions")
         return [
-            QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Subscriptions"]),
+        #    QueryMessagePart(promptVariant=instructionsTemplate, tags=["Prompts", "Subscriptions"]),
             QueryMessagePart(promptVariant=functionsTemplate   , tags=["Prompts", "Subscriptions"])
         ]
         #return [

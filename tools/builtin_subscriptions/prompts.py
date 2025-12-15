@@ -83,13 +83,12 @@ TOOLS = {
         "name": "unsubscribe",
         "title": "Unsubscribe from Tool subscription",
         "description": "Removes an active tool subscription, stopping it from being executed before future LLM queries.",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "subscription_id": {
                     "type": "string",
                     "description": "The unique identifier of the subscription to be removed.",
-                    "required": True
                 }
             },
             "required" : ["subscription_id"],

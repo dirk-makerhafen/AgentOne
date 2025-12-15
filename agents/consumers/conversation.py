@@ -15,9 +15,7 @@ def handle_conversationmessage_add(consumer, instance_pk, parts):
     except AgentInstance.DoesNotExist:
         consumer.send(text_data=json.dumps({'object': 'error', 'message': f'AgentInstance with pk {instance_pk} not found.'}))
         return
-    if parts:
-        agent_instance.add_to_conversation(role='user', parts=parts)
-    agent_instance.start_or_continue()
+    agent_instance.add_to_conversation(role='user', parts=parts, trigger_query=True, is_human_input=True)
 
 @register_handler('conversationmessage_list')
 def handle_conversationmessage_get(consumer, instance_pk, max_id=None, limit=20):

@@ -38,16 +38,20 @@
         {{/if}}
 
         {{#if tool_call_id}}
-            <div class="message-toolcall">
+            <div class="message-toolcall log-toolcall">
                 <div class="toolcall-header">
-                    <b class="status-{{status}}" id="tool_call_status_{{tool_call_id}}">{{status}}</b><b>{{function_name}}</b>&nbsp;<span class="toolcall-header-args">{{formatArgsForHeader arguments}}</span>
-                    <button class="btn btn-xs btn-default log-btn" onclick="event.preventDefault(); toggleElementVisibility('tool_call_full_{{tool_call_id}}')" title="Show Details"><i class="fa fa-plus"></i> More </button>
+                    <b class="toolcall-status-{{status}}" id="tool_call_status_{{tool_call_id}}">{{status}}</b>
+                    <b>{{function_name}}</b>&nbsp;
+                    <span class="toolcall-header-args">{{formatArgsForHeader arguments}}</span>
+                    <button class="btn btn-xs btn-default log-btn" onclick="toggleElementVisibility(event, 'tool_call_full_{{tool_call_id}}')" title="Show Details"><i class="fa fa-plus"></i> More</button>
                 </div>
                 <div class="toolcall-full hidden" id="tool_call_full_{{tool_call_id}}">
-                    <pre>Arguments:
-{{jsonStringify arguments}}</pre>
-                    <pre id="tool_call_result_{{tool_call_id}}">Response:
-{{jsonStringify result}}</pre>
+                    <div class="toolcall-args">Arguments:
+<pre>{{jsonStringify arguments}}</pre>
+                    </div>
+                    <div class="toolcall-result" id="tool_call_result_{{tool_call_id}}">Response:
+<pre>{{#if result}}{{jsonStringify result}}{{else}}Pending...{{/if}}</pre>
+                    </div>
                 </div>
             </div>
         {{/if}}

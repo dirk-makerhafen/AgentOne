@@ -27,7 +27,7 @@ class ToolDefinition(BaseModel):
     transport_type = models.CharField(max_length=20, choices=TransportChoices, default=TransportChoices.STDIN_STDOUT, help_text="The communication transport type for this tool.")
     execution_mode = models.CharField(max_length=20, choices=ExecutionMode.choices, default=ExecutionMode.SHARED, help_text="Determines if one process is shared across a system or if each agent instance gets a dedicated process.")
 
-    repository_url = models.URLField(blank=True, null=True, help_text="The Git repository URL for external tools.")
+    repository_url = models.URLField(blank=True, null=True, help_text="The repository URL or PATH for external tools., path begins with file://")
     status = models.CharField(max_length=20, choices=ToolDefinitionStatusChoices.choices, default=ToolDefinitionStatusChoices.NEW)
     manifest_version = models.CharField(max_length=50, blank=True, null=True, help_text="The version from the tool's manifest file.")
     last_checked_at = models.DateTimeField(null=True, blank=True, help_text="When the manifest was last checked for updates.")
@@ -48,6 +48,39 @@ class ToolDefinition(BaseModel):
             return True if  BUILTIN_TOOL_CLASS_MAP[self.name].TOOLS.get(name, None) else False
         else:
             return len([x for x in self.manifest.get("tools",[]) if x["name"] == name]) > 0
+
+    def to_llm_schema(self):
+        """Converts the tool definition into the JSON schema format for LLM tool calling."""
+        if self.is_builtin:
+            from tools.base.buildin_tools_map import BUILTIN_TOOL_CLASS_MAP
+            tool_class = BUILTIN_TOOL_CLASS_MAP.get(self.name)
+            if not tool_class:
+                return []
+            
+            schemas = []
+            for func_name, func_details in tool_class.TOOLS.items():
+                schemas.append({
+                    "type": "function",
+                    "function": {
+                        "name": func_name,
+                        "description": func_details.get("description", ""),
+                        "parameters": func_details.get("parameters", {"type": "object", "properties": {}})
+                    }
+                })
+            return schemas
+        else:
+            # For external tools, we derive the schema from the manifest
+            schemas = []
+            for tool_info in self.manifest.get("tools", []):
+                 schemas.append({
+                    "type": "function",
+                    "function": {
+                        "name": tool_info.get("name"),
+                        "description": tool_info.get("description", ""),
+                        "parameters": tool_info.get("parameters", {"type": "object", "properties": {}})
+                    }
+                })
+            return schemas
        
     def save(self, send_to_client=True, *args, **kwargs):
         from tools.definitions.tasks.refresh_definition_manifest import refresh_definition_manifest

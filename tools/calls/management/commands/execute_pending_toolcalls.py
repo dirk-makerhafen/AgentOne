@@ -15,7 +15,7 @@ class Command(BaseCommand):
         for agentInstance in agentInstances:
             toolCalls = agentInstance.toolCalls.filter(status=ToolCall.ToolCallStatusChoices.PENDING)
             if toolCalls.count() > 0:
-                agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.EXECUTING_TOOLS)
+                agentInstance.set_status(AgentInstance.AgentInstanceStatusChoices.TOOLCALLS_ACTIVE)
                 for tc in toolCalls:
                     try:
                         tc.run()

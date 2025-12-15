@@ -29,11 +29,12 @@ CHANNEL_LAYERS = {
 
 INSTALLED_APPS = (
     'config',
-    'agents',
     'core',
+    'agents',
     'providers',
     'systems',
     'launcher',
+    'events',
     'tools.base',
     'tools.calls',
     'tools.definitions',
@@ -56,7 +57,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django_celery_results',
     'channels',
-    'django_celery_beat'
+    'django_celery_beat',
 )
 
 CELERY_RESULT_BACKEND = REDIS_URL

@@ -1,0 +1,94 @@
+digraph StateMachine {
+    rankdir=TB;   // top → bottom layout
+    nodesep=1;
+    ranksep=1;
+
+    node [
+        shape=box
+        style="rounded,filled"
+        fillcolor="#f5f5f5"
+        color="#333333"
+        fontname="Helvetica"
+        fontsize=11
+    ];
+    // User
+    USER [style="rounded,dashed", color="red"];
+
+    // FUNCTIONS
+    USER -> instance__add_task;
+    USER -> instance__add_to_conversation;
+
+    instance__add_task [fillcolor=greenyellow]
+    instance__add_task -> instance__process_next_task;
+
+    instance__add_to_conversation [fillcolor=greenyellow]
+    instance__add_to_conversation -> PROCESSING_MESSAGE;
+    instance__add_to_conversation -> instance__process_next_task  [label="No Active Task\nEmpty User Message"];
+    instance__add_to_conversation -> create_query;
+
+    instance__process_next_task [fillcolor=greenyellow];
+    instance__process_next_task -> instance__add_to_conversation [label="Next Task"];
+    
+    create_query [fillcolor=greenyellow];
+    create_query -> QUERY_CREATE;
+    create_query -> schedule_query;
+    
+    schedule_query [fillcolor=greenyellow];
+    schedule_query -> QUERY_PENDING;
+    schedule_query -> execute_query;
+
+    execute_query [fillcolor=greenyellow];
+    execute_query -> QUERY_ACTIVE;
+    execute_query -> handle_llmResponse;
+
+    handle_llmResponse [fillcolor=greenyellow];
+    handle_llmResponse -> schedule_toolcalls;
+    handle_llmResponse -> select_next_status;
+    handle_llmResponse -> RESPONSE_PROCESS;
+
+    schedule_toolcalls [fillcolor=greenyellow];
+    schedule_toolcalls -> TOOLCALLS_PENDING;
+    
+    toolcalls_finished [fillcolor=greenyellow];
+    toolcalls_finished -> select_next_status;
+
+    select_next_status [fillcolor=greenyellow];
+    select_next_status -> SELECT_NEXT;
+    select_next_status -> instance__process_next_task;
+    select_next_status -> create_query;
+
+    // States    
+    IDLE;
+    PROCESSING_MESSAGE;
+    PROCESSING_MESSAGE -> QUERY_CREATE;
+    QUERY_CREATE;
+    QUERY_CREATE -> QUERY_PENDING; 
+    QUERY_PENDING;
+    QUERY_PENDING -> QUERY_ACTIVE;
+    QUERY_ACTIVE; 
+    QUERY_ACTIVE -> RESPONSE_PROCESS;
+
+    RESPONSE_PROCESS;
+    RESPONSE_PROCESS -> TOOLCALLS_PENDING;
+    RESPONSE_PROCESS -> SELECT_NEXT;
+    
+    TOOLCALLS_PENDING;
+    TOOLCALLS_PENDING -> TOOLCALLS_ACTIVE;
+    
+    TOOLCALLS_ACTIVE;
+    TOOLCALLS_ACTIVE -> SELECT_NEXT;
+    TOOLCALLS_ACTIVE -> toolcalls_finished;
+
+    SELECT_NEXT -> IDLE; 
+    SELECT_NEXT -> AWAITING_USER_INPUT; 
+
+    ERROR;
+    SYSTEM_OFFLINE;
+
+
+    // OBJECTS 
+    task_queue [fillcolor="#99faf0", style="square,filled"]
+    ACTIVE_CYCLE [style="rounded,dashed", fillcolor="#ffffff"];
+
+
+}

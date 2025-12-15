@@ -84,18 +84,16 @@ TOOLS = {
         "name": "update_working_dir",
         "title": "Update workingdir of a sub agent",
         "description": "Update the workingdir of a subagent",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 'agent_id': {
-                    'type': 'int', 
+                    'type': 'integer', 
                     'description': 'The agent_id of the agent instance to change.', 
-                    'required': True
                 },
                 "workingdir": {
                     "type": "string",
                     "description": "The new working dir",
-                    "required": True
                 },
             },
             "required": ["agent_id", "workingdir"]
@@ -105,30 +103,26 @@ TOOLS = {
         "name": "create",
         "title": "Create sub-agent",
         "description": "Creates a new sub-agent instance, linked to the current agent instance as a subordinate. The sub-agent will run independently.",
-        "inputSchema": {
+        "parameters": {
             "type": "object",
-            "parameters": {
+            "properties": {
                 "agent_name": {
                     "type": "string",
                     "description": "The name of the new sub-agent instance.",
-                    "required": True
                 },
                 "agent_description": {
                     "type": "string",
                     "description": "A brief description of the sub-agent's purpose.",
-                    "required": True
                 },
                 "based_on_agent_pk": {
                     "type": "integer",
                     "description": "The primary key of an existing Agent definition to base this sub-agent on. If not provided, a default Agent definition will be used.",
                     "nullable": True,
-                    "required": False
                 },
                 "workingdir": {
                     "type": "string",
                     "description": "A specific working directory for the sub-agent. If not provided, it will inherit the supervisor's working directory.",
                     "nullable": True,
-                    "required": False
                 }
             },
             "required": ["agent_name", "agent_description"]

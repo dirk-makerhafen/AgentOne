@@ -23,7 +23,10 @@ def write_file(path, content):
 
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(content, encoding='utf-8')
+        if type(content) == str:
+            p.write_text(content, encoding='utf-8')
+        else:
+            p.write_bytes(content)
         return {'status': 'success', 'message': f"File '{path}' written successfully."}
     except Exception as e:
         return {'status': 'error', 'message': f"Error writing to file {path}: {str(e)} {traceback.format_exc()}"}

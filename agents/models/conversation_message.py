@@ -1,6 +1,5 @@
 from django.db import models
 from core.models.base_model import BaseModel
-from tools.calls.models.tool_call import ToolCall
 import base64
 import os
 
@@ -11,12 +10,20 @@ class ConversationMessage(BaseModel):
     role = models.CharField(max_length=32)
     hide_from_context = models.BooleanField(default=False)
     pin_to_context = models.BooleanField(default=False)
+    trigger_query = models.BooleanField(default=False)
+
 
     def save(self, send_to_client=True, *args, **kwargs):
         if self.hide_from_context is True and self.pin_to_context is True:
             self.pin_to_context = False
         super().save(send_to_client=send_to_client, *args, **kwargs)
 
+    def add_part(self, content, content_type="TEXT"):
+        ConversationMessagePart.objects.create(
+            conversationMessage=self,
+            content=content,
+            content_type=content_type,
+        )
     def as_client_dict(self):
         message = {
             'object': 'ConversationMessage', "id": self.id,  
@@ -32,13 +39,11 @@ class ConversationMessage(BaseModel):
 
 
 class ConversationMessagePart(BaseModel):
-
     class ConversationMessagePartContentType(models.TextChoices):
         TEXT = 'TEXT', 'Text'
         IMAGE = 'IMAGE', 'Image'
 
     conversationMessage = models.ForeignKey(ConversationMessage, default=None, null=True, on_delete=models.SET_DEFAULT, related_name='conversationMessageParts')
-    toolCall = models.ForeignKey(ToolCall, default=None, null=True, on_delete=models.SET_DEFAULT, related_name='conversationMessageParts')
     tokens =  models.IntegerField(default=0) #?
     index =  models.IntegerField(default=0)
     content = models.CharField(max_length=1000000)
@@ -49,35 +54,30 @@ class ConversationMessagePart(BaseModel):
         return self.conversationMessage.agentInstance
 
     def as_client_dict(self):
-        if self.content_type.lower() == "image":
+        content = self.content
+        if self.content_type == self.ConversationMessagePartContentType.IMAGE:
             if self.content.startswith("data:"):
-                img = self.content
+                pass # Already a data URL
             elif self.content.startswith("path:"):
-                p = self.content.split(":",1)[1]
-                if os.path.exists(p):
-                    with open(p, "rb") as f:
+                path_str = self.content.split(":", 1)[1]
+                if os.path.exists(path_str):
+                    with open(path_str, "rb") as f:
                         encoded = base64.b64encode(f.read()).decode("ascii")
-                        img = f"data:image/jpeg;base64,{encoded}"
+                        content = f"data:image/jpeg;base64,{encoded}"
                 else:
-                    img = "Image file no longer exists"
+                    content = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" # 1x1 transparent gif
             else:
-                img = "No image, error"
-        r = {
+                content = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+
+        data = {
             'object': 'ConversationMessagePart',
             'id': self.id,
             'conversationMessage_id': self.conversationMessage_id,
-            'tool_call_id': self.toolCall_id,
+            'tool_call_id': None, # Default to null
             'tokens': self.tokens,
             'index': self.index,
-            'content': self.content if self.content_type.lower() == "text" else img,
+            'content': content,
             'content_type': self.content_type,
-            'content_type_display': self.get_content_type_display(),
         }
-        if self.toolCall:
-            r.update({
-                'function_name': self.toolCall.function_name, 
-                'arguments': self.toolCall.arguments, 
-                'status': self.toolCall.status, 
-                'result': self.toolCall.toolResponses.last().data if self.toolCall.toolResponses.last() else None
-            })
-        return r
+
+        return data
