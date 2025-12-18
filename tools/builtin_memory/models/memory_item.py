@@ -11,7 +11,6 @@ class MemoryItem(BaseModel):
     
     track = models.CharField(max_length=128, null=True, blank=True) # New field
     layer = models.CharField(max_length=128, null=True, blank=True) # New field
-    
     index = models.IntegerField()
     
     class Meta:

@@ -15,7 +15,6 @@ class ToolCall(BaseModel):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name='toolCalls')
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name='toolCalls')
     conversationMessage = models.ForeignKey("agents.ConversationMessage", null=True, default=None, on_delete=models.CASCADE, related_name='toolCalls')
-    #conversationMessagePart = models.ForeignKey("agents.ConversationMessagePart", null=True, default=None, blank=True, on_delete=models.SET_DEFAULT, related_name='toolCalls')
 
     # For standard LLM tool calls, this stores the unique ID from the API response.
     tool_call_id = models.CharField(max_length=255, null=True, blank=True, db_index=True)

@@ -7,7 +7,6 @@ from .models.history_limit import HistoryLimit
 from .models.llm_query import LLMQuery, QueryMessage, QueryMessagePart
 from .models.llm_response import LLMResponse
 from .models.agent_instance_fork import AgentInstanceFork
-from .models.query_queue import QueryQueue
 from .models.sub_agent_link import SubAgentLink
 
 # --- Inlines for nested structures ---
@@ -164,16 +163,6 @@ class AgentInstanceForkAdmin(admin.ModelAdmin):
     list_filter = ('created_at',)
     search_fields = ('parent_instance__name', 'child_instance__name')
     autocomplete_fields = ('parent_instance', 'child_instance')
-
-@admin.register(QueryQueue)
-class QueryQueueAdmin(admin.ModelAdmin):
-    list_display = ('agent_instance', 'status', 'created_at')
-    list_display_links = ('agent_instance',)
-    list_filter = ('status',)
-    search_fields = ('agent_instance__name',)
-    autocomplete_fields = ('agent_instance',)
-    readonly_fields = ('created_at', 'updated_at')
-    list_per_page = 50
 
 @admin.register(SubAgentLink)
 class SubAgentLinkAdmin(admin.ModelAdmin):

@@ -72,7 +72,8 @@ class LLMQuery(BaseModel):
         for d in list_of_tag_dicts:
             merge_into(result, d)
         return result
-    
+
+ 
 class QueryMessage(BaseModel):
     agent = models.ForeignKey("agents.Agent", on_delete=models.CASCADE, related_name="queryMessages")
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name="queryMessages")
@@ -171,6 +172,7 @@ class QueryMessage(BaseModel):
 
         elif tool_calls:
             message["tool_calls"] = tool_calls
+            del message["content"]
         return message
 
 

@@ -2,10 +2,25 @@ from django.db import models
 from django.db.models import Sum
 from core.models.base_model import BaseModel
 
+
+class AiModelFamily(BaseModel):
+    apiProvider = models.ForeignKey("providers.ApiProvider", on_delete=models.CASCADE, related_name='aimodelfamilys')
+    name = models.CharField(max_length=512)
+    enabled = models.BooleanField(default=True)
+    is_cloud = models.BooleanField(default=True)
+    description = models.CharField(max_length=65000, default="", blank=True)
+
 class AiModel(BaseModel):
     apiProvider = models.ForeignKey("providers.ApiProvider", on_delete=models.CASCADE, related_name='aimodels')
     name = models.CharField(max_length=512)
     enabled = models.BooleanField(default=True)
+    is_cloud = models.BooleanField(default=True)
+    description = models.CharField(max_length=65000, default="", blank=True)
+    context_length =  models.IntegerField(default=1000000)
+    filesize =  models.IntegerField(default=-1)
+    vision = models.BooleanField(default=False)
+
+
     max_prompt_tokens =  models.IntegerField(default=1000000)
     max_response_tokens = models.IntegerField(default=1000000)
     limit_request_per_day =  models.IntegerField(default=0)

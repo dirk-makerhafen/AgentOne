@@ -3,6 +3,7 @@ from core.models.base_model import BaseModel
 import base64
 import os
 
+
 class ConversationMessage(BaseModel):
     agent = models.ForeignKey("agents.Agent", default=None, null=True, on_delete=models.CASCADE, related_name='conversationMessages')
     agentInstance = models.ForeignKey("agents.AgentInstance", on_delete=models.CASCADE, related_name='conversationMessages')
@@ -11,7 +12,6 @@ class ConversationMessage(BaseModel):
     hide_from_context = models.BooleanField(default=False)
     pin_to_context = models.BooleanField(default=False)
     trigger_query = models.BooleanField(default=False)
-
 
     def save(self, send_to_client=True, *args, **kwargs):
         if self.hide_from_context is True and self.pin_to_context is True:
@@ -24,6 +24,7 @@ class ConversationMessage(BaseModel):
             content=content,
             content_type=content_type,
         )
+
     def as_client_dict(self):
         message = {
             'object': 'ConversationMessage', "id": self.id,  

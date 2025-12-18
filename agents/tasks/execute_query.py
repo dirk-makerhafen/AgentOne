@@ -51,12 +51,18 @@ def execute_query(llmQuery_id, streaming=False):
     llmResponse = None
     conversationMessage = None
     try:
+        tools = []
+        [tools.extend(tool_def.to_llm_schema()) for tool_def in agent.available_tools.all()]
         api_params = {
             "model": llmQuery.aimodel.name,
             "messages": messages,
-            "tools": [tool_def.to_llm_schema() for tool_def in agent.available_tools.all()],
-            "tool_choice": "auto"
+
         }
+        if tools:
+            api_params.update({
+                "tools": tools,
+                "tool_choice": "auto"
+            })
 
         client = OpenAI(api_key=llmQuery.apikey.key, base_url=llmQuery.aimodel.apiProvider.url)
         if streaming:
