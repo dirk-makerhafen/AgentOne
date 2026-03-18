@@ -58,7 +58,7 @@ def run_shell_script(script: str, interpreter: str = "auto", env: dict = None, t
             return {'status': 'error', 'message': f"Unsupported interpreter: {interpreter}"}
 
         # Execute the command
-        full_env = {"PATH": os.environ["PATH"]} 
+        full_env = {"PATH": os.environ["PATH"]}
         if env:
             full_env.update(env)
 

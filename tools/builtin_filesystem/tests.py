@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock, call
 from django.test import TestCase
 
-# Assuming Agent and AgentInstance models are correctly imported
+# Assuming Agent and AgentVersion models are correctly imported
 
 # Mock constants and utility for timestamps
 MOCK_NOW = datetime(2023, 10, 26, 10, 0, 0, tzinfo=timezone.utc)
@@ -130,7 +130,7 @@ def _mock_get_storage_method(existing_content, new_content):
 class FsLogEntryUndoTests(TestCase):
     def setUp(self):
         self.agent = Agent.objects.create(name="Test Agent")
-        self.agent_instance = AgentInstance.objects.create(agent=self.agent, workingdir="/app")
+        self.agent_instance = AgentVersion.objects.create(agent=self.agent, workingdir="/app")
         
         mock_fs.reset() # Reset mock filesystem before each test
 
@@ -178,7 +178,7 @@ class FsLogEntryUndoTests(TestCase):
     def _create_log_entry(self, path, content, action, prev_version=None, exists_on_fs=True, is_directory=False, pk=None, created_at=None):
         if prev_version:
             prev_version.is_newest_version = False
-            prev_version.save(send_to_client=False)
+            prev_version.save()
             
         entry = FsLogEntry.objects.create(
             pk=pk,
@@ -408,7 +408,7 @@ class FsLogEntryUndoTests(TestCase):
     # --- Test cases for celery_undo_all_filesystem_changes ---
     
     @patch('tools_filesystem.tasks.FsLogEntry.undo') # Mock the individual undo calls
-    @patch('tools_filesystem.tasks.AgentInstance.add_to_conversation')
+    @patch('tools_filesystem.tasks.AgentVersion.add_to_conversation')
     @patch('tools_filesystem.tasks.DebugLogEntry.objects.create')
     def test_celery_undo_all_basic_scenario(self, mock_debug_create, mock_add_to_conversation, mock_individual_undo):
         """
@@ -451,7 +451,7 @@ class FsLogEntryUndoTests(TestCase):
 
 
     @patch('tools_filesystem.tasks.FsLogEntry.undo') # Mock the individual undo calls
-    @patch('tools_filesystem.tasks.AgentInstance.add_to_conversation')
+    @patch('tools_filesystem.tasks.AgentVersion.add_to_conversation')
     @patch('tools_filesystem.tasks.DebugLogEntry.objects.create')
     def test_celery_undo_all_multiple_paths(self, mock_debug_create, mock_add_to_conversation, mock_individual_undo):
         """
@@ -566,7 +566,7 @@ class FsLogEntryUndoTests(TestCase):
         # manually set content_diff and stored_as to ensure it's a patch, as _create_log_entry uses "full" by default
         v2.stored_as = "patch"
         v2.content_diff = make_patch(v1.content, new_content_v2)
-        v2.save(send_to_client=False)
+        v2.save()
         
         mock_fs.add_file(file_path, new_content_v2)
 
@@ -635,7 +635,7 @@ class FsLogEntryUndoTests(TestCase):
         self.mock_os_remove.assert_not_called() # No remove was expected
 
     @patch('tools_filesystem.tasks.FsLogEntry.undo')
-    @patch('tools_filesystem.tasks.AgentInstance.add_to_conversation')
+    @patch('tools_filesystem.tasks.AgentVersion.add_to_conversation')
     @patch('tools_filesystem.tasks.DebugLogEntry.objects.create')
     def test_celery_undo_all_mixed_success_failure(self, mock_debug_create, mock_add_to_conversation, mock_individual_undo):
         """

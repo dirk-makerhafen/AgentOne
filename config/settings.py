@@ -2,8 +2,8 @@ import os
 import warnings
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-AGENT_SERVER_SECRET_KEY = "change_me"
-SECRET_KEY = 'change_me'
+AGENT_SERVER_SECRET_KEY = "change_me1"
+SECRET_KEY = 'change_me1'
 REDIS_URL = 'redis://localhost:6379/1'
 DEBUG = True
 
@@ -11,13 +11,27 @@ ALLOWED_HOSTS = ["*"]
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 99*24*3600
-
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+'''
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': 'localhost',
+        'PORT': '3306',
+        "NAME": "AgentOne_v2",
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    }
+}
+
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -26,28 +40,14 @@ CHANNEL_LAYERS = {
         },
     }
 }
-
 INSTALLED_APPS = (
-    'config',
-    'core',
-    'agents',
-    'providers',
-    'systems',
-    'launcher',
-    'events',
-    'tools.base',
-    'tools.calls',
-    'tools.definitions',
-    'tools.instances',
-    'tools.builtin_a2a',
     'tools.builtin_filesystem',
-    'tools.builtin_memory',
-    'tools.builtin_python',
-    'tools.builtin_shell',
-    'tools.builtin_subscriptions',
-    'tools.builtin_userinteraction',
-    'tools.builtin_subagents',
-    'tools.builtin_kv_storage',
+
+    'config',
+    'server',
+    'launcher',
+    'registry',
+    'tools',
     'ui',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -64,6 +64,7 @@ CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_BROKER_URL = REDIS_URL
 CELERY_WORKER_REDIRECT_STDOUTS = False
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+CELERYD_PREFETCH_MULTIPLIER = 1
 
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
@@ -117,7 +118,7 @@ DJANGORESIZED_DEFAULT_FORCE_FORMAT = 'JPEG'
 DJANGORESIZED_DEFAULT_FORMAT_EXTENSIONS = {'JPEG': ".jpg"}
 DJANGORESIZED_DEFAULT_NORMALIZE_ROTATION = True
 
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 2000
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 65000
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
@@ -128,9 +129,3 @@ CACHES = {
         'LOCATION': REDIS_URL, # Assumes Redis is running on localhost:6379
     }
 }
-
-warnings.filterwarnings(
-    'ignore',
-    message='Accessing the database during app initialization is discouraged',
-    category=RuntimeWarning
-)

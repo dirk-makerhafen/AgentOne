@@ -9,13 +9,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 import django
 django.setup()
 
-from ui import consumers
+from ui.consumer import PyHtmlGuiConsumer # Import the new consumer
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-            re_path(r'ws/(?P<user_pk>\d+)/$', consumers.UiConsumer.as_asgi()),
-        ])
+    "websocket": AuthMiddlewareStack(URLRouter([re_path(r'ws', PyHtmlGuiConsumer.as_asgi()),])
     ),
 })

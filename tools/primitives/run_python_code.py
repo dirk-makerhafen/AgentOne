@@ -28,6 +28,7 @@ def run_python_code(python_code_string: str, locals_dict={}, locals_to_return=[]
             "locals": locals_dict,
             "locals_to_return": locals_to_return,
         }) + "\n" + python_code_string
+
         proc = subprocess.run([sys.executable, script_file],
             cwd = workingdir or os.getcwd(),
             input = stdin_data,
@@ -35,6 +36,7 @@ def run_python_code(python_code_string: str, locals_dict={}, locals_to_return=[]
             text = True,
             env=full_env,
         )
+        
         if proc.returncode != 0:
             return {
                 "status": "error",

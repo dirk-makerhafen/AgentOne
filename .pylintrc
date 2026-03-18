@@ -1,0 +1,13 @@
+[MASTER]
+load-plugins=pylint_django, pylint_django.checkers.migrations  
+django-settings-module=config.settings
+
+[FORMAT]
+max-line-length=200
+
+[MESSAGES CONTROL]
+disable=C0114,C0115,C0116
+
+[DESIGN]
+max-parents=13
+

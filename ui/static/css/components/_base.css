@@ -10,6 +10,7 @@ html, body {
     background-color: white; /* Light grey for app background */
     box-sizing: border-box; /* Global box-sizing */
 }
+
 * {
     scrollbar-width: thin;
 

@@ -156,7 +156,7 @@
 }
 
 .tree-view-list li {
-    padding: 2px 0;
+    padding: 0px 0;
 }
 
 .tree-node-header, .tree-leaf-instance {
@@ -267,6 +267,8 @@
     margin-left: auto;
     position: relative; /* This is the anchor for the dropdown */
     flex-shrink: 0; /* Prevent the container from shrinking */
+        top: -2px;
+
 }
 
 .agent-actions-menu-container .agent-menu-dropdown {

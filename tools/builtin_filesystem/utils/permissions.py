@@ -28,12 +28,12 @@ def _matches(path, pattern):
         # It's a file pattern
         return path.match(pattern)
 
-def check_permission(agent_instance, absolute_path, action):
+def check_permission(agent_instance_version, absolute_path, action):
     """
     Checks if an agent instance has permission to perform an action on a given path.
 
     Args:
-        agent_instance (AgentInstance): The agent instance.
+        agent_instance (AgentVersion): The agent instance.
         absolute_path (str): The absolute path to the file or directory.
         action (str): The action to perform ('read' or 'write').
 
@@ -41,9 +41,10 @@ def check_permission(agent_instance, absolute_path, action):
         bool: True if the action is permitted, False otherwise.
     """
     # Normalize paths to handle OS differences
-    working_dir = Path(agent_instance.workingdir).resolve()
+    working_dir = Path(agent_instance_version.workingdir).resolve()
     target_path = Path(absolute_path).resolve()
 
+    '''
     # ---  Check Fine-Grained Rules First ---
     rules = _parse_rules(agent_instance.access_rules)
     # Rules are checked in order like iptables rules
@@ -65,7 +66,7 @@ def check_permission(agent_instance, absolute_path, action):
             if action == "write" and rule['permission'] == '>':
                 return True
             return False
-
+    '''
     # ---  Apply Default Permissions (if no rule matched) ---
     is_inside_workingdir = working_dir in target_path.parents or target_path == working_dir
 
@@ -73,7 +74,8 @@ def check_permission(agent_instance, absolute_path, action):
         if action == 'read':
             return True  # Read access is implicitly granted inside working directory
         if action == 'write':
-            return agent_instance.workingdir_write_allowed # Write access depends on the flag
+            return True # TODO
+            return agent_instance_version.workingdir_write_allowed # Write access depends on the flag
     
     # Path is outside working directory, but not handeld in rules, so deny
     return False

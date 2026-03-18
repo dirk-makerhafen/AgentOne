@@ -130,13 +130,13 @@ class Command(BaseCommand):
         import select
         from django.conf import settings
 
-        self.stdout.write(self.style.SUCCESS("--- Carna Server ---"))
+        self.stdout.write(self.style.SUCCESS("--- AgentOne Server ---"))
 
         config_path = os.path.join(settings.BASE_DIR, 'config', 'settings_local.py')
         config = self._read_local_config(config_path)
 
         listen_address = config.get('LISTEN_ADDRESS', '0.0.0.0')
-        listen_port = config.get('LISTEN_PORT', '8001')
+        listen_port = config.get('LISTEN_PORT', '8004')
 
         self.stdout.write(f"Starting server components...")
         self.stdout.write(f" - Daphne listening on: {self.style.SUCCESS(listen_address + ':' + listen_port)}")
@@ -145,7 +145,7 @@ class Command(BaseCommand):
         log_level = "DEBUG"
         commands = {
             "daphne": ['daphne', '-b', listen_address, '-p', listen_port, 'config.asgi:application'],
-            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '10'],
+            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '2'],
             "celery_beat": ['celery', '-A', 'config', 'beat', '-l', log_level]
         }
 

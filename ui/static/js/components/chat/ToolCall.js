@@ -1,6 +1,6 @@
 // This file manages the rendering of standalone ToolCall messages, and also updates embedded tool call statuses.
 
-// Renders and manages the rendering of tool calls, both standalone (legacy) and embedded in ConversationMessageParts (standard).
+// Renders and manages the rendering of tool calls, both standalone (legacy) and embedded in MessageParts (standard).
 function renderToolCallMessage(payload) {
     const toolCallId = payload.tool_call_id || payload.id;
 
@@ -20,7 +20,7 @@ function renderToolCallMessage(payload) {
     }
 
     // --- Fallback/Legacy Logic: Render standalone ToolCall log entry ---
-    // This handles the old `@@@...@@@` style tool calls which are not part of a ConversationMessage.
+    // This handles the old `@@@...@@@` style tool calls which are not part of a Message.
     const toolCallMessageTemplate = getTemplate('ToolCallTemplate');
     const renderedHtml = toolCallMessageTemplate({
         message: payload,

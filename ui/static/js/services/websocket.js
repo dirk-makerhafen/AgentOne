@@ -255,15 +255,15 @@ const messageHandlers = {
         renderPythonToolVarMessage(payload);
         updateSidebarVar(payload);
     },
-    'ConversationMessage': (payload) => renderConversationMessage(payload),
-    'ConversationMessagePart': (payload) => renderConversationMessagePart(payload),
+    'Message': (payload) => renderMessage(payload),
+    'ConversationMessagePart': (payload) => renderMessagePart(payload),
     'ToolCall': (payload) => renderToolCallMessage(payload),
     'FsLogEntry': (payload) => {
         renderSidebarFilesystem(payload, payload.agentInstance_id);
         renderFilesystemMessage(payload);
     },
     'DebugLogEntry': (payload) => renderDebugLogMessage(payload),
-    'LLMQuery': (payload) => renderLLMQueryMessage(payload, payload.agentInstance_id),
+    'Query': (payload) => renderLLMQueryMessage(payload, payload.agentInstance_id),
     'QueryMessage': (payload) => renderQueryMessage(payload),
     'QueryMessagePart': (payload) => renderQueryMessagePart(payload),
 
@@ -276,7 +276,7 @@ const messageHandlers = {
         }
     },
     'SubAgentLinkList': (payload) => {
-        renderSidebarSubagents(payload.sub_agents, payload.instance_pk);
+        renderSidebarSubagents(payload.subagents, payload.instance_pk);
     },
     'error': (payload) => addToClientLog(`Error: ${payload.message}`, 'error', null, payload.agentInstance_id),
     'info': (payload) => addToClientLog(`Info: ${payload.message}`, 'info', null, payload.agentInstance_id)

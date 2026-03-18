@@ -27,6 +27,12 @@
 @import url("components/provider_list.css");
 @import url("components/agent_edit_tab.css");
 
+
+.UiAppView {
+    width: 100%;
+    height: 100%;
+}
+
 /* --- Prompt Templates Table Styling --- */
 .prompts-table-container {
     overflow-x: auto; /* Allow horizontal scrolling only for the table if it absolutely needs it */
@@ -397,7 +403,7 @@ padding: 5px;
     flex-grow: 1;
     display: flex; /* Maintain flex for internal layouts if needed */
     flex-direction: column; /* Stack children vertically */
-    overflow: hidden; /* Prevent content from overflowing its boundaries */
+    overflow: auto; 
 }
 
 .table-hover>tbody>tr:hover {
@@ -516,3 +522,10 @@ padding: 5px;
 .agent-instance-count {
     font-size: 0.8em;
 }@import "components/sidebar_right_subagents.css";
+
+
+tree-node-details {
+    font-size: 0.75em;
+    padding-left: 42px;
+    color: darkgray;
+}

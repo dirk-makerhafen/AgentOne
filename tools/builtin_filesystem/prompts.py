@@ -167,7 +167,12 @@ TOOLS = {
             },
             "required" : ["path", "search", "replace"],
         }
-    },
+    }
+}
+
+'''
+
+,
     "fs_python_edit": {
         "name": "",
         "title": "",
@@ -195,5 +200,4 @@ TOOLS = {
             "required" : ["path", "source"],
         }
     }
-}
-
+'''

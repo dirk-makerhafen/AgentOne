@@ -1,0 +1,69 @@
+{% extends "pyHtmlGuiBase.html" %}
+{% load static %}
+
+{% block head_meta %}
+    {{ block.super }}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Ui</title>
+{% endblock %}
+
+{% block head_scripts %}
+    {{ block.super }}
+    <script src="{% static 'js3party/jquery-3.6.0.min.js' %}"></script>
+    <script src="{% static 'js3party/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js3party/split.js' %}"></script>
+
+    <script src="{% static 'js3party/diff.min.js' %}"></script>
+    <script src="{% static 'js3party/diff2html.min.js' %}"></script>
+    <script src="{% static 'js3party/handlebars.js' %}"></script>
+
+    <script src="{% static 'js3party/d3.v7.js' %}"></script>
+    <script src="{% static 'js3party/d3-flamegraph.min.js' %}"></script>
+    
+    <script src="{% static 'js/utils/utils.js' %}"></script>
+    <script src="{% static 'js/utils/resizable.js' %}"></script>
+    <script src="{% static 'js/utils/splitpanel.js' %}"></script>
+    <script src="{% static 'js/utils/tabs.js' %}"></script>
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the main split layout
+            if (typeof reinitializeAllSplits === 'function') {
+                reinitializeAllSplits();
+                if (typeof updateSplitControlButtons === 'function') {
+                    updateSplitControlButtons();
+                } else {
+                    console.error("updateSplitControlButtons function not found on DOMContentLoaded.");
+                }
+            } else {
+                console.error("reinitializeAllSplits function not found. Split.js setup failed.");
+            }
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => { 
+                    reinitializeAllSplits(); 
+                    if (typeof updateSplitControlButtons === 'function') {
+                        updateSplitControlButtons();
+                    }
+                }, 100);
+            });
+        });
+        
+    </script>
+
+{% endblock %}
+
+
+{% block head_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css3party/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css3party/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css3party/d3-flamegraph.css' %}">
+    <link rel="stylesheet" href="{% static 'css3party/diff2html.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/resizable.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+

@@ -5,13 +5,13 @@ import requests
 
 def dispatched_inprocess(func):
     @functools.wraps(func)
-    def wrapper(*args, agentInstance=None, system=None, **kwargs): # Added 'system' argument
+    def wrapper(*args, agent_instance=None, system=None, **kwargs): # Added 'system' argument
         is_remote = False
         target_system = None
         if system: # Prioritize system if explicitly passed
             target_system = system                
-        elif agentInstance: # Fallback to agentInstance.system
-            target_system = agentInstance.system
+        elif agent_instance: # Fallback to agent_instance.system
+            target_system = agent_instance.system  if hasattr(agent_instance, "system") else None
         if target_system:
             is_remote = target_system.executor_mode != "local"
         if is_remote:
@@ -21,13 +21,13 @@ def dispatched_inprocess(func):
 
 def dispatched_detached(func):
     @functools.wraps(func)
-    def wrapper(*args, agentInstance=None, system=None, **kwargs): # Added 'system' argument
+    def wrapper(*args, agent_instance=None, system=None, **kwargs): # Added 'system' argument
         is_remote = False
         target_system = None
         if system: # Prioritize system if explicitly passed
             target_system = system                
-        elif agentInstance: # Fallback to agentInstance.system
-            target_system = agentInstance.system
+        elif agent_instance: # Fallback to agent_instance.system
+            target_system = agent_instance.system if hasattr(agent_instance, "system") else None
         if target_system:
             is_remote = target_system.executor_mode != "local"
         if is_remote:

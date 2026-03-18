@@ -1,10 +1,10 @@
 // This file manages the rendering of conversation messages (user, assistant, etc.) in the log.
 
-const partTemplate = document.getElementById('ConversationMessagePartTemplate');
-    Handlebars.registerPartial('ConversationMessagePartTemplate', partTemplate.innerHTML);
+const partTemplate = document.getElementById('MessagePartTemplate');
+    Handlebars.registerPartial('MessagePartTemplate', partTemplate.innerHTML);
 
-function renderConversationMessage(payload) {    
-    const conversationMessageTemplate = getTemplate('ConversationMessageTemplate');
+function renderMessage(payload) {    
+    const conversationMessageTemplate = getTemplate('MessageTemplate');
     
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = conversationMessageTemplate({
@@ -34,10 +34,10 @@ function renderConversationMessage(payload) {
     }
 };
 
-function renderConversationMessagePart(payload) {
-    const partTemplate = getTemplate('ConversationMessagePartTemplate');
+function renderMessagePart(payload) {
+    const partTemplate = getTemplate('MessagePartTemplate');
     if (!partTemplate) {
-        console.error("ConversationMessagePartTemplate not found!");
+        console.error("MessagePartTemplate not found!");
         return;
     }
 
@@ -45,7 +45,7 @@ function renderConversationMessagePart(payload) {
     if (!parentContainer) {
         // The parent message might not have been rendered yet.
         // This can happen in high-frequency streaming scenarios.
-        // We will rely on the full ConversationMessage re-render to catch up.
+        // We will rely on the full Message re-render to catch up.
         return;
     }
 

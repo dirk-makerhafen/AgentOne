@@ -1,4 +1,4 @@
-// This file manages the rendering of LLMQuery log messages and their interactions (flame graphs, highlights).
+// This file manages the rendering of Query log messages and their interactions (flame graphs, highlights).
 
 function renderLLMQueryMessage(payload, instancePk) {
     const llmQueryMessageTemplate = getTemplate('LLMQueryTemplate');
@@ -85,9 +85,9 @@ function renderLLMQueryMessage(payload, instancePk) {
 
 
 /**
- * Toggles the visibility of the flame graph for a given LLMQuery message.
+ * Toggles the visibility of the flame graph for a given Query message.
  * If the flame graph is revealed, it attempts to render it.
- * @param {string} prefixedId The ID of the LLMQuery message container.
+ * @param {string} prefixedId The ID of the Query message container.
  * @param {number} instancePk The instance PK for scoping.
  */
 function toggleFlameGraph(prefixedId, instancePk) {
@@ -113,7 +113,7 @@ function toggleFlameGraph(prefixedId, instancePk) {
 /**
  * Renders the D3 flame graph within its container.
  * This function now uses the data transformation logic from the old working function.
- * @param {string} prefixedId The ID of the LLMQuery message container.
+ * @param {string} prefixedId The ID of the Query message container.
  * @param {number} instancePk The instance PK for scoping.
  */
 function renderFlameGraph(prefixedId, instancePk) {
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderQueryMessage(payload) {
     const parentContainer = document.querySelector(`#llm_query_message_${payload.query_id} #query_messages_container_${payload.query_id}`);
     if (!parentContainer) {
-        return; // Parent LLMQuery not rendered yet. It will be handled by the full render.
+        return; // Parent Query not rendered yet. It will be handled by the full render.
     }
 
     const template = getTemplate('QueryMessageTemplate');
