@@ -36,8 +36,6 @@ if TYPE_CHECKING:
     from server.models.agents.agent_version import AgentVersion
 
 class SimpleTaskAgent(BaseAgent):
-    def __init__(self, name=None, workingdir=None, profile=None, agent_instance_version=None):
-        super().__init__(name, workingdir, profile, agent_instance_version)
     @chain()
     def run(self, **kwargs):
         return [
@@ -53,7 +51,7 @@ class SimpleTaskAgent(BaseAgent):
         QueryMessagePart.objects.create(
             content = GenericContent.from_data(payload),
             content_type = MessageContentType.TEMPLATE,
-            content_template = query.profile.task_prompt,
+            content_template = query.agent_profile.task_prompt,
             query_message = query_message,
         )
         return query

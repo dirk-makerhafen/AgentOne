@@ -1,15 +1,16 @@
 from threading import Lock
 from channels.generic.websocket import WebsocketConsumer
 import json
+from ui.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.pyHtmlGui.pyhtmlgui import PyHtmlGui
-from ui.main_app import UiApp
-from ui.main_view import UiAppView
+from AgentOne.ui.app import UiApp
+from AgentOne.ui.app_view import UiAppView
 
 # Global PyHtmlGui instance (single instance for the entire Django app)
 # This will be initialized only once when the consumer is first loaded
 _pyhtmlgui_lock = Lock()
-_pyhtmlgui = None
-_pyhtmlgui_instance = None
+_pyhtmlgui: PyHtmlGui|None = None
+_pyhtmlgui_instance: PyHtmlGuiInstance|None = None
 _view_app_instance = UiApp() # Use the main UiApp as the app_instance
 
 class PyHtmlGuiConsumer(WebsocketConsumer):
@@ -32,10 +33,12 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
             _pyhtmlgui_instance.connect_send_function(self.send)
 
     def disconnect(self, close_code):
-        _pyhtmlgui_instance.disconnect_send_function(self.send)
+        if _pyhtmlgui_instance:
+            _pyhtmlgui_instance.disconnect_send_function(self.send)
 
-    def receive(self, text_data=None, bytes_data=None):
-        _pyhtmlgui_instance.process_received_message(json.loads(text_data))
+    def receive(self, text_data: str|None=None, bytes_data=None):
+        if _pyhtmlgui_instance and text_data:
+            _pyhtmlgui_instance.process_received_message(json.loads(text_data))
   
     def send(self, message):
         super().send(text_data=message)

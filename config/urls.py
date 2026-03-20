@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from old.register_client_api import register_client
-from ui.main_view import ui
+from AgentOne.ui.app_view import ui
 
 app_name = 'Agent'
 

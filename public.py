@@ -21,4 +21,8 @@ from server.models.queries.query import Query
 from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart
 
+from server.models.content import GenericContent
+
 from tools.builtin_filesystem.filesystem_api import FilesystemApi
+
+from tools import primitives
