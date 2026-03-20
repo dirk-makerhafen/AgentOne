@@ -1,5 +1,9 @@
 from __future__ import annotations
 from django.db import models
+from server.models.queries.query import Query
+from server.models.queries.response import Response
+
+from server.models.conversation_message import ConversationMessage
 from server.models.base_model import BaseModel
 from django.core.exceptions import ValidationError
 
@@ -36,15 +40,15 @@ class AgentInstance(BaseModel):
 
     @property
     def conversation_messages(self):
-        return self.related_conversation_messages # pyright: ignore[reportAttributeAccessIssue]
+        return ConversationMessage.objects.filter(agent_instance_version__agent_instance=self)
 
     @property
     def queries(self):
-        return self.related_queries # pyright: ignore[reportAttributeAccessIssue]
+        return Query.objects.filter(agent_instance_version__agent_instance=self)
 
     @property
     def responses(self):
-        return self.related_responses # pyright: ignore[reportAttributeAccessIssue]
+        return Response.objects.filter(agent_instance_version__agent_instance=self)
     
     @property
     def agent_task_instances(self):

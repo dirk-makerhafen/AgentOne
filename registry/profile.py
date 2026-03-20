@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 
-class ProfileDef():
-    def __init__(self, name = "default", model: str|None = None,
+class Profile():
+    def __init__(self, name = None, model: str|None = None,
                 max_retries: int|None = None, max_task_steps: int|None = None, unattended_steps: int|None = None, max_history_messages: int|None = None,
                 task_prompt: str|None = None, system_prompt: str|None = None,
                 execution_mode: str = 'queue', tool_call_syntax: str = 'default',
-                extra_settings: dict|None = None, variants: list[ProfileDef]|None = None) -> None:
+                extra_settings: dict|None = None, variants: list[Profile]|None = None) -> None:
         self.name = name
         self.model = model
         self.max_retries = max_retries

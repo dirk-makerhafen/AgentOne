@@ -43,7 +43,7 @@ class AgentVersionView(PyHtmlView):
               <td><b>Task Definitions</b></td>
               <td></td>
             </tr>
-            {{ pyview.agent_task_definitions_view.render()}}
+            {{ pyview.task_definitions_view.render()}}
 
             <tr>
               <td><b>Tools</b></td>
@@ -69,7 +69,7 @@ class AgentVersionView(PyHtmlView):
         super().__init__(subject, parent, **kwargs)
         self.s = subject
         self.agent_settings_view = AgentSettingsView(subject.profile, self)
-        self.agent_task_definitions_view = AgentTaskDefinitionsView(subject=subject.task_definitions, parent=self, item_class=AgentTaskDefinitionView)
+        self.task_definitions_view = AgentTaskDefinitionsView(subject=subject.task_definitions, parent=self, item_class=AgentTaskDefinitionView)
 
 
 class AgentVersionsView(PyHtmlView):

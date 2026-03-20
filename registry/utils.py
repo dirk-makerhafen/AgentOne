@@ -1,6 +1,9 @@
 
 import ast
 import inspect
+from pathlib import Path
+import pkgutil
+import sys
 from django.core.exceptions import ValidationError
 
 from server.models.providers.ai_model import AiModel
@@ -30,13 +33,17 @@ def get_import_strings(source_path, class_name):
         elif isinstance(node, ast.Attribute):
             # For 'np.array', we need to catch 'np'
             curr = node.value
-            while isinstance(curr, ast.Attribute): 
+            while isinstance(curr, ast.Attribute):
                 curr = curr.value
-            if isinstance(curr, ast.Name): 
+            if isinstance(curr, ast.Name):
                 used_in_class.add(curr.id)
 
+    
     # 4. Reconstruct the exact import strings used
     exec_strings = set()
+
+
+    '''
     for name in used_in_class:
         if name in name_to_node:
             node, alias = name_to_node[name]
@@ -46,6 +53,30 @@ def get_import_strings(source_path, class_name):
                 exec_strings.add(f"import {alias_str}")
             elif isinstance(node, ast.ImportFrom):
                 exec_strings.add(f"from {node.module} import {alias_str}")
+    '''
+
+    # Filtering Logic: Keep only non-local modules
+    for name in used_in_class:
+        if name in name_to_node:
+            node, alias = name_to_node[name]
+            # Determine the base module name (e.g., 'os' from 'os.path' or 'from os import...')
+            if isinstance(node, ast.ImportFrom):
+                base_module = node.module.split('.')[0] if node.module else ""
+            else:
+                base_module = alias.name.split('.')[0]
+            is_local= (Path(source_path).parent  / Path(base_module)).exists() and not base_module == "AgentOne"
+                
+            # CHECK: If it's a built-in or installed package, keep it
+            is_builtin = base_module in sys.builtin_module_names
+            is_installed = pkgutil.find_loader(base_module) is not None
+            if (is_builtin or is_installed) and not is_local :
+                alias_str = f"{alias.name} as {alias.asname}" if alias.asname else alias.name
+                if isinstance(node, ast.Import):
+                    exec_strings.add(f"import {alias_str} # {is_builtin}{is_installed}")
+                elif isinstance(node, ast.ImportFrom):
+                    exec_strings.add(f"from {node.module} import {alias_str} # {is_builtin}{is_installed}")
+
+    print("HEHRHERHEHRHERHEHRHERH", exec_strings)
     imports = sorted(list(exec_strings))
     return imports
 

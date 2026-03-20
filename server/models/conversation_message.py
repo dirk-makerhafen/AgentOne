@@ -1,5 +1,4 @@
 from django.db import models
-from server.models.agents.agent_instance_version import AgentInstanceVersion
 from django_enum import EnumField
 from server.models.enums.message_enums import MessageRole, MessageSource
 from server.models.conversation_message_part import ConversationMessagePart
@@ -9,7 +8,7 @@ from server.models.content import GenericContent
 
 class ConversationMessage(BaseModel):
     #reference tracking
-    agent_instance_version = models.ForeignKey(AgentInstanceVersion, on_delete=models.CASCADE, related_name="related_conversation_messages")
+    agent_instance_version = models.ForeignKey("server.AgentInstanceVersion", on_delete=models.CASCADE, related_name="related_conversation_messages")
     query          = models.ForeignKey("server.Query"        , null=True, blank=True, on_delete=models.CASCADE, related_name='related_conversation_messages')
     response       = models.ForeignKey("server.Response"     , null=True, blank=True, on_delete=models.CASCADE, related_name='related_conversation_messages')
     tool_calls     = models.ManyToManyField("server.AgentTaskCall",related_name='related_conversation_messages')

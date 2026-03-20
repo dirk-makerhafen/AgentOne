@@ -14,7 +14,7 @@ from attrs import define, field
 import re
 from runtime.tasks.bound_agent_function import BoundAgentFunction
 from runtime.context_manager import RuntimeContextTracker
-from server.agents.models.query_message import QueryMessage
+from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart
 from server.models.enums.message_enums import MessageContentType
 from registry.task_decorators import task, chain, chord, map, group,command
@@ -48,16 +48,16 @@ class SimpleTaskAgent(BaseAgent):
 
     @task()
     def _create_task_query(self, payload):
-        query = self._create_new_query.func()
-        qmsg = QueryMessage.objects.create(role="system", query=query, index=-1)
+        query = self._create_new_query()
+        query_message = QueryMessage.objects.create(role="system", query=query, index=-1)
         QueryMessagePart.objects.create(
-            content = GenericContent.from_data({"instance":self.agent_instance.pk, "agent":self.agent.pk}),
+            content = GenericContent.from_data(payload),
             content_type = MessageContentType.TEMPLATE,
-            content_template = system_prompt,
-            query_message = qmsg,
+            content_template = query.profile.task_prompt,
+            query_message = query_message,
         )
         return query
 
     @task()
-    def _get_response_message(self, message:str, **kwargs):
-        return message
+    def _get_response_message(self, content:str, **kwargs):
+        return content

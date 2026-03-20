@@ -4,6 +4,27 @@ from functools import wraps
 from runtime.tasks.bound_agent_function import BoundAgentFunction
 from server.models.enums.task_enums import TaskType
 
+class TaskDescriptor:
+    """Acts as the bridge between the class method and the agent instance."""
+    def __init__(self, func: Callable):
+        self.func = func
+        wraps(func)(self)
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self  # Access via class (e.g., MyAgent.add)
+        return BoundAgentFunction(instance, self.func)
+    def __call__(self, *args: Any, **kwds: Any):
+        raise TypeError(
+            f"Task '{self.func.__name__}' must be invoked using .delay(), .apply_async(), or .i() "
+            "for asynchronous execution or instance creation."
+        )
+    def old__call__(self, *args: Any, **kwds: Any):
+        #raise Exception()
+        def wrapper(*args, **kwds):
+            return self.func(*args, **kwds)
+        return wrapper # self.func(*args, **kwds)
+
 class TaskDecorator:
     """
     Base decorator for all Agent tasks. Stores metadata on the function object.
@@ -35,26 +56,6 @@ class TaskDecorator:
             "retry_requires_approval": self.retry_requires_approval, # required user approval before run
         }
         return TaskDescriptor(func)
-
-
-class TaskDescriptor:
-    """Acts as the bridge between the class method and the agent instance."""
-    def __init__(self, func: Callable):
-        self.func = func
-        wraps(func)(self)
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self  # Access via class (e.g., MyAgent.add)
-        return BoundAgentFunction(instance, self.func)
-
-    def __call__(self, *args: Any, **kwds: Any):
-        print("TaskDescriptor.__call__")
-        #raise Exception()
-        def wrapper(*args, **kwds):
-            return self.func(*args, **kwds)
-        return wrapper # self.func(*args, **kwds)
-
 
 
 # User-facing / invocation roots

@@ -3,6 +3,8 @@ import json
 from functools import wraps
 import traceback
 from django.db import models
+from runtime.rate_limiter import RateLimitError
+from server.models.tasks.agent_task_definition import AgentTaskDefinition
 from server.models.content import GenericContent
 from runtime.context_manager import ContextTracker
 from server.models.enums.task_enums import TaskRunStatus
@@ -62,11 +64,13 @@ class AgentTaskRun(BaseModel):
     result_json  = models.JSONField(default=None, null=True)
 
     @classmethod
-    def create(cls, agent_task_call: AgentTaskCall, args=[], kwargs=[], dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None) -> "AgentTaskRun":
+    def create(cls, agent_task_call: AgentTaskCall, args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None) -> "AgentTaskRun":
         print("create taskru ", agent_task_call.agent_task_definition.task_type, agent_task_call.agent_task_definition.name, args, kwargs)
         agent_task_instance = agent_task_call.agent_task_instance
         agent_task_instance: AgentTaskInstance
         
+        args = args if args else []
+        kwargs = kwargs if kwargs else {}        
         if not isinstance(args,(list, set, tuple)):
             args = [args, ]
         if args:
@@ -91,8 +95,8 @@ class AgentTaskRun(BaseModel):
             time_limit      = time_limit if time_limit else agent_task_instance.time_limit,   #   
             max_subtask_errors     = max_subtask_errors if max_subtask_errors else agent_task_instance.max_subtask_errors,   # for groups,absolute number, also used when timeout
             max_subtask_error_rate = max_subtask_error_rate if max_subtask_error_rate else agent_task_instance.max_subtask_error_rate,# for groups, in percent, also used when timeout
-            limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else agent_task_instance.limit_per_instance_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
-            limit_per_instance_parallel_runs = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else agent_task_instance.limit_subtask_parallel_runs #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+            limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else agent_task_instance.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
+            limit_per_instance_parallel_runs = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else agent_task_instance.limit_per_instance_parallel_runs  #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
         )
         if ref_pks:
             print("ref_pks", ref_pks)
@@ -101,6 +105,7 @@ class AgentTaskRun(BaseModel):
         # AUTOMATIC TRACKING
         parent_call = ContextTracker.current
         '''
+        # todo not sure if we need this tracking here, i think not
         if parent_call:
             # Fix: use the correct related name 'child_relations' 
             # and ensure we don't duplicate if already linked
@@ -173,7 +178,7 @@ class AgentTaskRun(BaseModel):
         print("current ctx1" , ContextTracker.current, self)
         from runtime.task_run_runtime import AgentTaskRunRuntime
         celery_delay(AgentTaskRunRuntime._apply_async, self.pk)
-
+    
     def apply(self):
         print("AgentTaskCall.run", self.agent_task_definition.name)
         new_sub_task_calls = []
@@ -184,64 +189,59 @@ class AgentTaskRun(BaseModel):
                 td = self.agent_task_definition
                 x = getattr(runtime, td.name)
                 kwargs = self.arguments_json
-                
+ 
                 if self.agent_task_definition.task_type == "CHAIN":
                     next_step_kwargs = kwargs
-                    #next_step_args = args
-                    print("call here" , next_step_kwargs )
                     for sub_task_instance in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
-                        print("next_step_args", next_step_kwargs)
-                        print("sub_task_instance1", sub_task_instance)
-                        #print("sub_task_instance1", sub_task_instance._parent)
-                        #if not isinstance(next_step_args, (list, tuple, set)) and not next_step_args.agent_task_instance.task_type == "GROUP" and not next_step_args.agent_task_instance.task_type == "CHAIN":
-                        #    next_step_args = [next_step_args, ]
                         next_step_kwargs = sub_task_instance.apply_async(kwargs=next_step_kwargs)
-                        #next_step_kwargs={}
                         new_sub_task_calls.append(next_step_kwargs)
                     result = new_sub_task_calls[-1]
-                
+ 
                 elif self.agent_task_definition.task_type == "GROUP":
-                    print("GROUP")
                     next_step_kwargs = kwargs
-                    #AgentTaskInstance
-                    for sub_task_instance  in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
-                        sub_task_instance: AgentTaskInstance
+                    for sub_task_instance in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
                         call = sub_task_instance.apply_async(kwargs=next_step_kwargs)
                         new_sub_task_calls.append(call)
                     result = new_sub_task_calls
-
+ 
                 else:
                     args, _ = load_model_references(self.arguments_json)
                     args = load_results_data(args, timeout=0)
-                    print("call me", args)
                     kwargs = {}
                     if isinstance(args, dict):
                         kwargs = args
-                        args = kwargs.pop("*",[])
+                        args = kwargs.pop("*", [])
                     elif not isinstance(args, (list, set, tuple)):
                         args = [args, ]
-                    print("STARING", args, kwargs)
-                    result = x.func(runtime,  *args,  **kwargs)
-
+                    result = x.func(runtime, *args, **kwargs)
+ 
                 self.result_json, ref_pks = AgentTaskRun.result_to_json(obj=result)
-
-                print("sdjbfkdsjhfds", ref_pks)
-                self.taskrun_result_references.set(ref_pks)
-                print("setting taskrun_result_references", self.taskrun_result_references.all(), ref_pks)
+                self.taskrun_result_references.add(ref_pks)
                 if ref_pks:
                     self.status = TaskRunStatus.WAITING_RESULTTASKS
                 else:
                     self.status = TaskRunStatus.SUCCESS
+ 
+            except RateLimitError:
+                # LLM capacity was unavailable — not a failure, not a retry.
+                # run_runtime._apply_async checks for RATE_LIMITED and transitions
+                # the call to WAITING_RATELIMIT without consuming retry budget.
+                # result_json is left None — the run will be re-dispatched from scratch.
+                self.status = TaskRunStatus.RATE_LIMITED
+ 
             except Exception as e:
-                self.result_json = json.dumps({ "exception": f"{e}", "traceback": traceback.format_exc()})
+                self.result_json = json.dumps({
+                    "exception": f"{e}",
+                    "traceback": traceback.format_exc(),
+                })
                 self.status = TaskRunStatus.FAILURE
-
-        # save result and status atomic
-        if not AgentTaskRun.objects.filter(pk = self.pk, status = TaskRunStatus.ACTIVE).update( status = self.status, result_json=self.result_json):
-            return None, None # is this failed something is wrong, just exit 
-        #print("waiting 2 seconds", self)
-        #time.sleep(1)
-
+ 
+        # Save result and status atomically
+        if not AgentTaskRun.objects.filter(
+            pk=self.pk, status=TaskRunStatus.ACTIVE
+        ).update(status=self.status, result_json=self.result_json):
+            return None, None
+        
     def save(self, *args,  allow=False, **kwargs):
         if not allow and self.pk:
             raise ValidationError(f"You may not edit an existing {self._meta.model_name}")

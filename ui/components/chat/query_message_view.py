@@ -29,7 +29,6 @@ class QueryMessagePartView(PyHtmlView):
     def __init__(self, subject, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.s = subject
-    
 
 class QueryMessageView(PyHtmlView):
     TEMPLATE_STR = """

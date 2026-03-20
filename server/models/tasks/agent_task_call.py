@@ -148,8 +148,8 @@ class AgentTaskCall(BaseModel):
             time_limit      = time_limit if time_limit else agent_task_instance.time_limit,     #
             max_subtask_errors     = max_subtask_errors if max_subtask_errors else agent_task_instance.max_subtask_errors,   # for groups,absolute number, also used when timeout
             max_subtask_error_rate = max_subtask_error_rate if max_subtask_error_rate else agent_task_instance.max_subtask_error_rate,# for groups, in percent, also used when timeout
-            limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else agent_task_instance.limit_per_instance_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
-            limit_per_instance_parallel_runs  = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else agent_task_instance.limit_subtask_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+            limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else agent_task_instance.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
+            limit_per_instance_parallel_runs  = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else agent_task_instance.limit_per_instance_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
 
             # Options - Retry
             max_retries  = max_retries if max_retries else agent_task_instance.max_retries,   # how many retries to we make in case of error
@@ -180,8 +180,8 @@ class AgentTaskCall(BaseModel):
         print("current ctx2" , ContextTracker.current)
         for before_hook_call in self.taskcall_before_run_hooks.all(): # start calls after their reference is set
             before_hook_call.apply_async()
-        from runtime.tasks.call_runtime import AgentTaskCallRuntime
-        celery_delay(AgentTaskCallRuntime._apply_async, self.pk)
+        from AgentOne.runtime.tasks.call_scheduler import CallScheduler
+        celery_delay(CallScheduler._apply_async, self.pk)
 
     @staticmethod
     def callargs_to_json(obj, ref_pks=None):

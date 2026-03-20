@@ -15,7 +15,7 @@ from server.models.agents.agent_version import AgentVersion, AgentVersionAvailab
 
 from server.models.providers.ai_model import AiModel
 from server.models.tasks.agent_task_definition import AgentTaskDefinition
-from registry.profile_def import ProfileDef
+from registry.profile import Profile
 from registry.task_decorators import TaskDescriptor
 from django.core.exceptions import ValidationError
 
@@ -25,29 +25,40 @@ from registry.utils import generate_schema_for_function, get_import_strings, get
 
 class AgentRegistry():
     def register(self, agent_cls, recursive=False) -> AgentVersion:
-        print(f'\Registering Agent "{agent_cls.__name__}" from definition')
-        subagent_defs = [ x for x in  getattr(agent_cls, "subagents", [])]
-        tool_defs = [x for x in getattr(agent_cls, "tools", []) if not isinstance(x, TaskDescriptor)]
-        subagent_versions = []
-        if recursive:
-            for subagent_def in subagent_defs:
-                subagent_versions.append(subagent_def.register(recursive=True))
-            for tool_def in tool_defs:
-                tool_def.register(recursive=True)
-        print("subagent_versions", subagent_versions)
-        unregistered_subagent_defs = [a for a in subagent_defs if a.is_registered is False]
-        unregistered_tool_defs = [a for a in tool_defs if a.is_registered is False]
-        if unregistered_subagent_defs:
-            raise Exception(f"unregistered_subagent_defs {unregistered_subagent_defs}")
-        if unregistered_tool_defs:
-            raise Exception(f"unregistered_tool_defs {unregistered_tool_defs}")
+        print(f'Registering Agent "{agent_cls.__name__}" from definition')
+        from AgentOne.registry.agent_def import AgentDef
 
+        # 1. Collect all subagents and tools declared by the agent_cls
+        subagent_defs = [x for x in getattr(agent_cls, "subagents", [])]
+        raw_tool_defs = [x for x in getattr(agent_cls, "tools", [])] # This list can contain TaskDescriptor or AgentDef subclasses
+
+        # Map to store AgentVersion for each *imported* agent (subagent or external tool agent)
+        imported_agent_versions_map: Dict[str, AgentVersion] = {} 
+
+        # 2. Recursively register subagents and external tool agents
+        # This ensures they are up-to-date and we get their latest AgentVersion objects.
+        subagent_versions: List[AgentVersion] = []
+        for subagent_def in subagent_defs:
+            registered_sub_version = subagent_def.register(recursive=True)
+            subagent_versions.append(registered_sub_version)
+            imported_agent_versions_map[subagent_def.__name__] = registered_sub_version
+
+        # Register external tool agents (AgentDef subclasses) declared in .tools list
+        # This is for tool agents that are separate AgentDef classes, not internal @tool methods.
+        registered_external_tool_agent_versions: List[AgentVersion] = []
+        for tool_def_item in raw_tool_defs:
+            if isinstance(tool_def_item, AgentDef): # Check if it's an AgentDef class
+                registered_tool_version = tool_def_item.register(recursive=True)
+                registered_external_tool_agent_versions.append(registered_tool_version)
+                imported_agent_versions_map[tool_def_item.__name__] = registered_tool_version
+
+        # 3. Prepare kwargs for AgentProfile (removed bare except and used specific get_or_create logic)
         profile = getattr(agent_cls, "profile")
-        profile: ProfileDef
-        agent_version = None
+        profile: Profile
+        print("profile.model", profile.model)
         aimodel = get_ai_model(profile.model)
         kwargs = {
-            "name": profile.name,
+            "name": profile.name if profile.name else f'{agent_cls.__name__}:default',
             "aimodel": aimodel,
             "variant_defs":  profile.to_dict().get("variants", None),
             "max_retries": profile.max_retries,
@@ -61,36 +72,79 @@ class AgentRegistry():
             "extra_settings": profile.extra_settings
         }
         kwargs = {k:v for k,v in kwargs.items() if v is not None}
+
         source_code = inspect.getsource(agent_cls)
         source_path = inspect.getfile(agent_cls)
-        python_dependencies = get_import_strings(source_path, agent_cls.__name__) # Remove duplicates and sort for consistency
+        python_dependencies = get_import_strings(source_path, agent_cls.__name__)
 
         with transaction.atomic():
-            profile, created = AgentProfile.objects.get_or_create(**kwargs)
-            agent, created = Agent.objects.get_or_create(name=agent_cls.__name__, defaults={"description": getattr(agent_cls, "description", ""),})
-            agent_version = agent.agent_versions.order_by("-version_number").first() if agent else None
-            source_changed = not agent_version or agent_version.source_path != source_path or agent_version.source_code.get() != source_code
+            profile_obj, created_profile = AgentProfile.objects.get_or_create(**kwargs) 
+            agent, created_agent = Agent.objects.get_or_create(name=agent_cls.__name__, defaults={"description": getattr(agent_cls, "description", ""),})
+
+            # Get the latest existing agent version
+            agent_version: AgentVersion = agent.agent_versions.order_by("-version_number").first()
+
+            # Determine if current agent's source/dependencies have changed
+            source_changed = not agent_version or agent_version.source_path != source_path or agent_version.source_code != source_code
             python_dependencies_changed = not agent_version or agent_version.python_dependencies != python_dependencies
-            imported_sub_agents_changed = False  #todo
-            imported_tool_agents_changed = False  #todo
-            print("self.source_changed", source_changed)
+
+            # Check for changes in imported sub-agents
+            imported_sub_agents_changed = False
+            if agent_version:
+                existing_sub_agent_pks = {v.pk for v in agent_version.sub_agent_versions.all()}
+                current_sub_agent_pks = {v.pk for v in subagent_versions}
+                imported_sub_agents_changed = (existing_sub_agent_pks != current_sub_agent_pks)
+
+            # Check for changes in available tools (from external tool agents OR internal @tool methods)
+            imported_tool_agents_changed = False
+            if agent_version:
+                existing_available_tools_info = {
+                    (avt.tool_agent_version.pk, avt.task_definition.pk)
+                    for avt in agent_version.available_tools.all()
+                }
+                current_available_tools_info = set()
+                for tool_item in raw_tool_defs:
+                    if isinstance(tool_item, TaskDescriptor):
+                        # Internal tool: its task definition is created during _register_tasks for this agent_version.
+                        # Its presence is implicitly covered by source_changed/python_dependencies_changed if its definition changes.
+                        # For explicit available_tools_info, we would need to know its final task_definition.pk
+                        # For simplicity, we are focusing on *external* tool agent changes for this flag.
+                        pass 
+                    elif isinstance(tool_item, AgentDef):
+                        tool_agent_name = tool_item.__name__
+                        if tool_agent_name in imported_agent_versions_map:
+                            tool_agent_version = imported_agent_versions_map[tool_agent_name]
+                            for td in tool_agent_version.task_definitions.filter(task_type=TaskType.TOOL):
+                                current_available_tools_info.add((tool_agent_version.pk, td.pk))
+                imported_tool_agents_changed = (existing_available_tools_info != current_available_tools_info)
+
+            print(f"source_changed: {source_changed}")
+            print(f"python_dependencies_changed: {python_dependencies_changed}")
+            print(f"imported_sub_agents_changed: {imported_sub_agents_changed}")
+            print(f"imported_tool_agents_changed: {imported_tool_agents_changed}")
+
             is_registered = not(source_changed or python_dependencies_changed or imported_sub_agents_changed  or imported_tool_agents_changed )
+
             if not is_registered:
-                agent_version = AgentVersion.objects.create(
+                print("Agent needs re-registration or is new.")
+                new_agent_version = AgentVersion.objects.create(
                     agent=agent,
-                    profile=profile,
-                    parent = None,
-                    #sub_agent_versions
+                    profile=profile_obj,
+                    parent = None, 
                     source_path = source_path,
-                    source_code = GenericContent.from_text(source_code) if source_code else "",
+                    source_code = GenericContent.from_text(source_code) if source_code else None,
                     class_name = agent_cls.__name__,
                     python_dependencies = python_dependencies,
                     version_number = agent_version.version_number + 1 if agent_version else 1
                 )
                 registered_tasks = self._register_tasks(agent_cls)
-                agent_version.task_definitions.set(registered_tasks)
-                agent_version.sub_agent_versions.set(subagent_versions)
-                #self._register_available_tools(newest_agent_version, imported_agent_versions)
+                new_agent_version.task_definitions.set(registered_tasks)
+                new_agent_version.sub_agent_versions.set(subagent_versions)
+                self._register_available_tools(agent_cls, new_agent_version, imported_agent_versions_map)
+                agent_version = new_agent_version # Update agent_version to the newly created one
+            else:
+                print("Agent is already registered and up-to-date.")
+
             agent_cls.is_registered = True
         return agent_version
 
@@ -123,25 +177,38 @@ class AgentRegistry():
             task_objs.append(task_obj)
         return task_objs
 
-    def _register_available_tools(self, agent_cls, new_agent_version, imported_agent_versions, ):
-        tools = []
-        for imp in getattr(agent_cls, "tools", []):
-            if isinstance(imp, TaskDescriptor):
-                aname, fname = imp.func.__qualname__.split(".",1)
-                tool_agent_version = imported_agent_versions[aname]
-                tool_agent_task_definition = tool_agent_version.agent_task_definitions.filter(name=fname, task_type=TaskType.TOOL).last()
-                tools.append((tool_agent_version, tool_agent_task_definition))
-            else:
-                agent_version = imported_agent_versions[imp.__name__]
-                tool_agent_task_definitions = agent_version.agent_task_definitions.filter(task_type=TaskType.TOOL)
-                for tool_agent_task_definition in tool_agent_task_definitions:
-                    tools.append((agent_version, tool_agent_task_definition))
-        for tool in tools:
-            tool_agent_version, tool_agent_task_definition = tool
+    def _register_available_tools(self, agent_cls, new_agent_version: AgentVersion, imported_agent_versions_map: Dict[str, AgentVersion]):
+        # Clear existing available tools for this version to ensure only current ones are linked
+        AgentVersionAvailableTool.objects.filter(parent_agent_version=new_agent_version).delete()
+        from AgentOne.registry.agent_def import AgentDef
+
+        tools_to_link = []
+        for tool_item in getattr(agent_cls, "tools", []):
+            if isinstance(tool_item, TaskDescriptor):
+                # This is an internal tool (e.g., @tool method in agent_cls)
+                # Its task definition is part of the new_agent_version's own tasks.
+                tool_task_def = new_agent_version.task_definitions.filter(name=tool_item.func.__name__, task_type=TaskType.TOOL).first()
+                if tool_task_def:
+                    tools_to_link.append((new_agent_version, tool_task_def)) # Link to itself as provider
+                else:
+                    print(f"WARNING: Internal tool {tool_item.func.__name__} not found in {new_agent_version.agent.name}'s task definitions.")
+            elif isinstance(tool_item, AgentDef):
+                # This is an external tool agent (e.g., class MyToolAgent in agent_cls.tools)
+                tool_agent_name = tool_item.__name__
+                if tool_agent_name in imported_agent_versions_map:
+                    tool_agent_version = imported_agent_versions_map[tool_agent_name]
+                    # Link all its TOOL-type task definitions
+                    for tool_task_def in tool_agent_version.task_definitions.filter(task_type=TaskType.TOOL):
+                        tools_to_link.append((tool_agent_version, tool_task_def))
+                else:
+                    print(f"WARNING: External tool agent {tool_agent_name} not found in imported_agent_versions_map.")
+
+        # Create or update AgentVersionAvailableTool entries
+        for tool_agent_version, task_definition in tools_to_link:
             AgentVersionAvailableTool.objects.get_or_create(
                 parent_agent_version = new_agent_version,
                 tool_agent_version = tool_agent_version,
-                task_definition = tool_agent_task_definition
+                task_definition = task_definition
             )
             
     def _read_task_definitions(self, agent_cls):

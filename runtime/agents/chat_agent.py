@@ -64,7 +64,7 @@ class ChatAgent(BaseAgent):
         import re
         import json
         try:
-            query = self._create_new_query.func()
+            query = self._create_new_query()
 
             print("FOOOOOooooo", conversation_message)
             # 2. Conversation History
@@ -137,7 +137,7 @@ class ChatAgent(BaseAgent):
             raise
 
     @task()
-    def response_to_conversation(self, response, message, tool_calls):
+    def response_to_conversation(self, response, content, tool_calls):
         conversation_message = ConversationMessage.objects.create(
             agent_instance_version = self.agent_instance_version,
             response=response,
@@ -145,8 +145,8 @@ class ChatAgent(BaseAgent):
         )
         if tool_calls:
             conversation_message.tool_calls.set(tool_calls)
-        if message:
-            conversation_message.add_part(message)
+        if content:
+            conversation_message.add_part(content)
         return conversation_message
 
     @task()

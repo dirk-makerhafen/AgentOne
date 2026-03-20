@@ -8,6 +8,8 @@ from typing import List, Any, Dict, Optional, Type, Set
 from registry.agent_def import AgentDef
 from attrs import define, field
 import re
+import shlex
+import ast
 from runtime.tasks.bound_agent_function import BoundAgentFunction
 from runtime.context_manager import RuntimeContextTracker
 from server.models.tasks.agent_task_definition import AgentTaskDefinition
@@ -29,6 +31,7 @@ if TYPE_CHECKING:
     from server.models.agents.agent_instance import AgentInstance
     from server.models.agents.agent_version import AgentVersion
 
+
 class BaseAgent(AgentDef):
     @task()
     def add_user_message(self,  message: str|None = None, parts: List[Dict]|None = None):
@@ -36,7 +39,8 @@ class BaseAgent(AgentDef):
         text = message.strip() if message else "".join([part["content"] for part in parts]).strip() if parts else ""
         conversation_msg = ConversationMessage.objects.create(role = "user", agent_instance_version = self.agent_instance_version)
         if text.startswith("!"):
-            cmd = text[2:].split(" ",1)[0]
+            cmd_full = text[1:].split(" ",1)[0] # Get command without '!'
+            cmd = cmd_full # Use cmd_full for now, assuming simple commands, can be refined for subcommands
             agent_tool = self.agent_version.tools.filter(trigger=cmd).first()
             if agent_tool:
                 agent_tool: QueryAvailableTool
@@ -47,19 +51,18 @@ class BaseAgent(AgentDef):
                 tool_agent_instance_version: AgentInstanceVersion
                 runtime = tool_agent_instance_version.get_runtime_instance()
                 task_function = getattr(runtime, agent_tool.task_definition.name) 
-            elif agent_task := self.agent_version.agent_task_definitions.filter(name=cmd).first():
+            elif agent_task := self.agent_version.task_definitions.filter(name=cmd).first():
                 agent_task: AgentTaskDefinition
                 task_function = getattr(self, agent_task.name) 
             else:
                 task_function = None
 
             if task_function:
-                # parse args if task_function is available
                 cmd_payload = text[1+len(cmd):].strip()
-                namespace = {}
-                exec(f"def to_args(*args, **kwargs):\n  return args, kwargs\nargs, kwargs = to_args({cmd_payload})", namespace)
-                print("PARSED_ARGS", namespace['args'], namespace['kwargs'])
-                tool_call = task_function.delay(*namespace['args'], **namespace['kwargs'])
+                # Safely parse arguments and keyword arguments
+                parsed_args, parsed_kwargs = self._safe_parse_command_args(cmd_payload)
+                print("PARSED_ARGS", parsed_args, parsed_kwargs)
+                tool_call = task_function.delay(*parsed_args, **parsed_kwargs)
                 conversation_msg.tool_calls.add(tool_call)
                 return self._command_result_to_message.delay(command_response=tool_call)
 
@@ -70,6 +73,38 @@ class BaseAgent(AgentDef):
                 conversation_msg.add_part(part["content"])
         return conversation_msg
 
+
+    def _safe_parse_command_args(self, command_string: str) -> tuple[list, dict]:
+        args = []
+        kwargs = {}
+        if not command_string:
+            return args, kwargs
+
+        # Use shlex to split the command string robustly, handling quotes
+        tokens = shlex.split(command_string)
+
+        for token in tokens:
+            if '=' in token:
+                key, value_str = token.split('=', 1)
+                key = key.strip()
+                try:
+                    # Safely evaluate literals (numbers, strings, booleans, lists, dicts)
+                    value = ast.literal_eval(value_str)
+                except (ValueError, SyntaxError):
+                    # If it's not a standard literal, treat it as a string.
+                    # Custom objects like Ref() would need custom parsing here.
+                    value = value_str
+                kwargs[key] = value
+            else:
+                try:
+                    # Attempt to evaluate positional arguments as literals too
+                    value = ast.literal_eval(token)
+                except (ValueError, SyntaxError):
+                    value = token
+                args.append(value)
+        return args, kwargs
+
+
     @task()
     def _command_result_to_message(self, command_response ):
         conv_msg = ConversationMessage.objects.create(role = "assistant", agent_instance_version = self.agent_instance_version)
@@ -79,8 +114,8 @@ class BaseAgent(AgentDef):
             content_type=MessageContentType.TEMPLATE,
             content_template=self.agent_instance_version.select_profile().task_prompt,
         )
+        return conv_msg
 
-    @task()
     def _create_new_query(self):
         from server.models.queries.query import Query
         from server.models.queries.query_message import QueryMessage
@@ -121,30 +156,39 @@ class BaseAgent(AgentDef):
             system_prompt = (system_prompt or "") + tool_instructions
 
         return query
+    
 
     @task(description="Send query to LLM provider")
-    def _execute_query(self, query:Query):
+    def _execute_query(self, query: Query):
         from server.models.queries.response import Response
         from openai import OpenAI
-        query.apikey = random.choice(list(query.aimodel.api_provider.api_keys.all()))
+        from runtime.rate_limiter import RateLimitChecker, RateLimitError
+
+        # --- Rate limit check + key selection ---
+        # This is the only place rate limits are enforced.
+        # RateLimitError is caught separately in AgentTaskRun.apply() and sets
+        # status=RATE_LIMITED rather than FAILURE — no retry budget consumed.
+        result = RateLimitChecker.check(query.aimodel)
+        query.apikey = result.selected_key
+        # --- End rate limit check ---
+
         query.status = "ACTIVE"
         query.save()
         try:
             messages = query.compile()
-            tool_call_syntax =query.agent_instance_version.select_profile().tool_call_syntax
+            tool_call_syntax = query.agent_instance_version.select_profile().tool_call_syntax
             api_tools = []
 
-            # Tools are only passed as API tools if syntax is DEFAULT
             if tool_call_syntax == AgentToolCallSyntax.DEFAULT:
                 for tdef in query.available_tools.all():
-                    tdef : QueryAvailableTool
+                    tdef: QueryAvailableTool
                     tadef = tdef.task_definition
                     api_tools.append({
                         "type": "function",
                         "function": {
                             "name": tadef.name,
                             "description": tadef.description,
-                            "parameters": tadef.function_schema
+                            "parameters": tadef.function_schema,
                         }
                     })
 
@@ -162,14 +206,12 @@ class BaseAgent(AgentDef):
                 api_params["tool_choice"] = "auto"
 
             client = OpenAI(api_key=query.apikey.key, base_url=query.aimodel.api_provider.url)
-            streaming = False
-            #if streaming:
-            #    llmResponse, conversationMessage = run_query_streaming(query, client, api_params)
-            #else:
-            #    llmResponse, conversationMessage = run_query_non_streaming(query, client, api_params)
+
             from server.models.debug_log_entry import DebugLogEntry
-            DebugLogEntry.objects.create(agent_instance=self.agent_instance, event='raw_query', data=api_params)
-           
+            DebugLogEntry.objects.create(
+                agent_instance=self.agent_instance, event='raw_query', data=api_params
+            )
+
             api_response = client.chat.completions.create(**api_params)
             response = Response.objects.create(
                 query=query,
@@ -177,18 +219,29 @@ class BaseAgent(AgentDef):
                 agent_profile=query.agent_profile,
                 agent_instance_version=query.agent_instance_version,
                 data=json.loads(api_response.model_dump_json()),
-                status="SUCCESS"
+                status="SUCCESS",
             )
-            content, tool_call_tasks = self._parse_query_response(response=response)
-            return dict(response=response, message=content, tool_calls=tool_call_tasks)
+
+            return self._parse_query_response.delay(response=response)
+
+        except RateLimitError:
+            # Don't touch query.status — the run will be re-dispatched by the
+            # scheduler and _execute_query will be called again from scratch.
+            raise  # re-raise so apply() can catch it by type
 
         except Exception:
             query.status = "FAILURE"
             query.save()
             from server.models.debug_log_entry import DebugLogEntry
-            DebugLogEntry.objects.create(agent_instance=self.agent_instance, event='exception', data={"exception": traceback.format_exc()})
+            DebugLogEntry.objects.create(
+                agent_instance=self.agent_instance,
+                event='exception',
+                data={"exception": traceback.format_exc()},
+            )
             raise
 
+
+    @task()
     def _parse_query_response(self, response):
         from server.models.conversation_message import ConversationMessage
         import re
@@ -197,7 +250,7 @@ class BaseAgent(AgentDef):
             msg_data = response.data['choices'][0].get('message', {})
             content = msg_data.get("content", "")
             api_tool_calls = msg_data.get('tool_calls', [])
-            custom_tool_calls = []
+            custom_tool_calls = [] 
             if response.agent_profile.tool_call_syntax == AgentToolCallSyntax.CUSTOM and content:
                 # Very basic regex parser for demonstration
                 pattern = r"\[call:(\w+)\((.*?)\)\]"
@@ -222,7 +275,10 @@ class BaseAgent(AgentDef):
                 for tc_data in all_tool_calls:
                     tc_id = tc_data['id']
                     func_name = tc_data['function']['name']
-                    kwargs = json.loads(tc_data['function']['arguments'])
+                    if isinstance(tc_data['function']['arguments'], str):
+                        kwargs = json.loads(tc_data['function']['arguments'])
+                    else:
+                        kwargs = tc_data['function']['arguments']
                     queryAvailableTools = response.query.available_tools.filter(task_definition__name=func_name)
                     print("queryAvailableTools", queryAvailableTools)
                     for queryAvailableTool in queryAvailableTools:
@@ -246,7 +302,7 @@ class BaseAgent(AgentDef):
                 print("set toolcals", tool_call_tasks)
                 for tool_call_task in tool_call_tasks:
                     tool_call_task.apply_async()
-            return content, tool_call_tasks
+            return dict(response=response, content=content, tool_calls=tool_call_tasks)
 
         except Exception:
             from server.models.debug_log_entry import DebugLogEntry
@@ -260,53 +316,3 @@ class BaseAgent(AgentDef):
     @chain(description="building chain task")
     def chain(self, *tasks):
         return tasks
-
-
-
-    '''
-    #agent_instance: AgentInstance|None
-    #agent_instance_version: AgentInstanceVersion|None
-    #agent_version: AgentVersion|None
-    parent: AgentRuntime|None
-    children: list
-    @classmethod
-    def i(cls, agent_instance_version):
-        print("AgentRuntime.agent_instance_version", agent_instance_version, cls)
-        return cls(agent_instance_version=agent_instance_version)
-
-    def __init__(self, workingdir = None, variant = None, name=None, agent_instance_version: AgentInstanceVersion|None=None):
-        print("AgentRuntime.__init__", agent_instance_version)
-        if agent_instance_version:
-            print("here1")
-            self.agent_instance_version = agent_instance_version
-            self.agent_instance_version: AgentInstanceVersion
-            self.agent_version = self.agent_instance_version.agent_version
-            self.agent_version: AgentVersion
-        else:
-            print("here2",self.parent)
-            # agent and agent_version are injected into the class by the agent registry or the class loader
-            if not workingdir and self.parent and self.parent.agent_instance_version:
-                workingdir = self.parent.agent_instance_version.workingdir
-            parent_agent_instance = self.parent.agent_instance if self.parent else None
-            self.agent_instance_version = self.agent_version.get_or_create_instance(parent_instance=parent_agent_instance, name=name, workingdir=workingdir , variant=variant)
-
-        self.agent_instance = self.agent_instance_version.agent_instance
-        self.workingdir =  self.agent_instance_version.workingdir
-        self.agent = self.agent_instance.agent
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        original_init = cls.__init__
-        print("__init_subclass__")
-        @wraps(original_init)
-        def wrapped_init(self, *args, **kwargs):
-            print("wrapped_init")
-            self.id = f"{cls.__name__}:{random.random():.5f}"
-            self.parent = RuntimeContextTracker.current
-            print("AgentRuntime.__init__1", self.parent, self)
-            with RuntimeContextTracker(self):
-                original_init(self, *args, **kwargs)
-
-        cls.__init__ = wrapped_init
- 
-    '''

@@ -66,10 +66,11 @@ class TaskCallStatusDetail(models.TextChoices):
 
 
 class TaskRunStatus(models.TextChoices):
-    NEW = 'NEW', 'New'
-    QUEUED = 'QUEUED', 'QUEUED'
-    ACTIVE = 'ACTIVE', 'Active'
-    WAITING_RESULTTASKS = 'WAITING_RESULTTASKS', 'WAITING_RESULTTASKS'
-    SUCCESS = 'SUCCESS', 'Success'
-    FAILURE = 'FAILURE', 'Failure'
-
+    NEW                  = 'NEW',                  'New'
+    QUEUED               = 'QUEUED',               'Queued'
+    ACTIVE               = 'ACTIVE',               'Active'
+    WAITING_RESULTTASKS  = 'WAITING_RESULTTASKS',  'Waiting for result tasks'
+    RATE_LIMITED         = 'RATE_LIMITED',         'Rate limited — waiting for LLM capacity'
+    SUCCESS              = 'SUCCESS',              'Success'
+    FAILURE              = 'FAILURE',              'Failure'
+ 

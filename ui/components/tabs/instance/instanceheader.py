@@ -1,3 +1,4 @@
+from server.models.agents.agent_profile import AgentProfile
 from server.models.agents.agent_instance import AgentInstance
 from server.models.agents.agent_instance_version import AgentInstanceVersion
 from server.models.agents.agent_version import AgentVersion
@@ -36,7 +37,7 @@ class InstanceHeaderView(PyHtmlView):
             </div>
             <div class="header-item">
                 <i class="fa fa-code-fork header-icon" title="Pinned Variant"></i> <b>Variant:</b> 
-                <span class="header-value">{% if pyview.pinned_agent_variant %}{{ pyview.pinned_agent_variant.name }}{% else %}N/A{% endif %}</span>
+                <span class="header-value">{% if pyview.pinned_agent_profile %}{{ pyview.pinned_agent_profile.name }}{% else %}N/A{% endif %}</span>
             </div>
             <div class="header-item" id="instance-autorun-container">
                 <i class="fa fa-cogs header-icon" title="Auto-Run Steps"></i> <b>Auto-Run:</b>
@@ -83,13 +84,13 @@ class InstanceHeaderView(PyHtmlView):
         self.agent_instance = subject
         self.latest_agent_instance_version:AgentInstanceVersion|None= None
         self.agent_version:AgentVersion|None = None
-        self.pinned_agent_variant:AgentVariant|None = None
+        self.pinned_agent_profile:AgentProfile|None = None
         self.reload()
 
     def reload(self):
         self.latest_agent_instance_version = self.agent_instance.latest_agent_instance_version
         self.agent_version = self.latest_agent_instance_version.agent_version
-        self.pinned_agent_variant = self.latest_agent_instance_version.pinned_agent_variant
+        self.pinned_agent_profile = self.latest_agent_instance_version.pinned_agent_profile
 
 
     def handle_instance_name_edit(self, element): pass

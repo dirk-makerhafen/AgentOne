@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import time
 import os
 import random
 import re
+import sys
 import traceback
 from typing import Dict, Type
 from cachetools import LRUCache
@@ -25,7 +27,19 @@ if TYPE_CHECKING:
 
 AGENT_VERSION_RUNTIME_CLASS_CACHE = LRUCache(maxsize=1024)
 
-
+@contextmanager
+def temp_sys_path(path):
+    """Temporarily adds a directory to sys.path."""
+    path = str(path)
+    if path not in sys.path:
+        sys.path.insert(0, path)
+        try:
+            yield
+        finally:
+            sys.path.remove(path)
+    else:
+        yield
+        
 class AgentVersionAvailableTool(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     parent_agent_version = models.ForeignKey("server.AgentVersion", related_name="available_tools", on_delete=models.CASCADE)
@@ -110,7 +124,7 @@ class AgentVersion(BaseModel):
             agent_instance = agent_instance,
             workingdir = workingdir,
         )
-        if parent_instance and (created or acreated or True):
+        if parent_instance and (created or acreated):
             print("parent_instance.agent.name", parent_instance.agent.name,  parent_instance.latest_agent_instance_version,  parent_instance.latest_agent_instance_version, new_instance_version)
             parent_instance.latest_agent_instance_version.child_agent_instance_versions.add(new_instance_version)
         print(new_instance_version)
@@ -151,7 +165,7 @@ class AgentVersion(BaseModel):
 
         from registry import task_decorators 
         from registry.agent_def import AgentDef
-        from registry.profile_def import ProfileDef
+        from registry.profile import Profile
         from registry.task_decorators import task, command, instance, hook,chain, tool
 
         if not self.source_code:
@@ -159,6 +173,7 @@ class AgentVersion(BaseModel):
 
         try:
             # Prepare execution environment
+            '''
             exec_globals = {
                 "__builtins__": __builtins__, 
                 # Agents
@@ -201,14 +216,19 @@ class AgentVersion(BaseModel):
                 # OTHER
                 "GenericContent": GenericContent,
                 "FilesystemApi": FilesystemApi,
+            }''' # removed for now, maybe forever, bevause its been replaced by python_dependencies 
+            exec_globals = {
+                    "__builtins__": __builtins__,
             }
-            exec_globals = {}
             for sub_agent_version in self.sub_agent_versions.all():
                 imported_agent_class = sub_agent_version.get_runtime_class()
                 exec_globals[imported_agent_class.__name__] = imported_agent_class
 
-            src = f"{"\n".join(self.python_dependencies)}\n{self.source_code.content}"
+            python_dependencies = f'\n{"\n".join(self.python_dependencies)}'
+            python_dependencies = python_dependencies.replace("\nfrom AgentOne.public ", "\nfrom public ")
+            src = f"{python_dependencies}\n{self.source_code.content}"
             print(f"##############\n{src}\n#####################")
+            #with temp_sys_path(filename.parent):
             exec(src, exec_globals) # Execute the source code
   
             agent_class = exec_globals.get(self.agent.name)

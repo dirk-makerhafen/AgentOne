@@ -219,7 +219,7 @@ class TaskListView(PyHtmlView):
         {{ pyview.agent_task_calls_view.render() }}
 
         <b>Task Definition</b><br>
-        {{ pyview.agent_task_definitions_view.render() }}
+        {{ pyview.task_definitions_view.render() }}
 
         <b>Task Instances</b><br>
         {{ pyview.agent_task_instances_view.render() }}
@@ -228,7 +228,7 @@ class TaskListView(PyHtmlView):
     
     def __init__(self, subject:AgentVersion, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.agent_task_definitions_view = QuerySetView(subject=subject.agent_version.agent_task_definitions, parent=self, item_class=AgentTaskDefinitionView)
+        self.task_definitions_view = QuerySetView(subject=subject.agent_version.task_definitions, parent=self, item_class=AgentTaskDefinitionView)
         self.agent_task_instances_view = QuerySetView(subject=subject.agent_task_instances, parent=self, item_class=AgentTaskInstanceView)
         self.agent_task_calls_view = QuerySetView(subject=subject.agent_task_calls.order_by("-id")[:20], parent=self, item_class=AgentTaskCallView)
 
