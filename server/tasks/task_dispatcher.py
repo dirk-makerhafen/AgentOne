@@ -5,8 +5,9 @@ from celery import shared_task
 def _celery_run(classname, fname, parent_ctx_id, *args, **kwargs):
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.tasks.agent_task_run  import AgentTaskRun
-    from runtime.task_call_runtime import AgentTaskCallRuntime
-    from runtime.task_run_runtime import AgentTaskRunRuntime    
+    from runtime.tasks.call_scheduler import CallScheduler
+    from runtime.tasks.run_scheduler import RunScheduler
+    
     from runtime.context_manager import ContextTracker
     
     # Restore the parent context on the worker side
@@ -21,10 +22,10 @@ def _celery_run(classname, fname, parent_ctx_id, *args, **kwargs):
             _class = AgentTaskCall
         elif classname == "AgentTaskRun":
             _class = AgentTaskRun
-        elif classname == "AgentTaskCallRuntime":
-            _class = AgentTaskCallRuntime
-        elif classname == "AgentTaskRunRuntime":
-            _class = AgentTaskRunRuntime
+        elif classname == "CallScheduler":
+            _class = CallScheduler
+        elif classname == "RunScheduler":
+            _class = RunScheduler
         f = getattr(_class, fname)
         f(*args, **kwargs)
 

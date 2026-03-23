@@ -26,7 +26,7 @@ from registry.utils import generate_schema_for_function, get_import_strings, get
 class AgentRegistry():
     def register(self, agent_cls, recursive=False) -> AgentVersion:
         print(f'Registering Agent "{agent_cls.__name__}" from definition')
-        from AgentOne.registry.agent_def import AgentDef
+        from registry.agent_def import AgentDef
 
         # 1. Collect all subagents and tools declared by the agent_cls
         subagent_defs = [x for x in getattr(agent_cls, "subagents", [])]
@@ -62,6 +62,7 @@ class AgentRegistry():
             "aimodel": aimodel,
             "variant_defs":  profile.to_dict().get("variants", None),
             "max_retries": profile.max_retries,
+            "priority":  profile.priority,
             "max_task_steps": profile.max_task_steps,
             "unattended_steps": profile.unattended_steps,
             "max_history_messages": profile.max_history_messages,
@@ -85,7 +86,8 @@ class AgentRegistry():
             agent_version: AgentVersion = agent.agent_versions.order_by("-version_number").first()
 
             # Determine if current agent's source/dependencies have changed
-            source_changed = not agent_version or agent_version.source_path != source_path or agent_version.source_code != source_code
+            source_changed = not agent_version or agent_version.source_path != source_path or ( not agent_version.source_code or agent_version.source_code.content != source_code)
+
             python_dependencies_changed = not agent_version or agent_version.python_dependencies != python_dependencies
 
             # Check for changes in imported sub-agents
@@ -170,6 +172,10 @@ class AgentRegistry():
             if retry_requires_approval := task_def.get("retry_requires_approval", None):
                 existing_tasks_filter_kwargs["retry_requires_approval"] = retry_requires_approval
 
+            if priority := task_def.get("priority", None):
+                existing_tasks_filter_kwargs["priority"] = priority
+            
+
             task_obj, created = AgentTaskDefinition.objects.get_or_create(
                 **existing_tasks_filter_kwargs, # Use the same normalized fields for lookup
             )
@@ -180,7 +186,7 @@ class AgentRegistry():
     def _register_available_tools(self, agent_cls, new_agent_version: AgentVersion, imported_agent_versions_map: Dict[str, AgentVersion]):
         # Clear existing available tools for this version to ensure only current ones are linked
         AgentVersionAvailableTool.objects.filter(parent_agent_version=new_agent_version).delete()
-        from AgentOne.registry.agent_def import AgentDef
+        from registry.agent_def import AgentDef
 
         tools_to_link = []
         for tool_item in getattr(agent_cls, "tools", []):

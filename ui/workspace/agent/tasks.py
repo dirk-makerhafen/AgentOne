@@ -1,66 +1,98 @@
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.pyHtmlGui.pyhtmlgui.view.queryset_view import QuerySetView
+from __future__ import annotations
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+from ui.lib.queryset_view import QuerySetView
+from ui.lib.model_view import ModelView
 
 
-class AgentTaskDefinitionView(PyHtmlView):
+class AgentTaskDefinitionView(ModelView):
+    """One row of task definition detail — used inside AgentVersionView table."""
+    DOM_ELEMENT_CLASS = "AgentTaskDefinitionView"
+
     TEMPLATE_STR = """
-    <div style='display:grid; grid-template-columns: repeat(13, auto);'>
-        <div class="grid-cell">{{ pyview.subject.name }}</div>
-        <div class="grid-cell">{{ pyview.subject.task_type }}</div>
-        <div class="grid-cell">{{ pyview.subject.description }}</div>
-        <div class="grid-cell">{{ pyview.subject.function_schema }}</div>
-        <div class="grid-cell">{{ pyview.subject.requires_approval }}</div>
-        <div class="grid-cell">{{ pyview.subject.max_retries }}</div>
-        <div class="grid-cell">{{ pyview.subject.retry_delay }}</div>
-        <div class="grid-cell">{{ pyview.subject.max_concurrency }}</div>
-        <div class="grid-cell">{ { pyview.subject.max_autonomous_steps } }</div>
-        <div class="grid-cell">{{ pyview.subject.trigger }}</div>
-        <div class="grid-cell">{{ pyview.subject.agent_task_instances.count() }}</div>
-        <div class="grid-cell">{{ pyview.subject.agent_versions.count() }}</div>
-    </div>
+        <tr>
+            <td>
+                <strong>{{ pyview.subject.name }}</strong>
+                <span class="badge text-muted small">{{ pyview.subject.task_type }}</span>
+            </td>
+            <td>
+                <span class="text-muted small">{{ pyview.subject.description }}</span>
+                <div class="small">
+                    approval={{ pyview.subject.requires_approval }}
+                    retries={{ pyview.subject.max_retries }}
+                    priority={{ pyview.subject.priority }}
+                    delay={{ pyview.subject.retry_delay }}s
+                    {% if pyview.subject.trigger %}trigger={{ pyview.subject.trigger }}{% endif %}
+                </div>
+                <button class="btn btn-xs btn-default" onclick="pyview.toggle_schema()">
+                    schema
+                </button>
+                <pre class="{{ 'hidden' if pyview.is_schema_hidden else '' }}">{{ pyview.subject.function_schema }}</pre>
+            </td>
+        </tr>
     """
+
+    def __init__(self, subject, parent, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self.is_schema_hidden = True
+
+    def toggle_schema(self):
+        self.is_schema_hidden = not self.is_schema_hidden
+        self.update()
+
 
 class AgentTaskDefinitionsView(QuerySetView):
-    TEMPLATE_STR = '''
+    """
+    Renders task definitions as <tr> rows inside an AgentVersionView table.
+    Subclasses QuerySetView to emit bare rows without a wrapper container.
+    """
+    TEMPLATE_STR = """
         {% for item in pyview.get_items() %}
-            <tr>
-                <td>
-                    {{item.subject.name}}
-                </td>
-                <td>
-                    {{ item.render()}}
-                </td> 
-            </tr>
+            {{ item.render() }}
         {% endfor %}
-    '''
-    def __init__(self, subject, parent, **kwargs):
-        self.s = subject
-        super().__init__(subject, parent, **kwargs)
-
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.pyHtmlGui.pyhtmlgui.view.queryset_view import QuerySetView
-
-
-class AgentTaskInstanceView(PyHtmlView):
-    TEMPLATE_STR = """
-    <b>Task Instance</b> <br>
-    name = {{ pyview.subject.name }} <br>
-    callbacks_instance = {{ pyview.subject.callbacks_instance }} <br>
-    instance_chain = {{ pyview.subject.instance_chain }} <br>
-    instance_group = {{ pyview.subject.instance_group }} <br>
-    called {{ pyview.subject.agent_task_calls.count() }} times <br>
     """
 
-class AgentTaskInstancesView(PyHtmlView):
+    def __init__(self, subject, parent, item_class=None, **kwargs):
+        super().__init__(
+            subject=subject,
+            parent=parent,
+            item_class=item_class or AgentTaskDefinitionView,
+            **kwargs,
+        )
+
+
+class AgentTaskInstanceView(ModelView):
+    """One-row summary of an AgentTaskInstance."""
+    DOM_ELEMENT_CLASS = "AgentTaskInstanceView task-instance-row"
+
     TEMPLATE_STR = """
-    <div class="agent-task-instances-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-top: 20px;">
-        <h4>AgentTaskInstances</h4>
-        {{ pyview.agent_task_instances_view.render() }}
-   
-    </div>
+        <div class="task-instance-inner">
+            <span class="task-def-name">
+                {{ pyview.subject.agent_task_definition.name }}
+            </span>
+            <span class="text-muted small">
+                calls={{ pyview.subject.agent_task_calls.count() }}
+                deps={{ pyview.subject.taskinstance_arg_references.count() }}
+                subtasks={{ pyview.subject.taskinstance_sub_taskinstances.count() }}
+                on_success={{ pyview.subject.taskinstances_on_success_callbacks.count() }}
+                on_error={{ pyview.subject.taskinstances_on_error_callbacks.count() }}
+            </span>
+        </div>
+    """
+
+
+class AgentTaskInstancesView(ModelView):
+    """List of AgentTaskInstances for an agent version or instance."""
+    DOM_ELEMENT_CLASS = "AgentTaskInstancesView"
+
+    TEMPLATE_STR = """
+        <h4>Task instances</h4>
+        {{ pyview.instances_view.render() }}
     """
 
     def __init__(self, subject, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        print("HEHRHER", subject)
-        self.agent_task_instances_view = QuerySetView(subject=subject, parent=self, item_class=AgentTaskInstanceView)
+        self.instances_view = QuerySetView(
+            subject=subject,
+            parent=self,
+            item_class=AgentTaskInstanceView,
+        )

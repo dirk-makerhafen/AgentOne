@@ -1,25 +1,44 @@
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+from __future__ import annotations
+from ui.lib.model_view import ModelView
 
 
+class FilesystemLogView(ModelView):
+    DOM_ELEMENT_CLASS = "FilesystemLogView conversation-log-item log-type-fs"
 
-class FilesystemLogView(PyHtmlView):
     TEMPLATE_STR = """
-    <div id="filesystem_message_{{ pyview.subject.id }}" class="conversation-log-item log-type-fs filesystem-log-item">
         <div class="message-header">
-            <strong>[{{ pyview.subject.created_at }}]</strong> <strong>FS {{ pyview.subject.action }}:</strong> {{ pyview.subject.path }}
-            <button class="btn btn-xs btn-default log-btn" onclick="pyview.toggle_details()"><i class="fa fa-plus"></i> Details </button>
+            <span class="message-time">{{ pyview.subject.created_at.strftime('%H:%M:%S') }}</span>
+            <strong>FS {{ pyview.subject.action }}</strong>
+            <span class="fs-log-path">{{ pyview.subject.path }}</span>
+            <button class="log-btn" onclick="pyview.toggle_details()">
+                {{ '▲' if not pyview.is_hidden else '▼' }} details
+            </button>
         </div>
-        <div class="message-content">
-            <div id="filesystem_full_{{ pyview.subject.id }}" class="filesystem-content {{ 'hidden' if pyview.is_details_hidden else '' }}">
-                <pre>{{ pyview.subject.data }}</pre>
-            </div>
+        <div class="message-content {{ 'hidden' if pyview.is_hidden else '' }}">
+            <pre class="log-pre">{{ pyview.subject.data }}</pre>
         </div>
-    </div>
     """
+
+    CSS_STR = """
+        .fs-log-path {
+            font-family: var(--font-mono);
+            font-size: 0.82em;
+            color: var(--text-muted);
+            flex-grow: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    """
+
+    @property
+    def DOM_ELEMENT_EXTRAS(self):
+        return f'style="order: {int(self.subject.created_at.timestamp())}"'
+
     def __init__(self, subject, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.is_details_hidden = True
+        self.is_hidden = True
 
     def toggle_details(self):
-        self.is_details_hidden = not self.is_details_hidden
+        self.is_hidden = not self.is_hidden
         self.update()

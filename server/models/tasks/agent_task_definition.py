@@ -18,6 +18,7 @@ class AgentTaskDefinition(BaseModel):
     max_subtask_error_rate = models.IntegerField(default=0)# for groups, in percent, also used when timeout
     limit_subtask_parallel_runs  = models.IntegerField(default=0) # how many subtasks cn run in parallel, for groups 0=no limit
     limit_per_instance_parallel_runs  = models.IntegerField(default=1) #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+    priority = models.IntegerField(default=0)   # 0 = highest, 1..999 less important
 
     # Options - Retry
     max_retries  = models.IntegerField(default=99)   # how many retries to we make in case of error

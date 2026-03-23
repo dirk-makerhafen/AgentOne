@@ -1,531 +1,364 @@
-/* --- Base & Utilities --- */
-@import url('components/_base.css');
-@import url('components/_buttons.css');
-@import url('components/_forms.css');
-@import url('components/_modals.css');
+/* ==========================================================================
+   AgentOne — Global Stylesheet
+   Scope: layout skeleton, design tokens, typography, shared utilities.
+   Component-specific styles live in each view's CSS_STR.
+   ========================================================================== */
 
-/* --- Core Layout Components --- */
-@import url('components/chat_input.css');
-@import url('components/console_output.css');
-@import url('components/conversation_log.css');
-@import url('components/header.css');
+/* --------------------------------------------------------------------------
+   Design tokens
+   -------------------------------------------------------------------------- */
+:root {
+    /* Surfaces */
+    --bg:           #ffffff;
+    --bg-subtle:    #f7f7f8;
+    --bg-raised:    #f0f0f2;
 
-/* --- Sidebar Components --- */
-@import url('components/sidebar_base.css');
-@import url('components/sidebar_left_agents.css');
-@import url('components/sidebar_left_systems.css');
-@import url('components/sidebar_right_fs.css');
-@import url('components/sidebar_right_memory.css');
-@import url('components/sidebar_right_permissions.css');
-@import url('components/sidebar_right_providers.css');
-@import url('components/sidebar_right_settings.css');
+    /* Borders */
+    --border:       #e2e2e6;
+    --border-light: #eeeeef;
 
-@import url('components/status_bar.css');
-@import url('components/_tabs.css');
-@import url("components/tool_registry.css");
+    /* Text */
+    --text:         #1a1a1a;
+    --text-muted:   #6b6b75;
+    --text-faint:   #a0a0aa;
 
-@import url("components/provider_list.css");
-@import url("components/agent_edit_tab.css");
+    /* Accent */
+    --accent:       #2563eb;
+    --accent-hover: #1d4ed8;
 
+    /* Semantic */
+    --success:      #16a34a;
+    --warning:      #d97706;
+    --danger:       #dc2626;
+    --info:         #0891b2;
 
+    /* Status badge backgrounds */
+    --badge-success-bg:  #dcfce7;
+    --badge-success-fg:  #15803d;
+    --badge-error-bg:    #fee2e2;
+    --badge-error-fg:    #b91c1c;
+    --badge-warning-bg:  #fef3c7;
+    --badge-warning-fg:  #92400e;
+    --badge-active-bg:   #dbeafe;
+    --badge-active-fg:   #1e40af;
+    --badge-waiting-bg:  #f3f4f6;
+    --badge-waiting-fg:  #374151;
+    --badge-halted-bg:   #fdf4ff;
+    --badge-halted-fg:   #7e22ce;
+    --badge-neutral-bg:  #f3f4f6;
+    --badge-neutral-fg:  #6b7280;
+
+    /* Spacing scale */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+
+    /* Radius */
+    --r-sm: 4px;
+    --r-md: 6px;
+    --r-lg: 10px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+    --shadow-md: 0 3px 8px rgba(0,0,0,.09);
+
+    /* Typography */
+    --font-sans: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    --font-size:  14px;
+    --line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Reset & base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--font-sans);
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    color: var(--text);
+    background: var(--bg);
+}
+
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+.hidden { display: none !important; }
+
+/* --------------------------------------------------------------------------
+   Layout skeleton — root app view
+   -------------------------------------------------------------------------- */
 .UiAppView {
     width: 100%;
     height: 100%;
-}
-
-/* --- Prompt Templates Table Styling --- */
-.prompts-table-container {
-    overflow-x: auto; /* Allow horizontal scrolling only for the table if it absolutely needs it */
-    flex-grow: 1; /* Allow it to take available space */
-    display: flex; /* Make it a flex container */
-    flex-direction: column; /* Stack children vertically */
-    padding: 15px 50px; /* Add some padding on the sides */
-    box-sizing: border-box; /* Include padding in the element's total width and height */
-    width: 100%; /* Ensure it takes full width of its parent */
-}
-
-#prompts-table {
-    width: 100%; /* Ensure the table fills its container */
-    table-layout: fixed; /* Fix table layout to prevent columns from expanding excessively */
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 0.9em;
-}
-#prompts-table tr {
-    background-color: #fff;
-}
-#prompts-table th,
-#prompts-table td {
-    padding: 8px 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-    border-top: 2px solid  #ddd;
-    word-wrap: break-word; /* Allow long words to break */
-}
-
-#prompts-table th {
-    background-color: var(--secondary-bg-color);
-    font-weight: bold;
-    color: var(--text-color);
-}
-
-#prompts-table tbody tr.prompt-item-row:hover {
-    background-color: var(--hover-bg-color);
-}
-
-#prompts-table .prompt-value-row td {
-    background-color: var(--code-bg-color); /* Slightly different background for expanded content */
-    border-top: none;
-    padding: 10px 12px;
-    padding-bottom: 25px;
-}
-
-.prompt-value-row :hover  {
-    background-color: #fff !important;
-
-}
-
-.prompt-value-content {
-    white-space: pre-wrap; /* Wrap long lines */
-    word-break: break-all; /* Break words to prevent overflow */
-    overflow-y: auto; /* Add scrollbar if prompt value is too long */
-    padding: 5px;
-    box-shadow: 1px 1px 3px 1px lightgray;
-    border: 1px solid var(--border-color-light);
-    border-radius: 4px;
-    background-color: var(--secondary-bg-color);
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    font-size: 0.85em;
-    color: var(--text-color);
-}
-
-#prompts-table .prompt-actions {
     display: flex;
-    gap: 5px;
-    justify-content: center; /* Align action buttons to the right */
 }
 
-#prompts-table .prompt-meta {
+/* --------------------------------------------------------------------------
+   Resizable split panel system
+   -------------------------------------------------------------------------- */
+.resizable-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-grow: 1;
+    overflow: hidden;
+}
+.resizable-container[data-orientation="vertical"]  { flex-direction: column; }
+.resizable-container[data-orientation="horizontal"] { flex-direction: row; }
+
+.resizable-panel {
+    display: flex;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0%;
+    overflow: auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.flex-row    { display: flex; flex-direction: row; }
+.flex-column { display: flex; flex-direction: column; }
+
+/* Gutter (Split.js) */
+.gutter {
+    background-color: var(--border);
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transition: background-color 0.1s;
+}
+.gutter.gutter-horizontal {
+    cursor: ew-resize;
+    width: 5px;
+    transition: max-width 0.3s ease;
+    max-width: 10px;
+}
+.gutter.gutter-vertical {
+    cursor: ns-resize;
+    height: 5px;
+}
+.gutter:hover { background-color: var(--accent); }
+
+.gutter .gutter-handle { background-color: #aaa; position: relative; border-radius: 2px; }
+.gutter .gutter-handle-horizontal {
+    left: 1px;
+    top: calc((100% - max(75px, 10%)) / 2);
+    height: calc(max(75px, 10%));
+    width: 3px;
+}
+.gutter .gutter-handle-vertical {
+    left: calc((100% - max(75px, 10%)) / 2);
+    top: 1px;
+    height: 3px;
+    width: calc(max(75px, 10%));
+}
+.gutter .gutter-handle-collapsed { background-color: var(--danger); }
+
+/* --------------------------------------------------------------------------
+   Tab bar — shared by WorkspaceView and any inner tab strip
+   -------------------------------------------------------------------------- */
+.tab-bar-area {
+    display: flex;
+    align-items: center;
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    flex-grow: 1;
+    min-height: 30px;
+}
+
+.tab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    font-size: 0.88em;
+    border: none;
+    border-right: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+.tab-button:hover    { background: var(--bg-raised); color: var(--text); }
+.tab-button.active   { background: var(--bg); color: var(--text); font-weight: 500; }
+
+.tab-button .close-tab-btn {
     font-size: 0.75em;
-    color: var(--text-color-light);
-    margin-top: 10px;
-    border-top: 1px dashed var(--border-color-light);
-    padding-top: 5px;
-}
-
-/* --- Systems Table Styling --- */
-.systems-table {
-    width: -webkit-fill-available;
-    margin-right: 50px;
-    margin-left: 50px;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 0.9em;
-}
-
-.systems-table th,
-.systems-table td {
-    padding: 8px 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.systems-table th {
-    background-color: #f8f8f8;
-    font-weight: bold;
-    color: #333;
-}
-
-.systems-table tbody tr:hover {
-    background-color: #f1f1f1;
-}
-
-.systems-table .system-details-row td {
-    background-color: #fcfcfc;
-    border-top: none;
-    padding: 15px;
-}
-
-.systems-table .system-details-content {
-    padding-left: 20px;
-    border-left: 3px solid #eee;
-}
-
-.systems-table .system-details-content p {
-    margin-bottom: 5px;
-}
-
-.systems-table .system-details-edit .form-group {
-    margin-bottom: 8px;
-}
-
-.systems-table .system-details-edit .form-control {
-    padding: 4px 8px;
-    font-size: 0.9em;
-    height: auto; /* Override default bootstrap height */
-}
-
-/* Status Badges within the table */
-.systems-table .system-status,
-.systems-table .deployment-status {
-    display: inline-block;
-    padding: 3px 7px;
+    color: var(--text-faint);
+    padding: 2px 4px;
     border-radius: 3px;
-
-    font-weight: bold;
-    color: #fff;
-    text-transform: uppercase;
+    transition: color 0.15s, background 0.15s;
 }
+.tab-button .close-tab-btn:hover { color: var(--danger); background: var(--badge-error-bg); }
 
-.systems-table .status-ONLINE { background-color: #28a745; } /* Green */
-.systems-table .status-OFFLINE { background-color: #dc3545; } /* Red */
-.systems-table .status-RUNNING { background-color: #17a2b8; } /* Info Blue */
-.systems-table .status-STARTING { background-color: #ffc107; color: #333; } /* Yellow */
-.systems-table .status-n/a { background-color: #6c757d; } /* Grey */
-.systems-table .status-SUCCESS { background-color: #28a745; } /* Green */
-.systems-table .status-FAILED { background-color: #dc3545; } /* Red */
-.systems-table .status-PENDING { background-color: #ffc107; color: #333; } /* Yellow */
-.systems-table .status-in-progress { background-color: #17a2b8; } /* Info Blue */
-
-/* Actions buttons in table */
-.systems-table td .btn {
-    margin-left: 5px;
-}
-
-.systems-table .system-item.active {
-    background-color: #e6f7ff; /* Highlight for active row if needed */
-}
-
-/* --- Sidebar Navigation Ribbons --- */
+/* --------------------------------------------------------------------------
+   Sidebar navigation ribbons (bottom of left sidebar)
+   -------------------------------------------------------------------------- */
 .sidebar-nav-ribbons {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    margin-top: auto; /* Pushes the ribbons to the bottom */
-    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+    border-top: 1px solid var(--border);
 }
 
 .nav-ribbon {
     width: 100%;
-    padding: 10px 15px;
-    color: var(--text-color);
-    border-left:none;
-    border-right: none;
-    background-color: white;
-    border-top: 1px solid lightgray;
-    border-bottom: none;
+    padding: 9px 14px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--border-light);
     text-align: left;
     cursor: pointer;
-    font-size: 0.95em;
+    font-size: 0.9em;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 10px;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    gap: 8px;
+    transition: background 0.15s, color 0.15s;
 }
+.nav-ribbon:first-child { border-top: none; }
+.nav-ribbon:hover { background: var(--bg-subtle); color: var(--accent); }
 
-.nav-ribbon:hover {
-    background-color: rgb(247, 247, 247);
-    color: var(--accent-color);
-}
-
-.nav-ribbon:last-child {
-    border-bottom: none;
-}
-
-/* --- Tab Close Button Styling --- */
-.tab-button .close-tab-btn {
-    margin-left: 10px;
-    font-size: 0.8em;
-    color: var(--text-color-light);
-    cursor: pointer;
-    transition: color 0.2s ease;
-    float:right;
-padding: 5px;
-    margin-right: -5px;
-}
-
-.tab-button .close-tab-btn:hover {
-    color: var(--danger-color); /* Red color on hover for close */
-}
-
-.tab-button span {
+/* --------------------------------------------------------------------------
+   Generic badges — used by StatusBadgeView and inline templates
+   -------------------------------------------------------------------------- */
+.badge {
     display: inline-block;
-    vertical-align: middle;
-}
-/* --- Split View Controls --- */
-.tab-controls-area {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0px;
-    background-color: var(--secondary-bg-color);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.tab-controls-area .tab-bar {
-    flex-grow: 1; /* Allows the tab bar to take available space */
-    display: flex;
-    flex-wrap: wrap;
-    /*
-    overflow-y: hidden;
-    overflow-x: auto; /* Allows horizontal scrolling for many tabs */
-    white-space: nowrap; /* Prevent tabs from wrapping */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    padding-bottom: 0; /* Adjust if needed */
-    min-height: 23px; /* Ensure a minimum height for drag-and-drop functionality */
-}
-
-.tab-controls-area .tab-actions {
-    display: flex;
-    gap: 5px; /* Space between action buttons */
-    margin-left: 10px; /* Space between tab bar and action buttons */
-    flex-shrink: 0; /* Prevent actions from shrinking */
-}
-
-.tab-actions .btn {
-    padding: 0px; /* Smaller padding for action buttons */
-    font-size: 0.85em;
-    border: none;
-}
-
-.remove-split-btn {
-    color: var(--danger-color); /* Red color for remove split button */
-}
-
-/* Default content for new split panels */
-.default-split-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2em;
-    color: var(--text-color-light);
-    background-color: var(--main-bg-color);
-    border: 1px dashed var(--border-color-light);
-    height: 100%;
-    flex-grow: 1;
-    text-align: center;
-}
-
-
-.tab-bar.drag-over {
-    background-color: rgba(0, 123, 255, 0.1); /* Light blue background when dragged over */
-    border: 1px dashed var(--accent-color); /* Highlight border */
-}
-
-/* --- Memory Editable Content Styling --- */
-.memory-editable-content:focus {
-    outline: none; /* Remove default blue outline on focus */
-    border: 1px dashed var(--accent-color); /* Optional: Add a subtle dashed border instead */
-    padding: 1px; /* Adjust padding if a border is added */
-}
-
-/* --- Memory Layer Item Editing Border --- */
-.memory-layer-items:has(.memory-editable-content:focus) {
-    border: 1px solid var(--border-color-light); /* Light border when content is focused */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); /* Subtle glow */
-}
-
-/* --- Agent Instance Description Editing Styling --- */
-.instance-description-container .instance-editable-description:focus {
-    outline: none; /* Remove default blue outline on focus */
-    border: 1px dashed var(--accent-color); /* Subtle dashed border */
-    padding: 1px; /* Adjust padding if a border is added */
-}
-
-.instance-description-container:has(.instance-editable-description:focus) {
-    border: 1px solid var(--border-color-light); /* Light border around container */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); /* Subtle glow */
-}
-
-/* --- Agent Instance Description Layout and Label Styling --- */
-.instance-description-container {
-    flex-grow: 1; /* Allow it to fill height within its flex parent */
-    display: flex; /* Make it a flex container to manage its children */
-    flex-direction: column; /* Stack children vertically */
-}
-
-.instance-description-container .instance-description-display-view {
-    flex-grow: 1; /* Allow the display view to fill height */
-    position: relative; /* Needed for absolute positioning of the inner label */
-    width: 100%;    
-    background-color: #f7f7f7;
-}
-
-.instance-description-container .instance-editable-description {
-    display: block; /* Ensure it takes full width/height for contenteditable */
-    width: 100%;
-    height: 100%; /* Fill the height of its parent display-view */
-    padding-bottom: 0px; /* Make space for the absolute positioned label */
-    box-sizing: border-box; /* Include padding in height calculation */
-    position: relative; /* Context for absolute positioning of inner label */
-    overflow-y: auto; /* Add scrollbar if content overflows */
-}
-
-.instance-description-container .description-bottom-right {
-    position: absolute;
-    bottom: 2px; /* Adjust as needed */
-    right: 5px; /* Adjust as needed */
-    font-size: 0.7em; /* Small text */
-    color: var(--text-color-light); /* Subtle color */
-    pointer-events: none; /* Make sure it's not clickable/editable */
-    user-select: none; /* Prevent selection */
-    opacity: 0.6; /* Slight transparency */
-}
-
-/* Adjust styling when description is focused/edited to maintain layout */
-.instance-description-container .instance-editable-description:focus {
-    padding-bottom: 0px; /* Keep space for label */
-}
-
-/* --- Agent Instance Name Editing Styling --- */
-.instance-name-container .instance-editable-name:focus {
-    outline: none; /* Remove default blue outline on focus */
-    border: 1px dashed var(--accent-color); /* Subtle dashed border */
-    padding: 1px; /* Adjust padding if a border is added */
-}
-
-.instance-name-container:has(.instance-editable-name:focus) {
-    border: 1px solid var(--border-color-light); /* Light border around container */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); /* Subtle glow */
-}
-
-/* --- Agent Instance Name Layout --- */
-.instance-name-container .instance-editable-name {
-    font-size: 0.9em; /* Smaller font size */
-    min-width: 50px; /* Ensure a minimum width for editing */
-    display: inline-block;
-    padding: 0; /* Remove extra padding */
-    margin-left: 5px; /* Space from the static "Instance:" label */
-}
-
-/* Ensure tab content takes all available vertical space */
-.tab-content {
-    flex-grow: 1;
-    display: flex; /* Maintain flex for internal layouts if needed */
-    flex-direction: column; /* Stack children vertically */
-    overflow: auto; 
-}
-
-.table-hover>tbody>tr:hover {
-    background-color: unset;
-}
-
-.variant-group-container {
-    padding-left: 20px !important; 
-}
-
-#mainSplitViewContainer > .gutter-horizontal {
-    flex-basis: 7px !important;
-    border-left: 1px solid gray;
-    border-right: 1px solid gray;
-    margin-left: 3px;
-    margin-right: 2px;
-
-}
-.default-split-content.drag-over {
-    background-color: #e0f0ff; /* A light blue to indicate a valid drop target */
-    border: 2px dashed #a0c0ff;
-}
-
-
-
-/* --- Tool Installation Logs Modal --- */
-.logs-container {
-    height: 60vh; /* Good height for log viewing */
-    overflow-y: auto;
-    background-color: #1e1e1e; /* Dark background for logs */
-    color: #d4d4d4; /* Light text */
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    font-size: 0.85em;
-    padding: 10px;
-    border-radius: 4px;
-}
-
-.logs-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.logs-table th, .logs-table td {
-    padding: 6px 8px;
-    text-align: left;
-    vertical-align: top;
-    border-bottom: 1px solid #333;
-}
-
-.logs-table th {
-    background-color: #252526;
-    position: sticky;
-    top: 0;
-}
-
-.logs-table .log-message pre {
-    white-space: pre-wrap;
-    word-break: break-all;
-    margin: 0;
-    padding: 0;
-    background: none;
-    border: none;
-    color: inherit;
-}
-
-.logs-table .log-level-info {
-    color: #3e9f3e; /* Green */
-    font-weight: bold;
-}
-
-.logs-table .log-level-error {
-    color: #d16969; /* Red */
-    font-weight: bold;
-}
-
-.logs-table .log-level-row-error {
-    background-color: rgba(210, 105, 105, 0.1); /* Slight red highlight for error rows */
-}
-
-
-/* Inline Tool Installation Logs */
-.tool-installation-item {
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-}
-.tool-installation-item-header, .tool-installation-details {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-.tool-installation-details {
-    margin-top: 5px;
-
-    color: #b0b0b0;
-}
-.tool-installation-name {
-    font-weight: bold;
-    flex-grow: 1;
-}
-.tool-installation-actions {
-    margin-left: auto;
-}
-.tool-installation-logs {
-
-    padding: 8px;
-    margin-top: 8px;
-    border-radius: 4px;
-    max-height: 200px;
-    overflow-y: auto;
-    font-family: monospace;
-    font-size: 12px;
-}
-
-
-.agent-instance-count {
-    font-size: 0.8em;
-}@import "components/sidebar_right_subagents.css";
-
-
-tree-node-details {
+    padding: 2px 7px;
+    border-radius: 10px;
     font-size: 0.75em;
-    padding-left: 42px;
-    color: darkgray;
+    font-weight: 500;
+    white-space: nowrap;
+    background: var(--badge-neutral-bg);
+    color: var(--badge-neutral-fg);
 }
+.badge--success { background: var(--badge-success-bg); color: var(--badge-success-fg); }
+.badge--error   { background: var(--badge-error-bg);   color: var(--badge-error-fg); }
+.badge--warning { background: var(--badge-warning-bg); color: var(--badge-warning-fg); }
+.badge--active  { background: var(--badge-active-bg);  color: var(--badge-active-fg); }
+.badge--waiting { background: var(--badge-waiting-bg); color: var(--badge-waiting-fg); }
+.badge--halted  { background: var(--badge-halted-bg);  color: var(--badge-halted-fg); }
+.badge--neutral { background: var(--badge-neutral-bg); color: var(--badge-neutral-fg); }
+
+/* --------------------------------------------------------------------------
+   Generic form elements — base sizing, no visual opinions
+   -------------------------------------------------------------------------- */
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.9em;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s;
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(37,99,235,.12);
+}
+
+/* --------------------------------------------------------------------------
+   Button base — component CSS_STR overrides for specific types
+   -------------------------------------------------------------------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    font-size: 0.88em;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+.btn:hover     { background: var(--bg-subtle); }
+.btn-xs        { padding: 2px 7px; font-size: 0.78em; }
+.btn-sm        { padding: 4px 10px; font-size: 0.85em; }
+
+.btn-primary   { background: var(--accent);   border-color: var(--accent);   color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+.btn-success   { background: var(--success);  border-color: var(--success);  color: #fff; }
+.btn-success:hover { background: #15803d; border-color: #15803d; }
+
+.btn-danger    { background: var(--danger);   border-color: var(--danger);   color: #fff; }
+.btn-danger:hover  { background: #b91c1c; border-color: #b91c1c; }
+
+.btn-warning   { background: var(--warning);  border-color: var(--warning);  color: #fff; }
+.btn-warning:hover { background: #b45309; border-color: #b45309; }
+
+.btn-default   { background: var(--bg-subtle); border-color: var(--border); color: var(--text); }
+.btn-default:hover { background: var(--bg-raised); }
+
+/* --------------------------------------------------------------------------
+   Sidebar header strip — shared by both sidebar and panel sections
+   -------------------------------------------------------------------------- */
+.sidebar-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Utility text helpers
+   -------------------------------------------------------------------------- */
+.text-muted  { color: var(--text-muted) !important; }
+.text-faint  { color: var(--text-faint) !important; }
+.small       { font-size: 0.85em; }
+
+/* --------------------------------------------------------------------------
+   Inline forms used by providers, systems, agent editor
+   -------------------------------------------------------------------------- */
+.inline-form {
+    padding: var(--sp-4);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    margin-bottom: var(--sp-4);
+}
+.inline-form h3, .inline-form h4, .inline-form h5 { margin: 0 0 var(--sp-3); }
+.form-group { margin-bottom: var(--sp-3); }
+.form-group label { display: block; margin-bottom: var(--sp-1); font-size: 0.88em; color: var(--text-muted); }
+
+/* --------------------------------------------------------------------------
+   Status colors for system status indicators
+   -------------------------------------------------------------------------- */
+.status-ONLINE       { color: var(--success); }
+.status-OFFLINE      { color: var(--danger); }
+.status-MAINTENANCE  { color: var(--warning); }
+
+/* --------------------------------------------------------------------------
+   d3 flamegraph — leave width alone, everything else from its own CSS
+   -------------------------------------------------------------------------- */
+.d3-flame-graph { width: 100%; padding-right: 5px; }

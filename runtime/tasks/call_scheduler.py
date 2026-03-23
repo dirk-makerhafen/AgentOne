@@ -28,19 +28,10 @@ class CallScheduler():
 
     @staticmethod
     def _apply_async(task_call_id):
-        print("start_task1", task_call_id)
-        tc = AgentTaskCall.objects.get(pk=task_call_id)
-        print(tc)
-        print(tc.agent_task_definition.name)
-        print(tc.taskcall_arg_references.all(), [r.status for r in tc.taskcall_arg_references.all()])
-        print("test")
-        
-        query = AgentTaskCall.objects.filter(pk = task_call_id, status_detail__in = [TaskCallStatusDetail.NEW, TaskCallStatusDetail.WAITING_RETRY])
+        tc = AgentTaskCall.objects.get(pk=task_call_id)       
         if not TaskCallStateMachine.enter_dependency_wait(task_call_id):
             print("not updated, skip")
             return
-        print("her1",AgentTaskCall.objects.filter(~Q(status=TaskCallStatus.ENDED), taskcall_arg_references__pk=task_call_id))
-        print("her1",AgentTaskCall.objects.filter(~Q(status=TaskCallStatus.ENDED), rev_taskcall_arg_references__pk=task_call_id))
 
         tc = AgentTaskCall.objects.get(pk=task_call_id)
         if tc.taskcall_arg_references.exclude(status=TaskCallStatus.ENDED).exists():
@@ -198,13 +189,13 @@ class CallScheduler():
         print("_on_taskcall_ended", task_call_id)
         #task_call = AgentTaskCall.objects.get(pk=task_call_id)
         from server.models.tasks.agent_task_run import AgentTaskRun
-        from runtime.task_run_runtime import AgentTaskRunRuntime
+        from runtime.tasks.run_scheduler import RunScheduler
 
         # In case We are a subtask of another task that waits for us to finish for its results
         parent_run_ids = AgentTaskRun.objects.filter(taskrun_result_references__pk=task_call_id, status=TaskRunStatus.WAITING_RESULTTASKS).values_list('pk', flat=True)
         print("parent_run_ids", parent_run_ids)
         for parent_run_id in parent_run_ids:
-            AgentTaskRunRuntime.taskrun_result_reference_ended(parent_run_id, task_call_id, taskcall_status_detail)
+            RunScheduler.taskrun_result_reference_ended(parent_run_id, task_call_id, taskcall_status_detail)
 
         # Call tasks that wait for us because their arguments need us
         dependent_ids = AgentTaskCall.objects.filter(taskcall_arg_references__pk=task_call_id, status_detail=TaskCallStatusDetail.WAITING_DEPENDENCY).values_list('pk', flat=True)
@@ -247,16 +238,3 @@ class CallScheduler():
                     callback = callback_instance.apply_async(kwargs=run)
                     callbacks.append(callback)
                 call.taskcall_on_error_callbacks.set(callbacks)
-
-    '''
-    @staticmethod
-    def _set_status(task_call_id, from_status_detail:TaskCallStatusDetail, to_status_detail:TaskCallStatusDetail, filter=None, set=None):
-        from_status = TaskCallStatus[from_status_detail.value.split("_",1)[0]]
-        to_status = TaskCallStatus[to_status_detail.value.split("_",1)[0]]
-        query = AgentTaskCall.objects.filter(pk = task_call_id, status = from_status, status_detail = from_status_detail)
-        if filter:
-            query = query.filter(filter)
-        set = set if set else {}
-        updated = query.update(status = to_status, status_detail = to_status_detail, **set)
-        return updated > 0
-    '''

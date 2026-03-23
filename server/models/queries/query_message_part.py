@@ -55,7 +55,7 @@ class QueryMessagePart(BaseModel):
                 data = {}
                 if self.query_message and self.query_message.query:
                         # Attempt to pull more context if needed
-                        data["instance"] = self.query_message.query.agent_instance
+                        data["instance"] = self.query_message.query.agent_instance_version.agent_instance
                 def load_image(image_path):
                     return f"!__LOAD_IMAGE__!{image_path}!__LOAD_IMAGE__!"
                     try:

@@ -1,224 +1,167 @@
 from __future__ import annotations
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from typing import TYPE_CHECKING
-
+from server.models.agents.agent import Agent
+from server.models.agents.agent_version import AgentVersion
+from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
-    from AgentOne.ui.app_view import UiApp
-    from AgentOne.ui.app_view import UiAppView
+    from ui.app import UiApp
+    from ui.app_view import UiAppView
 
-class SidebarAgentListView(PyHtmlView):
+
+class AgentVersionNodeView(ModelView):
+    DOM_ELEMENT = "li"
+    DOM_ELEMENT_CLASS = "AgentVersionNodeView"
+
     TEMPLATE_STR = """
-    <div class="sidebar-list-body">
-        <ul class="tree-view-list">
-            {% for pk, agentview in pyview.agent_views.items() %}
-                {{ agentview.render() }}
-            {% endfor %}
-        </ul>
-    </div>
-    """
-    def __init__(self, subject:UiApp, parent, **kwargs):
-        super().__init__(subject, parent, **kwargs)
-        self.app = parent.app
-        self.app:UiAppView
-        
-        self.agent_views = {}
-        self._rebuild_agent_views()
-
-    def _rebuild_agent_views(self):
-        from ui.components.sidebar.agentnode_view import SidebarAgentNodeView
-
-        # Clear existing views and create new ones based on the current list of agents
-        self.agent_views = {}
-        self.agents = self.subject.agents.all() # Assuming subject.agents.all() is a QuerySet
-        for agent in self.agents:
-            self.agent_views[agent.id] = SidebarAgentNodeView(agent, self)
-        self.update()
-
-    def _on_subject_updated(self, source, **kwargs):
-        self._rebuild_agent_views()
-
-
-from server.models.agents.agent import Agent
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.components.sidebar.instancelist_view import SidebarInstanceListView
-from ui.components.sidebar.versionlist_view import SidebarVersionListView
-from AgentOne.ui.app_view import UiAppView
-
-class SidebarAgentNodeView(PyHtmlView):
-    TEMPLATE_STR = """
-    <li class="agent-node-item">
-        <div class="tree-node-header agent-node">
-            <span class="agent-node-content" onclick="pyview.select_agent()" style="width: stretch;"> 
-                <i class="fa fa-users tree-node-icon"></i>
-                <span class="tree-node-name">{{ pyview.subject.name }}</span>   
-                <span style="font-size:0.9em">v{{ pyview.subject.latest_agent_version.version_number }}  </span>           
+        <div class="tree-node-header version-node">
+            <span class="tree-node-spacer"></span>
+            <i class="fa fa-code tree-node-icon"></i>
+            <span class="tree-node-name" onclick="pyview.select()">
+                v{{ pyview.subject.version_number }}
+                <span class="tree-node-meta">{{ pyview.subject.created_at.strftime('%Y-%m-%d') }}</span>
             </span>
-            <div class="agent-actions-menu-container">
-                <div class="agent-actions-menu" onmouseleave="pyview.hide_menu()">
-                    <button class="btn btn-xs btn-default burgerbtn" onclick="event.stopPropagation(); pyview.show_menu()"><i class="fa fa-bars"></i></button>
-                    <div id="agent-menu-{{pyview.subject.id}}" class="agent-menu-dropdown" style="display: none;">
-                        <a href="#" onclick="event.stopPropagation(); pyview.edit_agent()">Edit Agent</a>
-                        <a href="#" onclick="event.stopPropagation(); pyview.delete_agent()">Delete Agent</a>
-                    </div>
+            <div class="node-menu-container" onmouseleave="pyview.hide_menu()">
+                <button class="btn btn-xs btn-default burgerbtn"
+                        onclick="event.stopPropagation(); pyview.show_menu()">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div id="version-menu-{{ pyview.subject.id }}" class="node-menu-dropdown" style="display:none;">
+                    <a href="#" onclick="event.stopPropagation(); pyview.hide_menu()">Edit version</a>
+                    <a href="#" onclick="event.stopPropagation(); pyview.hide_menu()">Delete version</a>
                 </div>
             </div>
         </div>
-        <div class="tree-node-details small">
-            Instances: {{ pyview.subject.related_agent_instances.count() }}
-            subagents: {{ pyview.subject.latest_agent_version.sub_agent_versions.count() }}
-            ImportedBy: {{ pyview.subject.latest_agent_version.imported_by_agent_versions.count() }}
-        </div>
-    </li>
     """
-    '''
-     <div class="tree-node-children" style="{{ 'display: block;' if pyview.is_expanded else 'display: none;' }}">
-            <ul class="tree-view-list">
-                {% if pyview.subject.agent_versions %}
-                    {{pyview.versions_list.render()}}
-                {% endif %}
-                {% if pyview.subject.agent_instances %}
-                    {{pyview.instances_list.render()}}
-                {% endif %}
-            </ul>
-        </div>
-    '''
-    def __init__(self, subject: Agent, parent, **kwargs):
+
+    def __init__(self, subject: AgentVersion, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.app = parent.app
-        self.app:UiAppView
+        self.app: UiAppView = self._resolve_app(parent)
 
-        self._subject = subject
-        self.is_expanded = False
-        self.expanded_categories = {'versions': True, 'instances': True}
-        self.instances_list = SidebarInstanceListView(subject, self)
-        self.versions_list  = SidebarVersionListView(subject, self)
+    @staticmethod
+    def _resolve_app(parent):
+        node = parent
+        while node is not None:
+            if hasattr(node, 'app'):
+                return node.app
+            node = getattr(node, 'parent', None)
+        return None
 
-    def select_agent(self):
-        self.app.open_agent_tab(self.subject)
-        self.update()
-
-    def toggle_node(self):
-            self.is_expanded = not self.is_expanded
-            self.update()
-
-    def toggle_category(self, cat): 
-        self.expanded_categories[cat] = not self.expanded_categories[cat]
+    def select(self):
+        self.app.open_agent_tab(self.subject.agent)
         self.update()
 
     def show_menu(self):
-        self.eval_javascript(script='document.getElementById("agent-menu-" + args.id).style.display = "block";', id=self.subject.id)
+        self.eval_javascript(
+            script='document.getElementById("version-menu-" + args.id).style.display = "block";',
+            id=self.subject.id,
+        )
 
     def hide_menu(self):
-        self.eval_javascript(script='document.getElementById("agent-menu-" + args.id).style.display = "none";', id=self.subject.id)
-
-    def edit_agent(self):
-        print(f"Edit Agent: {self.subject.name} ({self.subject.id})")
-        self.app.open_agent_tab(self.subject)
-        self.hide_menu()
-
-    def delete_agent(self):
-        print(f"Delete Agent: {self.subject.name} ({self.subject.id})")
-        # Add actual deletion logic here later
-        self.hide_menu()
+        self.eval_javascript(
+            script='document.getElementById("version-menu-" + args.id).style.display = "none";',
+            id=self.subject.id,
+        )
 
 
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+class AgentNodeView(ModelView):
+    DOM_ELEMENT = "li"
+    DOM_ELEMENT_CLASS = "AgentNodeView"
 
-class SidebarVersionListView(PyHtmlView):
     TEMPLATE_STR = """
-    <div class="sidebar-list-body" style="display:none">
-        <ul class="tree-view-list">
-            {% for pk, versionview in pyview.version_views.items() %}
-                { { versionview.render() } }
-            {% endfor %}
-        </ul>
-    </div>
-    """
-    def __init__(self, subject, parent, **kwargs):
-        super().__init__(subject, parent, **kwargs)
-        self.app = parent.app
-        self._subject = subject
-        self._fooar = subject
-        self.version_views = {}
-        self._rebuild_version_views()
-
-    def _rebuild_version_views(self):
-        from ui.components.sidebar.versionnode_view import SidebarVersionNodeView
-        self.version_views = {}
-        self.agent_versions = self.subject.agent_versions.all() # Assuming subject.agent_versions.all() is a QuerySet
-        for agent_version in self.agent_versions:
-            self.version_views[agent_version.id] = SidebarVersionNodeView(agent_version, self)
-        self.update()
-
-    def _on_subject_updated(self, source, **kwargs):
-        self._rebuild_version_views()
-
-
-
-
-class SidebarVersionNodeView(PyHtmlView):
-    TEMPLATE_STR = """
-    <li class="version-node-item">
-        <div class="tree-node-header version-node">
-            <span class="tree-node-spacer"></span>
-            <span class="version-node-content" onclick="pyview.select_version()"> 
-                <i class="fa fa-code tree-node-icon"></i>
-                <span class="tree-node-name">v{{ pyview.subject.version }}</span>
+        <div class="tree-node-header">
+            <i class="fa fa-caret-{{ 'down' if pyview.is_expanded else 'right' }} tree-node-toggle"
+               onclick="event.stopPropagation(); pyview.toggle()"></i>
+            <i class="fa fa-users tree-node-icon"></i>
+            <span class="tree-node-name" onclick="pyview.select()">
+                {{ pyview.subject.name }}
+                {% if pyview.subject.latest_agent_version %}
+                    <span class="tree-node-meta">v{{ pyview.subject.latest_agent_version.version_number }}</span>
+                {% endif %}
             </span>
-            <div class="agent-actions-menu-container">
-                <div class="agent-actions-menu" onmouseleave="pyview.hide_menu()">
-                    <button class="btn btn-xs btn-default burgerbtn" onclick="event.stopPropagation(); pyview.show_menu()"><i class="fa fa-bars"></i></button>
-                    <div id="version-menu-{{pyview.subject.id}}" class="agent-menu-dropdown" style="display: none;">
-                        <a href="#" onclick="event.stopPropagation(); pyview.edit_version()">Edit Version</a>
-                        <a href="#" onclick="event.stopPropagation(); pyview.delete_version()">Delete Version</a>
-                    </div>
+            <span class="tree-node-meta">{{ pyview.subject.related_agent_instances.count() }}i</span>
+            <div class="node-menu-container" onmouseleave="pyview.hide_menu()">
+                <button class="btn btn-xs btn-default burgerbtn"
+                        onclick="event.stopPropagation(); pyview.show_menu()">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div id="agent-menu-{{ pyview.subject.id }}" class="node-menu-dropdown" style="display:none;">
+                    <a href="#" onclick="event.stopPropagation(); pyview.edit()">Edit agent</a>
+                    <a href="#" onclick="event.stopPropagation(); pyview.delete()">Delete agent</a>
                 </div>
             </div>
         </div>
-        <div class="tree-node-children" style="{{ 'display: block;' if pyview.is_expanded else 'display: none;' }}">
+        <div class="tree-node-children" style="{{ 'display:block' if pyview.is_expanded else 'display:none' }}">
             <ul class="tree-view-list">
-                {% if pyview.subject.agent_instances %}
-                    { {p yview.instances_list.render() } }
-                {% endif %}
-    
+                {% for version in pyview.subject.agent_versions.order_by('-version_number').all() %}
+                    {{ pyview.get_version_view(version).render() }}
+                {% endfor %}
             </ul>
         </div>
-    </li>
     """
-    def __init__(self, subject, parent, **kwargs):
+
+    def __init__(self, subject: Agent, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.app = parent.app
-        self._subject = subject
+        self.app: UiAppView = parent.app
         self.is_expanded = False
-        self.expanded_categories = {'instances': True}
-        #self.instances_list = SidebarInstanceListView(subject, self)
+        self._version_views: dict[int, AgentVersionNodeView] = {}
 
-    def select_version(self):
-        self.app.open_agent_tab(self.subject.agent) 
-        self.update()
+    def get_version_view(self, version: AgentVersion) -> AgentVersionNodeView:
+        if version.id not in self._version_views:
+            self._version_views[version.id] = AgentVersionNodeView(version, self)
+        return self._version_views[version.id]
 
-    def toggle_node(self):
+    def toggle(self):
         self.is_expanded = not self.is_expanded
         self.update()
 
-    def toggle_category(self, event, cat):
-        event.stopPropagation()
-        self.expanded_categories[cat] = not self.expanded_categories[cat]
+    def select(self):
+        self.app.open_agent_tab(self.subject)
         self.update()
 
+    def edit(self):
+        self.app.open_agent_tab(self.subject)
+        self.hide_menu()
+
+    def delete(self):
+        self.hide_menu()  # TODO
+
     def show_menu(self):
-        self.eval_javascript(script='document.getElementById("version-menu-" + args.id).style.display = "block";', id=self.subject.id)
+        self.eval_javascript(
+            script='document.getElementById("agent-menu-" + args.id).style.display = "block";',
+            id=self.subject.id,
+        )
 
     def hide_menu(self):
-        self.eval_javascript(script='document.getElementById("version-menu-" + args.id).style.display = "none";', id=self.subject.id)
+        self.eval_javascript(
+            script='document.getElementById("agent-menu-" + args.id).style.display = "none";',
+            id=self.subject.id,
+        )
 
-    def edit_version(self):
-        print(f"Edit Version: {self.subject.version} ({self.subject.id})")
-        # Add actual edit logic here later
-        self.hide_menu()
 
-    def delete_version(self):
-        print(f"Delete Version: {self.subject.version} ({self.subject.id})")
-        # Add actual deletion logic here later
-        self.hide_menu()
+class AgentTreeView(ModelView):
+    DOM_ELEMENT_CLASS = "AgentTreeView sidebar-tree-body"
+
+    TEMPLATE_STR = """
+        <ul class="tree-view-list">
+            {% for pk, view in pyview.agent_views.items() %}
+                {{ view.render() }}
+            {% endfor %}
+        </ul>
+    """
+
+    def __init__(self, subject: "UiApp", parent, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self.app: UiAppView = parent.app
+        self.agent_views: dict[int, AgentNodeView] = {}
+        self._rebuild()
+
+    def _rebuild(self):
+        self.agent_views = {
+            agent.id: AgentNodeView(agent, self)
+            for agent in self.subject.agents.all()
+        }
+        self.update()
+
+    def _on_subject_updated(self, source, **kwargs):
+        self._rebuild()

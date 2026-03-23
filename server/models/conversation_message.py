@@ -15,10 +15,10 @@ class ConversationMessage(BaseModel):
 
     role = models.CharField(choices=MessageRole.choices, default=MessageRole.USER, max_length=61)
     source = models.CharField(choices=MessageSource.choices, default=MessageSource.default, max_length=61)
-    
+
     hide_from_context = models.BooleanField(default=False)
     pin_to_context = models.BooleanField(default=False)
-    
+
     def add_part(self, content: str|GenericContent):
         ocontent = content
         try:
@@ -31,7 +31,7 @@ class ConversationMessage(BaseModel):
             )
         except Exception as e:
             raise Exception(f"failed to add {content}, ocontent: {ocontent}: {e}")
-        
+
     def save(self, *args, **kwargs):
         if self.hide_from_context is True and self.pin_to_context is True:
             self.pin_to_context = False

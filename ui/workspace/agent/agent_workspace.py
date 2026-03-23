@@ -1,63 +1,86 @@
+from __future__ import annotations
 from server.models.agents.agent import Agent
 from server.models.agents.agent_instance import AgentInstance
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.components.tabs.agent.agent_instances_view import AgentInstancesView
-from ui.components.tabs.agent.agent_versions_view import AgentVersionsView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+from ui.workspace.agent.overview import AgentVersionsView, AgentInstancesView
+from ui.workspace.agent.tasks import AgentTaskDefinitionsView, AgentTaskDefinitionView
+from ui.lib.model_view import ModelView
 
-class TabAgentView(PyHtmlView):
-    DOM_ELEMENT_CLASS = 'tab-content active agent-edit-tab'
-    DOM_ELEMENT_EXTRAS = 'style="padding:20px;"'
+
+class AgentWorkspaceView(ModelView):
+    """
+    Per-agent definition tab.
+    Shows agent metadata (name, description) and two sub-views:
+    the version history and the instance list.
+    """
+    DOM_ELEMENT_CLASS = "AgentWorkspaceView tab-content agent-workspace"
+    DOM_ELEMENT_EXTRAS = 'style="padding: 20px;"'
+
     TEMPLATE_STR = """
         <div class="agent-edit-container">
-            <h3>Edit Agent: <span contenteditable="true" onblur="pyview.update_agent_name(this.innerText)">{{ pyview.subject.name }}</span></h3>
-            <div class="form-group" style="margin-top: 15px;">
+            <h3>
+                <span contenteditable="true"
+                      onblur="pyview.save_name(this.innerText)">
+                    {{ pyview.subject.name }}
+                </span>
+            </h3>
+
+            <div class="form-group" style="margin-top: 12px;">
                 <label>Description:</label>
-                <textarea class="form-control" rows="3" onblur="pyview.update_agent_description(this.value)">{{ pyview.subject.description }}</textarea>
+                <textarea class="form-control"
+                          rows="3"
+                          onblur="pyview.save_description(this.value)">{{ pyview.subject.description or '' }}</textarea>
             </div>
-            {{ pyview.versions_table_view.render() }}
-            {{ pyview.instances_table_view.render() }}
-            <div class="agent-edit-footer" style="margin-top:20px; border-top: 1px solid #eee; padding-top: 15px;">
-                <button class="btn btn-success" onclick="pyview.save()">Save</button>
-                <button class="btn btn-default" onclick="pyview.cancel()">Cancel</button>
+
+            <div style="margin-top: 20px;">
+                {{ pyview.versions_view.render() }}
+            </div>
+
+            <div style="margin-top: 20px;">
+                {{ pyview.instances_view.render() }}
             </div>
         </div>
     """
+    CSS_STR = '''
+.agent-edit-container {
+    flex-grow: 1;
+    overflow-y: auto; /* Allow the inner container with the form to scroll */
+    padding: 20px;
+}
+
+'''
+
     def __init__(self, subject: Agent, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.active_instance = None
-        self.agent = subject
-        self.instances_table_view = AgentInstancesView(subject.agent_instances, self)
-        self.versions_table_view  = AgentVersionsView(subject.agent_versions, self)
+        self.versions_view = AgentVersionsView(
+            subject=subject.agent_versions.order_by('-version_number'),
+            parent=self,
+        )
+        self.instances_view = AgentInstancesView(
+            subject=subject.agent_instances.all(),
+            parent=self,
+        )
 
-    def update_agent_name(self, name):
-        if self.subject.name != name:
-            self.subject.name = name
-            self.subject.save()
-            # Also update the tab label if the name changes
-            self.parent.open_agent_tab(self.subject)
+    def save_name(self, name: str):
+        name = name.strip()
+        if name and self.subject.name != name:
+            # AgentInstance is immutable — Agent name changes need careful handling
+            # TODO: implement once mutation strategy is decided
+            print(f"[AgentWorkspaceView] name change to {name!r} — not yet persisted")
+        self.update()
 
-    def update_agent_description(self, description):
+    def save_description(self, description: str):
         if self.subject.description != description:
-            self.subject.description = description
-            self.subject.save()
-
-    def open_instance_tab(self, instance_id):
-        # This method is called from AgentInstancesTableView
-        self.active_instance = AgentInstance.objects.get(id=instance_id)
-        print(self.active_instance)
-        self.parent.open_instance_tab(self.active_instance)
-
-    def open_version_tab(self, version_id):
-        # This method is called from AgentVersionsTableView
-        # For now, just print. In a real scenario, this might open a new tab for the version
-        print(f"Opening version tab for version {version_id}")
-
-    def save(self):
-        # The name and description are saved onblur. This save button can be for other potential edits.
-        # For now, just re-render to ensure everything is up to date.
+            # TODO: persist once Agent mutation is supported
+            print(f"[AgentWorkspaceView] description change — not yet persisted")
         self.update()
 
-    def cancel(self):
-        # Discard unsaved changes by re-fetching from DB and updating
-        self.subject.refresh_from_db()
-        self.update()
+    def open_instance_tab(self, instance_id: int):
+        instance = AgentInstance.objects.get(id=instance_id)
+        # Walk up to the workspace to open the tab
+        node = self.parent
+        while node is not None:
+            if hasattr(node, 'open_instance_tab'):
+                node.open_instance_tab(instance)
+                return
+            node = getattr(node, 'parent', None)

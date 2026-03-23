@@ -1,10 +1,10 @@
 from threading import Lock
 from channels.generic.websocket import WebsocketConsumer
 import json
-from ui.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
-from ui.pyHtmlGui.pyhtmlgui import PyHtmlGui
-from AgentOne.ui.app import UiApp
-from AgentOne.ui.app_view import UiAppView
+from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
+from ui.lib.pyHtmlGui.pyhtmlgui import PyHtmlGui
+from ui.app import UiApp
+from ui.app_view import UiAppView
 
 # Global PyHtmlGui instance (single instance for the entire Django app)
 # This will be initialized only once when the consumer is first loaded

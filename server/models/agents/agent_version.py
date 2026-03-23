@@ -23,20 +23,18 @@ if TYPE_CHECKING:
     from server.models.agents.agent_instance import AgentInstance
     from server.models.agents.agent_instance_version import AgentInstanceVersion
 
-
-
 AGENT_VERSION_RUNTIME_CLASS_CACHE = LRUCache(maxsize=1024)
 
 @contextmanager
-def temp_sys_path(path):
+def temp_sys_path(path:Path):
     """Temporarily adds a directory to sys.path."""
-    path = str(path)
-    if path not in sys.path:
-        sys.path.insert(0, path)
+    pathstr = path.as_posix()
+    if pathstr not in sys.path:
+        sys.path.insert(0, pathstr)
         try:
             yield
         finally:
-            sys.path.remove(path)
+            sys.path.remove(pathstr)
     else:
         yield
         
@@ -57,7 +55,7 @@ class AgentVersion(BaseModel):
     task_definitions = models.ManyToManyField("server.AgentTaskDefinition", symmetrical=False, blank=True, related_name="related_agent_versions")
 
     sub_agent_versions  = models.ManyToManyField("self"                      , symmetrical=False, blank=True, related_name="imported_by_agent_versions")
-    
+
     # SOURCE CODE
     source_path = models.TextField(default=None, max_length=2048)
     source_code = models.ForeignKey(GenericContent,  default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="agent_version_source_code")
@@ -74,7 +72,7 @@ class AgentVersion(BaseModel):
     @property
     def tools(self):
         return self.available_tools
-    
+
     @property
     def conversation_messages(self):
         return self.related_conversation_messages # pyright: ignore[reportAttributeAccessIssue]
@@ -82,7 +80,7 @@ class AgentVersion(BaseModel):
     @property
     def queries(self):
         return self.related_queries # pyright: ignore[reportAttributeAccessIssue]
-    
+
     @property
     def responses(self):
         return self.related_responses # pyright: ignore[reportAttributeAccessIssue]
@@ -117,15 +115,16 @@ class AgentVersion(BaseModel):
                 return agent_instance_version
         else:
             print("NO CURRENT agent_instance_version", agent_instance_version)
-        print("agent_instance", agent_instance.pk)
+        print("agent_instance", agent_instance.pk, "parent_instance", parent_instance)
         new_instance_version, created = AgentInstanceVersion.objects.get_or_create(
             agent = self.agent,
             agent_version = self,
             agent_instance = agent_instance,
             workingdir = workingdir,
         )
-        if parent_instance and (created or acreated):
-            print("parent_instance.agent.name", parent_instance.agent.name,  parent_instance.latest_agent_instance_version,  parent_instance.latest_agent_instance_version, new_instance_version)
+
+        if parent_instance:
+            print("parent_instance.agent.name", parent_instance.agent.name if parent_instance else "no parent",  parent_instance.latest_agent_instance_version if parent_instance else "no last",  parent_instance.latest_agent_instance_version if parent_instance else "", new_instance_version)
             parent_instance.latest_agent_instance_version.child_agent_instance_versions.add(new_instance_version)
         print(new_instance_version)
         return new_instance_version
@@ -228,8 +227,15 @@ class AgentVersion(BaseModel):
             python_dependencies = python_dependencies.replace("\nfrom AgentOne.public ", "\nfrom public ")
             src = f"{python_dependencies}\n{self.source_code.content}"
             print(f"##############\n{src}\n#####################")
-            #with temp_sys_path(filename.parent):
-            exec(src, exec_globals) # Execute the source code
+            print(Path(self.source_path).parent)
+            print(Path(self.source_path).parent.parent)
+            print(Path(self.source_path).parent.parent.parent)
+            print(Path(self.source_path).parent.parent.parent.parent)
+            
+            with temp_sys_path(Path(self.source_path).parent):
+                with temp_sys_path(Path(self.source_path).parent.parent):
+                    with temp_sys_path(Path(self.source_path).parent.parent.parent):
+                        exec(src, exec_globals) # Execute the source code
   
             agent_class = exec_globals.get(self.agent.name)
             if not agent_class:

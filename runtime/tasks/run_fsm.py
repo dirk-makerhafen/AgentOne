@@ -24,7 +24,7 @@ class TaskRunStateMachine:
     """
     Single entry point for all AgentTaskRun status transitions.
  
-    Replaces AgentTaskRunRuntime._set_status() and the two raw .update() calls
+    Replaces RunScheduler._set_status() and the two raw .update() calls
     in _apply_async. TaskRun state is simpler than TaskCall — no approval gates,
     retries, or hooks. Those live at the TaskCall level.
  

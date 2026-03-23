@@ -4,7 +4,7 @@ from server.models.enums.task_enums import TaskRunStatus, TaskCallStatus, TaskCa
 
 from django.db.models import Q
 from server.models.tasks.agent_task_call import AgentTaskCall
-from AgentOne.runtime.tasks.call_scheduler import CallScheduler
+from runtime.tasks.call_scheduler import CallScheduler
 from runtime.tasks.call_fsm import TaskCallStateMachine
 from runtime.tasks.run_fsm import TaskRunStateMachine
 

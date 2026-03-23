@@ -20,8 +20,8 @@ class FilesystemApi():
 
     def fs_load(self, path, filter = "", mode="full"):
         abs_path, rel_path = clean_path(self.agent_instance_version.workingdir, path)
-        if not check_permission(self.agent_instance_version, abs_path, 'read'):
-            return (False, {'status': 'failed', 'message': f"Read access denied for: {rel_path}"})
+        #if not check_permission(self.agent_instance_version, abs_path, 'read'):
+        #    return (False, {'status': 'failed', 'message': f"Read access denied for: {rel_path}"})
         success, item = FsLogEntry.objects.get_or_create_latest(agent_instance = self.agent_instance, action="load", load_mode = mode, path = abs_path, filter = filter, recursive = False, must_exist = True )
         if not success:
             return False, item

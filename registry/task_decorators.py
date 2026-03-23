@@ -31,7 +31,7 @@ class TaskDecorator:
     Persistence is handled later by UnregisteredAgent.register().
     """
 
-    def __init__(self, task_type: TaskType, name: Optional[str] = None, description: str = "", bound: bool = True, trigger:   Optional[str] = None, requires_approval:  Optional[bool] = False, max_retries: Optional[int]=None, retry_delay: Optional[int]=None, retry_requires_approval: Optional[bool]=None):
+    def __init__(self, task_type: TaskType, name: Optional[str] = None, description: str = "", bound: bool = True, trigger:   Optional[str] = None, requires_approval:  Optional[bool] = False, max_retries: Optional[int]=None, retry_delay: Optional[int]=None, retry_requires_approval: Optional[bool]=None, priority: Optional[int]=None):
         self.task_type = task_type
         self.name = name
         self.description = description
@@ -39,6 +39,7 @@ class TaskDecorator:
         self.trigger = trigger
         self.requires_approval = requires_approval
         self.max_retries = max_retries
+        self.priority = priority
         self.retry_delay = retry_delay
         self.retry_requires_approval = retry_requires_approval
 
@@ -51,6 +52,7 @@ class TaskDecorator:
             "bound": self.bound,
             "trigger": self.trigger,
             "requires_approval": self.requires_approval,
+            "priority": self.priority,
             "max_retries": self.max_retries, # how many retries to we make in case of error
             "retry_delay": self.retry_delay, # time between retries in seconds
             "retry_requires_approval": self.retry_requires_approval, # required user approval before run

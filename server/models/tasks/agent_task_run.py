@@ -43,6 +43,7 @@ class AgentTaskRun(BaseModel):
     dont_start_before = models.DateTimeField(default=None, null=True ) # Absolute time and date of when the task should be executed. 
     dont_start_after  = models.DateTimeField(default=None, null=True) #  Datetime or seconds in the future for the task should expire. The task won't be executed after the expiration time.
     requires_approval = models.BooleanField(default=None, null=False)  # required user approval before run
+    priority = models.IntegerField(default=0)   # 0 = highest, 1..999 less important
 
     # Options - Run
     time_limit      = models.IntegerField(default=None, null=True)     #   
@@ -128,7 +129,7 @@ class AgentTaskRun(BaseModel):
             return obj, ref_pks
         if isinstance(obj, (list, set, tuple)):
             return obj.__class__(AgentTaskRun.resolve_calls_to_runs(item, ref_pks)[0] for item in obj), ref_pks
-        if isinstance(obj, (AgentTaskRun, ConversationMessage, GenericContent)):
+        if isinstance(obj, (AgentTaskRun, ConversationMessage, GenericContent, Query, Response)):
             return {"_type": obj.__class__.__qualname__, "pk": obj.pk}, ref_pks
         if isinstance(obj, dict):
             if "_type" in obj and "pk" in obj and len(obj) == 2:
@@ -138,6 +139,10 @@ class AgentTaskRun(BaseModel):
                 if obj["_type"] == "ConversationMessage":
                     return obj, ref_pks
                 if obj["_type"] == "GenericContent":
+                    return obj, ref_pks
+                if obj["_type"] == "Query":
+                    return obj, ref_pks
+                if obj["_type"] == "Response":
                     return obj, ref_pks
                 if obj["_type"] == "AgentTaskCall":
                     a =  AgentTaskCall.objects.get(pk=obj["pk"])
@@ -176,8 +181,8 @@ class AgentTaskRun(BaseModel):
         if 0 == query.update(status = TaskRunStatus.QUEUED):
             return # was not queued, maybe some race condition
         print("current ctx1" , ContextTracker.current, self)
-        from runtime.task_run_runtime import AgentTaskRunRuntime
-        celery_delay(AgentTaskRunRuntime._apply_async, self.pk)
+        from runtime.tasks.run_scheduler import RunScheduler
+        celery_delay(RunScheduler._apply_async, self.pk)
     
     def apply(self):
         print("AgentTaskCall.run", self.agent_task_definition.name)
@@ -216,7 +221,7 @@ class AgentTaskRun(BaseModel):
                     result = x.func(runtime, *args, **kwargs)
  
                 self.result_json, ref_pks = AgentTaskRun.result_to_json(obj=result)
-                self.taskrun_result_references.add(ref_pks)
+                self.taskrun_result_references.set(ref_pks)
                 if ref_pks:
                     self.status = TaskRunStatus.WAITING_RESULTTASKS
                 else:

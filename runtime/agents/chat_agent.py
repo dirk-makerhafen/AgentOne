@@ -34,8 +34,8 @@ if TYPE_CHECKING:
 
 class ChatAgent(BaseAgent):
     @task()
-    def add_user_message(self,  message: str|None = None, parts: List[Dict]|None = None):
-        tmp = super().add_user_message.func(message=message, parts=parts)
+    def add_user_message(self, message: str|None = None, parts: List[Dict]|None = None):
+        tmp = super().add_user_message.func(self, message=message, parts=parts)
         if isinstance(tmp, ConversationMessage):
             return self._process_conversation_message.delay(conversation_message=tmp)
         else: # command was parsed 
@@ -46,7 +46,7 @@ class ChatAgent(BaseAgent):
         return [
             self._create_query.i(),
             self._execute_query.i(),
-            self.response_to_conversation.i(),
+            self._response_to_conversation.i(),
             self._decide_next_status.i(),
         ]
 
@@ -137,7 +137,7 @@ class ChatAgent(BaseAgent):
             raise
 
     @task()
-    def response_to_conversation(self, response, content, tool_calls):
+    def _response_to_conversation(self, response, content, tool_calls):
         conversation_message = ConversationMessage.objects.create(
             agent_instance_version = self.agent_instance_version,
             response=response,

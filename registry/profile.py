@@ -3,9 +3,9 @@ from __future__ import annotations
 
 class Profile():
     def __init__(self, name = None, model: str|None = None,
-                max_retries: int|None = None, max_task_steps: int|None = None, unattended_steps: int|None = None, max_history_messages: int|None = None,
+                max_retries: int|None = None, max_task_steps: int|None = None, unattended_steps: int|None = None, max_history_messages: int|None = None, priority: int|None = None,
                 task_prompt: str|None = None, system_prompt: str|None = None,
-                execution_mode: str = 'queue', tool_call_syntax: str = 'default',
+                execution_mode: str = 'queue', tool_call_syntax: str = 'default', 
                 extra_settings: dict|None = None, variants: list[Profile]|None = None) -> None:
         self.name = name
         self.model = model
@@ -18,6 +18,7 @@ class Profile():
         self.execution_mode = execution_mode
         self.tool_call_syntax = tool_call_syntax
         self.extra_settings = extra_settings
+        self.priority = priority
         self.variants = variants
 
     def to_dict(self):
@@ -27,6 +28,8 @@ class Profile():
         }
         if self.max_retries:
             d["max_retries"] = self.max_retries
+        if self.priority:
+            d["priority"] = self.priority
         if self.max_task_steps:
             d["max_task_steps"] = self.max_task_steps
         if self.unattended_steps:

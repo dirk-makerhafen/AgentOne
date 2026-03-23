@@ -41,7 +41,7 @@ class BaseAgent(AgentDef):
         if text.startswith("!"):
             cmd_full = text[1:].split(" ",1)[0] # Get command without '!'
             cmd = cmd_full # Use cmd_full for now, assuming simple commands, can be refined for subcommands
-            agent_tool = self.agent_version.tools.filter(trigger=cmd).first()
+            agent_tool = self.agent_version.tools.filter(task_definition__trigger=cmd).first()
             if agent_tool:
                 agent_tool: QueryAvailableTool
                 agent_version = agent_tool.tool_agent_version
@@ -291,7 +291,7 @@ class BaseAgent(AgentDef):
                         )
                         tool_agent_instance_version: AgentInstanceVersion
                         rt = tool_agent_instance_version.get_runtime_instance()
-                        rt: AgentRuntime
+                        rt: AgentDef
                         func = getattr(rt, func_name)
                         func: BoundAgentFunction
                         tool_call_tasks.append(AgentTaskCall.create(func.instance(), args=[], kwargs=kwargs))

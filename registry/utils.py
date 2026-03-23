@@ -76,7 +76,6 @@ def get_import_strings(source_path, class_name):
                 elif isinstance(node, ast.ImportFrom):
                     exec_strings.add(f"from {node.module} import {alias_str} # {is_builtin}{is_installed}")
 
-    print("HEHRHERHEHRHERHEHRHERH", exec_strings)
     imports = sorted(list(exec_strings))
     return imports
 

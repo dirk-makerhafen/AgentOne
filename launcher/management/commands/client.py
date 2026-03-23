@@ -36,6 +36,7 @@ class Command(BaseCommand):
             self.handle_service(**options)
         else:
             self.stdout.write(self.style.ERROR(f"Unknown subcommand: {subcommand}"))
+
     def handle_register(self, **options):
         import os
         import json
@@ -113,9 +114,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"An unexpected error occurred: {e} {traceback.format_exc()}"))
             if 'response' in locals():
                 self.stdout.write(f"Server response: {response.status_code} - {response.text}")
+    
     def _get_config_path(self, options):
         config_info = self._determine_paths_and_permissions(options)
         return config_info['config_dir']
+    
     def _get_config_from_options(self, options):
         import socket
         return {

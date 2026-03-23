@@ -1,136 +1,157 @@
 from __future__ import annotations
-from ui.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.pyHtmlGui.pyhtmlgui.view.queryset_view import QuerySetView
-from ui.components.tabs.agent.agent_settings_view import AgentSettingsView
-from ui.components.tabs.agent.agent_task_definitions_view import  AgentTaskDefinitionView, AgentTaskDefinitionsView
+from server.models.agents.agent_version import AgentVersion
+from server.models.agents.agent_instance import AgentInstance
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+from ui.lib.queryset_view import QuerySetView
+from ui.workspace.agent.tasks import AgentTaskDefinitionsView, AgentTaskDefinitionView
+from ui.workspace.agent.settings import AgentSettingsView
+from ui.lib.model_view import ModelView
 
-class AgentVersionView(PyHtmlView):
-    DOM_ELEMENT_CLASS = "AgentVersionView"
+
+# ---------------------------------------------------------------------------
+# Version views
+# ---------------------------------------------------------------------------
+
+class AgentVersionView(ModelView):
+    """Detail table for a single AgentVersion."""
     DOM_ELEMENT = "table"
+    DOM_ELEMENT_CLASS = "AgentVersionView agent-version-table"
+
     TEMPLATE_STR = """
         <thead>
-            <tr>
-                <th>Parameter</th>
-                <th class="permission-checkbox-cell">Value</th>
-            </tr>
+            <tr><th>Field</th><th>Value</th></tr>
         </thead>
         <tbody>
             <tr>
-              <td>version_number</td>
-              <td>{{ pyview.subject.version_number }}</td>
+                <td>Version</td>
+                <td>{{ pyview.subject.version_number }}</td>
             </tr>
             <tr>
-              <td>Parent Version </td>
-              <td>{{ pyview.subject.parent.version_number }}</td>
+                <td>Parent</td>
+                <td>
+                    {% if pyview.subject.parent %}
+                        v{{ pyview.subject.parent.version_number }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
             </tr>
             <tr>
-              <td>source</td>
-              <td>{{ pyview.subject.source }}</td>
+                <td>Source path</td>
+                <td>{{ pyview.subject.source_path }}</td>
             </tr>
             <tr>
-              <td>subagents</td>
-              <td>{{ pyview.subject.sub_agent_versions.all() }}</td>
+                <td>Class name</td>
+                <td>{{ pyview.subject.class_name }}</td>
             </tr>
             <tr>
-              <td><b>Settings</b></td>
-              <td></td>
+                <td>Sub-agents</td>
+                <td>{{ pyview.subject.sub_agent_versions.count() }}</td>
             </tr>
-
-            {{ pyview.agent_settings_view.render()}}
-            
             <tr>
-              <td><b>Task Definitions</b></td>
-              <td></td>
+                <td colspan="2"><strong>Profile</strong></td>
             </tr>
-            {{ pyview.task_definitions_view.render()}}
-
+            {{ pyview.profile_view.render() }}
             <tr>
-              <td><b>Tools</b></td>
-              <td></td>
+                <td colspan="2"><strong>Task definitions</strong></td>
             </tr>
-            {% for tool in pyview.subject.tools.all() %}
-              <tr>
-                <td>{{ tool.name }}</td>
-                <td> {{tool}} </td>
-              </tr>
+            {{ pyview.task_definitions_view.render() }}
+            <tr>
+                <td colspan="2"><strong>Available tools</strong></td>
+            </tr>
+            {% for tool in pyview.subject.available_tools.all() %}
+                <tr>
+                    <td>{{ tool.task_definition.name }}</td>
+                    <td>{{ tool.tool_agent_version.agent.name }}</td>
+                </tr>
             {% endfor %}
-            
-            <tr>
-              <td><b>Variants</b></td>
-              <td>{{ pyview.subject.variants}}</td>
-            </tr>
-            
         </tbody>
-   
-
     """
-    def __init__(self, subject, parent, **kwargs):
+
+    def __init__(self, subject: AgentVersion, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.s = subject
-        self.agent_settings_view = AgentSettingsView(subject.profile, self)
-        self.task_definitions_view = AgentTaskDefinitionsView(subject=subject.task_definitions, parent=self, item_class=AgentTaskDefinitionView)
+        self.profile_view = AgentSettingsView(subject.profile, self)
+        self.task_definitions_view = AgentTaskDefinitionsView(
+            subject=subject.task_definitions.all(),
+            parent=self,
+            item_class=AgentTaskDefinitionView,
+        )
 
 
-class AgentVersionsView(PyHtmlView):
+class AgentVersionsView(ModelView):
+    """Shows the latest agent version — expandable to full history later."""
     DOM_ELEMENT_CLASS = "AgentVersionsView"
+
     TEMPLATE_STR = """
-    last
-  {{pyview.last_agent_version_view.render()}}
-          
+        <h4>Latest version</h4>
+        {% if pyview.latest_view %}
+            {{ pyview.latest_view.render() }}
+        {% else %}
+            <p class="text-muted small">No versions registered yet.</p>
+        {% endif %}
     """
+
     def __init__(self, subject, parent, **kwargs):
+        """Subject is the agent_versions queryset (ordered by -version_number)."""
         super().__init__(subject, parent, **kwargs)
-        self.av = subject
-        #self.agent_versions_view = QuerySetView(subject=subject, parent=self, item_class=AgentVersionView,dom_element_class="grid-body")
-        self.s=subject.last()
-        self.last_agent_version_view = AgentVersionView(subject=self.s, parent=self)
-
-    def open_version_tab(self, version_id):
-        # This will need to call back to the main app to open the version tab
-        print(f"Opening version tab for version {version_id}")
-        # For now, just print. In a real scenario, this would trigger a backend call to open a new tab
-        # self.parent.open_version_tab(version_id)
+        latest = subject.first()
+        self.latest_view = AgentVersionView(latest, self) if latest else None
 
 
+# ---------------------------------------------------------------------------
+# Instance views
+# ---------------------------------------------------------------------------
 
+class AgentInstanceView(ModelView):
+    """One-row summary of an AgentInstance."""
+    DOM_ELEMENT_CLASS = "AgentInstanceView agent-instance-row"
 
-from __future__ import annotations
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from server.models.agents.agent_instance import AgentInstance
-from ui.pyHtmlGui.pyhtmlgui.view.queryset_view import QuerySetView
-from ui.components.tabs.agent.agent_task_instances_view import AgentTaskInstancesView
-
-class AgentInstanceView(PyHtmlView):
-    DOM_ELEMENT_EXTRAS = "style='border:1px solid red'"
     TEMPLATE_STR = """
-        name: {{ pyview.subject.name }}  workingdir = {{ pyview.subject.workingdir }} <br>
-        latest_version = {{ pyview.subject.latest_agent_instance_version }}, current_variant= {{ pyview.subject.current_agent_variant }} <br>
-        task instances = { { pyv iew.agent_task_instances_view.render() } }
-        <button onclick="pyview.parent.parent.open_instance_tab({{pyview.subject.pk}})"></button>
+        <div class="instance-row-inner">
+            <span class="instance-name">{{ pyview.subject.name or 'unnamed' }}</span>
+            {% if pyview.subject.latest_agent_instance_version %}
+                <span class="text-muted small">
+                    v{{ pyview.subject.latest_agent_instance_version.agent_version.version_number }}
+                    · #{{ pyview.subject.latest_agent_instance_version.pk }}
+                    {% if pyview.subject.latest_agent_instance_version.workingdir %}
+                        · {{ pyview.subject.latest_agent_instance_version.workingdir }}
+                    {% endif %}
+                </span>
+            {% endif %}
+            <button class="btn btn-xs btn-default"
+                    onclick="pyview.open_tab()">
+                Open
+            </button>
+        </div>
     """
-    def __init__(self, subject, parent, **kwargs):
-        super().__init__(subject, parent, **kwargs)
-        print("hfoobarhehe1r1", type(subject), subject)
-        #print("here23",  subject.related_agent_task_instances)
-        #print("hfoobarheher", subject.agent_task_instances.all())
-        #self.agent_task_instances_view = AgentTaskInstancesView(subject=subject.related_agent_task_instances, parent=self)
 
-class AgentInstancesView(PyHtmlView):
+    def __init__(self, subject: AgentInstance, parent, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+
+    def open_tab(self):
+        # Walk up to the workspace view which has open_instance_tab
+        node = self.parent
+        while node is not None:
+            if hasattr(node, 'open_instance_tab'):
+                node.open_instance_tab(self.subject.pk)
+                return
+            node = getattr(node, 'parent', None)
+
+
+class AgentInstancesView(ModelView):
+    """List of all instances for this agent."""
+    DOM_ELEMENT_CLASS = "AgentInstancesView"
+
     TEMPLATE_STR = """
         <h4>Instances</h4>
-        {{ pyview.agent_instances_view.render() }}
+        {{ pyview.instances_view.render() }}
     """
 
     def __init__(self, subject, parent, **kwargs):
+        """Subject is the agent_instances queryset."""
         super().__init__(subject, parent, **kwargs)
-        self.agent_instances_view = QuerySetView(subject=subject, parent=self, item_class=AgentInstanceView)
-
-    def open_instance_tab(self, instance_id):
-        self.parent.open_instance_tab(instance_id)
-
-    def delete_instance(self, instance_id):
-        print(f"Deleting instance {instance_id}")
-        AgentInstance.objects.filter(id=instance_id).delete()
-        self.subject.refresh_from_db() # Refresh the agent to update its instances
-        self.update()
+        self.instances_view = QuerySetView(
+            subject=subject,
+            parent=self,
+            item_class=AgentInstanceView,
+        )

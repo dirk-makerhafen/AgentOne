@@ -1,28 +1,34 @@
+from __future__ import annotations
+from ui.lib.model_view import ModelView
 
 
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+class ResponseView(ModelView):
+    DOM_ELEMENT_CLASS = "ResponseView conversation-log-item log-type-llm"
 
-class ResponseView(PyHtmlView):
-    DOM_ELEMENT_CLASS = 'LLMResponseView conversation-log-item log-type-llm llm-response-item'
     TEMPLATE_STR = """
         <div class="message-header">
-            <strong>[{{ pyview.subject.created_at }}]</strong> <strong>LLM Response : </strong>
-            {{ pyview.subject.prompt_tokens }}/{{ pyview.subject.completion_tokens }} tokens
-            <button class="btn btn-xs btn-default log-btn" onclick="pyview.toggle_raw()"><i class="fa fa-code"></i> raw</button>
+            <span class="message-time">{{ pyview.subject.created_at.strftime('%H:%M:%S') }}</span>
+            <strong>LLM Response</strong>
+            <span class="token-count">
+                {{ pyview.subject.prompt_tokens }}&nbsp;↑&nbsp;/&nbsp;{{ pyview.subject.completion_tokens }}&nbsp;↓
+            </span>
+            <button class="log-btn" onclick="pyview.toggle_raw()">
+                {{ '▲' if not pyview.is_hidden else '▼' }} raw
+            </button>
         </div>
-        <div id="raw_json_container_llm_response_{{ pyview.subject.id }}" class="message-content {{ 'hidden' if pyview.is_raw_hidden else '' }}">
-            <pre>{{ pyview.subject.data }}</pre>
+        <div class="message-content {{ 'hidden' if pyview.is_hidden else '' }}">
+            <pre class="log-pre">{{ pyview.subject.data }}</pre>
         </div>
     """
-    def __init__(self, subject, parent, **kwargs):
-        super().__init__(subject, parent, **kwargs)
-        self.is_raw_hidden = True
-
-    def toggle_raw(self):
-        self.is_raw_hidden = not self.is_raw_hidden
-        self.update()
 
     @property
     def DOM_ELEMENT_EXTRAS(self):
-        return f'style="order: {int(self.subject.created_at.timestamp() )}"'
-    
+        return f'style="order: {int(self.subject.created_at.timestamp())}"'
+
+    def __init__(self, subject, parent, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self.is_hidden = True
+
+    def toggle_raw(self):
+        self.is_hidden = not self.is_hidden
+        self.update()

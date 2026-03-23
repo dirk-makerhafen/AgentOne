@@ -1,10 +1,11 @@
 
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+from ui.lib.model_view import ModelView
+from ui.workspace.workspace import WorkspaceView
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from AgentOne.ui.sidebar.sidebar import SidebarContainerView
-from ui.components.tabs.tabs import TabsView
-from AgentOne.ui.app import UiApp
+from ui.sidebar.sidebar import SidebarView
+from ui.app import UiApp
 
 @login_required
 def ui(request):
@@ -12,18 +13,14 @@ def ui(request):
 
 class UiAppView(PyHtmlView):
     TEMPLATE_STR = """
-    <style>
-        .fade {
-            opacity: 100%;
-        }
-    </style>
+    {{pyview.parent.css_view.render()}}
     <div class="resizable-container" data-orientation="horizontal">
         <div class="resizable-panel resizable-container " data-orientation="vertical" data-size-pc=15>
             {{ pyview.sidebar_view.render()}}
         </div>
 
         <div class="resizable-panel resizable-container" data-orientation="horizontal" data-size-pc=85 id="mainSplitViewContainer">
-            {{ pyview.tabs_view.render()}}
+            {{ pyview.workspace_view.render()}}
         </div>
     </div>
         <script>
@@ -36,15 +33,16 @@ class UiAppView(PyHtmlView):
     """
 
     def __init__(self, subject:UiApp, parent, **kwargs):
+        self._subject = subject
         super().__init__(subject, parent, **kwargs)
-        self.sidebar_view = SidebarContainerView(subject, self) # Subject will be the main UiApp
-        self.tabs_view = TabsView(subject, self) # Subject will be the main UiApp
+        self.sidebar_view = SidebarView(subject, self) # Subject will be the main UiApp
+        self.workspace_view = WorkspaceView(subject, self) # Subject will be the main UiApp
 
     def open_buildin_tab(self, tab_name):
-        self.tabs_view.open_buildin_tab(tab_name)
+        self.workspace_view.open_buildin_tab(tab_name)
 
     def open_instance_tab(self, instance):
-        self.tabs_view.open_instance_tab(instance)
+        self.workspace_view.open_instance_tab(instance)
 
     def open_agent_tab(self, agent):
-        self.tabs_view.open_agent_tab(agent)
+        self.workspace_view.open_agent_tab(agent)

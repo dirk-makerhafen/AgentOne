@@ -52,14 +52,13 @@ WantedBy=multi-user.target
             subprocess.run(['systemctl', 'enable', f'{self.service_name}.service'], check=True, capture_output=True)
             subprocess.run(['systemctl', 'start', f'{self.service_name}.service'], check=True, capture_output=True)
 
-            self.command.stdout.write(self.command.style.SUCCESS("
-Service installation completed successfully."))
+            self.command.stdout.write(self.command.style.SUCCESS("Service installation completed successfully."))
             self.status()
 
         except (subprocess.CalledProcessError, IOError) as e:
             self.command.stdout.write(self.command.style.ERROR(f"Error during service installation: {e} {traceback.format_exc()}"))
             if hasattr(e, 'stderr') and e.stderr:
-                self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))))
+                self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))
 
     def uninstall(self, *args, **kwargs):
         import os

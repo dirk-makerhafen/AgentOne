@@ -45,11 +45,11 @@ class SimpleTaskAgent(BaseAgent):
         ]
 
     @task()
-    def _create_task_query(self, payload):
+    def _create_task_query(self, **kwargs):
         query = self._create_new_query()
         query_message = QueryMessage.objects.create(role="system", query=query, index=-1)
         QueryMessagePart.objects.create(
-            content = GenericContent.from_data(payload),
+            content = GenericContent.from_data(kwargs),
             content_type = MessageContentType.TEMPLATE,
             content_template = query.agent_profile.task_prompt,
             query_message = query_message,

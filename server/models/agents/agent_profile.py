@@ -26,7 +26,7 @@ class AgentProfile(BaseModel):
     max_task_steps = models.IntegerField(default=0)
     unattended_steps = models.IntegerField(default=0)
     max_history_messages = models.IntegerField(default=0)
-
+    priority = models.IntegerField(default=0)   # 0 = highest, 1..999 less important
     task_prompt   = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="agent_profile_task_prompt")
     system_prompt = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="agent_profile_system_prompt")
 
@@ -34,7 +34,11 @@ class AgentProfile(BaseModel):
     tool_call_syntax = models.CharField(max_length=20, choices=AgentToolCallSyntax.choices, default=AgentToolCallSyntax.DEFAULT)
 
     extra_settings = models.JSONField(default=dict, blank=True, null=True)
-        
+
+    @property
+    def use_in_agent_versions(self):
+        return self.related_agent_versions # pyright: ignore[reportAttributeAccessIssue]
+
     def select(self, variant_names=None):
         if variant_names is None:
             variant_names = []
@@ -72,6 +76,7 @@ class AgentProfile(BaseModel):
             # copy base fields
             profile.aimodel = self.aimodel
             profile.max_retries = self.max_retries
+            profile.priority = self.priority
             profile.max_task_steps = self.max_task_steps
             profile.unattended_steps = self.unattended_steps
             profile.max_history_messages = self.max_history_messages
@@ -90,6 +95,9 @@ class AgentProfile(BaseModel):
 
             if "max_retries" in selected:
                 profile.max_retries = selected["max_retries"]
+
+            if "priority" in selected:
+                profile.priority = selected["priority"]
 
             if "max_task_steps" in selected:
                 profile.max_task_steps = selected["max_task_steps"]
@@ -115,10 +123,6 @@ class AgentProfile(BaseModel):
 
         # recursive variant chain
         return profile.select(variant_names[1:])
-
-    @property
-    def use_in_agent_versions(self):
-        return self.related_agent_versions # pyright: ignore[reportAttributeAccessIssue]
 
     def save(self, *args, **kwargs):
         if self.pk:

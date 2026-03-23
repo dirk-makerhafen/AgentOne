@@ -78,7 +78,7 @@ class TaskCallStateMachine:
     """
     Single entry point for all AgentTaskCall status transitions.
  
-    Replaces AgentTaskCallRuntime._set_status() and the one raw .update() in
+    Replaces CallScheduler._set_status() and the one raw .update() in
     on_all_on_posthook_ended(). All callers in call_runtime.py and run_runtime.py
     should go through here.
  

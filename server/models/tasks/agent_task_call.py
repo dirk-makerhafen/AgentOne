@@ -5,6 +5,8 @@ import random
 import threading
 import traceback
 from django.db import models
+from server.models.queries.query import Query
+from server.models.queries.response import Response
 from server.models.content import GenericContent
 from server.models.conversation_message import ConversationMessage
 from runtime.context_manager import ContextTracker
@@ -73,6 +75,7 @@ class AgentTaskCall(BaseModel):
     max_subtask_error_rate = models.IntegerField(default=None, null=False)# for groups, in percent, also used when timeout
     limit_subtask_parallel_runs  = models.IntegerField(default=None, null=False) # how many subtasks cn run in parallel, for groups 0=no limit
     limit_per_instance_parallel_runs  = models.IntegerField(default=None, null=False) #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+    priority = models.IntegerField(default=0)   # 0 = highest, 1..999 less important
 
     # Options - Retry
     max_retries  = models.IntegerField(default=None, null=False)   # how many retries to we make in case of error
@@ -101,7 +104,7 @@ class AgentTaskCall(BaseModel):
         return AgentTaskCallResult(self)
 
     @classmethod
-    def create(cls, agent_task_instance: "AgentTaskInstance", args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None, max_retries = None, retry_delay = None, retry_requires_approval = None ):
+    def create(cls, agent_task_instance: "AgentTaskInstance", args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None, max_retries = None, retry_delay = None, retry_requires_approval = None, priority:int|None = None ):
         """Create AgentTaskCall.
 
         Returns:
@@ -150,6 +153,7 @@ class AgentTaskCall(BaseModel):
             max_subtask_error_rate = max_subtask_error_rate if max_subtask_error_rate else agent_task_instance.max_subtask_error_rate,# for groups, in percent, also used when timeout
             limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else agent_task_instance.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
             limit_per_instance_parallel_runs  = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else agent_task_instance.limit_per_instance_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+            priority  = priority if priority else agent_task_instance.priority,   # how many retries to we make in case of error
 
             # Options - Retry
             max_retries  = max_retries if max_retries else agent_task_instance.max_retries,   # how many retries to we make in case of error
@@ -180,7 +184,7 @@ class AgentTaskCall(BaseModel):
         print("current ctx2" , ContextTracker.current)
         for before_hook_call in self.taskcall_before_run_hooks.all(): # start calls after their reference is set
             before_hook_call.apply_async()
-        from AgentOne.runtime.tasks.call_scheduler import CallScheduler
+        from runtime.tasks.call_scheduler import CallScheduler
         celery_delay(CallScheduler._apply_async, self.pk)
 
     @staticmethod
@@ -202,6 +206,10 @@ class AgentTaskCall(BaseModel):
                     return obj, ref_pks
                 if obj["_type"] == "GenericContent":
                     return obj, ref_pks
+                if obj["_type"] == "Query":
+                    return obj, ref_pks
+                if obj["_type"] == "Response":
+                    return obj, ref_pks
                 raise Exception(f"This should not be here in AgentTaskCall.arguments_to_json {obj}")
             return {k: AgentTaskCall.callargs_to_json(v, ref_pks)[0] for k, v in obj.items()}, ref_pks
         if isinstance(obj, list):
@@ -219,6 +227,10 @@ class AgentTaskCall(BaseModel):
             return {"_type": "ConversationMessage", "pk": obj.pk}, ref_pks
         if isinstance(obj, GenericContent):
             return {"_type": "GenericContent", "pk": obj.pk}, ref_pks
+        if isinstance(obj, Query):
+            return {"_type": "Query", "pk": obj.pk}, ref_pks
+        if isinstance(obj, Response):
+            return {"_type": "Response", "pk": obj.pk}, ref_pks
         raise Exception(f"Type {obj} unknown")
 
     def save(self, *args, **kwargs):

@@ -13,7 +13,7 @@ Celery beat config (settings.py):
 
     CELERY_BEAT_SCHEDULE = {
         'agentone-scheduler': {
-            'task': 'runtime.scheduler.tick_scheduler',
+            'task': 'tasks.tick_scheduler',
             'schedule': 10.0,  # seconds
         },
     }
@@ -26,7 +26,7 @@ from django.db import models
 from datetime import timedelta
 
 
-@shared_task(name='runtime.scheduler.tick_scheduler')
+@shared_task(name='tasks.tick_scheduler')
 def tick_scheduler():
     """Main scheduler tick — each routine is independent."""
     _release_rate_limited_calls()
@@ -44,17 +44,13 @@ def _release_rate_limited_calls():
     from server.models.enums.task_enums import TaskCallStatusDetail
     from runtime.rate_limiter import RateLimitChecker, RateLimitError
     from runtime.tasks.call_fsm import TaskCallStateMachine
-    from AgentOne.runtime.tasks.call_scheduler import CallScheduler
+    from runtime.tasks.call_scheduler import CallScheduler
 
     waiting = (
         AgentTaskCall.objects
         .filter(status_detail=TaskCallStatusDetail.WAITING_RATELIMIT)
-        .select_related(
-            'agent_instance_version__agent_version__profile__aimodel__api_provider'
-        )
-        .order_by('created_at')
+        .order_by('priority', 'created_at')
     )
-
     exhausted_models: set[int] = set()
 
     for call in waiting:
@@ -80,13 +76,8 @@ def _release_retry_calls():
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.enums.task_enums import TaskCallStatusDetail
     from runtime.tasks.call_fsm import TaskCallStateMachine
-    from AgentOne.runtime.tasks.call_scheduler import CallScheduler
-
-    due = AgentTaskCall.objects.filter(
-        status_detail=TaskCallStatusDetail.WAITING_RETRY,
-        dont_start_before__lte=timezone.now(),
-    ).order_by('dont_start_before')
-
+    from runtime.tasks.call_scheduler import CallScheduler
+    due = AgentTaskCall.objects.filter(status_detail=TaskCallStatusDetail.WAITING_RETRY, dont_start_before__lte=timezone.now()).order_by("priority",'dont_start_before')
     for call in due:
         try:
             if TaskCallStateMachine.enter_dependency_wait(call.pk):
@@ -100,13 +91,8 @@ def _release_scheduled_calls():
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.enums.task_enums import TaskCallStatusDetail
     from server.tasks.task_dispatcher import celery_delay
-    from AgentOne.runtime.tasks.call_scheduler import CallScheduler
-
-    due = AgentTaskCall.objects.filter(
-        status_detail=TaskCallStatusDetail.NEW,
-        dont_start_before__lte=timezone.now(),
-    ).order_by('dont_start_before')
-
+    from runtime.tasks.call_scheduler import CallScheduler
+    due = AgentTaskCall.objects.filter(status_detail=TaskCallStatusDetail.NEW, dont_start_before__lte=timezone.now()).order_by("priority",'dont_start_before')
     for call in due:
         try:
             celery_delay(CallScheduler._apply_async, call.pk)
@@ -119,19 +105,14 @@ def _timeout_active_runs():
     from server.models.tasks.agent_task_run import AgentTaskRun
     from server.models.enums.task_enums import TaskRunStatus
     from runtime.tasks.run_fsm import TaskRunStateMachine
-    from AgentOne.runtime.tasks.call_scheduler import CallScheduler
-
+    from runtime.tasks.call_scheduler import CallScheduler
     timed_out = (
         AgentTaskRun.objects
         .filter(status=TaskRunStatus.ACTIVE, time_limit__gt=0)
         .filter(
-            created_at__lt=timezone.now() - ExpressionWrapper(
-                F("time_limit") * timedelta(seconds=1),
-                output_field=DurationField(),
-            )
+            created_at__lt=timezone.now() - ExpressionWrapper(F("time_limit") * timedelta(seconds=1), output_field=DurationField())
         )
     )
-
     for run in timed_out:
         try:
             if TaskRunStateMachine.fail(run.pk):

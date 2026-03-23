@@ -65,6 +65,13 @@ CELERY_BROKER_URL = REDIS_URL
 CELERY_WORKER_REDIRECT_STDOUTS = False
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 CELERYD_PREFETCH_MULTIPLIER = 1
+CELERYD_PREFETCH_COUNT =1
+CELERY_BEAT_SCHEDULE = {
+    'agentone-scheduler': {
+        'task': 'tasks.tick_scheduler',
+        'schedule': 10.0,  # seconds
+    },
+}
 
 MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',

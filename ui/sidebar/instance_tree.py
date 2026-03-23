@@ -1,209 +1,185 @@
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.pyHtmlGui.pyhtmlgui.view.queryset_view import QuerySetView
-from ui.components.sidebar.instancenode_view import SidebarInstanceNodeView
-
+from __future__ import annotations
 from typing import TYPE_CHECKING
+from server.models.agents.agent_instance import AgentInstance
+from server.models.agents.agent_instance_version import AgentInstanceVersion
+from ui.lib.queryset_view import QuerySetView
+from ui.lib.model_view import ModelView
+
 if TYPE_CHECKING:
-    from AgentOne.ui.app_view import UiAppView
+    from ui.app import UiApp
+    from ui.app_view import UiAppView
 
-class SidebarInstanceListView(PyHtmlView):
+
+def _resolve_app(parent):
+    node = parent
+    while node is not None:
+        if hasattr(node, 'app'):
+            return node.app
+        node = getattr(node, 'parent', None)
+    return None
+
+
+class InstanceVersionNodeView(ModelView):
+    """One AgentInstanceVersion — sub-agent spawned during execution."""
+    DOM_ELEMENT_CLASS = "InstanceVersionNodeView"
+
     TEMPLATE_STR = """
-    <div class="sidebar-list-body">
-        <ul class="tree-view-list">
-        {{pyview.ninstance_views.render()}}
-            {% for pk, instanceview in pyview.instance_views.items() %}
-                {{ instanceview.render() }}
-            {% endfor %}
-        </ul>
-    </div>
-    """
-    def __init__(self, subject, parent, **kwargs):
-        super().__init__(subject, parent, **kwargs)
-        self.app = parent.app
-        self.app:UiAppView
-        self.s = subject
-
-        self.ninstance_views = QuerySetView(subject=subject.agent_instances.filter(parent=None), parent=self, item_class=SidebarInstanceNodeView)
-
-        self.instance_views = {}
-        #self._rebuild_instance_views()
-
-    def _rebuild_instance_views(self):
-        return
-        # Clear existing views and create new ones based on the current list of instances
-        self.instance_views = {}
-        print(" self.subject self.subject",  self.subject)
-        self.instances = self.subject.agent_instances.filter(parent=None) # Assuming subject.instances.all() is a QuerySet
-        for instance in self.instances:
-            self.instance_views[instance.id] = SidebarInstanceNodeView(instance, self)
-        self.update()
-
-    def _on_subject_updated(self, source, **kwargs):
-        self._rebuild_instance_views()
-
-
-from ui.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from typing import TYPE_CHECKING
-
-from ui.pyHtmlGui.pyhtmlgui.view.queryset_view import QuerySetView
-if TYPE_CHECKING:
-    from AgentOne.ui.app_view import UiAppView
-
-
-class SidebarInstanceVersionNodeView(PyHtmlView):
-    TEMPLATE_STR = """
-        <div class="tree-node-header instance-node">
-
-            {% if pyview.subject.child_agent_instance_versions.exists() %}
-                <i class="fa fa-caret-right tree-node-toggle" onclick="event.stopPropagation(); pyview.toggle_node()"></i>
+        <div class="tree-node-header">
+            {% if pyview.has_children %}
+                <i class="fa fa-caret-{{ 'down' if pyview.is_expanded else 'right' }} tree-node-toggle"
+                   onclick="event.stopPropagation(); pyview.toggle()"></i>
             {% else %}
                 <span class="tree-node-spacer"></span>
             {% endif %}
-            <span class="instance-node-content" onclick="pyview.select_instance()">
-                <i class="fa fa-users tree-node-icon"></i>
-                <span class="tree-node-name">
-                    {{pyview.subject.agent_instance.agent.name}}
-                    <i style="font-size:0.7em">
-                        v{{pyview.subject.agent_version.version_number}}
-                    </i> 
-                    {{ pyview.subject.name }}
-                    <i style="font-size:0.7em">
-                        #{{pyview.subject.pk}}
-                    </i> 
+            <i class="fa fa-code-fork tree-node-icon"></i>
+            <span class="tree-node-name" onclick="pyview.select()">
+                {{ pyview.subject.agent_instance.agent.name }}
+                <span class="tree-node-meta">
+                    v{{ pyview.subject.agent_version.version_number }} · #{{ pyview.subject.pk }}
                 </span>
+                {{ pyview.subject.agent_instance.name or '' }}
             </span>
-            <span class="instance-status instance-status-{{ pyview.subject.status }}">{{ pyview.subject.status_display }}</span>
-            
-            <div class="agent-actions-menu-container">
-                <div class="agent-actions-menu" onmouseleave="pyview.hide_menu()">
-                    <button class="btn btn-xs btn-default burgerbtn" onclick="event.stopPropagation(); pyview.show_menu()"><i class="fa fa-bars"></i></button>
-                    <div id="agent-instance-menu-{{pyview.subject.id}}" class="agent-menu-dropdown" style="display: none;">
-                        <a href="#" onclick="event.stopPropagation(); pyview.delete_instance()">Delete Instance</a>
-                    </div>
+            <div class="node-menu-container" onmouseleave="pyview.hide_menu()">
+                <button class="btn btn-xs btn-default burgerbtn"
+                        onclick="event.stopPropagation(); pyview.show_menu()">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div id="iv-menu-{{ pyview.subject.id }}" class="node-menu-dropdown" style="display:none;">
+                    <a href="#" onclick="event.stopPropagation(); pyview.hide_menu()">Delete instance</a>
                 </div>
             </div>
-        
-
         </div>
-        <div class="tree-node-children" style="{{ 'display: block;' if pyview.is_expanded else 'display: none;' }}">
-            <ul class="tree-view-list">
-               {{pyview.children.render()}}
-            </ul>
+        <div class="tree-node-children" style="{{ 'display:block' if pyview.is_expanded else 'display:none' }}">
+            <ul class="tree-view-list">{{ pyview.children_view.render() }}</ul>
         </div>
     """
-    def __init__(self, subject, parent, **kwargs): # subj = instance version
+
+    def __init__(self, subject: AgentInstanceVersion, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        try:
-            self.app = parent.app
-        except:
-            self.app = parent.parent.app
-        
-        self.app:UiAppView
-        self.s = subject
-        self.agent_instance_version = subject
-        
-        self.is_selected = False 
+        self.app: UiAppView = _resolve_app(parent)
         self.is_expanded = False
+        self.has_children = subject.child_agent_instance_versions.exists()
+        self.children_view = QuerySetView(
+            subject=subject.child_agent_instance_versions.all(),
+            parent=self,
+            item_class=InstanceVersionNodeView,
+        )
 
-        self._child_views = {}
-        self.children = QuerySetView(subject=subject.child_agent_instance_versions, parent=self, item_class=SidebarInstanceVersionNodeView)
-
-
-    def toggle_node(self):
+    def toggle(self):
         self.is_expanded = not self.is_expanded
         self.update()
-    def select_instance(self):
+
+    def select(self):
         self.app.open_instance_tab(self.subject.agent_instance)
         self.update()
+
     def show_menu(self):
-        self.eval_javascript(script='document.getElementById("agent-instance-menu-" + args.id).style.display = "block";', id=self.subject.id)
+        self.eval_javascript(
+            script='document.getElementById("iv-menu-" + args.id).style.display = "block";',
+            id=self.subject.id,
+        )
 
     def hide_menu(self):
-        self.eval_javascript(script='document.getElementById("agent-instance-menu-" + args.id).style.display = "none";', id=self.subject.id)
-    def delete_instance(self):
-        print(f"Delete Instance: {self.subject.name} ({self.subject.id})")
-        # Add actual deletion logic here later
-        self.hide_menu()
+        self.eval_javascript(
+            script='document.getElementById("iv-menu-" + args.id).style.display = "none";',
+            id=self.subject.id,
+        )
 
 
-class SidebarInstanceNodeView(PyHtmlView):
+class InstanceNodeView(ModelView):
+    """Top-level AgentInstance node — expands to child instance versions."""
+    DOM_ELEMENT = "li"
+    DOM_ELEMENT_CLASS = "InstanceNodeView"
+
     TEMPLATE_STR = """
-    <li>
-        <div id="agent_instance_{{ pyview.subject.id }}" class="tree-leaf-instance {{ 'selected-instance' if pyview.is_selected else '' }}">
-            
-            {% if pyview.child_agent_instance_versions.exists() %}
-                <i class="fa fa-caret-right tree-node-toggle" onclick="event.stopPropagation(); pyview.toggle_node()"></i>
+        <div id="agent_instance_{{ pyview.subject.id }}"
+             class="tree-leaf-instance {{ 'selected-instance' if pyview.is_selected else '' }}">
+            {% if pyview.has_children %}
+                <i class="fa fa-caret-{{ 'down' if pyview.is_expanded else 'right' }} tree-node-toggle"
+                   onclick="event.stopPropagation(); pyview.toggle()"></i>
             {% else %}
                 <span class="tree-node-spacer"></span>
             {% endif %}
-            <span class="instance-node-content" onclick="pyview.select_instance()">
-                <i class="fa fa-users tree-node-icon"></i>
-                <span class="tree-node-name">
-                    {{pyview.subject.agent.name}}
-                    <i style="font-size:0.7em">
-                        v{{pyview.latest_agent_instance_version.agent_version.version_number}}
-                    </i> 
-                    {{ pyview.subject.name }}
-                    <i style="font-size:0.7em">
-                        #{{pyview.latest_agent_instance_version.pk}}
-                    </i> 
-                </span>
+            <i class="fa fa-users tree-node-icon"></i>
+            <span class="tree-node-name" onclick="pyview.select()">
+                {{ pyview.subject.agent.name }}
+                {% if pyview.subject.latest_agent_instance_version %}
+                    <span class="tree-node-meta">
+                        v{{ pyview.subject.latest_agent_instance_version.agent_version.version_number }}
+                        · #{{ pyview.subject.latest_agent_instance_version.pk }}
+                    </span>
+                {% endif %}
+                {{ pyview.subject.name or '' }}
             </span>
-            <span class="instance-status instance-status-{{ pyview.subject.status }}">{{ pyview.subject.status_display }}</span>
-            
-            <div class="agent-actions-menu-container">
-                <div class="agent-actions-menu" onmouseleave="pyview.hide_menu()">
-                    <button class="btn btn-xs btn-default burgerbtn" onclick="event.stopPropagation(); pyview.show_menu()"><i class="fa fa-bars"></i></button>
-                    <div id="agent-instance-menu-{{pyview.subject.id}}" class="agent-menu-dropdown" style="display: none;">
-                        <a href="#" onclick="event.stopPropagation(); pyview.delete_instance()">Delete Instance</a>
-                    </div>
+            <div class="node-menu-container" onmouseleave="pyview.hide_menu()">
+                <button class="btn btn-xs btn-default burgerbtn"
+                        onclick="event.stopPropagation(); pyview.show_menu()">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div id="i-menu-{{ pyview.subject.id }}" class="node-menu-dropdown" style="display:none;">
+                    <a href="#" onclick="event.stopPropagation(); pyview.remove()">Remove instance</a>
                 </div>
             </div>
         </div>
-        <div class="tree-node-children" style="{{ 'display: block;' if pyview.is_expanded else 'display: none;' }}">
-            <ul class="tree-view-list">
-                {{pyview.children.render()}}
-            </ul>
+        <div class="tree-node-children" style="{{ 'display:block' if pyview.is_expanded else 'display:none' }}">
+            <ul class="tree-view-list">{{ pyview.children_view.render() }}</ul>
         </div>
-      
-    </li>
     """
-    def __init__(self, subject, parent, **kwargs): # subj = instance version
+
+    def __init__(self, subject: AgentInstance, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        try:
-            self.app = parent.app
-        except:
-            self.app = parent.parent.app
-        
-        self.app:UiAppView
-        self.s = subject
-        self.agent_instance = subject
-        self.latest_agent_instance_version = self.agent_instance.latest_agent_instance_version
-        self.child_agent_instance_versions = self.latest_agent_instance_version.child_agent_instance_versions
-        
-        self.is_selected = False 
+        self.app: UiAppView = _resolve_app(parent)
+        self.is_selected = False
         self.is_expanded = False
-        self.children = QuerySetView(subject=self.child_agent_instance_versions, parent=self, item_class=SidebarInstanceVersionNodeView)
+        latest = subject.latest_agent_instance_version
+        child_qs = (
+            latest.child_agent_instance_versions.all()
+            if latest is not None
+            else AgentInstanceVersion.objects.none()
+        )
+        self.has_children = child_qs.exists()
+        self.children_view = QuerySetView(
+            subject=child_qs,
+            parent=self,
+            item_class=InstanceVersionNodeView,
+        )
 
-        self._child_views = {}
+    def toggle(self):
+        self.is_expanded = not self.is_expanded
+        self.update()
 
-    def select_instance(self):
+    def select(self):
         self.app.open_instance_tab(self.subject)
         self.update()
 
+    def remove(self):
+        self.hide_menu()  # TODO
+
     def show_menu(self):
-        self.eval_javascript(script='document.getElementById("agent-instance-menu-" + args.id).style.display = "block";', id=self.subject.id)
+        self.eval_javascript(
+            script='document.getElementById("i-menu-" + args.id).style.display = "block";',
+            id=self.subject.id,
+        )
 
     def hide_menu(self):
-        self.eval_javascript(script='document.getElementById("agent-instance-menu-" + args.id).style.display = "none";', id=self.subject.id)
+        self.eval_javascript(
+            script='document.getElementById("i-menu-" + args.id).style.display = "none";',
+            id=self.subject.id,
+        )
 
-    def delete_instance(self):
-        print(f"Delete Instance: {self.subject.name} ({self.subject.id})")
-        # Add actual deletion logic here later
-        self.hide_menu()
 
-    def toggle_node(self):
-        self.is_expanded = not self.is_expanded
-        self.update()
+class InstanceTreeView(ModelView):
+    DOM_ELEMENT_CLASS = "InstanceTreeView"
 
-    
+    TEMPLATE_STR = """
+        <ul class="tree-view-list">{{ pyview.instances_view.render() }}</ul>
+    """
+
+    def __init__(self, subject: "UiApp", parent, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self.app: UiAppView = parent.app
+        self.instances_view = QuerySetView(
+            subject=subject.agent_instances.filter(parent=None),
+            parent=self,
+            item_class=InstanceNodeView,
+        )
