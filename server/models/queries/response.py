@@ -1,4 +1,5 @@
 from django.db import models
+from server.models.content import GenericContent
 from django_enum import EnumField
 from server.models.base_model import BaseModel
 
@@ -13,10 +14,15 @@ class Response(BaseModel):
     aimodel        = models.ForeignKey("server.AiModel"   , null=False, on_delete=models.CASCADE, related_name="related_responses")
     agent_instance_version = models.ForeignKey("server.AgentInstanceVersion", on_delete=models.CASCADE, related_name="related_response")
     agent_profile  = models.ForeignKey("server.AgentProfile" , null=True,  on_delete=models.CASCADE, related_name='related_responses', default=None, blank=True)
+    tool_calls     = models.ManyToManyField("server.AgentTaskCall",related_name='related_responses')
+
     status = EnumField(ResponseStatus, default=ResponseStatus.WAITING)
 
     prompt_tokens = models.IntegerField(default=0)
     completion_tokens = models.IntegerField(default=0)
+
+    message_content = models.ForeignKey(GenericContent,  default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="reponse_messages")
+    message_reasoning = models.ForeignKey(GenericContent,  default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="reponse_reason")
 
     @property
     def conversation_messages(self):

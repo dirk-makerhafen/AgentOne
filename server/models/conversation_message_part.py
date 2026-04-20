@@ -20,3 +20,6 @@ class ConversationMessagePart(BaseModel):
         #if self.pk:
         #    raise ValidationError(f"You may not edit an existing {self._meta.model_name}")
         super().save(*args, **kwargs) 
+
+    class Meta:
+        ordering = ("index","pk")

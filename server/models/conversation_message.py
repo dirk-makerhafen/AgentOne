@@ -12,12 +12,16 @@ class ConversationMessage(BaseModel):
     query          = models.ForeignKey("server.Query"        , null=True, blank=True, on_delete=models.CASCADE, related_name='related_conversation_messages')
     response       = models.ForeignKey("server.Response"     , null=True, blank=True, on_delete=models.CASCADE, related_name='related_conversation_messages')
     tool_calls     = models.ManyToManyField("server.AgentTaskCall",related_name='related_conversation_messages')
+    index          = models.FloatField(default=0)
 
     role = models.CharField(choices=MessageRole.choices, default=MessageRole.USER, max_length=61)
     source = models.CharField(choices=MessageSource.choices, default=MessageSource.default, max_length=61)
 
     hide_from_context = models.BooleanField(default=False)
     pin_to_context = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ("index","pk")
 
     def add_part(self, content: str|GenericContent):
         ocontent = content

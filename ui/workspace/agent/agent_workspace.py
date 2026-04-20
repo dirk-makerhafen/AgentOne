@@ -2,7 +2,7 @@ from __future__ import annotations
 from server.models.agents.agent import Agent
 from server.models.agents.agent_instance import AgentInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.workspace.agent.overview import AgentVersionsView, AgentInstancesView
+from ui.workspace.agent.overview import AgentVersionsView, AgentInstancesView, SubAgentVersionsView
 from ui.workspace.agent.tasks import AgentTaskDefinitionsView, AgentTaskDefinitionView
 from ui.lib.model_view import ModelView
 
@@ -35,7 +35,9 @@ class AgentWorkspaceView(ModelView):
             <div style="margin-top: 20px;">
                 {{ pyview.versions_view.render() }}
             </div>
-
+            <div style="margin-top: 20px;">
+                {{ pyview.subagents_view.render() }}
+            </div>
             <div style="margin-top: 20px;">
                 {{ pyview.instances_view.render() }}
             </div>
@@ -52,14 +54,9 @@ class AgentWorkspaceView(ModelView):
 
     def __init__(self, subject: Agent, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.versions_view = AgentVersionsView(
-            subject=subject.agent_versions.order_by('-version_number'),
-            parent=self,
-        )
-        self.instances_view = AgentInstancesView(
-            subject=subject.agent_instances.all(),
-            parent=self,
-        )
+        self.versions_view = AgentVersionsView(subject=subject.agent_versions.order_by('-version_number'), parent=self)
+        self.instances_view = AgentInstancesView(subject=subject.agent_instances.all(), parent=self)
+        self.subagents_view = SubAgentVersionsView(subject=subject.latest_agent_version.sub_agent_versions.all(), parent=self)
 
     def save_name(self, name: str):
         name = name.strip()

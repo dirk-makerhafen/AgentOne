@@ -1,9 +1,11 @@
 from __future__ import annotations
 from datetime import timedelta
 from functools import wraps
+from pathlib import Path
 import random
 import threading
 import traceback
+from types import GeneratorType
 from django.db import models
 from server.models.queries.query import Query
 from server.models.queries.response import Response
@@ -25,34 +27,6 @@ from django.db.models import F
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_instance import AgentTaskInstance
-
-class AgentTaskCallResult():
-    def __init__(self, agent_task_call) -> None:
-        self.agent_task_call = agent_task_call
-
-    def get(self, timeout=None):
-        s = time.time()
-        while True:
-            self.agent_task_call.refresh_from_db()
-            if self.agent_task_call.status in [TaskCallStatus.ENDED]:
-                return self.agent_task_call.taskcall_result_run.result_json
-            if timeout and time.time() - s >= timeout:
-                break
-            time.sleep(1)
-            print("PENDING for result of", self.agent_task_call, self.agent_task_call.status )
-        print("data",self.agent_task_call.taskcall_result_run.result_json)
-        print(self.agent_task_call)
-        
-        return None
-
-
-'''
-class AgentTaskCallSubtask(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey("server.AgentTaskCall", related_name="child_relations", on_delete=models.CASCADE)
-    child  = models.ForeignKey("server.AgentTaskCall", related_name="parent_relations", on_delete=models.CASCADE)
-    index  = models.IntegerField(default=0)
-'''
 
 class AgentTaskCall(BaseModel):
     """Specific invocation - equivalent to celery task"""
@@ -99,10 +73,6 @@ class AgentTaskCall(BaseModel):
 
     taskcall_result_run = models.ForeignKey("server.AgentTaskRun", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
 
-    @property
-    def results(self):
-        return AgentTaskCallResult(self)
-
     @classmethod
     def create(cls, agent_task_instance: "AgentTaskInstance", args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None, max_retries = None, retry_delay = None, retry_requires_approval = None, priority:int|None = None ):
         """Create AgentTaskCall.
@@ -114,26 +84,25 @@ class AgentTaskCall(BaseModel):
         from server.models.tasks.agent_task_run import AgentTaskRunSubtask
 
         args = args if args else []
-        kwargs = kwargs if kwargs else {}
+        arguments = kwargs if kwargs else {}
         if not isinstance(args,(list, set, tuple)):
             args = [args, ]
         if args:
-            kwargs["*"] = args
-        next_input = kwargs
-        print("testing", kwargs, args)
+            arguments["*"] = args
+
+        next_input = arguments
+
         # --- BEFORE_RUN Hooks Create ---
         before_hooks = list(agent_task_instance.taskinstances_before_run_hooks.all().order_by('pk'))
         before_hook_calls = []
         if before_hooks:
-            print(f"DEBUG: Dispatching BEFORE_RUN hooks for {agent_task_instance.agent_task_definition.name}. {len(before_hooks)} hooks found.")
             for i, hook_instance in enumerate(before_hooks):
                 hook_instance: AgentTaskInstance
-                print(f"  -> Launching before_run hook {hook_instance.agent_task_definition.name} (step {i+1}/{len(before_hooks)})")
                 next_input = hook_instance.call(kwargs=next_input)
                 before_hook_calls.append(next_input)
-                
-        # --- END BEFORE_RUN Hooks Create ---
-        arguments_json  , ref_pks = AgentTaskCall.callargs_to_json(next_input)
+        
+        arguments_json, ref_pks = AgentTaskCall.create_call_arguments_json(arguments=next_input)
+       
         taskcall = AgentTaskCall.objects.create(
             agent_task_instance = agent_task_instance,
             agent_task_definition = agent_task_instance.agent_task_definition,
@@ -165,7 +134,6 @@ class AgentTaskCall(BaseModel):
         taskcall.taskcall_before_run_hooks.set(before_hook_calls)
 
         if ref_pks:
-            print("ref_pks", ref_pks)
             taskcall.taskcall_arg_references.set(ref_pks)
 
         # AUTOMATIC TRACKING
@@ -188,50 +156,84 @@ class AgentTaskCall(BaseModel):
         celery_delay(CallScheduler._apply_async, self.pk)
 
     @staticmethod
-    def callargs_to_json(obj, ref_pks=None):
+    def create_call_arguments_json(arguments):
         from server.models.tasks.agent_task_run import AgentTaskRun
+        allowed_objects = {
+            "AgentTaskCall" : AgentTaskCall,  "AgentTaskRun" : AgentTaskRun,   "ConversationMessage" : ConversationMessage, 
+            "GenericContent" : GenericContent,  "Query": Query, "Response": Response
+        }
 
-        if ref_pks is None:
-            ref_pks = list()
-        if isinstance(obj,  (str, int,float, bool) ) or obj is None:
-            return obj, ref_pks
-        if isinstance(obj, dict):
-            if "_type" in obj and "pk" in obj and len(obj) == 2:
-                if obj["_type"] == "AgentTaskCall":
-                    ref_pks.append(obj["pk"])
-                    return obj, ref_pks
-                if obj["_type"] == "AgentTaskRun":
-                    return obj, ref_pks
-                if obj["_type"] == "ConversationMessage":
-                    return obj, ref_pks
-                if obj["_type"] == "GenericContent":
-                    return obj, ref_pks
-                if obj["_type"] == "Query":
-                    return obj, ref_pks
-                if obj["_type"] == "Response":
-                    return obj, ref_pks
-                raise Exception(f"This should not be here in AgentTaskCall.arguments_to_json {obj}")
-            return {k: AgentTaskCall.callargs_to_json(v, ref_pks)[0] for k, v in obj.items()}, ref_pks
-        if isinstance(obj, list):
-            return [AgentTaskCall.callargs_to_json(item, ref_pks)[0] for item in obj], ref_pks
-        if isinstance(obj, set):
-            return set([AgentTaskCall.callargs_to_json(item, ref_pks)[0] for item in obj]), ref_pks
-        if isinstance(obj, tuple):
-            return tuple([AgentTaskCall.callargs_to_json(item, ref_pks)[0] for item in obj]), ref_pks
-        if isinstance(obj, AgentTaskCall):
-            ref_pks.append(obj.pk)
-            return {"_type": "AgentTaskCall", "pk": obj.pk}, ref_pks
-        if isinstance(obj, AgentTaskRun):
-            return {"_type": "AgentTaskRun", "pk": obj.pk}, ref_pks
-        if isinstance(obj, ConversationMessage):
-            return {"_type": "ConversationMessage", "pk": obj.pk}, ref_pks
-        if isinstance(obj, GenericContent):
-            return {"_type": "GenericContent", "pk": obj.pk}, ref_pks
-        if isinstance(obj, Query):
-            return {"_type": "Query", "pk": obj.pk}, ref_pks
-        if isinstance(obj, Response):
-            return {"_type": "Response", "pk": obj.pk}, ref_pks
-        raise Exception(f"Type {obj} unknown")
+        def _create_recursive(obj, ref_pks:list[int]):
+            if isinstance(obj,  (str, int,float, bool) ) or obj is None:
+                return obj
+            if isinstance(obj, (list, set, tuple)):
+                return [_create_recursive(item, ref_pks) for item in obj]
+            if isinstance(obj, dict):
+                if "_type" in obj and "pk" in obj and len(obj) == 2:
+                    if obj["_type"] in allowed_objects:
+                        ref_pks.append(obj["pk"])
+                        return obj
+                    raise Exception(f"This should not be here in AgentTaskCall.arguments_to_json {obj}")
+                return {k: _create_recursive(v, ref_pks) for k, v in obj.items()}
+            if isinstance(obj, AgentTaskCall):
+                ref_pks.append(obj.pk)
+                return {"_type": "AgentTaskCall", "pk": obj.pk}
+            try:
+                if obj.__class__.__qualname__ in allowed_objects:
+                    return {"_type": obj.__class__.__qualname__, "pk": obj.pk}
+            except:
+                pass
+            if isinstance(obj, Path):
+                return obj.as_posix()
+            raise Exception(f"Type {type(obj)} unknown")
+        ref_pks=list()
+        return _create_recursive(obj=arguments,ref_pks=ref_pks), ref_pks
+    
+    def _resolve_call_arguments(self, timeout=0, recursive=True, allow_partial_results=False):
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.tasks.agent_task_run import AgentTaskRun
+       
+        def _get_recursive(data, timeout, recursive, allow_partial_results):
+            if isinstance(data, dict):
+                if "_type" in data and "pk" in data:
+                    model_instance = apps.get_model('server', data["_type"]).objects.get(pk=data["pk"])
+                    if recursive and (isinstance(model_instance, AgentTaskRun) or isinstance(model_instance, AgentTaskCall)):
+                        return model_instance.get_result(recursive=recursive, timeout=timeout, allow_partial_results=allow_partial_results)
+                    return model_instance
+                return {k: _get_recursive(data=v, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results) for k, v in data.items()}
+            
+            elif isinstance(data, list):
+                return [_get_recursive(data=item, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results) for item in data]
+            
+            elif isinstance(data, AgentTaskCall) or isinstance(data, AgentTaskRun):
+                if recursive:
+                    return data.get_result(timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results)
+               
+            return data
+        return _get_recursive(data = self.carguments_json, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results)
+      
+
+    def get_result(self, timeout=0, recursive=True, allow_partial_results=False):
+        '''
+        recursive: for AgentTaskCall items in result return their .get_result()
+        timeout: seconds to block while waiting for result pending subresult, 0 for no timeout, None for never. 
+        allow_partial_results: return partial results that dont fully resolve all recursive results from sub calls, otherwise fail
+        '''
+        s = time.time()
+        subtimeout = timeout
+        while True:
+            if self.status in [TaskCallStatus.ENDED, ]:
+                if self.taskcall_result_run:
+                    return self.taskcall_result_run.get_result(timeout=subtimeout, recursive=recursive, allow_partial_results=allow_partial_results)
+                return None
+            if timeout is not None:
+                if time.time() - s >= timeout:
+                    if allow_partial_results:
+                        return None
+                    raise TimeoutError("TaskRunResult not ready")
+                if subtimeout > 0:
+                    subtimeout -= 1
+            time.sleep(1)
 
     def save(self, *args, **kwargs):
         if self.pk:

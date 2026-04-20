@@ -7,7 +7,7 @@ class ConversationMessagePartInline(admin.TabularInline):
     model = ConversationMessagePart
     extra = 0
     fields = ('index', 'content_type', 'tokens', 'content', 'content_template')
-    autocomplete_fields = ('content', 'content_template')
+    #autocomplete_fields = ('content', 'content_template')
     readonly_fields = ('tokens',)
 
 
@@ -17,7 +17,7 @@ class ConversationMessageAdmin(admin.ModelAdmin):
     list_display_links = ('id',)
     list_filter = ('role', 'source', 'hide_from_context', 'pin_to_context', 'agent_instance_version__agent', 'created_at')
     search_fields = ('id', 'query__id')
-    autocomplete_fields = (  'query', 'response')
+    #autocomplete_fields = (  'query', 'response')
     inlines = [ConversationMessagePartInline]
     readonly_fields = ('created_at', 'updated_at')
     list_per_page = 25

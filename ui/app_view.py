@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from ui.sidebar.sidebar import SidebarView
 from ui.app import UiApp
+from django.http.response import HttpResponse
 
 @login_required
 def ui(request):

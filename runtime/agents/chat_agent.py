@@ -1,56 +1,34 @@
 from __future__ import annotations
-from functools import wraps
-import inspect
-import json
-import random
 import traceback
-from typing import List, Any, Dict, Optional, Type, Set
+from typing import List, Any, Dict
 from runtime.agents.base_agent import BaseAgent
-from registry.agent_def import AgentDef
-from attrs import define, field
-import re
-from runtime.tasks.bound_agent_function import BoundAgentFunction
-from runtime.context_manager import RuntimeContextTracker
-from server.models.tasks.agent_task_definition import AgentTaskDefinition
-from server.models.enums.message_enums import MessageContentType
-from registry.task_decorators import task, chain, chord, map, group,command
-from server.models.enums.task_enums import TaskExecutionMode
-from server.models.agents.agent_profile import AgentToolCallSyntax
-from server.models.tasks.agent_task_call import AgentTaskCall
-from server.models.conversation_message_part import ConversationMessagePart
-from server.models.queries.query import QueryAvailableTool
-from server.models.content import GenericContent
-from server.models.providers.ai_model import AiModel
-import shlex
+from registry.task_decorators import task, chain, chord, map, group, command
 
 from server.models.conversation_message import ConversationMessage
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from server.models.agents.agent_instance_version import AgentInstanceVersion
     from server.models.agents.agent_instance import AgentInstance
-    from server.models.agents.agent_version import AgentVersion
 
 
 class ChatAgent(BaseAgent):
     @task()
     def add_user_message(self, message: str|None = None, parts: List[Dict]|None = None):
-        tmp = super().add_user_message.func(self, message=message, parts=parts)
-        if isinstance(tmp, ConversationMessage):
-            return self._process_conversation_message.delay(conversation_message=tmp)
-        else: # command was parsed 
-            return tmp
+        message_or_call = super().add_user_message(message=message, parts=parts)
+        if isinstance(message_or_call, ConversationMessage):
+            return self._handle_chat_message.delay(conversation_message=message_or_call)
+        return message_or_call
     
-    @chain(description="Handle incoming chat message")
-    def _process_conversation_message(self, conversation_message=None):
+    @chain()
+    def _handle_chat_message(self, conversation_message=None):
         return [
-            self._create_query.i(),
-            self._execute_query.i(),
-            self._response_to_conversation.i(),
-            self._decide_next_status.i(),
+            self._create_query.i(),   # conversation_message -> query
+            self._execute_query.i(),  # query -> response
+            self._handle_response.i(), # response -> response, tool_runs
+            self._decide_next_step.i(), # response, tool_runs  -> conversation_message
         ]
 
-    @task(description="Prepare LLM query from context")
+    @task()
     def _create_query(self, conversation_message):
         from server.models.queries.query import Query
         from server.models.queries.query_message import QueryMessage
@@ -61,14 +39,13 @@ class ChatAgent(BaseAgent):
         from server.models.content import GenericContent
         from server.models.agents.agent import Agent
         from jinja2 import Template
-        import re
-        import json
+  
         try:
-            query = self._create_new_query()
+            query = super()._create_query()
 
-            print("FOOOOOooooo", conversation_message)
+            print("FOOOOO)ooooo", conversation_message)
             # 2. Conversation History
-            conversation_messages = self.agent_instance_version.related_conversation_messages.filter(pk__lte=conversation_message.pk, hide_from_context=False).order_by('-created_at')[:query.agent_profile.max_history_messages + 1]
+            conversation_messages = self.agent_instance_version.agent_instance.conversation_messages.filter(pk__lte=conversation_message.pk, hide_from_context=False).order_by('-created_at')[:query.agent_profile.max_history_messages + 1]
             # Sort chronological
             print(conversation_messages)
             all_entries = list(conversation_messages) # sorted(conversation_messages, key=lambda x: -x.created_at if hasattr(x, "created_at") else -x.updated_at)
@@ -136,24 +113,24 @@ class ChatAgent(BaseAgent):
             DebugLogEntry.objects.create(agent_instance=self.agent_instance, event='exception', data={"exception": traceback.format_exc()})
             raise
 
+
     @task()
-    def _response_to_conversation(self, response, content, tool_calls):
+    def _decide_next_step(self, response, tool_runs):
+        print("here")
         conversation_message = ConversationMessage.objects.create(
             agent_instance_version = self.agent_instance_version,
             response=response,
             role='assistant',
         )
-        if tool_calls:
-            conversation_message.tool_calls.set(tool_calls)
-        if content:
-            conversation_message.add_part(content)
-        return conversation_message
+        if response.tool_calls.exists():
+            conversation_message.tool_calls.set(response.tool_calls.all())
+        if response.message_content:
+            conversation_message.add_part(response.message_content.get())
 
-    @task()
-    def _decide_next_status(self, message):
-        return message
+        print("___decide_next_step", conversation_message, tool_runs)
+        return conversation_message
         return
-        agent_instance = conversationMessage.agent_instance
+        agent_instance = conversation_message.agent_instance
         agent_instance.refresh_from_db()
         if agent_instance.require_user_interaction:
             agent_instance.set_status(AgentInstanceStatusChoices.AWAITING_USER_INPUT)

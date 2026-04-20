@@ -94,156 +94,230 @@ def get_ai_model(model_name: str|None):
         raise ValidationError(f"AI Model '{model_name}' does not exist in the database.") from e
 
 
+import inspect
+import enum
+import re
+from typing import (
+    get_type_hints, get_origin, get_args,
+    Annotated, Union, Literal, List, Dict, TypedDict
+)
+
 
 def generate_schema_for_function(func):
     """
-    Generates a robust JSON Schema for the function's parameters.
-    Features:
-    - Resolves full type hints (handles forward references and string annotations).
-    - Extracts parameter descriptions from docstrings (Sphinx, Google, and Numpy styles).
-    - Handles complex typing: Optional, Union, List, Dict, Literal, and Annotated.
-    - Supports standard Python Enums.
-    - Identifies required fields and includes default values.
+    Generate an LLM-optimized JSON schema for a function.
+    Supports:
+    - TypedDict (preferred)
+    - Nested dict parsing from docstrings
+    - Enum / Literal
+    - Optional / Union
+    - Annotated metadata
     """
-    import enum
-    import re
-    from typing import get_type_hints, get_origin, get_args, Annotated, Union, Literal, List, Dict
-    
+
     sig = inspect.signature(func)
-    
-    # 1. Resolve Type Hints effectively
+
+    # --- Resolve type hints ---
     try:
-        # Using func.__globals__ allows resolving types imported in the agent's file
         type_hints = get_type_hints(func, globalns=func.__globals__)
     except Exception:
-        # Fallback to parameter annotations if resolution fails
-        type_hints = {name: param.annotation for name, param in sig.parameters.items()}
+        type_hints = {n: p.annotation for n, p in sig.parameters.items()}
 
-    # 2. Robust Docstring Parsing for parameter-level descriptions
+    # --- Parse docstring ---
     doc = inspect.getdoc(func) or ""
+    lines = doc.splitlines()
+
     param_descriptions = {}
-    
-    desc_lines = doc.splitlines()
-    in_params_section = False
+    description_lines = []
+
+    # --- Nested fields detection ---
+    nested_fields = {}
+    current_parent = None
+
+    in_params = False
     current_param = None
-    #print("desc_lines", desc_lines)
-    description_lines=[]
-    for line in desc_lines:
+
+    for line in lines:
         stripped = line.strip()
-        # Try Sphinx style: :param name: description
-        sphinx_match = re.search(r":param\s+(\w+):\s*(.*)", stripped)
-        if sphinx_match:
-            param_descriptions[sphinx_match.group(1)] = sphinx_match.group(2).strip()
+
+        # --- Sphinx ---
+        m = re.search(r":param\s+(\w+):\s*(.*)", stripped)
+        if m:
+            param_descriptions[m.group(1)] = m.group(2)
             continue
-            
-        # Detect section headers (Google/Numpy style)
+
+        # --- Section detection ---
         if stripped.lower() in ("args:", "parameters:", "params:"):
-            in_params_section = True
+            in_params = True
             continue
-        elif in_params_section and line and not line.startswith(" ") and line.endswith(":"):
-            in_params_section = False
-        
-        if in_params_section:
-            # Matches 'name (type): description' or 'name: description'
-            param_match = re.search(r"^([\w\d_]+)\s*(?:\([^)]+\))?\s*:\s*(.*)", stripped)
-            if param_match:
-                p_name, p_desc = param_match.groups()
-                param_descriptions[p_name] = p_desc.strip()
-                current_param = p_name
-            elif current_param and line.startswith("    ") and stripped:
-                # Multi-line description continuation
+        elif in_params and stripped and not line.startswith(" "):
+            in_params = False
+
+        # --- Google/Numpy param parsing ---
+        if in_params:
+            m = re.match(r"^(\w+)\s*(?:\([^)]+\))?\s*:\s*(.*)", stripped)
+            if m:
+                name, desc = m.groups()
+                param_descriptions[name] = desc
+                current_param = name
+
+                # detect "with fields:"
+                if "field" in desc.lower():
+                    current_parent = name
+                    nested_fields[current_parent] = {}
+                continue
+
+            # multiline continuation
+            if current_param and line.startswith("    "):
                 param_descriptions[current_param] += " " + stripped
+
+            # nested fields
+            nm = re.match(r"^[-•]\s*(\w+)\s*\(([^)]+)\):\s*(.*)", stripped)
+            if nm and current_parent:
+                n_name, n_type, n_desc = nm.groups()
+                nested_fields[current_parent][n_name] = {
+                    "type": n_type,
+                    "description": n_desc
+                }
+                continue
         else:
             description_lines.append(stripped)
 
-    # 3. JSON Schema Mapping Logic
-    def resolve_json_type(annotation) -> Dict:
-        """Recursively maps Python types to JSON Schema types."""
-        # Handle Annotated[T, metadata]
-        if get_origin(annotation) is Annotated:
-            inner_args = get_args(annotation)
-            base = inner_args[0]
-            schema = resolve_json_type(base)
-            # Check for description metadata
-            for meta in inner_args[1:]:
-                if isinstance(meta, str):
-                    schema["description"] = meta
-                elif hasattr(meta, 'description'):
-                    schema["description"] = getattr(meta, 'description')
-            return schema
+    # --- Type resolver ---
+    def resolve(annotation):
+        if annotation is inspect._empty:
+            return {"type": "string"}
 
         origin = get_origin(annotation)
         args = get_args(annotation)
 
-        # Handle Union (including Optional[T] which is Union[T, None])
-        if origin is Union:
-            pure_args = [a for a in args if a is not type(None)]
-            if len(pure_args) == 1:
-                return resolve_json_type(pure_args[0])
-            return {"anyOf": [resolve_json_type(a) for a in pure_args]}
+        # --- Annotated ---
+        if origin is Annotated:
+            base = resolve(args[0])
+            for meta in args[1:]:
+                if isinstance(meta, str):
+                    base["description"] = meta
+                elif hasattr(meta, "description"):
+                    base["description"] = meta.description
+            return base
 
-        # Handle Literals (Enums equivalent in typing)
+        # --- Optional / Union ---
+        if origin is Union:
+            non_none = [a for a in args if a is not type(None)]
+            if len(non_none) == 1:
+                return resolve(non_none[0])
+            return {"anyOf": [resolve(a) for a in non_none]}
+
+        # --- Literal ---
         if origin is Literal:
             return {"enum": list(args)}
 
-        # Handle standard Python Enums
+        # --- Enum ---
         if isinstance(annotation, type) and issubclass(annotation, enum.Enum):
             return {
                 "type": "string",
-                "enum": [e.value for e in annotation],
-                "description": f"Must be one of: {', '.join([e.name for e in annotation])}"
+                "enum": [e.value for e in annotation]
             }
 
-        # Handle Lists/Arrays
-        if origin in (list, List) or annotation is list:
-            item_schema = {"type": "string"}
-            if args:
-                item_schema = resolve_json_type(args[0])
-            return {"type": "array", "items": item_schema}
-        
-        # Handle Dicts/Objects
-        if origin in (dict, Dict) or annotation is dict:
-            return {"type": "object"}
+        # --- TypedDict ---
+        if isinstance(annotation, type) and issubclass(annotation, dict) and hasattr(annotation, "__annotations__"):
+            props = {}
+            required = []
 
-        # Primitive Mapping
+            for k, v in annotation.__annotations__.items():
+                props[k] = resolve(v)
+                required.append(k)
+
+            return {
+                "type": "object",
+                "properties": props,
+                "required": required,
+                "additionalProperties": False
+            }
+
+        # --- List ---
+        if origin in (list, List):
+            return {
+                "type": "array",
+                "items": resolve(args[0] if args else str)
+            }
+
+        # --- Dict ---
+        if origin in (dict, Dict):
+            val_type = args[1] if len(args) == 2 else str
+            return {
+                "type": "object",
+                "additionalProperties": resolve(val_type)
+            }
+
+        # --- Primitives ---
         mapping = {
-            str: "string", int: "integer", float: "number", bool: "boolean", bytes: "string",
+            str: "string",
+            int: "integer",
+            float: "number",
+            bool: "boolean",
+            bytes: "string",
         }
-        # Fallback for common string-named types
-        if annotation == "str": 
+
+        if annotation in mapping:
+            return {"type": mapping[annotation]}
+
+        if annotation in ("str",):
             return {"type": "string"}
-        if annotation == "int": 
+        if annotation in ("int",):
             return {"type": "integer"}
-        if annotation == "float": 
+        if annotation in ("float",):
             return {"type": "number"}
-        if annotation == "bool": 
+        if annotation in ("bool",):
             return {"type": "boolean"}
 
-        return {"type": mapping.get(annotation, "string")}
+        return {"type": "string"}
 
-    # 4. Construct Final Parameters Object
-    params_schema = {"type": "object", "properties": {}, "required": []}
+    # --- Build schema ---
+    schema = {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": False
+    }
 
     for name, param in sig.parameters.items():
-        # Skip framework-specific arguments
-        if name in ["self", "task_run", "task_context"]:
+        if name in ("self", "task_run", "task_context"):
             continue
 
-        # Generate type schema
-        p_annotation = type_hints.get(name, param.annotation)
-        field_schema = resolve_json_type(p_annotation)
-        
-        # Attach description from docstring if metadata didn't provide one
-        if "description" not in field_schema or not field_schema["description"]:
+        annotation = type_hints.get(name, param.annotation)
+        field_schema = resolve(annotation)
+
+        # --- attach description ---
+        if not field_schema.get("description"):
             field_schema["description"] = param_descriptions.get(name, "")
 
-        # Set Default vs Required
+        # --- nested override ---
+        if name in nested_fields:
+            field_schema = {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {},
+                    "required": [],
+                    "additionalProperties": False
+                }
+            }
+
+            for n, meta in nested_fields[name].items():
+                field_schema["items"]["properties"][n] = {
+                    "type": meta["type"],
+                    "description": meta["description"]
+                }
+                field_schema["items"]["required"].append(n)
+
+        # --- required vs default ---
         if param.default is inspect.Parameter.empty:
-            params_schema["required"].append(name)
+            schema["required"].append(name)
         else:
             field_schema["default"] = param.default
 
-        params_schema["properties"][name] = field_schema
-    description = "\n".join(description_lines)
-    #params_schema["description"] = description
-    return description, params_schema
+        schema["properties"][name] = field_schema
+
+    description = "\n".join([l for l in description_lines if l])
+
+    return description, schema

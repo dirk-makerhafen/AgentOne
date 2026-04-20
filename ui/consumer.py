@@ -21,12 +21,12 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
         with _pyhtmlgui_lock:
             if not _pyhtmlgui:
                 _pyhtmlgui = PyHtmlGui(
-                    app_instance=_view_app_instance, # Pass the UiApp instance
-                    view_class=UiAppView,           # Pass the main UiAppView class
-                    template_dir='ui/templates/',  
-                    base_template='pyhtmlgui_page.html', # Use your custom base template
-                    single_instance=True, 
-                    enable_server=False
+                    app_instance = _view_app_instance, # Pass the UiApp instance
+                    view_class = UiAppView,           # Pass the main UiAppView class
+                    template_dir = 'ui/templates/',
+                    base_template = 'pyhtmlgui_page.html', # Use your custom base template
+                    single_instance = True,
+                    enable_server = False
                 )
             if not _pyhtmlgui_instance:
                 _pyhtmlgui_instance = _pyhtmlgui.get_or_create_instance()

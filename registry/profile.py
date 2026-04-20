@@ -1,8 +1,11 @@
 from __future__ import annotations
+import textwrap
+from dataclasses import dataclass, field
+from typing import Type, List, Optional, Literal
 
 
 class Profile():
-    def __init__(self, name = None, model: str|None = None,
+    def __init__(self, name = None, model: str|None = None, thinking:bool|None = None,
                 max_retries: int|None = None, max_task_steps: int|None = None, unattended_steps: int|None = None, max_history_messages: int|None = None, priority: int|None = None,
                 task_prompt: str|None = None, system_prompt: str|None = None,
                 execution_mode: str = 'queue', tool_call_syntax: str = 'default', 
@@ -13,13 +16,14 @@ class Profile():
         self.max_task_steps = max_task_steps
         self.unattended_steps = unattended_steps
         self.max_history_messages = max_history_messages
-        self.task_prompt = task_prompt
-        self.system_prompt = system_prompt
+        self.task_prompt = textwrap.dedent(task_prompt).strip() if task_prompt else None
+        self.system_prompt = textwrap.dedent(system_prompt).strip() if system_prompt else None
         self.execution_mode = execution_mode
         self.tool_call_syntax = tool_call_syntax
         self.extra_settings = extra_settings
         self.priority = priority
         self.variants = variants
+        self.thinking = thinking
 
     def to_dict(self):
         d = {
@@ -36,6 +40,8 @@ class Profile():
             d["unattended_steps"] = self.unattended_steps
         if self.max_history_messages:
             d["max_history_messages"] = self.max_history_messages
+        if self.thinking:
+            d["thinking"] = self.thinking
         if self.task_prompt:
             d["task_prompt"] = self.task_prompt
         if self.system_prompt:

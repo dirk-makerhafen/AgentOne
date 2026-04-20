@@ -1,9 +1,10 @@
 import os
 import warnings
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-AGENT_SERVER_SECRET_KEY = "change_me1"
-SECRET_KEY = 'change_me1'
+AGENT_SERVER_SECRET_KEY = "change_me23"
+SECRET_KEY = 'change_me23'
 REDIS_URL = 'redis://localhost:6379/1'
 DEBUG = True
 
@@ -69,7 +70,7 @@ CELERYD_PREFETCH_COUNT =1
 CELERY_BEAT_SCHEDULE = {
     'agentone-scheduler': {
         'task': 'tasks.tick_scheduler',
-        'schedule': 10.0,  # seconds
+        'schedule': 10,  # seconds
     },
 }
 

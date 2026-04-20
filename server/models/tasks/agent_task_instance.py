@@ -1,4 +1,5 @@
 from functools import wraps
+from pathlib import Path
 from types import GeneratorType
 from django.db import models
 from runtime.context_manager import ContextTracker
@@ -71,18 +72,18 @@ class AgentTaskInstance(BaseModel):
         Returns:
             :class:`AgentTaskInstance`:  object for this task, wrapping arguments and options for multiple task invocation.
         """
-        from runtime.tasks.bound_agent_function import BoundAgentFunction
         agent_instance = boundAgentTaskDefinition.agent_instance
         agent_task_definition = boundAgentTaskDefinition.agent_task_definition
         agent_instance_version = boundAgentTaskDefinition.agent_instance_version
 
         args = args if args else []
-        kwargs = kwargs if kwargs else {}
+        arguments = kwargs if kwargs else {}
         if not isinstance(args,(list, set, tuple)):
             args = [args, ]
         if args:
-            kwargs["*"] = args
-        arguments_json, ref_pks = AgentTaskInstance.instanceargs_to_json(kwargs)
+            arguments["*"] = args
+            
+        arguments_json, ref_pks = AgentTaskInstance._create_instance_arguments_json(arguments=arguments)
 
         agent_task_instance, created = AgentTaskInstance.objects.get_or_create(
             agent_task_definition = agent_task_definition,
@@ -96,13 +97,13 @@ class AgentTaskInstance(BaseModel):
             time_limit      = agent_task_definition.time_limit ,  
             max_subtask_errors     = agent_task_definition.max_subtask_errors,   # for groups,absolute number, also used when timeout
             max_subtask_error_rate = agent_task_definition.max_subtask_error_rate, # for groups, in percent, also used when timeout
-            limit_subtask_parallel_runs  = agent_task_definition.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
-            limit_per_instance_parallel_runs  = agent_task_definition.limit_per_instance_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+            limit_subtask_parallel_runs = agent_task_definition.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
+            limit_per_instance_parallel_runs = agent_task_definition.limit_per_instance_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
             priority = agent_task_definition.priority,
             # Options - Retry
             max_retries  = agent_task_definition.max_retries,   # how many retries to we make in case of error
             retry_delay  = agent_task_definition.retry_delay,  # time between retries in seconds
-            retry_requires_approval =agent_task_definition.retry_requires_approval,  # required user approval before run
+            retry_requires_approval = agent_task_definition.retry_requires_approval,  # required user approval before run
             # Runtime values
             is_approved = False if agent_task_definition.requires_approval else None, # user did appove this call            
         )
@@ -139,7 +140,6 @@ class AgentTaskInstance(BaseModel):
 
     def apply_async(self, args=None, kwargs=None, link = None, link_error=None,**options):
         """Apply this task asynchronously.
-
         Arguments:
             args (Tuple): Partial args to be prepended to the call args.
             kwargs (Dict): Partial kwargs to be merged with call kwargs.
@@ -178,27 +178,30 @@ class AgentTaskInstance(BaseModel):
         )
 
     @staticmethod
-    def instanceargs_to_json(obj, ref_pks=None):
-        if ref_pks is None:
-            ref_pks = list()
-        if isinstance(obj,  (str, int,float, bool) ) or obj is None:
-            return obj, ref_pks
-        if isinstance(obj, dict):
-            if "_type" in obj and "pk" in obj and len(obj) == 2:
-                if obj["_type"] == "AgentTaskInstance":
-                    ref_pks.append(obj["pk"])
-                    return obj, ref_pks
-                raise Exception(f"Type {obj["_type"]} not allowed")
-            return {k: AgentTaskInstance.instanceargs_to_json(v, ref_pks)[0] for k, v in obj.items()}, ref_pks
-        if isinstance(obj, list):
-            return [AgentTaskInstance.instanceargs_to_json(item, ref_pks)[0] for item in obj], ref_pks
-        if isinstance(obj, set):
-            return set([AgentTaskInstance.instanceargs_to_json(item, ref_pks)[0] for item in obj]), ref_pks
-        if isinstance(obj, tuple):
-            return tuple([AgentTaskInstance.instanceargs_to_json(item, ref_pks)[0] for item in obj]), ref_pks
-        if isinstance(obj, AgentTaskInstance):
-            return {"_type": "AgentTaskInstance", "pk": obj.pk}, ref_pks
-        raise Exception(f"Type {obj} unknown")
+    def _create_instance_arguments_json(arguments:dict):
+        def _create_recursive(obj, ref_pks:list[int]):
+            if isinstance(obj,  (str, int,float, bool) ) or obj is None:
+                return obj
+            if isinstance(obj, dict):
+                if "_type" in obj and "pk" in obj and len(obj) == 2:
+                    if obj["_type"] == "AgentTaskInstance":
+                        ref_pks.append(obj["pk"])
+                        return obj
+                    raise Exception(f"Type {obj["_type"]} not allowed")
+                return {k: _create_recursive(v, ref_pks) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [_create_recursive(item, ref_pks) for item in obj]
+            if isinstance(obj, set):
+                return set(_create_recursive(item, ref_pks) for item in obj)
+            if isinstance(obj, tuple):
+                return tuple(_create_recursive(item, ref_pks) for item in obj)
+            if isinstance(obj, AgentTaskInstance):
+                return {"_type": "AgentTaskInstance", "pk": obj.pk}
+            if isinstance(obj, Path):
+                return obj.as_posix()
+            raise Exception(f"Type {type(obj)} unknown")
+        ref_pks=list()
+        return _create_recursive(obj=arguments, ref_pks=ref_pks), ref_pks
 
     def save(self, *args, **kwargs):
         if self.pk:

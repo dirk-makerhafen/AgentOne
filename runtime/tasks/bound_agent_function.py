@@ -1,19 +1,37 @@
 from __future__ import annotations
+from server.models.enums.task_enums import TaskCallStatusDetail
+from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_definition import AgentTaskDefinition
 from server.models.tasks.agent_task_instance import AgentTaskInstance
 
 class BoundAgentFunction:
     """The object returned by a.add"""
     def __init__(self, agent_runtime, func):
-        #print("BoundTask to ",agent_runtime, func)
         self.agent_runtime = agent_runtime
         self.agent_instance_version = agent_runtime.agent_instance_version
         self.agent_instance = agent_runtime.agent_instance_version.agent_instance
-        self.agent_task_definition = self.agent_instance_version.agent_version.task_definitions.get(name=func._task_definition.get("name"))
+        print("NAME:", func._task_definition.get("name"), self.agent_instance_version, self.agent_instance )
+        try:
+            self.agent_task_definition = self.agent_instance_version.agent_version.task_definitions.get(name=func._task_definition.get("name"))
+        except:
+            raise Exception(f"Failed to get TaskDefinition name {func._task_definition.get('name')} for agent instance version pk { self.agent_instance_version.pk}")
         self.agent_task_definition: AgentTaskDefinition
         self.func = func
 
+    def call(self, *args, **kwargs):
+        '''
+        synchronous call
+        '''
+        return self.func(self.agent_runtime, *args, **kwargs)
 
+    def get_calls(self):
+        return AgentTaskCall.objects.filter(agent_instance=self.agent_instance, agent_task_definition=self.agent_task_definition)
+
+    def lastest_result(self):
+        query = self.get_calls().exclude(taskcall_result_run=None).filter(status_detail=TaskCallStatusDetail.ENDED_SUCCESS)
+        task_call = query.last()
+        return task_call.get_result(timeout=0) if task_call else None
+    
     def delay(self, *args, **kwargs):
         """Star argument version of :meth:`apply_async`.
         Does not support the extra options enabled by :meth:`apply_async`.
@@ -24,7 +42,7 @@ class BoundAgentFunction:
         Returns:
             AgentTaskCall
         """
-        print("BoundAgentTaskDefinition.delay", self.func.__name__, args, kwargs)
+        #print("BoundAgentTaskDefinition.delay", self.func.__name__, args, kwargs)
         return self.apply_async(args, kwargs)
 
     def apply_async(self, args=None, kwargs=None, link=None, link_error=None, countdown=0, eta=None, expires=None,retry=False,time_limit=0, soft_time_limit=0,priority=0):
@@ -46,9 +64,9 @@ class BoundAgentFunction:
             ValueError: If soft_time_limit and time_limit both are set but soft_time_limit is greater than time_limit
             kombu.exceptions.OperationalError: If a connection to the transport cannot be made, or if the connection is lost.
         """
-        print("BoundAgentTaskDefinition.apply_async", self.func.__name__, args, kwargs)
+        #print("BoundAgentTaskDefinition.apply_async", self.func.__name__, args, kwargs)
         agentTaskInstance = self.instance()
-        print("here",  args, kwargs )
+        #print("here",  args, kwargs )
         return agentTaskInstance.apply_async( args=args, kwargs = kwargs)
 
     def instance(self, args = None, kwargs=None, **options ) -> AgentTaskInstance:
@@ -59,8 +77,6 @@ class BoundAgentFunction:
         """
         args = args if args else []
         kwargs = kwargs if kwargs else {}
-        
-        print("BoundAgentTaskDefinition.instance", self.func.__name__, args, kwargs, options)
         return AgentTaskInstance.get_or_create(
             boundAgentTaskDefinition = self,
             args = args,

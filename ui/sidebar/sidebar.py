@@ -126,7 +126,7 @@ class SidebarView(ModelView):
 
 /* Context menus */
 .node-menu-container { position: relative; flex-shrink: 0; margin-left: 2px; }
-.burgerbtn { opacity: 0; padding: 1px 4px; font-size: 0.7em; transition: opacity 0.15s; }
+.burgerbtn {padding: 1px 4px; font-size: 0.7em; transition: opacity 0.15s; }
 .tree-node-header:hover .burgerbtn,
 .tree-leaf-instance:hover .burgerbtn { opacity: 1; }
 .node-menu-dropdown {

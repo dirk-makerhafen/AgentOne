@@ -11,15 +11,6 @@ from ui.panels.tools import ToolsPanelView
 from ui.panels.settings import SettingsPanelView
 
 
-def _is_chat_agent(agent_instance: AgentInstance) -> bool:
-    try:
-        from runtime.agents.chat_agent import ChatAgent
-        agent_version = agent_instance.latest_agent_instance_version.agent_version
-        return issubclass(agent_version.get_runtime_class(), ChatAgent)
-    except Exception:
-        return False
-
-
 class InstanceWorkspaceView(ModelView):
     """
     Per-instance tab layout:
@@ -197,7 +188,9 @@ class InstanceWorkspaceView(ModelView):
 }
 .iw-status-bar-hidden { height: 0; opacity: 0; overflow: hidden; }
     """
-
+    @property
+    def foo(self):
+        return ""
     def __init__(self, subject: AgentInstance, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
 
@@ -216,11 +209,13 @@ class InstanceWorkspaceView(ModelView):
         # Right panels
         self.filesystem_panel = None
         if latest:
-            try:
-                ri = latest.get_runtime_instance()
-                self.filesystem_panel = FilesystemPanelView(ri.filesystem, self)
-            except Exception:
-                pass
+            ri = latest.get_runtime_instance()
+            
+            if hasattr(ri, "filesystem"):
+                
+                self.filesystem =  getattr(ri, "filesystem")
+                self.filesystem_panel = FilesystemPanelView(self.filesystem, self)
+            
 
         self.tasks_panel    = TasksPanelView(subject, self)
         self.settings_panel = SettingsPanelView(subject, self)

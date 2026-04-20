@@ -17,7 +17,12 @@ if TYPE_CHECKING:
 class AgentInstance(BaseModel):
     agent                 = models.ForeignKey("server.Agent"       , on_delete=models.CASCADE,  related_name="related_agent_instances")
     name  = models.CharField(max_length=255)
-    parent   = models.ForeignKey("self", on_delete=models.CASCADE, related_name="child_agent_instances", default=None, null=True, blank=True)
+    created_by   = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_agent_instances", default=None, null=True, blank=True)
+
+    @property
+    def instance_home(self):
+        if self.agent and self.agent.pk and self.pk:
+            return f"/Users/Dirk/ai/AgentHome/agent:{self.agent.pk}/instance:{self.pk}"
 
     @property
     def tools(self):

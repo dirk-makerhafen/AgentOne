@@ -16,14 +16,9 @@ class TaskDescriptor:
         return BoundAgentFunction(instance, self.func)
     def __call__(self, *args: Any, **kwds: Any):
         raise TypeError(
-            f"Task '{self.func.__name__}' must be invoked using .delay(), .apply_async(), or .i() "
+            f"Task '{self.func.__name__}' must be invoked using .delay(), .apply_async()"
             "for asynchronous execution or instance creation."
         )
-    def old__call__(self, *args: Any, **kwds: Any):
-        #raise Exception()
-        def wrapper(*args, **kwds):
-            return self.func(*args, **kwds)
-        return wrapper # self.func(*args, **kwds)
 
 class TaskDecorator:
     """
@@ -68,19 +63,32 @@ def command(trigger: str|None = None, name: str|None = None, description: str = 
 # Executable units inside flows
 def task(name: str|None = None, description: str = "", requires_approval = False):
     return TaskDecorator(task_type=TaskType.TASK, name=name, description=description, requires_approval=requires_approval )
+
 def tool(name: str|None = None, description: str = "", requires_approval = False):
     return TaskDecorator(task_type=TaskType.TOOL, name=name, description=description, requires_approval=requires_approval)
+
+def webapi(name: str|None = None, description: str = "", requires_approval = False):
+    return TaskDecorator(task_type=TaskType.WEBAPI, name=name, description=description, requires_approval=requires_approval)
+
+def webview(name: str|None = None, description: str = "", requires_approval = False):
+    return TaskDecorator(task_type=TaskType.WEBVIEW, name=name, description=description, requires_approval=requires_approval)
+
 
 # Flow controllers (Celery-equivalents)
 def chain(name: str|None = None, description: str = "", requires_approval = False):
     return TaskDecorator(task_type=TaskType.CHAIN, name=name, description=description, requires_approval=requires_approval)
+
 def group(name: str|None = None, description: str = "", requires_approval = False):
     return TaskDecorator(task_type=TaskType.GROUP, name=name, description=description, requires_approval=requires_approval)
+
 def chord(name: str|None = None, description: str = "", requires_approval = False):
     return TaskDecorator(task_type=TaskType.CHORD, name=name, description=description, requires_approval=requires_approval)
+
 def map(name: str|None = None, description: str = "", requires_approval = False):
     return TaskDecorator(task_type=TaskType.MAP, name=name, description=description, requires_approval=requires_approval)
 
+'''
+# Keep for later, not implemented yet
 # System hooks and callbacks
 def setup(name: str|None = None, description: str = "", requires_approval = False):  # called on registration/version change
     return TaskDecorator(task_type=TaskType.SETUP, name=name, description=description, requires_approval=requires_approval)
@@ -89,3 +97,4 @@ def instance(name: str|None = None, description: str = "", requires_approval = F
 def hook(name: str, description: str = "", requires_approval = False):
     """Decorator to tag a method as a lifecycle hook. name should be from TaskHook enum values."""
     return TaskDecorator(task_type=TaskType.HOOK, name=name, description=description, requires_approval=requires_approval)
+'''

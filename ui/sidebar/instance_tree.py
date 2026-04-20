@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from server.models.agents.agent_version import AgentVersion, AgentVersionSubAgentRelation
 from server.models.agents.agent_instance import AgentInstance
 from server.models.agents.agent_instance_version import AgentInstanceVersion
 from ui.lib.queryset_view import QuerySetView
@@ -31,9 +32,10 @@ class InstanceVersionNodeView(ModelView):
             {% else %}
                 <span class="tree-node-spacer"></span>
             {% endif %}
+            
             <i class="fa fa-code-fork tree-node-icon"></i>
             <span class="tree-node-name" onclick="pyview.select()">
-                {{ pyview.subject.agent_instance.agent.name }}
+                {{ pyview.subject.display_name }}
                 <span class="tree-node-meta">
                     v{{ pyview.subject.agent_version.version_number }} · #{{ pyview.subject.pk }}
                 </span>
@@ -50,7 +52,7 @@ class InstanceVersionNodeView(ModelView):
             </div>
         </div>
         <div class="tree-node-children" style="{{ 'display:block' if pyview.is_expanded else 'display:none' }}">
-            <ul class="tree-view-list">{{ pyview.children_view.render() }}</ul>
+            <ul class="tree-view-list">{% if pyview.is_expanded %}{{ pyview.children_view.render() }}{% endif %}</ul>
         </div>
     """
 
@@ -58,12 +60,19 @@ class InstanceVersionNodeView(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.app: UiAppView = _resolve_app(parent)
         self.is_expanded = False
+        self.s = subject
         self.has_children = subject.child_agent_instance_versions.exists()
-        self.children_view = QuerySetView(
-            subject=subject.child_agent_instance_versions.all(),
-            parent=self,
-            item_class=InstanceVersionNodeView,
-        )
+        self._children_view = None
+
+    @property
+    def children_view(self):
+        if not self._children_view:
+            self._children_view = QuerySetView(
+                parent = self,
+                subject = self.s.child_agent_instance_versions.order_by("-created_at").all(),
+                item_class = InstanceVersionNodeView,
+            )
+        return self._children_view
 
     def toggle(self):
         self.is_expanded = not self.is_expanded
@@ -121,8 +130,11 @@ class InstanceNodeView(ModelView):
                 </div>
             </div>
         </div>
+        <div class="tree-node-subagents">
+            <ul class="tree-view-list">{{ pyview.sub_agents_view.render() }}</ul>
+        </div>
         <div class="tree-node-children" style="{{ 'display:block' if pyview.is_expanded else 'display:none' }}">
-            <ul class="tree-view-list">{{ pyview.children_view.render() }}</ul>
+            <ul class="tree-view-list">{% if pyview.is_expanded %} {{ pyview.children_view.render() }}{% endif %}</ul>
         </div>
     """
 
@@ -131,18 +143,17 @@ class InstanceNodeView(ModelView):
         self.app: UiAppView = _resolve_app(parent)
         self.is_selected = False
         self.is_expanded = False
-        latest = subject.latest_agent_instance_version
-        child_qs = (
-            latest.child_agent_instance_versions.all()
-            if latest is not None
-            else AgentInstanceVersion.objects.none()
-        )
+        self.latest = subject.latest_agent_instance_version
+        self.sub_agents_view =  QuerySetView(subject=self.latest.agent_version.subagent_relations.all(), parent=self, item_class=SubAgentVersionNodeView)
+        self._children_view = None
+
+    @property
+    def children_view(self):
+        child_qs = self.latest.child_agent_instance_versions.all()
         self.has_children = child_qs.exists()
-        self.children_view = QuerySetView(
-            subject=child_qs,
-            parent=self,
-            item_class=InstanceVersionNodeView,
-        )
+        if not self._children_view:
+            self._children_view = QuerySetView(subject=child_qs, parent=self, item_class=InstanceVersionNodeView)
+        return self._children_view
 
     def toggle(self):
         self.is_expanded = not self.is_expanded
@@ -178,8 +189,106 @@ class InstanceTreeView(ModelView):
     def __init__(self, subject: "UiApp", parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.app: UiAppView = parent.app
-        self.instances_view = QuerySetView(
-            subject=subject.agent_instances.filter(parent=None),
-            parent=self,
-            item_class=InstanceNodeView,
+        self.instances_view = QuerySetView(subject=subject.agent_instances.filter(created_by=None), parent=self, item_class=InstanceNodeView)
+
+
+
+
+
+
+class SubAgentVersionNodeView(ModelView):
+    DOM_ELEMENT = "li"
+    DOM_ELEMENT_CLASS = "SubAgentVersionNodeView"
+
+    TEMPLATE_STR = """
+        <div class="tree-node-header version-node"  {% if pyview.subject.create_option != 'user' %}style="display:none"{% endif %}>
+            <span class="tree-node-spacer"></span>
+            <i class="fa fa-code tree-node-icon"></i>
+            <span class="tree-node-name" onclick="pyview.select()">
+                {{ pyview.subject.instance_name }} 
+                <span class="tree-node-meta">
+                    ({{ pyview.subject.sub_agent_version.agent.name }} v{{ pyview.subject.sub_agent_version.version_number }})
+                </span>
+            </span>
+            <span class="tree-node-meta">{{ pyview.subject.sub_agent_version.created_at.strftime('%Y-%m-%d') }}</span>
+            <span class="tree-node-meta" title="Visible to: {{ pyview.subject.visible_to }}">
+                {% if pyview.subject.visible_to == 'user' %}<i class="fa fa-user"></i>
+                {% elif pyview.subject.visible_to == 'agent' %}<i class="fa fa-sitemap"></i>
+                {% elif pyview.subject.visible_to == 'creator' %}<i class="fa fa-user-secret"></i>
+                {% elif pyview.subject.visible_to == 'both' %}<i class="fa fa-users"></i>
+                {% endif %}
+            </span>
+            <div class="node-menu-container" onmouseleave="pyview.hide_menu()">
+                {% if pyview.subject.create_option == 'user' or pyview.subject.create_option == 'both' %}
+                    <button class="btn btn-xs btn-default"
+                            onclick="pyview.create_instance()" title="Create new instance">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                {% endif %}
+                <button class="btn btn-xs btn-default burgerbtn"
+                        onclick="event.stopPropagation(); pyview.show_menu()">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div id="version-menu-{{ pyview.subject.id }}" class="node-menu-dropdown" style="display:none;">
+                    <a href="#" onclick="event.stopPropagation(); pyview.hide_menu()">Edit version</a>
+                    <a href="#" onclick="event.stopPropagation(); pyview.hide_menu()">Delete version</a>
+                </div>
+            </div>
+        </div>
+        <div class="tree-node-children">
+            <ul class="tree-view-list">{{ pyview.children_view.render() }}</ul>
+        </div>
+    """
+
+    def __init__(self, subject: AgentVersionSubAgentRelation, parent, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self.app: UiAppView = self._resolve_app(parent)
+        self._agent_version: AgentVersion = subject.sub_agent_version # Store the actual AgentVersion
+        
+        # Filter agent instances related to this _agent_version and the parent instance
+        self._children_view = None
+
+    @property
+    def children_view(self):
+        q = AgentInstanceVersion.objects.filter(
+            agent=self._agent_version.agent,
+            parent_agent_instance_versions=self.parent.parent.subject.latest_agent_instance_version
+        )
+        if not self._children_view:
+            self._children_view = QuerySetView(subject=q, parent=self, item_class=InstanceVersionNodeView)
+        return self._children_view
+
+
+
+    @staticmethod
+    def _resolve_app(parent):
+        node = parent
+        while node is not None:
+            if hasattr(node, 'app'):
+                return node.app
+            node = getattr(node, 'parent', None)
+        return None
+
+    def create_instance(self):
+        # Create instance using the actual AgentVersion, with the correct parent instance version
+        self._agent_version.get_or_create_instance(
+            display_name=f"{self.subject.instance_name} Session",
+            parent_instance_version=self.parent.parent.subject.latest_agent_instance_version
+        )
+
+    def select(self):
+        # Open agent tab using the actual Agent
+        self.app.open_agent_tab(self._agent_version.agent)
+        self.update()
+
+    def show_menu(self):
+        self.eval_javascript(
+            script='document.getElementById("version-menu-" + args.id).style.display = "block";',
+            id=self.subject.id, # Use the ID of the AgentVersionSubAgentRelation for the menu
+        )
+
+    def hide_menu(self):
+        self.eval_javascript(
+            script='document.getElementById("version-menu-" + args.id).style.display = "none";',
+            id=self.subject.id, # Use the ID of the AgentVersionSubAgentRelation for the menu
         )

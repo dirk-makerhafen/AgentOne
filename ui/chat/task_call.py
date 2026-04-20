@@ -2,7 +2,6 @@ from __future__ import annotations
 import json
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_run import AgentTaskRun
-from server.models.base_model import load_model_references, load_results_data
 from ui.lib.queryset_view import QuerySetView
 from ui.lib.model_view import ModelView
 
@@ -302,13 +301,8 @@ class TaskCallView(ModelView):
                 return json.dumps(self.subject.carguments_json, indent=2)
             except Exception:
                 return str(self.subject.carguments_json)
-        try:
-            args, _ = load_model_references(self.subject.carguments_json)
-            result = load_results_data(args, timeout=0)
-            return json.dumps(result, indent=2) if isinstance(result, (dict, list)) else str(result)
-        except Exception:
-            return str(self.subject.carguments_json)
-
+        return self.subject._resolve_call_arguments(timeout=0, allow_partial_results=True)
+    
 
 class TaskRunView(ModelView):
     """
@@ -332,28 +326,28 @@ class TaskRunView(ModelView):
         </div>
 
         {% if not pyview.is_collapsed %}
-        <div class="tr-expand">
-            {% if pyview.subject.taskrun_arg_references.exists() %}
-                <div class="section-label">Dependencies</div>
-                <div class="dep-list">
-                    {% for dep in pyview.subject.taskrun_arg_references.all() %}
-                        <span class="dep-item">{{ dep.__class__.__name__ }}#{{ dep.pk }}</span>
-                    {% endfor %}
-                </div>
-            {% endif %}
+            <div class="tr-expand">
+                {% if pyview.subject.taskrun_arg_references.exists() %}
+                    <div class="section-label">Dependencies</div>
+                    <div class="dep-list">
+                        {% for dep in pyview.subject.taskrun_arg_references.all() %}
+                            <span class="dep-item">{{ dep.__class__.__name__ }}#{{ dep.pk }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-            {% if pyview.result_str %}
-                <div class="section-label">Result</div>
-                <pre class="tc-pre">{{ pyview.result_str }}</pre>
-            {% endif %}
+                {% if pyview.result_str %}
+                    <div class="section-label">Result</div>
+                    <pre class="tc-pre">{{ pyview.result_str }}</pre>
+                {% endif %}
 
-            {% if pyview.has_children %}
-                <div class="tc-children">
-                    {{ pyview.subtask_views.render() }}
-                    {{ pyview.result_ref_views.render() }}
-                </div>
-            {% endif %}
-        </div>
+                {% if pyview.has_children %}
+                    <div class="tc-children">
+                        {{ pyview.subtask_views.render() }}
+                        {{ pyview.result_ref_views.render() }}
+                    </div>
+                {% endif %}
+            </div>
         {% endif %}
     """
 

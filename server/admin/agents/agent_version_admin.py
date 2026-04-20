@@ -1,6 +1,6 @@
 from django.contrib import admin
 from server.models.agents.agent_profile import AgentProfile
-from server.models.agents.agent_version import AgentVersion, AgentVersionAvailableTool
+from server.models.agents.agent_version import AgentVersion, AgentVersionAvailableTool, AgentVersionSubAgentRelation
 
 class AgentProfileInline(admin.TabularInline):
     
@@ -18,21 +18,27 @@ class AgentVersionAvailableToolInline(admin.TabularInline):
     fk_name = "parent_agent_version"
     show_change_link = True
 
+
+class AgentVersionSubAgentRelationInline(admin.TabularInline):
+    model = AgentVersionSubAgentRelation
+    extra = 0
+    fk_name = "parent_agent_version"
+
 @admin.register(AgentVersion)
 class AgentVersionAdmin(admin.ModelAdmin):
-    list_display = ("profile", 'version_number', 'agent', 'parent', 'created_at')
+    list_display = ("profile", 'version_number', 'agent',  'created_at')
     list_display_links = ('version_number',)
     search_fields = ('agent__name', 'version_number')
     list_filter = ('agent', 'created_at')
-    autocomplete_fields = ('agent',  'profile', 'parent')
+    autocomplete_fields = ('agent',  'profile')
     filter_horizontal = ( 'sub_agent_versions', 'task_definitions')
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')
-    inlines = [AgentVersionAvailableToolInline]
+    inlines = [AgentVersionAvailableToolInline, AgentVersionSubAgentRelationInline]
 
     fieldsets = (
         (None, {
-            'fields': ('agent', 'version_number', 'parent')
+            'fields': ('agent', 'version_number')
         }),
         ('Configuration & Logic', {
             'fields': ('source_code', 'profile')

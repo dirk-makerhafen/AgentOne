@@ -22,11 +22,13 @@ class TaskType(models.TextChoices):
     CHORD   = "CHORD"        # group + final callback
     MAP     = "MAP"        #
 
-    # System hooks and callbacks
-    HOOK     = "HOOK"         # intercept execution – must pass value forward
-    EVENT    = "EVENT"        # triggered by runtime state, not calls
-    SETUP    = "SETUP"        # called on registration/version change
-    INSTANCE = "INSTANCE"     # called on agent instanciation, init subagents and stuff
+    WEBAPI  = "WEBAPI"  # JSON API
+    WEBVIEW = "WEBVIEW" # HTML VIEW
+    # System hooks and callbacks (currently not in use)
+    #HOOK     = "HOOK"         # intercept execution – must pass value forward
+    #EVENT    = "EVENT"        # triggered by runtime state, not calls
+    #SETUP    = "SETUP"        # called on registration/version change
+    #INSTANCE = "INSTANCE"     # called on agent instanciation, init subagents and stuff
 
 
 class TaskCallStatus(models.TextChoices):

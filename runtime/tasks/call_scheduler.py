@@ -142,7 +142,7 @@ class CallScheduler():
                 for i, hook_instance in enumerate(after_hooks):
                     hook_instance: AgentTaskInstance
                     print(f"  -> Launching after_run hook {hook_instance.agent_task_definition.name} (step {i+1}/{len(after_hooks)})")
-                    result = hook_instance.call(args=hook_arguments)
+                    result = hook_instance.call(kwargs=hook_arguments)
                     after_hook_calls.append(result)
                     hook_arguments = result
                 call.taskcall_after_run_hooks.set(after_hook_calls)

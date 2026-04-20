@@ -5,8 +5,7 @@ from server.models.conversation_message_part import ConversationMessagePart
 class ConversationMessagePartAdmin(admin.ModelAdmin):
     list_display = ('id', 'message_id', 'content_type',  'index', 'tokens', 'created_at','content__content')
     list_filter = ('content_type', 'created_at')
-    search_fields = ('id', 'message__id', 'content__content')
-    autocomplete_fields = ('message', 'content', 'content_template')
+    search_fields = ('id',)
     readonly_fields = ('created_at', 'updated_at', 'tokens')
     list_per_page = 50
 

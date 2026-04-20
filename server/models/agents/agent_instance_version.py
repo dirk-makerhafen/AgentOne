@@ -17,12 +17,14 @@ class AgentInstanceVersion(BaseModel):
     agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="related_agent_instance_versions")
     agent_instance = models.ForeignKey(AgentInstance, on_delete=models.CASCADE, related_name="related_agent_instance_versions")
     agent_version  = models.ForeignKey(AgentVersion,  on_delete=models.CASCADE, related_name="related_agent_instance_versions")
+    created_by   = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_agent_instance_versions", default=None, null=True, blank=True)
 
     # Instance specific settings
-    workingdir     = models.CharField(max_length=1024, default=None, blank=True, null=True)
-
+    display_name = models.CharField(max_length=2048, default=None, blank=True, null=True)
+    workingdir   = models.CharField(max_length=1024, default=None, blank=True, null=True)
     pinned_agent_profile  = models.ForeignKey(AgentProfile,  on_delete=models.SET_DEFAULT, related_name="related_agent_instance_versions", null=True, blank=True, default=None) # optional pin a profile, otherwise a random profile is selected when this verion is used
     child_agent_instance_versions   = models.ManyToManyField("self", related_name="parent_agent_instance_versions", default=None, null=True, blank=True, symmetrical=False)
+
 
     @property
     def agent_task_instances(self):
@@ -32,7 +34,7 @@ class AgentInstanceVersion(BaseModel):
     def agent_task_calls(self):
         return self.related_agent_task_calls # pyright: ignore[reportAttributeAccessIssue]
 
-    def select_profile(self, variant_names=None) -> AgentProfile|None:
+    def select_profile(self, variant_names=None) -> AgentProfile:
         if not variant_names:
             variant_names=[]
         self.pinned_agent_profile: AgentProfile

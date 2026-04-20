@@ -1,5 +1,17 @@
+import datetime
+import os
+import socket
+from threading import Thread
+import time
+
 from django.core.management.base import BaseCommand
 import traceback
+from flask import Flask, render_template_string, jsonify
+from flask_sock import Sock
+from zeroconf import ServiceInfo, Zeroconf
+
+NAME = "AgentOne"
+
 
 class Command(BaseCommand):
     help = "Manages the Carna server application (setup, run, services)."
@@ -46,6 +58,7 @@ class Command(BaseCommand):
             config['SECRET_KEY'] = secrets.token_urlsafe(50)
             self.stdout.write(self.style.SUCCESS("SECRET_KEY generated."))
 
+        self.generate_self_signed_cert()
         self._create_superuser_if_needed()
         self._write_local_config(config_path, config)
 
@@ -144,10 +157,13 @@ class Command(BaseCommand):
         self.stdout.write(f"Type {self.style.ERROR('.exit')} and press Enter to quit.")
         log_level = "DEBUG"
         commands = {
-            "daphne": ['daphne', '-b', listen_address, '-p', listen_port, 'config.asgi:application'],
+            "daphne": ['daphne', '-b', listen_address, "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem", 'config.asgi:application'],
             "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '2'],
             "celery_beat": ['celery', '-A', 'config', 'beat', '-l', log_level]
         }
+
+        mdns_thread = Thread(target=self.run_zeroconf, daemon=True)
+        mdns_thread.start()
 
         processes = {}
         try:
@@ -233,4 +249,36 @@ class Command(BaseCommand):
              self.stdout.write(self.style.ERROR(f"The '{action}' action is not yet implemented for {system}."))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"An error occurred during the '{action}' operation: {e} {traceback.format_exc()}"))
+
+    def generate_self_signed_cert(self):
+        cert_path, key_path = "cert.pem", "key.pem"
+        if os.path.exists(cert_path) and os.path.exists(key_path):
+            return (cert_path, key_path)
+        
+        from cryptography import x509
+        from cryptography.x509.oid import NameOID
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
+
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        with open(key_path, "wb") as f:
+            f.write(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.TraditionalOpenSSL, serialization.NoEncryption()))
+       
+        subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, NAME)])
+        cert = x509.CertificateBuilder().subject_name(subject).issuer_name(issuer).public_key(key.public_key()).serial_number(x509.random_serial_number()).not_valid_before(datetime.datetime.utcnow()).not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=3650)).add_extension(x509.SubjectAlternativeName([x509.DNSName(NAME), x509.DNSName("localhost")]), critical=False).sign(key, hashes.SHA256())
+        with open(cert_path, "wb") as f:
+            f.write(cert.public_bytes(serialization.Encoding.PEM))
+        return (cert_path, key_path)
+
+    def run_zeroconf(self):
+        zeroconf = Zeroconf()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.connect(("8.8.8.8", 80))
+        ip_address = s.getsockname()[0]; s.close()
+        info = ServiceInfo("_https._tcp.local.", f"{NAME}._https._tcp.local.",
+            addresses=[socket.inet_aton(ip_address)], port=5000, server=f"{NAME}.local.")
+        zeroconf.register_service(info)
+        try:
+            while True: time.sleep(1)
+        finally:
+            zeroconf.unregister_service(info); zeroconf.close()
 

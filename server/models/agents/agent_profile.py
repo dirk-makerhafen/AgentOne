@@ -18,6 +18,7 @@ class AgentProfile(BaseModel):
     name = models.CharField(default="",max_length=512)
 
     aimodel = models.ForeignKey("server.AiModel", on_delete=models.CASCADE, related_name="related_agent_profiles", blank=True, null=True)
+    thinking = models.BooleanField(default=True)
     variants = models.ForeignKey("self", on_delete=models.CASCADE, related_name="related_agent_profiles", blank=True, null=True)
     parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="child_agent_profiles", blank=True, null=True)
     variant_defs = models.JSONField(default=list, blank=True)

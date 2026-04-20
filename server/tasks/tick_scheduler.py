@@ -21,7 +21,7 @@ Celery beat config (settings.py):
 
 from celery import shared_task
 from django.utils import timezone
-from django.db.models import Q, F, DurationField, ExpressionWrapper
+from django.db.models import Q, F, DurationField, ExpressionWrapper, Func
 from django.db import models
 from datetime import timedelta
 
@@ -72,6 +72,7 @@ def _release_rate_limited_calls():
 
 
 def _release_retry_calls():
+    return
     """Release WAITING_RETRY calls whose dont_start_before has passed."""
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.enums.task_enums import TaskCallStatusDetail
@@ -106,13 +107,15 @@ def _timeout_active_runs():
     from server.models.enums.task_enums import TaskRunStatus
     from runtime.tasks.run_fsm import TaskRunStateMachine
     from runtime.tasks.call_scheduler import CallScheduler
+
     timed_out = (
         AgentTaskRun.objects
         .filter(status=TaskRunStatus.ACTIVE, time_limit__gt=0)
-        .filter(
-            created_at__lt=timezone.now() - ExpressionWrapper(F("time_limit") * timedelta(seconds=1), output_field=DurationField())
+        .extra(
+            where=["created_at < NOW() - INTERVAL time_limit SECOND"]
         )
     )
+   
     for run in timed_out:
         try:
             if TaskRunStateMachine.fail(run.pk):

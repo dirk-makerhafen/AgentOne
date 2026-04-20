@@ -19,13 +19,16 @@ class QueryMessage(BaseModel):
     conversation_message = models.ForeignKey("server.ConversationMessage", on_delete=models.SET_DEFAULT , related_name='query_messages', default=None, null=True)
 
     role = EnumField(MessageRole, default=None)
-    index = models.IntegerField(default=0)
+    index = models.FloatField(default=0)
 
     content_prefix = models.ForeignKey(GenericContent,  default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_messages_prefix")
     content_postfix = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_messages_postfix")
 
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
+    
+    class Meta:
+        ordering = ("index","pk")
 
     def compile(self, fail_on_error=True):
         new_parts = []
@@ -41,7 +44,7 @@ class QueryMessage(BaseModel):
                 new_parts.append(part_content)
             elif querymessage_part.content_type == MessageContentType.TEXT or  querymessage_part.content_type == MessageContentType.TEMPLATE :
                 if self.content_prefix:
-                    part_content = f'{self.content_prefix}{part_content}'
+                    part_content = f'{self.content_prefix.get()}{part_content}'
                 if self.content_postfix:
                     part_content = f'{part_content}{self.content_postfix}'
                 part_content_tokens = math.ceil(len(part_content) / 3.8)

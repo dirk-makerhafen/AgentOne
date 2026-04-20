@@ -7,55 +7,6 @@ from django.utils import timezone
 import traceback
 from django.apps import apps
 
-def load_model_references(data, model_instances=None):
-    if model_instances is None:
-        model_instances = set()
-    if isinstance(data, dict):
-        if "_type" in data and "pk" in data:
-            try:
-                if data.get("_type") == "GenericContent":
-                    mi = GenericContent.objects.get(pk=data["pk"])
-                else:
-                    mi = apps.get_model('server', data["_type"]).objects.get(pk=data["pk"])
-                model_instances.add(mi)
-            except:
-                return data, model_instances   
-            return mi, model_instances
-        return {k: load_model_references(v, model_instances)[0] for k, v in data.items()}, model_instances
-    elif isinstance(data, list):
-        return [load_model_references(item, model_instances)[0] for item in data], model_instances
-    return data, model_instances
-
-def load_results_data(data, timeout=None):
-    from server.models.tasks.agent_task_call import AgentTaskCall
-    from server.models.tasks.agent_task_run import AgentTaskRun
-
-    print("_load_results_data", data)
-    if isinstance(data, dict):
-        d = {k: load_results_data(v, timeout) for k, v in data.items()}
-        print("return d", d)
-        return d
-    elif isinstance(data, list):
-        l = [load_results_data(item, timeout) for item in data]
-        print("reutnr l ,", l, data)
-        return l
-    elif isinstance(data, AgentTaskCall):
-        r= data.results.get(timeout=0)
-        r1, model_refs = load_model_references(r)
-        r2 = load_results_data(r1, timeout)
-        r3, model_refs = load_model_references(r2)
-        print("return r2 r3", r2,r3, data)
-        return r3
-    elif isinstance(data, AgentTaskRun):
-        r= data.result_json
-        r1, model_refs = load_model_references(r)
-        r2 = load_results_data(r1, timeout)
-        r3, model_refs = load_model_references(r2)
-        print("return r2 r3", r2, r3, data)
-        return r3
-    print("return ", data)
-    return data
-
 
 class BaseModel(DirtyFieldsMixin, models.Model):
     created_at = models.DateTimeField(db_index=True, editable=False)

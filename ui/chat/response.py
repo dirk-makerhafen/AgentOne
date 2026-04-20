@@ -18,6 +18,8 @@ class ResponseView(ModelView):
         </div>
         <div class="message-content {{ 'hidden' if pyview.is_hidden else '' }}">
             <pre class="log-pre">{{ pyview.subject.data }}</pre>
+            <pre class="log-pre">{% if pyview.subject.message_content %} {{ pyview.subject.message_content.get() }} {% endif %}</pre>
+            <pre class="log-pre">>{% if pyview.subject.message_reasoning %} {{ pyview.subject.message_reasoning.get() }} {% endif %}</pre>
         </div>
     """
 

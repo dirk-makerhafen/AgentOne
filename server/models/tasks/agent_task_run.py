@@ -1,6 +1,8 @@
 from __future__ import annotations
 import json
 from functools import wraps
+from pathlib import Path
+import time
 import traceback
 from django.db import models
 from runtime.rate_limiter import RateLimitError
@@ -13,14 +15,14 @@ from server.models.conversation_message import ConversationMessage
 from server.models.queries.query import Query
 from server.models.queries.response import Response
 from server.tasks.task_dispatcher import celery_delay
-from server.models.base_model import BaseModel, load_model_references, load_results_data
+from server.models.base_model import BaseModel
 from django.core.exceptions import ValidationError
 from typing import TYPE_CHECKING
 from server.models.tasks.agent_task_call import AgentTaskCall
+from django.apps import apps
 
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_instance import AgentTaskInstance
-
 
 class AgentTaskRunSubtask(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -71,12 +73,12 @@ class AgentTaskRun(BaseModel):
         agent_task_instance: AgentTaskInstance
         
         args = args if args else []
-        kwargs = kwargs if kwargs else {}        
+        arguments = kwargs if kwargs else {}
         if not isinstance(args,(list, set, tuple)):
             args = [args, ]
         if args:
-            kwargs["*"] = args
-        arguments_json, ref_pks = AgentTaskRun.resolve_calls_to_runs(kwargs)
+            arguments["*"] = args
+        arguments_json, ref_pks = AgentTaskRun._create_run_arguments_json(arguments=arguments)
 
         taskrun = AgentTaskRun.objects.create(
             agent_task_call = agent_task_call,
@@ -100,87 +102,14 @@ class AgentTaskRun(BaseModel):
             limit_per_instance_parallel_runs = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else agent_task_instance.limit_per_instance_parallel_runs  #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
         )
         if ref_pks:
-            print("ref_pks", ref_pks)
             taskrun.taskrun_arg_references.set(ref_pks)
 
-        # AUTOMATIC TRACKING
-        parent_call = ContextTracker.current
-        '''
-        # todo not sure if we need this tracking here, i think not
-        if parent_call:
-            # Fix: use the correct related name 'child_relations' 
-            # and ensure we don't duplicate if already linked
-            print("agent_task_call", agent_task_call)
-            print("parent_call", parent_call)
-            print("child_taskrun", taskrun)
-            AgentTaskRunSubtask.objects.get_or_create(
-                parent = parent_call,
-                child = taskrun,
-                defaults = {'index': parent_call.parent_relations.count()}
-            )
-            '''
         return taskrun
-
-    @staticmethod
-    def resolve_calls_to_runs(obj, ref_pks=None):
-        if ref_pks is None:
-            ref_pks = list()
-        if isinstance(obj,  (str, int,float, bool) ) or obj is None:
-            return obj, ref_pks
-        if isinstance(obj, (list, set, tuple)):
-            return obj.__class__(AgentTaskRun.resolve_calls_to_runs(item, ref_pks)[0] for item in obj), ref_pks
-        if isinstance(obj, (AgentTaskRun, ConversationMessage, GenericContent, Query, Response)):
-            return {"_type": obj.__class__.__qualname__, "pk": obj.pk}, ref_pks
-        if isinstance(obj, dict):
-            if "_type" in obj and "pk" in obj and len(obj) == 2:
-                if obj["_type"] == "AgentTaskRun":
-                    ref_pks.append(obj["pk"])
-                    return obj, ref_pks
-                if obj["_type"] == "ConversationMessage":
-                    return obj, ref_pks
-                if obj["_type"] == "GenericContent":
-                    return obj, ref_pks
-                if obj["_type"] == "Query":
-                    return obj, ref_pks
-                if obj["_type"] == "Response":
-                    return obj, ref_pks
-                if obj["_type"] == "AgentTaskCall":
-                    a =  AgentTaskCall.objects.get(pk=obj["pk"])
-                    # CRITICAL CHECK: The AgentTaskCall *must* have a result_run at this point.
-                    if not a.taskcall_result_run:
-                        raise ValueError(
-                            f"Dispatcher Error: AgentTaskRun attempted to be created with AgentTaskCall "
-                            f"{a.pk} as an argument, but its result_run is not set (status: {a.status_detail}). "
-                            "This indicates a bug where AgentTaskRun.create was called prematurely."
-                        )
-                    ref_pks.append(a.taskcall_result_run.pk)
-                    return {"_type": "AgentTaskRun", "pk": a.taskcall_result_run.pk if a.taskcall_result_run  else f"call:{obj["pk"]}"}, ref_pks
-                raise Exception(f"Type {obj["_type"]} not allowed in AgentTaskRun.resolve_calls_to_runs")
-            return {k: AgentTaskRun.resolve_calls_to_runs(v, ref_pks)[0] for k, v in obj.items()}, ref_pks
-        raise Exception(f"Type {obj} unknown")
-    
-    @staticmethod
-    def result_to_json(obj, ref_pks=None):
-        print("result_to_json", obj, ref_pks)
-        if ref_pks is None:
-            ref_pks = []
-        if isinstance(obj,  (str, int,float, bool) ) or obj is None:
-            return  obj, ref_pks
-        if isinstance(obj, dict):
-            return {k: AgentTaskRun.result_to_json(v, ref_pks)[0] for k, v in obj.items()}, ref_pks
-        if isinstance(obj, (list, set, tuple)):
-            return obj.__class__(AgentTaskRun.result_to_json(item, ref_pks)[0] for item in obj), ref_pks
-        if isinstance(obj, (Query, ConversationMessage, Response, AgentTaskCall, GenericContent)):
-            if isinstance(obj, AgentTaskCall):
-                ref_pks.append( obj.pk)
-            return {"_type": obj.__class__.__qualname__, "pk": obj.pk}, ref_pks
-        raise Exception(f"Type {obj} unknown")
 
     def apply_async(self):
         query = AgentTaskRun.objects.filter(pk = self.pk, status = TaskRunStatus.NEW)
         if 0 == query.update(status = TaskRunStatus.QUEUED):
             return # was not queued, maybe some race condition
-        print("current ctx1" , ContextTracker.current, self)
         from runtime.tasks.run_scheduler import RunScheduler
         celery_delay(RunScheduler._apply_async, self.pk)
     
@@ -191,62 +120,180 @@ class AgentTaskRun(BaseModel):
         with ContextTracker(self):
             try:
                 runtime = self.agent_instance_version.get_runtime_instance()
-                td = self.agent_task_definition
-                x = getattr(runtime, td.name)
-                kwargs = self.arguments_json
- 
+
                 if self.agent_task_definition.task_type == "CHAIN":
-                    next_step_kwargs = kwargs
+                    # Start subcalls for chain
+                    next_step_arguments = self.arguments_json
                     for sub_task_instance in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
-                        next_step_kwargs = sub_task_instance.apply_async(kwargs=next_step_kwargs)
-                        new_sub_task_calls.append(next_step_kwargs)
+                        next_step_arguments = sub_task_instance.apply_async(kwargs=next_step_arguments)
+                        new_sub_task_calls.append(next_step_arguments)
                     result = new_sub_task_calls[-1]
- 
+
                 elif self.agent_task_definition.task_type == "GROUP":
-                    next_step_kwargs = kwargs
+                    # Start subcalls for groups
                     for sub_task_instance in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
-                        call = sub_task_instance.apply_async(kwargs=next_step_kwargs)
+                        call = sub_task_instance.apply_async(kwargs=self.arguments_json)
                         new_sub_task_calls.append(call)
                     result = new_sub_task_calls
- 
-                else:
-                    args, _ = load_model_references(self.arguments_json)
-                    args = load_results_data(args, timeout=0)
+
+                else: 
+                    # normal executions
+                    arguments = self._resolve_run_arguments(timeout=0)
+                    
                     kwargs = {}
-                    if isinstance(args, dict):
-                        kwargs = args
-                        args = kwargs.pop("*", [])
-                    elif not isinstance(args, (list, set, tuple)):
-                        args = [args, ]
-                    result = x.func(runtime, *args, **kwargs)
- 
-                self.result_json, ref_pks = AgentTaskRun.result_to_json(obj=result)
+                    if isinstance(arguments, dict):
+                        args = arguments.pop("*", [])
+                        kwargs = arguments
+                    elif not isinstance(arguments, (list, set, tuple)):
+                        args = [arguments, ]
+
+                    bound_agent_function = getattr(runtime, self.agent_task_definition.name)
+                    result = bound_agent_function.call(*args, **kwargs)
+
+                self.result_json, ref_pks = self._create_result_json(result=result)
                 self.taskrun_result_references.set(ref_pks)
                 if ref_pks:
                     self.status = TaskRunStatus.WAITING_RESULTTASKS
                 else:
                     self.status = TaskRunStatus.SUCCESS
- 
+
             except RateLimitError:
                 # LLM capacity was unavailable — not a failure, not a retry.
                 # run_runtime._apply_async checks for RATE_LIMITED and transitions
                 # the call to WAITING_RATELIMIT without consuming retry budget.
                 # result_json is left None — the run will be re-dispatched from scratch.
                 self.status = TaskRunStatus.RATE_LIMITED
- 
+
             except Exception as e:
-                self.result_json = json.dumps({
-                    "exception": f"{e}",
-                    "traceback": traceback.format_exc(),
-                })
+                self.result_json = json.dumps({"exception": f"{e}", "traceback": traceback.format_exc()})
                 self.status = TaskRunStatus.FAILURE
- 
+
         # Save result and status atomically
-        if not AgentTaskRun.objects.filter(
-            pk=self.pk, status=TaskRunStatus.ACTIVE
-        ).update(status=self.status, result_json=self.result_json):
+        query = AgentTaskRun.objects.filter(pk=self.pk, status=TaskRunStatus.ACTIVE)
+        if not query.update(status=self.status, result_json=self.result_json):
             return None, None
-        
+
+    @staticmethod
+    def _create_run_arguments_json(arguments):
+        def _create_recursive(obj, ref_pks:list[int]):
+            if isinstance(obj,  (str, int,float, bool) ) or obj is None:
+                return obj
+            if isinstance(obj, (list, set, tuple)):
+                return obj.__class__(_create_recursive(item, ref_pks) for item in obj)
+            if isinstance(obj, (AgentTaskRun, ConversationMessage, GenericContent, Query, Response)):
+                return {"_type": obj.__class__.__qualname__, "pk": obj.pk}
+            if isinstance(obj, dict):
+                if "_type" in obj and "pk" in obj and len(obj) == 2:
+                    if obj["_type"] == "AgentTaskRun":
+                        ref_pks.append(obj["pk"])
+                        return obj
+                    if obj["_type"] in [ "ConversationMessage",  "Query", "Response", ]:
+                        return obj
+                    if obj["_type"] == "AgentTaskCall":
+                        a =  AgentTaskCall.objects.get(pk=obj["pk"])
+                        # CRITICAL CHECK: The AgentTaskCall *must* have a result_run at this point.
+                        if not a.taskcall_result_run:
+                            raise ValueError(
+                                f"Dispatcher Error: AgentTaskRun attempted to be created with AgentTaskCall "
+                                f"{a.pk} as an argument, but its result_run is not set (status: {a.status_detail}). "
+                                "This indicates a bug where AgentTaskRun.create was called prematurely."
+                            )
+                        ref_pks.append(a.taskcall_result_run.pk)
+                        return {"_type": "AgentTaskRun", "pk": a.taskcall_result_run.pk if a.taskcall_result_run  else f"call:{obj["pk"]}"}
+                    raise Exception(f"Type {obj["_type"]} not allowed in AgentTaskRun.resolve_calls_to_runs")
+                return {k: _create_recursive(v, ref_pks) for k, v in obj.items()}
+            if isinstance(obj, Path):
+                return obj.as_posix()
+            raise Exception(f"Type {type(obj)} unknown")
+        ref_pks=list()
+        return _create_recursive(obj=arguments, ref_pks=ref_pks), ref_pks
+
+    def _resolve_run_arguments(self, timeout=0, recursive=True, allow_partial_results=False):
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.tasks.agent_task_run import AgentTaskRun
+       
+        def _get_recursive(data, timeout, recursive, allow_partial_results):
+            if isinstance(data, dict):
+                if "_type" in data and "pk" in data:
+                    model_instance = apps.get_model('server', data["_type"]).objects.get(pk=data["pk"])
+                    if recursive and (isinstance(model_instance, AgentTaskRun) or isinstance(model_instance, AgentTaskCall)):
+                        return model_instance.get_result(recursive=recursive, timeout=timeout, allow_partial_results=allow_partial_results)
+                    return model_instance
+                return {k: _get_recursive(data=v, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results) for k, v in data.items()}
+            
+            elif isinstance(data, list):
+                return [_get_recursive(data=item, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results) for item in data]
+            
+            elif isinstance(data, AgentTaskCall) or isinstance(data, AgentTaskRun):
+                if recursive:
+                    return data.get_result(timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results)
+               
+            return data
+        return _get_recursive(data = self.arguments_json, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results)
+      
+    @staticmethod
+    def _create_result_json(result):
+        def _create_recursive(obj, ref_pks:list[int]):
+            if isinstance(obj,  (str, int,float, bool) ) or obj is None:
+                return  obj
+            if isinstance(obj, dict):
+                return {k: _create_recursive(v, ref_pks) for k, v in obj.items()}
+            if isinstance(obj, (list, set, tuple)):
+                return obj.__class__(_create_recursive(item, ref_pks) for item in obj)
+            if isinstance(obj, ( AgentTaskCall, ConversationMessage, Query, Response)):
+                if isinstance(obj, AgentTaskCall):
+                    ref_pks.append( obj.pk)
+                return {"_type": obj.__class__.__qualname__, "pk": obj.pk}
+            if isinstance(obj, Path):
+                return obj.as_posix()
+            raise Exception(f"Type {type(obj)} unknown")
+        ref_pks=list()
+        return _create_recursive(obj=result, ref_pks=ref_pks), ref_pks
+
+    def get_result(self, timeout=0, recursive=False, allow_partial_results=False):
+        '''
+        recursive: for AgentTaskCall items in result return their .get_result()
+        timeout: seconds to block while waiting for result pending subresult, 0 for no timeout, None for never. 
+        allow_partial_results: return partial results that dont fully resolve all recursive results from sub calls, otherwise fail
+        '''
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.tasks.agent_task_run import AgentTaskRun
+       
+        def _get_recursive(data, timeout, recursive, allow_partial_results):
+            if isinstance(data, dict):
+                if "_type" in data and "pk" in data:
+                    model_instance = apps.get_model('server', data["_type"]).objects.get(pk=data["pk"])
+                    if recursive and (isinstance(model_instance, AgentTaskRun) or isinstance(model_instance, AgentTaskCall)):
+                        return model_instance.get_result(recursive=recursive, timeout=timeout, allow_partial_results=allow_partial_results)
+                    return model_instance
+                return {k: _get_recursive(data=v, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results) for k, v in data.items()}
+            
+            elif isinstance(data, list):
+                return [_get_recursive(data=item, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results) for item in data]
+            
+            elif isinstance(data, AgentTaskCall) or isinstance(data, AgentTaskRun):
+                if recursive:
+                    return data.get_result(timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results)
+                return data
+            return data
+
+        s = time.time()
+        subtimeout = timeout
+        while True:
+            if self.status in [TaskRunStatus.SUCCESS, TaskRunStatus.FAILURE]:
+                if self.result_json:
+                    return _get_recursive(data = self.result_json, timeout=subtimeout, recursive=recursive, allow_partial_results=allow_partial_results)
+                return None
+            if timeout is not None:
+                if time.time() - s >= timeout:
+                    if allow_partial_results:
+                        return None
+                    raise TimeoutError("TaskRunResult not ready")
+                if subtimeout > 0:
+                    subtimeout -= 1
+            time.sleep(1)
+      
+            
     def save(self, *args,  allow=False, **kwargs):
         if not allow and self.pk:
             raise ValidationError(f"You may not edit an existing {self._meta.model_name}")

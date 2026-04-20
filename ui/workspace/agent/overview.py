@@ -155,3 +155,60 @@ class AgentInstancesView(ModelView):
             parent=self,
             item_class=AgentInstanceView,
         )
+
+
+
+# ---------------------------------------------------------------------------
+# Sub-Agent views
+# ---------------------------------------------------------------------------
+
+class SubAgentVersionView(ModelView):
+    """One-row summary of an Agent."""
+    DOM_ELEMENT_CLASS = "SubAgentVersionView agent-version-row"
+
+    TEMPLATE_STR = """
+        <div class="instance-row-inner">
+            <span class="instance-name">{{ pyview.subject.agent.name or 'unnamed' }}</span>
+            {% if pyview.subject %}
+                <span class="text-muted small">
+                    v{{ pyview.subject.version_number }}
+                    · #{{ pyview.subject.pk }}
+                    {% if pyview.subject.workingdir %}
+                        · {{ pyview.subject.workingdir }}
+                    {% endif %}
+                </span>
+            {% endif %}
+            <button class="btn btn-xs btn-default"
+                    onclick="pyview.open_agent_tab()">
+                Open
+            </button>
+        </div>
+    """
+
+    def __init__(self, subject: AgentVersion, parent, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+
+    def open_agent_tab(self):
+        # Walk up to the workspace view which has open_agent_tab
+        node = self.parent
+        while node is not None:
+            if hasattr(node, 'open_agent_tab'):
+                node.open_agent_tab(self.subject.agent)
+                return
+            node = getattr(node, 'parent', None)
+
+class SubAgentVersionsView(ModelView):
+    """List of all sub agents for this agent."""
+    DOM_ELEMENT_CLASS = "SubAgentVersionsView"
+    TEMPLATE_STR = """
+        <h4>Sub Agents</h4>
+        {{ pyview.instances_view.render() }}
+    """
+
+    def __init__(self, subject, parent, **kwargs):
+        """Subject is the agent queryset."""
+        super().__init__(subject, parent, **kwargs)
+        self.instances_view = QuerySetView(subject=subject, parent=self, item_class=SubAgentVersionView)
+
+
+    

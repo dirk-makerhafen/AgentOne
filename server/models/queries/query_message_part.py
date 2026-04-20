@@ -4,11 +4,9 @@ from django.db import models
 from django_enum import EnumField
 import base64
 from jinja2 import Template, Environment, BaseLoader
-import copy
 from server.models.enums.message_enums import MessageContentType
-from server.models.base_model import BaseModel, load_model_references
+from server.models.base_model import BaseModel
 from server.models.content import  GenericContent
-from django.core.exceptions import ValidationError
 
 
 _JINJA_ENV = Environment(loader=BaseLoader())
@@ -20,7 +18,7 @@ class QueryMessagePart(BaseModel):
     fsLogEntry                = models.ForeignKey("builtin_filesystem.FsLogEntry" , default=None, null=True, on_delete=models.SET_DEFAULT, related_name='query_message_parts')
 
     tokens = models.IntegerField(default=None, blank=True, null=True)
-    index  = models.IntegerField(default=0)
+    index  = models.FloatField(default=0)
 
     content          = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_content")
     content_prefix   = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_prefix")
@@ -29,6 +27,9 @@ class QueryMessagePart(BaseModel):
     content_type     = EnumField(MessageContentType, default=MessageContentType.TEXT)
 
     tags = models.JSONField(default=list, null=True, blank=True, help_text="List of tags used")
+    
+    class Meta:
+        ordering = ("index","pk")
 
     def compile(self, fail_on_error=True):
         part_content = ""
@@ -55,9 +56,10 @@ class QueryMessagePart(BaseModel):
                 data = {}
                 if self.query_message and self.query_message.query:
                         # Attempt to pull more context if needed
-                        data["instance"] = self.query_message.query.agent_instance_version.agent_instance
+                        data["message"] = self
                 def load_image(image_path):
-                    return f"!__LOAD_IMAGE__!{image_path}!__LOAD_IMAGE__!"
+                    load_image_marker = "LOAD_IMAGE"
+                    return f"!__{load_image_marker}__!{image_path}!__{load_image_marker}__!"
                     try:
                         with open(image_path, "rb") as f:
                             encoded = base64.b64encode(f.read()).decode("ascii")
@@ -68,10 +70,11 @@ class QueryMessagePart(BaseModel):
                 if content:
                     print("compile here4")
                     context = {**json.loads(content.content), **data, "load_image": load_image}
-                    context,_= load_model_references(context)
+                    #context,_= load_model_references(context)
                     part_content = rtemplate.render(**context)
-                    if "!__LOAD_IMAGE__!" in part_content:
-                        path = part_content.split("!__LOAD_IMAGE__!")[1]
+                    load_image_marker = "LOAD_IMAGE"
+                    if f"!__{load_image_marker}__!" in part_content:
+                        path = part_content.split(f"!__{load_image_marker}__!")[1]
                         try:
                             with open(path, "rb") as f:
                                 encoded = base64.b64encode(f.read()).decode("ascii")
@@ -101,9 +104,9 @@ class QueryMessagePart(BaseModel):
         print("compile here6", part_content)
         # 2. Wrap with prefix/postfix
         if self.content_prefix:
-            part_content = f"{self.content_prefix.content}{part_content}"
+            part_content = f"{self.content_prefix.get()}{part_content}"
         if self.content_postfix:
-            part_content = f"{part_content}{self.content_postfix.content}"
+            part_content = f"{part_content}{self.content_postfix.get()}"
 
         # 3. Token estimation
         tokens = math.ceil(len(part_content) / 3.8)

@@ -13,7 +13,7 @@ class AgentTaskInstanceAdmin(admin.ModelAdmin):
     list_display_links = ("id", )
     list_filter = ('agent_instance_version', 'agent_task_definition__task_type', 'created_at')
     search_fields = ( 'agent_instance__name', 'agent_task_definition__name')
-    autocomplete_fields = ('agent_instance_version', 'agent_task_definition')
+    #autocomplete_fields = ('agent_instance_version', 'agent_task_definition')
     
     fieldsets = (
         (None, {
