@@ -39,7 +39,7 @@ class WindowsService(BaseService):
 
             subprocess.run([
                 'sc', 'description', self.service_name, 
-                f'"{self.display_name} - Manages the Carna application."'
+                f'"{self.display_name} - Manages the AgentOne application."'
             ], check=False)
 
             self.command.stdout.write("Starting service...")

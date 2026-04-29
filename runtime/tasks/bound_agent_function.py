@@ -42,10 +42,9 @@ class BoundAgentFunction:
         Returns:
             AgentTaskCall
         """
-        #print("BoundAgentTaskDefinition.delay", self.func.__name__, args, kwargs)
         return self.apply_async(args, kwargs)
 
-    def apply_async(self, args=None, kwargs=None, link=None, link_error=None, countdown=0, eta=None, expires=None,retry=False,time_limit=0, soft_time_limit=0,priority=0):
+    def apply_async(self, args=None, kwargs=None, countdown=0, eta=None, expires=None,retry=False,time_limit=0, soft_time_limit=0,priority=0):
         """Apply tasks asynchronously by sending a message.
 
         Arguments:

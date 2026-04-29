@@ -2,15 +2,15 @@ from django.core.management.base import BaseCommand
 import traceback
 
 class Command(BaseCommand):
-    help = "Manages the Carna client application (register, run, services)."
+    help = "Manages the AgentOne client application (register, run, services)."
 
     def add_arguments(self, parser):
         subparsers = parser.add_subparsers(dest="subcommand", required=True, help="Available subcommands")
 
         # --- Register Subcommand ---
-        p_register = subparsers.add_parser("register", help="Registers the client with the Carna server.")
+        p_register = subparsers.add_parser("register", help="Registers the client with the AgentOne server.")
         p_register.add_argument('--path', help="(Optional) The installation/config directory. Uses a system default if not provided.")
-        p_register.add_argument('--server-url', help='(Non-interactive) Full URL of the Carna server.')
+        p_register.add_argument('--server-url', help='(Non-interactive) Full URL of the AgentOne server.')
         p_register.add_argument('--server-secret', help="(Non-interactive) Server's AGENT_SERVER_SECRET_KEY.")
         p_register.add_argument('--client-name', help="(Non-interactive) Name for this client (defaults to hostname).")
         p_register.add_argument('--client-port', default='8123', help="(Non-interactive) Port for this client (default: 8123).")
@@ -44,7 +44,7 @@ class Command(BaseCommand):
         import requests
         import platform # Added for OS detection
 
-        self.stdout.write(self.style.SUCCESS("--- Carna Client Registration ---"))
+        self.stdout.write(self.style.SUCCESS("--- AgentOne Client Registration ---"))
 
         config_dir = self._get_config_path(options)
         os.makedirs(config_dir, exist_ok=True)
@@ -131,7 +131,7 @@ class Command(BaseCommand):
     def _get_config_interactively(self):
         import socket
         config = {}
-        config['server_url'] = input("Enter the full URL of the Carna server (e.g., http://127.0.0.1:8000): ")
+        config['server_url'] = input("Enter the full URL of the AgentOne server (e.g., http://127.0.0.1:8000): ")
         config['server_secret'] = input("Enter the server's AGENT_SERVER_SECRET_KEY: ")
         default_client_name = socket.gethostname()
         config['client_name'] = input(f"Enter a name for this client (default: '{default_client_name}'): ") or default_client_name
@@ -145,7 +145,7 @@ class Command(BaseCommand):
         import sys
         from django.conf import settings
 
-        self.stdout.write(self.style.SUCCESS("--- Carna Client Executor ---"))
+        self.stdout.write(self.style.SUCCESS("--- AgentOne Client Executor ---"))
 
         config_dir = self._get_config_path(options)
         config_path = os.path.join(config_dir, 'client_config.json')
@@ -164,10 +164,10 @@ class Command(BaseCommand):
 
         # Prepare environment variables for the subprocess
         env = os.environ.copy()
-        env["CARNA_CLIENT_API_KEY"] = config.get("client_api_key", "")
-        env["CARNA_CLIENT_NAME"] = config.get("client_name", "")
-        env["CARNA_CLIENT_LISTEN"] = config.get("client_listen", "0.0.0.0")
-        env["CARNA_CLIENT_PORT"] = str(config.get("client_port", 8123))
+        env["AGENTONE_CLIENT_API_KEY"] = config.get("client_api_key", "")
+        env["AGENTONE_CLIENT_NAME"] = config.get("client_name", "")
+        env["AGENTONE_CLIENT_LISTEN"] = config.get("client_listen", "0.0.0.0")
+        env["AGENTONE_CLIENT_PORT"] = str(config.get("client_port", 8123))
 
         # We need to ensure the project's root is in the PYTHONPATH so the client can find the 'tools' module.
         project_root = str(settings.BASE_DIR)
@@ -181,8 +181,8 @@ class Command(BaseCommand):
             sys.executable,  # Use the same python interpreter running manage.py
             "-m", "uvicorn",
             "launcher.client.http_client:app",
-            "--host", env["CARNA_CLIENT_LISTEN"],
-            "--port", env["CARNA_CLIENT_PORT"]
+            "--host", env["AGENTONE_CLIENT_LISTEN"],
+            "--port", env["AGENTONE_CLIENT_PORT"]
         ]
 
         self.stdout.write(f"Starting client process...")
@@ -205,8 +205,8 @@ class Command(BaseCommand):
         action = options["action"]
         config_info = self._determine_paths_and_permissions(options)
 
-        service_name = "carna_executor"
-        display_name = "Carna Client Executor"
+        service_name = "agentone_executor"
+        display_name = "AgentOne Client Executor"
 
         system = config_info['system']
         config_dir = config_info['config_dir']
@@ -281,21 +281,21 @@ class Command(BaseCommand):
             base_config_dir = os.path.abspath(options['path'])
         elif is_admin_user and system != 'Windows': # Linux/macOS as root
             self.stdout.write(self.style.WARNING("WARNING: You are running this command with administrative privileges (root)."))
-            self.stdout.write(self.style.WARNING("The Carna client will have root access to the filesystem and can modify system-wide settings."))
+            self.stdout.write(self.style.WARNING("The AgentOne client will have root access to the filesystem and can modify system-wide settings."))
             confirm = input("Do you understand and wish to proceed with root access installation? (y/n): ").lower()
             if confirm != 'y':
                 self.stdout.write(self.style.ERROR("Installation cancelled by user."))
                 exit(1) # Exit cleanly, not with an error code
-            base_config_dir = '/etc/carna_executor'
+            base_config_dir = '/etc/agentone_executor'
         elif is_admin_user and system == 'Windows': # Windows as Administrator
-            base_config_dir = os.path.join(os.environ.get('ProgramData', r'C:\ProgramData'), 'CarnaExecutor')
+            base_config_dir = os.path.join(os.environ.get('ProgramData', r'C:\ProgramData'), 'AgentOneExecutor')
         else: # Non-root user
             if system == 'Windows':
-                base_config_dir = os.path.join(os.environ.get('APPDATA', r'C:\Users\Default\AppData\Roaming'), 'CarnaExecutor')
+                base_config_dir = os.path.join(os.environ.get('APPDATA', r'C:\Users\Default\AppData\Roaming'), 'AgentOneExecutor')
             elif system == 'Darwin': # macOS
-                base_config_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'CarnaExecutor')
+                base_config_dir = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support', 'AgentOneExecutor')
             else: # Linux (non-root)
-                base_config_dir = os.path.join(os.path.expanduser('~'), '.config', 'carna_executor')
+                base_config_dir = os.path.join(os.path.expanduser('~'), '.config', 'agentone_executor')
 
         return {
             'is_admin': is_admin_user,

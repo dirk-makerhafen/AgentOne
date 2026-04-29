@@ -12,13 +12,13 @@ import socket
 
 # --- Configuration Loading ---
 # This script expects APIKEY, HOSTNAME, LISTEN, and PORT to be set as environment variables.
-APIKEY = os.environ.get("CARNA_CLIENT_API_KEY", "")
-HOSTNAME = os.environ.get("CARNA_CLIENT_NAME", socket.gethostname())
-LISTEN = os.environ.get("CARNA_CLIENT_LISTEN", "0.0.0.0")
-PORT = int(os.environ.get("CARNA_CLIENT_PORT", 8123))
+APIKEY = os.environ.get("AGENTONE_CLIENT_API_KEY", "")
+HOSTNAME = os.environ.get("AGENTONE_CLIENT_NAME", socket.gethostname())
+LISTEN = os.environ.get("AGENTONE_CLIENT_LISTEN", "0.0.0.0")
+PORT = int(os.environ.get("AGENTONE_CLIENT_PORT", 8123))
 
 if not APIKEY:
-    print("FATAL: CARNA_CLIENT_API_KEY environment variable not set. Cannot start.")
+    print("FATAL: AGENTONE_CLIENT_API_KEY environment variable not set. Cannot start.")
     sys.exit(1)
 
 class ScriptExecution(BaseModel):
@@ -67,7 +67,7 @@ async def direct(item: DirectExecution):
 
 if __name__ == "__main__":
     import uvicorn
-    print(f"Starting Carna Executor '{HOSTNAME}'...")
+    print(f"Starting AgentOne Executor '{HOSTNAME}'...")
     print(f"Listening on: {LISTEN}:{PORT}")
     print("Press Ctrl+C to stop.")
     uvicorn.run(app, host=LISTEN, port=PORT)

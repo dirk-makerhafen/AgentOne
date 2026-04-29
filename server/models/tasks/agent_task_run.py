@@ -1,9 +1,11 @@
 from __future__ import annotations
+import copy
 import json
 from functools import wraps
 from pathlib import Path
 import time
 import traceback
+from types import GeneratorType
 from django.db import models
 from runtime.rate_limiter import RateLimitError
 from server.models.tasks.agent_task_definition import AgentTaskDefinition
@@ -56,12 +58,14 @@ class AgentTaskRun(BaseModel):
 
     # Runtime values
     is_approved = models.BooleanField(default=False)  # user did appove this call
+    ended_at = models.DateTimeField(editable=False, null=True, default=None)
+
 
     # References in Arguments for a TaskRun must be TaskRun, referencing the actual finished execution of a TaskCall
     # References in results must be TaskCall, hiding the actual (retried and so on) TaskRun that will be launched. 
     taskrun_arg_references     = models.ManyToManyField("server.AgentTaskRun", help_text="AgentTaskRuns used in args/kwargs", symmetrical=False, blank=True, related_name="rev_taskrun_arg_references")
     taskrun_result_references  = models.ManyToManyField("server.AgentTaskCall", help_text="AgentTaskCalls returned in results", symmetrical=False, blank=True, related_name="rev_taskrun_result_references")
-    taskrun_subtask_references = models.ManyToManyField("server.AgentTaskCall", help_text="AgentTaskCalls spawned", symmetrical=False, blank=True, related_name="rev_taskrun_sub_taskcalls", through=AgentTaskRunSubtask, through_fields=("parent", "child") )
+    taskrun_subtask_references = models.ManyToManyField("server.AgentTaskCall", help_text="AgentTaskCalls spawned", symmetrical=False, blank=True, related_name="rev_taskrun_subtask_references", through=AgentTaskRunSubtask, through_fields=("parent", "child") )
 
     status = models.CharField(choices=TaskRunStatus.choices, default=TaskRunStatus.NEW, max_length=61)
     result_json  = models.JSONField(default=None, null=True)
@@ -73,12 +77,9 @@ class AgentTaskRun(BaseModel):
         agent_task_instance: AgentTaskInstance
         
         args = args if args else []
-        arguments = kwargs if kwargs else {}
-        if not isinstance(args,(list, set, tuple)):
-            args = [args, ]
-        if args:
-            arguments["*"] = args
-        arguments_json, ref_pks = AgentTaskRun._create_run_arguments_json(arguments=arguments)
+        kwargs = kwargs if kwargs else {}
+
+        arguments_json, ref_pks = AgentTaskRun._create_run_arguments_json(args=args, kwargs=kwargs)
 
         taskrun = AgentTaskRun.objects.create(
             agent_task_call = agent_task_call,
@@ -137,17 +138,9 @@ class AgentTaskRun(BaseModel):
                     result = new_sub_task_calls
 
                 else: 
-                    # normal executions
-                    arguments = self._resolve_run_arguments(timeout=0)
-                    
-                    kwargs = {}
-                    if isinstance(arguments, dict):
-                        args = arguments.pop("*", [])
-                        kwargs = arguments
-                    elif not isinstance(arguments, (list, set, tuple)):
-                        args = [arguments, ]
-
+                    # normal executions            
                     bound_agent_function = getattr(runtime, self.agent_task_definition.name)
+                    args, kwargs = self._resolve_run_arguments(timeout=0)
                     result = bound_agent_function.call(*args, **kwargs)
 
                 self.result_json, ref_pks = self._create_result_json(result=result)
@@ -174,7 +167,8 @@ class AgentTaskRun(BaseModel):
             return None, None
 
     @staticmethod
-    def _create_run_arguments_json(arguments):
+    def _create_run_arguments_json(args, kwargs):
+
         def _create_recursive(obj, ref_pks:list[int]):
             if isinstance(obj,  (str, int,float, bool) ) or obj is None:
                 return obj
@@ -205,6 +199,15 @@ class AgentTaskRun(BaseModel):
             if isinstance(obj, Path):
                 return obj.as_posix()
             raise Exception(f"Type {type(obj)} unknown")
+        
+        arguments = copy.copy(kwargs)
+        if isinstance(args, GeneratorType):
+            args = list(args)
+        if not isinstance(args, (list, set, tuple)):
+            args = [args, ]
+        if args:
+            arguments["*"] = args
+
         ref_pks=list()
         return _create_recursive(obj=arguments, ref_pks=ref_pks), ref_pks
 
@@ -229,7 +232,17 @@ class AgentTaskRun(BaseModel):
                     return data.get_result(timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results)
                
             return data
-        return _get_recursive(data = self.arguments_json, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results)
+        
+        arguments = _get_recursive(data = self.arguments_json, timeout=timeout, recursive=recursive, allow_partial_results=allow_partial_results)
+
+        kwargs = {}
+        if isinstance(arguments, dict):
+            args = arguments.pop("*", [])
+            kwargs = arguments
+        elif not isinstance(arguments, (list, set, tuple)):
+            args = [arguments, ]
+
+        return args, kwargs
       
     @staticmethod
     def _create_result_json(result):

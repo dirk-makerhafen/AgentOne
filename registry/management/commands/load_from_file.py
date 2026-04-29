@@ -9,7 +9,7 @@ from django.conf import settings
 from pathlib import Path
 from contextlib import contextmanager
 
-#from agents.agent_config import AgentConfig
+
 @contextmanager
 def temp_sys_path(path):
     """Temporarily adds a directory to sys.path."""
@@ -31,7 +31,6 @@ class Command(BaseCommand):
 
 
     def load_dynamic_file(self, file_path):
-     
         filename = Path(file_path)
         namespace_root = "dynamic_scripts"
 
@@ -48,7 +47,8 @@ class Command(BaseCommand):
         with temp_sys_path(filename.parent):
             mod = loader.load_module(module_name)
         return mod
-    
+
+
     def handle(self, *args, **options):
         filename = options['filename']
 
@@ -65,16 +65,3 @@ class Command(BaseCommand):
         mod = self.load_dynamic_file(file_path)
         mod.__main__()
         self.stdout.write(self.style.SUCCESS(f'Successfully executed {filename}'))
-
-
-
-
-
-
-
-
-
-
-
-
-

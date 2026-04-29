@@ -248,6 +248,7 @@ class TaskCallStateMachine:
             status=TaskCallStatus.ENDED,
             status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
             taskcall_result_run_id=result_run_id,
+            ended_at = timezone.now()
         ) > 0
  
     @staticmethod
@@ -272,9 +273,12 @@ class TaskCallStateMachine:
     def fail(call_id: int) -> bool:
         """ACTIVE_RUNNING → ENDED_FAILURE_EXCEPTION (retries exhausted)."""
         return TaskCallStateMachine.transition(
-            call_id,
-            TaskCallStatusDetail.ACTIVE_RUNNING,
-            TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            call_id = call_id,
+            from_detail = TaskCallStatusDetail.ACTIVE_RUNNING,
+            to_detail = TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            extra = { 
+                "ended_at": timezone.now()
+            },
         )
  
     @staticmethod
@@ -284,14 +288,24 @@ class TaskCallStateMachine:
         Pass from_detail explicitly — cancellation originates from multiple states.
         """
         return TaskCallStateMachine.transition(
-            call_id, from_detail, TaskCallStatusDetail.ENDED_CANCELLED,
+            call_id = call_id, 
+            from_detail = from_detail, 
+            to_detail = TaskCallStatusDetail.ENDED_CANCELLED,
+            extra = { 
+                "ended_at": timezone.now()
+            },
         )
  
     @staticmethod
     def stop(call_id: int, from_detail: TaskCallStatusDetail) -> bool:
         """WAITING_DEPENDENCY, WAITING_SUBTASK, or WAITING_RATELIMIT → ENDED_STOPPED."""
         return TaskCallStateMachine.transition(
-            call_id, from_detail, TaskCallStatusDetail.ENDED_STOPPED,
+            call_id = call_id, 
+            from_detail = from_detail, 
+            to_detail = TaskCallStatusDetail.ENDED_STOPPED,               
+            extra = { 
+                "ended_at": timezone.now()
+            },
         )
 
     @staticmethod

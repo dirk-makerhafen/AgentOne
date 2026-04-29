@@ -13,26 +13,31 @@ from server.models.agents.agent_instance import AgentInstance
 from old.register_client_api import register_client
 from ui.app_view import ui
 
-@login_required
+#@login_required
 @csrf_exempt # Only if not sending a CSRF token from the frontend
 def agent_webapi_call(request, instance_id:int, method:str):
+    print("agent_webapi_callagent_webapi_call")
     if request.method == 'GET':
         kwargs = request.GET.dict()
     elif request.method == 'POST':
         try:
             kwargs = json.loads(request.body)
         except json.JSONDecodeError:
+            print("INVALIUD JSON")
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
     else:
+        print("INVALIUD GET/POST")
         return HttpResponseBadRequest("GET|POST")
         
     try:
-        agent_instance = AgentInstance.objects.get(pk=instance_id)
+        agent_instance = AgentInstance.objects.get(pk=int(instance_id))
     except:
+        print("no agent_instance")
         return HttpResponseNotFound()
     agent_instance_version = agent_instance.latest_agent_instance_version
     rt = agent_instance_version.get_runtime_instance()
     if not agent_instance_version.agent_version.task_definitions.filter(name=method, task_type=TaskType.WEBAPI).exists():
+        print("NO WEBAPI")
         return HttpResponseNotFound()
     agent_task_call:AgentTaskCall = getattr(rt, method).delay(**kwargs)
     return JsonResponse({

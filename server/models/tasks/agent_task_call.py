@@ -59,6 +59,7 @@ class AgentTaskCall(BaseModel):
     # Runtime values
     is_approved = models.BooleanField(default=None, null=True)  # user did appove this call
     retry_count = models.IntegerField(default=0)   #count will not be avauilable 
+    ended_at = models.DateTimeField(editable=False, null=True, default=None)
 
     taskcall_arg_references     = models.ManyToManyField("self", help_text="AgentTaskCalls used in call args/kwargs", symmetrical=False, blank=True, related_name="rev_taskcall_arg_references")
     
@@ -71,7 +72,7 @@ class AgentTaskCall(BaseModel):
     status = models.CharField(choices=TaskCallStatus.choices, default=TaskCallStatus.NEW, max_length=61)
     status_detail = models.CharField(choices=TaskCallStatusDetail.choices, default=TaskCallStatusDetail.NEW, max_length=61)
 
-    taskcall_result_run = models.ForeignKey("server.AgentTaskRun", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT)
+    taskcall_result_run = models.ForeignKey("server.AgentTaskRun", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT, related_name="rev_taskcall_result_run")
 
     @classmethod
     def create(cls, agent_task_instance: "AgentTaskInstance", args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None, max_retries = None, retry_delay = None, retry_requires_approval = None, priority:int|None = None ):

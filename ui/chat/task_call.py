@@ -281,11 +281,7 @@ class TaskCallView(ModelView):
         self.is_subtask   = is_subtask
         self.is_collapsed = True
         self.args_mode    = 'resolved'
-        self.run_views    = QuerySetView(
-            subject=subject.related_agent_task_runs.order_by('created_at'),
-            parent=self,
-            item_class=TaskRunView,
-        )
+        self.run_views    = QuerySetView(subject=subject.related_agent_task_runs.order_by('created_at'), parent=self, item_class=TaskRunView)
 
     def toggle(self):
         self.is_collapsed = not self.is_collapsed
@@ -371,8 +367,7 @@ class TaskRunView(ModelView):
 
     @property
     def has_children(self) -> bool:
-        return (self.subject.taskrun_subtask_references.exists()
-                or self.subject.taskrun_result_references.exists())
+        return self.subject.taskrun_subtask_references.exists() or self.subject.taskrun_result_references.exists()
 
     def __init__(self, subject: AgentTaskRun, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)

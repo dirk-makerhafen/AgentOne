@@ -1,4 +1,7 @@
 from __future__ import annotations
+from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+from ui.workspace.instance.task_trace_view import TaskTraceView
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_run import AgentTaskRun
 from ui.lib.model_view import ModelView
@@ -17,20 +20,18 @@ class ChatWorkspaceView(ModelView):
     DOM_ELEMENT_CLASS = "ChatWorkspaceView resizable-container"
     DOM_ELEMENT_EXTRAS = 'data-orientation="vertical"'
     TEMPLATE_STR = """
+       
+        {{pyview.task_trace_view.render()}}
         <div class="chat-timeline resizable-panel flex-column" data-size-pc="80">
             <div class="chat-mode-bar">
-                <button class="chat-mode-btn {{ 'active' if pyview.detail_level == 'simple' else '' }}"
-                        onclick="pyview.set_detail_level('simple')">Chat</button>
-                <button class="chat-mode-btn {{ 'active' if pyview.detail_level == 'developer' else '' }}"
-                        onclick="pyview.set_detail_level('developer')">Developer</button>
+                <button class="chat-mode-btn {{ 'active' if pyview.detail_level == 'simple'    else '' }}" onclick="pyview.set_detail_level('simple')">Chat</button>
+                <button class="chat-mode-btn {{ 'active' if pyview.detail_level == 'developer' else '' }}" onclick="pyview.set_detail_level('developer')">Developer</button>
             </div>
             <div class="chat-scroll">
                 {{ pyview.timeline.render() }}
                 <div id="timeline" style="position:relative; width:100%; height:600px; border:1px solid #ccc;"></div>
-
             </div>
         </div>
-
         <div class="chat-input-panel resizable-panel flex-row" data-size-pc="20">
             <div class="chat-input-wrap">
                 <div id="messageInput_{{ pyview.subject.id }}"
@@ -45,165 +46,13 @@ class ChatWorkspaceView(ModelView):
                 </button>
             </div>
         </div>
-
         <script>
             (function() {
                 var el = document.getElementById("{{ pyview.uid }}");
                 if (el && el.parentNode) initializeSplitForContainer(el.parentNode);
             })();
-            
+            $(".chat-scroll").scrollTop($(".chat-scroll")[0].scrollHeight);
         </script>
-
-
- 
-
-  <!-- Container for the Trace -->
-<div id="trace-app" style="background: #111; color: #eee; padding: 20px; font-family: 'Inter', sans-serif; min-height: 100vh; display:none">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-        <h2 style="margin:0;">Execution Trace</h2>
-        <div id="status-bar" style="font-size: 12px; color: #888;">Initializing...</div>
-    </div>
-    <div id="trace-viewer" style="border: 1px solid #333; border-radius: 8px; background: #1a1a1a; overflow-x: auto;">
-        <!-- Header for timestamps -->
-        <div id="timeline-header" style="display: grid; grid-template-columns: 300px 1fr; border-bottom: 2px solid #333; height: 30px; background: #222;">
-            <div style="padding: 8px; border-right: 1px solid #333; font-size: 10px; font-weight: bold; color: #666;">TASK / AGENT</div>
-            <div style="position: relative;" id="tick-marks"></div>
-        </div>
-        <!-- Rows will be injected here -->
-        <div id="trace-rows"></div>
-    </div>
-</div>
-
-<style>
-    .trace-row { display: grid; grid-template-columns: 300px 1fr; border-bottom: 1px solid #222; align-items: center; min-height: 35px; transition: background 0.2s; }
-    .trace-row:hover { background: #252525; }
-    .label-cell { 
-        padding: 5px 10px; font-size: 12px; white-space: nowrap; overflow: hidden; 
-        text-overflow: ellipsis; border-right: 1px solid #333; display: flex; align-items: center;
-    }
-    .bar-container { position: relative; height: 100%; width: 100%; min-width: 600px; padding: 0; margin: 0; }
-    .bar { 
-        position: absolute; top: 8px; height: 18px; border-radius: 4px; 
-        font-size: 10px; line-height: 18px; padding: 0 6px; color: white;
-        white-space: nowrap; overflow: hidden; cursor: pointer;
-    }
-    /* Specific Colors for your Workflow Data */
-    .bar-call { background: #3b82f6; border-left: 4px solid #1d4ed8; }
-    .bar-run  { background: #10b981; border-left: 4px solid #047857; }
-    .bar-hook { background: #f59e0b; border-left: 4px solid #b45309; opacity: 0.8; font-style: italic; }
-    .bar-callback { background: #8b5cf6; border-left: 4px solid #6d28d9; }
-    
-    .indent-guide { display: inline-block; width: 15px; border-left: 1px solid #444; height: 35px; margin-left: 5px; }
-</style>
-
-<script>
-async function buildWorkflowTrace(rootId) {
-    const rowsContainer = document.getElementById('trace-rows');
-    const status = document.getElementById('status-bar');
-    const fetchedData = [];
-    const visited = new Set();
-
-    status.innerText = "Crawling workflow tree...";
-
-    // 1. CRAWLER: Fetches data recursively via your pyview bridge
-    async function crawl(id, level = 0, relationType = 'main') {
-        if (visited.has(id)) return;
-        visited.add(id);
-
-        try {
-            // Logic to choose which backend function to call
-            const data = id.startsWith('call:') ? await pyview.get_call(id)  : await pyview.get_run(id);
-            console.log(data);
-            fetchedData.push({ ...data, _level: level, _relation: relationType });
-
-            // Follow Run <- taskrun_arg_references
-            if (data.taskrun_arg_references) {
-                for (let nextId of data.taskrun_arg_references) await crawl(nextId, level + 1, 'run');
-            }
-
-            // Follow Call <- taskcall_arg_references
-            if (data.taskcall_arg_references) {
-                for (let nextId of data.taskcall_arg_references) await crawl(nextId, level + 1, 'run');
-            }
-            // Follow Run -> Subtasks
-            if (data.taskrun_subtask_references) {
-                for (let nextId of data.taskrun_subtask_references) await crawl(nextId, level + 1, 'run');
-            }
-            // Follow Run -> Result References (other calls)
-            if (data.taskrun_result_references) {
-                for (let nextId of data.taskrun_result_references) await crawl(nextId, level + 1, 'run');
-            }
-            // Follow Call -> Hooks
-            if (data.taskcall_before_run_hooks) {
-                for (let nextId of data.taskcall_before_run_hooks) await crawl(nextId, level + 1, 'hook');
-            }
-            if (data.taskcall_after_run_hooks) {
-                for (let nextId of data.taskcall_after_run_hooks) await crawl(nextId, level + 1, 'hook');
-            }
-            // Follow Call -> Callbacks
-            if (data.taskcall_on_success_callbacks) {
-                for (let nextId of data.taskcall_on_success_callbacks) await crawl(nextId, level + 1, 'callback');
-            }
-        } catch (e) {
-            console.error("Failed to fetch ID:", id, e);
-        }
-    }
-
-    await crawl(rootId);
-
-    // 2. TIMING CALCULATION
-    const allStarts = fetchedData.map(d => d.created_at).filter(t => t > 0);
-    const allEnds = fetchedData.map(d => d.ended_at).filter(t => t > 0);
-    const minTs = Math.min(...allStarts);
-    const maxTs = Math.max(...allEnds);
-    const totalDuration = (maxTs - minTs) || 1;
-
-    status.innerText = `Trace Complete: ${fetchedData.length} items found.`;
-
-    // 3. RENDERING
-    rowsContainer.innerHTML = '';
-    fetchedData.sort((a, b) => a.created_at - b.created_at).forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'trace-row';
-
-        // Label Column
-        const labelCell = document.createElement('div');
-        labelCell.className = 'label-cell';
-        let indents = "";
-        for(let i=0; i<item._level; i++) indents += `<span class="indent-guide"></span>`;
-        
-        const taskName = item.agent_task_definition.split(':')[0];
-        labelCell.innerHTML = `${indents} <span title="${item.id}"><strong>${taskName}</strong></span>`;
-
-        // Timeline Column
-        const timelineCell = document.createElement('div');
-        timelineCell.className = 'bar-container';
-
-        const bar = document.createElement('div');
-        const typeClass = item.id.startsWith('call:') ? 'bar-call' : 'bar-run';
-        const relationClass = `bar-${item._relation}`;
-        bar.className = `bar ${typeClass} ${relationClass}`;
-
-        // Positioning
-        const startOffset = ((item.created_at - minTs) / totalDuration) * 100;
-        const width = (((item.ended_at || maxTs) - item.created_at) / totalDuration) * 100;
-
-        bar.style.left = `${startOffset}%`;
-        bar.style.width = `${Math.max(width, 1)}%`; // Ensure it's at least visible
-        bar.innerHTML = `<span style="font-size:9px; opacity:0.8">${item.agent.split(':')[1]}</span>`;
-        bar.onclick = () => console.table(item); // Debug detail to console
-
-        timelineCell.appendChild(bar);
-        row.appendChild(labelCell);
-        row.appendChild(timelineCell);
-        rowsContainer.appendChild(row);
-    });
-}
-
-// HOW TO START:
-//buildWorkflowTrace("call:303428"); 
-</script>
-  
     """
 
     CSS_STR = """
@@ -391,51 +240,6 @@ async function buildWorkflowTrace(rootId) {
         self.timeline = None
         self._build_timeline()
 
-    def get_time(self, value):
-        return f"hello from {value}"
-    def get_first_ids(self):
-        return ",".join([f'"{x.pk}"' for x in AgentTaskRun.objects.filter(agent_instance_version__agent_instance=self.s).order_by("-created_at")[:100]])
-
-    def get_call(self, call_id:str):
-        call_pk = int(call_id.split(":")[-1])
-        call = AgentTaskCall.objects.get(pk=int(call_pk))
-        return {
-            "id": f"call:{call.pk}",
-            "agent": f"agent:{call.agent_instance.agent.pk}",
-            "agent_instance": f"agent_instance:{call.agent_instance.pk}",
-            "agent_task_definition": f"{call.agent_task_definition.name}:{call.agent_task_definition.pk}",
-            "dont_start_before": int(call.dont_start_before.timestamp()) if call.dont_start_before else 0,
-            "dont_start_after": int(call.dont_start_after.timestamp()) if call.dont_start_after else 0,
-            "taskcall_arg_references":  [f"call:{call_pk}" for call_pk in call.taskcall_arg_references.values_list('pk', flat=True)],
-            "taskcall_on_success_callbacks":  [f"call:{call_pk}" for call_pk in call.taskcall_on_success_callbacks.values_list('pk', flat=True)],
-            "taskcall_on_error_callbacks":  [f"call:{call_pk}" for call_pk in call.taskcall_on_error_callbacks.values_list('pk', flat=True)],
-
-            "taskcall_before_run_hooks":  [f"call:{call_pk}" for call_pk in call.taskcall_before_run_hooks.values_list('pk', flat=True)],
-            "taskcall_after_run_hooks":  [f"call:{call_pk}" for call_pk in call.taskcall_after_run_hooks.values_list('pk', flat=True)],
-            "created_at": int(call.created_at.timestamp()) if call.created_at else 0,
-            "ended_at": int(call.updated_at.timestamp()) if call.updated_at else 0, # use last updateed ts for now
-        }
-
-    def get_run(self, run_id:str):
-        run_pk = int(run_id.split(":")[-1])
-        print("RUNPK", run_pk)
-        run = AgentTaskRun.objects.get(pk=int(run_pk))
-        return {
-            "id": f"run:{run.pk}",
-            "agent": f"agent:{run.agent_instance_version.agent.pk}",
-            "agent_instance": f"agent_instance:{run.agent_instance_version.agent_instance.pk}",
-            "agent_task_definition": f"{run.agent_task_definition.name}:{run.agent_task_definition.pk}",
-            "dont_start_before": int(run.dont_start_before.timestamp()) if run.dont_start_before else 0,
-            "dont_start_after": int(run.dont_start_after.timestamp()) if run.dont_start_after else 0,
-            "taskrun_arg_references":  [f"run:{run_pk}" for run_pk in run.taskrun_arg_references.values_list('pk', flat=True)],
-            "taskrun_result_references":  [f"call:{call_pk}" for call_pk in run.taskrun_result_references.values_list('pk', flat=True)],
-            "taskrun_subtask_references":  [f"call:{call_pk}" for call_pk in run.taskrun_subtask_references.values_list('pk', flat=True)],
-            "created_at": int(run.created_at.timestamp()) if run.created_at else 0,
-            "ended_at": int(run.updated_at.timestamp()) if run.updated_at else 0, # use last updateed ts for now
-        }
-
-
-
 
     def _build_timeline(self):
         if self.timeline is not None:
@@ -444,30 +248,27 @@ async function buildWorkflowTrace(rootId) {
         instance = self.subject
         latest = instance.latest_agent_instance_version
 
+
+        self.task_trace_view = TaskTraceView(subject=self.subject, parent=self)
+
+        from server.models.tasks.agent_task_run import AgentTaskRun as _Run
+        _child_ids = list(_Run.objects.filter(agent_instance_version__agent_instance=instance).values_list('taskrun_subtask_references', flat=True)) \
+            + list(_Run.objects.filter(agent_instance_version__agent_instance=instance).values_list('taskrun_result_references', flat=True))
+        _child_ids = [x for x in _child_ids if x is not None]
+        root_calls = instance.agent_task_calls.exclude(id__in=_child_ids).order_by('-created_at')[:50]
+        
         if self.detail_level == 'simple':
             querysets = [(instance.conversation_messages.order_by('created_at'), MessageView)]
         else:
             # Root calls only — children appear recursively inside TaskRunView.
             # A root call is any call NOT referenced as a subtask or result-ref
             # by any TaskRun belonging to this instance.
-            from server.models.tasks.agent_task_run import AgentTaskRun as _Run
-            _child_ids = list(
-                _Run.objects.filter(agent_instance_version__agent_instance=instance)
-                .values_list('taskrun_subtask_references', flat=True)
-            ) + list(
-                _Run.objects.filter(agent_instance_version__agent_instance=instance)
-                .values_list('taskrun_result_references', flat=True)
-            )
-            _child_ids = [x for x in _child_ids if x is not None]
-            root_calls = instance.agent_task_calls.exclude(
-                id__in=_child_ids
-            ).order_by('-created_at')[:100]
-
+ 
             querysets = [
                 (instance.conversation_messages.order_by('created_at'), MessageView),
                 (instance.queries.order_by('created_at'),               QueryView),
                 (instance.responses.order_by('created_at'),             ResponseView),
-                (root_calls,                                             TaskCallView),
+                (root_calls,                                            TaskCallView),
             ]
             try:
                 from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry

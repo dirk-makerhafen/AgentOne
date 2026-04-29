@@ -20,7 +20,7 @@ class MacOSService(BaseService):
         program_arguments = [python_executable, manage_py_path] + command_args
         program_arguments_xml = "\n".join(f"        <string>{arg}</string>" for arg in program_arguments)
 
-        service_label = f"com.carna.{self.service_name}"
+        service_label = f"com.agentone.{self.service_name}"
         plist_path = f"/Library/LaunchDaemons/{service_label}.plist"
 
         plist_content = f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -74,7 +74,7 @@ class MacOSService(BaseService):
             self.command.stdout.write(self.command.style.ERROR("This command must be run as root or with sudo."))
             return
 
-        service_label = f"com.carna.{self.service_name}"
+        service_label = f"com.agentone.{self.service_name}"
         plist_path = f"/Library/LaunchDaemons/{service_label}.plist"
 
         if not os.path.exists(plist_path):
@@ -103,14 +103,14 @@ class MacOSService(BaseService):
             self.command.stdout.write(self.command.style.ERROR("This command must be run as root or with sudo."))
             return
 
-        service_label = f"com.carna.{self.service_name}"
+        service_label = f"com.agentone.{self.service_name}"
         try:
             subprocess.run(['launchctl', 'start', service_label], check=True, capture_output=True)
             self.command.stdout.write(self.command.style.SUCCESS("Service started successfully."))
         except subprocess.CalledProcessError as e:
             self.command.stdout.write(self.command.style.ERROR(f"Failed to start service: {e}"))
             self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))
-            self.command.stdout.write(self.command.style.WARNING("Is the service installed? Try 'launchctl list | grep carna'"))
+            self.command.stdout.write(self.command.style.WARNING("Is the service installed? Try 'launchctl list | grep agentone'"))
 
     def stop(self, *args, **kwargs):
         import os
@@ -120,20 +120,20 @@ class MacOSService(BaseService):
             self.command.stdout.write(self.command.style.ERROR("This command must be run as root or with sudo."))
             return
 
-        service_label = f"com.carna.{self.service_name}"
+        service_label = f"com.agentone.{self.service_name}"
         try:
             subprocess.run(['launchctl', 'stop', service_label], check=True, capture_output=True)
             self.command.stdout.write(self.command.style.SUCCESS("Service stopped successfully."))
         except subprocess.CalledProcessError as e:
             self.command.stdout.write(self.command.style.ERROR(f"Failed to stop service: {e}"))
             self.command.stdout.write(self.command.style.ERROR(f"Stderr: {e.stderr.decode()}"))
-            self.command.stdout.write(self.command.style.WARNING("Is the service running? Try 'launchctl list | grep carna'"))
+            self.command.stdout.write(self.command.style.WARNING("Is the service running? Try 'launchctl list | grep agentone'"))
 
     def status(self, *args, **kwargs):
         import subprocess
         self.command.stdout.write(self.command.style.SUCCESS(f"--- Getting status for {self.display_name} service ---"))
 
-        service_label = f"com.carna.{self.service_name}"
+        service_label = f"com.agentone.{self.service_name}"
         try:
             result = subprocess.run(['launchctl', 'list'], capture_output=True, text=True, check=True)
             service_found = False

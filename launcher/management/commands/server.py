@@ -14,7 +14,7 @@ NAME = "AgentOne"
 
 
 class Command(BaseCommand):
-    help = "Manages the Carna server application (setup, run, services)."
+    help = "Manages the AgentOne server application (setup, run, services)."
 
     def add_arguments(self, parser):
         subparsers = parser.add_subparsers(dest="subcommand", required=True, help="Available subcommands")
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         from django.contrib.auth import get_user_model
         from django.core.management import call_command
 
-        self.stdout.write(self.style.SUCCESS("--- Carna Server Setup ---"))
+        self.stdout.write(self.style.SUCCESS("--- AgentOne Server Setup ---"))
         config_path = os.path.join(settings.BASE_DIR, 'config', 'settings_local.py')
         config = self._read_local_config(config_path)
 
@@ -157,9 +157,9 @@ class Command(BaseCommand):
         self.stdout.write(f"Type {self.style.ERROR('.exit')} and press Enter to quit.")
         log_level = "DEBUG"
         commands = {
-            "daphne": ['daphne', '-b', listen_address, "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem", 'config.asgi:application'],
+            "daphne":        ['daphne', '-b', listen_address, "-e", "tcp:8003", "-b", "0.0.0.0", "-p","8002", "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem", 'config.asgi:application'],
             "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '2'],
-            "celery_beat": ['celery', '-A', 'config', 'beat', '-l', log_level]
+            "celery_beat":   ['celery', '-A', 'config', 'beat',   '-l', log_level]
         }
 
         mdns_thread = Thread(target=self.run_zeroconf, daemon=True)
@@ -217,8 +217,8 @@ class Command(BaseCommand):
         from launcher.services.windows import WindowsService
 
         action = options["action"]
-        service_name = "carna_server"
-        display_name = "Carna Server"
+        service_name = "agentone_server"
+        display_name = "AgentOne Server"
 
         system = platform.system()
         service_manager = None

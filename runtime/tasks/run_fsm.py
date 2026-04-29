@@ -1,4 +1,5 @@
 from __future__ import annotations
+from django.utils import timezone
 from server.models.enums.task_enums import TaskRunStatus
  
  
@@ -117,7 +118,12 @@ class TaskRunStateMachine:
         )
         if not succeeded:
             succeeded = TaskRunStateMachine.transition(
-                run_id, TaskRunStatus.ACTIVE, TaskRunStatus.SUCCESS
+                run_id = run_id,
+                from_status = TaskRunStatus.ACTIVE, 
+                to_status = TaskRunStatus.SUCCESS,
+                extra = { 
+                    "ended_at": timezone.now()
+                },
             )
         return succeeded
  
@@ -133,6 +139,11 @@ class TaskRunStateMachine:
         )
         if not failed:
             failed = TaskRunStateMachine.transition(
-                run_id, TaskRunStatus.ACTIVE, TaskRunStatus.FAILURE
+                run_id = run_id, 
+                from_status = TaskRunStatus.ACTIVE, 
+                to_status = TaskRunStatus.FAILURE, 
+                extra = { 
+                    "ended_at": timezone.now()
+                },
             )
         return failed

@@ -9,8 +9,8 @@ from django.apps import apps
 
 
 class BaseModel(DirtyFieldsMixin, models.Model):
-    created_at = models.DateTimeField(db_index=True, editable=False)
-    updated_at = models.DateTimeField(editable=False)
+    created_at = models.DateTimeField(db_index=True, editable=False, auto_now_add=True)
+    updated_at = models.DateTimeField(editable=False, auto_now=True)
     raw_data = models.TextField(max_length=100 * 1024 * 1024, default='', blank=True)
 
     # Forking and Data Deduplication fields

@@ -12,6 +12,7 @@ ALLOWED_HOSTS = ["*"]
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 99*24*3600
+
 '''
 DATABASES = {
     'default': {
@@ -41,9 +42,10 @@ CHANNEL_LAYERS = {
         },
     }
 }
+
 INSTALLED_APPS = (
     'tools.builtin_filesystem',
-
+    'corsheaders',
     'config',
     'server',
     'launcher',
@@ -70,7 +72,7 @@ CELERYD_PREFETCH_COUNT =1
 CELERY_BEAT_SCHEDULE = {
     'agentone-scheduler': {
         'task': 'tasks.tick_scheduler',
-        'schedule': 10,  # seconds
+        'schedule': 5,  # seconds
     },
 }
 
@@ -83,6 +85,8 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 )
 
 TEMPLATES = [
