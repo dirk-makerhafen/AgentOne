@@ -1,48 +1,89 @@
 from __future__ import annotations
-from functools import wraps
-import inspect
-import json
-from pathlib import Path
-import random
-import traceback
-from typing import List, Any, Dict, Optional, Type, Set
-from registry.profile import Profile
-from registry.sub_agents import Subagents
-import re
-import shlex
+from typing import List, Any, Dict
 import ast
-from runtime.tasks.bound_agent_function import BoundAgentFunction
-from runtime.context_manager import RuntimeContextTracker
-from server.models.tasks.agent_task_definition import AgentTaskDefinition
-from server.models.queries.query_message_part import QueryMessagePart
-from server.models.enums.message_enums import MessageContentType
-from registry.task_decorators import task, chain, chord, map, group,command
-from server.models.agents.agent_profile import AgentToolCallSyntax
-from server.models.tasks.agent_task_call import AgentTaskCall
-from server.models.tasks.agent_task_run import  AgentTaskRun
-from server.models.conversation_message_part import ConversationMessagePart
-from server.models.queries.query import Query, QueryAvailableTool, QueryStatus
-from server.models.queries.response import Response, ResponseStatus
-
-from server.models.content import GenericContent
-
-from registry.agent_registry import AgentRegistry
-from server.models.agents.agent_instance_version import AgentInstanceVersion
-from server.models.agents.agent import Agent
-from server.models.agents.agent_version import AgentVersion, AgentVersionSubAgentRelation
-from registry.profile import Profile
-from server.models.content import GenericContent
-from registry.utils import get_import_strings
-
+from runtime.agents.bound_task import BoundTask
+from server.models.agents.agent import AgentModel
+from server.models.agents.agent_instance import InstanceModel
+from server.models.agents.agent_version import AgentVersionModel
+from server.models.agents.agent_instance_version import InstanceVersionModel
 from server.models.conversation_message import ConversationMessage
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from server.models.agents.agent_instance_version import AgentInstanceVersion
-    from server.models.agents.agent_instance import AgentInstance
-    from server.models.agents.agent_version import AgentVersion
+    from server.models.agents.agent_instance_version import InstanceVersionModel
 
 
+class AgentRuntime():
+    def __init__(self, agent_instance_version: InstanceVersionModel ):
+        self.agent:AgentModel = agent_instance_version.agent
+        self.agent_instance:InstanceModel = agent_instance_version.agent_instance
+        self.agent_instance_version:InstanceVersionModel = agent_instance_version
+        self.agent_version: AgentVersionModel = agent_instance_version.agent_version
+
+    def __getattribute__(self, name: str) -> Any:
+        try:
+            return object.__getattribute__(self, name)
+        except Exception as e:
+            task = object.__getattribute__(self, "all_tasks")(filter=dict(name=name)).first()
+            if task:
+                return BoundTask(self, task)
+            raise Exception(f"Task '{name}' not found in {self}")
+
+    def all_tasks(self, filter:Dict={}):
+        return self.tasks().filter(**filter).union(self.tools().filter(**filter)).union(self.commands().filter(**filter)).union(self.skills().filter(**filter))
+
+    def tasks(self):
+        return self.agent.latest_agent_version.tasks()
+
+    def tools(self):
+        return  self.agent.latest_agent_version.tools()
+
+    def commands(self):
+        return  self.agent.latest_agent_version.commands()
+
+    def skills(self):
+        return  self.agent.latest_agent_version.skills()
+
+    def add_user_message(self,  message: str|None = None, parts: List[Dict]|None = None):
+        if parts is None and message is not None:
+            parts = [{"content": message, "type": "TEXT"}]
+        if not parts:
+            raise Exception("No message or message parts provided")
+        
+        conversation_msg = ConversationMessage.objects.create(role = "user", agent_instance_version = self.agent_instance_version)
+        if parts[0] and parts[0].get("content", [None,])[0] == "!": # might be command
+            cmd = parts[0].get("content", [None,]).split(None,1)[0][1:].strip()  # Get command without '!'
+            task_function = None
+            print("CMD", cmd)
+            taskdefinition = self.commands().filter(trigger=cmd).first()
+            if not taskdefinition:
+                taskdefinition = self.commands().filter(name=cmd).first()
+            if not taskdefinition:
+                taskdefinition = self.tools().filter(name=cmd).first()
+            if not taskdefinition:
+                taskdefinition = self.tasks().filter(name=cmd).first()
+
+            if taskdefinition:
+                task_function = self.__getattribute__(taskdefinition.name)
+                print("task_function", task_function,  taskdefinition.name, task_function, taskdefinition.path)
+            if task_function:
+
+                full_cmd_str = "".join([part["content"] for part in parts]).strip() if parts else ""
+                cmd_payload = full_cmd_str[1+len(cmd):].strip()
+                # Safely parse arguments and keyword arguments
+                _payload_ast_tree = ast.parse(f"f({cmd_payload})")
+                call = _payload_ast_tree.body[0].value if _payload_ast_tree.body else None
+                args = [ast.literal_eval(arg) for arg in call.args] if call else []
+                kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords} if call else {}
+                return self.handle_user_command.delay(conversation_msg, cmd, cmdargs = args, cmdkwargs = kwargs)
+
+            print("NOT TASK!")
+        for part in parts:
+            conversation_msg.add_part(part["content"])
+        return self.handle_chat_message.delay(conversation_message=conversation_msg)
+
+
+'''
 class BaseAgent():
     """
     Base class for all agent definitions.
@@ -75,7 +116,7 @@ class BaseAgent():
                 self.agent = Agent.objects.get(name=self.__class__.__name__)
             if not self.agent_version:
                 self.agent_version = self.agent.agent_versions.order_by("-version_number").first()
-        
+
             parent_instance_version = self.parent.agent_instance_version if self.parent else None
 
             self.is_registered = getattr(self.__class__, "is_registered", False)
@@ -88,7 +129,7 @@ class BaseAgent():
                 self.is_registered = not (source_changed or python_dependencies_changed)
  
             if not self.is_registered:
-                raise Exception("Only registerd classed can be inititalized")
+                raise Exception(f"Only registered classed can be inititalized, failed {self}")
             
             self.agent_instance_version = self.agent_version.get_or_create_instance(
                 name = name,
@@ -191,13 +232,13 @@ class BaseAgent():
                 command_tool_call = task_function.delay(*args, **kwargs)
                 
                 conversation_msg.tool_calls.add(command_tool_call)
-                return self._handle_command_response.delay(command_response=command_tool_call)
+                return self.handle_command_response.delay(command_response=command_tool_call)
         
         for part in parts:
             conversation_msg.add_part(part["content"])
         return conversation_msg
 
-
+    @task()
     def _create_query(self):
         from server.models.queries.query import Query
         from server.models.queries.query_message import QueryMessage
@@ -251,7 +292,7 @@ class BaseAgent():
                 )
 
         return query
-    
+
     @task(description="Send query to LLM provider")
     def _execute_query(self, query: Query):
         from server.models.queries.response import Response
@@ -412,7 +453,7 @@ class BaseAgent():
             raise
 
     @task()
-    def _handle_command_response(self, command_response ):
+    def handle_command_response(self, command_response ):
         conv_msg = ConversationMessage.objects.create(role = "assistant", agent_instance_version = self.agent_instance_version)
         ConversationMessagePart.objects.create(
             message=conv_msg,
@@ -438,109 +479,5 @@ class BaseAgent():
             r += f"\nMessage received:{message}"
         return r
 
-
-
-
-
-
-
-
-
-
-
-
-
-    '''
-    def spawn_subagent_session(self, subagent_name: str, instance_name: Optional[str] = None, **kwargs) -> 'BaseAgent':
-        """
-        Spawns a new, isolated instance of a declared subagent type for delegation.
-        The subagent must be declared with `create='agent'` or `create='both'`.
-
-        Args:
-            subagent_name: The name of the subagent as declared in `self.subagents`.
-            instance_name: An optional name for this specific spawned instance.
-            kwargs: Additional arguments to pass to the subagent's constructor.
-
-        Returns:
-            The new subagent instance.
-
-        Raises:
-            ValueError: If the subagent is not declared or cannot be spawned by an agent.
-        """
-        for subagent_relations in self.agent_version.subagent_relations.filter(create_option="auto"):
-
-        declaration = self._get_subagent_declarations().get(subagent_name)
-        if not declaration:
-            raise ValueError(f"Subagent '{subagent_name}' not declared in '{self.name}'.")
-
-        if declaration.create_option not in ["agent", "both"]:
-            raise ValueError(f"Subagent '{subagent_name}' cannot be spawned by an agent (create='{declaration.create_option}').")
-
-        # Instantiate the subagent
-        new_subagent_instance = declaration.agent_class(
-            name=instance_name or f"{declaration.agent_class.__name__}-{str(uuid.uuid4())[:4]}",
-            workingdir=self.workingdir, # Inherit working directory
-            parent_agent=self, # Set this agent as the parent
-            _subagent_declaration=declaration, # Store declaration for runtime use
-            **kwargs
-        )
-        # The new instance will register itself with the runtime during its own __init__
-        print(f"Agent '{self.name}' spawned new session for '{declaration.agent_class.__name__}' (instance ID: {new_subagent_instance.instance_id}).")
-        return new_subagent_instance
-
-    def get_subagent_by_instance_name(self, instance_name: str) -> Optional['BaseAgent']:
-        """
-        Retrieves an 'auto' bound subagent instance by its assigned instance_name.
-        This provides direct access to auto-created subagents.
-
-        Args:
-            instance_name: The name given in the Subagent declaration (or inferred).
-
-        Returns:
-            The auto-bound subagent instance, or None if not found or not auto-bound.
-        """
-        # This assumes _setup_subagents has already bound these attributes
-        return getattr(self, instance_name, None)
-
-    def get_active_subagent_sessions(self, subagent_name: Optional[str] = None, requester_is_user: bool = False) -> List['BaseAgent']:
-        """
-        Retrieves a list of active subagent sessions that are visible to the requester.
-
-        Args:
-            subagent_name: Optional. The name of the subagent type to filter by.
-            requester_is_user: If True, filters for sessions visible to the user.
-                               If False (requester is an agent), filters for sessions visible to agents,
-                               including those specifically visible to the 'creator' if this agent is the creator.
-
-        Returns:
-            A list of active subagent instances.
-        """
-        target_declaration: Optional[Subagent] = None
-        agent_class_to_filter: Optional[Type] = None
-
-        if subagent_name:
-            target_declaration = self._get_subagent_declarations().get(subagent_name)
-            if not target_declaration:
-                print(f"Warning: Subagent '{subagent_name}' not declared in '{self.name}'. Cannot filter accurately.")
-                return []
-            agent_class_to_filter = target_declaration.agent_class
-
-        # Determine the visibility filter for the runtime
-        visibility_filter: Literal["agent", "user", "creator", "both"]
-        if requester_is_user:
-            visibility_filter = "user"
-        else:
-            # An agent requesting wants to see what's broadly visible to agents
-            # or what it specifically created. The runtime will handle the 'creator' check.
-            visibility_filter = "agent"
-
-        return _AGENTONE_RUNTIME.get_sessions(
-            agent_class=agent_class_to_filter,
-            requester_agent=self, # Pass self so runtime can check 'creator' visibility
-            visible_to_filter=visibility_filter 
-        )
-
-
+        
         '''
-    
-    

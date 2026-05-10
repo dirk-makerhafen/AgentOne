@@ -4,12 +4,12 @@ from dataclasses import dataclass, field
 from typing import Type, List, Optional, Literal
 
 
-class Profile():
+class Profile_old():
     def __init__(self, name = None, model: str|None = None, thinking:bool|None = None,
                 max_retries: int|None = None, max_task_steps: int|None = None, unattended_steps: int|None = None, max_history_messages: int|None = None, priority: int|None = None,
                 task_prompt: str|None = None, system_prompt: str|None = None,
                 execution_mode: str = 'queue', tool_call_syntax: str = 'default', 
-                extra_settings: dict|None = None, variants: list[Profile]|None = None) -> None:
+                extra_settings: dict|None = None, variants: list[Profile_old]|None = None) -> None:
         self.name = name
         self.model = model
         self.max_retries = max_retries

@@ -4,10 +4,10 @@ from typing import List, Any, Dict, Type, Union
 from django.db import transaction
 from registry.sub_agents import Subagents, Subagent
 from server.models.enums.task_enums import TaskType
-from server.models.agents.agent import Agent
-from server.models.agents.agent_profile import AgentProfile
-from server.models.agents.agent_version import AgentVersion, AgentVersionAvailableTool, AgentVersionSubAgentRelation
-from server.models.tasks.agent_task_definition import AgentTaskDefinition
+from server.models.agents.agent import AgentModel
+from server.models.agents.profile import ProfileModel
+from server.models.agents.agent_version import AgentVersionModel
+from server.models.tasks.task_definition import TaskDefinition
 from registry.profile import Profile
 from registry.task_decorators import TaskDescriptor
 from server.models.content import GenericContent
@@ -15,8 +15,7 @@ from registry.utils import generate_schema_for_function, get_import_strings, get
 
 
 class AgentRegistry():
-    def register(self, agent_cls, recursive=False) -> AgentVersion:
-        from runtime.agents.base_agent import BaseAgent
+    def register(self, agent_cls, recursive=False) -> AgentVersionModel:
 
         print(f'Registering Agent "{agent_cls.__name__}" from definition')
 
@@ -27,11 +26,11 @@ class AgentRegistry():
         raw_tool_defs = [x for x in getattr(agent_cls, "tools", [])] # This list can contain TaskDescriptor or BaseAgent subclasses
 
         # Map to store AgentVersion for each *imported* agent (subagent or external tool agent)
-        imported_agent_versions_map: Dict[str, AgentVersion] = {} 
+        imported_agent_versions_map: Dict[str, AgentVersionModel] = {} 
 
         # 2. Recursively register subagents
         # This ensures they are up-to-date and we get their latest AgentVersion objects.
-        subagent_versions: List[AgentVersion] = []
+        subagent_versions: List[AgentVersionModel] = []
         if recursive:
             for key, subagent in subagent_defs.all().items():
                 registered_sub_version = subagent.agent_class.register(recursive=True)
@@ -40,16 +39,16 @@ class AgentRegistry():
 
         # Register external tool agents (BaseAgent subclasses) declared in .tools list
         # This is for tool agents that are separate BaseAgent classes, not internal @tool methods.
-        registered_external_tool_agent_versions: List[AgentVersion] = []
+        registered_external_tool_agent_versions: List[AgentVersionModel] = []
         for tool_def_item in raw_tool_defs:
             if isinstance(tool_def_item, BaseAgent): # Check if it's an BaseAgent class
                 registered_tool_version = tool_def_item.register(recursive=True)
                 registered_external_tool_agent_versions.append(registered_tool_version)
                 imported_agent_versions_map[tool_def_item.__name__] = registered_tool_version
 
-        # 3. Prepare kwargs for AgentProfile (removed bare except and used specific get_or_create logic)
-        profile = getattr(agent_cls, "profile", Profile())
-        profile: Profile
+        # 3. Prepare kwargs for Profile (removed bare except and used specific get_or_create logic)
+        profile = getattr(agent_cls, "profile", ProfileModel())
+        profile: ProfileModel
         print("profile.model", profile.model)
         print("raw_tool_defs", raw_tool_defs)
         aimodel = get_ai_model(profile.model)
@@ -76,11 +75,11 @@ class AgentRegistry():
         python_dependencies = get_import_strings(source_path, agent_cls.__name__)
 
         with transaction.atomic():
-            profile_obj, created_profile = AgentProfile.objects.get_or_create(**kwargs) 
-            agent, created_agent = Agent.objects.get_or_create(name=agent_cls.__name__, defaults={"description": getattr(agent_cls, "description", ""),})
+            profile_obj, created_profile = ProfileModel.objects.get_or_create(**kwargs) 
+            agent, created_agent = AgentModel.objects.get_or_create(name=agent_cls.__name__, defaults={"description": getattr(agent_cls, "description", ""),})
 
             # Get the latest existing agent version
-            agent_version: AgentVersion = agent.agent_versions.order_by("-version_number").first()
+            agent_version: AgentVersionModel = agent.agent_versions.order_by("-version_number").first()
 
             # Determine if current agent's source/dependencies have changed
             source_changed = not agent_version or agent_version.source_path != source_path or ( not agent_version.source_code or agent_version.source_code.content != source_code)
@@ -135,7 +134,7 @@ class AgentRegistry():
             if not is_registered:
                 print("Agent needs re-registration or is new.")
 
-                new_agent_version = AgentVersion.objects.create(
+                new_agent_version = AgentVersionModel.objects.create(
                     agent=agent,
                     profile=profile_obj,
                     source_path = source_path,
@@ -148,13 +147,13 @@ class AgentRegistry():
 
                 for key, subagent in subagent_defs.all().items():
                     registered_sub_version = imported_agent_versions_map[subagent.agent_class.__name__]
-                    AgentVersionSubAgentRelation.objects.get_or_create(
+                    '''AgentVersionSubAgentRelation.objects.get_or_create(
                         parent_agent_version = new_agent_version,
                         sub_agent_version = registered_sub_version,
                         create_option = subagent.create_option,
                         visible_to = subagent.visible_to,
                         instance_name = subagent.instance_name if subagent.instance_name else key,
-                    )
+                    )'''
                 
                 agent_version = new_agent_version # Update agent_version to the newly created one
             else:
@@ -192,21 +191,21 @@ class AgentRegistry():
                 existing_tasks_filter_kwargs["priority"] = priority
             if thinking := task_def.get("thinking", None) is not None:
                 existing_tasks_filter_kwargs["thinking"] = thinking
-            task_obj, created = AgentTaskDefinition.objects.get_or_create(
+            task_obj, created = TaskDefinition.objects.get_or_create(
                 **existing_tasks_filter_kwargs, # Use the same normalized fields for lookup
             )
             task_objs.append(task_obj)
 
             if task_def["task_type"] == "TOOL":
                 print("TOOOOOOOOOLLLL", name)
-                AgentVersionAvailableTool.objects.get_or_create(
+                '''AgentVersionAvailableTool.objects.get_or_create(
                     parent_agent_version = agent_version,
                     tool_agent_version = agent_version,
                     task_definition = task_obj
-                )
+                )'''
         return task_objs
 
-    def _register_available_tools(self, agent_cls, new_agent_version: AgentVersion, imported_agent_versions_map: Dict[str, AgentVersion]):
+    def _register_available_tools(self, agent_cls, new_agent_version: AgentVersionModel, imported_agent_versions_map: Dict[str, AgentVersionModel]):
         from runtime.agents.base_agent import BaseAgent
 
         # Clear existing available tools for this version to ensure only current ones are linked
@@ -237,12 +236,14 @@ class AgentRegistry():
                 raise Exception(f"Unknown tool type {tool_item}")
             
         # Create or update AgentVersionAvailableTool entries
+        '''
         for tool_agent_version, task_definition in tools_to_link:
             AgentVersionAvailableTool.objects.get_or_create(
                 parent_agent_version = new_agent_version,
                 tool_agent_version = tool_agent_version,
                 task_definition = task_definition
             )
+        '''
             
     def _read_task_definitions(self, agent_cls):
         defs = {}

@@ -2,14 +2,14 @@ from django.db.models.signals import post_save, pre_delete, m2m_changed, pre_sav
 from django.dispatch import receiver
 from celery import chain
 
-from server.models.agents.agent_version import AgentVersion
+from server.models.agents.agent_version import AgentVersionModel
 #from core.logging import log_to_clients
 from server.models.system import System
 
 #@receiver(m2m_changed, sender=AgentVersion.available_tools.through)
 def handle_agent_tool_change(sender, instance, action, reverse, model, pk_set, **kwargs):
     return
-    if not isinstance(instance, AgentVersion):
+    if not isinstance(instance, AgentVersionModel):
         return
 
     changed_tools = ToolDefinition.objects.filter(pk__in=pk_set)
@@ -18,7 +18,7 @@ def handle_agent_tool_change(sender, instance, action, reverse, model, pk_set, *
         return
 
     agent_owners = instance.owners.all()
-    agent_instances = AgentVersion.objects.filter(agent=instance)
+    agent_instances = AgentVersionModel.objects.filter(agent=instance)
 
     for tool_def in dedicated_tools:
         if action == "post_add":
@@ -41,19 +41,20 @@ def handle_agent_tool_change(sender, instance, action, reverse, model, pk_set, *
                     #log_to_clients(f"  - Queueing uninstallation for instance {agent_instance.pk} (Installation PK: {installation.pk})", level='info', users=agent_owners)
                     uninstall_tool.delay(installation.pk)
 
-@receiver(pre_save, sender=AgentVersion)
+@receiver(pre_save, sender=AgentVersionModel)
 def store_old_system_on_instance(sender, instance, **kwargs):
     if instance.pk:
         try:
-            old_instance = AgentVersion.objects.get(pk=instance.pk)
+            old_instance = AgentVersionModel.objects.get(pk=instance.pk)
             instance._old_system_id = old_instance.system_id
-        except AgentVersion.DoesNotExist:
+        except AgentVersionModel.DoesNotExist:
             instance._old_system_id = None
     else:
         instance._old_system_id = None
 
-@receiver(post_save, sender=AgentVersion)
+@receiver(post_save, sender=AgentVersionModel)
 def manage_dedicated_tools_on_save(sender, instance, created, **kwargs):
+    return
     agent_owners = instance.agent.owners.all()
     if created:
         agent = instance.agent
@@ -98,7 +99,7 @@ def manage_dedicated_tools_on_save(sender, instance, created, **kwargs):
                     workflow = chain(install_tool.s(installation.pk), start_tool.s(installation.pk))
                     workflow.delay()
 
-@receiver(pre_delete, sender=AgentVersion)
+@receiver(pre_delete, sender=AgentVersionModel)
 def cleanup_references(sender, instance, **kwargs):
     return
     #if hasattr(instance, "fork_origin"):

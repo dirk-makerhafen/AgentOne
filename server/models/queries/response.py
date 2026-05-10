@@ -12,8 +12,8 @@ class ResponseStatus(models.TextChoices):
 class Response(BaseModel):
     query          = models.OneToOneField("server.Query"     , null=True , on_delete=models.CASCADE, related_name="related_response")
     aimodel        = models.ForeignKey("server.AiModel"   , null=False, on_delete=models.CASCADE, related_name="related_responses")
-    agent_instance_version = models.ForeignKey("server.AgentInstanceVersion", on_delete=models.CASCADE, related_name="related_response")
-    agent_profile  = models.ForeignKey("server.AgentProfile" , null=True,  on_delete=models.CASCADE, related_name='related_responses', default=None, blank=True)
+    agent_instance_version = models.ForeignKey("server.InstanceVersionModel", on_delete=models.CASCADE, related_name="related_response")
+    agent_profile  = models.ForeignKey("server.ProfileModel" , null=True,  on_delete=models.CASCADE, related_name='related_responses', default=None, blank=True)
     tool_calls     = models.ManyToManyField("server.AgentTaskCall",related_name='related_responses')
 
     status = EnumField(ResponseStatus, default=ResponseStatus.WAITING)

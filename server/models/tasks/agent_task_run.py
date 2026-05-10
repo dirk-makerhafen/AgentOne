@@ -8,11 +8,11 @@ import traceback
 from types import GeneratorType
 from django.db import models
 from runtime.rate_limiter import RateLimitError
-from server.models.tasks.agent_task_definition import AgentTaskDefinition
+from server.models.tasks.task_definition import TaskDefinition
 from server.models.content import GenericContent
 from runtime.context_manager import ContextTracker
 from server.models.enums.task_enums import TaskRunStatus
-from server.models.agents.agent_instance_version import AgentInstanceVersion
+from server.models.agents.agent_instance_version import InstanceVersionModel
 from server.models.conversation_message import ConversationMessage
 from server.models.queries.query import Query
 from server.models.queries.response import Response
@@ -36,9 +36,9 @@ class AgentTaskRun(BaseModel):
     """Single execution attempt"""
     agent_task_call       = models.ForeignKey("AgentTaskCall",         on_delete=models.CASCADE, related_name="related_agent_task_runs")
     agent_task_instance   = models.ForeignKey("AgentTaskInstance",     on_delete=models.CASCADE, related_name="related_agent_task_runs")
-    agent_task_definition = models.ForeignKey("AgentTaskDefinition",   on_delete=models.CASCADE, related_name="related_agent_task_runs")
-    agent_instance_version = models.ForeignKey(AgentInstanceVersion, on_delete=models.CASCADE, related_name="related_agent_task_runs")
-    agent_profile          = models.ForeignKey("server.AgentProfile",  on_delete=models.SET_NULL, related_name="related_agent_task_runs", null=True, blank=True) # will be random select if not given
+    agent_task_definition = models.ForeignKey("TaskDefinition",   on_delete=models.CASCADE, related_name="related_agent_task_runs")
+    agent_instance_version = models.ForeignKey(InstanceVersionModel, on_delete=models.CASCADE, related_name="related_agent_task_runs")
+    agent_profile          = models.ForeignKey("server.ProfileModel",  on_delete=models.SET_NULL, related_name="related_agent_task_runs", null=True, blank=True) # will be random select if not given
 
     # ARGUMENTS - Created by call by mergeing partial args/kwargs of instance with call specific arguments
     arguments_json = models.JSONField(default=dict, null=False)
@@ -80,7 +80,7 @@ class AgentTaskRun(BaseModel):
         kwargs = kwargs if kwargs else {}
 
         arguments_json, ref_pks = AgentTaskRun._create_run_arguments_json(args=args, kwargs=kwargs)
-
+        print("IN CREATE")
         taskrun = AgentTaskRun.objects.create(
             agent_task_call = agent_task_call,
             agent_task_instance = agent_task_instance,
@@ -104,10 +104,12 @@ class AgentTaskRun(BaseModel):
         )
         if ref_pks:
             taskrun.taskrun_arg_references.set(ref_pks)
-
+        print("TASKRUN", taskrun)
+        
         return taskrun
 
     def apply_async(self):
+        print("TASKRUN apply_async")
         query = AgentTaskRun.objects.filter(pk = self.pk, status = TaskRunStatus.NEW)
         if 0 == query.update(status = TaskRunStatus.QUEUED):
             return # was not queued, maybe some race condition
@@ -141,6 +143,7 @@ class AgentTaskRun(BaseModel):
                     # normal executions            
                     bound_agent_function = getattr(runtime, self.agent_task_definition.name)
                     args, kwargs = self._resolve_run_arguments(timeout=0)
+                    print("args, kwargs", args, kwargs)
                     result = bound_agent_function.call(*args, **kwargs)
 
                 self.result_json, ref_pks = self._create_result_json(result=result)
@@ -313,4 +316,7 @@ class AgentTaskRun(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"AgentTaskRun[{self.agent_task_definition.name if self.agent_task_definition else None}]#{self.pk}: {self.status}"
+        try:
+            return f"AgentTaskRun[{self.agent_task_definition.name if hasattr(self, 'agent_task_definition') else None}]#{self.pk}: {self.status}"
+        except:
+            return f"AgentTaskRun[{self}]#{self.pk}: {self.status}"

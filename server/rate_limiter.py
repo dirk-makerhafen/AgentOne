@@ -1,6 +1,6 @@
 from django.core.cache import cache
 from django.utils import timezone
-from server.models.agents.agent_version import AgentVersion
+from server.models.agents.agent_version import AgentVersionModel
 
 class RateLimitExceeded(Exception):
     """Custom exception raised when an agent instance exceeds its rate limit."""
@@ -22,7 +22,7 @@ class AgentRateLimiter:
         now = timezone.now()
         return f"{self.CACHE_KEY_PREFIX}:{agent_instance_pk}:{limit_type}:{now.year}-{now.month}-{now.day}-{now.hour}-{now.minute}"
 
-    def check_and_record_usage(self, agent_instance: AgentVersion, requests_cost: int = 1, tokens_cost: int = 0):
+    def check_and_record_usage(self, agent_instance: AgentVersionModel, requests_cost: int = 1, tokens_cost: int = 0):
         """
         Atomically checks if the agent instance is within its rate limits for the current minute.
         If within limits, records the usage. If limits are exceeded, raises RateLimitExceeded.

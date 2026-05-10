@@ -1,6 +1,6 @@
 from __future__ import annotations
 from ui.lib.model_view import ModelView
-from server.models.agents.agent_version import AgentVersion, AgentVersionAvailableTool
+from server.models.agents.agent_version import AgentVersionModel
 from ui.lib.queryset_view import QuerySetView
 
 
@@ -32,7 +32,7 @@ class AvailableToolView(ModelView):
         </div>
     """
 
-    def __init__(self, subject: AgentVersionAvailableTool, parent, **kwargs):
+    def __init__(self, subject, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.is_schema_hidden = True
 
@@ -57,7 +57,7 @@ class ToolsPanelView(ModelView):
         </div>
     """
 
-    def __init__(self, subject: AgentVersion, parent, **kwargs):
+    def __init__(self, subject: AgentVersionModel, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.tools_view = QuerySetView(
             subject=subject.available_tools.all(),

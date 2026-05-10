@@ -1,9 +1,9 @@
 from django.contrib import admin
-from server.models.tasks.agent_task_definition import AgentTaskDefinition
+from server.models.tasks.task_definition import TaskDefinition
 
-@admin.register(AgentTaskDefinition)
-class AgentTaskDefinitionAdmin(admin.ModelAdmin):
-    list_display = ("id", "created_at",  'task_type', 'name', 'requires_approval', 'max_retries', 'retry_delay',  'trigger' )
+@admin.register(TaskDefinition)
+class TaskDefinitionAdmin(admin.ModelAdmin):
+    list_display = ("id", "created_at",  'task_type', 'name', 'requires_approval', 'max_retries', 'retry_delay',  'trigger',"path","parent_skill", "parent_agent", "parent_project" )
     list_display_links = ("id",)
     list_filter = ('task_type', 'requires_approval', 'created_at', "trigger", "name")
     search_fields = ('name', 'description', 'task_type')

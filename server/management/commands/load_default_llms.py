@@ -50,6 +50,7 @@ class Command(BaseCommand):
         g(api_provider = ollama, name = "gemma3:1b" , family = "gemma3", is_cloud = False, vision = True, billion_parameters = 1)
         g(api_provider = ollama, name = "gemma3:4b" , family = "gemma3", is_cloud = False, vision = True, billion_parameters = 4)
         g(api_provider = ollama, name = "gemma3:27b", family = "gemma3", is_cloud = False, vision = True, billion_parameters = 27)
+        g(api_provider = ollama, name = "gemma4:26b", family = "gemma6", is_cloud = False, vision = True, billion_parameters = 27)
 
 
         google = ApiProvider.objects.get(name="google")

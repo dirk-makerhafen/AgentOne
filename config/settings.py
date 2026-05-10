@@ -26,7 +26,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'HOST': 'localhost',
         'PORT': '3306',
-        "NAME": "AgentOne_v2",
+        "NAME": "AgentOne_v3",
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
@@ -52,6 +52,7 @@ INSTALLED_APPS = (
     'registry',
     'tools',
     'ui',
+    'sortedm2m',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from django.db import models
+from runtime.agents.instance import Instance
 from server.models.queries.query import Query
 from server.models.queries.response import Response
 
@@ -9,39 +10,40 @@ from django.core.exceptions import ValidationError
 
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from server.models.agents.agent_instance_version import AgentInstanceVersion
+    from server.models.agents.agent_instance_version import InstanceVersionModel
     from server.models.tasks.agent_task_instance import AgentTaskInstance
-    from server.models.agents.agent_version import AgentVersion
-    from server.models.agents.agent_profile import AgentProfile
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.agents.profile import ProfileModel
 
-class AgentInstance(BaseModel):
-    agent                 = models.ForeignKey("server.Agent"       , on_delete=models.CASCADE,  related_name="related_agent_instances")
+class InstanceModel(BaseModel):
+    agent = models.ForeignKey("server.AgentModel", on_delete=models.CASCADE,  related_name="related_agent_instances")
     name  = models.CharField(max_length=255)
-    created_by   = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_agent_instances", default=None, null=True, blank=True)
+    created_by = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_agent_instances", default=None, null=True, blank=True)
+    latest_instance_version = models.ForeignKey("server.InstanceVersionModel", default=None, null=True, on_delete=models.CASCADE, related_name='related_newest_version')# for */someproject/.agentone/skills/ , null for global skill in ~/.agentone/skills
 
     @property
     def instance_home(self):
         if self.agent and self.agent.pk and self.pk:
             return f"/Users/Dirk/ai/AgentHome/agent:{self.agent.pk}/instance:{self.pk}"
 
-    @property
-    def tools(self):
-        return self.agent_version.tools
+    #@property
+    #def tools(self):
+    #    return self.agent_version.tools
 
-    @property
-    def agent_version(self) -> "AgentVersion":
-        agent_version = self.latest_agent_instance_version.agent_version
-        if agent_version:
-            return agent_version
-        return self.agent.related_agent_versions.last() # pyright: ignore[reportAttributeAccessIssue]
+    #@property
+    #def agent_version(self) -> "AgentVersion":
+    #    agent_version = self.latest_instance_version.agent_version
+    #    if agent_version:
+    #        return agent_version
+    #    return self.agent.related_agent_versions.last() # pyright: ignore[reportAttributeAccessIssue]
 
-    @property
-    def latest_agent_instance_version(self) -> AgentInstanceVersion:
-        return self.related_agent_instance_versions.last() # pyright: ignore[reportAttributeAccessIssue]
+    #@property
+    #def latest_instance_version(self) -> AgentInstanceVersion:
+    #    return self.related_agent_instance_versions.last() # pyright: ignore[reportAttributeAccessIssue]
 
-    @property
-    def agent_instance_versions(self) -> list[AgentInstanceVersion]:
-        return self.related_agent_instance_versions # pyright: ignore[reportAttributeAccessIssue]
+    #@property
+    #def agent_instance_versions(self) -> list[AgentInstanceVersion]:
+    #    return self.related_agent_instance_versions # pyright: ignore[reportAttributeAccessIssue]
 
     @property
     def conversation_messages(self):
@@ -55,13 +57,17 @@ class AgentInstance(BaseModel):
     def responses(self):
         return Response.objects.filter(agent_instance_version__agent_instance=self)
     
-    @property
-    def agent_task_instances(self):
-        return self.latest_agent_instance_version.related_agent_task_instances
+    def get_runtime(self):
+        return Instance(instance_model=self)
+    
 
-    @property
-    def agent_task_calls(self):
-        return self.related_agent_task_calls # pyright: ignore[reportAttributeAccessIssue]
+    #@property
+    #def agent_task_instances(self):
+    ##    return self.latest_agent_instance_version.related_agent_task_instances
+
+    #@property
+    #def agent_task_calls(self):
+    #    return self.related_agent_task_calls # pyright: ignore[reportAttributeAccessIssue]
 
     def save(self, *args, **kwargs):
         if self.pk:

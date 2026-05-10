@@ -1,15 +1,15 @@
 from __future__ import annotations
-from server.models.agents.agent_instance import AgentInstance
+from server.models.agents.agent_instance import InstanceModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_instance import AgentTaskInstance
-from server.models.tasks.agent_task_definition import AgentTaskDefinition
+from server.models.tasks.task_definition import TaskDefinition
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.lib.queryset_view import QuerySetView
 from ui.lib.model_view import ModelView
 
 
 class TaskDefinitionView(ModelView):
-    """One-row summary of an AgentTaskDefinition."""
+    """One-row summary of an TaskDefinition."""
     DOM_ELEMENT_CLASS = "TaskDefinitionView task-def-row"
 
     TEMPLATE_STR = """
@@ -85,41 +85,76 @@ class TasksPanelView(ModelView):
 
     TEMPLATE_STR = """
         <div class="panel-section">
+            <div class="panel-section-header">Commands</div>
+            {{ pyview.commands_view.render() }}
+        </div>
+        
+        <div class="panel-section">
+            <div class="panel-section-header">Tools</div>
+            {{ pyview.tools_view.render() }}
+        </div>
+        
+        <div class="panel-section">
+            <div class="panel-section-header">Tasks</div>
+            {{ pyview.tasks_view.render() }}
+        </div>
+        
+        <div class="panel-section">
+            <div class="panel-section-header">Skills</div>
+            {{ pyview.skills_view.render() }}
+        </div>      
+
+        <div class="panel-section">
             <div class="panel-section-header">
                 Recent task calls
                 <span class="text-muted small">(last 20)</span>
             </div>
-            {{ pyview.task_calls_view.render() }}
-        </div>
-
-        <div class="panel-section">
-            <div class="panel-section-header">Task definitions</div>
-            {{ pyview.task_definitions_view.render() }}
-        </div>
-
-        <div class="panel-section">
-            <div class="panel-section-header">Task instances</div>
-            {{ pyview.task_instances_view.render() }}
+            
         </div>
     """
-
-    def __init__(self, subject: AgentInstance, parent, **kwargs):
+    CSS_STR = '''
+        .panel-section-header {
+            font-weight: bold;
+        }
+    '''
+    def __init__(self, subject: InstanceModel, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        '''
+        {{ pyview.task_calls_view.render() }}
         self.task_calls_view = QuerySetView(
             subject=subject.agent_task_calls.order_by("-id")[:20],
             parent=self,
             item_class=TaskCallRowView,
         )
-        self.task_definitions_view = QuerySetView(
-            subject=subject.agent_version.task_definitions.all(),
+        '''
+        self.tasks_view = QuerySetView(
+            subject=subject.latest_instance_version.agent_version.tasks(),
             parent=self,
             item_class=TaskDefinitionView,
         )
+        self.commands_view = QuerySetView(
+            subject=subject.latest_instance_version.agent_version.commands(),
+            parent=self,
+            item_class=TaskDefinitionView,
+        )
+        self.tools_view = QuerySetView(
+            subject=subject.latest_instance_version.agent_version.tools(),
+            parent=self,
+            item_class=TaskDefinitionView,
+        )
+        self.skills_view = QuerySetView(
+            subject=subject.latest_instance_version.agent_version.skills(),
+            parent=self,
+            item_class=TaskDefinitionView,
+        )
+        '''
+        {{ pyview.task_instances_view.render() }}
         self.task_instances_view = QuerySetView(
             subject=subject.agent_task_instances.all(),
             parent=self,
             item_class=TaskInstanceView,
         )
+        '''
 
     def approve(self, call_id: int):
         from runtime.tasks.call_scheduler import CallScheduler

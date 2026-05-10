@@ -1,6 +1,6 @@
 from __future__ import annotations
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from server.models.agents.agent_instance_version import AgentInstanceVersion
+from server.models.agents.agent_instance_version import InstanceVersionModel
 from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
 from ui.lib.model_view import ModelView
 
@@ -111,7 +111,7 @@ class FilesystemHeaderView(ModelView):
         </div>
     """
 
-    def __init__(self, subject: AgentInstanceVersion, parent, **kwargs):
+    def __init__(self, subject: InstanceVersionModel, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.is_edit_mode = False
 

@@ -106,8 +106,8 @@ class FsLogEntryManager(models.Manager):
 
 
 class FsLogEntry(BaseModel):
-    agent = models.ForeignKey("server.Agent", on_delete=models.CASCADE, related_name='fsLogEntries')
-    agent_instance = models.ForeignKey("server.AgentInstance", on_delete=models.CASCADE, related_name='fsLogEntries')
+    agent = models.ForeignKey("server.AgentModel", on_delete=models.CASCADE, related_name='fsLogEntries')
+    agent_instance = models.ForeignKey("server.InstanceModel", on_delete=models.CASCADE, related_name='fsLogEntries')
     conversationMessage = models.ForeignKey("server.ConversationMessage", on_delete=models.CASCADE, related_name='fsLogEntries', null=True, default=None)
 
     prev_version = models.ForeignKey("self", on_delete=models.CASCADE, related_name='next_versions', null=True, default=None)

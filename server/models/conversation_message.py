@@ -8,7 +8,7 @@ from server.models.content import GenericContent
 
 class ConversationMessage(BaseModel):
     #reference tracking
-    agent_instance_version = models.ForeignKey("server.AgentInstanceVersion", on_delete=models.CASCADE, related_name="related_conversation_messages")
+    agent_instance_version = models.ForeignKey("server.InstanceVersionModel", on_delete=models.CASCADE, related_name="related_conversation_messages")
     query          = models.ForeignKey("server.Query"        , null=True, blank=True, on_delete=models.CASCADE, related_name='related_conversation_messages')
     response       = models.ForeignKey("server.Response"     , null=True, blank=True, on_delete=models.CASCADE, related_name='related_conversation_messages')
     tool_calls     = models.ManyToManyField("server.AgentTaskCall",related_name='related_conversation_messages')

@@ -31,9 +31,9 @@ if TYPE_CHECKING:
 class AgentTaskCall(BaseModel):
     """Specific invocation - equivalent to celery task"""
     agent_task_instance = models.ForeignKey("AgentTaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls")
-    agent_task_definition = models.ForeignKey("AgentTaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls")
-    agent_instance = models.ForeignKey("AgentInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls")
-    agent_instance_version = models.ForeignKey("AgentInstanceVersion", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+    agent_task_definition = models.ForeignKey("TaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+    agent_instance = models.ForeignKey("InstanceModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+    agent_instance_version = models.ForeignKey("InstanceVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
     
     # ARGUMENTS - Call Arguments, will be merged with Instance arguments
     carguments_json = models.JSONField(default=dict, null=False)
@@ -242,4 +242,7 @@ class AgentTaskCall(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"<AgentTaskCall[{self.pk}]# {self.agent_task_definition.name if self.agent_task_definition else None}>"
+        try:
+            return f"<AgentTaskCall[{self.pk}]# {self.agent_task_definition.name if self.agent_task_definition else None}>"
+        except:
+            return f"AgentTaskRun[{self.pk}]#{self.pk}: {self.status}"

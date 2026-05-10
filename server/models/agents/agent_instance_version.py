@@ -1,59 +1,72 @@
-import random
 from django.db import models
-from server.models.agents.agent_profile import AgentProfile
-from server.models.agents.agent_version import AgentVersion
-from server.models.agents.agent_instance import AgentInstance
-from server.models.agents.agent import Agent
+from runtime.agents.instance import Instance
+from server.models.agents.profile import ProfileModel
+from server.models.agents.agent_version import AgentVersionModel
+from server.models.agents.agent_instance import InstanceModel
+from server.models.agents.agent import AgentModel
 
 from server.models.base_model import BaseModel
 from cachetools import LRUCache
 from django.db import models
 from django.core.exceptions import ValidationError
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from server.models.content import GenericContent
 
 AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE = LRUCache(maxsize=1024)
 
-class AgentInstanceVersion(BaseModel):
-    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="related_agent_instance_versions")
-    agent_instance = models.ForeignKey(AgentInstance, on_delete=models.CASCADE, related_name="related_agent_instance_versions")
-    agent_version  = models.ForeignKey(AgentVersion,  on_delete=models.CASCADE, related_name="related_agent_instance_versions")
-    created_by   = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_agent_instance_versions", default=None, null=True, blank=True)
+class InstanceVersionModel(BaseModel):
+    agent = models.ForeignKey(AgentModel, on_delete=models.CASCADE, related_name="related_agent_instance_versions")
+    agent_instance = models.ForeignKey(InstanceModel, on_delete=models.CASCADE, related_name="related_agent_instance_versions")
+    agent_version  = models.ForeignKey(AgentVersionModel,  on_delete=models.CASCADE, related_name="related_agent_instance_versions")
 
-    # Instance specific settings
+    created_by = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_agent_instance_versions", default=None, null=True, blank=True)
+
+    name = models.CharField(max_length=255, default="")
     display_name = models.CharField(max_length=2048, default=None, blank=True, null=True)
-    workingdir   = models.CharField(max_length=1024, default=None, blank=True, null=True)
-    pinned_agent_profile  = models.ForeignKey(AgentProfile,  on_delete=models.SET_DEFAULT, related_name="related_agent_instance_versions", null=True, blank=True, default=None) # optional pin a profile, otherwise a random profile is selected when this verion is used
-    child_agent_instance_versions   = models.ManyToManyField("self", related_name="parent_agent_instance_versions", default=None, null=True, blank=True, symmetrical=False)
+    description  = models.TextField(max_length=65500, default="")
 
+    workingdir = models.CharField(max_length=1024, default=None, blank=True, null=True)
+    child_agent_instance_versions = models.ManyToManyField("self", related_name="parent_agent_instance_versions", default=None, null=True, blank=True, symmetrical=False)
 
-    @property
-    def agent_task_instances(self):
-        return self.related_agent_task_instances # pyright: ignore[reportAttributeAccessIssue]
+    instance_profile = models.ForeignKey("server.ProfileModel" , on_delete=models.SET_NULL, default=None, null=True, related_name="related_instance_versions") # top level profile
 
-    @property
-    def agent_task_calls(self):
-        return self.related_agent_task_calls # pyright: ignore[reportAttributeAccessIssue]
+    version_number = models.IntegerField(default=0)
+    commit = models.TextField(max_length=1024, default="")
 
-    def select_profile(self, variant_names=None) -> AgentProfile:
-        if not variant_names:
-            variant_names=[]
-        self.pinned_agent_profile: AgentProfile
-        if self.pinned_agent_profile:
-            return self.pinned_agent_profile.select(variant_names)
-        return self.agent_version.profile.select(variant_names)
-                            
-    def get_runtime_instance(self):
-        if not self.pk:
-            raise Exception("Cant create runtime instance, save AgentInstanceVersion model first")
-        self.agent_version: AgentVersion
-        runtime_class = self.agent_version.get_runtime_class()
-        print("runtime_class", runtime_class)
-        print("agent_instance_version", self)
-        runtime_instance = runtime_class(agent_instance_version=self)
-        #AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE[self.pk] = runtime_instance
-        print("get_runtime_instance", runtime_instance)
-        return runtime_instance
-    
+    #@property
+    #def agent_task_instances(self):
+    #    return self.related_agent_task_instances # pyright: ignore[reportAttributeAccessIssue]
+
+    #@property
+    #def agent_task_calls(self):
+    #    return self.related_agent_task_calls # pyright: ignore[reportAttributeAccessIssue]
+
+    def _resolve_profile_value(self, name) -> Any:
+        agent_profile_value = self.agent_version._resolve_profile_value(name)
+        if not self.instance_profile:  # we overwrite nothing, use agents profile
+            return agent_profile_value
+        
+        # we might overwrite agent profile values
+        instance_profile_value = getattr(self.instance_profile, name)
+        if instance_profile_value is None: # we dont..
+            return agent_profile_value 
+
+        if isinstance(instance_profile_value, (str, int, bool, GenericContent)):
+            return instance_profile_value
+        if isinstance(instance_profile_value, (list,)):
+            if "*" not in instance_profile_value: # overwrite parent list 
+                return instance_profile_value
+            extend_at_index = instance_profile_value.index("*")
+            instance_profile_value[extend_at_index:extend_at_index+1] = agent_profile_value
+        else:
+            raise Exception(f"_resolve_profile_value does not yet support type of '{name}': {type(instance_profile_value)}")
+        
+        return instance_profile_value
+
+    def get_runtime(self):
+        return Instance(instance_model=self.agent_instance, pinned_instance_version=self)
+
     def save(self, *args, **kwargs):
         if self.pk:
             raise ValidationError(f"You may not edit an existing {self._meta.model_name}")

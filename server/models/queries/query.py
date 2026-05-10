@@ -12,14 +12,14 @@ class QueryStatus(models.TextChoices):
 class QueryAvailableTool(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     query = models.ForeignKey("server.Query", related_name="available_tools", on_delete=models.CASCADE)
-    tool_agent_version  = models.ForeignKey("server.AgentVersion", related_name="related_query_available_tools", on_delete=models.CASCADE)
-    task_definition = models.ForeignKey("server.AgentTaskDefinition", blank=True, on_delete=models.CASCADE)
+    tool_agent_version  = models.ForeignKey("server.AgentVersionModel", related_name="related_query_available_tools", on_delete=models.CASCADE)
+    task_definition = models.ForeignKey("server.TaskDefinition", blank=True, on_delete=models.CASCADE)
 
 class Query(BaseModel):
     aimodel        = models.ForeignKey("server.AiModel"        , null=False, on_delete=models.CASCADE, related_name="related_queries")
     apikey         = models.ForeignKey("server.ApiKey"         , null=True , on_delete=models.SET_NULL,related_name="related_queries", blank=True)
-    agent_instance_version = models.ForeignKey("server.AgentInstanceVersion", null=False, on_delete=models.CASCADE, related_name='related_queries')
-    agent_profile  = models.ForeignKey("server.AgentProfile" , null=True , on_delete=models.CASCADE, related_name='related_queries', blank=True)
+    agent_instance_version = models.ForeignKey("server.InstanceVersionModel", null=False, on_delete=models.CASCADE, related_name='related_queries')
+    agent_profile  = models.ForeignKey("server.ProfileModel" , null=True , on_delete=models.CASCADE, related_name='related_queries', blank=True)
 
     status = EnumField(QueryStatus, default=QueryStatus.WAITING)
 

@@ -10,8 +10,7 @@ from celery.utils.functional import is_list, maybe_list, regen, seq_concat_item,
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from server.models.agents.agent_version import AgentVersion
-    from runtime.tasks.bound_agent_function import BoundAgentFunction
+    from server.models.agents.agent_version import AgentVersionModel
 
 class AgentTaskInstanceSubtask(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -22,9 +21,9 @@ class AgentTaskInstanceSubtask(models.Model):
 
 class AgentTaskInstance(BaseModel):
     """Binds a task definition to a specific agent instance"""
-    agent_task_definition   = models.ForeignKey("AgentTaskDefinition" , on_delete=models.CASCADE, related_name="related_agent_task_instances")
-    agent_instance          = models.ForeignKey("AgentInstance"       , on_delete=models.CASCADE, related_name="related_agent_task_instances")
-    agent_instance_version  = models.ForeignKey("AgentInstanceVersion", on_delete=models.CASCADE, related_name="related_agent_task_instances")
+    agent_task_definition   = models.ForeignKey("TaskDefinition" ,default=None, null=True, on_delete=models.CASCADE, related_name="related_agent_task_instances")
+    agent_instance          = models.ForeignKey("InstanceModel"       , on_delete=models.CASCADE, related_name="related_agent_task_instances")
+    agent_instance_version  = models.ForeignKey("InstanceVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_instances")
 
     # instance wide args/kwargs, will be prepended/merged with call args/kwargs
     iarguments_json = models.JSONField(default=dict, null=True)
@@ -67,14 +66,13 @@ class AgentTaskInstance(BaseModel):
         return self.related_agent_task_calls # pyright: ignore[reportAttributeAccessIssue]
 
     @classmethod
-    def get_or_create(cls, boundAgentTaskDefinition: "BoundAgentFunction", args = None, kwargs=None, **options ) -> "AgentTaskInstance":
+    def get_or_create(cls, task_definition, agent_instance_version, args = None, kwargs=None, **options ) -> "AgentTaskInstance":
         """Create AgentTaskInstance.
         Returns:
             :class:`AgentTaskInstance`:  object for this task, wrapping arguments and options for multiple task invocation.
         """
-        agent_instance = boundAgentTaskDefinition.agent_instance
-        agent_task_definition = boundAgentTaskDefinition.agent_task_definition
-        agent_instance_version = boundAgentTaskDefinition.agent_instance_version
+        print("get_or_create44", cls, task_definition, agent_instance_version, args, kwargs)
+        agent_instance = agent_instance_version.agent_instance
 
         args = args if args else []
         arguments = kwargs if kwargs else {}
@@ -86,35 +84,36 @@ class AgentTaskInstance(BaseModel):
         arguments_json, ref_pks = AgentTaskInstance._create_instance_arguments_json(arguments=arguments)
 
         agent_task_instance, created = AgentTaskInstance.objects.get_or_create(
-            agent_task_definition = agent_task_definition,
+            agent_task_definition = task_definition,
             agent_instance = agent_instance,
             agent_instance_version = agent_instance_version,
             # Arguments
             iarguments_json = arguments_json,
             # Options - Startup
-            requires_approval = agent_task_definition.requires_approval,
+            requires_approval = task_definition.requires_approval,
             # Options - Run
-            time_limit      = agent_task_definition.time_limit ,  
-            max_subtask_errors     = agent_task_definition.max_subtask_errors,   # for groups,absolute number, also used when timeout
-            max_subtask_error_rate = agent_task_definition.max_subtask_error_rate, # for groups, in percent, also used when timeout
-            limit_subtask_parallel_runs = agent_task_definition.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
-            limit_per_instance_parallel_runs = agent_task_definition.limit_per_instance_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
-            priority = agent_task_definition.priority,
+            time_limit      = task_definition.time_limit ,  
+            max_subtask_errors     = task_definition.max_subtask_errors,   # for groups,absolute number, also used when timeout
+            max_subtask_error_rate = task_definition.max_subtask_error_rate, # for groups, in percent, also used when timeout
+            limit_subtask_parallel_runs = task_definition.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
+            limit_per_instance_parallel_runs = task_definition.limit_per_instance_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+            priority = task_definition.priority,
             # Options - Retry
-            max_retries  = agent_task_definition.max_retries,   # how many retries to we make in case of error
-            retry_delay  = agent_task_definition.retry_delay,  # time between retries in seconds
-            retry_requires_approval = agent_task_definition.retry_requires_approval,  # required user approval before run
+            max_retries  = task_definition.max_retries,   # how many retries to we make in case of error
+            retry_delay  = task_definition.retry_delay,  # time between retries in seconds
+            retry_requires_approval = task_definition.retry_requires_approval,  # required user approval before run
             # Runtime values
-            is_approved = False if agent_task_definition.requires_approval else None, # user did appove this call            
+            is_approved = False if task_definition.requires_approval else None, # user did appove this call            
         )
-        
+        print("FOOOBAR55", agent_task_instance)
         if not created:
+            print("NOT CREATED")
             return agent_task_instance
         
         # Store references that are used for args/kwargs
         agent_task_instance.taskinstance_arg_references.set(ref_pks)
 
-        if agent_task_definition.task_type in ["CHAIN",  "GROUP"]:
+        if task_definition.task_type in ["CHAIN",  "GROUP"]:
             if len(args) == 1 and isinstance(args[0], (list, set, tuple, GeneratorType) ):
                 args = args[0]
             else:
@@ -130,7 +129,7 @@ class AgentTaskInstance(BaseModel):
                     index = index,
                 )
                 print("t:", t)
-
+        print("RETURN HERHE")
         return agent_task_instance
 
     def delay(self, *partial_args, **partial_kwargs):

@@ -9,7 +9,7 @@ from django.http.response import HttpResponse, JsonResponse, HttpResponseNotFoun
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_run import AgentTaskRun
 from server.models.enums.task_enums import TaskType, TaskCallStatusDetail
-from server.models.agents.agent_instance import AgentInstance
+from server.models.agents.agent_instance import InstanceModel
 from old.register_client_api import register_client
 from ui.app_view import ui
 
@@ -30,11 +30,11 @@ def agent_webapi_call(request, instance_id:int, method:str):
         return HttpResponseBadRequest("GET|POST")
         
     try:
-        agent_instance = AgentInstance.objects.get(pk=int(instance_id))
+        agent_instance = InstanceModel.objects.get(pk=int(instance_id))
     except:
         print("no agent_instance")
         return HttpResponseNotFound()
-    agent_instance_version = agent_instance.latest_agent_instance_version
+    agent_instance_version = agent_instance.latest_instance_version
     rt = agent_instance_version.get_runtime_instance()
     if not agent_instance_version.agent_version.task_definitions.filter(name=method, task_type=TaskType.WEBAPI).exists():
         print("NO WEBAPI")
@@ -74,14 +74,15 @@ def agent_webapi_view(request, instance_id:int, method:str):
         return HttpResponseBadRequest("GET|POST")
         
     try:
-        agent_instance = AgentInstance.objects.get(pk=instance_id)
+        agent_instance = InstanceModel.objects.get(pk=instance_id)
     except:
         return HttpResponseNotFound("instance not found")
-    agent_instance_version = agent_instance.latest_agent_instance_version
+    agent_instance_version = agent_instance.latest_instance_version
     if not agent_instance_version.agent_version.task_definitions.filter(name=method, task_type=TaskType.WEBVIEW).exists():
         return HttpResponseNotFound("method not found")
     rt = agent_instance_version.get_runtime_instance()
     return HttpResponse(getattr(rt, method).func(rt, **kwargs))
+
 
 urlpatterns = [
     path('', ui, name='ui'),

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from server.models.agents.agent_version import AgentVersion
+from server.models.agents.agent_version import AgentVersionModel
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.lib.queryset_view import QuerySetView
 from ui.lib.model_view import ModelView
@@ -98,7 +98,7 @@ class SubagentsPanelView(ModelView):
         </div>
     """
 
-    def __init__(self, subject: AgentVersion, parent, **kwargs):
+    def __init__(self, subject: AgentVersionModel, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.subagents_view = QuerySetView(
             subject=subject.sub_agent_versions.all(),

@@ -1,11 +1,10 @@
 from __future__ import annotations
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
-from server.models.tasks.agent_task_definition import AgentTaskDefinition
+from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.agent_task_instance import AgentTaskInstance
 
 class BoundAgentFunction:
-    """The object returned by a.add"""
     def __init__(self, agent_runtime, func):
         self.agent_runtime = agent_runtime
         self.agent_instance_version = agent_runtime.agent_instance_version
@@ -15,7 +14,7 @@ class BoundAgentFunction:
             self.agent_task_definition = self.agent_instance_version.agent_version.task_definitions.get(name=func._task_definition.get("name"))
         except:
             raise Exception(f"Failed to get TaskDefinition name {func._task_definition.get('name')} for agent instance version pk { self.agent_instance_version.pk}")
-        self.agent_task_definition: AgentTaskDefinition
+        self.agent_task_definition: TaskDefinition
         self.func = func
 
     def call(self, *args, **kwargs):
@@ -76,6 +75,7 @@ class BoundAgentFunction:
         """
         args = args if args else []
         kwargs = kwargs if kwargs else {}
+        raise Exception("FOOBAR42")
         return AgentTaskInstance.get_or_create(
             boundAgentTaskDefinition = self,
             args = args,

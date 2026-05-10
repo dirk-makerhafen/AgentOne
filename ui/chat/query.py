@@ -59,18 +59,6 @@ class QueryMessageView(ModelView):
         </div>
     """
 
-    CSS_STR = """
-        .qmsg-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 3px 8px;
-            background: var(--bg-raised);
-            border-bottom: 1px solid var(--border-light);
-            font-size: 0.85em;
-        }
-        .qmsg-parts { padding: 4px 8px; }
-    """
 
     def __init__(self, subject: QueryMessage, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)

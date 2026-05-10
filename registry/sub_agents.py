@@ -5,8 +5,7 @@ from typing import Dict, Literal, Optional, Type
 
 
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from AgentOne.runtime.agents.base_agent import BaseAgent
+#if TYPE_CHECKING:
 
 class Subagent():
     """

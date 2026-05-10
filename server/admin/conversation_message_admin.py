@@ -15,7 +15,7 @@ class ConversationMessagePartInline(admin.TabularInline):
 class ConversationMessageAdmin(admin.ModelAdmin):
     list_display = ('id', 'agent_instance_version', 'role', 'source', 'hide_from_context', 'pin_to_context', 'created_at')
     list_display_links = ('id',)
-    list_filter = ('role', 'source', 'hide_from_context', 'pin_to_context', 'agent_instance_version__agent', 'created_at')
+    list_filter = ('role', 'source', 'hide_from_context', 'pin_to_context', 'created_at')
     search_fields = ('id', 'query__id')
     #autocomplete_fields = (  'query', 'response')
     inlines = [ConversationMessagePartInline]

@@ -1,7 +1,7 @@
 from celery import shared_task
 import traceback
 
-from server.models.agents.agent_version import AgentVersion
+from server.models.agents.agent_version import AgentVersionModel
 from server.models.conversation_message import ConversationMessagePart
 from server.models.debug_log_entry import DebugLogEntry
 from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
@@ -11,7 +11,7 @@ from tools.builtin_filesystem.utils.fsutils import get_relative_path
 def celery_undo_filesystem_changes(instance_pk, log_entry_pk, user_comment):
     agent_instance = None
     try:
-        agent_instance = AgentVersion.objects.get(instance_pk=instance_pk)
+        agent_instance = AgentVersionModel.objects.get(instance_pk=instance_pk)
         log_entry = FsLogEntry.objects.get(pk=log_entry_pk)
         file_path = log_entry.path
 

@@ -26,9 +26,12 @@ def _celery_run(classname, fname, parent_ctx_id, *args, **kwargs):
             _class = CallScheduler
         elif classname == "RunScheduler":
             _class = RunScheduler
+        print("HEHREHR23")
         f = getattr(_class, fname)
-        f(*args, **kwargs)
 
+        f(*args, **kwargs)
+        print("FOND")
+        
 def celery_delay(func, *args, **kwargs):
     from runtime.context_manager import ContextTracker
     # Extract Parent PK from the local thread context

@@ -3,7 +3,7 @@ from server.models.base_model import BaseModel
 from django.core.exceptions import ValidationError
 
 class DebugLogEntry(BaseModel):
-    agent_instance = models.ForeignKey("server.AgentInstance", on_delete=models.CASCADE, related_name='debug_log_entries')
+    agent_instance = models.ForeignKey("server.InstanceModel", on_delete=models.CASCADE, related_name='debug_log_entries')
     event = models.CharField(max_length=64)
     status = models.CharField(max_length=16)
 

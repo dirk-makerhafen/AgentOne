@@ -3,7 +3,7 @@ from django.db import models
 class HistoryLimitingRule(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    agent = models.ForeignKey("server.Agent", on_delete=models.CASCADE, related_name='history_limiting_rules')
+    agent = models.ForeignKey("server.AgentModel", on_delete=models.CASCADE, related_name='history_limiting_rules')
 
     group_name  = models.CharField(default="default", max_length=255, help_text="Name of tool or other group this limit belongs to")
     rule_name   = models.CharField(max_length=255, help_text="The unique name of the rule template to override (e.g., 'fs_by_path').")

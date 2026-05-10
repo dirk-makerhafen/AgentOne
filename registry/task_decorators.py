@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Any, Callable, List, Optional, Dict
 from functools import wraps
-from runtime.tasks.bound_agent_function import BoundAgentFunction
 from server.models.enums.task_enums import TaskType
 
 class TaskDescriptor:
@@ -10,10 +9,10 @@ class TaskDescriptor:
         self.func = func
         wraps(func)(self)
 
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self  # Access via class (e.g., MyAgent.add)
-        return BoundAgentFunction(instance, self.func)
+    def call(self, agent_runtime, *args, **kwargs):
+        print("TaskDescriptor.call", self, agent_runtime, args, kwargs)
+        return self.func(agent_runtime, *args, **kwargs)
+    
     def __call__(self, *args: Any, **kwds: Any):
         raise TypeError(
             f"Task '{self.func.__name__}' must be invoked using .delay(), .apply_async()"
@@ -23,7 +22,6 @@ class TaskDescriptor:
 class TaskDecorator:
     """
     Base decorator for all Agent tasks. Stores metadata on the function object.
-    Persistence is handled later by UnregisteredAgent.register().
     """
 
     def __init__(self, task_type: TaskType, name: Optional[str] = None, description: str = "", bound: bool = True, trigger:   Optional[str] = None, requires_approval:  Optional[bool] = False, max_retries: Optional[int]=None, retry_delay: Optional[int]=None, retry_requires_approval: Optional[bool]=None, priority: Optional[int]=None):
@@ -38,7 +36,7 @@ class TaskDecorator:
         self.retry_delay = retry_delay
         self.retry_requires_approval = retry_requires_approval
 
-    def __call__(self, func: Callable) ->BoundAgentFunction:
+    def __call__(self, func: Callable) ->TaskDescriptor:
         # Attach metadata to the function for later registration
         func._task_definition = {
             "name": self.name or func.__name__,
