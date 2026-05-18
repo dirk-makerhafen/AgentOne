@@ -28,7 +28,7 @@ def _matches(path, pattern):
         # It's a file pattern
         return path.match(pattern)
 
-def check_permission(agent_instance_version, absolute_path, action):
+def check_permission(session_version, absolute_path, action):
     """
     Checks if an agent instance has permission to perform an action on a given path.
 
@@ -41,7 +41,7 @@ def check_permission(agent_instance_version, absolute_path, action):
         bool: True if the action is permitted, False otherwise.
     """
     # Normalize paths to handle OS differences
-    working_dir = Path(agent_instance_version.workingdir).resolve()
+    working_dir = Path(session_version.workingdir).resolve()
     target_path = Path(absolute_path).resolve()
 
     '''
@@ -75,7 +75,7 @@ def check_permission(agent_instance_version, absolute_path, action):
             return True  # Read access is implicitly granted inside working directory
         if action == 'write':
             return True # TODO
-            return agent_instance_version.workingdir_write_allowed # Write access depends on the flag
+            return session_version.workingdir_write_allowed # Write access depends on the flag
     
     # Path is outside working directory, but not handeld in rules, so deny
     return False

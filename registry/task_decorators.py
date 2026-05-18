@@ -4,19 +4,19 @@ from functools import wraps
 from server.models.enums.task_enums import TaskType
 
 class TaskDescriptor:
-    """Acts as the bridge between the class method and the agent instance."""
+    """Acts as the bridge between the class method and the agent session."""
     def __init__(self, func: Callable):
         self.func = func
         wraps(func)(self)
 
-    def call(self, agent_runtime, *args, **kwargs):
-        print("TaskDescriptor.call", self, agent_runtime, args, kwargs)
-        return self.func(agent_runtime, *args, **kwargs)
+    def call(self, session, *args, **kwargs):
+        print("TaskDescriptor.call", self, session, args, kwargs)
+        return self.func(session, *args, **kwargs)
     
     def __call__(self, *args: Any, **kwds: Any):
         raise TypeError(
             f"Task '{self.func.__name__}' must be invoked using .delay(), .apply_async()"
-            "for asynchronous execution or instance creation."
+            "for asynchronous execution or session creation."
         )
 
 class TaskDecorator:
@@ -24,7 +24,18 @@ class TaskDecorator:
     Base decorator for all Agent tasks. Stores metadata on the function object.
     """
 
-    def __init__(self, task_type: TaskType, name: Optional[str] = None, description: str = "", bound: bool = True, trigger:   Optional[str] = None, requires_approval:  Optional[bool] = False, max_retries: Optional[int]=None, retry_delay: Optional[int]=None, retry_requires_approval: Optional[bool]=None, priority: Optional[int]=None):
+    def __init__(self, task_type: TaskType, 
+                name: Optional[str] = None, 
+                description: str = "", 
+                bound: bool = True, 
+                trigger:   Optional[str] = None, 
+                requires_approval:  Optional[bool] = False, 
+                max_retries: Optional[int] = None, 
+                retry_delay: Optional[int] = None, 
+                retry_requires_approval: Optional[bool] = None, 
+                priority: Optional[int] = None ):
+        
+        
         self.task_type = task_type
         self.name = name
         self.description = description
@@ -90,7 +101,7 @@ def map(name: str|None = None, description: str = "", requires_approval = False)
 # System hooks and callbacks
 def setup(name: str|None = None, description: str = "", requires_approval = False):  # called on registration/version change
     return TaskDecorator(task_type=TaskType.SETUP, name=name, description=description, requires_approval=requires_approval)
-def instance(name: str|None = None, description: str = "", requires_approval = False):  # called on agent instanciation
+def session(name: str|None = None, description: str = "", requires_approval = False):  # called on agent instanciation
     return TaskDecorator(task_type=TaskType.INSTANCE, name=name, description=description, requires_approval=requires_approval)
 def hook(name: str, description: str = "", requires_approval = False):
     """Decorator to tag a method as a lifecycle hook. name should be from TaskHook enum values."""

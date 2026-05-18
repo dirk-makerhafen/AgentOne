@@ -23,16 +23,16 @@ class SidebarPanelLogs(ModelView):
             <div class="logs-control-panel">
                 <label class="logs-control-label" for="logsFile" data-i18n="logs_file">File</label>
                 <select id="logsFile" onchange="loadLogs(true)">
-                <option value="agent">agent</option>
-                <option value="errors">errors</option>
-                <option value="gateway">gateway</option>
+                    <option value="agent">agent</option>
+                    <option value="errors">errors</option>
+                    <option value="gateway">gateway</option>
                 </select>
                 <label class="logs-control-label" for="logsTail" data-i18n="logs_tail">Tail</label>
                 <select id="logsTail" onchange="loadLogs(true)">
-                <option value="100">100</option>
-                <option value="200" selected>200</option>
-                <option value="500">500</option>
-                <option value="1000">1000</option>
+                    <option value="100">100</option>
+                    <option value="200" selected>200</option>
+                    <option value="500">500</option>
+                    <option value="1000">1000</option>
                 </select>
                 <label class="logs-check-row"><input id="logsAutoRefresh" type="checkbox" checked onchange="_syncLogsAutoRefresh()"><span data-i18n="logs_auto_refresh">Auto-refresh (5s)</span></label>
                 <label class="logs-check-row"><input id="logsWrap" type="checkbox" onchange="_syncLogsWrap()"><span data-i18n="logs_wrap">Wrap lines</span></label>
@@ -43,5 +43,4 @@ class SidebarPanelLogs(ModelView):
 
     def __init__(self, subject:UiApp, parent: SidebarView, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.uid = "panelLogs"
         self.root_view: UiAppView = parent.root_view

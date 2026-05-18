@@ -2,7 +2,7 @@
 
 
 from registry.sub_agents import Subagent, Subagents
-from server.models.agents.profile import ProfileModel
+from server.models.settings import SettingsModel
 
 from registry.task_decorators import command
 from registry.task_decorators import task
@@ -23,8 +23,7 @@ from server.models.queries.query import Query
 from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart
 
-from server.models.conversation_message import ConversationMessage
-from server.models.conversation_message_part import ConversationMessagePart
+from server.models.message import Message, MessagePart
 
 
 

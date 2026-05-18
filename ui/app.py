@@ -1,8 +1,12 @@
-from runtime.agents.agent import Agents, Instances, Projects, Skills
+from runtime.agents.agents import Agents
+from runtime.agents.sessions import Sessions
+from runtime.agents.projects import Projects
+from runtime.agents.skills import  Skills
+from runtime.agents.workspaces import Workspaces
+from runtime.agents.crons import Cronjobs
 
 from server.models.project import Project
 from server.models.providers.api_provider import ApiProvider
-from server.models.skill import Skill
 from ui.lib.pyHtmlGui.pyhtmlgui.lib.observable import Observable
 from server.models.system import System
 
@@ -10,9 +14,12 @@ class UiApp(Observable):
     def __init__(self):
         super().__init__()
         self.projects = Projects()
+        self.workspaces = Workspaces()
+
         self.agents = Agents()
-        self.instances = Instances()
+        self.sessions = Sessions()
         self.skills = Skills()
+        self.cronjobs = Cronjobs()
 
         #self.systems = System.objects
         #self.providers = ApiProvider.objects

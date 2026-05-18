@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ui.panels.monitor import MonitorPanelView
 from ui.lib.model_view import ModelView
-from server.models.agents.agent_instance import InstanceModel
+from server.models.sessions.session import SessionModel
 from ui.workspace.instance.instance_header import InstanceHeaderView
 from ui.workspace.instance.chat_workspace import ChatWorkspaceView
 from ui.panels.filesystem import FilesystemPanelView
@@ -190,10 +190,10 @@ class InstanceWorkspaceView(ModelView):
     @property
     def foo(self):
         return ""
-    def __init__(self, subject: InstanceModel, parent, **kwargs):
+    def __init__(self, subject: SessionModel, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
 
-        latest = subject.latest_instance_version
+        latest = subject.latest_session_version
         agent_version = latest.agent_version if latest else None
 
         self.header = InstanceHeaderView(subject, self)
@@ -208,7 +208,7 @@ class InstanceWorkspaceView(ModelView):
         # Right panels
         self.filesystem_panel = None
         if latest:
-            ri = latest.get_runtime_instance()
+            ri = latest.get_runtime()
             try:
                 self.filesystem = ri.filesystem
             except Exception as e:

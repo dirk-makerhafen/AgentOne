@@ -26,7 +26,7 @@ class TaskAgent(BaseAgent):
         QueryMessagePart.objects.create(
             content = GenericContent.from_data(kwargs),
             content_type = MessageContentType.TEMPLATE,
-            content_template = task_prompt if task_prompt else query.agent_profile.task_prompt,
+            content_template = task_prompt if task_prompt else query.agent_settings.task_prompt,
             query_message = query_message,
         )
         print("test")

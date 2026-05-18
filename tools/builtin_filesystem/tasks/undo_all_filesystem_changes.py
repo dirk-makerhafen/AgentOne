@@ -1,7 +1,7 @@
 from celery import shared_task
 import traceback
 from server.models.agents.agent_version import AgentVersionModel
-from server.models.conversation_message import ConversationMessagePart
+from server.models.message import MessagePart
 from server.models.debug_log_entry import DebugLogEntry
 from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
 

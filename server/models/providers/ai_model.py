@@ -94,11 +94,12 @@ class AiModel(BaseModel):
         from server.models.tasks.agent_task_run import AgentTaskRun
         from server.models.enums.task_enums import TaskRunStatus
         return AgentTaskRun.objects.filter(
-            agent_instance_version__agent_version__profile__aimodel=self,
+            session_version__agent_version__profile__aimodel=self,
             status=TaskRunStatus.ACTIVE,
         ).count()
 
     def is_rate_limited(self) -> tuple[bool, str]:
+        return False, ""
         """
         Check all model-level limits.
         Returns (is_limited: bool, reason: str).
@@ -142,7 +143,7 @@ class AiModel(BaseModel):
         from server.models.tasks.agent_task_call import AgentTaskCall
         from server.models.enums.task_enums import TaskCallStatusDetail
         return AgentTaskCall.objects.filter(
-            agent_instance_version__agent_version__profile__aimodel=self,
+            session_version__agent_version__profile__aimodel=self,
             status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
         ).order_by('created_at')
 

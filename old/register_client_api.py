@@ -41,7 +41,7 @@ def register_client(request):
 
         resolved_client_url = f"http://{client_ip}:{client_port}"
 
-    # 3. Get or create the System (client) instance
+    # 3. Get or create the System (client) session
     system, created = System.objects.get_or_create(
         name=client_name,
         defaults={

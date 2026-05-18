@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 runtime/scheduler.py
 
@@ -52,10 +53,11 @@ def _release_rate_limited_calls():
         .order_by('priority', 'created_at')
     )
     exhausted_models: set[int] = set()
+    from runtime.agents.session import Session
 
     for call in waiting:
         try:
-            aimodel = call.agent_instance_version.agent_version.profile.aimodel
+            aimodel = Session(session_model=call.session, pinned_session_version=call.session_version).aimodel
             if aimodel is None or aimodel.pk in exhausted_models:
                 continue
             try:

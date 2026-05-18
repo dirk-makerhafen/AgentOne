@@ -17,39 +17,22 @@ class MainView(ModelView):
     TEMPLATE_STR = """
         {% if pyview.selected_tab_view %}
             {{ pyview.selected_tab_view.render() }}
-
         {% else %}
             Open something
         {% endif %}
-        {% for item in pyview.open_tabs.values() %}
-            {{ item.render() }}
-        {% endfor %}
+    
     """
    
     
     def __init__(self, subject: "UiApp", parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.open_tabs = {}
-
         self.selected_tab_id = ""
         self.selected_tab_view = None
-
-        #self.main_settings_view = MainSettingsView(subject=self.subject, parent=self)
-        #self.agent_view = MainAgentView(subject=self.subject, parent=self)
-        self.main_views = dict(
-            #chat = MainAgentView(subject=self.subject, parent=self),
-            #memory = MainMemoryView(subject=self.subject, parent=self),
-            #projects = MainProjectsView(subject=self.subject, parent=self),
-            #profiles = self.agent_view,
-            #insights = MainInsightsView(subject=self.subject, parent=self),
-            #logs = MainLogsView(subject=self.subject, parent=self),
-            #settings = self.main_settings_view,
-        )
 
     def create_and_open_tab(self, view_class, subject):
         uid = getattr(subject, "id", getattr(subject, "uid", id(subject)))
         key = f"{view_class.__name__}__{uid}"
-        print(key)
         existing_tab = self.open_tabs.get(key, None)
         if existing_tab is not None:
             self.select_tab(key)

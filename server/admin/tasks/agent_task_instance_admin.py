@@ -9,15 +9,15 @@ class TaskInstancetoTaskInstanceRelationInline(admin.TabularInline):
     
 @admin.register(AgentTaskInstance)
 class AgentTaskInstanceAdmin(admin.ModelAdmin):
-    list_display = ("id", "created_at", 'agent_instance', 'created_at')
+    list_display = ("id", "created_at", 'session', 'created_at')
     list_display_links = ("id", )
-    list_filter = ('agent_instance_version',  'created_at')
-    search_fields = ( 'agent_instance__name', )
-    #autocomplete_fields = ('agent_instance_version', 'agent_task_definition')
+    list_filter = ('session_version',  'created_at')
+    search_fields = ( 'session__name', )
+    #autocomplete_fields = ('session_version', 'agent_task_definition')
     
     fieldsets = (
         (None, {
-            'fields': ( "taskinstances_on_success_callbacks", "taskinstances_on_error_callbacks", 'agent_instance_version')
+            'fields': ( "taskinstances_on_success_callbacks", "taskinstances_on_error_callbacks", 'session_version')
         }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),

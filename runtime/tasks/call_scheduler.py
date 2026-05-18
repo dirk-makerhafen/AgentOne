@@ -135,13 +135,13 @@ class CallScheduler():
             # --- AFTER_RUN Hooks Dispatch ---
             after_hook_calls = []
             #result, _ = AgentTaskRun.result_to_json(obj=result)
-            print(f"DEBUG: Dispatching AFTER_RUN hooks for {run.agent_task_definition.name}. {len(after_hooks)} hooks found.")
+            print(f"DEBUG: Dispatching AFTER_RUN hooks for {run.task_definition_version.name}. {len(after_hooks)} hooks found.")
             updated = TaskCallStateMachine.wait_for_hooks(call.pk, taskrun_id)
             if updated:
                 hook_arguments = run
                 for i, hook_instance in enumerate(after_hooks):
                     hook_instance: AgentTaskInstance
-                    print(f"  -> Launching after_run hook {hook_instance.agent_task_definition.name} (step {i+1}/{len(after_hooks)})")
+                    print(f"  -> Launching after_run hook {hook_instance.task_definition_version.name} (step {i+1}/{len(after_hooks)})")
                     result = hook_instance.call(kwargs=hook_arguments)
                     after_hook_calls.append(result)
                     hook_arguments = result
@@ -221,7 +221,7 @@ class CallScheduler():
                 print(f"DEBUG: Dispatching taskcall_on_success_callbacks for taskrun:#{last_taskrun_id}. {len(callback_instances)} found.")
                 for i, callback_instance in enumerate(callback_instances):
                     callback_instance: AgentTaskInstance
-                    print(f"  -> Launching taskcall_on_success_callback {callback_instance.agent_task_definition.name} (step {i+1}/{len(callback_instances)})")
+                    print(f"  -> Launching taskcall_on_success_callback {callback_instance.task_definition_version.name} (step {i+1}/{len(callback_instances)})")
                     callback = callback_instance.apply_async(kwargs=run)
                     callbacks.append(callback)
                 call.taskcall_on_success_callbacks.set(callbacks)
@@ -234,7 +234,7 @@ class CallScheduler():
                 print(f"DEBUG: Dispatching taskcall_on_error_callbacks for taskrun:#{last_taskrun_id}. {len(callback_instances)} found.")
                 for i, callback_instance in enumerate(callback_instances):
                     callback_instance: AgentTaskInstance
-                    print(f"  -> Launching taskcall_on_error_callback {callback_instance.agent_task_definition.name} (step {i+1}/{len(callback_instances)})")
+                    print(f"  -> Launching taskcall_on_error_callback {callback_instance.task_definition_version.name} (step {i+1}/{len(callback_instances)})")
                     callback = callback_instance.apply_async(kwargs=run)
                     callbacks.append(callback)
                 call.taskcall_on_error_callbacks.set(callbacks)

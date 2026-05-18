@@ -6,15 +6,15 @@ from typing import Type, List, Optional, Literal
 
 class Profile_old():
     def __init__(self, name = None, model: str|None = None, thinking:bool|None = None,
-                max_retries: int|None = None, max_task_steps: int|None = None, unattended_steps: int|None = None, max_history_messages: int|None = None, priority: int|None = None,
+                max_retries: int|None = None, max_turns: int|None = None, max_unattended_turns: int|None = None, max_history_messages: int|None = None, priority: int|None = None,
                 task_prompt: str|None = None, system_prompt: str|None = None,
                 execution_mode: str = 'queue', tool_call_syntax: str = 'default', 
                 extra_settings: dict|None = None, variants: list[Profile_old]|None = None) -> None:
         self.name = name
         self.model = model
         self.max_retries = max_retries
-        self.max_task_steps = max_task_steps
-        self.unattended_steps = unattended_steps
+        self.max_turns = max_turns
+        self.max_unattended_turns = max_unattended_turns
         self.max_history_messages = max_history_messages
         self.task_prompt = textwrap.dedent(task_prompt).strip() if task_prompt else None
         self.system_prompt = textwrap.dedent(system_prompt).strip() if system_prompt else None
@@ -34,10 +34,10 @@ class Profile_old():
             d["max_retries"] = self.max_retries
         if self.priority:
             d["priority"] = self.priority
-        if self.max_task_steps:
-            d["max_task_steps"] = self.max_task_steps
-        if self.unattended_steps:
-            d["unattended_steps"] = self.unattended_steps
+        if self.max_turns:
+            d["max_turns"] = self.max_turns
+        if self.max_unattended_turns:
+            d["max_unattended_turns"] = self.max_unattended_turns
         if self.max_history_messages:
             d["max_history_messages"] = self.max_history_messages
         if self.thinking:

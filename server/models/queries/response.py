@@ -2,6 +2,7 @@ from django.db import models
 from server.models.content import GenericContent
 from django_enum import EnumField
 from server.models.base_model import BaseModel
+from server.models.queries.query import Query
 
 class ResponseStatus(models.TextChoices):
     ACTIVE = 'ACTIVE', 'Active' # query is active
@@ -10,28 +11,29 @@ class ResponseStatus(models.TextChoices):
     FAILURE = 'FAILURE', 'Failure (Terminal)' # data parsing error
 
 class Response(BaseModel):
-    query          = models.OneToOneField("server.Query"     , null=True , on_delete=models.CASCADE, related_name="related_response")
-    aimodel        = models.ForeignKey("server.AiModel"   , null=False, on_delete=models.CASCADE, related_name="related_responses")
-    agent_instance_version = models.ForeignKey("server.InstanceVersionModel", on_delete=models.CASCADE, related_name="related_response")
-    agent_profile  = models.ForeignKey("server.ProfileModel" , null=True,  on_delete=models.CASCADE, related_name='related_responses', default=None, blank=True)
-    tool_calls     = models.ManyToManyField("server.AgentTaskCall",related_name='related_responses')
+    query          = models.OneToOneField(Query    , null=True , on_delete=models.CASCADE, related_name="related_response")
+    session_version = models.ForeignKey("server.SessionVersionModel", on_delete=models.CASCADE, related_name="related_response")
 
     status = EnumField(ResponseStatus, default=ResponseStatus.WAITING)
 
+    # token usage
     prompt_tokens = models.IntegerField(default=0)
     completion_tokens = models.IntegerField(default=0)
 
-    message_content = models.ForeignKey(GenericContent,  default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="reponse_messages")
-    message_reasoning = models.ForeignKey(GenericContent,  default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="reponse_reason")
+    # log timing 
+    time_to_first_token = models.FloatField(default=0)
+    token_generation_time = models.FloatField(default=0)
+    total_time = models.FloatField(default=0)
+    reasoning_time = models.FloatField(default=0)
 
-    @property
-    def conversation_messages(self):
-        return self.related_conversation_messages # pyright: ignore[reportAttributeAccessIssue]
+    tool_calls = models.JSONField(default = [], null = False, blank = True)
+    content   = models.TextField(default = "", null = True, blank = True, max_length = 500000)
+    reasoning = models.TextField(default = "", null = True, blank = True, max_length = 500000)
+
+    finish_reason =  models.CharField(default = "", null = True, blank = True, max_length = 5000)
 
     def save(self, *args, **kwargs):
-        usage_data = self.data.get("usage", {})
-        self.completion_tokens = usage_data.get("completion_tokens", 0)
-        self.prompt_tokens = usage_data.get("prompt_tokens", 0)
+      
         super().save(*args, **kwargs)
         if self.status==ResponseStatus.SUCCESS and self.query:
             query = self.query

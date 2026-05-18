@@ -12,5 +12,5 @@ class AgentVersionInline(admin.TabularInline):
 
 @admin.register(AgentModel)
 class AgentAdmin(admin.ModelAdmin):
-    list_display = ('name',  'created_at', 'updated_at')
-   
+    list_display = ("id", "created_at",  'name', 'parent_project', 'parent_agent', 'parent_skill'  )
+       

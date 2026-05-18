@@ -14,35 +14,32 @@ class ResponseInline(admin.StackedInline):
     model = Response
     extra = 0
     can_delete = False
-    fields = ('status', 'aimodel', 'prompt_tokens', 'completion_tokens', 'created_at')
+    fields = ('status',  'prompt_tokens', 'completion_tokens', 'created_at')
     readonly_fields = ('created_at',)
-    autocomplete_fields = ('aimodel',)
+    autocomplete_fields = ()
 
  
 
 @admin.register(Query)
 class QueryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'agent_instance_version', 'status', 'tokens', 'created_at', 'agent_profile')
+    list_display = ('id', 'session_version', 'status', 'tokens', 'created_at')
     list_display_links = ('id',)
-    list_filter = ('status', 'aimodel', 'agent_instance_version__agent', 'created_at')
-    search_fields = ('id', 'agent_instance_version__name')
-    autocomplete_fields = ('aimodel', 'apikey',   'agent_profile', 'agent_instance_version')
+    list_filter = ('status',  'session_version__agent', 'created_at')
+    search_fields = ('id', 'session_version__name')
+    autocomplete_fields = ( 'apikey', 'session_version')
     readonly_fields = ('created_at', 'updated_at', 'tokens', 'tags_token_usage')
     inlines = [QueryMessageInline, ResponseInline]
     list_per_page = 25
 
     fieldsets = (
         (None, {
-            'fields': ('agent_instance_version', 'status', 'aimodel', 'apikey')
+            'fields': ('session_version', 'status',  'apikey')
         }),
         ('Tracking & Usage', {
             'fields': ('tokens', 'tags_token_usage'),
             'classes': ('collapse',)
         }),
-        ('Entity Snapshot', {
-            'fields': ( 'agent_profile',),
-            'classes': ('collapse',)
-        }),
+        
         ('Audit', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)

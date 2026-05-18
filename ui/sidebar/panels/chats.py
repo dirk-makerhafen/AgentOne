@@ -1,8 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from server.models.agents.agent import AgentModel
+from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
+from ui.main.chat.chat import Chat
+from ui.main.instance.chat_workspace import ChatWorkspaceView
 
 if TYPE_CHECKING:
     from ui.sidebar.sidebar import SidebarView
@@ -10,10 +13,68 @@ if TYPE_CHECKING:
     from ui.app_view import UiAppView
 
 
+
+'''
+        
+        <div class="session-action-menu open" style="left: 81px; top: 325.086px;">
+<button type="button" class="ws-opt session-action-opt">
+    <span class="ws-opt-action">
+        <span class="ws-opt-icon">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><polygon points="8,2 9.8,6.2 14.2,6.2 10.7,9.2 12,13.8 8,11 4,13.8 5.3,9.2 1.8,6.2 6.2,6.2"></polygon></svg>
+        </span>
+        <span class="session-action-copy">
+            <span class="ws-opt-name">Pin conversation</span>
+            <span class="session-action-meta">Keep this conversation at the top</span>
+        </span>
+    </span>
+</button>
+<button type="button" class="ws-opt session-action-opt">
+<span class="ws-opt-action">
+<span class="ws-opt-icon">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 4.5h4l1.5 1.5H14v7H2z"></path></svg>
+</span>
+<span class="session-action-copy">
+<span class="ws-opt-name">Move to project</span>
+<span class="session-action-meta">Assign a project to this conversation</span>
+</span>
+</span></button>
+<button type="button" class="ws-opt session-action-opt">
+<span class="ws-opt-action">
+<span class="ws-opt-icon">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="2" width="13" height="3" rx="1"></rect><path d="M2.5 5v8h11V5"></path><line x1="6" y1="8.5" x2="10" y2="8.5"></line></svg>
+</span>
+<span class="session-action-copy">
+<span class="ws-opt-name">Archive conversation</span>
+<span class="session-action-meta">Hide this conversation until archived is shown</span>
+</span>
+</span></button>
+<button type="button" class="ws-opt session-action-opt">
+<span class="ws-opt-action">
+<span class="ws-opt-icon">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="4.5" y="4.5" width="8.5" height="8.5" rx="1.5"></rect><path d="M3 11.5V3h8.5"></path></svg>
+</span>
+<span class="session-action-copy">
+<span class="ws-opt-name">Duplicate conversation</span>
+<span class="session-action-meta">Create a copy with the same workspace and model</span>
+</span>
+</span>
+</button>
+<button type="button" class="ws-opt session-action-opt danger">
+    <span class="ws-opt-action">
+    <span class="ws-opt-icon">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M4.5 4.5v8.5h7v-8.5"></path><line x1="7" y1="7" x2="7" y2="11"></line><line x1="9" y1="7" x2="9" y2="11"></line></svg>
+</span>
+<span class="session-action-copy">
+    <span class="ws-opt-name">Delete conversation</span>
+    <span class="session-action-meta">Permanently remove this conversation</span>
+</span>
+</span></button></div>
+        
+        '''
 class SidebarPanelChat(ModelView):
     DOM_ELEMENT_CLASS = "session-item"    
     TEMPLATE_STR = '''
-        <div class="session-text">
+        <div class="session-text"  onclick="pyview.open_instance_detail()">
             <div class="session-title-row">
                 <span class="session-branch-indicator" title="Forked from AI Agent Capabilities and Functionality Overview">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
@@ -31,15 +92,14 @@ class SidebarPanelChat(ModelView):
         </div>
     '''
     
-    def __init__(self, subject: AgentModel, parent: QuerySetView, **kwargs):
+    def __init__(self, subject: SessionModel, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        
         self.root_view: UiAppView = parent.parent.root_view
     
-    def open_agent_details(self):
-        self.root_view.main_panel.create_and_open_tab(AgentView, self.subject)
+    def open_instance_detail(self):
+        self.root_view.main_panel.create_and_open_tab(Chat, self.subject)
       
-
-
 
 class SidebarPanelChats(ModelView):
     DOM_ELEMENT_CLASS = "panel-view active"
@@ -48,7 +108,7 @@ class SidebarPanelChats(ModelView):
         <div class="panel-head">
             <span data-i18n="tab_chat">Chat</span>
             <div class="panel-head-actions">
-                <button class="panel-head-btn" id="btnNewChat" title="New conversation (Cmd+K)" data-i18n-title="new_conversation" aria-label="New conversation">
+                <button class="panel-head-btn" id="btnNewChat" title="New conversation (Cmd+K)" data-i18n-title="new_conversation" aria-label="New conversation" onclick="pyview.new_conversation()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
             </div>
@@ -79,8 +139,13 @@ class SidebarPanelChats(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.root_view
         self.agent_list = QuerySetView(
-            subject=subject.instances.root(),
+            subject=subject.sessions.root(),
             parent=self,
             item_class=SidebarPanelChat,
             dom_element_class="session-date-body"
         )
+
+    def new_conversation(self):
+        self.subject.agents.root().first().get_runtime()
+        self.subject.agents.root().first().latest_agent_version.get_or_create_instance()
+        

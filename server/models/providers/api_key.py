@@ -77,7 +77,7 @@ class ApiKey(BaseModel):
         from server.models.tasks.agent_task_run import AgentTaskRun
         from server.models.enums.task_enums import TaskRunStatus
         return AgentTaskRun.objects.filter(
-            agent_profile__aimodel__api_provider=self.api_provider,
+            agent_settings__aimodel__api_provider=self.api_provider,
             status=TaskRunStatus.ACTIVE,
         ).count()
 
@@ -86,6 +86,7 @@ class ApiKey(BaseModel):
         Check all key-level limits.
         Returns (is_limited: bool, reason: str).
         """
+        return False, ""
         if not self.enabled:
             return True, "disabled"
 
@@ -123,7 +124,7 @@ class ApiKey(BaseModel):
         from server.models.tasks.agent_task_call import AgentTaskCall
         from server.models.enums.task_enums import TaskCallStatusDetail
         return AgentTaskCall.objects.filter(
-            agent_instance_version__agent_version__profile__aimodel__api_provider=self.api_provider,
+            session_version__agent_version__profile__aimodel__api_provider=self.api_provider,
             status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
         ).order_by('created_at')
 

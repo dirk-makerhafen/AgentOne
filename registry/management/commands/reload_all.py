@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import hashlib
 import os
 import subprocess
 import sys
@@ -10,14 +11,17 @@ from django.conf import settings
 from pathlib import Path
 import frontmatter
 from server.models.agents.agent import AgentModel
-from server.models.agents.profile import ProfileModel
+from server.models.settings import SettingsModel
 from server.models.agents.agent_version import AgentVersionModel
 from registry.utils import generate_schema_for_function, get_import_strings, get_ai_model
+from server.models.content import GenericContent
 from server.models.enums.task_enums import TaskType
 from server.models.project import Project
-from server.models.skill import Skill, SkillVersion
+from server.models.skills.skill import SkillModel, SkillModelVersion
 from server.models.tasks.task_definition import TaskDefinition
 import textwrap
+
+from server.models.tasks.task_definition_version import TaskDefinitionVersion
 @contextmanager
 def temp_sys_path(path:Path):
     """Temporarily adds a directory to sys.path."""
@@ -32,12 +36,13 @@ def temp_sys_path(path:Path):
         yield
 
 def get_newstes_commit_hash(folder: Path):
-    print("get_newstes_commit_hash", folder)
+    #print("get_newstes_commit_hash", folder)
     try:
         cwd = folder if folder.is_dir() else folder.parent
         git_hash = subprocess.check_output(
             ["git", "log", "-n", "1", "--pretty=format:%h", "--", folder.as_posix()], stderr=subprocess.STDOUT, text=True, cwd=cwd
         ).strip()
+        print("git hash found", git_hash)
         return git_hash
     except subprocess.CalledProcessError as e:
         print(f"Git command failed: {e.output}")
@@ -117,55 +122,22 @@ def load_project_folder(folder: str):
     project_python_files = get_python_script_files(project_folder / "scripts")
     for project_python_file in project_python_files:
         load_python_script_file(project_python_file, parent_project=project)
-        
+
     # Project Skills
     project_skill_mds = get_skillmd_files(project_folder / "skills")
     for project_skill_md in project_skill_mds:
-        load_skill_md_file(project_skill_md, parent_project=project)
-        
+        skill, skill_version = load_skill_md_file(project_skill_md, parent_project=project)
+
     # Project Agents
     project_agent_mds = get_agentmd_files(project_folder / "agents")
     for project_agent_md in project_agent_mds:
-        load_agent_md_file(project_agent_md, project)
+        agent, agent_version = load_agent_md_file(project_agent_md, parent_project=project)
 
 
-def load_agent_md_file(agent_md_path:Path, parent_project = None, parent_agent=None):
+def load_agent_md_file(agent_md_path:Path, parent_project = None, parent_agent=None, parent_skill=None):
     print("load_agent_folder", agent_md_path)
-    agent = agentmd_to_database(agent_md_path, parent_project=parent_project, parent_agent=parent_agent)
-
     agent_md_parent = agent_md_path.parent
 
-    # Agent Scripts
-    project_python_files = get_python_script_files(agent_md_parent / "scripts")
-    for project_python_file in project_python_files:
-        load_python_script_file(project_python_file, parent_project=parent_project, parent_agent=agent)
-        
-    # Agent Skills
-    local_skill_mds = get_skillmd_files(agent_md_parent / "skills")
-    for local_skill_md in local_skill_mds:
-        skill = load_skill_md_file(local_skill_md, parent_project=parent_project, parent_agent=agent)
-        
-    # Agent Sub Agents
-    local_agent_mds = get_agentmd_files(agent_md_parent / "agents")
-    for local_agent_md in local_agent_mds:
-        load_agent_md_file(local_agent_md, parent_project=parent_project, parent_agent=agent)
-
-
-def load_skill_md_file(skill_md_path:Path, parent_project = None, parent_agent=None):
-    print("skill_md_path", skill_md_path)
-    skill = skillmd_to_database(skill_md_path, parent_project=parent_project, parent_agent=parent_agent)
-    for skill_tool_md in get_python_script_files(skill_md_path.parent / "scripts"):
-        load_python_script_file(skill_tool_md, parent_project=parent_project, parent_agent=parent_agent, parent_skill=skill)
-
-
-def load_python_script_file(python_script_path:Path, parent_project = None, parent_agent=None, parent_skill=None): 
-    print("load_python_script_file", python_script_path)
-    tool = python_script_to_database(python_script_path, parent_project=parent_project, parent_agent=parent_agent, parent_skill=parent_skill)
-    
-
-# SAVE TO DB
-
-def agentmd_to_database(agent_md_path, parent_project = None, parent_agent = None, parent_skill=None):
     agent_md = frontmatter.load(agent_md_path)
     '''
         name	           Yes	    Unique identifier using lowercase letters and hyphens
@@ -173,6 +145,7 @@ def agentmd_to_database(agent_md_path, parent_project = None, parent_agent = Non
         description	       Yes	    When AgentOne should delegate to this subagent
         extends             No      Extend another agent, inherits all its stuff if not overwritten
         model	            No	    Model to use: sonnet, opus, haiku, a full model ID (for example, gemma4:e3b), or inherit. 
+        reasoningEffort     No      Reasoning effort to use: none (default), minimal, low, medium, high, xhigh
         maxRetries          No      In case of error, how many retries do we do
         maxTurns            No      Maximum number of agentic turns before the subagent stops
         maxUnattendedTurns  No      Maximum number of agentic turns before the subagent requires human confirmation
@@ -187,61 +160,84 @@ def agentmd_to_database(agent_md_path, parent_project = None, parent_agent = Non
         disallowedTasks	    No	    Tasks to deny, removed from inherited or specified list
         commands	        No	    Commands the user can use, Inherits all commands from parent
         disallowedCommands  No	    Commands to deny, removed from inherited or specified list
-    
     ''' 
     print("agentmd_to_database", agent_md_path)
     # Agent
     if agent_md.get("oldName", None):
-        agent =  AgentModel.objects.get(name= agent_md.get("oldName"))
+        agent =  AgentModel.objects.get(name= agent_md.get("oldName"), parent_project = parent_project, parent_agent = parent_agent, parent_skill = parent_skill)
         agent.name = agent_md.get("name")
         agent.save()
     else:
-        agent, created_agent = AgentModel.objects.get_or_create(name= agent_md.get("name"))
+        agent, created_agent = AgentModel.objects.get_or_create(name= agent_md.get("name"), parent_project = parent_project, parent_agent = parent_agent, parent_skill = parent_skill)
 
-    # Profile
+    # Agent Skills
+    defined_skills = []
+    local_skill_mds = get_skillmd_files(agent_md_parent / "skills")
+    for local_skill_md in local_skill_mds:
+        skill, skill_version = load_skill_md_file(local_skill_md, parent_agent=agent)
+        defined_skills.append((skill, skill_version))
+
+    # Agent Scripts
+    defined_tasks = []
+    project_python_files = get_python_script_files(agent_md_parent / "scripts")
+    for project_python_file in project_python_files:
+        defined_tasks.extend(load_python_script_file(project_python_file, parent_agent=agent))
+
+    # Agent Sub Agents
+    local_agent_mds = get_agentmd_files(agent_md_parent / "agents")
+    defined_subagents = []
+    for local_agent_md in local_agent_mds:
+        subagent, subagent_version = load_agent_md_file(local_agent_md, parent_agent=agent)
+        defined_subagents.append((subagent, subagent_version))
+
+    # Settings
     aimodel = get_ai_model(agent_md.get("model"))
     extend_agents = []
-    extend_agent_names = [x.strip() for x in agent_md.get("extends", "").split(",") if x.strip()]
-    if extend_agent_names:
-        extend_agents =  AgentModel.objects.filter(name__in= extend_agent_names)
-       
+    def get_list(name):
+        l = agent_md.get(name)
+        if l is None:
+            return l
+        if isinstance(l, str):
+            l = l.split(",")
+        return [x.strip() for x in l if x.strip()]
+    
+    extend_agent_names = get_list("extends")
+    print("FOO232323", extend_agent_names)
     kwargs = {
         #"agent": agent,
         #"name": agent_md.get("name"),
         "aimodel": aimodel,
         #"description":  agent_md.get("description"),
-        #"extendsAgentNames": extend_agent_names,
+        #"extends_agent_names": extend_agent_names,
         "max_retries":  agent_md.get("maxRetries", None),
-        "max_task_steps":  agent_md.get("maxTurns", None),
-        "unattended_steps":  agent_md.get("maxUnattendedTurns", None),
+        "max_turns":  agent_md.get("maxTurns", None),
+        "max_unattended_turns":  agent_md.get("maxUnattendedTurns", None),
         "max_history_messages":  agent_md.get("maxHistoryMessages", None),
         "execution_mode":  agent_md.get("executionMode", None),
         "tool_call_syntax":  agent_md.get("toolCallSyntax", None),
+        "reasoning_effort":  agent_md.get("reasoningEffort", None),
         
-        "commandNames":  [x.strip() for x in agent_md.get("commands", "").split(",") if x.strip() if x.strip()],
-        "disallowedCommandNames":  [x.strip() for x in agent_md.get("disallowedCommands", "").split(",") if  x.strip()],
+        "commandNames":  get_list("commands"),
+        "disallowedCommandNames":  get_list("disallowedCommands"),
 
-        "taskNames": [x.strip() for x in agent_md.get("tasks", "").split(",")],
-        "disallowedTaskNames": [x.strip() for x in agent_md.get("disallowedTasks", "").split(",") if x.strip()],
+        "taskNames": get_list("tasks"),
+        "disallowedTaskNames": get_list("disallowedTasks"),
                 
-        "toolNames": [x.strip() for x in agent_md.get("tools", "").split(",")],
-        "disallowedToolNames": [x.strip() for x in agent_md.get("disallowedTools", "").split(",") if x.strip()] ,
+        "toolNames": get_list("tools"),
+        "disallowedToolNames": get_list("disallowedTools") ,
 
-        "skillNames":  [x.strip() for x in agent_md.get("skills", "").split(",")],
-        "disallowedSkillNames":  [x.strip() for x in agent_md.get("disallowedSkills", "").split(",") if x.strip()],
+        "skillNames": get_list("skills"),
+        "disallowedSkillNames":  get_list("disallowedSkills"),
 
         "priority":   agent_md.get("priority", None),
         "thinking":  agent_md.get("thinking", None),
 
-        #"task_prompt": GenericContent.from_text(profile.task_prompt) if profile.task_prompt else None,
-        #"system_prompt": GenericContent.from_text(profile.system_prompt) if profile.system_prompt else None,
+        "task_prompt": GenericContent.from_text(agent_md.get("task_prompt", "").strip()) ,
+        "system_prompt":  GenericContent.from_text(agent_md.content.strip()) ,
         "extra_settings":  agent_md.get("", None),
         "commit": get_newstes_commit_hash(agent_md_path),
     }
-    kwargs = {k:v for k,v in kwargs.items() if v is not None}
-    profile, created_profile = ProfileModel.objects.get_or_create(**kwargs)
-    #if extend_agents:
-    #    profile.extendsAgents.set(extend_agents)
+    settings, createdsettings = SettingsModel.objects.get_or_create(**kwargs)
 
     # AgentVersion
     current_version_number = 1
@@ -249,37 +245,45 @@ def agentmd_to_database(agent_md_path, parent_project = None, parent_agent = Non
         current_version_number = agent.latest_agent_version.version_number
     
     '''
-    parent_project = models.ForeignKey("server.Project", default=None, null=True, on_delete=models.CASCADE, related_name='child_agents')# for */someproject/.agentone/skills/ , null for global skill in ~/.agentone/skills
-    parent_agent = models.ForeignKey("server.AgentModel", default=None, null=True, on_delete=models.CASCADE, related_name='child_agents')# for */.agentone/Agent/someagent/skills/ , null for global skill in ~/.agentone/skills
-    parent_skill = models.ForeignKey("server.Skill", default=None, null=True, on_delete=models.CASCADE, related_name='child_agents')# for */.agentone/Agent/someagent/skills/ , null for global skill in ~/.agentone/skills
-    
+    AgentVersionModel:
     agent = models.ForeignKey("server.AgentModel"        , on_delete=models.CASCADE, related_name="related_agent_versions")
-
     description = models.TextField(max_length=65500, default="")
-    extendsAgentNames = models.JSONField(default=list, blank=True)
+    extends_agent_names = models.JSONField(default=list, blank=True)
+    extends_agent_versions = SortedManyToManyField("self", related_name="related_inheritors", default=None, null=True)
+    defined_skill_versions = models.ManyToManyField(SkillVersion ,default=None,null=True,  related_name="related_agent_versions") # top level profile
+    defined_task_versions = models.ManyToManyField(TaskDefinitionVersion ,default=None,null=True, related_name="related_agent_versions") # top level profile
+    defined_subagent_versions = models.ManyToManyField("self", related_name="related_parents", default=None, null=True)
+    agent_settings = models.ForeignKey(SettingsModel ,default=None,null=True, on_delete=models.SET_NULL, related_name="related_agent_versions") # top level profile
+    version_number = models.IntegerField(default=0)
+    '''
+    extend_agent_versions = []
+    for extend_agent_name in extend_agent_names:
+        extend_agent = AgentModel.objects.get(name= extend_agent_name)
+        extend_agent_versions.append(extend_agent.latest_agent_version)
 
-    extendsAgents = SortedManyToManyField("server.AgentModel", related_name="related_inheritors", default=None, null=True)
-    extendsAgentVersions = SortedManyToManyField("server.AgentVersionModel", related_name="related_inheritors", default=None, null=True)
-
-    agent_profile = models.ForeignKey(ProfileModel ,default=None,null=True, on_delete=models.SET_NULL, related_name="related_agent_versions") # top level profile
-     '''
+    hashstr = "_".join([f"{s}" for s in ([x.pk for x in extend_agent_versions] + extend_agent_names + sorted([s[1].pk for s in defined_skills]) +  sorted([s[1].pk for s in defined_tasks]) +  sorted([s[1].pk for s in defined_subagents]))])
+    hash = hashlib.sha1(hashstr.encode()).hexdigest()
     agent_version, created_agent_version = AgentVersionModel.objects.get_or_create(
-        parent_project = parent_project,
-        parent_agent = parent_agent,
-        parent_skill = parent_skill,
         agent = agent,
         description = agent_md.get("description"),
-        extendsAgentNames = extend_agent_names,
+        extends_agent_names = extend_agent_names,
         commit = get_newstes_commit_hash(agent_md_path.parent),
-        agent_profile = profile,
+        agent_settings = settings,
+        hash = hash,
     )
     if created_agent_version:
         AgentVersionModel.objects.filter(pk=agent_version.pk).update(version_number = current_version_number +1)
-    AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=agent_version)
-    return agent
+        AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=agent_version)
+        agent_version.defined_skill_versions.set([x[1] for x in defined_skills])
+        agent_version.defined_task_versions.set([x[1] for x in defined_tasks])
+        agent_version.defined_subagent_versions.set([x[1] for x in defined_subagents])
+        print("extend_agent_versions", extend_agent_versions)
+        agent_version.extends_agent_versions.set(extend_agent_versions)
 
+    return agent, agent_version
 
-def skillmd_to_database(skill_md_path:Path, parent_project = None, parent_agent = None):
+def load_skill_md_file(skill_md_path:Path, parent_project = None, parent_agent=None):
+    print("skill_md_path", skill_md_path)
     '''
     name	       Yes	Max 64 characters. Lowercase letters, numbers, and hyphens only. Must not start or end with a hyphen.
     description	   Yes	Max 1024 characters. Non-empty. Describes what the skill does and when to use it.
@@ -289,24 +293,29 @@ def skillmd_to_database(skill_md_path:Path, parent_project = None, parent_agent 
     allowed-tools	No	Space-separated string of pre-approved tools the skill may use. (Experimental)
     '''
     skill_md = frontmatter.load(skill_md_path)
-    skill, created_skill = Skill.objects.get_or_create(
+    skill, created_skill = SkillModel.objects.get_or_create(
         name = skill_md.get("name"),
         parent_agent = parent_agent,
         parent_project = parent_project,
     )
 
-    skill_version, created_skillversion = SkillVersion.objects.get_or_create(
+    skill_version, created_skillversion = SkillModelVersion.objects.get_or_create(
         skill = skill,
         description = skill_md.get("description"),
         path = skill_md_path,
         commit = get_newstes_commit_hash(skill_md_path.parent),
     )
     if created_skillversion:
-        Skill.objects.filter(pk = skill.pk).update(latest_skill_version=skill_version)
-        
+        SkillModel.objects.filter(pk = skill.pk).update(latest_skill_version=skill_version)
 
-    return skill
+    #for skill_tool_md in get_python_script_files(skill_md_path.parent / "scripts"):
+    #    load_python_script_file(skill_tool_md, parent_project=parent_project, parent_agent=parent_agent, parent_skill=skill)
+    return skill, skill_version
 
+def load_python_script_file(python_script_path:Path, parent_project = None, parent_agent=None, parent_skill=None): 
+    print("load_python_script_file", python_script_path)
+    tasks= python_script_to_database(python_script_path, parent_project=parent_project, parent_agent=parent_agent, parent_skill=parent_skill)
+    return tasks
 
 def python_script_to_database(python_script_path:Path, parent_project = None, parent_agent = None, parent_skill=None):
     '''
@@ -338,8 +347,8 @@ def python_script_to_database(python_script_path:Path, parent_project = None, pa
     exec_globals = {"__builtins__": __builtins__}
     with temp_sys_path( python_script_path.parent):
         exec(python_script_path.read_text(encoding="utf-8"), exec_globals) # Execute the source code
-    print("exec_globals", exec_globals)
-    defs = {}
+    #print("exec_globals", exec_globals)
+    results = []
     for key, value in  exec_globals.items():
         if key == "__builtins__":
             continue
@@ -352,37 +361,43 @@ def python_script_to_database(python_script_path:Path, parent_project = None, pa
                 task_def["description"]  = description
 
             existing_tasks_filter_kwargs = {
-                "name": task_def.get("name"),
-                "task_type": task_def["task_type"],
+                #"name": task_def.get("name"),
+                #"task_type": task_def["task_type"],
                 "description": textwrap.dedent(task_def.get("description", "")),
                 "trigger":  task_def.get("trigger", "") or "",
                 "function_schema": task_def.get("schema", {}) or {}  ,
             }
-            if requires_approval := task_def.get("requires_approval", None):
+            if (requires_approval := task_def.get("requires_approval", None)):
                 existing_tasks_filter_kwargs["requires_approval"] = requires_approval
-            if max_retries := task_def.get("max_retries", None):
+            if (max_retries := task_def.get("max_retries", None)) is not None:
                 existing_tasks_filter_kwargs["max_retries"] = max_retries
-            if retry_delay := task_def.get("retry_delay", None):
+            if (retry_delay := task_def.get("retry_delay", None)) is not None:
                 existing_tasks_filter_kwargs["retry_delay"] = retry_delay
-            if retry_requires_approval := task_def.get("retry_requires_approval", None):
+            if (retry_requires_approval := task_def.get("retry_requires_approval", None)) is not None:
                 existing_tasks_filter_kwargs["retry_requires_approval"] = retry_requires_approval
-            if priority := task_def.get("priority", None):
+            if (priority := task_def.get("priority", None)) is not None:
                 existing_tasks_filter_kwargs["priority"] = priority
-            if thinking := task_def.get("thinking", None) is not None:
+            if (thinking := task_def.get("thinking", None)) is not None:
                 existing_tasks_filter_kwargs["thinking"] = thinking
-            task_obj, created = TaskDefinition.objects.get_or_create(
+
+            task_definition, task_definition_version_created = TaskDefinition.objects.get_or_create(
                 parent_skill = parent_skill,
                 parent_agent = parent_agent,
                 parent_project = parent_project,
+                name = task_def.get("name"),
+                task_type = task_def["task_type"],
+            )
+            task_definition_version, task_definition_version_created = TaskDefinitionVersion.objects.get_or_create(
+                task_definition = task_definition,
                 path = python_script_path,
-                #commit = get_newstes_commit_hash(python_script_path.parent),
+                commit = get_newstes_commit_hash(python_script_path.parent),
                 **existing_tasks_filter_kwargs, # Use the same normalized fields for lookup
             )
+            if task_definition_version_created:
+                TaskDefinition.objects.filter(pk = task_definition.pk).update(latest_task_version=task_definition_version)
+            results.append((task_definition, task_definition_version))
 
-    print(defs)
-    return
-
-    return tool
+    return results
 
 
 def project_to_database(project_md_path):
@@ -425,12 +440,12 @@ class Command(BaseCommand):
         # Global Skills
         local_skill_mds = get_skillmd_files(agentone_path / "skills")
         for local_skill_md in local_skill_mds:
-            load_skill_md_file(local_skill_md)
+            skill, skill_version = load_skill_md_file(local_skill_md)
 
         # Global Agents
         local_agent_mds = get_agentmd_files(agentone_path / "agents")
         for local_agent_md in local_agent_mds:
-            load_agent_md_file(local_agent_md)
+            agent, agent_version = load_agent_md_file(local_agent_md)
 
         with (agentone_path / "projects.yaml").open(encoding="utf-8") as f:
             project_paths =  yaml.safe_load(f) or []

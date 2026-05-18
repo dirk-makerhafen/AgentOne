@@ -1,0 +1,45 @@
+from django.db import models
+from runtime.agents.session import Session
+from server.models.agents.agent_version import AgentVersionModel
+from server.models.sessions.session import SessionModel
+from server.models.agents.agent import AgentModel
+
+from server.models.base_model import BaseModel
+from cachetools import LRUCache
+from django.db import models
+from django.core.exceptions import ValidationError
+from typing import TYPE_CHECKING, Any
+
+from server.models.content import GenericContent
+
+AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE = LRUCache(maxsize=1024)
+
+class SessionVersionModel(BaseModel):
+    session = models.ForeignKey(SessionModel, on_delete=models.CASCADE, related_name="related_session_versions")
+    agent = models.ForeignKey(AgentModel, on_delete=models.CASCADE, related_name="related_session_versions")
+    agent_version  = models.ForeignKey(AgentVersionModel,  on_delete=models.CASCADE, related_name="related_session_versions")
+
+    created_by = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_session_versions", default=None, null=True, blank=True)
+    workspace = models.ForeignKey("server.WorkspaceModel", on_delete=models.CASCADE, related_name="related_session_versions", default=None, null=True, blank=True)
+
+    name = models.CharField(max_length=255, default="", blank=True)
+    display_name = models.CharField(max_length=2048, default=None, blank=True, null=True)
+    description  = models.TextField(max_length=65500, default="", blank=True)
+
+    workingdir = models.CharField(max_length=1024, default=None, blank=True, null=True)
+    child_session_versions = models.ManyToManyField("self", related_name="parent_session_versions", default=None, null=True, blank=True, symmetrical=False)
+
+    session_settings = models.ForeignKey("server.SettingsModel" , on_delete=models.SET_NULL, default=None, null=True , blank=True,related_name="related_instance_versions") # top level profile
+
+    version_number = models.IntegerField(default=0)
+
+    def get_runtime(self) -> Session:
+        return Session(session_model=self.session, pinned_session_version=self)
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValidationError(f"You may not edit an existing {self._meta.model_name}")
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"<AgentInstance#{self.session.pk}'{self.session.name}'__AgentInstanceVersion#{self.pk}>"

@@ -3,22 +3,22 @@ from typing import List, Any, Dict
 import ast
 from runtime.agents.bound_task import BoundTask
 from server.models.agents.agent import AgentModel
-from server.models.agents.agent_instance import InstanceModel
+from server.models.sessions.session import SessionModel
 from server.models.agents.agent_version import AgentVersionModel
-from server.models.agents.agent_instance_version import InstanceVersionModel
-from server.models.conversation_message import ConversationMessage
+from server.models.sessions.session_version import SessionVersionModel
+from server.models.message import Message
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from server.models.agents.agent_instance_version import InstanceVersionModel
+    from server.models.sessions.session_version import SessionVersionModel
 
 
 class AgentRuntime():
-    def __init__(self, agent_instance_version: InstanceVersionModel ):
-        self.agent:AgentModel = agent_instance_version.agent
-        self.agent_instance:InstanceModel = agent_instance_version.agent_instance
-        self.agent_instance_version:InstanceVersionModel = agent_instance_version
-        self.agent_version: AgentVersionModel = agent_instance_version.agent_version
+    def __init__(self, session_version: SessionVersionModel ):
+        self.agent:AgentModel = session_version.agent
+        self.agent_instance:SessionModel = session_version.session
+        self.session_version:SessionVersionModel = session_version
+        self.agent_version: AgentVersionModel = session_version.agent_version
 
     def __getattribute__(self, name: str) -> Any:
         try:
@@ -50,7 +50,7 @@ class AgentRuntime():
         if not parts:
             raise Exception("No message or message parts provided")
         
-        conversation_msg = ConversationMessage.objects.create(role = "user", agent_instance_version = self.agent_instance_version)
+        conversation_msg = Message.objects.create(role = "user", session_version = self.session_version)
         if parts[0] and parts[0].get("content", [None,])[0] == "!": # might be command
             cmd = parts[0].get("content", [None,]).split(None,1)[0][1:].strip()  # Get command without '!'
             task_function = None
@@ -80,7 +80,7 @@ class AgentRuntime():
             print("NOT TASK!")
         for part in parts:
             conversation_msg.add_part(part["content"])
-        return self.handle_chat_message.delay(conversation_message=conversation_msg)
+        return self.handle_chat_message.delay(message=conversation_msg)
 
 
 '''
@@ -89,26 +89,26 @@ class BaseAgent():
     Base class for all agent definitions.
  
     Class-level attributes (agent, agent_version, etc.) are populated either by
-    AgentRegistry.register() at startup, Instance-level attributes shadow them after __init__ runs.
+    AgentRegistry.register() at startup, Session-level attributes shadow them after __init__ runs.
     """
 
     parent: BaseAgent | None
     subagents: Subagents|None
 
-    def __init__(self, name:Optional[str] = None, display_name:Optional[str]=None, workingdir:str|None|Path=None, profile:Profile|None=None, agent_instance_version: AgentInstanceVersion|None=None, parent:BaseAgent|None=None):
+    def __init__(self, name:Optional[str] = None, display_name:Optional[str]=None, workingdir:str|None|Path=None, profile:Profile|None=None, session_version: AgentInstanceVersion|None=None, parent:BaseAgent|None=None):
         # Inherit workingdir from parent agent if not explicitly provided.
         # self.parent set by __init_subclass__
         if not self.parent and parent:
             self.parent = parent
-        if not workingdir and self.parent and self.parent.agent_instance_version:
-            workingdir = self.parent.agent_instance_version.workingdir
+        if not workingdir and self.parent and self.parent.session_version:
+            workingdir = self.parent.session_version.workingdir
 
-        if agent_instance_version:
-            # Instance version was injected directly (runtime loading path via
-            # AgentInstanceVersion.get_runtime_instance). Trust it, skip DB check.
-            self.agent = agent_instance_version.agent
-            self.agent_version = agent_instance_version.agent_version
-            self.agent_instance_version = agent_instance_version
+        if session_version:
+            # Session version was injected directly (runtime loading path via
+            # AgentInstanceVersion.get_runtime). Trust it, skip DB check.
+            self.agent = session_version.agent
+            self.agent_version = session_version.agent_version
+            self.session_version = session_version
             self.is_registered = True
         else:
             self.agent = getattr(self.__class__,"agent", None)  # injected by the backend loaded via in AgentVersion.get_runtime_class, otherwise get from db now
@@ -117,7 +117,7 @@ class BaseAgent():
             if not self.agent_version:
                 self.agent_version = self.agent.agent_versions.order_by("-version_number").first()
 
-            parent_instance_version = self.parent.agent_instance_version if self.parent else None
+            parent_instance_version = self.parent.session_version if self.parent else None
 
             self.is_registered = getattr(self.__class__, "is_registered", False)
             if not self.is_registered:
@@ -131,15 +131,15 @@ class BaseAgent():
             if not self.is_registered:
                 raise Exception(f"Only registered classed can be inititalized, failed {self}")
             
-            self.agent_instance_version = self.agent_version.get_or_create_instance(
+            self.session_version = self.agent_version.get_or_create_instance(
                 name = name,
                 display_name = display_name,
                 workingdir = workingdir,
                 parent_instance_version = parent_instance_version,
             )
 
-        self.agent_instance = self.agent_instance_version.agent_instance
-        self.workingdir = self.agent_instance_version.workingdir
+        self.agent_instance = self.session_version.agent_instance
+        self.workingdir = self.session_version.workingdir
         self.is_registered = True
         if hasattr(self, "subagents") and self.subagents:
             self.subagents.runtime_init(self)
@@ -154,7 +154,7 @@ class BaseAgent():
              active on the RuntimeContextTracker stack. This captures the agent that
              is constructing this one (e.g. a parent agent spinning up a sub-agent).
  
-          2. Instance reset: clear all instance-level agent attributes so each new
+          2. Session reset: clear all instance-level agent attributes so each new
              instance starts clean, regardless of what is cached on the class.
  
         Why the try/except for self.parent:
@@ -183,7 +183,7 @@ class BaseAgent():
             self.agent = None
             self.agent_version = None
             self.agent_instance = None
-            #self.agent_instance_version = None
+            #self.session_version = None
             self.is_registered = False
 
             # Push self onto the context stack so any agents constructed during
@@ -204,14 +204,14 @@ class BaseAgent():
         if not parts:
             raise Exception("No message or message parts provided")
         
-        conversation_msg = ConversationMessage.objects.create(role = "user", agent_instance_version = self.agent_instance_version)
+        conversation_msg = Message.objects.create(role = "user", session_version = self.session_version)
         if parts[0] and parts[0].get("content", [None,])[0] == "!": # might be command
             cmd = parts[0].get("content", [None,]).split(None,1)[0][1:] # Get command without '!'
             task_function = None
             print("CMD", cmd)
             agent_tool = self.agent_version.tools.filter(task_definition__trigger=cmd).first()
             if agent_tool:
-                tool_agent_instance_versio_runtime = agent_tool.tool_agent_version.get_or_create_instance().get_runtime_instance()
+                tool_agent_instance_versio_runtime = agent_tool.tool_agent_version.get_or_create_instance().get_runtime()
                 task_function = getattr(tool_agent_instance_versio_runtime, agent_tool.task_definition.name, None)
                 print("tool_agent_instance_versio_runtime", tool_agent_instance_versio_runtime, agent_tool.task_definition.name, task_function)
             else:
@@ -242,11 +242,11 @@ class BaseAgent():
     def _create_query(self):
         from server.models.queries.query import Query
         from server.models.queries.query_message import QueryMessage
-        agent_profile = self.agent_instance_version.select_profile()
+        agent_settings = self.session_version.select_profile()
         query = Query.objects.create(
-            aimodel =agent_profile.aimodel,
-            agent_instance_version = self.agent_instance_version,
-            agent_profile = agent_profile,
+            aimodel =agent_settings.aimodel,
+            session_version = self.session_version,
+            agent_settings = agent_settings,
         )
 
         available_tools = self.agent_version.tools
@@ -265,7 +265,7 @@ class BaseAgent():
             return index
         
         # 1. System Prompt
-        system_prompt = agent_profile.system_prompt
+        system_prompt = agent_settings.system_prompt
         if system_prompt:
             qmsg = QueryMessage.objects.create(role="system", query=query, index=get_index())
             QueryMessagePart.objects.create(
@@ -277,7 +277,7 @@ class BaseAgent():
             )
 
         # Inject Tool Definitions if CUSTOM syntax is used
-        if agent_profile.tool_call_syntax == AgentToolCallSyntax.CUSTOM:
+        if agent_settings.tool_call_syntax == AgentToolCallSyntax.CUSTOM:
             query_message = QueryMessage.objects.create(role="system", query=query, index=get_index())
             QueryMessagePart.objects.create(
                 query_message = query_message,
@@ -311,7 +311,7 @@ class BaseAgent():
         query.save()
         try:
             messages = query.compile()
-            tool_call_syntax = query.agent_instance_version.select_profile().tool_call_syntax
+            tool_call_syntax = query.session_version.select_profile().tool_call_syntax
             api_tools = []
 
             if tool_call_syntax == AgentToolCallSyntax.DEFAULT:
@@ -332,7 +332,7 @@ class BaseAgent():
                 "messages": messages,
                 "extra_body": {}
             }
-            if query.agent_profile.thinking is False:
+            if query.agent_settings.thinking is False:
                 api_params["extra_body"]["reasoning_effort"] = "none"
                 api_params["extra_body"]["thinking"] = False
                 api_params["extra_body"]["think"] = False
@@ -364,8 +364,8 @@ class BaseAgent():
             response = Response.objects.create(
                 query = query,
                 aimodel = query.aimodel,
-                agent_profile = query.agent_profile,
-                agent_instance_version = query.agent_instance_version,
+                agent_settings = query.agent_settings,
+                session_version = query.session_version,
                 data = response_data,
                 message_content = message_content,
                 message_reasoning = message_reasoning,
@@ -399,7 +399,7 @@ class BaseAgent():
             api_tool_calls = response.data.get('choices', [{},])[0].get('message', {}).get("tool_calls", None)
             
             custom_tool_calls = [] 
-            if response.agent_profile.tool_call_syntax == AgentToolCallSyntax.CUSTOM and response.message_content:
+            if response.agent_settings.tool_call_syntax == AgentToolCallSyntax.CUSTOM and response.message_content:
                 # Very basic regex parser for demonstration
                 pattern = r"\[call:(\w+)\((.*?)\)\]"
                 matches = re.finditer(pattern, response.message_content.get())
@@ -430,11 +430,11 @@ class BaseAgent():
                     for available_tool in available_tool_query:
                         available_tool: QueryAvailableTool
                         agent_version:AgentVersion = available_tool.tool_agent_version
-                        tool_agent_instance_version:AgentInstanceVersion = agent_version.get_or_create_instance(
-                            workingdir = self.agent_instance_version.workingdir,
-                            parent_instance_version = self.agent_instance_version,
+                        tool_session_version:AgentInstanceVersion = agent_version.get_or_create_instance(
+                            workingdir = self.session_version.workingdir,
+                            parent_instance_version = self.session_version,
                         )
-                        rt: BaseAgent = tool_agent_instance_version.get_runtime_instance()
+                        rt: BaseAgent = tool_session_version.get_runtime()
                         func: BoundAgentFunction = getattr(rt, func_name)
                         task_call = AgentTaskCall.create(func.instance(), args=[], kwargs=kwargs)
                         tool_call_tasks.append(task_call)
@@ -454,8 +454,8 @@ class BaseAgent():
 
     @task()
     def handle_command_response(self, command_response ):
-        conv_msg = ConversationMessage.objects.create(role = "assistant", agent_instance_version = self.agent_instance_version)
-        ConversationMessagePart.objects.create(
+        conv_msg = Message.objects.create(role = "assistant", session_version = self.session_version)
+        MessagePart.objects.create(
             message=conv_msg,
             #content=GenericContent.from_data(AgentTaskCall.callargs_to_json(command_response)[0]),
             content=GenericContent.from_data(command_response),
@@ -474,7 +474,7 @@ class BaseAgent():
 
     @task()
     def ping(self, message: str|None = None):
-        r = f"Pong from Agent {self.agent.name}, Version {self.agent_version.version_number}, Instance {self.agent_instance.name}"
+        r = f"Pong from Agent {self.agent.name}, Version {self.agent_version.version_number}, Session {self.agent_instance.name}"
         if message:
             r += f"\nMessage received:{message}"
         return r

@@ -2,10 +2,16 @@ from __future__ import annotations
 from contextlib import contextmanager
 from pathlib import Path
 import sys
+from typing import TYPE_CHECKING
 from server.models.enums.task_enums import TaskCallStatusDetail
 from registry.task_decorators import TaskDescriptor
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_instance import AgentTaskInstance
+from server.models.tasks.task_definition import TaskDefinition
+from server.models.tasks.task_definition_version import TaskDefinitionVersion
+
+if TYPE_CHECKING:
+    from server.models.sessions.session_version import SessionVersionModel
 
 @contextmanager
 def temp_sys_path(path):
@@ -21,33 +27,37 @@ def temp_sys_path(path):
         yield
 
 class BoundTask:
-    def __init__(self, agent_runtime, task_definition):
-        self.agent_runtime = agent_runtime
-        self.agent_instance_version = agent_runtime.agent_instance_version
-        self.agent_instance = agent_runtime.agent_instance_version.agent_instance
-        self.task_definition = task_definition
+    def __init__(self, session_version: SessionVersionModel, task_definition_version:TaskDefinitionVersion):
+        self.session_version = session_version
+        from runtime.agents.session import Session
+
+        self.session = Session(session_model=self.session_version.session, pinned_session_version=self.session_version)
+        self.task_definition_version = task_definition_version
+        self.task_definition =  self.task_definition_version.task_definition
+        print("BOUN TASK CREATED")
 
     def call(self, *args, **kwargs):
         '''
         synchronous call
         '''
+        print("CALL", self)
         exec_globals = {"__builtins__": __builtins__}
-        with temp_sys_path(Path( self.task_definition.path)):
-            exec(Path(self.task_definition.path).read_text(), exec_globals) # Execute the source code
-        func:TaskDescriptor|None = exec_globals.get(self.task_definition.name, None)
+        with temp_sys_path(Path( self.task_definition_version.path or "")):
+            exec(Path(self.task_definition_version.path or "").read_text(), exec_globals) # Execute the source code
+        func: TaskDescriptor|None = exec_globals.get(self.task_definition.name, None)
         if func:
-            return func.call(self.agent_runtime, *args, **kwargs)
-        raise Exception(f"Task '{self.task_definition.name}' not found, call failed, {self.task_definition.path}")
+            return func.call(self.session, *args, **kwargs)
+        raise Exception(f"Task '{self.task_definition.name}' not found, call failed, {self.task_definition_version.path}")
 
     def get_calls(self):
-        return AgentTaskCall.objects.filter(agent_instance=self.agent_instance, agent_task_definition=self.task_definition)
+        return AgentTaskCall.objects.filter(session=self.session_version.session, task_definition_version=self.task_definition_version)
 
     def lastest_result(self):
         query = self.get_calls().exclude(taskcall_result_run=None).filter(status_detail=TaskCallStatusDetail.ENDED_SUCCESS)
         task_call = query.last()
         return task_call.get_result(timeout=0) if task_call else None
 
-    def delay(self, *args, **kwargs):
+    def delay(self, *args, **kwargs) -> AgentTaskCall:
         """Star argument version of :meth:`apply_async`.
         Does not support the extra options enabled by :meth:`apply_async`.
 
@@ -59,7 +69,7 @@ class BoundTask:
         """
         return self.apply_async(args, kwargs)
 
-    def apply_async(self, args=None, kwargs=None, countdown=0, eta=None, expires=None,retry=False,time_limit=0, soft_time_limit=0,priority=0):
+    def apply_async(self, args=None, kwargs=None, countdown=0, eta=None, expires=None,retry=False,time_limit=0, soft_time_limit=0,priority=0) -> AgentTaskCall:
         """Apply tasks asynchronously by sending a message.
 
         Arguments:
@@ -93,14 +103,14 @@ class BoundTask:
         kwargs = kwargs if kwargs else {}
         print("HEREHRHEHR", )
         return AgentTaskInstance.get_or_create(
-            task_definition = self.task_definition,
-            agent_instance_version = self.agent_instance_version,
+            task_definition = self.task_definition_version,
+            session_version = self.session_version,
             args = args,
             kwargs=kwargs,
             **options
         )
 
-    def i(self, *args, **kwargs): # fertig
+    def i(self, *args, **kwargs) -> AgentTaskInstance: # fertig
         """Create AgentTaskInstance.  Shortcut for ``.i(*a, **k) -> .instance(a, k)``."""
         return self.instance(args=args, kwargs=kwargs)
 
@@ -128,4 +138,4 @@ class BoundTask:
         return self
 
     def __str__(self) -> str:
-        return f"<BoundTask {self.task_definition.name} of {self.agent_instance_version}>"
+        return f"<BoundTask {self.task_definition.name} of {self.session_version}>"

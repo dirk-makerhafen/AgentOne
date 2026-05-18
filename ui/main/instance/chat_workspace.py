@@ -1,11 +1,10 @@
 from __future__ import annotations
 from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.workspace.instance.task_trace_view import TaskTraceView
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_run import AgentTaskRun
 from ui.lib.model_view import ModelView
-from server.models.agents.agent_instance import InstanceModel
+from server.models.sessions.session import SessionModel
 from ui.lib.multi_queryset_view import MultiQuerySetView
 from ui.chat.message import MessageView
 from ui.chat.query import QueryView
@@ -15,13 +14,16 @@ from ui.chat.log_fs import FilesystemLogView
 from ui.chat.task_call import TaskCallView
 import unicodedata
 
+from ui.main.instance.task_trace_view import TaskTraceView
+
 
 class ChatWorkspaceView(ModelView):
     DOM_ELEMENT_CLASS = "ChatWorkspaceView resizable-container"
     DOM_ELEMENT_EXTRAS = 'data-orientation="vertical"'
     TEMPLATE_STR = """
        
-        {{pyview.task_trace_view.render()}}
+        {{ pyview.task_trace_view.render() w}}
+
         <div class="chat-timeline resizable-panel flex-column" data-size-pc="80">
             <div class="chat-mode-bar">
                 <button class="chat-mode-btn {{ 'active' if pyview.detail_level == 'simple'    else '' }}" onclick="pyview.set_detail_level('simple')">Chat</button>
@@ -55,7 +57,7 @@ class ChatWorkspaceView(ModelView):
         </script>
     """
 
-    def __init__(self, subject: InstanceModel, parent, **kwargs):
+    def __init__(self, subject: SessionModel, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.s = subject
         self.detail_level = 'simple'
@@ -68,14 +70,14 @@ class ChatWorkspaceView(ModelView):
             self.timeline.delete(remove_from_dom=False)
 
         instance = self.subject
-        latest = instance.latest_instance_version
+        latest = instance.latest_session_version
 
 
         self.task_trace_view = TaskTraceView(subject=self.subject, parent=self)
 
         from server.models.tasks.agent_task_run import AgentTaskRun as _Run
-        _child_ids = list(_Run.objects.filter(agent_instance_version__agent_instance=instance).values_list('taskrun_subtask_references', flat=True)) \
-            + list(_Run.objects.filter(agent_instance_version__agent_instance=instance).values_list('taskrun_result_references', flat=True))
+        _child_ids = list(_Run.objects.filter(session_version__agent_instance=instance).values_list('taskrun_subtask_references', flat=True)) \
+            + list(_Run.objects.filter(session_version__agent_instance=instance).values_list('taskrun_result_references', flat=True))
         _child_ids = [x for x in _child_ids if x is not None]
         root_calls = []# instance.agent_task_calls.exclude(id__in=_child_ids).order_by('-created_at')[:50]
         
@@ -95,7 +97,7 @@ class ChatWorkspaceView(ModelView):
             try:
                 from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
                 querysets.append((
-                    FsLogEntry.objects.filter(agent_instance_version=latest).order_by('created_at')
+                    FsLogEntry.objects.filter(session_version=latest).order_by('created_at')
                     if latest else FsLogEntry.objects.none(),
                     FilesystemLogView,
                 ))
@@ -104,7 +106,7 @@ class ChatWorkspaceView(ModelView):
             try:
                 from server.models.debug_log_entry import DebugLogEntry
                 querysets.append((
-                    DebugLogEntry.objects.filter(agent_instance=self.subject).order_by('created_at'),
+                    DebugLogEntry.objects.filter(session=self.subject).order_by('created_at'),
                     DebugLogView,
                 ))
             except Exception:
@@ -126,5 +128,5 @@ class ChatWorkspaceView(ModelView):
     def send_message(self, message: str):
         message = unicodedata.normalize("NFKC", message)
         if message.strip():
-            self.subject.latest_instance_version.get_runtime_instance().add_user_message(message=message)
+            self.subject.get_runtime().process_chat_message(message_string=message)
         self.update()

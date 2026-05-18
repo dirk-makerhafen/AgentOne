@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 from celery.utils.functional import is_list, maybe_list, regen, seq_concat_item, seq_concat_seq
 
 from typing import TYPE_CHECKING
+
+from server.models.tasks.task_definition_version import TaskDefinitionVersion
 if TYPE_CHECKING:
     from server.models.agents.agent_version import AgentVersionModel
 
@@ -21,9 +23,9 @@ class AgentTaskInstanceSubtask(models.Model):
 
 class AgentTaskInstance(BaseModel):
     """Binds a task definition to a specific agent instance"""
-    agent_task_definition   = models.ForeignKey("TaskDefinition" ,default=None, null=True, on_delete=models.CASCADE, related_name="related_agent_task_instances")
-    agent_instance          = models.ForeignKey("InstanceModel"       , on_delete=models.CASCADE, related_name="related_agent_task_instances")
-    agent_instance_version  = models.ForeignKey("InstanceVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_instances")
+    task_definition_version   = models.ForeignKey("TaskDefinitionVersion" ,default=None, null=True, on_delete=models.CASCADE, related_name="related_agent_task_instances")
+    session          = models.ForeignKey("SessionModel"       , on_delete=models.CASCADE, related_name="related_agent_task_instances")
+    session_version  = models.ForeignKey("SessionVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_instances")
 
     # instance wide args/kwargs, will be prepended/merged with call args/kwargs
     iarguments_json = models.JSONField(default=dict, null=True)
@@ -59,20 +61,20 @@ class AgentTaskInstance(BaseModel):
 
     @property
     def task_type(self):
-        return self.agent_task_definition.task_type
+        return self.task_definition_version.task_type
 
     @property
     def agent_task_calls(self):
         return self.related_agent_task_calls # pyright: ignore[reportAttributeAccessIssue]
 
     @classmethod
-    def get_or_create(cls, task_definition, agent_instance_version, args = None, kwargs=None, **options ) -> "AgentTaskInstance":
+    def get_or_create(cls, task_definition:TaskDefinitionVersion, session_version, args = None, kwargs=None, **options ) -> "AgentTaskInstance":
         """Create AgentTaskInstance.
         Returns:
             :class:`AgentTaskInstance`:  object for this task, wrapping arguments and options for multiple task invocation.
         """
-        print("get_or_create44", cls, task_definition, agent_instance_version, args, kwargs)
-        agent_instance = agent_instance_version.agent_instance
+        print("get_or_create44", cls, task_definition, session_version, args, kwargs)
+        session = session_version.session
 
         args = args if args else []
         arguments = kwargs if kwargs else {}
@@ -84,9 +86,9 @@ class AgentTaskInstance(BaseModel):
         arguments_json, ref_pks = AgentTaskInstance._create_instance_arguments_json(arguments=arguments)
 
         agent_task_instance, created = AgentTaskInstance.objects.get_or_create(
-            agent_task_definition = task_definition,
-            agent_instance = agent_instance,
-            agent_instance_version = agent_instance_version,
+            task_definition_version = task_definition,
+            session = session,
+            session_version = session_version,
             # Arguments
             iarguments_json = arguments_json,
             # Options - Startup
@@ -113,7 +115,7 @@ class AgentTaskInstance(BaseModel):
         # Store references that are used for args/kwargs
         agent_task_instance.taskinstance_arg_references.set(ref_pks)
 
-        if task_definition.task_type in ["CHAIN",  "GROUP"]:
+        if task_definition.task_definition.task_type in ["CHAIN",  "GROUP"]:
             if len(args) == 1 and isinstance(args[0], (list, set, tuple, GeneratorType) ):
                 args = args[0]
             else:
@@ -134,7 +136,7 @@ class AgentTaskInstance(BaseModel):
 
     def delay(self, *partial_args, **partial_kwargs):
         """Shortcut to :meth:`apply_async` using star arguments. """
-        print("AgentTaskInstance.delay", self.agent_task_definition.name, partial_args, partial_kwargs)
+        print("AgentTaskInstance.delay", self.task_definition_version, partial_args, partial_kwargs)
         return self.apply_async(args=partial_args, kwargs=partial_kwargs)
 
     def apply_async(self, args=None, kwargs=None, link = None, link_error=None,**options):
@@ -147,7 +149,7 @@ class AgentTaskInstance(BaseModel):
         Returns:
             ~@AgentTaskCall: promise of future evaluation.
         """
-        print("AgentTaskInstance.apply_async", self.agent_task_definition.name, args, kwargs, options, link, link_error)
+        print("AgentTaskInstance.apply_async", self.task_definition_version, args, kwargs, options, link, link_error)
         taskcall = self.call(args=args, kwargs=kwargs, **options)
         taskcall.apply_async()
         return taskcall
@@ -208,4 +210,4 @@ class AgentTaskInstance(BaseModel):
         super().save(*args, **kwargs) 
 
     def __str__(self):
-        return f"AgentTaskInstance#{self.pk}[{self.agent_task_definition.name}]"
+        return f"AgentTaskInstance#{self.pk}[{self.task_definition_version}]"

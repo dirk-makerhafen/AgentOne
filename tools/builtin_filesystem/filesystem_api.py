@@ -8,9 +8,9 @@ from .utils.permissions import check_permission
 from .utils.fuzzymatch import find_fuzzy_match
 
 class FilesystemApi():
-    def __init__(self, agent_instance_version):
-        self.agent_instance_version = agent_instance_version
-        self.agent_instance = agent_instance_version.agent_instance
+    def __init__(self, session_version):
+        self.session_version = session_version
+        self.agent_instance = session_version.agent_instance
    
     def get_loaded_items(self, refresh_from_disk=False):
         r = []
@@ -19,8 +19,8 @@ class FilesystemApi():
         return r
 
     def fs_load(self, path, filter = "", mode="full"):
-        abs_path, rel_path = clean_path(self.agent_instance_version.workingdir, path)
-        #if not check_permission(self.agent_instance_version, abs_path, 'read'):
+        abs_path, rel_path = clean_path(self.session_version.workingdir, path)
+        #if not check_permission(self.session_version, abs_path, 'read'):
         #    return (False, {'status': 'failed', 'message': f"Read access denied for: {rel_path}"})
         success, item = FsLogEntry.objects.get_or_create_latest(agent_instance = self.agent_instance, action="load", load_mode = mode, path = abs_path, filter = filter, recursive = False, must_exist = True )
         if not success:
@@ -28,7 +28,7 @@ class FilesystemApi():
         return True, {}
        
     def fs_unload(self, path):
-        abs_path, rel_path = clean_path(self.agent_instance_version.workingdir, path)
+        abs_path, rel_path = clean_path(self.session_version.workingdir, path)
         item = FsLogEntry.objects.filter(agent_instance=self.agent_instance, path=abs_path, is_newest_version=True).exclude(load_mode=None).order_by("-pk").first()
         if not item:
             return True, {}
@@ -38,8 +38,8 @@ class FilesystemApi():
         return True, {}
 
     def fs_write(self, path, content):
-        abs_path, rel_path = clean_path(self.agent_instance_version.workingdir, path)
-        if not check_permission(self.agent_instance_version, abs_path, 'write'):
+        abs_path, rel_path = clean_path(self.session_version.workingdir, path)
+        if not check_permission(self.session_version, abs_path, 'write'):
             return (False, {'status': 'failed', 'message': f"Write access denied for {rel_path}"})
         success, item = FsLogEntry.objects.get_or_create_latest(agent_instance=self.agent_instance, action="write", path = abs_path, must_be_file = True, must_exist = False)
         if not success:
@@ -50,8 +50,8 @@ class FilesystemApi():
         return True, {}
 
     def fs_append(self, path, content):
-        abs_path, rel_path = clean_path(self.agent_instance_version.workingdir, path)
-        if not check_permission(self.agent_instance_version, abs_path, 'write'):
+        abs_path, rel_path = clean_path(self.session_version.workingdir, path)
+        if not check_permission(self.session_version, abs_path, 'write'):
             return (False, {'status': 'failed', 'message': f"Write access denied for {rel_path}"})
         success, item = FsLogEntry.objects.get_or_create_latest(agent_instance = self.agent_instance, action="append", path = abs_path, must_be_file = True, must_exist = False)
         if not success:
@@ -62,8 +62,8 @@ class FilesystemApi():
         return True, {}
     
     def fs_replace(self, path, search, replace):
-        abs_path, rel_path = clean_path(self.agent_instance_version.workingdir, path)
-        if not check_permission(self.agent_instance_version, abs_path, 'write'):
+        abs_path, rel_path = clean_path(self.session_version.workingdir, path)
+        if not check_permission(self.session_version, abs_path, 'write'):
             return (False, {'status': 'failed', 'message': f"Write access denied for {rel_path}"})
         success, item = FsLogEntry.objects.get_or_create_latest(agent_instance=self.agent_instance, action="replace", path = abs_path, must_be_file = True, must_exist = True)
         if not success:
@@ -80,8 +80,8 @@ class FilesystemApi():
         return True, {}
 
     def fs_python_edit(self, path, source, classname = None, functionname = None):
-        abs_path, rel_path = clean_path(self.agent_instance_version.workingdir, path)
-        if not check_permission(self.agent_instance_version, abs_path, 'write'):
+        abs_path, rel_path = clean_path(self.session_version.workingdir, path)
+        if not check_permission(self.session_version, abs_path, 'write'):
             return (False, {'status': 'failed', 'message': f"Write access denied for {rel_path}"})      
         success, item = FsLogEntry.objects.get_or_create_latest(agent_instance = self.agent_instance, action="edit", path = abs_path, must_be_file = True, must_exist = True)
         if not success:
@@ -162,8 +162,8 @@ class FilesystemApi():
                     #'group_name': "Filesystem",
                     'name': 'path,unloaded',
                     'description': 'Limits history for tool calls on paths that are no longer loaded in the context.',
-                    #'match': lambda tc: tc.function_name.startswith('fs_') and tc.arguments.get('path') and get_abs_path(self.agent_instance_version.workingdir, tc.arguments.get('path')) not in loaded_paths,
-                    #'key': lambda tc: get_abs_path(self.agent_instance_version.workingdir, tc.arguments.get('path')),
+                    #'match': lambda tc: tc.function_name.startswith('fs_') and tc.arguments.get('path') and get_abs_path(self.session_version.workingdir, tc.arguments.get('path')) not in loaded_paths,
+                    #'key': lambda tc: get_abs_path(self.session_version.workingdir, tc.arguments.get('path')),
                     'limits': {'pending': limit, 'success': 2, 'failed': 1, 'max': 2}
                 },
                 {
@@ -171,7 +171,7 @@ class FilesystemApi():
                     'name': 'path,function',
                     'description': 'Limits history on a per-path, per-function basis (e.g., max 3 fs_write for "file.txt").',
                     #'match': lambda tc: tc.function_name.startswith('fs_'),
-                    #'key': lambda tc: (get_abs_path(self.agent_instance_version.workingdir, tc.arguments.get('path', '')), tc.function_name),
+                    #'key': lambda tc: (get_abs_path(self.session_version.workingdir, tc.arguments.get('path', '')), tc.function_name),
                     'limits': {'pending': limit, 'success': 3, 'failed': 2, 'max': 3}
                 },
                 {
@@ -179,7 +179,7 @@ class FilesystemApi():
                     'name': 'path',
                     'description': 'Limits total history for any fs_* call on a specific path.',
                     #'match': lambda tc: tc.function_name.startswith('fs_'),
-                    #'key': lambda tc: get_abs_path(self.agent_instance_version.workingdir, tc.arguments.get('path', '')),
+                    #'key': lambda tc: get_abs_path(self.session_version.workingdir, tc.arguments.get('path', '')),
                     'limits': {'pending': limit, 'success': 3, 'failed': 2, 'max': 3}
                 },
                 {

@@ -3,44 +3,16 @@ from server.models.base_model import BaseModel
 from server.models.enums.task_enums import TaskType  
 from django.core.exceptions import ValidationError
 
+from server.models.tasks.task_definition_version import TaskDefinitionVersion
+
 class TaskDefinition(BaseModel):
-    parent_skill = models.ForeignKey("server.Skill", default=None, null=True, on_delete=models.CASCADE, related_name='related_task_definitions')# for */.agentone/Agent/someagent/skills/ , null for global skill in ~/.agentone/skills
+    parent_skill = models.ForeignKey("server.SkillModel", default=None, null=True, on_delete=models.CASCADE, related_name='related_task_definitions')# for */.agentone/Agent/someagent/skills/ , null for global skill in ~/.agentone/skills
     parent_agent = models.ForeignKey("server.AgentModel", default=None, null=True, on_delete=models.CASCADE, related_name='related_task_definitions')# for */.agentone/Agent/someagent/skills/ , null for global skill in ~/.agentone/skills
     parent_project = models.ForeignKey("server.Project", default=None, null=True, on_delete=models.CASCADE, related_name='related_task_definitions')# for */someproject/.agentone/skills/ , null for global skill in ~/.agentone/skills
     
     name            = models.CharField(max_length=255)
     task_type       = models.CharField(max_length=20, choices=TaskType.choices)
-    description     = models.TextField()
-    function_schema = models.JSONField()
-
-    # Options - Startup
-    requires_approval = models.BooleanField(default=False)  # required user approval before run
-    
-    # Options - Run
-    time_limit      = models.IntegerField(default=None, null=True)     #   
-    max_subtask_errors     = models.IntegerField(default=0)   # for groups,absolute number, also used when timeout
-    max_subtask_error_rate = models.IntegerField(default=0)# for groups, in percent, also used when timeout
-    limit_subtask_parallel_runs  = models.IntegerField(default=0) # how many subtasks cn run in parallel, for groups 0=no limit
-    limit_per_instance_parallel_runs  = models.IntegerField(default=1) #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
-    priority = models.IntegerField(default=0)   # 0 = highest, 1..999 less important
-
-    # Options - Retry
-    max_retries  = models.IntegerField(default=0)   # how many retries to we make in case of error
-    retry_delay  = models.IntegerField(default=10)  # time between retries in seconds
-    retry_requires_approval = models.BooleanField(default=True)  # required user approval before run
-
-    trigger = models.CharField(max_length=255, default=None, blank=True, null=True)
-
-    path = models.CharField(max_length=1024, default=None, blank=True, null=True)
-    commit = models.CharField(max_length=1024, default="")
-
-    @property
-    def agent_task_instances(self):
-        return self.related_agent_task_instances # pyright: ignore[reportAttributeAccessIssue]
-
-    @property
-    def agent_versions(self):
-        return self.related_agent_versions # pyright: ignore[reportAttributeAccessIssue]
+    latest_task_version = models.ForeignKey(TaskDefinitionVersion, default=None, null=True, on_delete=models.SET_NULL, related_name='related_newest_task')
 
     def save(self, *args, **kwargs):
         if self.pk:

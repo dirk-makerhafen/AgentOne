@@ -1,5 +1,5 @@
 from __future__ import annotations
-from server.models.conversation_message import ConversationMessage
+from server.models.message import Message
 from ui.lib.queryset_view import QuerySetView
 from ui.lib.model_view import ModelView
 
@@ -43,7 +43,7 @@ class MessagePartView(ModelView):
 
 class MessageView(ModelView):
     """
-    Renders a single ConversationMessage.
+    Renders a single Message.
     Simple mode: content + collapsible tool-call summary.
     Developer mode: same, but tool calls link to full TaskCallView trees.
     """
@@ -137,7 +137,7 @@ class MessageView(ModelView):
     def DOM_ELEMENT_EXTRAS(self):
         return f'style="order: {int(self.subject.created_at.timestamp())}"'
 
-    def __init__(self, subject: ConversationMessage, parent, **kwargs):
+    def __init__(self, subject: Message, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.is_details_hidden = True
         self.part_views = QuerySetView(

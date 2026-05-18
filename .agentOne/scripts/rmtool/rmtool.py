@@ -1,0 +1,60 @@
+from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
+
+
+@tool()
+def rm(caller, path, recursive=False):
+    '''
+    Deletes a file or directory.
+
+    Args:
+        path (str): The absolute path to the file or directory to delete.
+        recursive (bool): If true, deletes directories and their contents. Default: false.
+
+    Returns:
+        tuple: (success: bool, result: dict)
+            On success, result contains:
+                - 'status': 'success'
+                - 'message': str
+            On error, result contains:
+                - 'status': 'error'
+                - 'message': str
+    '''
+    import os
+    from pathlib import Path
+    import shutil
+    import traceback
+
+    try:
+        if not path:
+            return (False, {'status': 'error', 'message': 'Path not provided'})
+
+        p = Path(path)
+
+        if not p.exists():
+            return (True, {'status': 'success', 'message': f"Path '{path}' does not exist, no action needed."})
+
+        if p.is_file():
+            os.remove(p)
+            return (True, {'status': 'success', 'message': f"File '{path}' deleted successfully."})
+        elif p.is_dir():
+            if recursive:
+                shutil.rmtree(p)
+                return (True, {'status': 'success', 'message': f"Directory '{path}' and its contents deleted recursively."})
+            else:
+                try:
+                    os.rmdir(p)
+                    return (True, {'status': 'success', 'message': f"Empty directory '{path}' deleted successfully."})
+                except OSError as e:
+                    err_str = str(e)
+                    if "Directory not empty" in err_str or "The directory is not empty" in err_str:
+                        return (False, {'status': 'error', 'message': f"Directory '{path}' is not empty. Use recursive=true to delete its contents."})
+                    else:
+                        return (False, {'status': 'error', 'message': f"Error deleting directory {path}: {err_str}"})
+        else:
+            return (False, {'status': 'error', 'message': f"Path '{path}' is neither a file nor a directory. Cannot delete."})
+
+    except Exception as e:
+        return (False, {
+            'status': 'error',
+            'message': f"Error deleting path {path}: {str(e)}\n{traceback.format_exc()}"
+        })

@@ -5,8 +5,9 @@ from contextlib import contextmanager
 
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
-from server.models.agents.profile import ProfileModel
+from server.models.settings import SettingsModel
 from server.models.tasks.agent_task_instance import AgentTaskInstance
+from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 
 class Command(BaseCommand):
@@ -24,12 +25,15 @@ class Command(BaseCommand):
         modelobj = None
         if model == "Agent":
             modelobj = AgentModel
-        elif model == "Profile":
-            modelobj = ProfileModel
+        elif model == "SettingsModel":
+            modelobj = SettingsModel
         elif model == "AgentVersion":
             modelobj = AgentVersionModel
         elif model == "AgentTaskInstance":
             modelobj = AgentTaskInstance
+        elif model == "TaskDefinitionVersion":
+            modelobj = TaskDefinitionVersion
+            
         #elif model == "AgentVersionAvailableTool":
         #    modelobj = AgentVersionAvailableTool
         else:

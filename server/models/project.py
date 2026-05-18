@@ -8,4 +8,3 @@ class Project(models.Model):
     description  = models.TextField(default="", max_length=10000, help_text="")
     path   = models.CharField(max_length=255, help_text="")
 
-

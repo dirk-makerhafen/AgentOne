@@ -26,17 +26,16 @@ class SidebarPanelProject(ModelView):
                     ACTIVE
                 </span>
             </div>
-            <div class="ws-row-path">/Users/Dirk/AgentOne</div>
+            <div class="ws-row-path"> {{ pyview.subject.path }} </div>
         </div>
     '''
     # </div>
-    def __init__(self, subject: AgentModel, parent: QuerySetView, **kwargs):
+    def __init__(self, subject: Project, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
     
     def open_project_details(self):
         self.root_view.main_panel.create_and_open_tab(ProjectView, self.subject)
-      
 
 
 class SidebarPanelProjects(ModelView):
@@ -46,7 +45,12 @@ class SidebarPanelProjects(ModelView):
         <div class="panel-head">
             <span data-i18n="tab_workspaces">Projects</span>
             <div class="panel-head-actions">
-                <button class="panel-head-btn" onclick="openWorkspaceCreate()" title="Add space" data-i18n-title="workspace_add_title" aria-label="Add space"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+                <button class="panel-head-btn" onclick="pyview.reloadFromDisk()" title="refresh from disk" data-i18n-title="projects_refresh_title" aria-label="Refresh from disk">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                </button>
+                <button class="panel-head-btn" onclick="openProjectCreate()" title="Add space" data-i18n-title="project_add_title" aria-label="Add space">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
             </div>
         </div>
         <div class="panel-head-sub" data-i18n="workspace_desc">Add and view Projects.</div>
@@ -57,11 +61,13 @@ class SidebarPanelProjects(ModelView):
 
     def __init__(self, subject:UiApp, parent: SidebarView, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.uid = "panelProjects"
         self.root_view: UiAppView = parent.root_view
         self.project_list = QuerySetView(
             subject=subject.projects.root(),
             parent=self,
             item_class=SidebarPanelProject,
         )
+
+    def reloadFromDisk(self):
+        pass
 

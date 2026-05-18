@@ -10,13 +10,15 @@ from server.models.enums.message_enums import MessageContentType, MessageRole
 from server.models.content import  GenericContent
 from django.core.exceptions import ValidationError
 
+from server.models.queries.query_message_part import QueryMessagePart
+
 
 class QueryMessage(BaseModel):
     # refernces
     query         = models.ForeignKey("server.Query"                     , on_delete=models.CASCADE     , related_name='query_messages')
     tool_calls    = models.ManyToManyField("server.AgentTaskCall"                                       , related_name='query_messages', default=None, null=True)
     tool_response = models.ForeignKey("server.AgentTaskRun"          , on_delete=models.SET_DEFAULT , related_name='query_messages', default=None, null=True)
-    conversation_message = models.ForeignKey("server.ConversationMessage", on_delete=models.SET_DEFAULT , related_name='query_messages', default=None, null=True)
+    message = models.ForeignKey("server.Message", on_delete=models.SET_DEFAULT , related_name='query_messages', default=None, null=True)
 
     role = EnumField(MessageRole, default=None)
     index = models.FloatField(default=0)
@@ -29,6 +31,24 @@ class QueryMessage(BaseModel):
     
     class Meta:
         ordering = ("index","pk")
+
+    def add_message_part(self, content:str|dict, content_template: str|None = None):
+        if isinstance(content, str):
+            db_content = GenericContent.from_text(content)
+            db_content_type = MessageContentType.TEXT
+        elif isinstance(content, dict):
+            db_content = GenericContent.from_data(content)
+            db_content_type = MessageContentType.TEMPLATE
+        db_content_template = None
+        if content_template:
+            db_content_template = GenericContent.from_text(content_template)
+        
+        return QueryMessagePart.objects.create(
+            content = db_content,
+            content_type = db_content_type,
+            content_template = db_content_template,
+            query_message = self,
+        )
 
     def compile(self, fail_on_error=True):
         new_parts = []

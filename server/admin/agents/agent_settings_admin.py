@@ -1,7 +1,7 @@
-from server.models.agents.profile import ProfileModel
+from server.models.settings import SettingsModel
 from django.contrib import admin
 
-@admin.register(ProfileModel)
+@admin.register(SettingsModel)
 class AgentProfileAdmin(admin.ModelAdmin):
     
     list_display = ('aimodel', 'execution_mode', 'created_at')

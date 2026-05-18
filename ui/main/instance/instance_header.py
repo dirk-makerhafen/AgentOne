@@ -1,9 +1,8 @@
 from __future__ import annotations
 from ui.lib.model_view import ModelView
-from server.models.agents.agent_instance import InstanceModel
-from server.models.agents.agent_instance_version import InstanceVersionModel
+from server.models.sessions.session import SessionModel
+from server.models.sessions.session_version import SessionVersionModel
 from server.models.agents.agent_version import AgentVersionModel
-from server.models.agents.profile import ProfileModel
 
 
 class InstanceHeaderView(ModelView):
@@ -103,14 +102,14 @@ class InstanceHeaderView(ModelView):
 }
     """
 
-    def __init__(self, subject: InstanceModel, parent, **kwargs):
+    def __init__(self, subject: SessionModel, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.agent_version: AgentVersionModel | None = None
         #self.pinned_profile: Profile | None = None
         self._reload()
 
     def _reload(self):
-        latest: InstanceVersionModel | None = self.subject.latest_instance_version
+        latest: SessionVersionModel | None = self.subject.latest_session_version
         if latest:
             self.agent_version = latest.agent_version
             #self.pinned_profile = latest.pinned_agent_profile

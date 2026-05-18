@@ -10,7 +10,7 @@ from django.db import models
 from server.models.queries.query import Query
 from server.models.queries.response import Response
 from server.models.content import GenericContent
-from server.models.conversation_message import ConversationMessage
+from server.models.message import Message
 from runtime.context_manager import ContextTracker
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
 from server.tasks.task_dispatcher import celery_delay
@@ -31,11 +31,11 @@ if TYPE_CHECKING:
 class AgentTaskCall(BaseModel):
     """Specific invocation - equivalent to celery task"""
     agent_task_instance = models.ForeignKey("AgentTaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls")
-    agent_task_definition = models.ForeignKey("TaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls")
-    agent_instance = models.ForeignKey("InstanceModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
-    agent_instance_version = models.ForeignKey("InstanceVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+    task_definition_version = models.ForeignKey("TaskDefinitionVersion", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
+    session = models.ForeignKey("SessionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+    session_version = models.ForeignKey("SessionVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
     
-    # ARGUMENTS - Call Arguments, will be merged with Instance arguments
+    # ARGUMENTS - Call Arguments, will be merged with Session arguments
     carguments_json = models.JSONField(default=dict, null=False)
 
     # Options - Startup
@@ -106,9 +106,9 @@ class AgentTaskCall(BaseModel):
        
         taskcall = AgentTaskCall.objects.create(
             agent_task_instance = agent_task_instance,
-            agent_task_definition = agent_task_instance.agent_task_definition,
-            agent_instance = agent_task_instance.agent_instance,
-            agent_instance_version = agent_task_instance.agent_instance_version,
+            task_definition_version = agent_task_instance.task_definition_version,
+            session = agent_task_instance.session,
+            session_version = agent_task_instance.session_version,
             # Arguments
             carguments_json = arguments_json,
 
@@ -147,7 +147,7 @@ class AgentTaskCall(BaseModel):
 
         return taskcall
 
-    def apply_async(self):
+    def apply_async(self) :
         if not self.pk:
             raise Exception("Must save first")
         print("current ctx2" , ContextTracker.current)
@@ -155,12 +155,13 @@ class AgentTaskCall(BaseModel):
             before_hook_call.apply_async()
         from runtime.tasks.call_scheduler import CallScheduler
         celery_delay(CallScheduler._apply_async, self.pk)
-
+        return self
+    
     @staticmethod
     def create_call_arguments_json(arguments):
         from server.models.tasks.agent_task_run import AgentTaskRun
         allowed_objects = {
-            "AgentTaskCall" : AgentTaskCall,  "AgentTaskRun" : AgentTaskRun,   "ConversationMessage" : ConversationMessage, 
+            "AgentTaskCall" : AgentTaskCall,  "AgentTaskRun" : AgentTaskRun,   "Message" : Message, 
             "GenericContent" : GenericContent,  "Query": Query, "Response": Response
         }
 
@@ -243,6 +244,6 @@ class AgentTaskCall(BaseModel):
 
     def __str__(self):
         try:
-            return f"<AgentTaskCall[{self.pk}]# {self.agent_task_definition.name if self.agent_task_definition else None}>"
+            return f"<AgentTaskCall[{self.pk}]# {self.task_definition_version.name if self.task_definition_version else None}>"
         except:
             return f"AgentTaskRun[{self.pk}]#{self.pk}: {self.status}"

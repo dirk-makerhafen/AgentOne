@@ -13,12 +13,14 @@ from .agents.agent_settings_admin import AgentProfileAdmin
 from .agents.agent_version_admin import AgentVersionAdmin
 
 from .tasks.agent_task_call_admin import AgentTaskCallAdmin
-from .tasks.agent_task_definition_admin import TaskDefinitionAdmin
+from .tasks.task_definition_version_admin import TaskDefinitionVersion
+from .tasks.task_definition_admin import TaskDefinitionAdmin
+
 from .tasks.agent_task_instance_admin import AgentTaskInstanceAdmin
 from .tasks.agent_task_run_admin import AgentTaskRunAdmin
 
-from .conversation_message_admin import ConversationMessageAdmin
-from .conversation_message_part_admin import ConversationMessagePartAdmin
+from .message_admin import ConversationMessageAdmin
+from .message_part_admin import ConversationMessagePartAdmin
 
 from .debug_log_entry_admin import DebugLogEntryAdmin
 from .history_limit_admin import HistoryLimitAdmin
@@ -31,6 +33,8 @@ from .system_admin import SystemAdmin
 
 from .skill_admin import SkillAdmin
 from .project_admin import ProjectAdmin
+
+from .workspace import WorkspaceAdmin
 
 #from .tool_call_admin import ToolCallAdmin
 #from .tool_definition_admin import ToolDefinitionAdmin

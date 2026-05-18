@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from runtime.agents.agent import Agent
 from server.models.agents.agent import AgentModel
 from ui.app import UiApp
 from ui.lib.model_view import ModelView
@@ -19,20 +20,28 @@ class SidebarPanelAgent(ModelView):
         <div class="profile-card-header" onclick="pyview.open_agent_details()">
             <div style="min-width:0;flex:1">
                 <div class="profile-card-name is-active">
+                    
                     <span class="profile-opt-badge stopped" title="Gateway stopped"></span>
-                        default 
-                    <span style="opacity:.5">(default)</span>
+                    
+                    {{ pyview.subject.name }} 
+                    
+                    <span style="opacity:.5">
+                        (default1)
+                    </span>
+                    
                     <span style="color:var(--link);font-size:10px;font-weight:600;margin-left:6px">
                         ACTIVE
                     </span>
                 </div>
-                <div class="profile-card-meta">gemma4:e4b · ollama-launch · 89 skills</div>
+                <div class="profile-card-meta">{{ pyview.subject.latest_agent_version.aimodel }} · ollama-launch · {{ pyview.subject.skillNames | length }} skills</div>
             </div>
         </div>
     '''
     def __init__(self, subject: AgentModel, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
+       
+        
     
     def open_agent_details(self):
         self.root_view.main_panel.create_and_open_tab(AgentView, self.subject)
@@ -45,7 +54,12 @@ class SidebarPanelAgents(ModelView):
         <div class="panel-head">
             <span data-i18n="tab_profiles">Agent profiles</span>
             <div class="panel-head-actions">
-            <button class="panel-head-btn" onclick="openProfileCreate()" title="New profile" data-i18n-title="new_profile" aria-label="New profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+            <button class="panel-head-btn" onclick="pyview.reloadFromDisk()" title="refresh from disk" data-i18n-title="agents_refresh_title" aria-label="Refresh from disk">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
+            <button class="panel-head-btn" onclick="openProfileCreate()" title="New profile" data-i18n-title="new_profile" aria-label="New profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
             </div>
         </div>
         <div style="flex:1;overflow-y:auto;padding:8px" id="profilesPanel">
@@ -59,7 +73,9 @@ class SidebarPanelAgents(ModelView):
         self.root_view: UiAppView = parent.root_view
 
         self.agent_list = QuerySetView(
-            subject=subject.agents.root(),
-            parent=self,
-            item_class=SidebarPanelAgent,
+            subject = subject.agents.root(),
+            parent = self,
+            item_class = SidebarPanelAgent,
         )
+    def reloadFromDisk(self):
+        pass

@@ -12,8 +12,8 @@ class AgentTaskRunSubtaskInline(admin.TabularInline):
 
 @admin.register(AgentTaskRun)
 class AgentTaskRunAdmin(admin.ModelAdmin):
-    # 'agent_instance_version__agent__name', 'agent_task_call', 'agent_task_definition__name', 
-    list_display = ('id', "created_at",'status', "arguments_json", 'result_json')
+    # 'session_version__agent__name', 'agent_task_call', 'agent_task_definition__name', 
+    list_display = ('id', "created_at",'status', "task_definition_version__task_definition__name","arguments_json", 'result_json')
     list_display_links = ('id',)
     list_filter = ('status', 'created_at')
     #search_fields = ( 'agent_task_call__id', 'agent_task_call__agent_task_instance__name')

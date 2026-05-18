@@ -1,11 +1,11 @@
-from server.models.agents.agent_instance import InstanceModel
+from server.models.sessions.session import SessionModel
 from django.contrib import admin
 
-@admin.register(InstanceModel)
+@admin.register(SessionModel)
 class AgentInstanceAdmin(admin.ModelAdmin):
-    list_display = ("pk", "created_at", 'name', 'agent', 'latest_instance_version', "created_by")
-    list_display_links = ("pk", 'name', "agent" ,"latest_instance_version")
-    search_fields = ('name', 'agent', "latest_instance_version")
-    list_filter = ('agent', 'created_at')
+    list_display = ("pk", "created_at", 'name',  'latest_session_version', "created_by")
+    list_display_links = ("pk", 'name',"latest_session_version")
+    search_fields = ('name',  "latest_session_version")
+    list_filter = ( 'created_at',)
     list_per_page = 25
     readonly_fields = ('created_at', 'updated_at')

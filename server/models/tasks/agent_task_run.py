@@ -12,8 +12,8 @@ from server.models.tasks.task_definition import TaskDefinition
 from server.models.content import GenericContent
 from runtime.context_manager import ContextTracker
 from server.models.enums.task_enums import TaskRunStatus
-from server.models.agents.agent_instance_version import InstanceVersionModel
-from server.models.conversation_message import ConversationMessage
+from server.models.sessions.session_version import SessionVersionModel
+from server.models.message import Message
 from server.models.queries.query import Query
 from server.models.queries.response import Response
 from server.tasks.task_dispatcher import celery_delay
@@ -36,9 +36,8 @@ class AgentTaskRun(BaseModel):
     """Single execution attempt"""
     agent_task_call       = models.ForeignKey("AgentTaskCall",         on_delete=models.CASCADE, related_name="related_agent_task_runs")
     agent_task_instance   = models.ForeignKey("AgentTaskInstance",     on_delete=models.CASCADE, related_name="related_agent_task_runs")
-    agent_task_definition = models.ForeignKey("TaskDefinition",   on_delete=models.CASCADE, related_name="related_agent_task_runs")
-    agent_instance_version = models.ForeignKey(InstanceVersionModel, on_delete=models.CASCADE, related_name="related_agent_task_runs")
-    agent_profile          = models.ForeignKey("server.ProfileModel",  on_delete=models.SET_NULL, related_name="related_agent_task_runs", null=True, blank=True) # will be random select if not given
+    task_definition_version = models.ForeignKey("TaskDefinitionVersion",   on_delete=models.CASCADE, related_name="related_agent_task_runs", default=None, null=True, blank=True)
+    session_version = models.ForeignKey(SessionVersionModel, on_delete=models.CASCADE, related_name="related_agent_task_runs")
 
     # ARGUMENTS - Created by call by mergeing partial args/kwargs of instance with call specific arguments
     arguments_json = models.JSONField(default=dict, null=False)
@@ -72,7 +71,7 @@ class AgentTaskRun(BaseModel):
 
     @classmethod
     def create(cls, agent_task_call: AgentTaskCall, args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None) -> "AgentTaskRun":
-        print("create taskru ", agent_task_call.agent_task_definition.task_type, agent_task_call.agent_task_definition.name, args, kwargs)
+        print("create taskru ", agent_task_call.task_definition_version, agent_task_call.task_definition_version, args, kwargs)
         agent_task_instance = agent_task_call.agent_task_instance
         agent_task_instance: AgentTaskInstance
         
@@ -84,9 +83,9 @@ class AgentTaskRun(BaseModel):
         taskrun = AgentTaskRun.objects.create(
             agent_task_call = agent_task_call,
             agent_task_instance = agent_task_instance,
-            agent_task_definition = agent_task_call.agent_task_definition,
-            agent_instance_version  = agent_task_call.agent_instance_version,
-            #agent_variant  =  agent_task_call.agent_instance_version.pinned_agent_variant  if agent_task_call.agent_instance_version.pinned_agent_variant else agent_task_call.agent_instance_version.get_or_create_variant(),
+            task_definition_version = agent_task_call.task_definition_version,
+            session_version  = agent_task_call.session_version,
+            #agent_variant  =  agent_task_call.session_version.pinned_agent_variant  if agent_task_call.session_version.pinned_agent_variant else agent_task_call.session_version.get_or_create_variant(),
             # Arguments
             arguments_json = arguments_json,
 
@@ -117,14 +116,15 @@ class AgentTaskRun(BaseModel):
         celery_delay(RunScheduler._apply_async, self.pk)
     
     def apply(self):
-        print("AgentTaskCall.run", self.agent_task_definition.name)
+        print("AgentTaskCall.run", self.task_definition_version)
+        task_definition=  self.task_definition_version.task_definition
         new_sub_task_calls = []
         result = None
         with ContextTracker(self):
             try:
-                runtime = self.agent_instance_version.get_runtime_instance()
+                runtime = self.session_version.get_runtime()
 
-                if self.agent_task_definition.task_type == "CHAIN":
+                if task_definition.task_type == "CHAIN":
                     # Start subcalls for chain
                     next_step_arguments = self.arguments_json
                     for sub_task_instance in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
@@ -132,7 +132,7 @@ class AgentTaskRun(BaseModel):
                         new_sub_task_calls.append(next_step_arguments)
                     result = new_sub_task_calls[-1]
 
-                elif self.agent_task_definition.task_type == "GROUP":
+                elif task_definition.task_type == "GROUP":
                     # Start subcalls for groups
                     for sub_task_instance in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
                         call = sub_task_instance.apply_async(kwargs=self.arguments_json)
@@ -141,7 +141,7 @@ class AgentTaskRun(BaseModel):
 
                 else: 
                     # normal executions            
-                    bound_agent_function = getattr(runtime, self.agent_task_definition.name)
+                    bound_agent_function = getattr(runtime, task_definition.name)
                     args, kwargs = self._resolve_run_arguments(timeout=0)
                     print("args, kwargs", args, kwargs)
                     result = bound_agent_function.call(*args, **kwargs)
@@ -177,14 +177,14 @@ class AgentTaskRun(BaseModel):
                 return obj
             if isinstance(obj, (list, set, tuple)):
                 return obj.__class__(_create_recursive(item, ref_pks) for item in obj)
-            if isinstance(obj, (AgentTaskRun, ConversationMessage, GenericContent, Query, Response)):
+            if isinstance(obj, (AgentTaskRun, Message, GenericContent, Query, Response)):
                 return {"_type": obj.__class__.__qualname__, "pk": obj.pk}
             if isinstance(obj, dict):
                 if "_type" in obj and "pk" in obj and len(obj) == 2:
                     if obj["_type"] == "AgentTaskRun":
                         ref_pks.append(obj["pk"])
                         return obj
-                    if obj["_type"] in [ "ConversationMessage",  "Query", "Response", ]:
+                    if obj["_type"] in [ "Message",  "Query", "Response", ]:
                         return obj
                     if obj["_type"] == "AgentTaskCall":
                         a =  AgentTaskCall.objects.get(pk=obj["pk"])
@@ -243,6 +243,7 @@ class AgentTaskRun(BaseModel):
             args = arguments.pop("*", [])
             kwargs = arguments
         elif not isinstance(arguments, (list, set, tuple)):
+            print("ISINSTANCE", arguments)
             args = [arguments, ]
 
         return args, kwargs
@@ -256,7 +257,7 @@ class AgentTaskRun(BaseModel):
                 return {k: _create_recursive(v, ref_pks) for k, v in obj.items()}
             if isinstance(obj, (list, set, tuple)):
                 return obj.__class__(_create_recursive(item, ref_pks) for item in obj)
-            if isinstance(obj, ( AgentTaskCall, ConversationMessage, Query, Response)):
+            if isinstance(obj, ( AgentTaskCall, Message, Query, Response)):
                 if isinstance(obj, AgentTaskCall):
                     ref_pks.append( obj.pk)
                 return {"_type": obj.__class__.__qualname__, "pk": obj.pk}
@@ -317,6 +318,6 @@ class AgentTaskRun(BaseModel):
 
     def __str__(self):
         try:
-            return f"AgentTaskRun[{self.agent_task_definition.name if hasattr(self, 'agent_task_definition') else None}]#{self.pk}: {self.status}"
+            return f"AgentTaskRun[{self.task_definition_version.name if hasattr(self, 'agent_task_definition') else None}]#{self.pk}: {self.status}"
         except:
             return f"AgentTaskRun[{self}]#{self.pk}: {self.status}"

@@ -44,7 +44,7 @@ class ApiProvider(BaseModel):
         from server.models.tasks.agent_task_run import AgentTaskRun
         from server.models.enums.task_enums import TaskRunStatus
         return AgentTaskRun.objects.filter(
-            agent_profile__aimodel__api_provider=self,
+            agent_settings__aimodel__api_provider=self,
             status=TaskRunStatus.ACTIVE,
         ).count()
 
@@ -53,6 +53,7 @@ class ApiProvider(BaseModel):
         Check provider-level parallel limit.
         Returns (is_limited: bool, reason: str).
         """
+        return False,""
         if self.limit_parallel_calls > 0:
             active = self.active_call_count()
             if active >= self.limit_parallel_calls:
@@ -68,7 +69,7 @@ class ApiProvider(BaseModel):
         from server.models.tasks.agent_task_call import AgentTaskCall
         from server.models.enums.task_enums import TaskCallStatusDetail
         return AgentTaskCall.objects.filter(
-            agent_instance_version__agent_version__profile__aimodel__api_provider=self,
+            session_version__agent_version__profile__aimodel__api_provider=self,
             status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
         ).order_by('created_at')
 

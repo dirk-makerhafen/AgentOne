@@ -510,11 +510,11 @@ resizeCanvas();
         print("GET_CALL", call)
         return {
             "id": f"call_{call.pk}",
-            "agent":                 f"agent:{call.agent_instance.agent.pk}",
-            "agent_name":            f"{call.agent_instance.agent.name}",
-            "agent_instance":        f"agent_instance:{call.agent_instance.pk}",
-            "agent_task_definition": f"{call.agent_task_definition.pk if hasattr(call,"agent_task_definition") else ''}",
-            "agent_task_definition_name": f"{call.agent_task_definition.name}",
+            "agent":                 f"agent:{call.session.agent.pk}",
+            "agent_name":            f"{call.session.agent.name}",
+            "agent_instance":        f"agent_instance:{call.session.pk}",
+            "agent_task_definition": f"{call.task_definition_version.pk if hasattr(call,"agent_task_definition") else ''}",
+            "agent_task_definition_name": f"{call.task_definition_version.name}",
 
             "dont_start_before": int(call.dont_start_before.timestamp()) if call.dont_start_before else 0,
             "dont_start_after":  int(call.dont_start_after.timestamp())  if call.dont_start_after  else 0,
@@ -557,10 +557,10 @@ resizeCanvas();
         
         return {
             "id":                    f"run_{run.pk}",
-            "agent":                 f"agent:{run.agent_instance_version.agent.pk}",
-            "agent_instance":        f"agent_instance:{run.agent_instance_version.agent_instance.pk}",
+            "agent":                 f"agent:{run.session_version.agent.pk}",
+            "agent_instance":        f"agent_instance:{run.session_version.session.pk}",
             "agent_task_call":       f"call_{run.agent_task_call.pk}",
-            "agent_task_definition": f"{run.agent_task_definition.name}:{run.agent_task_definition.pk}",
+            "agent_task_definition": f"{run.task_definition_version.name}:{run.task_definition_version.pk}",
             "dont_start_before":     int(run.dont_start_before.timestamp()) if run.dont_start_before else 0,
             "dont_start_after":      int(run.dont_start_after.timestamp()) if run.dont_start_after else 0,
             "taskrun_arg_references":     [f"run_{run_pk}"   for run_pk  in run.taskrun_arg_references.values_list('pk', flat=True)], # other runs referenced in our arguments

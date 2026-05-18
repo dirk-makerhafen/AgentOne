@@ -4,7 +4,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 class SettingsPanelView(PyHtmlView):
     """
-    Instance settings panel.
+    Session settings panel.
 
     Subject is AgentInstance. Several fields referenced here
     (limit_max_conversation_messages, limit_max_memory_items, etc.)
@@ -19,7 +19,7 @@ class SettingsPanelView(PyHtmlView):
     TEMPLATE_STR = """
         <div class="settings-container">
 
-            <h5>Instance limits</h5>
+            <h5>Session limits</h5>
 
             {{ pyview._limit_row('convo', 'Conversation history limit',
                 pyview.subject.limit_max_conversation_messages,

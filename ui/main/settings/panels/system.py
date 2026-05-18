@@ -12,7 +12,7 @@ class SettingPanelSystem(ModelView):
         <div class="settings-section-head">
             <div>
                 <div class="settings-section-title" data-i18n="settings_section_system_title">System</div>
-                <div class="settings-section-meta" data-i18n="settings_section_system_meta">Instance version and access controls.</div>
+                <div class="settings-section-meta" data-i18n="settings_section_system_meta">Session version and access controls.</div>
             </div>
             <div id="checkUpdatesBlock">
                 <span class="settings-version-badge" id="settings-webui-version-badge">WebUI: —</span>
@@ -75,4 +75,3 @@ class SettingPanelSystem(ModelView):
 
     def __init__(self, subject, parent: SettingsView, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.uid = "settingsPaneSystem"

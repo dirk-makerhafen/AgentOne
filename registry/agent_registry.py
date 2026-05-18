@@ -5,7 +5,7 @@ from django.db import transaction
 from registry.sub_agents import Subagents, Subagent
 from server.models.enums.task_enums import TaskType
 from server.models.agents.agent import AgentModel
-from server.models.agents.profile import ProfileModel
+from server.models.settings import SettingsModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.tasks.task_definition import TaskDefinition
 from registry.profile import Profile
@@ -47,8 +47,8 @@ class AgentRegistry():
                 imported_agent_versions_map[tool_def_item.__name__] = registered_tool_version
 
         # 3. Prepare kwargs for Profile (removed bare except and used specific get_or_create logic)
-        profile = getattr(agent_cls, "profile", ProfileModel())
-        profile: ProfileModel
+        profile = getattr(agent_cls, "profile", SettingsModel())
+        profile: SettingsModel
         print("profile.model", profile.model)
         print("raw_tool_defs", raw_tool_defs)
         aimodel = get_ai_model(profile.model)
@@ -59,8 +59,8 @@ class AgentRegistry():
             "max_retries": profile.max_retries,
             "priority":  profile.priority,
             "thinking":profile.thinking,
-            "max_task_steps": profile.max_task_steps,
-            "unattended_steps": profile.unattended_steps,
+            "max_turns": profile.max_turns,
+            "max_unattended_turns": profile.max_unattended_turns,
             "max_history_messages": profile.max_history_messages,
             "task_prompt": GenericContent.from_text(profile.task_prompt) if profile.task_prompt else None,
             "system_prompt": GenericContent.from_text(profile.system_prompt) if profile.system_prompt else None,
@@ -75,7 +75,7 @@ class AgentRegistry():
         python_dependencies = get_import_strings(source_path, agent_cls.__name__)
 
         with transaction.atomic():
-            profile_obj, created_profile = ProfileModel.objects.get_or_create(**kwargs) 
+            profile_obj, created_profile = SettingsModel.objects.get_or_create(**kwargs) 
             agent, created_agent = AgentModel.objects.get_or_create(name=agent_cls.__name__, defaults={"description": getattr(agent_cls, "description", ""),})
 
             # Get the latest existing agent version

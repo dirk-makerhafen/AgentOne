@@ -16,10 +16,10 @@ class QueryMessagePartView(ModelView):
             <span class="detail-meta">index {{ pyview.subject.index }}</span>
             <span class="detail-meta">{{ pyview.subject.content_type }}</span>
         </div>
-        {% if pyview.subject.conversation_message_part %}
+        {% if pyview.subject.message_part %}
             <div class="qmp-row">
                 <span class="detail-label">template:</span>
-                {{ pyview.subject.conversation_message_part.content_template }}
+                {{ pyview.subject.message_part.content_template }}
             </div>
         {% endif %}
         <button class="log-btn" onclick="pyview.toggle_compiled()">

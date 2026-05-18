@@ -177,4 +177,3 @@ class SettingPanelPerferences(ModelView):
 
     def __init__(self, subject, parent: SettingsView, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.uid = "settingsPanePreferences"

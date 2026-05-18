@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ui.lib.model_view import ModelView
-from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
-from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.settings.panels.appearance import SettingPanelAppearance
 from ui.main.settings.panels.conversation import SettingPanelConversation
 from ui.main.settings.panels.preferences import SettingPanelPerferences

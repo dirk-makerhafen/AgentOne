@@ -1,0 +1,52 @@
+from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
+
+
+@tool()
+def move(caller, source, destination):
+    '''
+    Moves a file or directory from source to destination.
+
+    - If the destination exists, it will be overwritten for files.
+    - Parent directories of the destination are created if they don't exist.
+    - Works across filesystem boundaries (unlike os.rename).
+
+    Args:
+        source (str): The absolute path to the file or directory to move.
+        destination (str): The absolute path to move to.
+
+    Returns:
+        tuple: (success: bool, result: dict)
+            On success, result contains:
+                - 'status': 'success'
+                - 'message': str
+            On error, result contains:
+                - 'status': 'error'
+                - 'message': str
+    '''
+    import shutil
+    from pathlib import Path
+    import traceback
+
+    try:
+        if not source or not destination:
+            return (False, {'status': 'error', 'message': 'Source and destination paths are required'})
+
+        src = Path(source)
+        if not src.exists():
+            return (False, {'status': 'error', 'message': f'Source not found: {source}'})
+
+        dst = Path(destination)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+
+        shutil.move(str(src), str(dst))
+
+        return (True, {
+            'status': 'success',
+            'message': f"Moved '{source}' to '{destination}'."
+        })
+
+    except Exception as e:
+        return (False, {
+            'status': 'error',
+            'message': f"Error moving '{source}' to '{destination}': {str(e)}\n{traceback.format_exc()}"
+        })

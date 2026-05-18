@@ -1,39 +1,78 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
+import sys
+import os
+import subprocess
+import tempfile
+import json
+
+from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool
 
 
 @tool()
 def python(caller, source):
     '''
-    Execute a Python script in a controlled sandbox environment. 
-    This tool allows the agent to run Python code for computation, data processing, file manipulation, or other programmatic tasks.
-    
-    Execution environment:
-    - The provided Python source code is executed inside an isolated runtime environment.
-    - Execution does not allow interactive input; all necessary data must be included in the script.
-    - The environment may restrict network access, long-running processes, or specific OS-level operations depending on system configuration.
-    - Python code is executed in a fresh context unless the backend explicitly provides persistence.
-    
-    Usage rules:
-- Use this tool only when Python execution is explicitly required, such as performing calculations, transforming data, generating files, or verifying code behavior.
-- Do not execute code that is destructive, harmful, or not explicitly authorized by the user.
-- Avoid speculative or unnecessary tool calls—use Python only when the result depends on code execution.
-- Scripts should be self-contained; avoid expecting interactive prompts or external input.
-- Ensure that long-running or infinite loops are avoided so execution can complete in a finite time.
+    Execute a Python script.
 
-Output behavior:
-- The tool returns stdout, stderr, and any generated files that the environment supports exporting.
-- Python exceptions will appear in stderr.
+    Use this tool when you need to run Python code for:
+    - Performing calculations or data processing
+    - Reading, writing, or transforming files
+    - Running small scripts to verify behavior
+    - Installing packages via subprocess
 
-Typical use cases:
-- Numerical computations or simulations
-- File parsing, transformation, or generation
-- Data analysis and visualization (if supported by the environment)
-- Testing or executing small Python utilities
+    Args:
+        source (str): The Python source code to execute.
 
-Use this tool when Python execution is the most reliable or efficient way to accomplish the requested task."
+    Returns:
+        tuple: (success: bool, result: dict)
+            On success, result contains:
+                - 'status': 'success'
+                - 'stdout': str
+                - 'stderr': str
+                - 'return_code': int
+            On error, result contains:
+                - 'status': 'error'
+                - 'stdout': str
+                - 'stderr': str
+                - 'return_code': int
     '''
-    result = primitives.run_python_code(agent_instance=caller, python_code_string=source, workingdir=caller.workingdir)
-    return ( result.get("status")=="success", result)
+    cwd = caller.workingdir if hasattr(caller, 'workingdir') and caller.workingdir else os.getcwd()
 
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
+            f.write(source)
+            tmp_path = f.name
 
+        proc = subprocess.run(
+            [sys.executable, tmp_path],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=300,
+            env={**os.environ}
+        )
 
+        result = {
+            'status': 'success',
+            'stdout': proc.stdout,
+            'stderr': proc.stderr,
+            'return_code': proc.returncode,
+        }
+        return (proc.returncode == 0, result)
+
+    except subprocess.TimeoutExpired:
+        return (False, {
+            'status': 'error',
+            'stdout': '',
+            'stderr': 'Python script timed out after 300 seconds.',
+            'return_code': -1,
+        })
+    except Exception as e:
+        import traceback
+        return (False, {
+            'status': 'error',
+            'stdout': '',
+            'stderr': f'{str(e)}\n{traceback.format_exc()}',
+            'return_code': -1,
+        })
+    finally:
+        if 'tmp_path' in locals() and os.path.exists(tmp_path):
+            os.remove(tmp_path)

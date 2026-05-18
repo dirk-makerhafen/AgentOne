@@ -3,19 +3,20 @@ import math
 from django.db import models
 from django_enum import EnumField
 import base64
-from jinja2 import Template, Environment, BaseLoader
+from jinja2 import Environment, BaseLoader
 from server.models.enums.message_enums import MessageContentType
 from server.models.base_model import BaseModel
 from server.models.content import  GenericContent
 
 
 _JINJA_ENV = Environment(loader=BaseLoader())
+
 class QueryMessagePart(BaseModel):
     # refernces
-    query_message             = models.ForeignKey("server.QueryMessage"           , on_delete=models.CASCADE, related_name='query_message_parts')
-    conversation_message      = models.ForeignKey("server.ConversationMessage"    , default=None, null=True, on_delete=models.SET_DEFAULT, related_name='query_message_parts')
-    conversation_message_part = models.ForeignKey("server.ConversationMessagePart", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='query_message_parts')
-    fsLogEntry                = models.ForeignKey("builtin_filesystem.FsLogEntry" , default=None, null=True, on_delete=models.SET_DEFAULT, related_name='query_message_parts')
+    query_message = models.ForeignKey("server.QueryMessage"           , on_delete=models.CASCADE, related_name='query_message_parts')
+    message       = models.ForeignKey("server.Message"    , default=None, null=True, on_delete=models.SET_DEFAULT, related_name='query_message_parts')
+    message_part  = models.ForeignKey("server.MessagePart", default=None, null=True, on_delete=models.SET_DEFAULT, related_name='query_message_parts')
+    #fsLogEntry    = models.ForeignKey("builtin_filesystem.FsLogEntry" , default=None, null=True, on_delete=models.SET_DEFAULT, related_name='query_message_parts')
 
     tokens = models.IntegerField(default=None, blank=True, null=True)
     index  = models.FloatField(default=0)
@@ -36,10 +37,10 @@ class QueryMessagePart(BaseModel):
         content = None
         content_type = self.content_type
         content_template = None
-        if self.conversation_message_part:
-            content_template = self.conversation_message_part.content_template
-            content_type =  self.conversation_message_part.content_type
-            content =   self.conversation_message_part.content
+        if self.message_part:
+            content_template = self.message_part.content_template
+            content_type =  self.message_part.content_type
+            content =   self.message_part.content
             print("compile here1")
         else:
             content_template = self.content_template

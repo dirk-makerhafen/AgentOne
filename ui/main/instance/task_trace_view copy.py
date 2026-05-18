@@ -4,7 +4,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_run import AgentTaskRun
 from ui.lib.model_view import ModelView
-from server.models.agents.agent_instance import InstanceModel
+from server.models.sessions.session import SessionModel
 from ui.lib.multi_queryset_view import MultiQuerySetView
 from ui.chat.message import MessageView
 from ui.chat.query import QueryView
@@ -715,8 +715,8 @@ loadTrace();
     def __init__(self, subject, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         instance = subject
         from server.models.tasks.agent_task_run import AgentTaskRun as _Run
-        _child_ids = list(_Run.objects.filter(agent_instance_version__agent_instance=instance).values_list('taskrun_subtask_references', flat=True)) \
-            + list(_Run.objects.filter(agent_instance_version__agent_instance=instance).values_list('taskrun_result_references', flat=True))
+        _child_ids = list(_Run.objects.filter(session_version__agent_instance=instance).values_list('taskrun_subtask_references', flat=True)) \
+            + list(_Run.objects.filter(session_version__agent_instance=instance).values_list('taskrun_result_references', flat=True))
         _child_ids = [x for x in _child_ids if x is not None]
         self.root_call = instance.agent_task_calls.order_by('created_at').last()
 
@@ -728,9 +728,9 @@ loadTrace();
         call = AgentTaskCall.objects.get(pk=int(call_id))
         return {
             "id": f"call:{call.pk}",
-            "agent": f"agent:{call.agent_instance.agent.pk}",
-            "agent_instance": f"agent_instance:{call.agent_instance.pk}",
-            "agent_task_definition": f"{call.agent_task_definition.name}:{call.agent_task_definition.pk}",
+            "agent": f"agent:{call.session.agent.pk}",
+            "agent_instance": f"agent_instance:{call.session.pk}",
+            "agent_task_definition": f"{call.task_definition_version.name}:{call.task_definition_version.pk}",
             "dont_start_before": int(call.dont_start_before.timestamp()) if call.dont_start_before else 0,
             "dont_start_after": int(call.dont_start_after.timestamp()) if call.dont_start_after else 0,
             "taskcall_arg_references":  [f"call:{call_pk}" for call_pk in call.taskcall_arg_references.values_list('pk', flat=True)],
@@ -752,9 +752,9 @@ loadTrace();
         run = AgentTaskRun.objects.get(pk=int(run_id))
         return {
             "id": f"run:{run.pk}",
-            "agent": f"agent:{run.agent_instance_version.agent.pk}",
-            "agent_instance": f"agent_instance:{run.agent_instance_version.agent_instance.pk}",
-            "agent_task_definition": f"{run.agent_task_definition.name}:{run.agent_task_definition.pk}",
+            "agent": f"agent:{run.session_version.agent.pk}",
+            "agent_instance": f"agent_instance:{run.session_version.session.pk}",
+            "agent_task_definition": f"{run.task_definition_version.name}:{run.task_definition_version.pk}",
             "agent_task_call": f"call:{run.agent_task_call.pk}",
             "dont_start_before": int(run.dont_start_before.timestamp()) if run.dont_start_before else 0,
             "dont_start_after": int(run.dont_start_after.timestamp()) if run.dont_start_after else 0,

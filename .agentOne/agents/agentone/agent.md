@@ -2,8 +2,8 @@
 name: AgentOne
 description: Production-grade general purpose AI operator for research, engineering, writing, debugging, planning, and execution
 model: gemma4:26b
-extends: chatagent
-tools: python, shell
+extends: baseagent
+tools: python, shell, read, write, edit, multiedit, glob, grep, mkdir, rm, move, copy, append, stat
 ---
 ## Role
 

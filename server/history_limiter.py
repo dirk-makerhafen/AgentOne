@@ -1,14 +1,16 @@
 from typing import List, Set, Any
 from django.db.models import QuerySet
 
+from runtime.agents.session import Session
+
 class HistoryLimiter:
-    def __init__(self, agent_instance_version, all_entries: List[Any], all_loaded_paths: Set[str]):
-        self.agent_instance_version = agent_instance_version
+    def __init__(self, session: Session, all_entries: List[Any], all_loaded_paths: Set[str]):
+        self.session = session
         self.all_entries = all_entries
         self.all_loaded_paths = all_loaded_paths
         
         # Load settings
-        self.max_history_messages = self.agent_instance_version.select_profile().max_history_messages
+        self.max_history_messages = self.session.max_history_messages
 
     def is_tool_call_limited(self, tool_call, message) -> bool:
         # Simplistic implementation for now

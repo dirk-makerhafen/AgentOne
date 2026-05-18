@@ -1,5 +1,5 @@
 from __future__ import annotations
-from server.models.agents.agent_instance import InstanceModel
+from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_instance import AgentTaskInstance
 from server.models.tasks.task_definition import TaskDefinition
@@ -117,7 +117,7 @@ class TasksPanelView(ModelView):
             font-weight: bold;
         }
     '''
-    def __init__(self, subject: InstanceModel, parent, **kwargs):
+    def __init__(self, subject: SessionModel, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         '''
         {{ pyview.task_calls_view.render() }}
@@ -128,22 +128,22 @@ class TasksPanelView(ModelView):
         )
         '''
         self.tasks_view = QuerySetView(
-            subject=subject.latest_instance_version.agent_version.tasks(),
+            subject=subject.latest_session_version.agent_version.tasks(),
             parent=self,
             item_class=TaskDefinitionView,
         )
         self.commands_view = QuerySetView(
-            subject=subject.latest_instance_version.agent_version.commands(),
+            subject=subject.latest_session_version.agent_version.commands(),
             parent=self,
             item_class=TaskDefinitionView,
         )
         self.tools_view = QuerySetView(
-            subject=subject.latest_instance_version.agent_version.tools(),
+            subject=subject.latest_session_version.agent_version.tools(),
             parent=self,
             item_class=TaskDefinitionView,
         )
         self.skills_view = QuerySetView(
-            subject=subject.latest_instance_version.agent_version.skills(),
+            subject=subject.latest_session_version.agent_version.skills(),
             parent=self,
             item_class=TaskDefinitionView,
         )

@@ -38,8 +38,8 @@ class TaskCallView(ModelView):
             </div>
 
             <div class="tc-body">
-                <span class="tc-agent">{{ pyview.subject.agent_instance_version.agent.name }}</span>
-                <span class="tc-ver">v{{ pyview.subject.agent_instance_version.agent_version.version_number }}</span>
+                <span class="tc-agent">{{ pyview.subject.session_version.agent.name }}</span>
+                <span class="tc-ver">v{{ pyview.subject.session_version.agent_version.version_number }}</span>
                 <span class="tc-sep">·</span>
                 <span class="tc-name">{{ pyview.subject.agent_task_definition.name }}</span>
                 <span class="tc-id">Call#{{ pyview.subject.id }}</span>
