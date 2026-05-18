@@ -3,10 +3,6 @@ import os
 import subprocess
 import tempfile
 
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool
-
-
-@tool()
 def shell(caller, source, interpreter="auto"):
     '''
     Execute a shell command or script.

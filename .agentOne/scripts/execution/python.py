@@ -4,10 +4,6 @@ import subprocess
 import tempfile
 import json
 
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool
-
-
-@tool()
 def python(caller, source):
     '''
     Execute a Python script.

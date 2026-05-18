@@ -1,7 +1,4 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
 
-
-@tool()
 def rm(caller, path, recursive=False):
     '''
     Deletes a file or directory.

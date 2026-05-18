@@ -1,7 +1,6 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
+import sys
+import os
 
-
-@tool()
 def append(caller, path, content):
     '''
     Appends content to the end of a file.
@@ -47,3 +46,24 @@ def append(caller, path, content):
             'status': 'error',
             'message': f"Error appending to file {path}: {str(e)}\n{traceback.format_exc()}"
         })
+
+
+if __name__ == '__main__':
+
+    class MockCaller:
+        workingdir = os.getcwd()
+
+    args = sys.argv[1:]
+    if len(args) < 2:
+        path = '/tmp/test_append_tool.txt'
+        content = 'Appended line!\n'
+        print(f"Usage: python appendtool.py <path> <content>")
+        print(f"Defaulting to: {path}")
+    else:
+        path = args[0]
+        content = ' '.join(args[1:])
+
+    print(f"Appending to: {path}")
+    success, result = append.call(MockCaller(), path, content)
+    print(f"Success: {success}")
+    print(f"Result: {result['message']}")

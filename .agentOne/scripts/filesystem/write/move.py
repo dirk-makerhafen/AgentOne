@@ -1,7 +1,4 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
 
-
-@tool()
 def move(caller, source, destination):
     '''
     Moves a file or directory from source to destination.

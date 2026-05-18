@@ -1,7 +1,4 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
 
-
-@tool()
 def write(caller, path, content):
     '''
     Write a file to the local filesystem.

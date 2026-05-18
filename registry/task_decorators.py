@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Any, Callable, List, Optional, Dict
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Dict
 from functools import wraps
+
+#if TYPE_CHECKING:
 from server.models.enums.task_enums import TaskType
 
 class TaskDescriptor:

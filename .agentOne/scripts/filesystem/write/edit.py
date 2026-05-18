@@ -1,7 +1,4 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
 
-
-@tool()
 def edit(caller, path, old_string, new_string, replace_all=False):
     '''
     Performs exact string replacements in files.

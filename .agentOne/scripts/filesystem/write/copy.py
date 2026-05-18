@@ -1,7 +1,6 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
+import sys
+import os
 
-
-@tool()
 def copy(caller, source, destination, recursive=False):
     '''
     Copies a file or directory from source to destination.
@@ -59,3 +58,32 @@ def copy(caller, source, destination, recursive=False):
             'status': 'error',
             'message': f"Error copying '{source}' to '{destination}': {str(e)}\n{traceback.format_exc()}"
         })
+
+
+if __name__ == '__main__':
+    import sys
+    sys.path.insert(0, '/Users/Dirk/AgentOne')
+
+    class MockCaller:
+        workingdir = os.getcwd()
+
+    args = sys.argv[1:]
+    if len(args) < 2:
+        source = '/tmp/test_copy_src.txt'
+        destination = '/tmp/test_copy_dst.txt'
+        recursive = False
+        print(f"Usage: python copytool.py <source> <destination> [recursive=true|false]")
+        print(f"Defaulting to: {source} -> {destination}")
+    elif len(args) == 2:
+        source = args[0]
+        destination = args[1]
+        recursive = False
+    else:
+        source = args[0]
+        destination = args[1]
+        recursive = args[2].lower() == 'true'
+
+    print(f"Copying: {source} -> {destination} (recursive={recursive})")
+    success, result = copy.call(MockCaller(), source, destination, recursive)
+    print(f"Success: {success}")
+    print(f"Result: {result['message']}")

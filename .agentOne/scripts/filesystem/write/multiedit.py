@@ -1,7 +1,4 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
 
-
-@tool()
 def multiedit(caller, path, edits):
     '''
     Performs multiple exact string replacements in a single file.
