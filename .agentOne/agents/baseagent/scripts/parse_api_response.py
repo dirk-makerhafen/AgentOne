@@ -7,11 +7,20 @@ from runtime.agents.bound_task import BoundTask
 from runtime.agents.session import Session
 from server.models.queries.response import Response
 from server.models.settings import AgentToolCallSyntax
-from server.models.tasks.agent_task_call import AgentTaskCall
 
+'''
+return list of parts
 
+part is 
+{
+"type": "text,image,json,toolcall,template"
+"content": "the actual content, as text, base64 image, json compatible data, template string or toolcall",
+"template": "a template, in case type is template"
+}
+
+'''
 @task()
-def parse_response(session: Session, response: Response) -> dict[str,list[str]]:
+def parse_response(session: Session, response: Response) -> list[dict]:
     print("parse_responseparse_response", session, response)
 
     toolcalls = response.tool_calls

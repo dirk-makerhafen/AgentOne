@@ -1,18 +1,19 @@
 
-from registry.task_decorators import task
+   
 
-from registry.task_decorators import task
+
 from runtime.agents.session import Session
 from server.models.message import Message
-from server.models.queries.query import Query
 
-@task()
-def process_message1(session: Session, message: Message):
+
+def process_message(session: Session, message: Message) -> Message:
+
     query = session.create_query.delay(message=message)
+
     response = session.execute_query.delay(query)
-    response_handled = session.parse_response.delay(response)
-    response_content = session.decide_next_step.delay(response_handled)
+    
+    parts = session.parse_api_response.delay(response)
+    
+    response_content = session.process_assistant_message.delay(response=response, parsed_response_data=parts)
+    
     return response_content
-
-
-

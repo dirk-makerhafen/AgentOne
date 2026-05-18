@@ -4,7 +4,7 @@
 from runtime.agents.agent import Agent
 from runtime.agents.session import Session
 from server.models.content import GenericContent
-from server.models.message import Message
+from server.models.message import Message, MessagePart
 from server.models.enums.message_enums import MessageContentType
 
 

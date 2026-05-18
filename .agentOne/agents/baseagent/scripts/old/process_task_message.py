@@ -3,7 +3,7 @@ from runtime.agents.session import Session
 from server.models.content import GenericContent
 from server.models.message import Message, MessagePart
 from server.models.enums.message_enums import MessageContentType
-
+# old
 @task()
 def process_task_message(session: Session, **kwargs) -> Message:
     conversationMessage = Message.objects.create(role="user", session_version=session.get_version_model())

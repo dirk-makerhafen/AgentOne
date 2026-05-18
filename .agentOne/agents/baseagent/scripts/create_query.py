@@ -33,7 +33,7 @@ def create_query(session: Session, message: Message) -> Query:
                     content = GenericContent.from_text(f"Tool: {tdef.name}\nDescription: {tdef.description}\nSchema: {json.dumps(tdef.function_schema)}\n"),
                 )
 
-        print("FOOOOOooooo", message)
+
         # 2. Conversation History
         conversation_messages = session.model.messages.filter(pk__lte=message.pk, hide_from_context=False).order_by('-created_at')[:session.max_history_messages + 1]
         # Sort chronological
