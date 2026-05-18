@@ -46,3 +46,29 @@ def write(caller, path, content):
             'status': 'error',
             'message': f"Error writing to file {path}: {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+    import sys
+    from pathlib import Path
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Write a file.')
+    parser.add_argument('path', type=str, help='Path to write')
+    parser.add_argument('--content', type=str, default=None, help='Content to write')
+    parser.add_argument('--file', type=str, default=None, help='File to read content from')
+    args = parser.parse_args()
+
+    content = args.content
+    if args.file:
+        content = Path(args.file).read_text(encoding='utf-8')
+    elif content is None:
+        content = sys.stdin.read()
+
+    success, result = write(MockCaller(), path=args.path, content=content)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

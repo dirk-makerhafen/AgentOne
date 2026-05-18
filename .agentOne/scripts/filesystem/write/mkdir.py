@@ -46,3 +46,21 @@ def mkdir(caller, path, parents=False, exist_ok=True):
             'status': 'error',
             'message': f"Error creating directory {path}: {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Create a directory.')
+    parser.add_argument('path', type=str, help='Directory path to create')
+    parser.add_argument('--parents', '-p', action='store_true', default=False, help='Create parent directories')
+    parser.add_argument('--exist-ok', action='store_true', default=True, help='No error if directory exists')
+    args = parser.parse_args()
+
+    success, result = mkdir(MockCaller(), path=args.path, parents=args.parents, exist_ok=args.exist_ok)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

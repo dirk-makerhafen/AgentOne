@@ -1,10 +1,6 @@
-import requests
 import httpx
+import os
 
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool
-
-
-@tool()
 def webFetch(caller, url, format="markdown"):
     '''
     Fetches content from a specified URL.
@@ -70,3 +66,23 @@ def webFetch(caller, url, format="markdown"):
     except Exception as e:
         import traceback
         return (False, {'status': 'error', 'message': f'Error fetching {url}: {str(e)}\n{traceback.format_exc()}'})
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Fetch content from a URL.')
+    parser.add_argument('url', type=str, help='URL to fetch')
+    parser.add_argument('--format', type=str, default='markdown', choices=['text', 'markdown', 'html'], help='Output format')
+    args = parser.parse_args()
+
+    success, result = webFetch(MockCaller(), url=args.url, format=args.format)
+    if success:
+        print(result.get('content', ''))
+    else:
+        print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

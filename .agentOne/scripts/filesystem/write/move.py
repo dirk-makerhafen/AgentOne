@@ -47,3 +47,20 @@ def move(caller, source, destination):
             'status': 'error',
             'message': f"Error moving '{source}' to '{destination}': {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Move a file or directory.')
+    parser.add_argument('source', type=str, help='Source path')
+    parser.add_argument('destination', type=str, help='Destination path')
+    args = parser.parse_args()
+
+    success, result = move(MockCaller(), source=args.source, destination=args.destination)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

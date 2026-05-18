@@ -55,3 +55,20 @@ def rm(caller, path, recursive=False):
             'status': 'error',
             'message': f"Error deleting path {path}: {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Delete a file or directory.')
+    parser.add_argument('path', type=str, help='Path to delete')
+    parser.add_argument('--recursive', '-r', action='store_true', default=False, help='Delete directories recursively')
+    args = parser.parse_args()
+
+    success, result = rm(MockCaller(), path=args.path, recursive=args.recursive)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

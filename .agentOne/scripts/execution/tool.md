@@ -8,4 +8,8 @@ tools:
     type: python
     file: shell.py
     function: shell
+  - name: kill
+    type: python
+    file: kill.py
+    function: kill
 

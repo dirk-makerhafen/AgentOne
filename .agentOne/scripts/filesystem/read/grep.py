@@ -1,7 +1,9 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
+import re
+import os
+from pathlib import Path
+import traceback
+import fnmatch
 
-
-@tool()
 def grep(caller, pattern, path=None, include=None):
     '''
     Fast content search tool that works with any codebase size.
@@ -28,17 +30,12 @@ def grep(caller, pattern, path=None, include=None):
                 - 'status': 'error'
                 - 'message': str
     '''
-    import re
-    import os
-    from pathlib import Path
-    import traceback
-    import fnmatch
 
     try:
         if not pattern:
             return (False, {'status': 'error', 'message': 'Pattern not provided'})
 
-        search_dir = path if path else (caller.workingdir if hasattr(caller, 'workingdir') and caller.workingdir else os.getcwd())
+        search_dir = path if path else os.getcwd()
         search_dir = Path(search_dir)
 
         if not search_dir.exists():
@@ -87,3 +84,21 @@ def grep(caller, pattern, path=None, include=None):
             'status': 'error',
             'message': f"Error searching for pattern '{pattern}': {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Fast content search with regex.')
+    parser.add_argument('pattern', type=str, help='Regex pattern to search for')
+    parser.add_argument('--path', type=str, default=None, help='Directory to search in')
+    parser.add_argument('--include', type=str, default=None, help='File pattern to include (e.g., "*.js")')
+    args = parser.parse_args()
+
+    success, result = grep(MockCaller(), pattern=args.pattern, path=args.path, include=args.include)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

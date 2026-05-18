@@ -65,3 +65,23 @@ def edit(caller, path, old_string, new_string, replace_all=False):
             'status': 'error',
             'message': f"Error editing file {path}: {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+    import sys
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Exact string replacement in a file.')
+    parser.add_argument('path', type=str, help='Path to file')
+    parser.add_argument('--old', type=str, required=True, help='Text to replace')
+    parser.add_argument('--new', type=str, required=True, help='Replacement text')
+    parser.add_argument('--all', action='store_true', default=False, help='Replace all occurrences')
+    args = parser.parse_args()
+
+    success, result = edit(MockCaller(), path=args.path, old_string=args.old, new_string=args.new, replace_all=args.all)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

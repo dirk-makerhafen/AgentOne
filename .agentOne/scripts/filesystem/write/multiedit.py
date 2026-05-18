@@ -81,3 +81,22 @@ def multiedit(caller, path, edits):
             'status': 'error',
             'message': f"Error editing file {path}: {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+    import sys
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Multiple exact string replacements in a file.')
+    parser.add_argument('path', type=str, help='Path to file')
+    parser.add_argument('--edits', type=str, required=True, help='JSON array of {old_string, new_string, replace_all?}')
+    args = parser.parse_args()
+
+    edits = json.loads(args.edits)
+    success, result = multiedit(MockCaller(), path=args.path, edits=edits)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

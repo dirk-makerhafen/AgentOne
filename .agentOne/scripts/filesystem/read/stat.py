@@ -1,7 +1,6 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
+from pathlib import Path
+import traceback
 
-
-@tool()
 def stat(caller, path):
     '''
     Gets metadata for a file or directory.
@@ -24,8 +23,6 @@ def stat(caller, path):
                 - 'status': 'error'
                 - 'message': str
     '''
-    from pathlib import Path
-    import traceback
 
     try:
         if not path:
@@ -61,3 +58,19 @@ def stat(caller, path):
             'status': 'error',
             'message': f"Error getting stat for {path}: {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Get file or directory metadata.')
+    parser.add_argument('path', type=str, help='Path to inspect')
+    args = parser.parse_args()
+
+    success, result = stat(MockCaller(), path=args.path)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

@@ -72,3 +72,25 @@ def python(caller, source):
     finally:
         if 'tmp_path' in locals() and os.path.exists(tmp_path):
             os.remove(tmp_path)
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Execute a Python script.')
+    parser.add_argument('--source', type=str, required=True, help='Python source code to execute')
+    parser.add_argument('--file', type=str, help='Python file to execute (alternative to --source)')
+    args = parser.parse_args()
+
+    source = args.source
+    if args.file:
+        with open(args.file, 'r') as f:
+            source = f.read()
+
+    success, result = python(MockCaller(), source=source)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

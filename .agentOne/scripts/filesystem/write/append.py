@@ -1,6 +1,3 @@
-import sys
-import os
-
 def append(caller, path, content):
     '''
     Appends content to the end of a file.
@@ -47,23 +44,28 @@ def append(caller, path, content):
             'message': f"Error appending to file {path}: {str(e)}\n{traceback.format_exc()}"
         })
 
-
 if __name__ == '__main__':
+    import argparse
+    import json
+    import sys
+    from pathlib import Path
 
     class MockCaller:
-        workingdir = os.getcwd()
+        def __init__(self):
+            self.workingdir = os.getcwd()
 
-    args = sys.argv[1:]
-    if len(args) < 2:
-        path = '/tmp/test_append_tool.txt'
-        content = 'Appended line!\n'
-        print(f"Usage: python appendtool.py <path> <content>")
-        print(f"Defaulting to: {path}")
-    else:
-        path = args[0]
-        content = ' '.join(args[1:])
+    parser = argparse.ArgumentParser(description='Append content to a file.')
+    parser.add_argument('path', type=str, help='Path to file')
+    parser.add_argument('--content', type=str, default=None, help='Content to append')
+    parser.add_argument('--file', type=str, default=None, help='File to read content from')
+    args = parser.parse_args()
 
-    print(f"Appending to: {path}")
-    success, result = append.call(MockCaller(), path, content)
-    print(f"Success: {success}")
-    print(f"Result: {result['message']}")
+    content = args.content
+    if args.file:
+        content = Path(args.file).read_text(encoding='utf-8')
+    elif content is None:
+        content = sys.stdin.read()
+
+    success, result = append(MockCaller(), path=args.path, content=content)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

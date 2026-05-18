@@ -1,7 +1,7 @@
-from agentone_public import Query, QueryMessage, QueryMessagePart, task, tool, primitives
+import glob as glob_module
+import os
+import traceback
 
-
-@tool()
 def glob(caller, pattern, path=None):
     '''
     Fast file pattern matching tool that works with any codebase size.
@@ -25,15 +25,12 @@ def glob(caller, pattern, path=None):
                 - 'status': 'error'
                 - 'message': str
     '''
-    import glob as glob_module
-    import os
-    import traceback
 
     try:
         if not pattern:
             return (False, {'status': 'error', 'message': 'Pattern not provided'})
 
-        search_dir = path if path else (caller.workingdir if hasattr(caller, 'workingdir') and caller.workingdir else os.getcwd())
+        search_dir = path if path else os.getcwd()
 
         search_pattern = os.path.join(search_dir, pattern)
         matches = sorted(glob_module.glob(search_pattern, recursive=True), key=os.path.getmtime)
@@ -49,3 +46,20 @@ def glob(caller, pattern, path=None):
             'status': 'error',
             'message': f"Error searching for pattern '{pattern}': {str(e)}\n{traceback.format_exc()}"
         })
+
+if __name__ == '__main__':
+    import argparse
+    import json
+
+    class MockCaller:
+        def __init__(self):
+            self.workingdir = os.getcwd()
+
+    parser = argparse.ArgumentParser(description='Fast file pattern matching.')
+    parser.add_argument('pattern', type=str, help='Glob pattern (e.g., "**/*.py")')
+    parser.add_argument('--path', type=str, default=None, help='Directory to search in')
+    args = parser.parse_args()
+
+    success, result = glob(MockCaller(), pattern=args.pattern, path=args.path)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)

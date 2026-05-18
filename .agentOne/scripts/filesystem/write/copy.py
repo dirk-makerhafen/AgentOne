@@ -1,6 +1,3 @@
-import sys
-import os
-
 def copy(caller, source, destination, recursive=False):
     '''
     Copies a file or directory from source to destination.
@@ -59,31 +56,20 @@ def copy(caller, source, destination, recursive=False):
             'message': f"Error copying '{source}' to '{destination}': {str(e)}\n{traceback.format_exc()}"
         })
 
-
 if __name__ == '__main__':
-    import sys
-    sys.path.insert(0, '/Users/Dirk/AgentOne')
+    import argparse
+    import json
 
     class MockCaller:
-        workingdir = os.getcwd()
+        def __init__(self):
+            self.workingdir = os.getcwd()
 
-    args = sys.argv[1:]
-    if len(args) < 2:
-        source = '/tmp/test_copy_src.txt'
-        destination = '/tmp/test_copy_dst.txt'
-        recursive = False
-        print(f"Usage: python copytool.py <source> <destination> [recursive=true|false]")
-        print(f"Defaulting to: {source} -> {destination}")
-    elif len(args) == 2:
-        source = args[0]
-        destination = args[1]
-        recursive = False
-    else:
-        source = args[0]
-        destination = args[1]
-        recursive = args[2].lower() == 'true'
+    parser = argparse.ArgumentParser(description='Copy a file or directory.')
+    parser.add_argument('source', type=str, help='Source path')
+    parser.add_argument('destination', type=str, help='Destination path')
+    parser.add_argument('--recursive', '-r', action='store_true', default=False, help='Copy directories recursively')
+    args = parser.parse_args()
 
-    print(f"Copying: {source} -> {destination} (recursive={recursive})")
-    success, result = copy.call(MockCaller(), source, destination, recursive)
-    print(f"Success: {success}")
-    print(f"Result: {result['message']}")
+    success, result = copy(MockCaller(), source=args.source, destination=args.destination, recursive=args.recursive)
+    print(json.dumps(result, indent=2))
+    exit(0 if success else 1)
