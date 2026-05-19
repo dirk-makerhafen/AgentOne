@@ -23,7 +23,7 @@ class TaskCallView(ModelView):
 
     Only ROOT calls (parent=None or not in any run's subtask list) should
     appear in the top-level chat timeline. Child calls appear recursively
-    inside TaskRunView via taskrun_subtask_references / taskrun_result_references.
+    inside TaskRunView via child_taskcalls / taskrun_result_references.
     """
     DOM_ELEMENT_CLASS = "TaskCallView"
 
@@ -367,13 +367,13 @@ class TaskRunView(ModelView):
 
     @property
     def has_children(self) -> bool:
-        return self.subject.taskrun_subtask_references.exists() or self.subject.taskrun_result_references.exists()
+        return self.subject.child_taskcalls.exists() or self.subject.taskrun_result_references.exists()
 
     def __init__(self, subject: AgentTaskRun, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.is_collapsed = True
         self.subtask_views = QuerySetView(
-            subject=subject.taskrun_subtask_references.order_by('created_at'),
+            subject=subject.child_taskcalls.order_by('created_at'),
             parent=self,
             item_class=TaskCallView,
             is_subtask=True,

@@ -58,13 +58,14 @@ class AgentTaskRun(BaseModel):
     # Runtime values
     is_approved = models.BooleanField(default=False)  # user did appove this call
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
+   
+    #child_taskcalls = SortedManyToManyField("server.AgentTaskCall", help_text="AgentTaskCalls spawned", symmetrical=False, blank=True, related_name="parent_taskruns" )
 
 
     # References in Arguments for a TaskRun must be TaskRun, referencing the actual finished execution of a TaskCall
     # References in results must be TaskCall, hiding the actual (retried and so on) TaskRun that will be launched. 
     taskrun_arg_references     = models.ManyToManyField("server.AgentTaskRun", help_text="AgentTaskRuns used in args/kwargs", symmetrical=False, blank=True, related_name="rev_taskrun_arg_references")
     taskrun_result_references  = models.ManyToManyField("server.AgentTaskCall", help_text="AgentTaskCalls returned in results", symmetrical=False, blank=True, related_name="rev_taskrun_result_references")
-    taskrun_subtask_references = models.ManyToManyField("server.AgentTaskCall", help_text="AgentTaskCalls spawned", symmetrical=False, blank=True, related_name="rev_taskrun_subtask_references", through=AgentTaskRunSubtask, through_fields=("parent", "child") )
 
     status = models.CharField(choices=TaskRunStatus.choices, default=TaskRunStatus.NEW, max_length=61)
     result_json  = models.JSONField(default=None, null=True)
@@ -127,14 +128,14 @@ class AgentTaskRun(BaseModel):
                 if task_definition.task_type == "CHAIN":
                     # Start subcalls for chain
                     next_step_arguments = self.arguments_json
-                    for sub_task_instance in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
+                    for sub_task_instance in self.agent_task_instance.child_instances.order_by('parent_relations__index').all():
                         next_step_arguments = sub_task_instance.apply_async(kwargs=next_step_arguments)
                         new_sub_task_calls.append(next_step_arguments)
                     result = new_sub_task_calls[-1]
 
                 elif task_definition.task_type == "GROUP":
                     # Start subcalls for groups
-                    for sub_task_instance in self.agent_task_instance.taskinstance_sub_taskinstances.order_by('parent_relations__index').all():
+                    for sub_task_instance in self.agent_task_instance.child_instances.order_by('parent_relations__index').all():
                         call = sub_task_instance.apply_async(kwargs=self.arguments_json)
                         new_sub_task_calls.append(call)
                     result = new_sub_task_calls

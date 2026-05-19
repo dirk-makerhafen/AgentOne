@@ -7,6 +7,7 @@ from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.base_model import BaseModel
 from django.core.exceptions import ValidationError
 from celery.utils.functional import is_list, maybe_list, regen, seq_concat_item, seq_concat_seq
+from sortedm2m.fields import SortedManyToManyField
 
 from typing import TYPE_CHECKING
 
@@ -50,9 +51,10 @@ class AgentTaskInstance(BaseModel):
     is_approved = models.BooleanField(default=None, null=True)  # user did appove this call
     retry_count = models.IntegerField(default=0) 
 
+    child_instances = SortedManyToManyField("self", symmetrical=False, blank=True, related_name="parent_instances" )
+
     taskinstance_arg_references    = models.ManyToManyField("self", help_text="AgentTaskInstances used in instance args/kwargs", symmetrical=False, blank=True, related_name="rev_taskinstance_arg_references")
     taskinstance_result_references = models.ManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="rev_taskinstance_result_references")
-    taskinstance_sub_taskinstances = models.ManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="rev_taskinstance_sub_taskinstances", through=AgentTaskInstanceSubtask, through_fields=("parent", "child") )
 
     taskinstances_on_success_callbacks = models.ManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="rev_taskinstances_on_success_callbacks")
     taskinstances_on_error_callbacks   = models.ManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="rev_taskinstances_callback_on_erro")

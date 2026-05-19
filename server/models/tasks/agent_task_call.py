@@ -61,6 +61,8 @@ class AgentTaskCall(BaseModel):
     retry_count = models.IntegerField(default=0)   #count will not be avauilable 
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
 
+    parent_taskruns = models.ForeignKey("server.AgentTaskCall", blank=True, on_delete=models.CASCADE, related_name="child_taskcalls" )
+
     taskcall_arg_references     = models.ManyToManyField("self", help_text="AgentTaskCalls used in call args/kwargs", symmetrical=False, blank=True, related_name="rev_taskcall_arg_references")
     
     taskcall_on_success_callbacks = models.ManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="rev_taskcall_on_success_callbacks")

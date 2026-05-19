@@ -2,6 +2,7 @@ from django.db import models
 from server.models.base_model import BaseModel
 from server.models.enums.task_enums import TaskType  
 from django.core.exceptions import ValidationError
+from sortedm2m.fields import SortedManyToManyField
 
 class TaskDefinitionVersion(BaseModel):
     task_definition = models.ForeignKey("server.TaskDefinition", default=None, null=True, on_delete=models.CASCADE, related_name='versions')# for */someproject/.agentone/skills/ , null for global skill in ~/.agentone/skills
@@ -29,6 +30,8 @@ class TaskDefinitionVersion(BaseModel):
 
     path = models.CharField(max_length=1024, default=None, blank=True, null=True)
     commit = models.CharField(max_length=1024, default="")
+
+    child_tasks = SortedManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="parent_tasks")
 
     @property
     def agent_task_instances(self):

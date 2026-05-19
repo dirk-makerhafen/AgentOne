@@ -37,7 +37,7 @@ class TaskInstanceView(ModelView):
             <span class="task-def-name">{{ pyview.subject.agent_task_definition.name }}</span>
             <span class="text-muted small">
                 deps={{ pyview.subject.taskinstance_arg_references.count() }}
-                subtasks={{ pyview.subject.taskinstance_sub_taskinstances.count() }}
+                subtasks={{ pyview.subject.child_instances.count() }}
                 on_success={{ pyview.subject.taskinstances_on_success_callbacks.count() }}
                 on_error={{ pyview.subject.taskinstances_on_error_callbacks.count() }}
             </span>

@@ -390,7 +390,7 @@ function renderTrace(data) {
     // link each run → its subtask calls AND result calls
     runs.forEach(r => {
         [
-            ...(r.taskrun_subtask_references || []),
+            ...(r.child_taskcalls || []),
             ...(r.taskrun_result_references  || []),
         ].forEach(cid => {
             if (_byId[cid] && !_byId[cid]._parent) {
@@ -597,7 +597,7 @@ function _selectNode(id) {
     ${chips(node.taskcall_after_run_hooks,       'after run hooks')}
     ${chips(node.taskrun_arg_references,         'run arg references')}
     ${chips(node.taskrun_result_references,      'result references')}
-    ${chips(node.taskrun_subtask_references,     'subtask references')}
+    ${chips(node.child_taskcalls,     'subtask references')}
   `;
 }
  
@@ -679,7 +679,7 @@ async function loadTrace() {
             refs = [
                 ...(runData.taskrun_arg_references    || []),
                 ...(runData.taskrun_result_references || []),
-                ...(runData.taskrun_subtask_references|| []),
+                ...(runData.child_taskcalls|| []),
             ];
             refs.forEach(id => {
                 if (id.startsWith('call:') && !allCalls[id]) callQueue.push(id);
@@ -715,7 +715,7 @@ loadTrace();
     def __init__(self, subject, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         instance = subject
         from server.models.tasks.agent_task_run import AgentTaskRun as _Run
-        _child_ids = list(_Run.objects.filter(session_version__agent_instance=instance).values_list('taskrun_subtask_references', flat=True)) \
+        _child_ids = list(_Run.objects.filter(session_version__agent_instance=instance).values_list('child_taskcalls', flat=True)) \
             + list(_Run.objects.filter(session_version__agent_instance=instance).values_list('taskrun_result_references', flat=True))
         _child_ids = [x for x in _child_ids if x is not None]
         self.root_call = instance.agent_task_calls.order_by('created_at').last()
@@ -760,7 +760,7 @@ loadTrace();
             "dont_start_after": int(run.dont_start_after.timestamp()) if run.dont_start_after else 0,
             "taskrun_arg_references":  [f"run:{run_pk}" for run_pk in run.taskrun_arg_references.values_list('pk', flat=True)],
             "taskrun_result_references":  [f"call:{call_pk}" for call_pk in run.taskrun_result_references.values_list('pk', flat=True)],
-            "taskrun_subtask_references": [f"call:{call_pk}" for call_pk in run.taskrun_subtask_references.values_list('pk', flat=True)],
+            "child_taskcalls": [f"call:{call_pk}" for call_pk in run.child_taskcalls.values_list('pk', flat=True)],
             "created_at": run.created_at.timestamp() if run.created_at else 0,
             "ended_at": run.updated_at.timestamp() if run.updated_at else 0, # use last updateed ts for now
 

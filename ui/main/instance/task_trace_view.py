@@ -170,7 +170,7 @@ renderCall = (callData) => {
                 <div class="spawned-by anchor-point" >
                     <div id="${callData.id}_on_success_destination" class="point" data-reftype="call" data-pointtype="destination" data-remotepostfix="_on_success_source" data-refname="rev_taskcall_on_success_callbacks" data-refs="${[...callData.rev_taskcall_on_success_callbacks].join(',')}"></div>
                     <div id="${callData.id}_on_error_destination"   class="point" data-reftype="call" data-pointtype="destination" data-remote_postfix="_on_error_source" data-refname="rev_taskcall_on_error_callbacks"   data-refs="${[ ...callData.rev_taskcall_on_error_callbacks].join(',')}"></div>
-                    <div id="${callData.id}_subrun_destination"     class="point" data-reftype="run"  data-pointtype="destination" data-remote_postfix="_subrun_source" data-refname="rev_taskrun_subtask_references"    data-refs="${[ ...callData.rev_taskrun_subtask_references].join(',')}"></div>
+                    <div id="${callData.id}_subrun_destination"     class="point" data-reftype="run"  data-pointtype="destination" data-remote_postfix="_subrun_source" data-refname="parent_taskruns"    data-refs="${[ ...callData.parent_taskruns].join(',')}"></div>
                 </div>
                 
                 <!-- Args: References to results of previous calls -->
@@ -245,7 +245,7 @@ renderRun = (runData) => {
             </div>
         </div>
         <div class="run-subcalls">
-            ${runData.taskrun_subtask_references.map(callId => `<div class="unloaded-ref" data-id="${callId}">${callId}</div>`).join('')}  
+            ${runData.child_taskcalls.map(callId => `<div class="unloaded-ref" data-id="${callId}">${callId}</div>`).join('')}  
         </div>
     `;
 
@@ -467,7 +467,7 @@ resizeCanvas();
             if is_call:
                 keys = ["taskcall_before_run_hooks", "taskcall_after_run_hooks", "rev_taskcall_before_run_hooks", "rev_taskcall_after_run_hooks", "taskcall_result_run", "related_agent_task_runs"]
             else:
-                keys = ["taskrun_subtask_references"]
+                keys = ["child_taskcalls"]
             for key in keys:
                 #print(key, item_obj[key], isinstance(item_obj[key], list) )
                 for sub_id in (item_obj[key] if isinstance(item_obj[key], list) else [item_obj[key],]):
@@ -491,7 +491,7 @@ resizeCanvas();
 
         if  max_backward_steps > 0:
             if is_call:
-                keys =  ["taskcall_arg_references", "rev_taskcall_on_success_callbacks", "rev_taskcall_on_error_callbacks","rev_taskrun_subtask_references" ]
+                keys =  ["taskcall_arg_references", "rev_taskcall_on_success_callbacks", "rev_taskcall_on_error_callbacks","parent_taskruns" ]
             else:
                 keys = ["taskrun_arg_references", "taskrun_result_references", "agent_task_call", "rev_taskcall_result_run"]
             for key in keys :
@@ -535,7 +535,7 @@ resizeCanvas();
             "rev_taskcall_after_run_hooks":   [f"call_{call_pk}" for call_pk in call.rev_taskcall_after_run_hooks.values_list('pk', flat=True)], # we are the hook
 
             "rev_taskrun_result_references":  [f"run_{call_pk}" for call_pk in call.rev_taskrun_result_references.values_list('pk', flat=True)],  # we are referenced in the results of these run
-            "rev_taskrun_subtask_references": [f"run_{call_pk}" for call_pk in call.rev_taskrun_subtask_references.values_list('pk', flat=True)], # we were created as a result of these runs
+            "parent_taskruns": [f"run_{call_pk}" for call_pk in call.parent_taskruns.values_list('pk', flat=True)], # we were created as a result of these runs
 
             "taskcall_result_run":      f"run_{call.taskcall_result_run.pk}" if  call.taskcall_result_run else None, # the one final run that provides the result for this call 
             "related_agent_task_runs": [f"run_{call_pk}" for call_pk in call.related_agent_task_runs.values_list('pk', flat=True)],  # all run for this call
@@ -551,9 +551,9 @@ resizeCanvas();
         run = AgentTaskRun.objects.get(pk=int(run_id))
         print("GET_RUN", run)
         taskrun_result_references  = [f"call_{call_pk}" for call_pk in run.taskrun_result_references.values_list('pk', flat=True)] # our result references these calls
-        taskrun_subtask_references = [f"call_{call_pk}" for call_pk in run.taskrun_subtask_references.values_list('pk', flat=True)] # all calls there were created inside of this run
-        sub_calls = [x for x in taskrun_subtask_references if x not in taskrun_result_references]
-        spawned_calls = [x for x in taskrun_subtask_references if x in taskrun_result_references]
+        child_taskcalls = [f"call_{call_pk}" for call_pk in run.child_taskcalls.values_list('pk', flat=True)] # all calls there were created inside of this run
+        sub_calls = [x for x in child_taskcalls if x not in taskrun_result_references]
+        spawned_calls = [x for x in child_taskcalls if x in taskrun_result_references]
         
         return {
             "id":                    f"run_{run.pk}",
@@ -567,7 +567,7 @@ resizeCanvas();
             "rev_taskrun_arg_references": [f"run_{run_pk}"   for run_pk  in run.rev_taskrun_arg_references.values_list('pk', flat=True)], # we are referenced in these runs arguments
             
             "taskrun_result_references":  taskrun_result_references, # our result references these calls
-            "taskrun_subtask_references": taskrun_subtask_references, # all calls there were created inside of this run
+            "child_taskcalls": child_taskcalls, # all calls there were created inside of this run
             "spawned_calls": spawned_calls,
             "sub_calls": sub_calls,
 

@@ -76,7 +76,7 @@ class ChatWorkspaceView(ModelView):
         self.task_trace_view = TaskTraceView(subject=self.subject, parent=self)
 
         from server.models.tasks.agent_task_run import AgentTaskRun as _Run
-        _child_ids = list(_Run.objects.filter(session_version__agent_instance=instance).values_list('taskrun_subtask_references', flat=True)) \
+        _child_ids = list(_Run.objects.filter(session_version__agent_instance=instance).values_list('child_taskcalls', flat=True)) \
             + list(_Run.objects.filter(session_version__agent_instance=instance).values_list('taskrun_result_references', flat=True))
         _child_ids = [x for x in _child_ids if x is not None]
         root_calls = []# instance.agent_task_calls.exclude(id__in=_child_ids).order_by('-created_at')[:50]
