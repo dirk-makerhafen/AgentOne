@@ -61,7 +61,7 @@ class AgentTaskCall(BaseModel):
     retry_count = models.IntegerField(default=0)   #count will not be avauilable 
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
 
-    parent_taskruns = models.ForeignKey("server.AgentTaskCall", blank=True, on_delete=models.CASCADE, related_name="child_taskcalls" )
+    parent_taskruns = models.ForeignKey("server.AgentTaskCall", blank=True, on_delete=models.CASCADE, related_name="child_taskcalls", default=None, null=True )
 
     taskcall_arg_references     = models.ManyToManyField("self", help_text="AgentTaskCalls used in call args/kwargs", symmetrical=False, blank=True, related_name="rev_taskcall_arg_references")
     
@@ -84,7 +84,6 @@ class AgentTaskCall(BaseModel):
             :class:`AgentTaskCall`: 
         """
         parent_run = ContextTracker.current
-        from server.models.tasks.agent_task_run import AgentTaskRunSubtask
 
         args = args if args else []
         arguments = kwargs if kwargs else {}
@@ -132,20 +131,14 @@ class AgentTaskCall(BaseModel):
             retry_delay  = retry_delay if retry_delay else agent_task_instance.retry_delay,  # time between retries in seconds
             retry_requires_approval = retry_requires_approval if retry_requires_approval else agent_task_instance.retry_requires_approval,  # required user approval before run
             # Runtime values
-            is_approved = None
+            is_approved = None,
+
+            parent_run = parent_run, # AUTOMATIC TRACKING
         )
         taskcall.taskcall_before_run_hooks.set(before_hook_calls)
 
         if ref_pks:
             taskcall.taskcall_arg_references.set(ref_pks)
-
-        # AUTOMATIC TRACKING
-        if parent_run:
-            AgentTaskRunSubtask.objects.get_or_create(
-                parent=parent_run,
-                child=taskcall,
-                defaults={'index': parent_run.child_relations.count()}
-            )
 
         return taskcall
 

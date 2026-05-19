@@ -26,12 +26,6 @@ from django.apps import apps
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_instance import AgentTaskInstance
 
-class AgentTaskRunSubtask(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey("server.AgentTaskRun", related_name="child_relations", on_delete=models.CASCADE)
-    child  = models.ForeignKey("server.AgentTaskCall", related_name="parent_relations", on_delete=models.CASCADE)
-    index  = models.IntegerField(default=0)
-
 class AgentTaskRun(BaseModel):
     """Single execution attempt"""
     agent_task_call       = models.ForeignKey("AgentTaskCall",         on_delete=models.CASCADE, related_name="related_agent_task_runs")
@@ -59,8 +53,8 @@ class AgentTaskRun(BaseModel):
     is_approved = models.BooleanField(default=False)  # user did appove this call
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
    
+    #now on reverse side as foreignkey 
     #child_taskcalls = SortedManyToManyField("server.AgentTaskCall", help_text="AgentTaskCalls spawned", symmetrical=False, blank=True, related_name="parent_taskruns" )
-
 
     # References in Arguments for a TaskRun must be TaskRun, referencing the actual finished execution of a TaskCall
     # References in results must be TaskCall, hiding the actual (retried and so on) TaskRun that will be launched. 

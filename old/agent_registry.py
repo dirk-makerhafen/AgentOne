@@ -2,13 +2,13 @@ from __future__ import annotations
 import inspect
 from typing import List, Any, Dict, Type, Union
 from django.db import transaction
-from registry.sub_agents import Subagents, Subagent
+from old.sub_agents import Subagents, Subagent
 from server.models.enums.task_enums import TaskType
 from server.models.agents.agent import AgentModel
 from server.models.settings import SettingsModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.tasks.task_definition import TaskDefinition
-from registry.profile import Profile
+from old.profile import Profile
 from registry.task_decorators import TaskDescriptor
 from server.models.content import GenericContent
 from registry.utils import generate_schema_for_function, get_import_strings, get_ai_model

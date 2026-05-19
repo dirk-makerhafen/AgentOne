@@ -38,3 +38,11 @@ tasks:
       - extract_tool_calls
       - execute_tools
       - decide_next_step
+
+commands:
+  - name: ping
+    type: python
+    file: ping.py
+    function: ping
+    bound: True
+    trigger: ping

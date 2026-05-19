@@ -14,6 +14,8 @@ class TaskDefinitionVersion(BaseModel):
     requires_approval = models.BooleanField(default=False)  # required user approval before run
     
     # Options - Run
+    bound = models.BooleanField(default=False)  # if bound then first agument to function is session
+
     time_limit      = models.IntegerField(default=None, null=True)     #   
     max_subtask_errors     = models.IntegerField(default=0)   # for groups,absolute number, also used when timeout
     max_subtask_error_rate = models.IntegerField(default=0)# for groups, in percent, also used when timeout

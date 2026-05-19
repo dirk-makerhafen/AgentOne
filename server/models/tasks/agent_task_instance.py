@@ -12,8 +12,6 @@ from sortedm2m.fields import SortedManyToManyField
 from typing import TYPE_CHECKING
 
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
-if TYPE_CHECKING:
-    from server.models.agents.agent_version import AgentVersionModel
 
 class AgentTaskInstanceSubtask(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)

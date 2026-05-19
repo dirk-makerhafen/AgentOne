@@ -26,7 +26,7 @@ class Response(BaseModel):
     total_time = models.FloatField(default=0)
     reasoning_time = models.FloatField(default=0)
 
-    tool_calls = models.JSONField(default = [], null = False, blank = True)
+    tool_calls = models.JSONField(default = list, null = False, blank = True)
     content   = models.TextField(default = "", null = True, blank = True, max_length = 500000)
     reasoning = models.TextField(default = "", null = True, blank = True, max_length = 500000)
 

@@ -1,5 +1,3 @@
-import base64
-from copy import copy
 import json
 import math
 from django.db import models
@@ -8,7 +6,6 @@ from django_enum import EnumField
 from server.models.base_model import BaseModel
 from server.models.enums.message_enums import MessageContentType, MessageRole
 from server.models.content import  GenericContent
-from django.core.exceptions import ValidationError
 
 from server.models.queries.query_message_part import QueryMessagePart
 
@@ -16,7 +13,7 @@ from server.models.queries.query_message_part import QueryMessagePart
 class QueryMessage(BaseModel):
     # refernces
     query         = models.ForeignKey("server.Query"                     , on_delete=models.CASCADE     , related_name='query_messages')
-    tool_calls    = models.ManyToManyField("server.AgentTaskCall"                                       , related_name='query_messages', default=None, null=True)
+    tool_calls    = models.ManyToManyField("server.AgentTaskCall"                                       , related_name='query_messages', default=None)
     tool_response = models.ForeignKey("server.AgentTaskRun"          , on_delete=models.SET_DEFAULT , related_name='query_messages', default=None, null=True)
     message = models.ForeignKey("server.Message", on_delete=models.SET_DEFAULT , related_name='query_messages', default=None, null=True)
 

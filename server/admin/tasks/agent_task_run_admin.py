@@ -1,13 +1,5 @@
 from django.contrib import admin
-from server.models.tasks.agent_task_run import AgentTaskRun, AgentTaskRunSubtask
-
-
-class AgentTaskRunSubtaskInline(admin.TabularInline):
-    model = AgentTaskRunSubtask
-    # Since it's a self-referencing relationship with two FKs to the same model,
-    # you must specify which one is the 'parent' for the inline.
-    fk_name = 'parent'
-    extra = 1
+from server.models.tasks.agent_task_run import AgentTaskRun
 
 
 @admin.register(AgentTaskRun)

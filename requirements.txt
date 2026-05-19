@@ -23,3 +23,12 @@ pytest
 pytest-django
 pytest-asyncio
 django-redis
+django-cors-headers
+django-sortedm2m
+django-enum
+mysqlclient
+cachetools
+flask
+flask_sock
+zeroconf
+daphne

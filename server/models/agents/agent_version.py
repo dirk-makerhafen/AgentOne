@@ -46,11 +46,11 @@ class AgentVersionModel(BaseModel):
     description = models.TextField(max_length=65500, default="")
 
     extends_agent_names = models.JSONField(default=list, blank=True)
-    extends_agent_versions = SortedManyToManyField("self", related_name="related_inheritors", default=None, null=True,symmetrical=False, )
+    extends_agent_versions = SortedManyToManyField("self", related_name="related_inheritors", default=None, symmetrical=False, )
 
-    defined_skill_versions = models.ManyToManyField(SkillModelVersion ,default=None,null=True,  related_name="related_agent_versions", symmetrical=False) # top level profile
-    defined_task_versions = models.ManyToManyField(TaskDefinitionVersion ,default=None,null=True, related_name="related_agent_versions", symmetrical=False) # top level profile
-    defined_subagent_versions = models.ManyToManyField("self", related_name="related_parents", default=None, null=True, symmetrical=False, )
+    defined_skill_versions = models.ManyToManyField(SkillModelVersion ,default=None,  related_name="related_agent_versions", symmetrical=False) # top level profile
+    defined_task_versions = models.ManyToManyField(TaskDefinitionVersion ,default=None,related_name="related_agent_versions", symmetrical=False) # top level profile
+    defined_subagent_versions = models.ManyToManyField("self", related_name="related_parents", default=None, symmetrical=False, )
 
     agent_settings = models.ForeignKey(SettingsModel ,default=None,null=True, on_delete=models.SET_NULL, related_name="related_agent_versions") # top level profile
 
