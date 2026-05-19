@@ -5,13 +5,9 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from kill import kill
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestKill(unittest.TestCase):
     def test_kill_missing_pid(self):
-        success, result = kill(MockCaller(), pid=999999)
+        success, result = kill(pid=999999)
         self.assertFalse(success)
         self.assertEqual(result['status'], 'error')
         self.assertIn('not found', result['message'])

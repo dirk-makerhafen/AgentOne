@@ -1,20 +1,26 @@
+"""
+Simple liveness check command. Responds with agent/session info.
+"""
 
-from registry.task_decorators import command
 from runtime.agents.session import Session
 
-'''
-@group(description="building group task")
-def group(runtime, *tasks):
-    return tasks
 
-@chain(description="building chain task")
-def chain(runtime, *tasks):
-    return tasks
-'''
+def ping(session: Session, message: str | None = None):
+    """
+    Return a pong string with agent name, version, and session info.
 
-@command()
-def ping(session: Session, message: str|None = None):
-    r = f"Pong from Agent {session.agent.name}, Version {session.agent.version_number}, Session {session.name}"
+    Args:
+        session: The active agent session.
+        message: Optional message to echo back.
+
+    Returns:
+        A greeting string.
+    """
+    r = (
+        f"Pong from Agent {session.agent.name}, "
+        f"Version {session.agent.version_number}, "
+        f"Session {session.name}"
+    )
     if message:
         r += f"\nMessage received:{message}"
     return r

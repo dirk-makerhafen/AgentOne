@@ -2,7 +2,7 @@ import os
 import signal
 import psutil
 
-def kill(caller, pid=None, name=None, signal_name="SIGTERM"):
+def kill(pid=None, name=None, signal_name="SIGTERM"):
     '''
     Terminate a running process by PID or name.
 

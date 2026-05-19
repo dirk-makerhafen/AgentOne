@@ -3,7 +3,7 @@ import os
 import subprocess
 import tempfile
 
-def shell(caller, source, interpreter="auto"):
+def shell(source, interpreter="auto"):
     '''
     Execute a shell command or script.
 
@@ -36,7 +36,7 @@ def shell(caller, source, interpreter="auto"):
                 - 'stderr': str
                 - 'return_code': int
     '''
-    cwd = caller.workingdir if hasattr(caller, 'workingdir') and caller.workingdir else os.getcwd()
+    cwd =  os.getcwd()
 
     is_windows = sys.platform == "win32"
     if interpreter == "auto":

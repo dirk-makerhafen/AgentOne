@@ -30,7 +30,7 @@ def python(caller, source):
                 - 'stderr': str
                 - 'return_code': int
     '''
-    cwd = caller.workingdir if hasattr(caller, 'workingdir') and caller.workingdir else os.getcwd()
+    cwd = os.getcwd()
 
     try:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
