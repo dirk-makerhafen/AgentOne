@@ -2,7 +2,7 @@ import os
 import json
 import urllib.parse
 
-def webSearch(caller, query, num_results=8):
+def webSearch(query, num_results=8):
     '''
     Search the web for real-time information.
 
@@ -117,15 +117,11 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Search the web.')
     parser.add_argument('query', type=str, help='Search query')
     parser.add_argument('--num-results', type=int, default=8, help='Number of results')
     args = parser.parse_args()
 
-    success, result = webSearch(MockCaller(), query=args.query, num_results=args.num_results)
+    success, result = webSearch(query=args.query, num_results=args.num_results)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

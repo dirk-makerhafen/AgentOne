@@ -13,7 +13,7 @@ from server.models.message import Message
 from server.models.queries.response import Response
 
 
-def decide_next_step(session: Session, response: Response, parsed: dict) -> Message:
+def decide_next_step(session: Session, response: Response, parts: list[dict], message:Message) -> Message:
     """
     Persist the assistant message and determine if the loop should continue.
 
@@ -26,49 +26,33 @@ def decide_next_step(session: Session, response: Response, parsed: dict) -> Mess
     Args:
         session:  The active agent session.
         response: The Response from call_llm.
-        parsed:   Enriched dict from execute_tools with keys:
-                  content, reasoning, tool_calls, task_calls.
-
+        parts:  list from parse_llm_response of Parts
+            Parts is dict with minimal keys:
+                type: message, reasoning, toolcall
+                content_type: text|image|template|json
+                content: str|dict
+            In case Part.content_type is template the following keys are also needed:
+                template_data: dict
+            if case Part.type is "toolcall":
+                tool_call: ToolCall 
+        message: The convesation Message object created by ingest_assistant_message
     Returns:
         A Message if the turn ends, or an AgentTaskCall for process_turn
         to continue the loop. The framework resolves the AgentTaskCall
         reference recursively via WAITING_RESULTTASKS.
     """
-    content = parsed.get("content", "")
-    tool_calls = parsed.get("tool_calls", [])
-    task_calls = parsed.get("task_calls", [])
 
-    session_version = session.get_version_model()
-    prev_message = session_version.related_messages.filter(
-        next_messages=None
-    ).last()
-
-    message = Message.objects.create(
-        session_version=session_version,
-        response=response,
-        role="assistant",
-        prev_message=prev_message,
-    )
-
-    if content:
-        message.add_part(content)
-
-    if task_calls:
-        message.tool_calls.set(task_calls)
 
     session.count_turn()
+    session.count_unattended_turn()
 
     if session.max_turns and session.current_turn_count >= session.max_turns:
         return message
 
-    if (
-        session.max_unattended_turns
-        and session.current_unattended_turn_count >= session.max_unattended_turns
-    ):
+    if session.max_unattended_turns and session.current_unattended_turn_count >= session.max_unattended_turns:
+        return message
+    
+    if not any([True for part in parts if "tool_call" in part]):
         return message
 
-    if not tool_calls:
-        return message
-
-    session.count_unattended_turn()
-    return session.process_turn.delay(message=message)
+    return session.get_task("process_turn").delay(message=message)

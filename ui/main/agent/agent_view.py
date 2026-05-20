@@ -73,8 +73,8 @@ class AgentView(ModelView):
                                     <div class="detail-row-value">{{pyview.agent.aimodel}}</div>
                                 </div>
                                 <div class="detail-row">
-                                    <div class="detail-row-label">execution_mode</div>
-                                    <div class="detail-row-value">{{pyview.agent.execution_mode}}</div>
+                                    <div class="detail-row-label">scheduler_strategy</div>
+                                    <div class="detail-row-value">{{pyview.agent.scheduler_strategy}}</div>
                                 </div>
                                 <div class="detail-row">
                                     <div class="detail-row-label">tool_call_syntax</div>
@@ -128,25 +128,21 @@ class AgentView(ModelView):
                             </div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-row-label">Tools</div>
+                            <div class="detail-row-label">Tool nmess</div>
                             <div class="detail-row-value">{{pyview.agent.toolNames}}</div>
                         </div>
                         <div class="detail-row">
-                            <div class="detail-row-label">disallowed tools</div>
+                            <div class="detail-row-label">disallowed tool amess</div>
                             <div class="detail-row-value">{{pyview.agent.disallowedToolNames}}</div>
                         </div>
                         <div class="detail-row">
                             <div class="detail-row-label">allowed tools</div>
                             <div class="detail-row-value">{{pyview.agent.allowedToolNames}}</div>
                         </div>
-
-                        
                     </div>
 
-                    <div class="detail-card">
-
-
                     
+                    <div class="detail-card">
                         <div class="detail-card-title">Skills</div>
                         <div class="detail-row">
                             <div class="detail-row-label">Defined</div>
@@ -170,6 +166,7 @@ class AgentView(ModelView):
                         </div>
                     </div>
 
+                    
                     <div class="detail-card">
                         <div class="detail-card-title">Commands</div>
                         <div class="detail-row">
@@ -203,13 +200,14 @@ class AgentView(ModelView):
                         </div>
                     </div>
                     
+
                     <div class="detail-card">
                         <div class="detail-card-title">Tasks</div>
                         <div class="detail-row">
                             <div class="detail-row-label">Defined</div>
                             <div class="detail-row-value">
-                                {% for definedTaskVersion in pyview.agent.definedTaskVersions %}
-                                    {{ definedTaskVersion.task_definition.name }}:{{ definedTaskVersion.pk }}, 
+                                {% for definedTaskName in pyview.agent.definedTaskNames %}
+                                    {{ definedTaskName }}
                                 {% endfor %}
                             </div>
                         </div>

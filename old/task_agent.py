@@ -1,5 +1,5 @@
 from __future__ import annotations
-from runtime.agents.base_agent import BaseAgent
+from old.base_agent import BaseAgent
 from server.models.content import GenericContent
 from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart

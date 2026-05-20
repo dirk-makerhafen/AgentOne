@@ -244,9 +244,7 @@ def handle_response(runtime: AgentRuntime, response:Response) -> dict[str,Respon
 '''
 @task()
 def handle_user_command(runtime: AgentRuntime, conversation_msg, command, cmdargs, cmdkwargs):
-    taskdefinition = runtime.commands().filter(trigger=command).first()
-    if not taskdefinition:
-        taskdefinition = runtime.commands().filter(name=command).first()
+    taskdefinition = runtime.commands().filter(name=command).first()
     if not taskdefinition:
         taskdefinition = runtime.tools().filter(name=command).first()
     if not taskdefinition:

@@ -1,7 +1,7 @@
 from pathlib import Path
 import traceback
 
-def stat(caller, path):
+def stat(path):
     '''
     Gets metadata for a file or directory.
 
@@ -63,14 +63,10 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Get file or directory metadata.')
     parser.add_argument('path', type=str, help='Path to inspect')
     args = parser.parse_args()
 
-    success, result = stat(MockCaller(), path=args.path)
+    success, result = stat(path=args.path)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

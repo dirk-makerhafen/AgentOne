@@ -1,12 +1,10 @@
 ---
 tools:
   - name: read
-    type: python
     file: filesystem.py
     function: read
 
   - name: write
-    type: python
     file: filesystem.py
     function: write
 

@@ -8,7 +8,7 @@ class Profile_old():
     def __init__(self, name = None, model: str|None = None, thinking:bool|None = None,
                 max_retries: int|None = None, max_turns: int|None = None, max_unattended_turns: int|None = None, max_history_messages: int|None = None, priority: int|None = None,
                 task_prompt: str|None = None, system_prompt: str|None = None,
-                execution_mode: str = 'queue', tool_call_syntax: str = 'default', 
+                scheduler_strategy: str = 'queue', tool_call_syntax: str = 'default', 
                 extra_settings: dict|None = None, variants: list[Profile_old]|None = None) -> None:
         self.name = name
         self.model = model
@@ -18,7 +18,7 @@ class Profile_old():
         self.max_history_messages = max_history_messages
         self.task_prompt = textwrap.dedent(task_prompt).strip() if task_prompt else None
         self.system_prompt = textwrap.dedent(system_prompt).strip() if system_prompt else None
-        self.execution_mode = execution_mode
+        self.scheduler_strategy = scheduler_strategy
         self.tool_call_syntax = tool_call_syntax
         self.extra_settings = extra_settings
         self.priority = priority
@@ -46,8 +46,8 @@ class Profile_old():
             d["task_prompt"] = self.task_prompt
         if self.system_prompt:
             d["system_prompt"] = self.system_prompt
-        if self.execution_mode:
-            d["execution_mode"] = self.execution_mode
+        if self.scheduler_strategy:
+            d["scheduler_strategy"] = self.scheduler_strategy
         if self.tool_call_syntax:
             d["tool_call_syntax"] = self.tool_call_syntax
         if self.extra_settings:

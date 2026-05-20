@@ -6,10 +6,6 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from read import read
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestRead(unittest.TestCase):
     def test_read_file(self):
         with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
@@ -17,7 +13,7 @@ class TestRead(unittest.TestCase):
             f.flush()
             tmp_path = f.name
         try:
-            success, result = read(MockCaller(), tmp_path)
+            success, result = read(tmp_path)
             self.assertTrue(success)
             self.assertEqual(result['type'], 'file')
             self.assertIn('1: line1', result['content'])
@@ -26,14 +22,14 @@ class TestRead(unittest.TestCase):
             os.unlink(tmp_path)
 
     def test_read_directory(self):
-        success, result = read(MockCaller(), os.path.dirname(os.path.abspath(__file__)))
+        success, result = read(os.path.dirname(os.path.abspath(__file__)))
         self.assertTrue(success)
         self.assertEqual(result['type'], 'directory')
         self.assertIsInstance(result['content'], list)
         self.assertTrue(len(result['content']) > 0)
 
     def test_read_nonexistent(self):
-        success, result = read(MockCaller(), '/nonexistent/path/xyz')
+        success, result = read('/nonexistent/path/xyz')
         self.assertFalse(success)
         self.assertIn('does not exist', result['message'])
 
@@ -44,7 +40,7 @@ class TestRead(unittest.TestCase):
             f.flush()
             tmp_path = f.name
         try:
-            success, result = read(MockCaller(), tmp_path, offset=3, limit=2)
+            success, result = read(tmp_path, offset=3, limit=2)
             self.assertTrue(success)
             self.assertIn('3: line2', result['content'])
             self.assertIn('4: line3', result['content'])
@@ -53,7 +49,7 @@ class TestRead(unittest.TestCase):
             os.unlink(tmp_path)
 
     def test_read_no_path(self):
-        success, result = read(MockCaller(), '')
+        success, result = read('')
         self.assertFalse(success)
         self.assertIn('Path not provided', result['message'])
 

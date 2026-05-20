@@ -37,7 +37,7 @@ Tool groups (`.agentone/scripts/`):
 
 ## Agent hierarchy
 
-- Base: `.agentone/agents/baseagent/agent.md` — core tools + tasks, `executionMode: queue`, `reasoningEffort: high`
+- Base: `.agentone/agents/baseagent/agent.md` — core tools + tasks, `schedulerStrategy: queue`, `reasoningEffort: high`
 - Primary: `.agentone/agents/agentone/agent.md` — extends `baseagent`, adds all 20 tools, model `gemma4:26b`
 
 Agent definitions use YAML frontmatter in `.md` files. Subagents use `Subagent`/`Subagents` from `registry.sub_agents`.

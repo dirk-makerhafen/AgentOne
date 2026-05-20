@@ -13,12 +13,6 @@ from typing import TYPE_CHECKING
 
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
-class AgentTaskInstanceSubtask(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    parent = models.ForeignKey("server.AgentTaskInstance", related_name="child_relations", on_delete=models.CASCADE)
-    child  = models.ForeignKey("server.AgentTaskInstance", related_name="parent_relations", on_delete=models.CASCADE)
-    index  = models.IntegerField(default=0)
-
 
 class AgentTaskInstance(BaseModel):
     """Binds a task definition to a specific agent instance"""
@@ -66,6 +60,10 @@ class AgentTaskInstance(BaseModel):
     @property
     def agent_task_calls(self):
         return self.related_agent_task_calls # pyright: ignore[reportAttributeAccessIssue]
+
+    @property
+    def task_execution_mode(self):
+        return self.task_definition_version.task_execution_mode
 
     @classmethod
     def get_or_create(cls, task_definition:TaskDefinitionVersion, session_version, args = None, kwargs=None, **options ) -> "AgentTaskInstance":
@@ -115,23 +113,21 @@ class AgentTaskInstance(BaseModel):
         # Store references that are used for args/kwargs
         agent_task_instance.taskinstance_arg_references.set(ref_pks)
 
-        if task_definition.task_definition.task_type in ["CHAIN",  "GROUP"]:
-            if len(args) == 1 and isinstance(args[0], (list, set, tuple, GeneratorType) ):
+        if task_definition.task_execution_mode in ("CHAIN", "GROUP"):
+            if len(args) == 1 and isinstance(args[0], (list, set, tuple, GeneratorType)):
                 args = args[0]
             else:
-                args = kwargs.pop("*",[])
+                args = kwargs.pop("*", [])
 
-            # RUN THE CHAIN/GROUP Function
-            sub_instances = boundAgentTaskDefinition.func(boundAgentTaskDefinition.agent_runtime, *args, **kwargs)
-            for index, sub_task_instance in enumerate(sub_instances):
-                print("si", sub_task_instance, "end")
-                t = AgentTaskInstanceSubtask.objects.get_or_create(
-                    parent_id = agent_task_instance.pk,
-                    child_id  = sub_task_instance.pk,
-                    index = index,
+            child_versions = task_definition.child_tasks.all()
+            for index, child_tdv in enumerate(child_versions):
+                child_instance = AgentTaskInstance.get_or_create(
+                    task_definition=child_tdv,
+                    session_version=session_version,
+                    args=list(args) if index == 0 else None,
                 )
-                print("t:", t)
-        print("RETURN HERHE")
+                agent_task_instance.child_instances.add(child_instance)
+
         return agent_task_instance
 
     def delay(self, *partial_args, **partial_kwargs):
@@ -161,17 +157,17 @@ class AgentTaskInstance(BaseModel):
             :class:`AgentTaskCall`: 
         """
         return AgentTaskCall.create(
-            agent_task_instance=self,
-            args=args,
-            kwargs=kwargs,
-            dont_start_before=dont_start_before,
-            dont_start_after=dont_start_after,
-            requires_approval=requires_approval,
-            time_limit=time_limit,
-            max_subtask_errors=max_subtask_errors,
-            max_subtask_error_rate=max_subtask_error_rate,
-            limit_subtask_parallel_runs=limit_subtask_parallel_runs,
-            limit_per_instance_parallel_runs=limit_per_instance_parallel_runs,
+            agent_task_instance = self,
+            args = args,
+            kwargs = kwargs,
+            dont_start_before = dont_start_before,
+            dont_start_after = dont_start_after,
+            requires_approval = requires_approval,
+            time_limit = time_limit,
+            max_subtask_errors = max_subtask_errors,
+            max_subtask_error_rate = max_subtask_error_rate,
+            limit_subtask_parallel_runs = limit_subtask_parallel_runs,
+            limit_per_instance_parallel_runs = limit_per_instance_parallel_runs,
             priority = priority,
             max_retries = max_retries,
             retry_delay = retry_delay,

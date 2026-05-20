@@ -5,8 +5,8 @@ Creates a Query model that holds the full request to be sent to the API.
 
 import json
 import traceback
-from registry.task_decorators import task
 from runtime.agents.session import Session
+from server.models.enums.message_enums import MessagePartType
 from server.models.settings import AgentToolCallSyntax
 from server.models.message import Message
 from server.models.queries.query import Query
@@ -20,8 +20,7 @@ def build_llm_context(session: Session, message: Message) -> Query:
     1. Create a Query record linked to the triggering message.
     2. Inject the system prompt (if set).
     3. For CUSTOM tool syntax, inject tool definitions as a system message.
-    4. Load conversation history up to and including the trigger message,
-       apply HistoryLimiter, and repack as QueryMessages with correct roles.
+    4. Load conversation history up to and including the trigger message, apply HistoryLimiter, and repack as QueryMessages with correct roles.
 
     Args:
         session: The active agent session.
@@ -35,7 +34,6 @@ def build_llm_context(session: Session, message: Message) -> Query:
     from server.models.queries.query_message_part import QueryMessagePart
     from server.history_limiter import HistoryLimiter
     from server.models.content import GenericContent
-    from jinja2 import Template
 
     try:
         query = Query.objects.create(
@@ -55,12 +53,11 @@ def build_llm_context(session: Session, message: Message) -> Query:
                 role="system",
                 content="Available Tools (use syntax [call:tool_name(arg=val)]):\n",
             )
-            for toolname in session.toolNames:
-                tdefs = getattr(session, toolname)
+            for tool in session.allowedTools:
                 query_message.add_message_part(
                     content=GenericContent.from_text(
-                        f"Tool: {tdef.name}\nDescription: {tdef.description}\n"
-                        f"Schema: {json.dumps(tdef.function_schema)}\n"
+                        f"Tool: {tool.task_definition.name}\nDescription: {tool.description}\n"
+                        f"Schema: {json.dumps(tool.function_schema)}\n"
                     ),
                 )
 
@@ -77,6 +74,8 @@ def build_llm_context(session: Session, message: Message) -> Query:
         for entry in all_entries:
             msg_parts = []
             for part in entry.parts.all():
+                if part.type == MessagePartType.REASONING:
+                    continue
                 msg_parts.append(QueryMessagePart(
                     message=entry,
                     message_part=part,

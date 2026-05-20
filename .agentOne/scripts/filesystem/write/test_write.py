@@ -6,15 +6,11 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from write import write
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestWrite(unittest.TestCase):
     def test_write_file(self):
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_write_abc123.txt')
         try:
-            success, result = write(MockCaller(), tmp_path, 'hello world')
+            success, result = write(tmp_path, 'hello world')
             self.assertTrue(success)
             with open(tmp_path, 'r') as f:
                 self.assertEqual(f.read(), 'hello world')
@@ -25,8 +21,8 @@ class TestWrite(unittest.TestCase):
     def test_write_overwrite(self):
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_write_abc123.txt')
         try:
-            write(MockCaller(), tmp_path, 'first')
-            success, result = write(MockCaller(), tmp_path, 'second')
+            write(tmp_path, 'first')
+            success, result = write(tmp_path, 'second')
             self.assertTrue(success)
             with open(tmp_path, 'r') as f:
                 self.assertEqual(f.read(), 'second')
@@ -37,7 +33,7 @@ class TestWrite(unittest.TestCase):
     def test_write_creates_dirs(self):
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_dir_xyz', 'nested', 'file.txt')
         try:
-            success, result = write(MockCaller(), tmp_path, 'nested content')
+            success, result = write(tmp_path, 'nested content')
             self.assertTrue(success)
             self.assertTrue(os.path.exists(tmp_path))
         finally:
@@ -51,7 +47,7 @@ class TestWrite(unittest.TestCase):
                 os.rmdir(grandparent)
 
     def test_write_no_path(self):
-        success, result = write(MockCaller(), '', 'content')
+        success, result = write('', 'content')
         self.assertFalse(success)
         self.assertIn('Path not provided', result['message'])
 

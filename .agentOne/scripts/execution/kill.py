@@ -74,16 +74,12 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Terminate a running process by PID or name.')
     parser.add_argument('--pid', type=int, help='Process ID to terminate')
     parser.add_argument('--name', type=str, help='Process name to match')
     parser.add_argument('--signal', type=str, default='SIGTERM', choices=['SIGTERM', 'SIGKILL', 'SIGHUP', 'SIGINT'], help='Signal to send')
     args = parser.parse_args()
 
-    success, result = kill(MockCaller(), pid=args.pid, name=args.name, signal_name=args.signal)
+    success, result = kill(pid=args.pid, name=args.name, signal_name=args.signal)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

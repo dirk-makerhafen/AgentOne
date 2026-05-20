@@ -1,27 +1,26 @@
 from django.db import models
 
 class TaskExecutionMode(models.TextChoices):
-    INTERRUPT = "interrupt"
-    QUEUE = "queue"
-    MERGE = "merge"
-    PARALLEL = "parallel"
-
-
-class TaskType(models.TextChoices):
-    # User-facing / invocation roots
-    CHAT   = "CHAT"          # main interaction path, top-level input
-    COMMAND = "COMMAND"      # user commands like /stop, /retry
-    
-    # Executable units inside flows
-    TASK    = "TASK"         # normal function – core business logic
-    TOOL    = "TOOL"         # LLM-callable, optional bound/unbound
-    
+    FUNCTION = "FUNCTION"
+    SCRIPT = "SCRIPT"
     # Flow controllers (Celery-equivalents)
     CHAIN   = "CHAIN"        # sequential t1 -> t2 -> t3
     GROUP   = "GROUP"        # parallel [a,b,c] -> join
     CHORD   = "CHORD"        # group + final callback
     MAP     = "MAP"        #
 
+class TaskSchedulerStrategy(models.TextChoices):
+    INTERRUPT = "interrupt"
+    QUEUE = "queue"
+    MERGE = "merge"
+    PARALLEL = "parallel"
+
+class TaskType(models.TextChoices):
+    # User-facing / invocation roots
+    COMMAND = "COMMAND"      # user commands like /stop, /retry
+    TASK    = "TASK"         # normal function – core business logic
+    TOOL    = "TOOL"         # LLM-callable, optional bound/unbound
+    
     WEBAPI  = "WEBAPI"  # JSON API
     WEBVIEW = "WEBVIEW" # HTML VIEW
     # System hooks and callbacks (currently not in use)

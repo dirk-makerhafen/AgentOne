@@ -2,7 +2,7 @@ import glob as glob_module
 import os
 import traceback
 
-def glob(caller, pattern, path=None):
+def glob(pattern, path=None):
     '''
     Fast file pattern matching tool that works with any codebase size.
 
@@ -51,15 +51,11 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Fast file pattern matching.')
     parser.add_argument('pattern', type=str, help='Glob pattern (e.g., "**/*.py")')
     parser.add_argument('--path', type=str, default=None, help='Directory to search in')
     args = parser.parse_args()
 
-    success, result = glob(MockCaller(), pattern=args.pattern, path=args.path)
+    success, result = glob(pattern=args.pattern, path=args.path)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

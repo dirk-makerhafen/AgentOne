@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 class AgentTaskCall(BaseModel):
     """Specific invocation - equivalent to celery task"""
     agent_task_instance = models.ForeignKey("AgentTaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+    task_definition = models.ForeignKey("server.TaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
     task_definition_version = models.ForeignKey("TaskDefinitionVersion", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
     session = models.ForeignKey("SessionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
     session_version = models.ForeignKey("SessionVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
@@ -61,7 +62,7 @@ class AgentTaskCall(BaseModel):
     retry_count = models.IntegerField(default=0)   #count will not be avauilable 
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
 
-    parent_taskruns = models.ForeignKey("server.AgentTaskCall", blank=True, on_delete=models.CASCADE, related_name="child_taskcalls", default=None, null=True )
+    parent_taskrun = models.ForeignKey("server.AgentTaskRun", blank=True, on_delete=models.CASCADE, related_name="child_taskcalls", default=None, null=True )
 
     taskcall_arg_references     = models.ManyToManyField("self", help_text="AgentTaskCalls used in call args/kwargs", symmetrical=False, blank=True, related_name="rev_taskcall_arg_references")
     
@@ -107,6 +108,7 @@ class AgentTaskCall(BaseModel):
        
         taskcall = AgentTaskCall.objects.create(
             agent_task_instance = agent_task_instance,
+            task_definition = agent_task_instance.task_definition_version.task_definition,
             task_definition_version = agent_task_instance.task_definition_version,
             session = agent_task_instance.session,
             session_version = agent_task_instance.session_version,
@@ -133,7 +135,7 @@ class AgentTaskCall(BaseModel):
             # Runtime values
             is_approved = None,
 
-            parent_run = parent_run, # AUTOMATIC TRACKING
+            parent_taskrun = parent_run, # AUTOMATIC TRACKING
         )
         taskcall.taskcall_before_run_hooks.set(before_hook_calls)
 
@@ -239,6 +241,6 @@ class AgentTaskCall(BaseModel):
 
     def __str__(self):
         try:
-            return f"<AgentTaskCall[{self.pk}]# {self.task_definition_version.name if self.task_definition_version else None}>"
+            return f"<AgentTaskCall[{self.pk}]# {self.task_definition.name if self.task_definition else None}>"
         except:
             return f"AgentTaskRun[{self.pk}]#{self.pk}: {self.status}"

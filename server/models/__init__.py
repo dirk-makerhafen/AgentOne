@@ -18,6 +18,7 @@ try:
     from .tasks.task_definition import TaskDefinition
     from .workspace import WorkspaceModel
     from .cron import Cronjob
+    from .tasks.task_definition_version import TaskDefinitionVersion
 except Exception as e:
     print("fialed to import", e)
     

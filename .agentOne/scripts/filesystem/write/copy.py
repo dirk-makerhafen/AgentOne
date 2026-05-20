@@ -1,4 +1,4 @@
-def copy(caller, source, destination, recursive=False):
+def copy(source, destination, recursive=False):
     '''
     Copies a file or directory from source to destination.
 
@@ -60,16 +60,12 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Copy a file or directory.')
     parser.add_argument('source', type=str, help='Source path')
     parser.add_argument('destination', type=str, help='Destination path')
     parser.add_argument('--recursive', '-r', action='store_true', default=False, help='Copy directories recursively')
     args = parser.parse_args()
 
-    success, result = copy(MockCaller(), source=args.source, destination=args.destination, recursive=args.recursive)
+    success, result = copy(source=args.source, destination=args.destination, recursive=args.recursive)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

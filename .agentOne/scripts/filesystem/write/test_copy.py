@@ -9,10 +9,6 @@ _copy_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_copy_mod)
 copy_tool = _copy_mod.copy
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestCopy(unittest.TestCase):
     def test_copy_file(self):
         src = os.path.join(tempfile.gettempdir(), 'test_copy_src.txt')
@@ -20,7 +16,7 @@ class TestCopy(unittest.TestCase):
         try:
             with open(src, 'w') as f:
                 f.write('test content')
-            success, result = copy_tool(MockCaller(), src, dst)
+            success, result = copy_tool(src, dst)
             self.assertTrue(success)
             with open(dst, 'r') as f:
                 self.assertEqual(f.read(), 'test content')
@@ -36,7 +32,7 @@ class TestCopy(unittest.TestCase):
             os.makedirs(src_dir)
             with open(os.path.join(src_dir, 'file.txt'), 'w') as f:
                 f.write('test')
-            success, result = copy_tool(MockCaller(), src_dir, dst_dir, recursive=True)
+            success, result = copy_tool(src_dir, dst_dir, recursive=True)
             self.assertTrue(success)
             self.assertTrue(os.path.exists(os.path.join(dst_dir, 'file.txt')))
         finally:
@@ -49,7 +45,7 @@ class TestCopy(unittest.TestCase):
         src_dir = os.path.join(tempfile.gettempdir(), 'test_copy_src_dir')
         try:
             os.makedirs(src_dir, exist_ok=True)
-            success, result = copy_tool(MockCaller(), src_dir, os.path.join(tempfile.gettempdir(), 'dst'))
+            success, result = copy_tool(src_dir, os.path.join(tempfile.gettempdir(), 'dst'))
             self.assertFalse(success)
             self.assertIn('recursive=true', result['message'])
         finally:
@@ -57,7 +53,7 @@ class TestCopy(unittest.TestCase):
                 os.rmdir(src_dir)
 
     def test_copy_source_not_found(self):
-        success, result = copy_tool(MockCaller(), '/nonexistent/xyz', '/tmp/dst')
+        success, result = copy_tool('/nonexistent/xyz', '/tmp/dst')
         self.assertFalse(success)
         self.assertIn('not found', result['message'])
 

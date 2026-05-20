@@ -1,6 +1,5 @@
 from django.db import models
 from server.models.base_model import BaseModel
-from server.models.enums.task_enums import TaskType  
 from django.core.exceptions import ValidationError
 
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
@@ -11,7 +10,6 @@ class TaskDefinition(BaseModel):
     parent_project = models.ForeignKey("server.Project", default=None, null=True, on_delete=models.CASCADE, related_name='related_task_definitions')# for */someproject/.agentone/skills/ , null for global skill in ~/.agentone/skills
     
     name            = models.CharField(max_length=255)
-    task_type       = models.CharField(max_length=20, choices=TaskType.choices)
     latest_task_version = models.ForeignKey(TaskDefinitionVersion, default=None, null=True, on_delete=models.SET_NULL, related_name='related_newest_task')
 
     def save(self, *args, **kwargs):
@@ -21,4 +19,7 @@ class TaskDefinition(BaseModel):
 
     def __str__(self):
         return f"TaskDefinition[{self.name} pk:{self.pk}]"
+
+    class Meta:
+        unique_together = ["parent_skill", "parent_agent", "parent_project", "name"]
 

@@ -6,7 +6,7 @@ from server.models.message import MessagePart
 class ConversationMessagePartInline(admin.TabularInline):
     model = MessagePart
     extra = 0
-    fields = ('index', 'content_type', 'tokens', 'content', 'content_template')
+    fields = ('content_type', "type", 'tokens', 'content', 'content_template')
     #autocomplete_fields = ('content', 'content_template')
     readonly_fields = ('tokens',)
 
@@ -16,7 +16,7 @@ class ConversationMessageAdmin(admin.ModelAdmin):
     list_display = ('id', 'session_version', 'role', 'source', 'hide_from_context', 'pin_to_context', 'created_at')
     list_display_links = ('id',)
     list_filter = ('role', 'source', 'hide_from_context', 'pin_to_context', 'created_at')
-    search_fields = ('id', 'query__id')
+    search_fields = ('id',)
     #autocomplete_fields = (  'query', 'response')
     inlines = [ConversationMessagePartInline]
     readonly_fields = ('created_at', 'updated_at')
@@ -31,7 +31,7 @@ class ConversationMessageAdmin(admin.ModelAdmin):
             'description': 'Control how this message appears in the model context history.'
         }),
         ('Extended Relations', {
-            'fields': ( 'query', 'response'),
+            'fields': ( 'response',),
             'classes': ('collapse',)
         }),
         ('Audit', {

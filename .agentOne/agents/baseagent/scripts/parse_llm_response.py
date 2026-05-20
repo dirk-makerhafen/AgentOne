@@ -9,11 +9,14 @@ import json
 import re
 import traceback
 from runtime.agents.session import Session
+from server.models.content import GenericContent
 from server.models.queries.response import Response
 from server.models.settings import AgentToolCallSyntax
 
+from typing import NotRequired, TypedDict
 
-def extract_tool_calls(session: Session, response: Response) -> dict:
+
+def parse_llm_response(session: Session, response: Response) -> dict:
     """
     Extract content, reasoning, and normalized tool call definitions.
 
@@ -31,11 +34,23 @@ def extract_tool_calls(session: Session, response: Response) -> dict:
             tool_calls (list) — Normalized list of {id, name, arguments} dicts,
                                 where arguments is already parsed from JSON.
     """
+    class Part(TypedDict):
+        type: str
+        content_type: str
+        content: str
+        template_data: NotRequired[dict]
+
+    result_parts = []
+
     toolcalls = list(getattr(response, "tool_calls", []) or [])
     content = getattr(response, "content", "") or ""
     reasoning = getattr(response, "reasoning", "") or ""
 
+    if reasoning:
+        result_parts.append(Part(type="reasoning", content_type="text", content=reasoning))
+
     try:
+
         if session.tool_call_syntax == AgentToolCallSyntax.CUSTOM and content:
             pattern = r"\[call:(\w+)\((.*?)\)\]"
             matches = re.finditer(pattern, content)
@@ -44,9 +59,7 @@ def extract_tool_calls(session: Session, response: Response) -> dict:
                 raw_args = match.group(2)
                 kwargs = {}
                 if raw_args:
-                    parts = re.split(
-                        r",(?=(?:[^']*'[^']*')*[^']*$)", raw_args
-                    )
+                    parts = re.split(r",(?=(?:[^']*'[^']*')*[^']*$)", raw_args)
                     for p in parts:
                         if "=" in p:
                             k, v = p.split("=", 1)
@@ -55,23 +68,35 @@ def extract_tool_calls(session: Session, response: Response) -> dict:
                     "id": f"custom_{func_name}",
                     "function": {"name": func_name, "arguments": kwargs},
                 })
+        if content:
+            result_parts.append(Part(type="message", content_type="text", content=content))
 
-        normalized = []
-        for tc in toolcalls:
-            func_name = tc["function"]["name"]
-            args = tc["function"]["arguments"]
-            if isinstance(args, str):
+        def _dedouplicate(data):
+            if isinstance(data, dict):
+                return {k: _dedouplicate(data=v) for k, v in data.items()}
+            elif isinstance(data, (list,set,)):
+                return [_dedouplicate(data=item) for item in data]
+            elif isinstance(data, str):
+                if len(data) < 128:
+                    return data 
+                return GenericContent.from_text(data)  
+            return data
+
+        for toolcall in toolcalls:
+            if isinstance(toolcall["arguments"], str):
                 try:
-                    args = json.loads(args)
+                    toolcall["arguments"] = json.loads(toolcall["arguments"])
                 except json.JSONDecodeError:
-                    args = {}
-            normalized.append({
-                "id": tc.get("id", ""),
-                "name": func_name,
-                "arguments": args,
-            })
+                    pass
+            #if len(json.dumps(toolcall["function"]["arguments"])) >= 1024:
+            #    toolcall["function"]["arguments"] = _dedouplicate(toolcall["function"]["arguments"])
+            result_parts.append(Part(type="toolcall", content_type="json", content=toolcall))
 
-        return {"content": content, "reasoning": reasoning, "tool_calls": normalized}
+        return dict(
+            response = response,
+            parts = result_parts,
+        )
+       
 
     except Exception:
         from server.models.debug_log_entry import DebugLogEntry

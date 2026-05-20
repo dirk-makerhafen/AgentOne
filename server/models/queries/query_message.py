@@ -4,7 +4,7 @@ from django.db import models
 from django_enum import EnumField
 
 from server.models.base_model import BaseModel
-from server.models.enums.message_enums import MessageContentType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.content import  GenericContent
 
 from server.models.queries.query_message_part import QueryMessagePart
@@ -53,7 +53,15 @@ class QueryMessage(BaseModel):
         tags_token_usage = {}
         querymessage_parts = list(self.query_message_parts.all())
         is_mixed = True in [p.content_type.lower() != "text" and p.content_type.lower() != "file" for p in querymessage_parts]
+        tool_call_models = []
         for querymessage_part in querymessage_parts:
+            if querymessage_part.message_part:
+                if  querymessage_part.message_part.type == MessagePartType.TOOLCALL:
+                    tool_call_models.append(querymessage_part.message_part.tool_call)
+                    continue
+                if querymessage_part.message_part.type != MessagePartType.MESSAGE:
+                    raise Exception("here broken")
+            
             part_content = querymessage_part.compile(fail_on_error=fail_on_error)
             if isinstance(part_content, dict):
                 is_mixed = True
@@ -107,10 +115,10 @@ class QueryMessage(BaseModel):
             "id": f"tc-{toolCall.pk}",
             "type": "function",
             "function": {
-                "name": toolCall.agent_task_definition.name,
+                "name": toolCall.task_definition.name,
                 "arguments": json.dumps(toolCall.carguments_json),
             }
-        } for toolCall in list(self.tool_calls.all())]
+        } for toolCall in list(tool_call_models)]
 
         message =  {"role": self.role, "content": content_to_send}
 

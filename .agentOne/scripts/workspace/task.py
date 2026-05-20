@@ -1,7 +1,7 @@
 import json
 import uuid
 
-def task(caller, description, prompt, subagent_type="general", timeout=None):
+def task(description, prompt, subagent_type="general", timeout=None):
     '''
     Launch a new agent to handle complex, multi-step tasks autonomously.
 
@@ -54,10 +54,6 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Launch a subagent task.')
     parser.add_argument('--description', type=str, required=True, help='Short task description')
     parser.add_argument('--prompt', type=str, required=True, help='Detailed task prompt')
@@ -65,6 +61,6 @@ if __name__ == '__main__':
     parser.add_argument('--timeout', type=int, default=None, help='Timeout in seconds')
     args = parser.parse_args()
 
-    success, result = task(MockCaller(), description=args.description, prompt=args.prompt, subagent_type=args.subagent_type, timeout=args.timeout)
+    success, result = task(description=args.description, prompt=args.prompt, subagent_type=args.subagent_type, timeout=args.timeout)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

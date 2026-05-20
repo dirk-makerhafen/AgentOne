@@ -6,15 +6,11 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from mkdir import mkdir
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestMkdir(unittest.TestCase):
     def test_mkdir_basic(self):
         d = os.path.join(tempfile.gettempdir(), 'test_mkdir_abc')
         try:
-            success, result = mkdir(MockCaller(), d)
+            success, result = mkdir(d)
             self.assertTrue(success)
             self.assertTrue(os.path.isdir(d))
         finally:
@@ -24,7 +20,7 @@ class TestMkdir(unittest.TestCase):
     def test_mkdir_parents(self):
         d = os.path.join(tempfile.gettempdir(), 'test_mkdir_a', 'test_mkdir_b', 'test_mkdir_c')
         try:
-            success, result = mkdir(MockCaller(), d, parents=True)
+            success, result = mkdir(d, parents=True)
             self.assertTrue(success)
             self.assertTrue(os.path.isdir(d))
         finally:
@@ -36,14 +32,14 @@ class TestMkdir(unittest.TestCase):
         d = os.path.join(tempfile.gettempdir(), 'test_mkdir_abc')
         try:
             os.makedirs(d)
-            success, result = mkdir(MockCaller(), d, exist_ok=True)
+            success, result = mkdir(d, exist_ok=True)
             self.assertTrue(success)
         finally:
             if os.path.isdir(d):
                 os.rmdir(d)
 
     def test_mkdir_no_path(self):
-        success, result = mkdir(MockCaller(), '')
+        success, result = mkdir('')
         self.assertFalse(success)
         self.assertIn('Path not provided', result['message'])
 

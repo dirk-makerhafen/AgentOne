@@ -1,7 +1,7 @@
 import httpx
 import os
 
-def webFetch(caller, url, format="markdown"):
+def webFetch(url, format="markdown"):
     '''
     Fetches content from a specified URL.
 
@@ -71,16 +71,12 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Fetch content from a URL.')
     parser.add_argument('url', type=str, help='URL to fetch')
     parser.add_argument('--format', type=str, default='markdown', choices=['text', 'markdown', 'html'], help='Output format')
     args = parser.parse_args()
 
-    success, result = webFetch(MockCaller(), url=args.url, format=args.format)
+    success, result = webFetch(url=args.url, format=args.format)
     if success:
         print(result.get('content', ''))
     else:

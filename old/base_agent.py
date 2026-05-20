@@ -18,31 +18,33 @@ class AgentRuntime():
         self.agent:AgentModel = session_version.agent
         self.agent_instance:SessionModel = session_version.session
         self.session_version:SessionVersionModel = session_version
-        self.agent_version: AgentVersionModel = session_version.agent_version
+        self.agent_version: AgentVersionModel = session_version.pinned_agent_version
 
     def __getattribute__(self, name: str) -> Any:
         try:
             return object.__getattribute__(self, name)
-        except Exception as e:
-            task = object.__getattribute__(self, "all_tasks")(filter=dict(name=name)).first()
-            if task:
-                return BoundTask(self, task)
-            raise Exception(f"Task '{name}' not found in {self}")
-
-    def all_tasks(self, filter:Dict={}):
-        return self.tasks().filter(**filter).union(self.tools().filter(**filter)).union(self.commands().filter(**filter)).union(self.skills().filter(**filter))
+        except AttributeError:
+            tdv = object.__getattribute__(self, "agent_version").tasks.filter(
+                task_definition__name=name
+            ).first()
+            if tdv:
+                return BoundTask(
+                    object.__getattribute__(self, "session_version"),
+                    tdv.task_definition,
+                )
+            raise AttributeError(f"Task '{name}' not found in {self}")
 
     def tasks(self):
-        return self.agent.latest_agent_version.tasks()
+        return self.agent_version.tasks()
 
     def tools(self):
-        return  self.agent.latest_agent_version.tools()
+        return self.agent_version.tools()
 
     def commands(self):
-        return  self.agent.latest_agent_version.commands()
+        return self.agent_version.commands()
 
     def skills(self):
-        return  self.agent.latest_agent_version.skills()
+        return self.agent_version.skills()
 
     def add_user_message(self,  message: str|None = None, parts: List[Dict]|None = None):
         if parts is None and message is not None:
@@ -55,9 +57,8 @@ class AgentRuntime():
             cmd = parts[0].get("content", [None,]).split(None,1)[0][1:].strip()  # Get command without '!'
             task_function = None
             print("CMD", cmd)
-            taskdefinition = self.commands().filter(trigger=cmd).first()
-            if not taskdefinition:
-                taskdefinition = self.commands().filter(name=cmd).first()
+
+            taskdefinition = self.commands().filter(name=cmd).first()
             if not taskdefinition:
                 taskdefinition = self.tools().filter(name=cmd).first()
             if not taskdefinition:

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-def read(caller, path, offset=1, limit=2000):
+def read(path, offset=1, limit=2000):
     '''
     Read a file or directory from the local filesystem.
 
@@ -102,17 +102,13 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Read a file or directory.')
     parser.add_argument('path', type=str, help='Path to file or directory')
     parser.add_argument('--offset', type=int, default=1, help='Starting line number (1-indexed)')
     parser.add_argument('--limit', type=int, default=2000, help='Max lines to read')
     args = parser.parse_args()
 
-    success, result = read(MockCaller(), path=args.path, offset=args.offset, limit=args.limit)
+    success, result = read(path=args.path, offset=args.offset, limit=args.limit)
     if result.get('type') == 'file':
         print(result.get('content', ''))
     else:

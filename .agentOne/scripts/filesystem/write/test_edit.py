@@ -6,17 +6,13 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from edit import edit
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestEdit(unittest.TestCase):
     def test_edit_single(self):
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_edit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
                 f.write('hello world\n')
-            success, result = edit(MockCaller(), tmp_path, 'hello', 'goodbye')
+            success, result = edit(tmp_path, 'hello', 'goodbye')
             self.assertTrue(success)
             with open(tmp_path, 'r') as f:
                 self.assertEqual(f.read(), 'goodbye world\n')
@@ -29,7 +25,7 @@ class TestEdit(unittest.TestCase):
         try:
             with open(tmp_path, 'w') as f:
                 f.write('foo bar foo\n')
-            success, result = edit(MockCaller(), tmp_path, 'foo', 'baz', replace_all=True)
+            success, result = edit(tmp_path, 'foo', 'baz', replace_all=True)
             self.assertTrue(success)
             with open(tmp_path, 'r') as f:
                 self.assertEqual(f.read(), 'baz bar baz\n')
@@ -42,7 +38,7 @@ class TestEdit(unittest.TestCase):
         try:
             with open(tmp_path, 'w') as f:
                 f.write('hello world\n')
-            success, result = edit(MockCaller(), tmp_path, 'xyz', 'abc')
+            success, result = edit(tmp_path, 'xyz', 'abc')
             self.assertFalse(success)
             self.assertIn('not found', result['message'])
         finally:
@@ -54,7 +50,7 @@ class TestEdit(unittest.TestCase):
         try:
             with open(tmp_path, 'w') as f:
                 f.write('hello\n')
-            success, result = edit(MockCaller(), tmp_path, 'hello', 'hello')
+            success, result = edit(tmp_path, 'hello', 'hello')
             self.assertFalse(success)
             self.assertIn('identical', result['message'])
         finally:
@@ -66,7 +62,7 @@ class TestEdit(unittest.TestCase):
         try:
             with open(tmp_path, 'w') as f:
                 f.write('foo bar foo\n')
-            success, result = edit(MockCaller(), tmp_path, 'foo', 'baz', replace_all=False)
+            success, result = edit(tmp_path, 'foo', 'baz', replace_all=False)
             self.assertFalse(success)
             self.assertIn('Found 2 occurrences', result['message'])
         finally:

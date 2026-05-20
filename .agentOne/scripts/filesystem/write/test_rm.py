@@ -6,16 +6,12 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from rm import rm
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestRm(unittest.TestCase):
     def test_rm_file(self):
         f = os.path.join(tempfile.gettempdir(), 'test_rm_abc.txt')
         with open(f, 'w') as fh:
             fh.write('test')
-        success, result = rm(MockCaller(), f)
+        success, result = rm(f)
         self.assertTrue(success)
         self.assertFalse(os.path.exists(f))
 
@@ -23,7 +19,7 @@ class TestRm(unittest.TestCase):
         d = os.path.join(tempfile.gettempdir(), 'test_rm_dir_abc')
         try:
             os.makedirs(d)
-            success, result = rm(MockCaller(), d)
+            success, result = rm(d)
             self.assertTrue(success)
             self.assertFalse(os.path.exists(d))
         except Exception:
@@ -35,14 +31,14 @@ class TestRm(unittest.TestCase):
             os.makedirs(os.path.join(d, 'sub'))
             with open(os.path.join(d, 'file.txt'), 'w') as fh:
                 fh.write('test')
-            success, result = rm(MockCaller(), d, recursive=True)
+            success, result = rm(d, recursive=True)
             self.assertTrue(success)
             self.assertFalse(os.path.exists(d))
         except Exception:
             pass
 
     def test_rm_nonexistent(self):
-        success, result = rm(MockCaller(), '/nonexistent/path/xyz')
+        success, result = rm('/nonexistent/path/xyz')
         self.assertTrue(success)
         self.assertIn('does not exist', result['message'])
 
@@ -50,7 +46,7 @@ class TestRm(unittest.TestCase):
         d = os.path.join(tempfile.gettempdir(), 'test_rm_dir_abc')
         try:
             os.makedirs(os.path.join(d, 'sub'))
-            success, result = rm(MockCaller(), d, recursive=False)
+            success, result = rm(d, recursive=False)
             self.assertFalse(success)
             self.assertIn('not empty', result['message'])
         finally:

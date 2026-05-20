@@ -3,7 +3,7 @@ from django.contrib import admin
 
 @admin.register(SessionVersionModel)
 class AgentInstanceVersionAdmin(admin.ModelAdmin):
-    list_display = ("id", "created_at", 'workingdir', 'session', 'agent_version')
+    list_display = ("id", "created_at", 'workingdir', 'session')
     list_display_links = ("id", 'session',)
     search_fields = ('name', 'session')
     list_filter = ('session', 'created_at')

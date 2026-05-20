@@ -1,5 +1,5 @@
 
-def edit(caller, path, old_string, new_string, replace_all=False):
+def edit(path, old_string, new_string, replace_all=False):
     '''
     Performs exact string replacements in files.
 
@@ -69,11 +69,6 @@ def edit(caller, path, old_string, new_string, replace_all=False):
 if __name__ == '__main__':
     import argparse
     import json
-    import sys
-
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
 
     parser = argparse.ArgumentParser(description='Exact string replacement in a file.')
     parser.add_argument('path', type=str, help='Path to file')
@@ -82,6 +77,6 @@ if __name__ == '__main__':
     parser.add_argument('--all', action='store_true', default=False, help='Replace all occurrences')
     args = parser.parse_args()
 
-    success, result = edit(MockCaller(), path=args.path, old_string=args.old, new_string=args.new, replace_all=args.all)
+    success, result = edit(path=args.path, old_string=args.old, new_string=args.new, replace_all=args.all)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

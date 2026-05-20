@@ -2,7 +2,7 @@ from django.db import models
 import random
 from django.core.exceptions import ValidationError
 from server.models.providers.ai_model import AiModel
-from server.models.enums.task_enums import TaskExecutionMode
+from server.models.enums.task_enums import TaskSchedulerStrategy
 from server.models.base_model import BaseModel
 from server.models.content import GenericContent
 
@@ -39,7 +39,7 @@ class SettingsModel(BaseModel):
     task_prompt   = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="agent_settings_task_prompt")
     system_prompt = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="agent_settings_system_prompt")
 
-    execution_mode = models.CharField(max_length=20, choices=TaskExecutionMode, default=None, null=True, blank=True)
+    scheduler_strategy = models.CharField(max_length=20, choices=TaskSchedulerStrategy, default=None, null=True, blank=True)
     tool_call_syntax = models.CharField(max_length=20, choices=AgentToolCallSyntax.choices, default=None, null=True, blank=True)
 
     commandNames = models.JSONField(default=None, null=True, blank=True)

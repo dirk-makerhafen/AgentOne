@@ -1,59 +1,63 @@
 from __future__ import annotations
-from contextlib import contextmanager
+import importlib.util
 from pathlib import Path
-import sys
 from typing import TYPE_CHECKING
 from server.models.enums.task_enums import TaskCallStatusDetail
-from registry.task_decorators import TaskDescriptor
-from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_instance import AgentTaskInstance
-from server.models.tasks.task_definition import TaskDefinition
-from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 if TYPE_CHECKING:
-    from server.models.sessions.session_version import SessionVersionModel
-
-@contextmanager
-def temp_sys_path(path):
-    """Temporarily adds a directory to sys.path."""
-    path = str(path)
-    if path not in sys.path:
-        sys.path.insert(0, path)
-        try:
-            yield
-        finally:
-            sys.path.remove(path)
-    else:
-        yield
+    from runtime.agents.session import Session
+    from server.models.tasks.task_definition_version import TaskDefinitionVersion
+    from server.models.tasks.agent_task_call import AgentTaskCall
 
 class BoundTask:
-    def __init__(self, session_version: SessionVersionModel, task_definition_version:TaskDefinitionVersion):
-        self.session_version = session_version
-        from runtime.agents.session import Session
-
-        self.session = Session(session_model=self.session_version.session, pinned_session_version=self.session_version)
+    def __init__(self, session: Session, task_definition_version:TaskDefinitionVersion):
+        self.session = session
         self.task_definition_version = task_definition_version
-        self.task_definition =  self.task_definition_version.task_definition
-        print("BOUN TASK CREATED")
+        self.task_definition = task_definition_version.task_definition
 
     def call(self, *args, **kwargs):
-        '''
-        synchronous call
-        '''
-        print("CALL", self)
-        exec_globals = {"__builtins__": __builtins__}
-        with temp_sys_path(Path( self.task_definition_version.path or "")):
-            exec(Path(self.task_definition_version.path or "").read_text(), exec_globals) # Execute the source code
-        func: TaskDescriptor|None = exec_globals.get(self.task_definition.name, None)
-        if func:
-            return func.call(self.session, *args, **kwargs)
-        raise Exception(f"Task '{self.task_definition.name}' not found, call failed, {self.task_definition_version.path}")
+
+        # Chain/group tasks have no Python file — they execute via AgentTaskRun.apply()
+        if self.task_definition_version.task_execution_mode in ("CHAIN", "GROUP"):
+            raise TypeError(
+                f"Task '{self.task_definition.name}' has execution_mode={self.task_definition_version.task_execution_mode} "
+                f"and has no callable Python function. "
+                f"Use apply_async() or instance().apply_async() instead."
+            )
+
+        file_path = Path(self.task_definition_version.path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"Script file not found: {file_path}")
+
+        if not self.task_definition_version.function_name:
+            raise ValueError(
+                f"TaskDefinitionVersion '{self.task_definition_version}' has no function_name set"
+            )
+
+        spec = importlib.util.spec_from_file_location(
+            f"_bound_{self.task_definition.name}", file_path
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        func = getattr(module, self.task_definition_version.function_name, None)
+        if func is None:
+            raise AttributeError(f"Function '{self.task_definition_version.function_name}' not found in {file_path}")
+
+        if self.task_definition_version.bound:
+            return func(self.session, *args, **kwargs)
+        return func(*args, **kwargs)
 
     def get_calls(self):
-        return AgentTaskCall.objects.filter(session=self.session_version.session, task_definition_version=self.task_definition_version)
+        return AgentTaskCall.objects.filter(
+            session=self.session.model,
+            task_definition=self.task_definition,
+        )
 
     def lastest_result(self):
-        query = self.get_calls().exclude(taskcall_result_run=None).filter(status_detail=TaskCallStatusDetail.ENDED_SUCCESS)
+        query = self.get_calls().exclude(taskcall_result_run=None).filter(
+            status_detail=TaskCallStatusDetail.ENDED_SUCCESS
+        )
         task_call = query.last()
         return task_call.get_result(timeout=0) if task_call else None
 
@@ -90,8 +94,7 @@ class BoundTask:
         """
         #print("BoundAgentTaskDefinition.apply_async", self.func.__name__, args, kwargs)
         agentTaskInstance = self.instance()
-        #print("here",  args, kwargs )
-        return agentTaskInstance.apply_async( args=args, kwargs = kwargs)
+        return agentTaskInstance.apply_async(args=args, kwargs=kwargs)
 
     def instance(self, args = None, kwargs=None, **options ) -> AgentTaskInstance:
         """get/Create AgentTaskInstance.
@@ -101,13 +104,12 @@ class BoundTask:
         """
         args = args if args else []
         kwargs = kwargs if kwargs else {}
-        print("HEREHRHEHR", )
         return AgentTaskInstance.get_or_create(
             task_definition = self.task_definition_version,
-            session_version = self.session_version,
+            session_version = self.session.get_version_model(),
             args = args,
-            kwargs=kwargs,
-            **options
+            kwargs = kwargs,
+            **options,
         )
 
     def i(self, *args, **kwargs) -> AgentTaskInstance: # fertig

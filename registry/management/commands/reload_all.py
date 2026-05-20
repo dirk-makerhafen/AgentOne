@@ -102,3 +102,5 @@ class Command(BaseCommand):
             for project_path in project_paths:
                 self.stdout.write(f"Loading project: {project_path}")
                 load_project_folder(project_path)
+
+        # Pass 2 (no longer needed — each agent resolves tasks during load)

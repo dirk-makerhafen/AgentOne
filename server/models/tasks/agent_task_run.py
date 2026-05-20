@@ -7,15 +7,17 @@ import time
 import traceback
 from types import GeneratorType
 from django.db import models
+from runtime.agents.session import Session
 from runtime.rate_limiter import RateLimitError
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.content import GenericContent
 from runtime.context_manager import ContextTracker
-from server.models.enums.task_enums import TaskRunStatus
+from server.models.enums.task_enums import TaskRunStatus, TaskType
 from server.models.sessions.session_version import SessionVersionModel
 from server.models.message import Message
 from server.models.queries.query import Query
 from server.models.queries.response import Response
+from server.models.tasks.task_definition_version import TaskDefinitionVersion
 from server.tasks.task_dispatcher import celery_delay
 from server.models.base_model import BaseModel
 from django.core.exceptions import ValidationError
@@ -29,7 +31,8 @@ if TYPE_CHECKING:
 class AgentTaskRun(BaseModel):
     """Single execution attempt"""
     agent_task_call       = models.ForeignKey("AgentTaskCall",         on_delete=models.CASCADE, related_name="related_agent_task_runs")
-    agent_task_instance   = models.ForeignKey("AgentTaskInstance",     on_delete=models.CASCADE, related_name="related_agent_task_runs")
+    agent_task_instance   = models.ForeignKey("AgentTaskInstance",     on_delete=models.CASCADE, related_name="related_agent_task_runs", default=None, null=True)
+
     task_definition_version = models.ForeignKey("TaskDefinitionVersion",   on_delete=models.CASCADE, related_name="related_agent_task_runs", default=None, null=True, blank=True)
     session_version = models.ForeignKey(SessionVersionModel, on_delete=models.CASCADE, related_name="related_agent_task_runs")
 
@@ -66,9 +69,24 @@ class AgentTaskRun(BaseModel):
 
     @classmethod
     def create(cls, agent_task_call: AgentTaskCall, args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None) -> "AgentTaskRun":
-        print("create taskru ", agent_task_call.task_definition_version, agent_task_call.task_definition_version, args, kwargs)
-        agent_task_instance = agent_task_call.agent_task_instance
-        agent_task_instance: AgentTaskInstance
+        print("create taskru ", agent_task_call.task_definition, agent_task_call.task_definition, args, kwargs)
+        session:Session = agent_task_call.session.latest_session_version.get_runtime()
+
+        # Resolve task definition version dynamically from the session's agent version scope, so a retry run of a call can pick up an updated version
+        task_type =  agent_task_call.task_definition_version.task_type
+        task_name =  agent_task_call.task_definition.name
+        print("TASK TASK TASK", task_type, task_name, session.allowedTasks)
+        print(session.version_number)
+        print(session.get_version_model())
+        print(session.agent.version_number)
+        print(session.agent.get_version_model())
+
+        if task_type == TaskType.TASK:
+            task_definition_version = session.get_task(task_name).task_definition_version
+        elif task_type == TaskType.TOOL:
+            task_definition_version = session.get_tool(task_name).task_definition_version 
+        if task_type == TaskType.COMMAND:
+            task_definition_version = session.get_command(task_name).task_definition_version
         
         args = args if args else []
         kwargs = kwargs if kwargs else {}
@@ -77,8 +95,8 @@ class AgentTaskRun(BaseModel):
         print("IN CREATE")
         taskrun = AgentTaskRun.objects.create(
             agent_task_call = agent_task_call,
-            agent_task_instance = agent_task_instance,
-            task_definition_version = agent_task_call.task_definition_version,
+            agent_task_instance = agent_task_call.agent_task_instance,
+            task_definition_version = task_definition_version,
             session_version  = agent_task_call.session_version,
             #agent_variant  =  agent_task_call.session_version.pinned_agent_variant  if agent_task_call.session_version.pinned_agent_variant else agent_task_call.session_version.get_or_create_variant(),
             # Arguments
@@ -87,14 +105,14 @@ class AgentTaskRun(BaseModel):
             # Options - Startup
             dont_start_before = dont_start_before if dont_start_before else None, # Absolute time and date of when the task should be executed. 
             dont_start_after  = dont_start_after if dont_start_after else None, #  Datetime or seconds in the future for the task should expire. The task won't be executed after the expiration time.
-            requires_approval = requires_approval if requires_approval else agent_task_instance.requires_approval,   # required user approval before run
+            requires_approval = requires_approval if requires_approval else task_definition_version.requires_approval,   # required user approval before run
 
             # Options - Run
-            time_limit      = time_limit if time_limit else agent_task_instance.time_limit,   #   
-            max_subtask_errors     = max_subtask_errors if max_subtask_errors else agent_task_instance.max_subtask_errors,   # for groups,absolute number, also used when timeout
-            max_subtask_error_rate = max_subtask_error_rate if max_subtask_error_rate else agent_task_instance.max_subtask_error_rate,# for groups, in percent, also used when timeout
-            limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else agent_task_instance.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
-            limit_per_instance_parallel_runs = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else agent_task_instance.limit_per_instance_parallel_runs  #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+            time_limit      = time_limit if time_limit else task_definition_version.time_limit,   #   
+            max_subtask_errors     = max_subtask_errors if max_subtask_errors else task_definition_version.max_subtask_errors,   # for groups,absolute number, also used when timeout
+            max_subtask_error_rate = max_subtask_error_rate if max_subtask_error_rate else task_definition_version.max_subtask_error_rate,# for groups, in percent, also used when timeout
+            limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else task_definition_version.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
+            limit_per_instance_parallel_runs = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else task_definition_version.limit_per_instance_parallel_runs  #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
         )
         if ref_pks:
             taskrun.taskrun_arg_references.set(ref_pks)
@@ -111,35 +129,46 @@ class AgentTaskRun(BaseModel):
         celery_delay(RunScheduler._apply_async, self.pk)
     
     def apply(self):
+        if not self.task_definition_version:
+            return
         print("AgentTaskCall.run", self.task_definition_version)
         task_definition=  self.task_definition_version.task_definition
         new_sub_task_calls = []
         result = None
         with ContextTracker(self):
             try:
-                runtime = self.session_version.get_runtime()
+                session = self.session_version.get_runtime()
 
-                if task_definition.task_type == "CHAIN":
+                if self.task_definition_version.task_execution_mode == "CHAIN":
                     # Start subcalls for chain
                     next_step_arguments = self.arguments_json
-                    for sub_task_instance in self.agent_task_instance.child_instances.order_by('parent_relations__index').all():
+                    for sub_task_instance in self.agent_task_instance.child_instances.all():
                         next_step_arguments = sub_task_instance.apply_async(kwargs=next_step_arguments)
                         new_sub_task_calls.append(next_step_arguments)
                     result = new_sub_task_calls[-1]
 
-                elif task_definition.task_type == "GROUP":
+                elif self.task_definition_version.task_execution_mode == "GROUP":
                     # Start subcalls for groups
-                    for sub_task_instance in self.agent_task_instance.child_instances.order_by('parent_relations__index').all():
+                    for sub_task_instance in self.agent_task_instance.child_instances.all():
                         call = sub_task_instance.apply_async(kwargs=self.arguments_json)
                         new_sub_task_calls.append(call)
                     result = new_sub_task_calls
 
                 else: 
-                    # normal executions            
-                    bound_agent_function = getattr(runtime, task_definition.name)
+                    # normal executions
+                    bound_task = None
+                    if self.task_definition_version.task_type == TaskType.TASK:
+                        bound_task = session.get_task(task_definition.name)
+                    elif self.task_definition_version.task_type == TaskType.TOOL:
+                        bound_task = session.get_tool(task_definition.name)
+                    elif self.task_definition_version.task_type == TaskType.COMMAND:
+                        bound_task = session.get_command(task_definition.name)
+                    if not bound_task:
+                        raise Exception(f"Unsupported task type '{self.task_definition_version.task_type}'")
+                    
                     args, kwargs = self._resolve_run_arguments(timeout=0)
                     print("args, kwargs", args, kwargs)
-                    result = bound_agent_function.call(*args, **kwargs)
+                    result = bound_task.call(*args, **kwargs)
 
                 self.result_json, ref_pks = self._create_result_json(result=result)
                 self.taskrun_result_references.set(ref_pks)
@@ -313,6 +342,8 @@ class AgentTaskRun(BaseModel):
 
     def __str__(self):
         try:
-            return f"AgentTaskRun[{self.task_definition_version.name if hasattr(self, 'agent_task_definition') else None}]#{self.pk}: {self.status}"
+            tdv = self.task_definition_version
+            name = tdv.task_definition.name if tdv and tdv.task_definition else None
+            return f"AgentTaskRun[{name}]#{self.pk}: {self.status}"
         except:
             return f"AgentTaskRun[{self}]#{self.pk}: {self.status}"

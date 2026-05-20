@@ -2,7 +2,7 @@ import os
 import subprocess
 import difflib
 
-def diff(caller, path=None, staged=False, target=None):
+def diff(path=None, staged=False, target=None):
     '''
     Show a git diff or file diff.
 
@@ -29,7 +29,7 @@ def diff(caller, path=None, staged=False, target=None):
                 - 'status': 'error'
                 - 'message': str
     '''
-    cwd = caller.workingdir if hasattr(caller, 'workingdir') and caller.workingdir else os.getcwd()
+    cwd = os.getcwd()
 
     try:
         git_dir = os.path.join(cwd, '.git')
@@ -83,17 +83,13 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Show a git diff or file diff.')
     parser.add_argument('--path', type=str, default=None, help='File path or git repo path')
     parser.add_argument('--staged', action='store_true', default=False, help='Show staged changes')
     parser.add_argument('--target', type=str, default=None, help='Git ref or second file path')
     args = parser.parse_args()
 
-    success, result = diff(MockCaller(), path=args.path, staged=args.staged, target=args.target)
+    success, result = diff(path=args.path, staged=args.staged, target=args.target)
     if success:
         print(result.get('diff', ''))
     else:

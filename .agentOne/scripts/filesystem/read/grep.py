@@ -4,7 +4,7 @@ from pathlib import Path
 import traceback
 import fnmatch
 
-def grep(caller, pattern, path=None, include=None):
+def grep(pattern, path=None, include=None):
     '''
     Fast content search tool that works with any codebase size.
 
@@ -89,16 +89,12 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Fast content search with regex.')
     parser.add_argument('pattern', type=str, help='Regex pattern to search for')
     parser.add_argument('--path', type=str, default=None, help='Directory to search in')
     parser.add_argument('--include', type=str, default=None, help='File pattern to include (e.g., "*.js")')
     args = parser.parse_args()
 
-    success, result = grep(MockCaller(), pattern=args.pattern, path=args.path, include=args.include)
+    success, result = grep(pattern=args.pattern, path=args.path, include=args.include)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

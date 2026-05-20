@@ -6,10 +6,6 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from move import move
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestMove(unittest.TestCase):
     def test_move_file(self):
         src = os.path.join(tempfile.gettempdir(), 'test_move_src.txt')
@@ -17,7 +13,7 @@ class TestMove(unittest.TestCase):
         try:
             with open(src, 'w') as f:
                 f.write('test content')
-            success, result = move(MockCaller(), src, dst)
+            success, result = move(src, dst)
             self.assertTrue(success)
             self.assertFalse(os.path.exists(src))
             self.assertTrue(os.path.exists(dst))
@@ -29,7 +25,7 @@ class TestMove(unittest.TestCase):
                     os.unlink(p)
 
     def test_move_source_not_found(self):
-        success, result = move(MockCaller(), '/nonexistent/xyz', '/tmp/dst')
+        success, result = move('/nonexistent/xyz', '/tmp/dst')
         self.assertFalse(success)
         self.assertIn('not found', result['message'])
 

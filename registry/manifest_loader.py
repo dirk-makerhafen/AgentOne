@@ -11,7 +11,6 @@ Versioning uses a shadow git repo per manifest folder for content hashing.
 import importlib.util
 import inspect
 import textwrap
-import traceback
 from pathlib import Path
 
 import yaml
@@ -22,7 +21,7 @@ from registry.utils import generate_schema_for_function, get_ai_model
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.content import GenericContent
-from server.models.enums.task_enums import TaskType
+from server.models.enums.task_enums import TaskExecutionMode, TaskType
 from server.models.project import Project
 from server.models.settings import SettingsModel
 from server.models.skills.skill import SkillModel, SkillModelVersion
@@ -34,34 +33,37 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 # Scripts loader (scripts.md) — tasks, tools, commands
 # ---------------------------------------------------------------------------
 
+_ENTRY_TYPE_TO_EXECUTION_MODE = {
+    "function": TaskExecutionMode.FUNCTION,
+    "script": TaskExecutionMode.SCRIPT,
+    "chain": TaskExecutionMode.CHAIN,
+    "group": TaskExecutionMode.GROUP,
+    "chord": TaskExecutionMode.CHORD,
+    "map": TaskExecutionMode.MAP,
+}
+
 def load_scripts_manifest(scripts_dir: Path, parent_project=None,
                           parent_agent=None, parent_skill=None):
     """
-    Load all entries from a scripts.md manifest.
+    Load all entries from all scripts.md manifests found in the given
+    directory (recurses into subdirectories).
 
     Processes entries in order so python entries are created before chain
     entries (which need to resolve child versions by name).
 
     Returns list of (TaskDefinition, TaskDefinitionVersion) tuples.
     """
-    manifest_path = scripts_dir / "scripts.md"
-    if not manifest_path.exists():
-        return []
-
-    with open(manifest_path) as f:
-        manifest = yaml.safe_load(f) or {}
-    commit = get_or_init_shadow_repo(scripts_dir)
-
-    # Ordered entries from all three categories
-    entries = _collect_manifest_entries(manifest)
     results = []
+    for manifest_path in sorted(scripts_dir.rglob("scripts.md")):
+        subdir = manifest_path.parent
+        with open(manifest_path) as f:
+            manifest = yaml.safe_load(f) or {}
+        commit = get_or_init_shadow_repo(subdir)
 
-    for entry in entries:
-        try:
-            _load_script_entry(entry, scripts_dir, commit, results,
+        entries = _collect_manifest_entries(manifest)
+        for entry in entries:
+            _load_script_entry(entry, subdir, commit, results,
                                parent_project, parent_agent, parent_skill)
-        except Exception:
-            traceback.print_exc()
 
     return results
 
@@ -69,42 +71,46 @@ def load_scripts_manifest(scripts_dir: Path, parent_project=None,
 def _collect_manifest_entries(manifest):
     """Flatten tools/tasks/commands from manifest into ordered list."""
     entries = []
-    for key, ttype in [
-        ("tools", TaskType.TOOL),
-        ("tasks", TaskType.TASK),
-        ("commands", TaskType.COMMAND),
-    ]:
-        for e in manifest.get(key, []):
-            e["task_type"] = ttype
-            entries.append(e)
+    for key, ttype in [("tools", TaskType.TOOL), ("tasks", TaskType.TASK), ("commands", TaskType.COMMAND)]:
+        for item in manifest.get(key, []):
+            item["task_type"] = ttype
+            for fkey, fenum in _ENTRY_TYPE_TO_EXECUTION_MODE.items():
+                if fkey in item:
+                    item["task_execution_mode"] = fenum
+                    break
+            print(item)
+            entries.append(item)
     return entries
 
 
 def _load_script_entry(entry, scripts_dir, commit, existing_results,
                        parent_project, parent_agent, parent_skill):
     task_type = entry["task_type"]
+    task_execution_mode = entry["task_execution_mode"]
     name = entry["name"]
-    entry_type = entry.get("type", "python")
-
-    if entry_type == "python":
-        _load_python_entry(entry, scripts_dir, commit, task_type, name,
+    print("_load_script_entry", entry)
+    if task_execution_mode == TaskExecutionMode.FUNCTION:
+        _load_python_entry(entry, scripts_dir, commit, task_type,
+                           task_execution_mode, name,
                            parent_project, parent_agent, parent_skill,
                            existing_results)
-    elif entry_type in ("chain", "group"):
-        _load_chain_entry(entry, commit, task_type, name,
-                          parent_project, parent_agent, parent_skill,
+    elif task_execution_mode in (TaskExecutionMode.CHAIN, TaskExecutionMode.GROUP):
+        _load_chain_entry(entry, commit, task_type, task_execution_mode,
+                          name, parent_project, parent_agent, parent_skill,
                           existing_results)
     else:
-        raise ValueError(f"Unknown entry type '{entry_type}' for '{name}'")
+        raise ValueError(
+            f"Unknown execution mode '{task_execution_mode}' for '{name}'"
+        )
 
 
-def _load_python_entry(entry, scripts_dir, commit, task_type, name,
+def _load_python_entry(entry, scripts_dir, commit, task_type,
+                       task_execution_mode, name,
                        parent_project, parent_agent, parent_skill,
                        existing_results):
     file_path = scripts_dir / entry["file"]
     function_name = entry["function"]
     bound = entry.get("bound", False)
-    trigger = entry.get("trigger", "")
 
     if not file_path.exists():
         raise FileNotFoundError(f"Script file not found: {file_path}")
@@ -123,14 +129,14 @@ def _load_python_entry(entry, scripts_dir, commit, task_type, name,
     if bound:
         _strip_bound_param(schema)
 
-    kw = _build_version_kwargs(entry, description, schema, commit, file_path)
+    kw = _build_version_kwargs(entry, description, schema, commit, file_path,
+                               task_type, task_execution_mode)
 
     task_def, _ = TaskDefinition.objects.get_or_create(
         parent_skill=parent_skill,
         parent_agent=parent_agent,
         parent_project=parent_project,
         name=name,
-        task_type=task_type,
     )
     task_version, created = TaskDefinitionVersion.objects.get_or_create(
         task_definition=task_def,
@@ -143,7 +149,7 @@ def _load_python_entry(entry, scripts_dir, commit, task_type, name,
     existing_results.append((task_def, task_version))
 
 
-def _load_chain_entry(entry, commit, task_type, name,
+def _load_chain_entry(entry, commit, task_type, task_execution_mode, name,
                       parent_project, parent_agent, parent_skill,
                       existing_results):
     step_names = entry.get("chain") or entry.get("group") or []
@@ -157,18 +163,20 @@ def _load_chain_entry(entry, commit, task_type, name,
             )
         child_versions.append(child)
 
-    description = entry.get("description", f"{task_type.lower()} chain: "
+    description = entry.get("description", f"{task_type.lower()} "
+                                           f"{task_execution_mode.lower()}: "
                                            f"{' → '.join(step_names)}")
     schema = {"steps": step_names}
 
-    kw = _build_version_kwargs(entry, description, schema, commit, path=None)
+    kw = _build_version_kwargs(entry, description, schema, commit, path=None,
+                               task_type=task_type,
+                               task_execution_mode=task_execution_mode)
 
     task_def, _ = TaskDefinition.objects.get_or_create(
         parent_skill=parent_skill,
         parent_agent=parent_agent,
         parent_project=parent_project,
         name=name,
-        task_type=task_type,
     )
     task_version, created = TaskDefinitionVersion.objects.get_or_create(
         task_definition=task_def,
@@ -228,6 +236,7 @@ def load_skill_manifest(skill_md_path: Path, parent_project=None,
 
 def load_agent_manifest(agent_md_path: Path, parent_project=None,
                         parent_agent=None, parent_skill=None):
+    print("load_agent_manifest", agent_md_path)
     manifest = frontmatter.load(agent_md_path)
     agent_dir = agent_md_path.parent
     commit = get_or_init_shadow_repo(agent_dir)
@@ -269,7 +278,7 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
             parent_project=parent_project,
             parent_agent=agent,
         )
-
+    print("defined_tasks", defined_tasks)
     # Load child skills
     defined_skills = []
     skills_dir = agent_dir / "skills"
@@ -304,7 +313,7 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         "max_turns": manifest.get("maxTurns"),
         "max_unattended_turns": manifest.get("maxUnattendedTurns"),
         "max_history_messages": manifest.get("maxHistoryMessages"),
-        "execution_mode": manifest.get("executionMode"),
+        "scheduler_strategy": manifest.get("schedulerStrategy"),
         "tool_call_syntax": manifest.get("toolCallSyntax"),
         "reasoning_effort": manifest.get("reasoningEffort"),
         "commandNames": get_list("commands"),
@@ -335,7 +344,8 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         ext_agent = AgentModel.objects.get(name=ext_name)
         if ext_agent.latest_agent_version:
             extend_versions.append(ext_agent.latest_agent_version)
-
+        else:
+            raise Exception(f"no latest found for {ext_agent}")
     # Build hash from all dependencies
     dep_pks = (
         [str(v.pk) for v in extend_versions]
@@ -344,6 +354,7 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         + [str(tv.pk) for _, tv in defined_tasks]
         + [str(sav.pk) for _, sav in defined_subagents]
     )
+    print("EXTENDS",agent_md_path, extend_versions)
     import hashlib
     hash_str = "_".join(sorted(set(dep_pks)))
     content_hash = hashlib.sha1(hash_str.encode()).hexdigest()
@@ -361,6 +372,8 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         hash=content_hash,
     )
     if created:
+        agent_version.extends_agent_versions.set(extend_versions)
+
         AgentVersionModel.objects.filter(pk=agent_version.pk).update(
             version_number=current_vn + 1
         )
@@ -376,21 +389,81 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         agent_version.defined_subagent_versions.set(
             [sav for _, sav in defined_subagents]
         )
-        agent_version.extends_agent_versions.set(extend_versions)
+    resolve_agent_version_tasks(agent_version)
 
     return agent, agent_version
+
+
+# ---------------------------------------------------------------------------
+# Pass 2: Resolve tasks for agent versions
+# ---------------------------------------------------------------------------
+
+def resolve_agent_version_tasks(agent_version: AgentVersionModel):
+    """Resolve the tools:/tasks:/commands: name lists from the agent's
+    SettingsModel into TaskDefinitionVersion objects and set tasks.
+
+    Looks up versions in order of precedence:
+      1. own defined_task_versions
+      2. extends chain (parent agent versions)
+      3. global (no parent_agent, no parent_project, no parent_skill)
+    """
+    settings = agent_version.agent_settings
+    if not settings:
+        return
+
+    rt = agent_version.get_runtime()
+    resolved = set()
+
+    for names in [rt.allowedTaskNames, rt.allowedToolNames, rt.allowedCommandNames]:
+        print("FOOOOO23", names)
+        if not names:
+            return
+
+
+        for name in names:
+            print("slook", name)
+
+            tdv = agent_version.defined_task_versions.filter(task_definition__name=name).first()
+            if tdv:
+                resolved.add(tdv.pk)
+                continue
+            for ext in agent_version.extends_agent_versions.all():
+                print("ETCENDS", ext, ext.defined_task_versions.all())
+                tdv = ext.defined_task_versions.filter(task_definition__name=name).first()
+                if tdv:
+                    resolved.add(tdv.pk)
+                    break
+            else:
+                print("SEARCH GLOBAL")
+                tdv = TaskDefinition.objects.filter(
+                    name=name,
+                    parent_agent__isnull=True,
+                    parent_project__isnull=True,
+                    parent_skill__isnull=True,
+                ).first().latest_task_version
+                print("found", tdv)
+                resolved.add(tdv.pk)
+    if not resolved:
+        raise Exception(f"not found {name}")
+    agent_version.task_versions.set(
+        TaskDefinitionVersion.objects.filter(pk__in=resolved)
+    )
+
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _build_version_kwargs(entry, description, schema, commit, path):
+def _build_version_kwargs(entry, description, schema, commit, path,
+                          task_type, task_execution_mode):
     """Build TaskDefinitionVersion filter kwargs from a manifest entry."""
     kw = {
         "description": textwrap.dedent(description),
         "function_schema": schema or {},
-        "trigger": entry.get("trigger", "") or "",
+        "task_type": task_type,
+        "task_execution_mode": task_execution_mode,
+        "function_name": entry.get("function", "") or "",
         "path": path.as_posix() if path else "",
         "commit": commit,
         "bound": entry.get("bound", False),

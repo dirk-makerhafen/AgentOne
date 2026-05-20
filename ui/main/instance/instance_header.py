@@ -111,7 +111,7 @@ class InstanceHeaderView(ModelView):
     def _reload(self):
         latest: SessionVersionModel | None = self.subject.latest_session_version
         if latest:
-            self.agent_version = latest.agent_version
+            self.agent_version = latest.pinned_agent_version
             #self.pinned_profile = latest.pinned_agent_profile
 
     @property

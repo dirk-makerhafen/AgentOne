@@ -113,15 +113,11 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Execute a shell command or script.')
     parser.add_argument('--source', type=str, required=True, help='Shell script to execute')
     parser.add_argument('--interpreter', type=str, default='auto', choices=['auto', 'bash', 'sh', 'powershell', 'cmd'], help='Interpreter to use')
     args = parser.parse_args()
 
-    success, result = shell(MockCaller(), source=args.source, interpreter=args.interpreter)
+    success, result = shell(source=args.source, interpreter=args.interpreter)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

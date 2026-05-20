@@ -16,4 +16,11 @@ class MessageSource(models.TextChoices):
 class MessageContentType(models.TextChoices):
     IMAGE = "IMAGE"
     TEXT = "TEXT"
+    JSON = "JSON"
     TEMPLATE = "TEMPLATE"
+
+class MessagePartType(models.TextChoices):
+    REASONING = "reasoning"
+    MESSAGE = "message"
+    TOOLCALL = "tool call"
+  

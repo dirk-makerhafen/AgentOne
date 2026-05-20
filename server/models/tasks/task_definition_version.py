@@ -1,14 +1,18 @@
 from django.db import models
 from server.models.base_model import BaseModel
-from server.models.enums.task_enums import TaskType  
+from server.models.enums.task_enums import TaskExecutionMode, TaskType  
 from django.core.exceptions import ValidationError
 from sortedm2m.fields import SortedManyToManyField
 
+    
 class TaskDefinitionVersion(BaseModel):
     task_definition = models.ForeignKey("server.TaskDefinition", default=None, null=True, on_delete=models.CASCADE, related_name='versions')# for */someproject/.agentone/skills/ , null for global skill in ~/.agentone/skills
 
     description     = models.TextField()
     function_schema = models.JSONField()
+
+    task_type       = models.CharField(max_length=20, choices=TaskType.choices)
+    task_execution_mode =  models.CharField(max_length=20, choices=TaskExecutionMode.choices, default=TaskExecutionMode.FUNCTION)
 
     # Options - Startup
     requires_approval = models.BooleanField(default=False)  # required user approval before run
@@ -28,7 +32,7 @@ class TaskDefinitionVersion(BaseModel):
     retry_delay  = models.IntegerField(default=10)  # time between retries in seconds
     retry_requires_approval = models.BooleanField(default=True)  # required user approval before run
 
-    trigger = models.CharField(max_length=255, default=None, blank=True, null=True)
+    function_name = models.CharField(max_length=255, default="", blank=True)
 
     path = models.CharField(max_length=1024, default=None, blank=True, null=True)
     commit = models.CharField(max_length=1024, default="")

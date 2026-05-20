@@ -46,6 +46,8 @@ class Response(BaseModel):
                     for query_message in query.query_messages.all():
                         recalculated_message_total = 0
                         for querymessage_part in query_message.query_message_parts.all():
+                            if not querymessage_part.tokens:
+                                continue
                             corrected_tokens = int(round(querymessage_part.tokens * correction_factor))
                             if querymessage_part.tokens != corrected_tokens:
                                 querymessage_part.tokens = corrected_tokens

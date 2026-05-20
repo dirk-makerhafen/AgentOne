@@ -9,9 +9,8 @@ from server.models.enums.message_enums import MessageContentType
 
 
 def has_slash_command(session: Session, name:str):
-    taskdefinition = session.commands().filter(trigger=name).first()
-    if not taskdefinition:
-        taskdefinition = session.commands().filter(name=name).first()
+
+    taskdefinition = session.commands().filter(name=name).first()
     if not taskdefinition:
         taskdefinition = session.tools().filter(name=name).first()
     if not taskdefinition:
@@ -20,9 +19,8 @@ def has_slash_command(session: Session, name:str):
         
 
 def run_slash_command(session: Session, name:str, args:list, kwargs:dict):
-    taskdefinition = session.commands().filter(trigger=name).first()
-    if not taskdefinition:
-        taskdefinition = session.commands().filter(name=name).first()
+
+    taskdefinition = session.commands().filter(name=name).first()
     if not taskdefinition:
         taskdefinition = session.tools().filter(name=name).first()
     if not taskdefinition:

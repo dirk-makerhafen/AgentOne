@@ -64,7 +64,7 @@ class AgentRegistry():
             "max_history_messages": profile.max_history_messages,
             "task_prompt": GenericContent.from_text(profile.task_prompt) if profile.task_prompt else None,
             "system_prompt": GenericContent.from_text(profile.system_prompt) if profile.system_prompt else None,
-            "execution_mode": profile.execution_mode,
+            "scheduler_strategy": profile.scheduler_strategy,
             "tool_call_syntax": profile.tool_call_syntax,
             "extra_settings": profile.extra_settings
         }
@@ -161,8 +161,8 @@ class AgentRegistry():
             registered_tasks = self._register_tasks(agent_cls, agent_version)
             self._register_available_tools(agent_cls, agent_version, imported_agent_versions_map)
             agent_cls.is_registered = True
-            agent_version.task_definitions.set(registered_tasks)
-            agent_version.sub_agent_versions.set(subagent_versions)
+            agent_version.defined_task_versions.set(registered_tasks)
+            agent_version.defined_subagent_versions.set(subagent_versions)
 
         return agent_version
 
@@ -171,12 +171,10 @@ class AgentRegistry():
         task_definitions = self._read_task_definitions(agent_cls)
         for name, task_def in task_definitions.items():
             canonical_function_schema = task_def.get("schema", {}) or {}            
-            normalized_trigger = task_def.get("trigger", "") or ""
             existing_tasks_filter_kwargs = {
                 "name": name,
                 "task_type": task_def["task_type"],
                 "description": task_def.get("description", ""),
-                "trigger": normalized_trigger,
                 "function_schema": canonical_function_schema,
             }
             if requires_approval := task_def.get("requires_approval", None):
@@ -206,7 +204,7 @@ class AgentRegistry():
         return task_objs
 
     def _register_available_tools(self, agent_cls, new_agent_version: AgentVersionModel, imported_agent_versions_map: Dict[str, AgentVersionModel]):
-        from runtime.agents.base_agent import BaseAgent
+        from old.base_agent import BaseAgent
 
         # Clear existing available tools for this version to ensure only current ones are linked
         #AgentVersionAvailableTool.objects.filter(parent_agent_version=new_agent_version).delete()

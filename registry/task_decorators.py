@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Callable, List, Optional, Dict
 from functools import wraps
 
 #if TYPE_CHECKING:
-from server.models.enums.task_enums import TaskType
+from server.models.enums.task_enums import TaskExecutionMode, TaskType
 
 class TaskDescriptor:
     """Acts as the bridge between the class method and the agent session."""
@@ -27,22 +27,21 @@ class TaskDecorator:
     """
 
     def __init__(self, task_type: TaskType, 
+                task_execution_mode: TaskExecutionMode = TaskExecutionMode.FUNCTION,
                 name: Optional[str] = None, 
                 description: str = "", 
                 bound: bool = True, 
-                trigger:   Optional[str] = None, 
                 requires_approval:  Optional[bool] = False, 
                 max_retries: Optional[int] = None, 
                 retry_delay: Optional[int] = None, 
                 retry_requires_approval: Optional[bool] = None, 
                 priority: Optional[int] = None ):
         
-        
         self.task_type = task_type
+        self.task_execution_mode = task_execution_mode
         self.name = name
         self.description = description
         self.bound = bound
-        self.trigger = trigger
         self.requires_approval = requires_approval
         self.max_retries = max_retries
         self.priority = priority
@@ -55,8 +54,8 @@ class TaskDecorator:
             "name": self.name or func.__name__,
             "description": self.description,
             "task_type": self.task_type,
+            "task_execution_mode": self.task_execution_mode,
             "bound": self.bound,
-            "trigger": self.trigger,
             "requires_approval": self.requires_approval,
             "priority": self.priority,
             "max_retries": self.max_retries, # how many retries to we make in case of error
@@ -67,9 +66,9 @@ class TaskDecorator:
 
 
 # User-facing / invocation roots
-def command(trigger: str|None = None, name: str|None = None, description: str = "", requires_approval = False):
+def command(name: str|None = None, description: str = "", requires_approval = False):
     """Decorator for user-invokable commands. Trigger is the string (after '!') that matches."""
-    return TaskDecorator(task_type=TaskType.COMMAND, name=name, description=description, trigger=trigger, requires_approval=requires_approval)
+    return TaskDecorator(task_type=TaskType.COMMAND, name=name, description=description, requires_approval=requires_approval)
 
 # Executable units inside flows
 def task(name: str|None = None, description: str = "", requires_approval = False):
@@ -87,16 +86,20 @@ def webview(name: str|None = None, description: str = "", requires_approval = Fa
 
 # Flow controllers (Celery-equivalents)
 def chain(name: str|None = None, description: str = "", requires_approval = False):
-    return TaskDecorator(task_type=TaskType.CHAIN, name=name, description=description, requires_approval=requires_approval)
+    return TaskDecorator(task_type=TaskType.TASK, task_execution_mode=TaskExecutionMode.CHAIN,
+                         name=name, description=description, requires_approval=requires_approval)
 
 def group(name: str|None = None, description: str = "", requires_approval = False):
-    return TaskDecorator(task_type=TaskType.GROUP, name=name, description=description, requires_approval=requires_approval)
+    return TaskDecorator(task_type=TaskType.TASK, task_execution_mode=TaskExecutionMode.GROUP,
+                         name=name, description=description, requires_approval=requires_approval)
 
 def chord(name: str|None = None, description: str = "", requires_approval = False):
-    return TaskDecorator(task_type=TaskType.CHORD, name=name, description=description, requires_approval=requires_approval)
+    return TaskDecorator(task_type=TaskType.TASK, task_execution_mode=TaskExecutionMode.CHORD,
+                         name=name, description=description, requires_approval=requires_approval)
 
 def map(name: str|None = None, description: str = "", requires_approval = False):
-    return TaskDecorator(task_type=TaskType.MAP, name=name, description=description, requires_approval=requires_approval)
+    return TaskDecorator(task_type=TaskType.TASK, task_execution_mode=TaskExecutionMode.MAP,
+                         name=name, description=description, requires_approval=requires_approval)
 
 '''
 # Keep for later, not implemented yet

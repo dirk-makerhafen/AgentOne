@@ -121,8 +121,21 @@ class ComposerFooter(ModelView):
 
         self.ctx_indicator_wrap = CtxIndicatorWrap(subject, self)
 
-    def send(self, message):
-        self.subject.add_user_message(message)
+    def send(self, parts):
+        '''
+        parts:  list from parse_llm_response of Parts
+            Parts is dict with minimal keys:
+                type: message, reasoning, toolcall
+                content_type: text|image|template|json
+                content: str|dict
+        '''
+        if isinstance(parts, str):
+            parts = [{
+                "type": "message",
+                "content_type": "text",
+                "content": parts
+            },]
+        self.subject.add_user_message(parts)
 
     def close_dropdowns(self):
         self.profile_dropdown.close()

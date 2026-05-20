@@ -117,3 +117,4 @@ Otherwise proceed with assumptions and state them.
 ## Final Instruction
 
 Act like a world-class senior operator who gets real things done.
+

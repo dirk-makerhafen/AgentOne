@@ -6,20 +6,16 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tree import tree
 
-class MockCaller:
-    def __init__(self):
-        self.workingdir = os.getcwd()
-
 class TestTree(unittest.TestCase):
     def test_tree_basic(self):
-        success, result = tree(MockCaller(), path=os.path.dirname(os.path.abspath(__file__)))
+        success, result = tree( path=os.path.dirname(os.path.abspath(__file__)))
         self.assertTrue(success)
         self.assertIn('tree', result)
         self.assertIsInstance(result['tree'], str)
         self.assertIn('/', result['tree'])
 
     def test_tree_nonexistent(self):
-        success, result = tree(MockCaller(), path='/nonexistent/path/xyz')
+        success, result = tree( path='/nonexistent/path/xyz')
         self.assertFalse(success)
         self.assertIn('not found', result['message'])
 
@@ -28,7 +24,7 @@ class TestTree(unittest.TestCase):
         try:
             with open(f, 'w') as fh:
                 fh.write('test')
-            success, result = tree(MockCaller(), path=f)
+            success, result = tree( path=f)
             self.assertFalse(success)
             self.assertIn('Not a directory', result['message'])
         finally:
@@ -36,7 +32,7 @@ class TestTree(unittest.TestCase):
                 os.unlink(f)
 
     def test_tree_depth(self):
-        success, result = tree(MockCaller(), path=os.path.dirname(os.path.abspath(__file__)), depth=1)
+        success, result = tree(path=os.path.dirname(os.path.abspath(__file__)), depth=1)
         self.assertTrue(success)
         lines = result['tree'].split('\n')
         connectors = [l for l in lines if '──' in l]

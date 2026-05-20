@@ -22,7 +22,6 @@ class TaskDefinitionView(ModelView):
                 retries={{ pyview.subject.max_retries }}
                 priority={{pyview.subject.priority}}
                 delay={{ pyview.subject.retry_delay }}s
-                {% if pyview.subject.trigger %}trigger={{ pyview.subject.trigger }}{% endif %}
             </div>
         </div>
     """

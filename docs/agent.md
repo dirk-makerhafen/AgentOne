@@ -16,7 +16,7 @@ maxRetries          No      In case of error, how many retries do we do
 maxTurns            No      Maximum number of agentic turns before the subagent stops
 maxUnattendedTurns  No      Maximum number of agentic turns before the subagent requires human confirmation
 maxHistoryMessages  No      Maximum number of historic messages the agent sees by default
-executionMode       No      TODO
+schedulerStrategy       No      TODO
 toolCallSyntax      No      Custom of default tool call syntax
 skills      	    No	    Skills to load into the subagent’s context at startup. Subagents don’t inherit skills from the parent conversation
 disallowedSkills    No	    Skills to deny, removed from inherited or specified list

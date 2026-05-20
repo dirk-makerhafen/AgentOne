@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import json
 
-def python(caller, source):
+def python(source):
     '''
     Execute a Python script.
 
@@ -77,10 +77,6 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Execute a Python script.')
     parser.add_argument('--source', type=str, required=True, help='Python source code to execute')
     parser.add_argument('--file', type=str, help='Python file to execute (alternative to --source)')
@@ -91,6 +87,6 @@ if __name__ == '__main__':
         with open(args.file, 'r') as f:
             source = f.read()
 
-    success, result = python(MockCaller(), source=source)
+    success, result = python(source=source)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

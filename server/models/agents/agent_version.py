@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 import sys
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 from cachetools import LRUCache
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -16,7 +16,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from server.models.skills.skill_version import SkillModelVersion
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
+from server.models.enums.task_enums import TaskType
 from sortedm2m.fields import SortedManyToManyField
+from django.db.models import QuerySet
 
 if TYPE_CHECKING:
     from server.models.sessions.session_version import SessionVersionModel
@@ -51,6 +53,10 @@ class AgentVersionModel(BaseModel):
     defined_skill_versions = models.ManyToManyField(SkillModelVersion ,default=None,  related_name="related_agent_versions", symmetrical=False) # top level profile
     defined_task_versions = models.ManyToManyField(TaskDefinitionVersion ,default=None,related_name="related_agent_versions", symmetrical=False) # top level profile
     defined_subagent_versions = models.ManyToManyField("self", related_name="related_parents", default=None, symmetrical=False, )
+
+    skill_versions = models.ManyToManyField(SkillModelVersion, default=None, related_name="used_by_agent_versions", symmetrical=False, blank=True) # resolved from tools:/tasks:/commands: name lists
+    task_versions = models.ManyToManyField(TaskDefinitionVersion, default=None, related_name="used_by_agent_versions", symmetrical=False, blank=True) # resolved from tools:/tasks:/commands: name lists
+    subagent_versions = models.ManyToManyField("self", default=None, related_name="used_by_agent_versions", symmetrical=False, blank=True) # resolved from tools:/tasks:/commands: name lists
 
     agent_settings = models.ForeignKey(SettingsModel ,default=None,null=True, on_delete=models.SET_NULL, related_name="related_agent_versions") # top level profile
 
@@ -89,7 +95,6 @@ class AgentVersionModel(BaseModel):
             or session_version.workingdir != workingdir:
                 session_version, aiv_created = SessionVersionModel.objects.get_or_create(
                     agent = self.agent,
-                    agent_version = self,
                     session = session,
                     workingdir = workingdir,
                     display_name = display_name,
@@ -104,12 +109,45 @@ class AgentVersionModel(BaseModel):
             parent_instance_version.child_session_versions.add(session_version)
         return session_version
 
-    def get_runtime(self):
+    def get_runtime(self) -> Agent:
         return Agent(agent_model=self.agent, pinned_agent_version=self)
 
-    def _resolve_property(self, name:str) -> Any:
-        # check inherited values if our is not set
-        
+    def tasks(self) -> Union[QuerySet, List[TaskDefinitionVersion]]:
+        return self.task_versions.filter(task_type=TaskType.TASK)
+
+    def tools(self) -> Union[QuerySet, List[TaskDefinitionVersion]]:
+        return self.task_versions.filter(task_type=TaskType.TOOL)
+
+    def commands(self) -> Union[QuerySet, List[TaskDefinitionVersion]]:
+        return self.task_versions.filter(task_type=TaskType.COMMAND)
+
+    def skills(self) -> Union[QuerySet, List[SkillModelVersion]]:
+        return self.skill_versions
+
+    def resolve_setting(self, name) -> Any:
+        print("resolve_setting", name)
+        extend_at_index = None
+        print("sv", self, self.agent_settings)
+        if (value:= getattr(self.agent_settings, name))  is not None:
+            print("IS NOT NONE", name, value)
+            if isinstance(value, (str, int, bool, GenericContent, BaseModel)):
+                return value
+            if isinstance(value, (list,)):
+                if "*" not in value: # overwrite parent list 
+                    return value
+                extend_at_index = value.index("*")
+            else:
+                raise Exception(f"_get_agent_setting does not yet support type of '{name}': {type(value)}")
+        for extends_agent_version in self.extends_agent_versions.all():
+            if (ext_value := extends_agent_version.resolve_setting(name)) is not None:
+                if isinstance(value, (list,)) and extend_at_index is not None:
+                    value[extend_at_index:extend_at_index+1] = ext_value
+                else:
+                    print("EXT", ext_value)
+                    return ext_value
+        return value
+    
+    def resolve_property(self, name:str) -> Any:
         extend_at_index = None
         if (value := getattr(self, name)) is not None:
             if isinstance(value, (str,int,bool, GenericContent)):
@@ -119,13 +157,9 @@ class AgentVersionModel(BaseModel):
                     return value
                 extend_at_index = value.index("*")
             else:
-                raise Exception(f"_resolve_property does not yet support type of '{name}': {type(value)}")
-        #for extendsAgentVersion in self.extends_agent_versions.all():
-        print(list(self.extendsAgent.all()))
-        for extendsAgent in self.extendsAgent.all():
-            extendsAgentVersion = extendsAgent.latest_agent_version
-            print("extendsAgentVersion", extendsAgentVersion)
-            if (ext_value := extendsAgentVersion._resolve_property(name)) is not None:
+                raise Exception(f"resolve_property does not yet support type of '{name}': {type(value)}")
+        for extends_agent_version in self.extends_agent_versions.all():
+            if (ext_value := extends_agent_version.resolve_property(name)) is not None:
                 if isinstance(value, (list,)) and extend_at_index is not None:
                     value[extend_at_index:extend_at_index+1] = ext_value
                 else:

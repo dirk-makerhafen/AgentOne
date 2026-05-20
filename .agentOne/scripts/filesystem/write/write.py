@@ -1,5 +1,5 @@
 
-def write(caller, path, content):
+def write(path, content):
     '''
     Write a file to the local filesystem.
 
@@ -53,10 +53,6 @@ if __name__ == '__main__':
     import sys
     from pathlib import Path
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Write a file.')
     parser.add_argument('path', type=str, help='Path to write')
     parser.add_argument('--content', type=str, default=None, help='Content to write')
@@ -69,6 +65,6 @@ if __name__ == '__main__':
     elif content is None:
         content = sys.stdin.read()
 
-    success, result = write(MockCaller(), path=args.path, content=content)
+    success, result = write(path=args.path, content=content)
     print(json.dumps(result, indent=2))
     exit(0 if success else 1)

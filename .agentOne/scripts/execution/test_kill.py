@@ -13,12 +13,12 @@ class TestKill(unittest.TestCase):
         self.assertIn('not found', result['message'])
 
     def test_kill_no_args(self):
-        success, result = kill(MockCaller())
+        success, result = kill()
         self.assertFalse(success)
         self.assertIn('Either pid or name', result['message'])
 
     def test_kill_invalid_signal(self):
-        success, result = kill(MockCaller(), name='nonexistent_proc_xyz', signal_name='INVALID')
+        success, result = kill(name='nonexistent_proc_xyz', signal_name='INVALID')
         self.assertFalse(success)
         self.assertIn('No matching processes found', result['message'])
 

@@ -8,8 +8,18 @@ from server.models.content import GenericContent
 from server.models.message import Message, MessagePart
 from server.models.enums.message_enums import MessageContentType
 
+'''
+:
+    list of Parts
 
-def ingest_user_message(session: Session, message: str, parts) -> Message:
+    Parts is dict with minimal keys:
+        type: message, reasoning, toolcall
+        content_type: text|image|template|json
+        content: str|dict
+    In case Part.content_type is template the following keys are also needed:
+        template_data: dict
+'''
+def ingest_user_message(session: Session, parts) -> Message:
     """
     Normalize user input, persist as a Message, and start the agent loop.
 
@@ -25,25 +35,24 @@ def ingest_user_message(session: Session, message: str, parts) -> Message:
         An AgentTaskCall for process_turn — the framework resolves this
         through the chain until decide_next_step returns the final Message.
     """
-    if parts is None and message is not None:
-        parts = [{"content": message, "type": "TEXT"}]
-    if not parts:
-        raise Exception("No message or message parts provided")
-
+    
     session.reset_unattended_turn_count()
     session_version = session.get_version_model()
-    prev_message = session_version.related_messages.filter(next_messages=None).last()
+    prev_message = session.get_messages().filter(next_messages=None).last()
 
     message = Message.objects.create(
-        role="user",
-        session_version=session_version,
-        prev_message=prev_message,
+        role = "user",
+        session_version = session_version,
+        prev_message = prev_message,
     )
-    for part in parts:
-        MessagePart.objects.create(
-            content=GenericContent.from_text(part["content"]),
-            content_type=MessageContentType.TEXT,
-            message=message,
-        )
 
-    return session.process_turn.delay(message=message)
+    for part in parts:
+        message.add_part(
+            type = part["type"],
+            content_type = part["content_type"],
+            content = part["content"],
+            template_data = part.get("template_data", None),
+            tool_call = part.get("tool_call", None),
+        )
+       
+    return session.get_task("process_turn").delay(message = message)

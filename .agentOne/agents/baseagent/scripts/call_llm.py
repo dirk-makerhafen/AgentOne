@@ -7,6 +7,7 @@ import json
 import time
 import traceback
 from runtime.agents.session import Session
+from server.models.providers.ai_model import AiModel
 from server.models.settings import AgentToolCallSyntax
 from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
@@ -169,42 +170,43 @@ def call_llm(session: Session, query: Query) -> Response:
     Returns:
         A Response model containing the streamed LLM output.
     """
-    ratelimit_result = RateLimitChecker.check(session.aimodel)
-    query.apikey = ratelimit_result.selected_key
-    query.status = QueryStatus.ACTIVE
-    query.save()
-
     try:
+        if not session.aimodel:
+            raise Exception("No llm model specified")
+        
+        ratelimit_result = RateLimitChecker.check(session.aimodel) 
+        if not ratelimit_result:
+            raise Exception("Error in ratelimiter")
+        apikey = ratelimit_result.selected_key
+        if not apikey:
+            raise Exception("Error in ratelimiter, not api key selected")
+        query.apikey = apikey
+        query.status = QueryStatus.ACTIVE
+        query.save()
+
         messages = query.compile()
         tool_call_syntax = session.tool_call_syntax
         api_tools = []
 
         if tool_call_syntax == AgentToolCallSyntax.DEFAULT:
-            for allowedToolName in session.allowedToolNames:
-                allowed_tool = session.agent.get_allowed_tool(allowedToolName)
-                if not allowed_tool:
-                    raise Exception(f"Tool '{allowedToolName}' not found")
-                if not allowed_tool.task_definition:
-                    raise Exception(
-                        f"No Taskdefinition for '{allowedToolName}' found"
-                    )
+            for tool in session.allowedTools:
                 api_tools.append({
                     "type": "function",
                     "function": {
-                        "name": allowed_tool.task_definition.name,
-                        "description": allowed_tool.description,
-                        "parameters": allowed_tool.function_schema,
+                        "name": tool.task_definition.name,
+                        "description": tool.description,
+                        "parameters": tool.function_schema,
                     },
                 })
 
         response = run_streaming_query(
-            url=session.aimodel.api_provider.url,
-            api_key=query.apikey.key,
-            model=session.aimodel.name,
-            messages=messages,
-            tools=api_tools,
-            query=query,
-            extra_body={
+            url = session.aimodel.api_provider.url,
+            api_key = query.apikey.key,
+            model = session.aimodel.name,
+            messages = messages,
+            tools = api_tools,
+            query = query,
+            extra_body = {
                 "reasoning_effort": session.reasoning_effort,
             },
         )

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-def tree(caller, path=None, depth=3, include_hidden=False):
+def tree(path=None, depth=3, include_hidden=False):
     '''
     Display a visual directory tree structure.
 
@@ -23,8 +23,7 @@ def tree(caller, path=None, depth=3, include_hidden=False):
                 - 'status': 'error'
                 - 'message': str
     '''
-    cwd = caller.workingdir if hasattr(caller, 'workingdir') and caller.workingdir else os.getcwd()
-    target = path if path else cwd
+    target = path if path else  os.getcwd()
 
     try:
         target_path = Path(target)
@@ -96,17 +95,13 @@ if __name__ == '__main__':
     import argparse
     import json
 
-    class MockCaller:
-        def __init__(self):
-            self.workingdir = os.getcwd()
-
     parser = argparse.ArgumentParser(description='Display directory tree.')
     parser.add_argument('path', type=str, nargs='?', default=None, help='Directory to display')
     parser.add_argument('--depth', type=int, default=3, help='Max depth to traverse')
     parser.add_argument('--hidden', action='store_true', default=False, help='Include hidden files')
     args = parser.parse_args()
 
-    success, result = tree(MockCaller(), path=args.path, depth=args.depth, include_hidden=args.hidden)
+    success, result = tree(path=args.path, depth=args.depth, include_hidden=args.hidden)
     if success:
         print(result.get('tree', ''))
     else:

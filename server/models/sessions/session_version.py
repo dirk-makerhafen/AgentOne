@@ -14,7 +14,7 @@ AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE = LRUCache(maxsize=1024)
 class SessionVersionModel(BaseModel):
     session = models.ForeignKey(SessionModel, on_delete=models.CASCADE, related_name="related_session_versions")
     agent = models.ForeignKey(AgentModel, on_delete=models.CASCADE, related_name="related_session_versions")
-    agent_version  = models.ForeignKey(AgentVersionModel,  on_delete=models.CASCADE, related_name="related_session_versions")
+    pinned_agent_version  = models.ForeignKey(AgentVersionModel,  on_delete=models.CASCADE, related_name="related_session_versions", default=None, null=True, blank=True)
 
     created_by = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_session_versions", default=None, null=True, blank=True)
     workspace = models.ForeignKey("server.WorkspaceModel", on_delete=models.CASCADE, related_name="related_session_versions", default=None, null=True, blank=True)
