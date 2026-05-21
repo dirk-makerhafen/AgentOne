@@ -1,15 +1,18 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.rightpanel.settings import RightPanelSettings
 from ui.main.rightpanel.workspace import RightPanelWorkspace
+from ui.main.rightpanel.subagents import RightPanelSubagents
 
 
 if TYPE_CHECKING:
     from ui.app import UiApp
     from ui.app_view import UiAppView
+    from ui.main.main_view import MainView
 
 class RightPanel(ModelView):
     DOM_ELEMENT = "aside"
@@ -24,6 +27,10 @@ class RightPanel(ModelView):
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                 <div class="rail-button-text" style="display:none">Settings</div>
             </button>
+            <button class="nav-tab active" data-panel="subagents" data-label="Sub-agents" onclick="pyview.switchPanel('subagents')" title="Sub-agents" data-i18n-title="tab_subagents">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+                <div class="rail-button-text" style="display:none">Sub-agents</div>
+            </button>
         </div>
         <div class="resize-handle" id="rightpanelResize"></div>
 
@@ -33,11 +40,27 @@ class RightPanel(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.workspace_view = RightPanelWorkspace(subject, self)
         self.settings_view = RightPanelSettings(subject, self)
+        self.subagents_view = RightPanelSubagents(subject, self)
         self.current_view = self.workspace_view
+
+    @property
+    def main_panel(self) -> MainView:
+        return self.parent.main_panel
+
+    @property
+    def current_session(self) -> SessionModel | None:
+        tab = self.main_panel.selected_tab_view
+        if tab is not None and hasattr(tab, "subject"):
+            subj = tab.subject
+            if isinstance(subj, SessionModel):
+                return subj
+        return None
 
     def switchPanel(self, name):
         if name == "workspace" and self.current_view != self.workspace_view:
             self.current_view = self.workspace_view
         if name == "settings" and self.current_view != self.settings_view:
             self.current_view = self.settings_view
+        if name == "subagents" and self.current_view != self.subagents_view:
+            self.current_view = self.subagents_view
         self.update()

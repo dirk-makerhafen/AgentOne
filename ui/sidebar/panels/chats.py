@@ -5,7 +5,6 @@ from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
 from ui.main.chat.chat import Chat
-from ui.main.instance.chat_workspace import ChatWorkspaceView
 
 if TYPE_CHECKING:
     from ui.sidebar.sidebar import SidebarView

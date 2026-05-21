@@ -57,6 +57,7 @@ class AgentVersionModel(BaseModel):
     skill_versions = models.ManyToManyField(SkillModelVersion, default=None, related_name="used_by_agent_versions", symmetrical=False, blank=True) # resolved from tools:/tasks:/commands: name lists
     task_versions = models.ManyToManyField(TaskDefinitionVersion, default=None, related_name="used_by_agent_versions", symmetrical=False, blank=True) # resolved from tools:/tasks:/commands: name lists
     subagent_versions = models.ManyToManyField("self", default=None, related_name="used_by_agent_versions", symmetrical=False, blank=True) # resolved from tools:/tasks:/commands: name lists
+    subagent_configs = models.JSONField(default=dict, blank=True)
 
     agent_settings = models.ForeignKey(SettingsModel ,default=None,null=True, on_delete=models.SET_NULL, related_name="related_agent_versions") # top level profile
 
@@ -84,7 +85,7 @@ class AgentVersionModel(BaseModel):
         session, _ = SessionModel.objects.get_or_create(
             name = name,
             defaults = dict(
-                created_by = parent_instance,
+                parent_session = parent_instance,
             )
         )
         session_version = session.latest_session_version
@@ -99,7 +100,7 @@ class AgentVersionModel(BaseModel):
                     workingdir = workingdir,
                     display_name = display_name,
                     defaults = dict(
-                        created_by = parent_instance_version,
+                        parent_session_version = parent_instance_version,
                     )
                 )
         if aiv_created:

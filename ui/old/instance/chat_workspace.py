@@ -14,7 +14,7 @@ from ui.chat.log_fs import FilesystemLogView
 from ui.chat.task_call import TaskCallView
 import unicodedata
 
-from ui.main.instance.task_trace_view import TaskTraceView
+from ui.old.instance.task_trace_view import TaskTraceView
 
 
 class ChatWorkspaceView(ModelView):

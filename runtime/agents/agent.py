@@ -147,6 +147,27 @@ class Agent():
 
 
     @property
+    def subagentNames(self) -> list[str]:
+        return self.get_version_model().resolve_setting("subagentNames") or []
+    @property
+    def disallowedSubagentNames(self) -> list[str]:
+        return self.get_version_model().resolve_setting("disallowedSubagentNames") or []
+    @property
+    def allowedSubagentNames(self) -> list[str]:
+        return list(set(self.subagentNames) - set(self.disallowedSubagentNames))
+    @property
+    def allowedSubagents(self) -> list[AgentVersionModel]:
+        return [s for s in [self.get_subagent(name) for name in self.allowedSubagentNames] if s]
+
+    def get_subagent(self, name) -> AgentVersionModel|None:
+        if name in self.allowedSubagentNames:
+            return self.get_version_model().subagent_versions.filter(agent__name=name).first()
+        return None
+
+    def subagent_config(self, name) -> dict:
+        return self.get_version_model().subagent_configs.get(name, {})
+
+    @property
     def definedSubagentVersions(self):
         return self.get_version_model().defined_subagent_versions.all()
     

@@ -16,8 +16,9 @@ class SessionModel(BaseModel):
     name  = models.CharField(max_length=255)
     turn_count  = models.IntegerField(default=0)
     unattended_turn_count  = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
     
-    created_by = models.ForeignKey("self", on_delete=models.CASCADE, related_name="created_agent_instances", default=None, null=True, blank=True)
+    parent_session = models.ForeignKey("self", on_delete=models.CASCADE, related_name="child_sessions", default=None, null=True, blank=True)
     latest_session_version = models.ForeignKey("server.SessionVersionModel", default=None, null=True, on_delete=models.CASCADE, related_name='related_newest_version')# for */someproject/.agentone/skills/ , null for global skill in ~/.agentone/skills
 
     @property

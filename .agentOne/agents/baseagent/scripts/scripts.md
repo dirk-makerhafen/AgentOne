@@ -51,3 +51,13 @@ commands:
     file: ping.py
     function: ping
     bound: True
+
+tools:
+  - name: delegate
+    file: delegate.py
+    function: delegate
+    bound: True
+  - name: session_end
+    file: session_end.py
+    function: session_end
+    bound: True

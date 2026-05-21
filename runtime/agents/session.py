@@ -16,6 +16,7 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 if TYPE_CHECKING:
     from server.models.sessions.session_version import SessionVersionModel
+    from server.models.agents.agent_version import AgentVersionModel
 
 class Session():
     def __init__(self, session_model: SessionModel, pinned_session_version: SessionVersionModel|None = None):
@@ -194,6 +195,31 @@ class Session():
         if name in self.allowedSkillNames:
             return self.agent.get_skill(name)
         return None
+    
+    @property
+    def is_active(self) -> bool:
+        return self.model.is_active
+    
+    @property
+    def subagentNames(self) -> list[str]:
+        return self._get_session_setting("subagentNames") or []
+    @property
+    def disallowedSubagentNames(self) -> list[str]:
+        return self._get_session_setting("disallowedSubagentNames") or []
+    @property
+    def allowedSubagentNames(self) -> list[str]:
+        return list(set(self.subagentNames) - set(self.disallowedSubagentNames))
+    @property
+    def allowedSubagents(self) -> list[AgentVersionModel]:
+        return [s for s in [ self.get_subagent(name) for name in self.allowedSubagentNames] if s]
+    
+    def get_subagent(self, name) -> AgentVersionModel|None:
+        if name in self.allowedSubagentNames:
+            return self.agent.get_subagent(name)
+        return None
+    
+    def subagent_config(self, name) -> dict:
+        return self.agent.subagent_config(name)
     
     def _get_session_setting(self, name) -> Any:
         session_version_model = self.get_version_model()

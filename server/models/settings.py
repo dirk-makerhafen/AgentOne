@@ -53,7 +53,10 @@ class SettingsModel(BaseModel):
 
     skillNames = models.JSONField(default=None, null=True, blank=True)
     disallowedSkillNames = models.JSONField(default=None, null=True, blank=True)
-    
+
+    subagentNames = models.JSONField(default=None, null=True, blank=True)
+    disallowedSubagentNames = models.JSONField(default=None, null=True, blank=True)
+
     extra_settings = models.JSONField(default=None, null=True, blank=True)
     commit = models.TextField(max_length=1024, default="")
 

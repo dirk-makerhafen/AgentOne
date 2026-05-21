@@ -278,6 +278,29 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
     aimodel = get_ai_model(manifest.get("model"))
     extend_agent_names = get_list("extends") or []
 
+    # Parse subagents: field (accepts strings, or dicts with metadata)
+    subagent_names = []
+    subagent_configs = {}
+    raw_subagents = manifest.get("subagents")
+    if raw_subagents is not None:
+        if isinstance(raw_subagents, str):
+            raw_subagents = [x.strip() for x in raw_subagents.split(",") if x.strip()]
+        elif isinstance(raw_subagents, (list, tuple)):
+            for entry in raw_subagents:
+                if isinstance(entry, str):
+                    name = entry.strip()
+                    subagent_names.append(name)
+                    subagent_configs[name] = {}
+                elif isinstance(entry, dict):
+                    name = entry.get("name", "").strip()
+                    if name:
+                        subagent_names.append(name)
+                        subagent_configs[name] = {k: v for k, v in entry.items() if k != "name"}
+                else:
+                    raise Exception(f"unsupported type for{entry}")
+        else:
+            raise Exception(f"unsupported type for{raw_subagents}")
+    print("subagent_configs", agent_md_path, raw_subagents, subagent_configs, subagent_names)         
     settings_kwargs = {
         "aimodel": aimodel,
         "max_retries": manifest.get("maxRetries"),
@@ -295,6 +318,8 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         "disallowedToolNames": get_list("disallowedTools"),
         "skillNames": get_list("skills"),
         "disallowedSkillNames": get_list("disallowedSkills"),
+        "subagentNames": subagent_names or None,
+        "disallowedSubagentNames": get_list("disallowedSubagents"),
         "priority": manifest.get("priority"),
         "thinking": manifest.get("thinking"),
         "task_prompt": GenericContent.from_text(
@@ -332,7 +357,7 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
     current_vn = 1
     if agent.latest_agent_version:
         current_vn = agent.latest_agent_version.version_number
-
+    print("current_vn", current_vn)
     agent_version, created = AgentVersionModel.objects.get_or_create(
         agent=agent,
         description=manifest.get("description", ""),
@@ -340,6 +365,7 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         commit=commit,
         agent_settings=settings,
         hash=content_hash,
+        version_number__gte=current_vn,
     )
     if created:
         agent_version.extends_agent_versions.set(extend_versions)
@@ -348,8 +374,12 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         agent_version.defined_skill_versions.set([sv for _, sv in defined_skills])
         agent_version.defined_task_versions.set([tv for _, tv in defined_tasks])
         agent_version.defined_subagent_versions.set([sav for _, sav in defined_subagents])
+        AgentVersionModel.objects.filter(pk=agent_version.pk).update(
+            subagent_configs=subagent_configs
+        )
 
     resolve_agent_version_tasks(agent_version)
+    resolve_agent_version_subagents(agent_version)
 
     return agent, agent_version
 
@@ -377,7 +407,7 @@ def resolve_agent_version_tasks(agent_version: AgentVersionModel):
     for names in [rt.allowedTaskNames, rt.allowedToolNames, rt.allowedCommandNames]:
         print("FOOOOO23", names)
         if not names:
-            return
+            continue
 
         for name in names:
             print("slook", name)
@@ -404,10 +434,46 @@ def resolve_agent_version_tasks(agent_version: AgentVersionModel):
     )
 
 
+def resolve_agent_version_subagents(agent_version: AgentVersionModel):
+    """Resolve the subagents: name list from the agent's SettingsModel
+    into AgentVersionModel objects and set subagent_versions M2M.
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+    Looks up versions in order of precedence:
+      1. own defined_subagent_versions
+      2. extends chain (parent agent versions)
+      3. global (no parent_agent, no parent_project, no parent_skill)
+    """
+    settings = agent_version.agent_settings
+    if not settings:
+        raise Exception(f"{agent_version} has no settings")
+
+    sa_names = settings.subagentNames
+    if not sa_names:
+        return
+
+    resolved = set()
+    for name in sa_names:
+        sav = agent_version.defined_subagent_versions.filter(agent__name=name).first()
+        if sav:
+            resolved.add(sav.pk)
+            continue
+        for ext in agent_version.extends_agent_versions.all():
+            sav = ext.defined_subagent_versions.filter(agent__name=name).first()
+            if sav:
+                resolved.add(sav.pk)
+                break
+        else:
+            sav = AgentVersionModel.objects.filter(
+                agent__name=name,
+                agent__parent_agent__isnull=True,
+                agent__parent_project__isnull=True,
+            ).order_by("-version_number").first()
+            if not sav:
+                raise Exception(f"No agent {name} found")
+            resolved.add(sav.pk)
+    print("SUBAGENTs", agent_version, resolved)    
+    if resolved:
+        agent_version.subagent_versions.set(AgentVersionModel.objects.filter(pk__in=resolved))
 
 def _build_version_kwargs(entry, description, schema, commit, path,
                           task_type, task_execution_mode):

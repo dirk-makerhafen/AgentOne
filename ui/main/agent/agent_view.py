@@ -164,6 +164,38 @@ class AgentView(ModelView):
 
                     
                     <div class="detail-card">
+                        <div class="detail-card-title">Subagents</div>
+                        <div class="detail-row">
+                            <div class="detail-row-label">Defined</div>
+                            <div class="detail-row-value">
+                                {% for definedSubagentVersion in pyview.agent.definedSubagentVersions %}
+                                    {{ definedSubagentVersion.agent.name }}:{{ definedSubagentVersion.pk }},
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-label">Allowed</div>
+                            <div class="detail-row-value">
+                                {% for allowedSubagent in pyview.agent.allowedSubagents %}
+                                    {{ allowedSubagent.agent.name }}:{{ allowedSubagent.pk }},
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-label">Subagent names</div>
+                            <div class="detail-row-value">{{pyview.agent.subagentNames}}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-label">Disallowed subagents</div>
+                            <div class="detail-row-value">{{pyview.agent.disallowedSubagentNames}}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-row-label">Allowed subagents</div>
+                            <div class="detail-row-value">{{pyview.agent.allowedSubagentNames}}</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-card">
                         <div class="detail-card-title">Commands</div>
                         <div class="detail-row">
                             <div class="detail-row-label">Defined</div>
