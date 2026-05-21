@@ -30,8 +30,7 @@ def parse_llm_response(session: Session, response: Response) -> dict:
         A dict with keys:
             content    (str)  — The text output from the LLM.
             reasoning  (str)  — Reasoning/thinking tokens, if any.
-            tool_calls (list) — Normalized list of {id, name, arguments} dicts,
-                                where arguments is already parsed from JSON.
+            tool_calls (list) — Normalized list of {id, name, arguments} dicts, where arguments is already parsed from JSON.
     """
     class Part(TypedDict):
         type: str

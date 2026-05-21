@@ -29,7 +29,7 @@ class RightPanel(ModelView):
 
         {{pyview.current_view.render()}}
     '''
-    def __init__(self, subject, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
+    def __init__(self, subject:UiApp, parent: UiAppView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.workspace_view = RightPanelWorkspace(subject, self)
         self.settings_view = RightPanelSettings(subject, self)

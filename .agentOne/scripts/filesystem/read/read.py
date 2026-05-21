@@ -59,7 +59,7 @@ def read(path, offset=1, limit=2000):
                 'status': 'success',
                 'content': entries,
                 'path': str(path),
-                'type': 'directory'
+                'type': 'directory',
             })
 
         if p.is_file():
@@ -88,7 +88,7 @@ def read(path, offset=1, limit=2000):
                 'type': 'file',
                 'total_lines': total_lines,
                 'offset': offset,
-                'limit': limit
+                'limit': limit,
                 'content': result_content,
             })
 

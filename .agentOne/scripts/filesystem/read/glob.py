@@ -37,7 +37,7 @@ def glob(pattern, path=None):
 
         return (True, {
             'status': 'success',
-            'count': len(matches)
+            'count': len(matches),
             'matches': matches,
         })
 

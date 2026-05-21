@@ -275,8 +275,8 @@ class Session():
         if not parts:
             raise Exception("No message or message parts provided")
 
-        if parts[0] and parts[0].get("content", [None,])[0] == "!": # might be command
-            cmd = parts[0].get("content", [None,]).split(None,1)[0][1:].strip()  # Get command without '!'
+        if parts[0] and parts[0].get("content", [None,])[0] == "/": # might be command
+            cmd = parts[0].get("content", [None,]).split(None,1)[0][1:].strip()  # Get command without '/'
             print("CMD", cmd)
             bound_cmd = self.get_command(cmd)
             if bound_cmd:
@@ -285,15 +285,12 @@ class Session():
                 # Safely parse arguments and keyword arguments
                 _payload_ast_tree = ast.parse(f"f({cmd_payload})")
                 call = _payload_ast_tree.body[0].value if _payload_ast_tree.body else None
-                args = [ast.literal_eval(arg) for arg in call.args] if call else []
+                #args = [ast.literal_eval(arg) for arg in call.args] if call else []
                 kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords} if call else {}
 
-                # Schedule command execution
-                bound_cmd.delay(*args, **kwargs)
-                # TODO
-                return self.handle_user_command.delay(conversation_msg, cmd, cmdargs = args, cmdkwargs = kwargs)
-
-            print("NOT TASK!")
+                # NOT Schedule command execution here, maybe, for now at least.  
+                #bound_cmd.delay(*args, **kwargs)
+                return self.get_task("ingest_slash_command").delay(name = cmd, **kwargs)
 
         return self.get_task("ingest_user_message").delay(parts = parts)
 

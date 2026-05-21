@@ -20,7 +20,6 @@ class MessageContentType(models.TextChoices):
     TEMPLATE = "TEMPLATE"
 
 class MessagePartType(models.TextChoices):
-    REASONING = "reasoning"
-    MESSAGE = "message"
-    TOOLCALL = "tool call"
-  
+    REASONING = "REASONING"
+    MESSAGE = "MESSAGE"
+    TOOLCALL = "TOOLCALL"

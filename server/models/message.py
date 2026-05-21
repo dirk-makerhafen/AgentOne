@@ -34,11 +34,11 @@ class Message(BaseModel):
                 tool_call: ToolCall
         '''
         if not isinstance(content, GenericContent):
-            if content_type == "image":
+            if content_type.upper() == MessageContentType.IMAGE:
                 content = GenericContent.from_image(content)
-            elif content_type == "template" or content_type == "text":
+            elif content_type.upper() == MessageContentType.TEMPLATE or content_type ==MessageContentType.TEXT:
                 content = GenericContent.from_text(content)
-            elif content_type == "json":
+            elif content_type.upper() == MessageContentType.JSON:
                 content = GenericContent.from_data(content)
             else:
                 raise Exception(f"unknown content type {content_type}")

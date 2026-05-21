@@ -24,6 +24,14 @@ tasks:
     file: decide_next_step.py
     function: decide_next_step
     bound: True
+  - name: process_slashcommand  
+    file: slash_commands.py
+    function: process_slashcommand
+    bound: True
+  - name: handle_slashcommand_response  
+    file: slash_commands.py
+    function: handle_slashcommand_response
+    bound: True
   - name: process_turn
     type: chain
     chain:
@@ -32,6 +40,12 @@ tasks:
       - parse_llm_response
       - ingest_assistant_message
       - decide_next_step
+  - name: ingest_slash_command
+    type: chain
+    chain:
+      - process_slashcommand
+      - handle_slashcommand_response
+
 commands:
   - name: ping
     file: ping.py
