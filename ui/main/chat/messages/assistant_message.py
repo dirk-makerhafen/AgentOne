@@ -12,14 +12,11 @@ if TYPE_CHECKING:
 
 class AssistantMessageView(ModelView):
     DOM_ELEMENT_CLASS = 'msg-row'
-    DOM_ELEMENT_EXTRAS = "data-role='assistant'"
 
     TEMPLATE_STR = '''
         <div class="msg-role assistant" title="30.4.2026, 21:44:25">
-            <div class="role-icon assistant">
-                A
-            </div>
-            <span style="font-size:12px">{{ pyview.subject.session_version.agent_version}}</span>
+            <div class="role-icon assistant">A</div>
+            <span style="font-size:12px">{{ pyview.subject.session_version.agent.name}} v{{ pyview.subject.session_version.pinned_agent_version if pyview.subject.session_version.pinned_agent_version else "-1"}}</span>
             <span class="msg-tps-inline" title="Tokens per second">22.7 t/s</span>
         </div>
         <div class="assistant-turn-blocks">
@@ -41,7 +38,7 @@ class AssistantMessageView(ModelView):
             {% endif %}
 
             <div class="assistant-segment" data-msg-idx="13">
-                <div class="msg-body" id="message_body_{{pyview.subject.pk}}">{% for message_part in  pyview.subject.parts.all() %}{{ message_part.content.get()}}{% endfor %}   
+                <div class="msg-body" id="message_body_{{pyview.subject.pk}}">{% for message_part in  pyview.subject.parts.filter(type__in=["MESSAGE","TOOLCALL"]) %}{{ message_part.content.get()}}{% endfor %}   
                 </div>
                 <div class="msg-foot">
                     <span class="msg-duration-inline">Done in 59s</span>

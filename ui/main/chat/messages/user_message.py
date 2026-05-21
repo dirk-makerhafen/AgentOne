@@ -8,7 +8,6 @@ from ui.lib.model_view import ModelView
 
 class UserMessageView(ModelView):
     DOM_ELEMENT_CLASS = "msg-row"
-    DOM_ELEMENT_EXTRAS = "data-role='user'"
     TEMPLATE_STR = '''
         <div class="msg-body">
             {% for message_part in  pyview.subject.parts.all() %}

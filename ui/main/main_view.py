@@ -20,7 +20,6 @@ class MainView(ModelView):
         {% else %}
             Open something
         {% endif %}
-    
     """
    
     

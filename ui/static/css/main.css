@@ -290,13 +290,13 @@
       :root{--app-titlebar-safe-top:env(safe-area-inset-top,0px);}
     }
   }
-  body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;}
+  body{background:var(--bg);color:var(--text);height:100vh;max-height:100vh;overflow:hidden;display:flex;flex-direction:column;}
   .UiAppView {
       display: flex;
       flex-direction: column;
       flex-grow: 1;
   }
-  .layout{display:flex;width:100%;flex:1 1 auto;min-height:0;}
+  .layout{display:flex;width:100%;flex:1 1 auto;min-height:0;    max-height: calc(100vh - 17px)}
   .app-titlebar{display:flex;align-items:center;justify-content:center;height:16px;flex-shrink:0;background:var(--sidebar);border-bottom:1px solid var(--border);padding:0 12px;padding-top:var(--app-titlebar-safe-top);padding-left:max(12px,env(safe-area-inset-left,0));padding-right:max(12px,env(safe-area-inset-right,0));box-sizing:content-box;font-size:12px;color:var(--muted);user-select:none;-webkit-app-region:drag;position:relative;z-index:20;}
   .app-titlebar-inner{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%;justify-content:center;}
   .system-health-panel.insights-card{display:flex;flex-direction:column;gap:12px;color:var(--muted);}
@@ -1179,7 +1179,7 @@
   /* container-type/name lets descendants run @container queries against the
      panel's width so the header can collapse less-essential elements as the
      user resizes the panel narrower. */
-  .rightpanel{width:300px;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
+  .rightpanel{       max-height: calc(100% - 42px);width:300px;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
   /* Collapse priority as the panel narrows: git-badge first, then "Workspace"
      label, never the icon buttons. flex-shrink ratios give graceful ellipsis;
      @container queries below cut to display:none at hard breakpoints. */
@@ -2816,7 +2816,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
    ═══════════════════════════════════════════════════════════════════ */
 :root {
   --msg-rail: 0;
-  --msg-max: 780px;
+  --msg-max: 1024px;
   --user-bubble-bg: var(--accent);
   --user-bubble-border: var(--accent-hover);
   --user-bubble-text: #fff;
