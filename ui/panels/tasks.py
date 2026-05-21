@@ -1,7 +1,7 @@
 from __future__ import annotations
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
-from server.models.tasks.agent_task_instance import AgentTaskInstance
+from server.models.tasks.task_instance import TaskInstance
 from server.models.tasks.task_definition import TaskDefinition
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.lib.queryset_view import QuerySetView
@@ -28,7 +28,7 @@ class TaskDefinitionView(ModelView):
 
 
 class TaskInstanceView(ModelView):
-    """One-row summary of an AgentTaskInstance."""
+    """One-row summary of an TaskInstance."""
     DOM_ELEMENT_CLASS = "TaskInstanceView task-instance-row"
 
     TEMPLATE_STR = """

@@ -26,12 +26,18 @@ from server.models.tasks.agent_task_call import AgentTaskCall
 from django.apps import apps
 
 if TYPE_CHECKING:
-    from server.models.tasks.agent_task_instance import AgentTaskInstance
+    from server.models.tasks.task_instance import TaskInstance
+
+#task_definition = models.ForeignKey("server.TaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
+#task_definition_version = models.ForeignKey("TaskDefinitionVersion", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
+##task_instance = models.ForeignKey("TaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+#session = models.ForeignKey("SessionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+#session_version = models.ForeignKey("SessionVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
 
 class AgentTaskRun(BaseModel):
     """Single execution attempt"""
-    agent_task_call       = models.ForeignKey("AgentTaskCall",         on_delete=models.CASCADE, related_name="related_agent_task_runs")
-    agent_task_instance   = models.ForeignKey("AgentTaskInstance",     on_delete=models.CASCADE, related_name="related_agent_task_runs", default=None, null=True)
+    agent_task_call = models.ForeignKey(AgentTaskCall,         on_delete=models.CASCADE, related_name="related_agent_task_runs")
+    task_instance   = models.ForeignKey("TaskInstance",     on_delete=models.CASCADE, related_name="related_agent_task_runs", default=None, null=True)
 
     task_definition_version = models.ForeignKey("TaskDefinitionVersion",   on_delete=models.CASCADE, related_name="related_agent_task_runs", default=None, null=True, blank=True)
     session_version = models.ForeignKey(SessionVersionModel, on_delete=models.CASCADE, related_name="related_agent_task_runs")
@@ -95,7 +101,7 @@ class AgentTaskRun(BaseModel):
         print("IN CREATE")
         taskrun = AgentTaskRun.objects.create(
             agent_task_call = agent_task_call,
-            agent_task_instance = agent_task_call.agent_task_instance,
+            task_instance = agent_task_call.task_instance,
             task_definition_version = task_definition_version,
             session_version  = agent_task_call.session_version,
             #agent_variant  =  agent_task_call.session_version.pinned_agent_variant  if agent_task_call.session_version.pinned_agent_variant else agent_task_call.session_version.get_or_create_variant(),
@@ -142,14 +148,14 @@ class AgentTaskRun(BaseModel):
                 if self.task_definition_version.task_execution_mode == "CHAIN":
                     # Start subcalls for chain
                     next_step_arguments = self.arguments_json
-                    for sub_task_instance in self.agent_task_instance.child_instances.all():
+                    for sub_task_instance in self.task_instance.child_instances.all():
                         next_step_arguments = sub_task_instance.apply_async(kwargs=next_step_arguments)
                         new_sub_task_calls.append(next_step_arguments)
                     result = new_sub_task_calls[-1]
 
                 elif self.task_definition_version.task_execution_mode == "GROUP":
                     # Start subcalls for groups
-                    for sub_task_instance in self.agent_task_instance.child_instances.all():
+                    for sub_task_instance in self.task_instance.child_instances.all():
                         call = sub_task_instance.apply_async(kwargs=self.arguments_json)
                         new_sub_task_calls.append(call)
                     result = new_sub_task_calls
@@ -271,7 +277,7 @@ class AgentTaskRun(BaseModel):
             args = [arguments, ]
 
         return args, kwargs
-      
+
     @staticmethod
     def _create_result_json(result):
         def _create_recursive(obj, ref_pks:list[int]):
@@ -333,8 +339,7 @@ class AgentTaskRun(BaseModel):
                 if subtimeout > 0:
                     subtimeout -= 1
             time.sleep(1)
-      
-            
+
     def save(self, *args,  allow=False, **kwargs):
         if not allow and self.pk:
             raise ValidationError(f"You may not edit an existing {self._meta.model_name}")

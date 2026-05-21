@@ -37,8 +37,8 @@ def glob(pattern, path=None):
 
         return (True, {
             'status': 'success',
-            'matches': matches,
             'count': len(matches)
+            'matches': matches,
         })
 
     except Exception as e:

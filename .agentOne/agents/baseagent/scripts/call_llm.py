@@ -1,5 +1,5 @@
 """
-Streams the compiled Query to the LLM API and records the Response.
+Streams the Query to the LLM API and records the Response.
 Handles rate limiting, API key selection, and streaming ingestion.
 """
 
@@ -15,7 +15,7 @@ from openai import OpenAI
 from runtime.rate_limiter import RateLimitChecker, RateLimitError
 
 
-def run_streaming_query(url, api_key, model, tools, messages, extra_body, query):
+def run_streaming_query(session, tools, messages, query:Query):
     """
     Open a streaming chat completion and incrementally save the response.
 
@@ -23,12 +23,11 @@ def run_streaming_query(url, api_key, model, tools, messages, extra_body, query)
     into the Response model. Saves every 150ms for progress visibility.
 
     Args:
-        url:         Base URL of the LLM API provider.
+        session:     The session
         api_key:     API key for authentication.
         model:       Model identifier (e.g. "gemma4:26b").
         tools:       OpenAI-format tool definitions.
-        messages:    Compiled message list from the Query.
-        extra_body:  Additional params (e.g. reasoning_effort).
+        messages:    openai api compatible message list from the Query.
         query:       The Query model this response belongs to.
 
     Returns:
@@ -37,28 +36,26 @@ def run_streaming_query(url, api_key, model, tools, messages, extra_body, query)
     """
     SAVE_INTERVAL = 0.150  # persist progress every 150ms
 
-    response = Response.objects.create(
-        query=query,
-        session_version=query.session_version,
-        status=ResponseStatus.ACTIVE,
-        tool_calls=[],
-    )
     last_save_time = time.time()
-
     first_token_timestamp = None
     first_reasoning_token_timestamp = None
     last_reasoning_token_timestamp = None
     start_timestamp = time.time()
 
-    client = OpenAI(base_url=url, api_key=api_key)
+    response = Response.objects.create(query = query, session_version = query.session_version, status = ResponseStatus.ACTIVE, tool_calls = [])
+
+    client = OpenAI(base_url=session.aimodel.api_provider.url, api_key=query.apikey.key if query.apikey else None)
+
     stream = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        extra_body=extra_body,
-        stream_options={"include_usage": True},
-        stream=True,
-        tools=tools,
-        tool_choice="auto",
+        model = session.aimodel.name,
+        messages = messages,
+        extra_body = {
+            "reasoning_effort": session.reasoning_effort,
+        },
+        stream_options = {"include_usage": True},
+        stream = True,
+        tools = tools,
+        tool_choice = "auto",
     )
 
     for event in stream:
@@ -80,23 +77,21 @@ def run_streaming_query(url, api_key, model, tools, messages, extra_body, query)
             unknown_chunk = False
             response.finish_reason = finish_reason
 
-        chunk = message_chunk.get("reasoning", None) or message_chunk.get(
-            "thinking", None
-        )
-        if chunk:
+        reasoning_chunk = message_chunk.get("reasoning", None) or message_chunk.get("thinking", None)
+        if reasoning_chunk:
             if not first_reasoning_token_timestamp:
                 first_reasoning_token_timestamp = time.time()
             last_reasoning_token_timestamp = time.time()
             unknown_chunk = False
-            response.reasoning += chunk
+            response.reasoning += reasoning_chunk
 
-        if chunk := message_chunk.get("content", None):
+        if content_chunk := message_chunk.get("content", None):
             unknown_chunk = False
-            response.content += chunk
+            response.content += content_chunk
 
-        if tool_calls := message_chunk.get("tool_calls", None):
+        if tool_calls_chunk := message_chunk.get("tool_calls", None):
             unknown_chunk = False
-            for tool_call in tool_calls:
+            for tool_call in tool_calls_chunk:
                 index = tool_call.get("index", 0)
                 if not response.tool_calls:
                     response.tool_calls = []
@@ -139,6 +134,7 @@ def run_streaming_query(url, api_key, model, tools, messages, extra_body, query)
     response.token_generation_time = 0
     response.reasoning_time = 0
     response.total_time = end_timestamp - start_timestamp
+
     if first_token_timestamp:
         response.time_to_first_token = first_token_timestamp - start_timestamp
         response.token_generation_time = end_timestamp - first_token_timestamp
@@ -157,7 +153,7 @@ def run_streaming_query(url, api_key, model, tools, messages, extra_body, query)
 
 def call_llm(session: Session, query: Query) -> Response:
     """
-    Send the compiled Query to the LLM and stream the response.
+    Send the Query to the LLM and stream the response.
 
     Handles rate-limit checking and API key selection before calling
     the provider. RateLimitError is caught by AgentTaskRun.apply()
@@ -184,12 +180,12 @@ def call_llm(session: Session, query: Query) -> Response:
         query.status = QueryStatus.ACTIVE
         query.save()
 
-        messages = query.compile()
-        tool_call_syntax = session.tool_call_syntax
+        messages = query.to_openai_message()
         api_tools = []
-
-        if tool_call_syntax == AgentToolCallSyntax.DEFAULT:
+        if session.tool_call_syntax == AgentToolCallSyntax.DEFAULT:
             for tool in session.allowedTools:
+                if not tool.task_definition:
+                    raise Exception("Missing task_definition")
                 api_tools.append({
                     "type": "function",
                     "function": {
@@ -200,15 +196,10 @@ def call_llm(session: Session, query: Query) -> Response:
                 })
 
         response = run_streaming_query(
-            url = session.aimodel.api_provider.url,
-            api_key = query.apikey.key,
-            model = session.aimodel.name,
+            session = session,
             messages = messages,
             tools = api_tools,
             query = query,
-            extra_body = {
-                "reasoning_effort": session.reasoning_effort,
-            },
         )
         return response
 

@@ -84,12 +84,12 @@ def read(path, offset=1, limit=2000):
 
             return (True, {
                 'status': 'success',
-                'content': result_content,
                 'path': str(path),
                 'type': 'file',
                 'total_lines': total_lines,
                 'offset': offset,
                 'limit': limit
+                'content': result_content,
             })
 
         return (False, {'status': 'error', 'message': f'Path is neither a file nor a directory: {path}'})

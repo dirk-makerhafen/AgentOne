@@ -129,23 +129,11 @@ def _load_python_entry(entry, scripts_dir, commit, task_type,
     if bound:
         _strip_bound_param(schema)
 
-    kw = _build_version_kwargs(entry, description, schema, commit, file_path,
-                               task_type, task_execution_mode)
-
-    task_def, _ = TaskDefinition.objects.get_or_create(
-        parent_skill=parent_skill,
-        parent_agent=parent_agent,
-        parent_project=parent_project,
-        name=name,
-    )
-    task_version, created = TaskDefinitionVersion.objects.get_or_create(
-        task_definition=task_def,
-        **kw,
-    )
+    kw = _build_version_kwargs(entry, description, schema, commit, file_path, task_type, task_execution_mode)
+    task_def, _ = TaskDefinition.objects.get_or_create( parent_skill=parent_skill, parent_agent=parent_agent, parent_project=parent_project, name=name)
+    task_version, created = TaskDefinitionVersion.objects.get_or_create(task_definition=task_def, **kw)
     if created:
-        TaskDefinition.objects.filter(pk=task_def.pk).update(
-            latest_task_version=task_version
-        )
+        TaskDefinition.objects.filter(pk=task_def.pk).update(latest_task_version=task_version)
     existing_results.append((task_def, task_version))
 
 
@@ -168,25 +156,12 @@ def _load_chain_entry(entry, commit, task_type, task_execution_mode, name,
                                            f"{' → '.join(step_names)}")
     schema = {"steps": step_names}
 
-    kw = _build_version_kwargs(entry, description, schema, commit, path=None,
-                               task_type=task_type,
-                               task_execution_mode=task_execution_mode)
-
-    task_def, _ = TaskDefinition.objects.get_or_create(
-        parent_skill=parent_skill,
-        parent_agent=parent_agent,
-        parent_project=parent_project,
-        name=name,
-    )
-    task_version, created = TaskDefinitionVersion.objects.get_or_create(
-        task_definition=task_def,
-        **kw,
-    )
+    kw = _build_version_kwargs(entry, description, schema, commit, path=None, task_type=task_type, task_execution_mode=task_execution_mode)
+    task_def, _ = TaskDefinition.objects.get_or_create(parent_skill=parent_skill, parent_agent=parent_agent, parent_project=parent_project, name=name)
+    task_version, created = TaskDefinitionVersion.objects.get_or_create(task_definition=task_def, **kw)
     if created:
         task_version.child_tasks.set(child_versions)
-        TaskDefinition.objects.filter(pk=task_def.pk).update(
-            latest_task_version=task_version
-        )
+        TaskDefinition.objects.filter(pk=task_def.pk).update(latest_task_version=task_version)
     existing_results.append((task_def, task_version))
 
 
@@ -296,11 +271,7 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
     agents_dir = agent_dir / "agents"
     if agents_dir.is_dir():
         for sub_md in _find_agent_md_files(agents_dir):
-            subagent, sav = load_agent_manifest(
-                sub_md,
-                parent_project=parent_project,
-                parent_agent=agent,
-            )
+            subagent, sav = load_agent_manifest(sub_md, parent_project=parent_project, parent_agent=agent)
             defined_subagents.append((subagent, sav))
 
     # Build SettingsModel
@@ -334,8 +305,7 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
         ),
         "commit": commit,
     }
-    settings_kwargs = {k: v for k, v in settings_kwargs.items()
-                       if v is not None}
+    settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}
     settings, _ = SettingsModel.objects.get_or_create(**settings_kwargs)
 
     # Resolve extends
@@ -373,22 +343,12 @@ def load_agent_manifest(agent_md_path: Path, parent_project=None,
     )
     if created:
         agent_version.extends_agent_versions.set(extend_versions)
+        AgentVersionModel.objects.filter(pk=agent_version.pk).update(version_number=current_vn + 1)
+        AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=agent_version)
+        agent_version.defined_skill_versions.set([sv for _, sv in defined_skills])
+        agent_version.defined_task_versions.set([tv for _, tv in defined_tasks])
+        agent_version.defined_subagent_versions.set([sav for _, sav in defined_subagents])
 
-        AgentVersionModel.objects.filter(pk=agent_version.pk).update(
-            version_number=current_vn + 1
-        )
-        AgentModel.objects.filter(pk=agent.pk).update(
-            latest_agent_version=agent_version
-        )
-        agent_version.defined_skill_versions.set(
-            [sv for _, sv in defined_skills]
-        )
-        agent_version.defined_task_versions.set(
-            [tv for _, tv in defined_tasks]
-        )
-        agent_version.defined_subagent_versions.set(
-            [sav for _, sav in defined_subagents]
-        )
     resolve_agent_version_tasks(agent_version)
 
     return agent, agent_version
@@ -419,7 +379,6 @@ def resolve_agent_version_tasks(agent_version: AgentVersionModel):
         if not names:
             return
 
-
         for name in names:
             print("slook", name)
 
@@ -435,12 +394,7 @@ def resolve_agent_version_tasks(agent_version: AgentVersionModel):
                     break
             else:
                 print("SEARCH GLOBAL")
-                tdv = TaskDefinition.objects.filter(
-                    name=name,
-                    parent_agent__isnull=True,
-                    parent_project__isnull=True,
-                    parent_skill__isnull=True,
-                ).first().latest_task_version
+                tdv = TaskDefinition.objects.filter(name=name, parent_agent__isnull=True, parent_project__isnull=True, parent_skill__isnull=True).first().latest_task_version
                 print("found", tdv)
                 resolved.add(tdv.pk)
     if not resolved:

@@ -14,11 +14,11 @@ from typing import TYPE_CHECKING
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 
-class AgentTaskInstance(BaseModel):
+class TaskInstance(BaseModel):
     """Binds a task definition to a specific agent instance"""
-    task_definition_version   = models.ForeignKey("TaskDefinitionVersion" ,default=None, null=True, on_delete=models.CASCADE, related_name="related_agent_task_instances")
-    session          = models.ForeignKey("SessionModel"       , on_delete=models.CASCADE, related_name="related_agent_task_instances")
-    session_version  = models.ForeignKey("SessionVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_instances")
+    task_definition_version   = models.ForeignKey("TaskDefinitionVersion" ,default=None, null=True, on_delete=models.CASCADE, related_name="related_task_instances")
+    session          = models.ForeignKey("SessionModel"       , on_delete=models.CASCADE, related_name="related_task_instances")
+    session_version  = models.ForeignKey("SessionVersionModel", on_delete=models.CASCADE, related_name="related_task_instances")
 
     # instance wide args/kwargs, will be prepended/merged with call args/kwargs
     iarguments_json = models.JSONField(default=dict, null=True)
@@ -55,6 +55,8 @@ class AgentTaskInstance(BaseModel):
 
     @property
     def task_type(self):
+        if not self.task_definition_version:
+            raise Exception("task_type not set")
         return self.task_definition_version.task_type
 
     @property
@@ -63,10 +65,12 @@ class AgentTaskInstance(BaseModel):
 
     @property
     def task_execution_mode(self):
+        if not self.task_definition_version:
+            raise Exception("task_execution_mode not set")
         return self.task_definition_version.task_execution_mode
 
     @classmethod
-    def get_or_create(cls, task_definition:TaskDefinitionVersion, session_version, args = None, kwargs=None, **options ) -> "AgentTaskInstance":
+    def get_or_create(cls, task_definition:TaskDefinitionVersion, session_version, args = None, kwargs=None, **options ) -> "TaskInstance":
         """Create AgentTaskInstance.
         Returns:
             :class:`AgentTaskInstance`:  object for this task, wrapping arguments and options for multiple task invocation.
@@ -81,9 +85,9 @@ class AgentTaskInstance(BaseModel):
         if args:
             arguments["*"] = args
             
-        arguments_json, ref_pks = AgentTaskInstance._create_instance_arguments_json(arguments=arguments)
+        arguments_json, ref_pks = TaskInstance._create_instance_arguments_json(arguments=arguments)
 
-        agent_task_instance, created = AgentTaskInstance.objects.get_or_create(
+        task_instance, created = TaskInstance.objects.get_or_create(
             task_definition_version = task_definition,
             session = session,
             session_version = session_version,
@@ -105,13 +109,11 @@ class AgentTaskInstance(BaseModel):
             # Runtime values
             is_approved = False if task_definition.requires_approval else None, # user did appove this call            
         )
-        print("FOOOBAR55", agent_task_instance)
         if not created:
-            print("NOT CREATED")
-            return agent_task_instance
+            return task_instance
         
         # Store references that are used for args/kwargs
-        agent_task_instance.taskinstance_arg_references.set(ref_pks)
+        task_instance.taskinstance_arg_references.set(ref_pks)
 
         if task_definition.task_execution_mode in ("CHAIN", "GROUP"):
             if len(args) == 1 and isinstance(args[0], (list, set, tuple, GeneratorType)):
@@ -121,14 +123,14 @@ class AgentTaskInstance(BaseModel):
 
             child_versions = task_definition.child_tasks.all()
             for index, child_tdv in enumerate(child_versions):
-                child_instance = AgentTaskInstance.get_or_create(
+                child_instance = TaskInstance.get_or_create(
                     task_definition=child_tdv,
                     session_version=session_version,
                     args=list(args) if index == 0 else None,
                 )
-                agent_task_instance.child_instances.add(child_instance)
+                task_instance.child_instances.add(child_instance)
 
-        return agent_task_instance
+        return task_instance
 
     def delay(self, *partial_args, **partial_kwargs):
         """Shortcut to :meth:`apply_async` using star arguments. """
@@ -146,18 +148,18 @@ class AgentTaskInstance(BaseModel):
             ~@AgentTaskCall: promise of future evaluation.
         """
         print("AgentTaskInstance.apply_async", self.task_definition_version, args, kwargs, options, link, link_error)
-        taskcall = self.call(args=args, kwargs=kwargs, **options)
+        taskcall = self.create_call(args=args, kwargs=kwargs, **options)
         taskcall.apply_async()
         return taskcall
 
-    def call(self, args:list|None=None, kwargs:dict|None=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None, max_retries = None, retry_delay = None, retry_requires_approval = None, priority=None ):
+    def create_call(self, args:list|None=None, kwargs:dict|None=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None, max_retries = None, retry_delay = None, retry_requires_approval = None, priority=None ):
         """Create AgentTaskCall.
 
         Returns:
             :class:`AgentTaskCall`: 
         """
         return AgentTaskCall.create(
-            agent_task_instance = self,
+            task_instance = self,
             args = args,
             kwargs = kwargs,
             dont_start_before = dont_start_before,
@@ -192,7 +194,7 @@ class AgentTaskInstance(BaseModel):
                 return set(_create_recursive(item, ref_pks) for item in obj)
             if isinstance(obj, tuple):
                 return tuple(_create_recursive(item, ref_pks) for item in obj)
-            if isinstance(obj, AgentTaskInstance):
+            if isinstance(obj, TaskInstance):
                 return {"_type": "AgentTaskInstance", "pk": obj.pk}
             if isinstance(obj, Path):
                 return obj.as_posix()

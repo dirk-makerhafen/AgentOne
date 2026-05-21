@@ -43,7 +43,7 @@ class AgentVersionModel(BaseModel):
     """
     A versioned snapshot of an agent 
     """    
-    agent = models.ForeignKey("server.AgentModel"        , on_delete=models.CASCADE, related_name="related_agent_versions")
+    agent = models.ForeignKey("server.AgentModel", on_delete=models.CASCADE, related_name="related_agent_versions")
 
     description = models.TextField(max_length=65500, default="")
 
@@ -67,7 +67,7 @@ class AgentVersionModel(BaseModel):
     class Meta:
         unique_together = ("agent", "version_number")
 
-    def get_or_create_instance(self, name:Optional[str] = None, display_name:Optional[str]=None, workingdir: Optional[str|Path] = None, parent_instance_version:SessionVersionModel|None=None) -> SessionVersionModel:
+    def get_or_create_session(self, name:Optional[str] = None, display_name:Optional[str]=None, workingdir: Optional[str|Path] = None, parent_instance_version:SessionVersionModel|None=None) -> SessionVersionModel:
         from server.models.sessions.session import SessionModel
         from server.models.sessions.session_version import SessionVersionModel
         if not workingdir and parent_instance_version:

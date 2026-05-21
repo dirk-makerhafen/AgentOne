@@ -14,8 +14,7 @@ class Message(BaseModel):
     
     prev_message   = models.ForeignKey("self"     , null=True, blank=True, on_delete=models.CASCADE, related_name='next_messages')
 
-    tool_calls     = models.ManyToManyField("server.AgentTaskCall",related_name='related_messages')
-    index          = models.FloatField(default=0)
+    #tool_calls     = models.ManyToManyField("server.AgentTaskCall",related_name='related_messages')
 
     role = models.CharField(choices=MessageRole.choices, default=MessageRole.USER, max_length=61)
     source = models.CharField(choices=MessageSource.choices, default=MessageSource.default, max_length=61)
@@ -23,9 +22,6 @@ class Message(BaseModel):
     hide_from_context = models.BooleanField(default=False)
     pin_to_context = models.BooleanField(default=False)
     
-    class Meta:
-        ordering = ("index","pk")
-
     def add_part(self, type:str, content_type:MessageContentType, content, template_data=None, tool_call=None):
         '''
             Parts is dict with minimal keys:
@@ -49,28 +45,20 @@ class Message(BaseModel):
             
         if template_data and not isinstance(template_data, GenericContent):
             template_data = GenericContent.from_text(template_data)
-          
-        args = {
-            "type":  MessagePartType[type.upper()],
-            "message": self,
-            "content": content,
-            "content_type": MessageContentType[content_type.upper()],
-        }
-
-        if args["content_type"] == MessageContentType.TEMPLATE:
-            args["content_template"] = template_data
-        
-        if tool_call:
-            args["tool_call"] = tool_call
-            
-        return MessagePart.objects.create(**args)
+                  
+        return MessagePart.objects.create(
+            message = self,
+            type =  MessagePartType[type.upper()],
+            content = content,
+            content_type = MessageContentType[content_type.upper()],
+            template_data = template_data,
+            tool_call = tool_call
+        )
         
     def save(self, *args, **kwargs):
         if self.hide_from_context is True and self.pin_to_context is True:
             self.pin_to_context = False
         super().save(*args, **kwargs)
-
-
 
 
 class MessagePart(BaseModel):
@@ -81,9 +69,6 @@ class MessagePart(BaseModel):
 
     content          = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="conversation_message_parts_content")
     content_type     = EnumField(MessageContentType, default=MessageContentType.TEXT)
-    content_template = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="conversation_message_parts_template")
+    template_data = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="conversation_message_parts_template")
 
     tool_call     = models.OneToOneField("server.AgentTaskCall", on_delete=models.CASCADE, default=None, blank=True, null=True)
-
-    class Meta:
-        ordering = ("pk")

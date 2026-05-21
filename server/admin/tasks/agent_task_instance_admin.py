@@ -1,7 +1,7 @@
 from django.contrib import admin
-from server.models.tasks.agent_task_instance import AgentTaskInstance
+from server.models.tasks.task_instance import TaskInstance
 
-@admin.register(AgentTaskInstance)
+@admin.register(TaskInstance)
 class AgentTaskInstanceAdmin(admin.ModelAdmin):
     list_display = ("id", "created_at", 'session', 'created_at')
     list_display_links = ("id", )

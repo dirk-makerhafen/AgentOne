@@ -19,14 +19,14 @@ class QueryMessagePartView(ModelView):
         {% if pyview.subject.message_part %}
             <div class="qmp-row">
                 <span class="detail-label">template:</span>
-                {{ pyview.subject.message_part.content_template }}
+                {{ pyview.subject.message_part.template_data }}
             </div>
         {% endif %}
         <button class="log-btn" onclick="pyview.toggle_compiled()">
             {{ '▲' if not pyview.is_compiled_hidden else '▼' }} compiled
         </button>
         <div class="{{ 'hidden' if pyview.is_compiled_hidden else '' }}">
-            <pre class="log-pre">{{ pyview.subject.compile(fail_on_error=False) }}</pre>
+            <pre class="log-pre">{{ pyview.subject.to_openai_message(fail_on_error=False) }}</pre>
         </div>
     """
 

@@ -3,7 +3,7 @@ import importlib.util
 from pathlib import Path
 from typing import TYPE_CHECKING
 from server.models.enums.task_enums import TaskCallStatusDetail
-from server.models.tasks.agent_task_instance import AgentTaskInstance
+from server.models.tasks.task_instance import TaskInstance
 
 if TYPE_CHECKING:
     from runtime.agents.session import Session
@@ -93,18 +93,18 @@ class BoundTask:
             kombu.exceptions.OperationalError: If a connection to the transport cannot be made, or if the connection is lost.
         """
         #print("BoundAgentTaskDefinition.apply_async", self.func.__name__, args, kwargs)
-        agentTaskInstance = self.instance()
-        return agentTaskInstance.apply_async(args=args, kwargs=kwargs)
+        task_instance = self.instance()
+        return task_instance.apply_async(args=args, kwargs=kwargs)
 
-    def instance(self, args = None, kwargs=None, **options ) -> AgentTaskInstance:
-        """get/Create AgentTaskInstance.
+    def instance(self, args = None, kwargs=None, **options ) -> TaskInstance:
+        """get/Create TaskInstance.
 
         Returns:
-            :class:`AgentTaskInstance`:  object for this task, wrapping arguments and options for multiple task invocation.
+            :class:`TaskInstance`:  object for this task, wrapping arguments and options for multiple task invocation.
         """
         args = args if args else []
         kwargs = kwargs if kwargs else {}
-        return AgentTaskInstance.get_or_create(
+        return TaskInstance.get_or_create(
             task_definition = self.task_definition_version,
             session_version = self.session.get_version_model(),
             args = args,
@@ -112,8 +112,8 @@ class BoundTask:
             **options,
         )
 
-    def i(self, *args, **kwargs) -> AgentTaskInstance: # fertig
-        """Create AgentTaskInstance.  Shortcut for ``.i(*a, **k) -> .instance(a, k)``."""
+    def i(self, *args, **kwargs) -> TaskInstance: # fertig
+        """Create TaskInstance.  Shortcut for ``.i(*a, **k) -> .instance(a, k)``."""
         return self.instance(args=args, kwargs=kwargs)
 
     def hook_after_run(self, callback_task: "BoundTask"):

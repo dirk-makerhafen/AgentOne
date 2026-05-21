@@ -6,7 +6,7 @@ class QueryMessageAdmin(admin.ModelAdmin):
     search_fields = ('id',)
 
 
-    list_display = ('id', 'role', 'index', 'tokens', 'created_at')
+    list_display = ('id', 'role',  'tokens', 'created_at')
     list_display_links = ('id',)
     list_filter = ('role', 'created_at')
     readonly_fields = ('created_at', 'updated_at')

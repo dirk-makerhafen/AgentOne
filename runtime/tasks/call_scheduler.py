@@ -1,28 +1,13 @@
 
 from __future__ import annotations
-from datetime import timedelta
-from functools import wraps
-import random
-import threading
-import traceback
-from django.db import models
 from server.models.tasks.agent_task_call import AgentTaskCall
-from runtime.context_manager import ContextTracker
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
-from server.tasks.task_dispatcher import celery_delay
-from server.models.base_model import BaseModel
 from django.apps import apps
-from django.db.models import Q
-import time
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-from django.db.models import F
 from runtime.tasks.call_fsm import TaskCallStateMachine
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from server.models.tasks.agent_task_instance import AgentTaskInstance
-
+    from server.models.tasks.task_instance import TaskInstance
 
 class CallScheduler():
 
@@ -100,10 +85,10 @@ class CallScheduler():
         taskcall = AgentTaskCall.objects.get(pk=task_call_id)
         #print("start_task", taskcall, taskcall._parent, threading.get_ident())
         args = []
-        args.extend(taskcall.agent_task_instance.iarguments_json.get("*", []))
+        args.extend(taskcall.task_instance.iarguments_json.get("*", []))
         args.extend(taskcall.carguments_json.get("*", []))
         kwargs = {}
-        kwargs.update(taskcall.agent_task_instance.iarguments_json)
+        kwargs.update(taskcall.task_instance.iarguments_json)
         kwargs.update(taskcall.carguments_json)
         if args:
             kwargs["*"] = args
@@ -127,7 +112,7 @@ class CallScheduler():
             return
 
         if taskrun_status == TaskRunStatus.SUCCESS:
-            after_hooks = list(run.agent_task_instance.taskinstances_after_run_hooks.all().order_by('pk'))
+            after_hooks = list(run.task_instance.taskinstances_after_run_hooks.all().order_by('pk'))
             if not after_hooks:
                 CallScheduler.on_all_on_posthook_ended(call.pk, taskrun_id)
                 return
@@ -140,9 +125,9 @@ class CallScheduler():
             if updated:
                 hook_arguments = run
                 for i, hook_instance in enumerate(after_hooks):
-                    hook_instance: AgentTaskInstance
+                    hook_instance: TaskInstance
                     print(f"  -> Launching after_run hook {hook_instance.task_definition_version.name} (step {i+1}/{len(after_hooks)})")
-                    result = hook_instance.call(kwargs=hook_arguments)
+                    result = hook_instance.create_call(kwargs=hook_arguments)
                     after_hook_calls.append(result)
                     hook_arguments = result
                 call.taskcall_after_run_hooks.set(after_hook_calls)
@@ -214,13 +199,13 @@ class CallScheduler():
         call =  AgentTaskCall.objects.get(pk=task_call_id)
         if taskcall_status_detail == TaskCallStatusDetail.ENDED_SUCCESS:
             print("taskcall_on_success_callbacks", )
-            callback_instances = list(run.agent_task_instance.taskinstances_on_success_callbacks.all().order_by('pk'))
+            callback_instances = list(run.task_instance.taskinstances_on_success_callbacks.all().order_by('pk'))
             print("callback_instances", callback_instances)
             if callback_instances:
                 callbacks = []
                 print(f"DEBUG: Dispatching taskcall_on_success_callbacks for taskrun:#{last_taskrun_id}. {len(callback_instances)} found.")
                 for i, callback_instance in enumerate(callback_instances):
-                    callback_instance: AgentTaskInstance
+                    callback_instance: TaskInstance
                     print(f"  -> Launching taskcall_on_success_callback {callback_instance.task_definition_version.name} (step {i+1}/{len(callback_instances)})")
                     callback = callback_instance.apply_async(kwargs=run)
                     callbacks.append(callback)
@@ -228,12 +213,12 @@ class CallScheduler():
 
         # --- taskcall_on_error_callbacks Dispatch ---
         elif taskcall_status_detail in [TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,  TaskCallStatusDetail.ENDED_FAILURE_LOGIC]:
-            callback_instances = list(run.agent_task_instance.taskinstances_on_error_callbacks.all().order_by('pk'))
+            callback_instances = list(run.task_instance.taskinstances_on_error_callbacks.all().order_by('pk'))
             if callback_instances:
                 callbacks = []
                 print(f"DEBUG: Dispatching taskcall_on_error_callbacks for taskrun:#{last_taskrun_id}. {len(callback_instances)} found.")
                 for i, callback_instance in enumerate(callback_instances):
-                    callback_instance: AgentTaskInstance
+                    callback_instance: TaskInstance
                     print(f"  -> Launching taskcall_on_error_callback {callback_instance.task_definition_version.name} (step {i+1}/{len(callback_instances)})")
                     callback = callback_instance.apply_async(kwargs=run)
                     callbacks.append(callback)

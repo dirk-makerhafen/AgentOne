@@ -1,8 +1,6 @@
 from django.db import models
-from server.models.content import GenericContent
 from django_enum import EnumField
 from server.models.base_model import BaseModel
-from server.models.queries.query import Query
 
 class ResponseStatus(models.TextChoices):
     ACTIVE = 'ACTIVE', 'Active' # query is active
@@ -11,7 +9,7 @@ class ResponseStatus(models.TextChoices):
     FAILURE = 'FAILURE', 'Failure (Terminal)' # data parsing error
 
 class Response(BaseModel):
-    query          = models.OneToOneField(Query    , null=True , on_delete=models.CASCADE, related_name="related_response")
+    query          = models.OneToOneField("Query"    , null=True , on_delete=models.CASCADE, related_name="related_response")
     session_version = models.ForeignKey("server.SessionVersionModel", on_delete=models.CASCADE, related_name="related_response")
 
     status = EnumField(ResponseStatus, default=ResponseStatus.WAITING)
@@ -43,7 +41,7 @@ class Response(BaseModel):
                 correction_factor = actual_total / estimated_total
                 if correction_factor > 1.01 or correction_factor < 0.99:
                     recalculated_total = 0
-                    for query_message in query.query_messages.all():
+                    for query_message in query.related_query_messages.all():
                         recalculated_message_total = 0
                         for querymessage_part in query_message.query_message_parts.all():
                             if not querymessage_part.tokens:

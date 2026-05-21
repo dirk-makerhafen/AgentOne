@@ -147,5 +147,5 @@ class SidebarPanelChats(ModelView):
 
     def new_conversation(self):
         self.subject.agents.root().first().get_runtime()
-        self.subject.agents.root().first().latest_agent_version.get_or_create_instance()
+        self.subject.agents.root().first().latest_agent_version.get_or_create_session()
         

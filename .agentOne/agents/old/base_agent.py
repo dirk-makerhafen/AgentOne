@@ -95,7 +95,7 @@ def execute_query(runtime: AgentRuntime, query: Query):
     query.status = "ACTIVE"
     query.save()
     try:
-        messages = query.compile()
+        messages = query.to_openai_message()
         tool_call_syntax = query.session_version.select_profile().tool_call_syntax
         api_tools = []
 

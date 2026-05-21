@@ -6,8 +6,8 @@ from server.models.message import MessagePart
 class ConversationMessagePartInline(admin.TabularInline):
     model = MessagePart
     extra = 0
-    fields = ('content_type', "type", 'tokens', 'content', 'content_template')
-    #autocomplete_fields = ('content', 'content_template')
+    fields = ('content_type', "type", 'tokens', 'content', 'template_data')
+    #autocomplete_fields = ('content', 'template_data')
     readonly_fields = ('tokens',)
 
 
@@ -36,10 +36,6 @@ class ConversationMessageAdmin(admin.ModelAdmin):
         }),
         ('Audit', {
             'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',),
-        }),
-        ('Tasks, Tool Calls', {
-            'fields': ('tool_calls',),
             'classes': ('collapse',),
         }),
     )

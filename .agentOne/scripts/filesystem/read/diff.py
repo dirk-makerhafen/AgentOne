@@ -58,8 +58,8 @@ def diff(path=None, staged=False, target=None):
             diff_output = proc.stdout
             return (True, {
                 'status': 'success',
+                'has_changes': bool(diff_output.strip()),
                 'diff': diff_output if diff_output else '(no changes)',
-                'has_changes': bool(diff_output.strip())
             })
         else:
             if path and target:
@@ -69,8 +69,8 @@ def diff(path=None, staged=False, target=None):
                 diff_output = ''.join(difflib.unified_diff(file1, file2, fromfile=path, tofile=target))
                 return (True, {
                     'status': 'success',
+                    'has_changes': bool(diff_output.strip()),
                     'diff': diff_output if diff_output else '(no differences)',
-                    'has_changes': bool(diff_output.strip())
                 })
             else:
                 return (False, {'status': 'error', 'message': 'Not a git repo. Provide both path and target for file comparison.'})

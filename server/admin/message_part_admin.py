@@ -3,7 +3,7 @@ from server.models.message import MessagePart
 
 @admin.register(MessagePart)
 class ConversationMessagePartAdmin(admin.ModelAdmin):
-    list_display = ('id', 'message_id', 'content_type', "type", 'index', 'tokens', 'created_at','content__content','tool_call')
+    list_display = ('id', 'message_id', 'content_type', "type", 'tokens', 'created_at','content__content','tool_call')
     list_filter = ('content_type', 'created_at')
     search_fields = ('id',)
     readonly_fields = ('created_at', 'updated_at', 'tokens')
@@ -15,10 +15,10 @@ class ConversationMessagePartAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('message', 'content_type', 'index', 'tokens', "tool_call")
+            'fields': ('message', 'content_type', 'tokens', "tool_call")
         }),
         ('Content Reference', {
-            'fields': ('content', 'content_template'),
+            'fields': ('content', 'template_data'),
             'description': 'References to the polymorphic content storage.'
         }),
         ('Audit', {

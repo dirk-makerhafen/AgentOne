@@ -14,7 +14,7 @@ class AgentTaskRunAdmin(admin.ModelAdmin):
     '''
     fieldsets = (
         (None, {
-            'fields': ('agent_task_call', 'status', "agent_task_instance")
+            'fields': ('agent_task_call', 'status', "task_instance")
         }),
         ('Arguments', {
             'fields': ( "arguments_json", "taskrun_arg_references"),

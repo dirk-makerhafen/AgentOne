@@ -20,11 +20,7 @@ class Agent():
     @property
     def name(self): 
         return self.model.name
-    
-    @property
-    def extends_agent_versions(self):
-        return [Agent(agent_model=x.agent, pinned_agent_version=x) for x in self.get_version_model().extends_agent_versions.all()]
-
+  
     # FROM AGENT VERSION
     @property
     def description(self): 

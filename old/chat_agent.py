@@ -80,7 +80,7 @@ class ChatAgent(BaseAgent):
                         qmsg.tool_calls.set(tool_calls)
                         for i, msg_part in enumerate(msg_parts):
                             msg_part.query_message = qmsg
-                            msg_part.index = i
+                            #msg_part.index = i
                             msg_part.save()
                         cmessages.append(qmsg)
                         if limiter.is_general_message_limited('messages_dont_warn_forget', entry):
@@ -100,7 +100,6 @@ class ChatAgent(BaseAgent):
             messages = reversed(cmessages)
             
             for index, message in enumerate(messages):
-                message.index = index
                 message.save()
                 if hasattr(message, "_tool_calls"):
                     for tc in message.tool_calls.all():

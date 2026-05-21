@@ -2,7 +2,7 @@ from __future__ import annotations
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.task_definition import TaskDefinition
-from server.models.tasks.agent_task_instance import AgentTaskInstance
+from server.models.tasks.task_instance import TaskInstance
 
 class OLDBoundAgentFunction:
     def __init__(self, agent_runtime, func):
@@ -67,7 +67,7 @@ class OLDBoundAgentFunction:
         #print("here",  args, kwargs )
         return agentTaskInstance.apply_async( args=args, kwargs = kwargs)
 
-    def instance(self, args = None, kwargs=None, **options ) -> AgentTaskInstance:
+    def instance(self, args = None, kwargs=None, **options ) -> TaskInstance:
         """get/Create AgentTaskInstance.
 
         Returns:
@@ -76,7 +76,7 @@ class OLDBoundAgentFunction:
         args = args if args else []
         kwargs = kwargs if kwargs else {}
         raise Exception("FOOBAR42")
-        return AgentTaskInstance.get_or_create(
+        return TaskInstance.get_or_create(
             boundAgentTaskDefinition = self,
             args = args,
             kwargs=kwargs,

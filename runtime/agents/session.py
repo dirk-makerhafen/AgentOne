@@ -290,6 +290,7 @@ class Session():
 
                 # Schedule command execution
                 bound_cmd.delay(*args, **kwargs)
+                # TODO
                 return self.handle_user_command.delay(conversation_msg, cmd, cmdargs = args, cmdkwargs = kwargs)
 
             print("NOT TASK!")

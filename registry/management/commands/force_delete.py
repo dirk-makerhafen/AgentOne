@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.settings import SettingsModel
-from server.models.tasks.agent_task_instance import AgentTaskInstance
+from server.models.tasks.task_instance import TaskInstance
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 
@@ -29,8 +29,8 @@ class Command(BaseCommand):
             modelobj = SettingsModel
         elif model == "AgentVersion":
             modelobj = AgentVersionModel
-        elif model == "AgentTaskInstance":
-            modelobj = AgentTaskInstance
+        elif model == "TaskInstance":
+            modelobj = TaskInstance
         elif model == "TaskDefinitionVersion":
             modelobj = TaskDefinitionVersion
             

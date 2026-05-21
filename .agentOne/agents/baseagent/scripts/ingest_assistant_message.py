@@ -4,13 +4,7 @@ Dispatches tool calls via BoundTask and records the resulting AgentTaskCall obje
 Receives the dict from parse_llm_response and enriches it with task_calls
 so that decide_next_step can link them to the assistant message.
 """
-
-from ast import Dict
-from typing import TYPE_CHECKING, NotRequired, TypedDict
-
 from server.models.message import Message
-
-
 from server.models.queries.response import Response
 from runtime.agents.session import Session
 
@@ -43,21 +37,14 @@ def ingest_assistant_message(session: Session, response: Response, parts: list[d
 
     prev_message = session.get_messages().filter(next_messages=None).last()
 
-    message = Message.objects.create(
-        session_version = session.get_version_model(),
-        response = response,
-        role = "assistant",
-        prev_message = prev_message,
-    )
+    message = Message.objects.create(session_version = session.get_version_model(), response = response, role = "assistant", prev_message = prev_message)
     
     for part in parts:
         if part["type"] == "toolcall":
             # start tool calls 
-            tool_name = part["content"]["name"]
-            tool_args = part["content"]["arguments"]
-            bound_task = session.get_tool(tool_name)
+            bound_task = session.get_tool(part["content"]["name"])
             if bound_task:
-                part["tool_call"] = bound_task.delay(**tool_args)
+                part["tool_call"] = bound_task.delay(**part["content"]["arguments"])
                 
         message.add_part(
             type = part["type"],

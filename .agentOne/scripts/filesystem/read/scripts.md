@@ -12,3 +12,9 @@ tools:
   - name: stat
     file: stat.py
     function: stat
+  - name: tree
+    file: tree.py
+    function: tree
+  - name: diff
+    file: diff.py
+    function: diff

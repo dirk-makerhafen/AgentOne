@@ -74,9 +74,10 @@ def grep(pattern, path=None, include=None):
 
         return (True, {
             'status': 'success',
-            'matches': matches,
             'file_count': len(files_with_matches),
-            'match_count': len(matches)
+            'match_count': len(matches),
+            'matches': matches,
+
         })
 
     except Exception as e:

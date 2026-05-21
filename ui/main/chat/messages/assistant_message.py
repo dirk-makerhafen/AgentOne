@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
 from ui.main.chat.messages.toolcard import ToolCard
@@ -40,10 +41,7 @@ class AssistantMessageView(ModelView):
             {% endif %}
 
             <div class="assistant-segment" data-msg-idx="13">
-                <div class="msg-body">
-                    {% for message_part in  pyview.subject.parts.all() %}
-                        {{ message_part.content.get()}}
-                    {% endfor %}   
+                <div class="msg-body" id="message_body_{{pyview.subject.pk}}">{% for message_part in  pyview.subject.parts.all() %}{{ message_part.content.get()}}{% endfor %}   
                 </div>
                 <div class="msg-foot">
                     <span class="msg-duration-inline">Done in 59s</span>
@@ -61,7 +59,10 @@ class AssistantMessageView(ModelView):
                     </span>
                 </div>
             </div>
-
+            <script>
+                el = document.getElementById('message_body_{{pyview.subject.pk}}')
+                el.innerHTML = marked.parse(el.innerHTML);
+            </script>
             <div class="tool-card-row">
                 {{ pyview.tool_list.render() }}
             </div>
@@ -71,11 +72,14 @@ class AssistantMessageView(ModelView):
         
     '''
     def __init__(self, subject: Message, parent: MessageView, **kwargs):
-        super().__init__(subject, parent, **kwargs)  
+        super().__init__(subject, parent, **kwargs) 
+      
+        self.message_parts = subject.parts.filter(tool_call__isnull=False)
+        self.tool_calls = AgentTaskCall.objects.filter(pk__in=[message_part.tool_call.pk for message_part in self.message_parts])
         self.tool_list = QuerySetView(
-            subject= subject.tool_calls.all(),
-            parent=self,
-            item_class=ToolCard,
+            subject = self.tool_calls,
+            parent = self,
+            item_class = ToolCard,
             #filter_function=self._filter_function
         )
         

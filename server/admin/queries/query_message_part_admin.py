@@ -3,7 +3,7 @@ from django.contrib import admin
 
 @admin.register(QueryMessagePart)
 class QueryMessagePartAdmin(admin.ModelAdmin):
-    list_display = ('id', 'query_message', 'content_type', 'index', 'tokens', 'created_at')
+    list_display = ('id', 'query_message', 'content_type','tokens', 'created_at')
     list_display_links = ('id',)
     list_filter = ('content_type', 'created_at')
     search_fields = ('id',)

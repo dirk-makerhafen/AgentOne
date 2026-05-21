@@ -26,13 +26,13 @@ from django.db.models import F
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from server.models.tasks.agent_task_instance import AgentTaskInstance
+    from server.models.tasks.task_instance import TaskInstance
 
 class AgentTaskCall(BaseModel):
     """Specific invocation - equivalent to celery task"""
-    agent_task_instance = models.ForeignKey("AgentTaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls")
     task_definition = models.ForeignKey("server.TaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
     task_definition_version = models.ForeignKey("TaskDefinitionVersion", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
+    task_instance = models.ForeignKey("TaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True)
     session = models.ForeignKey("SessionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
     session_version = models.ForeignKey("SessionVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
     
@@ -78,7 +78,7 @@ class AgentTaskCall(BaseModel):
     taskcall_result_run = models.ForeignKey("server.AgentTaskRun", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT, related_name="rev_taskcall_result_run")
 
     @classmethod
-    def create(cls, agent_task_instance: "AgentTaskInstance", args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None, max_retries = None, retry_delay = None, retry_requires_approval = None, priority:int|None = None ):
+    def create(cls, task_instance: "TaskInstance", args=None, kwargs=None, dont_start_before=None, dont_start_after=None, requires_approval=None, time_limit=None, max_subtask_errors=None, max_subtask_error_rate=None, limit_subtask_parallel_runs=None, limit_per_instance_parallel_runs=None, max_retries = None, retry_delay = None, retry_requires_approval = None, priority:int|None = None ):
         """Create AgentTaskCall.
 
         Returns:
@@ -96,42 +96,42 @@ class AgentTaskCall(BaseModel):
         next_input = arguments
 
         # --- BEFORE_RUN Hooks Create ---
-        before_hooks = list(agent_task_instance.taskinstances_before_run_hooks.all().order_by('pk'))
+        before_hooks = list(task_instance.taskinstances_before_run_hooks.all().order_by('pk'))
         before_hook_calls = []
         if before_hooks:
             for i, hook_instance in enumerate(before_hooks):
-                hook_instance: AgentTaskInstance
-                next_input = hook_instance.call(kwargs=next_input)
+                hook_instance: TaskInstance
+                next_input = hook_instance.create_call(kwargs=next_input)
                 before_hook_calls.append(next_input)
         
         arguments_json, ref_pks = AgentTaskCall.create_call_arguments_json(arguments=next_input)
        
         taskcall = AgentTaskCall.objects.create(
-            agent_task_instance = agent_task_instance,
-            task_definition = agent_task_instance.task_definition_version.task_definition,
-            task_definition_version = agent_task_instance.task_definition_version,
-            session = agent_task_instance.session,
-            session_version = agent_task_instance.session_version,
+            task_instance = task_instance,
+            task_definition = task_instance.task_definition_version.task_definition,
+            task_definition_version = task_instance.task_definition_version,
+            session = task_instance.session,
+            session_version = task_instance.session_version,
             # Arguments
             carguments_json = arguments_json,
 
             # Options - Startup
             dont_start_before = dont_start_before if dont_start_before else None,
             dont_start_after = dont_start_after if dont_start_after else None,
-            requires_approval = requires_approval if requires_approval else agent_task_instance.requires_approval,
+            requires_approval = requires_approval if requires_approval else task_instance.requires_approval,
 
             # Options - Run
-            time_limit      = time_limit if time_limit else agent_task_instance.time_limit,     #
-            max_subtask_errors     = max_subtask_errors if max_subtask_errors else agent_task_instance.max_subtask_errors,   # for groups,absolute number, also used when timeout
-            max_subtask_error_rate = max_subtask_error_rate if max_subtask_error_rate else agent_task_instance.max_subtask_error_rate,# for groups, in percent, also used when timeout
-            limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else agent_task_instance.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
-            limit_per_instance_parallel_runs  = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else agent_task_instance.limit_per_instance_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
-            priority  = priority if priority else agent_task_instance.priority,   # how many retries to we make in case of error
+            time_limit      = time_limit if time_limit else task_instance.time_limit,     #
+            max_subtask_errors     = max_subtask_errors if max_subtask_errors else task_instance.max_subtask_errors,   # for groups,absolute number, also used when timeout
+            max_subtask_error_rate = max_subtask_error_rate if max_subtask_error_rate else task_instance.max_subtask_error_rate,# for groups, in percent, also used when timeout
+            limit_subtask_parallel_runs  = limit_subtask_parallel_runs if limit_subtask_parallel_runs else task_instance.limit_subtask_parallel_runs, # how many subtasks cn run in parallel, for groups 0=no limit
+            limit_per_instance_parallel_runs  = limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else task_instance.limit_per_instance_parallel_runs, #how many times this task can run in parallel per agentInstance it belongs to, 0=no limit
+            priority  = priority if priority else task_instance.priority,   # how many retries to we make in case of error
 
             # Options - Retry
-            max_retries  = max_retries if max_retries else agent_task_instance.max_retries,   # how many retries to we make in case of error
-            retry_delay  = retry_delay if retry_delay else agent_task_instance.retry_delay,  # time between retries in seconds
-            retry_requires_approval = retry_requires_approval if retry_requires_approval else agent_task_instance.retry_requires_approval,  # required user approval before run
+            max_retries  = max_retries if max_retries else task_instance.max_retries,   # how many retries to we make in case of error
+            retry_delay  = retry_delay if retry_delay else task_instance.retry_delay,  # time between retries in seconds
+            retry_requires_approval = retry_requires_approval if retry_requires_approval else task_instance.retry_requires_approval,  # required user approval before run
             # Runtime values
             is_approved = None,
 

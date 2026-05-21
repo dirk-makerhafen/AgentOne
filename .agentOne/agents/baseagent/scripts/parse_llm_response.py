@@ -12,7 +12,6 @@ from runtime.agents.session import Session
 from server.models.content import GenericContent
 from server.models.queries.response import Response
 from server.models.settings import AgentToolCallSyntax
-
 from typing import NotRequired, TypedDict
 
 

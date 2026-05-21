@@ -40,8 +40,8 @@ class TaskDefinitionVersion(BaseModel):
     child_tasks = SortedManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="parent_tasks")
 
     @property
-    def agent_task_instances(self):
-        return self.related_agent_task_instances # pyright: ignore[reportAttributeAccessIssue]
+    def task_instances(self):
+        return self.related_task_instances # pyright: ignore[reportAttributeAccessIssue]
 
     @property
     def agent_versions(self):

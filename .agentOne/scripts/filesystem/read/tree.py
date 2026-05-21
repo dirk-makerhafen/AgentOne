@@ -83,8 +83,8 @@ def tree(path=None, depth=3, include_hidden=False):
 
         return (True, {
             'status': 'success',
+            'path': str(target),
             'tree': '\n'.join(lines),
-            'path': str(target)
         })
 
     except Exception as e:
