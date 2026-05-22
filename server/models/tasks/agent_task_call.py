@@ -23,6 +23,7 @@ from server.tasks.task_dispatcher import celery_delay
 
 if TYPE_CHECKING:
     from server.models.tasks.task_instance import TaskInstance
+    from server.models.tasks.agent_task_run import AgentTaskRun
 
 
 class AgentTaskCall(BaseModel):
@@ -311,6 +312,7 @@ class AgentTaskCall(BaseModel):
         allow_partial_results: bool = False,
     ) -> Any:
         """Resolve the stored call arguments, recursively fetching referenced objects."""
+        from server.models.tasks.agent_task_run import AgentTaskRun
 
         def _get_recursive(
             data: Any,

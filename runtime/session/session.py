@@ -131,13 +131,12 @@ class Session:
     @property
     def current_unattended_turn_count(self) -> int:
         """Return the current unattended turn count."""
+        self.model.refresh_from_db()
         return self.model.unattended_turn_count
 
     def count_unattended_turn(self) -> None:
         """Increment the unattended turn counter."""
-        SessionModel.objects.filter(pk=self.model.pk).update(
-            unattended_turn_count=self.model.turn_count + 1
-        )
+        SessionModel.objects.filter(pk=self.model.pk).update(unattended_turn_count=self.model.unattended_turn_count + 1)
 
     def reset_unattended_turn_count(self) -> None:
         """Reset the unattended turn counter to zero."""
@@ -356,7 +355,7 @@ class Session:
         Resolve a setting by checking the session's override first, then
         falling back to the agent version's configured value.
 
-        List-typed settings support a wildcard ``"*"`` that marks the
+        List-typed settings support a wildcard ``"+"`` that marks the
         insertion point where the agent-level list is spliced in.
         """
         print("_get_session_setting", name)
@@ -376,10 +375,10 @@ class Session:
             return session_settings_value
 
         if isinstance(session_settings_value, (list,)):
-            if "*" not in session_settings_value:  # overwrite parent list
+            if "+" not in session_settings_value:  # overwrite parent list
                 print("r1")
                 return session_settings_value
-            extend_at_index = session_settings_value.index("*")
+            extend_at_index = session_settings_value.index("+")
             session_settings_value[extend_at_index:extend_at_index + 1] = self.agent.get_agent_setting(name)
         else:
             raise Exception(

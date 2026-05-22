@@ -13,7 +13,6 @@ from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from runtime.session.session import Session
 from runtime.context_manager import ContextTracker
 from runtime.rate_limiter import RateLimitError
 from server.models.base_model import BaseModel
@@ -22,14 +21,12 @@ from server.models.enums.task_enums import TaskRunStatus, TaskType
 from server.models.message import Message
 from server.models.queries.query import Query
 from server.models.queries.response import Response
-from server.models.sessions.session_version import SessionVersionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
-from server.models.tasks.task_definition import TaskDefinition
-from server.models.tasks.task_definition_version import TaskDefinitionVersion
 from server.tasks.task_dispatcher import celery_delay
 
 if TYPE_CHECKING:
-    pass
+    from runtime.session.session import Session
+
 
 
 class AgentTaskRun(BaseModel):
@@ -40,7 +37,7 @@ class AgentTaskRun(BaseModel):
     """
 
     agent_task_call = models.ForeignKey(
-        AgentTaskCall,
+        "AgentTaskCall",
         on_delete=models.CASCADE,
         related_name="related_agent_task_runs",
     )
@@ -61,7 +58,7 @@ class AgentTaskRun(BaseModel):
         blank=True,
     )
     session_version = models.ForeignKey(
-        SessionVersionModel,
+        "SessionVersionModel",
         on_delete=models.CASCADE,
         related_name="related_agent_task_runs",
     )

@@ -4,8 +4,8 @@ import time
 from django.db import models
 from server.models.base_model import BaseModel
 from tools.primitives import append_file, list_directory, mkdir, read_file, rm, stat_path, write_file
-from tools.builtin_filesystem.utils.summarize import summarize
-from tools.builtin_filesystem.utils.fsutils import apply_patch, format_directory_listing, get_relative_path, make_patch
+from old.tools.builtin_filesystem.utils.summarize import summarize
+from old.tools.builtin_filesystem.utils.fsutils import apply_patch, format_directory_listing, get_relative_path, make_patch
 import traceback
 
 class FsLogEntryManager(models.Manager):

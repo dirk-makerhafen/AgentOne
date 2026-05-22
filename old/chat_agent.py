@@ -34,7 +34,7 @@ class ChatAgent(BaseAgent):
         from server.models.queries.query_message import QueryMessage
         from server.models.queries.query_message_part import QueryMessagePart
         from server.models.message import Message
-        from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
+        from old.tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
         from server.history_limiter import HistoryLimiter
         from server.models.content import GenericContent
         from server.models.agents.agent import AgentModel

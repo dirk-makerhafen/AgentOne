@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from server.models.sessions.session_version import SessionVersionModel
-from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
+from old.tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
 from ui.lib.model_view import ModelView
 
 

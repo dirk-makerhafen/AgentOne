@@ -6,13 +6,15 @@ from typing import Any
 
 from django.db import models
 from django_enum import EnumField
+from jinja2 import BaseLoader, Environment
 
 from server.models.base_model import BaseModel
 from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
-from server.models.message import MessagePart
+from server.models.message import Message, MessagePart
 from server.models.queries.query_message_part import QueryMessagePart
 
+_JINJA_ENV = Environment(loader=BaseLoader())
 
 class QueryMessage(BaseModel):
     """A single message within a query, containing one or more parts."""
@@ -130,9 +132,7 @@ class QueryMessage(BaseModel):
         merged_message_parts = [message_parts.pop(0)] if message_parts else []
         while message_parts:
             message_part = message_parts.pop(0)
-            if (
-                merged_message_parts[-1]["type"] == message_part["type"] == "text"
-            ):
+            if merged_message_parts[-1]["type"] == message_part["type"] == "text":
                 merged_message_parts[-1]["text"] += message_part["text"]
             else:
                 merged_message_parts.append(message_part)
@@ -157,13 +157,38 @@ class QueryMessage(BaseModel):
         if self.role == "tool":
             messages: list[dict[str, Any]] = []
             for message_tool_call in message_tool_calls:
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": f"tc-{message_tool_call.pk}",
-                        "content": json.dumps(message_tool_call.get_result()),
-                    }
-                )
+                tool_call_result = message_tool_call.get_result()
+                tool_call_result_str = ""
+                if isinstance(tool_call_result, Message):
+                    tcr = []
+                    for part in tool_call_result.parts.all():
+                        part:MessagePart
+                        if part.content_type == MessageContentType.TEXT:
+                            tcr.append(part.content.get())
+
+                        elif part.content_type == MessageContentType.TEMPLATE:
+                            try:
+                                rtemplate = _JINJA_ENV.from_string(part.content.get())
+                                data: dict[str, Any] = {}
+                                context = {**part.template_data.get(), **data}
+                                tcr.append(rtemplate.render(**context))               
+                            except Exception as e:
+                                if fail_on_error:
+                                    raise e
+                        elif part.content_type == MessageContentType.JSON:     
+                            tcr.append(json.dumps(part.content.get()))
+                        else:
+                            raise Exception(f"No message_content for content {part.content}")
+                    tool_call_result_str = "".join(tcr)
+                else:
+                    tool_call_result_str = json.dumps(tool_call_result)
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": f"tc-{message_tool_call.pk}",
+                    "content": tool_call_result_str,
+                })
+
             return messages if len(messages) > 1 else messages[0] if messages else []
 
         message["tool_calls"] = []

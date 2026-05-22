@@ -1,4 +1,5 @@
 ---
+group: filesystem-write
 tools:
   - name: append
     file: append.py

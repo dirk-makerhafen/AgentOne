@@ -9,7 +9,7 @@ from server.models.sessions.session_version import SessionVersionModel
 class SessionVersionModelAdmin(admin.ModelAdmin):
     """Admin for session version instances."""
 
-    list_display: tuple[str, ...] = ("id", "created_at", "workingdir", "session")
+    list_display: tuple[str, ...] = ("id", "created_at", "workspace", "session")
     list_display_links: tuple[str, ...] = ("id", "session")
     search_fields: tuple[str, ...] = ("name", "session")
     list_filter: tuple[str, ...] = ("session", "created_at")

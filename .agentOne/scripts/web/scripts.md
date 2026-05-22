@@ -1,4 +1,5 @@
 ---
+group: web
 tools:
   - name: webSearch
     file: websearch.py

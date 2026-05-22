@@ -14,16 +14,16 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 # Explicitly import primitive functions using their absolute paths from the project root
-from tools.primitives.append_file import append_file
-from tools.primitives.list_directory import list_directory
-from tools.primitives.manage_tool_process import start_tool_process, stop_tool_process, call_tool_session
-from tools.primitives.mkdir import mkdir
-from tools.primitives.read_file import read_file
-from tools.primitives.rm import rm
-from tools.primitives.run_python_code import run_python_code
-from tools.primitives.run_shell_script import run_shell_script
-from tools.primitives.stat_path import stat_path
-from tools.primitives.write_file import write_file
+from old.tools.primitives.append_file import append_file
+from old.tools.primitives.list_directory import list_directory
+from old.tools.primitives.manage_tool_process import start_tool_process, stop_tool_process, call_tool_session
+from old.tools.primitives.mkdir import mkdir
+from old.tools.primitives.read_file import read_file
+from old.tools.primitives.rm import rm
+from old.tools.primitives.run_python_code import run_python_code
+from old.tools.primitives.run_shell_script import run_shell_script
+from old.tools.primitives.stat_path import stat_path
+from old.tools.primitives.write_file import write_file
 
 # Load data from stdin
 data_transfered = json.loads(sys.stdin.readline())

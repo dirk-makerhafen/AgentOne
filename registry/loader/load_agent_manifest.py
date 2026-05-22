@@ -251,6 +251,8 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
 
         for name in names:
             print("slook", name)
+            if name == "+":
+                continue
 
             tdv = agent_version.defined_task_versions.filter(
                 task_definition__name=name

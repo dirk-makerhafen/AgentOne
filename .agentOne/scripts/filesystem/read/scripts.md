@@ -1,4 +1,5 @@
 ---
+group: filesystem-read
 tools:
   - name: glob
     file: glob.py

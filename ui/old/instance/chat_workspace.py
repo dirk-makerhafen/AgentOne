@@ -95,7 +95,7 @@ class ChatWorkspaceView(ModelView):
                 (root_calls,                                            TaskCallView),
             ]
             try:
-                from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
+                from old.tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
                 querysets.append((
                     FsLogEntry.objects.filter(session_version=latest).order_by('created_at')
                     if latest else FsLogEntry.objects.none(),

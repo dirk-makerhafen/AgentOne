@@ -1179,7 +1179,7 @@
   /* container-type/name lets descendants run @container queries against the
      panel's width so the header can collapse less-essential elements as the
      user resizes the panel narrower. */
-  .rightpanel{       max-height: calc(100% - 42px);width:300px;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
+  .rightpanel{         padding-bottom: 8px;height:100%;  max-height: calc(100% - 47px);width:300px;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
   /* Collapse priority as the panel narrows: git-badge first, then "Workspace"
      label, never the icon buttons. flex-shrink ratios give graceful ellipsis;
      @container queries below cut to display:none at hard breakpoints. */

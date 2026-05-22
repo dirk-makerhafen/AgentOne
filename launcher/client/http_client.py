@@ -3,9 +3,9 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.security.api_key import APIKeyHeader
 from fastapi import FastAPI, Depends, HTTPException, status, Security
-from tools.primitives.run_python_code import run_python_code
-from tools.primitives.run_shell_script import run_shell_script
-from tools.primitives import start_tool_process, stop_tool_process, call_tool_session
+from old.tools.primitives.run_python_code import run_python_code
+from old.tools.primitives.run_shell_script import run_shell_script
+from old.tools.primitives import start_tool_process, stop_tool_process, call_tool_session
 import json
 import sys
 import socket

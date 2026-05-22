@@ -131,7 +131,7 @@ class RightPanelSubagents(ModelView):
         if av is None:
             return
         ts = timezone.now().strftime("%Y%m%d%H%M%S")
-        sv = av.get_or_create_session(name=f"user-launch:{name}:{ts}", parent_instance_version=self.session.get_version_model())
+        sv = av.get_or_create_session(name=f"user-launch:{name}:{ts}", parent_session_version=self.session.get_version_model())
         self.parent.main_panel.create_and_open_tab(Chat, sv.session)
 
     def refresh(self):

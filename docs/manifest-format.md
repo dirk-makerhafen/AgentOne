@@ -132,9 +132,9 @@ tasks:                                  # section heading = task_type
       - file_search
 
 tools:
-  - name: delegate
-    file: delegate.py
-    function: delegate
+  - name: delegate_task
+    file: delegate_task.py
+    function: delegate_task
     bound: True
 
   - name: read

@@ -23,29 +23,10 @@ class QueryStatus(models.TextChoices):
 class Query(BaseModel):
     """Represents a single LLM query including its message history."""
 
-    apikey = models.ForeignKey(
-        "server.ApiKey",
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name="related_queries",
-        blank=True,
-    )
-    session_version = models.ForeignKey(
-        "server.SessionVersionModel",
-        null=False,
-        on_delete=models.CASCADE,
-        related_name="related_queries",
-    )
-    trigger_message = models.ForeignKey(
-        "server.Message",
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="related_queries",
-    )
-
+    apikey = models.ForeignKey(  "server.ApiKey",  null=True,  on_delete=models.SET_NULL,  related_name="related_queries",  blank=True)
+    session_version = models.ForeignKey(  "server.SessionVersionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
+    trigger_message = models.ForeignKey(  "server.Message",  null=True,  blank=True,  on_delete=models.CASCADE,  related_name="related_queries")
     status = EnumField(QueryStatus, default=QueryStatus.WAITING)
-
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
@@ -54,14 +35,7 @@ class Query(BaseModel):
         """Return the related Response for this query."""
         return self.related_response  # pyright: ignore[reportAttributeAccessIssue]
 
-    def add_message(
-        self,
-        role: str,
-        content_type: MessageContentType | None = None,
-        content: Any = None,
-        template_data: Any = None,
-        source_message: Message | None = None,
-    ) -> QueryMessage:
+    def add_message(  self,  role: str,  content_type: MessageContentType | None = None,  content: Any = None,  template_data: Any = None,  source_message: Message | None = None) -> QueryMessage:
         """Add a message to this query.
 
         Either provide ``source_message`` (copies its parts) or provide
@@ -72,9 +46,7 @@ class Query(BaseModel):
                 raise Exception(
                     "Set either source_message or content_type,content,template_data"
                 )
-            query_message = QueryMessage.objects.create(
-                role=role, query=self, source_message=source_message
-            )
+            query_message = QueryMessage.objects.create(role=role, query=self, source_message=source_message)
             for part in source_message.parts.all():
                 if part.type not in [MessagePartType.MESSAGE, MessagePartType.TOOLCALL]:
                     continue
@@ -102,6 +74,7 @@ class Query(BaseModel):
             return []
 
         for message in related_query_messages.all():
+            message: QueryMessage
             try:
                 qm = message.to_openai_message()
                 if qm is None:
@@ -111,8 +84,8 @@ class Query(BaseModel):
                         messages.append(m)
                 else:
                     messages.append(qm)
-                tokens += message.tokens
-                tags_token_usages.append(message.tags_token_usage)
+                tokens += message.tokens if message.tokens else 0
+                tags_token_usages.append(message.tags_token_usage or {})
             except Exception as e:
                 print("Failed to_openai_message", message)
                 raise e

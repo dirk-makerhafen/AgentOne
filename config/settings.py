@@ -44,13 +44,11 @@ CHANNEL_LAYERS = {
 }
 
 INSTALLED_APPS = (
-    'tools.builtin_filesystem',
     'corsheaders',
     'config',
     'server',
     'launcher',
     'registry',
-    'tools',
     'ui',
     'sortedm2m',
     'django.contrib.admin',

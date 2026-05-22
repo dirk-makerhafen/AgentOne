@@ -118,7 +118,7 @@ class BaseAgent():
             if not self.agent_version:
                 self.agent_version = self.agent.agent_versions.order_by("-version_number").first()
 
-            parent_instance_version = self.parent.session_version if self.parent else None
+            parent_session_version = self.parent.session_version if self.parent else None
 
             self.is_registered = getattr(self.__class__, "is_registered", False)
             if not self.is_registered:
@@ -136,7 +136,7 @@ class BaseAgent():
                 name = name,
                 display_name = display_name,
                 workingdir = workingdir,
-                parent_instance_version = parent_instance_version,
+                parent_session_version = parent_session_version,
             )
 
         self.agent_instance = self.session_version.agent_instance
@@ -433,7 +433,7 @@ class BaseAgent():
                         agent_version:AgentVersion = available_tool.tool_agent_version
                         tool_session_version:AgentInstanceVersion = agent_version.get_or_create_instance(
                             workingdir = self.session_version.workingdir,
-                            parent_instance_version = self.session_version,
+                            parent_session_version = self.session_version,
                         )
                         rt: BaseAgent = tool_session_version.get_runtime()
                         func: BoundAgentFunction = getattr(rt, func_name)

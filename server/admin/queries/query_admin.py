@@ -14,7 +14,7 @@ class QueryMessageInline(admin.TabularInline):
 
     model: type[QueryMessage] = QueryMessage
     extra: int = 0
-    fields: tuple[str, ...] = ("index", "role", "tokens")
+    fields: tuple[str, ...] = ( "role", "tokens")
     readonly_fields: tuple[str, ...] = ("tokens",)
     show_change_link: bool = True
 

@@ -111,16 +111,16 @@ class AgentVersionModel(BaseModel):
         self,
         name: Optional[str] = None,
         display_name: Optional[str] = None,
-        workingdir: Optional[str | Path] = None,
-        parent_instance_version: SessionVersionModel | None = None,
+        workspace: Optional[WorkspaceModel] = None,
+        parent_session_version: SessionVersionModel | None = None,
     ) -> SessionVersionModel:
         """Get or create a session for this agent version.
 
         Args:
             name: Unique session name. Auto-generated if omitted.
             display_name: Human-readable display name.
-            workingdir: Working directory for the session.
-            parent_instance_version: Optional parent session version to inherit from.
+            workspace: Workspace directory for the session.
+            parent_session_version: Optional parent session version to inherit from.
 
         Returns:
             The existing or newly created SessionVersionModel.
@@ -128,11 +128,9 @@ class AgentVersionModel(BaseModel):
         from server.models.sessions.session import SessionModel
         from server.models.sessions.session_version import SessionVersionModel
 
-        if not workingdir and parent_instance_version:
-            workingdir = parent_instance_version.workingdir
-        if workingdir:
-            workingdir = Path(workingdir).resolve()
-        parent_instance = parent_instance_version.session if parent_instance_version else None
+        if not workspace and parent_session_version:
+            workspace = parent_session_version.workspace
+        parent_instance = parent_session_version.session if parent_session_version else None
         if not name:
             name = (
                 f"p{parent_instance.pk}:{self.agent.name}"
@@ -154,22 +152,22 @@ class AgentVersionModel(BaseModel):
         session_version = session.latest_session_version
         print("session_version", session_version)
         aiv_created = False
-        if not session_version or session_version.agent_version != self or session_version.session != session or session_version.workingdir != workingdir:
+        if not session_version or session_version.agent_version != self or session_version.session != session or session_version.workspace != workspace:
             session_version, aiv_created = SessionVersionModel.objects.get_or_create(
                 agent=self.agent,
                 session=session,
-                workingdir=workingdir,
+                workspace=workspace,
                 display_name=display_name,
                 defaults=dict(
-                    parent_session_version=parent_instance_version,
+                    parent_session_version=parent_session_version,
                 ),
             )
         if  aiv_created and session_version:
             session.latest_session_version = session_version
             session.save()
 
-        if parent_instance_version:
-            parent_instance_version.child_session_versions.add(session_version)
+        if parent_session_version:
+            parent_session_version.child_session_versions.add(session_version)
         return session_version
 
     def get_runtime(self) -> Agent:
@@ -202,9 +200,9 @@ class AgentVersionModel(BaseModel):
             if isinstance(value, (str, int, bool, GenericContent, BaseModel)):
                 return value
             if isinstance(value, (list,)):
-                if "*" not in value:
+                if "+" not in value:
                     return value
-                extend_at_index = value.index("*")
+                extend_at_index = value.index("+")
             else:
                 raise Exception(
                     f"_get_agent_setting does not yet support type of '{name}': {type(value)}"
@@ -224,9 +222,9 @@ class AgentVersionModel(BaseModel):
             if isinstance(value, (str, int, bool, GenericContent)):
                 return value
             if isinstance(value, (list,)):
-                if "*" not in value:
+                if "+" not in value:
                     return value
-                extend_at_index = value.index("*")
+                extend_at_index = value.index("+")
             else:
                 raise Exception(
                     f"resolve_property does not yet support type of '{name}': {type(value)}"

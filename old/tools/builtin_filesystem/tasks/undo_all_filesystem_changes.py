@@ -3,7 +3,7 @@ import traceback
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.message import MessagePart
 from server.models.debug_log_entry import DebugLogEntry
-from tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
+from old.tools.builtin_filesystem.models.fs_log_entry import FsLogEntry
 
 @shared_task
 def celery_undo_all_filesystem_changes(instance_pk, log_entry_pk, comment=''):
