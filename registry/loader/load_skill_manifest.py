@@ -3,9 +3,10 @@
 # ---------------------------------------------------------------------------
 
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 import frontmatter
+from registry.install_repo import InstallRepo
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.shadow_git import get_or_init_shadow_repo
 from server.models.skills.skill import SkillModel
@@ -16,15 +17,19 @@ def load_skill_manifest(
     skill_md_path: Path,
     parent_project: Any = None,
     parent_agent: Any = None,
+    install_repo: Optional[InstallRepo] = None,
 ) -> Tuple[SkillModel, SkillModelVersion]:
     """Load a ``skill.md`` manifest into the database.
 
     Creates or retrieves the ``SkillModel`` and ``SkillModelVersion``, then
     recursively loads any scripts from the ``scripts/`` subfolder.
+
+    When *install_repo* is provided, version identifiers are deterministic git
+    tree SHAs. Otherwise falls back to shadow git repos in the source tree.
     """
     manifest = frontmatter.load(skill_md_path)
     skill_dir = skill_md_path.parent
-    commit = get_or_init_shadow_repo(skill_dir)
+    commit = install_repo.tree_sha(skill_dir) if install_repo else None
 
     skill, _ = SkillModel.objects.get_or_create(
         name=manifest.get("name"),
@@ -50,6 +55,7 @@ def load_skill_manifest(
             parent_project=parent_project,
             parent_agent=parent_agent,
             parent_skill=skill,
+            install_repo=install_repo,
         )
 
     return skill, skill_version

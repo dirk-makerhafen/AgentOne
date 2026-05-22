@@ -276,7 +276,7 @@ Skills follow the same `scripts/` pattern: a `skills/<name>/scripts/scripts.md` 
 1. **`scripts.md`** is the single source of truth — no `@tool()`/`@task()` decorators
 2. Manifests are pure YAML with opening `---` but no closing `---`
 3. Python files are loaded via `importlib`, never `exec()`
-4. Each `scripts/` folder has its own `.shadowgit/` for independent content hashing
+4. Version identifiers are **git tree SHAs** from install repos at ``~/.agentone/install/`` (one per scope: global + per-project). Tree SHAs are deterministic — same content always produces the same hash.
 5. Versioned models (`AgentVersionModel`, `TaskDefinitionVersion`, etc.) are immutable — `save()` raises `ValidationError` if `pk` exists
 
 ---
@@ -285,15 +285,21 @@ Skills follow the same `scripts/` pattern: a `skills/<name>/scripts/scripts.md` 
 
 `python3 manage.py reload_all .` triggers:
 
-1. **Pass 1 — Create models:**
-   - Load global `scripts/` → create `TaskDefinition` + `TaskDefinitionVersion`
-   - Load global `skills/` → create `SkillModel` + `SkillModelVersion`
-   - Load global `agents/` → recursively create `AgentModel` + `AgentVersionModel` (with `defined_*versions` for scripts, skills, subagents)
-   - For each project in `projects.yaml`, repeat
+1. **Sync — copy sources into install repos:**
+   - Global: ``rsync .agentone/ → ~/.agentone/install/global/``
+   - Per-project: ``rsync project/.agentone/ → ~/.agentone/install/project_<name>/``
+   - ``git add -A && git commit`` (only if dirty) in each install repo
 
-2. **During Pass 1 (per-agent):**
-   - Resolve tool/task/command name lists into `task_versions` M2M
-   - Resolve subagent name lists into `subagent_versions` M2M
-   - Store `subagent_configs` JSON with per-entry metadata
+2. **Pass 1 — Create models:**
+   - Load global ``scripts/`` → create ``TaskDefinition`` + ``TaskDefinitionVersion``
+   - Load global ``skills/`` → create ``SkillModel`` + ``SkillModelVersion``
+   - Load global ``agents/`` → recursively create ``AgentModel`` + ``AgentVersionModel`` (with ``defined_*versions`` for scripts, skills, subagents)
+   - For each project in ``projects.yaml``, repeat
+   - Version identifiers are **git tree SHAs** computed via ``git rev-parse HEAD:{relative_path}`` for each manifest folder
 
-3. **Version detection:** Content hash is computed from all dependency PKs. If hash matches an existing version, the agent version is reused (no change).
+3. **During Pass 1 (per-agent):**
+   - Resolve tool/task/command name lists into ``task_versions`` M2M
+   - Resolve subagent name lists into ``subagent_versions`` M2M
+   - Store ``subagent_configs`` JSON with per-entry metadata
+
+4. **Version detection:** Each manifest folder's tree SHA is deterministic — identical files produce the same SHA across different commits. ``get_or_create`` finds the existing version record when nothing changed. Agent versions additionally compute a ``content_hash`` from all dependency PKs to catch cascading changes.

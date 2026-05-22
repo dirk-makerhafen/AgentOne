@@ -1,10 +1,10 @@
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
+from registry.install_repo import InstallRepo
 from registry.loader.load_chain_entry import load_chain_entry
 from registry.loader.load_python_entry import load_python_entry
-from registry.shadow_git import get_or_init_shadow_repo
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
@@ -15,12 +15,16 @@ def load_scripts_manifest(
     parent_project: Any = None,
     parent_agent: Any = None,
     parent_skill: Any = None,
+    install_repo: Optional[InstallRepo] = None,
 ) -> List[Tuple[TaskDefinition, TaskDefinitionVersion]]:
     """Load all entries from all ``scripts.md`` manifests found in *scripts_dir*.
 
     Recurses into subdirectories. Entries are processed in order so that Python
     entries are created before chain/group entries (which need to resolve child
     versions by name).
+
+    When *install_repo* is provided, version identifiers are deterministic git
+    tree SHAs from the install repo. 
 
     Returns a list of ``(TaskDefinition, TaskDefinitionVersion)`` tuples.
     """
@@ -29,8 +33,8 @@ def load_scripts_manifest(
         subdir = manifest_path.parent
         with open(manifest_path, encoding="utf-8") as f:
             manifest: dict = yaml.safe_load(f) or {}
-
-        commit = get_or_init_shadow_repo(subdir)
+        
+        commit = install_repo.tree_sha(subdir) if install_repo else None
         entries = _collect_manifest_entries(manifest)
 
         for entry in entries:
@@ -67,7 +71,7 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
 def _load_script_entry(
     entry: Dict[str, Any],
     scripts_dir: Path,
-    commit: str,
+    commit: str |None,
     existing_results: List[Tuple[TaskDefinition, TaskDefinitionVersion]],
     parent_project: Any,
     parent_agent: Any,

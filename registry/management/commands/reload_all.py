@@ -3,6 +3,7 @@ from typing import Any, List
 
 import yaml
 from django.core.management.base import BaseCommand, CommandError
+from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_project_folder import load_project_folder
 from registry.loader.load_skill_manifest import load_skill_manifest
@@ -31,25 +32,30 @@ class Command(BaseCommand):
                 f"no .agentone subdir found in {path.as_posix()}"
             )
 
+        # Sync global sources into install repo
+        self.stdout.write("Syncing global install repo...")
+        global_install = InstallRepo.for_global(source_root=agentone_path)
+        global_install.sync()
+
         # Global scripts (no parent)
         scripts_dir = agentone_path / "scripts"
         if scripts_dir.is_dir():
             self.stdout.write("Loading global scripts...")
-            load_scripts_manifest(scripts_dir)
+            load_scripts_manifest(scripts_dir, install_repo=global_install)
 
         # Global skills (no parent)
         skills_dir = agentone_path / "skills"
         if skills_dir.is_dir():
             self.stdout.write("Loading global skills...")
             for skill_md in sorted(skills_dir.glob("**/skill.md")):
-                load_skill_manifest(skill_md)
+                load_skill_manifest(skill_md, install_repo=global_install)
 
         # Global agents (no parent)
         agents_dir = agentone_path / "agents"
         if agents_dir.is_dir():
             self.stdout.write("Loading global agents...")
             for agent_md in find_agent_md_files(agents_dir):
-                load_agent_manifest(agent_md)
+                load_agent_manifest(agent_md, install_repo=global_install)
 
         # Projects
         projects_file = agentone_path / "projects.yaml"

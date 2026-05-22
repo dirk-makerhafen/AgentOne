@@ -28,7 +28,7 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 def load_python_entry(
     entry: dict,
     scripts_dir: Path,
-    commit: str,
+    commit: str|None,
     task_type: TaskType,
     task_execution_mode: TaskExecutionMode,
     name: str,

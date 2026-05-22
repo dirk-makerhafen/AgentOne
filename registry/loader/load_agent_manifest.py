@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import frontmatter
 from django.core.exceptions import ValidationError
 
+from registry.install_repo import InstallRepo
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
@@ -27,17 +28,21 @@ def load_agent_manifest(
     parent_project: Any = None,
     parent_agent: Any = None,
     parent_skill: Any = None,
+    install_repo: Optional[InstallRepo] = None,
 ) -> Tuple[AgentModel, AgentVersionModel]:
     """Load an ``agent.md`` manifest into the database.
 
     Creates or updates the ``AgentModel`` and ``AgentVersionModel``, resolves
     child scripts, skills and subagents, builds a ``SettingsModel`` from the
     YAML frontmatter, and resolves task/subagent references.
+
+    When *install_repo* is provided, version identifiers are deterministic git
+    tree SHAs.
     """
     print("load_agent_manifest", agent_md_path)
     manifest = frontmatter.load(agent_md_path)
     agent_dir = agent_md_path.parent
-    commit = get_or_init_shadow_repo(agent_dir)
+    commit = install_repo.tree_sha(agent_dir) if install_repo else None
 
     def get_list(name: str) -> Optional[List[str]]:
         val = manifest.get(name)
@@ -75,6 +80,7 @@ def load_agent_manifest(
             scripts_dir,
             parent_project=parent_project,
             parent_agent=agent,
+            install_repo=install_repo,
         )
     print("defined_tasks", defined_tasks)
 
@@ -87,6 +93,7 @@ def load_agent_manifest(
                 skill_md,
                 parent_project=parent_project,
                 parent_agent=agent,
+                install_repo=install_repo,
             )
             defined_skills.append((skill, sv))
 
@@ -99,6 +106,7 @@ def load_agent_manifest(
                 sub_md,
                 parent_project=parent_project,
                 parent_agent=agent,
+                install_repo=install_repo,
             )
             defined_subagents.append((subagent, sav))
 
@@ -270,18 +278,19 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
                     break
             else:
                 print("SEARCH GLOBAL")
-                tdv = (
-                    TaskDefinition.objects.filter(
+                task_definition = TaskDefinition.objects.filter(
                         name=name,
                         parent_agent__isnull=True,
                         parent_project__isnull=True,
                         parent_skill__isnull=True,
-                    )
-                    .first()
-                    .latest_task_version
-                )
-                print("found", tdv)
-                resolved.add(tdv.pk)
+                    ).first()
+                
+                if not task_definition:
+                    raise Exception(f"No Task Definition found for {name}")
+                task_definition_version = task_definition.latest_task_version
+                print("found", task_definition_version)
+                resolved.add(task_definition_version.pk)
+                
     if not resolved:
         raise Exception(f"not found {name}")
     agent_version.task_versions.set(

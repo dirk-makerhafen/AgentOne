@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import frontmatter
+from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
@@ -13,23 +14,41 @@ def load_project_folder(folder: str) -> None:
 
     Expects a ``.agentone/`` directory at the root of *folder* with the
     standard subdirectory layout (``scripts/``, ``skills/``, ``agents/``).
+
+    Files are first synced into a per-project install repo, then version
+    identifiers are derived from git tree SHAs for each manifest folder.
     """
     project_folder = Path(folder) / ".agentone"
     project = _project_to_database(project_folder / "project.md")
 
+    install_repo = InstallRepo.for_project(
+        project_name=project.name,
+        source_root=project_folder,
+    )
+    install_repo.sync()
+
     scripts_dir = project_folder / "scripts"
     if scripts_dir.is_dir():
-        load_scripts_manifest(scripts_dir, parent_project=project)
+        load_scripts_manifest(
+            scripts_dir, parent_project=project,
+            install_repo=install_repo,
+        )
 
     skills_dir = project_folder / "skills"
     if skills_dir.is_dir():
         for skill_md in sorted(skills_dir.glob("**/skill.md")):
-            load_skill_manifest(skill_md, parent_project=project)
+            load_skill_manifest(
+                skill_md, parent_project=project,
+                install_repo=install_repo,
+            )
 
     agents_dir = project_folder / "agents"
     if agents_dir.is_dir():
         for agent_md in find_agent_md_files(agents_dir):
-            load_agent_manifest(agent_md, parent_project=project)
+            load_agent_manifest(
+                agent_md, parent_project=project,
+                install_repo=install_repo,
+            )
 
 
 def _project_to_database(project_md_path: Path) -> Project:

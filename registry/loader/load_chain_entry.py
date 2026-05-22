@@ -8,7 +8,7 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 def load_chain_entry(
     entry: dict,
-    commit: str,
+    commit: str|None,
     task_type: TaskType,
     task_execution_mode: TaskExecutionMode,
     name: str,

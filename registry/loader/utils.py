@@ -20,7 +20,7 @@ def build_version_kwargs(
     entry: dict,
     description: str,
     schema: dict,
-    commit: str,
+    commit: str|None,
     path: Optional[Path],
     task_type: TaskType,
     task_execution_mode: TaskExecutionMode,
