@@ -4,7 +4,9 @@ description: Production-grade general purpose AI operator for research, engineer
 model: gemma4:26b
 extends: baseagent
 tools: python, shell, kill, read, write, edit, multiedit, glob, grep, mkdir, rm, move, copy, append, stat, webFetch, webSearch, task, diff, tree
-subagents: [baseagent, ]
+subagents: 
+    - name: baseagent
+      create: both
 ---
 ## Role
 

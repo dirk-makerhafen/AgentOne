@@ -25,14 +25,6 @@ from typing import TYPE_CHECKING
 from server.models.tasks.agent_task_call import AgentTaskCall
 from django.apps import apps
 
-if TYPE_CHECKING:
-    from server.models.tasks.task_instance import TaskInstance
-
-#task_definition = models.ForeignKey("server.TaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
-#task_definition_version = models.ForeignKey("TaskDefinitionVersion", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
-##task_instance = models.ForeignKey("TaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls")
-#session = models.ForeignKey("SessionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
-#session_version = models.ForeignKey("SessionVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
 
 class AgentTaskRun(BaseModel):
     """Single execution attempt"""
@@ -61,9 +53,6 @@ class AgentTaskRun(BaseModel):
     # Runtime values
     is_approved = models.BooleanField(default=False)  # user did appove this call
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
-   
-    #now on reverse side as foreignkey 
-    #child_taskcalls = SortedManyToManyField("server.AgentTaskCall", help_text="AgentTaskCalls spawned", symmetrical=False, blank=True, related_name="parent_taskruns" )
 
     # References in Arguments for a TaskRun must be TaskRun, referencing the actual finished execution of a TaskCall
     # References in results must be TaskCall, hiding the actual (retried and so on) TaskRun that will be launched. 

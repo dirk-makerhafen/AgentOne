@@ -6,7 +6,6 @@ from ui.lib.pyHtmlGui.pyhtmlgui.lib.observableList import ObservableList
 from ui.lib.pyHtmlGui.pyhtmlgui.view.observable_list_view import ObservableListView
 from ui.main.chat.messages.message import MessageView
 from ui.lib.model_view import ModelView
-from ui.lib.queryset_view import QuerySetView
 
 if TYPE_CHECKING:
     from ui.main.chat.chat import Chat

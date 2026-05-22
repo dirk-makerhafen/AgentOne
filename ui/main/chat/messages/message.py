@@ -1,12 +1,10 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 from server.models.message import Message
-from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.lib.queryset_view import QuerySetView
+
 from ui.main.chat.messages.assistant_message import AssistantMessageView
 from ui.main.chat.messages.user_message import UserMessageView
 
@@ -27,7 +25,7 @@ class MessageView(ModelView):
         if subject.role == "assistant":
             self.view = AssistantMessageView(subject, self)
         else:
-            self.view = UserMessageView(subject, self)
+            self.view = UserMessageView(subject=subject, parent=self)
 
     @property
     def DOM_ELEMENT_EXTRAS(self):

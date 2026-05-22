@@ -6,12 +6,12 @@ from server.models.tasks.agent_task_run import AgentTaskRun
 from ui.lib.model_view import ModelView
 from server.models.sessions.session import SessionModel
 from ui.lib.multi_queryset_view import MultiQuerySetView
-from ui.chat.message import MessageView
-from ui.chat.query import QueryView
-from ui.chat.response import ResponseView
-from ui.chat.log_debug import DebugLogView
-from ui.chat.log_fs import FilesystemLogView
-from ui.chat.task_call import TaskCallView
+from ui.old.chat.message import MessageView
+from ui.old.chat.query import QueryView
+from ui.old.chat.response import ResponseView
+from ui.old.chat.log_debug import DebugLogView
+from ui.old.chat.log_fs import FilesystemLogView
+from ui.old.chat.task_call import TaskCallView
 import unicodedata
 
 from ui.old.instance.task_trace_view import TaskTraceView

@@ -22,22 +22,12 @@ class SessionModel(BaseModel):
     latest_session_version = models.ForeignKey("server.SessionVersionModel", default=None, null=True, on_delete=models.CASCADE, related_name='related_newest_version')# for */someproject/.agentone/skills/ , null for global skill in ~/.agentone/skills
 
     @property
-    def instance_home(self) -> Path:
-        if self.agent and self.agent.pk and self.pk:
-            return Path(f"/Users/Dirk/ai/AgentHome/agent:{self.agent.pk}/instance:{self.pk}")
-        return Path()
-
-    @property
     def messages(self)  -> Union[QuerySet, List[Message]]:
         return Message.objects.filter(session_version__session=self)
 
     @property
     def queries(self) -> Union[QuerySet, List[Query]]:
         return Query.objects.filter(session_version__session=self)
-
-    @property
-    def responses(self) -> Union[QuerySet, List[Response]]:
-        return Response.objects.filter(session_version__session=self)
 
     def get_runtime(self) -> Session:
         from runtime.agents.session import Session

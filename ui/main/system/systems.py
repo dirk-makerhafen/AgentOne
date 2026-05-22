@@ -82,45 +82,6 @@ class SystemListItemView(ModelView):
     </div>
     """
 
-    CSS_STR = """
-.system-card {
-    margin: 8px 0;
-    border: 1px solid var(--border);
-    border-radius: var(--r-md);
-    overflow: hidden;
-    background: var(--bg);
-    box-shadow: var(--shadow-sm);
-}
-.system-card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    background: var(--bg-subtle);
-}
-.system-name {
-    font-weight: 600;
-    flex-grow: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.system-status-badge {
-    font-size: 0.75em;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-    white-space: nowrap;
-    background: var(--badge-neutral-bg);
-    color: var(--badge-neutral-fg);
-}
-.system-status-badge.status-ONLINE      { background: var(--badge-success-bg); color: var(--badge-success-fg); }
-.system-status-badge.status-OFFLINE     { background: var(--badge-error-bg);   color: var(--badge-error-fg); }
-.system-status-badge.status-MAINTENANCE { background: var(--badge-warning-bg); color: var(--badge-warning-fg); }
-.system-card-meta    { font-size: 0.8em; color: var(--text-faint); flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.system-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    """
-
     def __init__(self, subject, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.is_editing = False
@@ -207,12 +168,6 @@ class SystemsView(ModelView):
             {% endif %}
         </div>
     </div>
-    """
-
-    CSS_STR = """
-.systems-view  { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-.systems-list  { flex-grow: 1; overflow-y: auto; padding: 0 16px 16px; }
-.systems-empty { padding: 40px; text-align: center; color: var(--text-faint); font-style: italic; }
     """
 
     def __init__(self, subject, parent, **kwargs):

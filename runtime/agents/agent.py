@@ -145,7 +145,6 @@ class Agent():
             return self.get_version_model().skills().filter(skill__name=name).first()
         return None
 
-
     @property
     def subagentNames(self) -> list[str]:
         return self.get_version_model().resolve_setting("subagentNames") or []

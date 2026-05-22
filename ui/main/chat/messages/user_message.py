@@ -1,9 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from server.models.message import Message
-from ui.chat.message import MessageView
 from ui.lib.model_view import ModelView
+
+if TYPE_CHECKING:
+    from ui.main.chat.messages.message import MessageView
+    from server.models.message import Message
 
 
 class UserMessageView(ModelView):

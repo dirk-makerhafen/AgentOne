@@ -1,7 +1,5 @@
 from django.db import models
-import random
 from django.core.exceptions import ValidationError
-from server.models.providers.ai_model import AiModel
 from server.models.enums.task_enums import TaskSchedulerStrategy
 from server.models.base_model import BaseModel
 from server.models.content import GenericContent
