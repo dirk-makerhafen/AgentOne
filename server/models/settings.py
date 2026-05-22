@@ -18,6 +18,10 @@ class AgentToolCallSyntax(models.TextChoices):
     CUSTOM = "custom", "Custom tagging"
 
 
+class SubagentResultDelivery(models.TextChoices):
+    PASSIVE = "passive", "Passive — results added to conversation, processed on next turn"
+    IMMEDIATE = "immediate", "Immediate — inject result and trigger process_turn"
+
 class ReasoningEffort(models.TextChoices):
     """Reasoning effort levels for LLM inference."""
 
@@ -126,6 +130,14 @@ class SettingsModel(BaseModel):
     subagentNames: Any = models.JSONField(default=None, null=True, blank=True)
     disallowedSubagentNames: Any = models.JSONField(
         default=None, null=True, blank=True
+    )
+
+    subagentResultDelivery: str | None = models.CharField(
+        max_length=20,
+        choices=SubagentResultDelivery,
+        default=None,
+        null=True,
+        blank=True,
     )
 
     extra_settings: Any = models.JSONField(default=None, null=True, blank=True)

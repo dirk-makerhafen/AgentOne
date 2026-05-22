@@ -299,6 +299,11 @@ class Session:
             return self.agent.get_skill(name)
         return None
 
+    @property
+    def subagentResultDelivery(self) -> str:
+        """Return the resolved subagent result delivery mode (default: passive)."""
+        return self._get_session_setting("subagentResultDelivery") or "passive"
+
     # ------------------------------------------------------------------
     # Session state
     # ------------------------------------------------------------------
