@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
@@ -70,9 +71,10 @@ if TYPE_CHECKING:
 </span></button></div>
         
         '''
-class SidebarPanelChat(ModelView):
-    DOM_ELEMENT_CLASS = "session-item"    
-    TEMPLATE_STR = '''
+
+
+
+exmapke = '''
         <div class="session-text"  onclick="pyview.open_instance_detail()">
             <div class="session-title-row">
                 <span class="session-branch-indicator" title="Forked from AI Agent Capabilities and Functionality Overview">
@@ -89,10 +91,32 @@ class SidebarPanelChat(ModelView):
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" stroke="none"><circle cx="8" cy="3" r="1.25"></circle><circle cx="8" cy="8" r="1.25"></circle><circle cx="8" cy="13" r="1.25"></circle></svg>
             </button>
         </div>
+'''
+class SidebarPanelChat(ModelView):
+    DOM_ELEMENT_CLASS = "session-item"    
+    TEMPLATE_STR = '''
+        <div class="session-text"  onclick="pyview.open_instance_detail()">
+            <div class="session-title-row">
+
+                <span class="session-branch-indicator" title="Forked from AI Agent Capabilities and Functionality Overview">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+                </span>
+                <span class="session-title" title="Double-click to rename">{{ pyview.session.name }}</span>
+                <span class="session-time">1w</span>
+            </div>
+            <div class="session-meta">30 msgs · {{ pyview.session.aimodel.name }}</div>
+        </div>
+        <span class="session-attention-indicator session-state-indicator" aria-hidden="true"></span>
+        <div class="session-actions">
+            <button type="button" class="session-actions-trigger" title="Conversation actions" aria-haspopup="menu" aria-label="Conversation actions">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" stroke="none"><circle cx="8" cy="3" r="1.25"></circle><circle cx="8" cy="8" r="1.25"></circle><circle cx="8" cy="13" r="1.25"></circle></svg>
+            </button>
+        </div>
     '''
     
     def __init__(self, subject: SessionModel, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        self.session = Session(subject)
         
         self.root_view: UiAppView = parent.parent.root_view
     

@@ -149,14 +149,12 @@ class AgentVersionModel(BaseModel):
                 parent_session=parent_instance,
             ),
         )
+        print("did crete session", session)
+        
         session_version = session.latest_session_version
+        print("session_version", session_version)
         aiv_created = False
-        if (
-            not session_version
-            or session_version.agent_version != self
-            or session_version.session != session
-            or session_version.workingdir != workingdir
-        ):
+        if not session_version or session_version.agent_version != self or session_version.session != session or session_version.workingdir != workingdir:
             session_version, aiv_created = SessionVersionModel.objects.get_or_create(
                 agent=self.agent,
                 session=session,
@@ -166,10 +164,9 @@ class AgentVersionModel(BaseModel):
                     parent_session_version=parent_instance_version,
                 ),
             )
-        if aiv_created:
-            SessionModel.objects.filter(pk=session.pk).update(
-                latest_session_version=session_version
-            )
+        if  aiv_created and session_version:
+            session.latest_session_version = session_version
+            session.save()
 
         if parent_instance_version:
             parent_instance_version.child_session_versions.add(session_version)

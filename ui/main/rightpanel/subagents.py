@@ -1,39 +1,28 @@
 from __future__ import annotations
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from django.utils import timezone
-from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.sessions.session import SessionModel
+from runtime.session.session import Session
 from ui.lib.model_view import ModelView
-from ui.lib.pyHtmlGui.pyhtmlgui.lib.observableList import ObservableList
-from ui.lib.pyHtmlGui.pyhtmlgui.view.observable_list_view import ObservableListView
 from ui.lib.queryset_view import QuerySetView
 from ui.main.chat.chat import Chat
 
 if TYPE_CHECKING:
+    from ui.main.rightpanel.rightpanel import RightPanel
     from ui.app import UiApp
 
 LIFECYCLE_LABELS = {"single": "Single", "multi": "Multi", "background": "Bg"}
 
 
-class SubagentLaunchItem(ModelView):
-    DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "subagent-item"
-    TEMPLATE_STR = """
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--link)" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
-        <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pyview.subject.name }}</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:1px">{{ pyview.subject.parent_name }} · <span class="lifecycle-badge" style="background:var(--bg3);padding:0 4px;border-radius:3px">{{ pyview.lifecycle_label }}</span>{% if pyview.subject.max_turns %} · max {{ pyview.subject.max_turns }}t{% endif %}</div>
-        </div>
-        <button class="btn btn-sm btn-primary" onclick="pyview.open()" style="flex-shrink:0;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;background:var(--accent);color:#fff;border:none">Open</button>
-    """
-
-    @property
-    def lifecycle_label(self) -> str:
-        return LIFECYCLE_LABELS.get(self.subject.lifecycle, self.subject.lifecycle)
-
-    def open(self):
-        self.parent.parent.open_subagent(self.subject.name)
+@dataclass
+class AvailableSubagent:
+    name: str
+    parent_name: str
+    lifecycle: str
+    max_turns: int
+    agent_version: AgentVersionModel | None
 
 
 class ChildSessionItem(ModelView):
@@ -63,7 +52,7 @@ class ChildSessionItem(ModelView):
 
     def close(self):
         SessionModel.objects.filter(pk=self.subject.pk).update(is_active=False)
-        self.parent._recreate()
+        self.parent._rebuild_active()
         self.parent.parent.update()
 
 
@@ -81,42 +70,28 @@ class RightPanelSubagents(ModelView):
         </div>
         <div style="flex:1;overflow-y:auto;padding:8px">
             <div class="section-label" style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 8px">Available Subagents</div>
-            {{ pyview.available_list.render() }}
+            {% if pyview.available_subagents %}
+            {% for sa in pyview.available_subagents %}
+            <div class="subagent-item" style="display:flex;align-items:center;gap:8px;padding:6px 0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--link)" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sa.name }}</div>
+                    <div style="font-size:10px;color:var(--muted);margin-top:1px">{{ sa.parent_name }} · <span class="lifecycle-badge" style="background:var(--bg3);padding:0 4px;border-radius:3px">{{ sa.lifecycle_label }}</span>{% if sa.max_turns %} · max {{ sa.max_turns }}t{% endif %}</div>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="pyview.open('{{ sa.name }}')" style="flex-shrink:0;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;background:var(--accent);color:#fff;border:none">Open</button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="font-size:12px;color:var(--muted);padding:8px 0">None</div>
+            {% endif %}
             <div style="border-top:1px solid var(--border2);margin:8px 0"></div>
             <div class="section-label" style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 8px">Active Child Sessions</div>
             {{ pyview.active_list.render() }}
         </div>
     '''
 
-    def __init__(self, subject: UiApp, parent, **kwargs):
+    def __init__(self, subject: UiApp, parent: RightPanel, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        items = ObservableList()
-        parents = AgentVersionModel.objects.filter(
-            subagent_configs__isnull=False,
-        ).exclude(subagent_configs={}).order_by("agent__name").select_related("agent")
-        for parent_av in parents:
-            for name, cfg in parent_av.subagent_configs.items():
-                create = cfg.get("create", "agent")
-                if create not in ("user", "both"):
-                    continue
-                subagent_av = parent_av.subagent_versions.filter(agent__name=name).first()
-                if not subagent_av:
-                    continue
-                items.append(_SubagentConfigWrapper(
-                    name=name,
-                    parent_name=parent_av.agent.name,
-                    lifecycle=cfg.get("lifecycle", "single"),
-                    max_turns=cfg.get("maxTurns", 0),
-                    parent_av=parent_av,
-                ))
-
-        self.available_list = ObservableListView(
-            subject=items,
-            parent=self,
-            item_class=SubagentLaunchItem,
-            dom_element="div",
-            dom_element_class="available-subagents",
-        )
         self.active_list = QuerySetView(
             subject=SessionModel.objects.none(),
             parent=self,
@@ -126,28 +101,48 @@ class RightPanelSubagents(ModelView):
         )
         self._rebuild_active()
 
-    def open_subagent(self, name: str):
-        agent = AgentModel.objects.filter(name=name).first()
-        if not agent:
+    @property
+    def session(self) -> Session | None:
+        return self.parent.current_session
+
+    @property
+    def available_subagents(self) -> list[AvailableSubagent]:
+        s = self.session
+        if s is None:
+            return []
+        result = []
+        for name in s.allowedSubagentNames:
+            av = s.get_subagent(name)
+            cfg = s.subagent_config(name)
+            result.append(AvailableSubagent(
+                name=name,
+                parent_name=s.agent.name,
+                lifecycle=cfg.get("lifecycle", "single"),
+                max_turns=cfg.get("maxTurns", 0),
+                agent_version=av,
+            ))
+        return result
+
+    def open(self, name: str):
+        s = self.session
+        if s is None:
             return
-        av = agent.latest_agent_version
-        if not av:
+        av = s.get_subagent(name)
+        if av is None:
             return
         ts = timezone.now().strftime("%Y%m%d%H%M%S")
-        sv = av.get_or_create_session(
-            name=f"user-launch:{name}:{ts}"
-        )
-        self.parent.parent.main_panel.create_and_open_tab(Chat, sv.session)
+        sv = av.get_or_create_session(name=f"user-launch:{name}:{ts}", parent_instance_version=self.session.get_version_model())
+        self.parent.main_panel.create_and_open_tab(Chat, sv.session)
 
     def refresh(self):
         self._rebuild_active()
         self.update()
 
     def _rebuild_active(self):
-        current = self.current_session
-        if current is not None:
+        s = self.session
+        if s is not None:
             qs = SessionModel.objects.filter(
-                parent_session=current,
+                parent_session=s.model,
                 is_active=True,
             ).order_by("-created_at").select_related(
                 "latest_session_version__agent",
@@ -157,21 +152,3 @@ class RightPanelSubagents(ModelView):
             qs = SessionModel.objects.none()
         self.active_list.query = qs
         self.active_list._recreate()
-
-    @property
-    def current_session(self) -> SessionModel | None:
-        tab = self.parent.parent.main_panel.selected_tab_view
-        if tab is not None and hasattr(tab, "subject"):
-            subj = tab.subject
-            if isinstance(subj, SessionModel):
-                return subj
-        return None
-
-
-class _SubagentConfigWrapper:
-    def __init__(self, name: str, parent_name: str, lifecycle: str, max_turns: int, parent_av: AgentVersionModel):
-        self.name = name
-        self.parent_name = parent_name
-        self.lifecycle = lifecycle
-        self.max_turns = max_turns
-        self.parent_av = parent_av

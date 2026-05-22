@@ -428,6 +428,7 @@ class Session:
         """Return the pinned session version, or the session's latest version."""
         if self._pinned_session_version:
             return self._pinned_session_version
+        print("NODEL", self.model, self.model.latest_session_version)
         return self.model.latest_session_version
 
     def is_newest_version(self):
