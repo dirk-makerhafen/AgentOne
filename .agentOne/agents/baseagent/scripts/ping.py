@@ -2,10 +2,12 @@
 Simple liveness check command. Responds with agent/session info.
 """
 
-from runtime.agents.session import Session
+from __future__ import annotations
+
+from runtime.session.session import Session
 
 
-def ping(session: Session, message: str | None = None):
+def ping(session: Session, message: str | None = None) -> str:
     """
     Return a pong string with agent name, version, and session info.
 

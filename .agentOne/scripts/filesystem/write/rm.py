@@ -1,20 +1,23 @@
+from __future__ import annotations
 
-def rm(path, recursive=False):
+
+def rm(path: str, recursive: bool = False) -> tuple[bool, dict]:
     '''
     Deletes a file or directory.
 
     Args:
-        path (str): The absolute path to the file or directory to delete.
-        recursive (bool): If true, deletes directories and their contents. Default: false.
+        path: The absolute path to the file or directory to delete.
+        recursive: If true, deletes directories and their contents.
+            Default: false.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'message': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - message: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     import os
     from pathlib import Path
@@ -44,7 +47,7 @@ def rm(path, recursive=False):
                 except OSError as e:
                     err_str = str(e)
                     if "Directory not empty" in err_str or "The directory is not empty" in err_str:
-                        return (False, {'status': 'error', 'message': f"Directory '{path}' is not empty. Use recursive=true to delete its contents."})
+                        return (False, {'status': 'error', 'message': f"Directory '{path}' is not empty. Use recursive=True to delete its contents."})
                     else:
                         return (False, {'status': 'error', 'message': f"Error deleting directory {path}: {err_str}"})
         else:
@@ -53,7 +56,7 @@ def rm(path, recursive=False):
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error deleting path {path}: {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error deleting path {path}: {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from runtime.agents.session import Session
+from runtime.session.session import Session
 from server.models.message import Message
 from ui.lib.pyHtmlGui.pyhtmlgui.lib.observableList import ObservableList
 from ui.lib.pyHtmlGui.pyhtmlgui.view.observable_list_view import ObservableListView

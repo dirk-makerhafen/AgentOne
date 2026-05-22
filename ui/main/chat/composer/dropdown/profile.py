@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from runtime.agents.session import Session
+from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView

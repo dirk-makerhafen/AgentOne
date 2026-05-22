@@ -1,11 +1,20 @@
+"""Admin for the Response model."""
 from django.contrib import admin
+from django.http import HttpRequest
+
 from server.models.queries.response import Response
+
 
 @admin.register(Response)
 class ResponseAdmin(admin.ModelAdmin):
-    list_display = ('id', 'query',  'session_version__agent', 'status', 'prompt_tokens', 'completion_tokens', 'status', 'created_at')
-    list_display_links = ('id',)
-    list_filter = ('status',)
-    autocomplete_fields = (  )
-    readonly_fields = ('created_at', 'updated_at')
-    list_per_page = 25
+    """Admin for query responses."""
+
+    list_display: tuple[str, ...] = (
+        "id", "query", "session_version__agent", "status",
+        "prompt_tokens", "completion_tokens", "status", "created_at",
+    )
+    list_display_links: tuple[str, ...] = ("id",)
+    list_filter: tuple[str, ...] = ("status",)
+    autocomplete_fields: tuple[str, ...] = ()
+    readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
+    list_per_page: int = 25

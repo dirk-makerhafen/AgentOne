@@ -2,20 +2,46 @@
 Parses an LLM Response to extract content, reasoning, and tool call definitions.
 
 Supports both DEFAULT (OpenAI function-calling) and CUSTOM ([call:...] syntax)
-tool call formats. Pure parse — no side effects, no tool execution.
+tool call formats. Pure parse -- no side effects, no tool execution.
 """
+
+from __future__ import annotations
 
 import json
 import re
 import traceback
-from runtime.agents.session import Session
-from server.models.content import GenericContent
+from typing import Any, NotRequired, TypedDict
+
+from runtime.session.session import Session
 from server.models.queries.response import Response
 from server.models.settings import AgentToolCallSyntax
-from typing import NotRequired, TypedDict
 
 
-def parse_llm_response(session: Session, response: Response) -> dict:
+class Part(TypedDict):
+    """A single parsed element from the LLM response."""
+
+    type: str
+    content_type: str
+    content: str | dict[str, Any]
+    template_data: NotRequired[dict[str, Any]]
+
+
+def _deduplicate(data: Any) -> Any:
+    """Recursively convert long strings to GenericContent wrappers."""
+    if isinstance(data, dict):
+        return {k: _deduplicate(data=v) for k, v in data.items()}
+    elif isinstance(data, (list, set)):
+        return [_deduplicate(data=item) for item in data]
+    elif isinstance(data, str):
+        if len(data) < 128:
+            return data
+        from server.models.content import GenericContent
+
+        return GenericContent.from_text(data)
+    return data
+
+
+def parse_llm_response(session: Session, response: Response) -> dict[str, Any]:
     """
     Extract content, reasoning, and normalized tool call definitions.
 
@@ -28,21 +54,17 @@ def parse_llm_response(session: Session, response: Response) -> dict:
 
     Returns:
         A dict with keys:
-            content    (str)  — The text output from the LLM.
-            reasoning  (str)  — Reasoning/thinking tokens, if any.
-            tool_calls (list) — Normalized list of {id, name, arguments} dicts, where arguments is already parsed from JSON.
+            response  (Response) -- The original response model.
+            parts     (list)    -- List of Part TypedDicts, each with:
+                                  type, content_type, content, and optionally
+                                  template_data / tool_call.
     """
-    class Part(TypedDict):
-        type: str
-        content_type: str
-        content: str
-        template_data: NotRequired[dict]
 
-    result_parts = []
+    result_parts: list[Part] = []
 
-    toolcalls = list(getattr(response, "tool_calls", []) or [])
-    content = getattr(response, "content", "") or ""
-    reasoning = getattr(response, "reasoning", "") or ""
+    toolcalls: list[dict[str, Any]] = list(getattr(response, "tool_calls", []) or [])
+    content: str = getattr(response, "content", "") or ""
+    reasoning: str = getattr(response, "reasoning", "") or ""
 
     if reasoning:
         result_parts.append(Part(type="reasoning", content_type="text", content=reasoning))
@@ -55,30 +77,21 @@ def parse_llm_response(session: Session, response: Response) -> dict:
             for match in matches:
                 func_name = match.group(1)
                 raw_args = match.group(2)
-                kwargs = {}
+                kwargs: dict[str, str] = {}
                 if raw_args:
-                    parts = re.split(r",(?=(?:[^']*'[^']*')*[^']*$)", raw_args)
-                    for p in parts:
+                    parts_list = re.split(r",(?=(?:[^']*'[^']*')*[^']*$)", raw_args)
+                    for p in parts_list:
                         if "=" in p:
                             k, v = p.split("=", 1)
                             kwargs[k.strip()] = v.strip().strip("'").strip('"')
-                toolcalls.append({
-                    "id": f"custom_{func_name}",
-                    "function": {"name": func_name, "arguments": kwargs},
-                })
+                toolcalls.append(
+                    {
+                        "id": f"custom_{func_name}",
+                        "function": {"name": func_name, "arguments": kwargs},
+                    }
+                )
         if content:
             result_parts.append(Part(type="message", content_type="text", content=content))
-
-        def _dedouplicate(data):
-            if isinstance(data, dict):
-                return {k: _dedouplicate(data=v) for k, v in data.items()}
-            elif isinstance(data, (list,set,)):
-                return [_dedouplicate(data=item) for item in data]
-            elif isinstance(data, str):
-                if len(data) < 128:
-                    return data 
-                return GenericContent.from_text(data)  
-            return data
 
         for toolcall in toolcalls:
             if isinstance(toolcall["arguments"], str):
@@ -86,18 +99,18 @@ def parse_llm_response(session: Session, response: Response) -> dict:
                     toolcall["arguments"] = json.loads(toolcall["arguments"])
                 except json.JSONDecodeError:
                     pass
-            #if len(json.dumps(toolcall["function"]["arguments"])) >= 1024:
-            #    toolcall["function"]["arguments"] = _dedouplicate(toolcall["function"]["arguments"])
-            result_parts.append(Part(type="toolcall", content_type="json", content=toolcall))
+            result_parts.append(
+                Part(type="toolcall", content_type="json", content=toolcall)
+            )
 
         return dict(
-            response = response,
-            parts = result_parts,
+            response=response,
+            parts=result_parts,
         )
-       
 
     except Exception:
         from server.models.debug_log_entry import DebugLogEntry
+
         DebugLogEntry.objects.create(
             session=session.model,
             event="exception",

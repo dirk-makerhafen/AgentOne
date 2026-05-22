@@ -1,80 +1,123 @@
+from __future__ import annotations
+
 import json
 import math
+from typing import Any
+
 from django.db import models
 from django_enum import EnumField
 
 from server.models.base_model import BaseModel
+from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
-from server.models.content import  GenericContent
-
 from server.models.message import MessagePart
 from server.models.queries.query_message_part import QueryMessagePart
 
 
 class QueryMessage(BaseModel):
-    # refernces
-    query         = models.ForeignKey("server.Query"                     , on_delete=models.CASCADE     , related_name='related_query_messages')
-    #tool_calls    = models.ManyToManyField("server.AgentTaskCall"                                       , related_name='query_messages', default=None)
-    #tool_response = models.ForeignKey("server.AgentTaskRun"          , on_delete=models.SET_DEFAULT , related_name='query_messages', default=None, null=True)
-    source_message = models.ForeignKey("server.Message", on_delete=models.SET_DEFAULT , related_name='related_query_messages', default=None, null=True)
+    """A single message within a query, containing one or more parts."""
+
+    query = models.ForeignKey(
+        "server.Query", on_delete=models.CASCADE, related_name="related_query_messages"
+    )
+    source_message = models.ForeignKey(
+        "server.Message",
+        on_delete=models.SET_DEFAULT,
+        related_name="related_query_messages",
+        default=None,
+        null=True,
+    )
 
     role = EnumField(MessageRole, default=None)
-    #index = models.FloatField(default=0)
 
-    content_prefix = models.ForeignKey(GenericContent,  default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_messages_prefix")
-    content_postfix = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_messages_postfix")
+    content_prefix = models.ForeignKey(
+        GenericContent,
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.SET_DEFAULT,
+        related_name="query_messages_prefix",
+    )
+    content_postfix = models.ForeignKey(
+        GenericContent,
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.SET_DEFAULT,
+        related_name="query_messages_postfix",
+    )
 
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
-    def add_part(self, content_type: MessageContentType|None=None, content=None, template_data=None, source_message_part:MessagePart|None=None):
+    def add_part(
+        self,
+        content_type: MessageContentType | None = None,
+        content: Any = None,
+        template_data: Any = None,
+        source_message_part: MessagePart | None = None,
+    ) -> QueryMessagePart:
+        """Add a part to this query message.
+
+        Either provide ``source_message_part`` (copied) or provide
+        ``content_type`` / ``content`` / ``template_data``.
+        """
         if source_message_part:
             if content_type or content or template_data:
-                raise Exception("Set either source_message_part or  content_type,content,template_data")
-            return QueryMessagePart.objects.create(query_message = self, source_message_part=source_message_part)
+                raise Exception(
+                    "Set either source_message_part or content_type,content,template_data"
+                )
+            return QueryMessagePart.objects.create(
+                query_message=self, source_message_part=source_message_part
+            )
 
         if not content_type or not content:
-            raise Exception("Set either content_type, content or source_message_part")
-        
+            raise Exception(
+                "Set either content_type, content or source_message_part"
+            )
+
         if content is not None and not isinstance(content, GenericContent):
             if content_type == MessageContentType.IMAGE:
                 content = GenericContent.from_image(content)
-            elif content_type == MessageContentType.TEMPLATE or content_type ==MessageContentType.TEXT:
+            elif content_type in (MessageContentType.TEMPLATE, MessageContentType.TEXT):
                 content = GenericContent.from_text(content)
             elif content_type == MessageContentType.JSON:
                 content = GenericContent.from_data(content)
             else:
                 raise Exception(f"unknown content type {content_type}")
-            
+
         if template_data is not None and not isinstance(template_data, GenericContent):
             template_data = GenericContent.from_data(template_data)
-        
+
         return QueryMessagePart.objects.create(
-            query_message = self, 
-            content_type = MessageContentType[content_type.upper()],
-            content = content,
-            template_data = template_data,
-            source_message_part = source_message_part,
+            query_message=self,
+            content_type=MessageContentType[content_type.upper()],
+            content=content,
+            template_data=template_data,
+            source_message_part=source_message_part,
         )
 
-    def to_openai_message(self, fail_on_error=True) -> list[dict]|dict:
-        tags_token_usage = {}
-        message_tool_calls = []
-        message_parts = []
-    
+    def to_openai_message(
+        self, fail_on_error: bool = True
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """Convert this query message to the OpenAI message format."""
+        tags_token_usage: dict[str, Any] = {}
+        message_tool_calls: list[Any] = []
+        message_parts: list[dict[str, Any]] = []
+
         for part in self.query_message_parts.all():
             if part.source_message_part:
-                if  part.source_message_part.type == MessagePartType.TOOLCALL:
+                if part.source_message_part.type == MessagePartType.TOOLCALL:
                     message_tool_calls.append(part.source_message_part.tool_call)
                     continue
                 if part.source_message_part.type != MessagePartType.MESSAGE:
                     raise Exception("here broken")
-            
+
             part_contents = part.to_openai_message(fail_on_error=fail_on_error)
             message_parts.extend(part_contents)
             c = tags_token_usage
             for tag in part.tags:
-                if tag not in c: 
+                if tag not in c:
                     c[tag] = {"tokens": 0}
                 c[tag]["tokens"] += part.tokens
                 c = c[tag]
@@ -84,10 +127,12 @@ class QueryMessage(BaseModel):
         if postfix := (self.content_postfix.get() if self.content_postfix else None):
             message_parts.append({"type": "text", "text": postfix})
 
-        merged_message_parts = [message_parts.pop(0), ] if message_parts else []
+        merged_message_parts = [message_parts.pop(0)] if message_parts else []
         while message_parts:
             message_part = message_parts.pop(0)
-            if merged_message_parts[-1]["type"] == message_part["type"] == "text":
+            if (
+                merged_message_parts[-1]["type"] == message_part["type"] == "text"
+            ):
                 merged_message_parts[-1]["text"] += message_part["text"]
             else:
                 merged_message_parts.append(message_part)
@@ -97,42 +142,44 @@ class QueryMessage(BaseModel):
             content_to_send = content_to_send[0]["text"]
             token_count = math.ceil(len(content_to_send) / 3.8)
         else:
-            token_count =  math.ceil(len(json.dumps(content_to_send)) / 3.8)
+            token_count = math.ceil(len(json.dumps(content_to_send)) / 3.8)
 
         if self.tokens != token_count:
             self.tags_token_usage = tags_token_usage
             self.tokens = token_count
             self.save()
 
-        message =  {"role": self.role, "content": content_to_send}
+        message: dict[str, Any] = {"role": self.role, "content": content_to_send}
 
         if not message_tool_calls:
             return message
-    
+
         if self.role == "tool":
-            messages = []
+            messages: list[dict[str, Any]] = []
             for message_tool_call in message_tool_calls:
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id":  f"tc-{message_tool_call.pk}",
-                    "content": json.dumps(message_tool_call.get_result()),
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": f"tc-{message_tool_call.pk}",
+                        "content": json.dumps(message_tool_call.get_result()),
+                    }
+                )
             return messages if len(messages) > 1 else messages[0] if messages else []
-        
+
         message["tool_calls"] = []
-        for toolCall in message_tool_calls:
-            message["tool_calls"].append({
-                "id": f"tc-{toolCall.pk}",
-                "type": "function",
-                "function": {
-                    "name": toolCall.task_definition.name,
-                    "arguments": json.dumps(toolCall.carguments_json),
+        for tool_call in message_tool_calls:
+            message["tool_calls"].append(
+                {
+                    "id": f"tc-{tool_call.pk}",
+                    "type": "function",
+                    "function": {
+                        "name": tool_call.task_definition.name,
+                        "arguments": json.dumps(tool_call.carguments_json),
+                    },
                 }
-            })
+            )
 
         return message
 
-    def save(self, *args, **kwargs):
-        #if self.pk:
-        #    raise ValidationError(f"You may not edit an existing {self._meta.model_name}")
-        super().save(*args, **kwargs) 
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        super().save(*args, **kwargs)

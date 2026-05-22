@@ -1,13 +1,17 @@
-from server.models.queries.query_message import QueryMessage
+"""Admin for the QueryMessage model."""
 from django.contrib import admin
+from django.http import HttpRequest
+
+from server.models.queries.query_message import QueryMessage
+
 
 @admin.register(QueryMessage)
 class QueryMessageAdmin(admin.ModelAdmin):
-    search_fields = ('id',)
+    """Admin for individual query messages within a query."""
 
-
-    list_display = ('id', 'role',  'tokens', 'created_at')
-    list_display_links = ('id',)
-    list_filter = ('role', 'created_at')
-    readonly_fields = ('created_at', 'updated_at')
-    list_per_page = 25
+    search_fields: tuple[str, ...] = ("id",)
+    list_display: tuple[str, ...] = ("id", "role", "tokens", "created_at")
+    list_display_links: tuple[str, ...] = ("id",)
+    list_filter: tuple[str, ...] = ("role", "created_at")
+    readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
+    list_per_page: int = 25

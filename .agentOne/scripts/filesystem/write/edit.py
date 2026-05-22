@@ -1,29 +1,41 @@
+from __future__ import annotations
 
-def edit(path, old_string, new_string, replace_all=False):
+
+def edit(
+    path: str,
+    old_string: str,
+    new_string: str,
+    replace_all: bool = False,
+) -> tuple[bool, dict]:
     '''
     Performs exact string replacements in files.
 
     Usage:
-    - You must use the Read tool at least once in the conversation before editing.
-    - When editing text, ensure you preserve the exact indentation (tabs/spaces).
+    - You must use the Read tool at least once in the conversation
+      before editing.
+    - When editing text, ensure you preserve the exact indentation
+      (tabs/spaces).
     - The edit will FAIL if old_string is not found in the file.
-    - The edit will FAIL if old_string is found multiple times and replace_all is False.
-    - Use replace_all for replacing strings across the file. This parameter is useful if you want to rename a variable.
+    - The edit will FAIL if old_string is found multiple times and
+      replace_all is False.
+    - Use replace_all for replacing strings across the file.
 
     Args:
-        path (str): The absolute path to the file to modify.
-        old_string (str): The text to replace.
-        new_string (str): The text to replace it with (must be different from old_string).
-        replace_all (bool): Replace all occurrences of old_string. Default: false.
+        path: The absolute path to the file to modify.
+        old_string: The text to replace.
+        new_string: The text to replace it with (must be different
+            from old_string).
+        replace_all: Replace all occurrences of old_string.
+            Default: false.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'message': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - message: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     from pathlib import Path
     import traceback
@@ -49,7 +61,7 @@ def edit(path, old_string, new_string, replace_all=False):
         if occurrences > 1 and not replace_all:
             return (False, {
                 'status': 'error',
-                'message': f'Found {occurrences} occurrences of old_string. Provide more surrounding lines to make it unique, or use replace_all=True.'
+                'message': f'Found {occurrences} occurrences of old_string. Provide more surrounding lines to make it unique, or use replace_all=True.',
             })
 
         new_content = content.replace(old_string, new_string, -1 if replace_all else 1)
@@ -57,13 +69,13 @@ def edit(path, old_string, new_string, replace_all=False):
 
         return (True, {
             'status': 'success',
-            'message': f"Replaced {occurrences if replace_all else 1} occurrence(s) in '{path}'."
+            'message': f"Replaced {occurrences if replace_all else 1} occurrence(s) in '{path}'.",
         })
 
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error editing file {path}: {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error editing file {path}: {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

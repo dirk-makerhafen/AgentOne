@@ -1,28 +1,34 @@
+from __future__ import annotations
 
-def multiedit(path, edits):
+from typing import Any
+
+
+def multiedit(path: str, edits: list[dict[str, Any]]) -> tuple[bool, dict]:
     '''
     Performs multiple exact string replacements in a single file.
 
-    Use this when you need to make several edits to the same file in one call.
-    Edits are applied in order. If any edit fails, the entire operation fails
-    and the file is left unchanged.
+    Use this when you need to make several edits to the same file
+    in one call. Edits are applied in order. If any edit fails,
+    the entire operation fails and the file is left unchanged.
 
     Args:
-        path (str): The absolute path to the file to modify.
-        edits (list[dict]): A list of edit operations, each containing:
+        path: The absolute path to the file to modify.
+        edits: A list of edit operations, each containing:
             - old_string (str): The text to replace (required).
-            - new_string (str): The text to replace it with (required).
-            - replace_all (bool): Replace all occurrences. Default: false (optional).
+            - new_string (str): The text to replace it with
+              (required).
+            - replace_all (bool): Replace all occurrences.
+              Default: false (optional).
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'message': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
-                - 'edits_applied': int (number of edits successfully applied before failure)
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - message: str
+        On error, result contains:
+            - status: "error"
+            - message: str
+            - edits_applied: int (edits applied before failure)
     '''
     from pathlib import Path
     import traceback
@@ -49,13 +55,13 @@ def multiedit(path, edits):
                 return (False, {
                     'status': 'error',
                     'message': f'Edit {i}: old_string not provided',
-                    'edits_applied': edits_applied
+                    'edits_applied': edits_applied,
                 })
             if old_string == new_string:
                 return (False, {
                     'status': 'error',
                     'message': f'Edit {i}: old_string and new_string are identical',
-                    'edits_applied': edits_applied
+                    'edits_applied': edits_applied,
                 })
 
             occurrences = content.count(old_string)
@@ -63,7 +69,7 @@ def multiedit(path, edits):
                 return (False, {
                     'status': 'error',
                     'message': f'Edit {i}: old_string not found in {path}',
-                    'edits_applied': edits_applied
+                    'edits_applied': edits_applied,
                 })
 
             content = content.replace(old_string, new_string, -1 if replace_all else 1)
@@ -73,7 +79,7 @@ def multiedit(path, edits):
 
         return (True, {
             'status': 'success',
-            'message': f"Applied {edits_applied} edit(s) to '{path}'."
+            'message': f"Applied {edits_applied} edit(s) to '{path}'.",
         })
 
     except Exception as e:

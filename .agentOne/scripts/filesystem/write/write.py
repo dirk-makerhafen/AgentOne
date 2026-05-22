@@ -1,26 +1,35 @@
+from __future__ import annotations
 
-def write(path, content):
+from typing import Union
+
+
+def write(path: str, content: Union[str, bytes]) -> tuple[bool, dict]:
     '''
     Write a file to the local filesystem.
 
-    - This tool will overwrite the existing file if there is one at the provided path.
-    - If this is an existing file, you MUST use the Read tool first to read the file's contents.
-    - ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
-    - NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
-    - Only use emojis if the user explicitly requests it. Avoid writing emojis to files unless asked.
+    - This tool will overwrite the existing file if there is one
+      at the provided path.
+    - If this is an existing file, you MUST use the Read tool first
+      to read the file's contents.
+    - ALWAYS prefer editing existing files in the codebase. NEVER
+      write new files unless explicitly required.
+    - NEVER proactively create documentation files (*.md) or README
+      files. Only create documentation files if explicitly requested.
+    - Only use emojis if the user explicitly requests it.
 
     Args:
-        path (str): The absolute path to the file to write (must be absolute, not relative).
-        content (str): The content to write to the file.
+        path: The absolute path to the file to write (must be
+            absolute, not relative).
+        content: The content to write to the file (str or bytes).
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'message': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - message: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     from pathlib import Path
     import traceback
@@ -38,13 +47,13 @@ def write(path, content):
 
         return (True, {
             'status': 'success',
-            'message': f"File '{path}' written successfully."
+            'message': f"File '{path}' written successfully.",
         })
 
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error writing to file {path}: {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error writing to file {path}: {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

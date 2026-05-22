@@ -1,13 +1,17 @@
-import sys
 import os
+import sys
 import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from multiedit import multiedit
 
+
 class TestMultiedit(unittest.TestCase):
-    def test_multiedit_basic(self):
+    """Tests for the multiedit tool."""
+
+    def test_multiedit_basic(self) -> None:
+        """Multiedit applies multiple edits to a file sequentially."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_multiedit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
@@ -24,7 +28,8 @@ class TestMultiedit(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_multiedit_partial_failure(self):
+    def test_multiedit_partial_failure(self) -> None:
+        """Multiedit applies edits until one fails and reports partial success."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_multiedit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
@@ -40,7 +45,8 @@ class TestMultiedit(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_multiedit_no_edits(self):
+    def test_multiedit_no_edits(self) -> None:
+        """Multiedit with an empty edits list returns an error."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_multiedit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
@@ -52,10 +58,12 @@ class TestMultiedit(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_multiedit_file_not_found(self):
+    def test_multiedit_file_not_found(self) -> None:
+        """Multiedit on a non-existent file returns an error."""
         success, result = multiedit('/nonexistent/path/xyz', [{'old_string': 'a', 'new_string': 'b'}])
         self.assertFalse(success)
         self.assertIn('not found', result['message'])
+
 
 if __name__ == '__main__':
     unittest.main()

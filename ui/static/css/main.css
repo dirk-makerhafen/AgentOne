@@ -1183,7 +1183,7 @@
   /* Collapse priority as the panel narrows: git-badge first, then "Workspace"
      label, never the icon buttons. flex-shrink ratios give graceful ellipsis;
      @container queries below cut to display:none at hard breakpoints. */
-  .panel-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:6px;overflow:visible;}
+  .panel-header{justify-content: space-between;padding:12px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:6px;overflow:visible;}
   .panel-header > span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex-shrink:2;}
   .workspace-panel-heading{cursor:default;border-radius:6px;padding:2px 4px;margin:-2px -4px;}
   .workspace-panel-heading.workspace-panel-heading--enabled{cursor:pointer;}
@@ -3165,7 +3165,7 @@ main.main > .main-view:not([id="mainChat"]):not([id="mainSettings"]) .main-view-
 }
 
 /* ── Shared detail-card styling (cron / workspace / profile detail pages) ── */
-.detail-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:16px 18px;margin-bottom:16px;width: -webkit-fill-available;}
+.detail-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:16px 12px;margin-bottom:16px;width: -webkit-fill-available;}
 .detail-card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
 .detail-row{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:flex-start;}
 .detail-row:last-child{border-bottom:none;}
@@ -3674,3 +3674,9 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .log-line-debug{color:var(--muted);opacity:.75;}
 .logs-empty,.logs-hint{margin:8px 14px;padding:12px;border:1px solid var(--border);border-radius:8px;color:var(--muted);background:var(--surface);white-space:normal;font-family:var(--font-ui,system-ui,sans-serif);font-size:12px;}
 .logs-hint.warn{color:#f59e0b;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08);}
+
+
+/* rightbar session setting panel */
+.setting-default-dot { color: #8e8585; float: right; font-size: 6px; margin-top: 6px;}
+.setting-reset-btn { color:#fa8232; font-size:14px; margin-right:6px; vertical-align:middle; }
+.setting-reset-btn:hover { filter: brightness(1.2); }

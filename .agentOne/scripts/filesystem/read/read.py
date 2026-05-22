@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
 
-def read(path, offset=1, limit=2000):
+
+def read(path: str, offset: int = 1, limit: int = 2000) -> tuple[bool, dict]:
     '''
     Read a file or directory from the local filesystem.
 
     For files:
-    - Returns the content with each line prefixed by its line number as "<line>: <content>".
+    - Returns the content with each line prefixed by its line number
+      as "<line>: <content>".
     - By default, returns up to 2000 lines from the start of the file.
     - Use offset to start from a specific line number (1-indexed).
     - Use limit to control the maximum number of lines to read.
@@ -14,25 +18,34 @@ def read(path, offset=1, limit=2000):
     - If the path does not exist, an error is returned.
 
     For directories:
-    - Returns entries one per line (without line numbers) with a trailing "/" for subdirectories.
+    - Returns entries one per line (without line numbers) with a
+      trailing "/" for subdirectories.
 
     Args:
-        path (str): The absolute path to the file or directory to read.
-        offset (int): The line number to start reading from (1-indexed). Default: 1.
-        limit (int): The maximum number of lines to read. Default: 2000.
+        path: The absolute path to the file or directory to read.
+        offset: The line number to start reading from (1-indexed).
+            Default: 1.
+        limit: The maximum number of lines to read. Default: 2000.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'content': str (file content with line numbers) or list (directory entries)
-                - 'path': str
-                - 'type': 'file' or 'directory'
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success for files, result contains:
+            - status: "success"
+            - content: str (file content with line numbers)
+            - path: str
+            - type: "file"
+            - total_lines: int
+            - offset: int
+            - limit: int
+        On success for directories, result contains:
+            - status: "success"
+            - content: list of dict entries
+            - path: str
+            - type: "directory"
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
-
     try:
         if not path:
             return (False, {'status': 'error', 'message': 'Path not provided'})

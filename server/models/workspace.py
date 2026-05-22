@@ -1,11 +1,19 @@
+"""Workspace model representing a working directory on a system."""
+from __future__ import annotations
+
+from datetime import datetime
+
 from django.db import models
 
+
 class WorkspaceModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    """A named workspace bound to a filesystem path."""
 
-    name  = models.CharField(default="", max_length=255, help_text="")
-    description  = models.TextField(default="", max_length=10000, help_text="")
-    path   = models.CharField(max_length=255, help_text="")
+    created_at: datetime = models.DateTimeField(auto_now_add=True)
+    updated_at: datetime = models.DateTimeField(auto_now=True)
 
-
+    name: str = models.CharField(default="", max_length=255, help_text="")
+    description: str = models.TextField(
+        default="", max_length=10000, help_text=""
+    )
+    path: str = models.CharField(max_length=255, help_text="")

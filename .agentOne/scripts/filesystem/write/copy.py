@@ -1,24 +1,31 @@
-def copy(source, destination, recursive=False):
+from __future__ import annotations
+
+
+def copy(source: str, destination: str, recursive: bool = False) -> tuple[bool, dict]:
     '''
     Copies a file or directory from source to destination.
 
-    - For files, copies the file to the destination. If destination is a directory, copies into it.
-    - For directories, use recursive=true to copy the entire directory tree.
-    - Parent directories of the destination are created if they don't exist.
+    - For files, copies the file to the destination. If destination
+      is a directory, copies into it.
+    - For directories, use recursive=True to copy the entire
+      directory tree.
+    - Parent directories of the destination are created if they
+      don't exist.
 
     Args:
-        source (str): The absolute path to the file or directory to copy.
-        destination (str): The absolute path to copy to.
-        recursive (bool): If true, copies directories recursively. Default: false.
+        source: The absolute path to the file or directory to copy.
+        destination: The absolute path to copy to.
+        recursive: If true, copies directories recursively.
+            Default: false.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'message': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - message: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     import shutil
     from pathlib import Path
@@ -41,19 +48,19 @@ def copy(source, destination, recursive=False):
                     dst = dst / src.name
                 shutil.copytree(str(src), str(dst))
             else:
-                return (False, {'status': 'error', 'message': f"Source is a directory. Use recursive=true to copy it."})
+                return (False, {'status': 'error', 'message': "Source is a directory. Use recursive=True to copy it."})
         else:
             shutil.copy2(str(src), str(dst))
 
         return (True, {
             'status': 'success',
-            'message': f"Copied '{source}' to '{destination}'."
+            'message': f"Copied '{source}' to '{destination}'.",
         })
 
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error copying '{source}' to '{destination}': {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error copying '{source}' to '{destination}': {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

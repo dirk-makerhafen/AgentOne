@@ -1,11 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from runtime.agents.skill import Skill
+from runtime.skill.skill import Skill
 from server.models.skills.skill import SkillModel
 from ui.lib.model_view import ModelView
-from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
-from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView

@@ -1,8 +1,16 @@
-import os
+from __future__ import annotations
+
 import signal
+from typing import Optional
+
 import psutil
 
-def kill(pid=None, name=None, signal_name="SIGTERM"):
+
+def kill(
+    pid: Optional[int] = None,
+    name: Optional[str] = None,
+    signal_name: str = "SIGTERM",
+) -> tuple[bool, dict]:
     '''
     Terminate a running process by PID or name.
 
@@ -12,18 +20,20 @@ def kill(pid=None, name=None, signal_name="SIGTERM"):
     - Clean up background processes
 
     Args:
-        pid (int, optional): The process ID to terminate.
-        name (str, optional): Process name to match (kills all matching processes).
-        signal_name (str): Signal to send. Options: "SIGTERM" (default), "SIGKILL", "SIGHUP", "SIGINT".
+        pid: The process ID to terminate.
+        name: Process name to match (kills all matching processes).
+        signal_name: Signal to send. Options: "SIGTERM" (default),
+            "SIGKILL", "SIGHUP", "SIGINT".
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'killed': list[int] (PIDs that were terminated)
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - killed: list of terminated PIDs
+            - signal: the signal sent
+        On error, result contains:
+            - status: "error"
+            - message: error description
     '''
     try:
         if pid is None and name is None:
@@ -63,7 +73,7 @@ def kill(pid=None, name=None, signal_name="SIGTERM"):
         return (True, {
             'status': 'success',
             'killed': killed,
-            'signal': signal_name
+            'signal': signal_name,
         })
 
     except Exception as e:

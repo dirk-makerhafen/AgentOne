@@ -1,31 +1,20 @@
+"""Admin for the AgentTaskRun model."""
 from django.contrib import admin
+from django.http import HttpRequest
+
 from server.models.tasks.agent_task_run import AgentTaskRun
 
 
 @admin.register(AgentTaskRun)
 class AgentTaskRunAdmin(admin.ModelAdmin):
-    # 'session_version__agent__name', 'agent_task_call', 'agent_task_definition__name', 
-    list_display = ('id', "created_at",'status', "task_definition_version__task_definition__name","arguments_json", 'result_json')
-    list_display_links = ('id',)
-    list_filter = ('status', 'created_at')
-    #search_fields = ( 'agent_task_call__id', 'agent_task_call__agent_task_instance__name')
-    #autocomplete_fields = ('agent_task_call',)
-    readonly_fields = ('created_at', 'updated_at')
-    '''
-    fieldsets = (
-        (None, {
-            'fields': ('agent_task_call', 'status', "task_instance")
-        }),
-        ('Arguments', {
-            'fields': ( "arguments_json", "taskrun_arg_references"),
-        }),
-        ('Results', {
-            'fields': ('result_json', 'taskrun_result_references'),
-        }),
-        ('Metadata', {
-            'fields': ('created_at', 'updated_at'),
-        }),
+    """Admin for agent task run records."""
+
+    list_display: tuple[str, ...] = (
+        "id", "created_at", "status",
+        "task_definition_version__task_definition__name",
+        "arguments_json", "result_json",
     )
-    '''
-    list_per_page = 25
-    #inlines = [AgentTaskRunSubtaskInline]
+    list_display_links: tuple[str, ...] = ("id",)
+    list_filter: tuple[str, ...] = ("status", "created_at")
+    readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
+    list_per_page: int = 25

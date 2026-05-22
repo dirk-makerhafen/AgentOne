@@ -1,9 +1,9 @@
 from runtime.agents.agents import Agents
-from runtime.agents.sessions import Sessions
-from runtime.agents.projects import Projects
-from runtime.agents.skills import  Skills
-from runtime.agents.workspaces import Workspaces
-from runtime.agents.crons import Cronjobs
+from runtime.session.sessions import Sessions
+from runtime.project.projects import Projects
+from runtime.skill.skills import  Skills
+from runtime.workspace.workspaces import Workspaces
+from runtime.cron.crons import Cronjobs
 
 from server.models.project import Project
 from server.models.providers.api_provider import ApiProvider

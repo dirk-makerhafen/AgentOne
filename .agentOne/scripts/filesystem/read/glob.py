@@ -1,31 +1,37 @@
+from __future__ import annotations
+
 import glob as glob_module
 import os
 import traceback
+from typing import Optional
 
-def glob(pattern, path=None):
+
+def glob(pattern: str, path: Optional[str] = None) -> tuple[bool, dict]:
     '''
     Fast file pattern matching tool that works with any codebase size.
 
     - Supports glob patterns like "**/*.js" or "src/**/*.tsx".
     - Returns matching file paths sorted by modification time.
     - Use this tool when you need to find files by name patterns.
-    - If the directory is not specified, the current working directory is used.
+    - If the directory is not specified, the current working
+      directory is used.
 
     Args:
-        pattern (str): The glob pattern to match files against (e.g., "**/*.py", "src/**/*.ts").
-        path (str, optional): The directory to search in. If not specified, the current working directory is used.
+        pattern: The glob pattern to match files against
+            (e.g., "**/*.py", "src/**/*.ts").
+        path: The directory to search in. If not specified, the
+            current working directory is used.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'matches': list[str] (sorted list of matching file paths)
-                - 'count': int
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - matches: list of matching file paths
+            - count: int
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
-
     try:
         if not pattern:
             return (False, {'status': 'error', 'message': 'Pattern not provided'})
@@ -44,7 +50,7 @@ def glob(pattern, path=None):
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error searching for pattern '{pattern}': {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error searching for pattern '{pattern}': {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

@@ -1,13 +1,23 @@
+"""AI Model model — provider's model definition with rate-limit tracking."""
 from __future__ import annotations
-from django.db import models
-from django.db.models import Sum, Count, Q
-from django.utils import timezone
+
 from datetime import timedelta
+
+from django.db import models
+from django.db.models import Sum
+from django.utils import timezone
+
 from server.models.base_model import BaseModel
 
 
 class AiModel(BaseModel):
-    api_provider = models.ForeignKey("server.ApiProvider", on_delete=models.CASCADE, related_name='aimodels')
+    """Represents an AI model offered by a provider, with usage tracking and limits."""
+
+    api_provider = models.ForeignKey(
+        "server.ApiProvider",
+        on_delete=models.CASCADE,
+        related_name="aimodels",
+    )
     name = models.CharField(max_length=512)
     family = models.CharField(max_length=512, default="", blank=True)
     description = models.TextField(max_length=65000, default="", blank=True)
@@ -24,90 +34,97 @@ class AiModel(BaseModel):
     max_response_tokens = models.IntegerField(default=1000000)
 
     # 0 = unlimited
-    limit_request_per_day    = models.IntegerField(default=0)
+    limit_request_per_day = models.IntegerField(default=0)
     limit_request_per_minute = models.IntegerField(default=0)
-    limit_tokens_per_day     = models.IntegerField(default=0)
-    limit_tokens_per_minute  = models.IntegerField(default=0)
+    limit_tokens_per_day = models.IntegerField(default=0)
+    limit_tokens_per_minute = models.IntegerField(default=0)
 
     # Maximum number of simultaneously active runs across all keys for this model.
     # 0 = unlimited.
     limit_parallel_calls = models.IntegerField(default=0)
 
-    # ------------------------------------------------------------------
-    # Usage counters (existing)
-    # ------------------------------------------------------------------
-
     @property
-    def total_llm_queries(self):
+    def total_llm_queries(self) -> int:
+        """Total number of queries made through this model."""
         return self.related_queries.count()
 
     @property
-    def total_prompt_tokens(self):
-        return self.related_responses.aggregate(total=Sum('prompt_tokens'))['total'] or 0
+    def total_prompt_tokens(self) -> int:
+        """Total prompt tokens consumed across all responses for this model."""
+        result = self.related_responses.aggregate(total=Sum("prompt_tokens"))["total"]
+        return result or 0
 
     @property
-    def total_completion_tokens(self):
-        return self.related_responses.aggregate(total=Sum('completion_tokens'))['total'] or 0
+    def total_completion_tokens(self) -> int:
+        """Total completion tokens consumed across all responses for this model."""
+        result = self.related_responses.aggregate(
+            total=Sum("completion_tokens")
+        )["total"]
+        return result or 0
 
     @property
     def queries(self):
+        """Return the related Query queryset for this model."""
         return self.related_queries  # pyright: ignore[reportAttributeAccessIssue]
 
     @property
     def responses(self):
+        """Return the related Response queryset for this model."""
         return self.related_responses  # pyright: ignore[reportAttributeAccessIssue]
 
-    # ------------------------------------------------------------------
-    # Rate limit checks
-    # All counts use completed Responses (status=SUCCESS) as the source
-    # of truth — that's what actually consumed provider capacity.
-    # ------------------------------------------------------------------
-
     def requests_last_minute(self) -> int:
+        """Number of successful responses in the last 60 seconds."""
         since = timezone.now() - timedelta(seconds=60)
         return self.related_responses.filter(
-            status='SUCCESS', created_at__gte=since
+            status="SUCCESS", created_at__gte=since
         ).count()
 
     def requests_today(self) -> int:
+        """Number of successful responses since midnight today."""
         today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
         return self.related_responses.filter(
-            status='SUCCESS', created_at__gte=today
+            status="SUCCESS", created_at__gte=today
         ).count()
 
     def tokens_last_minute(self) -> int:
+        """Total tokens (prompt + completion) in the last 60 seconds."""
         since = timezone.now() - timedelta(seconds=60)
         result = self.related_responses.filter(
-            status='SUCCESS', created_at__gte=since
-        ).aggregate(total=Sum('prompt_tokens') + Sum('completion_tokens'))
-        return result['total'] or 0
+            status="SUCCESS", created_at__gte=since
+        ).aggregate(total=Sum("prompt_tokens") + Sum("completion_tokens"))
+        return result["total"] or 0
 
     def tokens_today(self) -> int:
+        """Total tokens (prompt + completion) since midnight today."""
         today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
         result = self.related_responses.filter(
-            status='SUCCESS', created_at__gte=today
-        ).aggregate(total=Sum('prompt_tokens') + Sum('completion_tokens'))
-        return result['total'] or 0
+            status="SUCCESS", created_at__gte=today
+        ).aggregate(total=Sum("prompt_tokens") + Sum("completion_tokens"))
+        return result["total"] or 0
 
     def active_call_count(self) -> int:
         """Number of runs currently ACTIVE for this model across all keys."""
-        from server.models.tasks.agent_task_run import AgentTaskRun
         from server.models.enums.task_enums import TaskRunStatus
+        from server.models.tasks.agent_task_run import AgentTaskRun
+
         return AgentTaskRun.objects.filter(
             session_version__agent_version__profile__aimodel=self,
             status=TaskRunStatus.ACTIVE,
         ).count()
 
     def is_rate_limited(self) -> tuple[bool, str]:
+        """Check all model-level limits.
+
+        Returns:
+            A tuple ``(is_limited, reason)`` where ``reason`` is empty when not limited.
+        """
         return False, ""
-        """
-        Check all model-level limits.
-        Returns (is_limited: bool, reason: str).
-        reason is empty string when not limited.
-        """
         if self.limit_parallel_calls > 0:
             if self.active_call_count() >= self.limit_parallel_calls:
-                return True, f"parallel_calls:{self.active_call_count()}/{self.limit_parallel_calls}"
+                return (
+                    True,
+                    f"parallel_calls:{self.active_call_count()}/{self.limit_parallel_calls}",
+                )
 
         if self.limit_request_per_minute > 0:
             rpm = self.requests_last_minute()
@@ -131,21 +148,15 @@ class AiModel(BaseModel):
 
         return False, ""
 
-    # ------------------------------------------------------------------
-    # Pending calls (for UI)
-    # ------------------------------------------------------------------
-
     def pending_calls(self):
-        """
-        All AgentTaskCalls currently waiting due to this model's rate limits,
-        ordered by creation time (FIFO).
-        """
-        from server.models.tasks.agent_task_call import AgentTaskCall
+        """All AgentTaskCalls waiting due to this model's rate limits, FIFO order."""
         from server.models.enums.task_enums import TaskCallStatusDetail
+        from server.models.tasks.agent_task_call import AgentTaskCall
+
         return AgentTaskCall.objects.filter(
             session_version__agent_version__profile__aimodel=self,
             status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
-        ).order_by('created_at')
+        ).order_by("created_at")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "Model:" + self.name

@@ -1,24 +1,27 @@
+from __future__ import annotations
 
-def move(source, destination):
+
+def move(source: str, destination: str) -> tuple[bool, dict]:
     '''
     Moves a file or directory from source to destination.
 
     - If the destination exists, it will be overwritten for files.
-    - Parent directories of the destination are created if they don't exist.
+    - Parent directories of the destination are created if they
+      don't exist.
     - Works across filesystem boundaries (unlike os.rename).
 
     Args:
-        source (str): The absolute path to the file or directory to move.
-        destination (str): The absolute path to move to.
+        source: The absolute path to the file or directory to move.
+        destination: The absolute path to move to.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'message': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - message: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     import shutil
     from pathlib import Path
@@ -39,13 +42,13 @@ def move(source, destination):
 
         return (True, {
             'status': 'success',
-            'message': f"Moved '{source}' to '{destination}'."
+            'message': f"Moved '{source}' to '{destination}'.",
         })
 
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error moving '{source}' to '{destination}': {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error moving '{source}' to '{destination}': {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

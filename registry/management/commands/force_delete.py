@@ -1,7 +1,6 @@
+from typing import Any, Optional
+
 from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
-from pathlib import Path
-from contextlib import contextmanager
 
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
@@ -11,18 +10,26 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 
 class Command(BaseCommand):
-    help = ''
+    """Force-delete a model instance by primary key."""
 
-    def add_arguments(self, parser):
-        parser.add_argument('model', type=str, help='name of model')
-        parser.add_argument('pk', type=str, help='primary key')
-        parser.add_argument('--gte', type=bool, help='delete all models >= pk', default=False, required=False)
+    help = ""
 
-    def handle(self, *args, **options):
-        model = options['model']
-        pk = options['pk']
-        gte = options['gte']
-        modelobj = None
+    def add_arguments(self, parser: Any) -> None:
+        parser.add_argument("model", type=str, help="name of model")
+        parser.add_argument("pk", type=str, help="primary key")
+        parser.add_argument(
+            "--gte",
+            type=bool,
+            help="delete all models >= pk",
+            default=False,
+            required=False,
+        )
+
+    def handle(self, *args: Any, **options: Any) -> None:
+        model: str = options["model"]
+        pk: str = options["pk"]
+        gte: bool = options["gte"]
+        modelobj: Optional[Any] = None
         if model == "Agent":
             modelobj = AgentModel
         elif model == "SettingsModel":
@@ -33,12 +40,9 @@ class Command(BaseCommand):
             modelobj = TaskInstance
         elif model == "TaskDefinitionVersion":
             modelobj = TaskDefinitionVersion
-            
-        #elif model == "AgentVersionAvailableTool":
-        #    modelobj = AgentVersionAvailableTool
         else:
-            raise CommandError(f'Invalid model {model}')
-  
+            raise CommandError(f"Invalid model {model}")
+
         if gte is True:
             modelobj.objects.filter(pk__gte=pk).delete()
         else:

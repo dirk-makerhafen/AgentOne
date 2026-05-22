@@ -12,14 +12,14 @@ On each load:
   - Return the HEAD commit hash
 """
 
+import hashlib
 import subprocess
 import time
 from pathlib import Path
 
 
 def get_or_init_shadow_repo(folder: Path) -> str:
-    """
-    Ensure a shadow git repo exists at *folder*, auto-commit any changes,
+    """Ensure a shadow git repo exists at *folder*, auto-commit any changes,
     and return the current HEAD commit hash.
 
     If git is not available, falls back to a timestamp-based hash.
@@ -87,8 +87,7 @@ def get_or_init_shadow_repo(folder: Path) -> str:
 
 
 def _fallback_hash(folder: Path) -> str:
-    """Timestamp-based hash when git is not available."""
-    import hashlib
+    """Timestamp-based content hash when git is not available."""
     content_hash = hashlib.sha256()
     for f in sorted(folder.rglob("*")):
         if f.is_file() and ".shadowgit" not in f.parts:

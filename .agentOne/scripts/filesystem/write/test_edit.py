@@ -1,13 +1,17 @@
-import sys
 import os
+import sys
 import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from edit import edit
 
+
 class TestEdit(unittest.TestCase):
-    def test_edit_single(self):
+    """Tests for the edit tool."""
+
+    def test_edit_single(self) -> None:
+        """Edit replaces the first occurrence of a string in a file."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_edit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
@@ -20,7 +24,8 @@ class TestEdit(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_edit_replace_all(self):
+    def test_edit_replace_all(self) -> None:
+        """Edit with replace_all=True replaces all occurrences."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_edit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
@@ -33,7 +38,8 @@ class TestEdit(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_edit_not_found(self):
+    def test_edit_not_found(self) -> None:
+        """Edit with a non-existent old_string returns an error."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_edit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
@@ -45,7 +51,8 @@ class TestEdit(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_edit_identical(self):
+    def test_edit_identical(self) -> None:
+        """Edit with identical old and new strings returns an error."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_edit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
@@ -57,7 +64,8 @@ class TestEdit(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_edit_multiple_no_replace_all(self):
+    def test_edit_multiple_no_replace_all(self) -> None:
+        """Edit with multiple matches and replace_all=False returns an error."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_edit_abc.txt')
         try:
             with open(tmp_path, 'w') as f:
@@ -68,6 +76,7 @@ class TestEdit(unittest.TestCase):
         finally:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
+
 
 if __name__ == '__main__':
     unittest.main()

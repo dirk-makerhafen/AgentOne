@@ -1,10 +1,12 @@
-import sys
+from __future__ import annotations
+
 import os
 import subprocess
+import sys
 import tempfile
-import json
 
-def python(source):
+
+def python(source: str) -> tuple[bool, dict]:
     '''
     Execute a Python script.
 
@@ -15,20 +17,16 @@ def python(source):
     - Installing packages via subprocess
 
     Args:
-        source (str): The Python source code to execute.
+        source: The Python source code to execute.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'stdout': str
-                - 'stderr': str
-                - 'return_code': int
-            On error, result contains:
-                - 'status': 'error'
-                - 'stdout': str
-                - 'stderr': str
-                - 'return_code': int
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - stdout: str
+            - stderr: str
+            - return_code: int
+        On error, result contains the same keys with status "error".
     '''
     cwd = os.getcwd()
 
@@ -43,7 +41,7 @@ def python(source):
             capture_output=True,
             text=True,
             timeout=300,
-            env={**os.environ}
+            env={**os.environ},
         )
 
         result = {

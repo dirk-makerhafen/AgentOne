@@ -1,13 +1,17 @@
-import sys
 import os
+import sys
 import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from diff import diff
 
+
 class TestDiff(unittest.TestCase):
-    def test_file_diff(self):
+    """Tests for the diff tool."""
+
+    def test_file_diff(self) -> None:
+        """Diff two files with different content detects changes."""
         f1 = os.path.join(tempfile.gettempdir(), 'test_diff_1.txt')
         f2 = os.path.join(tempfile.gettempdir(), 'test_diff_2.txt')
         try:
@@ -15,7 +19,7 @@ class TestDiff(unittest.TestCase):
                 fh.write('line1\nline2\nline3\n')
             with open(f2, 'w') as fh:
                 fh.write('line1\nmodified\nline3\n')
-            success, result = diff( path=f1, target=f2)
+            success, result = diff(path=f1, target=f2)
             self.assertTrue(success)
             self.assertTrue(result['has_changes'])
             self.assertIn('modified', result['diff'])
@@ -24,7 +28,8 @@ class TestDiff(unittest.TestCase):
                 if os.path.exists(p):
                     os.unlink(p)
 
-    def test_file_diff_no_changes(self):
+    def test_file_diff_no_changes(self) -> None:
+        """Diff two identical files reports no changes."""
         f1 = os.path.join(tempfile.gettempdir(), 'test_diff_1.txt')
         f2 = os.path.join(tempfile.gettempdir(), 'test_diff_2.txt')
         try:
@@ -32,13 +37,14 @@ class TestDiff(unittest.TestCase):
                 fh.write('same content\n')
             with open(f2, 'w') as fh:
                 fh.write('same content\n')
-            success, result = diff( path=f1, target=f2)
+            success, result = diff(path=f1, target=f2)
             self.assertTrue(success)
             self.assertFalse(result['has_changes'])
         finally:
             for p in [f1, f2]:
                 if os.path.exists(p):
                     os.unlink(p)
+
 
 if __name__ == '__main__':
     unittest.main()

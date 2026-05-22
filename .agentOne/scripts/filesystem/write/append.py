@@ -1,23 +1,27 @@
-def append(path, content):
+from __future__ import annotations
+
+
+def append(path: str, content: str) -> tuple[bool, dict]:
     '''
     Appends content to the end of a file.
 
     - Creates the file and parent directories if they don't exist.
     - Content is appended as-is, without a leading newline.
-    - Use this when you want to add to an existing file without overwriting.
+    - Use this when you want to add to an existing file without
+      overwriting.
 
     Args:
-        path (str): The absolute path to the file to append to.
-        content (str): The content to append.
+        path: The absolute path to the file to append to.
+        content: The content to append.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'message': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - message: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     from pathlib import Path
     import traceback
@@ -35,13 +39,13 @@ def append(path, content):
 
         return (True, {
             'status': 'success',
-            'message': f"Appended to file '{path}' successfully."
+            'message': f"Appended to file '{path}' successfully.",
         })
 
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error appending to file {path}: {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error appending to file {path}: {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

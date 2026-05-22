@@ -1,13 +1,17 @@
-import sys
 import os
+import sys
 import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from write import write
 
+
 class TestWrite(unittest.TestCase):
-    def test_write_file(self):
+    """Tests for the write tool."""
+
+    def test_write_file(self) -> None:
+        """Write creates a file with the given content."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_write_abc123.txt')
         try:
             success, result = write(tmp_path, 'hello world')
@@ -18,7 +22,8 @@ class TestWrite(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_write_overwrite(self):
+    def test_write_overwrite(self) -> None:
+        """Write overwrites an existing file with new content."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_write_abc123.txt')
         try:
             write(tmp_path, 'first')
@@ -30,7 +35,8 @@ class TestWrite(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-    def test_write_creates_dirs(self):
+    def test_write_creates_dirs(self) -> None:
+        """Write creates intermediate directories for nested paths."""
         tmp_path = os.path.join(tempfile.gettempdir(), 'test_dir_xyz', 'nested', 'file.txt')
         try:
             success, result = write(tmp_path, 'nested content')
@@ -46,10 +52,12 @@ class TestWrite(unittest.TestCase):
             if os.path.exists(grandparent):
                 os.rmdir(grandparent)
 
-    def test_write_no_path(self):
+    def test_write_no_path(self) -> None:
+        """Write with an empty path returns an error."""
         success, result = write('', 'content')
         self.assertFalse(success)
         self.assertIn('Path not provided', result['message'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,9 +1,12 @@
-import sys
+from __future__ import annotations
+
 import os
 import subprocess
+import sys
 import tempfile
 
-def shell(source, interpreter="auto"):
+
+def shell(source: str, interpreter: str = "auto") -> tuple[bool, dict]:
     '''
     Execute a shell command or script.
 
@@ -15,28 +18,25 @@ def shell(source, interpreter="auto"):
 
     Execution environment:
     - The script is written to a temporary file and executed.
-    - Interpreter defaults to "auto" (bash on Unix, detects powershell/cmd on Windows).
+    - Interpreter defaults to "auto" (bash on Unix, detects
+      powershell/cmd on Windows).
     - Commands must be non-interactive and complete in finite time.
-    - Never use for speculative or destructive actions.
 
     Args:
-        source (str): The shell script to execute.
-        interpreter (str): The interpreter to use (e.g., "bash", "sh", "powershell", "cmd", "auto"). Default: "auto".
+        source: The shell script to execute.
+        interpreter: The interpreter to use ("bash", "sh",
+            "powershell", "cmd", or "auto"). Default: "auto".
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'stdout': str
-                - 'stderr': str
-                - 'return_code': int (0 on success)
-            On error, result contains:
-                - 'status': 'error'
-                - 'stdout': str
-                - 'stderr': str
-                - 'return_code': int
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - stdout: str
+            - stderr: str
+            - return_code: int (0 on success)
+        On error, result contains the same keys with status "error".
     '''
-    cwd =  os.getcwd()
+    cwd = os.getcwd()
 
     is_windows = sys.platform == "win32"
     if interpreter == "auto":
@@ -79,7 +79,7 @@ def shell(source, interpreter="auto"):
             capture_output=True,
             text=True,
             timeout=300,
-            env={**os.environ}
+            env={**os.environ},
         )
 
         result = {
@@ -94,7 +94,7 @@ def shell(source, interpreter="auto"):
         return (False, {
             'status': 'error',
             'stdout': '',
-            'stderr': f'Command timed out after 300 seconds.',
+            'stderr': 'Command timed out after 300 seconds.',
             'return_code': -1,
         })
     except Exception as e:

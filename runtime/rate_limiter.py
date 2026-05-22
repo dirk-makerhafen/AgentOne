@@ -12,7 +12,8 @@ class RateLimitError(Exception):
     Raised by RateLimitChecker.check() when no capacity is available.
     Caught separately in AgentTaskRun.apply() — does NOT trigger retry logic.
     """
-    def __init__(self, reason: str):
+
+    def __init__(self, reason: str) -> None:
         self.reason = reason
         super().__init__(f"Rate limited: {reason}")
 
@@ -20,6 +21,7 @@ class RateLimitError(Exception):
 @dataclass
 class RateLimitResult:
     """Returned when capacity IS available."""
+
     selected_key: "ApiKey"
 
 
@@ -39,6 +41,7 @@ class RateLimitChecker:
 
     @staticmethod
     def check(aimodel: "AiModel") -> RateLimitResult:
+        """Check all rate-limit tiers and return the best available API key."""
         # 1. Provider parallel limit
         limited, reason = aimodel.api_provider.is_rate_limited()
         if limited:
@@ -73,9 +76,7 @@ class RateLimitChecker:
         if not available:
             return None
 
-        # Active query count is the best available proxy for per-key load
-        # since the key is stored on Query (not AgentTaskRun).
-        def load(key):
+        def load(key: "ApiKey") -> int:
             return Query.objects.filter(apikey=key, status='ACTIVE').count()
 
         return min(available, key=load)

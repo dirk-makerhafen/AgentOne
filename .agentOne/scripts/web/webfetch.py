@@ -1,29 +1,34 @@
-import httpx
-import os
+from __future__ import annotations
 
-def webFetch(url, format="markdown"):
+import httpx
+
+
+def webFetch(url: str, format: str = "markdown") -> tuple[bool, dict]:
     '''
     Fetches content from a specified URL.
 
     - Takes a URL and optional format as input.
-    - Fetches the URL content, converts to requested format (markdown by default).
-    - Use this tool when you need to retrieve and analyze web content.
+    - Fetches the URL content, converts to requested format
+      (markdown by default).
+    - Use this tool when you need to retrieve and analyze web
+      content.
     - The URL must be a fully-formed valid URL.
     - HTTP URLs will be automatically upgraded to HTTPS.
 
     Args:
-        url (str): The URL to fetch content from.
-        format (str): The format to return the content in ("text", "markdown", or "html"). Default: "markdown".
+        url: The URL to fetch content from.
+        format: The format to return the content in ("text",
+            "markdown", or "html"). Default: "markdown".
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'content': str
-                - 'url': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - content: str
+            - url: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     try:
         if not url:
@@ -33,7 +38,7 @@ def webFetch(url, format="markdown"):
             url = 'https://' + url
 
         headers = {
-            'User-Agent': 'AgentOne/1.0'
+            'User-Agent': 'AgentOne/1.0',
         }
 
         response = httpx.get(url, headers=headers, follow_redirects=True, timeout=30)
@@ -58,7 +63,7 @@ def webFetch(url, format="markdown"):
         return (True, {
             'status': 'success',
             'content': content,
-            'url': url
+            'url': url,
         })
 
     except httpx.RequestError as e:

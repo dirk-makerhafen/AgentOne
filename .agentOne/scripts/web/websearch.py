@@ -1,29 +1,32 @@
-import os
-import json
-import urllib.parse
+from __future__ import annotations
 
-def webSearch(query, num_results=8):
+import os
+import urllib.parse
+from typing import Any
+
+
+def webSearch(query: str, num_results: int = 8) -> tuple[bool, dict]:
     '''
     Search the web for real-time information.
 
     - Performs a web search and returns up-to-date information.
     - Returns search results with titles, URLs, and snippets.
-    - Use this for current events, recent information, or topics beyond training data.
-    - The current year is 2026.
+    - Use this for current events, recent information, or topics
+      beyond training data.
 
     Args:
-        query (str): The search query.
-        num_results (int): Number of search results to return. Default: 8.
+        query: The search query.
+        num_results: Number of search results to return. Default: 8.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'results': list[dict] (each with 'title', 'url', 'snippet')
-                - 'query': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - results: list of dicts with 'title', 'url', 'snippet'
+            - query: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     try:
         if not query:
@@ -46,7 +49,7 @@ def webSearch(query, num_results=8):
             return (True, {
                 'status': 'success',
                 'results': items,
-                'query': query
+                'query': query,
             })
         else:
             import httpx
@@ -58,14 +61,22 @@ def webSearch(query, num_results=8):
             from html.parser import HTMLParser
 
             class DuckParser(HTMLParser):
-                def __init__(self):
-                    super().__init__()
-                    self.results = []
-                    self.current = {}
-                    self.in_result = False
-                    self.in_snippet = False
+                '''Parse DuckDuckGo HTML search results.'''
 
-                def handle_starttag(self, tag, attrs):
+                def __init__(self) -> None:
+                    super().__init__()
+                    self.results: list[dict[str, str]] = []
+                    self.current: dict[str, Any] = {}
+                    self.in_result: bool = False
+                    self.in_snippet: bool = False
+
+                def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+                    '''Process opening tags to identify result links and snippets.
+
+                    Args:
+                        tag: HTML tag name.
+                        attrs: List of (name, value) attribute pairs.
+                    '''
                     attrs_dict = {k: v for k, v in attrs}
                     cls = attrs_dict.get('class', '')
                     if tag == 'a' and cls and 'result__a' in cls:
@@ -74,7 +85,12 @@ def webSearch(query, num_results=8):
                     if tag == 'a' and cls and 'result__snippet' in cls:
                         self.in_snippet = True
 
-                def handle_data(self, data):
+                def handle_data(self, data: str) -> None:
+                    '''Collect title and snippet text.
+
+                    Args:
+                        data: Text content inside the current tag.
+                    '''
                     if self.in_result and data.strip():
                         self.current.setdefault('title', '')
                         if self.current['title'] is not None:
@@ -84,7 +100,12 @@ def webSearch(query, num_results=8):
                         if self.current['snippet'] is not None:
                             self.current['snippet'] += data.strip()
 
-                def handle_endtag(self, tag):
+                def handle_endtag(self, tag: str) -> None:
+                    '''Process closing tags to finalize a result entry.
+
+                    Args:
+                        tag: HTML tag name.
+                    '''
                     if tag == 'a' and self.in_snippet:
                         self.in_snippet = False
                     if tag == 'a' and self.in_result and self.current.get('title'):
@@ -106,7 +127,7 @@ def webSearch(query, num_results=8):
             return (True, {
                 'status': 'success',
                 'results': items,
-                'query': query
+                'query': query,
             })
 
     except Exception as e:

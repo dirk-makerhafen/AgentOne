@@ -1,18 +1,37 @@
 from __future__ import annotations
-from server.models.tasks.agent_task_run import AgentTaskRun
-from server.models.enums.task_enums import TaskRunStatus, TaskCallStatus, TaskCallStatusDetail
 
 from django.db.models import Q
+from server.models.tasks.agent_task_run import AgentTaskRun
+from server.models.enums.task_enums import TaskRunStatus, TaskCallStatus, TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
 from runtime.tasks.call_scheduler import CallScheduler
 from runtime.tasks.call_fsm import TaskCallStateMachine
 from runtime.tasks.run_fsm import TaskRunStateMachine
 
 
-class RunScheduler():
+class RunScheduler:
+    """
+    Orchestrates the execution lifecycle of AgentTaskRun instances.
+
+    Delegates status transitions to :class:`TaskRunStateMachine` and
+    coordinates with :class:`CallScheduler` / :class:`TaskCallStateMachine`
+    for the paired task-call transitions.  Also tracks result-reference
+    resolution for runs that produce sub-calls.
+    """
 
     @staticmethod
-    def _apply_async(taskrun_id):
+    def _apply_async(taskrun_id: int) -> None:
+        """
+        Execute a task run.
+
+        Transitions the run to ``ACTIVE`` and the parent call to
+        ``ACTIVE_RUNNING`` (with rollback on race).  After ``apply()``
+        inspects the result status and dispatches accordingly:
+
+        - ``RATE_LIMITED`` → park the call via :meth:`TaskCallStateMachine.rate_limit`.
+        - ``WAITING_RESULTTASKS`` → wait for result references.
+        - ``FAILURE`` / ``SUCCESS`` → delegate to :class:`CallScheduler`.
+        """
         print("task_run_id", taskrun_id)
         if not TaskRunStateMachine.start(taskrun_id):
             return
@@ -54,7 +73,18 @@ class RunScheduler():
     # ------------------------------------------------------------------
 
     @staticmethod
-    def taskrun_result_reference_ended(taskrun_id, result_taskcall_id, result_taskcall_status: TaskCallStatusDetail | str):
+    def taskrun_result_reference_ended(
+        taskrun_id: int,
+        result_taskcall_id: int,
+        result_taskcall_status: TaskCallStatusDetail | str,
+    ) -> None:
+        """
+        Called when a result-referenced task call ends.
+
+        If the referenced call failed, the parent run transitions to
+        ``FAILURE``.  Otherwise, once **all** result references have ended,
+        :meth:`all_taskrun_result_references_ended` is invoked.
+        """
         if result_taskcall_status != TaskCallStatusDetail.ENDED_SUCCESS:
             if TaskRunStateMachine.fail(taskrun_id):
                 CallScheduler.on_taskrun_ended(taskrun_id, TaskRunStatus.FAILURE)
@@ -68,7 +98,12 @@ class RunScheduler():
         RunScheduler.all_taskrun_result_references_ended(taskrun_id)
 
     @staticmethod
-    def all_taskrun_result_references_ended(taskrun_id):
+    def all_taskrun_result_references_ended(taskrun_id: int) -> None:
+        """
+        All result references have resolved.
+
+        If any ended unsuccessfully the run fails; otherwise it succeeds.
+        """
         unsuccessful = AgentTaskCall.objects.filter(
             ~Q(status_detail=TaskCallStatusDetail.ENDED_SUCCESS),
             rev_taskrun_result_references__id=taskrun_id,

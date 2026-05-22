@@ -1,22 +1,27 @@
+from __future__ import annotations
 
-def mkdir(path, parents=False, exist_ok=True):
+
+def mkdir(path: str, parents: bool = False, exist_ok: bool = True) -> tuple[bool, dict]:
     '''
     Creates a directory, including any necessary parent directories.
+
     Behaves like `mkdir -p` when parents=True.
 
     Args:
-        path (str): The absolute path to the directory to create.
-        parents (bool): Create parent directories if they don't exist. Default: false.
-        exist_ok (bool): Do not raise an error if the directory already exists. Default: true.
+        path: The absolute path to the directory to create.
+        parents: Create parent directories if they don't exist.
+            Default: false.
+        exist_ok: Do not raise an error if the directory already
+            exists. Default: true.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'message': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - message: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     import os
     import traceback
@@ -38,13 +43,13 @@ def mkdir(path, parents=False, exist_ok=True):
 
         return (True, {
             'status': 'success',
-            'message': f"Directory '{path}' created successfully."
+            'message': f"Directory '{path}' created successfully.",
         })
 
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error creating directory {path}: {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error creating directory {path}: {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

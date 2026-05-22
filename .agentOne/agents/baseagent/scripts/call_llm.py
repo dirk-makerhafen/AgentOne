@@ -3,11 +3,14 @@ Streams the Query to the LLM API and records the Response.
 Handles rate limiting, API key selection, and streaming ingestion.
 """
 
+from __future__ import annotations
+
 import json
 import time
 import traceback
-from runtime.agents.session import Session
-from server.models.providers.ai_model import AiModel
+from typing import Any
+
+from runtime.session.session import Session
 from server.models.settings import AgentToolCallSyntax
 from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
@@ -15,7 +18,12 @@ from openai import OpenAI
 from runtime.rate_limiter import RateLimitChecker, RateLimitError
 
 
-def run_streaming_query(session, tools, messages, query:Query):
+def run_streaming_query(
+    session: Session,
+    tools: list[dict[str, Any]],
+    messages: list[dict[str, Any]],
+    query: Query,
+) -> Response:
     """
     Open a streaming chat completion and incrementally save the response.
 
@@ -23,12 +31,10 @@ def run_streaming_query(session, tools, messages, query:Query):
     into the Response model. Saves every 150ms for progress visibility.
 
     Args:
-        session:     The session
-        api_key:     API key for authentication.
-        model:       Model identifier (e.g. "gemma4:26b").
-        tools:       OpenAI-format tool definitions.
-        messages:    openai api compatible message list from the Query.
-        query:       The Query model this response belongs to.
+        session:  The active agent session.
+        tools:    OpenAI-format tool definitions.
+        messages: OpenAI-API-compatible message list from the Query.
+        query:    The Query model this response belongs to.
 
     Returns:
         A saved Response model with content, reasoning, tool_calls,
@@ -37,25 +43,33 @@ def run_streaming_query(session, tools, messages, query:Query):
     SAVE_INTERVAL = 0.150  # persist progress every 150ms
 
     last_save_time = time.time()
-    first_token_timestamp = None
-    first_reasoning_token_timestamp = None
-    last_reasoning_token_timestamp = None
+    first_token_timestamp: float | None = None
+    first_reasoning_token_timestamp: float | None = None
+    last_reasoning_token_timestamp: float | None = None
     start_timestamp = time.time()
 
-    response = Response.objects.create(query = query, session_version = query.session_version, status = ResponseStatus.ACTIVE, tool_calls = [])
+    response = Response.objects.create(
+        query=query,
+        session_version=query.session_version,
+        status=ResponseStatus.ACTIVE,
+        tool_calls=[],
+    )
 
-    client = OpenAI(base_url=session.aimodel.api_provider.url, api_key=query.apikey.key if query.apikey else None)
+    client = OpenAI(
+        base_url=session.aimodel.api_provider.url,
+        api_key=query.apikey.key if query.apikey else None,
+    )
 
     stream = client.chat.completions.create(
-        model = session.aimodel.name,
-        messages = messages,
-        extra_body = {
+        model=session.aimodel.name,
+        messages=messages,
+        extra_body={
             "reasoning_effort": session.reasoning_effort,
         },
-        stream_options = {"include_usage": True},
-        stream = True,
-        tools = tools,
-        tool_choice = "auto",
+        stream_options={"include_usage": True},
+        stream=True,
+        tools=tools or None,
+        tool_choice="auto",
     )
 
     for event in stream:
@@ -77,7 +91,9 @@ def run_streaming_query(session, tools, messages, query:Query):
             unknown_chunk = False
             response.finish_reason = finish_reason
 
-        reasoning_chunk = message_chunk.get("reasoning", None) or message_chunk.get("thinking", None)
+        reasoning_chunk = message_chunk.get("reasoning", None) or message_chunk.get(
+            "thinking", None
+        )
         if reasoning_chunk:
             if not first_reasoning_token_timestamp:
                 first_reasoning_token_timestamp = time.time()
@@ -96,12 +112,14 @@ def run_streaming_query(session, tools, messages, query:Query):
                 if not response.tool_calls:
                     response.tool_calls = []
                 while len(response.tool_calls) <= index:
-                    response.tool_calls.append({
-                        "name": "",
-                        "arguments": "",
-                        "id": "",
-                        "index": len(response.tool_calls),
-                    })
+                    response.tool_calls.append(
+                        {
+                            "name": "",
+                            "arguments": "",
+                            "id": "",
+                            "index": len(response.tool_calls),
+                        }
+                    )
                 if tool_call_id := tool_call.get("id"):
                     response.tool_calls[index]["id"] += tool_call_id
                 if func := tool_call.get("function"):
@@ -169,8 +187,8 @@ def call_llm(session: Session, query: Query) -> Response:
     try:
         if not session.aimodel:
             raise Exception("No llm model specified")
-        
-        ratelimit_result = RateLimitChecker.check(session.aimodel) 
+
+        ratelimit_result = RateLimitChecker.check(session.aimodel)
         if not ratelimit_result:
             raise Exception("Error in ratelimiter")
         apikey = ratelimit_result.selected_key
@@ -181,25 +199,27 @@ def call_llm(session: Session, query: Query) -> Response:
         query.save()
 
         messages = query.to_openai_message()
-        api_tools = []
+        api_tools: list[dict[str, Any]] = []
         if session.tool_call_syntax == AgentToolCallSyntax.DEFAULT:
             for tool in session.allowedTools:
                 if not tool.task_definition:
                     raise Exception("Missing task_definition")
-                api_tools.append({
-                    "type": "function",
-                    "function": {
-                        "name": tool.task_definition.name,
-                        "description": tool.description,
-                        "parameters": tool.function_schema,
-                    },
-                })
+                api_tools.append(
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": tool.task_definition.name,
+                            "description": tool.description,
+                            "parameters": tool.function_schema,
+                        },
+                    }
+                )
 
         response = run_streaming_query(
-            session = session,
-            messages = messages,
-            tools = api_tools,
-            query = query,
+            session=session,
+            messages=messages,
+            tools=api_tools,
+            query=query,
         )
         return response
 
@@ -212,6 +232,7 @@ def call_llm(session: Session, query: Query) -> Response:
         query.status = QueryStatus.FAILURE
         query.save()
         from server.models.debug_log_entry import DebugLogEntry
+
         DebugLogEntry.objects.create(
             session=session.model,
             event="exception",

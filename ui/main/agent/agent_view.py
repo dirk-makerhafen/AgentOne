@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 from server.models.agents.agent import AgentModel
 from ui.lib.model_view import ModelView
 from typing import TYPE_CHECKING
@@ -7,14 +8,56 @@ if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
+@dataclass
+class CapabilityRow:
+    name: str
+    source_label: str
+    allowed: bool
+
+
+TYPE_CONFIG = [
+    ("Tools",     "TOOL",     "toolRows"),
+    ("Tasks",     "TASK",     "taskRows"),
+    ("Commands",  "COMMAND",  "commandRows"),
+    ("Skills",    "SKILL",    "skillRows"),
+    ("Subagents", "SUBAGENT", "subagentRows"),
+]
+
+
+def _source_label(item, defined_pks, version_model) -> str:
+    if item.pk in defined_pks:
+        return "self"
+    # check parent fields depending on item type
+    tdv = getattr(item, "task_definition", None)
+    if tdv is not None:
+        if tdv.parent_agent is None and tdv.parent_skill is None and tdv.parent_project is None:
+            return "global"
+        return "inherited"
+    sv = getattr(item, "skill", None)
+    if sv is not None:
+        if sv.parent_agent is None and sv.parent_skill is None and sv.parent_project is None:
+            return "global"
+        return "inherited"
+    av = getattr(item, "agent", None)
+    if av is not None:
+        if av.parent_agent is None and av.parent_skill is None and av.parent_project is None:
+            return "global"
+        return "inherited"
+    return "inherited"
+
+
+def _check_allowed(name: str, allowed_set: set, disallowed_set: set) -> bool:
+    if name in disallowed_set:
+        return False
+    return name in allowed_set
+
+
 class AgentView(ModelView):
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div style="display:None">
-            
             def all_versions(self):
                 pass
-
         </div>
 
         <div id="mainProfiles" class="main-view">
@@ -43,12 +86,11 @@ class AgentView(ModelView):
                         <div class="detail-row">
                             <div class="detail-row-label">Extends</div>
                             <div class="detail-row-value">
-                            {% for extends_agent_version in pyview.agent.extends_agent_versions %}
-                                 {{ extends_agent_version.name }}:{{ extends_agent_version.model.pk }}<br>
+                            {% for ea in pyview.extends_list %}
+                                 {{ ea }}<br>
                             {% endfor %}
                             </div>
                         </div>
-                        
                         <div class="detail-row">
                             <div class="detail-row-label">Status</div>
                             <div class="detail-row-value"><span class="detail-badge active">ACTIVE</span> <span class="detail-badge">(default)</span> </div>
@@ -58,10 +100,9 @@ class AgentView(ModelView):
                             <div class="detail-row-value">{{ pyview.agent.description }}</div>
                         </div>
                     </div>
-                    
+
                     <div class="detail-card">
                         <div class="detail-card-title">Settings</div>
-                        
                         <div style="display:flex; flex-direction: row; gap: 23px;">
                             <div style="width: stretch;">
                                 <div class="detail-row">
@@ -81,7 +122,6 @@ class AgentView(ModelView):
                                     <div class="detail-row-value">{{pyview.agent.priority}}</div>
                                 </div>
                             </div>
-                            
                             <div style="width:stretch;">
                                 <div class="detail-row">
                                     <div class="detail-row-label">max_retries</div>
@@ -103,165 +143,175 @@ class AgentView(ModelView):
                         </div>
                     </div>
 
-
-
                     <div class="detail-card">
                         <div class="detail-card-title">Tools</div>
+                        {% if pyview.toolRows %}
+                        <table class="capability-table" style="width:100%;border-collapse:collapse;font-size:12px">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Name</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Source</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in pyview.toolRows %}
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <td style="padding:4px 8px{% if not row.allowed %};text-decoration:line-through;color:var(--muted){% endif %}">{{ row.name }}</td>
+                                    <td style="padding:4px 8px">{{ row.source_label }}</td>
+                                    <td style="padding:4px 8px">
+                                    {% if row.allowed %}
+                                        <span style="color:var(--success)">allowed</span>
+                                    {% else %}
+                                        <span style="color:var(--danger)">disallowed</span>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
                         <div class="detail-row">
-                            <div class="detail-row-label">Defined</div>
-                            <div class="detail-row-value">
-                                {% for definedToolVersion in pyview.agent.definedToolVersions %}
-                                    {{ definedToolVersion.task_definition.name }}:{{ definedToolVersion.pk }}, 
-                                {% endfor %}
-                            </div>
+                            <div class="detail-row-value" style="color:var(--muted);font-size:12px">None</div>
                         </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Allowed</div>
-                            <div class="detail-row-value">
-                                {% for allowedTool in pyview.agent.allowedTools %}
-                                    {{ allowedTool.task_definition.name }}:{{ allowedTool.pk }}, 
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Tool nmess</div>
-                            <div class="detail-row-value">{{pyview.agent.toolNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">disallowed tool amess</div>
-                            <div class="detail-row-value">{{pyview.agent.disallowedToolNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">allowed tools</div>
-                            <div class="detail-row-value">{{pyview.agent.allowedToolNames}}</div>
-                        </div>
+                        {% endif %}
                     </div>
 
-                    
                     <div class="detail-card">
-                        <div class="detail-card-title">Skills</div>
+                        <div class="detail-card-title">Tasks</div>
+                        {% if pyview.taskRows %}
+                        <table class="capability-table" style="width:100%;border-collapse:collapse;font-size:12px">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Name</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Source</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in pyview.taskRows %}
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <td style="padding:4px 8px{% if not row.allowed %};text-decoration:line-through;color:var(--muted){% endif %}">{{ row.name }}</td>
+                                    <td style="padding:4px 8px">{{ row.source_label }}</td>
+                                    <td style="padding:4px 8px">
+                                    {% if row.allowed %}
+                                        <span style="color:var(--success)">allowed</span>
+                                    {% else %}
+                                        <span style="color:var(--danger)">disallowed</span>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
                         <div class="detail-row">
-                            <div class="detail-row-label">Defined</div>
-                            <div class="detail-row-value">
-                                {% for definedSkillVersion in pyview.agent.definedSkillVersions %}
-                                    {{ definedSkillVersion.skill.name }}:{{ definedSkillVersion.pk }}, 
-                                {% endfor %}
-                           </div>
+                            <div class="detail-row-value" style="color:var(--muted);font-size:12px">None</div>
                         </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">skills</div>
-                            <div class="detail-row-value">{{pyview.agent.skillNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">disallowed skill</div>
-                            <div class="detail-row-value">{{pyview.agent.disallowedSkillNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">allowed skill</div>
-                            <div class="detail-row-value">{{pyview.agent.allowedSkillNames}}</div>
-                        </div>
-                    </div>
-
-                    
-                    <div class="detail-card">
-                        <div class="detail-card-title">Subagents</div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Defined</div>
-                            <div class="detail-row-value">
-                                {% for definedSubagentVersion in pyview.agent.definedSubagentVersions %}
-                                    {{ definedSubagentVersion.agent.name }}:{{ definedSubagentVersion.pk }},
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Allowed</div>
-                            <div class="detail-row-value">
-                                {% for allowedSubagent in pyview.agent.allowedSubagents %}
-                                    {{ allowedSubagent.agent.name }}:{{ allowedSubagent.pk }},
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Subagent names</div>
-                            <div class="detail-row-value">{{pyview.agent.subagentNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Disallowed subagents</div>
-                            <div class="detail-row-value">{{pyview.agent.disallowedSubagentNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Allowed subagents</div>
-                            <div class="detail-row-value">{{pyview.agent.allowedSubagentNames}}</div>
-                        </div>
+                        {% endif %}
                     </div>
 
                     <div class="detail-card">
                         <div class="detail-card-title">Commands</div>
+                        {% if pyview.commandRows %}
+                        <table class="capability-table" style="width:100%;border-collapse:collapse;font-size:12px">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Name</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Source</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in pyview.commandRows %}
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <td style="padding:4px 8px{% if not row.allowed %};text-decoration:line-through;color:var(--muted){% endif %}">{{ row.name }}</td>
+                                    <td style="padding:4px 8px">{{ row.source_label }}</td>
+                                    <td style="padding:4px 8px">
+                                    {% if row.allowed %}
+                                        <span style="color:var(--success)">allowed</span>
+                                    {% else %}
+                                        <span style="color:var(--danger)">disallowed</span>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
                         <div class="detail-row">
-                            <div class="detail-row-label">Defined</div>
-                            <div class="detail-row-value">
-                                {% for definedCommandVersion in pyview.agent.definedCommandVersions %}
-                                    {{ definedCommandVersion.task_definition.name }}:{{ definedCommandVersion.pk }}, 
-                                {% endfor %}
-                            </div>
+                            <div class="detail-row-value" style="color:var(--muted);font-size:12px">None</div>
                         </div>
-                        
-                        <div class="detail-row">
-                            <div class="detail-row-label">Allowed</div>
-                            <div class="detail-row-value">
-                                {% for allowedCommand in pyview.agent.allowedCommands %}
-                                    {{ allowedCommand.task_definition.name }}:{{ allowedCommand.pk }}, 
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">commands</div>
-                            <div class="detail-row-value">{{pyview.agent.commandNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">disallowed Commands</div>
-                            <div class="detail-row-value">{{pyview.agent.disallowedCommandNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">allowed Commands</div>
-                            <div class="detail-row-value">{{pyview.agent.allowedCommandNames}}</div>
-                        </div>
+                        {% endif %}
                     </div>
-                    
 
                     <div class="detail-card">
-                        <div class="detail-card-title">Tasks</div>
+                        <div class="detail-card-title">Skills</div>
+                        {% if pyview.skillRows %}
+                        <table class="capability-table" style="width:100%;border-collapse:collapse;font-size:12px">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Name</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Source</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in pyview.skillRows %}
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <td style="padding:4px 8px{% if not row.allowed %};text-decoration:line-through;color:var(--muted){% endif %}">{{ row.name }}</td>
+                                    <td style="padding:4px 8px">{{ row.source_label }}</td>
+                                    <td style="padding:4px 8px">
+                                    {% if row.allowed %}
+                                        <span style="color:var(--success)">allowed</span>
+                                    {% else %}
+                                        <span style="color:var(--danger)">disallowed</span>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
                         <div class="detail-row">
-                            <div class="detail-row-label">Defined</div>
-                            <div class="detail-row-value">
-                                {% for definedTaskName in pyview.agent.definedTaskNames %}
-                                    {{ definedTaskName }}
-                                {% endfor %}
-                            </div>
+                            <div class="detail-row-value" style="color:var(--muted);font-size:12px">None</div>
                         </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Allowed</div>
-                            <div class="detail-row-value">
-                                {% for allowedTask in pyview.agent.allowedTasks %}
-                                    {{ allowedTask.task_definition.name }}:{{ allowedTask.pk }}, 
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">tasks</div>
-                            <div class="detail-row-value">{{pyview.agent.taskNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">disallowed Tasks</div>
-                            <div class="detail-row-value">{{pyview.agent.disallowedTaskNames}}</div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">allowed Tasks</div>
-                            <div class="detail-row-value">{{pyview.agent.allowedTaskNames}}</div>
-                        </div>
+                        {% endif %}
                     </div>
 
-                    
+                    <div class="detail-card">
+                        <div class="detail-card-title">Subagents</div>
+                        {% if pyview.subagentRows %}
+                        <table class="capability-table" style="width:100%;border-collapse:collapse;font-size:12px">
+                            <thead>
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Name</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Source</th>
+                                    <th style="text-align:left;padding:4px 8px;font-weight:600;color:var(--muted)">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in pyview.subagentRows %}
+                                <tr style="border-bottom:1px solid var(--border2)">
+                                    <td style="padding:4px 8px{% if not row.allowed %};text-decoration:line-through;color:var(--muted){% endif %}">{{ row.name }}</td>
+                                    <td style="padding:4px 8px">{{ row.source_label }}</td>
+                                    <td style="padding:4px 8px">
+                                    {% if row.allowed %}
+                                        <span style="color:var(--success)">allowed</span>
+                                    {% else %}
+                                        <span style="color:var(--danger)">disallowed</span>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="detail-row">
+                            <div class="detail-row-value" style="color:var(--muted);font-size:12px">None</div>
+                        </div>
+                        {% endif %}
+                    </div>
 
                     <div class="detail-card">
                         <div class="detail-card-title">System Prompt</div>
@@ -292,3 +342,96 @@ class AgentView(ModelView):
     def __init__(self, subject: AgentModel, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.agent = subject.get_runtime()
+        self._toolRows: list[CapabilityRow] = []
+        self._taskRows: list[CapabilityRow] = []
+        self._commandRows: list[CapabilityRow] = []
+        self._skillRows: list[CapabilityRow] = []
+        self._subagentRows: list[CapabilityRow] = []
+        self._build()
+
+    @property
+    def toolRows(self): return self._toolRows
+    @property
+    def taskRows(self): return self._taskRows
+    @property
+    def commandRows(self): return self._commandRows
+    @property
+    def skillRows(self): return self._skillRows
+    @property
+    def subagentRows(self): return self._subagentRows
+
+    @property
+    def extends_list(self):
+        vm = self.agent.get_version_model()
+        return [f"{ea.agent.name} v{ea.version_number}" for ea in vm.extends_agent_versions.all()]
+
+    def _build(self):
+        vm = self.agent.get_version_model()
+        defined_tdv_pks = set(vm.defined_task_versions.values_list("pk", flat=True))
+        defined_skill_pks = set(vm.defined_skill_versions.values_list("pk", flat=True))
+        defined_subagent_pks = set(vm.defined_subagent_versions.values_list("pk", flat=True))
+
+        allowed_tools = set(self.agent.allowedToolNames)
+        disallowed_tools = set(self.agent.disallowedToolNames)
+        allowed_tasks = set(self.agent.allowedTaskNames)
+        disallowed_tasks = set(self.agent.disallowedTaskNames)
+        allowed_commands = set(self.agent.allowedCommandNames)
+        disallowed_commands = set(self.agent.disallowedCommandNames)
+        allowed_skills = set(self.agent.allowedSkillNames)
+        disallowed_skills = set(self.agent.disallowedSkillNames)
+        allowed_subagents = set(self.agent.allowedSubagentNames)
+        disallowed_subagents = set(self.agent.disallowedSubagentNames)
+
+        seen_tdv = set()
+        seen_skill = set()
+        seen_subagent = set()
+
+        def add_tdv(tdv):
+            if tdv.pk in seen_tdv:
+                return
+            seen_tdv.add(tdv.pk)
+            name = tdv.task_definition.name
+            source = _source_label(tdv, defined_tdv_pks, vm)
+            if tdv.task_type == "TOOL":
+                self._toolRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_tools, disallowed_tools)))
+            elif tdv.task_type == "TASK":
+                self._taskRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_tasks, disallowed_tasks)))
+            elif tdv.task_type == "COMMAND":
+                self._commandRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_commands, disallowed_commands)))
+
+        for tdv in vm.task_versions.select_related("task_definition").all():
+            add_tdv(tdv)
+        for tdv in vm.defined_task_versions.select_related("task_definition").all():
+            add_tdv(tdv)
+
+        def add_skill(sv):
+            if sv.pk in seen_skill:
+                return
+            seen_skill.add(sv.pk)
+            name = sv.skill.name
+            source = _source_label(sv, defined_skill_pks, vm)
+            self._skillRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_skills, disallowed_skills)))
+
+        for sv in vm.skill_versions.select_related("skill").all():
+            add_skill(sv)
+        for sv in vm.defined_skill_versions.select_related("skill").all():
+            add_skill(sv)
+
+        def add_subagent(sav):
+            if sav.pk in seen_subagent:
+                return
+            seen_subagent.add(sav.pk)
+            name = sav.agent.name
+            source = _source_label(sav, defined_subagent_pks, vm)
+            self._subagentRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_subagents, disallowed_subagents)))
+
+        for sav in vm.subagent_versions.select_related("agent").all():
+            add_subagent(sav)
+        for sav in vm.defined_subagent_versions.select_related("agent").all():
+            add_subagent(sav)
+
+        self._toolRows.sort(key=lambda r: r.name)
+        self._taskRows.sort(key=lambda r: r.name)
+        self._commandRows.sort(key=lambda r: r.name)
+        self._skillRows.sort(key=lambda r: r.name)
+        self._subagentRows.sort(key=lambda r: r.name)

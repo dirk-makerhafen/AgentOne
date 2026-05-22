@@ -1,16 +1,20 @@
-import sys
+import importlib.util
 import os
+import sys
 import tempfile
 import unittest
-import importlib.util
 
 _spec = importlib.util.spec_from_file_location('copy_tool', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'copy.py'))
 _copy_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_copy_mod)
 copy_tool = _copy_mod.copy
 
+
 class TestCopy(unittest.TestCase):
-    def test_copy_file(self):
+    """Tests for the copy tool."""
+
+    def test_copy_file(self) -> None:
+        """Copy a file creates an identical destination file."""
         src = os.path.join(tempfile.gettempdir(), 'test_copy_src.txt')
         dst = os.path.join(tempfile.gettempdir(), 'test_copy_dst.txt')
         try:
@@ -25,7 +29,8 @@ class TestCopy(unittest.TestCase):
                 if os.path.exists(p):
                     os.unlink(p)
 
-    def test_copy_dir_recursive(self):
+    def test_copy_dir_recursive(self) -> None:
+        """Copy a directory recursively copies all contents."""
         src_dir = os.path.join(tempfile.gettempdir(), 'test_copy_src_dir')
         dst_dir = os.path.join(tempfile.gettempdir(), 'test_copy_dst_dir')
         try:
@@ -41,21 +46,24 @@ class TestCopy(unittest.TestCase):
                 if os.path.exists(p):
                     shutil.rmtree(p)
 
-    def test_copy_dir_no_recursive(self):
+    def test_copy_dir_no_recursive(self) -> None:
+        """Copy a directory without recursive flag returns an error."""
         src_dir = os.path.join(tempfile.gettempdir(), 'test_copy_src_dir')
         try:
             os.makedirs(src_dir, exist_ok=True)
             success, result = copy_tool(src_dir, os.path.join(tempfile.gettempdir(), 'dst'))
             self.assertFalse(success)
-            self.assertIn('recursive=true', result['message'])
+            self.assertIn('recursive=True', result['message'])
         finally:
             if os.path.exists(src_dir):
                 os.rmdir(src_dir)
 
-    def test_copy_source_not_found(self):
+    def test_copy_source_not_found(self) -> None:
+        """Copy a non-existent source returns an error."""
         success, result = copy_tool('/nonexistent/xyz', '/tmp/dst')
         self.assertFalse(success)
         self.assertIn('not found', result['message'])
+
 
 if __name__ == '__main__':
     unittest.main()

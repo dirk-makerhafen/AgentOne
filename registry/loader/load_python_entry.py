@@ -1,27 +1,59 @@
-
 import importlib
 import inspect
 import re
 import enum
-from typing import (get_type_hints, get_origin, get_args, Annotated, Union, Literal, List, Dict, TypedDict)
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+    get_type_hints,
+    get_origin,
+    get_args,
+    Annotated,
+    TypedDict,
+)
 
 from registry.loader.utils import build_version_kwargs
+from server.models.enums.task_enums import TaskExecutionMode, TaskType
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 
-def load_python_entry(entry, scripts_dir, commit, task_type, task_execution_mode, name, parent_project, parent_agent, parent_skill, existing_results):
+def load_python_entry(
+    entry: dict,
+    scripts_dir: Path,
+    commit: str,
+    task_type: TaskType,
+    task_execution_mode: TaskExecutionMode,
+    name: str,
+    parent_project: Any,
+    parent_agent: Any,
+    parent_skill: Any,
+    existing_results: List[Tuple[TaskDefinition, TaskDefinitionVersion]],
+) -> None:
+    """Load a Python function entry from a scripts.md manifest.
+
+    Imports the module at the given path, introspects the target function to
+    generate an LLM-optimised JSON schema, and persists the
+    ``TaskDefinition`` / ``TaskDefinitionVersion``.
+    """
     file_path = scripts_dir / entry["file"]
-    function_name = entry["function"]
-    bound = entry.get("bound", False)
+    function_name: str = entry["function"]
+    bound: bool = entry.get("bound", False)
 
     if not file_path.exists():
         raise FileNotFoundError(f"Script file not found: {file_path}")
 
     spec = importlib.util.spec_from_file_location(f"_manifest_{name}", file_path)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    func = getattr(module, function_name, None)
+    spec.loader.exec_module(module)  # type: ignore[union-attr]
+    func: Callable[..., Any] = getattr(module, function_name, None)
     if func is None:
         raise AttributeError(f"Function '{function_name}' not in {file_path}")
 
@@ -30,17 +62,28 @@ def load_python_entry(entry, scripts_dir, commit, task_type, task_execution_mode
     if bound:
         _strip_bound_param(schema)
 
-    kw = build_version_kwargs(entry, description, schema, commit, file_path, task_type, task_execution_mode)
-    task_def, _ = TaskDefinition.objects.get_or_create( parent_skill=parent_skill, parent_agent=parent_agent, parent_project=parent_project, name=name)
-    task_version, created = TaskDefinitionVersion.objects.get_or_create(task_definition=task_def, **kw)
+    kw = build_version_kwargs(
+        entry, description, schema, commit, file_path,
+        task_type, task_execution_mode,
+    )
+    task_def, _ = TaskDefinition.objects.get_or_create(
+        parent_skill=parent_skill,
+        parent_agent=parent_agent,
+        parent_project=parent_project,
+        name=name,
+    )
+    task_version, created = TaskDefinitionVersion.objects.get_or_create(
+        task_definition=task_def, **kw,
+    )
     if created:
-        TaskDefinition.objects.filter(pk=task_def.pk).update(latest_task_version=task_version)
+        TaskDefinition.objects.filter(pk=task_def.pk).update(
+            latest_task_version=task_version
+        )
     existing_results.append((task_def, task_version))
 
 
-
-def _strip_bound_param(schema):
-    """Remove the first parameter (session) from a bound function's schema."""
+def _strip_bound_param(schema: Dict[str, Any]) -> None:
+    """Remove the first parameter (``session``) from a bound function's schema."""
     props = schema.get("properties", {})
     required = schema.get("required", [])
     if not props:
@@ -52,12 +95,11 @@ def _strip_bound_param(schema):
             required.remove(first_key)
 
 
+def generate_schema_for_function(
+    func: Callable[..., Any],
+) -> Tuple[str, Dict[str, Any]]:
+    """Generate an LLM-optimised JSON schema for a function.
 
-
-
-def generate_schema_for_function(func):
-    """
-    Generate an LLM-optimized JSON schema for a function.
     Supports:
     - TypedDict (preferred)
     - Nested dict parsing from docstrings
@@ -65,7 +107,6 @@ def generate_schema_for_function(func):
     - Optional / Union
     - Annotated metadata
     """
-
     sig = inspect.signature(func)
 
     # --- Resolve type hints ---
@@ -78,15 +119,15 @@ def generate_schema_for_function(func):
     doc = inspect.getdoc(func) or ""
     lines = doc.splitlines()
 
-    param_descriptions = {}
-    description_lines = []
+    param_descriptions: Dict[str, str] = {}
+    description_lines: List[str] = []
 
     # --- Nested fields detection ---
-    nested_fields = {}
-    current_parent = None
+    nested_fields: Dict[str, Dict[str, Dict[str, str]]] = {}
+    current_parent: Optional[str] = None
 
     in_params = False
-    current_param = None
+    current_param: Optional[str] = None
 
     for line in lines:
         stripped = line.strip()
@@ -126,13 +167,16 @@ def generate_schema_for_function(func):
             nm = re.match(r"^[-•]\s*(\w+)\s*\(([^)]+)\):\s*(.*)", stripped)
             if nm and current_parent:
                 n_name, n_type, n_desc = nm.groups()
-                nested_fields[current_parent][n_name] = { "type": n_type, "description": n_desc}
+                nested_fields[current_parent][n_name] = {
+                    "type": n_type,
+                    "description": n_desc,
+                }
                 continue
         else:
             description_lines.append(stripped)
 
     # --- Type resolver ---
-    def resolve(annotation):
+    def resolve(annotation: Any) -> Dict[str, Any]:
         if annotation is inspect._empty:
             return {"type": "string"}
 
@@ -165,15 +209,24 @@ def generate_schema_for_function(func):
             return {"type": "string", "enum": [e.value for e in annotation]}
 
         # --- TypedDict ---
-        if isinstance(annotation, type) and issubclass(annotation, dict) and hasattr(annotation, "__annotations__"):
-            props = {}
-            required = []
+        if (
+            isinstance(annotation, type)
+            and issubclass(annotation, dict)
+            and hasattr(annotation, "__annotations__")
+        ):
+            props: Dict[str, Any] = {}
+            required: List[str] = []
 
             for k, v in annotation.__annotations__.items():
                 props[k] = resolve(v)
                 required.append(k)
 
-            return {"type": "object", "properties": props, "required": required, "additionalProperties": False}
+            return {
+                "type": "object",
+                "properties": props,
+                "required": required,
+                "additionalProperties": False,
+            }
 
         # --- List ---
         if origin in (list, List):
@@ -182,10 +235,16 @@ def generate_schema_for_function(func):
         # --- Dict ---
         if origin in (dict, Dict):
             val_type = args[1] if len(args) == 2 else str
-            return {"type": "object", "additionalProperties": resolve(val_type) }
+            return {"type": "object", "additionalProperties": resolve(val_type)}
 
         # --- Primitives ---
-        mapping = {str: "string", int: "integer", float: "number", bool: "boolean", bytes: "string"}
+        mapping: Dict[type, str] = {
+            str: "string",
+            int: "integer",
+            float: "number",
+            bool: "boolean",
+            bytes: "string",
+        }
         if annotation in mapping:
             return {"type": mapping[annotation]}
         if annotation in ("str",):
@@ -199,7 +258,12 @@ def generate_schema_for_function(func):
         return {"type": "string"}
 
     # --- Build schema ---
-    schema = { "type": "object", "properties": {}, "required": [], "additionalProperties": False}
+    schema: Dict[str, Any] = {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": False,
+    }
 
     for name, param in sig.parameters.items():
         if name in ("self", "task_run", "task_context"):
@@ -220,12 +284,15 @@ def generate_schema_for_function(func):
                     "type": "object",
                     "properties": {},
                     "required": [],
-                    "additionalProperties": False
-                }
+                    "additionalProperties": False,
+                },
             }
 
             for n, meta in nested_fields[name].items():
-                field_schema["items"]["properties"][n] = {"type": meta["type"], "description": meta["description"]}
+                field_schema["items"]["properties"][n] = {
+                    "type": meta["type"],
+                    "description": meta["description"],
+                }
                 field_schema["items"]["required"].append(n)
 
         # --- required vs default ---

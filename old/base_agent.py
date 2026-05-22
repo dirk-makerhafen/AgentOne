@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Any, Dict
 import ast
-from runtime.agents.bound_task import BoundTask
+from runtime.tasks.bound_task import BoundTask
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
 from server.models.agents.agent_version import AgentVersionModel

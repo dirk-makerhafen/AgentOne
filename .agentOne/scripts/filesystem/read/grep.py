@@ -1,36 +1,49 @@
-import re
-import os
-from pathlib import Path
-import traceback
-import fnmatch
+from __future__ import annotations
 
-def grep(pattern, path=None, include=None):
+import fnmatch
+import os
+import re
+import traceback
+from pathlib import Path
+from typing import Optional
+
+
+def grep(
+    pattern: str,
+    path: Optional[str] = None,
+    include: Optional[str] = None,
+) -> tuple[bool, dict]:
     '''
     Fast content search tool that works with any codebase size.
 
     - Searches file contents using regular expressions.
-    - Supports full regex syntax (e.g., "log.*Error", "function\\s+\\w+").
-    - Filter files by pattern with the include parameter (e.g., "*.js", "*.{ts,tsx}").
+    - Supports full regex syntax (e.g., "log.*Error",
+      "function\\s+\\w+").
+    - Filter files by pattern with the include parameter
+      (e.g., "*.js", "*.{ts,tsx}").
     - Returns file paths and line numbers with at least one match.
-    - If the directory is not specified, the current working directory is used.
+    - If the directory is not specified, the current working
+      directory is used.
 
     Args:
-        pattern (str): The regex pattern to search for in file contents.
-        path (str, optional): The directory to search in. Defaults to the current working directory.
-        include (str, optional): File pattern to include in the search (e.g., "*.js", "*.{ts,tsx}").
+        pattern: The regex pattern to search for in file contents.
+        path: The directory to search in. Defaults to the current
+            working directory.
+        include: File pattern to include in the search
+            (e.g., "*.js", "*.{ts,tsx}").
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'matches': list[dict] (each dict has 'file', 'line_number', 'line')
-                - 'file_count': int (number of files with at least one match)
-                - 'match_count': int (total number of matching lines)
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - matches: list of dicts with keys 'file', 'line_number',
+              'line'
+            - file_count: int (files with at least one match)
+            - match_count: int (total matching lines)
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
-
     try:
         if not pattern:
             return (False, {'status': 'error', 'message': 'Pattern not provided'})
@@ -46,7 +59,6 @@ def grep(pattern, path=None, include=None):
         files_with_matches = set()
 
         for root, dirs, files in os.walk(search_dir):
-            # Skip common noise directories
             dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', '.DS_Store', 'node_modules', '.pytest_cache', '_staticfiles']]
 
             for filename in files:
@@ -66,7 +78,7 @@ def grep(pattern, path=None, include=None):
                             matches.append({
                                 'file': str(filepath),
                                 'line_number': line_num,
-                                'line': line.strip()
+                                'line': line.strip(),
                             })
                             files_with_matches.add(filepath)
                 except (OSError, PermissionError):
@@ -77,13 +89,12 @@ def grep(pattern, path=None, include=None):
             'file_count': len(files_with_matches),
             'match_count': len(matches),
             'matches': matches,
-
         })
 
     except Exception as e:
         return (False, {
             'status': 'error',
-            'message': f"Error searching for pattern '{pattern}': {str(e)}\n{traceback.format_exc()}"
+            'message': f"Error searching for pattern '{pattern}': {str(e)}\n{traceback.format_exc()}",
         })
 
 if __name__ == '__main__':

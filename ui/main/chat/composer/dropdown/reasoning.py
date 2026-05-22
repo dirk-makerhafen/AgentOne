@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from runtime.agents.session import Session
+from runtime.session.session import Session
 from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:

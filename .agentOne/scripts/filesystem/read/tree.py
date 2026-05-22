@@ -1,29 +1,40 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
+from typing import Optional
 
-def tree(path=None, depth=3, include_hidden=False):
+
+def tree(
+    path: Optional[str] = None,
+    depth: int = 3,
+    include_hidden: bool = False,
+) -> tuple[bool, dict]:
     '''
     Display a visual directory tree structure.
 
-    Shows files and directories in a tree format, useful for understanding project structure.
-    Much better UX than a flat directory listing.
+    Shows files and directories in a tree format, useful for
+    understanding project structure. Much better UX than a flat
+    directory listing.
 
     Args:
-        path (str, optional): The directory to display. Defaults to the working directory.
-        depth (int): Maximum depth to traverse. Default: 3.
-        include_hidden (bool): Include hidden files/dirs (starting with "."). Default: false.
+        path: The directory to display. Defaults to the working
+            directory.
+        depth: Maximum depth to traverse. Default: 3.
+        include_hidden: Include hidden files/dirs (starting with ".").
+            Default: false.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'tree': str (visual tree output)
-                - 'path': str
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - tree: visual tree output (str)
+            - path: str
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
-    target = path if path else  os.getcwd()
+    target = path if path else os.getcwd()
 
     try:
         target_path = Path(target)
@@ -36,7 +47,14 @@ def tree(path=None, depth=3, include_hidden=False):
 
         lines = []
 
-        def _walk(dir_path, prefix, current_depth):
+        def _walk(dir_path: str, prefix: str, current_depth: int) -> None:
+            '''Recursively walk a directory and build tree lines.
+
+            Args:
+                dir_path: Path to the directory to walk.
+                prefix: String prefix for tree indentation.
+                current_depth: Current recursion depth.
+            '''
             if current_depth > depth:
                 return
             try:
@@ -58,10 +76,10 @@ def tree(path=None, depth=3, include_hidden=False):
             all_items = dirs + files
             for i, entry in enumerate(all_items):
                 is_last = (i == len(all_items) - 1)
-                connector = "└── " if is_last else "├── "
+                connector = "\u2514\u2500\u2500 " if is_last else "\u251c\u2500\u2500 "
                 if entry.is_dir():
                     lines.append(f"{prefix}{connector}{entry.name}/")
-                    extension = "    " if is_last else "│   "
+                    extension = "    " if is_last else "\u2502   "
                     _walk(entry.path, prefix + extension, current_depth + 1)
                 else:
                     try:
@@ -71,7 +89,15 @@ def tree(path=None, depth=3, include_hidden=False):
                     except OSError:
                         lines.append(f"{prefix}{connector}{entry.name}")
 
-        def _human_size(n):
+        def _human_size(n: float) -> str:
+            '''Convert a byte count to a human-readable string.
+
+            Args:
+                n: Number of bytes.
+
+            Returns:
+                Human-readable size string (e.g., "1KB", "2MB").
+            '''
             for unit in ['B', 'KB', 'MB', 'GB']:
                 if n < 1024:
                     return f"{n:.0f}{unit}" if n > 0 else f"0{unit}"

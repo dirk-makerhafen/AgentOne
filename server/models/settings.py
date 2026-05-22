@@ -1,64 +1,140 @@
+"""Immutable settings snapshots for agent versions."""
+from __future__ import annotations
+
+from typing import Any
+
 from django.db import models
 from django.core.exceptions import ValidationError
-from server.models.enums.task_enums import TaskSchedulerStrategy
+
 from server.models.base_model import BaseModel
 from server.models.content import GenericContent
+from server.models.enums.task_enums import TaskSchedulerStrategy
 
 
 class AgentToolCallSyntax(models.TextChoices):
-    DEFAULT = 'default', 'Default (OpenAI style)'
-    CUSTOM = 'custom', 'Custom tagging'
+    """Available tool-call syntax styles."""
+
+    DEFAULT = "default", "Default (OpenAI style)"
+    CUSTOM = "custom", "Custom tagging"
+
 
 class ReasoningEffort(models.TextChoices):
-    NONE = 'none', 'None, default'
-    MINIMAL = 'minimal', "Minimal"
-    LOW = 'low', 'Low'
-    MEDIUM = 'medium', 'Medium'
-    HIGH = 'high', "High"
-    XHIGH = 'xhigh', "Extra High"
+    """Reasoning effort levels for LLM inference."""
+
+    NONE = "none", "None, default"
+    MINIMAL = "minimal", "Minimal"
+    LOW = "low", "Low"
+    MEDIUM = "medium", "Medium"
+    HIGH = "high", "High"
+    XHIGH = "xhigh", "Extra High"
 
 
 class SettingsModel(BaseModel):
+    """Immutable snapshot of settings for an agent version.
+
+    Once saved, existing instances cannot be edited (the ``save`` method raises
+    :class:`ValidationError` if ``self.pk`` is already set).
     """
-    Immutable snapshot of settings for an Agent version.
-    """
 
-    aimodel = models.ForeignKey("server.AiModel", on_delete=models.CASCADE, related_name="related_agent_settings", blank=True, null=True)
-    thinking = models.BooleanField(default=None, null=True, blank=True)
+    aimodel: models.ForeignKey | None = models.ForeignKey(
+        "server.AiModel",
+        on_delete=models.CASCADE,
+        related_name="related_agent_settings",
+        blank=True,
+        null=True,
+    )
+    thinking: bool | None = models.BooleanField(
+        default=None, null=True, blank=True
+    )
 
-    reasoning_effort = models.CharField(max_length=20, choices=ReasoningEffort, default=None, null=True, blank=True)
+    reasoning_effort: str | None = models.CharField(
+        max_length=20,
+        choices=ReasoningEffort,
+        default=None,
+        null=True,
+        blank=True,
+    )
 
-    max_retries = models.IntegerField(default=None, null=True, blank=True)
-    max_turns = models.IntegerField(default=None, null=True, blank=True)
-    max_unattended_turns = models.IntegerField(default=None, null=True, blank=True)
-    max_history_messages = models.IntegerField(default=None, null=True, blank=True)
-    priority = models.IntegerField(default=None, null=True, blank=True)   # 0 = highest, 1..999 less important
+    max_retries: int | None = models.IntegerField(
+        default=None, null=True, blank=True
+    )
+    max_turns: int | None = models.IntegerField(
+        default=None, null=True, blank=True
+    )
+    max_unattended_turns: int | None = models.IntegerField(
+        default=None, null=True, blank=True
+    )
+    max_history_messages: int | None = models.IntegerField(
+        default=None, null=True, blank=True
+    )
+    priority: int | None = models.IntegerField(
+        default=None, null=True, blank=True
+    )  # 0 = highest, 1..999 less important
 
-    task_prompt   = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="agent_settings_task_prompt")
-    system_prompt = models.ForeignKey(GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="agent_settings_system_prompt")
+    task_prompt: GenericContent | None = models.ForeignKey(
+        GenericContent,
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.SET_DEFAULT,
+        related_name="agent_settings_task_prompt",
+    )
+    system_prompt: GenericContent | None = models.ForeignKey(
+        GenericContent,
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.SET_DEFAULT,
+        related_name="agent_settings_system_prompt",
+    )
 
-    scheduler_strategy = models.CharField(max_length=20, choices=TaskSchedulerStrategy, default=None, null=True, blank=True)
-    tool_call_syntax = models.CharField(max_length=20, choices=AgentToolCallSyntax.choices, default=None, null=True, blank=True)
+    scheduler_strategy: str | None = models.CharField(
+        max_length=20,
+        choices=TaskSchedulerStrategy,
+        default=None,
+        null=True,
+        blank=True,
+    )
+    tool_call_syntax: str | None = models.CharField(
+        max_length=20,
+        choices=AgentToolCallSyntax.choices,
+        default=None,
+        null=True,
+        blank=True,
+    )
 
-    commandNames = models.JSONField(default=None, null=True, blank=True)
-    disallowedCommandNames = models.JSONField(default=None, null=True, blank=True)
+    commandNames: Any = models.JSONField(default=None, null=True, blank=True)
+    disallowedCommandNames: Any = models.JSONField(
+        default=None, null=True, blank=True
+    )
 
-    taskNames = models.JSONField(default=None, null=True, blank=True)
-    disallowedTaskNames = models.JSONField(default=None, null=True, blank=True)
+    taskNames: Any = models.JSONField(default=None, null=True, blank=True)
+    disallowedTaskNames: Any = models.JSONField(
+        default=None, null=True, blank=True
+    )
 
-    toolNames = models.JSONField(default=None, null=True, blank=True)
-    disallowedToolNames = models.JSONField(default=None, null=True, blank=True)
+    toolNames: Any = models.JSONField(default=None, null=True, blank=True)
+    disallowedToolNames: Any = models.JSONField(
+        default=None, null=True, blank=True
+    )
 
-    skillNames = models.JSONField(default=None, null=True, blank=True)
-    disallowedSkillNames = models.JSONField(default=None, null=True, blank=True)
+    skillNames: Any = models.JSONField(default=None, null=True, blank=True)
+    disallowedSkillNames: Any = models.JSONField(
+        default=None, null=True, blank=True
+    )
 
-    subagentNames = models.JSONField(default=None, null=True, blank=True)
-    disallowedSubagentNames = models.JSONField(default=None, null=True, blank=True)
+    subagentNames: Any = models.JSONField(default=None, null=True, blank=True)
+    disallowedSubagentNames: Any = models.JSONField(
+        default=None, null=True, blank=True
+    )
 
-    extra_settings = models.JSONField(default=None, null=True, blank=True)
-    commit = models.TextField(max_length=1024, default="")
+    extra_settings: Any = models.JSONField(default=None, null=True, blank=True)
+    commit: str = models.TextField(max_length=1024, default="")
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> Any:
+        """Raise :class:`ValidationError` on update; delegate to super on create."""
         if self.pk:
-            raise ValidationError(f"You may not edit an existing {self._meta.model_name}")
-        super().save(*args, **kwargs)
+            raise ValidationError(
+                f"You may not edit an existing {self._meta.model_name}"
+            )
+        return super().save(*args, **kwargs)

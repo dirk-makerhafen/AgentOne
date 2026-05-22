@@ -1,7 +1,7 @@
 from typing import List, Set, Any
 from django.db.models import QuerySet
 
-from runtime.agents.session import Session
+from runtime.session.session import Session
 
 class HistoryLimiter:
     def __init__(self, session: Session, all_entries: List[Any]):

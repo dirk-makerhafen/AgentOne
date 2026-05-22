@@ -1,5 +1,7 @@
-import yaml
 from pathlib import Path
+from typing import Any, List
+
+import yaml
 from django.core.management.base import BaseCommand, CommandError
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_project_folder import load_project_folder
@@ -9,12 +11,16 @@ from registry.loader.utils import find_agent_md_files
 
 
 class Command(BaseCommand):
+    """Load all manifests (``.agentone/``) into the database."""
+
     help = "Load all manifests (.agentone/) into the database."
 
-    def add_arguments(self, parser):
-        parser.add_argument("folder", type=str, help="Root folder containing .agentone/ subdir")
+    def add_arguments(self, parser: Any) -> None:
+        parser.add_argument(
+            "folder", type=str, help="Root folder containing .agentone/ subdir"
+        )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         path = Path(options["folder"]).resolve()
         if not path.exists():
             raise CommandError(f"Folder not found: {path.as_posix()}")
@@ -49,9 +55,7 @@ class Command(BaseCommand):
         projects_file = agentone_path / "projects.yaml"
         if projects_file.exists():
             with projects_file.open(encoding="utf-8") as f:
-                project_paths = yaml.safe_load(f) or []
+                project_paths: List[str] = yaml.safe_load(f) or []
             for project_path in project_paths:
                 self.stdout.write(f"Loading project: {project_path}")
                 load_project_folder(project_path)
-
-        # Pass 2 (no longer needed — each agent resolves tasks during load)

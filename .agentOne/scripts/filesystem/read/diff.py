@@ -1,37 +1,59 @@
+from __future__ import annotations
+
+import difflib
 import os
 import subprocess
-import difflib
+from typing import Optional
 
-def diff(path=None, staged=False, target=None):
+
+def diff(
+    path: Optional[str] = None,
+    staged: bool = False,
+    target: Optional[str] = None,
+) -> tuple[bool, dict]:
     '''
     Show a git diff or file diff.
 
     For git repositories:
     - Shows unstaged changes by default (equivalent to `git diff`)
-    - Set staged=true for staged changes (equivalent to `git diff --staged`)
-    - Set target to compare against a specific commit or branch (e.g., "HEAD~1", "main")
+    - Set staged=True for staged changes (`git diff --staged`)
+    - Set target to compare against a specific commit or branch
 
     For files:
-    - Set path to a file and target to another file path to show a unified diff between them
+    - Set path to a file and target to another file path to show
+      a unified diff between them
 
     Args:
-        path (str, optional): The path within the git repo, or first file for file comparison.
-        staged (bool): If true, shows staged changes. Default: false.
-        target (str, optional): A git ref (commit, branch) to diff against, or second file for file comparison.
+        path: The path within the git repo, or first file for file
+            comparison.
+        staged: If true, shows staged changes. Default: false.
+        target: A git ref (commit, branch) to diff against, or
+            second file for file comparison.
 
     Returns:
-        tuple: (success: bool, result: dict)
-            On success, result contains:
-                - 'status': 'success'
-                - 'diff': str (unified diff output)
-                - 'has_changes': bool
-            On error, result contains:
-                - 'status': 'error'
-                - 'message': str
+        A tuple of (success, result).
+        On success, result contains:
+            - status: "success"
+            - diff: unified diff output (str)
+            - has_changes: bool
+        On error, result contains:
+            - status: "error"
+            - message: str
     '''
     cwd = os.getcwd()
 
     try:
+        if path and target and os.path.isfile(path) and os.path.isfile(target):
+            from pathlib import Path
+            file1 = Path(path).read_text(encoding='utf-8').splitlines(keepends=True)
+            file2 = Path(target).read_text(encoding='utf-8').splitlines(keepends=True)
+            diff_output = ''.join(difflib.unified_diff(file1, file2, fromfile=path, tofile=target))
+            return (True, {
+                'status': 'success',
+                'has_changes': bool(diff_output.strip()),
+                'diff': diff_output if diff_output else '(no differences)',
+            })
+
         git_dir = os.path.join(cwd, '.git')
         is_git_repo = os.path.isdir(git_dir)
 
@@ -49,7 +71,7 @@ def diff(path=None, staged=False, target=None):
                 cwd=cwd,
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
 
             if proc.returncode != 0:
