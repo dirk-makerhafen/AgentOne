@@ -273,6 +273,9 @@ class Agent:
     # Internal helpers
     # ------------------------------------------------------------------
 
+    def get_agent_setting(self, name: str) -> Any:
+        return self.get_version_model().resolve_setting(name)
+
     def _get_agent_property(self, name: str) -> Any:
         """Resolve a free-form property from the active agent version."""
         return self.get_version_model().resolve_property(name)

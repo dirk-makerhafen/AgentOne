@@ -2,6 +2,7 @@ from __future__ import annotations
 import ast
 from typing import TYPE_CHECKING, Any, Dict, List
 
+from runtime.agents.agent import Agent
 from runtime.tasks.bound_task import BoundTask
 from server.models.content import GenericContent
 from server.models.message import Message
@@ -41,7 +42,7 @@ class Session:
     # ------------------------------------------------------------------
 
     @property
-    def agent(self) -> Any:
+    def agent(self) -> Agent:
         """Return the runtime Agent associated with this session."""
         return self.get_version_model().agent.get_runtime()
 
@@ -353,37 +354,34 @@ class Session:
         List-typed settings support a wildcard ``"*"`` that marks the
         insertion point where the agent-level list is spliced in.
         """
-        session_version_model = self.get_version_model()
-        agent_version = session_version_model.pinned_agent_version
-        if not agent_version:
-            agent_version = session_version_model.agent.latest_agent_version
-        if not agent_version:
-            raise Exception("some error")
-        agent_settings_value = agent_version.resolve_setting(name)
-
-        session_settings = session_version_model.session_settings
+        print("_get_session_setting", name)
+        session_settings = self.get_version_model().session_settings
+        print(session_settings)
         if not session_settings:  # we overwrite nothing, use agents profile
-            return agent_settings_value
+            print("we dont")
+            return self.agent.get_agent_setting(name)
 
         # we might overwrite agent profile values
         session_settings_value = getattr(session_settings, name)
         if session_settings_value is None:  # we dont..
-            return agent_settings_value
+            print("we dont 2")
+            return self.agent.get_agent_setting(name)
 
         if isinstance(session_settings_value, (str, int, bool, GenericContent)):
             return session_settings_value
 
         if isinstance(session_settings_value, (list,)):
             if "*" not in session_settings_value:  # overwrite parent list
+                print("r1")
                 return session_settings_value
             extend_at_index = session_settings_value.index("*")
-            session_settings_value[extend_at_index:extend_at_index + 1] = agent_settings_value
+            session_settings_value[extend_at_index:extend_at_index + 1] = self.agent.get_agent_setting(name)
         else:
             raise Exception(
                 f"_get_session_setting does not yet support type of '{name}': "
                 f"{type(session_settings_value)}"
             )
-
+        print("r2, ", session_settings_value)
         return session_settings_value
 
     def _set_session_setting(self, name: str, value: Any) -> None:

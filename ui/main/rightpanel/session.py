@@ -65,18 +65,17 @@ class RightPanelSession(ModelView):
             <div class="settings-card" style="margin-bottom:8px">
                 <div class="panel-header" style="margin-left:-8px">Settings</div>
                 {% for name, label in pyview.settings_fields %}
-                    <div class="detail-row">
-                        <div class="detail-row-label">{{ label }}</div>
-                        <div class="detail-row-value">
-                            {{ pyview.setting_value(name) }}
-                            {% if pyview.is_overridden(name) %}
-                                <span class="setting-reset-btn" onclick="pyview.resetSetting('{name}')" title="Reset to agent default" style="cursor:pointer">⟳</span>
-                            {% else %}
-                                <span class="setting-default-dot" title="Agent default">⬤</span>
-                            {% endif %}
-                            
-                        </div>
+                <div class="detail-row">
+                    <div class="detail-row-label">{{ label }}</div>
+                    <div class="detail-row-value">
+                        {% if pyview.is_overridden(name) %}
+                            <span class="setting-reset-btn" onclick="pyview.resetSetting('{{name}}')" title="Reset to agent default">⟳</span>
+                        {% else %}
+                            <span class="setting-default-dot" title="Agent default">⬤</span>
+                        {% endif %}
+                        {{ pyview.setting_value(name) }}
                     </div>
+                </div>
                 {% endfor %}
                 <div class="detail-row">
                     <div class="detail-row-label">Current Turn Count</div>
