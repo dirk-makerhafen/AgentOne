@@ -117,6 +117,8 @@ class SidebarView(ModelView):
             return 
         self.selected_panel_name = panel_name
         self.selected_panel = self.panels[panel_name]
+        if hasattr(self.selected_panel, "panel_activated"):
+            self.selected_panel.panel_activated()
         self.update()
 
 '''

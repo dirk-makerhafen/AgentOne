@@ -9,7 +9,7 @@ tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.
 subagents: 
     - name: AgentOne
       create: both
-      
+skills: [document-scanner, ]
 ---
 ## Role
 
