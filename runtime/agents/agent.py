@@ -1,7 +1,10 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
+from django.db.models import QuerySet
+
 from server.models.content import GenericContent
+from server.models.enums.task_enums import TaskType
 from server.models.skills.skill_version import SkillModelVersion
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
@@ -271,6 +274,68 @@ class Agent:
         if name in self.allowedToolNames:
             return self.get_version_model().tools().filter(task_definition__name=name).first()
         return None
+
+    # ------------------------------------------------------------------
+    # All items (resolved, unfiltered — for UI display)
+    # ------------------------------------------------------------------
+
+    @property
+    def all_tools(self) -> list[TaskDefinitionVersion]:
+        """Return allowed tool TaskDefinitionVersions (respecting disallow list)."""
+        return self.allowedTools
+
+    @property
+    def all_tasks(self) -> list[TaskDefinitionVersion]:
+        """Return allowed task TaskDefinitionVersions (respecting disallow list)."""
+        return self.allowedTasks
+
+    @property
+    def all_commands(self) -> list[TaskDefinitionVersion]:
+        """Return allowed command TaskDefinitionVersions (respecting disallow list)."""
+        return self.allowedCommands
+
+    @property
+    def all_skills(self) -> list[SkillModelVersion]:
+        """Return allowed SkillModelVersions (respecting disallow list)."""
+        return self.allowedSkills
+
+    @property
+    def all_subagents(self) -> list[AgentVersionModel]:
+        """Return allowed subagent AgentVersionModels (respecting disallow list)."""
+        return self.allowedSubagents
+
+    # Defined-on-this-version items (unfiltered)
+
+    @property
+    def defined_tools(self) -> QuerySet:
+        """Return tool TaskDefinitionVersions defined on this version."""
+        return self.get_version_model().defined_task_versions.filter(
+            task_type=TaskType.TOOL
+        )
+
+    @property
+    def defined_tasks(self) -> QuerySet:
+        """Return task TaskDefinitionVersions defined on this version."""
+        return self.get_version_model().defined_task_versions.filter(
+            task_type=TaskType.TASK
+        )
+
+    @property
+    def defined_commands(self) -> QuerySet:
+        """Return command TaskDefinitionVersions defined on this version."""
+        return self.get_version_model().defined_task_versions.filter(
+            task_type=TaskType.COMMAND
+        )
+
+    @property
+    def defined_skills(self) -> QuerySet:
+        """Return SkillModelVersions defined on this version."""
+        return self.get_version_model().defined_skill_versions
+
+    @property
+    def defined_subagents(self) -> QuerySet:
+        """Return subagent AgentVersionModels defined on this version."""
+        return self.get_version_model().defined_subagent_versions
 
     # ------------------------------------------------------------------
     # Skills

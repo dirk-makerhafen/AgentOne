@@ -84,6 +84,54 @@ class PipeDetailView(ModelView):
                     {% if pyview.subscriptions %}
                         {% for sub in pyview.subscriptions %}
                         <div class="detail-card" style="margin:8px 0;padding:12px">
+                            {% if pyview._editing_consumer == sub.pk %}
+                            <div style="font-size:12px">
+                                <div class="detail-form-row">
+                                    <label>Name</label>
+                                    <input type="text" value="{{ pyview._edit_consumer_data.name }}" onchange="pyview.setEditConsumerField({{ sub.pk }}, 'name', this.value)">
+                                </div>
+                                <div class="detail-form-row">
+                                    <label>Agent</label>
+                                    <select onchange="pyview.setEditConsumerField({{ sub.pk }}, 'agent', this.value)">
+                                        <option value="">-- None --</option>
+                                        {% for agent in pyview._all_agents %}
+                                        <option value="{{ agent.pk }}"{% if pyview._edit_consumer_data.agent == agent.pk|string() %} selected{% endif %}>{{ agent.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="detail-form-row">
+                                    <label>Session</label>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                                        <label style="font-weight:normal;display:flex;align-items:center;gap:4px">
+                                            <input type="radio" name="ecSess_{{ sub.pk }}" value="new" onchange="pyview.setEditConsumerField({{ sub.pk }}, 'session_mode', this.value)" {% if pyview._edit_consumer_data.session_mode == 'new' %}checked{% endif %}>
+                                            New each run
+                                        </label>
+                                        <label style="font-weight:normal;display:flex;align-items:center;gap:4px">
+                                            <input type="radio" name="ecSess_{{ sub.pk }}" value="existing" onchange="pyview.setEditConsumerField({{ sub.pk }}, 'session_mode', this.value)" {% if pyview._edit_consumer_data.session_mode == 'existing' %}checked{% endif %}>
+                                            Reuse
+                                        </label>
+                                    </div>
+                                    {% if pyview._edit_consumer_data.session_mode == 'existing' %}
+                                    <input type="text" value="{{ pyview._edit_consumer_data.session_name }}" onchange="pyview.setEditConsumerField({{ sub.pk }}, 'session_name', this.value)" placeholder="Session name" style="margin-top:4px">
+                                    {% endif %}
+                                </div>
+                                <div class="detail-form-row">
+                                    <label>Active</label>
+                                    <label style="font-weight:normal">
+                                        <input type="checkbox" onchange="pyview.setEditConsumerField({{ sub.pk }}, 'is_active', this.checked ? 'true' : 'false')" {% if pyview._edit_consumer_data.is_active == 'true' %}checked{% endif %}>
+                                        Enable consumer
+                                    </label>
+                                </div>
+                                <div class="detail-form-row">
+                                    <label>Args template</label>
+                                    <textarea rows="2" onchange="pyview.setEditConsumerField({{ sub.pk }}, 'arguments_template', this.value)" style="font-family:monospace;font-size:12px;width:100%;box-sizing:border-box" placeholder='{"extra_param": "value"}'>{{ pyview._edit_consumer_data.arguments_template }}</textarea>
+                                </div>
+                                <div style="display:flex;gap:8px;margin-top:8px">
+                                    <button class="panel-head-btn primary" onclick="pyview.saveEditConsumer({{ sub.pk }})" style="padding:4px 16px">Save</button>
+                                    <button class="panel-head-btn" onclick="pyview.cancelEditConsumer()" style="padding:4px 16px">Cancel</button>
+                                </div>
+                            </div>
+                            {% else %}
                             <div style="display:flex;justify-content:space-between;align-items:center">
                                 <div>
                                     <strong>{{ sub.name or sub.pipe.name }}</strong>
@@ -96,6 +144,9 @@ class PipeDetailView(ModelView):
                                           style="cursor:pointer" onclick="pyview.toggleSubscription({{ sub.pk }})">
                                         {% if sub.is_active %}active{% else %}paused{% endif %}
                                     </span>
+                                    <button class="panel-head-btn" title="Edit" onclick="pyview.startEditConsumer({{ sub.pk }})">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
                                     <button class="panel-head-btn" title="Delete" onclick="pyview.deleteSubscription({{ sub.pk }})">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                     </button>
@@ -110,6 +161,7 @@ class PipeDetailView(ModelView):
                                 <span><strong>Args:</strong> <code>{{ sub.arguments_template }}</code></span>
                                 {% endif %}
                             </div>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     {% else %}
@@ -143,12 +195,25 @@ class PipeDetailView(ModelView):
 
                 <div class="detail-card">
                     <div class="detail-card-title">Recent items</div>
+                    <div style="display:flex;gap:4px;margin:8px 0;font-size:11px;flex-wrap:wrap">
+                        <button class="panel-head-btn {% if not pyview._item_status_filter %}primary{% endif %}" onclick="pyview.setItemFilter('')" style="padding:2px 10px;font-size:11px">All</button>
+                        <button class="panel-head-btn {% if pyview._item_status_filter == 'ENDED' %}primary{% endif %}" onclick="pyview.setItemFilter('ENDED')" style="padding:2px 10px;font-size:11px">Ended</button>
+                        <button class="panel-head-btn {% if pyview._item_status_filter == 'ACTIVE' %}primary{% endif %}" onclick="pyview.setItemFilter('ACTIVE')" style="padding:2px 10px;font-size:11px">Active</button>
+                        <button class="panel-head-btn {% if pyview._item_status_filter == 'WAITING' %}primary{% endif %}" onclick="pyview.setItemFilter('WAITING')" style="padding:2px 10px;font-size:11px">Waiting</button>
+                        <button class="panel-head-btn {% if pyview._item_status_filter == 'NEW' %}primary{% endif %}" onclick="pyview.setItemFilter('NEW')" style="padding:2px 10px;font-size:11px">New</button>
+                    </div>
                     {% if pyview.recent_items %}
                         {% for item in pyview.recent_items %}
-                        <div class="detail-row" style="border-bottom:1px solid var(--border)">
-                            <div class="detail-row-label">#{{ item.pk }}</div>
-                            <div class="detail-row-value" style="font-family:monospace;font-size:12px">
+                        <div class="detail-row" style="border-bottom:1px solid var(--border);padding:6px 0">
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <span style="font-weight:600;font-size:12px">#{{ item.pk }}</span>
+                                <span class="detail-badge {% if item.status == 'ENDED' %}ok{% elif item.status == 'ACTIVE' %}warn{% else %}info{% endif %}">{{ item.status }}</span>
+                            </div>
+                            <div style="font-family:monospace;font-size:12px;margin-top:2px;color:var(--muted)">
                                 {{ item.carguments_json|truncate(80) }}
+                            </div>
+                            <div style="font-size:11px;color:var(--muted);margin-top:2px">
+                                {{ item.created_at }} &mdash; {{ item.task_definition.name if item.task_definition else '?' }}
                             </div>
                         </div>
                         {% endfor %}
@@ -170,6 +235,9 @@ class PipeDetailView(ModelView):
             "name": subject.name,
             "description": subject.description,
         }
+        self._editing_consumer: int | None = None
+        self._edit_consumer_data: dict[str, str] = {}
+        self._item_status_filter: str = ""
 
     # ------------------------------------------------------------------
     # Properties
@@ -184,6 +252,11 @@ class PipeDetailView(ModelView):
         return self.subject.subscriptions.count()
 
     @property
+    def _all_agents(self) -> list:
+        from server.models.agents.agent import AgentModel
+        return list(AgentModel.objects.all().order_by("name"))
+
+    @property
     def registered_producers(self) -> list[TDV]:
         return list(
             TDV.objects.filter(
@@ -194,11 +267,12 @@ class PipeDetailView(ModelView):
     @property
     def recent_items(self) -> list:
         from server.models.tasks.agent_task_call import AgentTaskCall
-        return list(
-            AgentTaskCall.objects.filter(
-                pipe_output_names__contains=self.subject.name,
-            ).order_by("-pk")[:20]
-        )
+        qs = AgentTaskCall.objects.filter(
+            pipe_output_names__contains=self.subject.name,
+        ).select_related("task_definition")
+        if self._item_status_filter:
+            qs = qs.filter(status=self._item_status_filter)
+        return list(qs.order_by("-pk")[:20])
 
     # ------------------------------------------------------------------
     # Actions
@@ -215,6 +289,75 @@ class PipeDetailView(ModelView):
 
     def deleteSubscription(self, pk: int) -> None:
         NamedPipeSubscription.objects.filter(pk=pk).delete()
+        self.update()
+
+    def startEditConsumer(self, pk: int) -> None:
+        import json as _json
+        try:
+            sub = NamedPipeSubscription.objects.select_related(
+                "consumer_task", "agent"
+            ).get(pk=pk)
+        except NamedPipeSubscription.DoesNotExist:
+            return
+        self._editing_consumer = pk
+        self._edit_consumer_data = {
+            "name": sub.name or "",
+            "agent": str(sub.agent_id or ""),
+            "session_mode": sub.session_mode,
+            "session_name": sub.session_name or "",
+            "is_active": "true" if sub.is_active else "false",
+            "arguments_template": (
+                _json.dumps(sub.arguments_template, indent=2)
+                if sub.arguments_template else "{}"
+            ),
+        }
+        self.update()
+
+    def cancelEditConsumer(self) -> None:
+        self._editing_consumer = None
+        self._edit_consumer_data = {}
+        self.update()
+
+    def setEditConsumerField(self, pk: int, field: str, value: str) -> None:
+        self._edit_consumer_data[field] = value
+        self.update()
+
+    def saveEditConsumer(self, pk: int) -> None:
+        import json as _json
+        d = self._edit_consumer_data
+        try:
+            sub = NamedPipeSubscription.objects.get(pk=pk)
+        except NamedPipeSubscription.DoesNotExist:
+            return
+
+        sub.name = d.get("name", "")
+        agent_pk = d.get("agent", "").strip()
+        if agent_pk:
+            from server.models.agents.agent import AgentModel
+            try:
+                sub.agent = AgentModel.objects.get(pk=agent_pk)
+            except AgentModel.DoesNotExist:
+                sub.agent = None
+        else:
+            sub.agent = None
+        sub.session_mode = d.get("session_mode", "new")
+        sub.session_name = d.get("session_name", "").strip()
+        sub.is_active = d.get("is_active") == "true"
+        raw_args = d.get("arguments_template", "{}").strip()
+        if raw_args:
+            try:
+                parsed = _json.loads(raw_args)
+                if isinstance(parsed, dict):
+                    sub.arguments_template = parsed
+            except _json.JSONDecodeError:
+                pass
+        sub.save()
+        self._editing_consumer = None
+        self._edit_consumer_data = {}
+        self.update()
+
+    def setItemFilter(self, status: str) -> None:
+        self._item_status_filter = status
         self.update()
 
     def openCreateSubscription(self) -> None:

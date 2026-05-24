@@ -2,7 +2,7 @@
 # Skill loader (skill.md)
 # ---------------------------------------------------------------------------
 
-from pathlib import Path
+import os
 from pathlib import Path
 from typing import Any, Tuple
 
@@ -11,6 +11,9 @@ from registry.install_repo import InstallRepo
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from server.models.skills.skill import SkillModel
 from server.models.skills.skill_version import SkillModelVersion
+
+
+RUNTIME_BASE = Path(os.path.expanduser("~/.agentone/runtime"))
 
 
 def load_skill_manifest(
@@ -25,6 +28,8 @@ def load_skill_manifest(
     recursively loads any scripts from the ``scripts/`` subfolder.
 
     Version identifiers are deterministic git tree SHAs from *install_repo*.
+    Files are extracted to ``~/.agentone/runtime/<version_pk>/`` so that
+    the view reads a versioned copy, not whatever is on disk in the source tree.
     """
     manifest = frontmatter.load(skill_md_path)
     skill_dir = skill_md_path.parent
@@ -37,13 +42,22 @@ def load_skill_manifest(
     )
     skill_version, created = SkillModelVersion.objects.get_or_create(
         skill=skill,
-        description=manifest.get("description", ""),
-        path=skill_md_path.as_posix(),
         commit=commit,
+        defaults={
+            "description": manifest.get("description", ""),
+            "path": "",
+        },
     )
     if created:
         SkillModel.objects.filter(pk=skill.pk).update(
             latest_skill_version=skill_version
+        )
+        # Extract versioned files to runtime folder
+        dest = RUNTIME_BASE / str(skill_version.pk)
+        install_repo.checkout_tree(tree_sha=commit, dest=dest)
+        extracted_md = dest / skill_md_path.name
+        SkillModelVersion.objects.filter(pk=skill_version.pk).update(
+            path=extracted_md.as_posix(),
         )
 
     # Load scripts from scripts/ subfolder

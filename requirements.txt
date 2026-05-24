@@ -33,3 +33,6 @@ flask
 flask_sock
 zeroconf
 daphne
+python-frontmatter
+markdown
+psutil

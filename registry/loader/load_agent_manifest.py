@@ -15,6 +15,7 @@ from server.models.agents.agent_version import AgentVersionModel
 from server.models.content import GenericContent
 from server.models.providers.ai_model import AiModel
 from server.models.settings import SettingsModel
+from server.models.skills.skill_version import SkillModelVersion
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
@@ -231,6 +232,7 @@ def load_agent_manifest(
         )
 
     _resolve_agent_version_tasks(agent_version)
+    _resolve_agent_version_skills(agent_version)
     _resolve_agent_version_subagents(agent_version)
 
     return agent, agent_version
@@ -262,7 +264,7 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
         """Resolve a single name or wildcard pattern into TDV pks."""
         if pattern == "+":
             return
-        group = None
+        group = ""
         if "." in pattern:
             group, raw_name = [x.strip() for x in pattern.strip().split(".", 1)]
         else:
@@ -328,6 +330,54 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
     agent_version.task_versions.set(
         TaskDefinitionVersion.objects.filter(pk__in=resolved)
     )
+
+
+def _resolve_agent_version_skills(
+    agent_version: AgentVersionModel,
+) -> None:
+    """Resolve skill names from the agent's ``SettingsModel`` into
+    ``SkillModelVersion`` objects and set ``skill_versions`` M2M.
+
+    Lookup precedence:
+      1. own ``defined_skill_versions``
+      2. ``extends`` chain (parent agent versions)
+      3. any ``SkillModelVersion`` matching the name in the DB
+    """
+    settings = agent_version.agent_settings
+    if not settings:
+        return
+
+    skill_names = agent_version.resolve_setting("skillNames")
+    if not skill_names:
+        return
+
+    resolved: set = set()
+    for name in skill_names:
+        sv = agent_version.defined_skill_versions.filter(
+            skill__name=name
+        ).first()
+        if sv:
+            resolved.add(sv.pk)
+            continue
+        for ext in agent_version.extends_agent_versions.all():
+            sv = ext.defined_skill_versions.filter(skill__name=name).first()
+            if sv:
+                resolved.add(sv.pk)
+                break
+        else:
+            sv = (
+                SkillModelVersion.objects.filter(skill__name=name)
+                .order_by("-version_number")
+                .first()
+            )
+            if not sv:
+                raise Exception(f"No skill '{name}' found")
+            resolved.add(sv.pk)
+
+    if resolved:
+        agent_version.skill_versions.set(
+            SkillModelVersion.objects.filter(pk__in=resolved)
+        )
 
 
 def _resolve_agent_version_subagents(

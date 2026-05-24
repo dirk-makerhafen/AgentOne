@@ -24,10 +24,9 @@ TYPE_CONFIG = [
 ]
 
 
-def _source_label(item, defined_pks, version_model) -> str:
+def _source_label(item, defined_pks) -> str:
     if item.pk in defined_pks:
         return "self"
-    # check parent fields depending on item type
     tdv = getattr(item, "task_definition", None)
     if tdv is not None:
         if tdv.parent_agent is None and tdv.parent_skill is None and tdv.parent_project is None:
@@ -366,10 +365,11 @@ class AgentView(ModelView):
         return [f"{ea.agent.name} v{ea.version_number}" for ea in vm.extends_agent_versions.all()]
 
     def _build(self):
-        vm = self.agent.get_version_model()
-        defined_tdv_pks = set(vm.defined_task_versions.values_list("pk", flat=True))
-        defined_skill_pks = set(vm.defined_skill_versions.values_list("pk", flat=True))
-        defined_subagent_pks = set(vm.defined_subagent_versions.values_list("pk", flat=True))
+        defined_tools_pks = set(self.agent.defined_tools.values_list("pk", flat=True))
+        defined_tasks_pks = set(self.agent.defined_tasks.values_list("pk", flat=True))
+        defined_commands_pks = set(self.agent.defined_commands.values_list("pk", flat=True))
+        defined_skill_pks = set(self.agent.defined_skills.values_list("pk", flat=True))
+        defined_subagent_pks = set(self.agent.defined_subagents.values_list("pk", flat=True))
 
         allowed_tools = set(self.agent.allowedToolNames)
         disallowed_tools = set(self.agent.disallowedToolNames)
@@ -386,48 +386,85 @@ class AgentView(ModelView):
         seen_skill = set()
         seen_subagent = set()
 
-        def add_tdv(tdv):
+        def add_tool(tdv):
             if tdv.pk in seen_tdv:
                 return
             seen_tdv.add(tdv.pk)
-            name = tdv.task_definition.name
-            source = _source_label(tdv, defined_tdv_pks, vm)
-            if tdv.task_type == "TOOL":
-                self._toolRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_tools, disallowed_tools)))
-            elif tdv.task_type == "TASK":
-                self._taskRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_tasks, disallowed_tasks)))
-            elif tdv.task_type == "COMMAND":
-                self._commandRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_commands, disallowed_commands)))
+            self._toolRows.append(CapabilityRow(
+                tdv.task_definition.name,
+                _source_label(tdv, defined_tools_pks),
+                _check_allowed(tdv.task_definition.name, allowed_tools, disallowed_tools),
+            ))
 
-        for tdv in vm.task_versions.select_related("task_definition").all():
-            add_tdv(tdv)
-        for tdv in vm.defined_task_versions.select_related("task_definition").all():
-            add_tdv(tdv)
+        def add_task(tdv):
+            if tdv.pk in seen_tdv:
+                return
+            seen_tdv.add(tdv.pk)
+            self._taskRows.append(CapabilityRow(
+                tdv.task_definition.name,
+                _source_label(tdv, defined_tasks_pks),
+                _check_allowed(tdv.task_definition.name, allowed_tasks, disallowed_tasks),
+            ))
+
+        def add_command(tdv):
+            if tdv.pk in seen_tdv:
+                return
+            seen_tdv.add(tdv.pk)
+            self._commandRows.append(CapabilityRow(
+                tdv.task_definition.name,
+                _source_label(tdv, defined_commands_pks),
+                _check_allowed(tdv.task_definition.name, allowed_commands, disallowed_commands),
+            ))
 
         def add_skill(sv):
             if sv.pk in seen_skill:
                 return
             seen_skill.add(sv.pk)
-            name = sv.skill.name
-            source = _source_label(sv, defined_skill_pks, vm)
-            self._skillRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_skills, disallowed_skills)))
-
-        for sv in vm.skill_versions.select_related("skill").all():
-            add_skill(sv)
-        for sv in vm.defined_skill_versions.select_related("skill").all():
-            add_skill(sv)
+            self._skillRows.append(CapabilityRow(
+                sv.skill.name,
+                _source_label(sv, defined_skill_pks),
+                _check_allowed(sv.skill.name, allowed_skills, disallowed_skills),
+            ))
 
         def add_subagent(sav):
             if sav.pk in seen_subagent:
                 return
             seen_subagent.add(sav.pk)
-            name = sav.agent.name
-            source = _source_label(sav, defined_subagent_pks, vm)
-            self._subagentRows.append(CapabilityRow(name, source, _check_allowed(name, allowed_subagents, disallowed_subagents)))
+            self._subagentRows.append(CapabilityRow(
+                sav.agent.name,
+                _source_label(sav, defined_subagent_pks),
+                _check_allowed(sav.agent.name, allowed_subagents, disallowed_subagents),
+            ))
 
-        for sav in vm.subagent_versions.select_related("agent").all():
+        for tdv in self.agent.all_tools:
+            add_tool(tdv)
+        for tdv in self.agent.defined_tools.select_related("task_definition").all():
+            add_tool(tdv)
+
+        for tdv in self.agent.all_tasks:
+            add_task(tdv)
+        for tdv in self.agent.defined_tasks.select_related("task_definition").all():
+            add_task(tdv)
+
+        for tdv in self.agent.all_commands:
+            add_command(tdv)
+        for tdv in self.agent.defined_commands.select_related("task_definition").all():
+            add_command(tdv)
+
+        for sv in self.agent.all_skills:
+            add_skill(sv)
+        for sv in self.agent.defined_skills.select_related("skill").all():
+            add_skill(sv)
+        if not seen_skill and self.agent.skillNames:
+            from server.models.skills.skill_version import SkillModelVersion
+            for sv in SkillModelVersion.objects.filter(
+                skill__name__in=self.agent.skillNames
+            ).select_related("skill").all():
+                add_skill(sv)
+
+        for sav in self.agent.all_subagents:
             add_subagent(sav)
-        for sav in vm.defined_subagent_versions.select_related("agent").all():
+        for sav in self.agent.defined_subagents.select_related("agent").all():
             add_subagent(sav)
 
         self._toolRows.sort(key=lambda r: r.name)

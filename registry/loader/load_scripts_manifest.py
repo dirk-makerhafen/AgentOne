@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import yaml
+import frontmatter
 from registry.install_repo import InstallRepo
 from registry.loader.load_chain_entry import load_chain_entry
 from registry.loader.load_python_entry import load_python_entry
@@ -30,8 +31,7 @@ def load_scripts_manifest(
     results: List[Tuple[TaskDefinition, TaskDefinitionVersion]] = []
     for manifest_path in sorted(scripts_dir.rglob("scripts.md")):
         subdir = manifest_path.parent
-        with open(manifest_path, encoding="utf-8") as f:
-            manifest: dict = yaml.safe_load(f) or {}
+        manifest = frontmatter.load(manifest_path)
 
         commit = install_repo.tree_sha(subdir)
         entries = _collect_manifest_entries(manifest)
@@ -67,6 +67,7 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
             item["group_name"] = group_name
             print(item)
             entries.append(item)
+    print("RETURHN")
     return entries
 
 

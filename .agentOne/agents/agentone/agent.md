@@ -5,7 +5,7 @@ model: gemma4:26b
 extends: baseagent
 maxTurns: 2
 maxUnattendedTurns: 2
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*]
 subagents: 
     - name: AgentOne
       create: both
