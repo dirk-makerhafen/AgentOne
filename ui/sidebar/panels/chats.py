@@ -104,7 +104,7 @@ class SidebarPanelChat(ModelView):
                 <span class="session-title" title="Double-click to rename">{{ pyview.session.name }}</span>
                 <span class="session-time">1w</span>
             </div>
-            <div class="session-meta">30 msgs · {{ pyview.session.aimodel.name }}</div>
+            <div class="session-meta">{{pyview.subject.messages.count()}} msgs · {{ pyview.session.aimodel.name }}</div>
         </div>
         <span class="session-attention-indicator session-state-indicator" aria-hidden="true"></span>
         <div class="session-actions">

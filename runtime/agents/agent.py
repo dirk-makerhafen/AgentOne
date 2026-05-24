@@ -120,7 +120,12 @@ class Agent:
         return self.get_version_model().resolve_setting("priority")
 
     @property
-    def scheduler_strategy(self) -> str:
+    def reasoning_effort(self) -> str | None:
+        """Return the reasoning effort setting."""
+        return self.get_version_model().resolve_setting("reasoning_effort")
+
+    @property
+    def scheduler_strategy(self) -> str | None:
         """Return the scheduler strategy name."""
         return self.get_version_model().resolve_setting("scheduler_strategy")
 

@@ -3,9 +3,13 @@ name: AgentOne
 description: Production-grade general purpose AI operator for research, engineering, writing, debugging, planning, and execution
 model: gemma4:26b
 extends: baseagent
+maxTurns: 2
+maxUnattendedTurns: 2
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*]
 subagents: 
-    - name: baseagent
+    - name: AgentOne
       create: both
+      
 ---
 ## Role
 

@@ -2414,6 +2414,9 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .settings-action-btn:disabled,.settings-action-btn.disabled{opacity:.45;cursor:not-allowed;}
 .settings-action-btn:disabled:hover,.settings-action-btn.disabled:hover{background:var(--sidebar);border-color:var(--border);color:var(--text);}
 
+.settings-card select{width:80%;background:var(--input-bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px 8px;}
+
+
 /* Primary save buttons (Appearance / Preferences "Save Settings"). */
 #mainSettings .settings-btn,
 #mainSettings .sm-btn[onclick^="saveSettings"]{background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:9px 16px;cursor:pointer;font-weight:600;font-size:13px;transition:background .15s,border-color .15s,opacity .15s;}
@@ -3232,20 +3235,22 @@ main.main > .main-view:not([id="mainChat"]):not([id="mainSettings"]) .main-view-
 
 /* ── Shared in-main form (create/edit) for skills/tasks/workspaces/profiles ── */
 .detail-form{display:flex;flex-direction:column;gap:14px;}
-.detail-form-row{display:flex;flex-direction:column;gap:6px;}
+.detail-form-row{display:flex;flex-direction:row;gap:6px;}
 .detail-form-row > label{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.01em;}
 .detail-form-row input[type="text"],
+.detail-form-row input[type="number"],
 .detail-form-row input[type="password"],
 .detail-form-row input:not([type]),
 .detail-form-row select,
 .detail-form-row textarea{
   width:100%;box-sizing:border-box;
   background:var(--sidebar);border:1px solid var(--border);border-radius:8px;
-  color:var(--text);padding:9px 11px;font-size:13px;outline:none;
+  color:var(--text);padding:4px 10px;font-size:13px;outline:none;
   font-family:inherit;line-height:1.5;
   transition:border-color .15s,background .15s;
 }
 .detail-form-row input[type="text"]:focus,
+.detail-form-row input[type="number"]:focus,
 .detail-form-row input[type="password"]:focus,
 .detail-form-row input:not([type]):focus,
 .detail-form-row select:focus,
@@ -3707,6 +3712,6 @@ main.main.showing-logs > #mainLogs{display:flex;}
 
 
 /* rightbar session setting panel */
-.setting-default-dot { color: #8e8585; float: right; font-size: 6px; margin-top: 6px;}
-.setting-reset-btn { color:#fa8232; font-size:14px; margin-right:6px; vertical-align:middle; }
+.setting-default-dot {  color: #c5c4c4; float: right; line-height: 16px; font-size: 8px; margin-top: 6px;}
+.setting-reset-btn { color:#fa8232;   font-size:26px;  line-height: 27px;margin-top: -3px;; margin-right:6px; vertical-align:middle; }
 .setting-reset-btn:hover { filter: brightness(1.2); }

@@ -1,11 +1,34 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from runtime.session.session import Session
+from server.models.enums.task_enums import TaskSchedulerStrategy
+from server.models.providers.ai_model import AiModel
+from server.models.settings import (
+    AgentToolCallSyntax,
+    ReasoningEffort,
+    SubagentResultDelivery,
+)
 from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
     from ui.main.rightpanel.rightpanel import RightPanel
     from ui.app import UiApp
+
+
+CHOICE_FIELDS = {
+    "reasoning_effort": ReasoningEffort,
+    "scheduler_strategy": TaskSchedulerStrategy,
+    "tool_call_syntax": AgentToolCallSyntax,
+    "subagentResultDelivery": SubagentResultDelivery,
+}
+
+INT_FIELDS = {
+    "max_retries",
+    "max_turns",
+    "max_unattended_turns",
+    "max_history_messages",
+    "priority",
+}
 
 
 class RightPanelSession(ModelView):
@@ -15,7 +38,6 @@ class RightPanelSession(ModelView):
         <div class="panel-header">
             <span>Session</span>
             <div>
-             <!-- AI TODO: nicer small buttons/badged --->
                 {% if pyview.session.pinned_session_version %}
                     <span class="settings-version-badge">{{ pyview.session.pinned_session_version.version_number }}</span>
                     {% if not pyview.session.is_newest_version() %}
@@ -24,8 +46,7 @@ class RightPanelSession(ModelView):
                 {% else %}
                     <span class="settings-version-badge">Latest&nbsp;&nbsp;<small>(v{{ pyview.session.get_version_model().version_number }})</small></span>
                 {% endif %}
-
-            </div>    
+            </div>
         </div>
         <div style="flex:1;overflow-y:auto;padding:8px">
 
@@ -67,13 +88,26 @@ class RightPanelSession(ModelView):
                 {% for name, label in pyview.settings_fields %}
                 <div class="detail-row">
                     <div class="detail-row-label">{{ label }}</div>
-                    <div class="detail-row-value">
+                    <div class="detail-form-row">
+                        {% if name in pyview.choice_fields %}
+                            <select onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="max-width:80%;font-size:12px">
+                                <option value="">&mdash; Agent default &mdash;</option>
+                                {% for opt in pyview.setting_options(name) %}
+                                <option value="{{ opt }}"{% if pyview.setting_display_value(name) == opt %} selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        {% elif name in pyview.int_fields %}
+                            <input type="number" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px" min="0">
+                        {% elif name == 'aimodel' %}
+                            <input type="text" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px">
+                        {% else %}
+                            {{ pyview.setting_value(name) }}
+                        {% endif %}
                         {% if pyview.is_overridden(name) %}
                             <span class="setting-reset-btn" onclick="pyview.resetSetting('{{name}}')" title="Reset to agent default">⟳</span>
                         {% else %}
                             <span class="setting-default-dot" title="Agent default">⬤</span>
                         {% endif %}
-                        {{ pyview.setting_value(name) }}
                     </div>
                 </div>
                 {% endfor %}
@@ -118,6 +152,10 @@ class RightPanelSession(ModelView):
     def __init__(self, subject: UiApp, parent: RightPanel, **kwargs):
         super().__init__(subject, parent, **kwargs)
 
+    # ------------------------------------------------------------------
+    # Session access
+    # ------------------------------------------------------------------
+
     @property
     def session(self) -> Session | None:
         return self.parent.current_session
@@ -136,13 +174,33 @@ class RightPanelSession(ModelView):
             return str(ws)
         return "\u2014"
 
-    def setting_value(self, name: str) -> str:
+    # ------------------------------------------------------------------
+    # Setting helpers
+    # ------------------------------------------------------------------
+
+    def _resolved_value(self, name: str) -> Any:
+        """Return the raw resolved setting value (session override → agent default)."""
         s = self.session
         if s is None:
-            return ""
-        val = getattr(s, name, None)
+            return None
+        return getattr(s, name, None)
+
+    def setting_value(self, name: str) -> str:
+        """Return the string representation of the resolved setting value."""
+        val = self._resolved_value(name)
         if val is None:
             return "\u2014"
+        if hasattr(val, "name"):
+            return val.name
+        return str(val)
+
+    def setting_display_value(self, name: str) -> str:
+        """Return the raw resolved value as a string, or empty for controls."""
+        val = self._resolved_value(name)
+        if val is None:
+            return ""
+        if hasattr(val, "name"):
+            return val.name
         return str(val)
 
     def is_overridden(self, name: str) -> bool:
@@ -152,7 +210,53 @@ class RightPanelSession(ModelView):
         ss = s.get_version_model().session_settings
         return bool(ss and getattr(ss, name) is not None)
 
-    def resetSetting(self, name: str):
+    @property
+    def choice_fields(self):
+        return set(CHOICE_FIELDS.keys())
+
+    @property
+    def int_fields(self):
+        return INT_FIELDS
+
+    def setting_options(self, name: str) -> list[str]:
+        """Return valid option strings for a choice-based setting."""
+        choices_cls = CHOICE_FIELDS.get(name)
+        if choices_cls:
+            return [v.value for v in choices_cls]
+        return []
+
+    # ------------------------------------------------------------------
+    # Mutators
+    # ------------------------------------------------------------------
+
+    def setSetting(self, name: str, raw_value: str) -> None:
+        """Set a setting on the session (creates a new session version)."""
+        s = self.session
+        if s is None:
+            return
+
+        if raw_value == "":
+            value = None
+        elif name in INT_FIELDS:
+            try:
+                value = int(raw_value)
+            except (ValueError, TypeError):
+                return
+        elif name == "aimodel":
+            aimodel = AiModel.objects.filter(name=raw_value).first()
+            if aimodel is None:
+                return
+            s._set_session_setting(name, aimodel)
+            self.update()
+            return
+        else:
+            value = raw_value
+
+        s._set_session_setting(name, value)
+        self.update()
+
+    def resetSetting(self, name: str) -> None:
+        """Reset a setting override, restoring the agent default."""
         s = self.session
         if s is None:
             return

@@ -100,6 +100,38 @@ class Session:
         """Override the reasoning effort setting (creates a new version)."""
         self._set_session_setting("reasoning_effort", value)
 
+    def set_scheduler_strategy(self, value: str | None) -> None:
+        """Override the scheduler strategy setting (creates a new version)."""
+        self._set_session_setting("scheduler_strategy", value)
+
+    def set_tool_call_syntax(self, value: str | None) -> None:
+        """Override the tool call syntax setting (creates a new version)."""
+        self._set_session_setting("tool_call_syntax", value)
+
+    def set_subagentResultDelivery(self, value: str | None) -> None:
+        """Override the subagent result delivery setting (creates a new version)."""
+        self._set_session_setting("subagentResultDelivery", value)
+
+    def set_max_retries(self, value: int | None) -> None:
+        """Override the max retries setting (creates a new version)."""
+        self._set_session_setting("max_retries", value)
+
+    def set_max_turns(self, value: int | None) -> None:
+        """Override the max turns setting (creates a new version)."""
+        self._set_session_setting("max_turns", value)
+
+    def set_max_unattended_turns(self, value: int | None) -> None:
+        """Override the max unattended turns setting (creates a new version)."""
+        self._set_session_setting("max_unattended_turns", value)
+
+    def set_max_history_messages(self, value: int | None) -> None:
+        """Override the max history messages setting (creates a new version)."""
+        self._set_session_setting("max_history_messages", value)
+
+    def set_priority(self, value: int | None) -> None:
+        """Override the priority setting (creates a new version)."""
+        self._set_session_setting("priority", value)
+
     @property
     def max_retries(self) -> int:
         """Return the resolved max retries."""
@@ -211,6 +243,8 @@ class Session:
 
     def get_command(self, name: str) -> BoundTask | None:
         """Return a BoundTask for command *name*, or *None*."""
+        if name not in self.allowedCommandNames:
+            return None
         tdv = self.agent.get_command(name)
         if tdv:
             return BoundTask(session=self, task_definition_version=tdv)
@@ -242,6 +276,8 @@ class Session:
 
     def get_task(self, name: str) -> BoundTask | None:
         """Return a BoundTask for task *name*, or *None*."""
+        if name not in self.allowedTaskNames:
+            return None
         tdv = self.agent.get_task(name)
         if tdv:
             return BoundTask(session=self, task_definition_version=tdv)
@@ -273,6 +309,8 @@ class Session:
 
     def get_tool(self, name: str) -> BoundTask | None:
         """Return a BoundTask for tool *name*, or *None*."""
+        if name not in self.allowedToolNames:
+            return None
         tdv = self.agent.get_tool(name)
         if tdv:
             return BoundTask(session=self, task_definition_version=tdv)
@@ -403,17 +441,20 @@ class Session:
             new_session_setting = SettingsModel()
         else:
             new_session_setting = session_version_model.session_settings
-
-        if getattr(new_session_setting, name) == value:
-            return
+            if getattr(new_session_setting, name) == value:
+                return
+        
+        print("_set_session_setting", name, value)
         new_session_setting.pk = None
         new_session_setting.created_at = None
-        new_session_setting.__setattr__(name, value)
+        setattr(new_session_setting, name, value)
         new_session_setting.save()
         session_version_model.pk = None
         session_version_model.created_at = None
         session_version_model.version_number += 1
+        session_version_model.session_settings = new_session_setting
         session_version_model.save()
+        print(session_version_model.pk)
         self.model.latest_session_version = session_version_model
         self.model.save()
 

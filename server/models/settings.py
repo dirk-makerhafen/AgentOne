@@ -47,9 +47,7 @@ class SettingsModel(BaseModel):
         blank=True,
         null=True,
     )
-    thinking: bool | None = models.BooleanField(
-        default=None, null=True, blank=True
-    )
+    thinking: bool | None = models.BooleanField(default=None, null=True, blank=True)
 
     reasoning_effort: str | None = models.CharField(
         max_length=20,
