@@ -51,6 +51,8 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
     Each entry is annotated with ``task_type`` and ``task_execution_mode``.
     """
     entries: List[Dict[str, Any]] = []
+    group_name = manifest.get("group", "")
+
     for key, ttype in [
         ("tools", TaskType.TOOL),
         ("tasks", TaskType.TASK),
@@ -62,6 +64,7 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
                 if fkey in item:
                     item["task_execution_mode"] = fenum
                     break
+            item["group_name"] = group_name
             print(item)
             entries.append(item)
     return entries
@@ -83,16 +86,17 @@ def _load_script_entry(
     task_type: TaskType = entry["task_type"]
     task_execution_mode: TaskExecutionMode = entry["task_execution_mode"]
     name: str = entry["name"]
+    group_name: str = entry.get("group_name", scripts_dir.name)
     print("_load_script_entry", entry)
 
     if task_execution_mode == TaskExecutionMode.FUNCTION:
         load_python_entry(
             entry, scripts_dir, commit, task_type, task_execution_mode,
-            name, parent_project, parent_agent, parent_skill, existing_results,
+            name, group_name, parent_project, parent_agent, parent_skill, existing_results,
         )
     elif task_execution_mode in (TaskExecutionMode.CHAIN, TaskExecutionMode.GROUP):
         load_chain_entry(
-            entry, commit, task_type, task_execution_mode, name,
+            entry, commit, task_type, task_execution_mode, name, group_name,
             parent_project, parent_agent, parent_skill, existing_results,
         )
     else:

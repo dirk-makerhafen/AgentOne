@@ -32,6 +32,7 @@ def load_python_entry(
     task_type: TaskType,
     task_execution_mode: TaskExecutionMode,
     name: str,
+    group_name: str,
     parent_project: Any,
     parent_agent: Any,
     parent_skill: Any,
@@ -71,6 +72,7 @@ def load_python_entry(
         parent_agent=parent_agent,
         parent_project=parent_project,
         name=name,
+        group_name=group_name
     )
     task_version, created = TaskDefinitionVersion.objects.get_or_create(
         task_definition=task_def, **kw,

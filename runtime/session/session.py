@@ -2,7 +2,7 @@ from __future__ import annotations
 import ast
 from typing import TYPE_CHECKING, Any, Dict, List
 
-from runtime.agents.agent import Agent
+from runtime.agents.agent import Agent, is_name_disallowed
 from runtime.tasks.bound_task import BoundTask
 from server.models.content import GenericContent
 from server.models.message import Message
@@ -191,22 +191,29 @@ class Session:
         """Return the resolved disallowed command names."""
         return self._get_session_setting("disallowedCommandNames") or []
 
+    def _filter_allowed_names(self, tdvs: list[TaskDefinitionVersion], disallowed: list[str]) -> list[str]:
+        """Return names from *tdvs* that don't match any disallowed pattern."""
+        return [
+            tdv.task_definition.name
+            for tdv in tdvs
+            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+        ]
+
     @property
     def allowedCommandNames(self) -> list[str]:
-        """Return command names minus those disallowed."""
-        return list(set(self.commandNames) - set(self.disallowedCommandNames))
+        """Return concrete command names, expanded from patterns via the resolved M2M."""
+        return self._filter_allowed_names(self.agent.allowedCommands, self.disallowedCommandNames)
 
     @property
     def allowedCommands(self) -> list[TaskDefinitionVersion]:
         """Return allowed command TaskDefinitionVersion instances (from agent)."""
-        return [t for t in [self.agent.get_command(name) for name in self.allowedCommandNames] if t]
+        return list(self.agent.allowedCommands)
 
     def get_command(self, name: str) -> BoundTask | None:
         """Return a BoundTask for command *name*, or *None*."""
-        if name in self.allowedCommandNames:
-            task_definition_version = self.agent.get_command(name)
-            if task_definition_version:
-                return BoundTask(session=self, task_definition_version=task_definition_version)
+        tdv = self.agent.get_command(name)
+        if tdv:
+            return BoundTask(session=self, task_definition_version=tdv)
         return None
 
     # ------------------------------------------------------------------
@@ -225,20 +232,19 @@ class Session:
 
     @property
     def allowedTaskNames(self) -> list[str]:
-        """Return task names minus those disallowed."""
-        return list(set(self.taskNames) - set(self.disallowedTaskNames))
+        """Return concrete task names, expanded from patterns via the resolved M2M."""
+        return self._filter_allowed_names(self.agent.allowedTasks, self.disallowedTaskNames)
 
     @property
     def allowedTasks(self) -> list[TaskDefinitionVersion]:
         """Return allowed task TaskDefinitionVersion instances (from agent)."""
-        return [t for t in [self.agent.get_task(name) for name in self.allowedTaskNames] if t]
+        return list(self.agent.allowedTasks)
 
     def get_task(self, name: str) -> BoundTask | None:
         """Return a BoundTask for task *name*, or *None*."""
-        if name in self.allowedTaskNames:
-            task_definition_version = self.agent.get_task(name)
-            if task_definition_version:
-                return BoundTask(session=self, task_definition_version=task_definition_version)
+        tdv = self.agent.get_task(name)
+        if tdv:
+            return BoundTask(session=self, task_definition_version=tdv)
         return None
 
     # ------------------------------------------------------------------
@@ -257,20 +263,19 @@ class Session:
 
     @property
     def allowedToolNames(self) -> list[str]:
-        """Return tool names minus those disallowed."""
-        return list(set(self.toolNames) - set(self.disallowedToolNames))
+        """Return concrete tool names, expanded from patterns via the resolved M2M."""
+        return self._filter_allowed_names(self.agent.allowedTools, self.disallowedToolNames)
 
     @property
     def allowedTools(self) -> list[TaskDefinitionVersion]:
         """Return allowed tool TaskDefinitionVersion instances (from agent)."""
-        return [t for t in [self.agent.get_tool(name) for name in self.allowedToolNames] if t]
+        return list(self.agent.allowedTools)
 
     def get_tool(self, name: str) -> BoundTask | None:
         """Return a BoundTask for tool *name*, or *None*."""
-        if name in self.allowedToolNames:
-            task_definition_version = self.agent.get_tool(name)
-            if task_definition_version:
-                return BoundTask(session=self, task_definition_version=task_definition_version)
+        tdv = self.agent.get_tool(name)
+        if tdv:
+            return BoundTask(session=self, task_definition_version=tdv)
         return None
 
     # ------------------------------------------------------------------

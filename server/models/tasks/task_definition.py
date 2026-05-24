@@ -39,6 +39,7 @@ class TaskDefinition(BaseModel):
     )
 
     name = models.CharField(max_length=255)
+    group_name =  models.CharField(max_length=255, default="")
     latest_task_version = models.ForeignKey(
         TaskDefinitionVersion,
         default=None,

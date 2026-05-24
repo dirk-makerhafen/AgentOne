@@ -1,5 +1,5 @@
 ---
-group: execute
+group: execution
 tools:
   - name: python
     file: python.py

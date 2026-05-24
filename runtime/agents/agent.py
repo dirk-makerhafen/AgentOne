@@ -10,6 +10,41 @@ if TYPE_CHECKING:
     from server.models.agents.agent import AgentModel
 
 
+def is_name_disallowed(name: str, group_name: str, patterns: list[str]) -> bool:
+    """Check if *name* (in *group_name*) matches any wildcard pattern.
+
+    Supports the same syntax as the loader:
+
+    - exact name: ``"tree"``
+    - prefix wildcard: ``"tree*"`` → starts with ``"tree"``
+    - suffix wildcard: ``"*tree"`` → ends with ``"tree"``
+    - group wildcard: ``"filesystem-read.*"`` → all names in that group
+    - group + prefix: ``"filesystem-read.tree*"``
+    - group + suffix: ``"filesystem-read.*tree"``
+    """
+    for pattern in patterns:
+        if "." in pattern:
+            pat_group, pat_rest = pattern.split(".", 1)
+            if pat_group != group_name:
+                continue
+            if pat_rest == "*":
+                return True
+            if pat_rest.endswith("*") and name.startswith(pat_rest[:-1]):
+                return True
+            if pat_rest.startswith("*") and name.endswith(pat_rest[1:]):
+                return True
+            if pat_rest == name:
+                return True
+        else:
+            if pattern == name:
+                return True
+            if pattern.endswith("*") and name.startswith(pattern[:-1]):
+                return True
+            if pattern.startswith("*") and name.endswith(pattern[1:]):
+                return True
+    return False
+
+
 class Agent:
     """
     Runtime wrapper around an AgentModel.
@@ -121,26 +156,35 @@ class Agent:
 
     @property
     def commandNames(self) -> list[str]:
-        """Return all configured command names."""
+        """Return all configured command names (raw, may include patterns)."""
         return self.get_version_model().resolve_setting("commandNames") or []
 
     @property
     def disallowedCommandNames(self) -> list[str]:
-        """Return disallowed command names."""
+        """Return disallowed command names (raw, may include patterns)."""
         return self.get_version_model().resolve_setting("disallowedCommandNames") or []
 
     @property
     def allowedCommandNames(self) -> list[str]:
-        """Return command names minus those that are disallowed."""
-        return list(set(self.commandNames) - set(self.disallowedCommandNames))
+        """Return concrete command names, expanded from patterns via the resolved M2M."""
+        disallowed = self.disallowedCommandNames
+        return [
+            tdv.task_definition.name
+            for tdv in self.get_version_model().commands()
+            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+        ]
 
     @property
     def allowedCommands(self) -> list[TaskDefinitionVersion]:
-        """Return :class:`TaskDefinitionVersion` instances for allowed commands."""
-        return [t for t in [self.get_command(name) for name in self.allowedCommandNames] if t]
+        """Return :class:`TaskDefinitionVersion` instances for allowed commands, excluding disallowed."""
+        disallowed = self.disallowedCommandNames
+        return [
+            tdv for tdv in self.get_version_model().commands()
+            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+        ]
 
     def get_command(self, name: str) -> TaskDefinitionVersion | None:
-        """Return the command *name* as a TaskDefinitionVersion, or *None*."""
+        """Return the command *name* as a TaskDefinitionVersion, or *None* (None if disallowed)."""
         if name in self.allowedCommandNames:
             return self.get_version_model().commands().filter(task_definition__name=name).first()
         return None
@@ -151,26 +195,35 @@ class Agent:
 
     @property
     def taskNames(self) -> list[str]:
-        """Return all configured task names."""
+        """Return all configured task names (raw, may include patterns)."""
         return self.get_version_model().resolve_setting("taskNames") or []
 
     @property
     def disallowedTaskNames(self) -> list[str]:
-        """Return disallowed task names."""
+        """Return disallowed task names (raw, may include patterns)."""
         return self.get_version_model().resolve_setting("disallowedTaskNames") or []
 
     @property
     def allowedTaskNames(self) -> list[str]:
-        """Return task names minus those that are disallowed."""
-        return list(set(self.taskNames) - set(self.disallowedTaskNames))
+        """Return concrete task names, expanded from patterns via the resolved M2M."""
+        disallowed = self.disallowedTaskNames
+        return [
+            tdv.task_definition.name
+            for tdv in self.get_version_model().tasks()
+            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+        ]
 
     @property
     def allowedTasks(self) -> list[TaskDefinitionVersion]:
-        """Return :class:`TaskDefinitionVersion` instances for allowed tasks."""
-        return [t for t in [self.get_task(name) for name in self.allowedTaskNames] if t]
+        """Return :class:`TaskDefinitionVersion` instances for allowed tasks, excluding disallowed."""
+        disallowed = self.disallowedTaskNames
+        return [
+            tdv for tdv in self.get_version_model().tasks()
+            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+        ]
 
     def get_task(self, name: str) -> TaskDefinitionVersion | None:
-        """Return the task *name* as a TaskDefinitionVersion, or *None*."""
+        """Return the task *name* as a TaskDefinitionVersion, or *None* (None if disallowed)."""
         if name in self.allowedTaskNames:
             return self.get_version_model().tasks().filter(task_definition__name=name).first()
         return None
@@ -181,26 +234,35 @@ class Agent:
 
     @property
     def toolNames(self) -> list[str]:
-        """Return all configured tool names."""
+        """Return all configured tool names (raw, may include patterns)."""
         return self.get_version_model().resolve_setting("toolNames") or []
 
     @property
     def disallowedToolNames(self) -> list[str]:
-        """Return disallowed tool names."""
+        """Return disallowed tool names (raw, may include patterns)."""
         return self.get_version_model().resolve_setting("disallowedToolNames") or []
 
     @property
     def allowedToolNames(self) -> list[str]:
-        """Return tool names minus those that are disallowed."""
-        return list(set(self.toolNames) - set(self.disallowedToolNames))
+        """Return concrete tool names, expanded from patterns via the resolved M2M."""
+        disallowed = self.disallowedToolNames
+        return [
+            tdv.task_definition.name
+            for tdv in self.get_version_model().tools()
+            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+        ]
 
     @property
     def allowedTools(self) -> list[TaskDefinitionVersion]:
-        """Return :class:`TaskDefinitionVersion` instances for allowed tools."""
-        return [t for t in [self.get_tool(name) for name in self.allowedToolNames] if t]
+        """Return :class:`TaskDefinitionVersion` instances for allowed tools, excluding disallowed."""
+        disallowed = self.disallowedToolNames
+        return [
+            tdv for tdv in self.get_version_model().tools()
+            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+        ]
 
     def get_tool(self, name: str) -> TaskDefinitionVersion | None:
-        """Return the tool *name* as a TaskDefinitionVersion, or *None*."""
+        """Return the tool *name* as a TaskDefinitionVersion, or *None* (None if disallowed)."""
         if name in self.allowedToolNames:
             return self.get_version_model().tools().filter(task_definition__name=name).first()
         return None

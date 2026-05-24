@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import frontmatter
 from django.core.exceptions import ValidationError
+from django.db.models.query import QuerySet
 
 from registry.install_repo import InstallRepo
 from registry.loader.load_scripts_manifest import load_scripts_manifest
@@ -248,50 +249,82 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
     if not settings:
         return
 
-    rt = agent_version.get_runtime()
     resolved: set = set()
 
-    for names in [rt.allowedTaskNames, rt.allowedToolNames, rt.allowedCommandNames]:
-        print("FOOOOO23", names)
-        if not names:
-            continue
+    def _add_matches(qs: QuerySet, target: set) -> bool:
+        found = False
+        for tdv in qs:
+            target.add(tdv.pk)
+            found = True
+        return found
 
-        for name in names:
-            print("slook", name)
-            if name == "+":
-                continue
+    def _resolve_pattern(pattern: str) -> None:
+        """Resolve a single name or wildcard pattern into TDV pks."""
+        if pattern == "+":
+            return
+        group = None
+        if "." in pattern:
+            group, raw_name = [x.strip() for x in pattern.strip().split(".", 1)]
+        else:
+            raw_name = pattern
 
-            tdv = agent_version.defined_task_versions.filter(
-                task_definition__name=name
-            ).first()
-            if tdv:
-                resolved.add(tdv.pk)
-                continue
-            for ext in agent_version.extends_agent_versions.all():
-                print("ETCENDS", ext, ext.defined_task_versions.all())
-                tdv = ext.defined_task_versions.filter(
-                    task_definition__name=name
-                ).first()
-                if tdv:
-                    resolved.add(tdv.pk)
-                    break
+        is_wildcard = raw_name in ("*",) or raw_name.startswith("*") or raw_name.endswith("*")
+
+        fargs: dict[str, Any] = {}
+        if raw_name != "*":
+            if raw_name.startswith("*"):
+                fargs["task_definition__name__startswith"] = raw_name[1:]
+            elif raw_name.endswith("*"):
+                fargs["task_definition__name__endswith"] = raw_name[:-1]
             else:
-                print("SEARCH GLOBAL")
-                task_definition = TaskDefinition.objects.filter(
-                        name=name,
-                        parent_agent__isnull=True,
-                        parent_project__isnull=True,
-                        parent_skill__isnull=True,
-                    ).first()
-                
-                if not task_definition:
-                    raise Exception(f"No Task Definition found for {name}")
-                task_definition_version = task_definition.latest_task_version
-                print("found", task_definition_version)
-                resolved.add(task_definition_version.pk)
-                
-    if not resolved:
-        raise Exception(f"not found {name}")
+                fargs["task_definition__name"] = raw_name
+        if group:
+            fargs["task_definition__group_name"] = group
+
+        # 1. Own defined_task_versions
+        if _add_matches(agent_version.defined_task_versions.filter(**fargs), resolved):
+            return
+
+        # 2. Extends chain — wildcards collect from all, exact first-match wins
+        found_in_extends = False
+        for ext in agent_version.extends_agent_versions.all():
+            if _add_matches(ext.defined_task_versions.filter(**fargs), resolved):
+                found_in_extends = True
+                if not is_wildcard:
+                    break
+        if found_in_extends:
+            return
+
+        # 3. Global fallback
+        gfargs = {
+            k.replace("task_definition__", ""): v
+            for k, v in fargs.items()
+        }
+        gfargs["parent_agent__isnull"] = True
+        gfargs["parent_project__isnull"] = True
+        gfargs["parent_skill__isnull"] = True
+        global_tds = list(TaskDefinition.objects.filter(**gfargs))
+        if not global_tds:
+            raise Exception(f"No Task Definition found for '{raw_name}' group='{group}'")
+        for td in global_tds:
+            resolved.add(td.latest_task_version.pk)
+
+    # Read raw patterns via resolve_setting to walk the extends chain,
+    # NOT through the runtime Agent (the M2M hasn't been populated yet).
+    raw_namesets = [
+        agent_version.resolve_setting("toolNames") or [],
+        agent_version.resolve_setting("taskNames") or [],
+        agent_version.resolve_setting("commandNames") or [],
+    ]
+
+    cnt = 0
+    for names in raw_namesets:
+        for name in names:
+            cnt+=1
+            _resolve_pattern(name)
+
+    if not resolved and cnt > 0:
+        raise Exception(f"No task definitions resolved for pattern {raw_namesets}")
     agent_version.task_versions.set(
         TaskDefinitionVersion.objects.filter(pk__in=resolved)
     )
