@@ -1,92 +1,283 @@
-
 from __future__ import annotations
-from typing import TYPE_CHECKING
+import json
+from typing import TYPE_CHECKING, Any
+
+from server.models.agents.agent import AgentModel
+from server.models.sessions.session import SessionModel
+from runtime.agents.agent import Agent
 from ui.lib.model_view import ModelView
-from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
-from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
-from ui.lib.queryset_view import QuerySetView
 
 if TYPE_CHECKING:
+    from ui.app import UiApp
     from ui.main.main_view import MainView
 
-class CronCreateAgent(ModelView):
-    DOM_ELEMENT =  "option"
-    TEMPLATE_STR = '''{{pyview.subject.name}}'''
-    @property
-    def DOM_ELEMENT_EXTRAS(self):
-        return f' value="{self.subject.name}" selected=""'
 
 class CronCreateView(ModelView):
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="main-view-header">
-            <div class="main-view-title" id="taskDetailTitle">New job</div>
+            <div class="main-view-title">New job</div>
             <div class="main-view-actions">
-                <button id="btnRunTaskDetail" class="panel-head-btn" title="Run now" data-i18n-title="cron_run_now" onclick="runCurrentCron()" style="display: none1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
-                <button id="btnPauseTaskDetail" class="panel-head-btn" title="Pause" data-i18n-title="cron_pause" onclick="pauseCurrentCron()" style="display: none1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></button>
-                <button id="btnResumeTaskDetail" class="panel-head-btn" title="Resume" data-i18n-title="cron_resume" onclick="resumeCurrentCron()" style="display:none1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon><line x1="22" y1="4" x2="22" y2="20"></line></svg></button>
-                <button id="btnEditTaskDetail" class="panel-head-btn" title="Edit" data-i18n-title="edit" onclick="editCurrentCron()" style="display: none1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
-                <button id="btnDuplicateTaskDetail" class="panel-head-btn" title="Duplicate" data-i18n-title="cron_duplicate" onclick="duplicateCurrentCron()" style="display: none1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-                <button id="btnDeleteTaskDetail" class="panel-head-btn" title="Delete" data-i18n-title="delete_title" onclick="deleteCurrentCron()" style="display: none1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-                <button id="btnCancelTaskDetail" class="panel-head-btn" title="Cancel" data-i18n-title="cancel" onclick="cancelCronForm()" style=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-                <button id="btnSaveTaskDetail" class="panel-head-btn primary" title="Save" data-i18n-title="save" onclick="saveCronForm()" style=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+                <button class="panel-head-btn" title="Cancel" onclick="pyview.cancelCronForm()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <button class="panel-head-btn primary" title="Save" onclick="pyview.saveCronForm()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </button>
             </div>
         </div>
-        <div class="main-view-body" id="taskDetailBody" style="">
+        <div class="main-view-body">
             <div class="main-view-content">
-                <form class="detail-form" onsubmit="event.preventDefault(); saveCronForm();">
-                    <div class="detail-form-row">
-                        <label for="cronFormName">Name</label>
-                        <input type="text" id="cronFormName" value="" placeholder="Optional" autocomplete="off">
-                    </div>
-                    <div class="detail-form-row">
-                        <label for="cronFormSchedule">Schedule</label>
-                        <input type="text" id="cronFormSchedule" value="" placeholder="0 9 * * *  —  every 1h  —  @daily" autocomplete="off" required="">
-                        <div class="detail-form-hint">Cron expression or shorthand like 'every 1h'.</div>
-                    </div>
-                    <div class="detail-form-row">
-                        <label for="cronFormPrompt">Prompt</label>
-                        <textarea id="cronFormPrompt" rows="6" placeholder="Prompt" required=""></textarea>
-                    </div>
-                    <div class="detail-form-row">
-                        <label for="cronFormDeliver">Deliver output to</label>
-                        <select id="cronFormDeliver">
-                            <option value="local" selected="">Local (save output only)</option>
-                            <option value="discord">Discord</option>
-                            <option value="telegram">Telegram</option>
-                        </select>
-                    </div>
-                    <div class="detail-form-row">
-                        <label for="cronFormProfile">Profile</label>
+                <form class="detail-form" onsubmit="event.preventDefault(); pyview.saveCronForm();">
 
-                        {{ pyview.agent_list.render() }}
-                       
-                        <div class="detail-form-hint">Uses the WebUI server default profile at run time. Existing jobs without a profile keep this legacy behavior.</div>
-                    </div>
                     <div class="detail-form-row">
-                        <label for="cronFormSkillSearch">Skills</label>
-                        <div class="skill-picker-wrap">
-                            <input type="text" id="cronFormSkillSearch" placeholder="Add skills (optional)…" autocomplete="off">
-                            <div id="cronFormSkillDropdown" class="skill-picker-dropdown" style="display:none"></div>
-                            <div id="cronFormSkillTags" class="skill-picker-tags"></div>
+                        <label for="cfName">Name</label>
+                        <input type="text" id="cfName" value="{{ pyview._form_data.name }}" placeholder="Optional" autocomplete="off" onchange="pyview.setCronField('name', this.value)">
+                    </div>
+
+                    <div class="detail-form-row">
+                        <label for="cfSchedule">Schedule</label>
+                        <input type="text" id="cfSchedule" value="{{ pyview._form_data.schedule }}" placeholder="0 9 * * *  —  every 1h  —  @daily" autocomplete="off" required="" onchange="pyview.setCronField('schedule', this.value)">
+                        <div class="detail-form-hint">
+                            <strong>Standard cron:</strong> <code>min hour day month weekday</code> (e.g. <code>0 9 * * 1-5</code> = weekdays at 9AM) &mdash;
+                            <strong>Shorthands:</strong> <code>@daily</code>, <code>@hourly</code>, <code>@weekly</code> &mdash;
+                            <strong>Every N:</strong> <code>every 30m</code>, <code>every 2h</code>, <code>every 10min</code>
                         </div>
                     </div>
-                    <div id="cronFormError" class="detail-form-error" style="display:none"></div>
+
+                    <div class="detail-form-row">
+                        <label for="cfAgent">Agent</label>
+                        <select id="cfAgent" onchange="pyview.onAgentChange(this.value)" required="">
+                            <option value="">-- Select agent --</option>
+                            {% for agent in pyview.agent_list %}
+                            <option value="{{ agent.name }}"{% if pyview._form_data.agent == agent.name %} selected{% endif %}>{{ agent.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="detail-form-row">
+                        <label>Session</label>
+                        <div style="display:flex;flex-direction:column;gap:6px;width:100%">
+                            <div style="display:flex;gap:12px">
+                                <label style="font-weight:normal;display:flex;align-items:center;gap:4px">
+                                    <input type="radio" name="cfSessionMode" value="new" onchange="pyview.setCronField('session_mode', this.value)"
+                                        {% if pyview._form_data.session_mode == 'new' %}checked{% endif %}>
+                                    New session each run
+                                </label>
+                                <label style="font-weight:normal;display:flex;align-items:center;gap:4px">
+                                    <input type="radio" name="cfSessionMode" value="existing" onchange="pyview.setCronField('session_mode', this.value)"
+                                        {% if pyview._form_data.session_mode == 'existing' %}checked{% endif %}>
+                                    Reuse existing session
+                                </label>
+                            </div>
+                            {% if pyview._form_data.session_mode == 'existing' %}
+                            <div class="skill-picker-wrap">
+                                <input type="text" id="cfSessionName" value="{{ pyview._form_data.session_name }}" placeholder="Session name (leave blank for auto-name)" autocomplete="off"
+                                    oninput="pyview.searchSessions(this.value)" onchange="pyview.setCronField('session_name', this.value)">
+                                {% if pyview._session_search_results %}
+                                <div class="skill-picker-dropdown" style="display:block">
+                                    {% for sname in pyview._session_search_results %}
+                                    <div class="skill-picker-item" onclick="pyview.selectSession({{ loop.index0 }})" style="padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--border2)">{{ sname }}</div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="detail-form-hint" style="margin-top:2px">Auto-name: <code>cron:{{ pyview._form_data.agent }}:{{ pyview._form_data.name }}</code></div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if pyview._form_data.agent %}
+                    <div class="detail-form-row">
+                        <label for="cfFunction">Function</label>
+                        <select id="cfFunction" onchange="pyview.onFunctionChange(this.value)">
+                            <option value="">Send message (ingest_user_message)</option>
+                            {% for group_label, items in pyview.agent_functions %}
+                            <optgroup label="{{ group_label }}">
+                                {% for fname, ftype in items %}
+                                <option value="{{ ftype }}:{{ fname }}"{% if pyview._form_data.function_type == ftype and pyview._form_data.function_name == fname %} selected{% endif %}>{{ fname }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="detail-form-row">
+                        <label for="cfMessage">{% if pyview._form_data.function_type %}Message (JSON){% else %}Message{% endif %}</label>
+                        <textarea id="cfMessage" rows="6" placeholder="{% if pyview._form_data.function_type %}Enter JSON matching the function signature{% else %}Message text{% endif %}" onchange="pyview.setCronField('message', this.value)">{{ pyview._form_data.message }}</textarea>
+                        {% if pyview._form_data.function_type and pyview._selected_function_schema %}
+                        <div class="detail-form-hint" style="margin-top:4px">
+                            <strong>Expected schema:</strong>
+                            <pre style="font-size:11px;margin:4px 0;white-space:pre-wrap">{{ pyview._selected_function_schema }}</pre>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div id="cfError" class="detail-form-error" style="display:{% if pyview._form_error %}block{% else %}none{% endif %}">
+                        {{ pyview._form_error }}
+                    </div>
+
                 </form>
             </div>
         </div>
-        <div class="main-view-empty" id="taskDetailEmpty" style="display: none;">
+        <div class="main-view-empty" id="taskDetailEmpty" style="display:none">
             <svg class="main-view-empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <div class="main-view-empty-title" data-i18n="tasks_empty_title">Select a scheduled job</div>
             <div class="main-view-empty-sub" data-i18n="tasks_empty_sub">Pick a job from the sidebar to view its details and runs, or create a new one.</div>
         </div>
     '''
-    def __init__(self, subject, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
+
+    def __init__(self, subject: UiApp, parent: Any, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.agent_list = QuerySetView(
-            subject = subject.agents.root(),
-            parent = self,
-            item_class = CronCreateAgent,
-            dom_element = "select"
-        )
-    
+        self._form_data: dict[str, str] = {
+            "name": "",
+            "schedule": "",
+            "agent": "",
+            "session_mode": "new",
+            "session_name": "",
+            "function_type": "",
+            "function_name": "",
+            "message": "",
+        }
+        self._form_error: str = ""
+        self._session_search_results: list[str] = []
+        self._selected_function_schema: str = ""
+
+    @property
+    def agent_list(self) -> list[AgentModel]:
+        return list(self.subject.agents.root())
+
+    @property
+    def agent_functions(self) -> list[tuple[str, list[tuple[str, str]]]]:
+        name = self._form_data.get("agent", "")
+        if not name:
+            return []
+        agent_model = AgentModel.objects.filter(name=name).first()
+        if not agent_model:
+            return []
+        agent = Agent(agent_model=agent_model)
+        groups: list[tuple[str, list[tuple[str, str]]]] = []
+        tasks = [(tdv.task_definition.name, "task") for tdv in agent.allowedTasks]
+        if tasks:
+            groups.append(("Tasks", tasks))
+        tools = [(tdv.task_definition.name, "tool") for tdv in agent.allowedTools]
+        if tools:
+            groups.append(("Tools", tools))
+        commands = [(tdv.task_definition.name, "command") for tdv in agent.allowedCommands]
+        if commands:
+            groups.append(("Commands", commands))
+        return groups
+
+    def setCronField(self, field: str, value: str) -> None:
+        self._form_data[field] = value
+        if field == "function_type":
+            parts = value.split(":", 1)
+            if len(parts) == 2:
+                self._form_data["function_type"] = parts[0]
+                self._form_data["function_name"] = parts[1]
+                self._update_function_schema()
+            else:
+                self._form_data["function_type"] = ""
+                self._form_data["function_name"] = ""
+                self._selected_function_schema = ""
+        if field == "function_type" and not value:
+            self._form_data["function_type"] = ""
+            self._form_data["function_name"] = ""
+            self._selected_function_schema = ""
+        self.update()
+
+    def onAgentChange(self, agent_name: str) -> None:
+        self._form_data["agent"] = agent_name
+        self._form_data["function_type"] = ""
+        self._form_data["function_name"] = ""
+        self._selected_function_schema = ""
+        self.update()
+
+    def onFunctionChange(self, raw: str) -> None:
+        self.setCronField("function_type", raw)
+
+    def _update_function_schema(self) -> None:
+        ftype = self._form_data.get("function_type", "")
+        fname = self._form_data.get("function_name", "")
+        if not ftype or not fname:
+            self._selected_function_schema = ""
+            return
+        agent_name = self._form_data.get("agent", "")
+        agent_model = AgentModel.objects.filter(name=agent_name).first()
+        if not agent_model:
+            self._selected_function_schema = ""
+            return
+        agent = Agent(agent_model=agent_model)
+        getter = {"task": agent.get_task, "tool": agent.get_tool, "command": agent.get_command}.get(ftype)
+        if not getter:
+            self._selected_function_schema = ""
+            return
+        tdv = getter(fname)
+        if tdv and tdv.function_schema:
+            self._selected_function_schema = json.dumps(tdv.function_schema, indent=2)
+        else:
+            self._selected_function_schema = ""
+
+    def searchSessions(self, query: str) -> None:
+        if not query:
+            self._session_search_results = []
+        else:
+            qs = SessionModel.objects.filter(name__icontains=query).values_list("name", flat=True).distinct()[:10]
+            self._session_search_results = list(qs)
+        self.update()
+
+    def selectSession(self, index: int) -> None:
+        if 0 <= index < len(self._session_search_results):
+            self._form_data["session_name"] = self._session_search_results[index]
+        self._session_search_results = []
+        self.update()
+
+    def saveCronForm(self) -> None:
+        fd = self._form_data
+        if not fd.get("schedule"):
+            self._form_error = "Schedule is required."
+            self.update()
+            return
+        if not fd.get("agent"):
+            self._form_error = "Agent is required."
+            self.update()
+            return
+
+        message_content = fd.get("message", "")
+        if fd.get("function_type") and message_content:
+            try:
+                json.loads(message_content)
+            except (ValueError, TypeError):
+                self._form_error = "Message must be valid JSON when a function is selected."
+                self.update()
+                return
+
+        try:
+            self.subject.cronjobs.create(
+                name=fd.get("name", ""),
+                schedule=fd.get("schedule", ""),
+                agent_id=AgentModel.objects.get(name=fd["agent"]).pk,
+                description="",
+                session_mode=fd.get("session_mode", "new"),
+                session_name=fd.get("session_name", ""),
+                message_content=message_content,
+                function_type=fd.get("function_type", ""),
+                function_name=fd.get("function_name", ""),
+            )
+            self._form_error = ""
+            self.close_tab()
+        except Exception as e:
+            self._form_error = f"Error: {e}"
+            self.update()
+
+    def cancelCronForm(self) -> None:
+        self.close_tab()
+
+    def close_tab(self) -> None:
+        from ui.main.main_view import MainView
+        parent = self.parent
+        while parent and not isinstance(parent, MainView):
+            parent = parent.parent
+        if parent:
+            parent.close_tab(self)

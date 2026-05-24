@@ -30,6 +30,7 @@ def tick_scheduler() -> None:
     _release_scheduled_calls()
     _timeout_active_runs()
     _cleanup_stale_runtime_folders()
+    _process_cron_jobs()
 
 
 def _release_rate_limited_calls() -> None:
@@ -134,6 +135,19 @@ def _timeout_active_runs() -> None:
                 )
         except Exception as e:
             print(f"[scheduler] error timing out run {run.pk}: {e}")
+
+
+def _process_cron_jobs() -> None:
+    """Dispatch due cron jobs to Celery workers."""
+    from runtime.cron.execute import execute_cron_job
+    from runtime.cron.crons import Cronjobs
+
+    for cronjob in Cronjobs().due():
+        try:
+            execute_cron_job.delay(cronjob.pk)
+            print(f"[scheduler] dispatched cron job {cronjob.pk} ({cronjob.name})")
+        except Exception as e:
+            print(f"[scheduler] error dispatching cron job {cronjob.pk}: {e}")
 
 
 def _cleanup_stale_runtime_folders() -> None:

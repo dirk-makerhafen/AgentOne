@@ -27,6 +27,7 @@ django-cors-headers
 django-sortedm2m
 django-enum
 mysqlclient
+croniter
 cachetools
 flask
 flask_sock

@@ -3235,7 +3235,7 @@ main.main > .main-view:not([id="mainChat"]):not([id="mainSettings"]) .main-view-
 
 /* ── Shared in-main form (create/edit) for skills/tasks/workspaces/profiles ── */
 .detail-form{display:flex;flex-direction:column;gap:14px;}
-.detail-form-row{display:flex;flex-direction:row;gap:6px;}
+.detail-form-row{display:flex;flex-direction:column;gap:6px;}
 .detail-form-row > label{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.01em;}
 .detail-form-row input[type="text"],
 .detail-form-row input[type="number"],

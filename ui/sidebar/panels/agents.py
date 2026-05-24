@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from runtime.agents.agent import Agent
 from server.models.agents.agent import AgentModel
 from ui.app import UiApp
 from ui.lib.model_view import ModelView
@@ -30,13 +31,20 @@ class SidebarPanelAgent(ModelView):
                         ACTIVE
                     </span>
                 </div>
-                <div class="profile-card-meta">{{ pyview.subject.latest_agent_version.aimodel }} · ollama-launch · {{ pyview.subject.skillNames | length }} skills</div>
+                <div class="profile-card-meta">
+                    {{ pyview.agent.aimodel.name }} · 
+                    {{ pyview.agent.allowedSkills | length }} Skills,
+                    {{ pyview.agent.allowedTools | length }} Tools, 
+                    {{ pyview.agent.allowedTasks | length }} Tasks, 
+                    {{ pyview.agent.allowedCommands | length }} Cmd,  
+                </div>
             </div>
         </div>
     '''
     def __init__(self, subject: AgentModel, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
+        self.agent = Agent(subject)
        
         
     

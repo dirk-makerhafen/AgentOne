@@ -1,10 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from ui.main.agent.agent_view import AgentView
-from ui.main.insights.insights import MainInsightsView
-from ui.main.logs.logs import MainLogsView
-from ui.main.project.project_view import ProjectView
-from ui.main.settings.settings import SettingsView
 
 from ui.lib.model_view import ModelView
 
@@ -40,6 +35,23 @@ class MainView(ModelView):
         self.select_tab(key)
         
         return self.open_tabs[key]
+
+    def close_tab(self, view) -> None:
+        key = None
+        for k, v in self.open_tabs.items():
+            if v is view:
+                key = k
+                break
+        if key:
+            del self.open_tabs[key]
+        if self.selected_tab_view is view:
+            self.selected_tab_view = None
+            self.selected_tab_id = ""
+            if self.open_tabs:
+                last_key = list(self.open_tabs.keys())[-1]
+                self.select_tab(last_key)
+            else:
+                self.update()
 
     def select_tab(self, tab_id):
         if tab_id not in self.open_tabs:
