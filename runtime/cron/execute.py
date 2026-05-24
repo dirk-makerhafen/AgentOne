@@ -82,9 +82,33 @@ def _do_execute(cronjob_id: int) -> None:
     print(f"[cron] executed job {cronjob_id} ({cronjob.name})")
 
 
+def _expand_shorthand(schedule: str) -> str:
+    """Convert human-friendly shorthands to cron expressions.
+
+    Supported:
+      ``every N (min|m|hour|h)``  →  ``*/N * * * *`` (min) / ``N * * * *`` (hour)
+    """
+    s = schedule.strip().lower()
+    import re
+    m = re.match(r"^every\s+(\d+)\s*(min|m|minute|minutes|hour|hours|h)\s*$", s)
+    if m:
+        n = int(m.group(1))
+        unit = m.group(2)
+        if unit in ("min", "m", "minute", "minutes"):
+            return f"*/{n} * * * *"
+        else:
+            return f"0 */{n} * * *"
+    return schedule
+
+
 def compute_next_run(schedule: str) -> datetime | None:
-    """Compute the next run datetime from a cron expression using croniter."""
+    """Compute the next run datetime from a cron expression using croniter.
+
+    Supports standard cron (``*/5 * * * *``), shorthands (``@daily``,
+    ``@hourly``), and human-friendly ``every N (min|m|hour|h)``.
+    """
     try:
-        return croniter(schedule, timezone.localtime()).get_next(datetime)
+        expanded = _expand_shorthand(schedule)
+        return croniter(expanded, timezone.localtime()).get_next(datetime)
     except (ValueError, KeyError):
         return None

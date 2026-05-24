@@ -3200,7 +3200,7 @@ main.main > .main-view:not([id="mainChat"]):not([id="mainSettings"]) .main-view-
 /* ── Shared detail-card styling (cron / workspace / profile detail pages) ── */
 .detail-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:16px 12px;margin-bottom:16px;width: -webkit-fill-available;}
 .detail-card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
-.detail-row{display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:flex-start;}
+.detail-row{display:flex;gap:12px;flex-direction:row;padding:3px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:flex-start;}
 .detail-row:last-child{border-bottom:none;}
 .detail-row-label{flex:0 0 140px;color:var(--muted);font-size:12px;}
 .detail-row-value{flex:1;min-width:0;color:var(--text);word-break:break-word;}
@@ -3242,6 +3242,9 @@ main.main > .main-view:not([id="mainChat"]):not([id="mainSettings"]) .main-view-
 .detail-form-row input[type="password"],
 .detail-form-row input:not([type]),
 .detail-form-row select,
+.detail-row input[type="text"],
+.detail-row input[type="number"],
+.detail-row input[type="password"],
 .detail-form-row textarea{
   width:100%;box-sizing:border-box;
   background:var(--sidebar);border:1px solid var(--border);border-radius:8px;

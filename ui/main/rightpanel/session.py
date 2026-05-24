@@ -88,7 +88,7 @@ class RightPanelSession(ModelView):
                 {% for name, label in pyview.settings_fields %}
                 <div class="detail-row">
                     <div class="detail-row-label">{{ label }}</div>
-                    <div class="detail-form-row">
+                    <div class="detail-row">
                         {% if name in pyview.choice_fields %}
                             <select onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="max-width:80%;font-size:12px">
                                 <option value="">&mdash; Agent default &mdash;</option>
