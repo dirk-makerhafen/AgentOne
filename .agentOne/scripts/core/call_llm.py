@@ -104,8 +104,7 @@ def run_streaming_query(
             response.finish_reason = finish_reason
 
         reasoning_chunk = message_chunk.get("reasoning", None) or message_chunk.get(
-            "thinking", None
-        )
+            "thinking", None) or message_chunk.get("reasoning_content", None)
         if reasoning_chunk:
             if not first_reasoning_token_timestamp:
                 first_reasoning_token_timestamp = time.time()

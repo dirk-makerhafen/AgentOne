@@ -423,6 +423,8 @@ class Session:
                 return session_settings_value
             extend_at_index = session_settings_value.index("+")
             session_settings_value[extend_at_index:extend_at_index + 1] = self.agent.get_agent_setting(name)
+        elif isinstance(session_settings_value, AiModel): 
+            return session_settings_value
         else:
             raise Exception(
                 f"_get_session_setting does not yet support type of '{name}': "

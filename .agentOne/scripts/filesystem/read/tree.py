@@ -6,7 +6,7 @@ from typing import Optional
 
 
 def tree(
-    path: Optional[str] = None,
+    path: str,
     depth: int = 3,
     include_hidden: bool = False,
 ) -> tuple[bool, dict]:
@@ -34,14 +34,13 @@ def tree(
             - status: "error"
             - message: str
     '''
-    target = path if path else os.getcwd()
 
     try:
-        target_path = Path(target)
+        target_path = Path(path)
         if not target_path.exists():
-            return (False, {'status': 'error', 'message': f'Path not found: {target}'})
+            return (False, {'status': 'error', 'message': f'Path not found: {path}'})
         if not target_path.is_dir():
-            return (False, {'status': 'error', 'message': f'Not a directory: {target}'})
+            return (False, {'status': 'error', 'message': f'Not a directory: {path}'})
 
         skip_dirs = {'.git', '__pycache__', '.DS_Store', 'node_modules', '.pytest_cache', '_staticfiles'}
 
@@ -105,11 +104,11 @@ def tree(
             return f"{n:.0f}TB"
 
         lines.append(target_path.name + "/")
-        _walk(target_path, "", 1)
+        _walk(target_path.as_posix(), "", 1)
 
         return (True, {
             'status': 'success',
-            'path': str(target),
+            'path': str(target_path),
             'tree': '\n'.join(lines),
         })
 

@@ -111,7 +111,7 @@ class AgentVersionModel(BaseModel):
     def get_or_create_session(
         self,
         name: Optional[str] = None,
-        description: Optional[str] = None,
+        description: Optional[str] = "",
         display_name: Optional[str] = None,
         workspace: Optional[WorkspaceModel] = None,
         parent_session_version: SessionVersionModel | None = None,
@@ -147,10 +147,11 @@ class AgentVersionModel(BaseModel):
         )
         print("did crete session", session)
         
-        session_version = session.latest_session_version
+        session_version:SessionVersionModel = session.latest_session_version
         print("session_version", session_version)
         aiv_created = False
-        if not session_version or session_version.agent_version != self or session_version.session != session or session_version.workspace != workspace:
+    
+        if not session_version or (session_version.pinned_agent_version or session_version.agent.latest_agent_version) != self or session_version.session != session or session_version.workspace != workspace:
             session_version, aiv_created = SessionVersionModel.objects.get_or_create(
                 agent=self.agent,
                 description=description,

@@ -7,7 +7,7 @@ from typing import Optional
 
 
 def diff(
-    path: Optional[str] = None,
+    path: str,
     staged: bool = False,
     target: Optional[str] = None,
 ) -> tuple[bool, dict]:
@@ -40,7 +40,6 @@ def diff(
             - status: "error"
             - message: str
     '''
-    cwd = os.getcwd()
 
     try:
         if path and target and os.path.isfile(path) and os.path.isfile(target):
@@ -54,7 +53,7 @@ def diff(
                 'diff': diff_output if diff_output else '(no differences)',
             })
 
-        git_dir = os.path.join(cwd, '.git')
+        git_dir = os.path.join(path, '.git')
         is_git_repo = os.path.isdir(git_dir)
 
         if is_git_repo:
@@ -66,13 +65,7 @@ def diff(
             if path:
                 cmd.extend(['--', path])
 
-            proc = subprocess.run(
-                cmd,
-                cwd=cwd,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
+            proc = subprocess.run(cmd, cwd=path, capture_output=True, text=True, timeout=30)
 
             if proc.returncode != 0:
                 return (False, {'status': 'error', 'message': f'git diff failed: {proc.stderr}'})

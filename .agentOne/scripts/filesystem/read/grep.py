@@ -10,7 +10,7 @@ from typing import Optional
 
 def grep(
     pattern: str,
-    path: Optional[str] = None,
+    path: str,
     include: Optional[str] = None,
 ) -> tuple[bool, dict]:
     '''
@@ -27,8 +27,7 @@ def grep(
 
     Args:
         pattern: The regex pattern to search for in file contents.
-        path: The directory to search in. Defaults to the current
-            working directory.
+        path: The directory to search in.
         include: File pattern to include in the search
             (e.g., "*.js", "*.{ts,tsx}").
 
@@ -48,8 +47,7 @@ def grep(
         if not pattern:
             return (False, {'status': 'error', 'message': 'Pattern not provided'})
 
-        search_dir = path if path else os.getcwd()
-        search_dir = Path(search_dir)
+        search_dir = Path(path)
 
         if not search_dir.exists():
             return (False, {'status': 'error', 'message': f'Search directory not found: {search_dir}'})
