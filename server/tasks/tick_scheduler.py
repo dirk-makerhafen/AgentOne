@@ -29,6 +29,7 @@ def tick_scheduler() -> None:
     _release_retry_calls()
     _release_scheduled_calls()
     _timeout_active_runs()
+    _cleanup_stale_runtime_folders()
 
 
 def _release_rate_limited_calls() -> None:
@@ -133,3 +134,19 @@ def _timeout_active_runs() -> None:
                 )
         except Exception as e:
             print(f"[scheduler] error timing out run {run.pk}: {e}")
+
+
+def _cleanup_stale_runtime_folders() -> None:
+    """Remove runtime version folders (``~/.agentone/runtime/<pk>/``) whose
+    ``.last_used`` is older than the stale threshold.
+
+    If a version is needed again after cleanup, ``BoundTask.call()``
+    automatically re-extracts it from the install repo.
+    """
+    try:
+        from runtime.runtime_folder import RuntimeFolder
+        removed = RuntimeFolder.collect_garbage()
+        if removed:
+            print(f"[scheduler] cleaned {removed} stale runtime folder(s)")
+    except Exception as e:
+        print(f"[scheduler] error cleaning runtime folders: {e}")

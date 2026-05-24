@@ -13,7 +13,7 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def spawn_subagent(session: Session, subagent_name: str, query: str) -> dict[str, Any]:
+def spawn_subagent(session: Session, subagent_name: str, summary:str, query: str) -> dict[str, Any]:
     """
     Spawn a subagent asynchronously (non-blocking).
 
@@ -25,10 +25,11 @@ def spawn_subagent(session: Session, subagent_name: str, query: str) -> dict[str
     Args:
         session: The calling agent's session (bound automatically).
         subagent_name: Name of the subagent to spawn.
-        query: The task description or message to send.
+        summary: One sencence task summary.
+        query: The full task description or message to send.
 
     Returns:
-        A dict with key ``session_pk`` — the pk of the new child session.
+        A dict with key ``session_pk`` — the pk of the new child session-
     """
     subagent_version = session.get_subagent(subagent_name)
     if not subagent_version:
@@ -36,14 +37,12 @@ def spawn_subagent(session: Session, subagent_name: str, query: str) -> dict[str
 
     name = f"p{session.model.pk}:{subagent_name}:{int(time())}"
 
-    child_sv = subagent_version.get_or_create_session(
-        name=name,
-        workspace=session.workspace,
-        parent_session_version=session.get_version_model(),
-    )
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+    child_session_version = subagent_version.get_or_create_session(name=name, description=summary, workspace=session.workspace, parent_session_version=session.get_version_model())
+    child_session = Session(session_model=child_session_version.session, pinned_session_version=child_session_version)
 
     parts = [{"type": "message", "content_type": "text", "content": query}]
-    child_session.add_user_message(parts=parts)
+    
+    child_task = child_session.get_task("ingest_user_message").delay(parts=parts)
+    session.get_task("ingest_subagent_result").delay(child_session_pk=child_session.model.pk, summary=summary, result=child_task, )
 
-    return {"session_pk": child_session.model.pk}
+    return {"session_pk": child_session.model.pk, "message": f"Task dispatched to new async session with id '{child_session.model.pk}' of agent '{subagent_name}'"}

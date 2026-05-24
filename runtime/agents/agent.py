@@ -90,6 +90,11 @@ class Agent:
         return self.get_version_model().resolve_setting("scheduler_strategy")
 
     @property
+    def subagentResultDelivery(self) -> str:
+        """Return the subagent result delivery mode (default: passive)."""
+        return self.get_version_model().resolve_setting("subagentResultDelivery") or "passive"
+
+    @property
     def tool_call_syntax(self) -> str:
         """Return the tool call syntax identifier."""
         return self.get_version_model().resolve_setting("tool_call_syntax")

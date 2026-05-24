@@ -9,7 +9,6 @@ from registry.install_repo import InstallRepo
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
-from registry.shadow_git import get_or_init_shadow_repo
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.content import GenericContent
@@ -25,10 +24,10 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 def load_agent_manifest(
     agent_md_path: Path,
+    install_repo: InstallRepo,
     parent_project: Any = None,
     parent_agent: Any = None,
     parent_skill: Any = None,
-    install_repo: Optional[InstallRepo] = None,
 ) -> Tuple[AgentModel, AgentVersionModel]:
     """Load an ``agent.md`` manifest into the database.
 
@@ -36,13 +35,12 @@ def load_agent_manifest(
     child scripts, skills and subagents, builds a ``SettingsModel`` from the
     YAML frontmatter, and resolves task/subagent references.
 
-    When *install_repo* is provided, version identifiers are deterministic git
-    tree SHAs.
+    Version identifiers are deterministic git tree SHAs from *install_repo*.
     """
     print("load_agent_manifest", agent_md_path)
     manifest = frontmatter.load(agent_md_path)
     agent_dir = agent_md_path.parent
-    commit = install_repo.tree_sha(agent_dir) if install_repo else None
+    commit = install_repo.tree_sha(agent_dir)
 
     def get_list(name: str) -> Optional[List[str]]:
         val = manifest.get(name)
@@ -155,6 +153,7 @@ def load_agent_manifest(
         "scheduler_strategy": manifest.get("schedulerStrategy"),
         "tool_call_syntax": manifest.get("toolCallSyntax"),
         "reasoning_effort": manifest.get("reasoningEffort"),
+        "subagentResultDelivery": manifest.get("subagentResultDelivery"),
         "commandNames": get_list("commands"),
         "disallowedCommandNames": get_list("disallowedCommands"),
         "taskNames": get_list("tasks"),

@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("builtin_filesystem", "0001_initial"),
     ]
 
     operations = [
@@ -1971,16 +1970,7 @@ class Migration(migrations.Migration):
                         to="server.querymessagepart",
                     ),
                 ),
-                (
-                    "fsLogEntry",
-                    models.ForeignKey(
-                        default=None,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_DEFAULT,
-                        related_name="query_message_parts",
-                        to="builtin_filesystem.fslogentry",
-                    ),
-                ),
+                
                 (
                     "query_message",
                     models.ForeignKey(

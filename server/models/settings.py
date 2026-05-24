@@ -108,14 +108,10 @@ class SettingsModel(BaseModel):
     )
 
     commandNames: Any = models.JSONField(default=None, null=True, blank=True)
-    disallowedCommandNames: Any = models.JSONField(
-        default=None, null=True, blank=True
-    )
+    disallowedCommandNames: Any = models.JSONField(default=None, null=True, blank=True)
 
     taskNames: Any = models.JSONField(default=None, null=True, blank=True)
-    disallowedTaskNames: Any = models.JSONField(
-        default=None, null=True, blank=True
-    )
+    disallowedTaskNames: Any = models.JSONField(default=None, null=True, blank=True)
 
     toolNames: Any = models.JSONField(default=None, null=True, blank=True)
     disallowedToolNames: Any = models.JSONField(
@@ -123,22 +119,12 @@ class SettingsModel(BaseModel):
     )
 
     skillNames: Any = models.JSONField(default=None, null=True, blank=True)
-    disallowedSkillNames: Any = models.JSONField(
-        default=None, null=True, blank=True
-    )
+    disallowedSkillNames: Any = models.JSONField(default=None, null=True, blank=True )
 
     subagentNames: Any = models.JSONField(default=None, null=True, blank=True)
-    disallowedSubagentNames: Any = models.JSONField(
-        default=None, null=True, blank=True
-    )
+    disallowedSubagentNames: Any = models.JSONField(default=None, null=True, blank=True)
 
-    subagentResultDelivery: str | None = models.CharField(
-        max_length=20,
-        choices=SubagentResultDelivery,
-        default=None,
-        null=True,
-        blank=True,
-    )
+    subagentResultDelivery: str | None = models.CharField(  max_length=20,  choices=SubagentResultDelivery,  default=None,  null=True,  blank=True)
 
     extra_settings: Any = models.JSONField(default=None, null=True, blank=True)
     commit: str = models.TextField(max_length=1024, default="")

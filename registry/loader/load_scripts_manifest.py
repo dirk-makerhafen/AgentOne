@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import yaml
 from registry.install_repo import InstallRepo
@@ -12,10 +12,10 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 def load_scripts_manifest(
     scripts_dir: Path,
+    install_repo: InstallRepo,
     parent_project: Any = None,
     parent_agent: Any = None,
     parent_skill: Any = None,
-    install_repo: Optional[InstallRepo] = None,
 ) -> List[Tuple[TaskDefinition, TaskDefinitionVersion]]:
     """Load all entries from all ``scripts.md`` manifests found in *scripts_dir*.
 
@@ -23,8 +23,7 @@ def load_scripts_manifest(
     entries are created before chain/group entries (which need to resolve child
     versions by name).
 
-    When *install_repo* is provided, version identifiers are deterministic git
-    tree SHAs from the install repo. 
+    Version identifiers are deterministic git tree SHAs from *install_repo*.
 
     Returns a list of ``(TaskDefinition, TaskDefinitionVersion)`` tuples.
     """
@@ -33,8 +32,8 @@ def load_scripts_manifest(
         subdir = manifest_path.parent
         with open(manifest_path, encoding="utf-8") as f:
             manifest: dict = yaml.safe_load(f) or {}
-        
-        commit = install_repo.tree_sha(subdir) if install_repo else None
+
+        commit = install_repo.tree_sha(subdir)
         entries = _collect_manifest_entries(manifest)
 
         for entry in entries:

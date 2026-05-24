@@ -4,11 +4,12 @@ model: gemma4:26b
 description: Core functions available for all.
 extends: []
 maxRetries: 0
-maxTurns: 0
+maxTurns: 1
 reasoningEffort: medium
-maxUnattendedTurns: 0
-maxHistoryMessages: 0
+maxUnattendedTurns: 1
+maxHistoryMessages: 1
 schedulerStrategy: queue
+subagentResultDelivery: immediate
 toolCallSyntax: default
 skills: []
 disallowedSkills: []

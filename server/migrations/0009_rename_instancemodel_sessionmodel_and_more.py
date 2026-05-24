@@ -5,7 +5,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("builtin_filesystem", "0002_initial"),
         ("server", "0008_remove_skillversion_parent_agent_and_more"),
     ]
 

@@ -19,6 +19,7 @@ from server.models.enums.task_enums import TaskType
 from server.models.settings import SettingsModel
 from server.models.skills.skill_version import SkillModelVersion
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
+from server.models.workspace import WorkspaceModel
 
 if TYPE_CHECKING:
     from server.models.sessions.session_version import SessionVersionModel
@@ -110,6 +111,7 @@ class AgentVersionModel(BaseModel):
     def get_or_create_session(
         self,
         name: Optional[str] = None,
+        description: Optional[str] = None,
         display_name: Optional[str] = None,
         workspace: Optional[WorkspaceModel] = None,
         parent_session_version: SessionVersionModel | None = None,
@@ -132,11 +134,7 @@ class AgentVersionModel(BaseModel):
             workspace = parent_session_version.workspace
         parent_instance = parent_session_version.session if parent_session_version else None
         if not name:
-            name = (
-                f"p{parent_instance.pk}:{self.agent.name}"
-                if parent_instance
-                else f"default:{self.agent.name}"
-            )
+            name = f"p{parent_instance.pk}:{self.agent.name}" if parent_instance else f"default:{self.agent.name}"
 
         if not display_name:
             display_name = f"{self.agent.name}"
@@ -155,6 +153,7 @@ class AgentVersionModel(BaseModel):
         if not session_version or session_version.agent_version != self or session_version.session != session or session_version.workspace != workspace:
             session_version, aiv_created = SessionVersionModel.objects.get_or_create(
                 agent=self.agent,
+                description=description,
                 session=session,
                 workspace=workspace,
                 display_name=display_name,

@@ -34,7 +34,7 @@ class QueryAdmin(admin.ModelAdmin):
     """Admin for LLM query records."""
 
     list_display: tuple[str, ...] = (
-        "id", "session_version", "status", "tokens", "created_at",
+        "id", "session_version", "status", "tokens", "created_at", "trigger_message",
     )
     list_display_links: tuple[str, ...] = ("id",)
     list_filter: tuple[str, ...] = ("status", "session_version__agent", "created_at")
@@ -48,7 +48,7 @@ class QueryAdmin(admin.ModelAdmin):
 
     fieldsets: tuple[tuple[str, dict[str, Any]], ...] = (
         (None, {
-            "fields": ("session_version", "status", "apikey"),
+            "fields": ("session_version", "status", "apikey", "trigger_message"),
         }),
         ("Tracking & Usage", {
             "fields": ("tokens", "tags_token_usage"),

@@ -11,6 +11,7 @@ from typing import Any
 
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType
+from server.models.enums.task_enums import TaskCallStatus
 from server.models.settings import AgentToolCallSyntax
 from server.models.message import Message, MessagePart
 from server.models.queries.query import Query
@@ -59,9 +60,7 @@ def build_llm_context(session: Session, message: Message) -> Query:
             allowed_tools: list[Any] = list(session.allowedTools)
             if allowed_tools:
                 tools_msg = "Available Tools (use syntax [call:tool_name(arg=val)]):\n"
-                query_message = query.add_message(
-                    role="system", content_type=MessageContentType.TEXT, content=tools_msg
-                )
+                query_message = query.add_message(role="system", content_type=MessageContentType.TEXT, content=tools_msg)
                 for tool in allowed_tools:
                     if not tool.task_definition:
                         raise Exception("No task_definition should never happen")
@@ -74,15 +73,15 @@ def build_llm_context(session: Session, message: Message) -> Query:
                         ),
                     )
 
-        # Load and assemble conversation history
-        messages: list[Message] = session.model.messages.filter(
-            pk__lte=message.pk, hide_from_context=False
-        ).order_by("-created_at")[: session.max_history_messages + 1]
+        # Load and assemble conversation history, get it in reverse, because the history limiter counts from the end, so order must be reversed
+        messages: list[Message] = session.model.messages.filter(pk__lte=message.pk, hide_from_context=False).order_by("-created_at")[: session.max_history_messages + 1]
         limiter = HistoryLimiter(session, messages)
 
         cmessages: list[Any] = []
+        fmessages = []
         for message in messages:
             query_message_parts: list[QueryMessagePart] = []
+            tool_call_parts = []
             for part in message.parts.all():
                 part: MessagePart
                 if part.type == MessagePartType.REASONING:
@@ -90,28 +89,15 @@ def build_llm_context(session: Session, message: Message) -> Query:
                 if part.type == MessagePartType.TOOLCALL and part.tool_call:
                     if limiter.is_tool_call_limited(part.tool_call, message):
                         continue
-                query_message_parts.append(
-                    QueryMessagePart(
-                        source_message_part=part,
-                        tags=["ChatMessage", f"{message.role}"],
-                    )
-                )
+                query_message_parts.append(QueryMessagePart(source_message_part=part, tags=["ChatMessage", f"{message.role}"]))
+                if part.tool_call and part.tool_call.status == TaskCallStatus.ENDED:
+                    tool_call_parts.append(part)
+            fmessages.append((message, query_message_parts,tool_call_parts))
 
-            tool_call_parts = []
-            for query_message_part in query_message_parts:
-                if (
-                    query_message_part.source_message_part
-                    and query_message_part.source_message_part.tool_call
-                ):
-                    tool_call_parts.append(query_message_part.source_message_part)
-
-            if tool_call_parts:
-                for tool_call_part in tool_call_parts:
-                    qmsg = QueryMessage.objects.create(role="tool", query=query, source_message=message)
-                    qmsg.add_part(source_message_part=tool_call_part)
-                    cmessages.append(qmsg)
-
-            if query_message_parts or tool_call_parts:
+        # undo reverse order and assemble
+        for fmessage in reversed(fmessages):
+            message, query_message_parts, tool_call_parts = fmessage
+            if query_message_parts or query_message_parts:
                 query_message = QueryMessage.objects.create(role=message.role, query=query, source_message=message)
                 for i, query_message_part in enumerate(query_message_parts):
                     query_message_part.query_message = query_message
@@ -121,6 +107,13 @@ def build_llm_context(session: Session, message: Message) -> Query:
                     from server.models.content import GenericContent
                     query_message.content_prefix = GenericContent.from_text("@@@TO_BE_FORGOTTEN@@@")
                     query_message.save()
+
+            if tool_call_parts:
+                for tool_call_part in tool_call_parts:
+                    qmsg = QueryMessage.objects.create(role="tool", query=query, source_message=message)
+                    qmsg.add_part(source_message_part=tool_call_part)
+                    cmessages.append(qmsg)
+
 
         # Assign sequential indices to messages
         messages = cmessages

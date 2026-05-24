@@ -16,7 +16,6 @@
 | `server/` | Core Django app: models, admin, Celery tasks, migrations |
 | `registry/` | Agent registration, `@task`/`@tool`/`@command` decorators (legacy), `Subagent` classes |
 | `runtime/` | Agent execution runtime, context manager, rate limiter |
-| `tools/` | Legacy tool implementations (`primitives/`, `builtin_filesystem/`) |
 | `launcher/` | Launcher service with client |
 | `ui/` | Web UI (pyHtmlGui), templates, static files, panels |
 | `old/` | Dead legacy code — do not touch |
@@ -25,15 +24,6 @@
 ## Tool system
 
 **New tools** (in `.agentone/scripts/`): plain Python functions returning `(bool, dict)`. Each group has a `tool.md` manifest mapping names to files/functions. The framework auto-extracts schema from signatures/docstrings. No `@tool()` decorator.
-
-**Legacy tools** (in `tools/primitives/`, `tools/builtin_filesystem/`): use `@tool()` decorator from `registry.task_decorators`.
-
-Tool groups (`.agentone/scripts/`):
-- `execution/` — `python`, `shell`, `kill`
-- `filesystem/read/` — `read`, `glob`, `grep`, `stat`
-- `filesystem/write/` — `write`, `edit`, `multiedit`, `append`, `copy`, `move`, `mkdir`, `rm`
-- `web/` — `webSearch`, `webFetch`
-- `workspace/` — `diff`, `task`, `tree`
 
 ## Agent hierarchy
 

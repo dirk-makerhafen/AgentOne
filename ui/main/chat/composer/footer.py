@@ -135,6 +135,7 @@ class ComposerFooter(ModelView):
                 "content_type": "text",
                 "content": parts
             },]
+        self.eval_javascript(f"document.getElementById('input_{self.parent.uid}').value = ''", skip_results=True)
         self.subject.add_user_message(parts)
 
     def close_dropdowns(self):

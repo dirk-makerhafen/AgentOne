@@ -98,17 +98,19 @@ class Messages(ModelView):
 
     def __init__(self, subject: Session, parent: Chat, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.max_visible_items = 20
+        self.max_visible_items = 30
         self.min_id = 0
         self.max_id = 2^32
 
         self.message_list = ObservableList()
 
         first_messages = list(reversed(list(Message.objects.filter(session_version__session=self.subject.model ).order_by("-pk")[:self.max_visible_items])))
+         
         if first_messages:
             self.min_id = first_messages[0].pk
         if len(first_messages) > 1:
             self.max_id = first_messages[-1].pk
+
         self.message_list.extend(first_messages)
 
         self.messages_view = ObservableListView(
@@ -116,37 +118,63 @@ class Messages(ModelView):
             parent=self, 
             item_class=MessageView,
             dom_element_class="messages-inner",
-            
         )
     def update_list(self, center_pk):
         if not center_pk:
             return
         print("update_list", center_pk)
-        if int(center_pk) in [x.pk for x in self.message_list[:7]]:
+        if int(center_pk) in [x.pk for x in self.message_list[:7] if isinstance(x,Message)]:
             self.up()
-        if int(center_pk) in [x.pk for x in self.message_list[-7:]]:
+        if int(center_pk) in [x.pk for x in self.message_list[-7:] if isinstance(x,Message)]:
             self.down()   
         
 
+    def _first_message_pk(self) -> int:
+        for item in self.message_list:
+            if isinstance(item, Message):
+                return item.pk
+        return 0
+
+    def _last_message_pk(self) -> int:
+        for item in reversed(self.message_list):
+            if isinstance(item, Message):
+                return item.pk
+        return 0
+
+    def _message_count(self) -> int:
+        return sum(1 for item in self.message_list if isinstance(item, Message))
+
     def up(self):
-        xs = list(Message.objects.filter(session_version__session=self.subject.model, pk__lt=self.min_id ).order_by("-pk")[:1])
-        for x in xs:
-            self.message_list.insert(0, x)
-        self.min_id = self.message_list[0].pk
-        while len(self.message_list) > self.max_visible_items:
+        print("up")
+        messages = list(Message.objects.filter(session_version__session=self.subject.model, pk__lt=self.min_id ).order_by("-pk")[:1])
+        for message in messages:
+            self.message_list.insert(0, message)
+            if hasattr(message,"related_queries"):
+                for query in message.related_queries.all().order_by("-pk"):
+                    print("QUERY", query)
+                    self.message_list.insert(1, query)
+
+        self.min_id = self._first_message_pk()
+        while self._message_count() > self.max_visible_items:
             del self.message_list[-1]
-        self.max_id = self.message_list[-1].pk
+        self.max_id = self._last_message_pk()
         print("foo", [x.pk for x in self.message_list])
         print("MINMAX UP", self.min_id, self.max_id)
         print("len", len(self.message_list))
 
     def down(self):
-        x = list(Message.objects.filter(session_version__session=self.subject.model, pk__gt=self.max_id ).order_by("pk")[:1])
-        self.message_list.extend(x)
-        self.max_id = self.message_list[-1].pk
-        while len(self.message_list) > self.max_visible_items:
+        print("down")
+        messages = list(Message.objects.filter(session_version__session=self.subject.model, pk__gt=self.max_id ).order_by("pk")[:1])
+        for message in messages:
+            self.message_list.append(message)
+            for query in message.related_queries.all().order_by("pk"):
+                print("QUERY", query)
+                self.message_list.append(query)
+                
+        self.max_id = self._last_message_pk()
+        while self._message_count() > self.max_visible_items:
             del self.message_list[0]
-        self.min_id = self.message_list[0].pk
+        self.min_id = self._first_message_pk()
         print("foo", [x.pk for x in self.message_list])
         print("MINMAX DOWN", self.min_id, self.max_id)
         print("len", len(self.message_list))

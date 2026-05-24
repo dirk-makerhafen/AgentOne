@@ -1893,6 +1893,36 @@ body.resizing{user-select:none;cursor:col-resize;}
 .tool-arg-val{color:var(--muted);font-family:'SF Mono',ui-monospace,monospace;font-size:var(--font-size-xs);white-space:pre-wrap;word-break:break-word;display:block;overflow-x:auto;}
 .tool-card-result pre{font-size:var(--font-size-xs);color:var(--muted);font-family:'SF Mono',ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow-y:auto;margin:0;line-height:1.55;    background-color: #fff; border-radius: 7px; padding: 10px 0px 10px 10px;}
 
+/* ── Query cards (subagent LLM interactions inline in parent chat) ── */
+.query-row{margin-left:0px;    padding: 0px !important;}
+.query-card{background:var(--surface-subtle);border:1px solid var(--border-subtle);border-radius:var(--radius-card);margin:2px 0;overflow:hidden;}
+.query-card:hover{border-color:var(--border-muted);}
+.query-card-header{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-1) var(--space-3);cursor:pointer;user-select:none;}
+.query-card-icon{font-size:13px;flex-shrink:0;opacity:.5;}
+.query-card-agent{font-size:var(--font-size-xs);font-weight:600;color:var(--text);flex-shrink:0;}
+.query-card-summary{font-size:var(--font-size-xs);color:var(--muted);opacity:.62;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.query-card-status{font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;text-transform:uppercase;flex-shrink:0;}
+.query-card-status.success{color:var(--green);background:rgba(var(--green-rgb),.1);}
+.query-card-status.failure{color:var(--red);background:rgba(var(--red-rgb),.1);}
+.query-card-status.active{color:var(--accent);background:var(--accent-bg);}
+.query-card-status.waiting{color:var(--muted);background:var(--surface-subtle-hover);}
+.query-card-toggle{font-size:10px;color:var(--muted);opacity:.45;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;transform-origin:center;transition:transform .18s ease;will-change:transform;}
+.query-card.open .query-card-toggle{transform:rotate(90deg);}
+.query-card-detail{display:block;max-height:0;opacity:0;overflow:hidden;border-top:1px solid transparent;padding:0 var(--space-3);transition:max-height .22s ease,opacity .18s ease,padding .22s ease,border-top-color .22s ease;}
+.query-card.open .query-card-detail{max-height:800px;opacity:1;padding:var(--space-2) var(--space-3);border-top-color:var(--border-subtle);overflow:auto;}
+.query-card-messages{display:flex;flex-direction:column;gap:4px;}
+.query-message{padding:4px 8px;border-radius:6px;font-size:var(--font-size-xs);line-height:1.5;}
+.query-message-system{background:var(--surface-subtle);}
+.query-message-user{background:var(--surface-subtle-hover);}
+.query-message-assistant{background:var(--accent-bg);}
+.query-message-tool{background:var(--surface);font-family:'SF Mono',ui-monospace,monospace;font-size:10px;}
+.query-message-role{font-weight:600;color:var(--muted);font-size:10px;text-transform:uppercase;margin-bottom:2px;}
+.query-message-content{color:var(--text);white-space:pre-wrap;word-break:break-word;}
+.query-card-foot{display:flex;gap:var(--space-3);padding:var(--space-1) 0 0;font-size:10px;color:var(--muted);opacity:.6;}
+.query-tokens{font-variant-numeric:tabular-nums;}
+.query-time{margin-left:auto;}
+.query-active{border-color:var(--accent-bg-strong);background:var(--accent-bg);}
+
 /* ── Manual compression cards (transient transcript-local feedback) ── */
 .live-compression-cards{
   display:none;
@@ -2838,7 +2868,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .msg-body code { color: var(--strong); background: var(--code-inline-bg); font-size: 12.5px; }
 
 /* ── Unified indent rail — every child of a turn lines up on --msg-rail ── */
-.msg-row { padding: 12px 0; }
+.msg-row { padding: 6px 0; }
 .msg-body { padding-left: var(--msg-rail); padding-top: 8px; max-width: var(--msg-max); }
 .msg-body code,
 .msg-body pre,
@@ -2944,8 +2974,8 @@ main.main.showing-logs > #mainLogs{display:flex;}
 /* Turn boundary: right alignment already separates user turns — keep only vertical spacing */
 .msg-row + .msg-row[data-role="user"] {
   border-top: none;
-  margin-top: 10px;
-  padding-top: 12px;
+  margin-top: 5px;
+  padding-top: 6px;
 }
 
 /* ── Message footer: actions (and user timestamp) sit below the bubble ── */

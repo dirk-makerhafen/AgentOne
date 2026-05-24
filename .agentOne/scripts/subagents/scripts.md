@@ -1,5 +1,5 @@
 ---
-group: subagent
+group: subagents
 tools:
   # Sync — blocks until subagent finishes
   - name: delegate_task
@@ -35,5 +35,12 @@ tools:
   - name: stop_subagent
     file: stop_subagent.py
     function: stop_subagent
+    bound: True
+
+tasks:
+  # Internal — delivers subagent result in "immediate" mode
+  - name: ingest_subagent_result
+    file: ingest_subagent_result.py
+    function: ingest_subagent_result
     bound: True
 

@@ -1,8 +1,10 @@
 from __future__ import annotations
 import importlib.util
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from runtime.runtime_folder import RuntimeFolder
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.task_instance import TaskInstance
 
@@ -20,13 +22,13 @@ class BoundTask:
     ``.apply_async()`` for asynchronous dispatch, and hook registration
     methods (``hook_after_run``, ``hook_before_run``, ``on_success_callback``,
     ``on_error_callback``).
+
+    Runtime files are resolved through versioned runtime folders
+    (``~/.agentone/runtime/<version_pk>/``) extracted from the install repo,
+    not from the source tree.
     """
 
-    def __init__(
-        self,
-        session: Session,
-        task_definition_version: TaskDefinitionVersion,
-    ) -> None:
+    def __init__(self, session: Session, task_definition_version: TaskDefinitionVersion) -> None:
         self.session = session
         self.task_definition_version = task_definition_version
         self.task_definition = task_definition_version.task_definition
@@ -38,6 +40,10 @@ class BoundTask:
         Raises ``TypeError`` for CHAIN/GROUP tasks, ``FileNotFoundError`` if
         the script file is missing, and ``AttributeError`` if the target
         function is not found.
+
+        The script file is loaded from the versioned runtime folder
+        (``~/.agentone/runtime/<pk>/``), ensuring the exact versioned copy
+        is used.
 
         If the task definition is *bound* the session is passed as the first
         argument.
@@ -51,18 +57,26 @@ class BoundTask:
                 f"Use apply_async() or instance().apply_async() instead."
             )
 
-        file_path = Path(self.task_definition_version.path)
+        file_name = self._runtime_file_name()
+        runtime = RuntimeFolder(self.task_definition_version)
+        folder = runtime.ensure_folder()
+        file_path = folder / file_name
+
         if not file_path.exists():
-            raise FileNotFoundError(f"Script file not found: {file_path}")
+            raise FileNotFoundError(
+                f"Script file not found in runtime folder: {file_path}"
+            )
+
+        # Ensure the runtime folder is on sys.path so sibling imports work
+        if str(folder) not in sys.path:
+            sys.path.insert(0, str(folder))
 
         if not self.task_definition_version.function_name:
             raise ValueError(
                 f"TaskDefinitionVersion '{self.task_definition_version}' has no function_name set"
             )
 
-        spec = importlib.util.spec_from_file_location(
-            f"_bound_{self.task_definition.name}", file_path
-        )
+        spec = importlib.util.spec_from_file_location(f"_bound_{self.task_definition.name}", file_path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         func = getattr(module, self.task_definition_version.function_name, None)
@@ -74,6 +88,16 @@ class BoundTask:
         if self.task_definition_version.bound:
             return func(self.session, *args, **kwargs)
         return func(*args, **kwargs)
+
+    def _runtime_file_name(self) -> str:
+        """Return the file name (not full path) for this task's runtime file.
+
+        The ``path`` field on ``TaskDefinitionVersion`` may store an absolute
+        source path; we only need the basename since the install repo's tree
+        SHA points at the manifest folder containing that file.
+        """
+        raw = (self.task_definition_version.path or "")
+        return Path(raw).name
 
     def get_calls(self) -> Any:
         """Return all AgentTaskCall instances for this task in this session."""

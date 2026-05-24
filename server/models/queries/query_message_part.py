@@ -10,7 +10,7 @@ from jinja2 import BaseLoader, Environment
 
 from server.models.base_model import BaseModel
 from server.models.content import GenericContent
-from server.models.enums.message_enums import MessageContentType
+from server.models.enums.message_enums import MessageContentType, MessagePartType
 
 _JINJA_ENV = Environment(loader=BaseLoader())
 
@@ -77,64 +77,80 @@ class QueryMessagePart(BaseModel):
         Handles TEXT, TEMPLATE, IMAGE, and JSON content types.
         """
         if self.source_message_part:
-            content_type = self.source_message_part.content_type
             content = self.source_message_part.content
             template_data = self.source_message_part.template_data
+            content_type = self.source_message_part.content_type
+            part_type = self.source_message_part.type
         else:
-            content_type = self.content_type
             content = self.content
             template_data = self.template_data
+            content_type = self.content_type
+            part_type = None
 
         if not content:
-            raise Exception("No content set")
+            raise ValueError("No content set")
 
-        message_contents: list[dict[str, Any]] | None = None
-
-        if content_type == MessageContentType.TEXT:
-            message_contents = [{"type": "text", "text": content.get()}]
-
-        elif content_type == MessageContentType.TEMPLATE:
-            try:
-                rtemplate = _JINJA_ENV.from_string(content.get())
-                data: dict[str, Any] = {}
-                context = {**template_data.get(), **data}
-                message_contents = [
-                    {"type": "text", "text": rtemplate.render(**context)}
-                ]
-            except Exception as e:
-                if fail_on_error:
-                    raise e
-                message_contents = [
-                    {
-                        "type": "text",
-                        "text": f"Error in Template String:{e}\n{content.get()}",
-                    }
-                ]
-
-        elif content_type == MessageContentType.IMAGE:
-            message_contents = [
-                {"type": "image_url", "image_url": {"url": content.get()}}
-            ]
-
-        elif content_type == MessageContentType.JSON:
-            message_contents = [
-                {"type": "text", "text": json.dumps(content.get())}
-            ]
-
-        if message_contents is None:
-            raise Exception(f"No message_content for content {content}")
+        message_contents = self._build_message_contents(content, content_type, template_data, part_type, fail_on_error)
 
         if prefix := (self.content_prefix.get() if self.content_prefix else None):
             message_contents.insert(0, {"type": "text", "text": prefix})
         if postfix := (self.content_postfix.get() if self.content_postfix else None):
             message_contents.append({"type": "text", "text": postfix})
 
-        tokens = 0
-        for message_content in message_contents:
-            if msg := message_content.get("text", None):
-                tokens += math.ceil(len(msg) / 3.8)
+        self._update_token_estimate(message_contents)
+        return message_contents
+
+    def _build_message_contents(
+        self,
+        content: GenericContent,
+        content_type: MessageContentType,
+        template_data: GenericContent | None,
+        part_type: MessagePartType | None,
+        fail_on_error: bool,
+    ) -> list[dict[str, Any]]:
+        """Route content rendering by type."""
+        if self.source_message_part and part_type == MessagePartType.REASONING:
+            return []
+
+        if self.source_message_part and part_type == MessagePartType.TOOLCALL:
+            tc = self.source_message_part.tool_call
+            return [{
+                "id": f"tc-{tc.pk}",
+                "type": "function",
+                "function": {
+                    "name": tc.task_definition.name,
+                    "arguments": json.dumps(tc.carguments_json),
+                },
+            }]
+
+        if content_type == MessageContentType.TEXT:
+            return [{"type": "text", "text": content.get()}]
+
+        if content_type == MessageContentType.TEMPLATE:
+            try:
+                context = template_data.get() if template_data else {}
+                text = _JINJA_ENV.from_string(content.get()).render(**context)
+                return [{"type": "text", "text": text}]
+            except Exception as e:
+                if fail_on_error:
+                    raise
+                return [{"type": "text", "text": f"Error in Template String:{e}\n{content.get()}"}]
+
+        if content_type == MessageContentType.IMAGE:
+            return [{"type": "image_url", "image_url": {"url": content.get()}}]
+
+        if content_type == MessageContentType.JSON:
+            return [{"type": "text", "text": json.dumps(content.get())}]
+
+        raise ValueError(f"Unknown content type: {content_type}")
+
+    def _update_token_estimate(self, message_contents: list[dict[str, Any]]) -> None:
+        """Recompute token count and save if changed."""
+        tokens = sum(
+            math.ceil(len(msg["text"]) / 3.8)
+            for msg in message_contents
+            if msg.get("text")
+        )
         if self.tokens != tokens:
             self.tokens = tokens
-            self.save()
-
-        return message_contents
+            self.save(update_fields=["tokens"])

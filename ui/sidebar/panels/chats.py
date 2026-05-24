@@ -117,6 +117,7 @@ class SidebarPanelChat(ModelView):
     def __init__(self, subject: SessionModel, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.session = Session(subject)
+        print(self.session.aimodel)
         
         self.root_view: UiAppView = parent.parent.root_view
     

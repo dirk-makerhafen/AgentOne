@@ -14,7 +14,7 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def delegate_task(session: Session, subagent_name: str, query: str) -> dict[str, Any]:
+def delegate_task(session: Session, subagent_name: str, summary:str, query: str) -> dict[str, Any]:
     """
     Delegate a task to a named subagent and wait for the result (blocking).
 
@@ -24,7 +24,8 @@ def delegate_task(session: Session, subagent_name: str, query: str) -> dict[str,
     Args:
         session: The calling agent's session (bound automatically).
         subagent_name: Name of the subagent to delegate to.
-        query: The task description or message to send.
+        summary: One sencence task summary.
+        query: The full task description or message to send.
 
     Returns:
         A dict with keys:
@@ -41,6 +42,7 @@ def delegate_task(session: Session, subagent_name: str, query: str) -> dict[str,
 
     child_sv = subagent_version.get_or_create_session(
         name=name,
+        description=summary,
         workspace=session_version_model.workspace,
         parent_session_version=session_version_model,
     )

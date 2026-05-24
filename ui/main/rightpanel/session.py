@@ -107,6 +107,7 @@ class RightPanelSession(ModelView):
         ("reasoning_effort", "Reasoning Effort"),
         ("scheduler_strategy", "Scheduler Strategy"),
         ("tool_call_syntax", "Tool Call Syntax"),
+        ("subagentResultDelivery", "Subagent Result Delivery"),
         ("max_retries", "Max Retries"),
         ("max_turns", "Max Turns"),
         ("max_unattended_turns", "Max Unattended Turns"),

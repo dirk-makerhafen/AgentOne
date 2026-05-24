@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import json
 import math
-from typing import Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from django.db import models
 from django_enum import EnumField
@@ -13,15 +14,84 @@ from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message, MessagePart
 from server.models.queries.query_message_part import QueryMessagePart
+if TYPE_CHECKING:
+    from server.models.tasks.agent_task_call import AgentTaskCall
 
 _JINJA_ENV = Environment(loader=BaseLoader())
+
+
+def _merge_text_parts(
+    parts: list[dict[str, Any]],
+    prefix_fk: GenericContent | None = None,
+    postfix_fk: GenericContent | None = None,
+) -> str | list[dict[str, Any]]:
+    """Merge adjacent text parts, prepend prefix, append postfix."""
+    if prefix_fk and (prefix := prefix_fk.get()):
+        parts = [{"type": "text", "text": prefix}, *parts]
+    if postfix_fk and (postfix := postfix_fk.get()):
+        parts = [*parts, {"type": "text", "text": postfix}]
+
+    if not parts:
+        return ""
+
+    merged = [parts[0]]
+    for part in parts[1:]:
+        if merged[-1]["type"] == part["type"] == "text":
+            merged[-1]["text"] += part["text"]
+        else:
+            merged.append(part)
+
+    if len(merged) == 1 and merged[0]["type"] == "text":
+        return merged[0]["text"]
+    return merged
+
+
+def _estimate_tokens(content: str | list[dict[str, Any]]) -> int:
+    """Rough token estimate (OpenAI billing approximation)."""
+    if isinstance(content, str):
+        return math.ceil(len(content) / 3.8)
+    return math.ceil(len(json.dumps(content)) / 3.8)
+
+
+def _serialize_result(data: Any) -> str:
+    """JSON-serialise a tool result, handling Message / Path model references."""
+    def _walk(obj: Any) -> Any:
+        if obj is None or isinstance(obj, (str, int, float, bool)):
+            return obj
+        if isinstance(obj, dict):
+            return {k: _walk(v) for k, v in obj.items()}
+        if isinstance(obj, (list, set, tuple)):
+            return type(obj)(_walk(item) for item in obj)
+        if isinstance(obj, Message):
+            return "".join(
+                part.to_string()
+                for part in obj.parts.filter(type=MessagePartType.MESSAGE)
+            )
+        if isinstance(obj, Path):
+            return obj.as_posix()
+        raise TypeError(f"Cannot serialize {type(obj).__name__}")
+    return json.dumps(_walk(data))
+
+
+def _build_tool_messages(tool_calls: list[AgentTaskCall]) -> dict[str, Any] | list[dict[str, Any]]:
+    """Build OpenAI tool-role messages from completed AgentTaskCalls."""
+    messages = [
+        {
+            "role": "tool",
+            "tool_call_id": f"tc-{tc.pk}",
+            "content": _serialize_result(tc.get_result()),
+        }
+        for tc in tool_calls
+    ]
+    if len(messages) == 1:
+        return messages[0]
+    return messages
+
 
 class QueryMessage(BaseModel):
     """A single message within a query, containing one or more parts."""
 
-    query = models.ForeignKey(
-        "server.Query", on_delete=models.CASCADE, related_name="related_query_messages"
-    )
+    query = models.ForeignKey("server.Query", on_delete=models.CASCADE, related_name="related_query_messages")
     source_message = models.ForeignKey(
         "server.Message",
         on_delete=models.SET_DEFAULT,
@@ -103,107 +173,38 @@ class QueryMessage(BaseModel):
         self, fail_on_error: bool = True
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Convert this query message to the OpenAI message format."""
-        tags_token_usage: dict[str, Any] = {}
-        message_tool_calls: list[Any] = []
-        message_parts: list[dict[str, Any]] = []
+        content_parts: list[dict[str, Any]] = []
+        tool_call_dicts: list[dict[str, Any]] = []
+        tool_call_objects: list[AgentTaskCall] = []
+        tags_usage: dict[str, Any] = {}
 
         for part in self.query_message_parts.all():
-            if part.source_message_part:
-                if part.source_message_part.type == MessagePartType.TOOLCALL:
-                    message_tool_calls.append(part.source_message_part.tool_call)
-                    continue
-                if part.source_message_part.type != MessagePartType.MESSAGE:
-                    raise Exception("here broken")
-
             part_contents = part.to_openai_message(fail_on_error=fail_on_error)
-            message_parts.extend(part_contents)
-            c = tags_token_usage
-            for tag in part.tags:
-                if tag not in c:
-                    c[tag] = {"tokens": 0}
-                c[tag]["tokens"] += part.tokens
-                c = c[tag]
-
-        if prefix := (self.content_prefix.get() if self.content_prefix else None):
-            message_parts.insert(0, {"type": "text", "text": prefix})
-        if postfix := (self.content_postfix.get() if self.content_postfix else None):
-            message_parts.append({"type": "text", "text": postfix})
-
-        merged_message_parts = [message_parts.pop(0)] if message_parts else []
-        while message_parts:
-            message_part = message_parts.pop(0)
-            if merged_message_parts[-1]["type"] == message_part["type"] == "text":
-                merged_message_parts[-1]["text"] += message_part["text"]
+            if part.source_message_part and part.source_message_part.type == MessagePartType.TOOLCALL:
+                tool_call_dicts.extend(part_contents)
+                tool_call_objects.append(part.source_message_part.tool_call)
             else:
-                merged_message_parts.append(message_part)
+                content_parts.extend(part_contents)
 
-        content_to_send = merged_message_parts
-        if len(content_to_send) == 1 and content_to_send[0]["type"] == "text":
-            content_to_send = content_to_send[0]["text"]
-            token_count = math.ceil(len(content_to_send) / 3.8)
-        else:
-            token_count = math.ceil(len(json.dumps(content_to_send)) / 3.8)
-
-        if self.tokens != token_count:
-            self.tags_token_usage = tags_token_usage
-            self.tokens = token_count
-            self.save()
-
-        message: dict[str, Any] = {"role": self.role, "content": content_to_send}
-
-        if not message_tool_calls:
-            return message
+            c = tags_usage
+            for tag in (part.tags or []):
+                c = c.setdefault(tag, {"tokens": 0})
+                c["tokens"] += part.tokens or 0
 
         if self.role == "tool":
-            messages: list[dict[str, Any]] = []
-            for message_tool_call in message_tool_calls:
-                tool_call_result = message_tool_call.get_result()
-                tool_call_result_str = ""
-                if isinstance(tool_call_result, Message):
-                    tcr = []
-                    for part in tool_call_result.parts.all():
-                        part:MessagePart
-                        if part.content_type == MessageContentType.TEXT:
-                            tcr.append(part.content.get())
+            return _build_tool_messages(tool_call_objects)
 
-                        elif part.content_type == MessageContentType.TEMPLATE:
-                            try:
-                                rtemplate = _JINJA_ENV.from_string(part.content.get())
-                                data: dict[str, Any] = {}
-                                context = {**part.template_data.get(), **data}
-                                tcr.append(rtemplate.render(**context))               
-                            except Exception as e:
-                                if fail_on_error:
-                                    raise e
-                        elif part.content_type == MessageContentType.JSON:     
-                            tcr.append(json.dumps(part.content.get()))
-                        else:
-                            raise Exception(f"No message_content for content {part.content}")
-                    tool_call_result_str = "".join(tcr)
-                else:
-                    tool_call_result_str = json.dumps(tool_call_result)
+        merged = _merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
 
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": f"tc-{message_tool_call.pk}",
-                    "content": tool_call_result_str,
-                })
+        token_count = _estimate_tokens(merged)
+        if self.tokens != token_count:
+            self.tags_token_usage = tags_usage
+            self.tokens = token_count
+            self.save(update_fields=["tokens", "tags_token_usage"])
 
-            return messages if len(messages) > 1 else messages[0] if messages else []
-
-        message["tool_calls"] = []
-        for tool_call in message_tool_calls:
-            message["tool_calls"].append(
-                {
-                    "id": f"tc-{tool_call.pk}",
-                    "type": "function",
-                    "function": {
-                        "name": tool_call.task_definition.name,
-                        "arguments": json.dumps(tool_call.carguments_json),
-                    },
-                }
-            )
-
+        message: dict[str, Any] = {"role": self.role, "content": merged}
+        if tool_call_dicts:
+            message["tool_calls"] = tool_call_dicts
         return message
 
     def save(self, *args: Any, **kwargs: Any) -> None:

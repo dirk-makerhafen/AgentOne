@@ -19,6 +19,7 @@ class HistoryLimiter:
     def is_general_message_limited(self, rule_name: str, entry) -> bool:
         # Check if we should add "TO_BE_FORGOTTEN" tag
         # Logic based on max_history_messages
+        return False
         if self.max_history_messages > 0:
              # Find index of entry in all_entries (which is sorted newest first)
              try:

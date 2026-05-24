@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("builtin_filesystem", "0002_initial"),
         ("server", "0012_rename_instanceversionmodel_sessionversionmodel_and_more"),
     ]
 

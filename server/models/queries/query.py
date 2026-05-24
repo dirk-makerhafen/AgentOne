@@ -4,6 +4,7 @@ from typing import Any
 
 from django.db import models
 from django_enum import EnumField
+from sortedm2m.fields import SortedManyToManyField
 
 from server.models.base_model import BaseModel
 from server.models.enums.message_enums import MessageContentType, MessagePartType
@@ -29,6 +30,7 @@ class Query(BaseModel):
     status = EnumField(QueryStatus, default=QueryStatus.WAITING)
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
+    #messages = SortedManyToManyField( "QueryMessage", related_name="queries", default=None, symmetrical=False)
 
     @property
     def response(self):

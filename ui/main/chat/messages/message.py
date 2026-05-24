@@ -1,11 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from server.models.message import Message
+from server.models.queries.query import Query
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 from ui.main.chat.messages.assistant_message import AssistantMessageView
+from ui.main.chat.messages.query import QueryView
 from ui.main.chat.messages.user_message import UserMessageView
 
 class MessageView(ModelView):
@@ -20,16 +22,23 @@ class MessageView(ModelView):
             console.log("added");
         </script>
     '''
-    def __init__(self, subject: Message, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
+    def __init__(self, subject: Message|Query, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        if subject.role == "assistant":
-            self.view = AssistantMessageView(subject, self)
+        if isinstance(subject, Message):
+            if subject.role == "assistant":
+                self.view = AssistantMessageView(subject, self)
+            else:
+                self.view = UserMessageView(subject=subject, parent=self)
+            self.role = self.subject.role
         else:
-            self.view = UserMessageView(subject=subject, parent=self)
+            self.view = QueryView(subject=subject, parent=self)
+            self.role = "query"
+       
+
 
     @property
     def DOM_ELEMENT_EXTRAS(self):
-        return  f"style='display:flex;' data-pk='{self.subject.pk}' data-role='{self.subject.role}'  "
+        return  f"style='display:flex;' data-pk='{self.subject.pk}' data-role='{self.role}'  "
 
 #animation: smoothAppear .5s ease-out forwards;
 

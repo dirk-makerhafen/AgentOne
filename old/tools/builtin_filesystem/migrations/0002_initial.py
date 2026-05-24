@@ -8,7 +8,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("builtin_filesystem", "0001_initial"),
         ("server", "0001_initial"),
     ]
 
@@ -42,50 +41,6 @@ class Migration(migrations.Migration):
                 to="server.conversationmessage",
             ),
         ),
-        migrations.AddField(
-            model_name="fslogentry",
-            name="fork_of",
-            field=models.ForeignKey(
-                blank=True,
-                default=None,
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name="forks",
-                to="builtin_filesystem.fslogentry",
-            ),
-        ),
-        migrations.AddField(
-            model_name="fslogentry",
-            name="prev_version",
-            field=models.ForeignKey(
-                default=None,
-                null=True,
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name="next_versions",
-                to="builtin_filesystem.fslogentry",
-            ),
-        ),
-        migrations.AddField(
-            model_name="fslogentry",
-            name="raw_data_reference",
-            field=models.ForeignKey(
-                blank=True,
-                default=None,
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name="data_references",
-                to="builtin_filesystem.fslogentry",
-            ),
-        ),
-        migrations.AddField(
-            model_name="fslogentry",
-            name="reverted_from_entry",
-            field=models.ForeignKey(
-                default=None,
-                null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
-                related_name="reverted_by_entries",
-                to="builtin_filesystem.fslogentry",
-            ),
-        ),
+       
+        
     ]

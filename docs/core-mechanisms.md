@@ -228,6 +228,122 @@ The `taskcall` is an `AgentTaskCall`. When the parent receives this dict, the fr
 
 ---
 
+## Subagent Result Delivery
+
+The `subagentResultDelivery` setting on `SettingsModel` controls how a spawned subagent's final output reaches the parent session:
+
+| Mode | Behavior |
+|---|---|
+| `passive` (default) | Subagent's result is appended as a template message to the parent conversation, but does **not** trigger the parent's agent loop. The parent must explicitly call `await_subagents` or `message_subagent`. |
+| `immediate` | Subagent's result is injected into the parent conversation **and** triggers `process_turn` on the parent — the parent processes the result as a new user input. |
+
+Both modes use the same `ingest_subagent_result` background task (always dispatched by `spawn_subagent`). The difference is only whether the function chains to `process_turn` at the end:
+
+```python
+def ingest_subagent_result(session, child_session_pk, summary, result):
+    # Create a template message in the parent conversation
+    message = Message.objects.create(...)
+
+    if session.subagentResultDelivery == "immediate":
+        return session.get_task("process_turn").delay(message=message)
+    # passive: return None — message is appended but no turn triggered
+```
+
+### Dependency Resolution via `WAITING_DEPENDENCY`
+
+The critical design question: **how does `spawn_subagent` remain non-blocking while `ingest_subagent_result` needs the child's result?**
+
+The answer is the framework's argument-dependency mechanism, built into `AgentTaskCall`:
+
+```
+spawn_subagent:
+  1. child_task = child.get_task("ingest_user_message").delay(parts=parts)
+  2. session.get_task("ingest_subagent_result").delay(result=child_task)
+                                         ▲
+                                    AgentTaskCall passed as argument
+```
+
+Step 2 passes `child_task` (an `AgentTaskCall`) as the `result` argument. During `AgentTaskCall.create()`, the following happens:
+
+**`create_call_arguments_json()`** (`agent_task_call.py:259`) serialises the arguments. For `AgentTaskCall` objects it:
+1. Stores `{"_type": "AgentTaskCall", "pk": child_task.pk}` in `carguments_json`
+2. Appends `child_task.pk` to `ref_pks` — this populates the `taskcall_arg_references` M2M on the new call
+
+**`CallScheduler._apply_async()`** (`call_scheduler.py:22`) then checks:
+
+```python
+if tc.taskcall_arg_references.exclude(status=TaskCallStatus.ENDED).exists():
+    return  # Still waiting — park in WAITING_DEPENDENCY
+```
+
+Since `child_task` hasn't ended yet (it was just created in step 1), the delivery call enters `WAITING_DEPENDENCY` and **does not proceed**. The parent's `spawn_subagent` returns immediately — it never blocks.
+
+**`on_arg_reference_task_ended()`** (`call_scheduler.py:46`) fires when `child_task` reaches `ENDED_STATUS`. It checks whether all references have resolved:
+
+```python
+if tc.taskcall_arg_references.exclude(status=TaskCallStatus.ENDED).exists():
+    return  # Still waiting for other arguments
+CallScheduler.on_all_arg_reference_tasks_ended(task_call_id)
+```
+
+Once all deps are met, `start_new_taskrun()` (`call_scheduler.py:121`) creates the `AgentTaskRun` for the delivery call. **At this point** `child_task.taskcall_result_run` is set, so `_create_run_arguments_json()` (`agent_task_run.py:250`) converts the `AgentTaskCall` ref into an `AgentTaskRun` ref, and `_resolve_run_arguments(timeout=0)` resolves immediately because the referenced run has already ended.
+
+### Flow Diagram
+
+```
+spawn_subagent(session, name, query)
+  │
+  ├─ 1. child.get_task("ingest_user_message").delay(parts)
+  │       └── AgentTaskCall(child_task) created, run queued
+  │
+  ├─ 2. session.get_task("ingest_subagent_result").delay(result=child_task)
+  │       └── AgentTaskCall(delivery) created
+  │             └── taskcall_arg_references += child_task
+  │             └── _apply_async() → WAITING_DEPENDENCY (child not done)
+  │
+  └─ 3. return {"session_pk": ..., "mode": "passive|immediate"}
+        └── parent continues its turn immediately
+                │
+                ▼  (async, in Celery)
+        child_task runs to completion
+                │
+                ▼
+        child_task → ENDED_SUCCESS
+                │
+                ▼
+        on_arg_reference_task_ended(delivery.pk, ...)
+                │
+                ▼
+        all deps resolved → on_all_arg_reference_tasks_ended(delivery.pk)
+                │
+                ▼
+        start_new_taskrun(delivery.pk) → AgentTaskRun created
+                │
+                ▼
+        _resolve_run_arguments(timeout=0) → child result ready → func runs
+                │
+                ▼
+        ingest_subagent_result(session, child_session_pk, summary, result)
+                │
+                ├─ passive: create template Message, return None
+                │
+                └─ immediate: create Message + chain to process_turn
+                              └── parent processes subagent output
+```
+
+### Comparison: `delegate_task` vs `spawn_subagent`
+
+| Aspect | `delegate_task` | `spawn_subagent` |
+|---|---|---|
+| **Blocking** | Yes — returns `child_task` in result dict, framework auto-awaits via `WAITING_RESULTTASKS` | No — returns `session_pk` immediately, delivery is a background task |
+| **Result delivery** | Via auto-await — parent's **current** turn sees the result as tool output | Via `ingest_subagent_result` background task — result is injected as a **new** user message in the conversation |
+| **`subagentResultDelivery`** | Unaffected — always blocks regardless of setting | Affected — setting controls whether `process_turn` is triggered after delivery |
+| **Use case** | Parent needs the subagent's result to complete its current turn | Parent delegates work and continues; result arrives asynchronously |
+
+---
+
+
+
 ## pyHtmlGui Renderer
 
 pyHtmlGui is a custom WebSocket-based UI framework built on Jinja2 templates and Django Channels. It maintains an in-memory view tree on the server, renders it to HTML, and sends surgical DOM updates (not full pages) over the WebSocket.
