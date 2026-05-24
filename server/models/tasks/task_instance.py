@@ -61,6 +61,8 @@ class TaskInstance(BaseModel):
     is_approved = models.BooleanField(default=None, null=True)
     retry_count = models.IntegerField(default=0)
 
+    pipe_output_names = models.JSONField(default=list, blank=True)
+
     child_instances = SortedManyToManyField(
         "self", symmetrical=False, blank=True, related_name="parent_instances"
     )

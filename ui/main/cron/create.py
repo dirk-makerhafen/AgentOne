@@ -104,6 +104,12 @@ class CronCreateView(ModelView):
                     {% endif %}
 
                     <div class="detail-form-row">
+                        <label>Pipe outputs</label>
+                        <input type="text" value="{{ pyview._form_data.pipe_names }}" onchange="pyview.setCronField('pipe_names', this.value)" placeholder="email.received, item.parsed" autocomplete="off">
+                        <div class="detail-form-hint">Comma-separated pipe names. Output is published to these named pipes after each run.</div>
+                    </div>
+
+                    <div class="detail-form-row">
                         <label for="cfMessage">{% if pyview._form_data.function_type %}Message (JSON){% else %}Message{% endif %}</label>
                         <textarea id="cfMessage" rows="6" placeholder="{% if pyview._form_data.function_type %}Enter JSON matching the function signature{% else %}Message text{% endif %}" onchange="pyview.setCronField('message', this.value)">{{ pyview._form_data.message }}</textarea>
                         {% if pyview._form_data.function_type and pyview._selected_function_schema %}
@@ -139,6 +145,7 @@ class CronCreateView(ModelView):
             "function_type": "",
             "function_name": "",
             "message": "",
+            "pipe_names": "",
         }
         self._form_error: str = ""
         self._session_search_results: list[str] = []
@@ -253,6 +260,9 @@ class CronCreateView(ModelView):
                 self.update()
                 return
 
+        raw_pipes = fd.get("pipe_names", "").strip()
+        pipe_names = [p.strip() for p in raw_pipes.split(",") if p.strip()] if raw_pipes else []
+
         try:
             self.subject.cronjobs.create(
                 name=fd.get("name", ""),
@@ -264,6 +274,7 @@ class CronCreateView(ModelView):
                 message_content=message_content,
                 function_type=fd.get("function_type", ""),
                 function_name=fd.get("function_name", ""),
+                pipe_names=pipe_names,
             )
             self._form_error = ""
             self.close_tab()

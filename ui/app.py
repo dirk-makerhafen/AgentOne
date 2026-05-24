@@ -1,4 +1,5 @@
 from runtime.agents.agents import Agents
+from runtime.pipe.pipes import Pipes
 from runtime.session.sessions import Sessions
 from runtime.project.projects import Projects
 from runtime.skill.skills import  Skills
@@ -17,6 +18,7 @@ class UiApp(Observable):
         self.workspaces = Workspaces()
 
         self.agents = Agents()
+        self.pipes = Pipes()
         self.sessions = Sessions()
         self.skills = Skills()
         self.cronjobs = Cronjobs()

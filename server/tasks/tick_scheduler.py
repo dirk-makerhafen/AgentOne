@@ -31,6 +31,7 @@ def tick_scheduler() -> None:
     _timeout_active_runs()
     _cleanup_stale_runtime_folders()
     _process_cron_jobs()
+    _dispatch_pipe_subscriptions()
 
 
 def _release_rate_limited_calls() -> None:
@@ -148,6 +149,86 @@ def _process_cron_jobs() -> None:
             print(f"[scheduler] dispatched cron job {cronjob.pk} ({cronjob.name})")
         except Exception as e:
             print(f"[scheduler] error dispatching cron job {cronjob.pk}: {e}")
+
+
+def _dispatch_pipe_subscriptions() -> None:
+    """Dispatch new pipe items to subscribed consumer tasks.
+
+    For each active NamedPipeConsumer, find AgentTaskCalls that:
+    1. Completed with ENDED_SUCCESS
+    2. List the pipe name in their ``pipe_output_names``
+    3. Have NOT already been processed by this consumer (dedup via carguments_json)
+
+    Then create and enqueue a new AgentTaskCall for the consumer.
+    """
+    from server.models.pipe import NamedPipeSubscription
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from server.models.tasks.task_instance import TaskInstance
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from server.models.sessions.session import SessionModel
+    from runtime.session.session import Session
+
+    for sub in (
+        NamedPipeSubscription.objects.filter(is_active=True)
+        .select_related("pipe", "consumer_task", "agent")
+    ):
+        pipe_name = sub.pipe.name
+        source_calls = AgentTaskCall.objects.filter(
+            status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
+            pipe_output_names__contains=pipe_name,
+        ).order_by("pk")
+
+        for source in source_calls:
+            consumer_args = {**source.carguments_json, **sub.arguments_template}
+            if AgentTaskCall.objects.filter(
+                task_definition_version=sub.consumer_task,
+                carguments_json=consumer_args,
+            ).exists():
+                continue
+
+            # --- resolve session ---
+            if sub.agent and sub.agent.latest_agent_version_id:
+                agent_version = sub.agent.latest_agent_version
+                if sub.session_mode == "new":
+                    ts = int(timezone.now().timestamp())
+                    session_name = sub.session_name or f"pipe:{sub.pipe.name}:{ts}"
+                    session_version = agent_version.get_or_create_session(
+                        name=session_name
+                    )
+                    session_model = session_version.session
+                    session_obj = Session(
+                        session_model=session_model,
+                        pinned_session_version=session_version,
+                    )
+                else:
+                    auto_name = f"pipe:{sub.pipe.name}"
+                    session_name = sub.session_name or auto_name
+                    session_model, _ = SessionModel.objects.get_or_create(
+                        name=session_name
+                    )
+                    session_obj = Session(session_model=session_model)
+            else:
+                auto_name = f"pipe:{sub.pipe.name}"
+                session_model, _ = SessionModel.objects.get_or_create(
+                    name=auto_name
+                )
+                session_obj = Session(session_model=session_model)
+
+            task_instance = TaskInstance.objects.create(
+                task_definition_version=sub.consumer_task,
+                session=session_model,
+                session_version=session_obj.latest_version,
+                iarguments_json=consumer_args,
+            )
+            call = AgentTaskCall.create(
+                task_instance=task_instance,
+                kwargs=consumer_args,
+            )
+            call.apply_async()
+            print(
+                f"[scheduler] pipe {pipe_name}: dispatched call {call.pk}"
+                f" ({sub.consumer_task})"
+            )
 
 
 def _cleanup_stale_runtime_folders() -> None:

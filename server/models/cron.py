@@ -68,6 +68,9 @@ class Cronjob(models.Model):
         help_text="Name of the task/tool/command to execute.",
     )
 
+    # Named pipe output
+    pipe_names: list = models.JSONField(default=list, blank=True, help_text="Published to these named pipes after each run.")
+
     # Tracking
     last_run_at: datetime | None = models.DateTimeField(
         null=True, blank=True, default=None

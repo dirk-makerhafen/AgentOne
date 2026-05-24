@@ -48,6 +48,8 @@ class TaskDefinitionVersion(BaseModel):
     path = models.CharField(max_length=1024, default=None, blank=True, null=True)
     commit = models.CharField(max_length=1024, default="")
 
+    pipe_output_names = models.JSONField(default=list, blank=True)
+
     child_tasks = SortedManyToManyField(
         "self", help_text="", symmetrical=False, blank=True, related_name="parent_tasks"
     )

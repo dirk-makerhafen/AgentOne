@@ -45,6 +45,7 @@ def _do_execute(cronjob_id: int) -> None:
 
     # 2. Dispatch
     message_content = cronjob.message.content if cronjob.message else ""
+    dispatched_call = None
 
     if cronjob.function_type and cronjob.function_name:
         getter = {
@@ -63,11 +64,22 @@ def _do_execute(cronjob_id: int) -> None:
         args = json.loads(message_content) if message_content else {}
         if not isinstance(args, dict):
             raise ValueError("Message must be a JSON object for function dispatch")
-        bound_task.delay(**args)
+        dispatched_call = bound_task.delay(**args)
     else:
-        session.add_user_message(parts=[
+        dispatched_call = session.add_user_message(parts=[
             {"type": "message", "content_type": "text", "content": message_content},
         ])
+
+    # 2b. Route output to named pipes
+    if dispatched_call and cronjob.pipe_names:
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        call_pk = dispatched_call.pk if hasattr(dispatched_call, "pk") else dispatched_call
+        if isinstance(call_pk, int):
+            AgentTaskCall.objects.filter(pk=call_pk).update(
+                pipe_output_names=list(set(
+                    list(cronjob.pipe_names)
+                ))
+            )
 
     # 3. Update tracking
     next_run = croniter(cronjob.schedule, timezone.localtime()).get_next(datetime)

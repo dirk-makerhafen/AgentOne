@@ -88,6 +88,8 @@ class AgentTaskCall(BaseModel):
     retry_count = models.IntegerField(default=0)
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
 
+    pipe_output_names = models.JSONField(default=list, blank=True)
+
     parent_taskrun = models.ForeignKey(
         "server.AgentTaskRun",
         blank=True,
@@ -170,6 +172,7 @@ class AgentTaskCall(BaseModel):
         retry_delay: Any = None,
         retry_requires_approval: Any = None,
         priority: int | None = None,
+        pipe_output_names: list[str] | None = None,
     ) -> AgentTaskCall:
         """Create an AgentTaskCall for the given task instance.
 
@@ -202,6 +205,13 @@ class AgentTaskCall(BaseModel):
         arguments_json, ref_pks = AgentTaskCall.create_call_arguments_json(
             arguments=next_input
         )
+
+        effective_pipes = list(
+            task_instance.task_definition_version.pipe_output_names or []
+        )
+        effective_pipes = list(set(effective_pipes + (task_instance.pipe_output_names or [])))
+        if pipe_output_names:
+            effective_pipes = list(set(effective_pipes + pipe_output_names))
 
         taskcall = AgentTaskCall.objects.create(
             task_instance=task_instance,
@@ -236,6 +246,7 @@ class AgentTaskCall(BaseModel):
             else task_instance.retry_requires_approval,
             is_approved=None,
             parent_taskrun=parent_run,
+            pipe_output_names=effective_pipes,
         )
         taskcall.taskcall_before_run_hooks.set(before_hook_calls)
 

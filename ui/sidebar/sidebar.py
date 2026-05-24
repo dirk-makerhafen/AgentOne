@@ -6,6 +6,7 @@ from ui.sidebar.panels.chats import SidebarPanelChats
 from ui.sidebar.panels.cron import SidebarPanelCronjobs
 from ui.sidebar.panels.insights import SidebarPanelInsights
 from ui.sidebar.panels.logs import SidebarPanelLogs
+from ui.sidebar.panels.pipes import SidebarPanelPipes
 from ui.sidebar.panels.projects import SidebarPanelProjects
 from ui.sidebar.panels.settings import SidebarPanelSettings
 from ui.sidebar.panels.skills import SidebarPanelSkills
@@ -32,6 +33,10 @@ class SidebarView(ModelView):
             <button class="nav-tab" data-panel="cron" data-label="Cron" onclick="pyview.switchPanel('cron')" title="Cron" data-i18n-title="tab_cron">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 <div class="rail-button-text" style="display:none">Cron</div>
+            </button>
+            <button class="nav-tab" data-panel="pipes" data-label="Pipes" onclick="pyview.switchPanel('pipes')" title="Named pipes" data-i18n-title="tab_pipes">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
+                <div class="rail-button-text" style="display:none">Pipes</div>
             </button>
             <button class="nav-tab" data-panel="kanban" data-label="Kanban" onclick="pyview.switchPanel('kanban')" title="Kanban" data-i18n-title="tab_kanban">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16"/><path d="M16 4v16"/><path d="M3 10h18"/></svg>
@@ -96,6 +101,7 @@ class SidebarView(ModelView):
             profiles = SidebarPanelAgents(subject=self.subject, parent=self),
             chat = SidebarPanelChats(subject=self.subject, parent=self),
             cron = SidebarPanelCronjobs(subject=self.subject, parent=self),
+            pipes = SidebarPanelPipes(subject=self.subject, parent=self),
             insights = SidebarPanelInsights(subject=self.subject, parent=self),
             logs = SidebarPanelLogs(subject=self.subject, parent=self),
             projects = SidebarPanelProjects(subject=self.subject, parent=self),
