@@ -145,7 +145,7 @@ def _process_cron_jobs() -> None:
 
     for cronjob in Cronjobs().due():
         try:
-            execute_cron_job.delay(cronjob.pk)
+            execute_cron_job(cronjob.pk)
             print(f"[scheduler] dispatched cron job {cronjob.pk} ({cronjob.name})")
         except Exception as e:
             print(f"[scheduler] error dispatching cron job {cronjob.pk}: {e}")

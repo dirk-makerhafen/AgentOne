@@ -109,6 +109,10 @@ class AgentView(ModelView):
                                     <div class="detail-row-value">{{pyview.agent.aimodel}}</div>
                                 </div>
                                 <div class="detail-row">
+                                    <div class="detail-row-label">Precision</div>
+                                    <div class="detail-row-value">{{pyview.agent.precision}}</div>
+                                </div>
+                                <div class="detail-row">
                                     <div class="detail-row-label">scheduler_strategy</div>
                                     <div class="detail-row-value">{{pyview.agent.scheduler_strategy}}</div>
                                 </div>

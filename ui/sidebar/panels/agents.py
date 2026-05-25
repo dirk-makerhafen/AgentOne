@@ -82,5 +82,13 @@ class SidebarPanelAgents(ModelView):
             parent = self,
             item_class = SidebarPanelAgent,
         )
+    def set_project_filter(self, project_id: int | None) -> None:
+        if project_id is None:
+            self.agent_list.query = self.subject.agents.root()
+        else:
+            self.agent_list.query = AgentModel.objects.filter(parent_project=project_id)
+        self.agent_list._recreate()
+        self.update()
+
     def reloadFromDisk(self):
         pass

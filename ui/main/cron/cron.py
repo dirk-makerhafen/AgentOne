@@ -263,7 +263,7 @@ class CronView(ModelView):
 
     def runNow(self) -> None:
         from runtime.cron.execute import execute_cron_job
-        execute_cron_job.delay(self.subject.pk)
+        execute_cron_job(self.subject.pk)
 
     def toggleActive(self) -> None:
         self.subject.is_active = not self.subject.is_active

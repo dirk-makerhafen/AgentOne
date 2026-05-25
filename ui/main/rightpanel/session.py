@@ -4,6 +4,7 @@ from runtime.session.session import Session
 from server.models.enums.task_enums import TaskSchedulerStrategy
 from server.models.providers.ai_model import AiModel
 from server.models.settings import (
+    ResponseTemperature,
     AgentToolCallSyntax,
     ReasoningEffort,
     SubagentResultDelivery,
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
 
 
 CHOICE_FIELDS = {
+    "precision": ResponseTemperature,
     "reasoning_effort": ReasoningEffort,
     "scheduler_strategy": TaskSchedulerStrategy,
     "tool_call_syntax": AgentToolCallSyntax,
@@ -138,6 +140,7 @@ class RightPanelSession(ModelView):
 
     SETTINGS_FIELDS = [
         ("aimodel", "AI Model"),
+        ("precision", "Precision"),
         ("reasoning_effort", "Reasoning Effort"),
         ("scheduler_strategy", "Scheduler Strategy"),
         ("tool_call_syntax", "Tool Call Syntax"),

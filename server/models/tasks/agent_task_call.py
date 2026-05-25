@@ -33,39 +33,11 @@ class AgentTaskCall(BaseModel):
     hook references, and lifecycle status.
     """
 
-    task_definition = models.ForeignKey(
-        "server.TaskDefinition",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_calls",
-        default=None,
-        null=True,
-        blank=True,
-    )
-    task_definition_version = models.ForeignKey(
-        "TaskDefinitionVersion",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_calls",
-        default=None,
-        null=True,
-        blank=True,
-    )
-    task_instance = models.ForeignKey(
-        "TaskInstance",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_calls",
-        default=None,
-        null=True,
-    )
-    session = models.ForeignKey(
-        "SessionModel",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_calls",
-    )
-    session_version = models.ForeignKey(
-        "SessionVersionModel",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_calls",
-    )
+    task_definition = models.ForeignKey( "server.TaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
+    task_definition_version = models.ForeignKey( "TaskDefinitionVersion", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
+    task_instance = models.ForeignKey( "TaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True)
+    session = models.ForeignKey( "SessionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
+    session_version = models.ForeignKey( "SessionVersionModel", on_delete=models.CASCADE, related_name="related_agent_task_calls")
 
     carguments_json = models.JSONField(default=dict, null=False)
 
@@ -90,69 +62,19 @@ class AgentTaskCall(BaseModel):
 
     pipe_output_names = models.JSONField(default=list, blank=True)
 
-    parent_taskrun = models.ForeignKey(
-        "server.AgentTaskRun",
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="child_taskcalls",
-        default=None,
-        null=True,
-    )
+    parent_taskrun = models.ForeignKey( "server.AgentTaskRun", blank=True, on_delete=models.CASCADE, related_name="child_taskcalls", default=None, null=True)
 
-    taskcall_arg_references = models.ManyToManyField(
-        "self",
-        help_text="AgentTaskCalls used in call args/kwargs",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskcall_arg_references",
-    )
+    taskcall_arg_references = models.ManyToManyField( "self", help_text="AgentTaskCalls used in call args/kwargs", symmetrical=False, blank=True, related_name="rev_taskcall_arg_references")
 
-    taskcall_on_success_callbacks = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskcall_on_success_callbacks",
-    )
-    taskcall_on_error_callbacks = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskcall_on_error_callbacks",
-    )
-    taskcall_before_run_hooks = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskcall_before_run_hooks",
-    )
-    taskcall_after_run_hooks = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskcall_after_run_hooks",
-    )
+    taskcall_on_success_callbacks = models.ManyToManyField( "self", help_text="", symmetrical=False, blank=True, related_name="rev_taskcall_on_success_callbacks")
+    taskcall_on_error_callbacks = models.ManyToManyField( "self", help_text="", symmetrical=False, blank=True, related_name="rev_taskcall_on_error_callbacks")
+    taskcall_before_run_hooks = models.ManyToManyField( "self", help_text="", symmetrical=False, blank=True, related_name="rev_taskcall_before_run_hooks")
+    taskcall_after_run_hooks = models.ManyToManyField( "self", help_text="", symmetrical=False, blank=True, related_name="rev_taskcall_after_run_hooks")
 
-    status = models.CharField(
-        choices=TaskCallStatus.choices, default=TaskCallStatus.NEW, max_length=61
-    )
-    status_detail = models.CharField(
-        choices=TaskCallStatusDetail.choices,
-        default=TaskCallStatusDetail.NEW,
-        max_length=61,
-    )
+    status = models.CharField( choices=TaskCallStatus.choices, default=TaskCallStatus.NEW, max_length=61)
+    status_detail = models.CharField( choices=TaskCallStatusDetail.choices, default=TaskCallStatusDetail.NEW, max_length=61)
 
-    taskcall_result_run = models.ForeignKey(
-        "server.AgentTaskRun",
-        null=True,
-        blank=True,
-        default=None,
-        on_delete=models.SET_DEFAULT,
-        related_name="rev_taskcall_result_run",
-    )
+    taskcall_result_run = models.ForeignKey( "server.AgentTaskRun", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT, related_name="rev_taskcall_result_run")
 
     @classmethod
     def create(
@@ -222,28 +144,16 @@ class AgentTaskCall(BaseModel):
             carguments_json=arguments_json,
             dont_start_before=dont_start_before if dont_start_before else None,
             dont_start_after=dont_start_after if dont_start_after else None,
-            requires_approval=requires_approval
-            if requires_approval is not None
-            else task_instance.requires_approval,
+            requires_approval=requires_approval if requires_approval is not None else task_instance.requires_approval,
             time_limit=time_limit if time_limit else task_instance.time_limit,
-            max_subtask_errors=max_subtask_errors
-            if max_subtask_errors
-            else task_instance.max_subtask_errors,
-            max_subtask_error_rate=max_subtask_error_rate
-            if max_subtask_error_rate
-            else task_instance.max_subtask_error_rate,
-            limit_subtask_parallel_runs=limit_subtask_parallel_runs
-            if limit_subtask_parallel_runs
-            else task_instance.limit_subtask_parallel_runs,
-            limit_per_instance_parallel_runs=limit_per_instance_parallel_runs
-            if limit_per_instance_parallel_runs
-            else task_instance.limit_per_instance_parallel_runs,
+            max_subtask_errors=max_subtask_errors if max_subtask_errors else task_instance.max_subtask_errors,
+            max_subtask_error_rate=max_subtask_error_rate if max_subtask_error_rate else task_instance.max_subtask_error_rate,
+            limit_subtask_parallel_runs=limit_subtask_parallel_runs if limit_subtask_parallel_runs else task_instance.limit_subtask_parallel_runs,
+            limit_per_instance_parallel_runs=limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else task_instance.limit_per_instance_parallel_runs,
             priority=priority if priority else task_instance.priority,
             max_retries=max_retries if max_retries else task_instance.max_retries,
             retry_delay=retry_delay if retry_delay else task_instance.retry_delay,
-            retry_requires_approval=retry_requires_approval
-            if retry_requires_approval
-            else task_instance.retry_requires_approval,
+            retry_requires_approval=retry_requires_approval if retry_requires_approval else task_instance.retry_requires_approval,
             is_approved=None,
             parent_taskrun=parent_run,
             pipe_output_names=effective_pipes,

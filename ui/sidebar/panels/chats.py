@@ -93,9 +93,9 @@ exmapke = '''
         </div>
 '''
 class SidebarPanelChat(ModelView):
-    DOM_ELEMENT_CLASS = "session-item"    
+    DOM_ELEMENT_CLASS = "session-item"
     TEMPLATE_STR = '''
-        <div class="session-text"  onclick="pyview.open_instance_detail()">
+        <div class="session-text" onclick="pyview.open_instance_detail()">
             <div class="session-title-row">
 
                 <span class="session-branch-indicator" title="Forked from AI Agent Capabilities and Functionality Overview">
@@ -108,19 +108,75 @@ class SidebarPanelChat(ModelView):
         </div>
         <span class="session-attention-indicator session-state-indicator" aria-hidden="true"></span>
         <div class="session-actions">
-            <button type="button" class="session-actions-trigger" title="Conversation actions" aria-haspopup="menu" aria-label="Conversation actions">
+            <button type="button" class="session-actions-trigger" title="Conversation actions" aria-haspopup="menu" aria-label="Conversation actions" onclick="toggleSessionMenu(event, '{{pyview.uid}}')">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" stroke="none"><circle cx="8" cy="3" r="1.25"></circle><circle cx="8" cy="8" r="1.25"></circle><circle cx="8" cy="13" r="1.25"></circle></svg>
             </button>
+            <div class="session-action-menu" id="menu_{{pyview.uid}}" style="display:none1">
+                <button type="button" class="ws-opt session-action-opt">
+                    <span class="ws-opt-action">
+                        <span class="ws-opt-icon">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><polygon points="8,2 9.8,6.2 14.2,6.2 10.7,9.2 12,13.8 8,11 4,13.8 5.3,9.2 1.8,6.2 6.2,6.2"></polygon></svg>
+                        </span>
+                        <span class="session-action-copy">
+                            <span class="ws-opt-name">Pin conversation</span>
+                            <span class="session-action-meta">Keep this conversation at the top</span>
+                        </span>
+                    </span>
+                </button>
+                <button type="button" class="ws-opt session-action-opt">
+                    <span class="ws-opt-action">
+                        <span class="ws-opt-icon">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 4.5h4l1.5 1.5H14v7H2z"></path></svg>
+                        </span>
+                        <span class="session-action-copy">
+                            <span class="ws-opt-name">Move to project</span>
+                            <span class="session-action-meta">Assign a project to this conversation</span>
+                        </span>
+                    </span>
+                </button>
+                <button type="button" class="ws-opt session-action-opt">
+                    <span class="ws-opt-action">
+                        <span class="ws-opt-icon">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="2" width="13" height="3" rx="1"></rect><path d="M2.5 5v8h11V5"></path><line x1="6" y1="8.5" x2="10" y2="8.5"></line></svg>
+                        </span>
+                        <span class="session-action-copy">
+                            <span class="ws-opt-name">Archive conversation</span>
+                            <span class="session-action-meta">Hide this conversation until archived is shown</span>
+                        </span>
+                    </span>
+                </button>
+                <button type="button" class="ws-opt session-action-opt">
+                    <span class="ws-opt-action">
+                        <span class="ws-opt-icon">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="4.5" y="4.5" width="8.5" height="8.5" rx="1.5"></rect><path d="M3 11.5V3h8.5"></path></svg>
+                        </span>
+                        <span class="session-action-copy">
+                            <span class="ws-opt-name">Duplicate conversation</span>
+                            <span class="session-action-meta">Create a copy with the same workspace and model</span>
+                        </span>
+                    </span>
+                </button>
+                <button type="button" class="ws-opt session-action-opt danger">
+                    <span class="ws-opt-action">
+                        <span class="ws-opt-icon">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3.5 4.5h9M6.5 4.5V3h3v1.5M4.5 4.5v8.5h7v-8.5"></path><line x1="7" y1="7" x2="7" y2="11"></line><line x1="9" y1="7" x2="9" y2="11"></line></svg>
+                        </span>
+                        <span class="session-action-copy">
+                            <span class="ws-opt-name">Delete conversation</span>
+                            <span class="session-action-meta">Permanently remove this conversation</span>
+                        </span>
+                    </span>
+                </button>
+            </div>
         </div>
     '''
-    
+
     def __init__(self, subject: SessionModel, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.session = Session(subject)
         print(self.session.aimodel)
-        
         self.root_view: UiAppView = parent.parent.root_view
-    
+
     def open_instance_detail(self):
         self.root_view.main_panel.create_and_open_tab(Chat, self.subject)
       
@@ -157,6 +213,35 @@ class SidebarPanelChats(ModelView):
             </div>
             <div class="session-select-toggle">Select</div>
         </div>
+        <script>
+            function toggleSessionMenu(event, uid) {
+                event.stopPropagation();
+                var menu = document.getElementById('menu_' + uid);
+                var isOpen = menu.style.display === 'block';
+                closeAllSessionMenus();
+                if (!isOpen) {
+                    var btn = event.currentTarget;
+                    var rect = btn.getBoundingClientRect();
+                    menu.style.left = Math.max(8, rect.left - 220 + rect.width) + 'px';
+                    menu.style.top = (rect.bottom + 4) + 'px';
+                    menu.style.display = 'block';
+                }
+            }
+            function closeAllSessionMenus() {
+                var menus = document.querySelectorAll('.session-action-menu');
+                for (var i = 0; i < menus.length; i++) {
+                    menus[i].style.display = 'none';
+                }
+            }
+            if (!window._sessionMenuListenerAdded) {
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.session-action-menu') && !e.target.closest('.session-actions-trigger')) {
+                        closeAllSessionMenus();
+                    }
+                });
+                window._sessionMenuListenerAdded = true;
+            }
+        </script>
     '''
 
     def __init__(self, subject:UiApp, parent: SidebarView, **kwargs):
@@ -168,6 +253,16 @@ class SidebarPanelChats(ModelView):
             item_class=SidebarPanelChat,
             dom_element_class="session-date-body"
         )
+
+    def set_project_filter(self, project_id: int | None) -> None:
+        if project_id is None:
+            self.agent_list.query = self.subject.sessions.root()
+        else:
+            self.agent_list.query = SessionModel.objects.filter(
+                related_session_versions__agent__parent_project=project_id
+            ).distinct()
+        self.agent_list._recreate()
+        self.update()
 
     def new_conversation(self):
         self.subject.agents.root().first().get_runtime()

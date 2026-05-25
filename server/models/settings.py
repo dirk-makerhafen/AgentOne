@@ -1,6 +1,7 @@
 """Immutable settings snapshots for agent versions."""
 from __future__ import annotations
 
+from enum import Enum
 from typing import Any
 
 from django.db import models
@@ -32,6 +33,27 @@ class ReasoningEffort(models.TextChoices):
     HIGH = "high", "High"
     XHIGH = "xhigh", "Extra High"
 
+class ResponseTemperature(Enum):
+    """ResponseTemperature levels with float values."""
+    PRECISE = 0.05
+    FOCUSED = 0.2
+    BALANCED = 0.4
+    CREATIVE = 0.6
+    EXPLORATORY = 0.8
+    EXPERIMENTAL = 1.0
+
+    @classmethod
+    def choices(cls):
+        return [
+            (cls.PRECISE.value, "Precise"),
+            (cls.FOCUSED.value, "Focused"),
+            (cls.BALANCED.value, "Balanced"),
+            (cls.CREATIVE.value, "Creative"),
+            (cls.EXPLORATORY.value, "Exploratory"),
+            (cls.EXPERIMENTAL.value, "Experimental"),
+        ]
+
+
 
 class SettingsModel(BaseModel):
     """Immutable snapshot of settings for an agent version.
@@ -56,6 +78,7 @@ class SettingsModel(BaseModel):
         null=True,
         blank=True,
     )
+    precision:float | None = models.FloatField(choices=ResponseTemperature.choices, default=None, null=True, blank=True)
 
     max_retries: int | None = models.IntegerField(
         default=None, null=True, blank=True

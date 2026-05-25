@@ -133,6 +133,7 @@ class BoundTask:
         time_limit: int = 0,
         soft_time_limit: int = 0,
         priority: int = 0,
+         **options: Any
     ) -> Any:
         """
         Dispatch the task asynchronously via a TaskInstance.
@@ -159,7 +160,7 @@ class BoundTask:
             Task priority.
         """
         task_instance = self.instance()
-        return task_instance.apply_async(args=args, kwargs=kwargs)
+        return task_instance.apply_async(args=args, kwargs=kwargs, **options)
 
     def instance(self, args: Any = None, kwargs: Any = None, **options: Any) -> TaskInstance:
         """

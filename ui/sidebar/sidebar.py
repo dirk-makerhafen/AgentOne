@@ -11,6 +11,7 @@ from ui.sidebar.panels.projects import SidebarPanelProjects
 from ui.sidebar.panels.settings import SidebarPanelSettings
 from ui.sidebar.panels.skills import SidebarPanelSkills
 from ui.sidebar.panels.workspaces import SidebarPanelWorkspaces
+from ui.sidebar.project_selector import ProjectSelector
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -25,7 +26,8 @@ class SidebarView(ModelView):
     DOM_ELEMENT = "aside"
     DOM_ELEMENT_CLASS = "sidebar"
     TEMPLATE_STR = """
-        <div class="sidebar-nav">
+        {{ pyview.project_selector.render() }}
+        <div class="sidebar-nav" style="display:None">
             <button class="nav-tab active" data-panel="chat" data-label="Chat" onclick="pyview.switchPanel('chat')" title="Chat" data-i18n-title="tab_chat">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <div class="rail-button-text" style="display:none">Chats</div>
@@ -97,6 +99,9 @@ class SidebarView(ModelView):
         self.s = subject
         self.selected_panel_name = ""
         self.selected_panel = None
+        self.selected_project_id: int | None = None
+        self._active_project_filter: int | None = None
+        self.project_selector = ProjectSelector(subject=self.subject, parent=self)
         self.panels = dict(
             profiles = SidebarPanelAgents(subject=self.subject, parent=self),
             chat = SidebarPanelChats(subject=self.subject, parent=self),
@@ -120,6 +125,18 @@ class SidebarView(ModelView):
         if hasattr(self.selected_panel, "panel_activated"):
             self.selected_panel.panel_activated()
         self.update()
+
+    def set_project(self, project_id: int | None) -> None:
+        self.selected_project_id = project_id
+        if project_id != self._active_project_filter:
+            self._active_project_filter = project_id
+            self._apply_project_filter()
+
+    def _apply_project_filter(self) -> None:
+        pid = self.selected_project_id
+        for panel in self.panels.values():
+            if hasattr(panel, "set_project_filter"):
+                panel.set_project_filter(pid)
 
 '''
 

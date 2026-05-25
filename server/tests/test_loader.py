@@ -86,7 +86,7 @@ class LoaderTest(AgentMdTestMixin, TestCase):
         s = self.full_av.agent_settings
         self.assertEqual(s.max_retries, 3)
         self.assertEqual(s.max_turns, 10)
-        self.assertEqual(s.max_unattended_turns, 5)
+        self.assertEqual(s.max_unattended_turns, 5)   
         self.assertEqual(s.max_history_messages, 50)
         self.assertEqual(s.scheduler_strategy, "queue")
         self.assertEqual(s.tool_call_syntax, "default")

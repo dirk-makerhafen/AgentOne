@@ -156,9 +156,7 @@ class TaskInstance(BaseModel):
         if args:
             arguments["*"] = args
 
-        arguments_json, ref_pks = TaskInstance._create_instance_arguments_json(
-            arguments=arguments
-        )
+        arguments_json, ref_pks = TaskInstance._create_instance_arguments_json(arguments=arguments)
 
         task_instance, created = TaskInstance.objects.get_or_create(
             task_definition_version=task_definition,
@@ -241,6 +239,7 @@ class TaskInstance(BaseModel):
         retry_delay: Any = None,
         retry_requires_approval: Any = None,
         priority: Any = None,
+        pipe_output_names: list[str] | None = None,
     ) -> AgentTaskCall:
         """Create an AgentTaskCall for this task instance.
 
@@ -263,6 +262,7 @@ class TaskInstance(BaseModel):
             max_retries=max_retries,
             retry_delay=retry_delay,
             retry_requires_approval=retry_requires_approval,
+            pipe_output_names=pipe_output_names,
         )
 
     @staticmethod

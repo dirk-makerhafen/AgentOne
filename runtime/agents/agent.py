@@ -113,6 +113,11 @@ class Agent:
         return self.get_version_model().resolve_setting("max_unattended_turns")
 
     @property
+    def precision(self) -> int:
+        """Return precision (temperature)  preset"""
+        return self.get_version_model().resolve_setting("precision")
+
+    @property
     def max_history_messages(self) -> int:
         """Return the maximum number of history messages kept."""
         return self.get_version_model().resolve_setting("max_history_messages")

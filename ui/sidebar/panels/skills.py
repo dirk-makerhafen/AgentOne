@@ -68,6 +68,14 @@ class SidebarPanelSkills(ModelView):
             filter_function=self._filter_function
         )
 
+    def set_project_filter(self, project_id: int | None) -> None:
+        if project_id is None:
+            self.skill_list.query = self.subject.skills.root()
+        else:
+            self.skill_list.query = SkillModel.objects.filter(parent_project=project_id)
+        self.skill_list._recreate()
+        self.update()
+
     def reloadFromDisk(self):
         pass
 

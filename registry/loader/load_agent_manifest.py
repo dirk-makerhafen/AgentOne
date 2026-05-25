@@ -14,7 +14,7 @@ from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.content import GenericContent
 from server.models.providers.ai_model import AiModel
-from server.models.settings import SettingsModel
+from server.models.settings import ResponseTemperature, SettingsModel
 from server.models.skills.skill_version import SkillModelVersion
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
@@ -155,6 +155,7 @@ def load_agent_manifest(
         "scheduler_strategy": manifest.get("schedulerStrategy"),
         "tool_call_syntax": manifest.get("toolCallSyntax"),
         "reasoning_effort": manifest.get("reasoningEffort"),
+        "precision": manifest.get("precision"),
         "subagentResultDelivery": manifest.get("subagentResultDelivery"),
         "commandNames": get_list("commands"),
         "disallowedCommandNames": get_list("disallowedCommands"),
@@ -176,7 +177,13 @@ def load_agent_manifest(
         ),
         "commit": commit,
     }
+
     settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}
+    
+    if settings_kwargs.get("precision",None):
+        key = settings_kwargs.get("precision","").upper()
+        settings_kwargs["precision"] = ResponseTemperature[key].value
+
     settings, _ = SettingsModel.objects.get_or_create(**settings_kwargs)
 
     # Resolve extends

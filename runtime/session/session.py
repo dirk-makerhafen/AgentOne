@@ -123,6 +123,10 @@ class Session:
     def set_max_unattended_turns(self, value: int | None) -> None:
         """Override the max unattended turns setting (creates a new version)."""
         self._set_session_setting("max_unattended_turns", value)
+    def set_precision(self, value: int | None) -> None:
+        """Override the precision setting (creates a new version)."""
+        self._set_session_setting("precision", value)
+
 
     def set_max_history_messages(self, value: int | None) -> None:
         """Override the max history messages setting (creates a new version)."""
@@ -161,6 +165,11 @@ class Session:
         return self._get_session_setting("max_unattended_turns")
 
     @property
+    def precision(self) -> int:
+        """Return precision"""
+        return self._get_session_setting("precision")
+
+    @property
     def current_unattended_turn_count(self) -> int:
         """Return the current unattended turn count."""
         self.model.refresh_from_db()
@@ -186,6 +195,17 @@ class Session:
     def priority(self) -> int:
         """Return the resolved scheduling priority."""
         return self._get_session_setting("priority")
+
+    def needs_approval(self) -> bool:
+        """Return True if session has hit turn or unattended turn limits."""
+        try:
+            if self.max_turns and self.current_turn_count >= self.max_turns:
+                return True
+            if self.max_unattended_turns and self.current_unattended_turn_count >= self.max_unattended_turns:
+                return True
+        except (TypeError, AttributeError):
+            pass
+        return False
 
     @property
     def task_prompt(self) -> str | None:
@@ -414,7 +434,7 @@ class Session:
             print("we dont 2")
             return self.agent.get_agent_setting(name)
 
-        if isinstance(session_settings_value, (str, int, bool, GenericContent)):
+        if isinstance(session_settings_value, (str, int, bool, float, GenericContent)):
             return session_settings_value
 
         if isinstance(session_settings_value, (list,)):

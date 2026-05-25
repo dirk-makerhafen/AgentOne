@@ -9,6 +9,7 @@ maxUnattendedTurns: 0
 maxHistoryMessages: 0
 reasoningEffort: medium
 schedulerStrategy: queue
+precision: balanced
 subagentResultDelivery: immediate
 toolCallSyntax: default
 skills: []

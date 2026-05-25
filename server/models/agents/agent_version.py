@@ -197,7 +197,7 @@ class AgentVersionModel(BaseModel):
         """
         extend_at_index = None
         if (value := getattr(self.agent_settings, name)) is not None:
-            if isinstance(value, (str, int, bool, GenericContent, BaseModel)):
+            if isinstance(value, (str, int, bool, float, GenericContent, BaseModel)):
                 return value
             if isinstance(value, (list,)):
                 if "+" not in value:
@@ -219,7 +219,7 @@ class AgentVersionModel(BaseModel):
         """Resolve a property value, walking the agent inheritance chain."""
         extend_at_index = None
         if (value := getattr(self, name)) is not None:
-            if isinstance(value, (str, int, bool, GenericContent)):
+            if isinstance(value, (str, int, bool, float, GenericContent)):
                 return value
             if isinstance(value, (list,)):
                 if "+" not in value:
