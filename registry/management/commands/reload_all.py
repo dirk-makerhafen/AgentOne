@@ -5,10 +5,12 @@ import yaml
 from django.core.management.base import BaseCommand, CommandError
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
+from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_project_folder import load_project_folder
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.utils import find_agent_md_files
+from server.models.cron import Cronjob
 
 
 class Command(BaseCommand):
@@ -56,6 +58,15 @@ class Command(BaseCommand):
             self.stdout.write("Loading global agents...")
             for agent_md in find_agent_md_files(agents_dir):
                 load_agent_manifest(agent_md, install_repo=global_install)
+
+        # Global cron jobs (no parent)
+        crons_dir = agentone_path / "cronjobs"
+        if crons_dir.is_dir():
+            self.stdout.write("Loading global cron jobs...")
+            seen = set()
+            for cron_md in sorted(crons_dir.glob("*.md")):
+                load_cron_manifest(cron_md, install_repo=global_install, seen_names=seen)
+            Cronjob.objects.filter(parent_project__isnull=True, is_archived=False).exclude(name__in=seen).update(is_archived=True)
 
         # Projects
         projects_file = agentone_path / "projects.yaml"

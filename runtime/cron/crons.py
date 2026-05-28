@@ -7,7 +7,7 @@ from croniter import croniter
 from django.db.models import QuerySet
 from django.utils import timezone
 
-from server.models.content import GenericContent, ContentType
+from server.models.content import GenericContent
 from server.models.cron import Cronjob
 
 
@@ -53,14 +53,12 @@ class Cronjobs:
         function_type: str = "",
         function_name: str = "",
         pipe_names: list | None = None,
+        workspace_id: int | None = None,
     ) -> Cronjob:
         """Create a new cron job with a GenericContent for the message."""
         message = None
         if message_content:
-            message = GenericContent.objects.create(
-                content=message_content,
-                content_type=ContentType.TEXT,
-            )
+            message = GenericContent.from_text(message_content)
         return Cronjob.objects.create(
             name=name,
             description=description,
@@ -73,6 +71,7 @@ class Cronjobs:
             function_type=function_type,
             function_name=function_name,
             pipe_names=pipe_names or [],
+            workspace_id=workspace_id,
             next_run_at=self._compute_next_run(schedule),
         )
 

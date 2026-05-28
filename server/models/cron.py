@@ -28,7 +28,24 @@ class Cronjob(models.Model):
     description: str = models.TextField( default="", max_length=10000, help_text="")
     schedule: str = models.CharField(max_length=2048, help_text="")
     is_active: bool = models.BooleanField(default=True)
+    is_archived: bool = models.BooleanField(default=False)
     agent: models.ForeignKey | None = models.ForeignKey( "server.AgentModel", on_delete=models.CASCADE, related_name="related_cron", blank=True, null=True)
+    parent_project = models.ForeignKey(
+        "server.Project",
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="child_crons",
+    )
+    workspace = models.ForeignKey(
+        "server.WorkspaceModel",
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="cron_jobs",
+    )
 
     # Session
     session_mode: str = models.CharField(max_length=20, choices=SESSION_MODE_CHOICES, default="new")

@@ -3,23 +3,26 @@ from pathlib import Path
 import frontmatter
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
+from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
+from server.models.cron import Cronjob
 from server.models.project import Project
+from server.models.workspace import WorkspaceModel
 
 
 def load_project_folder(folder: str) -> None:
-    """Load scripts, skills, and agents for a project folder.
+    """Load scripts, skills, agents, cron jobs, and workspaces for a project.
 
     Expects a ``.agentone/`` directory at the root of *folder* with the
-    standard subdirectory layout (``scripts/``, ``skills/``, ``agents/``).
+    standard subdirectory layout (``scripts/``, ``skills/``, ``agents/``, ``crons/``).
 
     Files are first synced into a per-project install repo, then version
     identifiers are derived from git tree SHAs for each manifest folder.
     """
     project_folder = Path(folder) / ".agentone"
-    project = _project_to_database(project_folder / "project.md")
+    project = _project_to_database(project_folder / "project.md", project_root=Path(folder))
 
     install_repo = InstallRepo.for_project(
         project_name=project.name,
@@ -50,12 +53,26 @@ def load_project_folder(folder: str) -> None:
                 install_repo=install_repo,
             )
 
+    crons_dir = project_folder / "cronjobs"
+    if crons_dir.is_dir():
+        seen = set()
+        for cron_md in sorted(crons_dir.glob("*.md")):
+            load_cron_manifest(
+                cron_md, parent_project=project,
+                install_repo=install_repo, seen_names=seen,
+            )
+        Cronjob.objects.filter(parent_project=project, is_archived=False).exclude(name__in=seen).update(is_archived=True)
 
-def _project_to_database(project_md_path: Path) -> Project:
+
+def _project_to_database(project_md_path: Path, project_root: Path | None = None) -> Project:
     """Create or return a ``Project`` from a ``project.md`` file.
 
     Reads the YAML frontmatter for ``name`` and uses the body as the
     project description.
+
+    If the frontmatter contains a ``workspaces`` list, each entry is
+    created or updated as a ``WorkspaceModel``. Relative paths are
+    resolved against *project_root*.
     """
     project_md = frontmatter.load(project_md_path)
     project, _ = Project.objects.get_or_create(
@@ -63,4 +80,25 @@ def _project_to_database(project_md_path: Path) -> Project:
         description=project_md.content,
         defaults={"path": project_md_path.parent.as_posix()},
     )
+
+    for entry in project_md.get("workspaces") or []:
+        name = (entry or {}).get("name", "").strip()
+        desc = (entry or {}).get("description", "")
+        raw_path = (entry or {}).get("path", "")
+        if not name or not raw_path:
+            continue
+
+        p = Path(raw_path)
+        if not p.is_absolute() and project_root is not None:
+            p = project_root / raw_path
+        resolved = p.resolve().as_posix() if p.exists() else p.as_posix()
+
+        WorkspaceModel.objects.update_or_create(
+            name=name,
+            defaults={
+                "description": desc or "",
+                "path": resolved,
+            },
+        )
+
     return project

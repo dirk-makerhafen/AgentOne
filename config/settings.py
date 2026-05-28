@@ -2,6 +2,7 @@ import os
 import warnings
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+AGENTONE_ROOT = os.path.join(BASE_DIR, ".agentone")
 
 AGENT_SERVER_SECRET_KEY = "change_me23"
 SECRET_KEY = 'change_me23'

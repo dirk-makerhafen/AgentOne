@@ -54,6 +54,7 @@ from .pipe_admin import NamedPipeAdmin, NamedPipeSubscriptionAdmin
 from .skill_admin import SkillAdmin
 from .project_admin import ProjectAdmin
 from .workspace import WorkspaceAdmin
+from .cron_admin import CronjobAdmin
 
 # Legacy commented-out imports (kept for reference):
 # from .tool_call_admin import ToolCallAdmin

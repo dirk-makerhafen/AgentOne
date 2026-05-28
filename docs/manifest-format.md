@@ -240,10 +240,92 @@ Skills follow the same `scripts/` pattern: a `skills/<name>/scripts/scripts.md` 
 
 ---
 
+## `cron.md` — Cron Job Declaration
+
+Declares a scheduled cron job. Lives at `.agentone/cronjobs/<name>.md`.
+Jobs can be global (no `parent_project`) or per-project.
+
+```yaml
+---
+name: daily-digest
+description: Send daily summary at 8am
+schedule: "0 8 * * *"              # standard cron expression
+agent: baseagent                    # target agent (resolved by name)
+is_active: true                     # default: true
+session_mode: new                   # new | existing
+session_name: ""                    # session name for existing mode
+message: "Provide a summary"        # message text (stored as GenericContent)
+function_type: ""                   # task | tool | command | "" (send message)
+function_name: ""
+pipe_names: []                      # published to these named pipes after run
+---
+```
+
+Cron jobs created or edited through the UI are automatically written to
+`.agentone/cronjobs/<name>.md` so they stay in sync with the file system.
+Deleting a cron job in the UI removes the corresponding file.
+
+When the loader runs (`reload_all`), cron jobs are upserted by
+`(parent_project, name)` — re-running updates the schedule, message, agent,
+or other fields in place.
+
+Removing a `cron.md` file and re-running the loader **archives** the
+corresponding record (`is_archived=True`) rather than deleting it, so
+tracking data (run count, last run time, etc.) is preserved.  Archived
+crons are hidden from the default sidebar view but can be viewed by
+switching to the "Archived" tab in the cron panel.
+
+---
+
+## `project.md` — Project Declaration
+
+Declares a project with optional workspace definitions. Lives at `.agentone/project.md` at the root of a project folder.
+
+Each project folder is referenced in `.agentone/projects.yaml` (a YAML list of directory paths).
+
+```yaml
+---
+name: my-project
+workspaces:
+  - name: Workspace name
+    path: some/path/relative/to/project/root
+    description: some description
+  - name: other workspace
+    path: /absolute/path
+    description: foobar
+---
+Project description body goes here.
+```
+
+### Frontmatter Fields
+
+| Field | Required | Type | Description |
+|---|---|---|---|
+| `name` | yes | string | Unique project name |
+| `workspaces` | no | list | List of workspace definitions (see [Workspace Entry](#workspace-entry)) |
+
+The markdown body (after the frontmatter) is used as the project's `description`.
+
+### Workspace Entry
+
+Each entry in the `workspaces:` list is a dict with:
+
+| Field | Required | Type | Description |
+|---|---|---|---|
+| `name` | yes | string | Unique workspace name |
+| `path` | yes | string | Filesystem path; absolute paths used as-is, relative paths resolved against the project root |
+| `description` | no | string | Optional description of the workspace |
+
+When the project is loaded (via `reload_all`), each workspace is created or updated as a `WorkspaceModel` record. Relative paths are resolved relative to the project folder containing `.agentone/`. Workspaces are available for selection in cron jobs, session workspaces, and the workspace sidebar.
+
+---
+
 ## Filesystem Layout
 
 ```
 .agentone/
+├── cronjobs/                   # Global cron jobs (no parent_project)
+│   └── <name>.md
 ├── scripts/                    # Global scripts (available to all agents)
 │   ├── scripts.md
 │   ├── python.py
@@ -291,10 +373,11 @@ Skills follow the same `scripts/` pattern: a `skills/<name>/scripts/scripts.md` 
    - ``git add -A && git commit`` (only if dirty) in each install repo
 
 2. **Pass 1 — Create models:**
-   - Load global ``scripts/`` → create ``TaskDefinition`` + ``TaskDefinitionVersion``
-   - Load global ``skills/`` → create ``SkillModel`` + ``SkillModelVersion``
-   - Load global ``agents/`` → recursively create ``AgentModel`` + ``AgentVersionModel`` (with ``defined_*versions`` for scripts, skills, subagents)
-   - For each project in ``projects.yaml``, repeat
+    - Load global ``scripts/`` → create ``TaskDefinition`` + ``TaskDefinitionVersion``
+    - Load global ``skills/`` → create ``SkillModel`` + ``SkillModelVersion``
+    - Load global ``agents/`` → recursively create ``AgentModel`` + ``AgentVersionModel`` (with ``defined_*versions`` for scripts, skills, subagents)
+    - Load global ``cronjobs/`` → upsert ``Cronjob`` by ``name``
+    - For each project in ``projects.yaml``, repeat (same steps + cronjobs/ per project)
    - Version identifiers are **git tree SHAs** computed via ``git rev-parse HEAD:{relative_path}`` for each manifest folder
 
 3. **During Pass 1 (per-agent):**

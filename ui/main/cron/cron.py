@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from server.models.agents.agent import AgentModel
 from runtime.agents.agent import Agent
+from runtime.cron.file_io import write_cron_file, delete_cron_file, rename_cron_file
 from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
@@ -76,6 +77,15 @@ class CronView(ModelView):
                             <option value="">-- Select agent --</option>
                             {% for agent in pyview.agent_list %}
                             <option value="{{ agent.name }}"{% if pyview._edit_data.agent == agent.name %} selected{% endif %}>{{ agent.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="detail-form-row">
+                        <label>Workspace</label>
+                        <select onchange="pyview.setEditField('workspace', this.value)">
+                            <option value="">-- None --</option>
+                            {% for ws in pyview.workspace_list %}
+                            <option value="{{ ws.name }}"{% if pyview._edit_data.workspace == ws.name %} selected{% endif %}>{{ ws.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -160,6 +170,10 @@ class CronView(ModelView):
                         <div class="detail-row-value">{{ pyview.subject.agent.name }}</div>
                     </div>
                     <div class="detail-row">
+                        <div class="detail-row-label">Workspace</div>
+                        <div class="detail-row-value">{% if pyview.subject.workspace %}{{ pyview.subject.workspace.name }}{% else %}&mdash;{% endif %}</div>
+                    </div>
+                    <div class="detail-row">
                         <div class="detail-row-label">Session mode</div>
                         <div class="detail-row-value">{{ pyview.session_mode_display }}</div>
                     </div>
@@ -230,6 +244,11 @@ class CronView(ModelView):
     # ------------------------------------------------------------------
 
     @property
+    def workspace_list(self) -> list:
+        from server.models.workspace import WorkspaceModel
+        return list(WorkspaceModel.objects.all().order_by("name"))
+
+    @property
     def agent_list(self) -> list[AgentModel]:
         return list(AgentModel.objects.all().order_by("name"))
 
@@ -271,6 +290,7 @@ class CronView(ModelView):
         self.update()
 
     def deleteCron(self) -> None:
+        delete_cron_file(self.subject.name)
         self.subject.delete()
         self._close_tab()
 
@@ -287,6 +307,7 @@ class CronView(ModelView):
             "name": self.subject.name,
             "schedule": self.subject.schedule,
             "agent": self.subject.agent.name if self.subject.agent else "",
+            "workspace": self.subject.workspace.name if self.subject.workspace else "",
             "session_mode": self.subject.session_mode or "new",
             "session_name": self.subject.session_name or "",
             "function_type": self.subject.function_type or "",
@@ -321,7 +342,7 @@ class CronView(ModelView):
         if d.get("agent"):
             agent = AgentModel.objects.filter(name=d["agent"]).first()
 
-        from server.models.content import GenericContent, ContentType
+        from server.models.content import GenericContent
         message_content = d.get("message", "")
         message = self.subject.message
         if message_content:
@@ -329,14 +350,14 @@ class CronView(ModelView):
                 message.content = message_content
                 message.save(update_fields=["content"])
             else:
-                message = GenericContent.objects.create(
-                    content=message_content, content_type=ContentType.TEXT
-                )
+                message = GenericContent.from_text(message_content)
         elif message:
             message.delete()
             message = None
 
-        self.subject.name = d.get("name", self.subject.name)
+        old_name = self.subject.name
+        new_name = d.get("name", old_name)
+        self.subject.name = new_name
         new_schedule = d.get("schedule", self.subject.schedule)
         if new_schedule != self.subject.schedule:
             from runtime.cron.execute import compute_next_run
@@ -344,6 +365,15 @@ class CronView(ModelView):
             self.subject.next_run_at = compute_next_run(new_schedule)
         if agent:
             self.subject.agent = agent
+
+        ws_name = d.get("workspace", "")
+        if ws_name:
+            from server.models.workspace import WorkspaceModel
+            ws = WorkspaceModel.objects.filter(name=ws_name).first()
+            self.subject.workspace = ws
+        else:
+            self.subject.workspace = None
+
         self.subject.session_mode = d.get("session_mode", "new")
         self.subject.session_name = d.get("session_name", "")
         self.subject.function_type = d.get("function_type", "")
@@ -352,6 +382,10 @@ class CronView(ModelView):
         raw_pipes = d.get("pipe_names", "").strip()
         self.subject.pipe_names = [p.strip() for p in raw_pipes.split(",") if p.strip()] if raw_pipes else []
         self.subject.save()
+
+        if new_name != old_name:
+            rename_cron_file(old_name, new_name)
+        write_cron_file(self.subject)
 
         self._editing = False
         self.update()

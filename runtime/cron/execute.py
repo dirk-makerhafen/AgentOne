@@ -23,7 +23,10 @@ def execute_cron_job(cronjob_id: int) -> None:
         if cronjob.session_mode == "new":
             session_name = cronjob.session_name or f"{auto_name}:{int(timezone.now().timestamp())}"
             agent_version = cronjob.agent.latest_agent_version
-            session_version = agent_version.get_or_create_session(name=session_name)
+            session_version = agent_version.get_or_create_session(
+                name=session_name,
+                workspace=cronjob.workspace,
+            )
             session = Session(session_model=session_version.session, pinned_session_version=session_version)
         else:
             session_name = cronjob.session_name or auto_name

@@ -51,7 +51,7 @@ class UiAppView(PyHtmlView):
         </div>
 
         {{ pyview.onboarding_overlay.render() }}
-        
+
         {{ pyview.mobile_overlay.render() }}
 
         {{ pyview.app_dialog_overlay.render() }}

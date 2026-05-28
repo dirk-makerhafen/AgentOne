@@ -20,6 +20,8 @@ class SessionModel(BaseModel):
     turn_count = models.IntegerField(default=0)
     unattended_turn_count = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    is_pinned = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
 
     parent_session = models.ForeignKey(
         "self",
@@ -28,6 +30,14 @@ class SessionModel(BaseModel):
         default=None,
         null=True,
         blank=True,
+    )
+    parent_project = models.ForeignKey(
+        "server.Project",
+        on_delete=models.SET_NULL,
+        default=None,
+        null=True,
+        blank=True,
+        related_name="sessions",
     )
     latest_session_version = models.ForeignKey(
         "server.SessionVersionModel",

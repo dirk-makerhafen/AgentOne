@@ -11,20 +11,76 @@
 {% block head_scripts %}
     {{ block.super }}
     <script src="{% static 'js3party/jquery-3.6.0.min.js' %}"></script>
-    <script src="{% static 'js3party/split.js' %}"></script>
-    <script src="{% static 'js3party/diff.min.js' %}"></script>
-    <script src="{% static 'js3party/diff2html.min.js' %}"></script>
-
-    <script src="{% static 'js3party/d3.v7.js' %}"></script>
-    <script src="{% static 'js3party/d3-flamegraph.min.js' %}"></script>
-    
-    <script src="{% static 'js/resizable.js' %}"></script>
-    <script src="{% static 'js/splitpanel.js' %}"></script>
-    <script src="{% static 'js/tabs.js' %}"></script>
-
     <script src="{% static 'js/marked.umd.js' %}"></script>
 
     <script>
+        (function() {
+            if (window._panelResizeInited) return;
+            window._panelResizeInited = true;
+
+            var MIN_W = 180, MAX_W = 600;
+
+            function loadWidth(key, def) {
+                try { var v = localStorage.getItem(key); return v ? parseInt(v, 10) : def; }
+                catch(e) { return def; }
+            }
+            function restoreWidths() {
+                var s = document.querySelector('.sidebar');
+                var r = document.querySelector('.rightpanel');
+                if (s) s.style.width = loadWidth('sidebarWidth', 300) + 'px';
+                if (r) r.style.width = loadWidth('rightpanelWidth', 300) + 'px';
+            }
+            restoreWidths();
+
+            var layout = document.querySelector('.layout');
+            if (layout) {
+                var obs = new MutationObserver(function() {
+                    if (!window._panelDragging) restoreWidths();
+                });
+                obs.observe(layout, { childList: true, subtree: false });
+            }
+
+            var handle = null, startX = 0, startW = 0;
+
+            document.addEventListener('mousedown', function(e) {
+                var el = e.target.closest('.resize-handle');
+                if (!el || el.id === 'terminalResizeHandle') return;
+                if (el.id !== 'sidebarResize' && el.id !== 'rightpanelResize') return;
+                var panel = el.closest('.sidebar, .rightpanel');
+                if (!panel) return;
+                handle = el;
+                startX = e.clientX;
+                startW = panel.getBoundingClientRect().width;
+                document.body.classList.add('resizing');
+                window._panelDragging = true;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!handle) return;
+                var panel = handle.closest('.sidebar, .rightpanel');
+                if (!panel) return;
+                var dx = e.clientX - startX;
+                var w = handle.id === 'sidebarResize' ? startW + dx : startW - dx;
+                w = Math.max(MIN_W, Math.min(MAX_W, w));
+                panel.style.width = w + 'px';
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (!handle) return;
+                var panel = handle.closest('.sidebar, .rightpanel');
+                if (panel) {
+                    var w = parseInt(panel.style.width, 10);
+                    if (w) {
+                        var key = handle.id === 'sidebarResize' ? 'sidebarWidth' : 'rightpanelWidth';
+                        try { localStorage.setItem(key, w); } catch(e) {}
+                    }
+                }
+                handle = null;
+                document.body.classList.remove('resizing');
+                window._panelDragging = false;
+            });
+        })();
 
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize the main split layout

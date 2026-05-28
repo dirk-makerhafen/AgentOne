@@ -5,13 +5,12 @@ from datetime import datetime, timezone as dt_timezone
 from typing import TYPE_CHECKING
 
 from django.db.models import Count
-from django.db.models.functions import TruncDate
 from django.utils import timezone
 
 from server.models.agents.agent import AgentModel
 from server.models.cron import Cronjob
 from server.models.message import Message
-from server.models.pipe import NamedPipe, NamedPipeSubscription
+from server.models.pipe import NamedPipe
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.lib.model_view import ModelView
@@ -44,6 +43,15 @@ ITEM_BADGE = {
     "WAITING": "warn",
     "HALTED": "err",
     "NEW": "",
+}
+
+METRIC_ICONS = {
+    "agents": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+    "sessions": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+    "taskcalls": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>',
+    "pipes": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"></path><path d="M4 12h16"></path><path d="M12 4v16"></path></svg>',
+    "cron": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+    "messages": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>',
 }
 
 
@@ -84,68 +92,85 @@ class DashboardView(ModelView):
         <div class="main-view-body">
             <div class="main-view-content" style="max-width:1200px">
 
-                <div class="system-health-metrics">
-                    {% for m in pyview.metrics_row1 %}
-                    <div class="detail-card" style="text-align:center">
-                        <div class="detail-card-title" style="margin-bottom:4px">{{ m.label }}</div>
-                        <div style="font-size:28px;font-weight:700;line-height:1.2">{{ m.value }}</div>
+                <div class="insights-grid">
+                    {% for m in pyview.all_metrics %}
+                    <div class="insights-stat">
+                        <div class="insights-stat-icon">{{ m.icon|safe }}</div>
+                        <div class="insights-stat-info">
+                            <div class="insights-stat-value">{{ m.value }}</div>
+                            <div class="insights-stat-label">{{ m.label }}</div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
 
-                <div style="height:12px"></div>
-
                 <div class="system-health-metrics">
-                    {% for m in pyview.metrics_row2 %}
-                    <div class="detail-card" style="text-align:center">
-                        <div class="detail-card-title" style="margin-bottom:4px">{{ m.label }}</div>
-                        <div style="font-size:28px;font-weight:700;line-height:1.2">{{ m.value }}</div>
+                    <div class="system-health-metric" data-system-health-metric="cpu">
+                        <div class="system-health-label"><span>CPU</span><span class="system-health-value" data-system-health-value="" title="0%">0%</span></div>
+                        <div class="system-health-bar" role="progressbar" aria-label="CPU usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill" style="width: 0%;"></div></div>
                     </div>
-                    {% endfor %}
+                    <div class="system-health-metric" data-system-health-metric="memory">
+                        <div class="system-health-label"><span>RAM</span><span class="system-health-value" data-system-health-value="" title="0%">0%</span></div>
+                        <div class="system-health-bar" role="progressbar" aria-label="RAM usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="system-health-metric" data-system-health-metric="disk">
+                        <div class="system-health-label"><span>Disk</span><span class="system-health-value" data-system-health-value="" title="--">&mdash;</span></div>
+                        <div class="system-health-bar" role="progressbar" aria-label="Disk usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="system-health-bar-fill" style="width: 0%;"></div></div>
+                    </div>
                 </div>
 
-                <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap">
+                <div class="insights-row">
+                    <div class="insights-card">
+                        <div class="insights-card-title">Token Breakdown</div>
+                        <div class="insights-token-row">
+                            <span class="insights-token-label">Input</span>
+                            <span class="insights-token-value">--</span>
+                        </div>
+                        <div class="insights-token-row">
+                            <span class="insights-token-label">Output</span>
+                            <span class="insights-token-value">--</span>
+                        </div>
+                        <div class="insights-token-row insights-token-total">
+                            <span class="insights-token-label">Total</span>
+                            <span class="insights-token-value">--</span>
+                        </div>
+                    </div>
 
-                    <div class="detail-card" style="flex:1;min-width:280px">
-                        <div class="detail-card-title">Task call status</div>
+                    <div class="insights-card">
+                        <div class="insights-card-title">Task call status</div>
                         {% for row in pyview.status_rows %}
-                        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px">
-                            <span class="detail-badge {{ row.cls }}" style="min-width:60px;text-align:center">{{ row.label }}</span>
-                            <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden">
-                                <div style="width:{{ row.pct }}%;height:100%;background:{{ row.color }};border-radius:4px;transition:width .3s"></div>
+                        <div class="insights-bar-row" style="margin-bottom:4px">
+                            <span class="insights-bar-label">{{ row.label }}</span>
+                            <div class="insights-bar-track">
+                                <div class="insights-bar-fill{% if row.pct >= 80 %} peak{% endif %}" style="width:{{ row.pct }}%;background:{{ row.color }}"></div>
                             </div>
-                            <span style="font-weight:600;min-width:32px;text-align:right">{{ row.count }}</span>
+                            <span class="insights-bar-value">{{ row.count }}</span>
                         </div>
                         {% endfor %}
                     </div>
+                </div>
 
-                    <div class="detail-card" style="flex:2;min-width:360px">
-                        <div class="detail-card-title">
-                            Recent activity
-                            <span style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;font-size:11px;color:var(--muted)">last 10 calls</span>
-                        </div>
-                        {% if pyview.recent_rows %}
-                            {% for call in pyview.recent_rows %}
-                            <div class="detail-row" style="padding:6px 2px;font-size:12px">
-                                <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
-                                    <div style="display:flex;align-items:center;gap:6px;min-width:0">
-                                        <span class="detail-badge {{ call.badge }}" style="font-size:10px;padding:1px 6px">{{ call.status }}</span>
-                                        <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ call.name }}</span>
-                                    </div>
-                                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                                        <span style="color:var(--muted);font-size:11px">#{{ call.pk }}</span>
-                                        <span style="color:var(--muted);font-size:11px">{{ call.since }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div style="padding:12px;color:var(--muted);text-align:center;font-size:12px">
-                                No task calls yet.
-                            </div>
-                        {% endif %}
+                <div class="insights-card">
+                    <div class="insights-card-title">
+                        Recent activity
+                        <span style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;font-size:11px;color:var(--muted)">last 10 calls</span>
                     </div>
-
+                    {% if pyview.recent_rows %}
+                        {% for call in pyview.recent_rows %}
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 2px;font-size:12px;border-bottom:1px solid var(--border,.05)">
+                            <div style="display:flex;align-items:center;gap:6px;min-width:0">
+                                <span class="detail-badge {{ call.badge }}" style="font-size:10px;padding:1px 6px">{{ call.status }}</span>
+                                <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ call.name }}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                                <span style="color:var(--muted);font-size:11px">#{{ call.pk }}</span>
+                                <span style="color:var(--muted);font-size:11px">{{ call.since }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="insights-empty">No task calls yet.</div>
+                    {% endif %}
                 </div>
 
             </div>
@@ -156,23 +181,18 @@ class DashboardView(ModelView):
         super().__init__(subject, parent, **kwargs)
 
     # ------------------------------------------------------------------
-    # Metric rows
+    # All metrics
     # ------------------------------------------------------------------
 
     @property
-    def metrics_row1(self) -> list[dict]:
+    def all_metrics(self) -> list[dict]:
         return [
-            {"label": "Agents",    "value": AgentModel.objects.count()},
-            {"label": "Sessions",  "value": SessionModel.objects.count()},
-            {"label": "Task calls","value": AgentTaskCall.objects.count()},
-        ]
-
-    @property
-    def metrics_row2(self) -> list[dict]:
-        return [
-            {"label": "Pipes",     "value": NamedPipe.objects.count()},
-            {"label": "Cron jobs", "value": Cronjob.objects.count()},
-            {"label": "Messages",  "value": Message.objects.count()},
+            {"label": "Agents",    "value": AgentModel.objects.count(),    "icon": METRIC_ICONS["agents"]},
+            {"label": "Sessions",  "value": SessionModel.objects.count(),  "icon": METRIC_ICONS["sessions"]},
+            {"label": "Task calls","value": AgentTaskCall.objects.count(), "icon": METRIC_ICONS["taskcalls"]},
+            {"label": "Pipes",     "value": NamedPipe.objects.count(),     "icon": METRIC_ICONS["pipes"]},
+            {"label": "Cron jobs", "value": Cronjob.objects.count(),       "icon": METRIC_ICONS["cron"]},
+            {"label": "Messages",  "value": Message.objects.count(),       "icon": METRIC_ICONS["messages"]},
         ]
 
     # ------------------------------------------------------------------

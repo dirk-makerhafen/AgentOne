@@ -4,8 +4,11 @@ from typing import TYPE_CHECKING, Any
 
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
+from server.models.workspace import WorkspaceModel
 from runtime.agents.agent import Agent
+from runtime.cron.file_io import write_cron_file
 from ui.lib.model_view import ModelView
+from ui.main.cron.cron import CronView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -51,6 +54,16 @@ class CronCreateView(ModelView):
                             <option value="">-- Select agent --</option>
                             {% for agent in pyview.agent_list %}
                             <option value="{{ agent.name }}"{% if pyview._form_data.agent == agent.name %} selected{% endif %}>{{ agent.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="detail-form-row">
+                        <label for="cfWorkspace">Workspace</label>
+                        <select id="cfWorkspace" onchange="pyview.setCronField('workspace', this.value)">
+                            <option value="">-- None --</option>
+                            {% for ws in pyview.workspace_list %}
+                            <option value="{{ ws.name }}"{% if pyview._form_data.workspace == ws.name %} selected{% endif %}>{{ ws.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -140,6 +153,7 @@ class CronCreateView(ModelView):
             "name": "",
             "schedule": "",
             "agent": "",
+            "workspace": "",
             "session_mode": "new",
             "session_name": "",
             "function_type": "",
@@ -150,6 +164,10 @@ class CronCreateView(ModelView):
         self._form_error: str = ""
         self._session_search_results: list[str] = []
         self._selected_function_schema: str = ""
+
+    @property
+    def workspace_list(self) -> list[WorkspaceModel]:
+        return list(WorkspaceModel.objects.all().order_by("name"))
 
     @property
     def agent_list(self) -> list[AgentModel]:
@@ -264,11 +282,19 @@ class CronCreateView(ModelView):
         pipe_names = [p.strip() for p in raw_pipes.split(",") if p.strip()] if raw_pipes else []
 
         try:
-            self.subject.cronjobs.create(
+            ws_name = fd.get("workspace", "")
+            workspace_id = None
+            if ws_name:
+                ws = WorkspaceModel.objects.filter(name=ws_name).first()
+                if ws:
+                    workspace_id = ws.pk
+
+            created = self.subject.cronjobs.create(
                 name=fd.get("name", ""),
                 schedule=fd.get("schedule", ""),
                 agent_id=AgentModel.objects.get(name=fd["agent"]).pk,
                 description="",
+                workspace_id=workspace_id,
                 session_mode=fd.get("session_mode", "new"),
                 session_name=fd.get("session_name", ""),
                 message_content=message_content,
@@ -276,7 +302,11 @@ class CronCreateView(ModelView):
                 function_name=fd.get("function_name", ""),
                 pipe_names=pipe_names,
             )
+            write_cron_file(created)
             self._form_error = ""
+            parent = self._find_main_view()
+            if parent:
+                parent.create_and_open_tab(CronView, created)
             self.close_tab()
         except Exception as e:
             self._form_error = f"Error: {e}"
@@ -285,10 +315,14 @@ class CronCreateView(ModelView):
     def cancelCronForm(self) -> None:
         self.close_tab()
 
-    def close_tab(self) -> None:
+    def _find_main_view(self):
         from ui.main.main_view import MainView
         parent = self.parent
         while parent and not isinstance(parent, MainView):
             parent = parent.parent
+        return parent
+
+    def close_tab(self) -> None:
+        parent = self._find_main_view()
         if parent:
             parent.close_tab(self)

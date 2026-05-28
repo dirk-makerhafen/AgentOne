@@ -27,6 +27,7 @@ class SidebarView(ModelView):
     DOM_ELEMENT_CLASS = "sidebar"
     TEMPLATE_STR = """
         {{ pyview.project_selector.render() }}
+        <div class="sidebar-body">
         <div class="sidebar-nav" style="display:None">
             <button class="nav-tab active" data-panel="chat" data-label="Chat" onclick="pyview.switchPanel('chat')" title="Chat" data-i18n-title="tab_chat">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -86,7 +87,7 @@ class SidebarView(ModelView):
         </div>
 
         {{ pyview.selected_panel.render() }}
-        
+        </div>
         <div class="resize-handle" id="sidebarResize"></div>
     """
     
@@ -124,6 +125,7 @@ class SidebarView(ModelView):
         self.selected_panel = self.panels[panel_name]
         if hasattr(self.selected_panel, "panel_activated"):
             self.selected_panel.panel_activated()
+        self.parent.rail.update()
         self.update()
 
     def set_project(self, project_id: int | None) -> None:

@@ -18,10 +18,10 @@ if TYPE_CHECKING:
 
 class RightPanel(ModelView):
     DOM_ELEMENT = "aside"
-    DOM_ELEMENT_CLASS = "rightpanel1"
+    DOM_ELEMENT_CLASS = "rightpanel"
     TEMPLATE_STR = '''
         <div class="sidebar-nav">
-            <button class="nav-tab active" data-panel="workspce" data-label="Workspace" onclick="pyview.switchPanel('workspace')" title="Workspace" data-i18n-title="tab_workspace">
+            <button class="nav-tab active" data-panel="workspace" data-label="Workspace" onclick="pyview.switchPanel('workspace')" title="Workspace" data-i18n-title="tab_workspace">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 <div class="rail-button-text" style="display:none">Workspace</div>
             </button>

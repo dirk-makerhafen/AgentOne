@@ -1,81 +1,86 @@
-ui/
-├── app.py                          # UiApp(Observable) — data model
-├── app_view.py                     # UiAppView — root view, mounts sidebar + workspace
-├── consumer.py                     # WebSocket consumer — unchanged
-├── chat/                           # Individual chat item renderers
-│   │                               # All used by ChatWorkspaceView's MessageListView
-│   ├── message.py                  # ConversationMessageView, MessagePartView
-│   │                               #   Default: shows content only
-│   │                               #   Expanded: + tool calls inline, query link, response link
-│   ├── query.py                    # QueryView, QueryMessageView, QueryMessagePartView
-│   │                               #   Hidden by default, linked from message expand
-│   ├── response.py                 # ResponseView
-│   │                               #   Hidden by default, linked from message expand  
-│   ├── task_call.py                # TaskCallView, TaskCallPayloadView,
-│   │                               #   TaskRunView, TaskRunPayloadView
-│   │                               #   Used both in chat expand and task_workspace
-│   ├── log_fs.py                   # FilesystemLogView
-│   ├── log_debug.py                # DebugLogView
-## │   ├── log_interagent.py           # InterAgentLogView  deprecated, not needed
-## │   └── instance_fork.py            # InstanceForkView   deprecated, not needed
-│
-│
-├── panels/                         # Right-side panel tabs (shown in InstanceWorkspaceView)
-│   ├── filesystem.py               # FilesystemPanelView, FilesystemItemView, FilesystemHeaderView
-│   │                               #   (consolidates filesystem/ folder → 1 file)
-│   ├── memory.py                   # MemoryPanelView
-│   ├── tasks.py                    # TasksPanelView — task list for this instance
-│   ├── tools.py                    # ToolsPanelView
-│   ├── subagents.py                # SubagentsPanelView
-│   ├── settings.py                 # SettingsPanelView — instance-level settings
-## │   ├── permissions.py              # PermissionsPanelView — NEW (tab already exists in UI) deprecated, not needed
-## │   ├── events.py                   # EventsPanelView — NEW (tab already exists in UI) deprecated, not needed
-│   └── monitor.py                  # MonitorPanelView — NEW: global task monitor
-│
-│
-├── sidebar/
-│   ├── sidebar.py                  # SidebarView — container, view mode toggle (agents/dir/hierarchy)
-│   ├── agent_tree.py               # SidebarAgentTreeView, SidebarAgentNodeView,
-│   │                               #   SidebarVersionNodeView, SidebarVariantNodeView
-│   │                               #   (consolidates agentlist+agentnode+versionlist+
-│   │                               #    versionnode+variantlist+variantnode → 1 file)
-│   └── instance_tree.py            # SidebarInstanceTreeView, SidebarInstanceNodeView
-│                                   #   (consolidates instancelist+instancenode → 1 file)
+# UI directory structure
 
-├── workspace/                      # Center: tab bar + all tab content
-│   ├── workspace.py                # WorkspaceView — tab bar, open/close/select tabs
-│   │
-│   ├── instance/                   # Per-agent-instance tabs
-│   │   ├── instance_workspace.py   # InstanceWorkspaceView — layout: header + main + right panel
-│   │   ├── instance_header.py      # InstanceHeaderView — agent name, model, tokens, status bar
-│   │   ├── chat_workspace.py       # ChatWorkspaceView — chat-mode layout (for ChatAgent subclasses)
-│   │   │                           #   Detects ChatAgent via: issubclass(agent_cls, ChatAgent)
-│   │   │                           #   Contains: MessageListView, InputView
-│   │   └── task_workspace.py       # TaskWorkspaceView — task-mode layout (non-ChatAgent)
-│   │                               #   Contains: TaskTreeView as primary surface
-│   │
-│   ├── agent/                      # Per-agent-definition tabs
-│   │   ├── agent_workspace.py      # AgentWorkspaceView — layout for agent definition tab
-│   │   ├── overview.py             # AgentOverviewView — versions, instances summary
-│   │   ├── tasks.py                # AgentTasksView — task definitions + instances
-│   │   │                           #   (consolidates agent_task_definitions_view +
-│   │   │                           #    agent_task_instances_view → 1 file)
-│   │   ├── variants.py             # AgentVariantsView — profile variants
-│   │   └── settings.py             # AgentSettingsView — agent-level settings
-│   │
-│   └── system/                     # Global system tabs (not instance-specific)
-│       ├── providers.py            # ProvidersView — API providers + keys + rate limit status
-│       ├── systems.py              # SystemsView
-## │       ├── prompts.py              # PromptsView   deprecated, not needed
-## │       └── tools_registry.py      # ToolsRegistryView   deprecated, not needed
+```
+ui/
+├── app.py                  # UiApp(Observable) — data model root, holds all runtime managers
+├── app_view.py             # UiAppView(PyHtmlView) — root view, mounts full UI layout
+├── consumer.py             # PyHtmlGuiConsumer(WebsocketConsumer) — Django Channels WS bridge
 │
+├── lib/                    # Reusable base classes
+│   ├── model_view.py       # ModelView(PyHtmlView) — base for all AgentOne views (subject/parent/auto-update)
+│   ├── queryset_view.py    # QuerySetView(ModelView) — renders Django QuerySets as lazy child lists
+│   ├── multi_queryset_view.py  # MultiQuerySetView — merges multiple querysets into one sorted list
+│   ├── status_badge.py     # StatusBadgeView — status pill (success/error/waiting/active/halted/neutral)
+│   └── pyHtmlGui/          # Vendored pyHtmlGui framework (git submodule)
 │
-└── shared/                         # Reusable primitives used across multiple zones
-    ├── multi_queryset.py           # MultiQuerySetView — merged sorted queryset renderer
-    │                               #   (moved out of chat.py where it doesn't belong)
-    ├── detail_settings.py          # DetailSettingsPopover — the gear/sliders icon + popover
-    │                               #   controls which log types are visible per instance
-    │                               #   options: show_queries, show_fs_logs, show_debug_logs,
-    │                               #            show_task_calls, detail_level (simple/developer)
-    └── status_badge.py             # StatusBadgeView — reusable status pill
-                                    #   used by TaskCallView, InstanceHeaderView, sidebar nodes
+├── sidebar/                # Left sidebar + rail
+│   ├── sidebar.py          # SidebarView — container, panel switching, project filter
+│   ├── rail.py             # RailView — vertical icon nav bar (desktop)
+│   ├── project_selector.py # ProjectSelector + ProjectOption — dropdown project filter
+│   └── panels/
+│       ├── agents.py       # Agent profile list
+│       ├── chats.py        # Session/conversation list with search + context menu
+│       ├── cron.py         # Scheduled jobs list
+│       ├── insights.py     # Opens dashboard on activation
+│       ├── logs.py         # Log viewer controls (file, tail, auto-refresh)
+│       ├── pipes.py        # Named pipes list
+│       ├── projects.py     # Project list
+│       ├── settings.py     # Settings menu (opens SettingsView in main)
+│       ├── skills.py       # Skill list with search
+│       └── workspaces.py   # Workspace list
+│
+├── main/                   # Main content area (tabs)
+│   ├── main_view.py        # MainView — tab container, open/close/select
+│   ├── agent/              # Agent profile detail
+│   ├── chat/               # Chat workspace (messages + composer + cards + banners)
+│   │   ├── chat.py         # Chat — full chat workspace
+│   │   ├── messages/       # Message rendering (user, assistant, tool cards, query)
+│   │   ├── composer/       # Input area (textarea, footer, dropdowns)
+│   │   ├── cards/          # Flyout cards (approval, clarify, queue)
+│   │   ├── banner/         # Status banners (health, reconnect, update)
+│   │   └── panel/          # Side panels (terminal, mobile config)
+│   ├── cron/               # Cron job detail + creation
+│   ├── insights/           # Dashboard view (system health, metrics)
+│   ├── logs/               # File log display
+│   ├── memory/             # Agent memory browser
+│   ├── pipe/               # Named pipe detail + creation
+│   ├── project/            # Project detail/editor
+│   ├── rightpanel/         # Right-side tabs (session, tasks, workspace, subagents)
+│   ├── settings/           # Full settings tabs (conversation, appearance, preferences, providers, system)
+│   ├── skills/             # Skill detail/editor
+│   ├── system/             # Providers view, systems view
+│   └── workspace/          # Workspace detail + creation
+│
+├── overlay/                # Overlay views
+│   ├── appdialog.py        # Modal dialog (confirm, input)
+│   ├── mobile.py           # Mobile sidebar backdrop
+│   └── onboarding.py       # First-run wizard
+│
+├── static/
+│   ├── css/
+│   │   └── main.css        # 3800+ lines — single stylesheet, 7 color skins, light/dark
+│   ├── css3party/          # Bootstrap, font-awesome, jquery-ui, d3-flamegraph, diff2html
+│   ├── js/                 # marked.umd.js, resizable.js, splitpanel.js, tabs.js
+│   ├── js3party/           # jQuery, Bootstrap, D3, Split.js, diff, handlebars
+│   └── fonts/              # glyphicons, fontawesome
+│
+├── templates/
+│   ├── pyhtmlgui_page.html # Main page template (overrides base with static assets)
+│   ├── pyHtmlGuiBase.html  # Base HTML: WebSocket client, pyhtmlgui JS API
+│   ├── registration/       # Django auth login template
+│   └── test.html           # Layout test page (Split.js)
+│
+└── README.md               # This file
+```
+
+## Architecture notes
+
+- **Single shared instance**: `PyHtmlGuiConsumer` creates one `UiApp` + one `UiAppView` shared across all WebSocket connections.
+- **Reactive updates**: Views observe `Observable` subjects. When the model changes, all attached views call `update()` which re-renders via Jinja2 and patches the DOM over WebSocket.
+- **Lazy panels**: `QuerySetView` only creates child views when the panel is visible. Switching panels destroys the old children.
+- **No i18n yet**: All user-facing text has `data-i18n="key"` attributes stubbed, but no locale files exist.
+- **Panel pattern**: Each sidebar panel follows `SidebarPanelXxx` (container) + `SidebarPanelXxxItem` (row) pattern, with `set_project_filter(pid)` for project-aware filtering.
+
+## Adding a new panel
+
+See [docs/development.md](../docs/development.md) for the full guide.
