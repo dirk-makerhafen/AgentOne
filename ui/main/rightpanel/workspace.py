@@ -138,7 +138,11 @@ class RightPanelWorkspace(ModelView):
         </div>
         <div class="workspace-root-label" style="padding:4px 8px;font-size:11px;color:var(--muted)">{{ pyview.root_label }}</div>
         <div style="flex:1;overflow-y:auto">
+            {% if pyview.root_view %}
             {{ pyview.root_view.render() }}
+            {% else %}
+            <div style="font-size:12px;color:var(--muted);padding:16px 8px;text-align:center">No workspace path set.</div>
+            {% endif %}
         </div>
     '''
 
@@ -153,19 +157,19 @@ class RightPanelWorkspace(ModelView):
     @property
     def workspace_root(self) -> Path | None:
         session = self.session
-        if not session:
-            return None
-        workspace:WorkspaceModel = session.workspace
+        if session:
+            workspace: WorkspaceModel = session.workspace
+        else:
+            subj = self.parent.current_subject
+            workspace = subj if isinstance(subj, WorkspaceModel) else None
         if not workspace:
             return None
         working_dir = workspace.path
         if not working_dir:
             return None
-       
         working_path = Path(working_dir)
-        if working_path.is_dir() is False or working_path.exists() is False :
+        if working_path.is_dir() is False or working_path.exists() is False:
             return None
-  
         return working_path.resolve()
       
 

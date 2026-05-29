@@ -33,7 +33,6 @@ class MainView(ModelView):
             return existing_tab
         self.open_tabs[key] = view_class(subject=subject, parent=self)
         self.select_tab(key)
-        
         return self.open_tabs[key]
 
     def close_tab(self, view) -> None:
@@ -51,12 +50,14 @@ class MainView(ModelView):
                 last_key = list(self.open_tabs.keys())[-1]
                 self.select_tab(last_key)
             else:
+                self.parent.rightpanel._update_context()
                 self.update()
 
     def select_tab(self, tab_id):
         if tab_id not in self.open_tabs:
             print(f"No tab with id{tab_id}")
-            return 
+            return
         self.selected_tab_id = tab_id
         self.selected_tab_view = self.open_tabs[tab_id]
+        self.parent.rightpanel._update_context()
         self.update()
