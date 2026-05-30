@@ -230,11 +230,11 @@ class RightPanelAgentCapabilities(ModelView):
 
         sections = []
         pairs = [
-            ("Tools",     "allowedToolNames",     "disallowedToolNames"),
-            ("Tasks",     "allowedTaskNames",     "disallowedTaskNames"),
-            ("Commands",  "allowedCommandNames",  "disallowedCommandNames"),
-            ("Skills",    "allowedSkillNames",    "disallowedSkillNames"),
-            ("Subagents", "allowedSubagentNames", "disallowedSubagentNames"),
+            ("Tools",     "toolNames",     "disallowedToolNames"),
+            ("Tasks",     "taskNames",     "disallowedTaskNames"),
+            ("Commands",  "commandNames",  "disallowedCommandNames"),
+            ("Skills",    "skillNames",    "disallowedSkillNames"),
+            ("Subagents", "subagentNames", "disallowedSubagentNames"),
         ]
         for title, allowed_attr, disallowed_attr in pairs:
             allowed = set(av.resolve_setting(allowed_attr) or [])

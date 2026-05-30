@@ -50,8 +50,8 @@ class RightPanelSkillInfo(ModelView):
     @property
     def version_number(self) -> str:
         s = self.skill
-        if s and s.latest_version:
-            return str(s.latest_version.version_number)
+        if s and s.latest_skill_version:
+            return str(s.latest_skill_version.version_number)
         return "\u2014"
 
 
@@ -88,5 +88,5 @@ class RightPanelSkillAgents(ModelView):
         if not s:
             return []
         return list(AgentModel.objects.filter(
-            latest_version__allowedSkillNames__contains=[s.name],
+            latest_agent_version__agent_settings__skillNames__contains=[s.name],
         ).order_by("name"))

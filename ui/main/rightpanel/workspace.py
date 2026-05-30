@@ -177,7 +177,7 @@ class RightPanelWorkspace(ModelView):
     def root_label(self) -> str:
         rp = self.workspace_root
         if rp:
-            return rp
+            return str(rp)
         return "\u2014"
 
     @property
