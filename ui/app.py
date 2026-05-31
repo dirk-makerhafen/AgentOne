@@ -22,8 +22,3 @@ class UiApp(Observable):
         self.sessions = Sessions()
         self.skills = Skills()
         self.cronjobs = Cronjobs()
-
-        #self.systems = System.objects
-        #self.providers = ApiProvider.objects
-        #self.projects = Project.objects
-        #self.skills = Skill.objects

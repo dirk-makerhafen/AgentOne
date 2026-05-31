@@ -24,7 +24,7 @@ def load_chain_entry(
     manifest), builds the child version relationships, and persists both the
     ``TaskDefinition`` and ``TaskDefinitionVersion``.
     """
-    step_names: List[str] = entry.get("chain") or entry.get("group") or []
+    step_names: List[str] = entry.get("chain") or entry.get("group") or entry.get("map") or []
 
     child_versions: List[TaskDefinitionVersion] = []
     for step_name in step_names:

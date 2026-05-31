@@ -33,6 +33,10 @@ tasks:
     file: slash_commands.py
     function: handle_slashcommand_response
     bound: True
+  - name: map
+    file: map.py
+    function: map
+    bound: True
   - name: process_turn
     type: chain
     chain:

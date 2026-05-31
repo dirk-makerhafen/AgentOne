@@ -209,6 +209,11 @@ class AgentTaskRun(BaseModel):
                         new_sub_task_calls.append(call)
                     result = new_sub_task_calls
 
+                elif self.task_definition_version.task_execution_mode == "MAP":
+                    producer = self.task_instance.child_instances.first()
+                    consumer = self.task_instance.child_instances.last()
+                    items = producer.apply_async(kwargs=self.arguments_json)
+                    result = session.get_task("map").apply_async(items=items, target_pk=consumer.pk)
                 else:
                     bound_task = None
                     if self.task_definition_version.task_type == TaskType.TASK:

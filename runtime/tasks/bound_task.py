@@ -49,7 +49,7 @@ class BoundTask:
         argument.
         """
         # Chain/group tasks have no Python file — they execute via AgentTaskRun.apply()
-        if self.task_definition_version.task_execution_mode in ("CHAIN", "GROUP"):
+        if self.task_definition_version.task_execution_mode in ("CHAIN", "GROUP", "MAP"):
             raise TypeError(
                 f"Task '{self.task_definition.name}' has execution_mode="
                 f"{self.task_definition_version.task_execution_mode} "

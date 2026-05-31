@@ -95,7 +95,7 @@ def _load_script_entry(
             entry, scripts_dir, commit, task_type, task_execution_mode,
             name, group_name, parent_project, parent_agent, parent_skill, existing_results,
         )
-    elif task_execution_mode in (TaskExecutionMode.CHAIN, TaskExecutionMode.GROUP):
+    elif task_execution_mode in (TaskExecutionMode.CHAIN, TaskExecutionMode.GROUP, TaskExecutionMode.MAP):
         load_chain_entry(
             entry, commit, task_type, task_execution_mode, name, group_name,
             parent_project, parent_agent, parent_skill, existing_results,
