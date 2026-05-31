@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -15,6 +16,21 @@ if TYPE_CHECKING:
     from runtime.session.session import Session
     from server.models.tasks.task_definition_version import TaskDefinitionVersion
     from server.models.tasks.agent_task_call import AgentTaskCall
+
+
+@contextmanager
+def _chdir(path: str) -> Any:
+    """Temporarily change the working directory, restoring it on exit.
+
+    Safe inside Celery ``prefork`` workers — each worker runs at most one
+    task at a time, so there is no race on the process-wide cwd.
+    """
+    old = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(old)
 
 
 class BoundTask:
@@ -75,7 +91,6 @@ class BoundTask:
             return self._call_script(file_path, *args, **kwargs)
 
         # --- Python FUNCTION mode ---
-        # Ensure the runtime folder is on sys.path so sibling imports work
         if str(folder) not in sys.path:
             sys.path.insert(0, str(folder))
 
@@ -93,9 +108,15 @@ class BoundTask:
                 f"Function '{self.task_definition_version.function_name}' not found in {file_path}"
             )
 
-        if self.task_definition_version.bound:
-            return func(self.session, *args, **kwargs)
-        return func(*args, **kwargs)
+        cwd = str(
+            Path(self.session.workspace.path).resolve()
+            if self.session.workspace
+            else file_path.parent
+        )
+        with _chdir(cwd):
+            if self.task_definition_version.bound:
+                return func(self.session, *args, **kwargs)
+            return func(*args, **kwargs)
 
     def _call_script(self, file_path: Path, *args: Any, **kwargs: Any) -> Any:
         """Execute a script/binary and return its output.
@@ -130,7 +151,7 @@ class BoundTask:
         if self.task_definition_version.bound:
             env["AGENTONE_SESSION_ID"] = str(getattr(self.session, "id", ""))
 
-        cwd = self.session.workspace.path.resolve() if  self.session.workspace else file_path.parent
+        cwd = str(Path(self.session.workspace.path).resolve()) if self.session.workspace else file_path.parent
 
         result = subprocess.run(
             cmd,

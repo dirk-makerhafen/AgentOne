@@ -5,8 +5,10 @@ from server.models.tasks.task_instance import TaskInstance
 
 def map(session: Session, items: list, target_pk: int) -> list:
     """Execute the task identified by *target_pk* for each *item* in parallel."""
-    task_instance = TaskInstance.objects.get(pk=target_pk)
     results = []
+    if not items:
+        return results
+    task_instance = TaskInstance.objects.get(pk=target_pk)
     for item in items:
         results.append(task_instance.delay(item))
     return results

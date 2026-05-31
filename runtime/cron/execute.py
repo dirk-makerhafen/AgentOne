@@ -16,22 +16,22 @@ from runtime.session.session import Session
 def execute_cron_job(cronjob_id: int) -> None:
     """Execute a single cron job (runs in a Celery worker)."""
     try:
-        cronjob = Cronjob.objects.select_related("agent__latest_agent_version", "message").get(pk=cronjob_id)
+        cronjob = Cronjob.objects.get(pk=cronjob_id)
 
         # 1. Resolve session
         auto_name = f"cron:{cronjob.agent.name}:{cronjob.name}"
         if cronjob.session_mode == "new":
             session_name = cronjob.session_name or f"{auto_name}:{int(timezone.now().timestamp())}"
-            agent_version = cronjob.agent.latest_agent_version
-            session_version = agent_version.get_or_create_session(
-                name=session_name,
-                workspace=cronjob.workspace,
-            )
-            session = Session(session_model=session_version.session, pinned_session_version=session_version)
+
         else:
             session_name = cronjob.session_name or auto_name
-            session_model, _ = SessionModel.objects.get_or_create(name=session_name)
-            session = Session(session_model=session_model)
+            
+        agent_version = cronjob.agent.latest_agent_version
+        session_version = agent_version.get_or_create_session(
+            name=session_name,
+            workspace=cronjob.workspace,
+        )
+        session = Session(session_model=session_version.session, pinned_session_version=session_version)
 
         # 2. Dispatch
         message_data = cronjob.message.get() if cronjob.message else ""
@@ -71,6 +71,7 @@ def execute_cron_job(cronjob_id: int) -> None:
     except Exception as e:
         print(f"[cron] error executing job {cronjob_id}: {e}")
         Cronjob.objects.filter(pk=cronjob_id).update(last_status=f"error")
+        raise e
 
 
 
