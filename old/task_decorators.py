@@ -183,20 +183,6 @@ def group(
     )
 
 
-def chord(
-    name: Optional[str] = None,
-    description: str = "",
-    requires_approval: bool = False,
-) -> TaskDecorator:
-    """Decorator for a task that runs a group then a callback."""
-    return TaskDecorator(
-        task_type=TaskType.TASK,
-        task_execution_mode=TaskExecutionMode.CHORD,
-        name=name,
-        description=description,
-        requires_approval=requires_approval,
-    )
-
 
 def map(
     name: Optional[str] = None,

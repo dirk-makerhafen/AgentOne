@@ -2,7 +2,7 @@ from __future__ import annotations
 import traceback
 from typing import List, Any, Dict
 from old.base_agent import BaseAgent
-from registry.task_decorators import task, chain, chord, map, group, command
+from old.task_decorators import task, chain, chord, map, group, command
 
 from server.models.message import Message
 from typing import TYPE_CHECKING

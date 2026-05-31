@@ -117,6 +117,5 @@ _ENTRY_TYPE_TO_EXECUTION_MODE: Dict[str, TaskExecutionMode] = {
     "script": TaskExecutionMode.SCRIPT,
     "chain": TaskExecutionMode.CHAIN,
     "group": TaskExecutionMode.GROUP,
-    "chord": TaskExecutionMode.CHORD,
     "map": TaskExecutionMode.MAP,
 }

@@ -4,7 +4,7 @@ from server.models.content import GenericContent
 from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart
 from server.models.enums.message_enums import MessageContentType
-from registry.task_decorators import task, chain
+from old.task_decorators import task, chain
 
 
 class TaskAgent(BaseAgent):

@@ -9,7 +9,7 @@ from server.models.settings import SettingsModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.tasks.task_definition import TaskDefinition
 from old.profile import Profile
-from registry.task_decorators import TaskDescriptor
+from old.task_decorators import TaskDescriptor
 from server.models.content import GenericContent
 from registry.utils import generate_schema_for_function, get_import_strings, get_ai_model
 
