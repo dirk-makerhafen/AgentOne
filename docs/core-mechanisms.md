@@ -24,7 +24,7 @@ CallScheduler._apply_async(call_pk)        ← arg dependency resolution, approv
 AgentTaskRun.create() + apply_async()      ← resolves version, deserialises args
     │
     ▼
-RunScheduler._apply_async(run_pk)          ← executes CHAIN/GROUP/FUNCTION
+RunScheduler._apply_async(run_pk)          ← executes CHAIN/GROUP/MAP/FUNCTION
     │
     ▼
 AgentTaskRun.apply()                       ← actual Python execution
@@ -73,7 +73,7 @@ NEW ──→ WAITING_DEPENDENCY ──→ [HALTED_APPROVAL] ──→ WAITING_Q
 
 **File:** `server/models/tasks/agent_task_run.py`
 
-An `AgentTaskRun` is a single execution attempt. It resolves the exact `TaskDefinitionVersion` dynamically at create time (so retries see updated definitions), resolves arguments (including blocking on `AgentTaskCall` dependencies), executes the actual Python function or CHAIN/GROUP, and captures the result.
+An `AgentTaskRun` is a single execution attempt. It resolves the exact `TaskDefinitionVersion` dynamically at create time (so retries see updated definitions), resolves arguments (including blocking on `AgentTaskCall` dependencies), executes the actual Python function or CHAIN/GROUP/MAP, and captures the result.
 
 **Key fields:**
 
@@ -98,13 +98,15 @@ NEW → QUEUED → ACTIVE → SUCCESS
 
 **`apply()` — The core dispatch (line 182):**
 
-Three branches based on `self.task_definition_version.task_execution_mode`:
+Four branches based on `self.task_definition_version.task_execution_mode`:
 
 1. **CHAIN mode** (line 197): Iterates `self.task_instance.child_instances.all()`, feeds each sub-task's `apply_async(kwargs=next_step_arguments)` the output of the previous. Result is the last call's return value. The `child_instances` are the ordered steps declared in the `chain:` list in `scripts.md`.
 
 2. **GROUP mode** (line 206): Fires all `child_instances` in parallel with the same `arguments_json`. Result is a list of calls.
 
-3. **FUNCTION mode** (line 212): Resolves `bound_task` via `session.get_task()`, calls `_resolve_run_arguments()` to deserialize args (blocks on dependencies with `timeout=0`), then calls `bound_task.call(*args, **kwargs)`.
+3. **MAP mode** (line 212): Expects two children — a *producer* (child[0]) that returns a list, and a *consumer* (child[1]) that is called per item. Dispatches the producer via `apply_async()`, then delegates to the built-in `map` bound task (`scripts/core/map.py`) which receives the resolved items list and calls `consumer.delay(item)` for each element. All consumer calls run in parallel. Result is the list of consumer AgentTaskCalls, which the framework auto-awaits via `WAITING_RESULTTASKS`.
+
+4. **FUNCTION mode** (line 220): Resolves `bound_task` via `session.get_task()`, calls `_resolve_run_arguments()` to deserialize args (blocks on dependencies with `timeout=0`), then calls `bound_task.call(*args, **kwargs)`.  **SCRIPT mode** also falls into this branch — the ``else`` block dispatches both FUNCTION and SCRIPT to ``bound_task.call()``, where ``call()`` detects the mode and runs the executable directly instead of importing a Python module.
 
 After execution: passes result to `_create_result_json()`. If the result contains `AgentTaskCall` refs → `status=WAITING_RESULTTASKS`; otherwise `status=SUCCESS`. On `RateLimitError` → `status=RATE_LIMITED`. On any other Exception → `status=FAILURE` with exception JSON.
 
@@ -118,11 +120,11 @@ A `BoundTask` ties a `TaskDefinitionVersion` to a specific session. It is create
 
 **Key methods:**
 
-- **`call(*args, **kwargs)`** (line 34): Synchronous execution. Imports the `.path` file via `importlib`, loads the `.function_name` function, and calls `func(self.session, *args, **kwargs)` if `bound=True` or `func(*args, **kwargs)` if `bound=False`. Raises `TypeError` for CHAIN/GROUP tasks (they have no Python file to call).
+- **`call(*args, **kwargs)`** (line 34): Synchronous execution. For SCRIPT mode, executes the file as a subprocess (args → CLI, kwargs → JSON on stdin). For FUNCTION mode, imports the `.path` file via `importlib`, loads the `.function_name` function, and calls `func(self.session, *args, **kwargs)` if `bound=True` or `func(*args, **kwargs)` if `bound=False`. Raises `TypeError` for CHAIN/GROUP/MAP tasks (they have no callable file).
 
 - **`apply_async(args, kwargs)`** (line 101): Calls `self.instance()` to get/create a `TaskInstance`, then `task_instance.apply_async(args=args, kwargs=kwargs)` → `TaskInstance.create_call()` → `AgentTaskCall.create()` → `call.apply_async()` → `celery_delay(CallScheduler._apply_async, call.pk)`.
 
-- **`instance()`** (line 140): `TaskInstance.get_or_create()` — looks up or creates a `TaskInstance` matching `task_definition_version` + `session_version`. **This is where CHAIN/GROUP child instances are auto-created**: if the TDV has `child_tasks`, the method resolves those names into child `TaskInstance` records and stores them on `child_instances` M2M.
+- **`instance()`** (line 140): `TaskInstance.get_or_create()` — looks up or creates a `TaskInstance` matching `task_definition_version` + `session_version`. **This is where CHAIN/GROUP/MAP child instances are auto-created**: if the TDV has `child_tasks`, the method resolves those names into child `TaskInstance` records and stores them on `child_instances` M2M.
 
 - **`delay(*args, **kwargs)`** (line 97): Shorthand for `apply_async(args, kwargs)`.
 
@@ -571,7 +573,7 @@ No page reloads. No full re-renders. Only the specific view that called `update(
 | | 370–404 | `get_result()` |
 | `server/models/tasks/agent_task_run.py` | 39–100 | Fields |
 | | 102–171 | `AgentTaskRun.create()` |
-| | 182–248 | `apply()` (CHAIN/GROUP/FUNCTION dispatch) |
+| | 182–248 | `apply()` (CHAIN/GROUP/MAP/FUNCTION dispatch) |
 | | 250–302 | `_create_run_arguments_json()` |
 | | 304–374 | `_resolve_run_arguments()` |
 | | 376–396 | `_create_result_json()` |

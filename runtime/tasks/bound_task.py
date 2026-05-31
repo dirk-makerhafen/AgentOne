@@ -1,5 +1,8 @@
 from __future__ import annotations
 import importlib.util
+import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -37,7 +40,7 @@ class BoundTask:
         """
         Execute the task synchronously.
 
-        Raises ``TypeError`` for CHAIN/GROUP tasks, ``FileNotFoundError`` if
+        Raises ``TypeError`` for CHAIN/GROUP/MAP tasks, ``FileNotFoundError`` if
         the script file is missing, and ``AttributeError`` if the target
         function is not found.
 
@@ -48,7 +51,7 @@ class BoundTask:
         If the task definition is *bound* the session is passed as the first
         argument.
         """
-        # Chain/group tasks have no Python file — they execute via AgentTaskRun.apply()
+        # Chain/group/map tasks have no Python file — they execute via AgentTaskRun.apply()
         if self.task_definition_version.task_execution_mode in ("CHAIN", "GROUP", "MAP"):
             raise TypeError(
                 f"Task '{self.task_definition.name}' has execution_mode="
@@ -67,6 +70,11 @@ class BoundTask:
                 f"Script file not found in runtime folder: {file_path}"
             )
 
+        # --- SCRIPT mode: execute as an arbitrary binary ---
+        if self.task_definition_version.task_execution_mode == "SCRIPT":
+            return self._call_script(file_path, *args, **kwargs)
+
+        # --- Python FUNCTION mode ---
         # Ensure the runtime folder is on sys.path so sibling imports work
         if str(folder) not in sys.path:
             sys.path.insert(0, str(folder))
@@ -88,6 +96,64 @@ class BoundTask:
         if self.task_definition_version.bound:
             return func(self.session, *args, **kwargs)
         return func(*args, **kwargs)
+
+    def _call_script(self, file_path: Path, *args: Any, **kwargs: Any) -> Any:
+        """Execute a script/binary and return its output.
+
+        Positional ``args`` are passed as CLI arguments.  Keyword ``kwargs``
+        are serialised as JSON on stdin.  If stdout is valid JSON it is
+        parsed; otherwise returned as a plain string.
+
+        The script's parent directory is prepended to both ``PYTHONPATH`` (so
+        Python sibling imports resolve) and ``PATH`` (so sibling executables
+        resolve).  The process ``cwd`` is set to the session's working directory,
+        making relative output/config paths session-scoped.
+
+        When the task is *bound*, session metadata is injected via environment
+        variables (``AGENTONE_SESSION_ID``).
+        """
+        # Ensure the file is executable
+        st = file_path.stat()
+        if not st.st_mode & 0o111:
+            file_path.chmod(st.st_mode | 0o111)
+
+        script_dir = str(file_path.parent)
+        cmd = [str(file_path)]
+        cmd.extend(str(a) for a in args)
+
+        env = os.environ.copy()
+        env.setdefault("PYTHONPATH", "")
+        env["PYTHONPATH"] = f"{script_dir}{os.pathsep}{env['PYTHONPATH']}"
+        env.setdefault("PATH", "")
+        env["PATH"] = f"{script_dir}{os.pathsep}{env['PATH']}"
+
+        if self.task_definition_version.bound:
+            env["AGENTONE_SESSION_ID"] = str(getattr(self.session, "id", ""))
+
+        cwd = self.session.workspace.path.resolve() if  self.session.workspace else file_path.parent
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            input=json.dumps(kwargs) if kwargs else None,
+            env=env,
+            cwd=cwd,
+        )
+
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"Script '{file_path.name}' exited with code {result.returncode}:\n"
+                f"{result.stderr.strip()}"
+            )
+
+        output = result.stdout.strip()
+        if not output:
+            return None
+        try:
+            return json.loads(output)
+        except json.JSONDecodeError:
+            return output
 
     def _runtime_file_name(self) -> str:
         """Return the file name (not full path) for this task's runtime file.

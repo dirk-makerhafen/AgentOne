@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class AgentModel(BaseModel):
     """Uniquely identifies an Agent across all versions and variants."""
 
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     latest_agent_version = models.ForeignKey(
         "server.AgentVersionModel",
         default=None,

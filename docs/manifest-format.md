@@ -112,7 +112,7 @@ Declares executable entries for a folder. Lives alongside Python files in a `scr
 ---
 tasks:                                  # section heading = task_type
   - name: process_turn                  # unique name within scope
-    type: chain                         # python | chain | group | script
+    type: chain                         # python | chain | group | map | script
     chain:                              # only for type: chain
       - build_llm_context
       - call_llm
@@ -130,6 +130,12 @@ tasks:                                  # section heading = task_type
     group:
       - web_search
       - file_search
+
+  - name: process_new_emails
+    type: map                           # maps a list over a function
+    map:
+      - sync_account                    #   child[0]: produces a list
+      - new_email                       #   child[1]: called per item
 
 tools:
   - name: delegate_task
@@ -152,6 +158,10 @@ commands:
     function: ping
     bound: True
     trigger: ping                       # optional — slash command trigger
+
+  - name: deploy
+    script: deploy.sh                   # arbitrary executable (SCRIPT mode)
+    description: Deploy the application
 ---
 ```
 
@@ -160,12 +170,14 @@ commands:
 | Field | Required | Type | Description |
 |---|---|---|---|
 | `name` | yes | string | Unique entry name within its section |
-| `type` | no | string | Execution mode: `python` (default), `chain`, `group`, `script` |
+| `type` | no | string | Execution mode: `python` (default), `chain`, `group`, `map`, `script` |
 | `file` | for `python` type | string | Path to Python file (relative to scripts.md) |
 | `function` | for `python` type | string | Function name within the file |
 | `bound` | no | bool | `True` = first argument receives the Session object |
 | `chain` | for `chain` type | list | Ordered list of step names to execute sequentially |
 | `group` | for `group` type | list | Step names to execute in parallel |
+| `map` | for `map` type | list | Exactly 2 step names: `[producer, consumer]` — producer yields a list, consumer is called per item |
+| `script` | for `script` type | string | Path to executable (relative to scripts.md) — replaces `file` / `function` |
 | `trigger` | no | string | Slash command trigger (e.g. `ping` for `/ping`) |
 | `requires_approval` | no | bool | Whether human approval is required |
 | `max_retries` | no | int | Max retry attempts |
@@ -185,15 +197,16 @@ Each top-level key defines the `task_type` for all entries within:
 ### Execution Modes (`type`)
 
 | Mode | `task_execution_mode` | Behavior |
-|---|---|---|
+|---|---|---|---|
 | `python` (default) | FUNCTION | Calls a Python function via `importlib` |
 | `chain` | CHAIN | Runs child steps sequentially, each receives previous output |
 | `group` | GROUP | Runs child steps in parallel, joins on completion |
+| `map` | MAP | Runs child[0] (producer) to get a list, then calls child[1] (consumer) per item in parallel |
 | `script` | SCRIPT | Runs a script file |
 
-### Chain/Group Children
+### Chain/Group/Map Children
 
-For `type: chain` and `type: group`, child steps are named entries that must exist in the same `scripts.md` or in an ancestor's scripts:
+For `type: chain`, `type: group`, and `type: map`, child steps are named entries that must exist in the same `scripts.md` or in an ancestor's scripts:
 
 ```yaml
 tasks:
@@ -218,9 +231,47 @@ tasks:
     file: report.py
     function: generate_report
     bound: True
+
+  - name: process_new_emails
+    type: map
+    map:
+      - sync_account       # producer — runs first, returns a list
+      - new_email          # consumer — called once per item in parallel
 ```
 
-The chain steps' child relationships are stored as `SortedManyToManyField("self")` on `TaskDefinitionVersion.child_tasks`.
+The child relationships are stored as `SortedManyToManyField("self")` on `TaskDefinitionVersion.child_tasks`.
+
+#### MAP semantics
+
+`type: map` requires exactly two children:
+
+1. **Producer** (child[0]) — executed asynchronously. Its result must be a list.
+2. **Consumer** (child[1]) — the task to apply to each element.
+
+Runtime flow:
+- The producer is dispatched via `apply_async()`; the MAP task's arguments are forwarded as its kwargs.
+- A built-in `map` bound task (registered in `scripts/core/`) receives the producer's resolved result as `items` and the consumer's `TaskInstance` pk as `target_pk`.
+- The `map` function iterates the items list and calls `consumer.delay(item)` for each element.
+- All consumer calls run in parallel via the normal task dispatch pipeline.
+- The MAP task enters `WAITING_RESULTTASKS` until every consumer call completes.
+
+### SCRIPT semantics
+
+`type: script` (or just the `script:` key) declares an arbitrary executable. The value of the `script` field is the relative path to the executable file.
+
+```yaml
+- name: deploy
+  script: deploy.sh
+  description: Deploy the application
+```
+
+Runtime flow:
+- The file is located in the versioned runtime folder.
+- Positional arguments are passed as CLI arguments to the executable.
+- Keyword arguments are serialised as JSON on stdin.
+- On success, stdout is returned (parsed as JSON if valid, otherwise as plain text).
+- On non-zero exit, a ``RuntimeError`` is raised with stderr.
+- If ``bound: True``, the environment variable ``AGENTONE_SESSION_ID`` is set.
 
 ---
 

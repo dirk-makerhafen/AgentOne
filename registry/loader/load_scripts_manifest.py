@@ -6,6 +6,7 @@ import frontmatter
 from registry.install_repo import InstallRepo
 from registry.loader.load_chain_entry import load_chain_entry
 from registry.loader.load_python_entry import load_python_entry
+from registry.loader.load_script_entry import load_script_entry
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
@@ -82,7 +83,7 @@ def _load_script_entry(
 ) -> None:
     """Dispatch a single manifest entry to the appropriate loader.
 
-    Supports ``FUNCTION``, ``CHAIN``, and ``GROUP`` execution modes.
+    Supports ``FUNCTION``, ``SCRIPT``, ``CHAIN``, ``GROUP``, and ``MAP``.
     """
     task_type: TaskType = entry["task_type"]
     task_execution_mode: TaskExecutionMode = entry["task_execution_mode"]
@@ -92,6 +93,11 @@ def _load_script_entry(
 
     if task_execution_mode == TaskExecutionMode.FUNCTION:
         load_python_entry(
+            entry, scripts_dir, commit, task_type, task_execution_mode,
+            name, group_name, parent_project, parent_agent, parent_skill, existing_results,
+        )
+    elif task_execution_mode == TaskExecutionMode.SCRIPT:
+        load_script_entry(
             entry, scripts_dir, commit, task_type, task_execution_mode,
             name, group_name, parent_project, parent_agent, parent_skill, existing_results,
         )

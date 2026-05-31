@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import json
 from pathlib import Path
 from typing import Any
 
@@ -75,10 +76,11 @@ def load_cron_manifest(
     # Build message content
     message = None
     if message_text:
-        message, _ = GenericContent.objects.get_or_create(
-            content=message_text,
-            content_type=ContentType.TEXT,
-        )
+        if isinstance(message_text, str):
+            message = GenericContent.from_text(message_text)
+        else:
+            message = GenericContent.from_data( message_text)
+            
 
     # Upsert by (parent_project, name)
     cronjob, created = Cronjob.objects.get_or_create(
