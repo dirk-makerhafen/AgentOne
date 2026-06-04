@@ -240,6 +240,7 @@ class TaskInstance(BaseModel):
         retry_requires_approval: Any = None,
         priority: Any = None,
         pipe_output_names: list[str] | None = None,
+        cronjob: Any = None,
     ) -> AgentTaskCall:
         """Create an AgentTaskCall for this task instance.
 
@@ -263,6 +264,7 @@ class TaskInstance(BaseModel):
             retry_delay=retry_delay,
             retry_requires_approval=retry_requires_approval,
             pipe_output_names=pipe_output_names,
+            cronjob=cronjob,
         )
 
     @staticmethod

@@ -35,3 +35,4 @@ daphne
 python-frontmatter
 markdown
 psutil
+html2text

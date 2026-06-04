@@ -19,3 +19,4 @@ tools:
   - name: diff
     file: diff.py
     function: diff
+---

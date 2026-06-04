@@ -18,14 +18,34 @@ class AssistantMessageView(ModelView):
             <div class="role-icon assistant">A</div>
             <span style="font-size:12px">{{ pyview.subject.session_version.agent.name}} v{{ pyview.subject.session_version.pinned_agent_version if pyview.subject.session_version.pinned_agent_version else "-1"}}</span>
 
-            <span class="msg-tps-inline" title="Response Tokens ">{{pyview.subject.response.completion_tokens}}tkn</span>
-            <span class="msg-tps-inline" title="Time to first token">first {{pyview.subject.response.time_to_first_token |round(2) }}s</span>
-            <span class="msg-tps-inline" title="Reasoning Time">think {{pyview.subject.response.reasoning_time |round(2) }}s</span>
-            <span class="msg-tps-inline" title="Message Time">msg {{(pyview.subject.response.token_generation_time - pyview.subject.response.reasoning_time ) |round(2) }}s</span>
-            <span class="msg-tps-inline" title="Total Time">total {{pyview.subject.response.total_time |round(2) }}s</span>
-            <span class="msg-tps-inline" title="Tokens per second">{{(pyview.subject.response.completion_tokens / pyview.subject.response.token_generation_time) |round(2)}}tkn/s</span>
-            <span class="msg-tps-inline" title="Tokens per second">{{(pyview.subject.response.completion_tokens / pyview.subject.response.total_time) |round(2)}}tkn/s</span>
+            {% if pyview.subject.response.completion_tokens %}
+                <span class="msg-tps-inline" title="Response Tokens ">{{pyview.subject.response.completion_tokens}}tkn</span>
+            {% endif %}
 
+
+            {% if pyview.subject.response.time_to_first_token %}
+                <span class="msg-tps-inline" title="Time to first token">first {{pyview.subject.response.time_to_first_token |round(2) }}s</span>
+            {% endif %}
+
+            {% if pyview.subject.response.reasoning_time %}
+                <span class="msg-tps-inline" title="Reasoning Time">think {{pyview.subject.response.reasoning_time |round(2) }}s</span>
+            {% endif %}
+            
+            {% if pyview.subject.response.token_generation_time and pyview.subject.response.reasoning_time %}
+                <span class="msg-tps-inline" title="Message Time">msg {{(pyview.subject.response.token_generation_time - pyview.subject.response.reasoning_time ) |round(2) }}s</span>
+            {% endif %}
+            
+            {% if pyview.subject.response.total_time %}
+                <span class="msg-tps-inline" title="Total Time">total {{pyview.subject.response.total_time |round(2) }}s</span>
+            {% endif %}
+
+            {% if pyview.subject.response.completion_tokens and pyview.subject.response.token_generation_time %}
+                <span class="msg-tps-inline" title="Tokens per second">{{(pyview.subject.response.completion_tokens / pyview.subject.response.token_generation_time) |round(2)}}tkn/s</span>
+            {% endif %} 
+
+            {% if pyview.subject.response.completion_tokens and pyview.subject.response.total_time %}
+                <span class="msg-tps-inline" title="Tokens per second">{{(pyview.subject.response.completion_tokens / pyview.subject.response.total_time) |round(2)}}tkn/s</span>
+            {% endif %} 
             
         </div>
         <div class="assistant-turn-blocks">
@@ -50,7 +70,9 @@ class AssistantMessageView(ModelView):
                 <div class="msg-body" id="message_body_{{pyview.subject.pk}}">{% for message_part in  pyview.subject.parts.filter(type__in=["MESSAGE"]) %}{{ message_part.content.get()}}{% endfor %}   
                 </div>
                 <div class="msg-foot">
-                    <span class="msg-duration-inline">Done in {{pyview.subject.response.total_time |round(2) }}s</span>
+                    {% if pyview.subject.response.total_time %}
+                        <span class="msg-duration-inline">Done in {{pyview.subject.response.total_time |round(2) }}s</span>
+                    {% endif %}
                     <span class="msg-time" title="{{pyview.subject.create_at}}">{{pyview.subject.create_at}}</span>
                     <span class="msg-actions">
                         <button class="msg-action-btn msg-tts-btn" title="Listen" onclick="speakMessage(this)">

@@ -19,6 +19,7 @@ def load_scripts_manifest(
     parent_agent: Any = None,
     parent_skill: Any = None,
 ) -> List[Tuple[TaskDefinition, TaskDefinitionVersion]]:
+    print("scripts_dir", scripts_dir)
     """Load all entries from all ``scripts.md`` manifests found in *scripts_dir*.
 
     Recurses into subdirectories. Entries are processed in order so that Python
@@ -33,16 +34,18 @@ def load_scripts_manifest(
     for manifest_path in sorted(scripts_dir.rglob("scripts.md")):
         subdir = manifest_path.parent
         manifest = frontmatter.load(manifest_path)
-
+        if len(manifest.keys()) == 0:
+            if len(manifest_path.read_text().strip()) ==0:
+                # empty file
+                return []
+            raise Exception(f"Failed to load frontmatter from {manifest_path}, did you forget closing \\n---\\n\\n?")
         commit = install_repo.tree_sha(subdir)
         entries = _collect_manifest_entries(manifest)
-
         for entry in entries:
             _load_script_entry(
                 entry, subdir, commit, results,
                 parent_project, parent_agent, parent_skill,
             )
-
     return results
 
 
@@ -53,7 +56,6 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
     """
     entries: List[Dict[str, Any]] = []
     group_name = manifest.get("group", "")
-
     for key, ttype in [
         ("tools", TaskType.TOOL),
         ("tasks", TaskType.TASK),
@@ -68,7 +70,6 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
             item["group_name"] = group_name
             print(item)
             entries.append(item)
-    print("RETURHN")
     return entries
 
 

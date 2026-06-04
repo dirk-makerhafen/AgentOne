@@ -81,30 +81,6 @@
                 window._panelDragging = false;
             });
         })();
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize the main split layout
-            if (typeof reinitializeAllSplits === 'function') {
-                reinitializeAllSplits();
-                if (typeof updateSplitControlButtons === 'function') {
-                    updateSplitControlButtons();
-                } else {
-                    console.error("updateSplitControlButtons function not found on DOMContentLoaded.");
-                }
-            } else {
-                console.error("reinitializeAllSplits function not found. Split.js setup failed.");
-            }
-            let resizeTimeout;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(() => { 
-                    reinitializeAllSplits(); 
-                    if (typeof updateSplitControlButtons === 'function') {
-                        updateSplitControlButtons();
-                    }
-                }, 100);
-            });
-        });
         
     </script>
 

@@ -378,7 +378,7 @@ def _resolve_agent_version_skills(
                 .first()
             )
             if not sv:
-                raise Exception(f"No skill '{name}' found")
+                raise Exception(f"No skill '{name}' found for agent '{agent_version.agent.name}'")
             resolved.add(sv.pk)
 
     if resolved:

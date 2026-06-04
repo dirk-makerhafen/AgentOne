@@ -20,9 +20,17 @@ def ingest_user_message(session: Session, parts: list[dict[str, Any]]) -> Messag
 
     Args:
         session: The active agent session.
-        parts:   List of dicts with "content" and "type" keys. Each Part
-                 may also contain optional keys: template_data, tool_call.
-
+        parts:  List of dicts with 
+                type:
+                    Part type key (``"message"``, ``"reasoning"``, ``"toolcall"``).
+                content_type:
+                    Content type enum value (text, image, template, json).
+                content:
+                    Raw content value or a :class:`GenericContent` instance.  When
+                    ``content_type`` is ``IMAGE``, TEXT or JSON and ``content`` is not
+                    already a :class:`GenericContent`, one is created automatically.
+                template_data:
+                    Optional template data (string or :class:`GenericContent`).  Used when ``content_type`` is ``TEMPLATE``.
     Returns:
         An AgentTaskCall for process_turn -- the framework resolves this
         through the chain until decide_next_step returns the final Message.

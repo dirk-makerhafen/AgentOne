@@ -51,9 +51,9 @@ def execute_cron_job(cronjob_id: int) -> None:
                 raise Exception(f"Unknow function type {cronjob.function_type}")
             if not isinstance(message_data, dict):
                 raise ValueError("Message must be a JSON object for function dispatch")
-            dispatched_call = task.apply_async(kwargs=message_data, pipe_output_names=pipe_names)
+            dispatched_call = task.apply_async(kwargs=message_data, pipe_output_names=pipe_names, cronjob=cronjob)
         else:
-            dispatched_call = session.get_task("ingest_user_message").apply_async(kwargs=dict(parts=[{"type": "message", "content_type": "text", "content": message_data}]), pipe_output_names=pipe_names)
+            dispatched_call = session.get_task("ingest_user_message").apply_async(kwargs=dict(parts=[{"type": "message", "content_type": "text", "content": message_data}]), pipe_output_names=pipe_names, cronjob=cronjob)
         
         # 3. Update tracking
         next_run = croniter(cronjob.schedule, timezone.localtime()).get_next(datetime)

@@ -42,8 +42,11 @@ class ComposerBox(ModelView):
         self.command_dropdown = CommandDropdown(subject, self)
 
     def new_text_input(self, input):
-        if input.startswith("/") and not self.command_dropdown.open:
+        print("new_text_input", input)
+        if input.startswith("/"):
             self.command_dropdown.open()
-            print("command")
+            if cmd := input[1:]:
+                self.command_dropdown.filter_commands(cmd)
+                print("command")
         elif self.command_dropdown.open:
             self.command_dropdown.close()

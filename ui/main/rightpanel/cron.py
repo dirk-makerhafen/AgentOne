@@ -119,7 +119,7 @@ class RightPanelCronHistory(ModelView):
         from server.models.tasks.agent_task_call import AgentTaskCall
         now = timezone.now()
         qs = AgentTaskCall.objects.filter(
-            session__latest_session_version__agent=c.agent,
+            cronjob=c,
         ).order_by("-pk")[:20]
         rows = []
         for call in qs:

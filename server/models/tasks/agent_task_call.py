@@ -62,6 +62,10 @@ class AgentTaskCall(BaseModel):
 
     pipe_output_names = models.JSONField(default=list, blank=True)
 
+    cronjob = models.ForeignKey(
+        "server.Cronjob", blank=True, on_delete=models.SET_NULL,
+        related_name="related_task_calls", default=None, null=True,
+    )
     parent_taskrun = models.ForeignKey( "server.AgentTaskRun", blank=True, on_delete=models.CASCADE, related_name="child_taskcalls", default=None, null=True)
 
     taskcall_arg_references = models.ManyToManyField( "self", help_text="AgentTaskCalls used in call args/kwargs", symmetrical=False, blank=True, related_name="rev_taskcall_arg_references")
@@ -95,6 +99,7 @@ class AgentTaskCall(BaseModel):
         retry_requires_approval: Any = None,
         priority: int | None = None,
         pipe_output_names: list[str] | None = None,
+        cronjob: Any = None,
     ) -> AgentTaskCall:
         """Create an AgentTaskCall for the given task instance.
 
@@ -157,6 +162,7 @@ class AgentTaskCall(BaseModel):
             is_approved=None,
             parent_taskrun=parent_run,
             pipe_output_names=effective_pipes,
+            cronjob=cronjob,
         )
         taskcall.taskcall_before_run_hooks.set(before_hook_calls)
 

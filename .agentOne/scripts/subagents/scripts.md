@@ -43,4 +43,4 @@ tasks:
     file: ingest_subagent_result.py
     function: ingest_subagent_result
     bound: True
-
+---
