@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 from runtime.session.session import Session
 from server.models.sessions.session import SessionModel
 from server.models.agents.agent import AgentModel
+from server.models.collections import DataCollection
 from server.models.cron import Cronjob
-from server.models.pipe import NamedPipe
 from server.models.project import Project
 from server.models.workspace import WorkspaceModel
 from server.models.skills.skill import SkillModel
@@ -15,7 +15,7 @@ from ui.main.rightpanel.tasks import RightPanelTasks
 from ui.main.rightpanel.workspace import RightPanelWorkspace
 from ui.main.rightpanel.subagents import RightPanelSubagents
 from ui.main.rightpanel.cron import RightPanelCronSchedule, RightPanelCronHistory, CRON_ICONS
-from ui.main.rightpanel.pipe import RightPanelPipeActivity, RightPanelPipeSubscribers, PIPE_ICONS
+from ui.main.rightpanel.collection import RightPanelCollectionActivity, RightPanelCollectionDerived, FLOW_ICONS
 from ui.main.rightpanel.agent import RightPanelAgentInfo, RightPanelAgentSessions, RightPanelAgentCapabilities, AGENT_ICONS
 from ui.main.rightpanel.project import RightPanelProjectOverview, RightPanelProjectWorkspaces, PROJECT_ICONS
 from ui.main.rightpanel.workspace_context import RightPanelWorkspaceUsage, WORKSPACE_ICONS
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from ui.main.main_view import MainView
     from ui.main.chat.chat import Chat
     from ui.main.cron.cron import CronView
-    from ui.main.pipe.pipe import PipeDetailView
+    from ui.main.collections.collection_detail import CollectionDetailView
     from ui.main.agent.agent_view import AgentView
     from ui.main.project.project_view import ProjectView
     from ui.main.workspace.workspace import Workspace as WorkspaceView
@@ -37,8 +37,8 @@ if TYPE_CHECKING:
 TAB_ICONS = {
     "schedule": CRON_ICONS["schedule"],
     "history": CRON_ICONS["history"],
-    "activity": PIPE_ICONS["activity"],
-    "subscribers": PIPE_ICONS["subscribers"],
+    "activity": FLOW_ICONS["activity"],
+    "derived": FLOW_ICONS["derived"],
     "info": AGENT_ICONS["info"],
     "sessions": AGENT_ICONS["sessions"],
     "capabilities": AGENT_ICONS["capabilities"],
@@ -99,8 +99,8 @@ class RightPanel(ModelView):
         # Non-session tab views (lazy-created by context handlers)
         self._cron_schedule: RightPanelCronSchedule | None = None
         self._cron_history: RightPanelCronHistory | None = None
-        self._pipe_activity: RightPanelPipeActivity | None = None
-        self._pipe_subscribers: RightPanelPipeSubscribers | None = None
+        self._collection_activity: RightPanelCollectionActivity | None = None
+        self._collection_derived: RightPanelCollectionDerived | None = None
         self._agent_info: RightPanelAgentInfo | None = None
         self._agent_sessions: RightPanelAgentSessions | None = None
         self._agent_capabilities: RightPanelAgentCapabilities | None = None
@@ -159,7 +159,7 @@ class RightPanel(ModelView):
 
         from ui.main.chat.chat import Chat
         from ui.main.cron.cron import CronView
-        from ui.main.pipe.pipe import PipeDetailView
+        from ui.main.collections.collection_detail import CollectionDetailView
         from ui.main.agent.agent_view import AgentView
         from ui.main.project.project_view import ProjectView
         from ui.main.workspace.workspace import Workspace as WorkspaceView
@@ -169,8 +169,8 @@ class RightPanel(ModelView):
             self._show_session_context()
         elif isinstance(tab, CronView):
             self._show_cron_context()
-        elif isinstance(tab, PipeDetailView):
-            self._show_pipe_context()
+        elif isinstance(tab, CollectionDetailView):
+            self._show_collection_context()
         elif isinstance(tab, AgentView):
             self._show_agent_context()
         elif isinstance(tab, ProjectView):
@@ -222,14 +222,14 @@ class RightPanel(ModelView):
             ("history", "History", self._cron_history),
         ])
 
-    def _show_pipe_context(self) -> None:
-        if self._pipe_activity is None:
-            self._pipe_activity = RightPanelPipeActivity(self.subject, self)
-        if self._pipe_subscribers is None:
-            self._pipe_subscribers = RightPanelPipeSubscribers(self.subject, self)
+    def _show_collection_context(self) -> None:
+        if self._collection_activity is None:
+            self._collection_activity = RightPanelCollectionActivity(self.subject, self)
+        if self._collection_derived is None:
+            self._collection_derived = RightPanelCollectionDerived(self.subject, self)
         self._set_tabs([
-            ("activity", "Activity", self._pipe_activity),
-            ("subscribers", "Subscribers", self._pipe_subscribers),
+            ("activity", "Activity", self._collection_activity),
+            ("derived", "Derived", self._collection_derived),
         ])
 
     def _show_agent_context(self) -> None:

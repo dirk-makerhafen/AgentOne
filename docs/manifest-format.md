@@ -328,6 +328,75 @@ switching to the "Archived" tab in the cron panel.
 
 ---
 
+## `stream.md` / `set.md` — Data Flow Definition
+
+Defines a data flow (stream or set) that collects and processes task results. Lives at `.agentone/streams/<name>.md` or `.agentone/sets/<name>.md`.
+
+The directory determines the type: `streams/` → append-only stream (auto member/score), `sets/` → mutable ordered set (user-defined member/score).
+
+### YAML Frontmatter Fields
+
+| Field | Required | Type | Default | Description |
+|---|---|---|---|---|
+| `name` | yes | string | — | Collection name (unique) |
+| `description` | no | string | `""` | Human-readable description |
+| `sources` | yes | list | `[]` | Source definitions (see below) |
+| `processor` | yes | dict | `{}` | Agent + function that transforms items |
+| `processor.agent` | yes | string | — | Agent name for the processor task |
+| `processor.function` | yes | string | — | Task function name |
+| `processor.session` | no | string | `"default"` | Session name (supports `{source_agent.name}` template) |
+| `on_removed` | no | dict | `{}` | Handler fired when a set item is removed |
+| `on_removed.agent` | yes | string | — | Agent for the removal handler |
+| `on_removed.function` | yes | string | — | Task function for the removal handler |
+| `member_field` | no | string | `""` | Python eval expression for set member (sets only) |
+| `score_field` | no | string | `""` | Python eval expression for set score (sets only) |
+| `retroactive_on_source_change` | no | int | `0` | Max items to reprocess when sources change (0=off) |
+| `max_reprocess` | no | int | `0` | Max items to reprocess on processor update (0=off) |
+
+### Source definitions
+
+Each entry in `sources` has a `type` field:
+
+| Type | Extra fields | Behaviour |
+|---|---|---|
+| `query` | `project`, `agent`, `session`, `function` (all string/glob/list) | Match completed `AgentTaskCall` records |
+| `stream` | `stream: "<name>"` | Source from another stream's items |
+| `set` | `set: "<name>"` | Source from another set's items |
+
+### Example: Stream (append-only)
+
+```yaml
+---
+name: health_events
+sources:
+  - type: query
+    agent: [collector]
+    function: [check_health]
+processor:
+  agent: reporter
+  function: parse_event
+---
+```
+
+### Example: Ordered Set with on_removed
+
+```yaml
+---
+name: alert_report
+sources:
+  - type: stream
+    stream: health_events
+processor:
+  agent: reporter
+  function: generate_report
+member_field: item.source_call.pk
+score_field: item.score
+on_removed:
+  agent: reporter
+  function: alert_removed
+---
+```
+
 ## `project.md` — Project Declaration
 
 Declares a project with optional workspace definitions. Lives at `.agentone/project.md` at the root of a project folder.

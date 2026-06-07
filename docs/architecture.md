@@ -16,8 +16,8 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  UI LAYER (ui/)                             WebSocket thread  │
 │                                                                 │
 │  UiApp (Observable data model)                                  │
-│    ├── Agents, Sessions, Skills, Pipes, Projects, Workspaces   │
-│    │   (runtime wrapper collections)                            │
+│    ├── Agents, Sessions, Skills, DataCollections, Projects,     │
+│    │   Workspaces (runtime wrapper collections)                  │
 │    └── attach_observer/detach_observer                          │
 │                                                                 │
 │  UiAppView (root view)                                          │
@@ -48,7 +48,6 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  │   └── AgentTaskRun (the execution)                           │
 │  ├── Messages: Message → MessagePart → GenericContent          │
 │  ├── Skills: SkillModel → SkillModelVersion                     │
-│  ├── Pipes: NamedPipe → NamedPipeSubscription                   │
 │  ├── Queries: Query → Response (LLM interaction)                │
 │  ├── Providers: ApiProvider → AiModel → ApiKey                  │
 │  ├── SettingsModel, Project, WorkspaceModel, Cronjob            │
@@ -82,8 +81,9 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  Wrapper collections (lazy-load + cache):                       │
 │  ├── Agents   → Agent runtime (name resolution, allow/deny)    │
 │  ├── Sessions → Session runtime (copy-on-write property access) │
+│  ├── DataCollections → runtime query interface                   │
 │  ├── Tasks    → BoundTask (session-bound task dispatch)         │
-│  ├── Skills, Projects, Workspaces, Pipes, Crons                 │
+│  ├── Skills, Projects, Workspaces, Crons                         │
 │                                                                 │
 │  State machines (atomic SQL updates):                            │
 │  ├── call_fsm.py → TaskCallStateMachine:                        │
@@ -101,7 +101,11 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │                                                                 │
 │  tick_scheduler: runs every 5s via celery beat                  │
 │    ├── AdvanceTaskCalls → process WAITING→QUEUED transitions    │
-│    └── AdvanceTaskRuns → process QUEUED→ACTIVE transitions      │
+│    ├── AdvanceTaskRuns → process QUEUED→ACTIVE transitions      │
+│    ├── _dispatch_data_flows → match completed calls to          │
+│    │   DataCollection sources & dispatch processor tasks         │
+│    └── _propagate_from_collections → cascade new items to       │
+│        derived flows; detect removals & fire on_removed         │
 │                                                                 │
 │  heartbeat: runs every 2min, polls remote executors             │
 │  task_dispatcher: AgentTaskCall → AgentTaskRun dispatch logic   │
@@ -218,14 +222,69 @@ Three tiers checked in order (fail-fast):
 
 `RateLimitChecker` in `runtime/rate_limiter.py` uses Redis counters with TTLs for rolling windows and a semaphore pattern for parallel call limits.
 
-## Named pipes
+## Data flows (streams / ordered sets)
 
-Two-way agent communication:
+Data flows replace the legacy named-pipe system with a **collection-based** model.
 
-- `NamedPipe` — named channel (unique name)
-- `NamedPipeSubscription` — consumer config (task, agent, session mode, arguments template)
-- Agents can write to pipes; subscribers consume and process
-- Pipe output names on `TaskDefinitionVersion` link tasks to pipes they produce
+### Collections
+
+Two collection types on the `DataCollection` model:
+
+| Type | Behaviour | Member | Score |
+|---|---|---|---|
+| **Stream** | Append-only, auto-hashdedup | SHA-256 of content+timestamp | Auto = `time.time()` |
+| **Ordered Set** | Mutable (add/remove), dedup via `(collection, member)` unique | User-defined Python `eval()` expression | User-defined Python `eval()` expression |
+
+Each collection is self-contained: it declares its **sources** (where input comes from), a **processor** (agent+function that transforms input into items), and optional **on_removed** handler for sets.
+
+### Source types
+
+| Type | Meaning |
+|---|---|
+| `query` | Match `AgentTaskCall` records by project/agent/session/function glob patterns |
+| `stream` | Source from another stream's items |
+| `set` | Source from another set's items |
+
+### Dispatch flow
+
+```
+1. AgentTaskCall completes (ENDED_SUCCESS)
+2. tick_scheduler._dispatch_data_flows():
+     For each active DataCollection with query-type sources:
+       Match recent completed calls → first match per flow per tick
+       → _dispatch_processor(flow, call)
+         → creates TaskInstance + AgentTaskCall for processor function
+         → creates CollectionItem via update_or_create
+3. tick_scheduler._propagate_from_collections():
+     New items from any collection:
+       → for each derived flow that sources from that collection
+         → _dispatch_processor(derived_flow, item.source_call)
+     Sets: detect removals by comparing current vs previous-tick member set
+       → delete removed CollectionItems
+       → fire _trigger_on_removed(flow, removed_source_calls)
+```
+
+### YAML definition
+
+Defined in `.agentone/streams/*.md` and `.agentone/sets/*.md`:
+
+```yaml
+---
+name: health_events
+sources:
+  - type: query
+    agent: [collector]
+    function: [check_health]
+processor:
+  agent: reporter
+  function: parse_event
+member_field: result.service     # sets only
+score_field: result.priority     # sets only
+on_removed:                     # sets only
+  agent: reporter
+  function: alert_removed
+---
+```
 
 ## Configuration sources
 
@@ -236,5 +295,7 @@ Two-way agent communication:
 | `.agentone/agents/*/agent.md` | Agent definitions (model, tools, skills, settings) |
 | `.agentone/scripts/*/scripts.md` | Tool group definitions (name→file mapping) |
 | `.agentone/skills/skills.yaml` | Skill installation from repos |
+| `.agentone/streams/*.md` | Data flow stream definitions (append-only) |
+| `.agentone/sets/*.md` | Data flow ordered-set definitions (mutable) |
 | `server/models/settings.py` | `SettingsModel` — per-agent LLM settings |
 | `server/models/providers/*.py` | `ApiProvider` + `AiModel` + `ApiKey` — LLM provider config |

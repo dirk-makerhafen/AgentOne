@@ -18,6 +18,7 @@ class RuntimeAgentTest(AgentMdTestMixin, TestCase):
             "disallowed_cmds"
         )
         cls.sub_agent, cls.sub_av = cls.load_agent("subagents_test")
+        cls.so_agent, cls.so_av = cls.load_agent("session_override")
 
     @classmethod
     def tearDownClass(cls):
@@ -175,3 +176,36 @@ class RuntimeAgentTest(AgentMdTestMixin, TestCase):
     def test_subagent_names(self):
         agent = self._agent(self.sub_agent)
         self.assertIn("base", agent.subagentNames)
+
+    # ------------------------------------------------------------------
+    # Tools-only agent (session_override)
+    # ------------------------------------------------------------------
+
+    def test_tools_only_agent_allowed_tool_names(self):
+        agent = self._agent(self.so_agent)
+        names = agent.allowedToolNames
+        self.assertIn("read", names)
+        self.assertIn("write", names)
+        self.assertIn("delete", names)
+        self.assertIn("tree", names)
+
+    def test_tools_only_agent_has_no_commands(self):
+        agent = self._agent(self.so_agent)
+        self.assertEqual(agent.allowedCommandNames, [])
+
+    def test_tools_only_agent_has_no_tasks(self):
+        agent = self._agent(self.so_agent)
+        self.assertEqual(agent.allowedTaskNames, [])
+
+    def test_tools_only_agent_get_tool(self):
+        agent = self._agent(self.so_agent)
+        self.assertIsNotNone(agent.get_tool("read"))
+        self.assertIsNone(agent.get_tool("nonexistent"))
+
+    def test_tools_only_agent_get_command_returns_none(self):
+        agent = self._agent(self.so_agent)
+        self.assertIsNone(agent.get_command("ping"))
+
+    def test_tools_only_agent_get_task_returns_none(self):
+        agent = self._agent(self.so_agent)
+        self.assertIsNone(agent.get_task("core_task"))

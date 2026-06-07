@@ -19,6 +19,7 @@ class RuntimeSessionTest(AgentMdTestMixin, TestCase):
         cls.base_agent, cls.base_av = cls.load_agent("base")
         cls.disallowed_agent, cls.disallowed_av = cls.load_agent("disallowed")
         cls.cmds_agent, cls.cmds_av = cls.load_agent("disallowed_cmds")
+        cls.so_agent, cls.so_av = cls.load_agent("session_override")
 
     @classmethod
     def tearDownClass(cls):
@@ -101,3 +102,42 @@ class RuntimeSessionTest(AgentMdTestMixin, TestCase):
         )
         self.assertNotIn("core_task", session.allowedTaskNames)
         self.assertIsNone(session.get_task("core_task"))
+
+    # ------------------------------------------------------------------
+    # Tools-only agent (session_override) with session overrides
+    # ------------------------------------------------------------------
+
+    def test_tools_only_session_allowed_tools(self):
+        session = self._session(self.so_agent, self.so_av)
+        names = session.allowedToolNames
+        self.assertIn("read", names)
+        self.assertIn("write", names)
+        self.assertNotIn("nonexistent", names)
+
+    def test_tools_only_session_no_commands_or_tasks(self):
+        session = self._session(self.so_agent, self.so_av)
+        self.assertEqual(session.allowedCommandNames, [])
+        self.assertEqual(session.allowedTaskNames, [])
+
+    def test_tools_only_session_extra_disallowed(self):
+        settings = SettingsModel.objects.create(
+            disallowedToolNames=["delete"],
+        )
+        session = self._session(
+            self.so_agent, self.so_av,
+            session_settings=settings,
+        )
+        names = session.allowedToolNames
+        self.assertIn("read", names)
+        self.assertNotIn("delete", names)
+
+    def test_tools_only_session_get_tool_none_for_disallowed(self):
+        settings = SettingsModel.objects.create(
+            disallowedToolNames=["read"],
+        )
+        session = self._session(
+            self.so_agent, self.so_av,
+            session_settings=settings,
+        )
+        self.assertIsNone(session.get_tool("read"))
+        self.assertIsNotNone(session.get_tool("write"))

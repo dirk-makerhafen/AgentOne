@@ -34,8 +34,7 @@ models.Model
   ├── GenericContent                           # Content-addressed storage
   ├── Cronjob                                  # Scheduled cron jobs
   ├── HistoryLimitingRule                      # Tool usage limits
-  ├── NamedPipe                                # Inter-agent comms
-  ├── NamedPipeSubscription                    # Pipe consumer
+  ├── HistoryLimitingRule                      # Tool usage limits
   ├── Project                                  # Project grouping
   ├── SkillDefinition                          # Registered skill
   ├── SkillModel                               # Skill (no versioning)
@@ -273,6 +272,44 @@ File: `server/models/tasks/agent_task_run.py`
 
 ---
 
+## Data Collections
+
+### DataCollection
+
+File: `server/models/collections/data_collection.py`
+
+Unified model for both streams (append-only) and ordered sets (mutable). Each collection declares its own data-flow configuration.
+
+| Field | Type | Notes |
+|---|---|---|
+| `name` | `CharField(255, unique)` | Collection name |
+| `description` | `TextField` | Human-readable description |
+| `collection_type` | `CharField(10)` | `"stream"` or `"set"` |
+| `is_active` | `BooleanField(default=True)` | Inactive flows are skipped |
+| `sources` | `JSONField(list)` | Array of source definitions |
+| `processor` | `JSONField(dict)` | Agent+function that transforms items |
+| `on_removed` | `JSONField(dict)` | Handler for set removals |
+| `member_field` | `TextField` | Python eval expression for set member |
+| `score_field` | `TextField` | Python eval expression for set score |
+| `retroactive_on_source_change` | `IntegerField` | Max items to reprocess when sources change |
+| `max_reprocess` | `IntegerField` | Max items to reprocess on processor update |
+
+### CollectionItem
+
+File: `server/models/collections/collection_item.py`
+
+| Field | Type | Notes |
+|---|---|---|
+| `collection` | `FK(DataCollection, CASCADE)` | Parent collection |
+| `source_call` | `FK(AgentTaskCall, SET_NULL)` | The processor call that produced this item |
+| `member` | `CharField(1024)` | Unique ID within the collection |
+| `score` | `FloatField` | Ordering value (auto timestamp or user-defined) |
+| `value` | `JSONField(dict)` | Payload data |
+
+**Unique**: `(collection, member)` — enforces dedup for sets, no-op for streams (auto-hash member)
+
+---
+
 ## Messages
 
 ### Message
@@ -468,36 +505,6 @@ File: `server/models/skill_definition.py`
 | `requires_auth` | `BooleanField(default=False)` | Auth requirement |
 
 ---
-
-## Pipes
-
-### NamedPipe
-
-File: `server/models/pipe.py`
-
-| Field | Type | Notes |
-|---|---|---|
-| `name` | `CharField(255, unique)` | Pipe name |
-| `description` | `TextField` | |
-| `created_at` | `DateTimeField(auto_now_add)` | |
-
-### NamedPipeSubscription
-
-| Field | Type | Notes |
-|---|---|---|
-| `pipe` | `FK(NamedPipe, CASCADE)` | Bound pipe |
-| `consumer_task` | `FK(TaskDefinitionVersion, CASCADE)` | Consumer task |
-| `name` | `CharField(255)` | Subscription name |
-| `is_active` | `BooleanField(default=True)` | |
-| `arguments_template` | `JSONField(dict)` | Template args |
-| `agent` | `FK(AgentModel, SET_NULL)` | Target agent |
-| `session_mode` | `CharField(choices)` | new / existing |
-| `session_name` | `CharField(255)` | |
-
-**Unique**: `(pipe, consumer_task)`
-
----
-
 ## Other models
 
 ### GenericContent

@@ -27,7 +27,7 @@ class SidebarPanelChat(ModelView):
                 </span>
                 <span class="session-time">1w</span>
             </div>
-            <div class="session-meta">{{pyview.subject.messages.count()}} msgs · {{ pyview.session.aimodel.name }}</div>
+            <div class="session-meta">{{pyview.subject.messages.count()}} msgs · {% if  pyview.session.aimodel %} {{ pyview.session.aimodel.name }}{% else %}No Model{% endif %}</div>
         </div>
         <span class="session-attention-indicator session-state-indicator" aria-hidden="true"></span>
         <div class="session-actions">

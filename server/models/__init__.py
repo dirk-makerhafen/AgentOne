@@ -19,6 +19,6 @@ try:
     from .tasks.task_definition import TaskDefinition
     from .tasks.task_definition_version import TaskDefinitionVersion
     from .workspace import WorkspaceModel
-    from .pipe import NamedPipe, NamedPipeSubscription
+    from .collections import DataCollection, CollectionItem
 except Exception as e:
     print("Failed to import models:", e)

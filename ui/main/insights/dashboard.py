@@ -8,9 +8,9 @@ from django.db.models import Count
 from django.utils import timezone
 
 from server.models.agents.agent import AgentModel
+from server.models.collections import DataCollection
 from server.models.cron import Cronjob
 from server.models.message import Message
-from server.models.pipe import NamedPipe
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.lib.model_view import ModelView
@@ -190,7 +190,7 @@ class DashboardView(ModelView):
             {"label": "Agents",    "value": AgentModel.objects.count(),    "icon": METRIC_ICONS["agents"]},
             {"label": "Sessions",  "value": SessionModel.objects.count(),  "icon": METRIC_ICONS["sessions"]},
             {"label": "Task calls","value": AgentTaskCall.objects.count(), "icon": METRIC_ICONS["taskcalls"]},
-            {"label": "Pipes",     "value": NamedPipe.objects.count(),     "icon": METRIC_ICONS["pipes"]},
+            {"label": "Data flows","value": DataCollection.objects.count(), "icon": METRIC_ICONS["pipes"]},
             {"label": "Cron jobs", "value": Cronjob.objects.count(),       "icon": METRIC_ICONS["cron"]},
             {"label": "Messages",  "value": Message.objects.count(),       "icon": METRIC_ICONS["messages"]},
         ]

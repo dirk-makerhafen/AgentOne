@@ -111,11 +111,6 @@ class CronView(ModelView):
                         </select>
                     </div>
                     <div class="detail-form-row">
-                        <label for="ceditPipes">Pipe outputs</label>
-                        <input type="text" id="ceditPipes" value="{{ pyview._edit_data.pipe_names }}" onchange="pyview.setEditField('pipe_names', this.value)" placeholder="email.received, item.parsed">
-                        <div class="detail-form-hint">Comma-separated pipe names published after each run.</div>
-                    </div>
-                    <div class="detail-form-row">
                         <label for="ceditMessage">{% if pyview._edit_data.function_type %}Message (JSON){% else %}Message{% endif %}</label>
                         <textarea id="ceditMessage" rows="4" onchange="pyview.setEditField('message', this.value)">{{ pyview._edit_data.message }}</textarea>
                     </div>
@@ -198,18 +193,6 @@ class CronView(ModelView):
 
                     <div class="detail-card">
                         <div class="detail-card-title">Message</div>
-                        <div class="detail-row">
-                            <div class="detail-row-label">Pipe outputs</div>
-                            <div class="detail-row-value">
-                                {% if pyview.subject.pipe_names %}
-                                    {% for pname in pyview.subject.pipe_names %}
-                                    <span class="detail-badge">{{ pname }}</span>
-                                    {% endfor %}
-                                {% else %}
-                                    <span style="color:var(--muted)">&mdash;</span>
-                                {% endif %}
-                            </div>
-                        </div>
                     <div class="detail-prompt" style="white-space:pre-wrap;max-height:200px;overflow:auto">
                         {% if pyview.subject.message %}
                             {{ pyview.subject.message.content }}
@@ -314,7 +297,6 @@ class CronView(ModelView):
             "function_name": self.subject.function_name or "",
             "function": f"{self.subject.function_type}:{self.subject.function_name}" if self.subject.function_type else "",
             "message": m.content if m else "",
-            "pipe_names": ", ".join(self.subject.pipe_names or []),
         }
         self.update()
 
@@ -379,8 +361,6 @@ class CronView(ModelView):
         self.subject.function_type = d.get("function_type", "")
         self.subject.function_name = d.get("function_name", "")
         self.subject.message = message
-        raw_pipes = d.get("pipe_names", "").strip()
-        self.subject.pipe_names = [p.strip() for p in raw_pipes.split(",") if p.strip()] if raw_pipes else []
         self.subject.save()
 
         if new_name != old_name:

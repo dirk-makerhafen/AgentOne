@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from runtime.agents.agent import Agent
 from server.models.agents.agent import AgentModel
+from server.models.providers.ai_model import AiModel
 from ui.app import UiApp
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
@@ -32,7 +33,7 @@ class SidebarPanelAgent(ModelView):
                     </span>
                 </div>
                 <div class="profile-card-meta">
-                    {{ pyview.agent.aimodel.name }} · 
+                    {% if pyview.agent.aimodel %}{{ pyview.agent.aimodel.name }}{% else %}No Model{% endif %} · 
                     {{ pyview.agent.allowedSkills | length }} Skills,
                     {{ pyview.agent.allowedTools | length }} Tools, 
                     {{ pyview.agent.allowedTasks | length }} Tasks, 
@@ -45,9 +46,9 @@ class SidebarPanelAgent(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
         self.agent = Agent(subject)
-       
         
-    
+
+        
     def open_agent_details(self):
         self.root_view.main_panel.create_and_open_tab(AgentView, self.subject)
       

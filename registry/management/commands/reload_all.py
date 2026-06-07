@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_cron_manifest import load_cron_manifest
+from registry.loader.load_data_collection import load_data_collection_manifest
 from registry.loader.load_project_folder import load_project_folder
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
@@ -67,6 +68,21 @@ class Command(BaseCommand):
             for cron_md in sorted(crons_dir.glob("*.md")):
                 load_cron_manifest(cron_md, install_repo=global_install, seen_names=seen)
             Cronjob.objects.filter(parent_project__isnull=True, is_archived=False).exclude(name__in=seen).update(is_archived=True)
+
+        # Global streams (no parent)
+        streams_dir = agentone_path / "streams"
+        if streams_dir.is_dir():
+            self.stdout.write("Loading global streams...")
+            stream_seen: set[str] = set()
+            for stream_md in sorted(streams_dir.glob("*.md")):
+                load_data_collection_manifest(stream_md, seen_names=stream_seen)
+        # Global sets (no parent)
+        sets_dir = agentone_path / "sets"
+        if sets_dir.is_dir():
+            self.stdout.write("Loading global sets...")
+            set_seen: set[str] = set()
+            for set_md in sorted(sets_dir.glob("*.md")):
+                load_data_collection_manifest(set_md, seen_names=set_seen)
 
         # Projects
         projects_file = agentone_path / "projects.yaml"

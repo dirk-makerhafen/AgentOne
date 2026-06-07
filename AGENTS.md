@@ -5,6 +5,8 @@ Quick reference for developers working on AgentOne. See also:
 - [docs/architecture.md](docs/architecture.md) — system architecture, data flow, component interactions
 - [docs/development.md](docs/development.md) — setup, coding conventions, how-to guides
 - [docs/deployment.md](docs/deployment.md) — production deployment, supervisor, nginx
+- [docs/manifest-format.md](docs/manifest-format.md) — YAML manifest format (agents, scripts, cron, streams, sets)
+- [docs/models.md](docs/models.md) — model reference (all ~30 models including DataCollection)
 
 ## Directory ownership
 
@@ -17,7 +19,7 @@ Quick reference for developers working on AgentOne. See also:
 | `launcher/` | Launcher service for remote agent management |
 | `ui/` | Web UI (pyHtmlGui): views, sidebar, chat, settings, overlays |
 | `old/` | Dead legacy code — do not touch |
-| `.agentone/` | Active tool/agent config: YAML manifests, scripts, skills |
+| `.agentone/` | Active tool/agent config: YAML manifests, scripts, skills, streams, sets |
 
 ## Agent hierarchy
 
@@ -33,8 +35,9 @@ python3 manage.py runserver                    # dev server
 python3 -m celery -A config worker -l INFO      # worker
 python3 -m celery -A config beat -l INFO        # beat (required for tasks)
 python3 manage.py makemigrations && migrate     # DB schema
+python3 -m pytest server/tests/ -v --reuse-db   # server tests (184+)
 python3 -m pytest .agentone/scripts/ -v         # tool tests (73)
-python3 -m pylint config/ server/ registry/ tools/  # lint
+python3 -m pylint config/ server/ registry/     # lint
 python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 ```
 
@@ -49,3 +52,6 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - `agentone_public.py` at repo root is a flat re-export — not a module.
 - `old/` is dead code; `registry/task_decorators.py` has commented-out sections.
 - UI tools in `.agentone/scripts/` must return `(bool, dict)` and be registered in a `scripts.md` manifest.
+- Data flows (`.agentone/streams/*.md`, `.agentone/sets/*.md`) replaced legacy named-pipe system.
+- `_trigger_on_removed` in `tick_scheduler.py` (not reprocess_collection.py — it imports it) — the `source_calls` param must contain the AgentTaskCalls whose items were removed, not all source calls.
+- `_prev_collection_members` in `tick_scheduler.py` is a module-level dict — persists across tests in the same process, not thread-safe across Celery workers.
