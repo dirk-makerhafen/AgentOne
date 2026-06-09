@@ -8,15 +8,17 @@ import yaml
 from server.models.cron import Cronjob
 
 
-def cron_file_path(name: str) -> Path:
+def cron_file_path(name: str, project=None) -> Path:
     """Return the expected ``.agentone/cronjobs/<name>.md`` path."""
+    if project is not None and project.path:
+        return Path(project.path) / ".agentone" / "cronjobs" / f"{name}.md"
     from django.conf import settings
     return Path(settings.AGENTONE_ROOT) / "cronjobs" / f"{name}.md"
 
 
 def write_cron_file(cronjob: Cronjob) -> None:
     """Write a cron job's settings to ``.agentone/cronjobs/<name>.md``."""
-    path = cron_file_path(cronjob.name)
+    path = cron_file_path(cronjob.name, cronjob.parent_project)
     path.parent.mkdir(parents=True, exist_ok=True)
 
     frontmatter = {
@@ -39,16 +41,16 @@ def write_cron_file(cronjob: Cronjob) -> None:
         f.write("---\n")
 
 
-def delete_cron_file(name: str) -> None:
+def delete_cron_file(name: str, project=None) -> None:
     """Remove ``.agentone/cronjobs/<name>.md`` if it exists."""
-    path = cron_file_path(name)
+    path = cron_file_path(name, project)
     if path.exists():
         path.unlink()
 
 
-def rename_cron_file(old_name: str, new_name: str) -> None:
+def rename_cron_file(old_name: str, new_name: str, project=None) -> None:
     """Rename a cron file when the cron job is renamed."""
-    old_path = cron_file_path(old_name)
-    new_path = cron_file_path(new_name)
+    old_path = cron_file_path(old_name, project)
+    new_path = cron_file_path(new_name, project)
     if old_path.exists():
         old_path.rename(new_path)

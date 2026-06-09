@@ -273,7 +273,7 @@ class CronView(ModelView):
         self.update()
 
     def deleteCron(self) -> None:
-        delete_cron_file(self.subject.name)
+        delete_cron_file(self.subject.name, self.subject.parent_project)
         self.subject.delete()
         self._close_tab()
 
@@ -364,7 +364,7 @@ class CronView(ModelView):
         self.subject.save()
 
         if new_name != old_name:
-            rename_cron_file(old_name, new_name)
+            rename_cron_file(old_name, new_name, self.subject.parent_project)
         write_cron_file(self.subject)
 
         self._editing = False

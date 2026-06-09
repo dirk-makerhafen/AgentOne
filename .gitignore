@@ -36,3 +36,5 @@ td.py
 td1.py
 
 .shadowgit
+cert.pem
+key.pem
