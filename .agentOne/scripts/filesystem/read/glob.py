@@ -6,7 +6,7 @@ import traceback
 from typing import Optional
 
 
-def glob(pattern: str, path: str) -> tuple[bool, dict]:
+def glob(pattern: str, path: str | None = None) -> tuple[bool, dict]:
     '''
     Fast file pattern matching tool that works with any codebase size.
 
@@ -36,6 +36,8 @@ def glob(pattern: str, path: str) -> tuple[bool, dict]:
         if not pattern:
             return (False, {'status': 'error', 'message': 'Pattern not provided'})
 
+        if path is None:
+            path = os.getcwd()
         search_pattern = os.path.join(path, pattern)
         matches = sorted(glob_module.glob(search_pattern, recursive=True), key=os.path.getmtime)
 

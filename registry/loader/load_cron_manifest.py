@@ -46,7 +46,6 @@ def load_cron_manifest(
     session_name = manifest.get("session_name", "")
     function_type = manifest.get("function_type", "")
     function_name = manifest.get("function_name", "")
-    pipe_names = manifest.get("pipe_names", []) or []
     is_active = manifest.get("is_active", True)
     workspace_name = manifest.get("workspace", "")
     message_text = manifest.get("message", "")
@@ -97,7 +96,6 @@ def load_cron_manifest(
             "session_name": session_name,
             "function_type": function_type,
             "function_name": function_name,
-            "pipe_names": pipe_names,
             "message": message,
             "next_run_at": next_run_at,
         },
@@ -113,7 +111,6 @@ def load_cron_manifest(
         cronjob.session_name = session_name
         cronjob.function_type = function_type
         cronjob.function_name = function_name
-        cronjob.pipe_names = pipe_names
         cronjob.message = message
         cronjob.next_run_at = next_run_at
         cronjob.save()

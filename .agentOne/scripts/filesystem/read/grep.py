@@ -10,7 +10,7 @@ from typing import Optional
 
 def grep(
     pattern: str,
-    path: str,
+    path: str | None = None,
     include: Optional[str] = None,
 ) -> tuple[bool, dict]:
     '''
@@ -47,6 +47,8 @@ def grep(
         if not pattern:
             return (False, {'status': 'error', 'message': 'Pattern not provided'})
 
+        if path is None:
+            path = os.getcwd()
         search_dir = Path(path)
 
         if not search_dir.exists():

@@ -61,8 +61,6 @@ class TaskInstance(BaseModel):
     is_approved = models.BooleanField(default=None, null=True)
     retry_count = models.IntegerField(default=0)
 
-    pipe_output_names = models.JSONField(default=list, blank=True)
-
     child_instances = SortedManyToManyField(
         "self", symmetrical=False, blank=True, related_name="parent_instances"
     )
@@ -239,7 +237,6 @@ class TaskInstance(BaseModel):
         retry_delay: Any = None,
         retry_requires_approval: Any = None,
         priority: Any = None,
-        pipe_output_names: list[str] | None = None,
         cronjob: Any = None,
     ) -> AgentTaskCall:
         """Create an AgentTaskCall for this task instance.
@@ -263,7 +260,6 @@ class TaskInstance(BaseModel):
             max_retries=max_retries,
             retry_delay=retry_delay,
             retry_requires_approval=retry_requires_approval,
-            pipe_output_names=pipe_output_names,
             cronjob=cronjob,
         )
 

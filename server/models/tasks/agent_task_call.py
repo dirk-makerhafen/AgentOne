@@ -60,8 +60,6 @@ class AgentTaskCall(BaseModel):
     retry_count = models.IntegerField(default=0)
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
 
-    pipe_output_names = models.JSONField(default=list, blank=True)
-
     cronjob = models.ForeignKey(
         "server.Cronjob", blank=True, on_delete=models.SET_NULL,
         related_name="related_task_calls", default=None, null=True,
@@ -98,7 +96,6 @@ class AgentTaskCall(BaseModel):
         retry_delay: Any = None,
         retry_requires_approval: Any = None,
         priority: int | None = None,
-        pipe_output_names: list[str] | None = None,
         cronjob: Any = None,
     ) -> AgentTaskCall:
         """Create an AgentTaskCall for the given task instance.
@@ -133,13 +130,6 @@ class AgentTaskCall(BaseModel):
             arguments=next_input
         )
 
-        effective_pipes = list(
-            task_instance.task_definition_version.pipe_output_names or []
-        )
-        effective_pipes = list(set(effective_pipes + (task_instance.pipe_output_names or [])))
-        if pipe_output_names:
-            effective_pipes = list(set(effective_pipes + pipe_output_names))
-
         taskcall = AgentTaskCall.objects.create(
             task_instance=task_instance,
             task_definition=task_instance.task_definition_version.task_definition,
@@ -161,7 +151,6 @@ class AgentTaskCall(BaseModel):
             retry_requires_approval=retry_requires_approval if retry_requires_approval else task_instance.retry_requires_approval,
             is_approved=None,
             parent_taskrun=parent_run,
-            pipe_output_names=effective_pipes,
             cronjob=cronjob,
         )
         taskcall.taskcall_before_run_hooks.set(before_hook_calls)

@@ -210,28 +210,26 @@ Each cron job shows:
 
 ---
 
-## Named pipes
+## Data flows (streams &amp; sets)
 
-Pipes enable inter-agent communication.
+Data flows replace the legacy named-pipe system. A flow is a `DataCollection`
+that collects outputs from agent task calls (via a *query* source) and optionally
+chains them through downstream flows (via *stream* or *set* sources).
 
-### Viewing pipes
+**Streams** are append-only logs — every matching call produces an item.
+**Ordered sets** are mutable collections with deduplication — if a call produces
+the same *member* as an existing item, the item is updated rather than duplicated.
 
-1. Click the **Pipes** icon in the rail
-2. The sidebar lists all named pipes, each showing its subscription count
+### Viewing data flows
 
-### Creating a pipe
+1. Click the **Data flows** icon in the rail
+2. The sidebar lists all data flows, showing type (Stream / Ordered Set) and item count
 
-1. Click **+ New** in the pipes sidebar
-2. Enter a name and description
-3. Add subscriptions to define consumers
+### Creating a data flow
 
-### Subscriptions
-
-Each pipe subscription defines:
-- **Consumer task** — the task to run when the pipe receives data
-- **Agent** — target agent for execution
-- **Session mode** — new or existing session
-- **Arguments template** — JSON template for arguments
+1. Click **+ New** in the data flows sidebar
+2. Enter a name and configure sources and processor
+3. For sets, you can also configure a removal handler (`on_removed`)
 
 ---
 

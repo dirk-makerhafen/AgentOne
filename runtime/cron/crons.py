@@ -52,7 +52,6 @@ class Cronjobs:
         message_content: str = "",
         function_type: str = "",
         function_name: str = "",
-        pipe_names: list | None = None,
         workspace_id: int | None = None,
     ) -> Cronjob:
         """Create a new cron job with a GenericContent for the message."""
@@ -70,7 +69,6 @@ class Cronjobs:
             message=message,
             function_type=function_type,
             function_name=function_name,
-            pipe_names=pipe_names or [],
             workspace_id=workspace_id,
             next_run_at=self._compute_next_run(schedule),
         )

@@ -49,7 +49,7 @@ METRIC_ICONS = {
     "agents": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
     "sessions": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
     "taskcalls": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>',
-    "pipes": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"></path><path d="M4 12h16"></path><path d="M12 4v16"></path></svg>',
+    "dataflows": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"></path><path d="M4 12h16"></path><path d="M12 4v16"></path></svg>',
     "cron": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
     "messages": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>',
 }
@@ -190,7 +190,7 @@ class DashboardView(ModelView):
             {"label": "Agents",    "value": AgentModel.objects.count(),    "icon": METRIC_ICONS["agents"]},
             {"label": "Sessions",  "value": SessionModel.objects.count(),  "icon": METRIC_ICONS["sessions"]},
             {"label": "Task calls","value": AgentTaskCall.objects.count(), "icon": METRIC_ICONS["taskcalls"]},
-            {"label": "Data flows","value": DataCollection.objects.count(), "icon": METRIC_ICONS["pipes"]},
+            {"label": "Data flows","value": DataCollection.objects.count(), "icon": METRIC_ICONS["dataflows"]},
             {"label": "Cron jobs", "value": Cronjob.objects.count(),       "icon": METRIC_ICONS["cron"]},
             {"label": "Messages",  "value": Message.objects.count(),       "icon": METRIC_ICONS["messages"]},
         ]

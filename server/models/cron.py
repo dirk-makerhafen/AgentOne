@@ -58,9 +58,6 @@ class Cronjob(models.Model):
     function_type: str = models.CharField(max_length=20, choices=FUNCTION_TYPE_CHOICES, blank=True, default="")
     function_name: str = models.CharField(max_length=255, blank=True, default="", help_text="Name of the task/tool/command to execute.")
 
-    # Named pipe output
-    pipe_names: list = models.JSONField(default=list, blank=True, help_text="Published to these named pipes after each run.")
-
     # Tracking
     last_run_at: datetime | None = models.DateTimeField(null=True, blank=True, default=None)
     next_run_at: datetime | None = models.DateTimeField(null=True, blank=True, default=None)

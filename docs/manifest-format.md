@@ -308,7 +308,7 @@ session_name: ""                    # session name for existing mode
 message: "Provide a summary"        # message text (stored as GenericContent)
 function_type: ""                   # task | tool | command | "" (send message)
 function_name: ""
-pipe_names: []                      # published to these named pipes after run
+# pipe_names: []                   # (removed — use DataCollection streams/sets instead)
 ---
 ```
 
@@ -476,7 +476,7 @@ When the project is loaded (via `reload_all`), each workspace is created or upda
 ### Key Rules
 
 1. **`scripts.md`** is the single source of truth — no `@tool()`/`@task()` decorators
-2. Manifests are pure YAML with opening `---` but no closing `---`
+2. Manifests use `---` both to open **and** close the frontmatter block
 3. Python files are loaded via `importlib`, never `exec()`
 4. Version identifiers are **git tree SHAs** from install repos at ``~/.agentone/install/`` (one per scope: global + per-project). Tree SHAs are deterministic — same content always produces the same hash.
 5. Versioned models (`AgentVersionModel`, `TaskDefinitionVersion`, etc.) are immutable — `save()` raises `ValidationError` if `pk` exists

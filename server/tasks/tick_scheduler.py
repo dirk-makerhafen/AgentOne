@@ -567,12 +567,6 @@ def _propagate_from_collections() -> None:
                     break
 
 
-def _dispatch_pipe_subscriptions() -> None:
-    """Deprecated — pipe dispatch is now handled by _dispatch_data_flows
-    and _propagate_from_collections."""
-    pass
-
-
 def _cleanup_stale_runtime_folders() -> None:
     """Remove runtime version folders (``~/.agentone/runtime/<pk>/``) whose
     ``.last_used`` is older than the stale threshold.

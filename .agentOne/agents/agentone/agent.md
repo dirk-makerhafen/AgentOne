@@ -6,6 +6,7 @@ extends: baseagent
 maxTurns: 2
 maxUnattendedTurns: 2
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*]
+skills: [+, agentone-admin]
 subagents: 
     - name: AgentOne
       create: both

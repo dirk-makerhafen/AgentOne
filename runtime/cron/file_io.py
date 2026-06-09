@@ -31,7 +31,6 @@ def write_cron_file(cronjob: Cronjob) -> None:
         "message": cronjob.message.content if cronjob.message else "",
         "function_type": cronjob.function_type or "",
         "function_name": cronjob.function_name or "",
-        "pipe_names": cronjob.pipe_names or [],
     }
 
     with open(path, "w") as f:

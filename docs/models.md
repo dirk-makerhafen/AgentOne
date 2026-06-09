@@ -584,7 +584,7 @@ File: `server/models/cron.py`
 | `message` | `FK(GenericContent, SET_DEFAULT)` | Message template |
 | `function_type` | `CharField(choices)` | |
 | `function_name` | `CharField(255)` | |
-| `pipe_names` | `JSONField(list)` | Pipe outputs |
+| ~~`pipe_names`~~ | ~~`JSONField(list)`~~ | ~~Pipe outputs (removed)~~ |
 | `last_run_at` | `DateTimeField` | |
 | `next_run_at` | `DateTimeField` | |
 | `last_status` | `CharField(50)` | |

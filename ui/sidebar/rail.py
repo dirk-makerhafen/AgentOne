@@ -23,7 +23,7 @@ class RailView(ModelView):
             <div class="rail-button-text">Cron</div>
         </button>
 
-        <button class="rail-btn nav-tab{% if pyview.parent.sidebar.selected_panel_name == 'pipes' %} active{% endif %}" data-panel="pipes" onclick="pyview.parent.sidebar.switchPanel('pipes')" title="Data flows (streams &amp; ordered sets)" data-i18n-title="tab_pipes" aria-label="Data flows">
+        <button class="rail-btn nav-tab{% if pyview.parent.sidebar.selected_panel_name == 'dataflows' %} active{% endif %}" data-panel="dataflows" onclick="pyview.parent.sidebar.switchPanel('dataflows')" title="Data flows (streams &amp; ordered sets)" data-i18n-title="tab_dataflows" aria-label="Data flows">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
             <div class="rail-button-text">Data flows</div>
         </button>
