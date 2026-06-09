@@ -61,6 +61,11 @@ INSTALLED_APPS = (
     'django_celery_results',
     'channels',
     'django_celery_beat',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'drf_spectacular',
+    'django_filters',
+    'api',
 )
 
 CELERY_RESULT_BACKEND = REDIS_URL
@@ -140,4 +145,71 @@ CACHES = {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': REDIS_URL, # Assumes Redis is running on localhost:6379
     }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.StandardPagination',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
+    'PAGE_SIZE': 50,
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'AgentOne API',
+    'DESCRIPTION': 'REST API for AgentOne agent orchestration framework',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_SETTINGS': {
+        'persistAuthorization': True,
+    },
+    'SECURITY': [
+        {'BearerAuth': []},
+        {'SessionAuth': []},
+    ],
+    'TAGS': [
+        {'name': 'auth', 'description': 'JWT token authentication'},
+        {'name': 'agents', 'description': 'Agent management and resolved capabilities'},
+        {'name': 'sessions', 'description': 'Session management and task execution'},
+        {'name': 'queries', 'description': 'Query history (read-only)'},
+        {'name': 'collections', 'description': 'Data flow collections (streams and sets)'},
+        {'name': 'cron', 'description': 'Cron job schedules'},
+        {'name': 'providers', 'description': 'AI providers (read-only)'},
+        {'name': 'models', 'description': 'AI models (read-only)'},
+        {'name': 'skills', 'description': 'Skill definitions (read-only)'},
+        {'name': 'projects', 'description': 'Project folders'},
+        {'name': 'systems', 'description': 'Registered client systems'},
+        {'name': 'workspaces', 'description': 'Workspace directories'},
+        {'name': 'task-calls', 'description': 'Task call lifecycle (read-only)'},
+        {'name': 'task-runs', 'description': 'Task run attempts (read-only)'},
+        {'name': 'health', 'description': 'System health check'},
+    ],
+    'ENUM_NAME_OVERRIDES': {
+        'TaskCallStatusEnum': ['server.models.enums.task_enums.TaskCallStatus'],
+        'TaskCallStatusDetailEnum': ['server.models.enums.task_enums.TaskCallStatusDetail'],
+        'TaskRunStatusEnum': ['server.models.enums.task_enums.TaskRunStatus'],
+        'QueryStatusEnum': ['server.models.queries.query.QueryStatus'],
+        'ResponseStatusEnum': ['server.models.queries.response.ResponseStatus'],
+    },
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }

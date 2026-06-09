@@ -88,6 +88,7 @@ urlpatterns = [
     path('', ui, name='ui'),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('api/v1/', include('api.urls')),
     path('view/<instance_id>/<method>', agent_webapi_view    , name='agent_webapi_view'),
     path('call/<instance_id>/<method>', agent_webapi_call    , name='agent_webapi_call'),
     path('result/<call_id>'           , agent_webapi_response, name='agent_webapi_response'),

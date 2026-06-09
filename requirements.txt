@@ -7,6 +7,9 @@ django-celery-beat
 django-celery-results
 django-dirtyfields
 djangorestframework
+djangorestframework-simplejwt
+drf-spectacular
+django-filter
 diff-match-patch
 Fabric
 Jinja2
