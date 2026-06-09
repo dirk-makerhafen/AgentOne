@@ -20,17 +20,15 @@ AgentOne is a Django-based autonomous agent framework with real-time Web UI, sch
 ## Quick start
 
 ```bash
-# Prerequisites: Python 3.10+, MySQL/MariaDB, Redis
+# Prerequisites: Python 3.10+, Redis
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# Database setup
-python3 manage.py migrate
+# Interactive setup — database, Redis, TLS certificate
+python3 manage.py server setup
 
-# Run (three terminals)
-python3 manage.py runserver
-python3 -m celery -A config worker -l INFO
-python3 -m celery -A config beat -l INFO
+# Run (starts Daphne + Celery worker + Celery beat)
+python3 manage.py server run
 ```
 
 Open http://localhost:8000 to see the UI.
@@ -60,24 +58,22 @@ Open http://localhost:8000 to see the UI.
 └───────┼────────────┼──────────────┼───────────────┼──────────┘
         │            │              │               │
 ┌───────▼────────────▼──────────────▼───────────────▼──────────┐
-│  Django ORM / MySQL                                           │
-│  ~30 models: Agent, Session, Task, Message, Skill, Pipe, etc │
+│  Django ORM / SQLite or MySQL                                 │
+│  ~30 models: Agent, Session, Task, Message, Skill, etc       │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ## Documentation
 
 | Document | Description |
-|---|---|
+|---|---|---|
 | `AGENTS.md` | Quick reference: stack, directory ownership, key commands, constraints |
 | `docs/architecture.md` | Deep-dive into architecture, data flow, component interactions |
-| `docs/development.md` | Developer's guide: setup, adding models/tools/agents/UI, testing |
+| `docs/development.md` | Developer's guide: setup, adding models/tools/agents/UI, testing, REST API |
 | `docs/deployment.md` | Production deployment: prerequisites, services, nginx, TLS |
 | `docs/core-mechanisms.md` | Task dispatch pipeline, auto-await, pyHtmlGui renderer internals |
-| `docs/manifest-format.md` | YAML manifest format reference (agent, scripts, skill) |
-| `docs/agent.md` | Agent manifest field reference |
-| `docs/tool.md` | Tool manifest format |
-| `docs/skills.yaml.md` | Skill installation reference |
+| `docs/manifest-format.md` | YAML manifest format reference (agent, scripts, cron, streams, sets, projects) |
+| `docs/models.md` | Model reference (~30 models including DataCollection) |
 | `ui/README.md` | UI directory structure and component reference |
 
 ## Project layout
@@ -96,8 +92,7 @@ docs/           All documentation
 ## Requirements
 
 - Python 3.10+
-- MySQL 8+ (or MariaDB)
-- Redis 6+
-- Celery 5+
+- Redis 6+ (cache, channels, Celery broker)
+- MySQL 8+ optional (SQLite works for development)
 
 See `requirements.txt` for Python package dependencies.

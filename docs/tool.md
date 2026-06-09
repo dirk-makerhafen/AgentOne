@@ -1,27 +1,18 @@
----
+# Tools
+
+Tools are LLM-callable functions declared in `scripts.md` manifests. They follow the same format as tasks and commands.
+
+## Quick reference
+
+```yaml
 tools:
   - name: read
     file: filesystem.py
     function: read
+    bound: True
+    requires_approval: false
+```
 
-  - name: write
-    file: filesystem.py
-    function: write
+## Full documentation
 
-  - name: my-binary-tool
-    type: shell
-    command: ./bin/my-tool {path}
-    description: "Process a file through a custom binary"
-    parameters:
-      path:
-        type: string
-        description: "Path to the file to process"
-
-  - name: remote-api
-    type: shell
-    command: curl -X POST https://api.example.com/process -d '{input}'
-    description: "Call external API"
-    parameters:
-      input:
-        type: string
-        description: "Input data"
+See [docs/manifest-format.md](manifest-format.md) for the complete manifest format reference, including tools, tasks, commands, chains, groups, maps, and scripts.

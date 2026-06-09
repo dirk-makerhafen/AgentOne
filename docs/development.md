@@ -12,11 +12,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Configuration wizard — asks about DB type (SQLite/MySQL),
-# Redis URL, generates SECRET_KEY and TLS certificate
+# Redis URL, generates SECRET_KEY and TLS certificate,
+# runs migrations, and optionally creates a superuser
 python3 manage.py server setup
-
-# Apply database migrations
-python3 manage.py migrate
 
 # Run (starts Daphne + Celery worker + Celery beat)
 python3 manage.py server run
@@ -46,6 +44,30 @@ Key settings you can override in `settings_local.py`:
 | `LISTEN_PORT` | `8001` | Daphne TLS port |
 
 No secrets are stored in version control — `settings_local.py` is gitignored.
+
+### Setup wizard reference
+
+`python3 manage.py server setup` walks through configuration interactively:
+
+| Prompt | Default | Notes |
+|---|---|---|
+| **Database backend** | SQLite (1) | Choose 1 for SQLite, 2 for MySQL |
+| SQLite database path | `<project>/db.sqlite3` | Only asked for SQLite |
+| MySQL host | `localhost` | Only asked for MySQL |
+| MySQL port | `3306` | |
+| Database name | `AgentOne_v3` | |
+| MySQL user | *(blank for socket auth)* | Leave empty to omit USER/PASSWORD |
+| MySQL password | *(blank for no password)* | Only asked if user is non-empty |
+| **Redis URL** | `redis://localhost:6379/1` | Cache, channels, Celery broker |
+| **HTTP listen address** | `0.0.0.0` | Daphne bind address |
+| **HTTP listen port** | `8001` | Daphne TLS port |
+| **Generate TLS cert** | Yes | Creates `cert.pem` + `key.pem` (self-signed) |
+| **Create superuser** | Yes | Only shown if no superuser exists |
+| Admin username | `admin` | |
+| Admin email | `admin@localhost` | |
+| Admin password | *(blank for random)* | Random 16-char token printed if left empty |
+
+On completion the wizard: writes `config/settings_local.py`, runs `migrate`, and creates the superuser (if requested). The server is then ready with `python3 manage.py server run`.
 
 ## Code organization
 
@@ -86,7 +108,6 @@ runtime/            Execution runtime
   rate_limiter.py   3-tier rate limiter (provider→model→apikey)
   runtime_folder.py Versioned file extraction from git trees
   project/          Project runtime wrapper
-  pipe/             Pipe runtime wrapper
   skill/            Skill runtime wrapper
   workspace/        Workspace runtime wrapper
   cron/             Cron runtime wrapper
@@ -504,13 +525,10 @@ python3 -m pytest api/tests/test_agents.py -v
 # With schema validation
 python3 -m pytest api/tests/test_schema.py -v
 ```
-
-Now continuing with test commands for Django server tests:
-
 ## Running tests
 
 ```bash
-# Tool tests (73 total)
+# Tool tests (75 total)
 python3 -m pytest .agentone/scripts/ -v
 
 # Django tests (may require MySQL)

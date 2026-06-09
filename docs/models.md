@@ -1,6 +1,6 @@
 # Models reference
 
-All 28+ model classes, organized by domain.
+All ~30 model classes, organized by domain.
 
 ## Inheritance structure
 
@@ -34,10 +34,11 @@ models.Model
   ├── GenericContent                           # Content-addressed storage
   ├── Cronjob                                  # Scheduled cron jobs
   ├── HistoryLimitingRule                      # Tool usage limits
-  ├── HistoryLimitingRule                      # Tool usage limits
   ├── Project                                  # Project grouping
   ├── SkillDefinition                          # Registered skill
   ├── SkillModel                               # Skill (no versioning)
+  ├── DataCollection                           # Stream / ordered set
+  ├── CollectionItem                           # Data flow item
   └── WorkspaceModel                           # Workspace
 ```
 
@@ -199,7 +200,6 @@ File: `server/models/tasks/task_definition_version.py`
 | `function_name` | `CharField(255)` | Python function name |
 | `path` | `CharField(1024)` | File path to script |
 | `commit` | `CharField(1024)` | Git commit hash |
-| `pipe_output_names` | `JSONField(list)` | Named pipe outputs |
 | `child_tasks` | `SortedManyToMany(self)` | Sub-tasks for CHAIN/GROUP |
 
 Plus execution constraints: `time_limit`, `max_subtask_errors`, `max_retries`, `retry_delay`, `priority`, etc.

@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Python 3.10+
-- MySQL 8+ (or MariaDB 10.5+)
+- MySQL 8+ (or MariaDB 10.5+) — optional, SQLite works for development
 - Redis 6+
 - Supervisor (recommended) or systemd
 - Nginx (recommended as reverse proxy)
@@ -21,17 +21,21 @@ FLUSH PRIVILEGES;
 
 ### 2. Application configuration
 
-Copy and edit local settings:
+Run the setup wizard to generate a production configuration:
 
 ```bash
-cp config/settings_local.example.py config/settings_local.py  # if exists
-# or edit config/settings.py directly for production values
+python3 manage.py server setup
 ```
 
-Key settings to configure:
+Or create the config file manually:
+
+```bash
+cp config/settings_local.example.py config/settings_local.py
+```
+
+Key settings in `config/settings_local.py`:
 
 ```python
-# config/settings.py or settings_local.py
 SECRET_KEY = "<generate-a-random-secret-key>"
 DEBUG = False
 ALLOWED_HOSTS = ["your-domain.com"]
@@ -70,34 +74,16 @@ location /static/ {
 Install supervisor and create config files:
 
 ```ini
-# /etc/supervisor/conf.d/agentone-web.conf
-[program:agentone-web]
-command=/path/to/agentone/venv/bin/daphne -b 127.0.0.1 -p 8001 config.asgi:application
+# /etc/supervisor/conf.d/agentone.conf
+[program:agentone-server]
+command=/path/to/agentone/venv/bin/python3 manage.py server run
 directory=/path/to/agentone
 user=www-data
 autostart=true
 autorestart=true
-stdout_logfile=/var/log/agentone/web.log
-stderr_logfile=/var/log/agentone/web.err
+stdout_logfile=/var/log/agentone/server.log
+stderr_logfile=/var/log/agentone/server.err
 environment=PATH="/path/to/agentone/venv/bin"
-
-[program:agentone-worker]
-command=/path/to/agentone/venv/bin/celery -A config worker -l INFO
-directory=/path/to/agentone
-user=www-data
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/agentone/worker.log
-stderr_logfile=/var/log/agentone/worker.err
-
-[program:agentone-beat]
-command=/path/to/agentone/venv/bin/celery -A config beat -l INFO
-directory=/path/to/agentone
-user=www-data
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/agentone/beat.log
-stderr_logfile=/var/log/agentone/beat.err
 ```
 
 Reload supervisor:
@@ -105,7 +91,7 @@ Reload supervisor:
 ```bash
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl start agentone-web agentone-worker agentone-beat
+sudo supervisorctl start agentone-server
 ```
 
 ### 5. Nginx reverse proxy
@@ -180,10 +166,10 @@ maxmemory 512mb
 maxmemory-policy allkeys-lru
 ```
 
-If you set a Redis password, update `config/settings.py`:
+If you set a Redis password, update `config/settings_local.py`:
 
 ```python
-CACHES["default"]["LOCATION"] = "redis://:<password>@localhost:6379/1"
+REDIS_URL = "redis://:<password>@localhost:6379/1"
 ```
 
 ## Celery
@@ -195,7 +181,8 @@ Beat scheduler schedule:
 | `tasks.tick_scheduler` | 5 seconds | Advance task calls and runs through state machine |
 | `poll_remote_executors_for_heartbeat` | 120 seconds | Check remote executor health |
 
-For production, consider using `-O fair` worker flag to prevent long tasks from starving short ones:
+For production, consider using `-O fair` worker flag to prevent long tasks from starving short ones.
+If running workers separately (not via `manage.py server run`):
 
 ```ini
 [program:agentone-worker]
@@ -212,13 +199,16 @@ command=/path/to/agentone/venv/bin/celery -A config worker -l INFO -O fair
 ## Backup
 
 ```bash
-# Database
+# MySQL
 mysqldump -u agentone -p AgentOne_v3 > backup_$(date +%Y%m%d).sql
+
+# SQLite (just copy the file)
+cp db.sqlite3 backup_$(date +%Y%m%d).sqlite3
 
 # Runtime data
 tar czf runtime_backup_$(date +%Y%m%d).tar.gz ~/.agentone/runtime/
 
-# Local settings (if any)
+# Local configuration
 cp config/settings_local.py config/settings_local.py.backup
 ```
 

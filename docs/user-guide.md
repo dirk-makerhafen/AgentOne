@@ -29,7 +29,7 @@ The interface has four main zones:
 
 | Zone | Purpose |
 |---|---|
-| **Rail** (left icon strip) | Switch between sidebar panels: Chats, Cron, Pipes, Agents, Projects, Workspaces, Skills, Memory, Kanban, Todos, Insights, Logs, Settings |
+| **Rail** (left icon strip) | Switch between sidebar panels: Chats, Cron, Data Flows, Agents, Projects, Workspaces, Skills, Memory, Kanban, Todos, Insights, Logs, Settings |
 | **Sidebar** | Lists items for the selected panel: sessions, agents, skills, cron jobs, etc. |
 | **Main panel** | Primary workspace — opens tabs for chatting, editing settings, viewing agent details, etc. |
 | **Right panel** | Contextual details about the active selection: session info, task calls, workspace files, subagents |
@@ -199,7 +199,6 @@ Schedule automated tasks for agents.
    - **Agent** — target agent
    - **Session mode** — `new` (create a fresh session each run) or `existing`
    - **Message** — the message to send to the agent
-   - **Pipe names** — optional pipe outputs to trigger
 
 ### Job status
 
@@ -228,8 +227,66 @@ the same *member* as an existing item, the item is updated rather than duplicate
 ### Creating a data flow
 
 1. Click **+ New** in the data flows sidebar
-2. Enter a name and configure sources and processor
-3. For sets, you can also configure a removal handler (`on_removed`)
+2. Give it a **Name** and select the **Type** (Stream or Ordered Set)
+3. Configure **Sources** — see below
+4. Configure **Processor** — the agent and function that transforms incoming data into items
+5. For ordered sets: configure **Member/Score fields** and optional **On-removed handler**
+6. Set **Reprocess** limits if desired
+
+### Source configuration
+
+Each flow can have multiple sources. Click **Add source** to add one, then choose the type:
+
+**Query source** — matches completed `AgentTaskCall` records:
+
+| Field | Description |
+|---|---|
+| Project | Filter by project (optional) |
+| Agent | Agent name(s) — one or more, glob patterns supported |
+| Function | Task function name(s) — one or more, glob patterns supported |
+| Session | Session name(s) — one or more (optional) |
+
+**Stream source** — sources items from another stream by name.
+
+**Set source** — sources items from another ordered set by name.
+
+Multi-value fields (agent, function, session) use tag chips — type or select from the dropdown to add values, click the ✕ on a chip to remove. The dropdown hides already-selected options.
+
+### Processor configuration
+
+| Field | Description |
+|---|---|
+| Agent | The agent whose task will process incoming data |
+| Function | The task function to run — filtered to show only tasks available on the selected agent |
+| Session | Optional session name template (`{source_agent.name}` is substituted) |
+
+Each matching source call triggers the processor function with the call's result as input. The processor's return value becomes the collection item.
+
+### Ordered set fields
+
+Shown only when **Type = Ordered Set**:
+
+| Field | Description |
+|---|---|
+| Member field | Python expression to extract the dedup key (e.g., `result.id`) |
+| Score field | Python expression for the ordering score (e.g., `result.priority`) |
+| On-removed agent | Agent for the removal handler task |
+| On-removed function | Task function to fire when an item is removed from the set |
+
+### Reprocess settings
+
+| Field | Description |
+|---|---|
+| Retroactive on source change | Max items to reprocess when source filters are edited (0 = off) |
+| Max reprocess | Max items to reprocess when the processor is updated (0 = off) |
+
+### Derived flows
+
+In the data flow detail view, a **Derived flows** card lists any flows that source from this one (via stream or set source). This makes it easy to see the cascade: changing a source flow affects everything downstream.
+
+### Recent items
+
+The detail view also shows the most recent items in the flow (caller, member, score, value, and timestamp) for quick inspection.
 
 ---
 
@@ -363,7 +420,7 @@ The sidebar and right panel can be resized by dragging their edges:
 Agent definitions are loaded from `.agentone/agents/` directory. Ensure:
 - The manifest files exist with valid YAML frontmatter
 - The loader has been run (save an agent in the admin or restart the server)
-- MySQL/Redis are accessible
+- The database and Redis are accessible
 
 ### Settings changes have no effect
 

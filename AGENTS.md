@@ -31,11 +31,11 @@ Agent definitions use YAML frontmatter in `.md` files.
 ## Setup
 
 ```bash
-# Interactive setup — asks about DB type (SQLite/MySQL), Redis, TLS certs
+# Interactive setup — asks about DB type (SQLite/MySQL), Redis, TLS certs,
+# runs migrations, and optionally creates a superuser
 python3 manage.py server setup
 
-# Then apply migrations and start the server
-python3 manage.py migrate
+# Start the server (Daphne + Celery worker + Celery beat)
 python3 manage.py server run
 ```
 
@@ -48,9 +48,9 @@ python3 manage.py runserver                     # dev server only (no Celery)
 python3 -m celery -A config worker -l INFO      # worker
 python3 -m celery -A config beat -l INFO        # beat (required for tasks)
 python3 manage.py makemigrations && migrate     # DB schema
-python3 -m pytest server/tests/ -v --reuse-db   # server tests (184+)
+python3 -m pytest server/tests/ -v --reuse-db   # server tests (201+)
 python3 -m pytest api/tests/ -v --reuse-db      # API tests (67)
-python3 -m pytest .agentone/scripts/ -v         # tool tests (73)
+python3 -m pytest .agentone/scripts/ -v         # tool tests (75)
 python3 -m pylint config/ server/ registry/     # lint
 python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 ```

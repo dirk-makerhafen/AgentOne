@@ -23,7 +23,7 @@ ui/
 │       ├── cron.py         # Scheduled jobs list
 │       ├── insights.py     # Opens dashboard on activation
 │       ├── logs.py         # Log viewer controls (file, tail, auto-refresh)
-│       ├── pipes.py        # Named pipes list
+│   ├── dataflows.py    # Data collections (streams/sets) list
 │       ├── projects.py     # Project list
 │       ├── settings.py     # Settings menu (opens SettingsView in main)
 │       ├── skills.py       # Skill list with search
@@ -43,7 +43,7 @@ ui/
 │   ├── insights/           # Dashboard view (system health, metrics)
 │   ├── logs/               # File log display
 │   ├── memory/             # Agent memory browser
-│   ├── pipe/               # Named pipe detail + creation
+│   ├── collections/        # Data flow detail + creation
 │   ├── project/            # Project detail/editor
 │   ├── rightpanel/         # Right-side tabs (session, tasks, workspace, subagents)
 │   ├── settings/           # Full settings tabs (conversation, appearance, preferences, providers, system)

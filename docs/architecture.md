@@ -76,6 +76,7 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  │   ├── TaskInstance (bound to session)                        │
 │  │   ├── AgentTaskCall (the "promise")                          │
 │  │   └── AgentTaskRun (the execution)                           │
+│  ├── DataCollections: DataCollection → CollectionItem           │
 │  ├── Messages: Message → MessagePart → GenericContent          │
 │  ├── Skills: SkillModel → SkillModelVersion                     │
 │  ├── Queries: Query → Response (LLM interaction)                │
