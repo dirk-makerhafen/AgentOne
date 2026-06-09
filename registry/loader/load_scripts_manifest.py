@@ -18,8 +18,8 @@ def load_scripts_manifest(
     parent_project: Any = None,
     parent_agent: Any = None,
     parent_skill: Any = None,
+    details: list | None = None,
 ) -> List[Tuple[TaskDefinition, TaskDefinitionVersion]]:
-    print("scripts_dir", scripts_dir)
     """Load all entries from all ``scripts.md`` manifests found in *scripts_dir*.
 
     Recurses into subdirectories. Entries are processed in order so that Python
@@ -44,7 +44,7 @@ def load_scripts_manifest(
         for entry in entries:
             _load_script_entry(
                 entry, subdir, commit, results,
-                parent_project, parent_agent, parent_skill,
+                parent_project, parent_agent, parent_skill, details,
             )
     return results
 
@@ -68,7 +68,6 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
                     item["task_execution_mode"] = fenum
                     break
             item["group_name"] = group_name
-            print(item)
             entries.append(item)
     return entries
 
@@ -81,6 +80,7 @@ def _load_script_entry(
     parent_project: Any,
     parent_agent: Any,
     parent_skill: Any,
+    details: list | None = None,
 ) -> None:
     """Dispatch a single manifest entry to the appropriate loader.
 
@@ -90,22 +90,21 @@ def _load_script_entry(
     task_execution_mode: TaskExecutionMode = entry["task_execution_mode"]
     name: str = entry["name"]
     group_name: str = entry.get("group_name", scripts_dir.name)
-    print("_load_script_entry", entry)
 
     if task_execution_mode == TaskExecutionMode.FUNCTION:
         load_python_entry(
             entry, scripts_dir, commit, task_type, task_execution_mode,
-            name, group_name, parent_project, parent_agent, parent_skill, existing_results,
+            name, group_name, parent_project, parent_agent, parent_skill, existing_results, details,
         )
     elif task_execution_mode == TaskExecutionMode.SCRIPT:
         load_script_entry(
             entry, scripts_dir, commit, task_type, task_execution_mode,
-            name, group_name, parent_project, parent_agent, parent_skill, existing_results,
+            name, group_name, parent_project, parent_agent, parent_skill, existing_results, details,
         )
     elif task_execution_mode in (TaskExecutionMode.CHAIN, TaskExecutionMode.GROUP, TaskExecutionMode.MAP):
         load_chain_entry(
             entry, commit, task_type, task_execution_mode, name, group_name,
-            parent_project, parent_agent, parent_skill, existing_results,
+            parent_project, parent_agent, parent_skill, existing_results, details,
         )
     else:
         raise ValueError(

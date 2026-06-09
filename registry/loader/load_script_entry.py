@@ -19,6 +19,7 @@ def load_script_entry(
     parent_agent: Any,
     parent_skill: Any,
     existing_results: List[Tuple[TaskDefinition, TaskDefinitionVersion]],
+    details: list | None = None,
 ) -> None:
     """Load a script/binary entry from a scripts.md manifest.
 
@@ -52,4 +53,6 @@ def load_script_entry(
         TaskDefinition.objects.filter(pk=task_def.pk).update(
             latest_task_version=task_version
         )
+    if details is not None:
+        details.append({"name": name, "type": "script", "action": "created" if created else "up to date"})
     existing_results.append((task_def, task_version))

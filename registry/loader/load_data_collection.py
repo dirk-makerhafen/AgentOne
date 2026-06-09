@@ -26,6 +26,7 @@ def _infer_collection_type(file_path: Path) -> str:
 def load_data_collection_manifest(
     md_path: Path,
     seen_names: set[str] | None = None,
+    details: list | None = None,
 ) -> DataCollection:
     """Create or update a ``DataCollection`` from a YAML frontmatter file.
 
@@ -98,23 +99,36 @@ def load_data_collection_manifest(
         existing = DataCollection.objects.get(name=name)
         old_sources = existing.sources
     except DataCollection.DoesNotExist:
-        pass
+        existing = None
 
-    collection, created = DataCollection.objects.update_or_create(
+    defaults = {
+        "description": manifest.get("description", "") or "",
+        "collection_type": collection_type,
+        "is_active": manifest.get("is_active", True),
+        "sources": sources,
+        "processor": processor,
+        "on_removed": on_removed,
+        "member_field": member_field,
+        "score_field": score_field,
+        "retroactive_on_source_change": retroactive_on_source_change,
+        "max_reprocess": max_reprocess,
+    }
+
+    collection, created = DataCollection.objects.get_or_create(
         name=name,
-        defaults={
-            "description": manifest.get("description", "") or "",
-            "collection_type": collection_type,
-            "is_active": manifest.get("is_active", True),
-            "sources": sources,
-            "processor": processor,
-            "on_removed": on_removed,
-            "member_field": member_field,
-            "score_field": score_field,
-            "retroactive_on_source_change": retroactive_on_source_change,
-            "max_reprocess": max_reprocess,
-        },
+        defaults=defaults,
     )
+    changed = False
+    if not created:
+        for field_name, new_val in defaults.items():
+            if getattr(collection, field_name) != new_val:
+                setattr(collection, field_name, new_val)
+                changed = True
+        if changed:
+            collection.save()
+    if details is not None:
+        action = "created" if created else ("updated" if changed else "up to date")
+        details.append({"name": name, "type": collection_type, "action": action})
 
     # If sources changed and retroactive processing is configured, trigger it
     if (

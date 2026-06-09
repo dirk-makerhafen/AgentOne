@@ -12,7 +12,7 @@ from server.models.project import Project
 from server.models.workspace import WorkspaceModel
 
 
-def load_project_folder(folder: str) -> None:
+def load_project_folder(folder: str, details: list | None = None) -> None:
     """Load scripts, skills, agents, cron jobs, and workspaces for a project.
 
     Expects a ``.agentone/`` directory at the root of *folder* with the
@@ -21,8 +21,11 @@ def load_project_folder(folder: str) -> None:
     Files are first synced into a per-project install repo, then version
     identifiers are derived from git tree SHAs for each manifest folder.
     """
-    project_folder = Path(folder) / ".agentone"
-    project = _project_to_database(project_folder / "project.md", project_root=Path(folder))
+    project_root = Path(folder)
+    project_folder = project_root / ".agentone"
+    project, project_created = _project_to_database(project_folder / "project.md", project_root=project_root)
+    if details is not None:
+        details.append({"name": project.name, "type": "project", "action": "created" if project_created else "up to date"})
 
     install_repo = InstallRepo.for_project(
         project_name=project.name,
@@ -34,7 +37,7 @@ def load_project_folder(folder: str) -> None:
     if scripts_dir.is_dir():
         load_scripts_manifest(
             scripts_dir, parent_project=project,
-            install_repo=install_repo,
+            install_repo=install_repo, details=details,
         )
 
     skills_dir = project_folder / "skills"
@@ -42,7 +45,7 @@ def load_project_folder(folder: str) -> None:
         for skill_md in sorted(skills_dir.glob("**/skill.md")):
             load_skill_manifest(
                 skill_md, parent_project=project,
-                install_repo=install_repo,
+                install_repo=install_repo, details=details,
             )
 
     agents_dir = project_folder / "agents"
@@ -50,7 +53,7 @@ def load_project_folder(folder: str) -> None:
         for agent_md in find_agent_md_files(agents_dir):
             load_agent_manifest(
                 agent_md, parent_project=project,
-                install_repo=install_repo,
+                install_repo=install_repo, details=details,
             )
 
     crons_dir = project_folder / "cronjobs"
@@ -59,12 +62,12 @@ def load_project_folder(folder: str) -> None:
         for cron_md in sorted(crons_dir.glob("*.md")):
             load_cron_manifest(
                 cron_md, parent_project=project,
-                install_repo=install_repo, seen_names=seen,
+                install_repo=install_repo, seen_names=seen, details=details,
             )
         Cronjob.objects.filter(parent_project=project, is_archived=False).exclude(name__in=seen).update(is_archived=True)
 
 
-def _project_to_database(project_md_path: Path, project_root: Path | None = None) -> Project:
+def _project_to_database(project_md_path: Path, project_root: Path | None = None) -> tuple[Project, bool]:
     """Create or return a ``Project`` from a ``project.md`` file.
 
     Reads the YAML frontmatter for ``name`` and uses the body as the
@@ -73,9 +76,12 @@ def _project_to_database(project_md_path: Path, project_root: Path | None = None
     If the frontmatter contains a ``workspaces`` list, each entry is
     created or updated as a ``WorkspaceModel``. Relative paths are
     resolved against *project_root*.
+
+    Returns ``(project, created)`` where *created* indicates whether
+    the ``Project`` row was newly created.
     """
     project_md = frontmatter.load(project_md_path)
-    project, _ = Project.objects.get_or_create(
+    project, created = Project.objects.get_or_create(
         name=project_md.get("name"),
         description=project_md.content,
         defaults={"path": project_md_path.parent.as_posix()},
@@ -101,4 +107,4 @@ def _project_to_database(project_md_path: Path, project_root: Path | None = None
             },
         )
 
-    return project
+    return project, created

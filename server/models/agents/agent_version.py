@@ -145,10 +145,8 @@ class AgentVersionModel(BaseModel):
                 parent_session=parent_instance,
             ),
         )
-        print("did crete session", session)
-        
+
         session_version:SessionVersionModel = session.latest_session_version
-        print("session_version", session_version)
         aiv_created = False
     
         if not session_version or (session_version.pinned_agent_version or session_version.agent.latest_agent_version) != self or session_version.session != session or session_version.workspace != workspace:

@@ -30,6 +30,7 @@ def load_agent_manifest(
     parent_project: Any = None,
     parent_agent: Any = None,
     parent_skill: Any = None,
+    details: list | None = None,
 ) -> Tuple[AgentModel, AgentVersionModel]:
     """Load an ``agent.md`` manifest into the database.
 
@@ -39,7 +40,6 @@ def load_agent_manifest(
 
     Version identifiers are deterministic git tree SHAs from *install_repo*.
     """
-    print("load_agent_manifest", agent_md_path)
     manifest = frontmatter.load(agent_md_path)
     agent_dir = agent_md_path.parent
     commit = install_repo.tree_sha(agent_dir)
@@ -82,7 +82,6 @@ def load_agent_manifest(
             parent_agent=agent,
             install_repo=install_repo,
         )
-    print("defined_tasks", defined_tasks)
 
     # Load child skills
     defined_skills: List[Tuple[Any, Any]] = []
@@ -138,13 +137,6 @@ def load_agent_manifest(
                     raise Exception(f"unsupported type for{entry}")
         else:
             raise Exception(f"unsupported type for{raw_subagents}")
-    print(
-        "subagent_configs",
-        agent_md_path,
-        raw_subagents,
-        subagent_configs,
-        subagent_names,
-    )
 
     settings_kwargs: Dict[str, Any] = {
         "aimodel": aimodel,
@@ -203,14 +195,12 @@ def load_agent_manifest(
         + [str(tv.pk) for _, tv in defined_tasks]
         + [str(sav.pk) for _, sav in defined_subagents]
     )
-    print("EXTENDS", agent_md_path, extend_versions)
     hash_str = "_".join(sorted(set(dep_pks)))
     content_hash = hashlib.sha1(hash_str.encode()).hexdigest()
 
     current_vn = 1
     if agent.latest_agent_version:
         current_vn = agent.latest_agent_version.version_number
-    print("current_vn", current_vn)
 
     agent_version, created = AgentVersionModel.objects.get_or_create(
         agent=agent,
@@ -237,6 +227,9 @@ def load_agent_manifest(
         AgentVersionModel.objects.filter(pk=agent_version.pk).update(
             subagent_configs=subagent_configs
         )
+    if details is not None:
+        action = "created" if created else "up to date"
+        details.append({"name": agent.name, "type": "agent", "action": action})
 
     _resolve_agent_version_tasks(agent_version)
     _resolve_agent_version_skills(agent_version)
@@ -294,13 +287,24 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
         if _add_matches(agent_version.defined_task_versions.filter(**fargs), resolved):
             return
 
-        # 2. Extends chain — wildcards collect from all, exact first-match wins
+        # 2. Extends chain (recursive) — wildcards collect from all,
+        #    exact first-match wins
         found_in_extends = False
-        for ext in agent_version.extends_agent_versions.all():
-            if _add_matches(ext.defined_task_versions.filter(**fargs), resolved):
-                found_in_extends = True
-                if not is_wildcard:
-                    break
+        visited: set = set()
+
+        def _walk(av: Any) -> None:
+            nonlocal found_in_extends
+            if av.pk in visited:
+                return
+            visited.add(av.pk)
+            for ext in av.extends_agent_versions.all():
+                if _add_matches(ext.defined_task_versions.filter(**fargs), resolved):
+                    found_in_extends = True
+                    if not is_wildcard:
+                        return
+                _walk(ext)
+
+        _walk(agent_version)
         if found_in_extends:
             return
 
@@ -432,7 +436,6 @@ def _resolve_agent_version_subagents(
             if not sav:
                 raise Exception(f"No agent {name} found")
             resolved.add(sav.pk)
-    print("SUBAGENTs", agent_version, resolved)
     if resolved:
         agent_version.subagent_versions.set(
             AgentVersionModel.objects.filter(pk__in=resolved)
@@ -446,7 +449,6 @@ def _get_ai_model(model_name: Optional[str]) -> Optional[AiModel]:
     """
     if model_name is None:
         return None
-    print("model_name", model_name)
     try:
         ai_model = AiModel.objects.get(name=model_name)
         if not ai_model.enabled:

@@ -23,6 +23,7 @@ def load_cron_manifest(
     install_repo: InstallRepo,
     parent_project: Any = None,
     seen_names: set | None = None,
+    details: list | None = None,
 ) -> Cronjob:
     """Load a ``cron.md`` manifest into the database.
 
@@ -100,19 +101,30 @@ def load_cron_manifest(
             "next_run_at": next_run_at,
         },
     )
+    changed = False
     if not created:
-        cronjob.description = description
-        cronjob.schedule = schedule
-        cronjob.is_active = is_active
-        cronjob.is_archived = False
-        cronjob.agent = agent
-        cronjob.workspace = workspace
-        cronjob.session_mode = session_mode
-        cronjob.session_name = session_name
-        cronjob.function_type = function_type
-        cronjob.function_name = function_name
-        cronjob.message = message
-        cronjob.next_run_at = next_run_at
-        cronjob.save()
+        _fields_to_check = [
+            ("description", description),
+            ("schedule", schedule),
+            ("is_active", is_active),
+            ("is_archived", False),
+            ("agent", agent),
+            ("workspace", workspace),
+            ("session_mode", session_mode),
+            ("session_name", session_name),
+            ("function_type", function_type),
+            ("function_name", function_name),
+            ("message", message),
+            ("next_run_at", next_run_at),
+        ]
+        for field_name, new_val in _fields_to_check:
+            if getattr(cronjob, field_name) != new_val:
+                setattr(cronjob, field_name, new_val)
+                changed = True
+        if changed:
+            cronjob.save()
+    if details is not None:
+        action = "created" if created else ("updated" if changed else "up to date")
+        details.append({"name": name, "type": "cron", "action": action})
 
     return cronjob

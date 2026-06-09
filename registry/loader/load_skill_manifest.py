@@ -21,6 +21,7 @@ def load_skill_manifest(
     install_repo: InstallRepo,
     parent_project: Any = None,
     parent_agent: Any = None,
+    details: list | None = None,
 ) -> Tuple[SkillModel, SkillModelVersion]:
     """Load a ``skill.md`` manifest into the database.
 
@@ -59,6 +60,9 @@ def load_skill_manifest(
         SkillModelVersion.objects.filter(pk=skill_version.pk).update(
             path=extracted_md.as_posix(),
         )
+    if details is not None:
+        action = "created" if created else "up to date"
+        details.append({"name": skill.name, "type": "skill", "action": action})
 
     # Load scripts from scripts/ subfolder
     scripts_dir = skill_dir / "scripts"
