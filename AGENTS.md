@@ -28,14 +28,28 @@ Quick reference for developers working on AgentOne. See also:
 
 Agent definitions use YAML frontmatter in `.md` files.
 
+## Setup
+
+```bash
+# Interactive setup — asks about DB type (SQLite/MySQL), Redis, TLS certs
+python3 manage.py server setup
+
+# Then apply migrations and start the server
+python3 manage.py migrate
+python3 manage.py server run
+```
+
 ## Key commands
 
 ```bash
-python3 manage.py runserver                    # dev server
+python3 manage.py server setup                 # initial configuration wizard
+python3 manage.py server run                    # launch all server processes (Daphne + Celery)
+python3 manage.py runserver                     # dev server only (no Celery)
 python3 -m celery -A config worker -l INFO      # worker
 python3 -m celery -A config beat -l INFO        # beat (required for tasks)
 python3 manage.py makemigrations && migrate     # DB schema
 python3 -m pytest server/tests/ -v --reuse-db   # server tests (184+)
+python3 -m pytest api/tests/ -v --reuse-db      # API tests (67)
 python3 -m pytest .agentone/scripts/ -v         # tool tests (73)
 python3 -m pylint config/ server/ registry/     # lint
 python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
@@ -45,7 +59,7 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 
 - **Use `python3`**, not `python`.
 - `.pylintrc`: `max-line-length=200`, disables `C0114/C0115/C0116`, loads `pylint_django`.
-- `config/settings.py` uses MySQL by default. Fall back to SQLite by uncommenting lines 16–23, commenting 24–34.
+- `config/settings.py` defaults to SQLite. Override in `config/settings_local.py` for MySQL or custom config. File is gitignored. Run `python3 manage.py server setup` to generate one.
 - `db.sqlite3` is gitignored and stale.
 - Celery beat must be running (5s tick, 2min heartbeat).
 - Redis must be running at `localhost:6379` (channels, cache, celery).

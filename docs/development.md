@@ -11,30 +11,59 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Database (MySQL)
-mysql -u root -e "CREATE DATABASE AgentOne_v3 CHARACTER SET utf8mb4;"
+# Configuration wizard — asks about DB type (SQLite/MySQL),
+# Redis URL, generates SECRET_KEY and TLS certificate
+python3 manage.py server setup
+
+# Apply database migrations
 python3 manage.py migrate
 
-# Redis (must be running at localhost:6379)
-redis-server
-
-# Run
-python3 manage.py runserver           # dev server
-python3 -m celery -A config worker -l INFO   # worker
-python3 -m celery -A config beat -l INFO     # beat scheduler
+# Run (starts Daphne + Celery worker + Celery beat)
+python3 manage.py server run
 ```
 
 Open http://localhost:8000.
+
+### Manual configuration
+
+If you prefer to skip the wizard, copy the example file and edit:
+
+```bash
+cp config/settings_local.example.py config/settings_local.py
+```
+
+Key settings you can override in `settings_local.py`:
+
+| Setting | Default | Purpose |
+|---|---|---|
+| `SECRET_KEY` | auto-generated | Django CSRF/session signing |
+| `AGENT_SERVER_SECRET_KEY` | auto-generated | Client registration shared secret |
+| `DEBUG` | `False` | Enable dev debug mode |
+| `ALLOWED_HOSTS` | `["*"]` | Production: restrict to your domain |
+| `DATABASES` | SQLite | Switch to MySQL for production |
+| `REDIS_URL` | `redis://localhost:6379/1` | Cache, channels, Celery broker |
+| `LISTEN_ADDRESS` | `0.0.0.0` | Daphne bind address |
+| `LISTEN_PORT` | `8001` | Daphne TLS port |
+
+No secrets are stored in version control — `settings_local.py` is gitignored.
 
 ## Code organization
 
 ```
 config/             Django configuration
   settings.py       DB, Redis, Celery, installed apps, middleware
-  urls.py           URL routing: UI, admin, web API, accounts
+  urls.py           URL routing: UI, admin, web API (api/v1/), accounts
   asgi.py           ASGI app with Channels WebSocket at /ws
   wsgi.py           WSGI app
   celery.py         Celery app with beat schedule
+
+api/                REST API (Django REST Framework)
+  urls.py           Route registration (DRF DefaultRouter)
+  pagination.py     Custom pagination (PageNumberPagination)
+  permissions.py    Permission classes (DjangoModelAdminOrAnonReadOnly)
+  serializers/      Per-domain serializers with runtime resolution
+  views/            Per-domain ViewSets + function endpoints
+  tests/            pytest test suite (67 tests)
 
 server/             Core Django app
   models/           ~30 model classes organized by domain
@@ -307,6 +336,177 @@ class MyDetailView(ModelView):
 self.root_view.main.create_and_open_tab(MyDetailView, subject=my_model_instance)
 ```
 
+## REST API
+
+AgentOne provides a comprehensive REST API at `/api/v1/` backed by Django REST Framework.
+
+### Quick start
+
+```bash
+# Obtain a JWT token
+curl -X POST http://localhost:8000/api/v1/auth/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "yourpassword"}'
+
+# Use the token for authenticated requests
+TOKEN="eyJ0eXAiOiJKV1Qi..."
+curl http://localhost:8000/api/v1/agents/ \
+  -H "Authorization: Bearer $TOKEN"
+
+# Health check (no auth required)
+curl http://localhost:8000/api/v1/health/
+```
+
+### API docs (OpenAPI)
+
+| URL | Description |
+|---|---|
+| `/api/v1/schema/` | OpenAPI 3.0 JSON schema (use with `drf-spectacular`) |
+| `/api/v1/docs/` | Swagger UI interactive explorer |
+| `/api/v1/redoc/` | ReDoc documentation viewer |
+
+### Endpoints
+
+| Prefix | Description | Auth |
+|---|---|---|
+| `auth/token/` | JWT obtain + refresh | None (credentials in body) |
+| `health/` | DB + Redis connectivity | None |
+| `me/` | Current user profile | Required |
+| `agents/` | Full CRUD + `/commands/`, `/tasks/`, `/tools/`, `/skills/`, `/subagents/`, `/versions/` | Required |
+| `sessions/` | Full CRUD + `/message/`, `/messages/`, `/call/{name}/`, `/reset/` | Required |
+| `queries/` | Read-only list/detail + `/cancel/` | Required |
+| `collections/` | Full CRUD + `/items/`, `/reprocess/` | Required |
+| `cron/` | Full CRUD + `/run/` | Required |
+| `providers/` | Read-only list/detail | Required |
+| `models/` | Read-only list/detail | Required |
+| `skills/` | Read-only list/detail + `/versions/` | Required |
+| `projects/` | Full CRUD | Required |
+| `systems/` | Full CRUD | Required |
+| `workspaces/` | Full CRUD | Required |
+| `task-calls/` | Read-only list/detail with nested runs | Required |
+| `task-runs/` | Read-only list/detail | Required |
+
+### Common query parameters
+
+Every viewset supports:
+
+```bash
+# Filter by exact field match
+curl "$BASE/agents/?name=baseagent"
+curl "$BASE/collections/?collection_type=stream"
+
+# Full-text search across searchable fields
+curl "$BASE/agents/?search=base"
+curl "$BASE/sessions/?search=my-chat"
+
+# Ordering (ascending by default, prefix - for descending)
+curl "$BASE/agents/?ordering=-created_at"
+
+# Pagination (default page_size=10)
+curl "$BASE/agents/?page=2&page_size=50"
+```
+
+### Key patterns
+
+**Session message:**
+
+```bash
+# String content
+curl -X POST "$BASE/sessions/1/message/" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "hello"}'
+
+# Structured parts
+curl -X POST "$BASE/sessions/1/message/" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "", "parts": [{"type": "text", "text": "hello"}]}'
+```
+
+**Task call on a session:**
+
+```bash
+curl -X POST "$BASE/sessions/1/call/ping/" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"args": ["hello"], "kwargs": {}}'
+```
+
+**Session settings (PATCH updates via runtime copy-on-write):**
+
+```bash
+curl -X PATCH "$BASE/sessions/1/" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "renamed-session", "aimodel": 42}'
+```
+
+### Architecture
+
+The API sits between the HTTP client and the Django application:
+
+```
+HTTP client → DRF ViewSets → runtime wrappers → Django models
+```
+
+Rules for what gets exposed:
+- **Agents**: resolves inherited capabilities (`allowedCommands`, `allowedTools`, etc.) from the version chain, not raw M2M fields
+- **Sessions**: exposes `get_messages()`, settings via copy-on-write (`_safe_runtime_settings()`)
+- **Queries**: read-only — created internally by the session message flow
+- **Providers/Models**: read-only — managed through Django admin
+- **Task calls/runs**: read-only — expose `result_json` and `arguments_json` for full execution trace
+
+### Adding a new endpoint
+
+1. Create the view in `api/views/<name>.py`:
+```python
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+
+class MyViewSet(viewsets.ModelViewSet):
+    queryset = MyModel.objects.all()
+    serializer_class = MySerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['name', 'owner']
+    search_fields = ['name', 'description']
+    ordering_fields = '__all__'
+```
+
+2. Create the serializer in `api/serializers/<name>.py`:
+```python
+from rest_framework import serializers
+from server.models import MyModel
+
+class MySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyModel
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+```
+
+3. Register the route in `api/urls.py`:
+```python
+router.register(r'my-items', MyViewSet, basename='my-item')
+```
+
+4. Add tests in `api/tests/test_<name>.py` with fixtures from `conftest.py`.
+
+### Running API tests
+
+```bash
+# All API tests
+python3 -m pytest api/tests/ -v
+
+# Single file
+python3 -m pytest api/tests/test_agents.py -v
+
+# With schema validation
+python3 -m pytest api/tests/test_schema.py -v
+```
+
+Now continuing with test commands for Django server tests:
+
 ## Running tests
 
 ```bash
@@ -341,8 +541,9 @@ python3 -m pylint config/ server/ registry/ tools/
 
 ## Project configuration
 
-- `config/settings.py` uses MySQL by default; uncomment lines 16-23 and comment 24-34 for SQLite
-- `config/settings_local.py` is gitignored for local overrides
+- `config/settings.py` defaults to SQLite with safe dev values
+- `config/settings_local.py` is gitignored — create it via `python3 manage.py server setup` or copy `settings_local.example.py`
+- `cert.pem` and `key.pem` are gitignored — auto-generated by the setup wizard
 - Redis must be running at `localhost:6379` for full stack (channels, cache, celery)
 - Celery beat must be running — it drives the 5s tick scheduler
 - `old/` directory is dead code — do not modify

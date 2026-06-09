@@ -6,11 +6,41 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                          BROWSER                              │
-│  pyhtmlgui JS client ────── WebSocket ──────► Django ASGI   │
+│                          BROWSER / HTTP CLIENT                 │
+│  pyhtmlgui JS client ────── WebSocket ────► Django ASGI      │
 │  (DOM sync, reconnect,        /ws                             │
 │   ping, callbacks)                                            │
+│                                                               │
+│  REST API client ──────────── HTTP ────────► Django WSGI     │
+│  (curl, scripts, CI)            /api/v1/*                     │
 └──────────────────────────────────────────────────────────────┘
+                            │
+┌───────────────────────────▼───────────────────────────────────┐
+│  API LAYER (api/)                           WSGI thread        │
+│                                                                 │
+│  DRF ViewSets + Serializers per domain:                        │
+│  ├── auth/token/             JWT obtain + refresh               │
+│  ├── health/                 DB + Redis check (no auth)         │
+│  ├── me/                    Current user info                   │
+│  ├── agents/                CRUD + resolved capabilities        │
+│  │   └─ /{id}/commands/, /tasks/, /tools/, /skills/,           │
+│  │      /subagents/, /versions/                                 │
+│  ├── sessions/              CRUD + message + call + reset       │
+│  ├── queries/               Read-only + cancel                  │
+│  ├── collections/           CRUD + items + reprocess            │
+│  ├── cron/                  CRUD + run                          │
+│  ├── providers/             Read-only provider + model detail   │
+│  ├── skills/                Read-only + versions                │
+│  ├── projects/              CRUD                                │
+│  ├── systems/               CRUD                                │
+│  ├── workspaces/            CRUD                                │
+│  ├── task-calls/            Read-only with nested runs          │
+│  └── task-runs/             Read-only                           │
+│                                                                 │
+│  OpenAPI docs: /api/v1/schema/, /api/v1/docs/, /api/v1/redoc/  │
+│  Auth: JWT (Bearer) + Session, stacked                          │
+│  Search/filter/ordering across all viewsets                     │
+└────────────────────────────────────────────────────────────────┘
                             │
 ┌───────────────────────────▼───────────────────────────────────┐
 │  UI LAYER (ui/)                             WebSocket thread  │
@@ -286,16 +316,42 @@ on_removed:                     # sets only
 ---
 ```
 
-## Configuration sources
+## API layer
 
-| Source | What it configures |
+The REST API (`api/`) provides HTTP access to core AgentOne abstractions using Django REST Framework, JWT authentication (simplejwt), and OpenAPI documentation (drf-spectacular).
+
+All viewsets expose runtime-resolved data (e.g., inherited agent capabilities via the version chain, session settings via copy-on-write) rather than raw database rows. This ensures API consumers see the same resolved state as the WebSocket UI.
+
+| Component | Technology |
 |---|---|
-| `config/settings.py` | Django settings, DB, Redis, Celery, installed apps |
-| `config/settings_local.py` | Local overrides (gitignored) |
-| `.agentone/agents/*/agent.md` | Agent definitions (model, tools, skills, settings) |
-| `.agentone/scripts/*/scripts.md` | Tool group definitions (name→file mapping) |
-| `.agentone/skills/skills.yaml` | Skill installation from repos |
-| `.agentone/streams/*.md` | Data flow stream definitions (append-only) |
-| `.agentone/sets/*.md` | Data flow ordered-set definitions (mutable) |
-| `server/models/settings.py` | `SettingsModel` — per-agent LLM settings |
-| `server/models/providers/*.py` | `ApiProvider` + `AiModel` + `ApiKey` — LLM provider config |
+| Framework | Django REST Framework (DRF) |
+| Auth | `rest_framework_simplejwt` (JWT Bearer) + Session auth stacked |
+| Docs | drf-spectacular (OpenAPI 3.0), Swagger UI, ReDoc |
+| Filtering | django-filter (exact match), DRF SearchFilter (full-text), OrderingFilter |
+| Pagination | PageNumberPagination (default page_size=10) |
+
+### Endpoint index
+
+| Prefix | Access | Details |
+|---|---|---|
+| `POST /api/v1/auth/token/` | None | JWT obtain (`username` + `password`) |
+| `POST /api/v1/auth/token/refresh/` | None | JWT refresh |
+| `GET /api/v1/health/` | None | DB + Redis connectivity check |
+| `GET /api/v1/me/` | Authenticated | Current user (id, username, email, is_staff, is_superuser) |
+| `/api/v1/agents/` | Authenticated | CRUD + `/commands/`, `/tasks/`, `/tools/`, `/skills/`, `/subagents/`, `/versions/` |
+| `/api/v1/sessions/` | Authenticated | CRUD + `/message/`, `/messages/`, `/call/{task_name}/`, `/reset/` |
+| `/api/v1/queries/` | Authenticated | Read-only list/detail + `/cancel/` |
+| `/api/v1/collections/` | Authenticated | CRUD + `/items/`, `/reprocess/` |
+| `/api/v1/cron/` | Authenticated | CRUD + `/run/` |
+| `/api/v1/providers/` | Authenticated | Read-only list/detail |
+| `/api/v1/models/` | Authenticated | Read-only list/detail |
+| `/api/v1/skills/` | Authenticated | Read-only + `/versions/` |
+| `/api/v1/projects/` | Authenticated | CRUD |
+| `/api/v1/systems/` | Authenticated | CRUD |
+| `/api/v1/workspaces/` | Authenticated | CRUD |
+| `/api/v1/task-calls/` | Authenticated | Read-only with nested task runs |
+| `/api/v1/task-runs/` | Authenticated | Read-only |
+
+OpenAPI schema at `GET /api/v1/schema/`, Swagger UI at `/api/v1/docs/`, ReDoc at `/api/v1/redoc/`.
+
+## Configuration sources

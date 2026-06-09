@@ -26,6 +26,9 @@ celerybeat-schedule
 # Environment variables
 .env
 
+# Local Django settings (secrets, DB credentials)
+config/settings_local.py
+
 # Project specific test/dev files
 testfile.txt
 testfile1.txt

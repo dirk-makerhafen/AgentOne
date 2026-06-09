@@ -34,106 +34,231 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.ERROR(f"Unknown subcommand: {subcommand}"))
 
+    # ------------------------------------------------------------------
+    # Setup
+    # ------------------------------------------------------------------
+
     def handle_setup(self, **options):
-        import os
         import secrets
-        import string
-        from django.conf import settings
-        from django.contrib.auth import get_user_model
-        from django.core.management import call_command
 
-        self.stdout.write(self.style.SUCCESS("--- AgentOne Server Setup ---"))
-        config_path = os.path.join(settings.BASE_DIR, 'config', 'settings_local.py')
-        config = self._read_local_config(config_path)
+        self.stdout.write(self.style.SUCCESS("--- AgentOne Server Setup ---\n"))
 
-        config['LISTEN_ADDRESS'] = self._ask_question("Listen Address", config.get('LISTEN_ADDRESS', '0.0.0.0'))
-        config['LISTEN_PORT'] = self._ask_question("Listen Port", config.get('LISTEN_PORT', '8001'))
+        db_config = self._ask_database()
+        redis_url = self._ask("Redis URL", "redis://localhost:6379/1")
+        listen_addr = self._ask("HTTP listen address", "0.0.0.0")
+        listen_port = self._ask("HTTP listen port", "8001")
+        secret_key = secrets.token_urlsafe(50)
+        client_key = secrets.token_urlsafe(16)
 
-        default_client_key = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(8))
-        config['AGENT_SERVER_SECRET_KEY'] = self._ask_question("Client Registration Key", config.get('AGENT_SERVER_SECRET_KEY', default_client_key))
-        config['REDIS_URL'] = self._ask_question("Redis URL", config.get('REDIS_URL', 'redis://localhost:6379/'))
+        generate_cert = self._ask_yes_no(
+            "Generate self-signed TLS certificate (cert.pem, key.pem)",
+            default=True,
+        )
 
-        if 'SECRET_KEY' not in config or not config['SECRET_KEY']:
-            self.stdout.write("\nGenerating new SECRET_KEY...")
-            config['SECRET_KEY'] = secrets.token_urlsafe(50)
-            self.stdout.write(self.style.SUCCESS("SECRET_KEY generated."))
+        self.stdout.write()
+        self._write_local_config(db_config, redis_url, listen_addr, listen_port, secret_key, client_key)
+        self.stdout.write()
 
-        self.generate_self_signed_cert()
+        if generate_cert:
+            self.generate_self_signed_cert()
+            self.stdout.write(self.style.SUCCESS("TLS certificate generated (cert.pem, key.pem)."))
+
+        self._configure_database(db_config)
+        self._run_migrations()
         self._create_superuser_if_needed()
-        self._write_local_config(config_path, config)
 
-        self.stdout.write(self.style.SUCCESS(f"\nConfiguration saved to {config_path}"))
-        self.stdout.write(self.style.WARNING("Please restart the server for the new settings to take effect."))
+        self.stdout.write(self.style.SUCCESS("\nSetup complete!"))
+        self.stdout.write(self.style.WARNING(
+            "Run 'python3 manage.py server run' to start the server."
+        ))
 
-    def _read_local_config(self, path):
+    # ------------------------------------------------------------------
+    # Database configuration
+    # ------------------------------------------------------------------
+
+    def _ask_database(self):
+        self.stdout.write("Database backend:")
+        self.stdout.write("  1) SQLite  (simple, no setup — good for development)")
+        self.stdout.write("  2) MySQL   (production-ready, requires MySQL/MariaDB server)")
+
+        choice = self._ask("Choose [1/2]", "1")
+
+        if choice == "2":
+            return self._ask_mysql()
+        return self._ask_sqlite()
+
+    def _ask_sqlite(self):
         import os
-        config = {}
-        if not os.path.exists(path):
-            return config
+        from django.conf import settings
+        default_path = os.path.join(settings.BASE_DIR, "db.sqlite3")
+        path = self._ask("SQLite database path", default_path)
+        return {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": path,
+        }
 
-        self.stdout.write(f"Reading existing configuration from {path}...")
-        try:
-            with open(path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line or line.startswith('#'):
-                        continue
-
-                    # Remove inline comments before processing
-                    if '#' in line:
-                        line = line.split('#', 1)[0].strip()
-                        if not line:
-                            continue
-
-                    if '=' not in line:
-                        continue
-
-                    key, value = line.split('=', 1)
-                    key = key.strip()
-                    value = value.strip()
-
-                    # Robustly strip quotes
-                    if (value.startswith("'") and value.endswith("'")) or \
-                       (value.startswith('"') and value.endswith('"')):
-                        value = value[1:-1]
-
-                    config[key] = value
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Could not read config file: {e} {traceback.format_exc()}"))
+    def _ask_mysql(self):
+        config = {
+            "ENGINE": "django.db.backends.mysql",
+            "HOST": self._ask("MySQL host", "localhost"),
+            "PORT": self._ask("MySQL port", "3306"),
+            "NAME": self._ask("Database name", "AgentOne_v3"),
+        }
+        user = self._ask("MySQL user (leave blank for socket auth)", default=None)
+        if user:
+            config["USER"] = user
+            password = self._ask_password("MySQL password (leave blank for no password)")
+            if password:
+                config["PASSWORD"] = password
+        config["OPTIONS"] = {
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
         return config
 
-    def _ask_question(self, question, default):
-        prompt = f"{question} (default: {self.style.SUCCESS(default)}): "
-        answer = input(prompt)
-        return answer or default
+    # ------------------------------------------------------------------
+    # User prompts
+    # ------------------------------------------------------------------
+
+    def _ask(self, question, default=None):
+        if default is not None:
+            prompt = f"  {question} [{self.style.SUCCESS(default)}]: "
+        else:
+            prompt = f"  {question}: "
+        answer = input(prompt).strip()
+        return answer if answer else (default or "")
+
+    def _ask_password(self, question):
+        return input(f"  {question}: ").strip()
+
+    def _ask_yes_no(self, question, default=True):
+        hint = "Y/n" if default else "y/N"
+        prompt = f"  {question} [{self.style.SUCCESS(hint)}]: "
+        answer = input(prompt).strip().lower()
+        if not answer:
+            return default
+        return answer.startswith("y")
+
+    # ------------------------------------------------------------------
+    # Write settings_local.py as valid Python
+    # ------------------------------------------------------------------
+
+    def _write_local_config(self, db_config, redis_url, listen_addr, listen_port, secret_key, client_key):
+        import os
+        from django.conf import settings
+
+        path = os.path.join(settings.BASE_DIR, "config", "settings_local.py")
+
+        lines = [
+            "# This file is automatically generated by 'python3 manage.py server setup'.",
+            "# It overrides defaults in config/settings.py.",
+            "",
+            "import os",
+            "",
+            "# ---------------------------------------------------------------------------",
+            "# Security",
+            "# ---------------------------------------------------------------------------",
+            f"SECRET_KEY = {secret_key!r}",
+            f"AGENT_SERVER_SECRET_KEY = {client_key!r}",
+            "DEBUG = False",
+            'ALLOWED_HOSTS = ["*"]',
+            "",
+            "# ---------------------------------------------------------------------------",
+            "# Database",
+            "# ---------------------------------------------------------------------------",
+            "DATABASES = {",
+            '    "default": {',
+        ]
+        for key, value in db_config.items():
+            if key == "OPTIONS":
+                lines.append(f"        \"OPTIONS\": {{")
+                lines.append(f"            \"init_command\": \"SET sql_mode='STRICT_TRANS_TABLES'\",")
+                lines.append(f"        }},")
+            else:
+                lines.append(f"        {key!r}: {value!r},")
+        lines += [
+            "    }",
+            "}",
+            "",
+            "",
+            "# ---------------------------------------------------------------------------",
+            "# Redis (used for cache, channels, Celery broker/backend)",
+            "# ---------------------------------------------------------------------------",
+            f"REDIS_URL = {redis_url!r}",
+            "",
+            "# ---------------------------------------------------------------------------",
+            "# HTTP server",
+            "# ---------------------------------------------------------------------------",
+            f"LISTEN_ADDRESS = {listen_addr!r}",
+            f"LISTEN_PORT = {listen_port!r}",
+            "",
+        ]
+
+        content = "\n".join(lines) + "\n"
+
+        try:
+            with open(path, "w") as f:
+                f.write(content)
+            self.stdout.write(self.style.SUCCESS(f"Configuration written to {path}"))
+        except OSError as e:
+            self.stdout.write(self.style.ERROR(f"Failed to write {path}: {e}"))
+
+    # ------------------------------------------------------------------
+    # Superuser creation
+    # ------------------------------------------------------------------
+
+    def _configure_database(self, db_config):
+        """Point the running Django process at the newly-configured database."""
+        from django.conf import settings
+        from django.db import connections
+        # Purge cached connections so they are recreated with the new config
+        connections.close_all()
+        try:
+            del connections["default"]
+        except KeyError:
+            pass
+        # Merge into existing dict to preserve required keys (TIME_ZONE, etc.)
+        settings.DATABASES["default"].update(db_config)
+
+    def _run_migrations(self):
+        from django.core.management import call_command
+        self.stdout.write("\nApplying database migrations...")
+        try:
+            call_command("migrate", interactive=False, verbosity=0)
+            self.stdout.write(self.style.SUCCESS("Database migrations applied."))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Migration failed: {e}"))
+            self.stdout.write(self.style.WARNING(
+                "You can retry with 'python3 manage.py migrate'."
+            ))
 
     def _create_superuser_if_needed(self):
         from django.contrib.auth import get_user_model
-        from django.core.management import call_command
         User = get_user_model()
         if User.objects.filter(is_superuser=True).exists():
-            self.stdout.write("\nSuperuser already exists. Skipping creation.")
+            self.stdout.write("\nSuperuser already exists. Skipping creation.\n")
             return
 
-        self.stdout.write(self.style.WARNING("\nNo superuser found. Let's create one."))
-        try:
-            call_command('createsuperuser', interactive=True)
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Could not create superuser: {e} {traceback.format_exc()}"))
-
-    def _write_local_config(self, path, config):
-        self.stdout.write(f"\nWriting configuration to {path}...")
-        content = "# This file is automatically generated by 'manage.py server setup'.\n"
-        content += "# Do not edit it manually unless you know what you are doing.\n\n"
-
-        for key, value in config.items():
-            content += f"{key} = '{value}'\n"
+        self.stdout.write(self.style.WARNING("\nNo superuser found. Create one now?"))
+        if not self._ask_yes_no("Create superuser", default=True):
+            return
 
         try:
-            with open(path, 'w') as f:
-                f.write(content)
+            username = self._ask("Admin username", "admin")
+            email = self._ask("Admin email", "admin@localhost")
+            password = self._ask_password("Admin password (leave blank for a random one)")
+
+            if not password:
+                import secrets
+                password = secrets.token_urlsafe(16)
+                self.stdout.write(f"  Generated password: {self.style.SUCCESS(password)}")
+
+            User.objects.create_superuser(username=username, email=email, password=password)
+            self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' created."))
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Failed to write config file: {e} {traceback.format_exc()}"))
+            self.stdout.write(self.style.ERROR(f"Could not create superuser: {e}"))
+            self.stdout.write(self.style.WARNING(
+                "You can create one later with 'python3 manage.py createsuperuser'."
+            ))
 
     def handle_run(self, **options):
         import subprocess
@@ -145,11 +270,8 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("--- AgentOne Server ---"))
 
-        config_path = os.path.join(settings.BASE_DIR, 'config', 'settings_local.py')
-        config = self._read_local_config(config_path)
-
-        listen_address = config.get('LISTEN_ADDRESS', '0.0.0.0')
-        listen_port = config.get('LISTEN_PORT', '8004')
+        listen_address = getattr(settings, 'LISTEN_ADDRESS', '0.0.0.0')
+        listen_port = getattr(settings, 'LISTEN_PORT', '8001')
 
         self.stdout.write(f"Starting server components...")
         self.stdout.write(f" - Daphne listening on: {self.style.SUCCESS(listen_address + ':' + listen_port)}")

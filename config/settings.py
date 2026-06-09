@@ -4,33 +4,22 @@ import warnings
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENTONE_ROOT = os.path.join(BASE_DIR, ".agentone")
 
-AGENT_SERVER_SECRET_KEY = "change_me23"
-SECRET_KEY = 'change_me23'
+# ---------------------------------------------------------------------------
+# Default settings — override any of these in config/settings_local.py
+# ---------------------------------------------------------------------------
+SECRET_KEY = 'django-insecure-change-me-in-production'
+AGENT_SERVER_SECRET_KEY = 'change-me-in-production'
 REDIS_URL = 'redis://localhost:6379/1'
 DEBUG = True
-
 ALLOWED_HOSTS = ["*"]
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 99*24*3600
 
-'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-'''
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'localhost',
-        'PORT': '3306',
-        "NAME": "AgentOne_v3",
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
     }
 }
 
@@ -213,3 +202,13 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# ---------------------------------------------------------------------------
+# Load local overrides from config/settings_local.py (gitignored)
+# Create one with: python3 manage.py server setup
+# Variables set here override everything above.
+# ---------------------------------------------------------------------------
+try:
+    from .settings_local import *  # noqa
+except ImportError:
+    pass
