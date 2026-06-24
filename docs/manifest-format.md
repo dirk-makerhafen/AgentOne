@@ -506,3 +506,44 @@ When the project is loaded (via `reload_all`), each workspace is created or upda
    - Store ``subagent_configs`` JSON with per-entry metadata
 
 4. **Version detection:** Each manifest folder's tree SHA is deterministic — identical files produce the same SHA across different commits. ``get_or_create`` finds the existing version record when nothing changed. Agent versions additionally compute a ``content_hash`` from all dependency PKs to catch cascading changes.
+
+---
+
+## Upstream Sources (``sources.yaml``)
+
+AgentOne can merge agents, scripts, and skills from remote git repositories. Each source file lives in the relevant subdirectory:
+
+| File | Purpose |
+|---|---|
+| ``.agentone/skills/skills.yaml`` | Upstream skill repos |
+| ``.agentone/agents/sources.yaml`` | Upstream agent repos |
+| ``.agentone/scripts/sources.yaml`` | Upstream script/tool repos |
+
+### Format
+
+```yaml
+sources:
+  - repo: https://github.com/agentone/official-skills.git
+    ref: main
+  - repo: https://github.com/community/extra-tools.git
+    ref: v2.1
+    include:           # optional — sync only these paths
+      - filesystem/*
+      - git/*
+```
+
+### How it works during reload
+
+1. **Collect** — ``sync_upstream_sources()`` reads all three source YAML files
+2. **Clone/Fetch** — each upstream repo is cloned into ``~/.agentone/upstream/<name>-<hash>/`` (or fetched if already present), then checked out to the configured ``ref``
+3. **Merge** — a staging directory is built:
+   - Upstream content is copied in first (from each repo's ``.agentone/`` subdirectory — or the repo root if no ``.agentone/`` exists)
+   - Local ``.agentone/`` files are copied on top — **local always wins** on path conflicts
+4. **Sync** — the staging directory replaces the local ``.agentone/`` as the install repo's source root; ``rsync`` + ``git commit`` proceed normally
+5. **Version detection** — upstream files produce git tree SHAs identical to local files; ``get_or_create`` works the same way
+
+### Notes
+
+- Source YAML files with empty ``sources:`` lists (or no ``sources`` key at all) are silently skipped
+- If no sources are configured across all three files, the reload process is identical to the pre-upstream behavior
+- Local source YAML files themselves (``skills.yaml``, ``sources.yaml``) are **not** copied into the staging directory — they are configuration only, not manifest content

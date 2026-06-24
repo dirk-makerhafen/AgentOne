@@ -1,6 +1,11 @@
+from pathlib import Path
+
 from django.core.management.base import BaseCommand
+
+from registry.loader.load_providers import load_providers_manifest
 from server.models.providers.ai_model import AiModel
 from server.models.providers.api_provider import ApiProvider
+
 
 class Command(BaseCommand):
     def handle(self, *args, **options):

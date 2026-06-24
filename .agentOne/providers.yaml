@@ -1,0 +1,201 @@
+providers:
+- models:
+  - context_length: 1000000
+    family: gemini
+    name: gemini-2.5-pro
+    open_weights: false
+    self_hosted: false
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: true
+  - context_length: 1000000
+    family: gemini
+    name: gemini-2.5-flash
+    open_weights: false
+    self_hosted: false
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: true
+  - context_length: 1000000
+    family: gemini
+    name: gemini-2.5-flash-lite
+    open_weights: false
+    self_hosted: false
+    supports_reasoning: false
+    supports_tool_call: true
+    vision: true
+  - context_length: 1000000
+    family: gemini
+    name: gemini-3-flash-preview
+    open_weights: false
+    self_hosted: false
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: true
+  - context_length: 1000000
+    family: gemini
+    name: gemini-3.1-flash-lite-preview
+    open_weights: false
+    self_hosted: false
+    supports_reasoning: false
+    supports_tool_call: true
+    vision: true
+  name: Google
+  url: https://generativelanguage.googleapis.com/v1beta/
+- models:
+  - context_length: 128000
+    family: deepseek
+    name: deepseek-ocr:3b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: true
+    supports_tool_call: false
+    total_parameters: 3
+    vision: true
+  - context_length: 128000
+    family: glm
+    name: glm-ocr:q8_0
+    open_weights: true
+    quantization: q8_0
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 0.8
+    vision: true
+  - context_length: 128000
+    family: ministral-3
+    name: ministral-3:3b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 3
+    vision: true
+  - context_length: 128000
+    family: ministral-3
+    name: ministral-3:8b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 8
+    vision: true
+  - context_length: 128000
+    family: ministral-3
+    name: ministral-3:14b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 14
+    vision: true
+  - context_length: 128000
+    family: mistral-small
+    name: mistral-small3.2:24b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 24
+    vision: true
+  - context_length: 32000
+    family: qwen3-vl
+    name: qwen3-vl:2b-instruct
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 2
+    vision: true
+  - context_length: 32000
+    family: qwen3-vl
+    name: qwen3-vl:4b-instruct
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 4
+    vision: true
+  - context_length: 32000
+    family: qwen3-vl
+    name: qwen3-vl:8b-instruct
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 8
+    vision: true
+  - context_length: 32000
+    family: qwen3.5
+    name: qwen3.5:0.8b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 0.8
+    vision: true
+  - context_length: 32000
+    family: qwen3.5
+    name: qwen3.5:2b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 2
+    vision: true
+  - context_length: 32000
+    family: qwen3.5
+    name: qwen3.5:4b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 4
+    vision: true
+  - context_length: 32000
+    family: qwen3.5
+    name: qwen3.5:9b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 9
+    vision: true
+  - context_length: 8000
+    family: gemma3
+    name: gemma3:1b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 1
+    vision: true
+  - context_length: 8000
+    family: gemma3
+    name: gemma3:4b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 4
+    vision: true
+  - context_length: 8000
+    family: gemma3
+    name: gemma3:27b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 27
+    vision: true
+  - context_length: 8000
+    family: gemma4
+    name: gemma4:26b
+    open_weights: true
+    self_hosted: true
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 27
+    vision: true
+  name: Ollama
+  url: http://localhost:11434/v1/

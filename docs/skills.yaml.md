@@ -24,7 +24,17 @@ Optional skill description in markdown.
 
 ## Loading
 
-Skills are loaded automatically from `.agentone/skills/` by the manifest loader (via `python3 manage.py reload_all` or server startup). You can also install skills from remote repositories — see `install_repo.py` for the git-based install mechanism.
+Skills are loaded automatically from `.agentone/skills/` by the manifest loader (via `python3 manage.py reload_all` or server startup).
+
+You can also install skills from remote git repositories by listing them in `.agentone/skills/skills.yaml`:
+
+```yaml
+sources:
+  - repo: https://github.com/agentone/official-skills.git
+    ref: main
+```
+
+See [manifest-format.md — Upstream Sources](manifest-format.md#upstream-sources-sourcesyaml) for details.
 
 ## Assignment to agents
 

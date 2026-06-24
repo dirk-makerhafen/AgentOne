@@ -1,0 +1,5 @@
+appearance:
+  theme: system
+  skin: default
+  font_size: default
+  workspace_panel_open: false

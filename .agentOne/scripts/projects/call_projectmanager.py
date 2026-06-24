@@ -16,6 +16,7 @@ from typing import Any
 
 from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
+from server.models.workspace import WorkspaceModel
 
 
 def call_projectmanager(session: Session, project_path: str, task: str) -> dict[str, Any]:
@@ -49,11 +50,16 @@ def call_projectmanager(session: Session, project_path: str, task: str) -> dict[
     session_name = f"projectmanager:{project_path}"
 
     session_version_model = session.get_version_model()
+    workspace, _ = WorkspaceModel.objects.get_or_create(
+        name=f"{project_path} project root", 
+        path=project_path, 
+        description="project root directory"
+    )
 
     child_sv = agent_version.get_or_create_session(
         name=session_name,
         description=f"Project manager for {project_path}",
-        workspace=session_version_model.workspace,
+        workspace=workspace,
     )
     child_session = Session(
         session_model=child_sv.session,

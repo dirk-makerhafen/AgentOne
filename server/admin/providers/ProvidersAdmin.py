@@ -38,7 +38,9 @@ class ModelAdmin(admin.ModelAdmin):
     """Admin for AI model definitions."""
 
     list_display: tuple[str, ...] = (
-        "pk", "created_at", "name", "api_provider", "enabled", "vision",
+        "pk", "created_at", "name", "api_provider", "enabled", "self_hosted", "vision",
+        "open_weights", "supports_reasoning", "supports_tool_call",
+        "total_parameters", "active_parameters", "quantization",
         "is_cloud", "filesize", "limit_request_per_day",
         "limit_request_per_minute", "limit_tokens_per_day",
         "limit_tokens_per_minute", "raw_data",

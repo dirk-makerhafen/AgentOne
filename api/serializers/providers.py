@@ -18,7 +18,8 @@ class AiModelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = AiModel
         fields = ['id', 'name', 'family', 'provider_name', 'enabled',
-                  'context_length', 'vision', 'billion_parameters',
+                  'context_length', 'vision', 'self_hosted',
+                  'total_parameters', 'active_parameters', 'quantization',
                   'created_at', 'updated_at']
 
     def get_provider_name(self, obj) -> str | None:
@@ -31,8 +32,9 @@ class AiModelDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = AiModel
         fields = ['id', 'name', 'family', 'provider', 'description',
-                  'enabled', 'context_length', 'is_cloud',
-                  'vision', 'billion_parameters',
+                  'enabled', 'context_length', 'is_cloud', 'self_hosted',
+                  'vision', 'total_parameters', 'active_parameters',
+                  'quantization',
                   'max_prompt_tokens', 'max_response_tokens',
                   'limit_request_per_day', 'limit_request_per_minute',
                   'limit_tokens_per_day', 'limit_tokens_per_minute',

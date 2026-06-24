@@ -33,6 +33,14 @@ python3 manage.py server run
 
 Open http://localhost:8000 to see the UI.
 
+### Updating
+
+```bash
+python3 manage.py server update
+```
+
+Runs `git pull`, `pip install -r requirements.txt`, `migrate`, and `reload_all` in sequence.
+
 ## Architecture overview
 
 ```
@@ -69,11 +77,12 @@ Open http://localhost:8000 to see the UI.
 |---|---|---|
 | `AGENTS.md` | Quick reference: stack, directory ownership, key commands, constraints |
 | `docs/architecture.md` | Deep-dive into architecture, data flow, component interactions |
-| `docs/development.md` | Developer's guide: setup, adding models/tools/agents/UI, testing, REST API |
+| `docs/development.md` | Developer's guide: setup, adding models/tools/agents/UI, testing, REST API, upstream sources |
 | `docs/deployment.md` | Production deployment: prerequisites, services, nginx, TLS |
 | `docs/core-mechanisms.md` | Task dispatch pipeline, auto-await, pyHtmlGui renderer internals |
-| `docs/manifest-format.md` | YAML manifest format reference (agent, scripts, cron, streams, sets, projects) |
+| `docs/manifest-format.md` | YAML manifest format reference (agents, scripts, cron, streams, sets, upstream sources) |
 | `docs/models.md` | Model reference (~30 models including DataCollection) |
+| `docs/skills.yaml.md` | Skill manifest format and upstream installation |
 | `ui/README.md` | UI directory structure and component reference |
 
 ## Project layout

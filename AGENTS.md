@@ -14,7 +14,7 @@ Quick reference for developers working on AgentOne. See also:
 |---|---|
 | `config/` | Django settings, ASGI/WSGI, Celery app, URL routes |
 | `server/` | Core Django app: models (~30), admin, Celery tasks, migrations |
-| `registry/` | YAML manifest loader, install repo management; legacy decorators (dead) |
+| `registry/` | YAML manifest loader, install repo management, upstream source sync; legacy decorators (dead) |
 | `runtime/` | Agent/session/task runtime wrappers, state machines, rate limiter |
 | `launcher/` | Launcher service for remote agent management |
 | `ui/` | Web UI (pyHtmlGui): views, sidebar, chat, settings, overlays |
@@ -24,7 +24,7 @@ Quick reference for developers working on AgentOne. See also:
 ## Agent hierarchy
 
 - **baseagent** (`.agentone/agents/baseagent/agent.md`): core tasks + `ping` command, queue strategy, medium reasoning
-- **AgentOne** (`.agentone/agents/agentone/agent.md`): extends baseagent, all 20 tool groups, `gemma4:26b` model
+- **AgentOne** (`.agentone/agents/agentone/agent.md`): extends baseagent, all 20 tool groups
 
 Agent definitions use YAML frontmatter in `.md` files.
 
@@ -44,6 +44,7 @@ python3 manage.py server run
 ```bash
 python3 manage.py server setup                 # initial configuration wizard
 python3 manage.py server run                    # launch all server processes (Daphne + Celery)
+python3 manage.py server update                 # git pull + pip install + migrate + reload
 python3 manage.py runserver                     # dev server only (no Celery)
 python3 -m celery -A config worker -l INFO      # worker
 python3 -m celery -A config beat -l INFO        # beat (required for tasks)
@@ -66,6 +67,7 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - `agentone_public.py` at repo root is a flat re-export — not a module.
 - `old/` is dead code; `registry/task_decorators.py` has commented-out sections.
 - UI tools in `.agentone/scripts/` must return `(bool, dict)` and be registered in a `scripts.md` manifest.
+- Upstream sources (`.agentone/{skills}/skills.yaml`, `{agents}/sources.yaml`, `{scripts}/sources.yaml`) are merged via `~/.agentone/upstream/` on every reload. Local files always override upstream.
 - Data flows (`.agentone/streams/*.md`, `.agentone/sets/*.md`) replaced legacy named-pipe system.
 - `_trigger_on_removed` in `tick_scheduler.py` (not reprocess_collection.py — it imports it) — the `source_calls` param must contain the AgentTaskCalls whose items were removed, not all source calls.
 - `_prev_collection_members` in `tick_scheduler.py` is a module-level dict — persists across tests in the same process, not thread-safe across Celery workers.

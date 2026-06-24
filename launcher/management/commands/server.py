@@ -20,6 +20,7 @@ class Command(BaseCommand):
         subparsers = parser.add_subparsers(dest="subcommand", required=True, help="Available subcommands")
         parser_setup = subparsers.add_parser("setup", help="Guides through the initial server setup.")
         parser_run = subparsers.add_parser("run", help="Runs the server components (Daphne, Celery).")
+        parser_update = subparsers.add_parser("update", help="Update AgentOne to the latest version.")
         parser_service = subparsers.add_parser("service", help="Manages the server system service.")
         parser_service.add_argument("action", choices=["install", "start", "stop", "status", "uninstall"], help="Service action to perform.")
 
@@ -29,6 +30,8 @@ class Command(BaseCommand):
             self.handle_setup(**options)
         elif subcommand == "run":
             self.handle_run(**options)
+        elif subcommand == "update":
+            self.handle_update(**options)
         elif subcommand == "service":
             self.handle_service(**options)
         else:
@@ -331,6 +334,111 @@ class Command(BaseCommand):
                 self.stdout.write(f"{name} stopped.")
 
             self.stdout.write(self.style.SUCCESS("All server components shut down."))
+
+    def handle_update(self, **options):
+        import subprocess
+        import sys
+        from pathlib import Path
+        from django.conf import settings
+
+        repo_path = Path(settings.BASE_DIR)
+        self.stdout.write(self.style.SUCCESS("--- AgentOne Update ---\n"))
+
+        # 1. Verify we are in a git repo
+        if not (repo_path / ".git").is_dir():
+            self.stdout.write(self.style.ERROR(
+                "Not a git repository. AgentOne must be installed via git for updates."
+            ))
+            return
+
+        # 2. Check for uncommitted changes
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=repo_path, capture_output=True, text=True,
+        )
+        if result.stdout.strip():
+            self.stdout.write(self.style.WARNING(
+                "You have uncommitted changes. Stash or commit them first, "
+                "then retry."
+            ))
+            self.stdout.write(result.stdout)
+            return
+
+        # 3. Fetch remote tags
+        self.stdout.write("Fetching remote...")
+        subprocess.run(
+            ["git", "fetch", "--tags", "--quiet", "origin"],
+            cwd=repo_path, check=True, capture_output=True, text=True,
+        )
+
+        # 4. Check current vs latest
+        current = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=repo_path, capture_output=True, text=True,
+        ).stdout.strip()
+
+        behind = subprocess.run(
+            ["git", "rev-list", "--count", "HEAD..origin/HEAD"],
+            cwd=repo_path, capture_output=True, text=True,
+        ).stdout.strip()
+
+        self.stdout.write(f"  Current commit: {self.style.SUCCESS(current)}")
+        if behind and behind != "0":
+            self.stdout.write(f"  Behind remote: {self.style.WARNING(behind + ' commits')}")
+        else:
+            self.stdout.write("  Already up to date with remote.")
+            return
+
+        # 5. Pull latest
+        self.stdout.write("Pulling latest code...")
+        subprocess.run(
+            ["git", "pull", "--quiet", "--ff-only", "origin"],
+            cwd=repo_path, check=True, capture_output=True, text=True,
+        )
+
+        new_current = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=repo_path, capture_output=True, text=True,
+        ).stdout.strip()
+        self.stdout.write(f"  Updated to: {self.style.SUCCESS(new_current)}")
+
+        # 6. Install / update dependencies
+        self.stdout.write("Updating Python dependencies...")
+        req_path = repo_path / "requirements.txt"
+        if req_path.exists():
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-r", str(req_path)],
+                capture_output=True, text=True,
+            )
+            if result.returncode == 0:
+                self.stdout.write(self.style.SUCCESS("  Dependencies updated."))
+            else:
+                self.stdout.write(self.style.WARNING(
+                    f"  pip install had issues:\n{result.stderr[:500]}"
+                ))
+
+        # 7. Run migrations
+        self.stdout.write("Applying database migrations...")
+        try:
+            from django.core.management import call_command
+            call_command("migrate", interactive=False, verbosity=0)
+            self.stdout.write(self.style.SUCCESS("  Migrations applied."))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"  Migration failed: {e}"))
+            self.stdout.write(self.style.WARNING(
+                "You can retry with 'python3 manage.py migrate'."
+            ))
+
+        # 8. Reload manifests
+        self.stdout.write("Reloading manifests...")
+        try:
+            from registry.management.commands.reload_all import run_reload_all
+            result = run_reload_all(str(repo_path))
+            self.stdout.write(result["summary"])
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"  Reload failed: {e}"))
+
+        self.stdout.write(self.style.SUCCESS("\nUpdate complete!"))
 
     def handle_service(self, **options):
         import platform

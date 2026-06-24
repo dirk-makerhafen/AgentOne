@@ -1,6 +1,6 @@
 ---
 name: baseagent
-model: gemma4:26b
+model: Qwen3.6-35B-A3B-4bit
 description: Core functions available for all.
 extends: []
 maxRetries: 0

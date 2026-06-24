@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 
 class SidebarPanelWorkspace(ModelView):
-    DOM_ELEMENT_CLASS = "ws-row"    
     #<div class="ws-row" data-path="/Users/Dirk/AgentOne" draggable="true">
     TEMPLATE_STR = '''
         <span class="ws-drag-handle" title="Drag to reorder">
@@ -33,6 +32,21 @@ class SidebarPanelWorkspace(ModelView):
     def __init__(self, subject: WorkspaceModel, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
+
+    @property
+    def DOM_ELEMENT_CLASS(self):
+        cls = "ws-row"
+        if self._is_current_item():
+            cls += " active"
+        return cls
+
+    def _is_current_item(self):
+        tab = self.root_view.main_panel.selected_tab_view
+        if tab is not None and hasattr(tab, "subject"):
+            subj = tab.subject
+            if hasattr(subj, "pk"):
+                return subj.pk == self.subject.pk
+        return False
 
     def open_workspace_details(self):
         self.root_view.main_panel.create_and_open_tab(Workspace, self.subject)

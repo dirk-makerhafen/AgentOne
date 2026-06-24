@@ -10,7 +10,6 @@ def create_project(
     project_path: str,
     name: str,
     description: str = "",
-    workspaces: list | None = None,
 ) -> tuple[bool, dict]:
     '''
     Create a new project directory with ``.agentone/project.md`` and
@@ -49,8 +48,9 @@ def create_project(
         return (False, {"status": "error", "message": f"Cannot create directory {project_path}: {e}"})
 
     frontmatter_data: dict = {"name": name}
-    if workspaces:
-        frontmatter_data["workspaces"] = workspaces
+    frontmatter_data["workspaces"] = [
+        dict(name=f"{name} project root", path=project_path, description="project root directory")
+    ]
 
     project_md_lines = [
         "---",

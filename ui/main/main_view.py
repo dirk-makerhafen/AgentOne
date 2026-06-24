@@ -52,6 +52,8 @@ class MainView(ModelView):
             else:
                 self.parent.rightpanel._update_context()
                 self.update()
+                self._titlebar_update()
+                self._update_sidebar_active()
 
     def select_tab(self, tab_id):
         if tab_id not in self.open_tabs:
@@ -61,3 +63,23 @@ class MainView(ModelView):
         self.selected_tab_view = self.open_tabs[tab_id]
         self.parent.rightpanel._update_context()
         self.update()
+        self._titlebar_update()
+        self._update_sidebar_active()
+
+    def _titlebar_update(self):
+        titlebar = getattr(self.parent, 'titlebar', None)
+        if titlebar is not None:
+            titlebar.update()
+
+    def _update_sidebar_active(self):
+        sidebar = getattr(self.parent, 'sidebar', None)
+        if sidebar is None:
+            return
+        panel = getattr(sidebar, 'selected_panel', None)
+        if panel is None:
+            return
+        for attr in ('agent_list', 'cronjob_list', 'collection_list', 'project_list', 'workspace_list', 'skill_list'):
+            lst = getattr(panel, attr, None)
+            if lst is not None:
+                lst.update()
+                break

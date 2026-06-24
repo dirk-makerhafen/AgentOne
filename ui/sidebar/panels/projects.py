@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from ui.app_view import UiAppView
 
 class SidebarPanelProject(ModelView):
-    DOM_ELEMENT_CLASS = "ws-row"    
     #<div class="ws-row" data-path="/Users/Dirk/AgentOne" draggable="true">
     TEMPLATE_STR = '''
         <span class="ws-drag-handle" title="Drag to reorder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg></span>
@@ -33,7 +32,22 @@ class SidebarPanelProject(ModelView):
     def __init__(self, subject: Project, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
-    
+
+    @property
+    def DOM_ELEMENT_CLASS(self):
+        cls = "ws-row"
+        if self._is_current_item():
+            cls += " active"
+        return cls
+
+    def _is_current_item(self):
+        tab = self.root_view.main_panel.selected_tab_view
+        if tab is not None and hasattr(tab, "subject"):
+            subj = tab.subject
+            if hasattr(subj, "pk"):
+                return subj.pk == self.subject.pk
+        return False
+
     def open_project_details(self):
         self.root_view.main_panel.create_and_open_tab(ProjectView, self.subject)
 

@@ -6,7 +6,6 @@ description: >
   create, and update agents, cron jobs, scripts, skills, streams, sets,
   and the project manifest itself. Can run reload_project to sync changes
   to the database. Accessed via call_projectmanager tool.
-model: gemma4:26b
 extends: baseagent
 maxTurns: 6
 maxUnattendedTurns: 2

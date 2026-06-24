@@ -212,8 +212,10 @@
   :root:not(.dark) .new-chat-btn:hover{background:var(--accent-bg);}
   :root:not(.dark) .sidebar-search input{border-color:rgba(0,0,0,.1);background:rgba(0,0,0,.03);}
   :root:not(.dark) .sidebar-search input:focus{border-color:var(--accent);background:rgba(0,0,0,.02);}
-  :root:not(.dark) .cron-item{border-color:rgba(0,0,0,.08);background:rgba(0,0,0,.02);}
-  :root:not(.dark) .sm-btn{border-color:rgba(0,0,0,.1);}
+:root:not(.dark) .cron-item{border-color:rgba(0,0,0,.08);background:rgba(0,0,0,.02);}
+:root:not(.dark) .cron-item.active{background:var(--accent-bg);}
+:root:not(.dark) .cron-item.active .cron-name{color:var(--accent-text);}
+:root:not(.dark) .sm-btn{border-color:rgba(0,0,0,.1);}
   :root:not(.dark) .sm-btn:hover{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.15);}
   :root:not(.dark) select{border-color:rgba(0,0,0,.12);}
   :root:not(.dark) .composer-wrap{background:var(--sidebar);border-top:1px solid var(--border);}

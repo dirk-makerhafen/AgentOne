@@ -136,6 +136,21 @@ class SidebarPanelChat(ModelView):
         self.root_view: UiAppView = parent.parent.root_view
         self._show_project_dialog = False
 
+    @property
+    def DOM_ELEMENT_CLASS(self):
+        cls = "session-item"
+        if self._is_current_session():
+            cls += " active"
+        return cls
+
+    def _is_current_session(self):
+        tab = self.root_view.main_panel.selected_tab_view
+        if tab is not None and hasattr(tab, "subject"):
+            subj = tab.subject
+            if hasattr(subj, "pk"):
+                return subj.pk == self.subject.pk
+        return False
+
     def open_instance_detail(self):
         self.root_view.main_panel.create_and_open_tab(Chat, self.subject)
 

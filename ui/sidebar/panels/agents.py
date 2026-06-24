@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from ui.app_view import UiAppView
 
 class SidebarPanelAgent(ModelView):
-    DOM_ELEMENT_CLASS = "profile-card"    
     TEMPLATE_STR = '''
         <div class="profile-card-header" onclick="pyview.open_agent_details()">
             <div style="min-width:0;flex:1">
@@ -46,9 +45,22 @@ class SidebarPanelAgent(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
         self.agent = Agent(subject)
-        
 
-        
+    @property
+    def DOM_ELEMENT_CLASS(self):
+        cls = "profile-card"
+        if self._is_current_item():
+            cls += " active"
+        return cls
+
+    def _is_current_item(self):
+        tab = self.root_view.main_panel.selected_tab_view
+        if tab is not None and hasattr(tab, "subject"):
+            subj = tab.subject
+            if hasattr(subj, "pk"):
+                return subj.pk == self.subject.pk
+        return False
+
     def open_agent_details(self):
         self.root_view.main_panel.create_and_open_tab(AgentView, self.subject)
       

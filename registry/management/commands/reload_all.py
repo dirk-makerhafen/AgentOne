@@ -8,9 +8,11 @@ from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_data_collection import load_data_collection_manifest
 from registry.loader.load_project_folder import load_project_folder
+from registry.loader.load_providers import load_providers_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.utils import find_agent_md_files
+from registry.sources.manager import sync_upstream_sources
 from server.models.cron import Cronjob
 
 
@@ -49,14 +51,20 @@ def run_reload_all(folder: str) -> ReloadResult:
         "streams": 0,
         "sets": 0,
         "projects": 0,
+        "providers": 0,
     }
 
+    # Merge upstream sources (if configured) into a staging directory.
+    # The effective root points at the staging dir when upstreams exist,
+    # otherwise it stays at agentone_path.
+    effective_root = sync_upstream_sources(agentone_path, details=details)
+
     # Sync global sources into install repo
-    global_install = InstallRepo.for_global(source_root=agentone_path)
+    global_install = InstallRepo.for_global(source_root=effective_root)
     global_install.sync()
 
     # Global scripts (no parent)
-    scripts_dir = agentone_path / "scripts"
+    scripts_dir = effective_root / "scripts"
     if scripts_dir.is_dir():
         try:
             results = load_scripts_manifest(scripts_dir, install_repo=global_install, details=details)
@@ -65,7 +73,7 @@ def run_reload_all(folder: str) -> ReloadResult:
             errors.append(f"Scripts: {e}")
 
     # Global skills (no parent)
-    skills_dir = agentone_path / "skills"
+    skills_dir = effective_root / "skills"
     if skills_dir.is_dir():
         skill_count = 0
         for skill_md in sorted(skills_dir.glob("**/skill.md")):
@@ -77,7 +85,7 @@ def run_reload_all(folder: str) -> ReloadResult:
         counts["skills"] = skill_count
 
     # Global agents (no parent)
-    agents_dir = agentone_path / "agents"
+    agents_dir = effective_root / "agents"
     if agents_dir.is_dir():
         agent_count = 0
         for agent_md in find_agent_md_files(agents_dir):
@@ -90,7 +98,7 @@ def run_reload_all(folder: str) -> ReloadResult:
         counts["agents"] = agent_count
 
     # Global cron jobs (no parent)
-    crons_dir = agentone_path / "cronjobs"
+    crons_dir = effective_root / "cronjobs"
     if crons_dir.is_dir():
         cron_count = 0
         seen = set()
@@ -104,7 +112,7 @@ def run_reload_all(folder: str) -> ReloadResult:
         counts["cron_jobs"] = cron_count
 
     # Global streams (no parent)
-    streams_dir = agentone_path / "streams"
+    streams_dir = effective_root / "streams"
     if streams_dir.is_dir():
         stream_count = 0
         stream_seen: set[str] = set()
@@ -117,7 +125,7 @@ def run_reload_all(folder: str) -> ReloadResult:
         counts["streams"] = stream_count
 
     # Global sets (no parent)
-    sets_dir = agentone_path / "sets"
+    sets_dir = effective_root / "sets"
     if sets_dir.is_dir():
         set_count = 0
         set_seen: set[str] = set()
@@ -146,6 +154,15 @@ def run_reload_all(folder: str) -> ReloadResult:
             except Exception as e:
                 errors.append(f"Project {project_path}: {e}")
 
+    # Providers
+    providers_file = effective_root / "providers.yaml"
+    if providers_file.exists():
+        try:
+            provider_count = load_providers_manifest(providers_file, details=details)
+            counts["providers"] = provider_count
+        except Exception as e:
+            errors.append(f"Providers: {e}")
+
     # Build summary
     summary = _format_detailed_summary(details, errors)
     status = "success" if not errors else "partial"
@@ -160,6 +177,8 @@ TYPE_LABELS: Dict[str, str] = {
     "stream": "streams",
     "set": "sets",
     "project": "projects",
+    "provider": "providers",
+    "model": "models",
 }
 
 _SINGULAR_LABELS: Dict[str, str] = {
@@ -170,6 +189,8 @@ _SINGULAR_LABELS: Dict[str, str] = {
     "stream": "stream",
     "set": "set",
     "project": "project",
+    "provider": "provider",
+    "model": "model",
 }
 
 
@@ -203,7 +224,7 @@ def _format_detailed_summary(
     lines.append(f"Checked {total_items} manifests in .agentone/ — {action_summary}")
     lines.append("")
 
-    for t in ("agent", "script", "skill", "cron", "stream", "set", "project"):
+    for t in ("agent", "script", "skill", "cron", "stream", "set", "project", "provider", "model"):
         label = TYPE_LABELS.get(t, t + "s")
         items = by_type.get(t)
         if not items:
@@ -237,7 +258,7 @@ def _format_detailed_summary(
     if total_items > 0:
         lines.append("")
         parts = []
-        for t in ("agent", "script", "skill", "cron", "stream", "set", "project"):
+        for t in ("agent", "script", "skill", "cron", "stream", "set", "project", "provider", "model"):
             items = by_type.get(t)
             if items:
                 label = TYPE_LABELS.get(t, t + "s")

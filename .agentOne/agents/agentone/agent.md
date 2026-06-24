@@ -1,7 +1,6 @@
 ---
 name: AgentOne
 description: Main orchestrator agent. Creates and manages projects, coordinates research and planning, and spawns specialist subagents (researcher, planner, projectmanager). Not intended to be extended by other agents or instantiated within a project.
-model: gemma4:26b
 extends: baseagent
 maxTurns: 2
 maxUnattendedTurns: 2

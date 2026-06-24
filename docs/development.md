@@ -18,6 +18,9 @@ python3 manage.py server setup
 
 # Run (starts Daphne + Celery worker + Celery beat)
 python3 manage.py server run
+
+# Update (git pull + pip install + migrate + reload)
+python3 manage.py server update
 ```
 
 Open http://localhost:8000.
@@ -98,6 +101,7 @@ server/             Core Django app
 
 registry/           YAML manifest loader
   loader/           Loader pipeline: agent, scripts, skill, chain, python
+  sources/          Upstream git repo sync — skills, agents, scripts
   install_repo.py   Git-based runtime folder extraction
   task_decorators.py  Legacy @task/@tool/@command (dead code)
 
@@ -565,3 +569,39 @@ python3 -m pylint config/ server/ registry/ tools/
 - Redis must be running at `localhost:6379` for full stack (channels, cache, celery)
 - Celery beat must be running — it drives the 5s tick scheduler
 - `old/` directory is dead code — do not modify
+
+## Upstream sources
+
+AgentOne can pull agents, scripts, and skills from remote git repositories. Configure upstream repos in per-directory YAML files:
+
+| File | Source for |
+|---|---|
+| `.agentone/skills/skills.yaml` | Skill upstream repos |
+| `.agentone/agents/sources.yaml` | Agent upstream repos |
+| `.agentone/scripts/sources.yaml` | Script/tool upstream repos |
+
+**Format:**
+
+```yaml
+sources:
+  - repo: https://github.com/agentone/official-skills.git
+    ref: main
+  - repo: https://github.com/community/extra-tools.git
+    ref: v2.1
+    include: [filesystem/*, git/*]   # optional glob filter
+```
+
+**Merge semantics:**
+
+1. On every `reload_all`, upstream repos are cloned/fetched into `~/.agentone/upstream/`
+2. A staging directory is built — upstream content first, then local `.agentone/` files overlay on top
+3. **Local files always win** on path conflicts
+4. The merged staging directory becomes the install repo's source root — version tracking (git tree SHAs) works identically for upstream and local files
+
+**Server update:**
+
+```
+python3 manage.py server update
+```
+
+This runs `git fetch`, `git pull --ff-only`, `pip install -r requirements.txt`, `migrate`, and `reload_all` — safe to run while the server is down.

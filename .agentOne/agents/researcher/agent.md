@@ -6,7 +6,6 @@ description: >
   before acting — exploring an unfamiliar codebase, searching for relevant docs,
   researching best practices, or investigating a bug's root cause.
   Never writes files or executes code that modifies state.
-model: gemma4:26b
 extends: baseagent
 maxTurns: 4
 maxUnattendedTurns: 2

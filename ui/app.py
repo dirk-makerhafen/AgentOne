@@ -4,6 +4,7 @@ from runtime.project.projects import Projects
 from runtime.skill.skills import  Skills
 from runtime.workspace.workspaces import Workspaces
 from runtime.cron.crons import Cronjobs
+from runtime.settings import UserSettings
 
 from server.models.project import Project
 from server.models.providers.api_provider import ApiProvider
@@ -13,6 +14,7 @@ from server.models.system import System
 class UiApp(Observable):
     def __init__(self):
         super().__init__()
+        self.settings = UserSettings()
         self.projects = Projects()
         self.workspaces = Workspaces()
 

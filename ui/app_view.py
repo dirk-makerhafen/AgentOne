@@ -17,6 +17,21 @@ def ui(request):
 
 
 class AppTitlebar(PyHtmlView):
+    CATEGORIES = {
+        "Chat": "CHAT",
+        "CronView": "CRONJOB",
+        "CronCreateView": "CRONJOB",
+        "CollectionDetailView": "DATAFLOW",
+        "CollectionCreateView": "DATAFLOW",
+        "AgentView": "AGENT",
+        "ProjectView": "PROJECT",
+        "Workspace": "WORKSPACE",
+        "CreateWorkspace": "WORKSPACE",
+        "SkillView": "SKILL",
+        "SettingsView": "SETTINGS",
+        "DashboardView": "DASHBOARD",
+    }
+
     TEMPLATE_STR = '''
         <header class="app-titlebar" role="banner">
             <button class="app-titlebar-hamburger" id="btnHamburger" onclick="toggleMobileSidebar()" type="button" title="Menu" aria-label="Menu">
@@ -24,14 +39,63 @@ class AppTitlebar(PyHtmlView):
             </button>
             <div class="app-titlebar-inner">
                 <span class="app-titlebar-icon" aria-hidden="true">
-                
+
                 </span>
-                <span class="app-titlebar-title" id="appTitlebarTitle">AgentOne</span>
+                <span class="app-titlebar-title" id="appTitlebarTitle">{{ pyview.title_text }}</span>
                 <span class="app-titlebar-sub" id="appTitlebarSub" hidden></span>
             </div>
             <div class="app-titlebar-spacer" aria-hidden="true"></div>
         </header>
     '''
+
+    @property
+    def title_text(self):
+        parts = ["AgentOne"]
+        main_panel = getattr(self.parent, 'main_panel', None)
+        tab = getattr(main_panel, 'selected_tab_view', None) if main_panel else None
+        if tab is not None:
+            proj = self._tab_project(tab)
+            if proj:
+                parts.append(proj)
+            cat = self.CATEGORIES.get(tab.__class__.__name__)
+            if cat:
+                parts.append(cat)
+            name = self._tab_name(tab)
+            if name:
+                parts.append(name)
+        else:
+            sidebar = getattr(self.parent, 'sidebar', None)
+            if sidebar is not None:
+                pid = getattr(sidebar, 'selected_project_id', None)
+                if pid is not None:
+                    from server.models.project import Project
+                    project = Project.objects.filter(pk=pid).first()
+                    if project is not None:
+                        parts.append(project.name)
+        return " · ".join(parts)
+
+    @staticmethod
+    def _tab_name(tab):
+        subject = getattr(tab, 'subject', None)
+        if subject is not None:
+            return getattr(subject, 'name', None)
+        return None
+
+    @staticmethod
+    def _tab_project(tab):
+        subject = getattr(tab, 'subject', None)
+        if subject is None:
+            return None
+        pp = getattr(subject, 'parent_project', None)
+        if pp is not None:
+            return getattr(pp, 'name', str(pp))
+        ppid = getattr(subject, 'parent_project_id', None)
+        if ppid is not None:
+            from server.models.project import Project
+            project = Project.objects.filter(pk=ppid).first()
+            if project is not None:
+                return project.name
+        return None
 
 
 class UiAppView(PyHtmlView):

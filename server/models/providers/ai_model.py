@@ -26,9 +26,15 @@ class AiModel(BaseModel):
 
     context_length = models.IntegerField(default=1000000)
     is_cloud = models.BooleanField(default=True)
+    self_hosted = models.BooleanField(default=False)
+    open_weights = models.BooleanField(default=False)
+    supports_reasoning = models.BooleanField(default=False)
+    supports_tool_call = models.BooleanField(default=False)
     filesize = models.IntegerField(default=-1)
     vision = models.BooleanField(default=False)
-    billion_parameters = models.FloatField(default=0)
+    total_parameters = models.FloatField(default=0)
+    active_parameters = models.FloatField(default=0)
+    quantization = models.CharField(max_length=64, default="", blank=True)
 
     max_prompt_tokens = models.IntegerField(default=1000000)
     max_response_tokens = models.IntegerField(default=1000000)

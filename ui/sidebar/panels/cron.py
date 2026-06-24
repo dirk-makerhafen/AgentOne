@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 
 class SidebarPanelCronjob(ModelView):
-    DOM_ELEMENT_CLASS = "cron-item"
     TEMPLATE_STR = '''
         <div class="cron-header" onclick="pyview.open_cron_details()">
             <span class="cron-name" title="{{ pyview.subject.name }}">
@@ -121,6 +120,21 @@ class SidebarPanelCronjob(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
         self._show_project_dialog = False
+
+    @property
+    def DOM_ELEMENT_CLASS(self):
+        cls = "cron-item"
+        if self._is_current_item():
+            cls += " active"
+        return cls
+
+    def _is_current_item(self):
+        tab = self.root_view.main_panel.selected_tab_view
+        if tab is not None and hasattr(tab, "subject"):
+            subj = tab.subject
+            if hasattr(subj, "pk"):
+                return subj.pk == self.subject.pk
+        return False
 
     def open_cron_details(self):
         self.root_view.main_panel.create_and_open_tab(CronView, self.subject)
