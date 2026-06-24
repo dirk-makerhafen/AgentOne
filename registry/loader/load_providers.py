@@ -57,6 +57,18 @@ def load_providers_manifest(
                 action = "up to date"
         else:
             action = "created"
+
+        # Store free-tier / setup info in raw_data
+        free_info = provider_data.get("free_info")
+        if free_info or provider_data.get("api_key_url") or provider_data.get("setup_instructions"):
+            info = free_info or {}
+            if provider_data.get("api_key_url"):
+                info["api_key_url"] = provider_data["api_key_url"]
+            if provider_data.get("setup_instructions"):
+                info["setup_instructions"] = provider_data["setup_instructions"]
+            provider.data = info
+            provider.save(update_fields=["raw_data"])
+
         details.append({
             "type": "provider",
             "name": name,
@@ -67,6 +79,7 @@ def load_providers_manifest(
             model_name: str = model_data["name"]
             defaults = {
                 "family": model_data.get("family", ""),
+                "is_cloud": model_data.get("is_cloud", True),
                 "self_hosted": model_data.get("self_hosted", False),
                 "open_weights": model_data.get("open_weights", False),
                 "supports_reasoning": model_data.get("supports_reasoning", False),
@@ -80,6 +93,12 @@ def load_providers_manifest(
                 "enabled": model_data.get("enabled", True),
                 "max_prompt_tokens": model_data.get("max_prompt_tokens", 1000000),
                 "max_response_tokens": model_data.get("max_response_tokens", 1000000),
+                "filesize": model_data.get("filesize", -1),
+                "limit_request_per_day": model_data.get("limit_request_per_day", 0),
+                "limit_request_per_minute": model_data.get("limit_request_per_minute", 0),
+                "limit_tokens_per_day": model_data.get("limit_tokens_per_day", 0),
+                "limit_tokens_per_minute": model_data.get("limit_tokens_per_minute", 0),
+                "limit_parallel_calls": model_data.get("limit_parallel_calls", 0),
             }
 
             model_obj, model_created = AiModel.objects.get_or_create(
