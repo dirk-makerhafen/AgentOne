@@ -1,5 +1,7 @@
-from rest_framework import viewsets, serializers
+from rest_framework import viewsets, serializers, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django_filters import rest_framework as filters
 
 from server.models.tasks.agent_task_call import AgentTaskCall
@@ -29,6 +31,60 @@ class TaskCallViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'list':
             return TaskCallListSerializer
         return TaskCallDetailSerializer
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """Approve a task call that is halted for approval."""
+        from runtime.tasks.call_fsm import TaskCallStateMachine
+
+        try:
+            task_call = self.get_object()
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        if task_call.status_detail != "HALTED_APPROVAL":
+            return Response(
+                {'error': f'Call is not awaiting approval (status: {task_call.status_detail})'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        if not TaskCallStateMachine.approve(task_call.pk):
+            return Response(
+                {'error': 'Could not approve call'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response({'status': 'approved'})
+
+    @action(detail=True, methods=['post'])
+    def deny(self, request, pk=None):
+        """Deny a task call that is halted for approval."""
+        from runtime.tasks.call_fsm import TaskCallStateMachine
+        from server.models.enums.task_enums import TaskCallStatusDetail
+
+        try:
+            task_call = self.get_object()
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        if task_call.status_detail != "HALTED_APPROVAL":
+            return Response(
+                {'error': f'Call is not awaiting approval (status: {task_call.status_detail})'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        try:
+            cancelled = TaskCallStateMachine.cancel(task_call.pk, TaskCallStatusDetail.HALTED_APPROVAL)
+        except Exception:
+            cancelled = False
+
+        if not cancelled:
+            return Response(
+                {'error': 'Could not deny call'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response({'status': 'denied'})
 
 
 class TaskRunFilter(filters.FilterSet):

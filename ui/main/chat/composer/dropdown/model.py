@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from django.db.models import Q
 from runtime.session.session import Session
 from server.models.providers.ai_model import AiModel
 from server.models.sessions.session import SessionModel
@@ -12,7 +13,7 @@ class ModelDropdownOption(ModelView):
     TEMPLATE_STR = '''
         <div class="model-opt-top">
             <span class="model-opt-name"> {{ pyview.subject.name }} </span>
-            <span class="model-opt-provider">Ollama-Launch</span>
+            <span class="model-opt-provider"> {{pyview.subject.api_provider.name}}</span>
         </div>
         <span class="model-opt-id">gemma3:12b</span>
     '''
@@ -58,7 +59,10 @@ class ModelDropdown(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.open = False
         self.search_string = ""
-        models = AiModel.objects.all()
+        models = AiModel.objects.filter(
+            Q(api_provider__api_keys__enabled=True)
+            | Q(api_provider__raw_data__contains='"default_api_key"')
+        ).distinct()
         self.model_list = QuerySetView(
             subject=models,
             parent=self,

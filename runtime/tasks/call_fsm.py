@@ -18,8 +18,9 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskCallStatusDetail, TaskCallStatusDetail]]
     (TaskCallStatusDetail.WAITING_DEPENDENCY, TaskCallStatusDetail.HALTED_APPROVAL),
     (TaskCallStatusDetail.WAITING_DEPENDENCY, TaskCallStatusDetail.WAITING_QUEUE),
 
-    # Human approved
+    # Human approved / denied
     (TaskCallStatusDetail.HALTED_APPROVAL,    TaskCallStatusDetail.WAITING_QUEUE),
+    (TaskCallStatusDetail.HALTED_APPROVAL,    TaskCallStatusDetail.ENDED_CANCELLED),
 
     # Scheduler picks it up
     (TaskCallStatusDetail.WAITING_QUEUE,      TaskCallStatusDetail.ACTIVE_QUEUED),
@@ -316,12 +317,13 @@ class TaskCallStateMachine:
     @staticmethod
     def cancel(call_id: int, from_detail: TaskCallStatusDetail) -> bool:
         """
-        ``WAITING_DEPENDENCY`` **or** ``WAITING_SUBTASK`` → ``ENDED_CANCELLED``.
+        ``WAITING_DEPENDENCY``, ``HALTED_APPROVAL``, **or** ``WAITING_SUBTASK``
+        → ``ENDED_CANCELLED``.
 
         Parameters
         ----------
         from_detail : TaskCallStatusDetail
-            Must be ``WAITING_DEPENDENCY`` or ``WAITING_SUBTASK``.
+            Must be a valid source state for ``ENDED_CANCELLED``.
         """
         return TaskCallStateMachine.transition(
             call_id=call_id,

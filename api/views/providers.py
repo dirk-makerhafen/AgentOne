@@ -1,5 +1,7 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from server.models.providers.api_provider import ApiProvider
 from server.models.providers.ai_model import AiModel
@@ -8,6 +10,7 @@ from api.serializers.providers import (
     AiModelListSerializer, AiModelDetailSerializer,
 )
 from api.permissions import IsAdminUserOrReadOnly
+from api.utils import sync_provider_models
 
 
 class ProviderViewSet(viewsets.ReadOnlyModelViewSet):
@@ -21,6 +24,13 @@ class ProviderViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'list':
             return ProviderListSerializer
         return ProviderDetailSerializer
+
+    @action(detail=True, methods=['post'])
+    def sync_models(self, request, pk=None):
+        result = sync_provider_models(pk)
+        if result["error"]:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        return Response(result)
 
 
 class AiModelViewSet(viewsets.ReadOnlyModelViewSet):

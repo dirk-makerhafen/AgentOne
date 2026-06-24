@@ -89,8 +89,18 @@ class CallScheduler:
 
         If the call requires approval it is paused at ``HALTED_APPROVAL``;
         otherwise it is enqueued and a new task run is started.
+
+        Guardrail check: for ``shell`` tool calls, run sh-guard on the
+        command source.  If the verdict is ``ask`` (risky or blocked) the
+        call is dynamically marked as requiring approval so the user can
+        decide.
         """
         print("all_required_task_calls_ended", task_call_id)
+
+        # --- Guardrail checks ---
+        CallScheduler._guardrail_shell_check(task_call_id)
+        CallScheduler._guardrail_python_check(task_call_id)
+
         if TaskCallStateMachine.request_approval(task_call_id):
             print(" # WAIT FOR APPROVAL")
             return  # WAIT FOR APPROVAL
@@ -100,6 +110,87 @@ class CallScheduler:
             return  # was not queued, maybe some race condition
 
         CallScheduler.start_new_taskrun(task_call_id)
+
+    @staticmethod
+    def _guardrail_python_check(task_call_id: int) -> None:
+        """Run guardrail on Python code and dynamically require approval if needed."""
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.guardrails import check_python_command
+
+        try:
+            tc = AgentTaskCall.objects.get(pk=task_call_id)
+        except AgentTaskCall.DoesNotExist:
+            return
+
+        task_name = getattr(tc.task_definition, "name", "") if tc.task_definition else ""
+
+        if task_name != "python":
+            return
+
+        source = tc.carguments_json.get("source", "")
+        if not source:
+            args = tc.carguments_json.get("*", [])
+            source = args[0] if args else ""
+
+        if not source:
+            instance_args = getattr(tc.task_instance, "iarguments_json", {}).get("*", [])
+            source = instance_args[0] if instance_args else ""
+
+        source = str(source) if source else ""
+        if not source:
+            return
+
+        verdict = check_python_command(source)
+
+        if verdict.action == "ask" and not tc.requires_approval:
+            cargs = dict(tc.carguments_json)
+            cargs["__guardrail_reason__"] = verdict.reason
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            _ATC.objects.filter(pk=tc.pk).update(
+                requires_approval=True, carguments_json=cargs,
+            )
+            print(f"  # PYTHON GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
+
+    @staticmethod
+    def _guardrail_shell_check(task_call_id: int) -> None:
+        """Run guardrail on shell commands and dynamically require approval if needed."""
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.guardrails import check_shell_command
+
+        try:
+            tc = AgentTaskCall.objects.get(pk=task_call_id)
+        except AgentTaskCall.DoesNotExist:
+            return
+
+        task_name = getattr(tc.task_definition, "name", "") if tc.task_definition else ""
+
+        if task_name != "shell":
+            return
+
+        # Extract the 'source' argument from call or instance defaults
+        source = tc.carguments_json.get("source", "")
+        if not source:
+            args = tc.carguments_json.get("*", [])
+            source = args[0] if args else ""
+
+        if not source:
+            instance_args = getattr(tc.task_instance, "iarguments_json", {}).get("*", [])
+            source = instance_args[0] if instance_args else ""
+
+        source = str(source) if source else ""
+        if not source:
+            return
+
+        verdict = check_shell_command(source)
+
+        if verdict.action == "ask" and not tc.requires_approval:
+            cargs = dict(tc.carguments_json)
+            cargs["__guardrail_reason__"] = verdict.reason
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            _ATC.objects.filter(pk=tc.pk).update(
+                requires_approval=True, carguments_json=cargs,
+            )
+            print(f"  # GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
 
     # ------------------------------------------------------------------
     # Human approval

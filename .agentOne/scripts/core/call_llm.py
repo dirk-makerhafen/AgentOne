@@ -57,7 +57,7 @@ def run_streaming_query(
 
     client = OpenAI(
         base_url=session.aimodel.api_provider.url,
-        api_key=query.apikey.key if query.apikey else None,
+        api_key=query.apikey.key if query.apikey else (session.aimodel.api_provider.data or {}).get("default_api_key", ""),
     )
 
     from server.models.debug_log_entry import DebugLogEntry
@@ -203,8 +203,6 @@ def call_llm(session: Session, query: Query) -> Response:
         if not ratelimit_result:
             raise Exception("Error in ratelimiter")
         apikey = ratelimit_result.selected_key
-        if not apikey:
-            raise Exception("Error in ratelimiter, not api key selected")
         updated = Query.objects.filter(pk=query.pk, status=QueryStatus.WAITING).update(apikey=apikey, status=QueryStatus.ACTIVE)
         if not updated:
             raise Exception("Failed to update query to active state")

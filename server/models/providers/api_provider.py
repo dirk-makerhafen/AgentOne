@@ -51,6 +51,14 @@ class ApiProvider(BaseModel):
             status=TaskRunStatus.ACTIVE,
         ).count()
 
+    @property
+    def usable(self) -> bool:
+        """Whether this provider can make LLM calls — has enabled keys or a default key."""
+        return (
+            self.api_keys.filter(enabled=True).exists()
+            or bool(self.data.get("default_api_key"))
+        )
+
     def is_rate_limited(self) -> tuple[bool, str]:
         """Check provider-level parallel limit.
 

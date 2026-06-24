@@ -65,7 +65,8 @@ def _release_rate_limited_calls() -> None:
                 continue
             try:
                 RateLimitChecker.check(aimodel)
-            except RateLimitError:
+            except RateLimitError as e:
+                print(f"{aimodel} is rate limited" ,e )
                 exhausted_models.add(aimodel.pk)
                 continue
 

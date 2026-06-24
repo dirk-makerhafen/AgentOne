@@ -22,6 +22,12 @@ def shell(source: str, interpreter: str = "auto") -> tuple[bool, dict]:
       powershell/cmd on Windows).
     - Commands must be non-interactive and complete in finite time.
 
+    Safety:
+    - Commands are inspected by sh-guard before execution.
+      Dangerous commands (score >= 90) are blocked.
+    - pureshellcheck lint warnings are attached to the result
+      metadata for the LLM to review and fix shell issues.
+
     Args:
         source: The shell script to execute.
         interpreter: The interpreter to use ("bash", "sh",
@@ -34,8 +40,23 @@ def shell(source: str, interpreter: str = "auto") -> tuple[bool, dict]:
             - stdout: str
             - stderr: str
             - return_code: int (0 on success)
+            - lint_warnings: list[dict] (pureshellcheck findings, optional)
         On error, result contains the same keys with status "error".
     '''
+
+    # --- Guardrail check ---
+    guardrail_block = _guardrail_check(source)
+    if guardrail_block:
+        return (False, {
+            'status': 'error',
+            'stdout': '',
+            'stderr': guardrail_block,
+            'return_code': -1,
+        })
+
+    # --- Lint check (non-blocking) ---
+    lint_warnings = _lint_check(source)
+
     cwd = os.getcwd()
 
     is_windows = sys.platform == "win32"
@@ -88,6 +109,8 @@ def shell(source: str, interpreter: str = "auto") -> tuple[bool, dict]:
             'stderr': proc.stderr,
             'return_code': proc.returncode,
         }
+        if lint_warnings:
+            result['lint_warnings'] = lint_warnings
         return (proc.returncode == 0, result)
 
     except subprocess.TimeoutExpired:
@@ -108,6 +131,33 @@ def shell(source: str, interpreter: str = "auto") -> tuple[bool, dict]:
     finally:
         if 'tmp_path' in locals() and os.path.exists(tmp_path):
             os.remove(tmp_path)
+
+
+def _guardrail_check(source: str) -> str | None:
+    """Run sh-guard on the command.  Returns an error message or None."""
+    try:
+        from runtime.guardrails import check_shell_command
+
+        verdict = check_shell_command(source, ask_threshold=90)
+        if verdict.action == "ask":
+            return (
+                f"Command blocked by safety guardrail.\n"
+                f"Reason: {verdict.reason}\n"
+                f"Risk: {verdict.level} (score: {verdict.score})"
+            )
+    except Exception:
+        pass
+    return None
+
+
+def _lint_check(source: str) -> list[dict]:
+    """Run pureshellcheck on the command.  Returns a list of lint findings."""
+    try:
+        from runtime.guardrails import lint_shell_command
+
+        return lint_shell_command(source)
+    except Exception:
+        return []
 
 if __name__ == '__main__':
     import argparse

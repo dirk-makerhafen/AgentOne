@@ -28,6 +28,17 @@ def python(source: str) -> tuple[bool, dict]:
             - return_code: int
         On error, result contains the same keys with status "error".
     '''
+
+    # --- Guardrail check ---
+    guardrail_block = _guardrail_check(source)
+    if guardrail_block:
+        return (False, {
+            'status': 'error',
+            'stdout': '',
+            'stderr': guardrail_block,
+            'return_code': -1,
+        })
+
     cwd = os.getcwd()
 
     try:
@@ -70,6 +81,23 @@ def python(source: str) -> tuple[bool, dict]:
     finally:
         if 'tmp_path' in locals() and os.path.exists(tmp_path):
             os.remove(tmp_path)
+
+
+def _guardrail_check(source: str) -> str | None:
+    """Run Python guardrail on the source code.  Returns an error message or None."""
+    try:
+        from runtime.guardrails import check_python_command
+
+        verdict = check_python_command(source, ask_threshold=90)
+        if verdict.action == "ask":
+            return (
+                f"Python code blocked by safety guardrail.\n"
+                f"Reason: {verdict.reason}\n"
+                f"Risk: {verdict.level} (score: {verdict.score})"
+            )
+    except Exception:
+        pass
+    return None
 
 if __name__ == '__main__':
     import argparse

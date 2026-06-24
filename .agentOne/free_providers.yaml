@@ -372,3 +372,52 @@ providers:
         supports_reasoning: false
         supports_tool_call: true
         total_parameters: 9
+
+  - name: OpenCode Zen
+    url: https://opencode.ai/zen/v1
+    free_info:
+      api_key_url: https://opencode.ai/auth
+      default_api_key: "public"
+      setup_instructions: >
+        OpenCode Zen provides free models without requiring an API key.
+        In Settings → Providers → OpenCode Zen, leave the API key empty.
+        Our system will automatically use "public" as the auth token,
+        which the Zen gateway accepts for free-tier models.
+        For full access (paid models), sign up at opencode.ai/auth and
+        paste your Zen API key.
+    models:
+      - name: deepseek-v4-flash-free
+        family: deepseek
+        is_cloud: true
+        context_length: 64000
+        vision: false
+        supports_reasoning: true
+        supports_tool_call: true
+      - name: big-pickle
+        family: big-pickle
+        is_cloud: true
+        context_length: 128000
+        vision: false
+        supports_reasoning: false
+        supports_tool_call: true
+      - name: mimo-v2.5-free
+        family: mimo
+        is_cloud: true
+        context_length: 128000
+        vision: false
+        supports_reasoning: true
+        supports_tool_call: true
+      - name: north-mini-code-free
+        family: north
+        is_cloud: true
+        context_length: 128000
+        vision: false
+        supports_reasoning: true
+        supports_tool_call: true
+      - name: nemotron-3-ultra-free
+        family: nemotron
+        is_cloud: true
+        context_length: 128000
+        vision: false
+        supports_reasoning: false
+        supports_tool_call: true

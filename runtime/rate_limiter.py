@@ -22,7 +22,7 @@ class RateLimitError(Exception):
 class RateLimitResult:
     """Returned when capacity IS available."""
 
-    selected_key: "ApiKey"
+    selected_key: "ApiKey | None"
 
 
 class RateLimitChecker:
@@ -52,10 +52,13 @@ class RateLimitChecker:
         if limited:
             raise RateLimitError(f"model:{reason}")
 
-        # 3. Key selection
-        key = RateLimitChecker._select_key(aimodel)
-        if key is None:
-            raise RateLimitError("no_key_available: all keys are rate-limited or disabled")
+        # 3. Key selection — skip if provider has no keys (keyless API)
+        if aimodel.api_provider.api_keys.exists():
+            key = RateLimitChecker._select_key(aimodel)
+            if key is None:
+                raise RateLimitError("no_key_available: all keys are rate-limited or disabled")
+        else:
+            key = None
 
         return RateLimitResult(selected_key=key)
 
