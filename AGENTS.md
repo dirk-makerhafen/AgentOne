@@ -2,8 +2,10 @@
 
 Quick reference for developers working on AgentOne. See also:
 - [README.md](README.md) — project overview, features, quick start
+- [docs/user-guide.md](docs/user-guide.md) — end-user guide for the UI
 - [docs/architecture.md](docs/architecture.md) — system architecture, data flow, component interactions
 - [docs/development.md](docs/development.md) — setup, coding conventions, how-to guides
+- [docs/core-mechanisms.md](docs/core-mechanisms.md) — task dispatch pipeline, auto-await, renderer internals
 - [docs/deployment.md](docs/deployment.md) — production deployment, supervisor, nginx
 - [docs/manifest-format.md](docs/manifest-format.md) — YAML manifest format (agents, scripts, cron, streams, sets)
 - [docs/models.md](docs/models.md) — model reference (all ~30 models including DataCollection)
@@ -49,8 +51,8 @@ python3 manage.py runserver                     # dev server only (no Celery)
 python3 -m celery -A config worker -l INFO      # worker
 python3 -m celery -A config beat -l INFO        # beat (required for tasks)
 python3 manage.py makemigrations && migrate     # DB schema
-python3 -m pytest server/tests/ -v --reuse-db   # server tests (201+)
-python3 -m pytest api/tests/ -v --reuse-db      # API tests (67)
+python3 -m pytest server/tests/ -v --reuse-db   # server tests (245+)
+python3 -m pytest api/tests/ -v --reuse-db      # API tests (86)
 python3 -m pytest .agentone/scripts/ -v         # tool tests (75)
 python3 -m pylint config/ server/ registry/     # lint
 python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool

@@ -542,6 +542,17 @@ python3 -m pytest server/tests/ -v
 python3 -m pytest .agentone/scripts/filesystem/read/test_read.py -v
 ```
 
+## Guardrails
+
+Shell and Python commands are automatically scanned before execution by the guardrail system in `runtime/guardrails.py`.
+
+- **Shell commands** → [sh-guard](https://github.com/aryanbhosale/sh-guard) (AST-based risk classifier) + pureshellcheck linting
+- **Python code** → [bandit](https://github.com/PyCQA/bandit) (PyCQA security linter) + supplementary AST checks for patterns bandit misses (socket, ctypes, open modes, os.remove, compile)
+- **Pre-schedule** (threshold 80) runs before a call is dispatched; risky commands enter `HALTED_APPROVAL` for human decision
+- **Execution-time** (threshold 90) runs again just before `subprocess.run()` as a second line of defense
+- Guardrails are always advisory — they never silently deny; the user always gets an approve/deny card
+- Tests live in `server/tests/test_guardrails.py` (36 unit tests) and `api/tests/test_tasks.py` (24 integration tests)
+
 ## Linting
 
 ```bash
@@ -605,3 +616,7 @@ python3 manage.py server update
 ```
 
 This runs `git fetch`, `git pull --ff-only`, `pip install -r requirements.txt`, `migrate`, and `reload_all` — safe to run while the server is down.
+
+---
+
+**See also:** [Architecture](architecture.md) · [Core mechanisms](core-mechanisms.md) · [Manifest format](manifest-format.md) · [Deployment](deployment.md)

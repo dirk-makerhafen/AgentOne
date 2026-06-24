@@ -687,3 +687,7 @@ File: `server/models/debug_log_entry.py`
 ### SystemStatus, SystemOS, SystemConnectionMode
 
 `ONLINE` / `OFFLINE` / `MAINTENANCE`; `LINUX` / `WINDOWS` / `OSX`; `LOCAL` / `HTTP` / `WEBSOCKET`
+
+---
+
+**See also:** [Architecture](architecture.md) · [Manifest format](manifest-format.md) · [Core mechanisms](core-mechanisms.md)

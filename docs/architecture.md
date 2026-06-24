@@ -120,8 +120,16 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  ├── call_fsm.py → TaskCallStateMachine:                        │
 │  │   NEW→WAITING_DEPENDENCY→WAITING_QUEUE→                      │
 │  │   ACTIVE_QUEUED→ACTIVE_RUNNING→ENDED_SUCCESS                 │
+│  │   →HALTED_APPROVAL (guardrail) →WAITING_QUEUE (approve)      │
+│  │                              →ENDED_CANCELLED (deny)         │
 │  └── run_fsm.py → TaskRunStateMachine:                          │
 │      NEW→QUEUED→ACTIVE→SUCCESS/FAILURE                          │
+│                                                                 │
+│  Guardrails (runtime/guardrails.py):                             │
+│  ├── check_shell_command() → sh-guard AST classifier            │
+│  ├── check_python_command() → bandit + supplementary AST checks │
+│  └── lint_shell_command() → pureshellcheck linting              │
+│  All return GuardrailVerdict(action=allow/ask/deny, score, ...)  │
 │                                                                 │
 │  Rate limiter: 3-tier (provider→model→apikey) fail-fast         │
 │  Runtime folder manager: versioned file extraction from git     │
@@ -174,10 +182,11 @@ BoundTask.delay(args)
               → AgentTaskRun.apply()   ← actual Python execution
 ```
 
-- `AgentTaskCall` tracks call-level status (NEW→WAITING→ACTIVE→ENDED)
+- `AgentTaskCall` tracks call-level status (NEW→WAITING→ACTIVE→ENDED, plus `HALTED_APPROVAL`)
 - `AgentTaskRun` tracks run-level status (NEW→QUEUED→ACTIVE→SUCCESS/FAILURE)
 - Dependencies: calls reference other calls via M2M → `WAITING_DEPENDENCY`
 - Auto-await: if a task returns an `AgentTaskCall`, parent run enters `WAITING_RESULTTASKS`
+- Guardrails: before dispatch, shell and Python commands are scanned by sh-guard/bandit; risky commands enter `HALTED_APPROVAL` for human decision
 
 ### Auto-await / result resolution
 
@@ -351,8 +360,14 @@ All viewsets expose runtime-resolved data (e.g., inherited agent capabilities vi
 | `/api/v1/systems/` | Authenticated | CRUD |
 | `/api/v1/workspaces/` | Authenticated | CRUD |
 | `/api/v1/task-calls/` | Authenticated | Read-only with nested task runs |
+| `/api/v1/task-calls/{id}/approve/` | Authenticated | Approve a HALTED_APPROVAL call → WAITING_QUEUE |
+| `/api/v1/task-calls/{id}/deny/` | Authenticated | Deny a HALTED_APPROVAL call → ENDED_CANCELLED |
 | `/api/v1/task-runs/` | Authenticated | Read-only |
 
 OpenAPI schema at `GET /api/v1/schema/`, Swagger UI at `/api/v1/docs/`, ReDoc at `/api/v1/redoc/`.
+
+---
+
+**See also:** [User guide](user-guide.md) · [Core mechanisms](core-mechanisms.md) · [Development guide](development.md) · [Manifest format](manifest-format.md)
 
 ## Configuration sources

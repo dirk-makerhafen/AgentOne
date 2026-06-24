@@ -58,7 +58,7 @@ class ChildSessionItem(ModelView):
 
 class RightPanelSubagents(ModelView):
     DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel"
+    DOM_ELEMENT_CLASS = "rightpanel-inner"
     TEMPLATE_STR = '''
         <div class="panel-header">
             <span>Sub-agents</span>

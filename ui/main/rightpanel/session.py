@@ -35,7 +35,7 @@ INT_FIELDS = {
 
 class RightPanelSession(ModelView):
     DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel"
+    DOM_ELEMENT_CLASS = "rightpanel-inner"
     TEMPLATE_STR = '''
         <div class="panel-header">
             <span>Session</span>
@@ -55,7 +55,9 @@ class RightPanelSession(ModelView):
             <div class="settings-card" style="margin-bottom:8px">
                 <div class="detail-row">
                     <div class="detail-row-label">Name</div>
-                    <div class="detail-row-value">{{ pyview.session.name }}</div>
+                    <div class="detail-row-value">
+                        <input type="text" value="{{ pyview.session.name }}" onchange="pyview.setSessionName(this.value)" class="setting-input" style="width:100%;font-size:12px">
+                    </div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Agent</div>
@@ -266,4 +268,17 @@ class RightPanelSession(ModelView):
         if not self.is_overridden(name):
             return
         s._set_session_setting(name, None)
+        self.update()
+
+    def setSessionName(self, value: str) -> None:
+        """Update the session name."""
+        from server.models.sessions.session import SessionModel
+
+        s = self.session
+        if s is None:
+            return
+        name = value.strip()
+        if not name:
+            return
+        SessionModel.objects.filter(pk=s.model.pk).update(name=name)
         self.update()

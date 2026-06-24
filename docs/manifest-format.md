@@ -547,3 +547,7 @@ sources:
 - Source YAML files with empty ``sources:`` lists (or no ``sources`` key at all) are silently skipped
 - If no sources are configured across all three files, the reload process is identical to the pre-upstream behavior
 - Local source YAML files themselves (``skills.yaml``, ``sources.yaml``) are **not** copied into the staging directory — they are configuration only, not manifest content
+
+---
+
+**See also:** [Architecture](architecture.md) · [Core mechanisms](core-mechanisms.md) · [Models](models.md) · [Skills format](skills.yaml.md)

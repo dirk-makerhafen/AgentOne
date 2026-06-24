@@ -35,7 +35,7 @@ def _build_category(allowed_names: set[str], disallowed_names: set[str]) -> list
 
 class RightPanelTasks(ModelView):
     DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel"
+    DOM_ELEMENT_CLASS = "rightpanel-inner"
     TEMPLATE_STR = '''
         <div class="panel-header">
             <span>Capabilities</span>

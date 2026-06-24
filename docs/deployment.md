@@ -218,3 +218,7 @@ cp config/settings_local.py config/settings_local.py.backup
 - Celery workers can be scaled horizontally by running additional worker processes (or on separate machines sharing the same Redis and MySQL).
 - Rate limiting uses Redis — ensure Redis availability under load.
 - The 5s tick scheduler is the heartbeat of the task system. If the beat process is down, no task state transitions will occur.
+
+---
+
+**See also:** [Architecture](architecture.md) · [Development guide](development.md) · [User guide](user-guide.md)

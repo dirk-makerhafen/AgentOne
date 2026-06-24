@@ -1188,7 +1188,16 @@
   /* container-type/name lets descendants run @container queries against the
      panel's width so the header can collapse less-essential elements as the
      user resizes the panel narrower. */
-  .rightpanel{         padding-bottom: 8px;height:100%; padding-bottom: 30px;width:300px;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
+  .rightpanel{         padding-bottom: 8px;height:100%; padding-bottom: 30px;width:25%;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
+  .rightpanel-inner {
+    /* padding-bottom: 8px; */
+    height: calc(100% - 50px);
+    width: -webkit-fill-available;
+    background: var(--sidebar);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
   /* Collapse priority as the panel narrows: git-badge first, then "Workspace"
      label, never the icon buttons. flex-shrink ratios give graceful ellipsis;
      @container queries below cut to display:none at hard breakpoints. */
@@ -3229,7 +3238,7 @@ main.main > .main-view:not([id="mainChat"]):not([id="mainSettings"]) .main-view-
 /* ── Shared detail-card styling (cron / workspace / profile detail pages) ── */
 .detail-card{border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:16px 12px;margin-bottom:16px;width: -webkit-fill-available;}
 .detail-card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
-.detail-row{display:flex;gap:12px;flex-direction:row;padding:3px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:flex-start;}
+.detail-row{display:flex;gap:12px;flex-direction:row;padding:3px 0;border-bottom:1px solid var(--border);font-size:13px;    align-items: center; justify-content: space-between;}
 .detail-row:last-child{border-bottom:none;}
 .detail-row-label{flex:0 0 140px;color:var(--muted);font-size:12px;}
 .detail-row-value{flex:1;min-width:0;color:var(--text);word-break:break-word;}

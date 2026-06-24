@@ -618,3 +618,7 @@ No page reloads. No full re-renders. Only the specific view that called `update(
 | `ui/main/rightpanel/tasks.py` | 36–125 | Capability tables tab |
 | `ui/main/rightpanel/subagents.py` | 28–154 | Subagents tab |
 | `ui/main/agent/agent_view.py` | 55–437 | Agent detail view |
+
+---
+
+**See also:** [Architecture](architecture.md) · [Manifest format](manifest-format.md) · [Development guide](development.md) · [User guide](user-guide.md)

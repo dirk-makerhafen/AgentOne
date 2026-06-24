@@ -55,11 +55,16 @@ Type your message in the composer box at the bottom of the chat panel and press 
 
 ### Tool approval
 
-When a tool requires human approval, an **Approval Card** slides up over the composer:
+When a tool or command requires human approval, an **Approval Card** slides up over the composer:
 
-- **Approve** — allow the tool to execute
-- **Deny** — reject the tool call
-- **Review details** — expand the card to see the tool's function, arguments, and description
+- **Approve** — allow the tool/command to execute
+- **Deny** — reject the tool/command
+- **Review details** — expand the card to see the function, arguments, and description
+
+Approval can be triggered in two ways:
+
+- **Static** — the tool's `scripts.md` manifest has `requires_approval: true`
+- **Dynamic (guardrails)** — before a shell or Python command runs, it is scanned by safety guardrails. Shell commands are classified by **sh-guard** (AST-based risk scoring); Python code is analyzed by **bandit** (PyCQA security linter). If the guardrail deems a command risky (score ≥ 80), the call enters `HALTED_APPROVAL` state and an approval card is shown even if the tool itself does not require approval. Execution-time guardrails use a higher threshold (score ≥ 90) for a second line of defense.
 
 ### Queue
 
@@ -102,8 +107,9 @@ The Agents panel manages AI agent profiles.
 ### Creating an agent
 
 1. Click **+ New** at the top of the agents sidebar
-2. Fill in the agent's name and configuration
-3. Agent definitions can also be created by placing `agent.md` files in `.agentone/agents/`
+2. A create form opens in the main panel with fields: name, extends (parent agent), model, reasoning effort, max turns, max unattended turns, and description / system prompt
+3. On save, an `agent.md` file is written to `.agentone/agents/<name>/`, the manifest loader reloads all agents, and the new agent detail view opens
+4. Agent definitions can also be created by placing `agent.md` files directly in `.agentone/agents/`
 
 ### Agent details
 
@@ -151,8 +157,9 @@ Projects group agents, skills, and sessions together.
 ### Creating a project
 
 1. Click **+ New** at the top of the projects sidebar
-2. Enter a name, description, and optional filesystem path
-3. The project appears in the project selector dropdown
+2. A create form opens: enter a name, description, and optional filesystem path
+3. On save, the project directory is created with a `.agentone/project.md` manifest, the project is registered in `.agentone/projects.yaml`, the manifest loader reloads, and the project detail view opens
+4. The project immediately appears in the project selector dropdown
 
 ### Project filtering
 
@@ -431,3 +438,7 @@ Some settings only apply to new sessions, not existing ones. Check if the settin
 1. Check the project selector — it may be filtering items
 2. Try switching to **All** in the project selector
 3. Check if the selected panel has any data (agents, sessions, etc.)
+
+---
+
+**See also:** [Architecture](architecture.md) · [Development guide](development.md) · [Manifest format](manifest-format.md)

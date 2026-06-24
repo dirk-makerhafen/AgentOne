@@ -1,4 +1,5 @@
 asgiref
+bandit
 celery
 channels
 channels-redis
@@ -15,10 +16,12 @@ Fabric
 Jinja2
 openai
 PyMySQL
+PyYAML
 rapidfuzz
 redis
-whitenoise
 requests
+sh-guard
+whitenoise
 httpx
 mcp
 pytest
@@ -38,4 +41,5 @@ daphne
 python-frontmatter
 markdown
 psutil
+pureshellcheck
 html2text
