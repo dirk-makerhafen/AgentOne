@@ -197,10 +197,8 @@ class Session:
         return self._get_session_setting("priority")
 
     def needs_approval(self) -> bool:
-        """Return True if session has hit turn or unattended turn limits."""
+        """Return True if session has hit the unattended turn limit."""
         try:
-            if self.max_turns and self.current_turn_count >= self.max_turns:
-                return True
             if self.max_unattended_turns and self.current_unattended_turn_count >= self.max_unattended_turns:
                 return True
         except (TypeError, AttributeError):

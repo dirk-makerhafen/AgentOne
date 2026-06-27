@@ -30,6 +30,13 @@ Quick reference for developers working on AgentOne. See also:
 
 Agent definitions use YAML frontmatter in `.md` files.
 
+## Debug commands
+
+| Command | Approval | Purpose |
+|---|---|---|
+| `/debug` | no | General debugging: `/debug ping`, `/debug approval` |
+| `/test-approval` | **yes** | Tests the full guardrail/approval card UI flow |
+
 ## Setup
 
 ```bash
@@ -40,6 +47,8 @@ python3 manage.py server setup
 # Start the server (Daphne + Celery worker + Celery beat)
 python3 manage.py server run
 ```
+
+See [docs/development.md](docs/development.md) for detailed setup instructions.
 
 ## Key commands
 

@@ -9,6 +9,7 @@ from ui.main.chat.banner.update import UpdateBanner
 from ui.main.chat.composer.box import ComposerBox
 from ui.main.chat.cards.approval import ApprovalCard
 from ui.main.chat.cards.clarify import ClarifyCard
+from ui.main.chat.cards.guardrail_approval import GuardrailApprovalCard
 from ui.main.chat.cards.queue import QueueCard
 from ui.main.chat.messages.messages import Messages
 from ui.main.chat.panel.terminal import TerminalPanel
@@ -37,6 +38,8 @@ class Chat(ModelView):
                 {{ pyview.queue_card.render() }}
 
                 {{ pyview.approval_card.render() }}
+
+                {{ pyview.guardrail_card.render() }}
                 
                 {{ pyview.clarify_card.render() }}
 
@@ -72,6 +75,7 @@ class Chat(ModelView):
 
         self.queue_card = QueueCard(self.session, self)
         self.approval_card = ApprovalCard(self.session, self)
+        self.guardrail_card = GuardrailApprovalCard(self.session, self)
         self.clarify_card = ClarifyCard(self.session, self)
         self.terminal_panel = TerminalPanel(self.session, self)
 

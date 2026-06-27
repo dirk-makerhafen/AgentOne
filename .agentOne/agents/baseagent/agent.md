@@ -18,7 +18,7 @@ tools: []
 disallowedTools: []
 tasks: [ core.*  ]
 disallowedTasks: []
-commands: [ ping ]
+commands: [ ping, debug, test-approval ]
 disallowedCommands: []
 priority: 0
 ---

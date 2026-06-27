@@ -16,10 +16,10 @@ class ApprovalCard(ModelView):
                     <line x1="12" y1="9" x2="12" y2="13"/>
                     <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
-                <span id="approvalHeading">Turn limit reached</span>
+                <span id="approvalHeading">Unattended turn limit reached</span>
             </div>
             <div class="approval-desc" id="approvalDesc">
-                This session has reached the maximum number of turns.
+                The agent has reached the maximum number of unattended turns.
                 Approve to reset the counters and continue processing.
             </div>
             <div class="approval-cmd" id="approvalCmd"></div>
