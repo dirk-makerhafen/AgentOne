@@ -5,419 +5,420 @@
 # Rate-limit fields: 0 = unlimited.
 
 providers:
-  - name: Google
-    url: https://generativelanguage.googleapis.com/v1beta/
-    free_info:
-      api_key_url: https://aistudio.google.com/apikey
-      setup_instructions: >
-        Create a Google account (or use an existing one), visit the API key page
-        above, click "Create API key", and paste it into the Google API key field
-        in AgentOne settings. The free tier includes Gemini 2.5 Flash with generous
-        rate limits (1500 RPM, 1M TPM for Flash).
-    models:
-      - name: gemini-2.5-flash
-        family: gemini
-        is_cloud: true
-        context_length: 1048576
-        vision: true
-        supports_reasoning: false
-        supports_tool_call: true
-        limit_request_per_minute: 1500
-        limit_tokens_per_minute: 1000000
-        limit_tokens_per_day: 0
-      - name: gemini-2.5-flash-lite
-        family: gemini
-        is_cloud: true
-        context_length: 1048576
-        vision: true
-        supports_reasoning: false
-        supports_tool_call: true
-        limit_request_per_minute: 1500
-        limit_tokens_per_minute: 1000000
-        limit_tokens_per_day: 0
+- name: Google
+  url: https://generativelanguage.googleapis.com/v1beta/
+  free_info:
+    api_key_url: https://aistudio.google.com/apikey
+    setup_instructions: 'Create a Google account (or use an existing one), visit the
+      API key page above, click "Create API key", and paste it into the Google API
+      key field in AgentOne settings. The free tier includes Gemini 2.5 Flash with
+      generous rate limits (1500 RPM, 1M TPM for Flash).
 
-  - name: Groq
-    url: https://api.groq.com/openai/v1
-    free_info:
-      api_key_url: https://console.groq.com/keys
-      setup_instructions: >
-        Sign up at console.groq.com (free, no credit card), go to API Keys,
-        create a key, and paste it in AgentOne settings. Free tier offers 30 RPM
-        and 14,400 RPD on most models.
-    models:
-      - name: llama-3.3-70b-versatile
-        family: llama
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 70
-        limit_request_per_minute: 30
-        limit_request_per_day: 14400
-      - name: llama-3.1-8b-instant
-        family: llama
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 8
-        limit_request_per_minute: 30
-        limit_request_per_day: 14400
-      - name: mixtral-8x7b-32768
-        family: mixtral
-        is_cloud: true
-        context_length: 32768
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 47
-        active_parameters: 13
-        limit_request_per_minute: 30
-        limit_request_per_day: 14400
-      - name: gemma2-9b-it
-        family: gemma
-        is_cloud: true
-        context_length: 8192
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: false
-        total_parameters: 9
-        limit_request_per_minute: 30
-        limit_request_per_day: 14400
+      '
+  models:
+  - name: gemini-2.5-flash
+    family: gemini
+    is_cloud: true
+    context_length: 1048576
+    vision: true
+    supports_reasoning: false
+    supports_tool_call: true
+    limit_request_per_minute: 1500
+    limit_tokens_per_minute: 1000000
+    limit_tokens_per_day: 0
+  - name: gemini-2.5-flash-lite
+    family: gemini
+    is_cloud: true
+    context_length: 1048576
+    vision: true
+    supports_reasoning: false
+    supports_tool_call: true
+    limit_request_per_minute: 1500
+    limit_tokens_per_minute: 1000000
+    limit_tokens_per_day: 0
+- name: Groq
+  url: https://api.groq.com/openai/v1
+  free_info:
+    api_key_url: https://console.groq.com/keys
+    setup_instructions: 'Sign up at console.groq.com (free, no credit card), go to
+      API Keys, create a key, and paste it in AgentOne settings. Free tier offers
+      30 RPM and 14,400 RPD on most models.
 
-  - name: OpenRouter
-    url: https://openrouter.ai/api/v1
-    free_info:
-      api_key_url: https://openrouter.ai/keys
-      setup_instructions: >
-        Create a free account at openrouter.ai, generate an API key under "Keys",
-        and enter it in AgentOne settings. OpenRouter aggregates dozens of free
-        models from multiple providers. Check https://openrouter.ai/models?free=1
-        for the current list of free models.
-        Requires a free plan (may ask for credit card for paid models, but free
-        models work without it).
-    models:
-      - name: deepseek/deepseek-chat
-        family: deepseek
-        is_cloud: true
-        context_length: 65536
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 236
-        active_parameters: 21
-        description: DeepSeek V3 / R1 via DeepSeek on OpenRouter. Free tier available.
-      - name: google/gemini-2.5-flash-preview-04a
-        family: gemini
-        is_cloud: true
-        context_length: 1048576
-        vision: true
-        supports_reasoning: false
-        supports_tool_call: true
-        description: Gemini 2.5 Flash via OpenRouter free tier.
-      - name: meta-llama/llama-3.2-3b-instruct
-        family: llama
-        is_cloud: true
-        context_length: 8192
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: false
-        total_parameters: 3
-        description: Llama 3.2 3B — free, fast, no credit card needed.
-      - name: mistralai/mistral-7b-instruct
-        family: mistral
-        is_cloud: true
-        context_length: 8192
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: false
-        total_parameters: 7
-      # Free models available via OpenRouter (latest as of Jun 2026)
-      - name: deepseek/deepseek-v4-flash:free
-        family: deepseek
-        is_cloud: true
-        context_length: 1048576
-        vision: false
-        supports_reasoning: true
-        supports_tool_call: true
-        total_parameters: 284
-        active_parameters: 13
-        description: DeepSeek V4 Flash — MoE, 1M context, strong reasoning & coding.
-      - name: nvidia/nemotron-3-ultra-550b-a55b:free
-        family: nemotron
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: true
-        supports_tool_call: true
-        total_parameters: 550
-        active_parameters: 55
-        description: NVIDIA Nemotron 3 Ultra — 550B MoE, 55B active, strong reasoning.
-      - name: nvidia/nemotron-3-super-120b-a12b:free
-        family: nemotron
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 120
-        active_parameters: 12
-        description: NVIDIA Nemotron 3 Super — 120B MoE, 12B active.
-      - name: nvidia/nemotron-3-nano-30b-a3b:free
-        family: nemotron
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 30
-        active_parameters: 3
-        description: NVIDIA Nemotron 3 Nano — 30B MoE, 3B active, fast & lightweight.
-      - name: cohere/north-mini-code:free
-        family: cohere-north
-        is_cloud: true
-        context_length: 262144
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 30
-        active_parameters: 3
-        description: Cohere North Mini Code — 256K context, agentic coding, open-weight.
-      - name: xiaomi/mimo-v2.5
-        family: mimo
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 0
-        description: Xiaomi MIMO V2.5 — free via OpenRouter.
-      - name: opencode/big-pickle
-        family: opencode
-        is_cloud: true
-        context_length: 65536
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 0
-        description: Big Pickle — OpenCode Zen free model.
+      '
+  models:
+  - name: llama-3.3-70b-versatile
+    family: llama
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 70
+    limit_request_per_minute: 30
+    limit_request_per_day: 14400
+  - name: llama-3.1-8b-instant
+    family: llama
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 8
+    limit_request_per_minute: 30
+    limit_request_per_day: 14400
+  - name: mixtral-8x7b-32768
+    family: mixtral
+    is_cloud: true
+    context_length: 32768
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 47
+    active_parameters: 13
+    limit_request_per_minute: 30
+    limit_request_per_day: 14400
+  - name: gemma2-9b-it
+    family: gemma
+    is_cloud: true
+    context_length: 8192
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 9
+    limit_request_per_minute: 30
+    limit_request_per_day: 14400
+- name: OpenRouter
+  url: https://openrouter.ai/api/v1
+  free_info:
+    api_key_url: https://openrouter.ai/keys
+    setup_instructions: 'Create a free account at openrouter.ai, generate an API key
+      under "Keys", and enter it in AgentOne settings. OpenRouter aggregates dozens
+      of free models from multiple providers. Check https://openrouter.ai/models?free=1
+      for the current list of free models. Requires a free plan (may ask for credit
+      card for paid models, but free models work without it).
 
-  - name: DeepSeek
-    url: https://api.deepseek.com/v1
-    free_info:
-      api_key_url: https://platform.deepseek.com/api_keys
-      setup_instructions: >
-        Sign up at platform.deepseek.com, go to API Keys, create a key (free tier
-        available with 10M tokens). Paste the key in AgentOne settings.
-        Rate limits are generous (500 RPM for free tier).
-    models:
-      - name: deepseek-chat
-        family: deepseek
-        is_cloud: true
-        context_length: 65536
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 236
-        active_parameters: 21
-        limit_request_per_minute: 500
-        description: DeepSeek V3 — primary chat model. ~$0.27/M tokens after free tier.
-      - name: deepseek-reasoner
-        family: deepseek
-        is_cloud: true
-        context_length: 65536
-        vision: false
-        supports_reasoning: true
-        supports_tool_call: true
-        total_parameters: 660
-        active_parameters: 37
-        limit_request_per_minute: 500
-        description: DeepSeek R1 — reasoning model (chain-of-thought).
+      '
+  models:
+  - name: deepseek/deepseek-chat
+    family: deepseek
+    is_cloud: true
+    context_length: 65536
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 236
+    active_parameters: 21
+    description: DeepSeek V3 / R1 via DeepSeek on OpenRouter. Free tier available.
+  - name: google/gemini-2.5-flash-preview-04a
+    family: gemini
+    is_cloud: true
+    context_length: 1048576
+    vision: true
+    supports_reasoning: false
+    supports_tool_call: true
+    description: Gemini 2.5 Flash via OpenRouter free tier.
+  - name: meta-llama/llama-3.2-3b-instruct
+    family: llama
+    is_cloud: true
+    context_length: 8192
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 3
+    description: Llama 3.2 3B — free, fast, no credit card needed.
+  - name: mistralai/mistral-7b-instruct
+    family: mistral
+    is_cloud: true
+    context_length: 8192
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 7
+  - name: deepseek/deepseek-v4-flash:free
+    family: deepseek
+    is_cloud: true
+    context_length: 1048576
+    vision: false
+    supports_reasoning: true
+    supports_tool_call: true
+    total_parameters: 284
+    active_parameters: 13
+    description: DeepSeek V4 Flash — MoE, 1M context, strong reasoning & coding.
+    requires_reasoning_echo: true
+  - name: nvidia/nemotron-3-ultra-550b-a55b:free
+    family: nemotron
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: true
+    supports_tool_call: true
+    total_parameters: 550
+    active_parameters: 55
+    description: NVIDIA Nemotron 3 Ultra — 550B MoE, 55B active, strong reasoning.
+  - name: nvidia/nemotron-3-super-120b-a12b:free
+    family: nemotron
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 120
+    active_parameters: 12
+    description: NVIDIA Nemotron 3 Super — 120B MoE, 12B active.
+  - name: nvidia/nemotron-3-nano-30b-a3b:free
+    family: nemotron
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 30
+    active_parameters: 3
+    description: NVIDIA Nemotron 3 Nano — 30B MoE, 3B active, fast & lightweight.
+  - name: cohere/north-mini-code:free
+    family: cohere-north
+    is_cloud: true
+    context_length: 262144
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 30
+    active_parameters: 3
+    description: Cohere North Mini Code — 256K context, agentic coding, open-weight.
+  - name: xiaomi/mimo-v2.5
+    family: mimo
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 0
+    description: Xiaomi MIMO V2.5 — free via OpenRouter.
+  - name: opencode/big-pickle
+    family: opencode
+    is_cloud: true
+    context_length: 65536
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 0
+    description: Big Pickle — OpenCode Zen free model.
+- name: DeepSeek
+  url: https://api.deepseek.com/v1
+  free_info:
+    api_key_url: https://platform.deepseek.com/api_keys
+    setup_instructions: 'Sign up at platform.deepseek.com, go to API Keys, create
+      a key (free tier available with 10M tokens). Paste the key in AgentOne settings.
+      Rate limits are generous (500 RPM for free tier).
 
-  - name: Together AI
-    url: https://api.together.xyz/v1
-    free_info:
-      api_key_url: https://api.together.xyz/settings/api-keys
-      setup_instructions: >
-        Sign up at together.ai (free, no credit card), go to Settings > API Keys,
-        create a key, paste in AgentOne. Free tier includes $1 credit and access
-        to several open models.
-    models:
-      - name: meta-llama/Llama-3.3-70B-Instruct-Turbo
-        family: llama
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 70
-      - name: meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo
-        family: llama
-        is_cloud: true
-        context_length: 8192
-        vision: true
-        supports_reasoning: false
-        supports_tool_call: false
-        total_parameters: 11
-      - name: mistralai/Mixtral-8x7B-Instruct-v0.1
-        family: mixtral
-        is_cloud: true
-        context_length: 32768
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 47
-        active_parameters: 13
+      '
+  models:
+  - name: deepseek-chat
+    family: deepseek
+    is_cloud: true
+    context_length: 65536
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 236
+    active_parameters: 21
+    limit_request_per_minute: 500
+    description: DeepSeek V3 — primary chat model. ~$0.27/M tokens after free tier.
+  - name: deepseek-reasoner
+    family: deepseek
+    is_cloud: true
+    context_length: 65536
+    vision: false
+    supports_reasoning: true
+    supports_tool_call: true
+    total_parameters: 660
+    active_parameters: 37
+    limit_request_per_minute: 500
+    description: DeepSeek R1 — reasoning model (chain-of-thought).
+    requires_reasoning_echo: true
+- name: Together AI
+  url: https://api.together.xyz/v1
+  free_info:
+    api_key_url: https://api.together.xyz/settings/api-keys
+    setup_instructions: 'Sign up at together.ai (free, no credit card), go to Settings
+      > API Keys, create a key, paste in AgentOne. Free tier includes $1 credit and
+      access to several open models.
 
-  - name: Alibaba Cloud
-    url: https://dashscope.aliyuncs.com/compatible-mode/v1
-    free_info:
-      api_key_url: https://bailian.console.aliyun.com/
-      setup_instructions: >
-        Register at aliyun.com, activate the DashScope (Model Studio) service,
-        create an API key in the console. Free tier offers 2M tokens for Qwen
-        models. The API is OpenAI-compatible.
-        Note: Chinese phone number recommended for signup.
-    models:
-      - name: qwen-plus
-        family: qwen
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 72
-        description: Qwen 2.5 72B via DashScope. Free tier 2M tokens.
-      - name: qwen-turbo
-        family: qwen
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 7
-        description: Qwen 2.5 7B — cheaper, faster, free tier available.
-      - name: qwen-vl-plus
-        family: qwen
-        is_cloud: true
-        context_length: 8192
-        vision: true
-        supports_reasoning: false
-        supports_tool_call: false
-        total_parameters: 72
-        description: Qwen 2.5 VL 72B — vision model, free tier available.
+      '
+  models:
+  - name: meta-llama/Llama-3.3-70B-Instruct-Turbo
+    family: llama
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 70
+  - name: meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo
+    family: llama
+    is_cloud: true
+    context_length: 8192
+    vision: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 11
+  - name: mistralai/Mixtral-8x7B-Instruct-v0.1
+    family: mixtral
+    is_cloud: true
+    context_length: 32768
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 47
+    active_parameters: 13
+- name: Alibaba Cloud
+  url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  free_info:
+    api_key_url: https://bailian.console.aliyun.com/
+    setup_instructions: 'Register at aliyun.com, activate the DashScope (Model Studio)
+      service, create an API key in the console. Free tier offers 2M tokens for Qwen
+      models. The API is OpenAI-compatible. Note: Chinese phone number recommended
+      for signup.
 
-  - name: Zhipu AI
-    url: https://open.bigmodel.cn/api/paas/v4
-    free_info:
-      api_key_url: https://open.bigmodel.cn/usercenter/apikeys
-      setup_instructions: >
-        Register at open.bigmodel.cn (Chinese platform, may need phone/WeChat),
-        create an API key under User Center. Free tier gives 2M tokens for GLM
-        models. OpenAI-compatible API.
-    models:
-      - name: glm-4-plus
-        family: glm
-        is_cloud: true
-        context_length: 128000
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 130
-        description: GLM-4-Plus. Balanced performance, free tier 2M tokens.
-      - name: glm-4-flash
-        family: glm
-        is_cloud: true
-        context_length: 128000
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 9
-        description: GLM-4-Flash. Fast, efficient, free tier available.
+      '
+  models:
+  - name: qwen-plus
+    family: qwen
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 72
+    description: Qwen 2.5 72B via DashScope. Free tier 2M tokens.
+  - name: qwen-turbo
+    family: qwen
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 7
+    description: Qwen 2.5 7B — cheaper, faster, free tier available.
+  - name: qwen-vl-plus
+    family: qwen
+    is_cloud: true
+    context_length: 8192
+    vision: true
+    supports_reasoning: false
+    supports_tool_call: false
+    total_parameters: 72
+    description: Qwen 2.5 VL 72B — vision model, free tier available.
+- name: Zhipu AI
+  url: https://open.bigmodel.cn/api/paas/v4
+  free_info:
+    api_key_url: https://open.bigmodel.cn/usercenter/apikeys
+    setup_instructions: 'Register at open.bigmodel.cn (Chinese platform, may need
+      phone/WeChat), create an API key under User Center. Free tier gives 2M tokens
+      for GLM models. OpenAI-compatible API.
 
-  - name: SiliconFlow
-    url: https://api.siliconflow.cn/v1
-    free_info:
-      api_key_url: https://siliconflow.cn/account/api-key
-      setup_instructions: >
-        Register at siliconflow.cn (Chinese signup, phone recommended), create an
-        API key. Free tier includes 2M tokens for most models. OpenAI-compatible.
-        Good coverage of Chinese and English models.
-    models:
-      - name: deepseek-ai/DeepSeek-V3
-        family: deepseek
-        is_cloud: true
-        context_length: 65536
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 236
-        active_parameters: 21
-        description: DeepSeek V3 hosted on SiliconFlow.
-      - name: Qwen/Qwen2.5-72B-Instruct-128k
-        family: qwen
-        is_cloud: true
-        context_length: 128000
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 72
-      - name: THUDM/glm-4-9b-chat
-        family: glm
-        is_cloud: true
-        context_length: 131072
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-        total_parameters: 9
+      '
+  models:
+  - name: glm-4-plus
+    family: glm
+    is_cloud: true
+    context_length: 128000
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 130
+    description: GLM-4-Plus. Balanced performance, free tier 2M tokens.
+  - name: glm-4-flash
+    family: glm
+    is_cloud: true
+    context_length: 128000
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 9
+    description: GLM-4-Flash. Fast, efficient, free tier available.
+- name: SiliconFlow
+  url: https://api.siliconflow.cn/v1
+  free_info:
+    api_key_url: https://siliconflow.cn/account/api-key
+    setup_instructions: 'Register at siliconflow.cn (Chinese signup, phone recommended),
+      create an API key. Free tier includes 2M tokens for most models. OpenAI-compatible.
+      Good coverage of Chinese and English models.
 
-  - name: OpenCode Zen
-    url: https://opencode.ai/zen/v1
-    free_info:
-      api_key_url: https://opencode.ai/auth
-      default_api_key: "public"
-      setup_instructions: >
-        OpenCode Zen provides free models without requiring an API key.
-        In Settings → Providers → OpenCode Zen, leave the API key empty.
-        Our system will automatically use "public" as the auth token,
-        which the Zen gateway accepts for free-tier models.
-        For full access (paid models), sign up at opencode.ai/auth and
-        paste your Zen API key.
-    models:
-      - name: deepseek-v4-flash-free
-        family: deepseek
-        is_cloud: true
-        context_length: 64000
-        vision: false
-        supports_reasoning: true
-        supports_tool_call: true
-      - name: big-pickle
-        family: big-pickle
-        is_cloud: true
-        context_length: 128000
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
-      - name: mimo-v2.5-free
-        family: mimo
-        is_cloud: true
-        context_length: 128000
-        vision: false
-        supports_reasoning: true
-        supports_tool_call: true
-      - name: north-mini-code-free
-        family: north
-        is_cloud: true
-        context_length: 128000
-        vision: false
-        supports_reasoning: true
-        supports_tool_call: true
-      - name: nemotron-3-ultra-free
-        family: nemotron
-        is_cloud: true
-        context_length: 128000
-        vision: false
-        supports_reasoning: false
-        supports_tool_call: true
+      '
+  models:
+  - name: deepseek-ai/DeepSeek-V3
+    family: deepseek
+    is_cloud: true
+    context_length: 65536
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 236
+    active_parameters: 21
+    description: DeepSeek V3 hosted on SiliconFlow.
+  - name: Qwen/Qwen2.5-72B-Instruct-128k
+    family: qwen
+    is_cloud: true
+    context_length: 128000
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 72
+  - name: THUDM/glm-4-9b-chat
+    family: glm
+    is_cloud: true
+    context_length: 131072
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+    total_parameters: 9
+- name: OpenCode Zen
+  url: https://opencode.ai/zen/v1
+  free_info:
+    api_key_url: https://opencode.ai/auth
+    default_api_key: public
+    setup_instructions: 'OpenCode Zen provides free models without requiring an API
+      key. In Settings → Providers → OpenCode Zen, leave the API key empty. Our system
+      will automatically use "public" as the auth token, which the Zen gateway accepts
+      for free-tier models. For full access (paid models), sign up at opencode.ai/auth
+      and paste your Zen API key.
+
+      '
+  models:
+  - name: deepseek-v4-flash-free
+    family: deepseek
+    is_cloud: true
+    context_length: 64000
+    vision: false
+    supports_reasoning: true
+    supports_tool_call: true
+    requires_reasoning_echo: true
+  - name: big-pickle
+    family: big-pickle
+    is_cloud: true
+    context_length: 128000
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true
+  - name: mimo-v2.5-free
+    family: mimo
+    is_cloud: true
+    context_length: 128000
+    vision: false
+    supports_reasoning: true
+    supports_tool_call: true
+  - name: north-mini-code-free
+    family: north
+    is_cloud: true
+    context_length: 128000
+    vision: false
+    supports_reasoning: true
+    supports_tool_call: true
+  - name: nemotron-3-ultra-free
+    family: nemotron
+    is_cloud: true
+    context_length: 128000
+    vision: false
+    supports_reasoning: false
+    supports_tool_call: true

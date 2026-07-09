@@ -36,32 +36,11 @@ class AgentTaskRun(BaseModel):
     and references to other runs/calls used in arguments or results.
     """
 
-    agent_task_call = models.ForeignKey(
-        "AgentTaskCall",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_runs",
-    )
-    task_instance = models.ForeignKey(
-        "TaskInstance",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_runs",
-        default=None,
-        null=True,
-    )
+    agent_task_call = models.ForeignKey("AgentTaskCall",on_delete=models.CASCADE,related_name="related_agent_task_runs",)
+    task_instance = models.ForeignKey("TaskInstance",on_delete=models.CASCADE,related_name="related_agent_task_runs",default=None,null=True,)
 
-    task_definition_version = models.ForeignKey(
-        "TaskDefinitionVersion",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_runs",
-        default=None,
-        null=True,
-        blank=True,
-    )
-    session_version = models.ForeignKey(
-        "SessionVersionModel",
-        on_delete=models.CASCADE,
-        related_name="related_agent_task_runs",
-    )
+    task_definition_version = models.ForeignKey("TaskDefinitionVersion",on_delete=models.CASCADE,related_name="related_agent_task_runs",default=None,null=True,blank=True,)
+    session_version = models.ForeignKey("SessionVersionModel",on_delete=models.CASCADE,related_name="related_agent_task_runs",)
 
     arguments_json = models.JSONField(default=dict, null=False)
 
@@ -79,24 +58,10 @@ class AgentTaskRun(BaseModel):
     is_approved = models.BooleanField(default=False)
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
 
-    taskrun_arg_references = models.ManyToManyField(
-        "server.AgentTaskRun",
-        help_text="AgentTaskRuns used in args/kwargs",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskrun_arg_references",
-    )
-    taskrun_result_references = models.ManyToManyField(
-        "server.AgentTaskCall",
-        help_text="AgentTaskCalls returned in results",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskrun_result_references",
-    )
+    taskrun_arg_references = models.ManyToManyField("server.AgentTaskRun",help_text="AgentTaskRuns used in args/kwargs",symmetrical=False,blank=True,related_name="rev_taskrun_arg_references",)
+    taskrun_result_references = models.ManyToManyField("server.AgentTaskCall",help_text="AgentTaskCalls returned in results",symmetrical=False,blank=True,related_name="rev_taskrun_result_references",)
 
-    status = models.CharField(
-        choices=TaskRunStatus.choices, default=TaskRunStatus.NEW, max_length=61
-    )
+    status = models.CharField(choices=TaskRunStatus.choices, default=TaskRunStatus.NEW, max_length=61)
     result_json = models.JSONField(default=None, null=True)
 
     @classmethod

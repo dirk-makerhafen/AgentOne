@@ -5,7 +5,7 @@ from ui.lib.model_view import ModelView
 
 
 class QueueCard(ModelView):
-    DOM_ELEMENT_CLASS = 'queue-card xvisible'
+    DOM_ELEMENT_CLASS = 'queue-card'
     DOM_ELEMENT_EXTRAS = 'role="region" aria-label="Queued messages" aria-live="polite"'
     TEMPLATE_STR = '''
         <div id="queueChips" class="queue-card-inner">

@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
+from ui.app import UiApp
 from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class GuardrailApprovalCard(ModelView):
-    DOM_ELEMENT_CLASS = 'guardrail-approval-card'
+    #DOM_ELEMENT_CLASS = 'guardrail-approval-card'
     DOM_ELEMENT_EXTRAS = 'role="alertdialog" aria-labelledby="guardrailHeading" aria-describedby="guardrailDesc"'
     TEMPLATE_STR = '''
         <div class="guardrail-inner" style="{% if not pyview.pending_calls %}display:none{% endif %}">
@@ -56,9 +57,28 @@ class GuardrailApprovalCard(ModelView):
             {% endfor %}
         </div>
     '''
+    @property
+    def DOM_ELEMENT_CLASS(self):
+        return 'guardrail-approval-card' + ' visible' if self.pending_calls else ""
 
     def __init__(self, subject: Session, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        if getattr(self.parent, 'live_session', None):
+            self.add_observable(self.parent.live_session)
+        app = UiApp.get_instance()
+        if app is not None:
+            self._session_id = subject.model.pk
+            app.model_observer.unwatch_filter(
+                model_class=AgentTaskCall,
+                filter={"session_id": self._session_id},
+            )
+            app.model_observer.watch(
+                AgentTaskCall,
+                filter={"session_id": self._session_id},
+                callback_name="_on_guardrail_taskcall_updated",
+                view=self,
+                action="update",
+            )
 
     @property
     def pending_calls(self) -> list[AgentTaskCall]:
@@ -90,3 +110,7 @@ class GuardrailApprovalCard(ModelView):
             TaskCallStateMachine.cancel(call.pk, TaskCallStatusDetail.HALTED_APPROVAL)
         if not self.pending_calls:
             self.update()
+
+    def _on_guardrail_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:
+        """Re-render when an AgentTaskCall for this session changes status."""
+        self.update()

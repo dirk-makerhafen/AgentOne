@@ -18,58 +18,18 @@ _JINJA_ENV = Environment(loader=BaseLoader())
 class QueryMessagePart(BaseModel):
     """A single content part within a query message."""
 
-    query_message = models.ForeignKey(
-        "server.QueryMessage",
-        on_delete=models.CASCADE,
-        related_name="query_message_parts",
-    )
-    source_message_part = models.ForeignKey(
-        "server.MessagePart",
-        default=None,
-        null=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="query_message_parts",
-    )
+    query_message = models.ForeignKey("server.QueryMessage", on_delete=models.CASCADE, related_name="query_message_parts")
+    source_message_part = models.ForeignKey( "server.MessagePart", default=None, null=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts")
 
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
-    content = models.ForeignKey(
-        GenericContent,
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="query_message_parts_content",
-    )
-    content_prefix = models.ForeignKey(
-        GenericContent,
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="query_message_parts_prefix",
-    )
-    content_postfix = models.ForeignKey(
-        GenericContent,
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="query_message_parts_postfix",
-    )
-    template_data = models.ForeignKey(
-        GenericContent,
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="query_message_parts_template_data",
-    )
+    content = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_content")
+    content_prefix = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_prefix")
+    content_postfix = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_postfix")
+    template_data = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_template_data")
     content_type = EnumField(MessageContentType, default=MessageContentType.TEXT)
 
-    tags = models.JSONField(
-        default=list, null=True, blank=True, help_text="List of tags used"
-    )
+    tags = models.JSONField( default=list, null=True, blank=True, help_text="List of tags used")
 
     def to_openai_message(self, fail_on_error: bool = True) -> list[dict[str, Any]]:
         """Convert this part to the OpenAI content-part format.

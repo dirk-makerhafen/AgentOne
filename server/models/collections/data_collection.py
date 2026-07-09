@@ -18,9 +18,7 @@ class DataCollection(BaseModel):
 
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(default="", blank=True)
-    collection_type = models.CharField(
-        max_length=10, choices=COLLECTION_TYPES, default="stream"
-    )
+    collection_type = models.CharField(max_length=10, choices=COLLECTION_TYPES, default="stream")
     is_active = models.BooleanField(default=True)
 
     # ── Data flow: sources ──────────────────────────────────────────────
@@ -43,26 +41,12 @@ class DataCollection(BaseModel):
 
     # ── For sets: member / score extraction ─────────────────────────────
     # Python expressions evaluated against the processor's result value.
-    member_field = models.TextField(
-        default="", blank=True,
-        help_text="Python expression to extract the member (unique ID) from the item",
-    )
-    score_field = models.TextField(
-        default="", blank=True,
-        help_text="Python expression to extract the score (float) from the item",
-    )
+    member_field = models.TextField(default="", blank=True,help_text="Python expression to extract the member (unique ID) from the item")
+    score_field = models.TextField(default="", blank=True,help_text="Python expression to extract the score (float) from the item")
 
     # ── Reprocess / backfill settings ───────────────────────────────────
-    retroactive_on_source_change = models.IntegerField(
-        default=0,
-        help_text="When source matching criteria change, "
-                  "max existing items to retroactively process (0 = off)",
-    )
-    max_reprocess = models.IntegerField(
-        default=0,
-        help_text="When processor task is updated, "
-                  "max historical items to reprocess (0 = off)",
-    )
+    retroactive_on_source_change = models.IntegerField(default=0,help_text="When source matching criteria change, max existing items to retroactively process (0 = off)")
+    max_reprocess = models.IntegerField(default=0,help_text="When processor task is updated, max historical items to reprocess (0 = off)")
 
     class Meta:
         verbose_name = "Data Collection"

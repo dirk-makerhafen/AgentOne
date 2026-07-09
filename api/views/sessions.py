@@ -63,6 +63,8 @@ class SessionViewSet(viewsets.ModelViewSet):
         if 'name' in data:
             session_model.name = data['name']
             session_model.save(update_fields=['name'])
+            from runtime.events import publish_model_event
+            publish_model_event(session_model, "update")
 
         settings_map = {
             'aimodel': 'set_aimodel',

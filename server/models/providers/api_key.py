@@ -14,11 +14,7 @@ from server.models.queries.response import Response
 class ApiKey(BaseModel):
     """An API key for a provider, with independent rate-limit tracking."""
 
-    api_provider = models.ForeignKey(
-        "server.ApiProvider",
-        on_delete=models.CASCADE,
-        related_name="api_keys",
-    )
+    api_provider = models.ForeignKey("server.ApiProvider", on_delete=models.CASCADE, related_name="api_keys")
     comment = models.CharField(max_length=512, default="", null=True)
     key = models.CharField(max_length=512)
 

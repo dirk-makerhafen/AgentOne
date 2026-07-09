@@ -1,11 +1,15 @@
 from __future__ import annotations
+import threading
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
 from server.models.message import Message
+from server.models.queries.query import Query
+from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.lib.pyHtmlGui.pyhtmlgui.lib.observableList import ObservableList
 from ui.lib.pyHtmlGui.pyhtmlgui.view.observable_list_view import ObservableListView
 from ui.main.chat.messages.message import MessageView
 from ui.lib.model_view import ModelView
+from ui.app import UiApp
 
 if TYPE_CHECKING:
     from ui.main.chat.chat import Chat
@@ -34,7 +38,7 @@ class Messages(ModelView):
   }
 }
     </style>
-            <button id="scrollToBottomBtn" class="scroll-to-bottom-btn" aria-label="Scroll to bottom" onclick="e=document.getElementById('{{pyview.uid}}');e.scrollTo(0, e.scrollHeight);" style="display:none1">↓</button>
+            <button id="scrollToBottomBtn" class="scroll-to-bottom-btn" aria-label="Scroll to bottom" onclick="var e=document.getElementById('{{pyview.uid}}');if(e)e.scrollTop=e.scrollHeight;" style="display:none1">↓</button>
 
             <div class="empty-state" id="emptyState" style="display:none">
                 <div class="empty-logo"></div>
@@ -54,6 +58,14 @@ class Messages(ModelView):
 
             
             <script>
+                // Auto-scroll to bottom when new content arrives and user is near bottom
+                function autoScrollMessages(uid, threshold) {
+                    var el = document.getElementById(uid);
+                    if (!el) return;
+                    if (el.scrollHeight - el.clientHeight - el.scrollTop < threshold) {
+                        el.scrollTop = el.scrollHeight;
+                    }
+                }
                 // Functions to manage your data
                 function loadMoreBottomItems() {
                     pyview.down();
@@ -102,6 +114,53 @@ class Messages(ModelView):
         self.min_id = 0
         self.max_id = 2^32
 
+        self._session_id = subject.model.pk
+        app = UiApp.get_instance()
+        if app is not None:
+            # Unwatch any previous subscription for this session_id to
+            # prevent duplicate callbacks when a tab is reopened before
+            # the old Messages instance is GC'd.
+            app.model_observer.unwatch_filter(
+                model_class=Message,
+                filter={"session_id": self._session_id},
+            )
+            app.model_observer.unwatch_filter(
+                model_class=Query,
+                filter={"session_id": self._session_id},
+            )
+            app.model_observer.watch(
+                Message,
+                filter={"session_id": self._session_id},
+                callback_name="_on_message_created",
+                view=self,
+                action="create",
+            )
+            app.model_observer.watch(
+                Query,
+                filter={"session_id": self._session_id},
+                callback_name="_on_query_created",
+                view=self,
+                action="create",
+            )
+            app.model_observer.watch(
+                Query,
+                filter={"session_id": self._session_id},
+                callback_name="_on_query_updated",
+                view=self,
+                action="update",
+            )
+            app.model_observer.unwatch_filter(
+                model_class=AgentTaskCall,
+                filter={"session_id": self._session_id},
+            )
+            app.model_observer.watch(
+                AgentTaskCall,
+                filter={"session_id": self._session_id},
+                callback_name="_on_taskcall_updated",
+                view=self,
+                action="update",
+            )
+
         self.message_list = ObservableList()
 
         first_messages = list(reversed(list(Message.objects.filter(session_version__session=self.subject.model ).order_by("-pk")[:self.max_visible_items])))
@@ -111,7 +170,8 @@ class Messages(ModelView):
         if len(first_messages) > 1:
             self.max_id = first_messages[-1].pk
 
-        self.message_list.extend(first_messages)
+        with self._callback_lock:
+            self.message_list.extend(first_messages)
 
         self.messages_view = ObservableListView(
             subject=self.message_list, 
@@ -119,6 +179,130 @@ class Messages(ModelView):
             item_class=MessageView,
             dom_element_class="messages-inner",
         )
+    def _log(self, msg: str) -> None:
+        try:
+            with open("/tmp/agentone_events.log", "a") as _f:
+                import time
+                _f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
+        except Exception:
+            pass
+
+    def scrollToBottom(self) -> None:
+        """Scroll the messages container to the bottom."""
+        try:
+            self._instance.call_javascript(
+                "pyhtmlgui.eval_script",
+                ["document.getElementById('{}').scrollTop=document.getElementById('{}').scrollHeight".format(self.uid, self.uid), {}],
+                skip_results=True,
+            )
+        except Exception:
+            pass
+
+    def _auto_scroll_if_needed(self) -> None:
+        """Scroll to bottom if user is already near the bottom."""
+        try:
+            self._instance.call_javascript(
+                "pyhtmlgui.eval_script",
+                ["var el=document.getElementById('{}');if(el&&el.scrollHeight-el.clientHeight-el.scrollTop<150)el.scrollTop=el.scrollHeight;".format(self.uid), {}],
+                skip_results=True,
+            )
+        except Exception:
+            pass
+
+    # Thread safety lock for model-event callbacks (may fire from multiple
+    # Channels consumer threads).  Class-level to protect against two
+    # Messages instances sharing the same session_id.
+    _callback_lock = threading.Lock()
+
+    def _on_message_created(self, pk: int, action: str, filter_context: dict) -> None:
+        """Append a newly created Message to the ObservableList (one DOM insert)."""
+        from server.models.message import Message as Msg
+        import traceback
+        stack = ''.join(traceback.format_stack()[-5:-1])
+        self._log(f"Messages._on_message_created: pk={pk} action={action} uid={id(self)} listlen={len(self.message_list)} fc={filter_context}\n{stack}")
+        with self._callback_lock:
+            try:
+                msg = Msg.objects.get(pk=pk)
+            except Msg.DoesNotExist:
+                self._log(f"Messages._on_message_created: Msg {pk} DoesNotExist")
+                return
+            existing = [item for item in self.message_list if isinstance(item, Msg) and item.pk == pk]
+            if existing:
+                self._log(f"Messages._on_message_created: {pk} already in list, skipping (found {len(existing)} existing)")
+                return
+            self._log(f"Messages._on_message_created: appending {pk} (list had {len(self.message_list)} items)")
+            self.message_list.append(msg)
+            # Also add related Queries so the query-card is always visible
+            if hasattr(msg, "related_queries"):
+                for query in msg.related_queries.all().order_by("-pk"):
+                    if not any(isinstance(item, Query) and item.pk == query.pk for item in self.message_list):
+                        self.message_list.append(query)
+            self._auto_scroll_if_needed()
+
+    def _on_query_created(self, pk: int, action: str, filter_context: dict) -> None:
+        """Insert a Query into the message list after its trigger_message."""
+        from server.models.queries.query import Query as QueryModel
+        with self._callback_lock:
+            try:
+                query = QueryModel.objects.get(pk=pk)
+            except QueryModel.DoesNotExist:
+                return
+            trigger_msg_pk = filter_context.get("trigger_message_id")
+            if trigger_msg_pk is None:
+                return
+            if any(isinstance(item, Query) and item.pk == pk for item in self.message_list):
+                self._log(f"_on_query_created: Query {pk} already in list, skipping")
+                return
+            for idx, item in enumerate(self.message_list):
+                if isinstance(item, Message) and item.pk == trigger_msg_pk:
+                    self._log(f"_on_query_created: inserting Query {pk} after msg {trigger_msg_pk} at index {idx+1}")
+                    self.message_list.insert(idx + 1, query)
+                    self._auto_scroll_if_needed()
+                    return
+
+    def _on_query_updated(self, pk: int, action: str, filter_context: dict) -> None:
+        """Re-render the QueryView whose underlying Query status changed."""
+        self._log(f"_on_query_updated: pk={pk} action={action} fc={filter_context}")
+        for wrapper in self.messages_view._wrapped_data:
+            subj = wrapper.subject
+            if subj is None:
+                continue
+            if isinstance(subj, Query) and subj.pk == pk:
+                if hasattr(wrapper, 'view'):
+                    self._log(f"_on_query_updated: found wrapper for Query {pk}, calling view.update()")
+                    try:
+                        subj.refresh_from_db()
+                    except Exception:
+                        pass
+                    wrapper.view.update()
+                return
+        self._log(f"_on_query_updated: no wrapper found for Query {pk} in _wrapped_data (len={len(self.messages_view._wrapped_data)})")
+
+    def _on_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:
+        """Re-render the ToolCard whose underlying AgentTaskCall status changed."""
+        self._log(f"_on_taskcall_updated: pk={pk} action={action} fc={filter_context}")
+        for wrapper in self.messages_view._wrapped_data:
+            if wrapper.subject is None:
+                continue
+            if not isinstance(wrapper.subject, Message):
+                continue
+            msg_view = getattr(wrapper, 'view', None)
+            if msg_view is None:
+                continue
+            tool_list = getattr(msg_view, 'tool_list', None)
+            if tool_list is None:
+                continue
+            for tool_card in tool_list._wrapped_data:
+                if getattr(tool_card.subject, 'pk', None) == pk:
+                    self._log(f"_on_taskcall_updated: found ToolCard for call {pk}, calling update()")
+                    try:
+                        tool_card.subject.refresh_from_db()
+                    except Exception:
+                        pass
+                    tool_card.update()
+                    return
+        self._log(f"_on_taskcall_updated: no ToolCard found for call {pk}")
+
     def update_list(self, center_pk):
         if not center_pk:
             return

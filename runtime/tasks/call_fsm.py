@@ -80,6 +80,17 @@ def _detail_to_status(detail: TaskCallStatusDetail) -> TaskCallStatus:
     return TaskCallStatus[prefix]
 
 
+def _publish_call_event(call_id: int) -> None:
+    """Publish a model event for an AgentTaskCall after a transition."""
+    try:
+        from runtime.events import publish_model_event
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        call = AgentTaskCall.objects.get(pk=call_id)
+        publish_model_event(call, "update")
+    except Exception:
+        pass
+
+
 class TaskCallStateMachine:
     """
     Single entry point for all AgentTaskCall status transitions.
@@ -147,7 +158,10 @@ class TaskCallStateMachine:
         if extra:
             fields.update(extra)
 
-        return query.update(**fields) > 0
+        updated = query.update(**fields) > 0
+        if updated:
+            _publish_call_event(call_id)
+        return updated
 
     # ------------------------------------------------------------------
     # Named transition methods
@@ -163,7 +177,7 @@ class TaskCallStateMachine:
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
 
-        return AgentTaskCall.objects.filter(
+        updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.NEW,
@@ -173,6 +187,9 @@ class TaskCallStateMachine:
             status=TaskCallStatus.WAITING,
             status_detail=TaskCallStatusDetail.WAITING_DEPENDENCY,
         ) > 0
+        if updated:
+            _publish_call_event(call_id)
+        return updated
 
     @staticmethod
     def request_approval(call_id: int) -> bool:
@@ -249,7 +266,7 @@ class TaskCallStateMachine:
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
 
-        return AgentTaskCall.objects.filter(
+        updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.ACTIVE_RUNNING,
@@ -260,6 +277,9 @@ class TaskCallStateMachine:
             status_detail=TaskCallStatusDetail.WAITING_SUBTASK,
             taskcall_result_run_id=result_run_id,
         ) > 0
+        if updated:
+            _publish_call_event(call_id)
+        return updated
 
     @staticmethod
     def succeed(call_id: int, result_run_id: int) -> bool:
@@ -271,7 +291,7 @@ class TaskCallStateMachine:
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
 
-        return AgentTaskCall.objects.filter(
+        updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.ACTIVE_RUNNING,
@@ -283,6 +303,9 @@ class TaskCallStateMachine:
             taskcall_result_run_id=result_run_id,
             ended_at=timezone.now(),
         ) > 0
+        if updated:
+            _publish_call_event(call_id)
+        return updated
 
     @staticmethod
     def schedule_retry(call_id: int, retry_delay_seconds: int, max_retries: int) -> bool:

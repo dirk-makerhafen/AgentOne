@@ -14,32 +14,8 @@ class SkillModel(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     name = models.CharField(default="", max_length=255, help_text="")
-    latest_skill_version = models.ForeignKey(
-        SkillModelVersion,
-        default=None,
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name="related_newest_skill",
-    )
+    latest_skill_version = models.ForeignKey(SkillModelVersion,default=None,null=True,on_delete=models.SET_NULL,related_name="related_newest_skill")
 
-    parent_agent = models.ForeignKey(
-        "server.AgentModel",
-        default=None,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="related_skills",
-    )
-    parent_project = models.ForeignKey(
-        "server.Project",
-        default=None,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="related_skills",
-    )
-    parent_skill = models.ForeignKey(
-        "self",
-        default=None,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="related_skills",
-    )
+    parent_agent = models.ForeignKey("server.AgentModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_skills")
+    parent_project = models.ForeignKey("server.Project",default=None,null=True,on_delete=models.CASCADE,related_name="related_skills")
+    parent_skill = models.ForeignKey("self",default=None,null=True,on_delete=models.CASCADE,related_name="related_skills")

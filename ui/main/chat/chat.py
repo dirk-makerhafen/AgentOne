@@ -13,14 +13,12 @@ from ui.main.chat.cards.guardrail_approval import GuardrailApprovalCard
 from ui.main.chat.cards.queue import QueueCard
 from ui.main.chat.messages.messages import Messages
 from ui.main.chat.panel.terminal import TerminalPanel
+from ui.app import UiApp
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
-'''
 
-
-'''
 class Chat(ModelView):
     DOM_ELEMENT_CLASS = 'main-view'
     TEMPLATE_STR = '''
@@ -67,6 +65,8 @@ class Chat(ModelView):
     def __init__(self, subject: SessionModel, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.session = Session(subject)
+        app = UiApp.get_instance()
+        self.live_session = app.get_live_session(subject.pk) if app is not None else None
         self.messages = Messages(self.session, self)
 
         self.update_banner = UpdateBanner(self.session, self)

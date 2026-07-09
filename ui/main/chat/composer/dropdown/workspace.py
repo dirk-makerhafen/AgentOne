@@ -82,6 +82,9 @@ class WorkspaceDropdown(ModelView):
     def set_workspace(self, workspace_pk):
         print("set_workspace", workspace_pk)
         self.subject.set_workspace( WorkspaceModel.objects.get(pk=int(workspace_pk)))
+        self.open = False
+        self.parent.workspace_wrap.update()
+        self.update()
 
     def toggle(self):
         if not self.open:

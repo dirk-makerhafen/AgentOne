@@ -13,7 +13,5 @@ class Project(models.Model):
     updated_at: datetime = models.DateTimeField(auto_now=True)
 
     name: str = models.CharField(default="", max_length=255, help_text="")
-    description: str = models.TextField(
-        default="", max_length=10000, help_text=""
-    )
+    description: str = models.TextField(default="", max_length=10000, help_text="")
     path: str = models.CharField(max_length=255, help_text="")

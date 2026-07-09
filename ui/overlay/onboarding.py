@@ -8,8 +8,8 @@ class OnboardingOverlay(ModelView):
             <div class="onboarding-shell">
                 <div class="onboarding-sidebar">
                     <div class="onboarding-badge" data-i18n="onboarding_badge">FIRST RUN</div>
-                    <h2 id="onboardingTitle" data-i18n="onboarding_title">Welcome to Hermes Web UI</h2>
-                    <p id="onboardingLead" data-i18n="onboarding_lead">A quick guided setup will check your Hermes install, choose a workspace and model, and optionally protect the app with a password.</p>
+                    <h2 id="onboardingTitle" data-i18n="onboarding_title">Welcome to AgentOne Web UI</h2>
+                    <p id="onboardingLead" data-i18n="onboarding_lead">A quick guided setup will check your AgentOne install, choose a workspace and model, and optionally protect the app with a password.</p>
                     <div class="onboarding-steps" id="onboardingSteps"></div>
                 </div>
                 <div class="onboarding-main">

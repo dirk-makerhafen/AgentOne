@@ -25,22 +25,11 @@ class TaskInstance(BaseModel):
     and references to child instances (for CHAIN/GROUP) and hooks.
     """
 
-    task_definition_version = models.ForeignKey(
-        "TaskDefinitionVersion",
-        default=None,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="related_task_instances",
+    task_definition_version = models.ForeignKey("TaskDefinitionVersion",default=None,null=True,on_delete=models.CASCADE,related_name="related_task_instances",
     )
-    session = models.ForeignKey(
-        "SessionModel",
-        on_delete=models.CASCADE,
-        related_name="related_task_instances",
+    session = models.ForeignKey("SessionModel",on_delete=models.CASCADE,related_name="related_task_instances",
     )
-    session_version = models.ForeignKey(
-        "SessionVersionModel",
-        on_delete=models.CASCADE,
-        related_name="related_task_instances",
+    session_version = models.ForeignKey("SessionVersionModel",on_delete=models.CASCADE,related_name="related_task_instances",
     )
 
     iarguments_json = models.JSONField(default=dict, null=True)
@@ -61,53 +50,15 @@ class TaskInstance(BaseModel):
     is_approved = models.BooleanField(default=None, null=True)
     retry_count = models.IntegerField(default=0)
 
-    child_instances = SortedManyToManyField(
-        "self", symmetrical=False, blank=True, related_name="parent_instances"
-    )
+    child_instances = SortedManyToManyField("self", symmetrical=False, blank=True, related_name="parent_instances")
 
-    taskinstance_arg_references = models.ManyToManyField(
-        "self",
-        help_text="AgentTaskInstances used in instance args/kwargs",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskinstance_arg_references",
-    )
-    taskinstance_result_references = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskinstance_result_references",
-    )
+    taskinstance_arg_references = models.ManyToManyField("self",help_text="AgentTaskInstances used in instance args/kwargs",symmetrical=False,blank=True,related_name="rev_taskinstance_arg_references")
+    taskinstance_result_references = models.ManyToManyField("self",help_text="",symmetrical=False,blank=True,related_name="rev_taskinstance_result_references")
 
-    taskinstances_on_success_callbacks = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskinstances_on_success_callbacks",
-    )
-    taskinstances_on_error_callbacks = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskinstances_callback_on_erro",
-    )
-    taskinstances_before_run_hooks = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskinstances_hook_before_run",
-    )
-    taskinstances_after_run_hooks = models.ManyToManyField(
-        "self",
-        help_text="",
-        symmetrical=False,
-        blank=True,
-        related_name="rev_taskinstances_hook_after_run",
-    )
+    taskinstances_on_success_callbacks = models.ManyToManyField("self",help_text="",symmetrical=False,blank=True,related_name="rev_taskinstances_on_success_callbacks")
+    taskinstances_on_error_callbacks = models.ManyToManyField("self",help_text="",symmetrical=False,blank=True,related_name="rev_taskinstances_callback_on_erro")
+    taskinstances_before_run_hooks = models.ManyToManyField("self",help_text="",symmetrical=False,blank=True,related_name="rev_taskinstances_hook_before_run")
+    taskinstances_after_run_hooks = models.ManyToManyField("self",help_text="",symmetrical=False,blank=True,related_name="rev_taskinstances_hook_after_run")
 
     @property
     def task_type(self) -> str:

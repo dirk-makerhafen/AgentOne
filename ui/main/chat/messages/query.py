@@ -29,6 +29,7 @@ class QueryView(ModelView):
                         <div class="query-message query-message-{{ qm.role }}">
                             <div class="query-message-role">{{ qm.role }}</div>
                             <div class="query-message-content">{{ qm.to_openai_message() }}</div>
+                            <span class="query-message-tokens">{{ qm.tokens or 0 }} tok</span>
                         </div>
                     {% endfor %}
                 </div>

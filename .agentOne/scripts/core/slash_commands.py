@@ -43,6 +43,9 @@ def process_slashcommand(session: Session, name: str, **kwargs: Any) -> dict[str
         tool_call=task_call,
     )
 
+    from runtime.events import publish_model_event
+    publish_model_event(message, "create")
+
     return dict(message=message, tool_reponse=task_call)
 
 
@@ -68,4 +71,8 @@ def handle_slashcommand_response(
         content=GenericContent.from_data(tool_reponse),
         content_type=MessageContentType.JSON,
     )
+
+    from runtime.events import publish_model_event
+    publish_model_event(conv_msg, "create")
+
     return tool_reponse

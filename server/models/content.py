@@ -28,9 +28,7 @@ class GenericContent(models.Model):
     sha256: str = models.CharField(max_length=64, primary_key=True)
     content: str = models.TextField()
     content_type: ContentType = EnumField(ContentType, default=ContentType.TEXT)
-    expires_at: datetime | None = models.DateTimeField(
-        null=True, default=None, blank=True
-    )
+    expires_at: datetime | None = models.DateTimeField(null=True, default=None, blank=True)
 
     def get(self) -> Any:
         """Return the deserialised content.

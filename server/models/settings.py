@@ -62,71 +62,23 @@ class SettingsModel(BaseModel):
     :class:`ValidationError` if ``self.pk`` is already set).
     """
 
-    aimodel: models.ForeignKey | None = models.ForeignKey(
-        "server.AiModel",
-        on_delete=models.CASCADE,
-        related_name="related_agent_settings",
-        blank=True,
-        null=True,
-    )
+    aimodel: models.ForeignKey | None = models.ForeignKey("server.AiModel",on_delete=models.CASCADE,related_name="related_agent_settings",blank=True,null=True)
     thinking: bool | None = models.BooleanField(default=None, null=True, blank=True)
 
-    reasoning_effort: str | None = models.CharField(
-        max_length=20,
-        choices=ReasoningEffort,
-        default=None,
-        null=True,
-        blank=True,
-    )
+    reasoning_effort: str | None = models.CharField(max_length=20,choices=ReasoningEffort,default=None,null=True,blank=True)
     precision:float | None = models.FloatField(choices=ResponseTemperature.choices, default=None, null=True, blank=True)
 
-    max_retries: int | None = models.IntegerField(
-        default=None, null=True, blank=True
-    )
-    max_turns: int | None = models.IntegerField(
-        default=None, null=True, blank=True
-    )
-    max_unattended_turns: int | None = models.IntegerField(
-        default=None, null=True, blank=True
-    )
-    max_history_messages: int | None = models.IntegerField(
-        default=None, null=True, blank=True
-    )
-    priority: int | None = models.IntegerField(
-        default=None, null=True, blank=True
-    )  # 0 = highest, 1..999 less important
+    max_retries: int | None = models.IntegerField(default=None, null=True, blank=True)
+    max_turns: int | None = models.IntegerField(default=None, null=True, blank=True)
+    max_unattended_turns: int | None = models.IntegerField(default=None, null=True, blank=True)
+    max_history_messages: int | None = models.IntegerField(default=None, null=True, blank=True)
+    priority: int | None = models.IntegerField(default=None, null=True, blank=True)  # 0 = highest, 1..999 less important
 
-    task_prompt: GenericContent | None = models.ForeignKey(
-        GenericContent,
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="agent_settings_task_prompt",
-    )
-    system_prompt: GenericContent | None = models.ForeignKey(
-        GenericContent,
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="agent_settings_system_prompt",
-    )
+    task_prompt: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_task_prompt")
+    system_prompt: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_system_prompt")
 
-    scheduler_strategy: str | None = models.CharField(
-        max_length=20,
-        choices=TaskSchedulerStrategy,
-        default=None,
-        null=True,
-        blank=True,
-    )
-    tool_call_syntax: str | None = models.CharField(
-        max_length=20,
-        choices=AgentToolCallSyntax.choices,
-        default=None,
-        null=True,
-        blank=True,
-    )
+    scheduler_strategy: str | None = models.CharField(max_length=20,choices=TaskSchedulerStrategy,default=None,null=True,blank=True)
+    tool_call_syntax: str | None = models.CharField(max_length=20,choices=AgentToolCallSyntax.choices,default=None,null=True,blank=True)
 
     commandNames: Any = models.JSONField(default=None, null=True, blank=True)
     disallowedCommandNames: Any = models.JSONField(default=None, null=True, blank=True)
@@ -135,9 +87,7 @@ class SettingsModel(BaseModel):
     disallowedTaskNames: Any = models.JSONField(default=None, null=True, blank=True)
 
     toolNames: Any = models.JSONField(default=None, null=True, blank=True)
-    disallowedToolNames: Any = models.JSONField(
-        default=None, null=True, blank=True
-    )
+    disallowedToolNames: Any = models.JSONField(default=None, null=True, blank=True)
 
     skillNames: Any = models.JSONField(default=None, null=True, blank=True)
     disallowedSkillNames: Any = models.JSONField(default=None, null=True, blank=True )

@@ -29,6 +29,9 @@ class ReasoningDropdown(ModelView):
     
     def set_reasoning_effort(self, value):
         self.subject.set_reasoning_effort(value)
+        self.open = False
+        self.parent.reasoning_wrap.update()
+        self.update()
 
     def toggle(self):
         if not self.open:

@@ -16,13 +16,9 @@ class BaseModel(DirtyFieldsMixin, models.Model):
     """Abstract base model providing created/updated timestamps, raw JSON data
     storage, and fork-based data deduplication."""
 
-    created_at: datetime = models.DateTimeField(
-        db_index=True, editable=False, auto_now_add=True
-    )
+    created_at: datetime = models.DateTimeField(db_index=True, editable=False, auto_now_add=True)
     updated_at: datetime = models.DateTimeField(editable=False, auto_now=True)
-    raw_data: str = models.TextField(
-        max_length=100 * 1024 * 1024, default="", blank=True
-    )
+    raw_data: str = models.TextField(max_length=100 * 1024 * 1024, default="", blank=True)
 
     # Forking and data deduplication fields
     fork_of: models.ForeignKey | None = models.ForeignKey(

@@ -23,6 +23,17 @@ class InvalidTransition(Exception):
     pass
 
 
+def _publish_run_event(run_id: int) -> None:
+    """Publish a model event for an AgentTaskRun after a transition."""
+    try:
+        from runtime.events import publish_model_event
+        from server.models.tasks.agent_task_run import AgentTaskRun
+        run = AgentTaskRun.objects.get(pk=run_id)
+        publish_model_event(run, "update")
+    except Exception:
+        pass
+
+
 class TaskRunStateMachine:
     """
     Single entry point for all AgentTaskRun status transitions.
@@ -80,7 +91,10 @@ class TaskRunStateMachine:
         if extra:
             fields.update(extra)
 
-        return AgentTaskRun.objects.filter(pk=run_id, status=from_status).update(**fields) > 0
+        updated = AgentTaskRun.objects.filter(pk=run_id, status=from_status).update(**fields) > 0
+        if updated:
+            _publish_run_event(run_id)
+        return updated
 
     # ------------------------------------------------------------------
     # Named transition methods
@@ -114,9 +128,12 @@ class TaskRunStateMachine:
         """
         from server.models.tasks.agent_task_run import AgentTaskRun
 
-        return AgentTaskRun.objects.filter(
+        updated = AgentTaskRun.objects.filter(
             pk=run_id, status=TaskRunStatus.ACTIVE
         ).update(status=TaskRunStatus.QUEUED) > 0
+        if updated:
+            _publish_run_event(run_id)
+        return updated
 
     @staticmethod
     def wait_for_results(run_id: int) -> bool:

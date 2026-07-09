@@ -29,6 +29,7 @@ class AiModel(BaseModel):
     self_hosted = models.BooleanField(default=False)
     open_weights = models.BooleanField(default=False)
     supports_reasoning = models.BooleanField(default=False)
+    requires_reasoning_echo = models.BooleanField(default=False)
     supports_tool_call = models.BooleanField(default=False)
     filesize = models.IntegerField(default=-1)
     vision = models.BooleanField(default=False)

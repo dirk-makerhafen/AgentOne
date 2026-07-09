@@ -4,8 +4,6 @@ from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
-from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
-from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.lib.queryset_view import QuerySetView
 
 if TYPE_CHECKING:
@@ -72,11 +70,13 @@ class ProfileDropdown(ModelView):
             parent=self,
             item_class=ProfileDropdownOption,
             filter_function=self._filter_function
-            
         )
         
     def set_profile(self, pk):
         self.subject.set_agent(AgentModel.objects.get(pk=int(pk)))
+        self.open = False
+        self.parent.profile_wrap.update()
+        self.update()
 
     def toggle(self):
         if not self.open:

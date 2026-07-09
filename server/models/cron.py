@@ -5,10 +5,11 @@ from datetime import datetime
 
 from django.db import models
 
+from server.models.base_model import BaseModel
 from server.models.content import GenericContent
 
 
-class Cronjob(models.Model):
+class Cronjob(BaseModel):
     """A scheduled job that runs an agent on a recurring schedule."""
 
     SESSION_MODE_CHOICES = [ ("new", "New session each run"), ("existing", "Reuse existing session"),
@@ -30,22 +31,8 @@ class Cronjob(models.Model):
     is_active: bool = models.BooleanField(default=True)
     is_archived: bool = models.BooleanField(default=False)
     agent: models.ForeignKey | None = models.ForeignKey( "server.AgentModel", on_delete=models.CASCADE, related_name="related_cron", blank=True, null=True)
-    parent_project = models.ForeignKey(
-        "server.Project",
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="child_crons",
-    )
-    workspace = models.ForeignKey(
-        "server.WorkspaceModel",
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="cron_jobs",
-    )
+    parent_project = models.ForeignKey("server.Project",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="child_crons")
+    workspace = models.ForeignKey("server.WorkspaceModel",default=None,null=True,blank=True,on_delete=models.SET_NULL,related_name="cron_jobs")
 
     # Session
     session_mode: str = models.CharField(max_length=20, choices=SESSION_MODE_CHOICES, default="new")

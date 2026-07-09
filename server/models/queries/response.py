@@ -58,13 +58,18 @@ class Response(BaseModel):
             query = self.query
             estimated_total = query.tokens
             actual_total = self.prompt_tokens
+            print("estimated_total", estimated_total)
+            print("actual_total", actual_total)
             if estimated_total and actual_total and estimated_total > 0 and actual_total > 0:
                 correction_factor = actual_total / estimated_total
+                print("correction_factor", correction_factor)
                 if correction_factor > 1.01 or correction_factor < 0.99:
                     recalculated_total = 0
                     for query_message in query.related_query_messages.all():
+                        print("query_message", query_message)
                         recalculated_message_total = 0
                         for querymessage_part in query_message.query_message_parts.all():
+                            print("querymessage_part", querymessage_part)
                             if not querymessage_part.tokens:
                                 continue
                             corrected_tokens = int(
@@ -73,6 +78,7 @@ class Response(BaseModel):
                             if querymessage_part.tokens != corrected_tokens:
                                 querymessage_part.tokens = corrected_tokens
                                 querymessage_part.save()
+                                print("querymessage_part.save", querymessage_part)
                             recalculated_message_total += corrected_tokens
                         if query_message.tokens != recalculated_message_total:
                             query_message.tokens = recalculated_message_total

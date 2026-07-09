@@ -59,6 +59,9 @@ def ingest_assistant_message(
             tool_call=part.get("tool_call", None),
         )
 
+    from runtime.events import publish_model_event
+    publish_model_event(message, "create")
+
     return dict(
         response=response,
         parts=parts,

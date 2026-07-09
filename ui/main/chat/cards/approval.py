@@ -6,7 +6,7 @@ from ui.lib.model_view import ModelView
 
 
 class ApprovalCard(ModelView):
-    DOM_ELEMENT_CLASS = 'approval-card'
+    #DOM_ELEMENT_CLASS = 'approval-card'
     DOM_ELEMENT_EXTRAS = 'role="alertdialog" aria-labelledby="approvalHeading" aria-describedby="approvalDesc"'
     TEMPLATE_STR = '''
         <div class="approval-inner" style="{% if not pyview.subject.needs_approval() %}display:none{% endif %}">
@@ -55,9 +55,14 @@ class ApprovalCard(ModelView):
             </div>
         </div>
     '''
-
+    @property
+    def DOM_ELEMENT_CLASS(self):
+        return 'approval-card' + ' visible' if self.subject.needs_approval() else ""
+    
     def __init__(self, subject: Session, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        if getattr(self.parent, 'live_session', None):
+            self.add_observable(self.parent.live_session)
 
     def approve(self, mode: str) -> None:
         """Handle approval button clicks.

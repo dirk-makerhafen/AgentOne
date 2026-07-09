@@ -44,62 +44,23 @@ def temp_sys_path(path: Path) -> Any:
 class AgentVersionModel(BaseModel):
     """A versioned snapshot of an agent's configuration."""
 
-    agent = models.ForeignKey(
-        "server.AgentModel",
-        on_delete=models.CASCADE,
-        related_name="related_agent_versions",
-    )
+    agent = models.ForeignKey("server.AgentModel",on_delete=models.CASCADE,related_name="related_agent_versions")
 
     description = models.TextField(max_length=65500, default="")
 
     extends_agent_names = models.JSONField(default=list, blank=True)
-    extends_agent_versions = SortedManyToManyField(
-        "self", related_name="related_inheritors", default=None, symmetrical=False
-    )
+    extends_agent_versions = SortedManyToManyField("self", related_name="related_inheritors", default=None, symmetrical=False)
 
-    defined_skill_versions = models.ManyToManyField(
-        SkillModelVersion, default=None, related_name="related_agent_versions", symmetrical=False
-    )
-    defined_task_versions = models.ManyToManyField(
-        TaskDefinitionVersion,
-        default=None,
-        related_name="related_agent_versions",
-        symmetrical=False,
-    )
-    defined_subagent_versions = models.ManyToManyField(
-        "self", related_name="related_parents", default=None, symmetrical=False
-    )
+    defined_skill_versions = models.ManyToManyField(SkillModelVersion, default=None, related_name="related_agent_versions", symmetrical=False)
+    defined_task_versions = models.ManyToManyField(TaskDefinitionVersion,default=None,related_name="related_agent_versions",symmetrical=False)
+    defined_subagent_versions = models.ManyToManyField("self", related_name="related_parents", default=None, symmetrical=False)
 
-    skill_versions = models.ManyToManyField(
-        SkillModelVersion,
-        default=None,
-        related_name="used_by_agent_versions",
-        symmetrical=False,
-        blank=True,
-    )
-    task_versions = models.ManyToManyField(
-        TaskDefinitionVersion,
-        default=None,
-        related_name="used_by_agent_versions",
-        symmetrical=False,
-        blank=True,
-    )
-    subagent_versions = models.ManyToManyField(
-        "self",
-        default=None,
-        related_name="used_by_agent_versions",
-        symmetrical=False,
-        blank=True,
-    )
+    skill_versions = models.ManyToManyField(SkillModelVersion,default=None,related_name="used_by_agent_versions",symmetrical=False,blank=True)
+    task_versions = models.ManyToManyField(TaskDefinitionVersion,default=None,related_name="used_by_agent_versions",symmetrical=False,blank=True)
+    subagent_versions = models.ManyToManyField("self",default=None,related_name="used_by_agent_versions",symmetrical=False,blank=True)
     subagent_configs = models.JSONField(default=dict, blank=True)
 
-    agent_settings = models.ForeignKey(
-        SettingsModel,
-        default=None,
-        null=True,
-        on_delete=models.SET_NULL,
-        related_name="related_agent_versions",
-    )
+    agent_settings = models.ForeignKey(SettingsModel,default=None,null=True,on_delete=models.SET_NULL,related_name="related_agent_versions")
 
     version_number = models.IntegerField(default=0)
     commit = models.CharField(max_length=1024, default="")

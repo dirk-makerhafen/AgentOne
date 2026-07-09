@@ -13,13 +13,7 @@ from server.models.enums.task_enums import TaskExecutionMode, TaskType
 class TaskDefinitionVersion(BaseModel):
     """A versioned snapshot of a task definition's configuration."""
 
-    task_definition = models.ForeignKey(
-        "server.TaskDefinition",
-        default=None,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="versions",
-    )
+    task_definition = models.ForeignKey("server.TaskDefinition", default=None, null=True, on_delete=models.CASCADE, related_name="versions")
 
     description = models.TextField()
     function_schema = models.JSONField()
@@ -48,9 +42,7 @@ class TaskDefinitionVersion(BaseModel):
     path = models.CharField(max_length=1024, default=None, blank=True, null=True)
     commit = models.CharField(max_length=1024, default="")
 
-    child_tasks = SortedManyToManyField(
-        "self", help_text="", symmetrical=False, blank=True, related_name="parent_tasks"
-    )
+    child_tasks = SortedManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="parent_tasks")
 
     @property
     def task_instances(self):

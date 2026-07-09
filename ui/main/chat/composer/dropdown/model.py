@@ -59,10 +59,7 @@ class ModelDropdown(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.open = False
         self.search_string = ""
-        models = AiModel.objects.filter(
-            Q(api_provider__api_keys__enabled=True)
-            | Q(api_provider__raw_data__contains='"default_api_key"')
-        ).distinct()
+        models = AiModel.objects.filter(Q(api_provider__api_keys__enabled=True) | Q(api_provider__raw_data__contains='"default_api_key"')).distinct()
         self.model_list = QuerySetView(
             subject=models,
             parent=self,
@@ -72,6 +69,9 @@ class ModelDropdown(ModelView):
     
     def set_model(self, pk):
         self.subject.set_aimodel(AiModel.objects.get(pk=int(pk)))
+        self.open = False
+        self.parent.model_wrap.update()
+        self.update()
 
     def toggle(self):
         if not self.open:

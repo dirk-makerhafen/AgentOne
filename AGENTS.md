@@ -82,3 +82,33 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - Data flows (`.agentone/streams/*.md`, `.agentone/sets/*.md`) replaced legacy named-pipe system.
 - `_trigger_on_removed` in `tick_scheduler.py` (not reprocess_collection.py — it imports it) — the `source_calls` param must contain the AgentTaskCalls whose items were removed, not all source calls.
 - `_prev_collection_members` in `tick_scheduler.py` is a module-level dict — persists across tests in the same process, not thread-safe across Celery workers.
+- When writing tests for UI views (`ui/`), call `messages_view.set_visible(True)` in setUp to activate ObservableListView observer callbacks before exercising append/insert.
+
+## Real-time UI events
+
+The system uses `publish_model_event(instance, action)` in Celery tasks to push model changes to the browser via WebSocket:
+
+| Model | Action | Celery file | Purpose |
+|---|---|---|---|
+| `Message` | `create` | `ingest_user_message.py`, `ingest_assistant_message.py`, `ingest_subagent_result.py` | Add new messages to chat without page reload |
+| `Query` | `create` | `build_llm_context.py` | Insert query-card after trigger_message |
+| `Query` | `update` | `call_llm.py` (after each status transition) | Re-render query-card status |
+
+### Key UI callback files
+
+| File | Role |
+|---|---|
+| `ui/main/chat/messages/messages.py` | `_on_message_created`, `_on_query_created`, `_on_query_updated` |
+| `ui/lib/pyHtmlGui/pyhtmlgui/view/observable_list_view.py` | `set_visible` snapshot fix, dedup guard in `_on_subject_updated` |
+| `ui/model_observer.py` | `unwatch_filter` for subscription cleanup on tab re-open |
+| `runtime/events.py` | `publish_model_event`, `_extract_filter_context` |
+
+Skills provide specialized instructions and workflows for specific tasks.
+Use the skill tool to load a skill when a task matches its description.
+<available_skills>
+  <skill>
+    <name>customize-opencode</name>
+    <description>Use ONLY when the user is editing or creating opencode's own configuration: opencode.json, opencode.jsonc, files under .opencode/, or files under ~/.config/opencode/. Also use when creating or fixing opencode agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring opencode itself.</description>
+    <location>file:///Users/Dirk/%3Cbuilt-in%3E</location>
+  </skill>
+</available_skills>

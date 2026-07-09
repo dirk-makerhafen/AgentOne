@@ -37,6 +37,7 @@ def ingest_user_message(session: Session, parts: list[dict[str, Any]]) -> Messag
     """
 
     session.reset_unattended_turn_count()
+    session.reset_turn_count()
     session_version = session.get_version_model()
     prev_message = session.get_messages().filter(next_messages=None).last()
 
@@ -54,5 +55,8 @@ def ingest_user_message(session: Session, parts: list[dict[str, Any]]) -> Messag
             template_data=part.get("template_data", None),
             tool_call=part.get("tool_call", None),
         )
+
+    from runtime.events import publish_model_event
+    publish_model_event(message, "create")
 
     return session.get_task("process_turn").delay(message=message)

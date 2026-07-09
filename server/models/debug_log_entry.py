@@ -16,11 +16,7 @@ class DebugLogEntry(BaseModel):
     raises :class:`ValidationError` if ``self.pk`` is already set).
     """
 
-    session: models.ForeignKey | None = models.ForeignKey(
-        "server.SessionModel",
-        on_delete=models.CASCADE,
-        related_name="debug_log_entries",
-    )
+    session: models.ForeignKey | None = models.ForeignKey("server.SessionModel",on_delete=models.CASCADE,related_name="debug_log_entries")
     event: str = models.CharField(max_length=64)
     status: str = models.CharField(max_length=16)
 

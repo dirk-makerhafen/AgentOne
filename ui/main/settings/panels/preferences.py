@@ -13,7 +13,7 @@ class SettingPanelPerferences(ModelView):
         <div class="settings-section-head">
             <div>
                 <div class="settings-section-title" data-i18n="settings_section_preferences_title">Preferences</div>
-                <div class="settings-section-meta" data-i18n="settings_section_preferences_meta">Defaults and UI behavior for Hermes Web UI.</div>
+                <div class="settings-section-meta" data-i18n="settings_section_preferences_meta">Defaults and UI behavior for AgentOne Web UI.</div>
             </div>
         </div>
         <div class="settings-field">
@@ -58,7 +58,7 @@ class SettingPanelPerferences(ModelView):
                 <input type="checkbox" id="settingsVoiceModeEnabled" style="width:15px;height:15px;accent-color:var(--accent)">
                 <span data-i18n="settings_label_voice_mode">Hands-free voice mode button</span>
             </label>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="settings_desc_voice_mode">Show the voice-mode button (audio waveform) next to the dictation mic. Lets you speak naturally — Hermes auto-sends after a pause and reads replies aloud. Requires a browser that supports both speech recognition and TTS.</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="settings_desc_voice_mode">Show the voice-mode button (audio waveform) next to the dictation mic. Lets you speak naturally — AgentOne auto-sends after a pause and reads replies aloud. Requires a browser that supports both speech recognition and TTS.</div>
         </div>
         <div class="settings-field">
             <label for="settingsTtsVoice" data-i18n="settings_label_tts_voice">Voice</label>
@@ -155,7 +155,7 @@ class SettingPanelPerferences(ModelView):
                 <input type="checkbox" id="settingsSyncInsights" style="width:15px;height:15px;accent-color:var(--accent)">
                 <span data-i18n="settings_label_sync_insights">Sync usage to /insights</span>
             </label>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="settings_desc_sync_insights">Mirrors WebUI token usage to state.db so <code>hermes /insights</code> includes browser session data. Off by default.</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="settings_desc_sync_insights">Mirrors WebUI token usage to state.db so <code>agentone /insights</code> includes browser session data. Off by default.</div>
         </div>
         <div class="settings-field">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -166,8 +166,8 @@ class SettingPanelPerferences(ModelView):
         </div>
         <div class="settings-field">
             <label for="settingsBotName" data-i18n="settings_label_bot_name">Assistant Name</label>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px" data-i18n="settings_desc_bot_name">Display name for the assistant throughout the UI. Defaults to Hermes.</div>
-            <input type="text" id="settingsBotName" placeholder="Hermes" maxlength="64" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:13px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px" data-i18n="settings_desc_bot_name">Display name for the assistant throughout the UI. Defaults to AgentOne.</div>
+            <input type="text" id="settingsBotName" placeholder="AgentOne" maxlength="64" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:13px">
         </div>
 
         <button class="sm-btn" onclick="saveSettings()" style="margin-top:12px;width:100%;padding:8px;font-weight:600" data-i18n="settings_save_btn">Save Settings</button>

@@ -33,8 +33,8 @@ class SettingPanelSystem(ModelView):
         <button class="sm-btn" id="btnSignOut" onclick="signOut()" style="margin-top:6px;width:100%;padding:8px;font-weight:600;color:var(--accent);border-color:rgba(233,69,96,.3);display:none" data-i18n="sign_out">Sign Out</button>
         
         <div class="settings-field" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
-            <label for="settingsDashboardMode">Official Hermes Dashboard</label>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Show a nav-rail link when the official <code>hermes dashboard</code> is reachable. Overrides are restricted to loopback URLs.</div>
+            <label for="settingsDashboardMode">Official AgentOne Dashboard</label>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Show a nav-rail link when the official <code>agentone dashboard</code> is reachable. Overrides are restricted to loopback URLs.</div>
             <select id="settingsDashboardMode" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px">
                 <option value="auto">Auto-detect</option>
                 <option value="always">Always show</option>
@@ -48,7 +48,7 @@ class SettingPanelSystem(ModelView):
         <!-- Gateway Status Section -->
         <div class="settings-field" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
             <label>Gateway Status</label>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Status of the Hermes gateway (Telegram, Discord, Slack, etc.)</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Status of the AgentOne gateway (Telegram, Discord, Slack, etc.)</div>
             <div id="gatewayStatusCard"><span style="color:var(--muted);font-size:12px">Loading…</span></div>
         </div>
 
@@ -57,7 +57,7 @@ class SettingPanelSystem(ModelView):
             <label data-i18n="mcp_servers_title">MCP Servers</label>
             <div style="font-size:11px;color:var(--muted);margin-bottom:8px" data-i18n="mcp_servers_desc">View Model Context Protocol servers configured in config.yaml.</div>
             <div id="mcpServerList"></div>
-            <div class="mcp-restart-hint" data-i18n="mcp_restart_hint">Server changes are read-only here for now. Edit config.yaml and restart Hermes for changes to take effect.</div>
+            <div class="mcp-restart-hint" data-i18n="mcp_restart_hint">Server changes are read-only here for now. Edit config.yaml and restart AgentOne for changes to take effect.</div>
         </div>
 
         <!-- MCP Tools Section -->

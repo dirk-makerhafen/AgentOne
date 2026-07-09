@@ -276,6 +276,18 @@ class SidebarPanelChats(ModelView):
             item_class=SidebarPanelChat,
             dom_element_class="session-date-body"
         )
+        app = subject
+        app.model_observer.watch(
+            SessionModel,
+            filter={},
+            callback_name="_on_session_updated",
+            view=self,
+            action="update",
+        )
+
+    def _on_session_updated(self, pk: int, action: str, filter_context: dict) -> None:
+        """Re-render sidebar when a session is renamed (or otherwise updated)."""
+        self.refresh_list()
 
     def _base_query(self):
         qs = self.subject.sessions.root()

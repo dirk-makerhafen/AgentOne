@@ -120,6 +120,8 @@ def build_llm_context(session: Session, message: Message) -> Query:
         for index, message in enumerate(messages):
             message.save()
 
+        from runtime.events import publish_model_event
+        publish_model_event(query, "create")
         return query
 
     except Exception:

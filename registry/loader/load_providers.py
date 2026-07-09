@@ -83,6 +83,7 @@ def load_providers_manifest(
                 "self_hosted": model_data.get("self_hosted", False),
                 "open_weights": model_data.get("open_weights", False),
                 "supports_reasoning": model_data.get("supports_reasoning", False),
+                "requires_reasoning_echo": model_data.get("requires_reasoning_echo", False),
                 "supports_tool_call": model_data.get("supports_tool_call", False),
                 "vision": model_data.get("vision", False),
                 "total_parameters": model_data.get("total_parameters", 0),

@@ -23,29 +23,9 @@ class SessionModel(BaseModel):
     is_pinned = models.BooleanField(default=False)
     is_archived = models.BooleanField(default=False)
 
-    parent_session = models.ForeignKey(
-        "self",
-        on_delete=models.CASCADE,
-        related_name="child_sessions",
-        default=None,
-        null=True,
-        blank=True,
-    )
-    parent_project = models.ForeignKey(
-        "server.Project",
-        on_delete=models.SET_NULL,
-        default=None,
-        null=True,
-        blank=True,
-        related_name="sessions",
-    )
-    latest_session_version = models.ForeignKey(
-        "server.SessionVersionModel",
-        default=None,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name="related_newest_version",
-    )
+    parent_session = models.ForeignKey("self",on_delete=models.CASCADE,related_name="child_sessions",default=None,null=True,blank=True)
+    parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="sessions")
+    latest_session_version = models.ForeignKey("server.SessionVersionModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_newest_version")
 
     @property
     def messages(self) -> QuerySet:

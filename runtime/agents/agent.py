@@ -57,11 +57,7 @@ class Agent:
     filtered through the allowed/disallowed lists stored on the version.
     """
 
-    def __init__(
-        self,
-        agent_model: AgentModel,
-        pinned_agent_version: AgentVersionModel | None = None,
-    ) -> None:
+    def __init__(self, agent_model: AgentModel, pinned_agent_version: AgentVersionModel | None = None) -> None:
         self.model: AgentModel = agent_model
         self._pinned_agent_version = pinned_agent_version
 

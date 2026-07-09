@@ -43,6 +43,9 @@ def ingest_subagent_result(session: Session, child_session_pk: int, summary: str
         )
     )
 
+    from runtime.events import publish_model_event
+    publish_model_event(message, "create")
+
     if session.subagentResultDelivery == "immediate":
         return session.get_task("process_turn").delay(message=message)
     

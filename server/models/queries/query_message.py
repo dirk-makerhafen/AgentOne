@@ -17,9 +17,6 @@ from server.models.queries.query_message_part import QueryMessagePart
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_call import AgentTaskCall
 
-_JINJA_ENV = Environment(loader=BaseLoader())
-
-
 def _merge_text_parts(
     parts: list[dict[str, Any]],
     prefix_fk: GenericContent | None = None,
@@ -92,32 +89,10 @@ class QueryMessage(BaseModel):
     """A single message within a query, containing one or more parts."""
 
     query = models.ForeignKey("server.Query", on_delete=models.CASCADE, related_name="related_query_messages")
-    source_message = models.ForeignKey(
-        "server.Message",
-        on_delete=models.SET_DEFAULT,
-        related_name="related_query_messages",
-        default=None,
-        null=True,
-    )
-
+    source_message = models.ForeignKey("server.Message",on_delete=models.SET_DEFAULT,related_name="related_query_messages",default=None,null=True)
     role = EnumField(MessageRole, default=None)
-
-    content_prefix = models.ForeignKey(
-        GenericContent,
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="query_messages_prefix",
-    )
-    content_postfix = models.ForeignKey(
-        GenericContent,
-        default=None,
-        null=True,
-        blank=True,
-        on_delete=models.SET_DEFAULT,
-        related_name="query_messages_postfix",
-    )
+    content_prefix = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="query_messages_prefix")
+    content_postfix = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="query_messages_postfix")
 
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
@@ -169,6 +144,15 @@ class QueryMessage(BaseModel):
             source_message_part=source_message_part,
         )
 
+    def _update_tokens_from_content(
+        self, content: dict[str, Any] | list[dict[str, Any]], tags_usage: dict[str, Any] | None = None
+    ) -> None:
+        token_count = _estimate_tokens(json.dumps(content))
+        if self.tokens != token_count:
+            self.tags_token_usage = tags_usage
+            self.tokens = token_count
+            self.save(update_fields=["tokens", "tags_token_usage"])
+
     def to_openai_message(
         self, fail_on_error: bool = True
     ) -> dict[str, Any] | list[dict[str, Any]]:
@@ -192,19 +176,33 @@ class QueryMessage(BaseModel):
                 c["tokens"] += part.tokens or 0
 
         if self.role == "tool":
-            return _build_tool_messages(tool_call_objects)
-
-        merged = _merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
-
-        token_count = _estimate_tokens(merged)
-        if self.tokens != token_count:
-            self.tags_token_usage = tags_usage
-            self.tokens = token_count
-            self.save(update_fields=["tokens", "tags_token_usage"])
-
-        message: dict[str, Any] = {"role": self.role, "content": merged}
-        if tool_call_dicts:
-            message["tool_calls"] = tool_call_dicts
+            message = _build_tool_messages(tool_call_objects)
+            self._update_tokens_from_content(message)
+        else:
+            
+            merged = _merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
+            message: dict[str, Any] = {"role": self.role, "content": merged}
+            if tool_call_dicts:
+                message["tool_calls"] = tool_call_dicts
+        print("REASONING")
+        # DeepSeek requires reasoning_content to be echoed back in subsequent
+        # assistant messages when thinking mode is active.
+        # Only include when the model requires this (requires_reasoning_echo
+        # in provider YAML manifests).
+        if self.role == "assistant":
+            print("REASONING1")
+            try:
+                aimodel = self.query.session_version.get_runtime().aimodel
+                print("REASONING2", aimodel)
+                if aimodel and aimodel.requires_reasoning_echo:
+                    reasoning = self.source_message.response.reasoning
+                    print("REASONING3", reasoning)
+                    if reasoning:
+                        message["reasoning_content"] = reasoning
+            except Exception as e:
+                print("Failed to reasoning_content ", e)
+                pass
+        self._update_tokens_from_content(message, tags_usage)
         return message
 
     def save(self, *args: Any, **kwargs: Any) -> None:
