@@ -6,7 +6,7 @@ extends: []
 maxRetries: 0
 maxTurns: 2
 maxUnattendedTurns: 0
-maxHistoryMessages: 0
+maxHistoryMessages: 1000
 reasoningEffort: medium
 schedulerStrategy: queue
 precision: balanced
@@ -18,7 +18,7 @@ tools: []
 disallowedTools: []
 tasks: [ core.*  ]
 disallowedTasks: []
-commands: [ ping, debug, test-approval ]
+commands: [ ping, debug, test-approval, compact ]
 disallowedCommands: []
 priority: 0
 ---

@@ -192,6 +192,16 @@ class Session:
         return self._get_session_setting("max_history_messages")
 
     @property
+    def auto_compact_limit(self) -> int:
+        """Token threshold triggering auto-compaction (0 = disabled)."""
+        return self._get_session_setting("auto_compact_limit") or 0
+
+    @property
+    def compact_size_limit(self) -> int:
+        """Target token count to compact down to."""
+        return self._get_session_setting("compact_size_limit") or 0
+
+    @property
     def priority(self) -> int:
         """Return the resolved scheduling priority."""
         return self._get_session_setting("priority")
@@ -498,7 +508,6 @@ class Session:
         """Return the pinned session version, or the session's latest version."""
         if self._pinned_session_version:
             return self._pinned_session_version
-        print("NODEL", self.model, self.model.latest_session_version)
         return self.model.latest_session_version
 
     def is_newest_version(self):

@@ -37,3 +37,4 @@ class MessagePartType(models.TextChoices):
     REASONING = "REASONING"
     MESSAGE = "MESSAGE"
     TOOLCALL = "TOOLCALL"
+    COMPACTION = "COMPACTION"

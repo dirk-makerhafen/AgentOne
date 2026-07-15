@@ -17,10 +17,10 @@ from server.models.message import Message, MessagePart
 from server.models.queries.query import Query
 from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart
-from server.history_limiter import HistoryLimiter
+from server.history_limiter import HistoryLimiter, find_compaction_boundary
 
 
-def build_llm_context(session: Session, message: Message) -> Query:
+def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Query:
     """
     Build a Query with system prompt, tool schemas, and conversation history.
 
@@ -73,8 +73,15 @@ def build_llm_context(session: Session, message: Message) -> Query:
                         ),
                     )
 
-        # Load and assemble conversation history, get it in reverse, because the history limiter counts from the end, so order must be reversed
-        messages: list[Message] = session.model.messages.filter(pk__lte=message.pk, hide_from_context=False).order_by("-created_at")[: session.max_history_messages + 1]
+        # Load and assemble conversation history from the last compaction boundary forward.
+        # The compaction boundary is a Message with a COMPACTION part — everything before
+        # it is already summarized and excluded from context.
+        boundary_pk = find_compaction_boundary(session, message.pk)
+        messages: list[Message] = session.model.messages.filter(
+            pk__gte=boundary_pk,
+            pk__lte=message.pk,
+            hide_from_context=False,
+        ).order_by("-created_at")[: session.max_history_messages + 1]
         limiter = HistoryLimiter(session, messages)
 
         cmessages: list[Any] = []
