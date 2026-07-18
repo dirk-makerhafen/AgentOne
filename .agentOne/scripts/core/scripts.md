@@ -60,11 +60,11 @@ tasks:
   - name: process_turn
     type: chain
     chain:
-      - compact_if_needed
       - build_llm_context
       - call_llm
       - parse_llm_response
       - ingest_assistant_message
+      - compact_if_needed
       - decide_next_step
   - name: ingest_slash_command
     type: chain

@@ -67,7 +67,7 @@ class Message(BaseModel):
                 raise Exception(f"unknown content type {content_type}")
 
         if template_data and not isinstance(template_data, GenericContent):
-            template_data = GenericContent.from_text(template_data)
+            template_data = GenericContent.from_data(template_data)
 
         return MessagePart.objects.create(
             message=self,

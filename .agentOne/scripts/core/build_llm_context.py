@@ -17,7 +17,7 @@ from server.models.message import Message, MessagePart
 from server.models.queries.query import Query
 from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart
-from server.history_limiter import HistoryLimiter, find_compaction_boundary
+from server.history_limiter import HistoryLimiter
 
 
 def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Query:
@@ -73,15 +73,18 @@ def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Quer
                         ),
                     )
 
-        # Load and assemble conversation history from the last compaction boundary forward.
-        # The compaction boundary is a Message with a COMPACTION part — everything before
-        # it is already summarized and excluded from context.
-        boundary_pk = find_compaction_boundary(session, message.pk)
-        messages: list[Message] = session.model.messages.filter(
-            pk__gte=boundary_pk,
-            pk__lte=message.pk,
-            hide_from_context=False,
-        ).order_by("-created_at")[: session.max_history_messages + 1]
+        # Walk the prev_message linked list from the trigger message backwards.
+        # Stop at the first message with a COMPACTION part (boundary marker).
+        # This handles injected compaction messages and forks naturally.
+        messages: list[Message] = []
+        current = message
+        while current and len(messages) < session.max_history_messages + 1:
+            if not current.hide_from_context:
+                messages.append(current)
+                if current.parts.filter(type="COMPACTION").exists():
+                    break
+            current = current.prev_message
+        messages.reverse()
         limiter = HistoryLimiter(session, messages)
 
         cmessages: list[Any] = []

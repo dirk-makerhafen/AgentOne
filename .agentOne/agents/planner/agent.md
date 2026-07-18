@@ -7,8 +7,6 @@ description: >
   implementing. Has read + web access to research, and can run Python analysis,
   but never writes files or executes modifying commands.
 extends: researcher
-maxTurns: 6
-maxUnattendedTurns: 2
 reasoningEffort: xhigh
 precision: precise
 tools: [+, execution.python]

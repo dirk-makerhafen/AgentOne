@@ -29,6 +29,8 @@ INT_FIELDS = {
     "max_turns",
     "max_unattended_turns",
     "max_history_messages",
+    "auto_compact_limit",
+    "compact_size_limit",
     "priority",
 }
 
@@ -151,6 +153,8 @@ class RightPanelSession(ModelView):
         ("max_turns", "Max Turns"),
         ("max_unattended_turns", "Max Unattended Turns"),
         ("max_history_messages", "Max History Messages"),
+        ("auto_compact_limit", "Auto Compact Limit"),
+        ("compact_size_limit", "Compact Size Limit"),
         ("priority", "Priority"),
     ]
 

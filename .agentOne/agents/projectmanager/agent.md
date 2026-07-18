@@ -7,8 +7,6 @@ description: >
   and the project manifest itself. Can run reload_project to sync changes
   to the database. Accessed via call_projectmanager tool.
 extends: baseagent
-maxTurns: 6
-maxUnattendedTurns: 2
 reasoningEffort: medium
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project]
 skills: [+, agentone-admin, project-manager]
@@ -17,6 +15,9 @@ subagents:
     create: agent
     lifecycle: single
   - name: planner
+    create: agent
+    lifecycle: single
+  - name: brain
     create: agent
     lifecycle: single
 ---

@@ -142,6 +142,14 @@ class AgentView(ModelView):
                                     <div class="detail-row-label">max_history_messages</div>
                                     <div class="detail-row-value">{{pyview.agent.max_history_messages}}</div>
                                 </div>
+                                <div class="detail-row">
+                                    <div class="detail-row-label">auto_compact_limit</div>
+                                    <div class="detail-row-value">{{pyview.agent.auto_compact_limit}}</div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-row-label">compact_size_limit</div>
+                                    <div class="detail-row-value">{{pyview.agent.compact_size_limit}}</div>
+                                </div>
                             </div>
                         </div>
                     </div>

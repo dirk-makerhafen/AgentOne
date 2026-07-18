@@ -17,7 +17,7 @@ from server.models.queries.response import Response
 
 
 def decide_next_step(
-    session: Session, response: Response, parts: list[dict[str, Any]], message: Message
+    session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any,
 ) -> Message:
     """
     Persist the assistant message and determine if the loop should continue.

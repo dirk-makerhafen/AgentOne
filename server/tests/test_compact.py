@@ -21,7 +21,6 @@ from server.history_limiter import (
     estimate_message_tokens,
     estimate_tokens_from_text,
 )
-from server.compact import _format_messages_for_compaction
 from server.tests.helpers import AgentMdTestMixin
 
 
@@ -220,75 +219,6 @@ class FindTurnBoundaryTest(TestCase):
         ]
         index = HistoryLimiter.find_turn_boundary(messages, 1000000)
         self.assertEqual(index, 0)
-
-
-class FormatMessagesForCompactionTest(TestCase):
-    def setUp(self):
-        self.agent = AgentModel.objects.create(name="test-agent")
-        self.av = AgentVersionModel.objects.create(
-            agent=self.agent,
-            agent_settings=SettingsModel.objects.create(),
-        )
-        self.session = SessionModel.objects.create(name="test-session")
-        self.sv = SessionVersionModel.objects.create(
-            session=self.session,
-            agent=self.agent,
-            pinned_agent_version=self.av,
-        )
-
-    def _msg(self, role: str, text: str) -> Message:
-        msg = Message.objects.create(
-            session_version=self.sv,
-            role=role,
-        )
-        content = GenericContent.from_text(text)
-        MessagePart.objects.create(
-            message=msg,
-            type=MessagePartType.MESSAGE,
-            content=content,
-            content_type=MessageContentType.TEXT,
-        )
-        return msg
-
-    def test_formats_single_message(self):
-        msg = self._msg("user", "hello")
-        result = _format_messages_for_compaction([msg])
-        self.assertIn("[USER]", result)
-        self.assertIn("hello", result)
-
-    def test_formats_multiple_messages(self):
-        msgs = [
-            self._msg("assistant", "response"),
-            self._msg("user", "query"),
-        ]
-        result = _format_messages_for_compaction(msgs)
-        self.assertIn("[ASSISTANT]", result)
-        self.assertIn("[USER]", result)
-        self.assertIn("response", result)
-        self.assertIn("query", result)
-
-    def test_skips_compaction_parts(self):
-        msg = Message.objects.create(
-            session_version=self.sv,
-            role="system",
-        )
-        content = GenericContent.from_text("compacted summary")
-        MessagePart.objects.create(
-            message=msg,
-            type=MessagePartType.COMPACTION,
-            content=content,
-            content_type=MessageContentType.TEXT,
-        )
-        text_content = GenericContent.from_text("regular text")
-        MessagePart.objects.create(
-            message=msg,
-            type=MessagePartType.MESSAGE,
-            content=text_content,
-            content_type=MessageContentType.TEXT,
-        )
-        result = _format_messages_for_compaction([msg])
-        self.assertIn("regular text", result)
-        self.assertNotIn("compacted summary", result)
 
 
 

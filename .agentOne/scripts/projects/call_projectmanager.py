@@ -60,6 +60,7 @@ def call_projectmanager(session: Session, project_path: str, task: str) -> dict[
         name=session_name,
         description=f"Project manager for {project_path}",
         workspace=workspace,
+        parent_session_version = session_version_model,
     )
     child_session = Session(
         session_model=child_sv.session,

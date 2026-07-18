@@ -40,6 +40,8 @@ maxRetries: 0                  # max retry attempts
 maxTurns: 0                    # max conversation turns (0 = unlimited)
 maxUnattendedTurns: 0          # max autonomous turns
 maxHistoryMessages: 0          # max stored messages
+autoCompactLimit: 100000        # token threshold for auto-compaction (0 = disabled)
+compactSizeLimit: 15            # percentage of newest messages to keep in full
 reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel
 toolCallSyntax: default        # default | custom

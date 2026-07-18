@@ -11,4 +11,5 @@ class Sessions:
 
     def root(self) -> QuerySet[SessionModel]:
         """Return all sessions."""
-        return SessionModel.objects.filter(parent_session__isnull=True)
+        #return SessionModel.objects.filter(parent_session__isnull=True)
+        return SessionModel.objects.filter()

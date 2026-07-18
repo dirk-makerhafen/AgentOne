@@ -556,6 +556,10 @@ Comprehensive agent/session settings. All nullable — values inherit through th
 | `precision` | `FloatField(choices=ResponseTemperature)` | 0.05 (precise) — 1.0 (experimental) |
 | `max_retries` | `IntegerField` | |
 | `max_turns` | `IntegerField` | |
+| `max_unattended_turns` | `IntegerField` | |
+| `max_history_messages` | `IntegerField` | |
+| `auto_compact_limit` | `IntegerField(nullable)` | Token threshold triggering auto-compaction (0 = disabled) |
+| `compact_size_limit` | `IntegerField(nullable)` | Percentage of newest messages to keep in full during compaction |
 | `scheduler_strategy` | `CharField(choices=TaskSchedulerStrategy)` | interrupt / queue / merge / parallel |
 | `tool_call_syntax` | `CharField(choices)` | default / custom |
 | `commandNames` / `taskNames` / `toolNames` / `skillNames` / `subagentNames` | `JSONField(list)` | Allow lists (wildcards) |

@@ -308,6 +308,8 @@ Configure conversation defaults:
 - Reasoning effort (none to xhigh)
 - Precision/temperature (precise to experimental)
 - Max turns, retries, history messages
+- Auto-compact limit (token threshold triggering automatic context compaction; 0 = disabled)
+- Compact size limit (target token count after compaction)
 - Scheduler strategy (interrupt, queue, merge, parallel)
 - Tool call syntax
 

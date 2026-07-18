@@ -7,8 +7,6 @@ description: >
   researching best practices, or investigating a bug's root cause.
   Never writes files or executes code that modifies state.
 extends: baseagent
-maxTurns: 4
-maxUnattendedTurns: 2
 reasoningEffort: high
 precision: precise
 tools: [+, filesystem-read.*, web.*, subagents.*]
