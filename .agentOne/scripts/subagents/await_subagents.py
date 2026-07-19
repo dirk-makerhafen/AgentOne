@@ -51,29 +51,9 @@ def await_subagents(session: Session, session_pks: list[int]) -> dict[str, Any]:
             results.append({"session_pk": spk, "error": "no pending work", "turn_count": 0})
             continue
 
-        # Block until the taskcall chain resolves
-        try:
-            resolved = taskcall.get_result(timeout=None, recursive=True)
-        except Exception as exc:
-            results.append({"session_pk": spk, "error": str(exc)})
-            continue
-
-        # Extract text from the resolved Message
-        if isinstance(resolved, Message):
-            text_parts = []
-            for part in resolved.parts.all():
-                if part.type == "message":
-                    content = part.content
-                    text = content.get() if hasattr(content, "get") else str(content or "")
-                    if text:
-                        text_parts.append(text)
-            output = "\n".join(text_parts)
-        else:
-            output = str(resolved) if resolved is not None else ""
-
         results.append({
             "session_pk": spk,
-            "output": output,
+            "output": taskcall,
             "turn_count": child_model.turn_count,
         })
 

@@ -28,6 +28,7 @@ def tick_scheduler() -> None:
     _release_rate_limited_calls()
     _release_retry_calls()
     _release_scheduled_calls()
+    _release_queued_calls()
     _timeout_active_runs()
     _cleanup_stale_runtime_folders()
     _process_cron_jobs()
@@ -113,6 +114,35 @@ def _release_scheduled_calls() -> None:
             celery_delay(CallScheduler._apply_async, call.pk)
         except Exception as e:
             print(f"[scheduler] error dispatching scheduled call {call.pk}: {e}")
+
+
+def _release_queued_calls() -> None:
+    """Release WAITING_QUEUE calls whose session has no active ingest calls.
+
+    Acts as a fallback for the drain-in-_on_taskcall_ended path — catches
+    queue entries left behind after a crash or hang.
+    """
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from server.models.enums.task_enums import TaskCallStatusDetail, TaskCallStatus
+    from runtime.tasks.call_scheduler import CallScheduler
+
+    queued = AgentTaskCall.objects.filter(
+        status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+    ).order_by("created_at")
+
+    for call in queued:
+        try:
+            has_active = AgentTaskCall.objects.filter(
+                session=call.session,
+                task_definition__name__in=["ingest_user_message", "ingest_slash_command"],
+            ).exclude(
+                status=TaskCallStatus.ENDED,
+                pk=call.pk,
+            ).exists()
+            if not has_active:
+                CallScheduler.start_new_taskrun(call.pk)
+        except Exception as e:
+            print(f"[scheduler] error releasing queued call {call.pk}: {e}")
 
 
 def _timeout_active_runs() -> None:

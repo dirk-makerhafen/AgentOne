@@ -4,6 +4,7 @@ import json
 import math
 from typing import Any
 
+from cachetools import LRUCache
 from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
@@ -13,6 +14,7 @@ from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 
 _JINJA_ENV = Environment(loader=BaseLoader())
+cache = LRUCache(maxsize=10000)
 
 
 class QueryMessagePart(BaseModel):
@@ -36,6 +38,10 @@ class QueryMessagePart(BaseModel):
 
         Handles TEXT, TEMPLATE, IMAGE, and JSON content types.
         """
+        cache_key = f"qmp{self.pk}"
+        if item := cache.get(cache_key):
+            return item
+        
         if self.source_message_part:
             content = self.source_message_part.content
             template_data = self.source_message_part.template_data
@@ -57,7 +63,11 @@ class QueryMessagePart(BaseModel):
         if postfix := (self.content_postfix.get() if self.content_postfix else None):
             message_contents.append({"type": "text", "text": postfix})
 
-        self._update_token_estimate(message_contents)
+        tokens = sum( math.ceil(len(msg["text"]) / 3.8) for msg in message_contents if msg.get("text"))
+        if self.tokens != tokens:
+            self.tokens = tokens
+            self.save(update_fields=["tokens"])
+        cache[cache_key] = message_contents
         return message_contents
 
     def _build_message_contents(
@@ -104,13 +114,3 @@ class QueryMessagePart(BaseModel):
 
         raise ValueError(f"Unknown content type: {content_type}")
 
-    def _update_token_estimate(self, message_contents: list[dict[str, Any]]) -> None:
-        """Recompute token count and save if changed."""
-        tokens = sum(
-            math.ceil(len(msg["text"]) / 3.8)
-            for msg in message_contents
-            if msg.get("text")
-        )
-        if self.tokens != tokens:
-            self.tokens = tokens
-            self.save(update_fields=["tokens"])

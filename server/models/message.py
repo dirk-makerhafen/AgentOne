@@ -100,14 +100,3 @@ class MessagePart(BaseModel):
     template_data: GenericContent | None = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="conversation_message_parts_template")
 
     tool_call: models.OneToOneField | None = models.OneToOneField( "server.AgentTaskCall", on_delete=models.CASCADE, default=None, blank=True, null=True)
-
-    def to_string(self):
-        if self.content_type == MessageContentType.TEMPLATE:
-            return self.content.get()
-        if self.content_type == MessageContentType.JSON:
-            return self.content.content
-        if self.content_type == MessageContentType.TEXT:
-            return self.content.get()
-        if self.content_type == MessageContentType.IMAGE:
-            return self.content.get()
-        

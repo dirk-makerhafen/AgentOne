@@ -445,3 +445,22 @@ class CallScheduler:
                     callback = callback_instance.apply_async(kwargs=run)
                     callbacks.append(callback)
                 call.taskcall_on_error_callbacks.set(callbacks)
+
+        # --- Drain session queue (if this was an ingest call) ---
+        if call.task_definition and call.task_definition.name in (
+            "ingest_user_message", "ingest_slash_command",
+        ):
+            CallScheduler._release_next_queued_call(call.session)
+
+    @staticmethod
+    def _release_next_queued_call(session) -> None:
+        """Dispatch the oldest WAITING_QUEUE call for *session*, if any."""
+        from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+        from server.models.enums.task_enums import TaskCallStatusDetail
+
+        next_call = _ATC.objects.filter(
+            session=session,
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+        ).order_by("created_at").first()
+        if next_call:
+            CallScheduler.start_new_taskrun(next_call.pk)

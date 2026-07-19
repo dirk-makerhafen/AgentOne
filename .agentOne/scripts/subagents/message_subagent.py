@@ -15,7 +15,7 @@ from server.models.sessions.session import SessionModel
 
 def message_subagent(session: Session, session_pk: int, query: str) -> dict[str, Any]:
     """
-    Send a follow-up message to a previously spawned subagent.
+    Send a message to a previously spawned subagent session.
 
     The message is appended to the child session's conversation history.
     The subagent processes it asynchronously.

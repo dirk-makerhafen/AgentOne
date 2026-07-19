@@ -429,17 +429,13 @@ class Session:
         List-typed settings support a wildcard ``"+"`` that marks the
         insertion point where the agent-level list is spliced in.
         """
-        print("_get_session_setting", name)
         session_settings = self.get_version_model().session_settings
-        print(session_settings)
         if not session_settings:  # we overwrite nothing, use agents profile
-            print("we dont")
             return self.agent.get_agent_setting(name)
 
         # we might overwrite agent profile values
         session_settings_value = getattr(session_settings, name)
         if session_settings_value is None:  # we dont..
-            print("we dont 2")
             return self.agent.get_agent_setting(name)
 
         if isinstance(session_settings_value, (str, int, bool, float, GenericContent)):
@@ -447,7 +443,6 @@ class Session:
 
         if isinstance(session_settings_value, (list,)):
             if "+" not in session_settings_value:  # overwrite parent list
-                print("r1")
                 return session_settings_value
             extend_at_index = session_settings_value.index("+")
             session_settings_value[extend_at_index:extend_at_index + 1] = self.agent.get_agent_setting(name)
@@ -458,7 +453,6 @@ class Session:
                 f"_get_session_setting does not yet support type of '{name}': "
                 f"{type(session_settings_value)}"
             )
-        print("r2, ", session_settings_value)
         return session_settings_value
 
     def _set_session_setting(self, name: str, value: Any) -> None:
@@ -520,7 +514,7 @@ class Session:
     # Message handling
     # ------------------------------------------------------------------
 
-    def add_user_message(self, parts: List[Dict] | None = None) -> Any:
+    def add_user_message(self, parts: List[Dict] | None = None, force: bool = False) -> Any:
         """
         Ingest a user message (list of parts from parse_llm_response).
 
@@ -534,25 +528,89 @@ class Session:
             - ``type`` : ``"message"`` | ``"reasoning"`` | ``"toolcall"``
             - ``content_type`` : ``"text"`` | ``"image"`` | ``"template"`` | ``"json"``
             - ``content`` : str | dict
+        force : bool
+            If True, bypass the scheduler strategy and dispatch immediately.
         """
         if not parts:
             raise Exception("No message or message parts provided")
 
-        if parts[0] and parts[0].get("content", [None, ])[0] == "/":  # might be command
-            cmd = parts[0].get("content", [None, ]).split(None, 1)[0][1:].strip()  # Get command without '/'
-            print("CMD", cmd)
+        is_command = False
+        cmd = ""
+        parsed_kwargs: dict = {}
+
+        if parts[0] and parts[0].get("content", [None, ])[0] == "/":
+            cmd = parts[0].get("content", [None, ]).split(None, 1)[0][1:].strip()
             bound_cmd = self.get_command(cmd)
             if bound_cmd:
+                is_command = True
                 full_cmd_str = "".join([part["content"] for part in parts]).strip() if parts else ""
                 cmd_payload = full_cmd_str[1 + len(cmd):].strip()
-                # Safely parse arguments and keyword arguments
                 _payload_ast_tree = ast.parse(f"f({cmd_payload})")
                 call = _payload_ast_tree.body[0].value if _payload_ast_tree.body else None
-                kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords} if call else {}
+                parsed_kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords} if call else {}
 
-                return self.get_task("ingest_slash_command").delay(name=cmd, **kwargs)
+        if is_command:
+            bound_task = self.get_task("ingest_slash_command")
+            call_kwargs: dict = dict(name=cmd, **parsed_kwargs)
+        else:
+            bound_task = self.get_task("ingest_user_message")
+            call_kwargs = dict(parts=parts)
 
-        return self.get_task("ingest_user_message").delay(parts=parts)
+        if not force:
+            strategy = self.scheduler_strategy
+            if strategy == "queue" and self._has_active_call():
+                ti = bound_task.instance(kwargs=call_kwargs)
+                taskcall = ti.create_call(kwargs=call_kwargs)
+                from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+                from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+                _ATC.objects.filter(pk=taskcall.pk).update(
+                    status=TaskCallStatus.WAITING,
+                    status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+                )
+                return taskcall
+            if strategy == "interrupt":
+                self._stop_active_ingest_calls()
+
+        return bound_task.delay(**call_kwargs)
+
+    def _has_active_call(self) -> bool:
+        """Return True if there is a non-ended ingest_user_message or
+        ingest_slash_command call for this session."""
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatus
+        return AgentTaskCall.objects.filter(
+            session=self.model,
+            task_definition__name__in=["ingest_user_message", "ingest_slash_command"],
+        ).exclude(status=TaskCallStatus.ENDED).exists()
+
+    def _stop_active_ingest_calls(self) -> None:
+        """Force-stop all active ingest calls for this session."""
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+        from runtime.tasks.call_fsm import TaskCallStateMachine
+        from django.utils import timezone
+
+        active = AgentTaskCall.objects.filter(
+            session=self.model,
+            task_definition__name__in=["ingest_user_message", "ingest_slash_command"],
+        ).exclude(status=TaskCallStatus.ENDED)
+
+        stoppable = {
+            TaskCallStatusDetail.WAITING_DEPENDENCY,
+            TaskCallStatusDetail.WAITING_SUBTASK,
+            TaskCallStatusDetail.WAITING_RATELIMIT,
+        }
+
+        for call in active:
+            detail = call.status_detail
+            if detail in stoppable:
+                TaskCallStateMachine.stop(call.pk, detail)
+            else:
+                AgentTaskCall.objects.filter(pk=call.pk).update(
+                    status=TaskCallStatus.ENDED,
+                    status_detail=TaskCallStatusDetail.ENDED_STOPPED,
+                    ended_at=timezone.now(),
+                )
 
     def get_messages(self) -> Any:
         """Return all messages for this session."""

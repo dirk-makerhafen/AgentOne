@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from cachetools import LRUCache
 from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
@@ -16,6 +17,8 @@ from server.models.message import Message, MessagePart
 from server.models.queries.query_message_part import QueryMessagePart
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_call import AgentTaskCall
+
+cache = LRUCache(maxsize=10000)
 
 def _merge_text_parts(
     parts: list[dict[str, Any]],
@@ -43,13 +46,6 @@ def _merge_text_parts(
     return merged
 
 
-def _estimate_tokens(content: str | list[dict[str, Any]]) -> int:
-    """Rough token estimate (OpenAI billing approximation)."""
-    if isinstance(content, str):
-        return math.ceil(len(content) / 3.8)
-    return math.ceil(len(json.dumps(content)) / 3.8)
-
-
 def _serialize_result(data: Any) -> str:
     """JSON-serialise a tool result, handling Message / Path model references."""
     def _walk(obj: Any) -> Any:
@@ -69,20 +65,6 @@ def _serialize_result(data: Any) -> str:
         raise TypeError(f"Cannot serialize {type(obj).__name__}")
     return json.dumps(_walk(data))
 
-
-def _build_tool_messages(tool_calls: list[AgentTaskCall]) -> dict[str, Any] | list[dict[str, Any]]:
-    """Build OpenAI tool-role messages from completed AgentTaskCalls."""
-    messages = [
-        {
-            "role": "tool",
-            "tool_call_id": f"tc-{tc.pk}",
-            "content": _serialize_result(tc.get_result()),
-        }
-        for tc in tool_calls
-    ]
-    if len(messages) == 1:
-        return messages[0]
-    return messages
 
 
 class QueryMessage(BaseModel):
@@ -144,19 +126,14 @@ class QueryMessage(BaseModel):
             source_message_part=source_message_part,
         )
 
-    def _update_tokens_from_content(
-        self, content: dict[str, Any] | list[dict[str, Any]], tags_usage: dict[str, Any] | None = None
-    ) -> None:
-        token_count = _estimate_tokens(json.dumps(content))
-        if self.tokens != token_count:
-            self.tags_token_usage = tags_usage
-            self.tokens = token_count
-            self.save(update_fields=["tokens", "tags_token_usage"])
-
     def to_openai_message(
-        self, fail_on_error: bool = True
+        self, requires_reasoning_echo: bool = False, fail_on_error: bool = True
     ) -> dict[str, Any] | list[dict[str, Any]]:
         """Convert this query message to the OpenAI message format."""
+        cache_key = f"{self.pk}{requires_reasoning_echo}"
+        if item := cache.get(cache_key):
+            return item
+       
         content_parts: list[dict[str, Any]] = []
         tool_call_dicts: list[dict[str, Any]] = []
         tool_call_objects: list[AgentTaskCall] = []
@@ -176,8 +153,16 @@ class QueryMessage(BaseModel):
                 c["tokens"] += part.tokens or 0
 
         if self.role == "tool":
-            message = _build_tool_messages(tool_call_objects)
-            self._update_tokens_from_content(message)
+            messages = [
+                {
+                    "role": "tool",
+                    "tool_call_id": f"tc-{tc.pk}",
+                    "content": _serialize_result(tc.get_result()),
+                }
+                for tc in tool_call_objects
+            ]           
+            message = messages[0] if len(messages) == 1 else messages
+ 
         else:
             
             merged = _merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
@@ -192,9 +177,7 @@ class QueryMessage(BaseModel):
         if self.role == "assistant":
             print("REASONING1")
             try:
-                aimodel = self.query.session_version.get_runtime().aimodel
-                print("REASONING2", aimodel)
-                if aimodel and aimodel.requires_reasoning_echo:
+                if requires_reasoning_echo:
                     reasoning = self.source_message.response.reasoning
                     print("REASONING3", reasoning)
                     if reasoning:
@@ -202,7 +185,19 @@ class QueryMessage(BaseModel):
             except Exception as e:
                 print("Failed to reasoning_content ", e)
                 pass
-        self._update_tokens_from_content(message, tags_usage)
+
+        """Rough token estimate (OpenAI billing approximation)."""
+        if isinstance(message, str):
+            token_count =  math.ceil(len(message) / 3.8)
+        else:
+            token_count =  math.ceil(len(json.dumps(message)) / 3.8)
+            
+        if self.tokens != token_count:
+            self.tags_token_usage = tags_usage
+            self.tokens = token_count
+            self.save(update_fields=["tokens", "tags_token_usage"])
+
+        cache[cache_key] = message
         return message
 
     def save(self, *args: Any, **kwargs: Any) -> None:

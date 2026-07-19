@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from cachetools import LRUCache
 from django.db import models
 from django_enum import EnumField
 from sortedm2m.fields import SortedManyToManyField
@@ -11,6 +12,8 @@ from server.models.enums.message_enums import MessageContentType, MessagePartTyp
 from server.models.message import Message
 from server.models.queries.query_message import QueryMessage
 
+
+cache = LRUCache(maxsize=10000)
 
 class QueryStatus(models.TextChoices):
     """Status of an LLM query."""
@@ -75,10 +78,17 @@ class Query(BaseModel):
         if not related_query_messages:
             return []
 
+        aimodel = self.session_version.get_runtime().aimodel
+        requires_reasoning_echo = aimodel and aimodel.requires_reasoning_echo
+        cache_key = f"{self.pk}{requires_reasoning_echo}"
+        if item := cache.get(cache_key):
+            return item
+       
+
         for message in related_query_messages.all():
             message: QueryMessage
             try:
-                qm = message.to_openai_message()
+                qm = message.to_openai_message(requires_reasoning_echo)
                 if qm is None:
                     continue
                 if isinstance(qm, list):
@@ -96,6 +106,7 @@ class Query(BaseModel):
             self.tokens = tokens
             self.tags_token_usage = tags_token_usage
             self.save()
+        cache[cache_key] = message
         return messages
 
     def merge_tag_usage(self, list_of_tag_dicts: list[dict[str, Any]]) -> dict[str, Any]:

@@ -33,10 +33,13 @@ def list_subagents(session: Session) -> dict[str, Any]:
 
     subagents: list[dict[str, Any]] = []
     for child in children:
-        av = child.latest_session_version.agent if child.latest_session_version else None
+        lsv = child.latest_session_version
+        av = child.latest_session_version.agent if lsv else None
         subagents.append({
             "session_pk": child.pk,
-            "name": av.name if av else "?",
+            "session_name": child.name,
+            "session_description": lsv.description if lsv else "",
+            "agent": av.name if av else "?",
             "status": "active" if child.is_active else "idle",
             "turn_count": child.turn_count,
             "created_at": child.created_at.isoformat() if child.created_at else "",

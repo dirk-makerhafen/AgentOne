@@ -47,10 +47,10 @@ class Chat(ModelView):
 
             </div>
 
-            <div class="queue-pill-outer" style="display:non1e">
-                <button id="queuePill" class="queue-pill" aria-label="Show queued messages" type="button" title="Show queued messages">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><rect x="3" y="5" width="6" height="6" rx="1"></rect><path d="m3 17 2 2 4-4"></path><path d="M13 6h8"></path><path d="M13 12h8"></path><path d="M13 18h8"></path></svg
-                    <span class="queue-pill-count">2 queued</span>
+            <div class="queue-pill-outer {% if pyview.queue_card.show_pill %}show{% endif %}">
+                <button id="queuePill" class="queue-pill" onclick="document.querySelector('.queue-card').classList.add('visible');this.closest('.queue-pill-outer').classList.remove('show')" aria-label="Show queued messages" type="button" title="Show queued messages">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><rect x="3" y="5" width="6" height="6" rx="1"></rect><path d="m3 17 2 2 4-4"></path><path d="M13 6h8"></path><path d="M13 12h8"></path><path d="M13 18h8"></path></svg>
+                    <span class="queue-pill-count">{{ pyview.queue_card.queue_count }} queued</span>
                     <span class="queue-pill-chevron">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><polyline points="18 15 12 9 6 15"></polyline></svg>
                     </span>

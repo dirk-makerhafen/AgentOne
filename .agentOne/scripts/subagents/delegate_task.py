@@ -14,9 +14,9 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def delegate_task(session: Session, subagent_name: str, summary:str, query: str) -> dict[str, Any]:
+def delegate_task(session: Session, subagent_name: str, session_name: str|None, query: str) -> dict[str, Any]:
     """
-    Delegate a task to a named subagent and wait for the result (blocking).
+    Delegate a task to a named subagent session and wait for the result (blocking).
 
     Creates a new child session, sends *query* as the initial user message,
     and returns the TaskCall that the framework auto-awaits.
@@ -24,7 +24,7 @@ def delegate_task(session: Session, subagent_name: str, summary:str, query: str)
     Args:
         session: The calling agent's session (bound automatically).
         subagent_name: Name of the subagent to delegate to.
-        summary: One sencence task summary.
+        session_name: The name of the session to use/create or None to autogenerate unique session name.
         query: The full task description or message to send.
 
     Returns:
@@ -38,11 +38,11 @@ def delegate_task(session: Session, subagent_name: str, summary:str, query: str)
         return {"error": f"Subagent '{subagent_name}' not found"}
 
     session_version_model = session.get_version_model()
-    name = f"p{session_version_model.session.pk}:{subagent_name}:{int(time())}"
+    if session_name in [None, "none", "None"]:
+        session_name = f"p{session_version_model.session.pk}:{subagent_name}:{int(time())}"
 
     child_sv = subagent_version.get_or_create_session(
-        name=name,
-        description=summary,
+        name=session_name,
         workspace=session_version_model.workspace,
         parent_session_version=session_version_model,
     )
