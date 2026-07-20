@@ -18,7 +18,7 @@ from server.models.queries.query_message_part import QueryMessagePart
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_call import AgentTaskCall
 
-cache = LRUCache(maxsize=10000)
+cache = LRUCache(maxsize=50000)
 
 def _merge_text_parts(
     parts: list[dict[str, Any]],
@@ -134,6 +134,7 @@ class QueryMessage(BaseModel):
         if item := cache.get(cache_key):
             return item
        
+
         content_parts: list[dict[str, Any]] = []
         tool_call_dicts: list[dict[str, Any]] = []
         tool_call_objects: list[AgentTaskCall] = []
@@ -169,13 +170,11 @@ class QueryMessage(BaseModel):
             message: dict[str, Any] = {"role": self.role, "content": merged}
             if tool_call_dicts:
                 message["tool_calls"] = tool_call_dicts
-        print("REASONING")
         # DeepSeek requires reasoning_content to be echoed back in subsequent
         # assistant messages when thinking mode is active.
         # Only include when the model requires this (requires_reasoning_echo
         # in provider YAML manifests).
         if self.role == "assistant":
-            print("REASONING1")
             try:
                 if requires_reasoning_echo:
                     reasoning = self.source_message.response.reasoning

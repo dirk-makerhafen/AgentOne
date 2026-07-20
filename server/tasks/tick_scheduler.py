@@ -30,6 +30,7 @@ def tick_scheduler() -> None:
     _release_scheduled_calls()
     _release_queued_calls()
     _timeout_active_runs()
+    _resolve_stuck_waiting_runs()
     _cleanup_stale_runtime_folders()
     _process_cron_jobs()
     _dispatch_data_flows()
@@ -128,17 +129,15 @@ def _release_queued_calls() -> None:
 
     queued = AgentTaskCall.objects.filter(
         status_detail=TaskCallStatusDetail.WAITING_QUEUE,
-    ).order_by("created_at")
+    ).order_by("pk")
 
     for call in queued:
         try:
             has_active = AgentTaskCall.objects.filter(
                 session=call.session,
                 task_definition__name__in=["ingest_user_message", "ingest_slash_command"],
-            ).exclude(
-                status=TaskCallStatus.ENDED,
-                pk=call.pk,
-            ).exists()
+                pk__lt=call.pk
+            ).exclude(status=TaskCallStatus.ENDED).exists()
             if not has_active:
                 CallScheduler.start_new_taskrun(call.pk)
         except Exception as e:
@@ -167,6 +166,38 @@ def _timeout_active_runs() -> None:
                 )
         except Exception as e:
             print(f"[scheduler] error timing out run {run.pk}: {e}")
+
+
+def _resolve_stuck_waiting_runs() -> None:
+    """Resolve WAITING_RESULTTASKS runs whose referenced calls have all ended.
+
+    Recovery path for runs that were missed by the normal
+    ``taskrun_result_reference_ended`` callback (e.g. race, crash after
+    ``_apply_async``, or referenced calls that already ended before the
+    parent run entered ``WAITING_RESULTTASKS``).
+    """
+    from server.models.tasks.agent_task_run import AgentTaskRun
+    from server.models.enums.task_enums import TaskRunStatus, TaskCallStatus
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from runtime.tasks.run_scheduler import RunScheduler
+    from django.db.models import Q
+
+    stuck = AgentTaskRun.objects.filter(status=TaskRunStatus.WAITING_RESULTTASKS)
+    for run in stuck:
+        try:
+            pending = AgentTaskCall.objects.filter(
+                ~Q(status=TaskCallStatus.ENDED),
+                rev_taskrun_result_references=run.pk,
+            )
+            if not pending.exists():
+                RunScheduler.all_taskrun_result_references_ended(run.pk)
+                print(
+                    f"[scheduler] recovered stuck WAITING_RESULTTASKS run {run.pk}"
+                )
+        except Exception as e:
+            print(
+                f"[scheduler] error recovering WAITING_RESULTTASKS run {run.pk}: {e}"
+            )
 
 
 def _process_cron_jobs() -> None:

@@ -5,6 +5,7 @@ from typing import Any
 
 from django.db import models
 from django_enum import EnumField
+from jinja2 import BaseLoader, Environment
 
 from server.models.base_model import BaseModel
 from server.models.content import GenericContent
@@ -15,6 +16,7 @@ from server.models.enums.message_enums import (
     MessageSource,
 )
 from server.models.queries.response import Response
+_JINJA_ENV = Environment(loader=BaseLoader())
 
 
 class Message(BaseModel):
@@ -100,3 +102,19 @@ class MessagePart(BaseModel):
     template_data: GenericContent | None = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="conversation_message_parts_template")
 
     tool_call: models.OneToOneField | None = models.OneToOneField( "server.AgentTaskCall", on_delete=models.CASCADE, default=None, blank=True, null=True)
+
+    def to_string(self):
+        if self.content_type == MessageContentType.TEMPLATE:
+            try:
+                context = self.template_data.get() if self.template_data else {}
+                return _JINJA_ENV.from_string(self.content.get() if self.content else "").render(**context)
+            except Exception as e:
+                  return [{"type": "text", "text": f"Error in Template String:{e}\n{self.content.get()}"}]
+
+        if self.content_type == MessageContentType.JSON:
+            return self.content.get()
+        if self.content_type == MessageContentType.TEXT:
+            return self.content.get()
+        if self.content_type == MessageContentType.IMAGE:
+            return self.content.get()
+        

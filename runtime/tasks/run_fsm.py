@@ -136,20 +136,25 @@ class TaskRunStateMachine:
         return updated
 
     @staticmethod
-    def wait_for_results(run_id: int) -> bool:
+    def wait_for_results(run_id: int, extra: dict | None = None) -> bool:
         """
         ``ACTIVE`` → ``WAITING_RESULTTASKS``.
 
-        The run returned successfully but its result contains AgentTaskCall
-        references that haven't finished yet.  Stays open until all referenced
-        calls reach ``ENDED``.
+        The run's result contains AgentTaskCall references that haven't
+        finished yet.  Stays open until all referenced calls reach ``ENDED``.
+
+        Parameters
+        ----------
+        extra : dict | None
+            Additional field updates to apply atomically with the transition
+            (e.g. ``result_json``).
         """
         return TaskRunStateMachine.transition(
-            run_id, TaskRunStatus.ACTIVE, TaskRunStatus.WAITING_RESULTTASKS
+            run_id, TaskRunStatus.ACTIVE, TaskRunStatus.WAITING_RESULTTASKS, extra=extra
         )
 
     @staticmethod
-    def succeed(run_id: int) -> bool:
+    def succeed(run_id: int, extra: dict | None = None) -> bool:
         """
         ``WAITING_RESULTTASKS`` **or** ``ACTIVE`` → ``SUCCESS``.
 
@@ -159,31 +164,43 @@ class TaskRunStateMachine:
         succeeded = TaskRunStateMachine.transition(
             run_id, TaskRunStatus.WAITING_RESULTTASKS, TaskRunStatus.SUCCESS
         )
+        extras = {"ended_at": timezone.now()}
+        if extra:
+            extras.update(extra)
         if not succeeded:
             succeeded = TaskRunStateMachine.transition(
                 run_id=run_id,
                 from_status=TaskRunStatus.ACTIVE,
                 to_status=TaskRunStatus.SUCCESS,
-                extra={"ended_at": timezone.now()},
+                extra = extras,
             )
         return succeeded
 
     @staticmethod
-    def fail(run_id: int) -> bool:
+    def fail(run_id: int, extra: dict | None = None) -> bool:
         """
         ``WAITING_RESULTTASKS`` **or** ``ACTIVE`` → ``FAILURE``.
 
         Tries ``WAITING_RESULTTASKS`` first (a referenced call failed), then
         falls back to ``ACTIVE`` (the run itself raised an exception).
+
+        Parameters
+        ----------
+        extra : dict | None
+            Additional field updates to apply atomically with the fallback
+            transition (e.g. ``result_json``).
         """
         failed = TaskRunStateMachine.transition(
             run_id, TaskRunStatus.WAITING_RESULTTASKS, TaskRunStatus.FAILURE
         )
+        extras = {"ended_at": timezone.now()}
+        if extra:
+            extras.update(extra)
         if not failed:
             failed = TaskRunStateMachine.transition(
                 run_id=run_id,
                 from_status=TaskRunStatus.ACTIVE,
                 to_status=TaskRunStatus.FAILURE,
-                extra={"ended_at": timezone.now()},
+                extra=extras,
             )
         return failed

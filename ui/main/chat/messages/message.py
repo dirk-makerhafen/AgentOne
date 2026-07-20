@@ -13,14 +13,9 @@ from ui.main.chat.messages.user_message import UserMessageView
 class MessageView(ModelView):
     DOM_ELEMENT = "div"
     DOM_ELEMENT_CLASS = "MessageView msg-row"
-    #DOM_ELEMENT_EXTRAS = "style='display:flex;'"
 
     TEMPLATE_STR = '''
         {{ pyview.view.render() }}
-        <script>
-            observer.observe(document.getElementById('{{pyview.uid}}'));
-            console.log("added");
-        </script>
     '''
     def __init__(self, subject: Message|Query, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         super().__init__(subject, parent, **kwargs)
@@ -51,7 +46,7 @@ class MessageView(ModelView):
     <div class="tool-card open">
       <div class="tool-card-header" onclick="this.closest('.tool-card').classList.toggle('open')">
         
-        <span class="tool-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+        <span class="tool-card-icon"><svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
 </span>
         <span class="tool-card-name">skill_view</span>
         <span class="tool-card-preview">{"success": true, "name": "obsidian", "description": "Read, search, and create notes in the Obsidian vault.", "tags": [], "related_skills": [], "content": "---\nname: obsidian\ndescription: Read, search, and create notes in the Obsidian vault.\n---\n\n# Obsidian Vault\n\n**Location:** Set via `OBSIDIAN_VAULT_PATH` environment variable (e.g.</span>
@@ -92,7 +87,7 @@ What would you like to do with the Obsidian vault now? For example:
 3.  **Create:** &quot;Create a new note titled 'Meeting Minutes - [Date]'.&quot;">
 <div class="thinking-card open">
 <div class="thinking-card-header" onclick="this.parentElement.classList.toggle('open')">
-<span class="thinking-card-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.7-3.2 6H8.2C6.3 13.7 5 11.5 5 9a7 7 0 0 1 7-7z"></path><line x1="9" y1="17" x2="15" y2="17"></line><line x1="10" y1="20" x2="14" y2="20"></line></svg>
+<span class="thinking-card-icon"><svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.7-3.2 6H8.2C6.3 13.7 5 11.5 5 9a7 7 0 0 1 7-7z"></path><line x1="9" y1="17" x2="15" y2="17"></line><line x1="10" y1="20" x2="14" y2="20"></line></svg>
 </span>
 <span class="thinking-card-label">Thinking</span>
 <span class="thinking-card-toggle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><polyline points="9 18 15 12 9 6"></polyline></svg>

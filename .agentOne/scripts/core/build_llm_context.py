@@ -84,7 +84,7 @@ def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Quer
                 if current.parts.filter(type="COMPACTION").exists():
                     break
             current = current.prev_message
-        messages.reverse()
+        
         limiter = HistoryLimiter(session, messages)
 
         cmessages: list[Any] = []

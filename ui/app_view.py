@@ -120,6 +120,17 @@ class UiAppView(PyHtmlView):
 
         {{ pyview.app_dialog_overlay.render() }}
 
+        <script>
+        (function(){
+            var r=document.documentElement;
+            var t='{{ pyview.subject.settings.theme }}';
+            if(t==='dark'){r.classList.add('dark')}
+            else if(t==='light'){r.classList.remove('dark')}
+            else{var pd=window.matchMedia('(prefers-color-scheme:dark)').matches;r.classList.toggle('dark',pd)}
+            r.setAttribute('data-skin','{{ pyview.subject.settings.skin }}');
+            r.setAttribute('data-font-size','{{ pyview.subject.settings.font_size }}');
+        })();
+        </script>
         """
     
     def __init__(self, subject:UiApp, parent, **kwargs):
@@ -137,6 +148,3 @@ class UiAppView(PyHtmlView):
         self.onboarding_overlay = OnboardingOverlay(subject, self)
         self.mobile_overlay = MobileOverlay(subject, self)
         self.app_dialog_overlay = AppDialogOverlay(subject, self)
-        
-        
-        

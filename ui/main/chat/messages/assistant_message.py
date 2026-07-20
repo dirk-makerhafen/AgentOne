@@ -50,8 +50,8 @@ class AssistantMessageView(ModelView):
         </div>
         <div class="assistant-turn-blocks">
             {% if pyview.subject.response.reasoning %}
-                <div class="thinking-card open">
-                    <div class="thinking-card-header" onclick="this.parentElement.classList.toggle('open')">
+                <div class="thinking-card {% if pyview.is_reasoning_open %} open {% endif %}">
+                    <div class="thinking-card-header" onclick="pyview.toggle_reasoning()">
                         <span class="thinking-card-icon">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.7-3.2 6H8.2C6.3 13.7 5 11.5 5 9a7 7 0 0 1 7-7z"></path><line x1="9" y1="17" x2="15" y2="17"></line><line x1="10" y1="20" x2="14" y2="20"></line></svg>
                         </span>
@@ -101,7 +101,7 @@ class AssistantMessageView(ModelView):
     '''
     def __init__(self, subject: Message, parent: MessageView, **kwargs):
         super().__init__(subject, parent, **kwargs) 
-      
+        self.is_reasoning_open = False
         self.message_parts = subject.parts.filter(tool_call__isnull=False)
         self.tool_calls = AgentTaskCall.objects.filter(pk__in=[message_part.tool_call.pk for message_part in self.message_parts])
         self.tool_list = QuerySetView(
@@ -111,4 +111,7 @@ class AssistantMessageView(ModelView):
             #filter_function=self._filter_function
         )
         
+    def toggle_reasoning(self):
+        self.is_reasoning_open = not self.is_reasoning_open
+        self.update()
 

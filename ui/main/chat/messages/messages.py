@@ -30,15 +30,15 @@ class Messages(ModelView):
 @keyframes smoothAppear {
   0% {
     opacity: 0;
-    transform: translateY(50%); /* Starts slightly lower */
+    transform: translateY(50%);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);    /* Ends in its natural position */
+    transform: translateY(0);
   }
 }
     </style>
-            <button id="scrollToBottomBtn" class="scroll-to-bottom-btn" aria-label="Scroll to bottom" onclick="var e=document.getElementById('{{pyview.uid}}');if(e)e.scrollTop=e.scrollHeight;" style="display:none1">↓</button>
+            <button id="scrollToBottomBtn" class="scroll-to-bottom-btn" aria-label="Scroll to bottom" onclick="var e=document.getElementById('{{pyview.uid}}');if(e)e.scrollTop=e.scrollHeight;pyview.scrollToBottom()">↓</button>
 
             <div class="empty-state" id="emptyState" style="display:none">
                 <div class="empty-logo"></div>
@@ -50,7 +50,7 @@ class Messages(ModelView):
             {{ pyview.messages_view.render() }}
             <div id="bottom-sentinel" style="height: 1px;"></div>    
 
-            <span onclick="pyview.up()">UP</span>
+            <span onclick="var e=document.getElementById('{{pyview.uid}}');pyview.up()">UP</span>
             <span onclick="pyview.down()">DOWN</span>
             <div id="liveCompressionCards" class="live-compression-cards"></div>
 
@@ -58,68 +58,47 @@ class Messages(ModelView):
 
             
             <script>
-                // Auto-scroll to bottom when new content arrives and user is near bottom
-                function autoScrollMessages(uid, threshold) {
-                    var el = document.getElementById(uid);
-                    if (!el) return;
-                    if (el.scrollHeight - el.clientHeight - el.scrollTop < threshold) {
-                        el.scrollTop = el.scrollHeight;
-                    }
-                }
-                // Functions to manage your data
-                function loadMoreBottomItems() {
-                    pyview.down();
-                    console.log("Loading new items at bottom, unloading top items...");
-                }
 
-                function loadMoreTopItems() {
-                    pyview.up();
-                    console.log("Loading older items at top, unloading bottom items...");
-                }
-
-                // Configuration for the observer
                  options = {
-                    //root: document.getElementById('{{pyview.uid}}'), // Uses the browser viewport (change to your container element if nested)
-                    // "20% 0px" extends the detection zone vertically by 20% outside the viewport
-                    rootMargin: '10% 0px 10% 0px', 
-                    threshold: 0 // Trigger as soon as the sentinel hits the 20% margin zone
-                };
+                    rootMargin: '5% 0px 5% 0px',
+                    threshold: 0
+                 };
 
                  var observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
-                        console.log(entry);
-                        // Only trigger if the element enters our 20% buffer zone
-                        if (entry.isIntersecting) {
-                             console.log(entry.target);
-                            pyview.update_list(entry.target.dataset.pk);
-                            if (entry.target.id === 'bottom-sentinel') {
-                                //loadMoreBottomItems();
-                            } else if (entry.target.id === 'top-sentinel') {
-                                //loadMoreTopItems();
-                            };
+                        if (!entry.isIntersecting) return;
+                        if (entry.target.id === 'top-sentinel') {
+                            var el = document.getElementById('{{pyview.uid}}');
+                            var pct = el ? Math.round(el.clientHeight * 0.05) : 1;
+                            if (el && el.scrollTop < pct) {
+                                el.scrollTop = pct * 1.05;
+                                pyview.up();
+                            }
+                            
+                        } else if (entry.target.id === 'bottom-sentinel') {
+                            pyview.down();
                         }
                     });
-                }, options);
+                 }, options);
 
-                // Start watching the top and bottom boundaries
-                observer.observe(document.getElementById('top-sentinel'));
-                observer.observe(document.getElementById('bottom-sentinel'));
+                 observer.observe(document.getElementById('top-sentinel'));
+                 observer.observe(document.getElementById('bottom-sentinel'));
+
+                 var e=document.getElementById('{{pyview.uid}}');
+                 if(e){
+                    e.scrollTop=e.scrollHeight;
+                 }
             </script>
 
     '''
 
     def __init__(self, subject: Session, parent: Chat, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.max_visible_items = 30
-        self.min_id = 0
-        self.max_id = 2^32
-
+        self.max_visible_items = 100
+        
         self._session_id = subject.model.pk
         app = UiApp.get_instance()
         if app is not None:
-            # Unwatch any previous subscription for this session_id to
-            # prevent duplicate callbacks when a tab is reopened before
-            # the old Messages instance is GC'd.
             app.model_observer.unwatch_filter(
                 model_class=Message,
                 filter={"session_id": self._session_id},
@@ -163,22 +142,36 @@ class Messages(ModelView):
 
         self.message_list = ObservableList()
 
-        first_messages = list(reversed(list(Message.objects.filter(session_version__session=self.subject.model ).order_by("-pk")[:self.max_visible_items])))
-         
-        if first_messages:
-            self.min_id = first_messages[0].pk
-        if len(first_messages) > 1:
-            self.max_id = first_messages[-1].pk
-
-        with self._callback_lock:
-            self.message_list.extend(first_messages)
-
+        self.load_message_from_bottom()
+        
         self.messages_view = ObservableListView(
             subject=self.message_list, 
             parent=self, 
             item_class=MessageView,
             dom_element_class="messages-inner",
         )
+
+    def load_message_from_bottom(self):
+        tail = Message.objects.filter(
+            session_version__session=self.subject.model,
+            next_messages=None,
+        ).last()
+        if self.message_list and tail == self.message_list[-1]:
+            return
+        messages = []
+        current = tail
+        while current and len(messages) < self.max_visible_items:
+            messages.append(current)
+            current = current.prev_message
+        messages.reverse()
+        with self._callback_lock:
+            self.message_list.clear()
+            for message in messages:
+                self.message_list.append(message)
+                for query in message.related_queries.filter(session_version__session=self.subject.model).order_by("-pk"):
+                    self.message_list.append(query)
+
+
     def _log(self, msg: str) -> None:
         try:
             with open("/tmp/agentone_events.log", "a") as _f:
@@ -188,7 +181,7 @@ class Messages(ModelView):
             pass
 
     def scrollToBottom(self) -> None:
-        """Scroll the messages container to the bottom."""
+        self.load_message_from_bottom()
         try:
             self._instance.call_javascript(
                 "pyhtmlgui.eval_script",
@@ -199,7 +192,6 @@ class Messages(ModelView):
             pass
 
     def _auto_scroll_if_needed(self) -> None:
-        """Scroll to bottom if user is already near the bottom."""
         try:
             self._instance.call_javascript(
                 "pyhtmlgui.eval_script",
@@ -209,13 +201,9 @@ class Messages(ModelView):
         except Exception:
             pass
 
-    # Thread safety lock for model-event callbacks (may fire from multiple
-    # Channels consumer threads).  Class-level to protect against two
-    # Messages instances sharing the same session_id.
     _callback_lock = threading.Lock()
 
     def _on_message_created(self, pk: int, action: str, filter_context: dict) -> None:
-        """Append a newly created Message to the ObservableList (one DOM insert)."""
         from server.models.message import Message as Msg
         import traceback
         stack = ''.join(traceback.format_stack()[-5:-1])
@@ -230,9 +218,20 @@ class Messages(ModelView):
             if existing:
                 self._log(f"Messages._on_message_created: {pk} already in list, skipping (found {len(existing)} existing)")
                 return
-            self._log(f"Messages._on_message_created: appending {pk} (list had {len(self.message_list)} items)")
-            self.message_list.append(msg)
-            # Also add related Queries so the query-card is always visible
+
+            prev_id = filter_context.get("prev_message_id")
+            inserted = False
+            if prev_id is not None:
+                for idx, item in enumerate(self.message_list):
+                    if isinstance(item, Msg) and item.pk == prev_id:
+                        self._log(f"Messages._on_message_created: inserting {pk} after msg {prev_id} at index {idx+1}")
+                        self.message_list.insert(idx + 1, msg)
+                        inserted = True
+                        break
+            if not inserted:
+                self._log(f"Messages._on_message_created: appending {pk} (list had {len(self.message_list)} items)")
+                self.message_list.append(msg)
+
             if hasattr(msg, "related_queries"):
                 for query in msg.related_queries.all().order_by("-pk"):
                     if not any(isinstance(item, Query) and item.pk == query.pk for item in self.message_list):
@@ -240,7 +239,6 @@ class Messages(ModelView):
             self._auto_scroll_if_needed()
 
     def _on_query_created(self, pk: int, action: str, filter_context: dict) -> None:
-        """Insert a Query into the message list after its trigger_message."""
         from server.models.queries.query import Query as QueryModel
         with self._callback_lock:
             try:
@@ -261,7 +259,6 @@ class Messages(ModelView):
                     return
 
     def _on_query_updated(self, pk: int, action: str, filter_context: dict) -> None:
-        """Re-render the QueryView whose underlying Query status changed."""
         self._log(f"_on_query_updated: pk={pk} action={action} fc={filter_context}")
         for wrapper in self.messages_view._wrapped_data:
             subj = wrapper.subject
@@ -279,7 +276,6 @@ class Messages(ModelView):
         self._log(f"_on_query_updated: no wrapper found for Query {pk} in _wrapped_data (len={len(self.messages_view._wrapped_data)})")
 
     def _on_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:
-        """Re-render the ToolCard whose underlying AgentTaskCall status changed."""
         self._log(f"_on_taskcall_updated: pk={pk} action={action} fc={filter_context}")
         for wrapper in self.messages_view._wrapped_data:
             if wrapper.subject is None:
@@ -303,62 +299,56 @@ class Messages(ModelView):
                     return
         self._log(f"_on_taskcall_updated: no ToolCard found for call {pk}")
 
-    def update_list(self, center_pk):
-        if not center_pk:
-            return
-        print("update_list", center_pk)
-        if int(center_pk) in [x.pk for x in self.message_list[:7] if isinstance(x,Message)]:
-            self.up()
-        if int(center_pk) in [x.pk for x in self.message_list[-7:] if isinstance(x,Message)]:
-            self.down()   
-        
-
-    def _first_message_pk(self) -> int:
+    def _first_message(self):
         for item in self.message_list:
             if isinstance(item, Message):
-                return item.pk
-        return 0
+                return item
+        return None
 
-    def _last_message_pk(self) -> int:
+    def _last_message(self):
         for item in reversed(self.message_list):
             if isinstance(item, Message):
-                return item.pk
-        return 0
+                return item
+        return None
 
     def _message_count(self) -> int:
         return sum(1 for item in self.message_list if isinstance(item, Message))
 
     def up(self):
-        print("up")
-        messages = list(Message.objects.filter(session_version__session=self.subject.model, pk__lt=self.min_id ).order_by("-pk")[:1])
-        for message in messages:
-            self.message_list.insert(0, message)
-            if hasattr(message,"related_queries"):
-                for query in message.related_queries.all().order_by("-pk"):
-                    print("QUERY", query)
-                    self.message_list.insert(1, query)
+        first = self._first_message()
+        if not first:
+            return
 
-        self.min_id = self._first_message_pk()
-        while self._message_count() > self.max_visible_items:
-            del self.message_list[-1]
-        self.max_id = self._last_message_pk()
-        print("foo", [x.pk for x in self.message_list])
-        print("MINMAX UP", self.min_id, self.max_id)
-        print("len", len(self.message_list))
+        for _ in range(self.max_visible_items//4):
+            older = first.prev_message
+            if older is None:
+                break
+            self.message_list.insert(0, older)
+            for query in older.related_queries.filter(session_version__session=self.subject.model).order_by("-pk"):
+                self.message_list.insert(1, query)
+            first = older
 
+        delcnt = self._message_count() - self.max_visible_items
+        if delcnt > 0:
+            for _ in range(delcnt):
+                del self.message_list[-1]
+            
     def down(self):
-        print("down")
-        messages = list(Message.objects.filter(session_version__session=self.subject.model, pk__gt=self.max_id ).order_by("pk")[:1])
-        for message in messages:
-            self.message_list.append(message)
-            for query in message.related_queries.all().order_by("pk"):
-                print("QUERY", query)
+        last = self._last_message()
+        if not last:
+            return
+
+        for _ in range(self.max_visible_items//4):
+            newer = last.next_messages.filter(session_version__session=self.subject.model).first()
+            if newer is None:
+                break
+            self.message_list.append(newer)
+            for query in newer.related_queries.filter(session_version__session=self.subject.model).order_by("pk"):
                 self.message_list.append(query)
-                
-        self.max_id = self._last_message_pk()
-        while self._message_count() > self.max_visible_items:
-            del self.message_list[0]
-        self.min_id = self._first_message_pk()
-        print("foo", [x.pk for x in self.message_list])
-        print("MINMAX DOWN", self.min_id, self.max_id)
-        print("len", len(self.message_list))
+            last = newer
+
+        delcnt = self._message_count() - self.max_visible_items 
+        if delcnt > 0:
+            for _ in range(delcnt):
+                del self.message_list[0]
+        

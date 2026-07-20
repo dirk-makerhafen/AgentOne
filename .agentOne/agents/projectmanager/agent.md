@@ -8,7 +8,7 @@ description: >
   to the database. Accessed via call_projectmanager tool.
 extends: baseagent
 reasoningEffort: medium
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project, wiki.*]
 skills: [+, agentone-admin, project-manager]
 subagents:
   - name: researcher
@@ -17,7 +17,7 @@ subagents:
   - name: planner
     create: agent
     lifecycle: single
-  - name: brain
+  - name: wiki
     create: agent
     lifecycle: single
 ---

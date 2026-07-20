@@ -61,6 +61,9 @@ class RunScheduler:
                 # Despite the method name, wait_for_hooks uses the same state.
                 TaskCallStateMachine.wait_for_hooks(taskrun.agent_task_call_id, taskrun_id)
                 return
+            # All referenced calls already ended — resolve immediately.
+            RunScheduler.all_taskrun_result_references_ended(taskrun.pk)
+            return
 
         if taskrun.status == TaskRunStatus.FAILURE:
             CallScheduler.on_taskrun_ended(taskrun.pk, TaskRunStatus.FAILURE)

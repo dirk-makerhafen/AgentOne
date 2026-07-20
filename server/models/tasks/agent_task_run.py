@@ -197,25 +197,34 @@ class AgentTaskRun(BaseModel):
 
                 self.result_json, ref_pks = self._create_result_json(result=result)
                 self.taskrun_result_references.set(ref_pks)
+
+                from runtime.tasks.run_fsm import TaskRunStateMachine
                 if ref_pks:
                     self.status = TaskRunStatus.WAITING_RESULTTASKS
+                    TaskRunStateMachine.wait_for_results(
+                        self.pk, extra={"result_json": self.result_json}
+                    )
                 else:
                     self.status = TaskRunStatus.SUCCESS
+                    TaskRunStateMachine.succeed(
+                        self.pk, extra={"result_json": self.result_json}
+                    )
 
             except RateLimitError:
                 self.status = TaskRunStatus.RATE_LIMITED
+                AgentTaskRun.objects.filter(pk=self.pk, status=TaskRunStatus.ACTIVE).update(
+                    status=self.status
+                )
 
             except Exception as e:
-                self.result_json = json.dumps(
+                self.status = TaskRunStatus.FAILURE
+                exception_json = json.dumps(
                     {"exception": f"{e}", "traceback": traceback.format_exc()}
                 )
-                self.status = TaskRunStatus.FAILURE
-
-        query = AgentTaskRun.objects.filter(
-            pk=self.pk, status=TaskRunStatus.ACTIVE
-        )
-        if not query.update(status=self.status, result_json=self.result_json):
-            return None
+                from runtime.tasks.run_fsm import TaskRunStateMachine
+                TaskRunStateMachine.fail(
+                    self.pk, extra={"result_json": exception_json}
+                )
 
     @staticmethod
     def _create_run_arguments_json(

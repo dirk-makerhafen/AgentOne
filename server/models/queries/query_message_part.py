@@ -14,7 +14,7 @@ from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 
 _JINJA_ENV = Environment(loader=BaseLoader())
-cache = LRUCache(maxsize=10000)
+cache = LRUCache(maxsize=100000)
 
 
 class QueryMessagePart(BaseModel):
