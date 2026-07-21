@@ -106,7 +106,6 @@ def load_cron_manifest(
         _fields_to_check = [
             ("description", description),
             ("schedule", schedule),
-            ("is_active", is_active),
             ("is_archived", False),
             ("agent", agent),
             ("workspace", workspace),

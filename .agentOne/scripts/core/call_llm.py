@@ -60,7 +60,6 @@ def run_streaming_query(
         api_key=query.apikey.key if query.apikey else (session.aimodel.api_provider.data or {}).get("default_api_key", ""),
     )
 
-    from server.models.debug_log_entry import DebugLogEntry
 
 
     args = dict(
@@ -76,11 +75,12 @@ def run_streaming_query(
         args["tools"] = tools
         args["tool_choice"] = "auto"
     
-    DebugLogEntry.objects.create(
-        session=session.model,
-        event="query",
-        data={"query_args": args}
-    )
+    #from server.models.debug_log_entry import DebugLogEntry
+    #DebugLogEntry.objects.create(
+    #    session=session.model,
+    #    event="query",
+    #    data={"query_args": args}
+    #)
 
     stream = client.chat.completions.create(**args)
 

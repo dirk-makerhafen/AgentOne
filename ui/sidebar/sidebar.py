@@ -6,6 +6,7 @@ from ui.sidebar.panels.chats import SidebarPanelChats
 from ui.sidebar.panels.collections import SidebarPanelCollections
 from ui.sidebar.panels.cron import SidebarPanelCronjobs
 from ui.sidebar.panels.insights import SidebarPanelInsights
+
 from ui.sidebar.panels.logs import SidebarPanelLogs
 from ui.sidebar.panels.projects import SidebarPanelProjects
 from ui.sidebar.panels.settings import SidebarPanelSettings
@@ -70,6 +71,7 @@ class SidebarView(ModelView):
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>
                 <div class="rail-button-text" style="display:none">Todos</div>
             </button>
+
             <button class="nav-tab" data-panel="insights" data-label="Insights" onclick="pyview.switchPanel('insights')" title="Insights" data-i18n-title="tab_insights">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
                 <div class="rail-button-text" style="display:none">Insights</div>
@@ -108,6 +110,7 @@ class SidebarView(ModelView):
             chat = SidebarPanelChats(subject=self.subject, parent=self),
             cron = SidebarPanelCronjobs(subject=self.subject, parent=self),
             dataflows = SidebarPanelCollections(subject=self.subject, parent=self),
+
             insights = SidebarPanelInsights(subject=self.subject, parent=self),
             logs = SidebarPanelLogs(subject=self.subject, parent=self),
             projects = SidebarPanelProjects(subject=self.subject, parent=self),

@@ -64,7 +64,7 @@ def parse_llm_response(session: Session, response: Response) -> dict[str, Any]:
 
     toolcalls: list[dict[str, Any]] = list(getattr(response, "tool_calls", []) or [])
     content: str = getattr(response, "content", "") or ""
-    reasoning: str = getattr(response, "reasoning", "") or ""
+    reasoning: str = (getattr(response, "reasoning", "") or "").strip()
 
     if reasoning:
         result_parts.append(Part(type="reasoning", content_type="text", content=reasoning))

@@ -1,6 +1,7 @@
-"""Dashboard view — overview stats for the agent framework."""
+"""Dashboard view — overview stats for the agent framework plus filterable inspect results."""
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone as dt_timezone
 from typing import TYPE_CHECKING
 
@@ -13,7 +14,10 @@ from server.models.cron import Cronjob
 from server.models.message import Message
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
+from server.models.tasks.task_definition import TaskDefinition
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.lib.observableList import ObservableList
+from ui.lib.pyHtmlGui.pyhtmlgui.view.observable_list_view import ObservableListView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -54,6 +58,15 @@ METRIC_ICONS = {
     "messages": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>',
 }
 
+INSPECT_STATUS_OPTIONS = [
+    ("", "All"),
+    ("ENDED", "Ended"),
+    ("ACTIVE", "Active"),
+    ("WAITING", "Waiting"),
+    ("HALTED", "Halted"),
+    ("NEW", "New"),
+]
+
 
 def _timesince(dt: datetime | None) -> str:
     if not dt:
@@ -75,6 +88,126 @@ def _timesince(dt: datetime | None) -> str:
         return f"{hours}h ago"
     days = hours // 24
     return f"{days}d ago"
+
+
+# ---------------------------------------------------------------------------
+# Inspect result count — updates independently from the dashboard
+# ---------------------------------------------------------------------------
+
+
+class ResultCountView(ModelView):
+    TEMPLATE_STR = """
+    {{pyview.parent.result_count}} Items
+    """
+
+
+# ---------------------------------------------------------------------------
+# Inspect row — expandable filterable result row
+# ---------------------------------------------------------------------------
+
+
+class InspectRowView(ModelView):
+    TEMPLATE_STR = """
+        <div class="inspect-row">
+            <div class="inspect-row-content" onclick="pyview.toggle()">
+                <span class="inspect-row-toggle">{{ pyview._toggle_marker }}</span>
+                <span class="inspect-row-col--id">#{{ pyview.subject.pk }}</span>
+                <span class="inspect-row-col--agent">{{ pyview.subject.session_version.agent.name if pyview.subject.session_version and pyview.subject.session_version.agent else "?" }}</span>
+                <span class="inspect-row-col--task">{{ pyview.subject.task_definition.name if pyview.subject.task_definition else "?" }}</span>
+                <span class="inspect-row-col--session">{{ pyview.subject.session.name if pyview.subject.session else "?" }}</span>
+                <span class="inspect-row-col--status"><span class="detail-badge {{ pyview.STATUS_BADGE.get(pyview.subject.status, "") }}">{{ pyview.subject.status }}</span></span>
+                <span class="inspect-row-col--time">{{ pyview._timesince(pyview.subject.created_at) }}</span>
+            </div>
+            {% if pyview._expanded %}
+                <div id="inspect_detail_{{pyview.uid}}" class="inspect-row-detail">
+                    <div class="inspect-detail-grid">
+                        <span class="inspect-detail-label">Status detail</span>
+                        <span>{{ pyview.subject.status_detail }}</span>
+                        {% if pyview.subject.ended_at %}
+                        <span class="inspect-detail-label">Ended at</span>
+                        <span>{{ pyview.subject.ended_at.strftime("%Y-%m-%d %H:%M:%S") if pyview.subject.ended_at else "" }}</span>
+                        {% endif %}
+                        {% if pyview.subject.retry_count %}
+                        <span class="inspect-detail-label">Retries</span>
+                        <span>{{ pyview.subject.retry_count }}</span>
+                        {% endif %}
+                        <span class="inspect-detail-label">Session</span>
+                        <span><a href="#" class="inspect-detail-link" onclick="pyview._dashboard_view.open_session({{ pyview.subject.session_id }});return false">{{ pyview.subject.session.name if pyview.subject.session else "?" }}</a></span>
+                    </div>
+                    <div class="inspect-section">
+                        <div class="inspect-section-header">Result</div>
+                        <pre class="inspect-code-block">{{ pyview.subject.get_result(timeout= 0, recursive = True, allow_partial_results = True) }}</pre>
+                    </div>
+                    {% if pyview.subject.carguments_json %}
+                    <div class="inspect-section">
+                        <div class="inspect-section-header">Arguments</div>
+                        <pre class="inspect-code-block">{{ pyview.subject.carguments_json }}</pre>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    """
+
+    def __init__(self, subject, parent, dashboard_view=None, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self._dashboard_view = dashboard_view
+        self._expanded = False
+        self.STATUS_BADGE = {
+            "ENDED": "ok",
+            "ACTIVE": "running",
+            "WAITING": "warn",
+            "HALTED": "err",
+            "NEW": "",
+        }
+
+    def _load_result(self):
+        self._result = self.subject.get_result(timeout=0, recursive=True, allow_partial_results=True)
+
+    @property
+    def task_result(self):
+        self._load_result()
+        return json.dumps(self._result, indent=2, default=str) if self._result else None
+
+    @property
+    def task_arguments(self):
+        if self.subject.carguments_json:
+            return json.dumps(self.subject.carguments_json, indent=2, default=str)
+        return None
+
+    @property
+    def _toggle_marker(self) -> str:
+        return "\u25bc" if self._expanded else "\u25b6"
+
+    def toggle(self) -> None:
+        self._expanded = not self._expanded
+        self.update()
+
+    def _timesince(self, dt: datetime | None) -> str:
+        if not dt:
+            return ""
+        now = timezone.now()
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=dt_timezone.utc)
+        diff = now - dt
+        secs = int(diff.total_seconds())
+        if secs < 5:
+            return "just now"
+        if secs < 60:
+            return f"{secs}s ago"
+        mins = secs // 60
+        if mins < 60:
+            return f"{mins}m ago"
+        hours = mins // 60
+        if hours < 24:
+            return f"{hours}h ago"
+        days = hours // 24
+        return f"{days}d ago"
+
+
+# ---------------------------------------------------------------------------
+# Dashboard
+# ---------------------------------------------------------------------------
 
 
 class DashboardView(ModelView):
@@ -150,28 +283,29 @@ class DashboardView(ModelView):
                     </div>
                 </div>
 
-                <div class="insights-card">
-                    <div class="insights-card-title">
-                        Recent activity
-                        <span style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;font-size:11px;color:var(--muted)">last 10 calls</span>
+                <div class="inspect-filters">
+                        <input id="inspect_agent_{{pyview.uid}}" class="inspect-filter-input" type="text" placeholder="Filter by agent..." value="{{ pyview._agent_filter }}" spellcheck="false" autocomplete="off" oninput="pyview.apply_filters(this.value,document.getElementById('inspect_status_{{pyview.uid}}').value,document.getElementById('inspect_task_{{pyview.uid}}').value,document.getElementById('inspect_session_{{pyview.uid}}').value)">
+                        <select id="inspect_status_{{pyview.uid}}" class="inspect-filter-select" onchange="pyview.apply_filters(document.getElementById('inspect_agent_{{pyview.uid}}').value,this.value,document.getElementById('inspect_task_{{pyview.uid}}').value,document.getElementById('inspect_session_{{pyview.uid}}').value)">
+                            {% for val, label in pyview.status_options %}
+                            <option value="{{ val }}"{% if pyview._status_filter == val %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <input id="inspect_task_{{pyview.uid}}" class="inspect-filter-input" type="text" placeholder="Filter by task..." value="{{ pyview._task_filter }}" spellcheck="false" autocomplete="off" oninput="pyview.apply_filters(document.getElementById('inspect_agent_{{pyview.uid}}').value,document.getElementById('inspect_status_{{pyview.uid}}').value,this.value,document.getElementById('inspect_session_{{pyview.uid}}').value)">
+                        <input id="inspect_session_{{pyview.uid}}" class="inspect-filter-input" type="text" placeholder="Session #..." value="{{ pyview._session_filter }}" spellcheck="false" autocomplete="off" oninput="pyview.apply_filters(document.getElementById('inspect_agent_{{pyview.uid}}').value,document.getElementById('inspect_status_{{pyview.uid}}').value,document.getElementById('inspect_task_{{pyview.uid}}').value,this.value)">
+                        <span class="inspect-filter-label">{{ pyview.result_count_view.render() }}</span>
                     </div>
-                    {% if pyview.recent_rows %}
-                        {% for call in pyview.recent_rows %}
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 2px;font-size:12px;border-bottom:1px solid var(--border,.05)">
-                            <div style="display:flex;align-items:center;gap:6px;min-width:0">
-                                <span class="detail-badge {{ call.badge }}" style="font-size:10px;padding:1px 6px">{{ call.status }}</span>
-                                <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ call.name }}</span>
-                            </div>
-                            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                                <span style="color:var(--muted);font-size:11px">#{{ call.pk }}</span>
-                                <span style="color:var(--muted);font-size:11px">{{ call.since }}</span>
-                            </div>
+
+                    <div class="inspect-results">
+                        <div class="inspect-results-header">
+                            <span class="inspect-row-col--id">Call</span>
+                            <span class="inspect-row-col--fill">Agent</span>
+                            <span class="inspect-row-col--fill">Task</span>
+                            <span class="inspect-row-col--fill">Session</span>
+                            <span class="inspect-row-col--status">Status</span>
+                            <span class="inspect-row-col--time">When</span>
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="insights-empty">No task calls yet.</div>
-                    {% endif %}
-                </div>
+                        {{ pyview.results_view.render() }}
+                    </div>
 
             </div>
         </div>
@@ -179,9 +313,24 @@ class DashboardView(ModelView):
 
     def __init__(self, subject: UiApp, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        self.status_options = INSPECT_STATUS_OPTIONS
+        self._agent_filter = ""
+        self._status_filter = ""
+        self._task_filter = ""
+        self._session_filter = ""
+        self.result_count_view = ResultCountView(self.subject, self)
+        self.results_list = ObservableList()
+        self.results_view = ObservableListView(
+            subject=self.results_list,
+            parent=self,
+            item_class=InspectRowView,
+            dom_element_class="",
+            dashboard_view=self,
+        )
+        self._rebuild_results()
 
     # ------------------------------------------------------------------
-    # All metrics
+    # Metrics
     # ------------------------------------------------------------------
 
     @property
@@ -222,26 +371,63 @@ class DashboardView(ModelView):
         return rows
 
     # ------------------------------------------------------------------
-    # Recent activity
+    # Inspect filters
     # ------------------------------------------------------------------
 
+    def apply_filters(self, agent: str = "", status: str = "", task: str = "", session: str = "") -> None:
+        self._agent_filter = agent.strip()
+        self._status_filter = status.strip()
+        self._task_filter = task.strip()
+        self._session_filter = session.strip()
+        self._rebuild_results()
+        self.result_count_view.update()
+
+    # ------------------------------------------------------------------
+    # Inspect results
+    # ------------------------------------------------------------------
+
+    def _build_qs(self):
+        qs = AgentTaskCall.objects.select_related(
+            "task_definition",
+            "session",
+            "session_version__agent",
+            "taskcall_result_run",
+        ).order_by("-pk")
+
+        if self._agent_filter:
+            qs = qs.filter(session_version__agent__name__icontains=self._agent_filter)
+        if self._status_filter:
+            qs = qs.filter(status=self._status_filter)
+        if self._task_filter:
+            qs = qs.filter(task_definition__name__icontains=self._task_filter)
+        if self._session_filter:
+            try:
+                session_pk = int(self._session_filter)
+                qs = qs.filter(session__pk=session_pk)
+            except ValueError:
+                qs = qs.filter(session__name__icontains=self._session_filter)
+        return qs
+
     @property
-    def recent_rows(self) -> list[dict]:
-        calls = AgentTaskCall.objects.select_related("task_definition").order_by("-pk")[:10]
-        rows = []
-        for c in calls:
-            rows.append({
-                "pk": c.pk,
-                "status": c.status,
-                "badge": ITEM_BADGE.get(c.status, ""),
-                "name": c.task_definition.name if c.task_definition else "?",
-                "since": _timesince(c.created_at),
-            })
-        return rows
+    def result_count(self) -> int:
+        return self._build_qs().count()
+
+    def _rebuild_results(self) -> None:
+        self.results_list.clear()
+        for c in self._build_qs()[:200]:
+            self.results_list.append(c)
 
     # ------------------------------------------------------------------
     # Actions
     # ------------------------------------------------------------------
 
+    def open_session(self, session_pk: int) -> None:
+        from ui.main.chat.chat import Chat
+        try:
+            session = SessionModel.objects.get(pk=session_pk)
+        except SessionModel.DoesNotExist:
+            return
+        self.parent.create_and_open_tab(Chat, session)
+
     def refresh(self) -> None:
-        self.update()
+        self._rebuild_results()

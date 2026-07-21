@@ -37,8 +37,8 @@ class SidebarPanelInsights(ModelView):
         self._dashboard_opened = False
 
     def panel_activated(self) -> None:
-        if self._dashboard_opened:
-            return
+        #if self._dashboard_opened:
+        #    return
         self._dashboard_opened = True
         self.openDashboard()
 

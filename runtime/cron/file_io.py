@@ -11,7 +11,7 @@ from server.models.cron import Cronjob
 def cron_file_path(name: str, project=None) -> Path:
     """Return the expected ``.agentone/cronjobs/<name>.md`` path."""
     if project is not None and project.path:
-        return Path(project.path) / ".agentone" / "cronjobs" / f"{name}.md"
+        return Path(project.path) / "cronjobs" / f"{name}.md"
     from django.conf import settings
     return Path(settings.AGENTONE_ROOT) / "cronjobs" / f"{name}.md"
 

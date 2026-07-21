@@ -18,6 +18,16 @@ class CollectionCreateView(ModelView):
     DOM_ELEMENT_CLASS = "main-view"
 
     TEMPLATE_STR = '''
+        <script>
+            function filterSourceList(inputId, listId) {
+                var val = document.getElementById(inputId).value.toLowerCase();
+                var list = document.getElementById(listId);
+                for (var i = 0; i < list.children.length; i++) {
+                    var item = list.children[i];
+                    item.style.display = item.textContent.toLowerCase().includes(val) ? "" : "none";
+                }
+            }
+        </script>
         <div class="main-view-header">
             <div class="main-view-title">New data flow</div>
             <div class="main-view-actions">
@@ -91,13 +101,11 @@ class CollectionCreateView(ModelView):
                                     </span>
                                     {% endfor %}
                                 </div>
-                                <div style="display:flex;gap:4px">
-                                    <select onchange="pyview.addSourceValue('{{ src.uid }}','agent_values',this.value);this.value=''" style="font-size:11px;padding:2px 4px">
-                                        <option value="">+ Add agent</option>
-                                        {% for a in pyview.agent_list %}
-                                        <option value="{{ a.name }}"{% if a.name in src.agent_values %} disabled{% endif %}>{{ a.name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                <input id="agent_filter_{{src.uid}}" class="source-filter-input" placeholder="Filter agents..." oninput="filterSourceList('agent_filter_{{src.uid}}','agent_list_{{src.uid}}')">
+                                <div id="agent_list_{{src.uid}}" class="source-option-list">
+                                    {% for a in pyview.agent_list %}
+                                    <div class="filter-option-item" onclick="pyview.addSourceValue('{{ src.uid }}','agent_values','{{ a.name }}');document.getElementById('agent_filter_{{src.uid}}').value='';filterSourceList('agent_filter_{{src.uid}}','agent_list_{{src.uid}}')">{{ a.name }}</div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <div class="detail-form-row" style="flex-direction:column;align-items:stretch">
@@ -110,13 +118,11 @@ class CollectionCreateView(ModelView):
                                     </span>
                                     {% endfor %}
                                 </div>
-                                <div style="display:flex;gap:4px">
-                                    <select onchange="pyview.addSourceValue('{{ src.uid }}','function_values',this.value);this.value=''" style="font-size:11px;padding:2px 4px">
-                                        <option value="">+ Add function</option>
-                                        {% for f in pyview.all_function_names %}
-                                        <option value="{{ f }}"{% if f in src.function_values %} disabled{% endif %}>{{ f }}</option>
-                                        {% endfor %}
-                                    </select>
+                                <input id="func_filter_{{src.uid}}" class="source-filter-input" placeholder="Filter functions..." oninput="filterSourceList('func_filter_{{src.uid}}','func_list_{{src.uid}}')">
+                                <div id="func_list_{{src.uid}}" class="source-option-list">
+                                    {% for f in pyview.get_function_names_for_source(src.uid) %}
+                                    <div class="filter-option-item" onclick="pyview.addSourceValue('{{ src.uid }}','function_values','{{ f }}');document.getElementById('func_filter_{{src.uid}}').value='';filterSourceList('func_filter_{{src.uid}}','func_list_{{src.uid}}')">{{ f }}</div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <div class="detail-form-row" style="flex-direction:column;align-items:stretch">
@@ -129,15 +135,15 @@ class CollectionCreateView(ModelView):
                                     </span>
                                     {% endfor %}
                                 </div>
-                                <div style="display:flex;gap:4px">
-                                    <select onchange="pyview.addSourceValue('{{ src.uid }}','session_values',this.value);this.value=''" style="font-size:11px;padding:2px 4px">
-                                        <option value="">+ Add session</option>
-                                        <option value="default">default</option>
-                                        {% for s in pyview.session_names_list %}
-                                        <option value="{{ s }}"{% if s in src.session_values %} disabled{% endif %}>{{ s }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div class="detail-form-hint" style="margin-top:1px">Leave empty to match any session.</div>
+                                <input id="sess_filter_{{src.uid}}" class="source-filter-input" placeholder="Filter sessions..." oninput="filterSourceList('sess_filter_{{src.uid}}','sess_list_{{src.uid}}')">
+                                <div class="source-hint-row">
+                                    <span class="source-hint">Leave empty to match any</span>
+                                </div>
+                                <div id="sess_list_{{src.uid}}" class="source-option-list--short">
+                                    <div class="filter-option-item" onclick="pyview.addSourceValue('{{ src.uid }}','session_values','default');document.getElementById('sess_filter_{{src.uid}}').value='';filterSourceList('sess_filter_{{src.uid}}','sess_list_{{src.uid}}')">default</div>
+                                    {% for s in pyview.get_session_names_for_source(src.uid) %}
+                                    <div class="filter-option-item" onclick="pyview.addSourceValue('{{ src.uid }}','session_values','{{ s }}');document.getElementById('sess_filter_{{src.uid}}').value='';filterSourceList('sess_filter_{{src.uid}}','sess_list_{{src.uid}}')">{{ s }}</div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             {% elif src.type == 'stream' %}
@@ -307,14 +313,62 @@ class CollectionCreateView(ModelView):
     def all_function_names(self):
         names = set()
         for agent_model in AgentModel.objects.all():
-            agent = Agent(agent_model=agent_model)
-            for tdv in agent.allowedTasks:
-                names.add(tdv.task_definition.name)
-            for tdv in agent.allowedTools:
-                names.add(tdv.task_definition.name)
-            for tdv in agent.allowedCommands:
-                names.add(tdv.task_definition.name)
+            try:
+                if not agent_model.latest_agent_version:
+                    continue
+                agent = Agent(agent_model=agent_model)
+                for tdv in agent.allowedTasks:
+                    names.add(tdv.task_definition.name)
+                for tdv in agent.allowedTools:
+                    names.add(tdv.task_definition.name)
+                for tdv in agent.allowedCommands:
+                    names.add(tdv.task_definition.name)
+            except Exception:
+                pass
+        if not names:
+            from server.models.tasks.task_definition import TaskDefinition
+            names = set(TaskDefinition.objects.values_list("name", flat=True))
         return sorted(names)
+
+    def get_session_names_for_source(self, src_uid: str) -> list[str]:
+        src = next((e for e in self._source_entries if e["uid"] == src_uid), None)
+        if not src:
+            return self.session_names_list
+        agent_names = src.get("agent_values", [])
+        if not agent_names:
+            return self.session_names_list
+        from server.models.sessions.session_version import SessionVersionModel
+        names = list(
+            SessionVersionModel.objects
+            .filter(agent__name__in=agent_names)
+            .values_list("session__name", flat=True)
+            .distinct()
+            .order_by("session__name")[:50]
+        )
+        return names if names else self.session_names_list
+
+    def get_function_names_for_source(self, src_uid: str) -> list[str]:
+        src = next((e for e in self._source_entries if e["uid"] == src_uid), None)
+        if not src:
+            return self.all_function_names
+        agent_names = src.get("agent_values", [])
+        if not agent_names:
+            return self.all_function_names
+        names = set()
+        for agent_model in AgentModel.objects.filter(name__in=agent_names):
+            try:
+                if not agent_model.latest_agent_version:
+                    continue
+                agent = Agent(agent_model=agent_model)
+                for tdv in agent.allowedTasks:
+                    names.add(tdv.task_definition.name)
+                for tdv in agent.allowedTools:
+                    names.add(tdv.task_definition.name)
+                for tdv in agent.allowedCommands:
+                    names.add(tdv.task_definition.name)
+            except Exception:
+                pass
+        return sorted(names) if names else self.all_function_names
 
     @property
     def session_names_list(self):
@@ -381,27 +435,32 @@ class CollectionCreateView(ModelView):
     # Processor agent/function cascading
     # ------------------------------------------------------------------
 
+    def _agent_function_names(self, agent_name: str) -> list[str]:
+        if not agent_name:
+            return []
+        agent_model = AgentModel.objects.filter(name=agent_name).first()
+        if not agent_model or not agent_model.latest_agent_version:
+            return []
+        try:
+            agent = Agent(agent_model=agent_model)
+            names = set()
+            for tdv in agent.allowedTasks:
+                names.add(tdv.task_definition.name)
+            for tdv in agent.allowedTools:
+                names.add(tdv.task_definition.name)
+            for tdv in agent.allowedCommands:
+                names.add(tdv.task_definition.name)
+            return sorted(names)
+        except Exception:
+            return []
+
     @property
     def processor_functions(self):
-        name = self._form_data.get("processor_agent", "")
-        if not name:
-            return []
-        agent_model = AgentModel.objects.filter(name=name).first()
-        if not agent_model:
-            return []
-        agent = Agent(agent_model=agent_model)
-        return sorted(set(tdv.task_definition.name for tdv in agent.allowedTasks))
+        return self._agent_function_names(self._form_data.get("processor_agent", ""))
 
     @property
     def on_removed_functions(self):
-        name = self._form_data.get("on_removed_agent", "")
-        if not name:
-            return []
-        agent_model = AgentModel.objects.filter(name=name).first()
-        if not agent_model:
-            return []
-        agent = Agent(agent_model=agent_model)
-        return sorted(set(tdv.task_definition.name for tdv in agent.allowedTasks))
+        return self._agent_function_names(self._form_data.get("on_removed_agent", ""))
 
     def onTypeChange(self, value: str) -> None:
         self._form_data["collection_type"] = value

@@ -16,11 +16,11 @@ def _workspace_and_name(session: Session, folder: str | None = None) -> tuple[Wo
         if not p.is_absolute():
             folder = (Path(session.workspace.path) / p).resolve().as_posix()
     workspace, _ = WorkspaceModel.objects.get_or_create(
-        name=f"Wiki:{folder}",
+        name=f"wiki:{folder}",
         path=folder,
-        description=f"Wiki '{folder}' root directory",
+        description=f"wiki '{folder}' root directory",
     )
-    return workspace, f"Wiki:{folder}:Main"
+    return workspace, f"wiki:{folder}:main"
 
 
 def wiki_init(session: Session, folder: str | None = None) -> dict[str, Any]:
@@ -43,21 +43,17 @@ def wiki_init(session: Session, folder: str | None = None) -> dict[str, Any]:
     """
     workspace, session_name = _workspace_and_name(session, folder)
 
-    start = session.get_task("start_subsession")
-    result = start.call(
-        agentname="wiki",
-        sessionname=session_name,
-        prompt=f"Wiki '{folder or session.workspace.path}' Main Session",
-    )
-    if "error" in result:
-        return result
+    subagent_version = session.get_subagent("wiki")
+    if not subagent_version:
+        return {"error": f"Agent 'wiki' not found"}
 
-    # Override the default workspace with the wiki-specific one.
-    session_pk = result["session_pk"]
-    sv = SessionVersionModel.objects.filter(session__pk=session_pk).first()
-    if sv and sv.workspace_id != workspace.pk:
-        sv.workspace = workspace
-        sv.save(update_fields=["workspace"])
+    child_sv = subagent_version.get_or_create_session(
+        name=session_name,
+        description=f"Wiki '{folder or session.workspace.path}' main session.",
+        workspace=workspace,
+        parent_session_version=session.get_version_model(),
+    )
+    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
     # Send the init command.
     message_subsession = session.get_task("message_subsession")
@@ -68,6 +64,5 @@ def wiki_init(session: Session, folder: str | None = None) -> dict[str, Any]:
     )
     return {
         "result": msg_result,
-        "session_pk": session_pk,
         "session_name": session_name,
     }
