@@ -5,6 +5,11 @@ extends: [baseagent]
 reasoningEffort: high
 precision: precise
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*]
+subagents:
+    - name: researcher
+      create: both
+    - name: wiki
+      create: both
 ---
 
 # My Second Brain - Wiki Maintainer Rules

@@ -125,7 +125,6 @@ def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Quer
                     cmessages.append(qmsg)
 
 
-        # Assign sequential indices to messages
         messages = cmessages
         for index, message in enumerate(messages):
             message.save()

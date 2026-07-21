@@ -13,13 +13,10 @@ skills: [+, agentone-admin, project-manager]
 subagents:
   - name: researcher
     create: agent
-    lifecycle: single
   - name: planner
     create: agent
-    lifecycle: single
   - name: wiki
     create: agent
-    lifecycle: single
 ---
 
 ## Role

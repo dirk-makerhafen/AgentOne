@@ -20,6 +20,7 @@ def load_script_entry(
     parent_skill: Any,
     existing_results: List[Tuple[TaskDefinition, TaskDefinitionVersion]],
     details: list | None = None,
+    parent_generation: Any = None,
 ) -> None:
     """Load a script/binary entry from a scripts.md manifest.
 
@@ -46,6 +47,10 @@ def load_script_entry(
         name=name,
         group_name=group_name,
     )
+    if parent_generation is not None and task_def.parent_generation_id != parent_generation.pk:
+        TaskDefinition.objects.filter(pk=task_def.pk).update(
+            parent_generation=parent_generation
+        )
     task_version, created = TaskDefinitionVersion.objects.get_or_create(
         task_definition=task_def, **kw,
     )

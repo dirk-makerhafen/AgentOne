@@ -1,10 +1,3 @@
-"""
-Sync subagent delegation — blocks until the subagent finishes and returns its output.
-
-Uses the framework's TaskCall auto-await: returns the AgentTaskCall from
-add_user_message, which the framework resolves recursively through the
-entire process_turn chain until the subagent produces a final assistant Message.
-"""
 
 from __future__ import annotations
 
@@ -14,41 +7,61 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def delegate_task(session: Session, subagent_name: str, session_name: str|None, query: str) -> dict[str, Any]:
-    """
-    Delegate a task to a named subagent session and wait for the result (blocking).
+def delegate_task(session: Session, agentname: str, prompt: str, blocking: bool = False) -> dict[str, Any]:
+    """Send a one-off task to another agent.
 
-    Creates a new child session, sends *query* as the initial user message,
-    and returns the TaskCall that the framework auto-awaits.
+    Creates a fresh session for the target agent, sends *prompt* as its
+    first message.  Unlike ``start_subsession``, every call creates a new
+    uniquely-named session — use ``start_subsession`` if you need a named,
+    reusable background session that you can message repeatedly.
+
+    When *blocking* is ``True``: your turn pauses until the agent finishes.
+    The ``result`` field will contain the agent's final reply (a message
+    dict with ``content``, ``role``, etc.).
+
+    When *blocking* is ``False``: returns immediately. The agent's reply
+    will be injected into your conversation once it completes.
+
+    See also: ``spawn_subtask`` (same idea but uses your own agent),
+    ``start_subsession`` (named persistent background sessions).
 
     Args:
-        session: The calling agent's session (bound automatically).
-        subagent_name: Name of the subagent to delegate to.
-        session_name: The name of the session to use/create or None to autogenerate unique session name.
-        query: The full task description or message to send.
+        agentname: Name of the agent to perform the task. Run
+            ``get_available_agents`` to see valid names.
+        prompt: The task description to execute.
+        blocking: ``True`` to wait for the result, ``False`` to submit and
+            receive the result later asynchronously. Defaults to ``False``.
 
     Returns:
-        A dict with keys:
-            - result: the resolved TaskCall (auto-awaited by framework)
-            - session_pk: the child session pk for follow-up
-            - error: if something went wrong
+        Blocking mode (blocking=True):
+            ``{"result": {message dict}, "session_pk": int}``
+        Non-blocking mode (blocking=False):
+            ``{"result": "delegated", "session_pk": int}``
+        On error:
+            ``{"error": "Agent '<name>' not found"}``
     """
-    subagent_version = session.get_subagent(subagent_name)
+    subagent_version = session.get_subagent(agentname)
     if not subagent_version:
-        return {"error": f"Subagent '{subagent_name}' not found"}
+        return {"error": f"Agent '{agentname}' not found"}
 
-    session_version_model = session.get_version_model()
-    if session_name in [None, "none", "None"]:
-        session_name = f"p{session_version_model.session.pk}:{subagent_name}:{int(time())}"
-
+    session_name = f"p{session.model.pk}:{agentname}:{int(time())}"
     child_sv = subagent_version.get_or_create_session(
         name=session_name,
-        workspace=session_version_model.workspace,
-        parent_session_version=session_version_model,
+        description=prompt,
+        workspace=session.workspace,
+        parent_session_version=session.get_version_model(),
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
-    parts = [{"type": "message", "content_type": "text", "content": query}]
+    parts = [{"type": "message", "content_type": "text", "content": prompt}]
     taskcall = child_session.add_user_message(parts=parts)
 
-    return {"result": taskcall, "session_pk": child_session.model.pk}
+    if blocking:
+        return {"result": taskcall, "session_pk": child_session.model.pk}
+
+    session.get_task("ingest_subagent_result").delay(
+        child_session_pk=child_session.model.pk,
+        summary=prompt,
+        result=taskcall,
+    )
+    return {"result": "delegated", "session_pk": child_session.model.pk}

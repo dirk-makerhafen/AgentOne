@@ -90,7 +90,11 @@ def run_reload_all(folder: str) -> ReloadResult:
         agent_count = 0
         for agent_md in find_agent_md_files(agents_dir):
             try:
-                load_agent_manifest(agent_md, install_repo=global_install, details=details)
+                load_agent_manifest(
+                    agent_md,
+                    install_repo=global_install,
+                    details=details,
+                )
                 agent_count += 1
             except Exception as e:
                 agent_name = agent_md.parent.name

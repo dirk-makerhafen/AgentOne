@@ -19,6 +19,7 @@ class TaskDefinition(BaseModel):
     parent_skill = models.ForeignKey("server.SkillModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_task_definitions")
     parent_agent = models.ForeignKey("server.AgentModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_task_definitions")
     parent_project = models.ForeignKey("server.Project",default=None,null=True,on_delete=models.CASCADE,related_name="related_task_definitions")
+    parent_generation = models.ForeignKey("server.ScriptsGeneration",default=None,null=True,on_delete=models.CASCADE,related_name="related_task_definitions")
 
     name = models.CharField(max_length=255)
     group_name =  models.CharField(max_length=255, default="")

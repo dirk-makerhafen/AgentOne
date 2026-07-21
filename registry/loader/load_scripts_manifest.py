@@ -8,6 +8,7 @@ from registry.loader.load_chain_entry import load_chain_entry
 from registry.loader.load_python_entry import load_python_entry
 from registry.loader.load_script_entry import load_script_entry
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
+from server.models.tasks.scripts_generation import ScriptsGeneration
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
@@ -28,9 +29,26 @@ def load_scripts_manifest(
 
     Version identifiers are deterministic git tree SHAs from *install_repo*.
 
+    For global scripts (no parent), a ``ScriptsGeneration`` is created (or
+    reused) to track which task definitions are current.
+
     Returns a list of ``(TaskDefinition, TaskDefinitionVersion)`` tuples.
     """
+    is_global = parent_project is None and parent_agent is None and parent_skill is None
     results: List[Tuple[TaskDefinition, TaskDefinitionVersion]] = []
+
+    # For global scripts, create a fresh ScriptsGeneration for this
+    # reload, so all current tasks share the same generation and the
+    # latest generation always reflects the current manifest state.
+    # Old generations (from prior reloads) are left in place so that
+    # orphaned/removed tasks automatically fall out of scope.
+    parent_generation = None
+    if is_global:
+        root_commit = install_repo.tree_sha(scripts_dir) or ""
+        parent_generation = ScriptsGeneration.objects.create(
+            commit=root_commit
+        )
+
     for manifest_path in sorted(scripts_dir.rglob("scripts.md")):
         subdir = manifest_path.parent
         manifest = frontmatter.load(manifest_path)
@@ -45,6 +63,7 @@ def load_scripts_manifest(
             _load_script_entry(
                 entry, subdir, commit, results,
                 parent_project, parent_agent, parent_skill, details,
+                parent_generation=parent_generation,
             )
     return results
 
@@ -81,6 +100,7 @@ def _load_script_entry(
     parent_agent: Any,
     parent_skill: Any,
     details: list | None = None,
+    parent_generation: ScriptsGeneration | None = None,
 ) -> None:
     """Dispatch a single manifest entry to the appropriate loader.
 
@@ -95,16 +115,19 @@ def _load_script_entry(
         load_python_entry(
             entry, scripts_dir, commit, task_type, task_execution_mode,
             name, group_name, parent_project, parent_agent, parent_skill, existing_results, details,
+            parent_generation=parent_generation,
         )
     elif task_execution_mode == TaskExecutionMode.SCRIPT:
         load_script_entry(
             entry, scripts_dir, commit, task_type, task_execution_mode,
             name, group_name, parent_project, parent_agent, parent_skill, existing_results, details,
+            parent_generation=parent_generation,
         )
     elif task_execution_mode in (TaskExecutionMode.CHAIN, TaskExecutionMode.GROUP, TaskExecutionMode.MAP):
         load_chain_entry(
             entry, commit, task_type, task_execution_mode, name, group_name,
             parent_project, parent_agent, parent_skill, existing_results, details,
+            parent_generation=parent_generation,
         )
     else:
         raise ValueError(

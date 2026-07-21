@@ -16,6 +16,7 @@ from server.models.content import GenericContent
 from server.models.providers.ai_model import AiModel
 from server.models.settings import ResponseTemperature, SettingsModel
 from server.models.skills.skill_version import SkillModelVersion
+from server.models.tasks.scripts_generation import ScriptsGeneration
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
@@ -240,7 +241,9 @@ def load_agent_manifest(
     return agent, agent_version
 
 
-def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
+def _resolve_agent_version_tasks(
+    agent_version: AgentVersionModel,
+) -> None:
     """Resolve tool / task / command names from the agent's ``SettingsModel``
     into ``TaskDefinitionVersion`` objects and set the M2M.
 
@@ -248,6 +251,10 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
       1. own ``defined_task_versions``
       2. ``extends`` chain (parent agent versions)
       3. global (no parent_agent, no parent_project, no parent_skill)
+
+    Global task resolution is scoped to the latest ``ScriptsGeneration``,
+    which prevents orphaned tool definitions (e.g. after a rename) from
+    appearing as available tools.
     """
     settings = agent_version.agent_settings
     if not settings:
@@ -310,7 +317,7 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
         if found_in_extends:
             return
 
-        # 3. Global fallback
+        # 3. Global fallback — only tasks from the latest ScriptsGeneration
         gfargs = {
             k.replace("task_definition__", ""): v
             for k, v in fargs.items()
@@ -318,6 +325,11 @@ def _resolve_agent_version_tasks(agent_version: AgentVersionModel) -> None:
         gfargs["parent_agent__isnull"] = True
         gfargs["parent_project__isnull"] = True
         gfargs["parent_skill__isnull"] = True
+
+        latest_gen = ScriptsGeneration.objects.order_by("-created_at").first()
+        if latest_gen:
+            gfargs["parent_generation"] = latest_gen
+
         global_tds = list(TaskDefinition.objects.filter(**gfargs))
         if not global_tds:
             raise Exception(f"No Task Definition found for '{raw_name}' group='{group}'")

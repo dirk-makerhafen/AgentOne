@@ -13,7 +13,6 @@ tools: [+, filesystem-read.*, web.*, subagents.*]
 subagents:
   - name: researcher
     create: agent
-    lifecycle: single
 ---
 
 ## Role

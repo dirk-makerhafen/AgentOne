@@ -236,10 +236,10 @@ The `subagentResultDelivery` setting on `SettingsModel` controls how a spawned s
 
 | Mode | Behavior |
 |---|---|
-| `passive` (default) | Subagent's result is appended as a template message to the parent conversation, but does **not** trigger the parent's agent loop. The parent must explicitly call `await_subagents` or `message_subagent`. |
+| `passive` (default) | Subagent's result is appended as a template message to the parent conversation, but does **not** trigger the parent's agent loop. The parent must explicitly call `await_subsession` or `message_subsession`. |
 | `immediate` | Subagent's result is injected into the parent conversation **and** triggers `process_turn` on the parent — the parent processes the result as a new user input. |
 
-Both modes use the same `ingest_subagent_result` background task (always dispatched by `spawn_subagent`). The difference is only whether the function chains to `process_turn` at the end:
+Both modes use the same `ingest_subagent_result` background task (always dispatched by `delegate_task(blocking=False)`, `spawn_subtask(blocking=False)`, or `start_subsession`). The difference is only whether the function chains to `process_turn` at the end:
 
 ```python
 def ingest_subagent_result(session, child_session_pk, summary, result):
@@ -253,12 +253,12 @@ def ingest_subagent_result(session, child_session_pk, summary, result):
 
 ### Dependency Resolution via `WAITING_DEPENDENCY`
 
-The critical design question: **how does `spawn_subagent` remain non-blocking while `ingest_subagent_result` needs the child's result?**
+The critical design question: **how do the async tools (`delegate_task(blocking=False)`, `spawn_subtask(blocking=False)`, `start_subsession`) remain non-blocking while `ingest_subagent_result` needs the child's result?**
 
 The answer is the framework's argument-dependency mechanism, built into `AgentTaskCall`:
 
 ```
-spawn_subagent:
+delegate_task(blocking=False)  (or start_subsession / spawn_subtask / message_subsession):
   1. child_task = child.get_task("ingest_user_message").delay(parts=parts)
   2. session.get_task("ingest_subagent_result").delay(result=child_task)
                                          ▲
@@ -278,7 +278,7 @@ if tc.taskcall_arg_references.exclude(status=TaskCallStatus.ENDED).exists():
     return  # Still waiting — park in WAITING_DEPENDENCY
 ```
 
-Since `child_task` hasn't ended yet (it was just created in step 1), the delivery call enters `WAITING_DEPENDENCY` and **does not proceed**. The parent's `spawn_subagent` returns immediately — it never blocks.
+Since `child_task` hasn't ended yet (it was just created in step 1), the delivery call enters `WAITING_DEPENDENCY` and **does not proceed**. The parent's tool call returns immediately — it never blocks.
 
 **`on_arg_reference_task_ended()`** (`call_scheduler.py:46`) fires when `child_task` reaches `ENDED_STATUS`. It checks whether all references have resolved:
 
@@ -293,7 +293,7 @@ Once all deps are met, `start_new_taskrun()` (`call_scheduler.py:121`) creates t
 ### Flow Diagram
 
 ```
-spawn_subagent(session, name, query)
+delegate_task(blocking=False)  (or start_subsession / spawn_subtask / message_subsession)
   │
   ├─ 1. child.get_task("ingest_user_message").delay(parts)
   │       └── AgentTaskCall(child_task) created, run queued
@@ -333,11 +333,11 @@ spawn_subagent(session, name, query)
                               └── parent processes subagent output
 ```
 
-### Comparison: `delegate_task` vs `spawn_subagent`
+### Comparison: `delegate_task(blocking=True)` vs async delegation
 
-| Aspect | `delegate_task` | `spawn_subagent` |
+| Aspect | `delegate_task(blocking=True)` | `delegate_task(blocking=False)` / `start_subsession` / `spawn_subtask` |
 |---|---|---|
-| **Blocking** | Yes — returns `child_task` in result dict, framework auto-awaits via `WAITING_RESULTTASKS` | No — returns `session_pk` immediately, delivery is a background task |
+| **Blocking** | Yes — returns `child_task` in result dict, framework auto-awaits via `WAITING_RESULTTASKS` | No — returns immediately, delivery is a background task |
 | **Result delivery** | Via auto-await — parent's **current** turn sees the result as tool output | Via `ingest_subagent_result` background task — result is injected as a **new** user message in the conversation |
 | **`subagentResultDelivery`** | Unaffected — always blocks regardless of setting | Affected — setting controls whether `process_turn` is triggered after delivery |
 | **Use case** | Parent needs the subagent's result to complete its current turn | Parent delegates work and continues; result arrives asynchronously |

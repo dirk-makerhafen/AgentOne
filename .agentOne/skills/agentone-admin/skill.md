@@ -35,7 +35,6 @@ subagents:
   - <name>                 # simple string, or dict:
   - name: <name>
     create: agent          # auto | agent | user | both
-    lifecycle: single      # single | multi | background
     visibleTo: both        # agent | user | both
     maxTurns: 0            # 0 = unlimited
 
@@ -81,14 +80,6 @@ filesystem-write, and web tools.
 | `agent`  | Parent AI during execution              |
 | `user`   | User explicitly                         |
 | `both`   | Either                                  |
-
-### Subagent Lifecycle Modes
-
-| Mode         | Session strategy        | History                          |
-|--------------|-------------------------|----------------------------------|
-| `single`     | One session per parent  | Fresh chain per delegation       |
-| `multi`      | Dedicated per relation  | Full history, persists           |
-| `background` | Dedicated, async        | Full history, non-blocking       |
 
 ### Resolution Precedence
 

@@ -13,14 +13,11 @@ if TYPE_CHECKING:
     from ui.main.rightpanel.rightpanel import RightPanel
     from ui.app import UiApp
 
-LIFECYCLE_LABELS = {"single": "Single", "multi": "Multi", "background": "Bg"}
-
 
 @dataclass
 class AvailableSubagent:
     name: str
     parent_name: str
-    lifecycle: str
     max_turns: int
     agent_version: AgentVersionModel | None
 
@@ -76,7 +73,7 @@ class RightPanelSubagents(ModelView):
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--link)" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
                 <div style="flex:1;min-width:0">
                     <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sa.name }}</div>
-                    <div style="font-size:10px;color:var(--muted);margin-top:1px">{{ sa.parent_name }} · <span class="lifecycle-badge" style="background:var(--bg3);padding:0 4px;border-radius:3px">{{ sa.lifecycle_label }}</span>{% if sa.max_turns %} · max {{ sa.max_turns }}t{% endif %}</div>
+                    <div style="font-size:10px;color:var(--muted);margin-top:1px">{{ sa.parent_name }}{% if sa.max_turns %} · max {{ sa.max_turns }}t{% endif %}</div>
                 </div>
                 <button class="btn btn-sm btn-primary" onclick="pyview.open('{{ sa.name }}')" style="flex-shrink:0;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;background:var(--accent);color:#fff;border:none">Open</button>
             </div>
@@ -117,7 +114,6 @@ class RightPanelSubagents(ModelView):
             result.append(AvailableSubagent(
                 name=name,
                 parent_name=s.agent.name,
-                lifecycle=cfg.get("lifecycle", "single"),
                 max_turns=cfg.get("maxTurns", 0),
                 agent_version=av,
             ))

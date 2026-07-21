@@ -23,7 +23,6 @@ subagents:                      # optional — names of child subagents with met
   - file_operator
   - name: code_reviewer
     create: user                # auto | agent | user | both (default: agent)
-    lifecycle: single           # single | multi | background (default: single)
     visibleTo: both             # agent | user | both (default: both)
     maxTurns: 10                # 0 = unlimited (default: 0)
 
@@ -75,7 +74,6 @@ subagents:
   - file_operator                  # simple name (defaults apply)
   - name: code_reviewer
     create: user                   # who can create: auto | agent | user | both
-    lifecycle: single              # single | multi | background
     visibleTo: both                # visibility: agent | user | both
     maxTurns: 10                   # max conversation turns (0 = unlimited)
 ```
@@ -87,13 +85,6 @@ subagents:
 | `agent` | Parent AI during execution | Delegate research task |
 | `user` | User explicitly | Start a code review session |
 | `both` | Either | General-purpose assistant |
-
-**`lifecycle` modes:**
-| Mode | Session Strategy | History |
-|---|---|---|
-| `single` | One session per parent, shared | Fresh chain per delegation |
-| `multi` | Dedicated session per relationship | Full history, persists until `session_end()` |
-| `background` | Dedicated session, async | Full history, parent doesn't block |
 
 ### Resolution Precedence
 

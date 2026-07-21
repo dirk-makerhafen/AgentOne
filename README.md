@@ -9,7 +9,7 @@ AgentOne is a Django-based autonomous agent framework with real-time Web UI, sch
 - **Versioned everything** — Agents, tools, sessions, and settings are immutable once created; changes produce new versions with full history
 - **Plugin tool system** — Tools are plain Python functions in YAML-defined groups with auto-extracted JSON schemas — no decorators
 - **Celery task pipeline** — Asynchronous task dispatch with scheduling (5s tick, 2min heartbeat), state machine execution, and dependency resolution via M2M references
-- **Subagent delegation** — Agents can spawn subagents with `delegate_task`/`spawn_subagent`, with automatic await and result delivery
+- **Subagent delegation** — Agents can delegate tasks with `delegate_task`/`start_subsession`/`spawn_subtask`, with automatic await and result delivery
 - **Data flows (streams / ordered sets)** — Agents produce data into append-only streams or mutable ordered sets, which cascade to derived flows via propagation. Replaces legacy named pipes.
 - **Project organization** — Agents, skills, and sessions can be grouped into projects with filtering across the sidebar
 - **Rate limiting** — Three-tier rate limiting (provider → model → API key) with per-minute/per-day token and request limits

@@ -16,6 +16,7 @@ try:
     from .sessions.session import SessionModel
     from .sessions.session_version import SessionVersionModel
     from .skills.skill import SkillModel
+    from .tasks.scripts_generation import ScriptsGeneration
     from .tasks.task_definition import TaskDefinition
     from .tasks.task_definition_version import TaskDefinitionVersion
     from .workspace import WorkspaceModel

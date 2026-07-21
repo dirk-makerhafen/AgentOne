@@ -1,40 +1,52 @@
 ---
 group: subagents
 tools:
-  # Sync — blocks until subagent finishes
+  # Create or reuse a named background subsession
+  - name: start_subsession
+    file: start_subsession.py
+    function: start_subsession
+    bound: True
+
+  # Stop/mark a subsession as inactive
+  - name: stop_subsession
+    file: stop_subsession.py
+    function: stop_subsession
+    bound: True
+
+  # Send a message to a named subsession (blocking or async delivery)
+  - name: message_subsession
+    file: message_subsession.py
+    function: message_subsession
+    bound: True
+
+  # Block until the subsession's latest message is answered
+  - name: await_subsession
+    file: await_subsession.py
+    function: await_subsession
+    bound: True
+
+  # List all subsessions owned by the current session
+  - name: list_subsessions
+    file: list_subsessions.py
+    function: list_subsessions
+    bound: True
+
+  # Fork yourself as a child session to do a one-off task
+  - name: spawn_subtask
+    file: spawn_subtask.py
+    function: spawn_subtask
+    bound: True
+
+  # Delegate a one-off task to a named agent (new or existing session)
   - name: delegate_task
     file: delegate_task.py
     function: delegate_task
     bound: True
 
-  # Async — fire-and-forget, returns session_pk
-  - name: spawn_subagent
-    file: spawn_subagent.py
-    function: spawn_subagent
-    bound: True
-
-  # Async follow-up — send message to running subagent
-  - name: message_subagent
-    file: message_subagent.py
-    function: message_subagent
-    bound: True
-
-  # Sync barrier — wait for one or more spawned subagents to complete
-  - name: await_subagents
-    file: await_subagents.py
-    function: await_subagents
-    bound: True
-
-  # Sync instant — list child sessions with metadata (no output)
-  - name: list_subagents
-    file: list_subagents.py
-    function: list_subagents
-    bound: True
-
-  # Sync instant — stop/cancel a child session
-  - name: stop_subagent
-    file: stop_subagent.py
-    function: stop_subagent
+  # List agents available for delegation
+  - name: get_available_agents
+    file: get_available_agents.py
+    function: get_available_agents
     bound: True
 
 tasks:
