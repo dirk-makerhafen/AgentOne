@@ -15,8 +15,6 @@ def spawn_subtask(session: Session, prompt: str, blocking: bool = False) -> dict
     The child runs as a separate session with your agent's configuration.  It
     **inherits the full chat history** up to the current point in *your*
     conversation — the child can see everything that was said before the fork.
-    The fork point is linked via ``prev_message`` so the child's context
-    builder can trace back through the parent's history.
 
     When *blocking* is ``True``: your turn pauses until the subtask finishes.
     The ``result`` field will contain the subtask's final reply (a message
@@ -42,7 +40,7 @@ def spawn_subtask(session: Session, prompt: str, blocking: bool = False) -> dict
         On error:
             ``{"error": str}``
     """
-    agent_version = session.get_version_model().agent
+    agent_version = session.agent.get_version_model()
     if not agent_version:
         return {"error": "Current agent version not found"}
 

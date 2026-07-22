@@ -31,13 +31,13 @@ class GuardrailApprovalCard(ModelView):
             {% for call in pyview.pending_calls %}
             <div class="guardrail-call">
                 <div class="guardrail-call-name">{{ call.task_definition_version.task_definition.name }}</div>
-                {% if call.carguments_json and call.carguments_json.__guardrail_reason__ %}
-                <div class="guardrail-call-reason">{{ call.carguments_json.__guardrail_reason__ }}</div>
+                {% if call.carguments_json and call.guardrail_reason %}
+                <div class="guardrail-call-reason">{{ call.guardrail_reason }}</div>
                 {% endif %}
                 {% if call.carguments_json %}
                 <div class="guardrail-call-args">
                     {% for key, value in call.carguments_json.items() %}
-                    {% if key != '__guardrail_reason__' and key != '*' %}
+                    {% if key != 'guardrail_reason' and key != '*' %}
                     <div><span class="guardrail-arg-key">{{ key }}:</span> <span class="guardrail-arg-val">{{ value }}</span></div>
                     {% endif %}
                     {% endfor %}

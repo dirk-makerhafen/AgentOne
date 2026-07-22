@@ -22,7 +22,7 @@ class MessageAdmin(admin.ModelAdmin):
 
     list_display: tuple[str, ...] = (
         "id", "session_version", "role", "source",
-        "hide_from_context", "pin_to_context", "created_at",
+        "hide_from_context", "pin_to_context", "created_at", "prev_message",
     )
     list_display_links: tuple[str, ...] = ("id",)
     list_filter: tuple[str, ...] = (
@@ -42,7 +42,7 @@ class MessageAdmin(admin.ModelAdmin):
             "description": "Control how this message appears in the model context history.",
         }),
         ("Extended Relations", {
-            "fields": ("response",),
+            "fields": ("response","prev_message"),
             "classes": ("collapse",),
         }),
         ("Audit", {

@@ -296,9 +296,12 @@ class AgentTaskRun(BaseModel):
         ) -> Any:
             if isinstance(data, dict):
                 if "_type" in data and "pk" in data:
-                    model_instance = apps.get_model("server", data["_type"]).objects.get(
-                        pk=data["pk"]
-                    )
+                    try:
+                        model_instance = apps.get_model("server", data["_type"]).objects.get(
+                            pk=data["pk"]
+                        )
+                    except:
+                        return None
                     if recursive and (
                         isinstance(model_instance, AgentTaskRun)
                         or isinstance(model_instance, AgentTaskCall)
@@ -399,9 +402,12 @@ class AgentTaskRun(BaseModel):
         ) -> Any:
             if isinstance(data, dict):
                 if "_type" in data and "pk" in data:
-                    model_instance = apps.get_model("server", data["_type"]).objects.get(
-                        pk=data["pk"]
-                    )
+                    try:
+                        model_instance = apps.get_model("server", data["_type"]).objects.get(
+                            pk=data["pk"]
+                        )
+                    except:
+                        return None
                     if recursive and (
                         isinstance(model_instance, AgentTaskRun)
                         or isinstance(model_instance, AgentTaskCall)

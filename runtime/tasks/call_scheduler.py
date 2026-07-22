@@ -143,11 +143,9 @@ class CallScheduler:
         verdict = check_python_command(source)
 
         if verdict.action == "ask" and not tc.requires_approval:
-            cargs = dict(tc.carguments_json)
-            cargs["__guardrail_reason__"] = verdict.reason
             from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
             _ATC.objects.filter(pk=tc.pk).update(
-                requires_approval=True, carguments_json=cargs,
+                requires_approval=True, guardrail_reason = verdict.reason
             )
             print(f"  # PYTHON GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
 
@@ -184,11 +182,9 @@ class CallScheduler:
         verdict = check_shell_command(source)
 
         if verdict.action == "ask" and not tc.requires_approval:
-            cargs = dict(tc.carguments_json)
-            cargs["__guardrail_reason__"] = verdict.reason
             from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
             _ATC.objects.filter(pk=tc.pk).update(
-                requires_approval=True, carguments_json=cargs,
+                requires_approval=True, guardrail_reason = verdict.reason,
             )
             print(f"  # GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
 

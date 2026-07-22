@@ -56,10 +56,10 @@ def wiki_init(session: Session, folder: str | None = None) -> dict[str, Any]:
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
     # Send the init command.
-    message_subsession = session.get_task("message_subsession")
+    message_subsession = session.get_tool("message_subsession")
     msg_result = message_subsession.delay(
         sessionname=session_name,
-        prompt="New wiki session created, create basic folders if needed",
+        prompt="New wiki session created, create basic files and folders if needed. git init the folder if new, commit your work as first commit. Dont start to automatically ingest data yet, just prepare.",
         blocking=True,
     )
     return {

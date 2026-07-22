@@ -24,15 +24,15 @@ def _resolve_folder(session: Session, folder: str | None = None) -> str | None:
             folder = (Path(session.workspace.path) / p).resolve().as_posix()
         return folder
 
-    brain_paths = list(
+    wiki_paths = list(
         SessionVersionModel.objects.filter(
             parent_session_version=session.get_version_model(),
-            agent__name="brain",
+            agent__name="wiki",
             workspace__isnull=False,
         ).values_list("workspace__path", flat=True).distinct()
     )
-    if len(brain_paths) == 1:
-        return brain_paths[0]
+    if len(wiki_paths) == 1:
+        return wiki_paths[0]
     return None
 
 
@@ -47,7 +47,7 @@ def wiki_query(session: Session, question: str, folder: str | None = None, block
         session: The calling agent's session (bound automatically).
         question: The question to ask the wiki.
         folder: Optional wiki root path. When omitted and there is exactly
-            one subsession with agent type ``brain``, its workspace is used.
+            one subsession with agent type ``wiki``, its workspace is used.
         blocking: ``True`` to wait for the answer, ``False`` to submit and
             receive the answer later. Defaults to ``False``.
 
@@ -56,20 +56,20 @@ def wiki_query(session: Session, question: str, folder: str | None = None, block
     """
     resolved = _resolve_folder(session, folder)
     if resolved is None:
-        brain_paths = list(
+        wiki_paths = list(
             SessionVersionModel.objects.filter(
                 parent_session_version=session.get_version_model(),
-                agent__name="brain",
+                agent__name="wiki",
                 workspace__isnull=False,
             ).values_list("workspace__path", flat=True).distinct()
         )
-        if not brain_paths:
-            return {"error": "no brain folder found — no subsessions with agent type 'brain' exist"}
-        path_list = "\n".join(f"  - {p}" for p in brain_paths)
-        return {"error": f"more than one brain folder found:\n{path_list}\nfolder parameter mandatory in this case"}
+        if not wiki_paths:
+            return {"error": "no wiki folder found — no subsessions with agent type 'wiki' exist"}
+        path_list = "\n".join(f"  - {p}" for p in wiki_paths)
+        return {"error": f"more than one wiki folder found:\n{path_list}\nfolder parameter mandatory in this case"}
 
     session_name = _session_name(resolved)
     prompt = f"query {question}"
 
-    message_subsession = session.get_task("message_subsession")
+    message_subsession = session.get_tool("message_subsession")
     return message_subsession.delay(sessionname=session_name, prompt=prompt, blocking=blocking)

@@ -154,15 +154,25 @@ class QueryMessage(BaseModel):
                 c["tokens"] += part.tokens or 0
 
         if self.role == "tool":
-            messages = [
-                {
-                    "role": "tool",
-                    "tool_call_id": f"tc-{tc.pk}",
-                    "content": _serialize_result(tc.get_result()),
-                }
-                for tc in tool_call_objects
-            ]           
-            message = messages[0] if len(messages) == 1 else messages
+            for tc in tool_call_objects:
+                tool_response_string = _serialize_result(tc.get_result())
+                l = len(tool_response_string)
+                if l > 30000*4:  # more than ~30k tokens
+                    removed_chars = l - 24000*4
+                    s = tool_response_string[:12000*4]
+                    m = f"\n<RESPONSE SHORTEND BY TOOL RESPONSE BACKEND>{removed_chars} chars omited here to save context tokens.</RESPONSE SHORTEND BY TOOL RESPONSE BACKEND>\n"
+                    e = tool_response_string[-12000*4:]
+                    e1 = f"\n\n{removed_chars} of {l} characters ommited from response to save context tokens"
+                    tool_response_string = f"{s}{m}{e}{e1}" 
+                messages = [
+                    {
+                        "role": "tool",
+                        "tool_call_id": f"tc-{tc.pk}",
+                        "content": tool_response_string,
+                    }
+                    
+                ]           
+                message = messages[0] if len(messages) == 1 else messages
  
         else:
             

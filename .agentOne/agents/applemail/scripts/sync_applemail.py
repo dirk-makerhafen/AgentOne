@@ -150,6 +150,12 @@ def sync(account: str, target_folder) -> list[str]|str:
         result_files = []
         timestamps = []
         for eml_file in eml_files:
+            bads = ["__info@twitter.com__", "no-reply@mail.instagram.com__"]
+            if True in [ bad in eml_file.as_posix() for bad in bads]:
+                os.remove(eml_file)
+                continue
+
+                
             with open(eml_file, "rb") as f:
                 msg = BytesParser(policy=policy.default).parse(f)
 
@@ -263,12 +269,22 @@ def sync(account: str, target_folder) -> list[str]|str:
                         print("failed to parse date")
 
             # Create target dir
+            def _clean_name(raw: str) -> str:
+                name = raw
+                name = re.sub(r'<[^>]+>', '', name)
+                name = name.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+                name = name.replace('Ä', 'Ae').replace('Ö', 'Oe').replace('Ü', 'Ue')
+                name = name.replace('ß', 'ss')
+                name = re.sub(r'[()\[\]{}]', '', name)
+                name = re.sub(r'\s+', '_', name)
+                name = name.strip('-._ ')
+                return name
+
+            clean_folder = _clean_name(eml_file.parent.name)
             if email_date:
-                # Construct final structured path based on extracted metadata
-                # target_dir/account_name/direction/YYYY/MM/DD/EMAIL_ID_FOLDER/
-                target_path = OUTPUT_PATH  / metadata["direction"] / str(email_date.year) / f"{email_date.month:02d}" / eml_file.parent.name  # Use the original temporary folder name as the unique ID
+                target_path = OUTPUT_PATH / metadata["direction"] / str(email_date.year) / f"{email_date.month:02d}" / clean_folder
             else:
-                target_path =  OUTPUT_PATH  / metadata["direction"] / "kein_datum" / eml_file.parent.name # Use the original temporary folder name as the unique ID
+                target_path = OUTPUT_PATH / metadata["direction"] / "kein_datum" / clean_folder
 
             target_path.mkdir(parents=True, exist_ok=True) # Ensure parent directories exist
 

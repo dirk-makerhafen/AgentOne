@@ -43,6 +43,7 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskCallStatusDetail, TaskCallStatusDetail]]
 
     # Hard failure — no retries left
     (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION),
+    (TaskCallStatusDetail.WAITING_SUBTASK,    TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION),
 
     # Dependency or hook failed
     (TaskCallStatusDetail.WAITING_DEPENDENCY, TaskCallStatusDetail.ENDED_CANCELLED),
@@ -329,13 +330,23 @@ class TaskCallStateMachine:
 
     @staticmethod
     def fail(call_id: int) -> bool:
-        """``ACTIVE_RUNNING`` → ``ENDED_FAILURE_EXCEPTION`` (retries exhausted)."""
-        return TaskCallStateMachine.transition(
-            call_id=call_id,
-            from_detail=TaskCallStatusDetail.ACTIVE_RUNNING,
-            to_detail=TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
-            extra={"ended_at": timezone.now()},
-        )
+        """``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASK`` → ``ENDED_FAILURE_EXCEPTION`` (retries exhausted)."""
+        from server.models.tasks.agent_task_call import AgentTaskCall
+
+        updated = AgentTaskCall.objects.filter(
+            pk=call_id,
+            status_detail__in=[
+                TaskCallStatusDetail.ACTIVE_RUNNING,
+                TaskCallStatusDetail.WAITING_SUBTASK,
+            ],
+        ).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            ended_at=timezone.now(),
+        ) > 0
+        if updated:
+            _publish_call_event(call_id)
+        return updated
 
     @staticmethod
     def cancel(call_id: int, from_detail: TaskCallStatusDetail) -> bool:

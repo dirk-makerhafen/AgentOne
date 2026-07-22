@@ -13,7 +13,7 @@ from server.models.base_model import BaseModel
 class AgentModel(BaseModel):
     """Uniquely identifies an Agent across all versions and variants."""
 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     latest_agent_version = models.ForeignKey("server.AgentVersionModel",default=None,null=True,on_delete=models.SET_NULL,related_name="related_newest_version")
     parent_skill = models.ForeignKey("server.SkillModel",default=None,null=True, blank=True, on_delete=models.CASCADE,related_name="child_agents")
     parent_agent = models.ForeignKey("server.AgentModel",default=None,null=True, blank=True, on_delete=models.CASCADE,related_name="child_agents")

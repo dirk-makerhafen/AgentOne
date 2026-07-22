@@ -26,7 +26,10 @@ def ingest_compaction(
         compaction_message = Message.objects.create(
             session_version=session.get_version_model(),
             response=response,
-            role="system",
+            role="user",
+        )
+        compaction_message.add_part(
+            type="COMPACTION", content_type="text", content="Old messages before this summary have been compacted to save context tokens. Summary:"
         )
         compaction_message.add_part(
             type="COMPACTION", content_type="text", content=summary_text
@@ -38,7 +41,7 @@ def ingest_compaction(
     # The compaction replaces everything from oldest_compacted (chronologically
     # first) through newest_compacted (chronologically last).
     oldest_compacted = conv[0].source_message
-    newest_compacted = conv[-1].source_message
+    newest_compacted = conv[-2].source_message
     prev_for_compaction = oldest_compacted.prev_message
 
     # The first message that follows the compacted range (if any).
@@ -49,8 +52,11 @@ def ingest_compaction(
     compaction_message = Message.objects.create(
         session_version=session.get_version_model(),
         response=response,
-        role="system",
+        role="user",
         prev_message=prev_for_compaction,
+    )
+    compaction_message.add_part(
+        type="COMPACTION", content_type="text", content="Old messages before this summary have been compacted to save context tokens. Summary:"
     )
     compaction_message.add_part(
         type="COMPACTION",

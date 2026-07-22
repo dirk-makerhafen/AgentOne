@@ -5,6 +5,7 @@ Handle slash commands from the user (e.g. /help, /reset).
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 from runtime.session.session import Session
@@ -66,9 +67,27 @@ def handle_slashcommand_response(
     conv_msg = Message.objects.create(
         role="assistant", session_version=session.get_version_model()
     )
+
+    def _serialize_result(obj: Any) -> Any:
+        """JSON-serialise a tool result, handling Message / Path model references."""
+        if obj is None or isinstance(obj, (str, int, float, bool)):
+            return obj
+        if isinstance(obj, dict):
+            return {k: _serialize_result(v) for k, v in obj.items()}
+        if isinstance(obj, (list, set, tuple)):
+            return type(obj)(_serialize_result(item) for item in obj)
+        if isinstance(obj, Message):
+            return "".join(
+                part.to_string()
+                for part in obj.parts.filter(type=MessagePartType.MESSAGE)
+            )
+        if isinstance(obj, Path):
+            return obj.as_posix()
+        raise TypeError(f"Cannot serialize {type(obj).__name__}")
+
     MessagePart.objects.create(
         message=conv_msg,
-        content=GenericContent.from_data(tool_reponse),
+        content=GenericContent.from_data(_serialize_result(tool_reponse)),
         content_type=MessageContentType.JSON,
     )
 

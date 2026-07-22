@@ -44,6 +44,7 @@ class AgentTaskCall(BaseModel):
     dont_start_before = models.DateTimeField(default=None, null=True)
     dont_start_after = models.DateTimeField(default=None, null=True)
     requires_approval = models.BooleanField(default=None, null=False)
+    guardrail_reason = models.TextField(default=None, blank=True, null= True)
 
     time_limit = models.IntegerField(default=None, null=True)
     max_subtask_errors = models.IntegerField(default=None, null=False)
@@ -235,9 +236,12 @@ class AgentTaskCall(BaseModel):
         ) -> Any:
             if isinstance(data, dict):
                 if "_type" in data and "pk" in data:
-                    model_instance = apps.get_model("server", data["_type"]).objects.get(
-                        pk=data["pk"]
-                    )
+                    try:
+                        model_instance = apps.get_model("server", data["_type"]).objects.get(
+                            pk=data["pk"]
+                        )
+                    except:
+                        return None
                     if recursive and (
                         isinstance(model_instance, AgentTaskRun)
                         or isinstance(model_instance, AgentTaskCall)

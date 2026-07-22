@@ -211,7 +211,7 @@ class TestCallSchedulerGuardrails:
         CallScheduler._guardrail_shell_check(call.pk)
         call.refresh_from_db()
         assert call.requires_approval is True
-        assert "__guardrail_reason__" in call.carguments_json
+        assert call.guardrail_reason is not None
 
     def test_shell_guardrail_safe_not_marked(self, db):
         """Safe shell command → no change."""
@@ -253,7 +253,7 @@ class TestCallSchedulerGuardrails:
         CallScheduler._guardrail_shell_check(call.pk)
         call.refresh_from_db()
         assert call.requires_approval is True
-        assert "__guardrail_reason__" in call.carguments_json
+        assert call.guardrail_reason is not None
 
     def test_shell_guardrail_source_from_instance_defaults(self, db):
         """Source extracted from instance iarguments_json when call args empty."""
@@ -277,7 +277,7 @@ class TestCallSchedulerGuardrails:
         call.refresh_from_db()
         assert call.requires_approval is True
         # Guardrail should not modify carguments when already requires_approval
-        assert "__guardrail_reason__" not in call.carguments_json
+        assert call.guardrail_reason is not None
 
     # --- Python guardrail ---
 
@@ -291,7 +291,7 @@ class TestCallSchedulerGuardrails:
         CallScheduler._guardrail_python_check(call.pk)
         call.refresh_from_db()
         assert call.requires_approval is True
-        assert "__guardrail_reason__" in call.carguments_json
+        assert call.guardrail_reason is not None
 
     def test_python_guardrail_safe_not_marked(self, db):
         """Safe Python code → no change."""
@@ -382,7 +382,7 @@ class TestGuardrailFullFlow:
         call.refresh_from_db()
         assert call.status_detail == TaskCallStatusDetail.HALTED_APPROVAL
         assert call.requires_approval is True
-        assert "__guardrail_reason__" in call.carguments_json
+        assert call.guardrail_reason is not None
 
         approved = TaskCallStateMachine.approve(call.pk)
         assert approved is True

@@ -7,7 +7,7 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def delegate_task(session: Session, agentname: str, prompt: str, blocking: bool = False) -> dict[str, Any]:
+def delegate_task(session: Session, agentname: str|None=None, prompt: str = "", blocking: bool = False) -> dict[str, Any]:
     """Send a one-off task to another agent.
 
     Creates a fresh session for the target agent, sends *prompt* as its
@@ -22,13 +22,13 @@ def delegate_task(session: Session, agentname: str, prompt: str, blocking: bool 
     When *blocking* is ``False``: returns immediately. The agent's reply
     will be injected into your conversation once it completes.
 
-    See also: ``spawn_subtask`` (same idea but uses your own agent),
+    See also: ``spawn_subtask`` (same idea but forks your current session),
     ``start_subsession`` (named persistent background sessions).
 
     Args:
-        agentname: Name of the agent to perform the task. Run
-            ``get_available_agents`` to see valid names.
         prompt: The task description to execute.
+        agentname: Optional name of the agent to perform the task. Run
+            ``get_available_agents`` to see valid names. Defaults to the same agent as you.
         blocking: ``True`` to wait for the result, ``False`` to submit and
             receive the result later asynchronously. Defaults to ``False``.
 
@@ -40,6 +40,12 @@ def delegate_task(session: Session, agentname: str, prompt: str, blocking: bool 
         On error:
             ``{"error": "Agent '<name>' not found"}``
     """
+
+    if not prompt:
+        return {"error": f"You must provide a prompt to delegate a task"}
+    if not agentname:
+        agentname = session.agent.name
+        
     subagent_version = session.get_subagent(agentname)
     if not subagent_version:
         return {"error": f"Agent '{agentname}' not found"}
