@@ -6,14 +6,14 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def get_available_agents(session: Session) -> dict[str, Any]:
+def get_available_agents(_session: Session) -> dict[str, Any]:
     """List every agent you can delegate tasks or subsessions to.
 
     The returned ``name`` values are the valid inputs for the *agentname*
     parameter of ``start_subsession`` and ``delegate_task``.
 
     Args:
-        (none besides session, which is bound automatically).
+        (none besides _session, which is bound automatically).
 
     Returns:
         ``{"agents": [{
@@ -27,7 +27,7 @@ def get_available_agents(session: Session) -> dict[str, Any]:
     two default agents).  Other names depend on what's installed.
     """
     agents: list[dict[str, Any]] = []
-    for av in session.allowedSubagents:
+    for av in _session.allowedSubagents:
         agents.append({
             "name": av.agent.name,
             "description": av.description,

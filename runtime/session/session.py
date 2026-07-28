@@ -1,5 +1,6 @@
 from __future__ import annotations
 import ast
+import json
 from typing import TYPE_CHECKING, Any, Dict, List
 
 from runtime.agents.agent import Agent, is_name_disallowed
@@ -545,9 +546,18 @@ class Session:
                 is_command = True
                 full_cmd_str = "".join([part["content"] for part in parts]).strip() if parts else ""
                 cmd_payload = full_cmd_str[1 + len(cmd):].strip()
-                _payload_ast_tree = ast.parse(f"f({cmd_payload})")
-                call = _payload_ast_tree.body[0].value if _payload_ast_tree.body else None
-                parsed_kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords} if call else {}
+                try:
+                    parsed_kwargs = json.loads(cmd_payload)
+                except (json.JSONDecodeError, TypeError):
+                    try:
+                        _payload_ast_tree = ast.parse(f"f({cmd_payload})")
+                        call = _payload_ast_tree.body[0].value if _payload_ast_tree.body else None
+                        parsed_kwargs = {kw.arg: ast.literal_eval(kw.value) for kw in call.keywords} if call else {}
+                    except SyntaxError:
+                        raise ValueError(
+                            f"Could not parse arguments for /{cmd}. "
+                            f"Expected JSON or Python keyword arguments, got: {cmd_payload!r}"
+                        )
 
         if is_command:
             bound_task = self.get_task("ingest_slash_command")

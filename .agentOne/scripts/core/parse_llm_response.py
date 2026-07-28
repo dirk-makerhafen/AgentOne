@@ -41,7 +41,7 @@ def _deduplicate(data: Any) -> Any:
     return data
 
 
-def parse_llm_response(session: Session, response: Response) -> dict[str, Any]:
+def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
     """
     Extract content, reasoning, and normalized tool call definitions.
 
@@ -49,7 +49,7 @@ def parse_llm_response(session: Session, response: Response) -> dict[str, Any]:
     the response content and appends them to any existing tool_calls.
 
     Args:
-        session:  The active agent session (used to check tool_call_syntax).
+        _session:  The active agent session (used to check tool_call_syntax).
         response: The Response model returned by call_llm.
 
     Returns:
@@ -71,7 +71,7 @@ def parse_llm_response(session: Session, response: Response) -> dict[str, Any]:
 
     try:
 
-        if session.tool_call_syntax == AgentToolCallSyntax.CUSTOM and content:
+        if _session.tool_call_syntax == AgentToolCallSyntax.CUSTOM and content:
             pattern = r"\[call:(\w+)\((.*?)\)\]"
             matches = re.finditer(pattern, content)
             for match in matches:
@@ -112,7 +112,7 @@ def parse_llm_response(session: Session, response: Response) -> dict[str, Any]:
         from server.models.debug_log_entry import DebugLogEntry
 
         DebugLogEntry.objects.create(
-            session=session.model,
+            session=_session.model,
             event="exception",
             data={"exception": traceback.format_exc()},
         )

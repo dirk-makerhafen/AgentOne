@@ -3,7 +3,7 @@ from __future__ import annotations
 from runtime.session.session import Session
 from server.models.tasks.task_instance import TaskInstance
 
-def map(session: Session, items: list, target_pk: int) -> list:
+def map(_session: Session, items: list, target_pk: int) -> list:
     """Execute the task identified by *target_pk* for each *item* in parallel."""
     results = []
     if not items:

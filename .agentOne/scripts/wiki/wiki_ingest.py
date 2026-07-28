@@ -17,16 +17,16 @@ def _session_name(folder: str) -> str:
     return f"wiki:{folder}:Main"
 
 
-def _resolve_folder(session: Session, folder: str | None = None) -> str | None:
+def _resolve_folder(_session: Session, folder: str | None = None) -> str | None:
     if folder is not None:
         p = Path(folder)
         if not p.is_absolute():
-            folder = (Path(session.workspace.path) / p).resolve().as_posix()
+            folder = (Path(_session.workspace.path) / p).resolve().as_posix()
         return folder
 
     wiki_paths = list(
         SessionVersionModel.objects.filter(
-            parent_session_version=session.get_version_model(),
+            parent_session_version=_session.get_version_model(),
             agent__name="wiki",
             workspace__isnull=False,
         ).values_list("workspace__path", flat=True).distinct()
@@ -36,7 +36,7 @@ def _resolve_folder(session: Session, folder: str | None = None) -> str | None:
     return None
 
 
-def wiki_ingest(session: Session, source: str, folder: str | None = None, blocking: bool = False) -> dict[str, Any]:
+def wiki_ingest(_session: Session, source: str, folder: str | None = None, blocking: bool = False) -> dict[str, Any]:
     """Send an ``ingest`` command to a wiki subagent session.
 
     When *blocking* is ``True`` the command's result is returned directly.
@@ -44,7 +44,7 @@ def wiki_ingest(session: Session, source: str, folder: str | None = None, blocki
     asynchronously and the result is delivered back later.
 
     Args:
-        session: The calling agent's session (bound automatically).
+        _session: The calling agent's session (bound automatically).
         source: File path or URL to ingest.
         folder: Optional wiki root path. When omitted and there is exactly
             one subsession with agent type ``wiki``, its workspace is used.
@@ -54,11 +54,11 @@ def wiki_ingest(session: Session, source: str, folder: str | None = None, blocki
     Returns:
         A dict indicating the command was sent.
     """
-    resolved = _resolve_folder(session, folder)
+    resolved = _resolve_folder(_session, folder)
     if resolved is None:
         wiki_paths = list(
             SessionVersionModel.objects.filter(
-                parent_session_version=session.get_version_model(),
+                parent_session_version=_session.get_version_model(),
                 agent__name="wiki",
                 workspace__isnull=False,
             ).values_list("workspace__path", flat=True).distinct()
@@ -71,5 +71,5 @@ def wiki_ingest(session: Session, source: str, folder: str | None = None, blocki
     session_name = _session_name(resolved)
     prompt = f"ingest {source}"
 
-    message_subsession = session.get_tool("message_subsession")
+    message_subsession = _session.get_tool("message_subsession")
     return message_subsession.delay(sessionname=session_name, prompt=prompt, blocking=blocking)

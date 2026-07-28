@@ -136,7 +136,17 @@ class ComposerFooter(ModelView):
                 "content": parts
             },]
         self.eval_javascript(f"document.getElementById('input_{self.parent.uid}').value = ''", skip_results=True)
-        self.subject.add_user_message(parts)
+        try:
+            self.subject.add_user_message(parts)
+        except Exception as e:
+            from server.models.message import Message as Msg
+            from server.models.enums.message_enums import MessagePartType, MessageContentType
+            from runtime.events import publish_model_event
+            session_version = self.subject.get_version_model()
+            prev_message = self.subject.get_messages().filter(next_messages=None).last()
+            msg = Msg.objects.create(role="user", session_version=session_version, prev_message=prev_message)
+            msg.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=str(e))
+            publish_model_event(msg, "create")
 
     def close_dropdowns(self):
         self.profile_dropdown.close()

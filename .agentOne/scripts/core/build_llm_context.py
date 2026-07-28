@@ -20,7 +20,7 @@ from server.models.queries.query_message_part import QueryMessagePart
 from server.history_limiter import HistoryLimiter
 
 
-def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Query:
+def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Query:
     """
     Build a Query with system prompt, tool schemas, and conversation history.
 
@@ -32,7 +32,7 @@ def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Quer
        apply HistoryLimiter, and repack as QueryMessages with correct roles.
 
     Args:
-        session: The active agent session.
+        _session: The active agent session.
         message: The message that triggered this turn (used as upper bound
                  for history loading).
 
@@ -42,22 +42,22 @@ def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Quer
 
     try:
         query = Query.objects.create(
-            session_version=session.get_version_model(),
+            session_version=_session.get_version_model(),
             trigger_message=message,
         )
 
         # SYSTEM PROMPT
-        if session.system_prompt:
+        if _session.system_prompt:
             query.add_message(
                 role="system",
                 content_type=MessageContentType.TEMPLATE,
-                content=session.system_prompt,
+                content=_session.system_prompt,
                 template_data={},
             )
 
         # CUSTOM TOOLS
-        if session.tool_call_syntax == AgentToolCallSyntax.CUSTOM:
-            allowed_tools: list[Any] = list(session.allowedTools)
+        if _session.tool_call_syntax == AgentToolCallSyntax.CUSTOM:
+            allowed_tools: list[Any] = list(_session.allowedTools)
             if allowed_tools:
                 tools_msg = "Available Tools (use syntax [call:tool_name(arg=val)]):\n"
                 query_message = query.add_message(role="system", content_type=MessageContentType.TEXT, content=tools_msg)
@@ -78,14 +78,14 @@ def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Quer
         # This handles injected compaction messages and forks naturally.
         messages: list[Message] = []
         current = message
-        while current and len(messages) < session.max_history_messages + 1:
+        while current and len(messages) < _session.max_history_messages + 1:
             if not current.hide_from_context:
                 messages.append(current)
                 if current.parts.filter(type="COMPACTION").exists():
                     break
             current = current.prev_message
         
-        limiter = HistoryLimiter(session, messages)
+        limiter = HistoryLimiter(_session, messages)
 
         cmessages: list[Any] = []
         fmessages = []
@@ -137,6 +137,6 @@ def build_llm_context(session: Session, message: Message, **kwargs: Any) -> Quer
         from server.models.debug_log_entry import DebugLogEntry
 
         DebugLogEntry.objects.create(
-            session=session.model, event="exception", data={"exception": traceback.format_exc()}
+            session=_session.model, event="exception", data={"exception": traceback.format_exc()}
         )
         raise

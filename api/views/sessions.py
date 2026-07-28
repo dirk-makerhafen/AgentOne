@@ -102,6 +102,7 @@ class SessionViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
             message_parts = parts
         elif content:
+            # TODO this might need content_type, ai: double check
             message_parts = [{'type': 'text', 'content': content}]
         else:
             return Response({'error': 'Provide either "content" (string) or "parts" (list of dicts)'},

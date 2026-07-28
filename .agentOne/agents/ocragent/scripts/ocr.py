@@ -9,5 +9,5 @@ from runtime.session.session import Session
 
 from collections import Counter, defaultdict
 
-def ocr(session: Session, image_data: str | None = None, allow_cloud=False, ):
+def ocr(_session: Session, image_data: str | None = None, allow_cloud=False, ):
     pass

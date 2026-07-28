@@ -1,6 +1,6 @@
 ---
 name: baseagent
-model: Qwen3.6-35B-A3B-4bit
+model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Core functions available for all.
 extends: []
 maxRetries: 0
@@ -20,7 +20,7 @@ tools: []
 disallowedTools: []
 tasks: [ core.*  ]
 disallowedTasks: []
-commands: [ ping, debug, test-approval, compact ]
+commands: [ ping, debug, test-approval, compact, tasks.* ]
 disallowedCommands: []
 priority: 0
 ---

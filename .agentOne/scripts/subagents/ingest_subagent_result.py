@@ -9,27 +9,27 @@ from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 
 
-def ingest_subagent_result(session: Session, child_session_pk: int, summary: str, result: Message) -> Any:
+def ingest_subagent_result(_session: Session, child_session_pk: int, summary: str, result: Message) -> Any:
     """
     Wait for a subagent's TaskCall to complete, then inject the child's last
-    assistant message into *session* (the parent) and trigger process_turn.
+    assistant message into *_session* (the parent) and trigger process_turn.
 
     Args:
-        session: The parent session (bound automatically).
+        _session: The parent session (bound automatically).
         child_session_pk: PK of the child's SessionModel.
         summary: One-sentence task summary.
         result: The resolved result Message from the child's task call.
 
     Returns:
-        The result of ``session.add_user_message(...)`` — an AgentTaskCall
+        The result of ``_session.add_user_message(...)`` — an AgentTaskCall
         that chains to ``ingest_user_message`` → ``process_turn`` on the
         parent.  The framework auto-awaits this recursively.
     """
     child_session_model = SessionModel.objects.get(pk=child_session_pk)
     child_session = Session(session_model=child_session_model)
 
-    session_version = session.get_version_model()
-    prev_message = session.get_messages().filter(next_messages=None).last()
+    session_version = _session.get_version_model()
+    prev_message = _session.get_messages().filter(next_messages=None).last()
     message = Message.objects.create(role="user", session_version=session_version, prev_message=prev_message)
     message.add_part(
         type="message",
@@ -46,6 +46,6 @@ def ingest_subagent_result(session: Session, child_session_pk: int, summary: str
     from runtime.events import publish_model_event
     publish_model_event(message, "create")
 
-    if session.subagentResultDelivery == "immediate":
-        return session.get_task("process_turn").delay(message=message)
+    if _session.subagentResultDelivery == "immediate":
+        return _session.get_task("process_turn").delay(message=message)
     

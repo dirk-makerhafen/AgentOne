@@ -83,8 +83,12 @@ def run_streaming_query(
     #)
 
     stream = client.chat.completions.create(**args)
-
+    repeat_count = 0
     for event in stream:
+        if repeat_count >= 5:
+            response.finish_reason = "Looping detected"
+            break
+
         event_data = event.model_dump()
         unknown_chunk = True
 
@@ -103,17 +107,20 @@ def run_streaming_query(
             unknown_chunk = False
             response.finish_reason = finish_reason
 
-        reasoning_chunk = message_chunk.get("reasoning", None) or message_chunk.get(
-            "thinking", None) or message_chunk.get("reasoning_content", None)
+        reasoning_chunk = message_chunk.get("reasoning", None) or message_chunk.get("thinking", None) or message_chunk.get("reasoning_content", None)
         if reasoning_chunk:
             if not first_reasoning_token_timestamp:
                 first_reasoning_token_timestamp = time.time()
             last_reasoning_token_timestamp = time.time()
             unknown_chunk = False
+            if reasoning_chunk in response.reasoning:
+                repeat_count += 1
             response.reasoning += reasoning_chunk
 
         if content_chunk := message_chunk.get("content", None):
             unknown_chunk = False
+            if content_chunk in response.content:
+                repeat_count += 1
             response.content += content_chunk
 
         if tool_calls_chunk := message_chunk.get("tool_calls", None):
@@ -180,7 +187,7 @@ def run_streaming_query(
     return response
 
 
-def call_llm(session: Session, query: Query) -> Response:
+def call_llm(_session: Session, query: Query) -> Response:
     """
     Send the Query to the LLM and stream the response.
 
@@ -189,17 +196,17 @@ def call_llm(session: Session, query: Query) -> Response:
     and transitions to RATE_LIMITED status (no retry budget consumed).
 
     Args:
-        session: The active agent session.
+        _session: The active agent session.
         query:   The Query (built by build_llm_context) to send.
 
     Returns:
         A Response model containing the streamed LLM output.
     """
     try:
-        if not session.aimodel:
+        if not _session.aimodel:
             raise Exception("No llm model specified")
 
-        ratelimit_result = RateLimitChecker.check(session.aimodel)
+        ratelimit_result = RateLimitChecker.check(_session.aimodel)
         if not ratelimit_result:
             raise Exception("Error in ratelimiter")
         apikey = ratelimit_result.selected_key
@@ -211,8 +218,8 @@ def call_llm(session: Session, query: Query) -> Response:
 
         messages = query.to_openai_message()
         api_tools: list[dict[str, Any]] = []
-        if session.tool_call_syntax == AgentToolCallSyntax.DEFAULT:
-            for tool in session.allowedTools:
+        if _session.tool_call_syntax == AgentToolCallSyntax.DEFAULT:
+            for tool in _session.allowedTools:
                 if not tool.task_definition:
                     raise Exception("Missing task_definition")
                 api_tools.append(
@@ -227,7 +234,7 @@ def call_llm(session: Session, query: Query) -> Response:
                 )
 
         response = run_streaming_query(
-            session=session,
+            session=_session,
             messages=messages,
             tools=api_tools,
             query=query,
@@ -253,7 +260,7 @@ def call_llm(session: Session, query: Query) -> Response:
         from server.models.debug_log_entry import DebugLogEntry
 
         DebugLogEntry.objects.create(
-            session=session.model,
+            session=_session.model,
             event="exception",
             data={"exception": traceback.format_exc()},
         )

@@ -21,11 +21,11 @@ Format as a clear, structured summary. Be specific — avoid generic statements.
 """
 
 
-def build_llm_compact_context(session: Session, message: Message) -> Query:
-    query = session.get_task("build_llm_context").call(message=message)
+def build_llm_compact_context(_session: Session, message: Message) -> Query:
+    query = _session.get_task("build_llm_context").call(message=message)
 
     # compactSizeLimit is a percentage (0–100) of messages to KEEP in full.
-    pct = session.compact_size_limit
+    pct = _session.compact_size_limit
     if pct <= 0:
         pct = 15
 

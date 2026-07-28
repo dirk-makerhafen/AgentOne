@@ -8,7 +8,7 @@ from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 
 
-def await_subsession(session: Session, sessionname: str) -> dict[str, Any]:
+def await_subsession(_session: Session, sessionname: str) -> dict[str, Any]:
     """Wait for a subsession's latest reply to arrive.
 
     Use this after sending a non-blocking message
@@ -29,7 +29,7 @@ def await_subsession(session: Session, sessionname: str) -> dict[str, Any]:
             ``{"error": "No pending work", "session_name": str}``
     """
     try:
-        child_model = SessionModel.objects.get(parent_session=session.model, name=sessionname)
+        child_model = SessionModel.objects.get(parent_session=_session.model, name=sessionname)
     except SessionModel.DoesNotExist:
         return {"error": f"Subsession '{sessionname}' not found"}
 

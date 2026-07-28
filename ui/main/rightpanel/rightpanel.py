@@ -211,6 +211,7 @@ class RightPanel(ModelView):
         if self._current_tab_name not in self._tab_map:
             self._current_tab_name = "workspace"
         self.current_view = self._tab_map.get(self._current_tab_name, self.workspace_view)
+        self.subagents_view.refresh()
 
     def _show_cron_context(self) -> None:
         if self._cron_schedule is None:
@@ -301,6 +302,10 @@ class RightPanel(ModelView):
             self._current_tab_name = name
             for tab in self._tabs:
                 tab["active"] = tab["name"] == name
+            if name == "subagents":
+                self.subagents_view.refresh()
+            if name == "tasks":
+                self.tasks_view.refresh()
             self.update()
 
     def update(self, *args, **kwargs) -> None:

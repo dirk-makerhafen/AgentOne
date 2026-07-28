@@ -14,59 +14,62 @@ from server.models.message import Message, MessagePart
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 
 
-def process_slashcommand(session: Session, name: str, **kwargs: Any) -> dict[str, Any]:
+def process_slashcommand(_session: Session, name: str, **kwargs: Any) -> dict[str, Any]:
     """
     Look up and dispatch a slash command, recording a user Message.
 
     Args:
-        session: The active agent session.
+        _session: The active agent session.
         name:    The command name (without leading slash).
         **kwargs: Arguments forwarded to the command's BoundTask.
 
     Returns:
         A dict with keys:
             message      (Message)   -- The user Message recording this command.
-            tool_reponse (AgentTaskCall) -- The dispatched task call.
+            tool_reponse (Any)       -- The command's return value or error dict.
     """
-    bound_task = session.get_command(name)
+    import traceback
+
+    bound_task = _session.get_command(name)
     if not bound_task:
         raise Exception(f"Task {name} not found")
 
-    session_version = session.get_version_model()
-    message = Message.objects.create(role="user", session_version=session_version)
+    session_version = _session.get_version_model()
+    prev_message = _session.get_messages().filter(next_messages=None).last()
+    message = Message.objects.create(role="user", session_version=session_version, prev_message=prev_message)
 
-    task_call = bound_task.delay(**kwargs)
+    try:
+        result = bound_task.call(**kwargs)
+    except Exception as e:
+        result = {"exception": str(e), "traceback": traceback.format_exc()}
 
     message.add_part(
         type=MessagePartType.TOOLCALL,
         content_type=MessageContentType.JSON,
-        content=f"/{name} {json.dumps(kwargs)}",
-        tool_call=task_call,
+        content=f"/{name} {json.dumps(kwargs) if kwargs else ''}",
     )
 
     from runtime.events import publish_model_event
     publish_model_event(message, "create")
 
-    return dict(message=message, tool_reponse=task_call)
+    return dict(message=message, tool_reponse=result)
 
 
 def handle_slashcommand_response(
-    session: Session, message: Message, tool_reponse: Any
+    _session: Session, message: Message, tool_reponse: Any
 ) -> Any:
     """
     Create an assistant Message wrapping the slash command result.
 
     Args:
-        session:      The active agent session.
+        _session:      The active agent session.
         message:      The original user Message for the slash command.
         tool_reponse: The result returned by the dispatched command task.
 
     Returns:
         The raw tool response value.
     """
-    conv_msg = Message.objects.create(
-        role="assistant", session_version=session.get_version_model()
-    )
+    conv_msg = Message.objects.create(role="assistant", session_version=_session.get_version_model(), prev_message=message)
 
     def _serialize_result(obj: Any) -> Any:
         """JSON-serialise a tool result, handling Message / Path model references."""
@@ -85,9 +88,14 @@ def handle_slashcommand_response(
             return obj.as_posix()
         raise TypeError(f"Cannot serialize {type(obj).__name__}")
 
+    try:
+        serialized = _serialize_result(tool_reponse)
+    except Exception as e:
+        serialized = {"exception": str(e)}
+
     MessagePart.objects.create(
         message=conv_msg,
-        content=GenericContent.from_data(_serialize_result(tool_reponse)),
+        content=GenericContent.from_data(serialized),
         content_type=MessageContentType.JSON,
     )
 

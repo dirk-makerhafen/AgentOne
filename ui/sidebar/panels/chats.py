@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from django.db.models import Prefetch
 from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
@@ -18,9 +19,9 @@ class SidebarPanelChat(ModelView):
     TEMPLATE_STR = '''
         <div class="session-text" onclick="pyview.open_instance_detail()">
             <div class="session-title-row">
-                <span class="session-branch-indicator" title="Forked from AI Agent Capabilities and Functionality Overview">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
-                </span>
+                {% if pyview.active_children %}
+                <span class="session-caret" onclick="event.stopPropagation(); pyview.toggle_children()">{% if pyview._show_children %}▾{% else %}▸{% endif %}</span>
+                {% endif %}
                 <span class="session-title" title="Double-click to rename">
                     {% if pyview.subject.is_pinned %}<svg class="session-pin-icon" width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><polygon points="8,2 9.8,6.2 14.2,6.2 10.7,9.2 12,13.8 8,11 4,13.8 5.3,9.2 1.8,6.2 6.2,6.2"/></svg>{% endif %}
                     {{ pyview.session.name }}
@@ -28,8 +29,24 @@ class SidebarPanelChat(ModelView):
                 <span class="session-time">1w</span>
             </div>
             <div class="session-meta">{{pyview.subject.messages.count()}} msgs · {% if  pyview.session.aimodel %} {{ pyview.session.aimodel.name }}{% else %}No Model{% endif %}</div>
+            {% if pyview.active_children and pyview._show_children %}
+            <div class="session-child-sessions">
+                {% for child, depth, model_name, has_active, needs_approval in pyview.child_tree %}
+                <div class="session-tree-child session-item{% if child.pk == pyview._active_session_pk %} active{% endif %}" style="margin-left:{{ depth }}em" onclick="event.stopPropagation(); pyview.open_child({{ child.pk }})" title="{{ child.name }}">
+                    <div style="display:flex;align-items:flex-start;gap:6px;flex:1;min-width:0">
+                        {% if has_active %}<span class="session-state-indicator is-streaming" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}
+                        {% if needs_approval %}<span class="session-state-indicator needs-approval" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}
+                        <div style="flex:1;min-width:0">
+                            <div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ child.name }}</div>
+                            <div class="session-meta">{{ child.messages.count() }} msgs{% if model_name %} · {{ model_name }}{% endif %}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
-        <span class="session-attention-indicator session-state-indicator" aria-hidden="true"></span>
+        <span class="session-attention-indicator session-state-indicator{% if pyview.mark_active %} is-streaming{% endif %}{% if pyview.mark_needs_approval %} needs-approval{% endif %}" aria-hidden="true"></span>
         <div class="session-actions">
             <button type="button" class="session-actions-trigger" title="Conversation actions" aria-haspopup="menu" aria-label="Conversation actions" onclick="toggleSessionMenu(event, '{{pyview.uid}}')">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" stroke="none"><circle cx="8" cy="3" r="1.25"></circle><circle cx="8" cy="8" r="1.25"></circle><circle cx="8" cy="13" r="1.25"></circle></svg>
@@ -135,6 +152,7 @@ class SidebarPanelChat(ModelView):
         self.session = Session(subject)
         self.root_view: UiAppView = parent.parent.root_view
         self._show_project_dialog = False
+        self._show_children = True
 
     @property
     def DOM_ELEMENT_CLASS(self):
@@ -144,12 +162,16 @@ class SidebarPanelChat(ModelView):
         return cls
 
     def _is_current_session(self):
+        return self.subject.pk == self._active_session_pk
+
+    @property
+    def _active_session_pk(self) -> int | None:
         tab = self.root_view.main_panel.selected_tab_view
         if tab is not None and hasattr(tab, "subject"):
             subj = tab.subject
             if hasattr(subj, "pk"):
-                return subj.pk == self.subject.pk
-        return False
+                return subj.pk
+        return None
 
     def open_instance_detail(self):
         self.root_view.main_panel.create_and_open_tab(Chat, self.subject)
@@ -190,6 +212,86 @@ class SidebarPanelChat(ModelView):
         from server.models.project import Project
         return Project.objects.only("pk", "name").all()
 
+    @property
+    def active_children(self) -> list:
+        return list(self.subject.child_sessions.all())
+
+    @property
+    def child_tree(self) -> list[tuple]:
+        """Flat list of (session, depth, model_name, has_active, needs_approval) tuples."""
+        result = []
+        self._build_subtree(self.subject, 0, result)
+        return result
+
+    def _build_subtree(self, session, depth, result):
+        if depth >= 10:
+            return
+        if depth == 0:
+            children = self.subject.child_sessions.all()
+        else:
+            children = SessionModel.objects.filter(parent_session=session, is_active=True).select_related('latest_session_version__agent').order_by('-created_at')
+        for child in children:
+            model_name = ""
+            try:
+                sv = child.latest_session_version
+                if sv and sv.session_settings and sv.session_settings.aimodel:
+                    model_name = sv.session_settings.aimodel.name
+            except Exception:
+                pass
+            has_active = self._child_has_active(child)
+            needs_approval = self._child_needs_approval(child)
+            result.append((child, depth, model_name, has_active, needs_approval))
+            self._build_subtree(child, depth + 1, result)
+
+    @staticmethod
+    def _child_has_active(child: SessionModel) -> bool:
+        from server.models.queries.query import Query, QueryStatus
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatus
+        return (
+            Query.objects.filter(session_version__session=child, status=QueryStatus.ACTIVE).exists()
+            or AgentTaskCall.objects.filter(session=child).exclude(status=TaskCallStatus.ENDED).exists()
+        )
+
+    @staticmethod
+    def _child_needs_approval(child: SessionModel) -> bool:
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatusDetail
+        return AgentTaskCall.objects.filter(
+            session=child,
+            requires_approval=True,
+            status_detail=TaskCallStatusDetail.HALTED_APPROVAL,
+        ).exists()
+
+    def toggle_children(self):
+        self._show_children = not self._show_children
+        self.update()
+
+    @property
+    def mark_active(self) -> bool:
+        from server.models.queries.query import Query, QueryStatus
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatus
+        return (
+            Query.objects.filter(session_version__session=self.subject, status=QueryStatus.ACTIVE).exists()
+            or AgentTaskCall.objects.filter(session=self.subject).exclude(status=TaskCallStatus.ENDED).exists()
+        )
+
+    @property
+    def mark_needs_approval(self) -> bool:
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatusDetail
+        return AgentTaskCall.objects.filter(
+            session=self.subject,
+            requires_approval=True,
+            status_detail=TaskCallStatusDetail.HALTED_APPROVAL,
+        ).exists()
+
+    def open_child(self, pk: int):
+        from server.models.sessions.session import SessionModel
+        child = SessionModel.objects.get(pk=pk)
+        self.root_view.main_panel.create_and_open_tab(Chat, child)
+
 
 class SidebarPanelChats(ModelView):
     DOM_ELEMENT_CLASS = "panel-view active"
@@ -197,6 +299,7 @@ class SidebarPanelChats(ModelView):
         <!-- Chat panel -->
         <div class="panel-head">
             <span data-i18n="tab_chat">Chat</span>
+            {% if pyview.subagent_count %}<span class="subagent-badge" title="{{ pyview.subagent_count }} active subagent session(s)">{{ pyview.subagent_count }} subagents</span>{% endif %}
             <div class="panel-head-actions">
                 <button class="panel-head-btn" id="btnNewChat" title="New conversation (Cmd+K)" data-i18n-title="new_conversation" aria-label="New conversation" onclick="pyview.new_conversation()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -284,13 +387,29 @@ class SidebarPanelChats(ModelView):
             view=self,
             action="update",
         )
+        app.model_observer.watch(
+            SessionModel,
+            filter={},
+            callback_name="_on_session_created",
+            view=self,
+            action="create",
+        )
 
     def _on_session_updated(self, pk: int, action: str, filter_context: dict) -> None:
         """Re-render sidebar when a session is renamed (or otherwise updated)."""
         self.refresh_list()
 
+    def _on_session_created(self, pk: int, action: str, filter_context: dict) -> None:
+        """Re-render sidebar when a new session (e.g. subagent) is created."""
+        self.refresh_list()
+
+    @property
+    def subagent_count(self) -> int:
+        return SessionModel.objects.filter(parent_session__isnull=False, is_active=True).count()
+
     def _base_query(self):
-        qs = self.subject.sessions.root()
+        qs = self.subject.sessions.root().filter(parent_session__isnull=True)
+        qs = qs.prefetch_related(Prefetch('child_sessions', queryset=SessionModel.objects.filter(is_active=True).select_related('latest_session_version__agent').order_by('-created_at')))
         if self._show_archived:
             return qs.filter(is_archived=True).order_by('-is_pinned', '-created_at')
         return qs.filter(is_archived=False).order_by('-is_pinned', '-created_at')
@@ -302,9 +421,10 @@ class SidebarPanelChats(ModelView):
 
     def set_project_filter(self, project_id: int | None) -> None:
         if project_id is None:
-            base = self.subject.sessions.root()
+            base = self.subject.sessions.root().filter(parent_session__isnull=True)
         else:
-            base = SessionModel.objects.filter(parent_project_id=project_id)
+            base = SessionModel.objects.filter(parent_project_id=project_id, parent_session__isnull=True)
+        base = base.prefetch_related(Prefetch('child_sessions', queryset=SessionModel.objects.filter(is_active=True).select_related('latest_session_version__agent').order_by('-created_at')))
         if self._show_archived:
             base = base.filter(is_archived=True)
         else:

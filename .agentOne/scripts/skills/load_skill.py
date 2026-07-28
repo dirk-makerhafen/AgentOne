@@ -17,12 +17,12 @@ if TYPE_CHECKING:
     from runtime.session.session import Session
 
 
-def load_skill(session: Session, skill_name: str) -> tuple[bool, dict]:
+def load_skill(_session: Session, skill_name: str) -> tuple[bool, dict]:
     """
     Load a skill's content by name (frontmatter metadata + markdown body).
 
     Args:
-        session: The calling agent's session (bound automatically).
+        _session: The calling agent's session (bound automatically).
         skill_name: The name of the skill to load (e.g. ``"document-scanner"``).
 
     Returns:
@@ -43,7 +43,7 @@ def load_skill(session: Session, skill_name: str) -> tuple[bool, dict]:
 
     On failure, *result_dict* contains ``status`` and ``message``.
     """
-    skill_version = session.get_skill(skill_name)
+    skill_version = _session.get_skill(skill_name)
     if skill_version is None:
         return (
             False,
@@ -130,8 +130,8 @@ if __name__ == "__main__":
 
     if args.session_pk:
         session_model = SessionModel.objects.get(pk=args.session_pk)
-        session = RuntimeSession(session_model=session_model)
-        success, result = load_skill(session, args.skill_name)
+        _session = RuntimeSession(session_model=session_model)
+        success, result = load_skill(_session, args.skill_name)
         print(json.dumps(result, indent=2, default=str))
         sys.exit(0 if success else 1)
     else:

@@ -19,7 +19,7 @@ AGENT_ICONS = {
 
 class RightPanelAgentInfo(ModelView):
     DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel"
+    DOM_ELEMENT_CLASS = "rightpanel-inner"
     TEMPLATE_STR = '''
         <div class="panel-header"><span>Info</span></div>
         <div style="flex:1;overflow-y:auto;padding:8px">

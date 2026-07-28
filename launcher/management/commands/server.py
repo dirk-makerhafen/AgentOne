@@ -283,7 +283,7 @@ class Command(BaseCommand):
         log_level = "DEBUG"
         commands = {
             "daphne":        ['daphne', '-b', listen_address, "-e", "tcp:8003", "-b", "0.0.0.0", "-p","8002", "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem", 'config.asgi:application'],
-            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '2'],
+            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '5'],
             "celery_beat":   ['celery', '-A', 'config', 'beat',   '-l', log_level]
         }
 

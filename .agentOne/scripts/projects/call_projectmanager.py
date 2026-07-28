@@ -19,7 +19,7 @@ from server.models.agents.agent import AgentModel
 from server.models.workspace import WorkspaceModel
 
 
-def call_projectmanager(session: Session, project_path: str, task: str) -> dict[str, Any]:
+def call_projectmanager(_session: Session, project_path: str, task: str) -> dict[str, Any]:
     """
     Send a task to a project's singleton projectmanager session (blocking).
 
@@ -28,7 +28,7 @@ def call_projectmanager(session: Session, project_path: str, task: str) -> dict[
     the message and its response is returned via the auto-awaited TaskCall.
 
     Args:
-        session: The calling agent's session (bound automatically).
+        _session: The calling agent's session (bound automatically).
         project_path: Absolute path of the target project.
         task: The task description or message to send to the projectmanager.
 
@@ -49,7 +49,7 @@ def call_projectmanager(session: Session, project_path: str, task: str) -> dict[
 
     session_name = f"projectmanager:{project_path}"
 
-    session_version_model = session.get_version_model()
+    session_version_model = _session.get_version_model()
     workspace, _ = WorkspaceModel.objects.get_or_create(
         name=f"{project_path} project root", 
         path=project_path, 

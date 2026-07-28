@@ -8,15 +8,15 @@ from server.models.queries.response import Response
 
 
 def compact_if_needed(
-    session: Session,
+    _session: Session,
     response: Response,
     parts: list[dict[str, Any]],
     message: Message,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    auto_limit = session.auto_compact_limit
+    auto_limit = _session.auto_compact_limit
     if auto_limit <= 0 or response.prompt_tokens < auto_limit:
         return dict(response=response, parts=parts, message=message)
 
-    compact_call = session.get_task("compact_turn").delay(message=message)
+    compact_call = _session.get_task("compact_turn").delay(message=message)
     return dict(response=response, parts=parts, message=message, compact_call=compact_call)

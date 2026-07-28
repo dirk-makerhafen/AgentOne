@@ -7,7 +7,7 @@ from runtime.session.session import Session
 from server.models.sessions.session import SessionModel
 
 
-def list_subsessions(session: Session) -> dict[str, Any]:
+def list_subsessions(_session: Session) -> dict[str, Any]:
     """List all subsessions you have created.
 
     Returns metadata for every child session, active or inactive.
@@ -15,7 +15,7 @@ def list_subsessions(session: Session) -> dict[str, Any]:
     retrieve a specific subsession's latest reply.
 
     Args:
-        (none besides session, which is bound automatically).
+        (none besides _session, which is bound automatically).
 
     Returns:
         ``{"subsessions": [{
@@ -29,7 +29,7 @@ def list_subsessions(session: Session) -> dict[str, Any]:
         }, ...]}``
     """
     children = SessionModel.objects.filter(
-        parent_session=session.model,
+        parent_session=_session.model,
     ).order_by("-created_at").select_related("latest_session_version__agent")
 
     subsessions: list[dict[str, Any]] = []

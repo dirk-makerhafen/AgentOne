@@ -11,12 +11,12 @@ from __future__ import annotations
 from runtime.session.session import Session
 
 
-def debug(session: Session, type: str = "ping") -> str:
+def debug(_session: Session, type: str = "ping") -> str:
     """
     Debug command for testing various system features.
 
     Args:
-        session: The active agent session.
+        _session: The active agent session.
         type: Sub-command type - "ping" (default) or "approval".
 
     Returns:

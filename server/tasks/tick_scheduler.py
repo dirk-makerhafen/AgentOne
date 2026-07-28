@@ -31,6 +31,7 @@ def tick_scheduler() -> None:
     _release_queued_calls()
     _timeout_active_runs()
     _resolve_stuck_waiting_runs()
+    _recover_stale_queries()
     _cleanup_stale_runtime_folders()
     _process_cron_jobs()
     _dispatch_data_flows()
@@ -200,6 +201,70 @@ def _resolve_stuck_waiting_runs() -> None:
             )
 
 
+def _recover_stale_queries() -> None:
+    """
+    Detect and recover queries that are stuck in ACTIVE status.
+
+    When the server is stopped while a streaming LLM call is in progress,
+    the Query stays ACTIVE and the Response stays ACTIVE forever.
+    This function finds such stale queries, marks them as FAILURE,
+    and also fails any orphaned AgentTaskRuns so the chain machinery
+    can clean up.
+
+    A later enhancement could re-dispatch ``call_llm`` to truly restart
+    the query, but that requires careful integration with the chain's
+    WAITING_RESULTTASKS run to avoid duplicate assistant messages.
+    """
+    from datetime import timedelta
+    from server.models.queries.query import Query, QueryStatus
+    from server.models.queries.response import Response, ResponseStatus
+    from server.models.enums.task_enums import TaskRunStatus
+    from server.models.tasks.agent_task_run import AgentTaskRun
+    from runtime.tasks.run_fsm import TaskRunStateMachine
+    from runtime.tasks.call_scheduler import CallScheduler
+    from runtime.events import publish_model_event
+
+    timeout = timedelta(minutes=15)
+    stale = Query.objects.filter(
+        status=QueryStatus.ACTIVE,
+        updated_at__lt=timezone.now() - timeout,
+    ).select_related("session_version__session")
+
+    for query in stale:
+        try:
+            print(f"[scheduler] recovering stale query {query.pk} (ACTIVE since {query.updated_at})")
+
+            # Fail orphaned Responses
+            Response.objects.filter(query=query, status=ResponseStatus.ACTIVE).update(
+                status=ResponseStatus.FAILURE,
+            )
+
+            # Transition the Query to FAILURE
+            Query.objects.filter(pk=query.pk, status=QueryStatus.ACTIVE).update(
+                status=QueryStatus.FAILURE,
+            )
+            query.refresh_from_db()
+
+            # Publish update so UI shows the failed state
+            publish_model_event(query, "update")
+
+            # Also fail any orphaned ACTIVE AgentTaskRun for call_llm
+            # that references this query's session.
+            orphaned = AgentTaskRun.objects.filter(
+                status=TaskRunStatus.ACTIVE,
+                session_version=query.session_version,
+            ).select_related("agent_task_call")
+            for run in orphaned:
+                if TaskRunStateMachine.fail(run.pk):
+                    CallScheduler.on_taskrun_ended(run.pk, TaskRunStatus.FAILURE)
+                    print(
+                        f"  [scheduler] failed orphaned run {run.pk} for stale query {query.pk}"
+                    )
+
+        except Exception as e:
+            print(f"[scheduler] error recovering stale query {query.pk}: {e}")
+
+
 def _process_cron_jobs() -> None:
     """Dispatch due cron jobs to Celery workers."""
     from runtime.cron.execute import execute_cron_job
@@ -311,7 +376,7 @@ def _dispatch_processor(flow, call, source_item=None):
     from server.models.sessions.session import SessionModel
     from server.models.sessions.session_version import SessionVersionModel
     from runtime.session.session import Session
-
+    print("_dispatch_processor", flow, call, source_item)
     processor = flow.processor
     if not processor or not isinstance(processor, dict):
         return
@@ -367,19 +432,39 @@ def _dispatch_processor(flow, call, source_item=None):
         pinned_session_version=session_version,
     )
 
-    # Create a TaskInstance for the consumer
+    # Determine member BEFORE creating the processor call so we can persist
+    # a CollectionItem (dedup token) immediately — even if the processor
+    # fails or this function throws an exception later.
+    member = _extract_member(flow, None, call)
+    score = _extract_score(flow, None, call)
+
+    # Upsert the dedup token right away so the source call won't be
+    # re-dispatched on the next tick regardless of what happens below.
+    CollectionItem.objects.update_or_create(
+        collection=flow,
+        member=member,
+        defaults={
+            "score": score,
+            "value": call.carguments_json,
+        },
+    )
+
+    # Create a TaskInstance for the consumer.
+    # We intentionally set iarguments_json to {} — copying it from the source
+    # call would double positional args when start_new_taskrun merges
+    # iarguments_json["*"] + carguments_json["*"].
     src_ti = call.task_instance
     task_instance = TaskInstance.objects.create(
         task_definition_version=tdv.latest_task_version,
         session=session_model,
         session_version=session_obj.latest_version if hasattr(session_obj, 'latest_version') else session_version,
-        iarguments_json=call.carguments_json,
+        iarguments_json={},
         requires_approval=src_ti.requires_approval if src_ti else False,
         max_subtask_errors=src_ti.max_subtask_errors if src_ti else 0,
         max_subtask_error_rate=src_ti.max_subtask_error_rate if src_ti else 0,
         limit_subtask_parallel_runs=src_ti.limit_subtask_parallel_runs if src_ti else 0,
         limit_per_instance_parallel_runs=src_ti.limit_per_instance_parallel_runs if src_ti else 1,
-        max_retries=src_ti.max_retries if src_ti else 0,
+        max_retries=0,
         retry_delay=src_ti.retry_delay if src_ti else 10,
         retry_requires_approval=src_ti.retry_requires_approval if src_ti else True,
     )
@@ -407,24 +492,11 @@ def _dispatch_processor(flow, call, source_item=None):
         if completed_run and completed_run.result_json is not None:
             processor_result = completed_run.result_json
 
-    # Processor explicitly returned None → filter this item out
-    if completed_run and processor_result is None:
-        return
-
-    # Determine value / member / score from processor result or raw args
-    if processor_result is not None:
-        value = processor_result
-        member = _extract_member(flow, processor_call, call, processor_result=processor_result)
-        score = _extract_score(flow, processor_call, call, processor_result=processor_result)
-    else:
-        value = call.carguments_json
-        member = _extract_member(flow, processor_call, call)
-        score = _extract_score(flow, processor_call, call)
-
+    # Update the CollectionItem with the actual processor call and result
     defaults: dict = {
         "source_call": processor_call,
         "score": score,
-        "value": value,
+        "value": processor_result if processor_result is not None else call.carguments_json,
     }
     if source_item is not None:
         defaults["source_item"] = source_item
@@ -525,7 +597,7 @@ def _trigger_on_removed(collection, source_calls):
             task_definition_version=tdv.latest_task_version,
             session=session_model,
             session_version=session_version,
-            iarguments_json=call.carguments_json,
+            iarguments_json={},
             requires_approval=src_ti.requires_approval if src_ti else False,
             max_subtask_errors=src_ti.max_subtask_errors if src_ti else 0,
             max_subtask_error_rate=src_ti.max_subtask_error_rate if src_ti else 0,
@@ -549,23 +621,33 @@ def _dispatch_data_flows() -> None:
     ``AgentTaskCall`` records matching the flow's query-type sources,
     then runs the processor task and stores the result as a
     ``CollectionItem``.
+
+    Dedup is handled by checking whether a ``CollectionItem`` with the
+    same ``(collection, member)`` already exists — the member is derived
+    from the source call's PK and timestamp, so each source call produces
+    exactly one downstream item.
     """
-    from server.models.collections import DataCollection
+    from server.models.collections import DataCollection, CollectionItem
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.enums.task_enums import TaskCallStatusDetail
 
-    # Find recently completed calls
-    recent_calls = list(
+    # Fetch the most recent completed calls and process them
+    # from oldest to newest so data-flow items are created
+    # in chronological order.
+    calls = list(
         AgentTaskCall.objects.filter(
             status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
         ).select_related(
             "session",
             "task_instance__task_definition_version__task_definition__parent_agent",
             "session_version__agent__parent_project",
-        ).order_by("-pk")[:200]
+        ).order_by("-pk")[:500]
     )
-    if not recent_calls:
+    if not calls:
         return
+
+    # Oldest of this batch first
+    calls.reverse()
 
     for flow in DataCollection.objects.filter(is_active=True):
         flow_sources = flow.sources
@@ -580,10 +662,12 @@ def _dispatch_data_flows() -> None:
         if not has_query_source:
             continue
 
-        for call in recent_calls:
+        for call in calls:
             if any(_matches_data_flow_source(call, s) for s in flow_sources):
+                member = _extract_member(flow, None, call)
+                if CollectionItem.objects.filter(collection=flow, member=member).exists():
+                    continue  # Already dispatched
                 _dispatch_processor(flow, call)
-                break  # One item per tick per flow is enough
 
 
 def _propagate_from_collections() -> None:
@@ -608,6 +692,9 @@ def _propagate_from_collections() -> None:
     if not recent_items:
         return
 
+    # Process oldest items first so downstream items are created in order.
+    recent_items.reverse()
+
     # Fetch all active flows that source from a stream or set
     # (we do this in Python to work around MySQL JSON query limits)
     all_flows = list(DataCollection.objects.filter(is_active=True))
@@ -621,10 +708,14 @@ def _propagate_from_collections() -> None:
                 src_type = source_def.get("type", "query")
                 if src_type == "stream" and source_def.get("stream") == source_collection_name:
                     if item.source_call:
+                        if CollectionItem.objects.filter(collection=flow, source_item=item).exists():
+                            break
                         _dispatch_processor(flow, item.source_call, source_item=item)
                     break
                 if src_type == "set" and source_def.get("set") == source_collection_name:
                     if item.source_call:
+                        if CollectionItem.objects.filter(collection=flow, source_item=item).exists():
+                            break
                         _dispatch_processor(flow, item.source_call, source_item=item)
                     break
 

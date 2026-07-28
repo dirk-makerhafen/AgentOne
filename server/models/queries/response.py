@@ -43,9 +43,7 @@ class Response(BaseModel):
     content = models.TextField(default="", null=True, blank=True, max_length=500000)
     reasoning = models.TextField(default="", null=True, blank=True, max_length=500000)
 
-    finish_reason = models.CharField(
-        default="", null=True, blank=True, max_length=5000
-    )
+    finish_reason = models.CharField( default="", null=True, blank=True, max_length=5000)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Save the response and optionally recalibrate query token estimates.

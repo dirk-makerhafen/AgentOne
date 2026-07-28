@@ -17,16 +17,16 @@ def _session_name(folder: str) -> str:
     return f"wiki:{folder}:Main"
 
 
-def _resolve_folder(session: Session, folder: str | None = None) -> str | None:
+def _resolve_folder(_session: Session, folder: str | None = None) -> str | None:
     if folder is not None:
         p = Path(folder)
         if not p.is_absolute():
-            folder = (Path(session.workspace.path) / p).resolve().as_posix()
+            folder = (Path(_session.workspace.path) / p).resolve().as_posix()
         return folder
 
     wiki_paths = list(
         SessionVersionModel.objects.filter(
-            parent_session_version=session.get_version_model(),
+            parent_session_version=_session.get_version_model(),
             agent__name="wiki",
             workspace__isnull=False,
         ).values_list("workspace__path", flat=True).distinct()
@@ -36,7 +36,7 @@ def _resolve_folder(session: Session, folder: str | None = None) -> str | None:
     return None
 
 
-def wiki_lint(session: Session, message: str | None = None, folder: str | None = None, blocking: bool = False) -> dict[str, Any]:
+def wiki_lint(_session: Session, message: str | None = None, folder: str | None = None, blocking: bool = False) -> dict[str, Any]:
     """Send a ``lint`` command to a wiki subagent.
 
     When *blocking* is ``True`` the lint result is returned directly.
@@ -44,7 +44,7 @@ def wiki_lint(session: Session, message: str | None = None, folder: str | None =
     asynchronously and the result is delivered back later.
 
     Args:
-        session: The calling agent's session (bound automatically).
+        _session: The calling agent's session (bound automatically).
         message: Optional focus instruction — narrows the lint to a
             specific concern.
         folder: Optional wiki root path. When omitted and there is exactly
@@ -55,11 +55,11 @@ def wiki_lint(session: Session, message: str | None = None, folder: str | None =
     Returns:
         A dict indicating the command was sent.
     """
-    resolved = _resolve_folder(session, folder)
+    resolved = _resolve_folder(_session, folder)
     if resolved is None:
         wiki_paths = list(
             SessionVersionModel.objects.filter(
-                parent_session_version=session.get_version_model(),
+                parent_session_version=_session.get_version_model(),
                 agent__name="wiki",
                 workspace__isnull=False,
             ).values_list("workspace__path", flat=True).distinct()
@@ -72,5 +72,5 @@ def wiki_lint(session: Session, message: str | None = None, folder: str | None =
     session_name = _session_name(resolved)
     prompt = f"lint {message}" if message else "lint"
 
-    message_subsession = session.get_tool("message_subsession")
+    message_subsession = _session.get_tool("message_subsession")
     return message_subsession.delay(sessionname=session_name, prompt=prompt, blocking=blocking)

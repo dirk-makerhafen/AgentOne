@@ -6,7 +6,7 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def start_subsession(session: Session, agentname: str, sessionname: str, prompt: str) -> dict[str, Any]:
+def start_subsession(_session: Session, agentname: str, sessionname: str, prompt: str) -> dict[str, Any]:
     """Create a long-running background subsession of another agent.
 
     The subsession persists across turns — you can send follow-up messages
@@ -30,15 +30,15 @@ def start_subsession(session: Session, agentname: str, sessionname: str, prompt:
         On success: ``{"session_pk": int, "session_name": str}``.
         On error: ``{"error": "Agent '<name>' not found"}``.
     """
-    subagent_version = session.get_subagent(agentname)
+    subagent_version = _session.get_subagent(agentname)
     if not subagent_version:
         return {"error": f"Agent '{agentname}' not found"}
 
     child_sv = subagent_version.get_or_create_session(
         name=sessionname,
         description=prompt,
-        workspace=session.workspace,
-        parent_session_version=session.get_version_model(),
+        workspace=_session.workspace,
+        parent_session_version=_session.get_version_model(),
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 

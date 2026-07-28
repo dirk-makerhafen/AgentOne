@@ -7,7 +7,7 @@ from runtime.session.session import Session
 from server.models.sessions.session import SessionModel
 
 
-def stop_subsession(session: Session, sessionname: str) -> dict[str, Any]:
+def stop_subsession(_session: Session, sessionname: str) -> dict[str, Any]:
     """Stop a running subsession by name.
 
     The subsession is marked inactive — it will no longer process messages.
@@ -21,7 +21,7 @@ def stop_subsession(session: Session, sessionname: str) -> dict[str, Any]:
         On error: ``{"error": "No active subsession '<name>' found"}``.
     """
     updated = SessionModel.objects.filter(
-        parent_session=session.model,
+        parent_session=_session.model,
         name=sessionname,
         is_active=True,
     ).update(is_active=False)

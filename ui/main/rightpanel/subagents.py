@@ -26,26 +26,52 @@ class ChildSessionItem(ModelView):
     DOM_ELEMENT = "div"
     DOM_ELEMENT_CLASS = "subagent-session-item"
     TEMPLATE_STR = """
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--success)" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pyview.subject.latest_session_version.agent.name }}</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:1px">from {{ pyview.parent_name }} · {{ pyview.subject.turn_count }}t · {{ pyview.created_label }}</div>
+        <div class="subagent-session-body" onclick="pyview.open_chat()" title="Open conversation">
+            {% if pyview.mark_active %}<span class="session-state-indicator is-streaming" style="visibility:visible;flex-shrink:0;width:8px;height:8px"></span>{% endif %}
+            {% if pyview.mark_needs_approval %}<span class="session-state-indicator needs-approval" style="visibility:visible;flex-shrink:0;width:8px;height:8px"></span>{% endif %}
+            {% if not pyview.mark_active and not pyview.mark_needs_approval %}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--success)" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            {% endif %}
+            <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pyview.subject.name }}</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:1px">{{ pyview.subject.messages.count() }} msgs{% if pyview.model_name %} · {{ pyview.model_name }}{% endif %}</div>
+            </div>
         </div>
-        <button class="btn btn-sm btn-outline" onclick="pyview.close()" style="flex-shrink:0;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;background:none;border:1px solid var(--border2);color:var(--text)">Close</button>
+        <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); pyview.close()" style="flex-shrink:0;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;background:none;border:1px solid var(--border2);color:var(--text)">Close</button>
     """
 
     @property
-    def parent_name(self) -> str:
-        p = self.subject.parent_session
-        if p and p.latest_session_version:
-            return p.latest_session_version.agent.name
-        return "?"
+    def model_name(self) -> str:
+        try:
+            sv = self.subject.latest_session_version
+            if sv and sv.session_settings and sv.session_settings.aimodel:
+                return sv.session_settings.aimodel.name
+        except Exception:
+            pass
+        return ""
 
     @property
-    def created_label(self) -> str:
-        if self.subject.created_at:
-            return self.subject.created_at.strftime("%b %d %H:%M")
-        return ""
+    def mark_active(self) -> bool:
+        from server.models.queries.query import Query, QueryStatus
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatus
+        return (
+            Query.objects.filter(session_version__session=self.subject, status=QueryStatus.ACTIVE).exists()
+            or AgentTaskCall.objects.filter(session=self.subject).exclude(status=TaskCallStatus.ENDED).exists()
+        )
+
+    @property
+    def mark_needs_approval(self) -> bool:
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatusDetail
+        return AgentTaskCall.objects.filter(
+            session=self.subject,
+            requires_approval=True,
+            status_detail=TaskCallStatusDetail.HALTED_APPROVAL,
+        ).exists()
+
+    def open_chat(self):
+        self.parent.parent.main_panel.create_and_open_tab(Chat, self.subject)
 
     def close(self):
         SessionModel.objects.filter(pk=self.subject.pk).update(is_active=False)
@@ -142,6 +168,7 @@ class RightPanelSubagents(ModelView):
                 is_active=True,
             ).order_by("-created_at").select_related(
                 "latest_session_version__agent",
+                "latest_session_version__session_settings__aimodel",
                 "parent_session__latest_session_version__agent",
             )
         else:

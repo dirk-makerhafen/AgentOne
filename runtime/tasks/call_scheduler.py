@@ -215,9 +215,16 @@ class CallScheduler:
             return
 
         taskcall = AgentTaskCall.objects.get(pk=task_call_id)
-        args: list = []
-        args.extend(taskcall.task_instance.iarguments_json.get("*", []))
-        args.extend(taskcall.carguments_json.get("*", []))
+
+        # Merge positional args, guarding against duplicates when both
+        # iarguments_json and carguments_json carry the same "*" list.
+        iargs = taskcall.task_instance.iarguments_json.get("*", [])
+        cargs = taskcall.carguments_json.get("*", [])
+        if iargs and iargs == cargs:
+            args = list(iargs)
+        else:
+            args = list(iargs) + list(cargs)
+
         kwargs: dict = {}
         kwargs.update(taskcall.task_instance.iarguments_json)
         kwargs.update(taskcall.carguments_json)

@@ -8,7 +8,7 @@ from server.models.sessions.session import SessionModel
 
 
 def message_subsession(
-    session: Session, sessionname: str, prompt: str, blocking: bool = False
+    _session: Session, sessionname: str, prompt: str, blocking: bool = False
 ) -> dict[str, Any]:
     """Send a message to a running subsession.
 
@@ -43,7 +43,7 @@ def message_subsession(
             ``{"error": "Subsession '<name>' not found"}``
     """
     try:
-        child_model = SessionModel.objects.get(parent_session=session.model, name=sessionname)
+        child_model = SessionModel.objects.get(parent_session=_session.model, name=sessionname)
     except SessionModel.DoesNotExist:
         return {"error": f"Subsession '{sessionname}' not found"}
 
@@ -55,7 +55,7 @@ def message_subsession(
     if blocking:
         return {"result": taskcall, "session_name": sessionname}
 
-    session.get_task("ingest_subagent_result").delay(
+    _session.get_task("ingest_subagent_result").delay(
         child_session_pk=child_session.model.pk,
         summary=prompt,
         result=taskcall,

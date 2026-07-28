@@ -62,7 +62,7 @@ class AgentTaskCall(BaseModel):
     ended_at = models.DateTimeField(editable=False, null=True, default=None)
 
     cronjob = models.ForeignKey("server.Cronjob", blank=True, on_delete=models.SET_NULL, related_name="related_task_calls", default=None, null=True)
-    parent_taskrun = models.ForeignKey( "server.AgentTaskRun", blank=True, on_delete=models.CASCADE, related_name="child_taskcalls", default=None, null=True)
+    parent_taskrun = models.ForeignKey( "server.AgentTaskRun", blank=True, on_delete=models.SET_NULL, related_name="child_taskcalls", default=None, null=True)
 
     taskcall_arg_references = models.ManyToManyField( "self", help_text="AgentTaskCalls used in call args/kwargs", symmetrical=False, blank=True, related_name="rev_taskcall_arg_references")
 

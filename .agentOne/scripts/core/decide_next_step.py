@@ -17,7 +17,7 @@ from server.models.queries.response import Response
 
 
 def decide_next_step(
-    session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any,
+    _session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any,
 ) -> Message:
     """
     Persist the assistant message and determine if the loop should continue.
@@ -29,7 +29,7 @@ def decide_next_step(
         - Otherwise -> continue: chain back to process_turn.delay()
 
     Args:
-        session:  The active agent session.
+        _session:  The active agent session.
         response: The Response from call_llm.
         parts:    List from parse_llm_response of Parts.
                   Each Part is a dict with minimal keys:
@@ -44,19 +44,19 @@ def decide_next_step(
         reference recursively via WAITING_RESULTTASKS.
     """
 
-    session.count_turn()
-    session.count_unattended_turn()
+    _session.count_turn()
+    _session.count_unattended_turn()
 
-    if session.max_turns and session.current_turn_count >= session.max_turns:
+    if _session.max_turns and _session.current_turn_count >= _session.max_turns:
         return message
 
     if (
-        session.max_unattended_turns
-        and session.current_unattended_turn_count >= session.max_unattended_turns
+        _session.max_unattended_turns
+        and _session.current_unattended_turn_count >= _session.max_unattended_turns
     ):
         return message
 
     if not any(True for part in parts if "tool_call" in part):
         return message
 
-    return session.get_task("process_turn").delay(message=message)
+    return _session.get_task("process_turn").delay(message=message)

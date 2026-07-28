@@ -7,7 +7,7 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def delegate_task(session: Session, agentname: str|None=None, prompt: str = "", blocking: bool = False) -> dict[str, Any]:
+def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "", blocking: bool = True) -> dict[str, Any]:
     """Send a one-off task to another agent.
 
     Creates a fresh session for the target agent, sends *prompt* as its
@@ -30,7 +30,7 @@ def delegate_task(session: Session, agentname: str|None=None, prompt: str = "", 
         agentname: Optional name of the agent to perform the task. Run
             ``get_available_agents`` to see valid names. Defaults to the same agent as you.
         blocking: ``True`` to wait for the result, ``False`` to submit and
-            receive the result later asynchronously. Defaults to ``False``.
+            receive the result later asynchronously. Defaults to ``True``.
 
     Returns:
         Blocking mode (blocking=True):
@@ -44,18 +44,18 @@ def delegate_task(session: Session, agentname: str|None=None, prompt: str = "", 
     if not prompt:
         return {"error": f"You must provide a prompt to delegate a task"}
     if not agentname:
-        agentname = session.agent.name
+        agentname = _session.agent.name
         
-    subagent_version = session.get_subagent(agentname)
+    subagent_version = _session.get_subagent(agentname)
     if not subagent_version:
         return {"error": f"Agent '{agentname}' not found"}
 
-    session_name = f"p{session.model.pk}:{agentname}:{int(time())}"
+    session_name = f"p{_session.model.pk}:{agentname}:{int(time())}"
     child_sv = subagent_version.get_or_create_session(
         name=session_name,
         description=prompt,
-        workspace=session.workspace,
-        parent_session_version=session.get_version_model(),
+        workspace=_session.workspace,
+        parent_session_version=_session.get_version_model(),
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
@@ -65,7 +65,7 @@ def delegate_task(session: Session, agentname: str|None=None, prompt: str = "", 
     if blocking:
         return {"result": taskcall, "session_pk": child_session.model.pk}
 
-    session.get_task("ingest_subagent_result").delay(
+    _session.get_task("ingest_subagent_result").delay(
         child_session_pk=child_session.model.pk,
         summary=prompt,
         result=taskcall,

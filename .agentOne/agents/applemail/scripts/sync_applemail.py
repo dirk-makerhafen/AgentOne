@@ -15,7 +15,7 @@ import html2text
 import yaml
 from bs4 import BeautifulSoup  # pip install beautifulsoup4
 
-def sync(account: str, target_folder) -> list[str]|str:
+def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
     '''
     sync specific mailbox by email adress, returns a list of eml files
     '''
@@ -104,8 +104,8 @@ def sync(account: str, target_folder) -> list[str]|str:
             repeat with mbx in allMailboxes
                 set mailboxName to name of mbx
                 try
-                    -- Filter messages after last run date
-                    set newMessages to (messages of mbx whose date received comes after lastRunDate and date received comes before endDate)
+                    -- Filter messages after last run date (date sent covers sent mailboxes)
+                    set newMessages to (messages of mbx whose (date received comes after lastRunDate or date sent comes after lastRunDate) and (date received comes before endDate or date sent comes before endDate))
                     
                     repeat with m in newMessages
                         try
@@ -142,17 +142,19 @@ def sync(account: str, target_folder) -> list[str]|str:
 
         p = Popen(['osascript', '-'], stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         stdout, stderr = p.communicate(textwrap.dedent(script))
-
+        print("APPLESCRIPT RESULTS")
+        print(stdout, stderr)
         eml_files = WORKING_PATH.rglob('*.eml')
         if not eml_files and stderr.strip() != "":
             return f"{account}: ERROR running applescript\n{stderr.strip()}"
         
-        result_files = []
+        result_files: list[tuple[datetime.datetime, Path]] = []
         timestamps = []
         for eml_file in eml_files:
             bads = ["__info@twitter.com__", "no-reply@mail.instagram.com__"]
             if True in [ bad in eml_file.as_posix() for bad in bads]:
                 os.remove(eml_file)
+                os.rmdir(eml_file.parent)
                 continue
 
                 
@@ -353,7 +355,7 @@ def sync(account: str, target_folder) -> list[str]|str:
                 yaml_string = yaml.dump(metadata, default_flow_style=False, allow_unicode=True)
                 markdown_file_content = f"---\n{yaml_string}---\n\n{message_text}"
                 target_file_md.write_text(markdown_file_content)
-                result_files.append(target_file_md)    
+                result_files.append((email_date or datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc), target_file_md))
 
             if not any(eml_file.parent.glob("*")): # eml folder
                 eml_file.parent.rmdir()
@@ -378,7 +380,16 @@ def sync(account: str, target_folder) -> list[str]|str:
         if _break:
             break
 
-    return [f.as_posix() for f in result_files]
+    if git_autocommit and result_files:
+        paths = [p.as_posix() for _, p in result_files]
+        for i in range(0, len(paths), 10):
+            batch = paths[i:i + 10]
+            p = Popen(['git', 'add'] + batch, universal_newlines=True, cwd=OUTPUT_PATH)
+            p.communicate()
+        p = Popen(['git', 'commit', '-m', f"{len(result_files)} new raw files added"], universal_newlines=True, cwd=OUTPUT_PATH)
+        p.communicate()
+          
+    return [p.as_posix() for _, p in sorted(result_files, key=lambda x: x[0])]
 
 
 def clean_html_email_to_markdown(html_content):

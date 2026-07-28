@@ -8,7 +8,7 @@ from server.models.queries.response import Response
 
 
 def ingest_compaction(
-    session: Session, response: Response, parts: list[dict[str, Any]]
+    _session: Session, response: Response, parts: list[dict[str, Any]]
 ) -> dict[str, Any]:
     summary_text = ""
     for part in parts:
@@ -24,7 +24,7 @@ def ingest_compaction(
     if not conv:
         # Nothing to compact — create a trivial summary.
         compaction_message = Message.objects.create(
-            session_version=session.get_version_model(),
+            session_version=_session.get_version_model(),
             response=response,
             role="user",
         )
@@ -50,7 +50,7 @@ def ingest_compaction(
     ).order_by("pk").first()
 
     compaction_message = Message.objects.create(
-        session_version=session.get_version_model(),
+        session_version=_session.get_version_model(),
         response=response,
         role="user",
         prev_message=prev_for_compaction,

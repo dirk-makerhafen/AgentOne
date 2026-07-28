@@ -11,15 +11,15 @@ from runtime.session.session import Session
 from server.models.message import Message
 
 
-def ingest_user_message(session: Session, parts: list[dict[str, Any]]) -> Message:
+def ingest_user_message(_session: Session, parts: list[dict[str, Any]]) -> Message:
     """
     Normalize user input, persist as a Message, and start the agent loop.
 
-    Called via session.ingest_user_message.delay(message=..., parts=...)
+    Called via _session.ingest_user_message.delay(message=..., parts=...)
     from the framework when the user sends a chat message.
 
     Args:
-        session: The active agent session.
+        _session: The active agent session.
         parts:  List of dicts with 
                 type:
                     Part type key (``"message"``, ``"reasoning"``, ``"toolcall"``).
@@ -36,10 +36,10 @@ def ingest_user_message(session: Session, parts: list[dict[str, Any]]) -> Messag
         through the chain until decide_next_step returns the final Message.
     """
 
-    session.reset_unattended_turn_count()
-    session.reset_turn_count()
-    session_version = session.get_version_model()
-    prev_message = session.get_messages().filter(next_messages=None).last()
+    _session.reset_unattended_turn_count()
+    _session.reset_turn_count()
+    session_version = _session.get_version_model()
+    prev_message = _session.get_messages().filter(next_messages=None).last()
 
     message = Message.objects.create(
         role="user",
@@ -59,4 +59,4 @@ def ingest_user_message(session: Session, parts: list[dict[str, Any]]) -> Messag
     from runtime.events import publish_model_event
     publish_model_event(message, "create")
 
-    return session.get_task("process_turn").delay(message=message)
+    return _session.get_task("process_turn").delay(message=message)

@@ -15,7 +15,7 @@ from runtime.session.session import Session
 
 
 def ingest_assistant_message(
-    session: Session, response: Response, parts: list[dict[str, Any]]
+    _session: Session, response: Response, parts: list[dict[str, Any]]
 ) -> dict[str, Any]:
     """
     For each normalized tool call, create a BoundTask and dispatch it.
@@ -24,7 +24,7 @@ def ingest_assistant_message(
     call is appended to parsed["task_calls"] as an AgentTaskCall.
 
     Args:
-        session:  The active agent session.
+        _session:  The active agent session.
         response: The Response model returned by call_llm.
         parts:    List from parse_llm_response of Parts.
                   Each Part is a dict with minimal keys:
@@ -36,10 +36,10 @@ def ingest_assistant_message(
         AgentTaskCall objects that the framework will execute and resolve.
     """
 
-    prev_message = session.get_messages().filter(next_messages=None).last()
+    prev_message = _session.get_messages().filter(next_messages=None).last()
 
     message = Message.objects.create(
-        session_version=session.get_version_model(),
+        session_version=_session.get_version_model(),
         response=response,
         role="assistant",
         prev_message=prev_message,
@@ -47,7 +47,7 @@ def ingest_assistant_message(
 
     for part in parts:
         if part["type"] == "toolcall":
-            bound_task = session.get_tool(part["content"]["name"])
+            bound_task = _session.get_tool(part["content"]["name"])
             if bound_task:
                 part["tool_call"] = bound_task.delay(**part["content"]["arguments"])
 
