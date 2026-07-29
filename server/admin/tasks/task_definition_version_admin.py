@@ -14,3 +14,4 @@ class TaskDefinitionVersionAdmin(admin.ModelAdmin):
         "retry_delay", "path", "commit",
     )
     list_display_links: tuple[str, ...] = ("id",)
+    search_fields: tuple[str, ...] = ("task_definition__name", "commit")

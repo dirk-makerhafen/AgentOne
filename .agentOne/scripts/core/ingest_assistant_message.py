@@ -45,11 +45,19 @@ def ingest_assistant_message(
         prev_message=prev_message,
     )
 
+    has_final_result = False
+
     for part in parts:
         if part["type"] == "toolcall":
-            bound_task = _session.get_tool(part["content"]["name"])
-            if bound_task:
-                part["tool_call"] = bound_task.delay(**part["content"]["arguments"])
+            if part["content"]["name"] == "final_result":
+                has_final_result = True
+                part["type"] = "message"
+                part["content_type"] = "text"
+                part["content"] = part["content"]["arguments"].get("content", "")
+            else:
+                bound_task = _session.get_tool(part["content"]["name"])
+                if bound_task:
+                    part["tool_call"] = bound_task.delay(**part["content"]["arguments"])
 
         message.add_part(
             type=part["type"],
@@ -62,8 +70,11 @@ def ingest_assistant_message(
     from runtime.events import publish_model_event
     publish_model_event(message, "create")
 
-    return dict(
+    result = dict(
         response=response,
         parts=parts,
         message=message,
     )
+    if has_final_result:
+        result["has_final_result"] = True
+    return result

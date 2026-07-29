@@ -12,6 +12,7 @@ from server.models.skills.skill import SkillModel
 from ui.lib.model_view import ModelView
 from ui.main.rightpanel.session import RightPanelSession
 from ui.main.rightpanel.tasks import RightPanelTasks
+from ui.main.rightpanel.calls import RightPanelCalls
 from ui.main.rightpanel.workspace import RightPanelWorkspace
 from ui.main.rightpanel.subagents import RightPanelSubagents
 from ui.main.rightpanel.cron import RightPanelCronSchedule, RightPanelCronHistory, CRON_ICONS
@@ -54,6 +55,7 @@ ICON_MAP = {
     "session": '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
     "tasks": '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
     "subagents": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',
+    "calls": '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
 }
 
 
@@ -84,7 +86,8 @@ class RightPanel(ModelView):
     SESSION_TABS = [
         ("workspace", "Workspace", "workspace"),
         ("session", "Session", "session"),
-        ("tasks", "Tasks", "tasks"),
+        ("tasks", "Capabilities", "tasks"),
+        ("calls", "Calls", "calls"),
         ("subagents", "Sub-agents", "subagents"),
     ]
 
@@ -95,6 +98,7 @@ class RightPanel(ModelView):
         self.session_view = RightPanelSession(subject, self)
         self.subagents_view = RightPanelSubagents(subject, self)
         self.tasks_view = RightPanelTasks(subject, self)
+        self.calls_view = RightPanelCalls(subject, self)
 
         # Non-session tab views (lazy-created by context handlers)
         self._cron_schedule: RightPanelCronSchedule | None = None
@@ -206,6 +210,7 @@ class RightPanel(ModelView):
             ("workspace", "", self.workspace_view),
             ("session", "", self.session_view),
             ("tasks", "", self.tasks_view),
+            ("calls", "", self.calls_view),
             ("subagents", "", self.subagents_view),
         ]}
         if self._current_tab_name not in self._tab_map:
@@ -306,6 +311,8 @@ class RightPanel(ModelView):
                 self.subagents_view.refresh()
             if name == "tasks":
                 self.tasks_view.refresh()
+            if name == "calls":
+                self.calls_view.refresh()
             self.update()
 
     def update(self, *args, **kwargs) -> None:

@@ -9,10 +9,14 @@ tasks:
     file: build_llm_context.py
     function: build_llm_context
     bound: True
+    max_retries: 3    
+    retry_delay: 60
   - name: call_llm
     file: call_llm.py
     function: call_llm
     bound: True
+    max_retries: 3    
+    retry_delay: 60
   - name: parse_llm_response
     file: parse_llm_response.py
     function: parse_llm_response
@@ -21,6 +25,8 @@ tasks:
     file: ingest_assistant_message.py
     function: ingest_assistant_message
     bound: True
+    max_retries: 3    
+    retry_delay: 60
   - name: decide_next_step  
     file: decide_next_step.py
     function: decide_next_step

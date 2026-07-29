@@ -83,7 +83,7 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  ├── Providers: ApiProvider → AiModel → ApiKey                  │
 │  ├── SettingsModel, Project, WorkspaceModel, Cronjob            │
 │  └── BaseModel (abstract: created_at, updated_at, raw_data,    │
-│                  fork_of, dirty-tracking, immutable save)       │
+│                  dirty-tracking, immutable save)       │
 │                                                                 │
 │  Admin: all models registered with django admin                 │
 │  Prompts: system prompt template for agents                     │
@@ -138,7 +138,7 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 ┌───────────────────────────▼───────────────────────────────────┐
 │  CELERY TASKS (server/tasks/)                 Celery workers   │
 │                                                                 │
-│  tick_scheduler: runs every 5s via celery beat                  │
+│  tick_scheduler: runs every 10s via celery beat                  │
 │    ├── AdvanceTaskCalls → process WAITING→QUEUED transitions    │
 │    ├── AdvanceTaskRuns → process QUEUED→ACTIVE transitions      │
 │    ├── _dispatch_data_flows → match completed calls to          │
@@ -213,8 +213,7 @@ Most models follow a **definition/version split**:
 - Definition records can be updated (name, parent pointers)
 - Version records override `save()` to raise `ValidationError` on update
 - Creating a new version increments `version_number` and updates the definition's `latest_*` pointer
-- `fork_of` on `BaseModel` enables deduplication
-- `raw_data` + `raw_data_reference` enable content-addressed JSON storage
+- `raw_data` enable content-addressed JSON storage
 
 ## pyHtmlGui render pipeline
 

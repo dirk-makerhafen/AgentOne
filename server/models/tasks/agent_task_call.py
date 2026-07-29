@@ -41,12 +41,12 @@ class AgentTaskCall(BaseModel):
 
     carguments_json = models.JSONField(default=dict, null=False)
 
-    dont_start_before = models.DateTimeField(default=None, null=True)
-    dont_start_after = models.DateTimeField(default=None, null=True)
+    dont_start_before = models.DateTimeField(default=None, null=True, blank=True)
+    dont_start_after = models.DateTimeField(default=None, null=True, blank=True)
     requires_approval = models.BooleanField(default=None, null=False)
     guardrail_reason = models.TextField(default=None, blank=True, null= True)
 
-    time_limit = models.IntegerField(default=None, null=True)
+    time_limit = models.IntegerField(default=None, null=True, blank=True)
     max_subtask_errors = models.IntegerField(default=None, null=False)
     max_subtask_error_rate = models.IntegerField(default=None, null=False)
     limit_subtask_parallel_runs = models.IntegerField(default=None, null=False)
@@ -75,6 +75,12 @@ class AgentTaskCall(BaseModel):
     status_detail = models.CharField( choices=TaskCallStatusDetail.choices, default=TaskCallStatusDetail.NEW, max_length=61)
 
     taskcall_result_run = models.ForeignKey( "server.AgentTaskRun", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT, related_name="rev_taskcall_result_run")
+
+    session_root_task = models.ForeignKey(
+        "self", on_delete=models.CASCADE,
+        related_name="session_child_task_calls",
+        default=None, null=True, blank=True
+    )
 
     @classmethod
     def create(
@@ -128,6 +134,11 @@ class AgentTaskCall(BaseModel):
             arguments=next_input
         )
 
+        # Determine session_root_task
+        root = None
+        if parent_run and parent_run.session_version.session_id == task_instance.session_id and parent_run.agent_task_call:
+            root = parent_run.agent_task_call.session_root_task or parent_run.agent_task_call
+
         taskcall = AgentTaskCall.objects.create(
             task_instance=task_instance,
             task_definition=task_instance.task_definition_version.task_definition,
@@ -150,8 +161,13 @@ class AgentTaskCall(BaseModel):
             is_approved=None,
             parent_taskrun=parent_run,
             cronjob=cronjob,
+            session_root_task=root,
         )
         taskcall.taskcall_before_run_hooks.set(before_hook_calls)
+
+        if not root:
+            AgentTaskCall.objects.filter(pk=taskcall.pk).update(session_root_task=taskcall)
+            taskcall.session_root_task = taskcall
 
         if ref_pks:
             taskcall.taskcall_arg_references.set(ref_pks)
@@ -159,14 +175,14 @@ class AgentTaskCall(BaseModel):
         return taskcall
 
     def apply_async(self) -> AgentTaskCall:
-        """Dispatch this call to the Celery-backed scheduler for execution."""
+        """Dispatch this call to the scheduler for execution."""
         if not self.pk:
             raise Exception("Must save first")
         for before_hook_call in self.taskcall_before_run_hooks.all():
             before_hook_call.apply_async()
         from runtime.tasks.call_scheduler import CallScheduler
 
-        celery_delay(CallScheduler._apply_async, self.pk)
+        CallScheduler._apply_async(self.pk)
         return self
 
     @staticmethod

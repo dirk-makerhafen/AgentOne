@@ -3,6 +3,8 @@ import ast
 import json
 from typing import TYPE_CHECKING, Any, Dict, List
 
+from django.db import transaction
+
 from runtime.agents.agent import Agent, is_name_disallowed
 from runtime.tasks.bound_task import BoundTask
 from server.models.content import GenericContent
@@ -568,29 +570,38 @@ class Session:
 
         if not force:
             strategy = self.scheduler_strategy
-            if strategy == "queue" and self._has_active_call():
-                ti = bound_task.instance(kwargs=call_kwargs)
-                taskcall = ti.create_call(kwargs=call_kwargs)
-                from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-                from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
-                _ATC.objects.filter(pk=taskcall.pk).update(
-                    status=TaskCallStatus.WAITING,
-                    status_detail=TaskCallStatusDetail.WAITING_QUEUE,
-                )
-                return taskcall
+            if strategy == "queue":
+                with transaction.atomic():
+                    SessionModel.objects.select_for_update().get(pk=self.model.pk)
+                    if self._has_active_call():
+                        ti = bound_task.instance(kwargs=call_kwargs)
+                        taskcall = ti.create_call(kwargs=call_kwargs)
+                        from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+                        from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+                        _ATC.objects.filter(pk=taskcall.pk).update(
+                            status=TaskCallStatus.WAITING,
+                            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+                        )
+                        return taskcall
+                    return bound_task.delay(**call_kwargs)
             if strategy == "interrupt":
                 self._stop_active_ingest_calls()
 
         return bound_task.delay(**call_kwargs)
 
     def _has_active_call(self) -> bool:
-        """Return True if there is a non-ended ingest_user_message or
-        ingest_slash_command call for this session."""
+        """Return True if there is a non-ended ingest or process_turn call
+        for this session — covers both user-initiated and agent-continuation flows."""
         from server.models.tasks.agent_task_call import AgentTaskCall
         from server.models.enums.task_enums import TaskCallStatus
         return AgentTaskCall.objects.filter(
             session=self.model,
-            task_definition__name__in=["ingest_user_message", "ingest_slash_command"],
+            task_definition__name__in=[
+                "ingest_user_message",
+                "ingest_slash_command",
+                "process_turn",
+                "compact_turn",
+            ],
         ).exclude(status=TaskCallStatus.ENDED).exists()
 
     def _stop_active_ingest_calls(self) -> None:

@@ -20,24 +20,6 @@ class BaseModel(DirtyFieldsMixin, models.Model):
     updated_at: datetime = models.DateTimeField(editable=False, auto_now=True)
     raw_data: str = models.TextField(max_length=100 * 1024 * 1024, default="", blank=True)
 
-    # Forking and data deduplication fields
-    fork_of: models.ForeignKey | None = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        default=None,
-        related_name="forks",
-    )
-    raw_data_reference: models.ForeignKey | None = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        default=None,
-        related_name="data_references",
-    )
-
     class Meta:
         abstract = True
 
@@ -50,8 +32,6 @@ class BaseModel(DirtyFieldsMixin, models.Model):
         """
         if not hasattr(self, "_data") or self._data is None:
             source_raw_data = self.raw_data
-            if self.raw_data_reference:
-                source_raw_data = self.raw_data_reference.raw_data
             try:
                 self._data = json.loads(source_raw_data) if source_raw_data else {}
             except Exception as e:
@@ -65,12 +45,7 @@ class BaseModel(DirtyFieldsMixin, models.Model):
     @data.setter
     def data(self, new_data: dict[str, Any]) -> None:
         """Set new data (copy-on-write — breaks the fork reference).
-
-        When assigning data, any existing ``raw_data_reference`` is cleared so the
-        new data is stored directly on this instance.
         """
-        if self.raw_data_reference is not None:
-            self.raw_data_reference = None
         self._data = new_data
 
     def save(self, *args: Any, **kwargs: Any) -> Any:

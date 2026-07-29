@@ -59,7 +59,11 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
-    parts = [{"type": "message", "content_type": "text", "content": prompt}]
+    parts = [
+        {"type": "message", "content_type": "text", "content": prompt},
+        {"type": "message", "content_type": "text", "content": "\n\nYou are a doing a subtask for another agent. Remember to finalize your work by calling final_result(message='..your final result message..')"},
+
+    ]
     taskcall = child_session.add_user_message(parts=parts)
 
     if blocking:

@@ -69,7 +69,7 @@ def handle_slashcommand_response(
     Returns:
         The raw tool response value.
     """
-    conv_msg = Message.objects.create(role="assistant", session_version=_session.get_version_model(), prev_message=message)
+    conv_msg = Message.objects.create(role="tool", session_version=_session.get_version_model(), prev_message=message)
 
     def _serialize_result(obj: Any) -> Any:
         """JSON-serialise a tool result, handling Message / Path model references."""

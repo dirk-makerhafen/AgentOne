@@ -15,4 +15,4 @@ class SessionVersionModelAdmin(admin.ModelAdmin):
     list_filter: tuple[str, ...] = ("session", "created_at")
     list_per_page: int = 25
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
-    filter_horizontal: tuple[str, ...] = ("child_session_versions",)
+    raw_id_fields: tuple[str, ...] = ("child_session_versions",)

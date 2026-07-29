@@ -84,14 +84,15 @@ class QueryMessagePart(BaseModel):
 
         if self.source_message_part and part_type == MessagePartType.TOOLCALL:
             tc = self.source_message_part.tool_call
-            return [{
-                "id": f"tc-{tc.pk}",
-                "type": "function",
-                "function": {
-                    "name": tc.task_definition.name,
-                    "arguments": json.dumps(tc.carguments_json),
-                },
-            }]
+            if tc:
+                return [{
+                    "id": f"tc-{tc.pk}",
+                    "type": "function",
+                    "function": {
+                        "name": tc.task_definition.name,
+                        "arguments": json.dumps(tc.carguments_json),
+                    },
+                }]
 
         if content_type == MessageContentType.TEXT:
             return [{"type": "text", "text": content.get()}]

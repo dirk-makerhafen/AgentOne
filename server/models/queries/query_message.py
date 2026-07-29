@@ -138,13 +138,18 @@ class QueryMessage(BaseModel):
         content_parts: list[dict[str, Any]] = []
         tool_call_dicts: list[dict[str, Any]] = []
         tool_call_objects: list[AgentTaskCall] = []
+        has_user_toolcall = False
         tags_usage: dict[str, Any] = {}
 
         for part in self.query_message_parts.all():
             part_contents = part.to_openai_message(fail_on_error=fail_on_error)
             if part.source_message_part and part.source_message_part.type == MessagePartType.TOOLCALL:
-                tool_call_dicts.extend(part_contents)
-                tool_call_objects.append(part.source_message_part.tool_call)
+                if part.source_message_part.tool_call:
+                    tool_call_dicts.extend(part_contents)
+                    tool_call_objects.append(part.source_message_part.tool_call)
+                else:
+                    has_user_toolcall = True
+                    content_parts.extend(part_contents)
             else:
                 content_parts.extend(part_contents)
 
@@ -153,7 +158,7 @@ class QueryMessage(BaseModel):
                 c = c.setdefault(tag, {"tokens": 0})
                 c["tokens"] += part.tokens or 0
 
-        if self.role == "tool":
+        if self.role == "tool" and tool_call_objects:
             for tc in tool_call_objects:
                 tool_response_string = _serialize_result(tc.get_result())
                 l = len(tool_response_string)
@@ -173,11 +178,24 @@ class QueryMessage(BaseModel):
                     
                 ]           
                 message = messages[0] if len(messages) == 1 else messages
- 
+
+        elif self.role == "tool":
+            merged = _merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
+            if isinstance(merged, str):
+                merged = f"USER TOOLCALL RESPONSE: {merged}"
+            else:
+                merged.insert(0, {"type": "text", "text": "USER TOOLCALL RESPONSE: "})
+            message: dict[str, Any] = {"role": "assistant", "content": merged}
+
         else:
             
             merged = _merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
             message: dict[str, Any] = {"role": self.role, "content": merged}
+            if has_user_toolcall:
+                if isinstance(merged, str):
+                    message["content"] = f"USER TOOLCALL: {merged}"
+                elif isinstance(merged, list):
+                    message["content"] = [{"type": "text", "text": "USER TOOLCALL: "}] + merged
             if tool_call_dicts:
                 message["tool_calls"] = tool_call_dicts
         # DeepSeek requires reasoning_content to be echoed back in subsequent
@@ -188,7 +206,6 @@ class QueryMessage(BaseModel):
             try:
                 if requires_reasoning_echo:
                     reasoning = self.source_message.response.reasoning
-                    print("REASONING3", reasoning)
                     if reasoning:
                         message["reasoning_content"] = reasoning
             except Exception as e:

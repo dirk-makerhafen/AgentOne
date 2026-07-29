@@ -7,7 +7,7 @@ All ~30 model classes, organized by domain.
 ```
 models.Model
   ├── BaseModel(DirtyFieldsMixin, abstract)    ← most models inherit this
-  │     ├── created_at, updated_at, raw_data, fork_of, raw_data_reference
+  │     ├── created_at, updated_at, raw_data
   │     │
   │     ├── AgentModel                         # Agent definition
   │     ├── AgentVersionModel                   # Immutable agent version
@@ -57,8 +57,6 @@ class BaseModel(DirtyFieldsMixin, models.Model):
 | `created_at` | `DateTimeField(auto_now_add, db_index)` | Set once on creation |
 | `updated_at` | `DateTimeField(auto_now)` | Updated on every save |
 | `raw_data` | `TextField(100MB)` | JSON blob storage (arbitrary model data) |
-| `fork_of` | `FK(self, SET_NULL)` | Fork source for deduplication |
-| `raw_data_reference` | `FK(self, SET_NULL)` | Shared data reference (copy-on-write) |
 
 **`.data` property**: Parses `raw_data` as JSON (cached). Setter serializes dict to JSON.
 

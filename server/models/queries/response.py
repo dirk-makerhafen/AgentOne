@@ -20,7 +20,7 @@ class ResponseStatus(models.TextChoices):
 class Response(BaseModel):
     """Stores the result of a single LLM query including token usage and timing."""
 
-    query = models.OneToOneField(
+    query = models.ForeignKey(
         "Query", null=True, on_delete=models.CASCADE, related_name="related_response"
     )
     session_version = models.ForeignKey(

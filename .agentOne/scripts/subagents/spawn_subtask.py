@@ -62,10 +62,13 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
     fork_msg.add_part(
         type="message",
         content_type=MessageContentType.TEXT,
-        content=(f"You have been forked from parent _session #{_session.model.pk} of agent '{_session.agent.name}'. Your task:"),
+        content=(f"You have been forked from parent _session #{_session.model.pk} of agent '{_session.agent.name}'. Your task:\n"),
     )
 
-    parts = [{"type": "message", "content_type": "text", "content": prompt}]
+    parts = [
+        {"type": "message", "content_type": "text", "content": prompt},
+        {"type": "message", "content_type": "text", "content": "\n\nYou are a doing a subtask for another agent. Remember to finalize your work by calling final_result(message='..your final result message..')"},
+    ]
     taskcall = child_session.add_user_message(parts=parts)
 
     if blocking:

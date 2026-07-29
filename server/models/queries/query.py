@@ -33,7 +33,6 @@ class Query(BaseModel):
     status = EnumField(QueryStatus, default=QueryStatus.WAITING)
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
-    #messages = SortedManyToManyField( "QueryMessage", related_name="queries", default=None, symmetrical=False)
 
     @property
     def response(self):

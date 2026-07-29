@@ -61,13 +61,14 @@ def run_streaming_query(
     )
 
 
+    extra_body = {}
+    if session.aimodel.supports_reasoning:
+        extra_body["reasoning_effort"] = session.reasoning_effort
 
     args = dict(
         model=session.aimodel.name,
         messages=messages,
-        extra_body={
-            "reasoning_effort": session.reasoning_effort,
-        },
+        extra_body=extra_body,
         stream_options={"include_usage": True},
         stream=True,
     )
@@ -210,7 +211,7 @@ def call_llm(_session: Session, query: Query) -> Response:
         if not ratelimit_result:
             raise Exception("Error in ratelimiter")
         apikey = ratelimit_result.selected_key
-        updated = Query.objects.filter(pk=query.pk, status=QueryStatus.WAITING).update(apikey=apikey, status=QueryStatus.ACTIVE)
+        updated = Query.objects.filter(pk=query.pk, status__in=[QueryStatus.WAITING, QueryStatus.FAILURE]).update(apikey=apikey, status=QueryStatus.ACTIVE)
         if not updated:
             raise Exception("Failed to update query to active state")
         query.apikey = apikey

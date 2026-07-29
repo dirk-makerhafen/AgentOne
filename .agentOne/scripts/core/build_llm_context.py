@@ -8,13 +8,13 @@ from __future__ import annotations
 import json
 import traceback
 from typing import Any
-
+import datetime
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.enums.task_enums import TaskCallStatus
 from server.models.settings import AgentToolCallSyntax
 from server.models.message import Message, MessagePart
-from server.models.queries.query import Query
+from server.models.queries.query import Query, QueryStatus
 from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart
 from server.history_limiter import HistoryLimiter
@@ -41,8 +41,18 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
     """
 
     try:
+        sv = _session.get_version_model()
+        existing = Query.objects.filter(
+            session_version=sv,
+            status__in=[QueryStatus.WAITING, QueryStatus.ACTIVE],
+        ).exists()
+        if existing:
+            raise RuntimeError(
+                f"Session {sv.session_id} already has a WAITING or ACTIVE query — "
+                f"refusing to create a duplicate"
+            )
         query = Query.objects.create(
-            session_version=_session.get_version_model(),
+            session_version=sv,
             trigger_message=message,
         )
 
@@ -124,11 +134,18 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                     qmsg.add_part(source_message_part=tool_call_part)
                     cmessages.append(qmsg)
 
-
         messages = cmessages
+        
         for index, message in enumerate(messages):
             message.save()
 
+        d = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()[:-9]
+        query.add_message(
+            role="developer",
+            content_type=MessageContentType.TEXT,
+            content=f"Your working dir is '{_session.workspace.path}', it is {d}",
+            template_data={},
+        )
         from runtime.events import publish_model_event
         publish_model_event(query, "create")
         return query

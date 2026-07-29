@@ -48,6 +48,7 @@ def sync_provider_models(provider_id: int) -> dict:
 
     created = 0
     updated = 0
+    seen_names = set()
 
     for m in raw_models:
         raw_name = m.get("id" if not is_google else "name", "")
@@ -56,6 +57,7 @@ def sync_provider_models(provider_id: int) -> dict:
         name = raw_name
         if name.startswith("models/"):
             name = name.split("/", 1)[-1]
+        seen_names.add(name)
 
         defaults = {
             "family": m.get("owned_by", "") if not is_google else m.get("displayName", ""),
@@ -72,4 +74,9 @@ def sync_provider_models(provider_id: int) -> dict:
         else:
             updated += 1
 
-    return {"error": "", "created": created, "updated": updated, "total": len(raw_models)}
+    # Disable models that the provider no longer serves
+    stale_count = AiModel.objects.filter(
+        api_provider=provider, enabled=True,
+    ).exclude(name__in=seen_names).update(enabled=False)
+
+    return {"error": "", "created": created, "updated": updated, "stale": stale_count, "total": len(raw_models)}

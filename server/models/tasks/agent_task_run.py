@@ -44,12 +44,12 @@ class AgentTaskRun(BaseModel):
 
     arguments_json = models.JSONField(default=dict, null=False)
 
-    dont_start_before = models.DateTimeField(default=None, null=True)
-    dont_start_after = models.DateTimeField(default=None, null=True)
+    dont_start_before = models.DateTimeField(default=None, null=True, blank=True)
+    dont_start_after = models.DateTimeField(default=None, null=True, blank=True)
     requires_approval = models.BooleanField(default=None, null=False)
     priority = models.IntegerField(default=0)
 
-    time_limit = models.IntegerField(default=None, null=True)
+    time_limit = models.IntegerField(default=None, null=True, blank=True)
     max_subtask_errors = models.IntegerField(default=None, null=False)
     max_subtask_error_rate = models.IntegerField(default=None, null=False)
     limit_subtask_parallel_runs = models.IntegerField(default=None, null=False)
@@ -158,6 +158,7 @@ class AgentTaskRun(BaseModel):
         with ContextTracker(self):
             try:
                 session = self.session_version.get_runtime()
+                session._current_taskrun = self
 
                 if self.task_definition_version.task_execution_mode == "CHAIN":
                     next_step_arguments = self.arguments_json
