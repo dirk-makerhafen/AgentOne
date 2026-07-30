@@ -105,7 +105,7 @@ class Query(BaseModel):
             self.tokens = tokens
             self.tags_token_usage = tags_token_usage
             self.save()
-        cache[cache_key] = message
+        cache[cache_key] = messages
         return messages
 
     def merge_tag_usage(self, list_of_tag_dicts: list[dict[str, Any]]) -> dict[str, Any]:

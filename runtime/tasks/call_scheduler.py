@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
 from runtime.tasks.call_fsm import TaskCallStateMachine
-
 if TYPE_CHECKING:
     from server.models.tasks.task_instance import TaskInstance
 
@@ -74,6 +73,10 @@ class CallScheduler:
                 CallScheduler._on_taskcall_ended(
                     task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED
                 )
+            else:
+                # Dependent may have progressed past WAITING_DEPENDENCY
+                # (e.g. WAITING_RETRY, WAITING_QUEUE, ACTIVE_QUEUED).
+                CallScheduler._cancel_safe(task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED)
             return
 
         tc = AgentTaskCall.objects.get(pk=task_call_id)
@@ -210,20 +213,37 @@ class CallScheduler:
         Transition the call to ``ACTIVE_QUEUED`` and create a new
         :class:`AgentTaskRun` for it.
         """
+        from server.models.tasks.agent_task_run import AgentTaskRun as _ATR
+        from server.models.enums.task_enums import TaskRunStatus as _TRS
+
+        taskcall = AgentTaskCall.objects.get(pk=task_call_id)
+
+        # Enforce per-TaskInstance parallel run limit.
+        limit = taskcall.limit_per_instance_parallel_runs
+        if limit > 0:
+            running = _ATR.objects.filter(
+                task_instance=taskcall.task_instance,
+            ).exclude(
+                status__in=[_TRS.SUCCESS, _TRS.FAILURE]
+            ).count()
+            if running >= limit:
+                return  # Stay in WAITING_QUEUE — drain will pick up later
+
         if not TaskCallStateMachine.pick_up(task_call_id):
             print(" # was not queued, maybe some race condition")
             return
 
         taskcall = AgentTaskCall.objects.get(pk=task_call_id)
 
-        # Merge positional args, guarding against duplicates when both
-        # iarguments_json and carguments_json carry the same "*" list.
+        # Merge positional args, deduplicating while preserving order.
+        # iargs (instance defaults) come first; call-level overrides appended
+        # only if not already present (handles dict/list args via equality).
         iargs = taskcall.task_instance.iarguments_json.get("*", [])
         cargs = taskcall.carguments_json.get("*", [])
-        if iargs and iargs == cargs:
-            args = list(iargs)
-        else:
-            args = list(iargs) + list(cargs)
+        args = list(iargs)
+        for x in cargs:
+            if x not in iargs:
+                args.append(x)
 
         kwargs: dict = {}
         kwargs.update(taskcall.task_instance.iarguments_json)
@@ -323,6 +343,10 @@ class CallScheduler:
                 CallScheduler._on_taskcall_ended(
                     task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED
                 )
+            else:
+                # Hook parent may have progressed past WAITING_SUBTASK
+                # (e.g. WAITING_RETRY, WAITING_QUEUE, ACTIVE_QUEUED).
+                CallScheduler._cancel_safe(task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED)
             return
 
         tc = AgentTaskCall.objects.get(pk=task_call_id)
@@ -375,16 +399,18 @@ class CallScheduler:
             RunScheduler.taskrun_result_reference_ended(
                 parent_run_id, task_call_id, taskcall_status_detail
             )
+        from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
 
         # Call tasks that wait for us because their arguments need us
         dependent_ids = AgentTaskCall.objects.filter(
             taskcall_arg_references__pk=task_call_id,
             status_detail=TaskCallStatusDetail.WAITING_DEPENDENCY,
         ).values_list('pk', flat=True)
-        print("dependent_ids", dependent_ids)
         for dependent_id in dependent_ids:
-            CallScheduler.on_arg_reference_task_ended(
-                dependent_id, last_taskrun_id, taskcall_status_detail
+            from server.tasks.task_dispatcher import celery_delay
+            celery_delay(
+                CallScheduler.on_arg_reference_task_ended,
+                dependent_id, last_taskrun_id, taskcall_status_detail,
             )
 
         # In case we are a run after hook, call our parent task
@@ -392,16 +418,23 @@ class CallScheduler:
             taskcall_after_run_hooks__pk=task_call_id,
             status_detail=TaskCallStatusDetail.WAITING_SUBTASK,
         ).values_list('pk', flat=True)
-        print("after_run_hook_ids", after_run_hook_ids)
+        #print("after_run_hook_ids", after_run_hook_ids)
         for after_run_hook_id in after_run_hook_ids:
-            CallScheduler.on_posthook_ended(
-                after_run_hook_id, last_taskrun_id, taskcall_status_detail
+            from server.tasks.task_dispatcher import celery_delay
+            celery_delay(
+                CallScheduler.on_posthook_ended,
+                after_run_hook_id, last_taskrun_id, taskcall_status_detail,
             )
 
         # --- taskcall_on_success_callbacks Dispatch ---
-        run = AgentTaskRun.objects.get(pk=last_taskrun_id)
+        try:
+            run = AgentTaskRun.objects.get(pk=last_taskrun_id)
+        except AgentTaskRun.DoesNotExist:
+            run = None
         call = AgentTaskCall.objects.get(pk=task_call_id)
-        if taskcall_status_detail == TaskCallStatusDetail.ENDED_SUCCESS:
+        if not run:
+            pass  # no run to dispatch callbacks from
+        elif taskcall_status_detail == TaskCallStatusDetail.ENDED_SUCCESS:
             print("taskcall_on_success_callbacks")
             callback_instances = list(
                 run.task_instance.taskinstances_on_success_callbacks.all().order_by('pk')
@@ -449,11 +482,68 @@ class CallScheduler:
                     callbacks.append(callback)
                 call.taskcall_on_error_callbacks.set(callbacks)
 
-        # --- Drain session queue (if this was an ingest call) ---
+        # --- Drain per-TaskInstance queue (release calls blocked by parallel limit) ---
+        if call.limit_per_instance_parallel_runs > 0:
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            from server.models.enums.task_enums import TaskCallStatusDetail
+            next_waiting = _ATC.objects.filter(
+                task_instance=call.task_instance,
+                status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+            ).order_by("created_at").first()
+            if next_waiting:
+                CallScheduler.start_new_taskrun(next_waiting.pk)
+
+        # --- Drain session queue for ingest calls (per-session FIFO) ---
         if call.task_definition and call.task_definition.name in (
             "ingest_user_message", "ingest_slash_command",
         ):
             CallScheduler._release_next_queued_call(call.session)
+
+    @staticmethod
+    def _cancel_safe(call_id: int, last_taskrun_id: int, status_detail: TaskCallStatusDetail) -> None:
+        """Cancel a call in whatever state it is currently in, then propagate.
+
+        Used as a fallback when :meth:`on_arg_reference_task_ended` or
+        :meth:`on_posthook_ended` find the target call has progressed past
+        the expected ``WAITING_DEPENDENCY`` / ``WAITING_SUBTASK`` state
+        (e.g. into ``WAITING_RETRY``, ``WAITING_QUEUE``, or ``ACTIVE_QUEUED``).
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.tasks.call_fsm import _publish_call_event
+
+        try:
+            tc = AgentTaskCall.objects.get(pk=call_id)
+        except AgentTaskCall.DoesNotExist:
+            return
+
+        if tc.status == TaskCallStatus.ENDED:
+            return
+
+        sd = TaskCallStatusDetail(tc.status_detail)
+
+        # ACTIVE_RUNNING calls must go through fail() (no FSM path to ENDED_CANCELLED)
+        if sd == TaskCallStatusDetail.ACTIVE_RUNNING:
+            if TaskCallStateMachine.fail(call_id):
+                CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
+            return
+
+        # Try FSM transition from the call's current state
+        if TaskCallStateMachine.transition(
+            call_id, sd, TaskCallStatusDetail.ENDED_CANCELLED,
+            extra={"ended_at": timezone.now()},
+        ):
+            CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
+            return
+
+        # Fallback for any state the FSM doesn't cover
+        updated = AgentTaskCall.objects.filter(pk=call_id).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_CANCELLED,
+            ended_at=timezone.now(),
+        ) > 0
+        if updated:
+            _publish_call_event(call_id)
+            CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
 
     @staticmethod
     def _release_next_queued_call(session) -> None:

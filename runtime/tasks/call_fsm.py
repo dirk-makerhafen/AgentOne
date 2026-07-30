@@ -25,6 +25,9 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskCallStatusDetail, TaskCallStatusDetail]]
     # Scheduler picks it up
     (TaskCallStatusDetail.WAITING_QUEUE,      TaskCallStatusDetail.ACTIVE_QUEUED),
 
+    # Recovery: re-queue a call whose Celery run message was lost
+    (TaskCallStatusDetail.ACTIVE_QUEUED,      TaskCallStatusDetail.WAITING_QUEUE),
+
     # Worker begins execution (atomically paired with taskrun QUEUED→ACTIVE in run_runtime)
     (TaskCallStatusDetail.ACTIVE_QUEUED,      TaskCallStatusDetail.ACTIVE_RUNNING),
 
@@ -49,9 +52,21 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskCallStatusDetail, TaskCallStatusDetail]]
     (TaskCallStatusDetail.WAITING_DEPENDENCY, TaskCallStatusDetail.ENDED_CANCELLED),
     (TaskCallStatusDetail.WAITING_SUBTASK,    TaskCallStatusDetail.ENDED_CANCELLED),
 
+    # Direct cancel from NEW/WAITING_RETRY (no need to chain through WAITING_DEPENDENCY)
+    (TaskCallStatusDetail.NEW,                TaskCallStatusDetail.ENDED_CANCELLED),
+    (TaskCallStatusDetail.WAITING_RETRY,      TaskCallStatusDetail.ENDED_CANCELLED),
+    (TaskCallStatusDetail.NEW,                TaskCallStatusDetail.ENDED_STOPPED),
+    (TaskCallStatusDetail.WAITING_RETRY,      TaskCallStatusDetail.ENDED_STOPPED),
+
     # External stop
     (TaskCallStatusDetail.WAITING_DEPENDENCY, TaskCallStatusDetail.ENDED_STOPPED),
     (TaskCallStatusDetail.WAITING_SUBTASK,    TaskCallStatusDetail.ENDED_STOPPED),
+
+    # Cancel from queue or active-queued (no FSM path existed before — gap)
+    (TaskCallStatusDetail.WAITING_QUEUE,      TaskCallStatusDetail.ENDED_CANCELLED),
+    (TaskCallStatusDetail.ACTIVE_QUEUED,      TaskCallStatusDetail.ENDED_CANCELLED),
+    (TaskCallStatusDetail.WAITING_QUEUE,      TaskCallStatusDetail.ENDED_STOPPED),
+    (TaskCallStatusDetail.ACTIVE_QUEUED,      TaskCallStatusDetail.ENDED_STOPPED),
 
     # Rate limiting.
     # ACTIVE_RUNNING → WAITING_RATELIMIT: _execute_query discovered no LLM capacity.
@@ -239,6 +254,15 @@ class TaskCallStateMachine:
             call_id,
             TaskCallStatusDetail.WAITING_QUEUE,
             TaskCallStatusDetail.ACTIVE_QUEUED,
+        )
+
+    @staticmethod
+    def re_queue(call_id: int) -> bool:
+        """``ACTIVE_QUEUED`` → ``WAITING_QUEUE`` — recovery path for lost Celery runs."""
+        return TaskCallStateMachine.transition(
+            call_id,
+            TaskCallStatusDetail.ACTIVE_QUEUED,
+            TaskCallStatusDetail.WAITING_QUEUE,
         )
 
     @staticmethod

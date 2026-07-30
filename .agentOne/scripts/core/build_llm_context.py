@@ -141,7 +141,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
 
         d = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()[:-9]
         query.add_message(
-            role="developer",
+            role="user",
             content_type=MessageContentType.TEXT,
             content=f"Your working dir is '{_session.workspace.path}', it is {d}",
             template_data={},

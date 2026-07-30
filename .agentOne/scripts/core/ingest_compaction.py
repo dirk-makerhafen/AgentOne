@@ -19,9 +19,20 @@ def ingest_compaction(
     # The remaining QueryMessages (kept messages were deleted by
     # build_llm_compact_context) are exactly the messages that were
     # compacted — no need to recalculate the split.
-    conv = [qm for qm in response.query.related_query_messages.all() if qm.source_message_id]
+    # Deduplicate by source_message and sort by PK so the range
+    # boundaries are correct even when a source_message has multiple
+    # QueryMessages (e.g. content + toolcall parts).
+    seen: set[int] = set()
+    compacted_messages: list[Message] = []
+    for qm in response.query.related_query_messages.all():
+        msg = qm.source_message
+        if msg and msg.pk not in seen:
+            seen.add(msg.pk)
+            compacted_messages.append(msg)
 
-    if not conv:
+    compacted_messages.sort(key=lambda m: m.pk)
+
+    if not compacted_messages:
         # Nothing to compact — create a trivial summary.
         compaction_message = Message.objects.create(
             session_version=_session.get_version_model(),
@@ -40,8 +51,8 @@ def ingest_compaction(
 
     # The compaction replaces everything from oldest_compacted (chronologically
     # first) through newest_compacted (chronologically last).
-    oldest_compacted = conv[0].source_message
-    newest_compacted = conv[-2].source_message
+    oldest_compacted = compacted_messages[0]
+    newest_compacted = compacted_messages[-1]
     prev_for_compaction = oldest_compacted.prev_message
 
     # The first message that follows the compacted range (if any).

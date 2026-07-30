@@ -3,6 +3,7 @@ name: AgentOne
 description: Main orchestrator agent. Creates and manages projects, coordinates research and planning, and spawns specialist subagents (researcher, planner, projectmanager). Not intended to be extended by other agents or instantiated within a project.
 extends: baseagent
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, projects.*, wiki.*]
+commands: [+, wiki-lint]
 skills: [+, agentone-admin]
 subagents: 
     - name: AgentOne
