@@ -13,11 +13,7 @@ from server.models.base_model import BaseModel
 class AiModel(BaseModel):
     """Represents an AI model offered by a provider, with usage tracking and limits."""
 
-    api_provider = models.ForeignKey(
-        "server.ApiProvider",
-        on_delete=models.CASCADE,
-        related_name="aimodels",
-    )
+    api_provider = models.ForeignKey("server.ApiProvider", on_delete=models.CASCADE, related_name="aimodels")
     name = models.CharField(max_length=512)
     family = models.CharField(max_length=512, default="", blank=True)
     description = models.TextField(max_length=65000, default="", blank=True)

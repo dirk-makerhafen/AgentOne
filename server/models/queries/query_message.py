@@ -20,52 +20,6 @@ if TYPE_CHECKING:
 
 cache = LRUCache(maxsize=50000)
 
-def _merge_text_parts(
-    parts: list[dict[str, Any]],
-    prefix_fk: GenericContent | None = None,
-    postfix_fk: GenericContent | None = None,
-) -> str | list[dict[str, Any]]:
-    """Merge adjacent text parts, prepend prefix, append postfix."""
-    if prefix_fk and (prefix := prefix_fk.get()):
-        parts = [{"type": "text", "text": prefix}, *parts]
-    if postfix_fk and (postfix := postfix_fk.get()):
-        parts = [*parts, {"type": "text", "text": postfix}]
-
-    if not parts:
-        return ""
-
-    merged = [parts[0]]
-    for part in parts[1:]:
-        if merged[-1]["type"] == part["type"] == "text":
-            merged[-1]["text"] += part["text"]
-        else:
-            merged.append(part)
-
-    if len(merged) == 1 and merged[0]["type"] == "text":
-        return merged[0]["text"]
-    return merged
-
-
-def _serialize_result(data: Any) -> str:
-    """JSON-serialise a tool result, handling Message / Path model references."""
-    def _walk(obj: Any) -> Any:
-        if obj is None or isinstance(obj, (str, int, float, bool)):
-            return obj
-        if isinstance(obj, dict):
-            return {k: _walk(v) for k, v in obj.items()}
-        if isinstance(obj, (list, set, tuple)):
-            return type(obj)(_walk(item) for item in obj)
-        if isinstance(obj, Message):
-            return "".join(
-                part.to_string()
-                for part in obj.parts.filter(type=MessagePartType.MESSAGE)
-            )
-        if isinstance(obj, Path):
-            return obj.as_posix()
-        raise TypeError(f"Cannot serialize {type(obj).__name__}")
-    return json.dumps(_walk(data))
-
-
 
 class QueryMessage(BaseModel):
     """A single message within a query, containing one or more parts."""
@@ -160,7 +114,7 @@ class QueryMessage(BaseModel):
 
         if self.role == "tool" and tool_call_objects:
             for tc in tool_call_objects:
-                tool_response_string = _serialize_result(tc.get_result())
+                tool_response_string = self._serialize_result(tc.get_result())
                 l = len(tool_response_string)
                 if l > 30000*4:  # more than ~30k tokens
                     removed_chars = l - 24000*4
@@ -180,7 +134,7 @@ class QueryMessage(BaseModel):
                 message = messages[0] if len(messages) == 1 else messages
 
         elif self.role == "tool":
-            merged = _merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
+            merged = self._merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
             if isinstance(merged, str):
                 merged = f"USER TOOLCALL RESPONSE: {merged}"
             else:
@@ -189,7 +143,7 @@ class QueryMessage(BaseModel):
 
         else:
             
-            merged = _merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
+            merged = self._merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
             message: dict[str, Any] = {"role": self.role, "content": merged}
             if has_user_toolcall:
                 if isinstance(merged, str):
@@ -225,6 +179,49 @@ class QueryMessage(BaseModel):
 
         cache[cache_key] = message
         return message
+
+
+    def _merge_text_parts(self, parts: list[dict[str, Any]], prefix_fk: GenericContent | None = None, postfix_fk: GenericContent | None = None) -> str | list[dict[str, Any]]:
+        """Merge adjacent text parts, prepend prefix, append postfix."""
+        if prefix_fk and (prefix := prefix_fk.get()):
+            parts = [{"type": "text", "text": prefix}, *parts]
+        if postfix_fk and (postfix := postfix_fk.get()):
+            parts = [*parts, {"type": "text", "text": postfix}]
+
+        if not parts:
+            return ""
+
+        merged = [parts[0]]
+        for part in parts[1:]:
+            if merged[-1]["type"] == part["type"] == "text":
+                merged[-1]["text"] += part["text"]
+            else:
+                merged.append(part)
+
+        if len(merged) == 1 and merged[0]["type"] == "text":
+            return merged[0]["text"]
+        return merged
+
+
+    def _serialize_result(self, data: Any) -> str:
+        """JSON-serialise a tool result, handling Message / Path model references."""
+        def _walk(obj: Any) -> Any:
+            if obj is None or isinstance(obj, (str, int, float, bool)):
+                return obj
+            if isinstance(obj, dict):
+                return {k: _walk(v) for k, v in obj.items()}
+            if isinstance(obj, (list, set, tuple)):
+                return type(obj)(_walk(item) for item in obj)
+            if isinstance(obj, Message):
+                return "".join(
+                    part.to_string()
+                    for part in obj.parts.filter(type=MessagePartType.MESSAGE)
+                )
+            if isinstance(obj, Path):
+                return obj.as_posix()
+            raise TypeError(f"Cannot serialize {type(obj).__name__}")
+        return json.dumps(_walk(data))
+
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         super().save(*args, **kwargs)

@@ -19,10 +19,22 @@ Two tasks are defined here:
 
 from __future__ import annotations
 
+import datetime
 from typing import Any
 
 from celery import shared_task
 from django.utils import timezone
+
+# A call parked in WAITING_QUEUE is *about to progress*: the 60s release pass
+# (``_release_queued_calls``) and the ``_on_taskcall_ended`` drain pick queued
+# calls up within seconds, so a fresh WAITING_QUEUE call is a transient
+# transition gap (e.g. the successor ``call_llm`` just after its parent
+# sub-call ended — incident 294368), never a deadlock.  Only once a call has
+# sat queued far longer than the release cadence is it treated as permanently
+# blocked (e.g. a parallel-limit slot held by a non-ending run) and allowed to
+# count against tree liveness.  This is the conservative runtime trade-off:
+# genuine E5-style deadlocks are broken, healthy-but-slow chains are not.
+STALE_WAITING_QUEUE_TIMEOUT = datetime.timedelta(minutes=15)
 
 
 @shared_task(name="tasks.tick_scheduler_recovery")
@@ -112,8 +124,17 @@ def _resolve_stuck_waiting_runs() -> None:
 
     2. **No ref is actively executing** — the run's pending result references
        are all stuck in states that will never progress (e.g. WAITING_QUEUE
-       blocked by the per-TI limit held by this very run, forming a circular
-       deadlock).  We fail the run to break the cycle.
+       permanently blocked by the per-TI limit, forming a circular deadlock).
+       We fail the run to break the cycle.
+
+    This is deliberately CONSERVATIVE: a call in WAITING_QUEUE or
+    WAITING_DEPENDENCY-with-ended-args is *about to progress* (the release pass
+    / ``_on_taskcall_ended`` drain picks it up within seconds), so a fresh
+    queued call is a transient transition gap, not a deadlock.  Only a call
+    queued far beyond the release cadence (see ``STALE_WAITING_QUEUE_TIMEOUT``)
+    counts as permanently blocked.  The whole tree must be quiet for the 30s
+    grace period before a run is force-failed — a healthy-but-slow chain is
+    never touched here.
     """
     from server.models.tasks.agent_task_run import AgentTaskRun
     from server.models.enums.task_enums import TaskRunStatus, TaskCallStatus, TaskCallStatusDetail
@@ -160,12 +181,17 @@ def _resolve_stuck_waiting_runs() -> None:
             }
             pending_details = set(pending)
             if pending_details.isdisjoint(active_states):
-                skip_grace = False
 
-                # Multi-level deadlock detection: if the entire root task
-                # tree has no actively progressing calls, the deadlock spans
-                # multiple levels (e.g. A→B→C→A).  No single call's run can
-                # progress — fail immediately without waiting for grace.
+                # Deadlock detection: if the entire root task tree has no
+                # actively progressing calls, the deadlock spans multiple
+                # levels (e.g. A→B→C→A).  No single call's run can progress.
+                #
+                # This check is conservative: a tree is only declared dead
+                # after it has been QUIET (nothing progressing, no fresh
+                # WAITING_QUEUE call, no ready dependency) for the 30s grace
+                # period below.  A transient transition gap (incident 294368)
+                # is protected because a fresh WAITING_QUEUE call counts as
+                # progressing.
                 #
                 # A call counts as *progressing* only if it is ACTIVE
                 # (ACTIVE_QUEUED/ACTIVE_RUNNING) AND not itself blocked in
@@ -185,14 +211,45 @@ def _resolve_stuck_waiting_runs() -> None:
                 # ``ingest_user_message`` is the child tree root).  If we only
                 # inspect the run's own tree we see nothing active and wrongly
                 # declare a deadlock while the child chain is actually making
-                # progress.  Inspect the union of root-task trees: the run's
-                # own call plus every pending result reference.
-                root_task_ids = set()
+                # progress.
+                #
+                # Walk the waiting graph TRANSITIVELY.  A call parked in
+                # WAITING_SUBTASKS_OR_HOOKS has a WAITING_RESULTTASKS run that
+                # is itself waiting on further result references — possibly in
+                # yet another session (delegate -> subagent -> sub-subagent).
+                # A single-level union (own tree + direct pending refs) only
+                # protects the run that DIRECTLY references the cross-session
+                # call; every ancestor in the calling session still sees only
+                # its own tree (all parked calls are invisible to the
+                # active-states check) and is wrongly force-failed while the
+                # subagent is legitimately working.  Collect the union of every
+                # session-root-task tree reachable by following the waiting
+                # chain, so a genuinely-executing leaf anywhere in the graph
+                # (e.g. the subagent's active ``call_llm``) protects the whole
+                # chain.
+                root_task_ids: set[int] = set()
                 if call and call.session_root_task_id:
                     root_task_ids.add(call.session_root_task_id)
-                for ref in pending_calls:
-                    if ref.session_root_task_id:
-                        root_task_ids.add(ref.session_root_task_id)
+                seen_runs: set[int] = {run.pk}
+                frontier: list[AgentTaskRun] = [run]
+                while frontier:
+                    current = frontier.pop()
+                    refs = list(pending_calls) if current.pk == run.pk else list(
+                        AgentTaskCall.objects.filter(
+                            ~Q(status=TaskCallStatus.ENDED),
+                            rev_taskrun_result_references=current.pk,
+                        )
+                    )
+                    for ref in refs:
+                        if ref.session_root_task_id:
+                            root_task_ids.add(ref.session_root_task_id)
+                        waiting_run = AgentTaskRun.objects.filter(
+                            agent_task_call=ref,
+                            status=TaskRunStatus.WAITING_RESULTTASKS,
+                        ).order_by("-pk").first()
+                        if waiting_run and waiting_run.pk not in seen_runs:
+                            seen_runs.add(waiting_run.pk)
+                            frontier.append(waiting_run)
 
                 if root_task_ids:
                     # A call counts as *progressing* when it is on a
@@ -240,29 +297,34 @@ def _resolve_stuck_waiting_runs() -> None:
                     ).exclude(
                         taskcall_arg_references__status__in=non_ended_statuses,
                     ).exists()
-                    has_progressing = active_or_running or dependency_ready
+                    queue_releasing = AgentTaskCall.objects.filter(
+                        session_root_task_id__in=root_task_ids,
+                        status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+                        updated_at__gte=timezone.now() - STALE_WAITING_QUEUE_TIMEOUT,
+                    ).exists()
+                    has_progressing = active_or_running or dependency_ready or queue_releasing
                     if has_progressing:
-                        # The root tree still has a call doing real work, or a
+                        # The root tree still has a call doing real work, a
                         # dependency that is about to release (e.g. a slow
                         # ``call_llm``, or a CHAIN step whose previous step
-                        # just ended and is queued for release).  The run's
-                        # pending refs are waiting on that chain and will
-                        # resolve when it ends — do NOT fail a
-                        # healthy-but-slow pipeline here.
+                        # just ended and is queued for release), or a FRESH
+                        # WAITING_QUEUE call the release pass / drain will pick
+                        # up within seconds (e.g. the successor ``call_llm`` in
+                        # the brief gap after its parent sub-call ends —
+                        # incident 294368).  The run's pending refs are waiting
+                        # on that chain and will resolve when it ends — do NOT
+                        # fail a healthy-but-slow pipeline here.
                         continue
-                    skip_grace = True
 
-                if not skip_grace:
-                    grace = datetime.timedelta(seconds=30)
-                    if not (run.updated_at and timezone.now() - run.updated_at > grace):
-                        continue  # Not yet eligible for grace-based recovery
+                grace = datetime.timedelta(seconds=30)
+                if not (run.updated_at and timezone.now() - run.updated_at > grace):
+                    continue  # Not yet eligible for grace-based recovery
 
                 from runtime.tasks.run_fsm import TaskRunStateMachine
                 from runtime.tasks.call_scheduler import CallScheduler
                 if TaskRunStateMachine.fail(run.pk):
                     CallScheduler.on_taskrun_ended(run.pk, TaskRunStatus.FAILURE)
-                    label = "multi-level deadlock" if skip_grace else "no active refs"
-                    print(f"[recovery] failed stuck WAITING_RESULTTASKS run {run.pk} — {label} ({pending_details})")
+                    print(f"[recovery] failed stuck WAITING_RESULTTASKS run {run.pk} — no progressing refs ({pending_details})")
                 resolved_this_pass += 1
                 if resolved_this_pass >= max_per_pass:
                     return  # Pace the cascade

@@ -911,12 +911,21 @@ class TestResolveStuckWaitingRuns:
 
         session, sv, td, tdv, ti = self._make_setup()
 
+        # The root has sat in WAITING_QUEUE far beyond the release cadence
+        # (permanently blocked) — unlike a FRESH queued call, this does NOT
+        # count as progressing.
         root = self._make_call(ti, td, tdv, session, sv, root=None,
                                detail=TaskCallStatusDetail.WAITING_QUEUE)
-        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+        AgentTaskCall.objects.filter(pk=root.pk).update(
+            session_root_task=root,
+            updated_at=timezone.now() - timedelta(minutes=30),
+        )
 
+        # A call whose run is WAITING_RESULTTASKS is parked waiting on that run
+        # (never a fresh WAITING_QUEUE successor, which would count as
+        # progressing).
         parent = self._make_call(ti, td, tdv, session, sv, root=root,
-                                 detail=TaskCallStatusDetail.WAITING_QUEUE)
+                                 detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
             session_version=sv, arguments_json={},
@@ -998,6 +1007,94 @@ class TestResolveStuckWaitingRuns:
         run.refresh_from_db()
         assert run.status == TaskRunStatus.WAITING_RESULTTASKS
 
+    def test_run_with_fresh_queued_successor_not_failed(self, db):
+        """Regression (incident 294368): a WAITING_RESULTTASKS run whose pending
+        ref is a FRESH WAITING_QUEUE call must NOT be failed.
+
+        A WAITING_QUEUE call is about to progress — the release pass /
+        ``_on_taskcall_ended`` drain picks it up within seconds — so a tree
+        that otherwise looks idle is mid-transition, not deadlocked.  The old
+        skip_grace path force-failed the whole chain in the ~60ms gap between
+        a parent sub-call (build_llm_context) ending and its successor
+        (call_llm) being released to WAITING_QUEUE."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None,
+                               detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+
+        parent = self._make_call(ti, td, tdv, session, sv, root=root,
+                                 detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+
+        # The successor was just released into WAITING_QUEUE by its parent's
+        # _on_taskcall_ended — fresh, picked up on the next release pass.  The
+        # run is NOT deadlocked even though nothing is ACTIVE.
+        successor = self._make_call(ti, td, tdv, session, sv, root=root,
+                                    detail=TaskCallStatusDetail.WAITING_QUEUE)
+        run.taskrun_result_references.add(successor)
+
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+    def test_run_with_stale_queued_successor_is_failed(self, db):
+        """A WAITING_RESULTTASKS run whose pending ref has sat in WAITING_QUEUE
+        far beyond the release cadence (permanently blocked, e.g. a parallel
+        limit slot held by a non-ending run) IS failed — the tree is genuinely
+        dead, not mid-transition."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None,
+                               detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+
+        parent = self._make_call(ti, td, tdv, session, sv, root=root,
+                                 detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+
+        # Permanently blocked: queued far longer than the release cadence.
+        successor = self._make_call(ti, td, tdv, session, sv, root=root,
+                                    detail=TaskCallStatusDetail.WAITING_QUEUE)
+        AgentTaskCall.objects.filter(pk=successor.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=30),
+        )
+        run.taskrun_result_references.add(successor)
+
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.FAILURE
+
     def test_run_with_blocked_active_sibling_is_failed(self, db):
         """An ACTIVE_RUNNING sibling whose own run is WAITING_RESULTTASKS is itself
         blocked (E5 circular deadlock) — it must NOT protect the tree."""
@@ -1007,12 +1104,18 @@ class TestResolveStuckWaitingRuns:
 
         session, sv, td, tdv, ti = self._make_setup()
 
+        # Root queued far beyond the release cadence — permanently blocked,
+        # so it does not protect the tree.
         root = self._make_call(ti, td, tdv, session, sv, root=None,
                                detail=TaskCallStatusDetail.WAITING_QUEUE)
-        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+        AgentTaskCall.objects.filter(pk=root.pk).update(
+            session_root_task=root,
+            updated_at=timezone.now() - timedelta(minutes=30),
+        )
 
+        # Parked call (its run is WAITING_RESULTTASKS) — not a fresh successor.
         parent = self._make_call(ti, td, tdv, session, sv, root=root,
-                                 detail=TaskCallStatusDetail.WAITING_QUEUE)
+                                 detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
             session_version=sv, arguments_json={},
@@ -1109,6 +1212,112 @@ class TestResolveStuckWaitingRuns:
         # Parent run waits on the child's root call (which is parked waiting on
         # its own child leaf) — exactly the delegate_task pattern.
         run.taskrun_result_references.add(child_root)
+
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+    def test_run_above_cross_session_leaf_not_failed(self, db):
+        """An ANCESTOR run in the calling session must also be protected when the
+        genuinely-active work lives in a cross-session subtree reached only by
+        following the waiting chain TRANSITIVELY.
+
+        Regression: wiki ingest delegate_task:294110 succeeded, but recovery
+        force-failed the whole caller chain (decide_next_step:294101,
+        process_turn:294103, ...) one batch per 60s pass.  The delegate's own
+        run was protected by the direct cross-session union, but every ancestor
+        (whose parked refs stayed in the calling tree) saw only an idle tree —
+        the delegate call is parked in WAITING_SUBTASKS_OR_HOOKS and thus
+        invisible to the active-states check — and was force-failed while the
+        subagent session was still working."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        # Calling-session root — its own tree is idle (everything parked).
+        parent_root = self._make_call(ti, td, tdv, session, sv, root=None,
+                                      detail=TaskCallStatusDetail.WAITING_QUEUE)
+        AgentTaskCall.objects.filter(pk=parent_root.pk).update(session_root_task=parent_root)
+
+        # The stuck ancestor run, parked in the calling tree.
+        parent = self._make_call(ti, td, tdv, session, sv, root=parent_root,
+                                 detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+
+        # Intermediate parked call IN THE SAME TREE (e.g. the decide_next_step
+        # / process_turn that ran the delegate): its own run waits on the
+        # cross-session child, but the ancestor's ref never leaves the tree.
+        mid = self._make_call(ti, td, tdv, session, sv, root=parent_root,
+                              detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        mid_run = AgentTaskRun.objects.create(
+            agent_task_call=mid, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        run.taskrun_result_references.add(mid)
+
+        # Child session with its own root task tree.
+        child_session = SessionModel.objects.create(name='stuck-child-session-2')
+        child_sv = SessionVersionModel.objects.create(
+            session=child_session,
+            agent=AgentModel.objects.create(name='stuck-child-agent-2'))
+        child_ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=child_session,
+            session_version=child_sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        child_root = self._make_call(child_ti, td, tdv, child_session, child_sv, root=None,
+                                     detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        AgentTaskCall.objects.filter(pk=child_root.pk).update(session_root_task=child_root)
+
+        # The child tree is genuinely active: a leaf ACTIVE_RUNNING with its
+        # run in ACTIVE (e.g. the subagent's call_llm).
+        AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=child_ti, session=child_session, session_version=child_sv,
+            carguments_json={}, requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            session_root_task=child_root,
+            status=TaskCallStatus.ACTIVE,
+            status_detail=TaskCallStatusDetail.ACTIVE_RUNNING,
+        )
+        AgentTaskRun.objects.create(
+            agent_task_call=AgentTaskCall.objects.filter(
+                session_root_task=child_root,
+                status_detail=TaskCallStatusDetail.ACTIVE_RUNNING,
+            ).first(),
+            task_instance=child_ti, task_definition_version=tdv,
+            session_version=child_sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.ACTIVE,
+        )
+
+        # The intermediate run waits on the cross-session child root
+        # (delegate_task pattern), one level below the stuck ancestor.
+        mid_run.taskrun_result_references.add(child_root)
 
         _resolve_stuck_waiting_runs()
 

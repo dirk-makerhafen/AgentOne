@@ -29,7 +29,6 @@ class SessionVersionModel(BaseModel):
     display_name = models.CharField(max_length=2048, default=None, blank=True, null=True)
     description = models.TextField(max_length=65500, default="", blank=True)
 
-    #workingdir = models.CharField(max_length=1024, default=None, blank=True, null=True)
     child_session_versions = models.ManyToManyField("self", related_name="parent_session_versions", default=None, blank=True, symmetrical=False)
     session_settings = models.ForeignKey("server.SettingsModel",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="related_instance_versions")
     version_number = models.IntegerField(default=0)
