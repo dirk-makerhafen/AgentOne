@@ -23,14 +23,14 @@ This vault follows Karpathy's LLM Wiki pattern: I curate sources and ask questio
 
 - `.` — The main wiki folder working dir, you own this layer. While you can read outside of your working dir, Never edit outside of your working dir.
 - `index.md` — Root catalog of every page. Read it first on any query.
-- `rules.md` - User given and other important instructions not covered by the system prompt. 
+- `rules.md` - User given and other important instructions not covered by the system prompt. Read it at the start of every session and whenever a topic touches a section it governs.
 - `raw/` — Immutable raw sources. Never edit. Never add files here yourself.
 - `concepts/` — Ideas, frameworks, categories, recurring themes.
 - `concepts/archive/<year>/` — Archived concept pages, no longer actively referenced.
 - `entities/` — People, companies, products, organizations.
 - `entities/archive/<year>/` — Archived entity pages, no longer actively referenced.
 - `timeline/<year>/<month>/<day>/` — Date-based source summary archive.
-- `queries/` — A place to store queries and reponses.
+- `queries/` — A place to store queries and responses.
 
 
 Additional per-vault sections (e.g. buchhaltung, calendar, events) are defined in `index.md` and their own `index.md` files. Always check the root index and drill down.
@@ -81,8 +81,8 @@ When `entities/`, `concepts/` or other sections grows and age, archive stale pag
 
 **Archive procedure:**
 1. Move the file to `entities/archive/<year>/<Name>.md` or `concepts/archive/<year>/<Name>.md`.
-2. Create `archive/<year>/Index.md` if missing; add an entry for the archived page with a one-sentence summary.
-3. Remove the entry from the parent `entities/Index.md` (or `concepts/Index.md`).
+2. Create `archive/<year>/index.md` if missing; add an entry for the archived page with a one-sentence summary.
+3. Remove the entry from the parent `entities/index.md` (or `concepts/index.md`).
 4. Update `index.md` if it directly referenced the page.
 5. Optionally leave a stub in the original folder with a wikilink to the archive location.
 6. Git commit your work with date, operation, source title, and pages touched as the commit message.
@@ -102,7 +102,7 @@ Archive year corresponds to the year of archiving, not the page's creation date.
    date: <event date>
    updated: <today>
    tags: [<relevant tags>]
-   source: "[[raw/some/file.md]]"
+   sources: ["[[raw/some/file.md]]"]
    author: <sender / originator if available>
    ---
    # <Title>
@@ -110,14 +110,14 @@ Archive year corresponds to the year of archiving, not the page's creation date.
    <Key claims, numbers, quotes, why this matters. Bullet points preferred.>
    ```
 
-   The `source` field MUST point to the original raw file (e.g. `raw/emails/.../message.md`) or the URL. Use tags consistently — derive them from the section or topic (e.g. `buchhaltung`, `mitglieder`, `workshop`, `lieferung`).
+   The `sources` field is a list of wikilinks and MUST point to the original raw file(s) (e.g. `[[raw/emails/.../message.md]]`) or the URL. Singular `source` is invalid — the lint tool flags and auto-fixes it. Use tags consistently — derive them from the section or topic (e.g. `buchhaltung`, `mitglieder`, `workshop`, `lieferung`).
 
 4. Ripple through every entity, concept, and section it touches (usually 5–15 pages).
 5. Create missing entity, concept, and section pages.
 6. Add backlinks and citations.
 7. Update every affected `index.md` (root, section, subsection).
 8. Git commit your work with date, operation, source title, and pages touched as the commit message.
-9. use tool delegate_task(prompt= "lint <message>", blocking=True) to trigger a linting of your changes. <message> should contain the source file or url an a short description of the work you did
+9. use tool delegate_task(prompt= "lint <message>", blocking=True) to trigger a linting of your changes. <message> should contain the source file or url an a short description of the work you did. For small, self-contained changes you may instead verify directly with the `wiki_check` tool.
 
 ## Operation: query <question>
 
@@ -132,11 +132,13 @@ Archive year corresponds to the year of archiving, not the page's creation date.
 
 Health-check the vault. If a focus message is provided, narrow the check to that specific concern (e.g. "check only orphaned entity pages", "find broken wikilinks in the calendar section").
 
-Default checks:
-- Contradictions, Halucinations, stale claims, orphan pages, missing cross-references.
-- Entities mentioned 3+ times with no page.
-- Pages missing from their section's `index.md`.
-- Sections whose `index.md` is missing or outdated.
+1. Run the `wiki_check` tool to get deterministic findings: dead wikilinks, orphan pages, missing or stale `index.md` entries, and invalid frontmatter. Pass `autofix=True` to fix unambiguous broken links and `source`→`sources` mismatches directly.
+2. Then do the semantic checks the tool cannot:
+   - Contradictions, hallucinations, stale claims, orphan pages, missing cross-references.
+   - Entities mentioned 3+ times with no page.
+   - Pages missing from their section's `index.md`.
+   - Sections whose `index.md` is missing or outdated.
+3. Fix everything found, then re-run the deterministic checks and confirm they report zero issues.
 
 Git commit your work if you did any updates, with date, operation, source title, and pages touched as the commit message.
 
@@ -144,6 +146,7 @@ Git commit your work if you did any updates, with date, operation, source title,
 ## Boundaries
 
 - Never modify Raw files after creation.
+- Never edit outside your working dir (the vault root).
 - Never delete a wiki page without asking.
 - Deprecate and link forward instead of deleting.
 - Never invent facts.
