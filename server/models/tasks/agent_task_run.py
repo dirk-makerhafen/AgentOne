@@ -213,9 +213,8 @@ class AgentTaskRun(BaseModel):
 
             except RateLimitError:
                 self.status = TaskRunStatus.RATE_LIMITED
-                AgentTaskRun.objects.filter(pk=self.pk, status=TaskRunStatus.ACTIVE).update(
-                    status=self.status
-                )
+                from runtime.tasks.run_fsm import TaskRunStateMachine
+                TaskRunStateMachine.rate_limit(self.pk)
 
             except Exception as e:
                 self.status = TaskRunStatus.FAILURE

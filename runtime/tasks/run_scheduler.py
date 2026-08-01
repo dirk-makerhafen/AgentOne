@@ -57,7 +57,7 @@ class RunScheduler:
                 rev_taskrun_result_references=taskrun_id,
             )
             if pending.exists():
-                # Result references still pending — park the call in WAITING_SUBTASK.
+                # Result references still pending — park the call in WAITING_SUBTASKS_OR_HOOKS.
                 # Despite the method name, wait_for_hooks uses the same state.
                 TaskCallStateMachine.wait_for_hooks(taskrun.agent_task_call_id, taskrun_id)
                 return

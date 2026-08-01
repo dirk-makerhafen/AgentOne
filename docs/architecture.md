@@ -139,12 +139,21 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  CELERY TASKS (server/tasks/)                 Celery workers   │
 │                                                                 │
 │  tick_scheduler: runs every 10s via celery beat                  │
-│    ├── AdvanceTaskCalls → process WAITING→QUEUED transitions    │
-│    ├── AdvanceTaskRuns → process QUEUED→ACTIVE transitions      │
 │    ├── _dispatch_data_flows → match completed calls to          │
 │    │   DataCollection sources & dispatch processor tasks         │
-│    └── _propagate_from_collections → cascade new items to       │
-│        derived flows; detect removals & fire on_removed         │
+│    ├── _propagate_from_collections → cascade new items to       │
+│    │   derived flows; detect removals & fire on_removed         │
+│    ├── _release_scheduled_calls / _release_rate_limited_calls / │
+│    │   _release_retry_calls → WAITING→QUEUED transitions        │
+│    └── _process_cron_jobs → scheduled agent dispatch            │
+│                                                                 │
+│  tick_scheduler_recovery: runs every 60s via celery beat        │
+│    └── Error recovery: lost messages, orphaned runs, stale      │
+│        queries, stuck WAITING_RESULTTASKS (deadlock breaking)   │
+│                                                                 │
+│  startup_cleanup: one-time, dispatched by `server run`          │
+│    └── Clean leftover state + run release/recover passes        │
+│        immediately (no 60s wait for beat)                       │
 │                                                                 │
 │  heartbeat: runs every 2min, polls remote executors             │
 │  task_dispatcher: AgentTaskCall → AgentTaskRun dispatch logic   │

@@ -16,7 +16,7 @@ STATUS_COLORS = {
     TaskCallStatusDetail.WAITING_QUEUE: "var(--link)",
     TaskCallStatusDetail.WAITING_RETRY: "var(--warning)",
     TaskCallStatusDetail.WAITING_DEPENDENCY: "var(--link)",
-    TaskCallStatusDetail.WAITING_SUBTASK: "var(--link)",
+    TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS: "var(--link)",
     TaskCallStatusDetail.WAITING_RATELIMIT: "var(--warning)",
     TaskCallStatusDetail.ACTIVE_QUEUED: "var(--accent)",
     TaskCallStatusDetail.ACTIVE_RUNNING: "var(--accent)",
@@ -36,7 +36,7 @@ STATUS_LABELS = {
     TaskCallStatusDetail.WAITING_QUEUE: "queued",
     TaskCallStatusDetail.WAITING_RETRY: "retry",
     TaskCallStatusDetail.WAITING_DEPENDENCY: "waiting",
-    TaskCallStatusDetail.WAITING_SUBTASK: "waiting",
+    TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS: "waiting",
     TaskCallStatusDetail.WAITING_RATELIMIT: "rate-limited",
     TaskCallStatusDetail.ACTIVE_QUEUED: "active",
     TaskCallStatusDetail.ACTIVE_RUNNING: "running",
@@ -57,7 +57,7 @@ _ACTIVE_DETAILS = {
     TaskCallStatusDetail.WAITING_QUEUE,
     TaskCallStatusDetail.WAITING_RETRY,
     TaskCallStatusDetail.WAITING_DEPENDENCY,
-    TaskCallStatusDetail.WAITING_SUBTASK,
+    TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
     TaskCallStatusDetail.WAITING_RATELIMIT,
 }
 
@@ -109,7 +109,7 @@ class CallNodeView(ModelView):
     def cancel(self) -> None:
         """Cancel/stop this task call and propagate to dependents."""
         from server.models.tasks.agent_task_call import AgentTaskCall as ATC
-        from server.tasks.tick_scheduler import _force_end_call
+        from server.tasks.recovery_scheduler import _force_end_call
 
         call = ATC.objects.get(pk=self.subject.pk)
         _force_end_call(call)
@@ -120,16 +120,29 @@ class CallNodeView(ModelView):
 
 
 def _build_flat_items(session_model, parent_view: ModelView) -> list[CallNodeView]:
+    from django.db.models import F as _F
+
     MAX_SIBLINGS = 1000
     MAX_DEPTH = 100
-    calls = list(AgentTaskCall.objects.filter(
+
+    # Find the newest root call for this session via session_root_task.
+    # Root calls have session_root_task pointing to themselves.
+    root_call = AgentTaskCall.objects.filter(
         session=session_model,
+        session_root_task=_F("pk"),
+    ).order_by("-created_at").first()
+    if not root_call:
+        return []
+
+    # Fetch only calls under this root (current turn's call tree).
+    calls = list(AgentTaskCall.objects.filter(
+        session_root_task=root_call,
     ).select_related(
         "task_definition",
         "parent_taskrun__agent_task_call",
-    ).order_by("-created_at")[:1500])
-    #calls.reverse()
+    ).order_by("-created_at")[:500])
 
+    # Build tree using parent_taskrun.agent_task_call_id (multi-level nesting).
     call_map = {c.pk: c for c in calls}
     child_ids: dict[int, list[int]] = defaultdict(list)
     roots: list[int] = []
@@ -197,10 +210,20 @@ class RightPanelCalls(ModelView):
 
     @property
     def active_count(self) -> int:
+        from django.db.models import F as _F
         s = self.session
         if s is None:
             return 0
-        return AgentTaskCall.objects.filter(session=s.model).exclude(status=TaskCallStatus.ENDED).count()
+        # Count non-ended calls under the newest root task for the session
+        root = AgentTaskCall.objects.filter(
+            session=s.model,
+            session_root_task=_F("pk"),
+        ).order_by("-created_at").first()
+        if not root:
+            return 0
+        return AgentTaskCall.objects.filter(
+            session_root_task=root,
+        ).exclude(status=TaskCallStatus.ENDED).count()
 
     @property
     def session(self):

@@ -5,6 +5,7 @@ from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
 from runtime.tasks.call_fsm import TaskCallStateMachine
 if TYPE_CHECKING:
+    from server.models.tasks.agent_task_run import AgentTaskRun
     from server.models.tasks.task_instance import TaskInstance
 
 
@@ -208,6 +209,37 @@ class CallScheduler:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _ancestor_call_ids(task_call_id: int) -> list[int]:
+        """Collect the ``agent_task_call`` ids of all ancestor runs of a call.
+
+        Walks the ``parent_taskrun`` chain (the run that spawned this call, that
+        run's own call, and so on up to the session root).  A call's ancestors
+        on the same task_instance form a *same-turn continuation* chain (e.g.
+        ``decide_next_step`` at the tail of a ``process_turn`` chain dispatching
+        the next ``process_turn``); their runs must not count against the
+        per-TaskInstance parallel limit or the continuation would deadlock
+        against the very run that spawned it (E5).
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+
+        ancestor_ids: list[int] = []
+        seen: set[int] = set()
+        current = _ATC.objects.filter(pk=task_call_id).only(
+            "pk", "parent_taskrun_id"
+        ).first()
+        while current and current.parent_taskrun_id and current.pk not in seen:
+            seen.add(current.pk)
+            parent = current.parent_taskrun
+            if parent and parent.agent_task_call_id:
+                ancestor_ids.append(parent.agent_task_call_id)
+                current = _ATC.objects.filter(pk=parent.agent_task_call_id).only(
+                    "pk", "parent_taskrun_id"
+                ).first()
+            else:
+                break
+        return ancestor_ids
+
+    @staticmethod
     def start_new_taskrun(task_call_id: int) -> None:
         """
         Transition the call to ``ACTIVE_QUEUED`` and create a new
@@ -215,23 +247,59 @@ class CallScheduler:
         """
         from server.models.tasks.agent_task_run import AgentTaskRun as _ATR
         from server.models.enums.task_enums import TaskRunStatus as _TRS
+        from django.db import transaction
 
         taskcall = AgentTaskCall.objects.get(pk=task_call_id)
 
         # Enforce per-TaskInstance parallel run limit.
         limit = taskcall.limit_per_instance_parallel_runs
         if limit > 0:
-            running = _ATR.objects.filter(
-                task_instance=taskcall.task_instance,
-            ).exclude(
-                status__in=[_TRS.SUCCESS, _TRS.FAILURE]
-            ).count()
-            if running >= limit:
-                return  # Stay in WAITING_QUEUE — drain will pick up later
+            # I1 race: the count-then-create sequence is racy.  Two concurrent
+            # dispatches for *different* calls on the same task_instance can
+            # both read ``running < limit`` and both create runs, exceeding the
+            # parallel limit.  Lock the task_instance row so admission control
+            # (count + pick_up + run creation) is atomic.
+            from server.models.tasks.task_instance import TaskInstance
 
+            with transaction.atomic():
+                TaskInstance.objects.select_for_update().get(pk=taskcall.task_instance_id)
+                running = _ATR.objects.filter(
+                    task_instance=taskcall.task_instance,
+                ).exclude(
+                    status__in=[_TRS.SUCCESS, _TRS.FAILURE]
+                ).exclude(
+                    # A call that is a *descendant* of a running call on the
+                    # same task_instance is a same-turn continuation (e.g.
+                    # ``decide_next_step`` at the tail of a ``process_turn``
+                    # chain dispatching the next ``process_turn``), not a
+                    # concurrent turn.  Counting the ancestor's run here would
+                    # block the continuation against the very run that spawned
+                    # it — the E5 circular deadlock.  Exclude ancestors so the
+                    # loop can proceed; genuinely independent calls (sibling
+                    # turns, separate messages) are still serialized.
+                    agent_task_call_id__in=CallScheduler._ancestor_call_ids(task_call_id),
+                ).count()
+                if running >= limit:
+                    return  # Stay in WAITING_QUEUE — drain will pick up later
+
+                taskrun = CallScheduler._pick_up_and_create_run(task_call_id)
+        else:
+            taskrun = CallScheduler._pick_up_and_create_run(task_call_id)
+
+        if taskrun:
+            taskrun.apply_async()
+
+    @staticmethod
+    def _pick_up_and_create_run(task_call_id: int) -> AgentTaskRun | None:
+        """``pick_up()`` the call, merge its args, and create the run.
+
+        Returns ``None`` if ``pick_up()`` lost the race (call no longer in
+        ``WAITING_QUEUE``).  The run is dispatched by the caller after the
+        admission-control transaction commits.
+        """
         if not TaskCallStateMachine.pick_up(task_call_id):
             print(" # was not queued, maybe some race condition")
-            return
+            return None
 
         taskcall = AgentTaskCall.objects.get(pk=task_call_id)
 
@@ -253,8 +321,7 @@ class CallScheduler:
 
         from server.models.tasks.agent_task_run import AgentTaskRun
 
-        taskrun = AgentTaskRun.create(agent_task_call=taskcall, args=args, kwargs=kwargs)
-        taskrun.apply_async()
+        return AgentTaskRun.create(agent_task_call=taskcall, args=args, kwargs=kwargs)
 
     @staticmethod
     def on_taskrun_ended(taskrun_id: int, taskrun_status: TaskRunStatus) -> None:
@@ -327,7 +394,7 @@ class CallScheduler:
         print("on_posthook_ended", task_call_id, last_taskrun_id, related_call_status)
 
         if related_call_status == TaskCallStatusDetail.ENDED_STOPPED:
-            if TaskCallStateMachine.stop(task_call_id, TaskCallStatusDetail.WAITING_SUBTASK):
+            if TaskCallStateMachine.stop(task_call_id, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS):
                 CallScheduler._on_taskcall_ended(
                     task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED
                 )
@@ -339,12 +406,12 @@ class CallScheduler:
                 "required_task_call NOT ENDED_SUCCESS, TaskCallStatusDetail.ENDED_CANCELLED",
                 related_call_status,
             )
-            if TaskCallStateMachine.cancel(task_call_id, TaskCallStatusDetail.WAITING_SUBTASK):
+            if TaskCallStateMachine.cancel(task_call_id, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS):
                 CallScheduler._on_taskcall_ended(
                     task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED
                 )
             else:
-                # Hook parent may have progressed past WAITING_SUBTASK
+                # Hook parent may have progressed past WAITING_SUBTASKS_OR_HOOKS
                 # (e.g. WAITING_RETRY, WAITING_QUEUE, ACTIVE_QUEUED).
                 CallScheduler._cancel_safe(task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED)
             return
@@ -388,6 +455,23 @@ class CallScheduler:
         from server.models.tasks.agent_task_run import AgentTaskRun
         from runtime.tasks.run_scheduler import RunScheduler
 
+        # I4 invariant: the call is ending — any run still non-terminal is
+        # stranded.  A force-cancel (UI cancel, duplicate-query dedup, bulk
+        # root cancel) can end an ACTIVE_RUNNING call while its worker is
+        # mid-apply().  Fail the run so no ACTIVE run outlives its call; the
+        # worker's later succeed()/fail() is a no-op because the run is
+        # already FAILURE.  Mirrors the run sweep in _recover_stuck_calls
+        # step 3.
+        from django.utils import timezone
+        AgentTaskRun.objects.filter(
+            agent_task_call_id=task_call_id,
+        ).exclude(
+            status__in=[TaskRunStatus.SUCCESS, TaskRunStatus.FAILURE],
+        ).update(
+            status=TaskRunStatus.FAILURE,
+            ended_at=timezone.now(),
+        )
+
         # In case We are a subtask of another task that waits for us to
         # finish for its results
         parent_run_ids = AgentTaskRun.objects.filter(
@@ -416,7 +500,7 @@ class CallScheduler:
         # In case we are a run after hook, call our parent task
         after_run_hook_ids = AgentTaskCall.objects.filter(
             taskcall_after_run_hooks__pk=task_call_id,
-            status_detail=TaskCallStatusDetail.WAITING_SUBTASK,
+            status_detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
         ).values_list('pk', flat=True)
         #print("after_run_hook_ids", after_run_hook_ids)
         for after_run_hook_id in after_run_hook_ids:
@@ -505,7 +589,7 @@ class CallScheduler:
 
         Used as a fallback when :meth:`on_arg_reference_task_ended` or
         :meth:`on_posthook_ended` find the target call has progressed past
-        the expected ``WAITING_DEPENDENCY`` / ``WAITING_SUBTASK`` state
+        the expected ``WAITING_DEPENDENCY`` / ``WAITING_SUBTASKS_OR_HOOKS`` state
         (e.g. into ``WAITING_RETRY``, ``WAITING_QUEUE``, or ``ACTIVE_QUEUED``).
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
@@ -535,7 +619,11 @@ class CallScheduler:
             CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
             return
 
-        # Fallback for any state the FSM doesn't cover
+        # Fallback for any state the FSM doesn't cover.
+        # This should never fire — all non-terminal states now have FSM paths.
+        # If it does, it indicates a programming bug (a state was added without
+        # updating the FSM). We still do the cascade to leave the system
+        # consistent, then raise.
         updated = AgentTaskCall.objects.filter(pk=call_id).update(
             status=TaskCallStatus.ENDED,
             status_detail=TaskCallStatusDetail.ENDED_CANCELLED,
@@ -544,6 +632,41 @@ class CallScheduler:
         if updated:
             _publish_call_event(call_id)
             CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
+        raise RuntimeError(
+            f"_cancel_safe fallback fired for call {call_id} "
+            f"(state={tc.status_detail}) — programming bug: no FSM path to ENDED_CANCELLED"
+        )
+
+    @staticmethod
+    def cancel_root_tasktree(root_call_id: int) -> None:
+        """Cancel an entire root task tree (root + all children).
+
+        Traverses ``session_child_task_calls`` to find all non-ended
+        children of *root_call_id* and cancels them deepest-first,
+        then cancels the root itself.  Each cancellation cascades
+        through the dependency graph via ``_on_taskcall_ended``.
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatus
+
+        root = AgentTaskCall.objects.filter(pk=root_call_id).first()
+        if not root:
+            return
+
+        actual_root_id = root.session_root_task_id or root.pk
+
+        # Cancel all non-ended children (deepest first via -pk ordering,
+        # since children created later tend to be deeper in the tree).
+        for child in AgentTaskCall.objects.filter(
+            session_root_task_id=actual_root_id,
+        ).exclude(status=TaskCallStatus.ENDED).order_by("-pk"):
+            if child.pk == actual_root_id:
+                continue  # skip root, we do it last
+            CallScheduler._cancel_safe(child.pk, 0, TaskCallStatusDetail.ENDED_CANCELLED)
+
+        # Finally cancel the root itself.
+        if root.status != TaskCallStatus.ENDED:
+            CallScheduler._cancel_safe(root.pk, 0, TaskCallStatusDetail.ENDED_CANCELLED)
 
     @staticmethod
     def _release_next_queued_call(session) -> None:

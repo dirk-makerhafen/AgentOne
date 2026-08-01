@@ -618,7 +618,7 @@ class Session:
 
         stoppable = {
             TaskCallStatusDetail.WAITING_DEPENDENCY,
-            TaskCallStatusDetail.WAITING_SUBTASK,
+            TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             TaskCallStatusDetail.WAITING_RATELIMIT,
         }
 

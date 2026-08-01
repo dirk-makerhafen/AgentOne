@@ -52,7 +52,7 @@ An `AgentTaskCall` is a single logical invocation of a task definition. It is im
 **Lifecycle states:**
 
 ```
-NEW ──→ WAITING_DEPENDENCY ──→ [HALTED_APPROVAL] ──→ WAITING_QUEUE ──→ ACTIVE_QUEUED ──→ ACTIVE_RUNNING ──→ [WAITING_SUBTASK] ──→ ENDED_SUCCESS
+NEW ──→ WAITING_DEPENDENCY ──→ [HALTED_APPROVAL] ──→ WAITING_QUEUE ──→ ACTIVE_QUEUED ──→ ACTIVE_RUNNING ──→ [WAITING_SUBTASKS_OR_HOOKS] ──→ ENDED_SUCCESS
                                        │                                                                    │
                                        └── WAITING_QUEUE ←── WAITING_RETRY ←──────────────────────────────────┘
                                                                                    └── WAITING_RATELIMIT ──→ WAITING_QUEUE
@@ -204,7 +204,7 @@ This means: **any task that returns an `AgentTaskCall` (directly, nested in a di
 
 **File:** `run_scheduler.py:54`
 
-`RunScheduler._apply_async()` calls `run.apply()`, then checks `run.status`. If `WAITING_RESULTTASKS` and not all referenced calls have ended → parks the parent call in `WAITING_SUBTASK`. When the child calls reach `ENDED`, the `RunScheduler` is notified via `taskrun_result_reference_ended()` (line 76), which decrements the wait counter. Once zero → `all_taskrun_result_references_ended()` (line 100) → `TaskRunStateMachine.succeed()`.
+`RunScheduler._apply_async()` calls `run.apply()`, then checks `run.status`. If `WAITING_RESULTTASKS` and not all referenced calls have ended → parks the parent call in `WAITING_SUBTASKS_OR_HOOKS`. When the child calls reach `ENDED`, the `RunScheduler` is notified via `taskrun_result_reference_ended()` (line 76), which decrements the wait counter. Once zero → `all_taskrun_result_references_ended()` (line 100) → `TaskRunStateMachine.succeed()`.
 
 ### Stage 4 — Recursive `get_result()`
 

@@ -179,6 +179,7 @@ Beat scheduler schedule:
 | Task | Interval | Purpose |
 |---|---|---|
 | `tasks.tick_scheduler` | 10 seconds | Advance task calls and runs through state machine |
+| `tasks.tick_scheduler_recovery` | 60 seconds | Error recovery pass (lost messages, orphaned runs, stale queries) |
 | `poll_remote_executors_for_heartbeat` | 120 seconds | Check remote executor health |
 
 For production, consider using `-O fair` worker flag to prevent long tasks from starving short ones.

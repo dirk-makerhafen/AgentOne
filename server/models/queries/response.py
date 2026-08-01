@@ -49,39 +49,36 @@ class Response(BaseModel):
         """Save the response and optionally recalibrate query token estimates.
 
         On success, if there is a discrepancy between estimated and actual
-        token counts, all related query messages are corrected proportionally.
+        token counts, the query message token estimates are corrected
+        proportionally and ``query.tokens`` is set to the authoritative
+        backend-reported ``prompt_tokens``.
         """
         super().save(*args, **kwargs)
         if self.status == ResponseStatus.SUCCESS and self.query:
             query = self.query
             estimated_total = query.tokens
             actual_total = self.prompt_tokens
-            #print("estimated_total", estimated_total)
-            #print("actual_total", actual_total)
             if estimated_total and actual_total and estimated_total > 0 and actual_total > 0:
                 correction_factor = actual_total / estimated_total
-                #print("correction_factor", correction_factor)
                 if correction_factor > 1.01 or correction_factor < 0.99:
+                    # Scale at the *message* level, NOT the part level.  Tool
+                    # result tokens are rendered dynamically at the message
+                    # level (``_serialize_result(tc.get_result())``) and never
+                    # exist as part tokens, so a part-based recalculation
+                    # silently dropped them and collapsed ``query.tokens``.
                     recalculated_total = 0
                     for query_message in query.related_query_messages.all():
-                        #print("query_message", query_message)
-                        recalculated_message_total = 0
-                        for querymessage_part in query_message.query_message_parts.all():
-                            #print("querymessage_part", querymessage_part)
-                            if not querymessage_part.tokens:
-                                continue
-                            corrected_tokens = int(
-                                round(querymessage_part.tokens * correction_factor)
-                            )
-                            if querymessage_part.tokens != corrected_tokens:
-                                querymessage_part.tokens = corrected_tokens
-                                querymessage_part.save()
-                                #print("querymessage_part.save", querymessage_part)
-                            recalculated_message_total += corrected_tokens
-                        if query_message.tokens != recalculated_message_total:
-                            query_message.tokens = recalculated_message_total
-                            query_message.save()
-                        recalculated_total += recalculated_message_total
-                    if query.tokens != recalculated_total:
-                        query.tokens = recalculated_total
-                        query.save()
+                        if not query_message.tokens:
+                            continue
+                        corrected_tokens = int(
+                            round(query_message.tokens * correction_factor)
+                        )
+                        if query_message.tokens != corrected_tokens:
+                            query_message.tokens = corrected_tokens
+                            query_message.save(update_fields=["tokens"])
+                        recalculated_total += corrected_tokens
+                    # ``query.tokens`` is the authoritative backend count, not
+                    # the (rounded) scaled estimate.
+                    if query.tokens != actual_total:
+                        query.tokens = actual_total
+                        query.save(update_fields=["tokens"])

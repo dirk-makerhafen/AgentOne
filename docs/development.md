@@ -93,7 +93,7 @@ api/                REST API (Django REST Framework)
 server/             Core Django app
   models/           ~30 model classes organized by domain
   admin/            Django admin registrations
-  tasks/            Celery tasks: tick_scheduler, heartbeat, dispatcher
+  tasks/            Celery tasks: tick_scheduler (10s), recovery_scheduler (60s), heartbeat, dispatcher
   prompts.py        System prompt template builder
   signals.py        Model signal handlers (auto-reload on save)
   migrations/       67 migration files

@@ -5,7 +5,7 @@ extends: [baseagent]
 reasoningEffort: high
 precision: precise
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*]
-commands: [+, ingest, wiki-lint]
+commands: [+, ingest, wiki_lint]
 tasks: [+, verify, ingest_verification]
 subagents:
     - name: researcher

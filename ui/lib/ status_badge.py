@@ -11,7 +11,7 @@ _CALL_DETAIL_MAP: dict[str, tuple[str, str]] = {
     TaskCallStatusDetail.WAITING_QUEUE:          ("waiting",  "queued"),
     TaskCallStatusDetail.WAITING_DEPENDENCY:     ("waiting",  "waiting"),
     TaskCallStatusDetail.WAITING_RETRY:          ("waiting",  "retry"),
-    TaskCallStatusDetail.WAITING_SUBTASK:        ("waiting",  "subtask"),
+    TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS:        ("waiting",  "subtask"),
     TaskCallStatusDetail.WAITING_RATELIMIT:      ("warning",  "rate limited"),
     TaskCallStatusDetail.ACTIVE_QUEUED:          ("active",   "queued"),
     TaskCallStatusDetail.ACTIVE_RUNNING:         ("active",   "running"),

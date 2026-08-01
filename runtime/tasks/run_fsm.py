@@ -14,6 +14,7 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskRunStatus, TaskRunStatus]] = frozenset({
     (TaskRunStatus.ACTIVE,              TaskRunStatus.FAILURE),
     (TaskRunStatus.WAITING_RESULTTASKS, TaskRunStatus.SUCCESS),
     (TaskRunStatus.WAITING_RESULTTASKS, TaskRunStatus.FAILURE),
+    (TaskRunStatus.ACTIVE,              TaskRunStatus.RATE_LIMITED),
 })
 
 
@@ -48,6 +49,7 @@ class TaskRunStateMachine:
                               → FAILURE
                               → WAITING_RESULTTASKS → SUCCESS
                                                     → FAILURE
+                              → RATE_LIMITED
     """
 
     @staticmethod
@@ -204,3 +206,19 @@ class TaskRunStateMachine:
                 extra=extras,
             )
         return failed
+
+    @staticmethod
+    def rate_limit(run_id: int) -> bool:
+        """
+        ``ACTIVE`` → ``RATE_LIMITED``.
+
+        Called from ``AgentTaskRun.apply()`` when a ``RateLimitError`` is
+        caught.  Does **not** consume the retry budget — the ATC is parked
+        in ``WAITING_RATELIMIT`` for the scheduler to re-dispatch.
+        """
+        return TaskRunStateMachine.transition(
+            run_id,
+            TaskRunStatus.ACTIVE,
+            TaskRunStatus.RATE_LIMITED,
+            extra={"ended_at": timezone.now()},
+        )

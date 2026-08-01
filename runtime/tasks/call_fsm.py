@@ -33,24 +33,24 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskCallStatusDetail, TaskCallStatusDetail]]
 
     # Run succeeded, after-hooks pending.
     # wait_for_hooks() accepts both states via __in (matches original on_taskrun_ended).
-    (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.WAITING_SUBTASK),
-    (TaskCallStatusDetail.WAITING_SUBTASK,    TaskCallStatusDetail.WAITING_SUBTASK),
+    (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS),
+    (TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,    TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS),
 
     # Success terminal — from either state depending on hook path.
     # succeed() accepts both via __in (matches original on_all_on_posthook_ended).
     (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.ENDED_SUCCESS),
-    (TaskCallStatusDetail.WAITING_SUBTASK,    TaskCallStatusDetail.ENDED_SUCCESS),
+    (TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,    TaskCallStatusDetail.ENDED_SUCCESS),
 
     # Retry — only if retry_count < max_retries (enforced inside schedule_retry())
     (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.WAITING_RETRY),
 
     # Hard failure — no retries left
     (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION),
-    (TaskCallStatusDetail.WAITING_SUBTASK,    TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION),
+    (TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,    TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION),
 
     # Dependency or hook failed
     (TaskCallStatusDetail.WAITING_DEPENDENCY, TaskCallStatusDetail.ENDED_CANCELLED),
-    (TaskCallStatusDetail.WAITING_SUBTASK,    TaskCallStatusDetail.ENDED_CANCELLED),
+    (TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,    TaskCallStatusDetail.ENDED_CANCELLED),
 
     # Direct cancel from NEW/WAITING_RETRY (no need to chain through WAITING_DEPENDENCY)
     (TaskCallStatusDetail.NEW,                TaskCallStatusDetail.ENDED_CANCELLED),
@@ -60,7 +60,7 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskCallStatusDetail, TaskCallStatusDetail]]
 
     # External stop
     (TaskCallStatusDetail.WAITING_DEPENDENCY, TaskCallStatusDetail.ENDED_STOPPED),
-    (TaskCallStatusDetail.WAITING_SUBTASK,    TaskCallStatusDetail.ENDED_STOPPED),
+    (TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,    TaskCallStatusDetail.ENDED_STOPPED),
 
     # Cancel from queue or active-queued (no FSM path existed before — gap)
     (TaskCallStatusDetail.WAITING_QUEUE,      TaskCallStatusDetail.ENDED_CANCELLED),
@@ -273,21 +273,34 @@ class TaskCallStateMachine:
         Called from ``run_runtime._apply_async`` paired with taskrun
         ``QUEUED → ACTIVE``.  If this returns ``False`` the caller must roll
         the taskrun back to ``QUEUED``.
+
+        Includes a defensive guard: if this call has a root task
+        (``session_root_task``) and that root is already ``ENDED``, the
+        transition is rejected.  Prevents child calls from activating
+        after their root turn was cancelled (race safety).
         """
+        extra_filter = Q(session_root_task__status__in=[
+            TaskCallStatus.NEW,
+            TaskCallStatus.WAITING,
+            TaskCallStatus.ACTIVE,
+            TaskCallStatus.HALTED,
+        ]) | Q(session_root_task__isnull=True)
+
         return TaskCallStateMachine.transition(
             call_id,
             TaskCallStatusDetail.ACTIVE_QUEUED,
             TaskCallStatusDetail.ACTIVE_RUNNING,
+            extra_filter=extra_filter,
         )
 
     @staticmethod
     def wait_for_hooks(call_id: int, result_run_id: int) -> bool:
         """
-        ``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASK`` → ``WAITING_SUBTASK``.
+        ``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASKS_OR_HOOKS`` → ``WAITING_SUBTASKS_OR_HOOKS``.
 
         Accepts both from-states via ``__in``, matching the original
         ``on_taskrun_ended`` which uses
-        ``status_detail__in=[ACTIVE_RUNNING, WAITING_SUBTASK]``.
+        ``status_detail__in=[ACTIVE_RUNNING, WAITING_SUBTASKS_OR_HOOKS]``.
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
 
@@ -295,11 +308,11 @@ class TaskCallStateMachine:
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.ACTIVE_RUNNING,
-                TaskCallStatusDetail.WAITING_SUBTASK,
+                TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             ],
         ).update(
             status=TaskCallStatus.WAITING,
-            status_detail=TaskCallStatusDetail.WAITING_SUBTASK,
+            status_detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             taskcall_result_run_id=result_run_id,
         ) > 0
         if updated:
@@ -309,7 +322,7 @@ class TaskCallStateMachine:
     @staticmethod
     def succeed(call_id: int, result_run_id: int) -> bool:
         """
-        ``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASK`` → ``ENDED_SUCCESS``.
+        ``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASKS_OR_HOOKS`` → ``ENDED_SUCCESS``.
 
         Accepts both from-states via ``__in``, matching the original
         ``on_all_on_posthook_ended``.
@@ -320,7 +333,7 @@ class TaskCallStateMachine:
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.ACTIVE_RUNNING,
-                TaskCallStatusDetail.WAITING_SUBTASK,
+                TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             ],
         ).update(
             status=TaskCallStatus.ENDED,
@@ -354,14 +367,14 @@ class TaskCallStateMachine:
 
     @staticmethod
     def fail(call_id: int) -> bool:
-        """``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASK`` → ``ENDED_FAILURE_EXCEPTION`` (retries exhausted)."""
+        """``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASKS_OR_HOOKS`` → ``ENDED_FAILURE_EXCEPTION`` (retries exhausted)."""
         from server.models.tasks.agent_task_call import AgentTaskCall
 
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.ACTIVE_RUNNING,
-                TaskCallStatusDetail.WAITING_SUBTASK,
+                TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             ],
         ).update(
             status=TaskCallStatus.ENDED,
@@ -375,7 +388,7 @@ class TaskCallStateMachine:
     @staticmethod
     def cancel(call_id: int, from_detail: TaskCallStatusDetail) -> bool:
         """
-        ``WAITING_DEPENDENCY``, ``HALTED_APPROVAL``, **or** ``WAITING_SUBTASK``
+        ``WAITING_DEPENDENCY``, ``HALTED_APPROVAL``, **or** ``WAITING_SUBTASKS_OR_HOOKS``
         → ``ENDED_CANCELLED``.
 
         Parameters
@@ -393,7 +406,7 @@ class TaskCallStateMachine:
     @staticmethod
     def stop(call_id: int, from_detail: TaskCallStatusDetail) -> bool:
         """
-        ``WAITING_DEPENDENCY``, ``WAITING_SUBTASK``, **or**
+        ``WAITING_DEPENDENCY``, ``WAITING_SUBTASKS_OR_HOOKS``, **or**
         ``WAITING_RATELIMIT`` → ``ENDED_STOPPED``.
         """
         return TaskCallStateMachine.transition(

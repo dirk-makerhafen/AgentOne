@@ -50,7 +50,7 @@ class TaskCallStatusDetail(models.TextChoices):
     WAITING_QUEUE = "WAITING_QUEUE", "Waiting for execution queue"
     WAITING_RETRY = "WAITING_RETRY", "Waiting for Retry time"
     WAITING_DEPENDENCY = "WAITING_DEPENDENCY", "Waiting for Parent DEPENDENCY tasks"
-    WAITING_SUBTASK = "WAITING_SUBTASK", "Waiting for Sub-tasks"
+    WAITING_SUBTASKS_OR_HOOKS = "WAITING_SUBTASKS_OR_HOOKS", "Waiting for Sub-tasks"
     WAITING_RATELIMIT = "WAITING_RATELIMIT", "Waiting for Rate Limited"
 
     ACTIVE_QUEUED = "ACTIVE_QUEUED", "Queued"

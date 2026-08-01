@@ -280,6 +280,10 @@ class Command(BaseCommand):
         self.stdout.write(f" - Daphne listening on: {self.style.SUCCESS(listen_address + ':' + listen_port)}")
         self.stdout.write(f" - Celery Worker & Beat starting...")
         self.stdout.write(f"Type {self.style.ERROR('.exit')} and press Enter to quit.")
+
+        from server.tasks.recovery_scheduler import startup_cleanup
+        startup_cleanup()
+        self.stdout.write(" - Startup cleanup queued...")
         log_level = "DEBUG"
         commands = {
             "daphne":        ['daphne', '-b', listen_address, "-e", "tcp:8003", "-b", "0.0.0.0", "-p","8002", "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem", 'config.asgi:application'],

@@ -32,7 +32,7 @@ class QueueCard(ModelView):
                 <span class="queue-card-drag" aria-hidden="true">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><rect x="3" y="5" width="6" height="6" rx="1"></rect><path d="m3 17 2 2 4-4"></path><path d="M13 6h8"></path><path d="M13 12h8"></path><path d="M13 18h8"></path></svg>
                 </span>
-                <span class="queue-card-text" contenteditable="true" role="textbox" aria-label="Queued message — edit in place" draggable="false">{{ pyview.call_display_text(call) }}</span>
+                <span class="queue-card-text" contenteditable="true" role="textbox" aria-label="Queued message — edit in place" draggable="false">{{  call.carguments_json }}</span>
                 <span class="queue-card-badges">
                     <span title="Model: {{ pyview.call_model_name(call) }}">{{ pyview.call_model_name(call) }}</span>
                 </span>
@@ -69,18 +69,6 @@ class QueueCard(ModelView):
     def DOM_ELEMENT_CLASS(self):
         return 'queue-card'
 
-    def call_display_text(self, call):
-        args = call.carguments_json or {}
-        parts = args.get("parts")
-        if isinstance(parts, list) and parts:
-            first = parts[0]
-            if isinstance(first, dict):
-                text = first.get("content", "")
-                if isinstance(text, str):
-                    return text[:80] + ("\u2026" if len(text) > 80 else "")
-        if "name" in args:
-            return "/" + args["name"]
-        return "(message)"
 
     def call_model_name(self, call):
         if self.subject and self.subject.aimodel:

@@ -353,7 +353,7 @@ File: `server/models/queries/query.py`
 | `trigger_message` | `FK(Message, CASCADE, nullable)` | Triggering message |
 | `status` | `EnumField(QueryStatus)` | ACTIVE / WAITING / SUCCESS / FAILURE |
 | `tags_token_usage` | `JSONField(dict)` | Tagged token breakdowns |
-| `tokens` | `IntegerField` | Total token count |
+| `tokens` | `IntegerField` | Total token count. Set to the **authoritative backend `prompt_tokens`** on SUCCESS (see Response `save()`); otherwise the sum of `QueryMessage.tokens` estimates |
 
 **Relationship**: Each Query has one Response (OneToOneField).
 
@@ -399,7 +399,7 @@ File: `server/models/queries/response.py`
 | `reasoning` | `TextField(500000)` | Reasoning text |
 | `finish_reason` | `CharField(5000)` | Stop reason |
 
-**`save()`**: On success, recalibrates token estimates across related QueryMessage/QueryMessagePart instances using proportional correction.
+**`save()`**: On success, recalibrates token estimates and sets `query.tokens` to the authoritative backend `prompt_tokens`. Correction is applied at the **QueryMessage** level, not the part level: tool-result tokens are rendered dynamically (`_serialize_result(tc.get_result())`) and never exist as `QueryMessagePart.tokens`, so part-level recalculation dropped them and collapsed `query.tokens` (e.g. ~74k → ~6k). Tests: `server/tests/test_query_tokens.py`.
 
 ---
 
@@ -651,7 +651,7 @@ File: `server/models/debug_log_entry.py`
 
 ### TaskCallStatusDetail (granular)
 
-`NEW`, `WAITING_QUEUE`, `WAITING_RETRY`, `WAITING_DEPENDENCY`, `WAITING_SUBTASK`, `WAITING_RATELIMIT`, `ACTIVE_QUEUED`, `ACTIVE_RUNNING`, `HALTED_INPUT`, `HALTED_APPROVAL`, `HALTED_STAGNATED`, `HALTED_PAUSED`, `ENDED_SUCCESS`, `ENDED_FAILURE_EXCEPTION`, `ENDED_FAILURE_LOGIC`, `ENDED_CANCELLED`, `ENDED_STOPPED`
+`NEW`, `WAITING_QUEUE`, `WAITING_RETRY`, `WAITING_DEPENDENCY`, `WAITING_SUBTASKS_OR_HOOKS`, `WAITING_RATELIMIT`, `ACTIVE_QUEUED`, `ACTIVE_RUNNING`, `HALTED_INPUT`, `HALTED_APPROVAL`, `HALTED_STAGNATED`, `HALTED_PAUSED`, `ENDED_SUCCESS`, `ENDED_FAILURE_EXCEPTION`, `ENDED_FAILURE_LOGIC`, `ENDED_CANCELLED`, `ENDED_STOPPED`
 
 ### TaskRunStatus (execution state)
 

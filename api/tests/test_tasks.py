@@ -462,3 +462,586 @@ class TestTaskRuns:
         )
         resp = auth_client.get(f'/api/v1/task-runs/{run.id}/')
         assert resp.status_code == 200
+
+
+@pytest.mark.django_db
+class TestParallelRunLimit:
+    """Regression test for the I1 violation risk: concurrent dispatches for
+    two calls on the same task_instance must not both create runs when the
+    per-instance parallel limit would be exceeded."""
+
+    def _make_setup(self):
+        agent = AgentModel.objects.create(name='i1-agent')
+        session = SessionModel.objects.create(name='i1-session')
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+        td = TaskDefinition.objects.create(name='i1-task')
+        tdv = TaskDefinitionVersion.objects.create(
+            task_definition=td, task_type=TaskType.TOOL,
+            description='i1-task', function_schema={},
+        )
+        ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        return session, sv, td, tdv, ti
+
+    def _make_queued_call(self, ti, td, tdv, session, sv, parent_run=None, root=None):
+        return AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json={}, requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            parent_taskrun=parent_run,
+            session_root_task=root,
+            status=TaskCallStatus.WAITING,
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+        )
+
+    def test_second_dispatch_blocked_when_limit_reached(self, db):
+        """A second call on a full task_instance must not get a new run."""
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+        call1 = self._make_queued_call(ti, td, tdv, session, sv)
+        call2 = self._make_queued_call(ti, td, tdv, session, sv)
+
+        # call1 already holds the single run slot (limit=1).
+        AgentTaskRun.objects.create(
+            agent_task_call=call1, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.QUEUED,
+        )
+
+        with patch.object(CallScheduler, '_pick_up_and_create_run', return_value=None) as mock:
+            CallScheduler.start_new_taskrun(call2.pk)
+
+        mock.assert_not_called()
+        call2.refresh_from_db()
+        assert call2.status_detail == TaskCallStatusDetail.WAITING_QUEUE
+
+    def test_second_dispatch_proceeds_when_slot_free(self, db):
+        """With no runs yet, the first dispatch does create a run."""
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+        call = self._make_queued_call(ti, td, tdv, session, sv)
+
+        with patch.object(CallScheduler, '_pick_up_and_create_run', return_value=None) as mock:
+            CallScheduler.start_new_taskrun(call.pk)
+
+        mock.assert_called_once_with(call.pk)
+
+    def test_continuation_descendant_not_blocked_by_ancestor(self, db):
+        """A same-turn continuation (decide_next_step dispatching the next
+        process_turn) is a descendant of the run holding the TI slot.  It must
+        NOT be blocked, or the agent loop deadlocks against its own parent (E5).
+
+        Regression for commit 0182d96, which started enforcing the per-TI
+        limiter in ``start_new_taskrun``: the counter counted *every* active
+        run on the task_instance, including the ancestor process_turn's run
+        that spawned the continuation via its tail (decide_next_step)."""
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        # Old process_turn (chain) already holds the single slot.
+        old = self._make_queued_call(ti, td, tdv, session, sv)
+        old_run = AgentTaskRun.objects.create(
+            agent_task_call=old, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+
+        # decide_next_step is a child of old process_turn's run.
+        next_step = self._make_queued_call(
+            ti, td, tdv, session, sv, parent_run=old_run, root=old,
+        )
+        next_step_run = AgentTaskRun.objects.create(
+            agent_task_call=next_step, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+
+        # New process_turn dispatched by decide_next_step — descendant of old.
+        cont = self._make_queued_call(
+            ti, td, tdv, session, sv, parent_run=next_step_run, root=old,
+        )
+
+        with patch.object(CallScheduler, '_pick_up_and_create_run', return_value=None) as mock:
+            CallScheduler.start_new_taskrun(cont.pk)
+
+        # The continuation must be admitted despite the ancestor holding the slot.
+        mock.assert_called_once_with(cont.pk)
+
+    def test_unrelated_sibling_still_blocked_when_limit_reached(self, db):
+        """A call that is NOT a descendant of the slot holder is a genuinely
+        independent turn (e.g. a second user message) and must remain blocked."""
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+        call1 = self._make_queued_call(ti, td, tdv, session, sv, root=None)
+        call1 = AgentTaskCall.objects.get(pk=call1.pk)
+        AgentTaskRun.objects.create(
+            agent_task_call=call1, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.QUEUED,
+        )
+        # Independent second call — different root, no ancestor link.
+        call2 = self._make_queued_call(ti, td, tdv, session, sv, root=None)
+
+        with patch.object(CallScheduler, '_pick_up_and_create_run', return_value=None) as mock:
+            CallScheduler.start_new_taskrun(call2.pk)
+
+        mock.assert_not_called()
+        call2.refresh_from_db()
+        assert call2.status_detail == TaskCallStatusDetail.WAITING_QUEUE
+
+
+@pytest.mark.django_db
+class TestRecoverStuckCalls:
+    """Recovery-pass handling of zombie calls.
+
+    A call whose root task has ended can never start: ``start_running``
+    rejects ``ACTIVE_QUEUED → ACTIVE_RUNNING`` once the root turn is done.
+    The recovery pass must cancel such calls instead of endlessly
+    re-dispatching their QUEUED runs.
+    """
+
+    def _make_setup(self):
+        agent = AgentModel.objects.create(name='recover-agent')
+        session = SessionModel.objects.create(name='recover-session')
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+        td = TaskDefinition.objects.create(name='recover-task')
+        tdv = TaskDefinitionVersion.objects.create(
+            task_definition=td, task_type=TaskType.TOOL,
+            description='recover-task', function_schema={},
+        )
+        ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        return session, sv, td, tdv, ti
+
+    def _make_call(self, ti, td, tdv, session, sv, *, root=None):
+        return AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json={}, requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            session_root_task=root,
+            status=TaskCallStatus.ACTIVE,
+            status_detail=TaskCallStatusDetail.ACTIVE_QUEUED,
+        )
+
+    def test_zombie_call_with_ended_root_is_cancelled(self, db):
+        """ACTIVE_QUEUED call whose root ended → cancelled, run failed, no redispatch."""
+        from server.tasks.recovery_scheduler import _recover_stuck_calls
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None)
+        AgentTaskCall.objects.filter(pk=root.pk).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            ended_at=None,
+        )
+        root.refresh_from_db()
+
+        zombie = self._make_call(ti, td, tdv, session, sv, root=root)
+        AgentTaskRun.objects.create(
+            agent_task_call=zombie, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.QUEUED,
+        )
+
+        with patch('server.tasks.task_dispatcher.celery_delay') as mock_dispatch:
+            _recover_stuck_calls()
+
+        zombie.refresh_from_db()
+        assert zombie.status == TaskCallStatus.ENDED
+        assert zombie.status_detail == TaskCallStatusDetail.ENDED_CANCELLED
+        run = zombie.related_agent_task_runs.first()
+        assert run.status == TaskRunStatus.FAILURE
+        mock_dispatch.assert_not_called()
+
+    def test_zombie_call_with_no_run_is_cancelled(self, db):
+        """ACTIVE_QUEUED call (no run) with ended root → cancelled, not re-queued."""
+        from server.tasks.recovery_scheduler import _recover_stuck_calls
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None)
+        AgentTaskCall.objects.filter(pk=root.pk).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            ended_at=None,
+        )
+        root.refresh_from_db()
+
+        zombie = self._make_call(ti, td, tdv, session, sv, root=root)
+
+        with patch('server.tasks.task_dispatcher.celery_delay') as mock_dispatch:
+            _recover_stuck_calls()
+
+        zombie.refresh_from_db()
+        assert zombie.status == TaskCallStatus.ENDED
+        assert zombie.status_detail == TaskCallStatusDetail.ENDED_CANCELLED
+        mock_dispatch.assert_not_called()
+
+    def test_orphan_call_with_live_root_is_requeued(self, db):
+        """ACTIVE_QUEUED call with a live root and no run → re-queued normally."""
+        from server.tasks.recovery_scheduler import _recover_stuck_calls
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None)
+        AgentTaskRun.objects.create(
+            agent_task_call=root, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.ACTIVE,
+        )
+        orphan = self._make_call(ti, td, tdv, session, sv, root=root)
+
+        with patch.object(CallScheduler, 'start_new_taskrun') as mock_start, \
+             patch('server.tasks.task_dispatcher.celery_delay') as mock_dispatch:
+            _recover_stuck_calls()
+
+        orphan.refresh_from_db()
+        assert orphan.status_detail == TaskCallStatusDetail.WAITING_QUEUE
+        mock_start.assert_called_with(orphan.pk)
+        mock_dispatch.assert_not_called()
+
+    def test_waiting_queue_call_with_dangling_ref_is_cancelled(self, db):
+        """WAITING_QUEUE call referencing a deleted call → cancelled, not released."""
+        from server.tasks.recovery_scheduler import _release_queued_calls
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        # Root call for session_root_task self-reference is unnecessary here; a
+        # plain WAITING_QUEUE call whose args reference a non-existent call.
+        ghost = AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json={"_type": "AgentTaskCall", "pk": 999999},
+            requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            session_root_task=None,
+            status=TaskCallStatus.WAITING,
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+        )
+
+        with patch.object(CallScheduler, 'start_new_taskrun') as mock_start:
+            _release_queued_calls()
+
+        ghost.refresh_from_db()
+        assert ghost.status == TaskCallStatus.ENDED
+        assert ghost.status_detail == TaskCallStatusDetail.ENDED_CANCELLED
+        mock_start.assert_not_called()
+
+
+@pytest.mark.django_db
+class TestResolveStuckWaitingRuns:
+    """Deadlock-breaker safety: must not fail runs whose tree is still alive."""
+
+    def _make_setup(self):
+        agent = AgentModel.objects.create(name='stuck-agent')
+        session = SessionModel.objects.create(name='stuck-session')
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+        td = TaskDefinition.objects.create(name='stuck-task')
+        tdv = TaskDefinitionVersion.objects.create(
+            task_definition=td, task_type=TaskType.TOOL,
+            description='stuck-task', function_schema={},
+        )
+        ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        return session, sv, td, tdv, ti
+
+    def _make_call(self, ti, td, tdv, session, sv, *, root, detail):
+        return AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json={}, requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            session_root_task=root,
+            status=TaskCallStatus.WAITING,
+            status_detail=detail,
+        )
+
+    def test_run_with_live_tree_not_failed(self, db):
+        """WAITING_RESULTTASKS run whose ref is WAITING_DEPENDENCY but a sibling
+        call is ACTIVE_RUNNING → NOT failed (healthy-but-slow chain)."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None,
+                               detail=TaskCallStatusDetail.ACTIVE_RUNNING)
+        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+
+        # The chain parent: WAITING_RESULTTASKS run waiting on a ref.
+        parent = self._make_call(ti, td, tdv, session, sv, root=root,
+                                 detail=TaskCallStatusDetail.ACTIVE_RUNNING)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        # Force updated_at older than the 30s grace.
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+
+        # The pending ref: still waiting on its own deps (WAITING_DEPENDENCY).
+        ref = self._make_call(ti, td, tdv, session, sv, root=root,
+                              detail=TaskCallStatusDetail.WAITING_DEPENDENCY)
+        run.taskrun_result_references.add(ref)
+
+        # A sibling in the root tree is genuinely ACTIVE_RUNNING (slow call_llm)
+        # with its run in ACTIVE (doing real work), not WAITING_RESULTTASKS.
+        sibling = self._make_call(ti, td, tdv, session, sv, root=root,
+                                  detail=TaskCallStatusDetail.ACTIVE_RUNNING)
+        AgentTaskRun.objects.create(
+            agent_task_call=sibling, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.ACTIVE,
+        )
+
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+    def test_run_with_halted_approval_ref_is_not_failed(self, db):
+        """A WAITING_RESULTTASKS run whose pending ref is HALTED_APPROVAL is
+        paused on a human decision, not deadlocked — it must NOT be force-failed.
+        (Regression: whole chains died ~8s after a python call went to approval
+        because HALTED_APPROVAL was treated as a non-progressing state.)"""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None,
+                               detail=TaskCallStatusDetail.ACTIVE_RUNNING)
+        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+
+        parent = self._make_call(ti, td, tdv, session, sv, root=root,
+                                 detail=TaskCallStatusDetail.ACTIVE_RUNNING)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+
+        # The pending ref is halted for human approval (python guardrail).
+        ref = self._make_call(ti, td, tdv, session, sv, root=root,
+                              detail=TaskCallStatusDetail.HALTED_APPROVAL)
+        run.taskrun_result_references.add(ref)
+
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+    def test_run_with_dead_tree_is_failed(self, db):
+        """WAITING_RESULTTASKS run whose whole tree is stuck → failed (true deadlock)."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None,
+                               detail=TaskCallStatusDetail.WAITING_QUEUE)
+        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+
+        parent = self._make_call(ti, td, tdv, session, sv, root=root,
+                                 detail=TaskCallStatusDetail.WAITING_QUEUE)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+        ref = self._make_call(ti, td, tdv, session, sv, root=root,
+                              detail=TaskCallStatusDetail.WAITING_DEPENDENCY)
+        run.taskrun_result_references.add(ref)
+
+        # No sibling is active — the whole tree is stuck.
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.FAILURE
+
+    def test_run_with_parked_ref_and_ready_dependency_not_failed(self, db):
+        """A WAITING_RESULTTASKS run whose pending ref is parked in
+        WAITING_SUBTASKS_OR_HOOKS, while a sibling chain step is
+        WAITING_DEPENDENCY with all its deps ended, is mid-chain — NOT failed.
+        (Regression: session-963 — a healthy chain was force-failed in the gap
+        between the previous step ending and the next step being released.)"""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None,
+                               detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+
+        parent = self._make_call(ti, td, tdv, session, sv, root=root,
+                                 detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+
+        # The pending ref is itself a parked chain parent (WAITING_SUBTASKS_OR_HOOKS):
+        # its run waits on the chain steps below it.
+        parked = self._make_call(ti, td, tdv, session, sv, root=root,
+                                 detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        parked_run = AgentTaskRun.objects.create(
+            agent_task_call=parked, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        run.taskrun_result_references.add(parked)
+
+        # Previous chain step just ended; the next step is WAITING_DEPENDENCY
+        # with all its deps (prev) ended — about to be released by the Celery
+        # on_arg_reference_task_ended notification.
+        prev = self._make_call(ti, td, tdv, session, sv, root=root,
+                               detail=TaskCallStatusDetail.ENDED_SUCCESS)
+        AgentTaskCall.objects.filter(pk=prev.pk).update(status=TaskCallStatus.ENDED)
+        nxt = self._make_call(ti, td, tdv, session, sv, root=root,
+                              detail=TaskCallStatusDetail.WAITING_DEPENDENCY)
+        nxt.taskcall_arg_references.add(prev)
+        parked_run.taskrun_result_references.add(nxt)
+
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+    def test_run_with_blocked_active_sibling_is_failed(self, db):
+        """An ACTIVE_RUNNING sibling whose own run is WAITING_RESULTTASKS is itself
+        blocked (E5 circular deadlock) — it must NOT protect the tree."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        root = self._make_call(ti, td, tdv, session, sv, root=None,
+                               detail=TaskCallStatusDetail.WAITING_QUEUE)
+        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+
+        parent = self._make_call(ti, td, tdv, session, sv, root=root,
+                                 detail=TaskCallStatusDetail.WAITING_QUEUE)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+        ref = self._make_call(ti, td, tdv, session, sv, root=root,
+                              detail=TaskCallStatusDetail.WAITING_DEPENDENCY)
+        run.taskrun_result_references.add(ref)
+
+        # A sibling appears ACTIVE_RUNNING but is itself stuck waiting on refs
+        # (E5 circular deadlock) — its own run is WAITING_RESULTTASKS.
+        sibling = self._make_call(ti, td, tdv, session, sv, root=root,
+                                  detail=TaskCallStatusDetail.ACTIVE_RUNNING)
+        AgentTaskRun.objects.create(
+            agent_task_call=sibling, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.FAILURE
