@@ -134,10 +134,11 @@ def _resolve_stuck_waiting_runs() -> None:
 
     for run in stuck:
         try:
-            pending = AgentTaskCall.objects.filter(
+            pending_calls = AgentTaskCall.objects.filter(
                 ~Q(status=TaskCallStatus.ENDED),
                 rev_taskrun_result_references=run.pk,
-            ).values_list('status_detail', flat=True)
+            )
+            pending = pending_calls.values_list('status_detail', flat=True)
 
             # Case 1: all refs ended — resolve immediately (no cascade risk)
             if not pending:
@@ -176,7 +177,24 @@ def _resolve_stuck_waiting_runs() -> None:
                 # HALTED_APPROVAL also counts as progressing: the chain is
                 # paused on a human decision, not deadlocked.
                 call = run.agent_task_call
+
+                # The run may be blocked on result references that live in a
+                # DIFFERENT session root task tree than its own call — e.g.
+                # ``delegate_task`` / ``start_subsession`` spawn a fresh child
+                # session whose chain is its own root task (the child's
+                # ``ingest_user_message`` is the child tree root).  If we only
+                # inspect the run's own tree we see nothing active and wrongly
+                # declare a deadlock while the child chain is actually making
+                # progress.  Inspect the union of root-task trees: the run's
+                # own call plus every pending result reference.
+                root_task_ids = set()
                 if call and call.session_root_task_id:
+                    root_task_ids.add(call.session_root_task_id)
+                for ref in pending_calls:
+                    if ref.session_root_task_id:
+                        root_task_ids.add(ref.session_root_task_id)
+
+                if root_task_ids:
                     # A call counts as *progressing* when it is on a
                     # deterministic forward-progress path:
                     #
@@ -202,7 +220,7 @@ def _resolve_stuck_waiting_runs() -> None:
                         TaskCallStatus.HALTED,
                     ]
                     active_or_running = AgentTaskCall.objects.filter(
-                        session_root_task_id=call.session_root_task_id,
+                        session_root_task_id__in=root_task_ids,
                     ).exclude(
                         status=TaskCallStatus.ENDED,
                     ).filter(
@@ -215,7 +233,7 @@ def _resolve_stuck_waiting_runs() -> None:
                         related_agent_task_runs__status=TaskRunStatus.WAITING_RESULTTASKS,
                     ).exists()
                     dependency_ready = AgentTaskCall.objects.filter(
-                        session_root_task_id=call.session_root_task_id,
+                        session_root_task_id__in=root_task_ids,
                         status_detail=TaskCallStatusDetail.WAITING_DEPENDENCY,
                     ).filter(
                         taskcall_arg_references__isnull=False,

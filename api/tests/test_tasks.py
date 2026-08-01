@@ -1045,3 +1045,72 @@ class TestResolveStuckWaitingRuns:
 
         run.refresh_from_db()
         assert run.status == TaskRunStatus.FAILURE
+
+    def test_run_with_active_ref_in_other_session_tree_not_failed(self, db):
+        """A WAITING_RESULTTASKS run blocked on a result reference that lives
+        in a DIFFERENT session root task tree (e.g. ``delegate_task`` spawning a
+        child session whose chain has its own root task) must NOT be failed when
+        that other tree is actively progressing — even if the run's own tree is
+        idle.  Regression: delegate_task:293740 was force-failed while the child
+        session was alive and merely paused on a human approval."""
+        from datetime import timedelta
+        from django.utils import timezone
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        session, sv, td, tdv, ti = self._make_setup()
+
+        # Parent session root task — its own tree is completely idle.
+        parent_root = self._make_call(ti, td, tdv, session, sv, root=None,
+                                      detail=TaskCallStatusDetail.WAITING_QUEUE)
+        AgentTaskCall.objects.filter(pk=parent_root.pk).update(session_root_task=parent_root)
+
+        parent = self._make_call(ti, td, tdv, session, sv, root=parent_root,
+                                 detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = AgentTaskRun.objects.create(
+            agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        AgentTaskRun.objects.filter(pk=run.pk).update(
+            updated_at=timezone.now() - timedelta(minutes=5),
+        )
+
+        # Child session with its own root task tree.
+        child_session = SessionModel.objects.create(name='stuck-child-session')
+        child_sv = SessionVersionModel.objects.create(
+            session=child_session, agent=AgentModel.objects.create(name='stuck-child-agent'))
+        child_ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=child_session, session_version=child_sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        child_root = self._make_call(child_ti, td, tdv, child_session, child_sv, root=None,
+                                     detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        AgentTaskCall.objects.filter(pk=child_root.pk).update(session_root_task=child_root)
+
+        # The child tree is ACTIVE: a leaf call paused on human approval
+        # (HALTED_APPROVAL) — a healthy-but-paused state, never a deadlock.
+        AgentTaskCall.objects.create(            task_definition=td, task_definition_version=tdv,
+            task_instance=child_ti, session=child_session, session_version=child_sv,
+            carguments_json={}, requires_approval=True,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            session_root_task=child_root,
+            status=TaskCallStatus.WAITING,
+            status_detail=TaskCallStatusDetail.HALTED_APPROVAL,
+        )
+
+        # Parent run waits on the child's root call (which is parked waiting on
+        # its own child leaf) — exactly the delegate_task pattern.
+        run.taskrun_result_references.add(child_root)
+
+        _resolve_stuck_waiting_runs()
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.WAITING_RESULTTASKS
