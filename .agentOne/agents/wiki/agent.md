@@ -4,7 +4,7 @@ description: Vault brain agent — markdown wiki maintainer and knowledge curato
 extends: [baseagent]
 reasoningEffort: high
 precision: precise
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, wiki_find_unlinked_raw]
 commands: [+, ingest, wiki_lint]
 tasks: [+, verify, ingest_verification]
 subagents:

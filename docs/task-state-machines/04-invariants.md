@@ -87,7 +87,7 @@ For each session, the `prev_message` chain forms a single linked list from root 
 
 **Rationale:** `ingest_user_message` and `ingest_assistant_message` use `filter(next_messages=None).last()` to find the predecessor. If this returns multiple messages, message ordering is undefined and context building may behave incorrectly.
 
-**Enforcement:** `ingest_compaction` (`.agentone/scripts/core/ingest_compaction.py`) repoints the kept message at the new compaction message, detaches the compacted range from its predecessor, then self-references every message no longer reachable from the compaction message (backward via `prev_message`, forward via `next_messages`). This keeps the linked list a single chain. Regression coverage: `server/tests/test_compact_fork.py`.
+**Enforcement:** `ingest_compaction` (`.agentone/scripts/core/ingest_compaction.py`) inserts the compaction message immediately *after* the last compacted message (its `prev_message` is the newest compacted message) and relinks the first message that followed the range back at it. The compacted range stays in the chain — nothing is detached or self-referenced. Because inserting a node never branches a linear chain, the invariant holds trivially. Regression coverage: `server/tests/test_compact_fork.py`.
 
 **Historic violation:** A historic compaction bug caused chain forks (see `.agentone/scripts/core/repair_message_chain.py`). The repair script self-references orphan messages so they are excluded from `filter(next_messages=None)`. The bug is fixed in the current `ingest_compaction`; the repair script remains for pre-existing corrupted sessions.
 
@@ -95,6 +95,6 @@ For each session, the `prev_message` chain forms a single linked list from root 
 
 When `msg.prev_message = msg.id`, the message appears in its own `next_messages` queryset via the reverse FK `related_name="next_messages"`. Since `next_messages` is not null, `filter(next_messages=None)` correctly excludes it.
 
-This is used by the repair script (`repair_message_chain.py`) and by `ingest_compaction` to hide orphan messages from the tail query without deleting them.
+This is used by the repair script (`repair_message_chain.py`) to hide orphan messages from the tail query without deleting them. (`ingest_compaction` no longer self-references messages — it keeps the compacted range in the chain so the UI can still render the full history; see I7.)
 
 **Note:** The FK has `on_delete=SET_NULL`, so if a self-referencing message is deleted, its `prev_message` goes to NULL and it would reappear in `filter(next_messages=None)`. In practice, messages are not deleted.

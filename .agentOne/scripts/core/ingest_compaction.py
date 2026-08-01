@@ -55,22 +55,29 @@ def ingest_compaction(
         publish_model_event(compaction_message, "create")
         return dict(response=response, parts=parts, message=compaction_message)
 
-    # The compaction replaces everything from oldest_compacted (chronologically
-    # first) through newest_compacted (chronologically last).
-    oldest_compacted = compacted_messages[0]
+    # The compaction is inserted as a boundary marker immediately after the
+    # newest compacted message (chronologically last).  The message linked
+    # list stays a single linear chain: nothing is repointed, detached, or
+    # orphaned.
+    #
+    # ``build_llm_context`` walks backward from the newest message and stops
+    # at the first message with a COMPACTION part, so the compacted range is
+    # excluded from the LLM context.  The UI (which walks the same
+    # ``prev_message`` chain without stopping) can still render the full
+    # history in order.
     newest_compacted = compacted_messages[-1]
-    prev_for_compaction = oldest_compacted.prev_message
 
-    # The first message that follows the compacted range (if any).
-    first_kept = newest_compacted.next_messages.filter(
-        hide_from_context=False,
-    ).order_by("pk").first()
+    # The first message that followed the compacted range (if any).  Captured
+    # *before* creating the compaction message so ``newest_compacted``'s
+    # ``next_messages`` does not yet include it (otherwise a fully-compacted
+    # chain would repoint the compaction message at itself).
+    successor = newest_compacted.next_messages.order_by("pk").first()
 
     compaction_message = Message.objects.create(
         session_version=_session.get_version_model(),
         response=response,
         role="user",
-        prev_message=prev_for_compaction,
+        prev_message=newest_compacted,
     )
     compaction_message.add_part(
         type="COMPACTION", content_type="text", content="Old messages before this summary have been compacted to save context tokens. Summary:"
@@ -81,56 +88,13 @@ def ingest_compaction(
         content=summary_text,
     )
 
-    if first_kept:
-        first_kept.prev_message = compaction_message
-        first_kept.save()
-    else:
-        # Everything was compacted — relink the trigger message directly.
-        response.query.trigger_message.prev_message = compaction_message
-        response.query.trigger_message.save()
-
-    # Detach the old branch from the chain so the message linked list
-    # remains a single chain (no fork).  Without this, the predecessor
-    # of *oldest_compacted* has two ``next_messages`` children, and
-    # ``filter(next_messages=None).last()`` may pick the wrong tail
-    # (the old branch instead of the active one).
-    if oldest_compacted.prev_message_id:
-        oldest_compacted.prev_message = None
-        oldest_compacted.save()
-
-    # Repointing the kept message at the compaction message orphans the whole
-    # compacted range plus any of its hidden children.  Every message no
-    # longer reachable from the compaction message (backward via prev_message,
-    # forward via next_messages) shows up as a dangling tail in
-    # ``filter(next_messages=None)`` (I7 fork).  Self-reference them all
-    # (I8 pattern) so the tail query only ever returns the active tail.
-    session_messages = list(Message.objects.filter(
-        session_version=_session.get_version_model(),
-    ).only("pk", "prev_message_id"))
-    prev_map = {m.pk: m.prev_message_id for m in session_messages}
-
-    # Forward walk: everything that follows the compaction message.
-    active: set[int] = set()
-    stack = [compaction_message.pk]
-    while stack:
-        mid = stack.pop()
-        if mid in active:
-            continue
-        active.add(mid)
-        for child_id, parent_id in prev_map.items():
-            if parent_id == mid:
-                stack.append(child_id)
-
-    # Backward walk: everything that precedes it on the active chain.
-    cur: int | None = compaction_message.prev_message_id
-    while cur is not None and cur not in active and cur in prev_map:
-        active.add(cur)
-        cur = prev_map[cur]
-
-    for m in session_messages:
-        if m.pk not in active and m.pk != m.prev_message_id:
-            m.prev_message_id = m.pk
-            m.save()
+    # Relink the first message that followed the compacted range (if any) so
+    # it now points back at the compaction message.  Without this the
+    # predecessor (newest_compacted) would have two ``next_messages``
+    # children and the chain would fork.
+    if successor:
+        successor.prev_message = compaction_message
+        successor.save()
 
     from runtime.events import publish_model_event
     publish_model_event(compaction_message, "create")
