@@ -22,10 +22,16 @@ def _resolve_folder(folder: str | None, session: Any | None) -> str | None:
     if session is None:
         return None
 
+    version = session.get_version_model()
+
+    # The calling session itself is a wiki agent session → use its own workspace.
+    if version.agent.name == "wiki" and version.workspace is not None:
+        return version.workspace.path
+
     from server.models.sessions.session_version import SessionVersionModel
     wiki_paths = list(
         SessionVersionModel.objects.filter(
-            parent_session_version=session.get_version_model(),
+            parent_session_version=version,
             agent__name="wiki",
             workspace__isnull=False,
         ).values_list("workspace__path", flat=True).distinct()

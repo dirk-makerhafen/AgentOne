@@ -11,10 +11,46 @@ import django
 django.setup()
 
 from wiki_checks import (
+    _resolve_folder,
     _resolve_wikilink_target,
     _strip_code_fences,
     _strip_inline_code,
 )
+
+
+class _FakeWorkspace:
+    def __init__(self, path):
+        self.path = path
+
+
+class _FakeAgent:
+    def __init__(self, name):
+        self.name = name
+
+
+class _FakeVersion:
+    def __init__(self, agent_name, workspace_path):
+        self.agent = _FakeAgent(agent_name)
+        self.workspace = _FakeWorkspace(workspace_path) if workspace_path else None
+
+
+class _FakeSession:
+    def __init__(self, agent_name, workspace_path):
+        self.workspace = _FakeWorkspace(workspace_path) if workspace_path else None
+        self._version = _FakeVersion(agent_name, workspace_path)
+
+    def get_version_model(self):
+        return self._version
+
+
+def test_resolve_folder_wiki_agent_self_uses_own_workspace():
+    session = _FakeSession("wiki", "/tmp/vault")
+    assert _resolve_folder(None, session) == "/tmp/vault"
+
+
+def test_resolve_folder_explicit_folder_wins():
+    session = _FakeSession("wiki", "/tmp/vault")
+    assert _resolve_folder("/elsewhere/wiki", session) == "/elsewhere/wiki"
 
 
 def _eq(a: Path | None, b: Path | None) -> bool:
