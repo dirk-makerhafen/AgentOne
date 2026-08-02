@@ -735,9 +735,7 @@ def _recover_stale_queries() -> None:
             if has_live_call_llm:
                 continue  # This query is still being worked on
             print(f"[recovery] cancelling stale WAITING query {query.pk} (WAITING since {query.updated_at})")
-            Query.objects.filter(pk=query.pk, status=QueryStatus.WAITING).update(
-                status=QueryStatus.SUCCESS,
-            )
+            Query.objects.filter(pk=query.pk, status=QueryStatus.WAITING).update(status=QueryStatus.SUCCESS,)
             publish_model_event(query, "update")
         except Exception as e:
             print(f"[recovery] error cancelling stale WAITING query {query.pk}: {e}")
@@ -753,9 +751,7 @@ def _recover_stale_queries() -> None:
             print(f"[recovery] resuming stale query {query.pk} (ACTIVE since {query.updated_at})")
 
             # 1. Fail orphaned ACTIVE Responses
-            Response.objects.filter(query=query, status=ResponseStatus.ACTIVE).update(
-                status=ResponseStatus.FAILURE,
-            )
+            Response.objects.filter(query=query, status=ResponseStatus.ACTIVE).update(status=ResponseStatus.FAILURE)
 
             # 2. Find call_llm calls referencing THIS specific query (not all queries
             #    in the session version).  Uses _references_query for deep JSON matching

@@ -30,7 +30,7 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
         pct = 15
 
     # Count conversation QueryMessages (system/tool defs have source_message=None).
-    conv = [qm for qm in query.related_query_messages.all() if qm.source_message_id]
+    conv = [qm for qm in query.related_query_messages.order_by("pk").all() if qm.source_message_id]
     keep_count = max(1, int(len(conv) * pct / 100))
 
     # Remove the kept messages from the compaction query so the LLM only

@@ -3023,7 +3023,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
    seamless. */
 .msg-row[data-role="assistant"]:has(.msg-body:empty) { padding: 0; margin: 0; }
 .msg-row[data-role="assistant"]:has(.msg-body:empty) .msg-role,
-.msg-row[data-role="assistant"]:has(.msg-body:empty) .msg-files { display: none; }
+/*.msg-row[data-role="assistant"]:has(.msg-body:empty) .msg-files { display: none; }*/
 .msg-files { padding-left: var(--msg-rail); }
 .msg-usage { padding-left: var(--msg-rail); opacity: 1; margin-top: 6px; font-size: 11px; }
 .tool-card { margin-left: var(--msg-rail); max-width: var(--msg-max);

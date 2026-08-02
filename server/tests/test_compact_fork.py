@@ -130,6 +130,38 @@ class CompactionForkTest(TestCase):
         self.assertIsNotNone(out["message"])
         self.assertEqual(len(self._tails()), 1)
 
+    def test_second_compaction_boundary_follows_chain_not_pk(self):
+        # A prior compaction inserted marker X mid-chain.  X was created
+        # AFTER c (higher pk) but sits BEFORE it in the chain.  The second
+        # compaction's boundary must be the chain-last compacted message (c),
+        # NOT the pk-max message (X) — otherwise c stays in the context even
+        # though it was compacted.
+        a = _msg(self.sv, MessageRole.USER, "a", None)
+        b = _msg(self.sv, MessageRole.USER, "b", a)
+        c = _msg(self.sv, MessageRole.USER, "c", b)
+        d = _msg(self.sv, MessageRole.USER, "d", c)
+
+        # Simulate compaction 1: marker X inserted between b and c.
+        x = Message.objects.create(session_version=self.sv, role=MessageRole.USER, prev_message=b)
+        MessagePart.objects.create(
+            message=x,
+            type=MessagePartType.COMPACTION,
+            content=GenericContent.from_text("old summary"),
+            content_type=MessageContentType.TEXT,
+        )
+        Message.objects.filter(pk=c.pk).update(prev_message=x)
+
+        # Second compaction: compact [X, c], keep d.
+        out = self._run_compaction([x, c], trigger=d)
+
+        # New boundary sits after c (chain-last compacted), and d points back
+        # to it — NOT after X (which has the higher pk).
+        self.assertEqual(out["message"].prev_message_id, c.pk)
+        d.refresh_from_db()
+        self.assertEqual(d.prev_message_id, out["message"].pk)
+        self.assertEqual(len(self._tails()), 1, f"expected single tail, got {self._tails()}")
+        self.assertEqual(self._tails()[0], d.pk)
+
     def test_hidden_child_after_compaction_not_a_tail(self):
         a = _msg(self.sv, MessageRole.USER, "a", None)
         b = _msg(self.sv, MessageRole.USER, "b", a)

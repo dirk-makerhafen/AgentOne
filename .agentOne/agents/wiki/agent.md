@@ -7,6 +7,8 @@ precision: precise
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, wiki.wiki_find_unlinked_raw]
 commands: [+, ingest, wiki_lint]
 tasks: [+, verify, ingest_verification]
+autoCompactLimit: 90000
+compactSizeLimit: 10
 subagents:
     - name: researcher
       create: both
@@ -110,7 +112,7 @@ Archive year corresponds to the year of archiving, not the page's creation date.
    <Key claims, numbers, quotes, why this matters. Bullet points preferred.>
    ```
 
-   The `sources` field is a list of wikilinks and MUST point to the original raw file(s) (e.g. `[[raw/emails/.../message.md]]`) or the URL. Singular `source` is invalid — the lint tool flags and auto-fixes it. Use tags consistently — derive them from the section or topic (e.g. `buchhaltung`, `mitglieder`, `workshop`, `lieferung`).
+   The `sources` field is a list of wikilinks and MUST point to the original raw file(s) (e.g. `[[raw/emails/.../message.md]]`) or the URL. Singular `source` is invalid — the lint tool flags and auto-fixes it. Use tags consistently — derive them from the section or topic (e.g. `buchhaltung`, `mitglieder`, `workshop`, `lieferung`). Every raw file must have a timeline entry, otherwise that the file counts as "not been ingested yet".
 
 4. Ripple through every entity, concept, and section it touches (usually 5–15 pages).
 5. Create missing entity, concept, and section pages.

@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
+from server.models.enums.message_enums import MessageContentType, MessageRole
 from server.models.message import Message
 from server.models.queries.response import Response
 from server.models.enums.task_enums import TaskRunStatus
@@ -35,9 +36,7 @@ def _is_subtask_execution(_session: Session) -> bool:
     return False
 
 
-def decide_next_step(
-    _session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any,
-) -> Message:
+def decide_next_step(_session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any) -> Message:
     _session.count_turn()
     _session.count_unattended_turn()
 
@@ -49,6 +48,29 @@ def decide_next_step(
 
     if kwargs.get("has_final_result"):
         return message
+
+
+    MAX_NO_TOOL_ASSISTANT_TURNS = 5
+    warn_no_toolcall_loop = True
+    pmessage = message
+    for _ in range(MAX_NO_TOOL_ASSISTANT_TURNS):
+        if not pmessage or pmessage.role != MessageRole.ASSISTANT or (pmessage.response and pmessage.response.tool_calls):
+            warn_no_toolcall_loop = False
+            break
+        pmessage = pmessage.prev_message
+
+    if warn_no_toolcall_loop:
+        prev_message = message
+        message = Message.objects.create(
+            role= MessageRole.USER,
+            session_version=_session.get_version_model(),
+            prev_message=prev_message,
+        )
+        message.add_part(
+            type="message",
+            content_type=MessageContentType.TEXT,
+            content="<SYSTEM HINT>Possible looping or inefficient behavior detected. You did multiple turns without any tool calling. Take a step back and correct if needed.</SYSTEM HINT>",
+        )
 
     if _is_subtask_execution(_session):
         return _session.get_task("process_turn").delay(message=message)

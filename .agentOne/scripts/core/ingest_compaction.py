@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
+from server.models.enums.message_enums import MessageContentType
 from server.models.message import Message
 from server.models.queries.response import Response
 
@@ -19,9 +20,9 @@ def ingest_compaction(
     # The remaining QueryMessages (kept messages were deleted by
     # build_llm_compact_context) are exactly the messages that were
     # compacted — no need to recalculate the split.
-    # Deduplicate by source_message and sort by PK so the range
-    # boundaries are correct even when a source_message has multiple
-    # QueryMessages (e.g. content + toolcall parts).
+    # Deduplicate by source_message.  Multiple QueryMessages for the same
+    # source_message (e.g. content + toolcall parts) are adjacent, so the
+    # first occurrence preserves the order.
     seen: set[int] = set()
     compacted_messages: list[Message] = []
     for qm in response.query.related_query_messages.all():
@@ -30,21 +31,37 @@ def ingest_compaction(
             seen.add(msg.pk)
             compacted_messages.append(msg)
 
-    compacted_messages.sort(key=lambda m: m.pk)
+    # Order the compacted messages by their position in the ``prev_message``
+    # chain, NOT by pk: a COMPACTION marker inserted mid-chain was created
+    # *after* the messages that follow it in the chain, so it has a higher pk
+    # yet sits *before* them.  Sorting by pk would pick the marker as the
+    # "newest" compacted message and place the boundary too early, leaving
+    # messages that were meant to be compacted in the context.  Walk the
+    # linked list to recover the true chain order.
+    if len(compacted_messages) > 1:
+        by_id = {m.pk: m for m in compacted_messages}
+        followers = {
+            m.prev_message_id: m
+            for m in compacted_messages
+            if m.prev_message_id in by_id
+        }
+        head = next(
+            (m for m in compacted_messages if m.prev_message_id not in by_id),
+            compacted_messages[0],
+        )
+        ordered: list[Message] = []
+        current: Message | None = head
+        while current is not None:
+            ordered.append(current)
+            current = followers.get(current.pk)
+        compacted_messages = ordered
 
     if not compacted_messages:
         # Nothing to compact — create a trivial summary appended to the
         # current tail so the linked list stays a single chain.
         sv = _session.get_version_model()
-        current_tail = Message.objects.filter(
-            session_version=sv, next_messages=None,
-        ).order_by("-pk").first()
-        compaction_message = Message.objects.create(
-            session_version=sv,
-            response=response,
-            role="user",
-            prev_message=current_tail,
-        )
+        current_tail = Message.objects.filter(session_version=sv, next_messages=None).order_by("-pk").first()
+        compaction_message = Message.objects.create(session_version=sv, response=response, role="user", prev_message=current_tail,)
         compaction_message.add_part(
             type="COMPACTION", content_type="text", content="Old messages before this summary have been compacted to save context tokens. Summary:"
         )
@@ -80,11 +97,11 @@ def ingest_compaction(
         prev_message=newest_compacted,
     )
     compaction_message.add_part(
-        type="COMPACTION", content_type="text", content="Old messages before this summary have been compacted to save context tokens. Summary:"
+        type="COMPACTION", content_type=MessageContentType.TEXT, content="Old messages before this summary have been compacted to save context tokens. Summary:"
     )
     compaction_message.add_part(
         type="COMPACTION",
-        content_type="text",
+        content_type=MessageContentType.TEXT,
         content=summary_text,
     )
 
