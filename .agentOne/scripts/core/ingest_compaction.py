@@ -63,7 +63,7 @@ def ingest_compaction(
         current_tail = Message.objects.filter(session_version=sv, next_messages=None).order_by("-pk").first()
         compaction_message = Message.objects.create(session_version=sv, response=response, role="user", prev_message=current_tail,)
         compaction_message.add_part(
-            type="COMPACTION", content_type="text", content="Old messages before this summary have been compacted to save context tokens. Summary:"
+            type="COMPACTION", content_type="text", content="Old messages before this summary have been compacted to save context tokens. Summary :"
         )
         compaction_message.add_part(
             type="COMPACTION", content_type="text", content=summary_text

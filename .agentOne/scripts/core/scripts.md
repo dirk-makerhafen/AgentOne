@@ -62,7 +62,6 @@ tasks:
       - call_llm
       - parse_llm_response
       - ingest_compaction
-      - decide_next_step
   - name: process_turn
     type: chain
     chain:
