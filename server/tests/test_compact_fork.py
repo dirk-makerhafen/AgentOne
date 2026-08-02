@@ -162,6 +162,57 @@ class CompactionForkTest(TestCase):
         self.assertEqual(len(self._tails()), 1, f"expected single tail, got {self._tails()}")
         self.assertEqual(self._tails()[0], d.pk)
 
+    def test_stacked_markers_boundary_is_chain_tail_not_pk_max(self):
+        # Regression for the real-world corruption: when a session compacts on
+        # every turn, each new COMPACTION marker M_high is created AFTER the
+        # previously kept message (higher pk) but inserted BEFORE it in the
+        # chain, stacking markers into a run.  The pk-max message of the
+        # compacted set is then the chain-HEAD of that run (oldest in chain),
+        # and the true chain-last compacted message sits at the far end.
+        # The boundary must follow the chain, not pk, so the kept region is
+        # actually excluded from the context.
+        a = _msg(self.sv, MessageRole.USER, "a", None)
+        b = _msg(self.sv, MessageRole.USER, "b", a)
+        c = _msg(self.sv, MessageRole.USER, "c", b)
+        d = _msg(self.sv, MessageRole.USER, "d", c)
+        e = _msg(self.sv, MessageRole.USER, "e", d)
+        f = _msg(self.sv, MessageRole.USER, "f", e)
+
+        # Stack two markers into a run between b and c.  Each marker has a
+        # HIGHER pk than c but sits BEFORE it in the chain.
+        def _marker(prev):
+            m = Message.objects.create(session_version=self.sv, role=MessageRole.USER, prev_message=prev)
+            MessagePart.objects.create(
+                message=m,
+                type=MessagePartType.COMPACTION,
+                content=GenericContent.from_text("old summary"),
+                content_type=MessageContentType.TEXT,
+            )
+            return m
+
+        m_low = _marker(b)      # oldest of the run, prev -> b
+        m_high = _marker(m_low)  # pk-max, prev -> m_low
+        Message.objects.filter(pk=c.pk).update(prev_message=m_high)
+        self.assertGreater(m_high.pk, c.pk)
+        self.assertGreater(m_low.pk, c.pk)
+
+        # Compact everything through c, keeping d -> e -> f.
+        out = self._run_compaction([a, b, m_low, m_high, c], trigger=f)
+
+        # Boundary sits after c (chain-last compacted), NOT after m_high
+        # (pk-max).  d must point back to the new marker.
+        self.assertEqual(out["message"].prev_message_id, c.pk)
+        d.refresh_from_db()
+        self.assertEqual(d.prev_message_id, out["message"].pk)
+        tails = self._tails()
+        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
+        self.assertEqual(tails[0], f.pk)
+
+        # Active chain: a -> b -> m_low -> m_high -> c -> compaction -> d -> e -> f
+        f.refresh_from_db()
+        self.assertEqual(f.prev_message_id, e.pk)
+        self.assertEqual(e.prev_message_id, d.pk)
+
     def test_hidden_child_after_compaction_not_a_tail(self):
         a = _msg(self.sv, MessageRole.USER, "a", None)
         b = _msg(self.sv, MessageRole.USER, "b", a)
