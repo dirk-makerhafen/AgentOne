@@ -115,15 +115,17 @@ def run_streaming_query(
                 first_reasoning_token_timestamp = time.time()
             last_reasoning_token_timestamp = time.time()
             unknown_chunk = False
-            if reasoning_chunk in response.reasoning:
-                repeat_count += 1
             response.reasoning += reasoning_chunk
+            r = response.reasoning
+            if r and r.count(r[-255:]) > 1:
+                repeat_count += 1
 
         if content_chunk := message_chunk.get("content", None):
             unknown_chunk = False
-            if content_chunk in response.content:
-                repeat_count += 1
             response.content += content_chunk
+            r = response.content
+            if r and r.count(r[-255:]) > 1:
+                repeat_count += 1
 
         if tool_calls_chunk := message_chunk.get("tool_calls", None):
             unknown_chunk = False
