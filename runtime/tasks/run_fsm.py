@@ -89,7 +89,12 @@ class TaskRunStateMachine:
             )
         from server.models.tasks.agent_task_run import AgentTaskRun
 
-        fields: dict = {"status": to_status}
+        # ``.update()`` bypasses ``BaseModel.save()`` / ``auto_now``, so the
+        # timestamp must be bumped explicitly — otherwise ``updated_at`` stays
+        # pinned at insert time and recovery passes that key their staleness
+        # checks off it (``_resolve_stuck_waiting_runs`` 30s grace) treat any
+        # long-but-healthy run as stuck and force-fail it.
+        fields: dict = {"status": to_status, "updated_at": timezone.now()}
         if extra:
             fields.update(extra)
 
@@ -132,7 +137,7 @@ class TaskRunStateMachine:
 
         updated = AgentTaskRun.objects.filter(
             pk=run_id, status=TaskRunStatus.ACTIVE
-        ).update(status=TaskRunStatus.QUEUED) > 0
+        ).update(status=TaskRunStatus.QUEUED, updated_at=timezone.now()) > 0
         if updated:
             _publish_run_event(run_id)
         return updated

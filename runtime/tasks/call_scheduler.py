@@ -470,6 +470,7 @@ class CallScheduler:
         ).update(
             status=TaskRunStatus.FAILURE,
             ended_at=timezone.now(),
+            updated_at=timezone.now(),
         )
 
         # In case We are a subtask of another task that waits for us to

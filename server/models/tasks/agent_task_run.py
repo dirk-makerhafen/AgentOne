@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Optional
 from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from runtime.context_manager import ContextTracker
 from runtime.rate_limiter import RateLimitError
@@ -160,7 +161,7 @@ class AgentTaskRun(BaseModel):
     def apply_async(self) -> None:
         """Dispatch this run asynchronously via Celery."""
         query = AgentTaskRun.objects.filter(pk=self.pk, status=TaskRunStatus.NEW)
-        if 0 == query.update(status=TaskRunStatus.QUEUED):
+        if 0 == query.update(status=TaskRunStatus.QUEUED, updated_at=timezone.now()):
             return
         from runtime.tasks.run_scheduler import RunScheduler
 

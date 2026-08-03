@@ -61,9 +61,9 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
         super().send(text_data=message)
 
     def session_event(self, event: dict) -> None:
-        print(f"CONSUMER.session_event: type={event.get('event_type')} "
-             f"sid={event.get('session_id')} "
-             f"payload_keys={list(event.get('payload', {}).keys())}")
+        #print(f"CONSUMER.session_event: type={event.get('event_type')} "
+        #     f"sid={event.get('session_id')} "
+        #     f"payload_keys={list(event.get('payload', {}).keys())}")
         try:
             _view_app_instance.dispatch_session_event(
                 event.get("session_id"),

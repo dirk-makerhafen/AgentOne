@@ -217,6 +217,50 @@ class CompactionForkTest(TestCase):
         self.assertEqual(f.prev_message_id, e.pk)
         self.assertEqual(e.prev_message_id, d.pk)
 
+    def test_marker_with_missing_successor_boundary_follows_chain_tail(self):
+        # Regression for the real-world failure: the compaction query starts
+        # with the prior COMPACTION marker (the walk-back stops there), but the
+        # marker's immediate chain-successor is NOT in the compacted set (e.g. a
+        # hidden tool-result message between the marker and the rest).  Sorting
+        # by pk — or walking from the chain head — would pick the marker as the
+        # "newest" compacted message (its prev is outside the set, and its own
+        # next is missing), chaining new markers into a run and leaving the live
+        # conversation un-compacted.  The boundary must land after the chain-LAST
+        # compacted message.
+        a = _msg(self.sv, MessageRole.USER, "a", None)
+        b = _msg(self.sv, MessageRole.USER, "b", a)
+        c = _msg(self.sv, MessageRole.USER, "c", b)
+        d = _msg(self.sv, MessageRole.USER, "d", c)
+        e = _msg(self.sv, MessageRole.USER, "e", d)
+
+        # Prior compaction marker X inserted between b and c (created after d,
+        # so higher pk, yet sits BEFORE it in the chain).
+        x = Message.objects.create(session=self.sv.session, session_version=self.sv, role=MessageRole.USER, prev_message=b)
+        MessagePart.objects.create(
+            message=x,
+            type=MessagePartType.COMPACTION,
+            content=GenericContent.from_text("old summary"),
+            content_type=MessageContentType.TEXT,
+        )
+        # Hidden tool-result between X and c — present in the chain but excluded
+        # from the compaction query (hide_from_context), so the marker's chain
+        # successor is missing from the compacted set.
+        h = _msg(self.sv, MessageRole.USER, "h", x)
+        Message.objects.filter(pk=h.pk).update(hide_from_context=True)
+        Message.objects.filter(pk=c.pk).update(prev_message=h)
+        self.assertGreater(x.pk, d.pk)
+
+        # Second compaction: compact [X, c, d] (h excluded), keep e.
+        out = self._run_compaction([x, c, d], trigger=e)
+
+        # Boundary sits after d (chain-last compacted), NOT after X (pk-max).
+        self.assertEqual(out["message"].prev_message_id, d.pk)
+        e.refresh_from_db()
+        self.assertEqual(e.prev_message_id, out["message"].pk)
+        tails = self._tails()
+        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
+        self.assertEqual(tails[0], e.pk)
+
     def test_hidden_child_after_compaction_not_a_tail(self):
         a = _msg(self.sv, MessageRole.USER, "a", None)
         b = _msg(self.sv, MessageRole.USER, "b", a)

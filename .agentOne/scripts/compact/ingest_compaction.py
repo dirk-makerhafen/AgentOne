@@ -20,6 +20,17 @@ def ingest_compaction(
     # The remaining QueryMessages (kept messages were deleted by
     # build_llm_compact_context) are exactly the messages that were
     # compacted — no need to recalculate the split.
+    #
+    # ``build_llm_context`` creates QueryMessages in chain order: the
+    # compaction-boundary marker first (oldest), then the remaining messages
+    # oldest → newest, so ``related_query_messages.all()`` (pk = creation
+    # order) is already in chain order.  The newest compacted message is the
+    # LAST entry — never re-sort by source-message pk or by walking the
+    # ``prev_message`` links: a marker created later than the messages that
+    # follow it has a HIGHER source-message pk yet sits BEFORE them, so a
+    # pk-based "newest" pick would choose the marker and place the boundary
+    # too early, leaving the live conversation un-compacted.
+    #
     # Deduplicate by source_message.  Multiple QueryMessages for the same
     # source_message (e.g. content + toolcall parts) are adjacent, so the
     # first occurrence preserves the order.
@@ -30,31 +41,6 @@ def ingest_compaction(
         if msg and msg.pk not in seen:
             seen.add(msg.pk)
             compacted_messages.append(msg)
-
-    # Order the compacted messages by their position in the ``prev_message``
-    # chain, NOT by pk: a COMPACTION marker inserted mid-chain was created
-    # *after* the messages that follow it in the chain, so it has a higher pk
-    # yet sits *before* them.  Sorting by pk would pick the marker as the
-    # "newest" compacted message and place the boundary too early, leaving
-    # messages that were meant to be compacted in the context.  Walk the
-    # linked list to recover the true chain order.
-    if len(compacted_messages) > 1:
-        by_id = {m.pk: m for m in compacted_messages}
-        followers = {
-            m.prev_message_id: m
-            for m in compacted_messages
-            if m.prev_message_id in by_id
-        }
-        head = next(
-            (m for m in compacted_messages if m.prev_message_id not in by_id),
-            compacted_messages[0],
-        )
-        ordered: list[Message] = []
-        current: Message | None = head
-        while current is not None:
-            ordered.append(current)
-            current = followers.get(current.pk)
-        compacted_messages = ordered
 
     if not compacted_messages:
         # Nothing to compact — create a trivial summary appended to the

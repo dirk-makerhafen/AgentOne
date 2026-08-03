@@ -364,6 +364,7 @@ def _recover_stuck_calls() -> None:
                 ).update(
                     status=TaskRunStatus.FAILURE,
                     ended_at=timezone.now(),
+                    updated_at=timezone.now(),
                 )
                 if _force_end_call(call):
                     print(f"[recovery] cancelled ACTIVE_QUEUED call {call.pk} — root task {root.pk} ended")
@@ -406,6 +407,7 @@ def _recover_stuck_calls() -> None:
                 ).update(
                     status=TaskRunStatus.FAILURE,
                     ended_at=timezone.now(),
+                    updated_at=timezone.now(),
                 )
                 if call.max_retries > 0 and call.retry_count < call.max_retries:
                     if TaskCallStateMachine.schedule_retry(call.pk, call.retry_delay, call.max_retries):

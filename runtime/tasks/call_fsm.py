@@ -170,7 +170,7 @@ class TaskCallStateMachine:
         if extra_filter is not None:
             query = query.filter(extra_filter)
 
-        fields: dict = {"status": to_status, "status_detail": to_detail}
+        fields: dict = {"status": to_status, "status_detail": to_detail, "updated_at": timezone.now()}
         if extra:
             fields.update(extra)
 
@@ -202,6 +202,7 @@ class TaskCallStateMachine:
         ).update(
             status=TaskCallStatus.WAITING,
             status_detail=TaskCallStatusDetail.WAITING_DEPENDENCY,
+            updated_at=timezone.now(),
         ) > 0
         if updated:
             _publish_call_event(call_id)
@@ -314,6 +315,7 @@ class TaskCallStateMachine:
             status=TaskCallStatus.WAITING,
             status_detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             taskcall_result_run_id=result_run_id,
+            updated_at=timezone.now(),
         ) > 0
         if updated:
             _publish_call_event(call_id)
@@ -340,6 +342,7 @@ class TaskCallStateMachine:
             status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
             taskcall_result_run_id=result_run_id,
             ended_at=timezone.now(),
+            updated_at=timezone.now(),
         ) > 0
         if updated:
             _publish_call_event(call_id)
@@ -380,6 +383,7 @@ class TaskCallStateMachine:
             status=TaskCallStatus.ENDED,
             status_detail=TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
             ended_at=timezone.now(),
+            updated_at=timezone.now(),
         ) > 0
         if updated:
             _publish_call_event(call_id)
