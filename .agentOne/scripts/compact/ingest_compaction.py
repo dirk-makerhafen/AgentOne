@@ -99,7 +99,9 @@ def ingest_compaction(
         prev_message=newest_compacted,
     )
     compaction_message.add_part(
-        type=MessagePartType.COMPACTION, content_type=MessageContentType.TEXT, content="Old messages before this summary have been compacted to save context tokens. Summary:"
+        type=MessagePartType.COMPACTION, 
+        content_type=MessageContentType.TEXT, 
+        content="Old messages before this summary have been compacted to save context tokens. Summary:"
     )
     compaction_message.add_part(
         type=MessagePartType.COMPACTION,

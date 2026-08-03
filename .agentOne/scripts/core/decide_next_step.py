@@ -54,7 +54,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     warn_no_toolcall_loop = True
     pmessage = message
     for _ in range(MAX_NO_TOOL_ASSISTANT_TURNS):
-        if not pmessage or pmessage.role != MessageRole.ASSISTANT or (pmessage.response and pmessage.response.tool_calls):
+        if not pmessage or (pmessage.role != MessageRole.ASSISTANT and pmessage.role != MessageRole.TOOL) or (pmessage.response and pmessage.response.tool_calls):
             warn_no_toolcall_loop = False
             break
         pmessage = pmessage.prev_message
@@ -68,10 +68,13 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
             session_version=sv,
             prev_message=prev_message,
         )
+        call_hint = ", or call final_result(message='..your final result message..') to finish and return your results." if _is_subtask_execution(_session) else "."
+        hint_prompt = f"<SYSTEM HINT>Possible looping or inefficient behavior detected. You did multiple turns without any tool calling. Take a step back and correct if needed{call_hint}</SYSTEM HINT>"
+
         message.add_part(
             type=MessagePartType.MESSAGE,
             content_type=MessageContentType.TEXT,
-            content="<SYSTEM HINT>Possible looping or inefficient behavior detected. You did multiple turns without any tool calling. Take a step back and correct if needed.</SYSTEM HINT>",
+            content=hint_prompt,
         )
 
     if _is_subtask_execution(_session):

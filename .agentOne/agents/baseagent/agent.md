@@ -18,9 +18,9 @@ skills: []
 disallowedSkills: []
 tools: []
 disallowedTools: []
-tasks: [ core.*, compact.*  ]
+tasks: [ core.call_llm  ]
 disallowedTasks: []
-commands: [ ping, debug, test-approval, compact, tasks.* ]
+commands: [ ping, debug, test-approval, tasks.* ]
 disallowedCommands: []
 priority: 0
 ---
