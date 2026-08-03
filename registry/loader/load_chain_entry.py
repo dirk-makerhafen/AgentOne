@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from registry.loader.utils import build_version_kwargs
@@ -19,6 +20,7 @@ def load_chain_entry(
     existing_results: List[Tuple[TaskDefinition, TaskDefinitionVersion]],
     details: list | None = None,
     parent_generation: Any = None,
+    manifest_path: Path | None = None,
 ) -> None:
     """Load a chain/group entry from a scripts.md manifest.
 
@@ -32,9 +34,13 @@ def load_chain_entry(
     for step_name in step_names:
         child = _find_task_version(step_name, existing_results)
         if child is None:
+            available = ", ".join(td.name for td, _ in existing_results) or "(none loaded yet)"
             raise LookupError(
-                f"Chain step '{step_name}' not found in existing results "
-                "(must appear earlier in scripts.md)"
+                f"Chain step '{step_name}' not found for task '{name}' "
+                f"({manifest_path or 'unknown scripts.md'}): it must be "
+                f"defined as a standalone tool/task/command (function or "
+                f"script) in a scripts.md under this scripts directory. "
+                f"Tasks already defined: [{available}]"
             )
         child_versions.append(child)
 

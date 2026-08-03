@@ -39,7 +39,7 @@ class SessionVersionModel(BaseModel):
         "session",  
         "agent",
         "pinned_agent_version",      
-        "parent_session_version",
+        "parent_session",
         "workspace",    
     ])
 
@@ -51,7 +51,7 @@ class SessionVersionModel(BaseModel):
             f"SessionVersionModel.session:{self.session_pk}",
             f"SessionVersionModel.agent:{self.agent_pk}",
             f"SessionVersionModel.pinned_agent_version:{self.pinned_agent_version_pk}",
-            f"SessionVersionModel.parent_session_version:{self.parent_session_version_pk}",
+            f"SessionVersionModel.parent_session:{self.parent_session_pk}",
             f"SessionVersionModel.workspace:{self.workspace_pk}",
         ])
 

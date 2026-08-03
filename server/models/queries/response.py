@@ -45,7 +45,6 @@ class Response(BaseModel):
         "pk",
         "query",
         "session",
-        "session_version",
     ])
     @property
     def observable_keys(self):
@@ -54,7 +53,6 @@ class Response(BaseModel):
             f"Response.pk:{self.pk}",
             f"Response.query:{self.query_pk}",      
             f"Response.session:{self.session_pk}",   
-            f"Response.session_version:{self.session_version_pk}", 
         ])
 
     def notify_observers(self):

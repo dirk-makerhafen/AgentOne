@@ -332,23 +332,44 @@ def _resolve_agent_version_tasks(
 
         global_tds = list(TaskDefinition.objects.filter(**gfargs))
         if not global_tds:
-            raise Exception(f"No Task Definition found for '{raw_name}' group='{group}'")
+            avail_groups = sorted(
+                TaskDefinition.objects.filter(
+                    parent_agent__isnull=True,
+                    parent_project__isnull=True,
+                    parent_skill__isnull=True,
+                ).values_list("group_name", flat=True).distinct()
+            )
+            hint = (
+                f"No Task Definition found for '{raw_name}' group='{group}'. "
+                f"Available global task groups: {avail_groups or '(none)'}. "
+                f"Check that the referenced scripts.md loaded successfully — "
+                f"a 'Scripts:' error earlier in reload output (e.g. a chain "
+                f"step that couldn't be resolved) will abort all script "
+                f"loading and cause this."
+            )
+            raise Exception(hint)
         for td in global_tds:
             resolved.add(td.latest_task_version.pk)
 
     # Read raw patterns via resolve_setting to walk the extends chain,
     # NOT through the runtime Agent (the M2M hasn't been populated yet).
     raw_namesets = [
-        agent_version.resolve_setting("toolNames") or [],
-        agent_version.resolve_setting("taskNames") or [],
-        agent_version.resolve_setting("commandNames") or [],
+        ("toolNames", agent_version.resolve_setting("toolNames") or []),
+        ("taskNames", agent_version.resolve_setting("taskNames") or []),
+        ("commandNames", agent_version.resolve_setting("commandNames") or []),
     ]
 
     cnt = 0
-    for names in raw_namesets:
+    for setting_key, names in raw_namesets:
         for name in names:
             cnt+=1
-            _resolve_pattern(name)
+            try:
+                _resolve_pattern(name)
+            except Exception as e:
+                raise Exception(
+                    f"{e} (resolving agent '{agent_version.agent.name}' "
+                    f"{setting_key} pattern '{name}')"
+                ) from e
 
     if not resolved and cnt > 0:
         raise Exception(f"No task definitions resolved for pattern {raw_namesets}")

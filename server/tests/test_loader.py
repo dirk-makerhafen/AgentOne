@@ -1,8 +1,10 @@
 from django.test import TestCase
 
 from registry.loader.load_agent_manifest import load_agent_manifest
+from registry.loader.load_chain_entry import load_chain_entry
 from server.tests.helpers import AgentMdTestMixin, TESTPROJECT
-from server.models.enums.task_enums import TaskType
+from server.models.enums.task_enums import TaskType, TaskExecutionMode
+from pathlib import Path
 
 
 class LoaderTest(AgentMdTestMixin, TestCase):
@@ -111,3 +113,110 @@ class LoaderTest(AgentMdTestMixin, TestCase):
         self.assertEqual(
             self.sub_av.subagent_configs["base"].get("create"), "both"
         )
+
+
+class LoadChainEntryTest(TestCase):
+    """Error-hint quality for chain steps that reference unknown tasks."""
+
+    def test_missing_chain_step_includes_manifest_and_available_tasks(self):
+        from server.models.tasks.task_definition import TaskDefinition
+        from server.models.tasks.task_definition_version import TaskDefinitionVersion
+
+        with self.assertRaises(LookupError) as ctx:
+            load_chain_entry(
+                entry={"name": "my_chain", "chain": ["call_llm"]},
+                commit="abc",
+                task_type=TaskType.TASK,
+                task_execution_mode=TaskExecutionMode.CHAIN,
+                name="my_chain",
+                group_name="core",
+                parent_project=None,
+                parent_agent=None,
+                parent_skill=None,
+                existing_results=[],
+                manifest_path=TESTPROJECT / "scripts" / "compact" / "scripts.md",
+            )
+        msg = str(ctx.exception)
+        self.assertIn("'call_llm'", msg)
+        self.assertIn("my_chain", msg)
+        self.assertIn("scripts.md", msg)
+
+
+class LoadScriptsTwoPassTest(TestCase):
+    """Chain steps may reference tasks defined in OTHER scripts.md files,
+    regardless of alphabetical directory order (the compact/core bug)."""
+
+    def _write_manifest(self, scripts_dir: Path, sub: str, body: str) -> None:
+        d = scripts_dir / sub
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "scripts.md").write_text(body)
+
+    def test_chain_in_earlier_dir_resolves_step_from_later_dir(self):
+        import shutil
+        import tempfile
+        from pathlib import Path
+        from registry.loader.load_scripts_manifest import load_scripts_manifest
+        from registry.install_repo import InstallRepo
+
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        scripts_dir = tmp / "scripts"
+
+        # z-core defines call_llm; a-compact references it. "a-compact"
+        # sorts first, so single-pass loading would fail.
+        self._write_manifest(
+            scripts_dir,
+            "a-compact",
+            "---\ngroup: compact\ntasks:\n  - name: compact_turn\n    type: chain\n"
+            "    chain: [call_llm]\n---\n",
+        )
+        self._write_manifest(
+            scripts_dir,
+            "z-core",
+            "---\ngroup: core\ntasks:\n  - name: call_llm\n"
+            "    file: dummy.py\n    function: dummy\n---\n",
+        )
+        (scripts_dir / "z-core" / "dummy.py").write_text(
+            "def dummy():\n    return 1\n"
+        )
+
+        repo = InstallRepo(repo_path=tmp / "install")
+        repo.source_root = scripts_dir
+        repo.sync()
+
+        results = load_scripts_manifest(scripts_dir, install_repo=repo)
+        names = {td.name for td, _ in results}
+        self.assertIn("compact_turn", names)
+        self.assertIn("call_llm", names)
+
+        chain_tdv = next(tdv for _, tdv in results if _.name == "compact_turn")
+        child_names = {c.task_definition.name for c in chain_tdv.child_tasks.all()}
+        self.assertIn("call_llm", child_names)
+
+    def test_truly_missing_step_raises_aggregate_error(self):
+        import shutil
+        import tempfile
+        from pathlib import Path
+        from registry.loader.load_scripts_manifest import load_scripts_manifest
+        from registry.install_repo import InstallRepo
+
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        scripts_dir = tmp / "scripts"
+
+        self._write_manifest(
+            scripts_dir,
+            "a-compact",
+            "---\ngroup: compact\ntasks:\n  - name: compact_turn\n    type: chain\n"
+            "    chain: [does_not_exist]\n---\n",
+        )
+
+        repo = InstallRepo(repo_path=tmp / "install")
+        repo.source_root = scripts_dir
+        repo.sync()
+
+        with self.assertRaises(LookupError) as ctx:
+            load_scripts_manifest(scripts_dir, install_repo=repo)
+        msg = str(ctx.exception)
+        self.assertIn("missing step(s)", msg)
+        self.assertIn("does_not_exist", msg)

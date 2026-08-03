@@ -286,8 +286,41 @@ def _format_detailed_summary(
         lines.append(f"Errors ({len(errors)}):")
         for e in errors:
             lines.append(f"  - {e}")
+        hints = _build_error_hints(errors)
+        if hints:
+            lines.append("")
+            lines.append("Hints:")
+            for h in hints:
+                lines.append(f"  - {h}")
 
     return "\n".join(lines)
+
+
+def _build_error_hints(errors: List[str]) -> List[str]:
+    """Build actionable hints that explain how separate errors relate."""
+    hints: List[str] = []
+    has_script_error = any(e.startswith("Scripts:") for e in errors)
+    has_task_error = any("No Task Definition found" in e for e in errors)
+    has_chain_error = any("Chain step" in e for e in errors)
+
+    if has_chain_error:
+        hints.append(
+            "A chain/group step could not be resolved. Chain steps must "
+            "reference tasks defined as standalone tools/tasks/commands "
+            "(function or script) in a scripts.md under the scripts directory. "
+            "A missing step is usually a typo, a renamed definition, or a name "
+            "that only exists outside this scripts directory — check the "
+            "'missing step(s)' list in the error above."
+        )
+    if has_script_error and has_task_error:
+        hints.append(
+            "The 'No Task Definition found' agent errors are almost certainly "
+            "a cascade: when global scripts fail to load (see the 'Scripts:' "
+            "error), no task definitions are created, so agents that reference "
+            "those tools cannot resolve them. Fix the 'Scripts:' error first, "
+            "then reload again."
+        )
+    return hints
 
 
 class Command(BaseCommand):

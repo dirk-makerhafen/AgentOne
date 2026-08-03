@@ -43,10 +43,10 @@ class Query(BaseModel):
 
     @property
     def observable_keys(self):
-        return set([
-            "Query",
+        return set([            
+            f"Query",
             f"Query.pk:{self.pk}",
-            f"Query.session_version:{self.session_version_pk}",        
+            f"Query.session:{self.session_pk}",        
         ])
 
     @property

@@ -51,7 +51,6 @@ class SessionModel(BaseModel):
             f"SessionModel.pk:{self.pk}",
             f"SessionModel.parent_session:{self.parent_session_pk}",
             f"SessionModel.parent_project:{self.parent_project_pk}",
-            f"SessionModel.latest_session_version:{self.latest_session_version_pk}",
         ])
 
     def get_runtime(self) -> Session:

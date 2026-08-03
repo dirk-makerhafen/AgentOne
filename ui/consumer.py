@@ -1,4 +1,4 @@
-from _typeshed import Unused
+
 from threading import Lock
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer

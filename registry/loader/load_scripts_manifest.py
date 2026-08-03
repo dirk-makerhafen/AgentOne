@@ -23,9 +23,14 @@ def load_scripts_manifest(
 ) -> List[Tuple[TaskDefinition, TaskDefinitionVersion]]:
     """Load all entries from all ``scripts.md`` manifests found in *scripts_dir*.
 
-    Recurses into subdirectories. Entries are processed in order so that Python
-    entries are created before chain/group entries (which need to resolve child
-    versions by name).
+    Recurses into subdirectories. Entries are loaded in two passes so chain /
+    group / map entries can reference standalone functions/scripts from *any*
+    ``scripts.md`` under *scripts_dir*, independent of directory order:
+
+    1. Standalone entries (``function`` / ``script``) are loaded first.
+    2. Chain / group / map entries are resolved afterwards, re-waved until
+       all step references resolve (nested chains included). A wave that makes
+       no progress raises with a list of the unresolved steps.
 
     Version identifiers are deterministic git tree SHAs from *install_repo*.
 
@@ -49,23 +54,79 @@ def load_scripts_manifest(
             commit=root_commit
         )
 
+    # Collect every entry from every scripts.md before loading, so a chain in
+    # one file can reference a task defined in any other file.
+    collected: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
     for manifest_path in sorted(scripts_dir.rglob("scripts.md")):
         subdir = manifest_path.parent
         manifest = frontmatter.load(manifest_path)
         if len(manifest.keys()) == 0:
-            if len(manifest_path.read_text().strip()) ==0:
+            if len(manifest_path.read_text().strip()) == 0:
                 # empty file
                 return []
             raise Exception(f"Failed to load frontmatter from {manifest_path}, did you forget closing \\n---\\n\\n?")
         commit = install_repo.tree_sha(subdir)
-        entries = _collect_manifest_entries(manifest)
-        for entry in entries:
+        for entry in _collect_manifest_entries(manifest):
+            collected.append((entry, subdir, commit, manifest_path))
+
+    # Pass 1 — standalone functions/scripts (chains depend on these).
+    deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
+    for entry, subdir, commit, manifest_path in collected:
+        if entry["task_execution_mode"] in (
+            TaskExecutionMode.FUNCTION,
+            TaskExecutionMode.SCRIPT,
+        ):
             _load_script_entry(
                 entry, subdir, commit, results,
                 parent_project, parent_agent, parent_skill, details,
                 parent_generation=parent_generation,
+                manifest_path=manifest_path,
             )
+        else:
+            deferred.append((entry, subdir, commit, manifest_path))
+
+    # Pass 2 — chain / group / map entries, re-waved until every step
+    # reference resolves (chains may reference other chains).
+    while deferred:
+        still_deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
+        progressed = False
+        for entry, subdir, commit, manifest_path in deferred:
+            try:
+                _load_script_entry(
+                    entry, subdir, commit, results,
+                    parent_project, parent_agent, parent_skill, details,
+                    parent_generation=parent_generation,
+                    manifest_path=manifest_path,
+                )
+                progressed = True
+            except LookupError:
+                still_deferred.append((entry, subdir, commit, manifest_path))
+        if not progressed:
+            raise _build_unresolved_chain_error(still_deferred, results)
+        deferred = still_deferred
+
     return results
+
+
+def _build_unresolved_chain_error(
+    deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]],
+    results: List[Tuple[TaskDefinition, TaskDefinitionVersion]],
+) -> LookupError:
+    """Build a detailed error listing every chain step that never resolved."""
+    defined = {td.name for td, _ in results}
+    lines: List[str] = []
+    for entry, _, _, manifest_path in deferred:
+        steps = entry.get("chain") or entry.get("group") or entry.get("map") or []
+        missing = [s for s in steps if s not in defined]
+        lines.append(f"  - '{entry['name']}' in {manifest_path}: missing step(s) {missing}")
+    return LookupError(
+        "Could not resolve chain step(s) (no dependency wave made progress):\n"
+        + "\n".join(lines)
+        + "\nEach step must be defined as a tool/task/command (function or "
+          "script) in a scripts.md under this scripts directory. Missing "
+          "steps are likely typos, renamed definitions, or names that exist "
+          "only outside this scripts directory."
+    )
 
 
 def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
@@ -101,6 +162,7 @@ def _load_script_entry(
     parent_skill: Any,
     details: list | None = None,
     parent_generation: ScriptsGeneration | None = None,
+    manifest_path: Path | None = None,
 ) -> None:
     """Dispatch a single manifest entry to the appropriate loader.
 
@@ -128,6 +190,7 @@ def _load_script_entry(
             entry, commit, task_type, task_execution_mode, name, group_name,
             parent_project, parent_agent, parent_skill, existing_results, details,
             parent_generation=parent_generation,
+            manifest_path=manifest_path,
         )
     else:
         raise ValueError(
