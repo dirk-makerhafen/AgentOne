@@ -13,7 +13,7 @@ def ingest_compaction(
 ) -> dict[str, Any]:
     summary_text = ""
     for part in parts:
-        if part["type"] == "message":
+        if part["type"] == MessagePartType.MESSAGE:
             content = part["content"]
             summary_text = str(content) if content else ""
 

@@ -50,7 +50,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         return message
 
 
-    MAX_NO_TOOL_ASSISTANT_TURNS = 5
+    MAX_NO_TOOL_ASSISTANT_TURNS = 4
     warn_no_toolcall_loop = True
     pmessage = message
     for _ in range(MAX_NO_TOOL_ASSISTANT_TURNS):
@@ -80,7 +80,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     if _is_subtask_execution(_session):
         return _session.get_task("process_turn").delay(message=message)
 
-    if not any(True for part in parts if "tool_call" in part) and any(True for part in parts if part["type"] == "message"):
+    if not any(True for part in parts if "tool_call" in part) and any(True for part in parts if part["type"] == MessagePartType.MESSAGE):
         return message
 
     return _session.get_task("process_turn").delay(message=message)

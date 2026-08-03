@@ -298,7 +298,7 @@ class CallScheduler:
         admission-control transaction commits.
         """
         if not TaskCallStateMachine.pick_up(task_call_id):
-            print(" # was not queued, maybe some race condition")
+            print(f" # TaksCallId {task_call_id} was not queued, maybe some race condition")
             return None
 
         taskcall = AgentTaskCall.objects.get(pk=task_call_id)

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.models.enums.message_enums import MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
 from server.models.queries.response import Response
 from runtime.session.session import Session
@@ -51,11 +51,11 @@ def ingest_assistant_message(
     has_final_result = False
 
     for part in parts:
-        if part["type"] == "toolcall":
+        if part["type"] == MessagePartType.TOOLCALL:
             if part["content"]["name"] == "final_result":
                 has_final_result = True
-                part["type"] = "message"
-                part["content_type"] = "text"
+                part["type"] = MessagePartType.MESSAGE
+                part["content_type"] = MessageContentType.TEXT
                 part["content"] = part["content"]["arguments"].get("content", "")
             else:
                 bound_task = _session.get_tool(part["content"]["name"])

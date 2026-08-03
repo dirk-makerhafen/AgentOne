@@ -10,7 +10,7 @@ import traceback
 from typing import Any
 import datetime
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessagePartType
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.enums.task_enums import TaskCallStatus
 from server.models.settings import AgentToolCallSyntax
 from server.models.message import Message, MessagePart
@@ -47,10 +47,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
             status__in=[QueryStatus.WAITING, QueryStatus.ACTIVE],
         ).exists()
         if existing:
-            raise RuntimeError(
-                f"Session {sv.session_id} already has a WAITING or ACTIVE query — "
-                f"refusing to create a duplicate"
-            )
+            raise RuntimeError(f"Session {sv.session_id} already has a WAITING or ACTIVE query - refusing to create a duplicate")
         query = Query.objects.create(
             session=sv.session,
             session_version=sv,
@@ -60,7 +57,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         # SYSTEM PROMPT
         if _session.system_prompt:
             query.add_message(
-                role="system",
+                role=MessageRole.SYSTEM,
                 content_type=MessageContentType.TEMPLATE,
                 content=_session.system_prompt,
                 template_data={},
@@ -71,7 +68,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
             allowed_tools: list[Any] = list(_session.allowedTools)
             if allowed_tools:
                 tools_msg = "Available Tools (use syntax [call:tool_name(arg=val)]):\n"
-                query_message = query.add_message(role="system", content_type=MessageContentType.TEXT, content=tools_msg)
+                query_message = query.add_message(role=MessageRole.SYSTEM, content_type=MessageContentType.TEXT, content=tools_msg)
                 for tool in allowed_tools:
                     if not tool.task_definition:
                         raise Exception("No task_definition should never happen")
@@ -107,9 +104,6 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                 part: MessagePart
                 if part.type == MessagePartType.REASONING:
                     continue
-                if part.type == MessagePartType.TOOLCALL and part.tool_call:
-                    if limiter.is_tool_call_limited(part.tool_call, message):
-                        continue
                 query_message_parts.append(QueryMessagePart(source_message_part=part, tags=["ChatMessage", f"{message.role}"]))
                 if part.tool_call and part.tool_call.status == TaskCallStatus.ENDED:
                     tool_call_parts.append(part)
@@ -124,10 +118,6 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                     query_message_part.query_message = query_message
                     query_message_part.save()
                 cmessages.append(query_message)
-                if limiter.is_general_message_limited("messages_dont_warn_forget", message):
-                    from server.models.content import GenericContent
-                    query_message.content_prefix = GenericContent.from_text("@@@TO_BE_FORGOTTEN@@@")
-                    query_message.save()
 
             if tool_call_parts:
                 for tool_call_part in tool_call_parts:
