@@ -9,7 +9,7 @@ from typing import Any
 WIKILINK_RE = re.compile(r'\[\[([^\[\]]+?)(?:\|([^\[\]]*?))?\]\]')
 FRONTMATTER_RE = re.compile(r'^---\s*\n(.*?)\n---', re.DOTALL)
 REQUIRED_FM_FIELDS = ('type', 'date', 'updated', 'tags', 'sources')
-CHECK_NAMES = ("dead_wikilinks", "orphan_pages", "missing_index", "stale_index_entries", "frontmatter")
+CHECK_NAMES = ("dead_wikilinks", "link_format", "orphan_pages", "missing_index", "stale_index_entries", "frontmatter", "folder_structure")
 
 
 def _resolve_folder(folder: str | None, session: Any | None) -> str | None:
@@ -172,6 +172,66 @@ def _fix_source_to_sources(text: str) -> str:
     return text[:m.start(1)] + new_fm + text[m.end(1):]
 
 
+def _autofix_link(fp: Path, old_link: str, new_link: str) -> bool:
+    """Replace ``[[old_link]]`` / ``[[old_link|...]]`` with ``[[new_link]]`` in *fp*.
+
+    Returns True when the file was modified.
+    """
+    try:
+        text = fp.read_text(encoding="utf-8")
+    except Exception:
+        return False
+    old_bracketed = f"[[{old_link}]]"
+    new_bracketed = f"[[{new_link}]]"
+    if old_bracketed in text:
+        new_text = text.replace(old_bracketed, new_bracketed)
+    else:
+        old_re = re.compile(r'\[\[' + re.escape(old_link) + r'\|')
+        new_text = old_re.sub(f'[[{new_link}|', text)
+    if new_text == text:
+        return False
+    fp.write_text(new_text, encoding="utf-8")
+    return True
+
+
+_YEAR_SEGMENT_RE = re.compile(r'^[12]\d{3}$')
+
+
+def _is_year_segment(seg: str) -> bool:
+    return bool(_YEAR_SEGMENT_RE.match(seg)) and 2000 <= int(seg) <= 2030
+
+
+def _folder_structure_issues(rel: str) -> list[str]:
+    """Return structural problems found in a vault-root-relative path.
+
+    Detects:
+    - Multiple year segments: a date folder nested inside another date
+      folder, e.g. ``timeline/2020/2020`` or ``timeline/2021/02/2021/02/08``
+    - Invalid month/day values in date-stamped paths (e.g. month 13, day 32)
+    """
+    segments = rel.split("/")
+    issues: list[str] = []
+    year_idx = [i for i, s in enumerate(segments) if _is_year_segment(s)]
+    if len(year_idx) >= 2:
+        years = [segments[i] for i in year_idx]
+        issues.append("multiple year segments: " + " / ".join(years))
+    if year_idx:
+        y = year_idx[0]
+        if y + 1 < len(segments):
+            nxt = segments[y + 1]
+            if nxt.isdigit() and len(nxt) <= 2:
+                mm = int(nxt)
+                if mm < 1 or mm > 12:
+                    issues.append(f"invalid month '{nxt}' after year '{segments[y]}'")
+                elif y + 2 < len(segments):
+                    nxt2 = segments[y + 2]
+                    if nxt2.isdigit() and len(nxt2) <= 2:
+                        dd = int(nxt2)
+                        if dd < 1 or dd > 31:
+                            issues.append(f"invalid day '{nxt2}' after '{segments[y]}/{nxt}'")
+    return issues
+
+
 def wiki_check(
     _session: Any,
     folder: str | None = None,
@@ -184,10 +244,14 @@ def wiki_check(
 
     Scans Markdown files for:
     - Dead wikilinks (target file doesn't exist)
+    - Link-format violations (bare filenames, ``../`` relative chains,
+      filesystem-absolute paths — all links should be vault-root-relative)
     - Orphan pages (no inbound wikilinks from non-archive pages)
     - Missing ``index.md`` files in subdirectories
     - Stale entries in ``index.md`` that point to non-existent files
     - Missing or invalid YAML frontmatter
+    - Folder-structure problems (duplicated date segments such as
+      ``2020/2020``, invalid month/day values)
 
     Files under ``raw/`` are excluded from all checks (immutable sources).
 
@@ -205,8 +269,9 @@ def wiki_check(
         limit: Max findings to return per check category. ``0`` means no limit.
             Default: 20.
         checks: Comma-separated check names to run, or ``""`` / ``"all"``
-            for all checks. Valid names: ``dead_wikilinks``, ``orphan_pages``,
-            ``missing_index``, ``stale_index_entries``, ``frontmatter``.
+            for all checks. Valid names: ``dead_wikilinks``, ``link_format``,
+            ``orphan_pages``, ``missing_index``, ``stale_index_entries``,
+            ``frontmatter``, ``folder_structure``.
             Default: ``""`` (all).
         files: Comma-separated file paths or glob patterns (relative to wiki
             root) to scope the check to. Supports ``*``, ``?``, ``**``
@@ -260,7 +325,7 @@ def wiki_check(
                 "message": f"more than one wiki folder found:\n{path_list}\nfolder parameter mandatory",
             })
 
-        root = Path(resolved)
+        root = Path(resolved).resolve()
         if not root.is_dir():
             return (False, {"status": "error", "message": f"folder not found: {resolved}"})
 
@@ -323,10 +388,6 @@ def wiki_check(
                         return result
             return None
 
-        def _compute_rel_path(source_rel: str, target_rel: str) -> str:
-            from os.path import relpath
-            return relpath(target_rel, Path(source_rel).parent.as_posix())
-
         def _depth_adjust(link: str, source_dir: Path, root: Path) -> str | None:
             if not link.startswith("../"):
                 return None
@@ -337,7 +398,10 @@ def wiki_check(
                     adj = "../" * offset + link
                 candidate = (source_dir / adj).resolve()
                 if candidate.exists() and candidate.is_file():
-                    return adj
+                    try:
+                        return candidate.relative_to(root).as_posix()
+                    except ValueError:
+                        return adj
             return None
 
         md_files = [fp for fp in all_md_files if not fp.relative_to(root).as_posix().startswith("raw/")]
@@ -419,7 +483,7 @@ def wiki_check(
                             unique = _find_unique_target(link, source_rel=rel)
                             if unique is not None:
                                 item["can_autofix"] = True
-                                item["suggestion"] = _compute_rel_path(rel, unique)
+                                item["suggestion"] = unique
                         dead.append(item)
             if autofix:
                 autofix_count_dead = 0
@@ -427,20 +491,9 @@ def wiki_check(
                     if "suggestion" not in item:
                         continue
                     fp = root / item["file"]
-                    old_bracketed = f"[[{item['link']}]]"
-                    new_bracketed = f"[[{item['suggestion']}]]"
-                    try:
-                        text = fp.read_text(encoding="utf-8")
-                        if old_bracketed in text:
-                            text = text.replace(old_bracketed, new_bracketed)
-                        else:
-                            old_re = re.compile(r'\[\[' + re.escape(item['link']) + r'\|')
-                            text = old_re.sub(f'[[{item["suggestion"]}|', text)
-                        fp.write_text(text, encoding="utf-8")
-                        item["autofixed"] = True
+                    item["autofixed"] = _autofix_link(fp, item["link"], item["suggestion"])
+                    if item["autofixed"]:
                         autofix_count_dead += 1
-                    except Exception:
-                        item["autofixed"] = False
             capped = _cap(dead, effective_limit)
             omitted_total += len(dead) - len(capped)
             findings.append({
@@ -448,6 +501,84 @@ def wiki_check(
                 "total": total_wikilinks,
                 "wrong": len(dead),
                 "correct": total_wikilinks - len(dead),
+                "returned": len(capped),
+                "items": capped,
+            })
+
+        if _run_check("link_format"):
+            # Enforce the vault convention: every wikilink must be a
+            # vault-root-relative path (e.g. ``[[timeline/2021/02/08/Note]]``).
+            # Bare filenames ("shortest path"), ``../`` relative chains and
+            # filesystem-absolute ``/`` links are flagged, with a suggestion
+            # rewritten to the vault-root-relative form.
+            format_total = 0
+            fmt_issues: list[dict] = []
+            for fp in md_files:
+                rel = fp.relative_to(root).as_posix()
+                try:
+                    text = fp.read_text(encoding="utf-8")
+                except Exception:
+                    continue
+                for link in _extract_wikilinks(text):
+                    if link.startswith("http://") or link.startswith("https://"):
+                        continue
+                    if link.endswith("/.."):
+                        continue
+                    format_total += 1
+                    bare_part = link
+                    for sep in ("#", "^"):
+                        bare_part = bare_part.split(sep, 1)[0]
+                    is_bare = "/" not in bare_part
+                    is_relative = (
+                        link.startswith("../")
+                        or link.startswith("./")
+                        or "/../" in link
+                        or "/./" in link
+                    )
+                    is_fs_abs = link.startswith("/")
+                    if not (is_bare or is_relative or is_fs_abs):
+                        continue
+                    if is_relative:
+                        issue = "relative path - use a vault-root-relative path"
+                    elif is_fs_abs:
+                        issue = "filesystem-absolute path - use a vault-root-relative path"
+                    else:
+                        issue = "bare filename - use a vault-root-relative path"
+                    item: dict[str, Any] = {"file": rel, "link": link, "issue": issue}
+                    suffix = ""
+                    resolved = _resolve_wikilink_target(link, fp.parent, root)
+                    if resolved is None:
+                        for sep in ("#", "^"):
+                            parts = link.rsplit(sep, 1)
+                            if len(parts) == 2 and parts[1]:
+                                base, suffix = parts[0], sep + parts[1]
+                                resolved = _resolve_wikilink_target(base, fp.parent, root)
+                                break
+                    if resolved is not None:
+                        try:
+                            item["suggestion"] = resolved.relative_to(root).as_posix() + suffix
+                            item["can_autofix"] = True
+                        except ValueError:
+                            pass
+                    else:
+                        unique = _find_unique_target(link, source_rel=rel)
+                        if unique is not None:
+                            item["suggestion"] = unique + suffix
+                            item["can_autofix"] = True
+                    fmt_issues.append(item)
+            if autofix:
+                for item in fmt_issues:
+                    if not item.get("can_autofix"):
+                        continue
+                    fp = root / item["file"]
+                    item["autofixed"] = _autofix_link(fp, item["link"], item["suggestion"])
+            capped = _cap(fmt_issues, effective_limit)
+            omitted_total += len(fmt_issues) - len(capped)
+            findings.append({
+                "check": "link_format",
+                "total": format_total,
+                "wrong": len(fmt_issues),
+                "correct": format_total - len(fmt_issues),
                 "returned": len(capped),
                 "items": capped,
             })
@@ -577,13 +708,58 @@ def wiki_check(
                 "items": capped,
             })
 
+        if _run_check("folder_structure"):
+            # Scan the vault directory layout (non-raw folders + markdown
+            # files) for structural problems: duplicated/overlapping date
+            # segments (e.g. ``2020/2020``, ``2021/02/2021/02/08``) and
+            # invalid month/day values.  Only the shortest offending path is
+            # reported; its descendants are suppressed.
+            dirs: list[str] = []
+            if not files:
+                for d in root.rglob("*"):
+                    if not d.is_dir():
+                        continue
+                    rel = d.relative_to(root).as_posix()
+                    if rel.startswith("raw/") or any(s.startswith(".") for s in rel.split("/")):
+                        continue
+                    dirs.append(rel)
+            candidate: set[str] = set(dirs)
+            for fp in md_files:
+                rel = fp.relative_to(root).as_posix()
+                candidate.add(rel)
+                if files:
+                    d = fp.parent
+                    while d != root:
+                        candidate.add(d.relative_to(root).as_posix())
+                        d = d.parent
+            ordered = sorted(candidate, key=lambda p: (p.count("/"), p))
+            structure: list[dict] = []
+            reported: list[str] = []
+            for p in ordered:
+                if any(p == r or p.startswith(r + "/") for r in reported):
+                    continue
+                issues = _folder_structure_issues(p)
+                if issues:
+                    structure.append({"folder": p, "issues": issues})
+                    reported.append(p)
+            capped = _cap(structure, effective_limit)
+            omitted_total += len(structure) - len(capped)
+            findings.append({
+                "check": "folder_structure",
+                "total": len(candidate),
+                "wrong": len(structure),
+                "correct": len(candidate) - len(structure),
+                "returned": len(capped),
+                "items": capped,
+            })
+
         total_wrong = sum(f["wrong"] for f in findings)
         returned = sum(len(f["items"]) for f in findings)
         total_correct = sum(f["correct"] for f in findings)
         autofix_count = 0
         if autofix:
             for f in findings:
-                if f["check"] in ("dead_wikilinks", "frontmatter"):
+                if f["check"] in ("dead_wikilinks", "link_format", "frontmatter"):
                     autofix_count += sum(1 for item in f["items"] if item.get("autofixed"))
 
         summary_parts = []
