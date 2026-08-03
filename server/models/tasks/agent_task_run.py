@@ -177,6 +177,7 @@ class AgentTaskRun(BaseModel):
         task_definition = self.task_definition_version.task_definition
         new_sub_task_calls: list[Any] = []
         result = None
+        is_function_step = False
         with ContextTracker(self):
             try:
                 session = self.session_version.get_runtime()
@@ -203,6 +204,7 @@ class AgentTaskRun(BaseModel):
                     items = producer.apply_async(kwargs=self.arguments_json)
                     result = session.get_task("map").delay(items=items, target_pk=consumer.pk)
                 else:
+                    is_function_step = True
                     bound_task = None
                     if self.task_definition_version.task_type == TaskType.TASK:
                         bound_task = session.get_task(task_definition.name)
@@ -222,6 +224,9 @@ class AgentTaskRun(BaseModel):
                 self.taskrun_result_references.set(ref_pks)
 
                 from runtime.tasks.run_fsm import TaskRunStateMachine
+                if ref_pks and is_function_step and self._try_continuation_repoint(ref_pks):
+                    return
+
                 if ref_pks:
                     self.status = TaskRunStatus.WAITING_RESULTTASKS
                     TaskRunStateMachine.wait_for_results(
@@ -247,6 +252,90 @@ class AgentTaskRun(BaseModel):
                 TaskRunStateMachine.fail(
                     self.pk, extra={"result_json": exception_json}
                 )
+
+    def _try_continuation_repoint(self, ref_pks: list[int]) -> bool:
+        """Flatten a chain whose awaited tail step returned a continuation call.
+
+        When this FUNCTION run is the tail step a CHAIN-mode run is currently
+        waiting on, and its result references exactly one AgentTaskCall (a
+        continuation), the chain's result reference is re-pointed to that
+        continuation instead of this run entering ``WAITING_RESULTTASKS`` and
+        nesting the wait graph one level deeper (Celery ``Task.replace()``
+        semantics — the replacement call takes the replaced step's place in
+        the chain).
+
+        The re-point target is found structurally, never by name:
+
+        - If some other ``WAITING_RESULTTASKS`` run awaits this chain run's
+          call (its "result parent"), that run adopts the continuation and
+          this chain run + this step resolve immediately.  Tail-recursive
+          chains (e.g. a turn loop) therefore keep a constant wait depth
+          regardless of how many times they re-enter.
+        - If nothing awaits this chain run's call (the chain is the top of
+          its wait graph), the chain run itself adopts the continuation and
+          stays waiting on it.
+
+        Returns ``True`` when the continuation was flattened (this run was
+        already transitioned to ``SUCCESS``), ``False`` to fall back to the
+        normal auto-await behavior.
+        """
+        if len(ref_pks) != 1:
+            return False
+        if not self.agent_task_call_id:
+            return False
+        parent_run = self.agent_task_call.parent_taskrun
+        if not parent_run or parent_run.status != TaskRunStatus.WAITING_RESULTTASKS:
+            return False
+        if parent_run.task_definition_version.task_execution_mode != TaskExecutionMode.CHAIN:
+            return False
+        if not parent_run.taskrun_result_references.filter(pk=self.agent_task_call_id).exists():
+            return False
+
+        from runtime.tasks.run_fsm import TaskRunStateMachine
+
+        chain_call_id = parent_run.agent_task_call_id
+        waiters = list(AgentTaskRun.objects.filter(
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+            taskrun_result_references__pk=chain_call_id,
+        ).exclude(pk=parent_run.pk))
+        if len(waiters) == 1:
+            # The chain is itself awaited by another run — bubble the
+            # continuation up to that run and let this chain resolve.
+            self._repoint_result_references(
+                waiters[0], chain_call_id, self.result_json, ref_pks
+            )
+        elif len(waiters) == 0:
+            # Top of the wait graph — the chain run adopts the continuation.
+            self._repoint_result_references(
+                parent_run, self.agent_task_call_id, self.result_json, ref_pks
+            )
+        else:
+            # Ambiguous waiters — keep the current auto-await behavior.
+            return False
+
+        self.status = TaskRunStatus.SUCCESS
+        TaskRunStateMachine.succeed(self.pk, extra={"result_json": self.result_json})
+        return True
+
+    @staticmethod
+    def _repoint_result_references(
+        waiter: "AgentTaskRun",
+        old_call_id: int,
+        result_json: Any,
+        new_ref_pks: list[int],
+    ) -> None:
+        """Transfer a waiting run's result reference to a continuation call.
+
+        Removes *old_call_id* from *waiter*'s result references, adds the
+        continuation call(s), and replaces *waiter*'s ``result_json`` with the
+        continuation's result (the value the old call would ultimately resolve
+        to).  The waiter stays in ``WAITING_RESULTTASKS``.
+        """
+        waiter.taskrun_result_references.remove(old_call_id)
+        waiter.taskrun_result_references.add(*new_ref_pks)
+        AgentTaskRun.objects.filter(
+            pk=waiter.pk, status=TaskRunStatus.WAITING_RESULTTASKS
+        ).update(result_json=result_json)
 
     @staticmethod
     def _create_run_arguments_json(

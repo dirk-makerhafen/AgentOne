@@ -9,7 +9,11 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 from server.models.tasks.task_instance import TaskInstance
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_run import AgentTaskRun
-from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus, TaskType
+from server.models.enums.task_enums import (
+    TaskCallStatus, TaskCallStatusDetail, TaskExecutionMode, TaskRunStatus, TaskType,
+)
+from runtime.tasks.run_fsm import TaskRunStateMachine
+from runtime.tasks.run_scheduler import RunScheduler
 
 
 @pytest.mark.django_db
@@ -1323,3 +1327,434 @@ class TestResolveStuckWaitingRuns:
 
         run.refresh_from_db()
         assert run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+
+@pytest.mark.django_db
+class TestChainContinuationFlattening:
+    """Chain-returns-chain flattening (Celery ``Task.replace()`` semantics).
+
+    When a CHAIN run's awaited tail step returns a single AgentTaskCall (a
+    continuation), the wait graph is re-pointed to that continuation instead
+    of nesting one more ``WAITING_RESULTTASKS`` level:
+
+    - The run awaiting this chain (its "result parent") adopts the
+      continuation, the chain run + tail step resolve immediately.
+    - If nothing awaits this chain, the chain run adopts the continuation
+      itself and stays waiting.
+
+    Result: tail-recursive chains (e.g. the process_turn loop) keep a
+    CONSTANT wait depth regardless of iteration count.  The mechanism is
+    purely structural — no task names, sessions, or roots are involved.
+    """
+
+    def _make_setup(self):
+        agent = AgentModel.objects.create(name='flatten-agent')
+        session = SessionModel.objects.create(name='flatten-session')
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+
+        # FUNCTION tail step.
+        step_td = TaskDefinition.objects.create(name='flatten-step')
+        step_tdv = TaskDefinitionVersion.objects.create(
+            task_definition=step_td, task_type=TaskType.TOOL,
+            description='flatten-step', function_schema={},
+        )
+        step_ti = TaskInstance.objects.create(
+            task_definition_version=step_tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+
+        # CHAIN task whose single step is the FUNCTION step.
+        chain_td = TaskDefinition.objects.create(name='flatten-chain')
+        chain_tdv = TaskDefinitionVersion.objects.create(
+            task_definition=chain_td, task_type=TaskType.TASK,
+            description='flatten-chain', function_schema={},
+            task_execution_mode=TaskExecutionMode.CHAIN,
+        )
+        chain_tdv.child_tasks.set([step_tdv])
+        chain_ti = TaskInstance.objects.create(
+            task_definition_version=chain_tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        chain_ti.child_instances.set([step_ti])
+        return session, sv, step_tdv, step_ti, chain_tdv, chain_ti
+
+    def _make_call(self, ti, tdv, session, sv, *, parent_run=None, root=None):
+        return AgentTaskCall.objects.create(
+            task_definition=tdv.task_definition, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json={}, requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            parent_taskrun=parent_run,
+            session_root_task=root,
+            status=TaskCallStatus.WAITING,
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+        )
+
+    def _make_run(self, call, ti, tdv, sv, status, *, result_json=None, refs=None):
+        run = AgentTaskRun.objects.create(
+            agent_task_call=call, task_instance=ti, task_definition_version=tdv,
+            session=ti.session, session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=status, result_json=result_json,
+        )
+        if refs:
+            run.taskrun_result_references.set(refs)
+        return run
+
+    @staticmethod
+    def _end_call(call_pk, detail=TaskCallStatusDetail.ENDED_SUCCESS):
+        AgentTaskCall.objects.filter(pk=call_pk).update(
+            status=TaskCallStatus.ENDED, status_detail=detail,
+        )
+
+    def test_tail_continuation_repoints_waiter_and_succeeds_step(self):
+        """A chain tail step returning a continuation re-points the run that
+        awaits this chain; the chain and tail step resolve immediately."""
+        session, sv, step_tdv, step_ti, chain_tdv, chain_ti = self._make_setup()
+
+        waiter_call = self._make_call(step_ti, step_tdv, session, sv)
+        waiter = self._make_run(
+            waiter_call, step_ti, step_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+
+        chain_call = self._make_call(chain_ti, chain_tdv, session, sv, root=waiter_call)
+        chain_run = self._make_run(
+            chain_call, chain_ti, chain_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        waiter.taskrun_result_references.set([chain_call])
+
+        step_call = self._make_call(
+            step_ti, step_tdv, session, sv, parent_run=chain_run, root=waiter_call,
+        )
+        step_run = self._make_run(
+            step_call, step_ti, step_tdv, sv, TaskRunStatus.ACTIVE,
+        )
+        chain_run.taskrun_result_references.set([step_call])
+
+        cont_call = self._make_call(
+            chain_ti, chain_tdv, session, sv, parent_run=step_run, root=waiter_call,
+        )
+
+        cont_result = {"_type": "AgentTaskCall", "pk": cont_call.pk}
+        step_run.result_json = cont_result
+        step_run.save(allow=True)
+
+        assert step_run._try_continuation_repoint(  # pylint: disable=protected-access
+            [cont_call.pk],
+        ) is True
+
+        step_run.refresh_from_db()
+        assert step_run.status == TaskRunStatus.SUCCESS
+
+        waiter.refresh_from_db()
+        assert list(waiter.taskrun_result_references.values_list('pk', flat=True)) == [cont_call.pk]
+        assert waiter.result_json == cont_result
+        assert waiter.status == TaskRunStatus.WAITING_RESULTTASKS
+
+        chain_run.refresh_from_db()
+        assert list(chain_run.taskrun_result_references.values_list('pk', flat=True)) == [step_call.pk]
+        assert chain_run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+        # The chain resolves when its tail step call ends (no re-point left behind).
+        self._end_call(step_call.pk)
+        RunScheduler.taskrun_result_reference_ended(
+            chain_run.pk, step_call.pk, TaskCallStatusDetail.ENDED_SUCCESS
+        )
+        chain_run.refresh_from_db()
+        assert chain_run.status == TaskRunStatus.SUCCESS
+
+        # The waiter resolves when the continuation ends.
+        self._end_call(cont_call.pk)
+        RunScheduler.taskrun_result_reference_ended(
+            waiter.pk, cont_call.pk, TaskCallStatusDetail.ENDED_SUCCESS
+        )
+        waiter.refresh_from_db()
+        assert waiter.status == TaskRunStatus.SUCCESS
+
+    def test_tail_continuation_adopts_locally_when_top_of_wait_graph(self):
+        """With nothing awaiting the chain, the chain run adopts the
+        continuation itself and stays waiting on it."""
+        session, sv, step_tdv, step_ti, chain_tdv, chain_ti = self._make_setup()
+
+        chain_call = self._make_call(chain_ti, chain_tdv, session, sv)
+        chain_run = self._make_run(
+            chain_call, chain_ti, chain_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+
+        step_call = self._make_call(
+            step_ti, step_tdv, session, sv, parent_run=chain_run, root=chain_call,
+        )
+        step_run = self._make_run(
+            step_call, step_ti, step_tdv, sv, TaskRunStatus.ACTIVE,
+        )
+        chain_run.taskrun_result_references.set([step_call])
+
+        cont_call = self._make_call(
+            chain_ti, chain_tdv, session, sv, parent_run=step_run, root=chain_call,
+        )
+        cont_result = {"_type": "AgentTaskCall", "pk": cont_call.pk}
+        step_run.result_json = cont_result
+        step_run.save(allow=True)
+
+        assert step_run._try_continuation_repoint(  # pylint: disable=protected-access
+            [cont_call.pk],
+        ) is True
+
+        step_run.refresh_from_db()
+        assert step_run.status == TaskRunStatus.SUCCESS
+
+        chain_run.refresh_from_db()
+        assert list(chain_run.taskrun_result_references.values_list('pk', flat=True)) == [cont_call.pk]
+        assert chain_run.result_json == cont_result
+        assert chain_run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+    def test_mid_chain_step_not_flattened(self):
+        """A step that is NOT the chain's awaited tail must keep auto-await
+        (compact_if_needed-style): the chain waits for it as before."""
+        session, sv, step_tdv, _, chain_tdv, chain_ti = self._make_setup()
+
+        # Two steps: mid (returns continuation) and tail.
+        mid_ti = TaskInstance.objects.create(
+            task_definition_version=step_tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        tail_ti = TaskInstance.objects.create(
+            task_definition_version=step_tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+
+        chain_call = self._make_call(chain_ti, chain_tdv, session, sv)
+        chain_run = self._make_run(
+            chain_call, chain_ti, chain_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+
+        mid_call = self._make_call(
+            mid_ti, step_tdv, session, sv, parent_run=chain_run, root=chain_call,
+        )
+        tail_call = self._make_call(
+            tail_ti, step_tdv, session, sv, parent_run=chain_run, root=chain_call,
+        )
+        mid_run = self._make_run(
+            mid_call, mid_ti, step_tdv, sv, TaskRunStatus.ACTIVE,
+        )
+        # Chain only awaits its LAST step (the tail), not the mid step.
+        chain_run.taskrun_result_references.set([tail_call])
+
+        cont_call = self._make_call(
+            mid_ti, step_tdv, session, sv, parent_run=mid_run, root=chain_call,
+        )
+        mid_run.result_json = {"_type": "AgentTaskCall", "pk": cont_call.pk}
+        mid_run.save(allow=True)
+
+        assert mid_run._try_continuation_repoint(  # pylint: disable=protected-access
+            [cont_call.pk],
+        ) is False
+        mid_run.refresh_from_db()
+        assert mid_run.status == TaskRunStatus.ACTIVE
+
+    def test_multi_ref_result_not_flattened(self):
+        """A tail step returning MULTIPLE calls keeps auto-await (no re-point)."""
+        session, sv, step_tdv, step_ti, chain_tdv, chain_ti = self._make_setup()
+
+        chain_call = self._make_call(chain_ti, chain_tdv, session, sv)
+        chain_run = self._make_run(
+            chain_call, chain_ti, chain_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        step_call = self._make_call(
+            step_ti, step_tdv, session, sv, parent_run=chain_run, root=chain_call,
+        )
+        step_run = self._make_run(
+            step_call, step_ti, step_tdv, sv, TaskRunStatus.ACTIVE,
+        )
+        chain_run.taskrun_result_references.set([step_call])
+
+        cont_a = self._make_call(step_ti, step_tdv, session, sv, parent_run=step_run, root=chain_call)
+        cont_b = self._make_call(step_ti, step_tdv, session, sv, parent_run=step_run, root=chain_call)
+
+        assert step_run._try_continuation_repoint(  # pylint: disable=protected-access
+            [cont_a.pk, cont_b.pk],
+        ) is False
+        step_run.refresh_from_db()
+        assert step_run.status == TaskRunStatus.ACTIVE
+
+    def test_continuation_loop_keeps_constant_wait_depth(self):
+        # pylint: disable=too-many-locals
+        """A tail-recursive chain loop (3 re-entries) keeps exactly ONE
+        WAITING_RESULTTASKS run at steady state — the anchor — and resolves to
+        the terminal result."""
+
+        session, sv, step_tdv, step_ti, chain_tdv, chain_ti = self._make_setup()
+
+        waiter_call = self._make_call(step_ti, step_tdv, session, sv)
+        waiter = self._make_run(
+            waiter_call, step_ti, step_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+
+        def _waiting_count():
+            return AgentTaskRun.objects.filter(
+                status=TaskRunStatus.WAITING_RESULTTASKS,
+            ).count()
+
+        # Each turn: a fresh chain run awaits its tail step; the tail step
+        # returns the next chain call; the re-point moves the anchor forward.
+        # The next turn's chain call IS the previous turn's continuation.
+        anchor_root = waiter_call
+        continuation_call = None
+        for _ in range(3):
+            if continuation_call is None:
+                # First turn: the chain the anchor initially awaits.
+                chain_call = self._make_call(
+                    chain_ti, chain_tdv, session, sv,
+                    parent_run=None, root=anchor_root,
+                )
+                waiter.taskrun_result_references.set([chain_call])
+            else:
+                # Later turns: this chain was returned by the prior tail step.
+                chain_call = continuation_call
+            chain_run = self._make_run(
+                chain_call, chain_ti, chain_tdv, sv,
+                TaskRunStatus.WAITING_RESULTTASKS,
+            )
+            step_call = self._make_call(
+                step_ti, step_tdv, session, sv,
+                parent_run=chain_run, root=anchor_root,
+            )
+            step_run = self._make_run(
+                step_call, step_ti, step_tdv, sv, TaskRunStatus.ACTIVE,
+            )
+            chain_run.taskrun_result_references.set([step_call])
+
+            next_chain_call = self._make_call(
+                chain_ti, chain_tdv, session, sv,
+                parent_run=step_run, root=anchor_root,
+            )
+            cont_result = {"_type": "AgentTaskCall", "pk": next_chain_call.pk}
+            step_run.result_json = cont_result
+            step_run.save(allow=True)
+
+            assert step_run._try_continuation_repoint(  # pylint: disable=protected-access
+                [next_chain_call.pk],
+            ) is True
+            step_run.refresh_from_db()
+            assert step_run.status == TaskRunStatus.SUCCESS
+
+            # Old chain run resolves as soon as its tail step call ends.
+            self._end_call(step_call.pk)
+            RunScheduler.taskrun_result_reference_ended(
+                chain_run.pk, step_call.pk, TaskCallStatusDetail.ENDED_SUCCESS
+            )
+            chain_run.refresh_from_db()
+            assert chain_run.status == TaskRunStatus.SUCCESS
+
+            # Anchor now points at the newest continuation.
+            waiter.refresh_from_db()
+            assert list(waiter.taskrun_result_references.values_list('pk', flat=True)) == [next_chain_call.pk]
+            assert waiter.result_json == cont_result
+
+            # Invariant: only the anchor stays WAITING (constant depth).
+            assert _waiting_count() == 1
+
+            continuation_call = next_chain_call
+
+        # Terminal turn: the tail step returns a plain value (no continuation).
+        # The chain here is the last continuation the anchor is waiting on.
+        chain_call = continuation_call
+        waiter.taskrun_result_references.set([chain_call])
+        chain_run = self._make_run(
+            chain_call, chain_ti, chain_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        step_call = self._make_call(
+            step_ti, step_tdv, session, sv, parent_run=chain_run, root=anchor_root,
+        )
+        step_run = self._make_run(
+            step_call, step_ti, step_tdv, sv, TaskRunStatus.ACTIVE,
+            result_json="final-message",
+        )
+        chain_run.taskrun_result_references.set([step_call])
+        chain_run.result_json = {"_type": "AgentTaskCall", "pk": step_call.pk}
+        chain_run.save(allow=True)
+
+        # No continuation -> normal auto-await: step succeeds, chain resolves,
+        # anchor resolves with the terminal value.
+        TaskRunStateMachine.succeed(step_run.pk)
+        AgentTaskCall.objects.filter(pk=step_call.pk).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
+            taskcall_result_run=step_run,
+        )
+        RunScheduler.taskrun_result_reference_ended(
+            chain_run.pk, step_call.pk, TaskCallStatusDetail.ENDED_SUCCESS
+        )
+        chain_run.refresh_from_db()
+        assert chain_run.status == TaskRunStatus.SUCCESS
+
+        AgentTaskCall.objects.filter(pk=chain_call.pk).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
+            taskcall_result_run=chain_run,
+        )
+        RunScheduler.taskrun_result_reference_ended(
+            waiter.pk, chain_call.pk, TaskCallStatusDetail.ENDED_SUCCESS
+        )
+        waiter.refresh_from_db()
+        assert waiter.status == TaskRunStatus.SUCCESS
+        assert waiter.get_result(recursive=True) == "final-message"
+
+    def test_continuation_failure_propagates_to_anchor(self):
+        # pylint: disable=too-many-locals
+        """A failing continuation fails the run that adopted it."""
+        session, sv, step_tdv, step_ti, chain_tdv, chain_ti = self._make_setup()
+
+        waiter_call = self._make_call(step_ti, step_tdv, session, sv)
+        waiter = self._make_run(
+            waiter_call, step_ti, step_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        chain_call = self._make_call(chain_ti, chain_tdv, session, sv, root=waiter_call)
+        chain_run = self._make_run(
+            chain_call, chain_ti, chain_tdv, sv, TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        waiter.taskrun_result_references.set([chain_call])
+        step_call = self._make_call(
+            step_ti, step_tdv, session, sv, parent_run=chain_run, root=waiter_call,
+        )
+        step_run = self._make_run(
+            step_call, step_ti, step_tdv, sv, TaskRunStatus.ACTIVE,
+        )
+        chain_run.taskrun_result_references.set([step_call])
+
+        cont_call = self._make_call(
+            chain_ti, chain_tdv, session, sv, parent_run=step_run, root=waiter_call,
+        )
+        cont_result = {"_type": "AgentTaskCall", "pk": cont_call.pk}
+        step_run.result_json = cont_result
+        step_run.save(allow=True)
+
+        assert step_run._try_continuation_repoint(  # pylint: disable=protected-access
+            [cont_call.pk],
+        ) is True
+
+        # Continuation fails -> anchor fails.
+        self._end_call(cont_call.pk, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        RunScheduler.taskrun_result_reference_ended(
+            waiter.pk, cont_call.pk, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION
+        )
+        waiter.refresh_from_db()
+        assert waiter.status == TaskRunStatus.FAILURE
