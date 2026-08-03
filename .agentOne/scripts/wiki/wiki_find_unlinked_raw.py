@@ -9,7 +9,7 @@ from wiki_checks import _resolve_folder, _resolve_wikilink_target, _extract_wiki
 def _extract_date_from_path(rel_path: str) -> str:
     parts = rel_path.split("/")
     for i, p in enumerate(parts):
-        if p.isdigit() and len(p) == 4 and 2000 <= int(p) <= 2030:
+        if p.isdigit() and len(p) == 4 and 2000 <= int(p) <= 2035:
             mm = parts[i + 1] if i + 1 < len(parts) and parts[i + 1].isdigit() and 1 <= int(parts[i + 1]) <= 12 else None
             dd = parts[i + 2] if mm and i + 2 < len(parts) and parts[i + 2].isdigit() and 1 <= int(parts[i + 2]) <= 31 else None
             if dd:

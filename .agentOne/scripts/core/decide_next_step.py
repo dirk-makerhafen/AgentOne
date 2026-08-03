@@ -50,7 +50,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         return message
 
 
-    MAX_NO_TOOL_ASSISTANT_TURNS = 4
+    MAX_NO_TOOL_ASSISTANT_TURNS = 5
     warn_no_toolcall_loop = True
     pmessage = message
     for _ in range(MAX_NO_TOOL_ASSISTANT_TURNS):
@@ -68,8 +68,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
             session_version=sv,
             prev_message=prev_message,
         )
-        call_hint = ", or call final_result(message='..your final result message..') to finish and return your results." if _is_subtask_execution(_session) else "."
-        hint_prompt = f"<SYSTEM HINT>Possible looping or inefficient behavior detected. You did multiple turns without any tool calling. Take a step back and correct if needed{call_hint}</SYSTEM HINT>"
+        hint_prompt = f"<SYSTEM HINT>Possible looping or inefficient behavior detected. You did multiple turns without any tool calling. Take a step back and correct if needed, or call final_result(message='..your final result message..') to finish and return your results.</SYSTEM HINT>"
 
         message.add_part(
             type=MessagePartType.MESSAGE,
@@ -77,10 +76,10 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
             content=hint_prompt,
         )
 
-    if _is_subtask_execution(_session):
-        return _session.get_task("process_turn").delay(message=message)
+    #if _is_subtask_execution(_session):
+    #    return _session.get_task("process_turn").delay(message=message)
 
-    if not any(True for part in parts if "tool_call" in part) and any(True for part in parts if part["type"] == MessagePartType.MESSAGE):
-        return message
+    #if not any(True for part in parts if "tool_call" in part) and any(True for part in parts if part["type"] == MessagePartType.MESSAGE):
+    #    return message
 
     return _session.get_task("process_turn").delay(message=message)
