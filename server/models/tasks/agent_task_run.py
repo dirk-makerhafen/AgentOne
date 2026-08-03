@@ -17,7 +17,7 @@ from runtime.context_manager import ContextTracker
 from runtime.rate_limiter import RateLimitError
 from server.models.base_model import BaseModel
 from server.models.content import GenericContent
-from server.models.enums.task_enums import TaskRunStatus, TaskType
+from server.models.enums.task_enums import TaskExecutionMode, TaskRunStatus, TaskType
 from server.models.message import Message
 from server.models.queries.query import Query
 from server.models.queries.response import Response
@@ -182,7 +182,7 @@ class AgentTaskRun(BaseModel):
                 session = self.session_version.get_runtime()
                 session._current_taskrun = self
 
-                if self.task_definition_version.task_execution_mode == "CHAIN":
+                if self.task_definition_version.task_execution_mode == TaskExecutionMode.CHAIN:
                     next_step_arguments = self.arguments_json
                     for sub_task_instance in self.task_instance.child_instances.all():
                         next_step_arguments = sub_task_instance.apply_async(
@@ -191,13 +191,13 @@ class AgentTaskRun(BaseModel):
                         new_sub_task_calls.append(next_step_arguments)
                     result = new_sub_task_calls[-1]
 
-                elif self.task_definition_version.task_execution_mode == "GROUP":
+                elif self.task_definition_version.task_execution_mode ==  TaskExecutionMode.GROUP:
                     for sub_task_instance in self.task_instance.child_instances.all():
                         call = sub_task_instance.apply_async(kwargs=self.arguments_json)
                         new_sub_task_calls.append(call)
                     result = new_sub_task_calls
 
-                elif self.task_definition_version.task_execution_mode == "MAP":
+                elif self.task_definition_version.task_execution_mode ==  TaskExecutionMode.MAP:
                     producer = self.task_instance.child_instances.first()
                     consumer = self.task_instance.child_instances.last()
                     items = producer.apply_async(kwargs=self.arguments_json)

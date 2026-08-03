@@ -46,6 +46,7 @@ Additional per-vault sections (e.g. buchhaltung, calendar, events) are defined i
 - Claims in wiki pages cite the relevant summary page.
 - Entity and concept pages use plain names, like OpenAI.md.
 - Never invent facts. If something is not supported by a source, mark it unverified.
+- Use your wiki_check tool regularly to check for dead/halucinated wikilinks, orphan pages, missing or stale `index.md` entries, and invalid frontmatter
 
 ## Index.md convention
 
@@ -132,7 +133,7 @@ Archive year corresponds to the year of archiving, not the page's creation date.
 
 ## Operation: lint [focus message]
 
-Health-check the vault. If a focus message is provided, narrow the check to that specific concern (e.g. "check only orphaned entity pages", "find broken wikilinks in the calendar section").
+Health-check the vault. If a focus message is provided, narrow the check to that specific concern (e.g. "check only orphaned entity pages", "find broken wikilinks in the calendar section"). 
 
 1. Run the `wiki_check` tool to get deterministic findings: dead wikilinks, orphan pages, missing or stale `index.md` entries, and invalid frontmatter. Pass `autofix=True` to fix unambiguous broken links and `source`→`sources` mismatches directly.
 2. Then do the semantic checks the tool cannot:
