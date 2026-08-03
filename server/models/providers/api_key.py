@@ -26,6 +26,11 @@ class ApiKey(BaseModel):
     limit_tokens_per_day = models.IntegerField(default=0)
     limit_tokens_per_minute = models.IntegerField(default=0)
 
+    observable_fields = set([
+        "pk",
+        "api_provider"
+    ])
+
     @property
     def total_llm_queries(self) -> int:
         """Total number of queries made through this API key."""
@@ -52,6 +57,14 @@ class ApiKey(BaseModel):
         """Return the related Query queryset for this API key."""
         return self.related_queries  # pyright: ignore[reportAttributeAccessIssue]
 
+    @property
+    def observable_keys(self):
+        return set([
+            "ApiKey",
+            f"ApiKey.pk:{self.pk}",
+            f"ApiKey.api_provider:{self.api_provider_pk}",
+        ]
+        )
     def requests_last_minute(self) -> int:
         """Number of successful responses in the last 60 seconds for this key."""
         since = timezone.now() - timedelta(seconds=60)

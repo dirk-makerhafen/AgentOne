@@ -37,6 +37,11 @@ class CollectionItem(BaseModel):
     score = models.FloatField(default=0.0)
     value = models.JSONField(default=dict, blank=True)
 
+    observable_fields = set([
+        "pk",
+        "collection"
+    ])
+
     class Meta:
         verbose_name = "Collection Item"
         verbose_name_plural = "Collection Items"
@@ -46,6 +51,14 @@ class CollectionItem(BaseModel):
             models.Index(fields=["score"]),
             models.Index(fields=["collection", "score"]),
         ]
+
+    @property
+    def observable_keys(self):
+        return set([
+            "CollectionItem",
+            f"CollectionItem.pk:{self.pk}",
+            f"CollectionItem.collection:{self.collection_pk}",
+        ])
 
     def __str__(self) -> str:
         return f"[{self.collection.name}] {self.member} (score={self.score})"

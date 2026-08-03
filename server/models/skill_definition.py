@@ -28,6 +28,10 @@ class SkillDefinition(models.Model):
     created_at: datetime = models.DateTimeField(auto_now_add=True)
     updated_at: datetime = models.DateTimeField(auto_now=True)
 
+    observable_fields = set([
+        "pk",
+    ])
+
     class Meta:
         verbose_name = "Skill Definition"
         verbose_name_plural = "Skill Definitions"
@@ -35,3 +39,10 @@ class SkillDefinition(models.Model):
     def __str__(self) -> str:
         """Return the unique slug as the string representation."""
         return self.skill_slug
+
+    @property
+    def observable_keys(self):
+        return set([
+            "SkillDefinition",
+            f"SkillDefinition.pk:{self.pk}",
+        ])

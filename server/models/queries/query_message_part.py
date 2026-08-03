@@ -33,6 +33,19 @@ class QueryMessagePart(BaseModel):
 
     tags = models.JSONField( default=list, null=True, blank=True, help_text="List of tags used")
 
+    observable_fields = set([
+        "pk",
+        "query_message",  
+    ])
+
+    @property
+    def observable_keys(self):
+        return set([
+            "QueryMessagePart",
+            f"QueryMessagePart.pk:{self.pk}",
+            f"QueryMessagePart.query_message:{self.query_pk}",        
+        ])
+
     def to_openai_message(self, fail_on_error: bool = True) -> list[dict[str, Any]]:
         """Convert this part to the OpenAI content-part format.
 

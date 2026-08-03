@@ -47,16 +47,6 @@ class UiApp(Observable):
         self, session_id: int | None, event_type: str, payload: dict[str, Any]
     ) -> None:
         if event_type == "model_event":
-            try:
-                with open("/tmp/agentone_events.log", "a") as _f:
-                    import time
-                    _f.write(f"[{time.strftime('%H:%M:%S')}] UiApp.dispatch: "
-                             f"model={payload.get('model_name')} "
-                             f"action={payload.get('action')} "
-                             f"pk={payload.get('pk')} "
-                             f"fc={payload.get('filter_context')}\n")
-            except Exception:
-                pass
             self.model_observer.dispatch(
                 payload.get("model_name", ""),
                 payload.get("action", ""),

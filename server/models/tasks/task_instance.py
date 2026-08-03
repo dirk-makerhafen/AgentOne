@@ -57,6 +57,13 @@ class TaskInstance(BaseModel):
     taskinstances_before_run_hooks = models.ManyToManyField("self",help_text="",symmetrical=False,blank=True,related_name="rev_taskinstances_hook_before_run")
     taskinstances_after_run_hooks = models.ManyToManyField("self",help_text="",symmetrical=False,blank=True,related_name="rev_taskinstances_hook_after_run")
 
+    observable_fields = set([
+        "pk",
+        "task_definition_version",
+        "session",
+        "session_version",
+    ])
+
     @property
     def task_type(self) -> str:
         """Return the task type from the linked definition version."""
@@ -142,6 +149,16 @@ class TaskInstance(BaseModel):
                 task_instance.child_instances.add(child_instance)
 
         return task_instance
+
+    @property
+    def observable_keys(self):
+        return set([
+            "TaskInstance",
+            f"TaskInstance.pk:{self.pk}",
+            f"TaskInstance.task_definition_version:{self.task_definition_version_pk}",
+            f"TaskInstance.session:{self.session_pk}",
+            f"TaskInstance.session_version:{self.session_version_pk}",
+        ])
 
     def delay(self, *partial_args: Any, **partial_kwargs: Any) -> AgentTaskCall:
         """Shortcut to :meth:`apply_async` using star arguments."""

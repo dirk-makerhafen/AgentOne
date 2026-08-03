@@ -33,6 +33,19 @@ class QueryMessage(BaseModel):
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
+    observable_fields = set([
+        "pk",
+        "query",  
+    ])
+
+    @property
+    def observable_keys(self):
+        return set([
+            "QueryMessage",
+            f"QueryMessage.pk:{self.pk}",
+            f"QueryMessage.query:{self.query_pk}",        
+        ])
+
     def add_part(
         self,
         content_type: MessageContentType | None = None,

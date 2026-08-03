@@ -29,6 +29,24 @@ class AgentModel(BaseModel):
         """Return related agent version instances."""
         return self.related_agent_versions  # pyright: ignore[reportAttributeAccessIssue]
 
+    observable_fields = set([
+        "pk",
+        "parent_skill"
+        "parent_agent",
+        "parent_project"
+    ])
+    
+    @property
+    def observable_keys(self):
+        return set([
+            "AgentModel",
+            f"AgentModel.pk:{self.pk}",
+            f"AgentModel.parent_skill:{self.parent_skill_pk}",     
+            f"AgentModel.parent_agent:{self.parent_agent_pk}",     
+            f"AgentModel.parent_project:{self.parent_project_pk}",        
+        ])
+
+
     def get_runtime(self) -> Agent:
         """Return a runtime Agent wrapper for this model."""
         return Agent(agent_model=self)

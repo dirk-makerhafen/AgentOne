@@ -102,6 +102,10 @@ class SettingsModel(BaseModel):
     extra_settings: Any = models.JSONField(default=None, null=True, blank=True)
     commit: str = models.TextField(max_length=1024, default="")
 
+    observable_fields = set([
+        "pk",
+    ])
+
     def save(self, *args: Any, **kwargs: Any) -> Any:
         """Raise :class:`ValidationError` on update; delegate to super on create."""
         if self.pk:
@@ -109,3 +113,10 @@ class SettingsModel(BaseModel):
                 f"You may not edit an existing {self._meta.model_name}"
             )
         return super().save(*args, **kwargs)
+
+    @property
+    def observable_keys(self):
+        return set([
+            "SettingsModel",
+            f"SettingsModel.pk:{self.pk}",
+        ])

@@ -50,3 +50,20 @@ class Cronjob(BaseModel):
     next_run_at: datetime | None = models.DateTimeField(null=True, blank=True, default=None)
     last_status: str = models.CharField(max_length=50, blank=True, default="")
     total_runs: int = models.IntegerField(default=0)
+
+    observable_fields = set([
+        "pk",
+        "agent",
+        "parent_project",
+        "workspace",
+    ])
+
+    @property
+    def observable_keys(self):
+        return set([
+            "Cronjob",
+            f"Cronjob.pk:{self.pk}",
+            f"Cronjob.agent:{self.agent_pk}",
+            f"Cronjob.parent_project:{self.parent_project_pk}",
+            f"Cronjob.workspace:{self.workspace_pk}",
+        ])

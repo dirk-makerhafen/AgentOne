@@ -39,6 +39,37 @@ class Response(BaseModel):
 
     finish_reason = models.CharField( default="", null=True, blank=True, max_length=5000)
 
+    observable_fields = set([
+        "pk",
+        "query",
+        "session_version",
+    ])
+    @property
+    def observable_keys(self):
+        return set([
+            "Response",
+            f"Response.pk:{self.pk}",
+            f"Response.query:{self.query_pk}",      
+            f"Response.session_version:{self.session_version_pk}",               
+        ])
+
+    def notify_observers(self):
+        keys = self.observable_keys
+        #observers = redis_get keys
+        #set(observers)
+        #for each observer:
+        # redis add observer self
+
+    def register_observer(self, observer, field = None, value=None):
+        redis_key = "Response"
+        if field:
+            if field not in self.observable_fields:
+                raise Exception(f"Failed, field {field} is not observable for model 'Response'")
+            redis_key += f".{field}"
+        if value:
+            redis_key += f":{value}"
+        #redis add redis_key observer
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Save the response and optionally recalibrate query token estimates.
 

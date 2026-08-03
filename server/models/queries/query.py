@@ -34,6 +34,20 @@ class Query(BaseModel):
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
+
+    observable_fields = set([
+        "pk",
+        "session_version",  
+    ])
+
+    @property
+    def observable_keys(self):
+        return set([
+            "Query",
+            f"Query.pk:{self.pk}",
+            f"Query.session_version:{self.session_version_pk}",        
+        ])
+
     @property
     def response(self):
         """Return the related Response for this query."""

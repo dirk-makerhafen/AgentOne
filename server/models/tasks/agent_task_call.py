@@ -82,6 +82,16 @@ class AgentTaskCall(BaseModel):
         default=None, null=True, blank=True
     )
 
+    observable_fields = set([
+        "pk",
+        "task_instance",
+        "task_definition",
+        "task_definition_version",
+        "session",
+        "session_version",                       
+    ])
+
+
     @classmethod
     def create(
         cls,
@@ -173,6 +183,18 @@ class AgentTaskCall(BaseModel):
             taskcall.taskcall_arg_references.set(ref_pks)
 
         return taskcall
+    
+    @property
+    def observable_keys(self):
+        return set([
+            "AgentTaskCall",
+            f"AgentTaskCall.pk:{self.pk}",
+            f"AgentTaskCall.task_instance:{self.task_instance_pk}",  
+            f"AgentTaskCall.task_definition:{self.task_definition_pk}",
+            f"AgentTaskCall.task_definition_version:{self.task_definition_version_pk}",
+            f"AgentTaskCall.session:{self.session_pk}",
+            f"AgentTaskCall.session_version:{self.session_version_pk}", 
+        ])
 
     def apply_async(self) -> AgentTaskCall:
         """Dispatch this call to the scheduler for execution."""

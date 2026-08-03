@@ -27,6 +27,13 @@ class SessionModel(BaseModel):
     parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="sessions")
     latest_session_version = models.ForeignKey("server.SessionVersionModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_newest_version")
 
+    observable_fields = set([
+        "pk",
+        "parent_session",  
+        "parent_project",
+        "latest_session_version",                         
+    ])
+
     @property
     def messages(self) -> QuerySet:
         """All messages belonging to this session across all versions."""
@@ -36,6 +43,16 @@ class SessionModel(BaseModel):
     def queries(self) -> QuerySet:
         """All queries belonging to this session across all versions."""
         return Query.objects.filter(session_version__session=self)
+
+    @property
+    def observable_keys(self):
+        return set([
+            "SessionModel",
+            f"SessionModel.pk:{self.pk}",
+            f"SessionModel.parent_session:{self.parent_session_pk}",
+            f"SessionModel.parent_project:{self.parent_project_pk}",
+            f"SessionModel.latest_session_version:{self.latest_session_version_pk}",
+        ])
 
     def get_runtime(self) -> Session:
         """Return a runtime Session wrapper for this model."""

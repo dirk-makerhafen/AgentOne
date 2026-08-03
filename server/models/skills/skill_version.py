@@ -17,3 +17,16 @@ class SkillModelVersion(models.Model):
 
     path = models.CharField(default="", max_length=255, help_text="")
     version_number = models.IntegerField(default=0)
+
+    observable_fields = set([
+        "pk",
+        "skill",                    
+    ])
+
+    @property
+    def observable_keys(self):
+        return set([
+            "SkillModelVersion",
+            f"SkillModelVersion.pk:{self.pk}",
+            f"SkillModelVersion.skill:{self.skill_pk}",
+        ])

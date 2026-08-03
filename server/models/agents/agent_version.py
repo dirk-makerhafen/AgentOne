@@ -69,6 +69,19 @@ class AgentVersionModel(BaseModel):
     class Meta:
         unique_together = ("agent", "version_number")
 
+    observable_fields = set([
+        "pk",
+        "agent"
+    ])
+
+    @property
+    def observable_keys(self):
+        return set([
+            "AgentVersionModel",
+            f"AgentVersionModel.pk:{self.pk}",
+            f"AgentVersionModel.agent:{self.agent_pk}",        
+        ])
+
     def get_or_create_session(
         self,
         name: Optional[str] = None,

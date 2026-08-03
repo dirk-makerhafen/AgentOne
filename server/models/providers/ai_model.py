@@ -46,6 +46,11 @@ class AiModel(BaseModel):
     # 0 = unlimited.
     limit_parallel_calls = models.IntegerField(default=0)
 
+    observable_fields = set([
+        "pk",
+        "api_provider"
+    ])
+
     @property
     def total_llm_queries(self) -> int:
         """Total number of queries made through this model."""
@@ -74,6 +79,14 @@ class AiModel(BaseModel):
     def responses(self):
         """Return the related Response queryset for this model."""
         return self.related_responses  # pyright: ignore[reportAttributeAccessIssue]
+
+    @property
+    def observable_keys(self):
+        return set([
+            "AiModel",
+            f"AiModel.pk:{self.pk}",
+            f"AiModel.api_provider:{self.api_provider_pk}",
+        ])
 
     def requests_last_minute(self) -> int:
         """Number of successful responses in the last 60 seconds."""

@@ -20,6 +20,10 @@ class ApiProvider(BaseModel):
     # 0 = unlimited.
     limit_parallel_calls = models.IntegerField(default=0)
 
+    observable_fields = set([
+        "pk",
+    ])
+
     @property
     def total_llm_queries(self) -> int:
         """Total number of queries made through this provider."""
@@ -40,6 +44,13 @@ class ApiProvider(BaseModel):
             query__aimodel__api_provider=self
         ).aggregate(total=Sum("completion_tokens"))["total"]
         return result or 0
+
+    @property
+    def observable_keys(self):
+        return set([
+            "ApiProvider",
+            f"ApiProvider.pk:{self.pk}",
+        ])
 
     def active_call_count(self) -> int:
         """Total active runs across all models for this provider."""

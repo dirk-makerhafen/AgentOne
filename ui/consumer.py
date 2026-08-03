@@ -1,3 +1,4 @@
+from _typeshed import Unused
 from threading import Lock
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
@@ -9,15 +10,6 @@ from ui.app import UiApp
 from ui.app_view import UiAppView
 from runtime.events import CHANNEL_GROUP
 
-_LOG_FILE = "/tmp/agentone_events.log"
-def _log(msg: str) -> None:
-    import os, time
-    try:
-        with open(_LOG_FILE, "a") as f:
-            f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
-    except Exception:
-        pass
-
 # Global PyHtmlGui instance (single instance for the entire Django app)
 _pyhtmlgui_lock = Lock()
 _pyhtmlgui: PyHtmlGui|None = None
@@ -26,6 +18,9 @@ _view_app_instance = UiApp()
 
 
 class PyHtmlGuiConsumer(WebsocketConsumer):
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        
     def connect(self):
         global _pyhtmlgui
         global _pyhtmlgui_instance
@@ -45,17 +40,13 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
             _pyhtmlgui_instance.connect_send_function(self.send)
 
         try:
-            async_to_sync(get_channel_layer().group_add)(
-                CHANNEL_GROUP, self.channel_name
-            )
+            async_to_sync(get_channel_layer().group_add)(CHANNEL_GROUP, self.channel_name)
         except Exception:
             pass
 
     def disconnect(self, close_code):
         try:
-            async_to_sync(get_channel_layer().group_discard)(
-                CHANNEL_GROUP, self.channel_name
-            )
+            async_to_sync(get_channel_layer().group_discard)(CHANNEL_GROUP, self.channel_name)
         except Exception:
             pass
 
@@ -70,7 +61,7 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
         super().send(text_data=message)
 
     def session_event(self, event: dict) -> None:
-        _log(f"CONSUMER.session_event: type={event.get('event_type')} "
+        print(f"CONSUMER.session_event: type={event.get('event_type')} "
              f"sid={event.get('session_id')} "
              f"payload_keys={list(event.get('payload', {}).keys())}")
         try:
@@ -81,4 +72,4 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
             )
         except Exception as e:
             import traceback
-            _log(f"CONSUMER.session_event ERROR: {e}\n{traceback.format_exc()}")
+            print(f"CONSUMER.session_event ERROR: {e}\n{traceback.format_exc()}")

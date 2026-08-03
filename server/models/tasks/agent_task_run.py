@@ -64,6 +64,14 @@ class AgentTaskRun(BaseModel):
     status = models.CharField(choices=TaskRunStatus.choices, default=TaskRunStatus.NEW, max_length=61)
     result_json = models.JSONField(default=None, null=True)
 
+    observable_fields = set([
+        "pk",
+        "agent_task_call",
+        "task_instance",
+        "task_definition_version",
+        "session_version",                       
+    ])
+
     @classmethod
     def create(
         cls,
@@ -134,6 +142,18 @@ class AgentTaskRun(BaseModel):
             taskrun.taskrun_arg_references.set(ref_pks)
 
         return taskrun
+
+    @property
+    def observable_keys(self):
+        return set([
+            "AgentTaskRun",
+            f"AgentTaskRun.pk:{self.pk}",
+            f"AgentTaskRun.agent_task_call:{self.agent_task_call_pk}",
+            f"AgentTaskRun.task_instance:{self.task_instance_pk}",
+            f"AgentTaskRun.task_definition_version:{self.task_definition_version_pk}",  
+            f"AgentTaskRun.session_version:{self.session_version_pk}", 
+        ])
+
 
     def apply_async(self) -> None:
         """Dispatch this run asynchronously via Celery."""

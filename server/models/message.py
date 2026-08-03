@@ -35,6 +35,20 @@ class Message(BaseModel):
     hide_from_context: bool = models.BooleanField(default=False)
     pin_to_context: bool = models.BooleanField(default=False)
 
+    observable_fields = set([
+        "pk",
+        "session_version",
+    ])
+
+    @property
+    def observable_keys(self):
+        return set([
+            "Message",
+            f"Message.pk:{self.pk}",
+            f"Message.session_version:{self.session_version_pk}",        
+        ])
+
+
     def add_part( self, type: str, content_type: MessageContentType, content: Any, template_data: Any = None, tool_call: Any = None) -> MessagePart:
         """Create and return a new :class:`MessagePart` attached to this message.
 
