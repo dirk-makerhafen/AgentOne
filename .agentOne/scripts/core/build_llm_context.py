@@ -52,6 +52,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                 f"refusing to create a duplicate"
             )
         query = Query.objects.create(
+            session=sv.session,
             session_version=sv,
             trigger_message=message,
         )

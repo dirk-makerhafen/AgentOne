@@ -22,6 +22,7 @@ class SessionVersionModel(BaseModel):
     agent = models.ForeignKey(AgentModel, on_delete=models.CASCADE, related_name="related_session_versions")
     pinned_agent_version = models.ForeignKey(AgentVersionModel,on_delete=models.CASCADE,related_name="related_session_versions",default=None,null=True,blank=True)
 
+    parent_session = models.ForeignKey("SessionModel",on_delete=models.CASCADE,related_name="related_child_session_versions",default=None,null=True,blank=True)
     parent_session_version = models.ForeignKey("self",on_delete=models.CASCADE,related_name="created_session_versions",default=None,null=True,blank=True)
     workspace = models.ForeignKey("server.WorkspaceModel",on_delete=models.CASCADE,related_name="related_session_versions",default=None,null=True,blank=True)
 

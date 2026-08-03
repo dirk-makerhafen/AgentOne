@@ -17,6 +17,9 @@ class TestQueries:
         sv = SessionVersionModel.objects.create(session=session, agent=agent)
         session.latest_session_version = sv
         session.save()
-        query = Query.objects.create(session_version=sv)
+        query = Query.objects.create(
+            session=sv.session,
+            session_version=sv
+        )
         resp = auth_client.get(f'/api/v1/queries/{query.id}/')
         assert resp.status_code == 200

@@ -131,6 +131,7 @@ class AgentVersionModel(BaseModel):
                 workspace=workspace,
                 display_name=display_name,
                 defaults=dict(
+                    parent_session = parent_session_version.session if parent_session_version else None,
                     parent_session_version=parent_session_version,
                 ),
             )
@@ -140,6 +141,7 @@ class AgentVersionModel(BaseModel):
 
         if parent_session_version:
             parent_session_version.child_session_versions.add(session_version)
+            
         return session_version
 
     def get_runtime(self) -> Agent:

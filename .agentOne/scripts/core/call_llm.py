@@ -47,10 +47,11 @@ def run_streaming_query(
     first_reasoning_token_timestamp: float | None = None
     last_reasoning_token_timestamp: float | None = None
     start_timestamp = time.time()
-
+    sv = query.session_version
     response = Response.objects.create(
         query=query,
-        session_version=query.session_version,
+        session = sv.session,
+        session_version = sv,
         status=ResponseStatus.ACTIVE,
         tool_calls=[],
     )

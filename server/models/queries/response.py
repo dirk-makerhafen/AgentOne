@@ -21,6 +21,8 @@ class Response(BaseModel):
     """Stores the result of a single LLM query including token usage and timing."""
 
     query = models.ForeignKey("Query", null=True, on_delete=models.CASCADE, related_name="related_response")
+
+    session = models.ForeignKey("server.SessionModel", on_delete=models.CASCADE, related_name="related_response")
     session_version = models.ForeignKey("server.SessionVersionModel", on_delete=models.CASCADE, related_name="related_response")
 
     status = EnumField(ResponseStatus, default=ResponseStatus.WAITING)
@@ -42,6 +44,7 @@ class Response(BaseModel):
     observable_fields = set([
         "pk",
         "query",
+        "session",
         "session_version",
     ])
     @property
@@ -50,7 +53,8 @@ class Response(BaseModel):
             "Response",
             f"Response.pk:{self.pk}",
             f"Response.query:{self.query_pk}",      
-            f"Response.session_version:{self.session_version_pk}",               
+            f"Response.session:{self.session_pk}",   
+            f"Response.session_version:{self.session_version_pk}", 
         ])
 
     def notify_observers(self):

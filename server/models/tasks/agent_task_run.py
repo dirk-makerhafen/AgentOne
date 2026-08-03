@@ -40,6 +40,7 @@ class AgentTaskRun(BaseModel):
     task_instance = models.ForeignKey("TaskInstance",on_delete=models.CASCADE,related_name="related_agent_task_runs",default=None,null=True,)
 
     task_definition_version = models.ForeignKey("TaskDefinitionVersion",on_delete=models.CASCADE,related_name="related_agent_task_runs",default=None,null=True,blank=True,)
+    session = models.ForeignKey("SessionModel",on_delete=models.CASCADE,related_name="related_task_runs")
     session_version = models.ForeignKey("SessionVersionModel",on_delete=models.CASCADE,related_name="related_agent_task_runs",)
 
     arguments_json = models.JSONField(default=dict, null=False)
@@ -112,12 +113,13 @@ class AgentTaskRun(BaseModel):
         arguments_json, ref_pks = AgentTaskRun._create_run_arguments_json(
             args=args, kwargs=kwargs
         )
-
+        sv = agent_task_call.session_version
         taskrun = AgentTaskRun.objects.create(
             agent_task_call=agent_task_call,
             task_instance=agent_task_call.task_instance,
             task_definition_version=task_definition_version,
-            session_version=agent_task_call.session_version,
+            session_version=sv,
+            session = sv.session,
             arguments_json=arguments_json,
             dont_start_before=dont_start_before if dont_start_before else None,
             dont_start_after=dont_start_after if dont_start_after else None,

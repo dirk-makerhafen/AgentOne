@@ -67,10 +67,14 @@ class CompactionForkTest(TestCase):
 
     def _run_compaction(self, compacted, trigger, summary="summary"):
         from runtime.session.session import Session
-        query = Query.objects.create(session_version=self.sv, trigger_message=trigger)
+        query = Query.objects.create(
+            session=self.sv.session,
+            session_version=self.sv,
+            trigger_message=trigger
+        )
         for m in compacted:
             query.add_message(role=m.role, source_message=m).save()
-        response = Response.objects.create(query=query, session_version=self.sv)
+        response = Response.objects.create(query=query, session_version=self.sv, session=self.sv.session)
         session = Session(session_model=self.session)
         return self.ingest.ingest_compaction(
             session, response, [{"type": "message", "content": summary}]

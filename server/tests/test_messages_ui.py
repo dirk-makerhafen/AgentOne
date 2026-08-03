@@ -98,9 +98,11 @@ class MessagesTest(TestCase):
     def test_on_message_created_adds_related_queries(self):
         """If a message already has related Queries, they are appended too."""
         msg = self._create_message(role="user")
+        sv = self.session_version
         query = Query.objects.create(
             trigger_message=msg,
-            session_version=self.session_version,
+            session = sv.session,
+            session_version=sv,
             status=QueryStatus.ACTIVE,
         )
         self.messages._on_message_created(msg.pk, "create", {
@@ -113,11 +115,12 @@ class MessagesTest(TestCase):
 
     def test_on_query_created_inserts_after_trigger_message(self):
         """_on_query_created inserts a Query after its trigger_message."""
-        msg = self._create_message(role="user",
-                                   session_version=self.session_version)
+        msg = self._create_message(role="user", session_version=self.session_version)
+        sv = self.session_version
         query = Query.objects.create(
             trigger_message=msg,
-            session_version=self.session_version,
+            session = sv.session,
+            session_version=sv,
             status=QueryStatus.WAITING,
         )
         # First add the trigger message
@@ -143,9 +146,11 @@ class MessagesTest(TestCase):
     def test_on_query_created_dedup(self):
         """_on_query_created does NOT insert if the Query is already in the list."""
         msg = self._create_message(role="user")
+        sv = self.session_version
         query = Query.objects.create(
             trigger_message=msg,
-            session_version=self.session_version,
+            session = sv.session,
+            session_version=sv,
             status=QueryStatus.WAITING,
         )
         self.messages._on_message_created(msg.pk, "create", {
@@ -166,9 +171,11 @@ class MessagesTest(TestCase):
     def test_on_query_updated_refreshes_view(self):
         """_on_query_updated calls update() on the matching QueryView."""
         msg = self._create_message(role="user")
+        sv = self.session_version
         query = Query.objects.create(
             trigger_message=msg,
-            session_version=self.session_version,
+            session = sv.session,
+            session_version=sv,
             status=QueryStatus.WAITING,
         )
         # Add message + query to the list

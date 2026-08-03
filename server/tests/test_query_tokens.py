@@ -37,7 +37,10 @@ class QueryTokenRecalibrationTest(TestCase):
         self.session.refresh_from_db()
 
     def _make_query(self):
-        query = Query.objects.create(session_version=self.sv)
+        query = Query.objects.create(
+            session = self.sv.session,
+            session_version=self.sv
+        )
         query.add_message(
             role=MessageRole.SYSTEM,
             content_type=MessageContentType.TEXT,
@@ -58,6 +61,7 @@ class QueryTokenRecalibrationTest(TestCase):
 
         response = Response.objects.create(
             query=query,
+            session = self.sv.session,
             session_version=self.sv,
             status=ResponseStatus.SUCCESS,
             prompt_tokens=90000,
@@ -82,6 +86,7 @@ class QueryTokenRecalibrationTest(TestCase):
 
         response = Response.objects.create(
             query=query,
+            session = self.sv.session,
             session_version=self.sv,
             status=ResponseStatus.SUCCESS,
             prompt_tokens=10000,  # factor 2.0
@@ -102,6 +107,7 @@ class QueryTokenRecalibrationTest(TestCase):
 
         response = Response.objects.create(
             query=query,
+            session = self.sv.session,
             session_version=self.sv,
             status=ResponseStatus.SUCCESS,
             prompt_tokens=10050,  # factor 1.005 → within tolerance
@@ -120,6 +126,7 @@ class QueryTokenRecalibrationTest(TestCase):
 
         Response.objects.create(
             query=query,
+            session = self.sv.session,
             session_version=self.sv,
             status=ResponseStatus.FAILURE,
             prompt_tokens=90000,

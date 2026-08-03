@@ -28,6 +28,7 @@ class Query(BaseModel):
     """Represents a single LLM query including its message history."""
 
     apikey = models.ForeignKey(  "server.ApiKey",  null=True,  on_delete=models.SET_NULL,  related_name="related_queries",  blank=True)
+    session = models.ForeignKey(  "server.SessionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
     session_version = models.ForeignKey(  "server.SessionVersionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
     trigger_message = models.ForeignKey(  "server.Message",  null=True,  blank=True,  on_delete=models.CASCADE,  related_name="related_queries")
     status = EnumField(QueryStatus, default=QueryStatus.WAITING)
