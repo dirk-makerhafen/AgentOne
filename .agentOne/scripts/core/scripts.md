@@ -47,21 +47,6 @@ tasks:
     file: compact_if_needed.py
     function: compact_if_needed
     bound: True
-  - name: build_llm_compact_context
-    file: build_llm_compact_context.py
-    function: build_llm_compact_context
-    bound: True
-  - name: ingest_compaction
-    file: ingest_compaction.py
-    function: ingest_compaction
-    bound: True
-  - name: compact_turn
-    type: chain
-    chain:
-      - build_llm_compact_context
-      - call_llm
-      - parse_llm_response
-      - ingest_compaction
   - name: process_turn
     type: chain
     chain:

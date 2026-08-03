@@ -17,6 +17,10 @@ def compact_if_needed(
     auto_limit = _session.auto_compact_limit
     if auto_limit <= 0 or response.prompt_tokens < auto_limit:
         return dict(response=response, parts=parts, message=message, **kwargs)
+    
+    compact_task = _session.get_task("compact_turn")
+    if not compact_task:
+        return dict(response=response, parts=parts, message=message, **kwargs)
 
-    compact_call = _session.get_task("compact_turn").delay(message=message)
+    compact_call = compact_task.delay(message=message)
     return dict(response=response, parts=parts, message=message, compact_call=compact_call, **kwargs)
