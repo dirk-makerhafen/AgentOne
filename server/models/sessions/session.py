@@ -24,7 +24,7 @@ class SessionModel(BaseModel):
     is_archived = models.BooleanField(default=False)
 
     parent_session = models.ForeignKey("self",on_delete=models.CASCADE,related_name="child_sessions",default=None,null=True,blank=True)
-    parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="sessions")
+    parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="child_sessions")
     latest_session_version = models.ForeignKey("server.SessionVersionModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_newest_version")
 
     observable_fields = set([
@@ -46,6 +46,11 @@ class SessionModel(BaseModel):
 
     @property
     def observable_keys(self):
+        k = f"SessionModel:{self.pk}"
+        k = f"SessionModel:{self.parent_session_pk}:child_sessions"
+        k = f"Project:{self.parent_project_pk}:child_sessions"
+        
+
         return set([
             "SessionModel",
             f"SessionModel.pk:{self.pk}",

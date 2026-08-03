@@ -40,6 +40,9 @@ class QueryMessage(BaseModel):
 
     @property
     def observable_keys(self):
+        k = f"QueryMessage:{self.pk}"
+        k = f"Query:{self.query_pk}:related_query_messages"
+
         return set([
             "QueryMessage",
             f"QueryMessage.pk:{self.pk}",

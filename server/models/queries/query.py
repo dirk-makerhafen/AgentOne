@@ -43,6 +43,9 @@ class Query(BaseModel):
 
     @property
     def observable_keys(self):
+        k = f"Query:{self.pk}"
+        k = f"SessionModel:{self.session_pk}:related_queries"
+
         return set([            
             f"Query",
             f"Query.pk:{self.pk}",

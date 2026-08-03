@@ -38,6 +38,10 @@ class AgentModel(BaseModel):
     
     @property
     def observable_keys(self):
+        k = f"Project:{self.parent_project_pk}.child_agents|created"
+        k = f"AgentModel:{self.parent_agent_pk}.child_agents|created"
+        k = f"SkillModel:{self.parent_skill_pk}.child_agents|created"
+
         return set([
             "AgentModel",
             f"AgentModel.pk:{self.pk}",

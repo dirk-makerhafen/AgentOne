@@ -48,3 +48,4 @@ class Workspace(ModelView):
 
     def __init__(self, subject: WorkspaceModel, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        

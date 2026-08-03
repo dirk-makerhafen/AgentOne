@@ -43,9 +43,7 @@ class UiApp(Observable):
             self._live_sessions[session_id] = LiveSession(session_id)
         return self._live_sessions[session_id]
 
-    def dispatch_session_event(
-        self, session_id: int | None, event_type: str, payload: dict[str, Any]
-    ) -> None:
+    def dispatch_session_event(self, session_id: int | None, event_type: str, payload: dict[str, Any]) -> None:
         if event_type == "model_event":
             self.model_observer.dispatch(
                 payload.get("model_name", ""),

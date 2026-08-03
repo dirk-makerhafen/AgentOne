@@ -40,6 +40,9 @@ class QueryMessagePart(BaseModel):
 
     @property
     def observable_keys(self):
+        k = f"QueryMessagePart:{self.pk}"
+        k = f"QueryMessage:{self.query_message_pk}:query_message_parts"
+
         return set([
             "QueryMessagePart",
             f"QueryMessagePart.pk:{self.pk}",

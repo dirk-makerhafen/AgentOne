@@ -43,6 +43,10 @@ class Message(BaseModel):
 
     @property
     def observable_keys(self):
+        k = f"Message:{self.pk}",
+        k = f"SessionModel:{self.session_pk}.related_messages"
+        k = f"SessionVersionModel:{self.session_version_pk}.related_messages"
+
         return set([
             "Message",
             f"Message.pk:{self.pk}",
