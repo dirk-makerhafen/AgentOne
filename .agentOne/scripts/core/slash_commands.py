@@ -11,7 +11,7 @@ from typing import Any
 from runtime.session.session import Session
 from server.models.content import GenericContent
 from server.models.message import Message, MessagePart
-from server.models.enums.message_enums import MessageContentType, MessagePartType
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 
 
 def process_slashcommand(_session: Session, name: str, **kwargs: Any) -> dict[str, Any]:
@@ -36,7 +36,7 @@ def process_slashcommand(_session: Session, name: str, **kwargs: Any) -> dict[st
 
     session_version = _session.get_version_model()
     prev_message = _session.get_messages().filter(next_messages=None).last()
-    message = Message.objects.create(role="user", session_version=session_version, prev_message=prev_message)
+    message = Message.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
 
     try:
         result = bound_task.call(**kwargs)
@@ -69,7 +69,8 @@ def handle_slashcommand_response(
     Returns:
         The raw tool response value.
     """
-    conv_msg = Message.objects.create(role="tool", session_version=_session.get_version_model(), prev_message=message)
+    sv = _session.get_version_model()
+    conv_msg = Message.objects.create(role="tool", session=sv.session, session_version=sv, prev_message=message)
 
     def _serialize_result(obj: Any) -> Any:
         """JSON-serialise a tool result, handling Message / Path model references."""

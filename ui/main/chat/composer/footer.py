@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
+from server.models.enums.message_enums import MessageRole
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 from ui.main.chat.composer.dropdown.model import ModelDropdown
@@ -17,6 +18,7 @@ from ui.main.chat.composer.wrap.toolsets import ToolsetsWrap
 from ui.main.chat.composer.wrap.workspace import WorkspaceWrap
 if TYPE_CHECKING:
     from ui.main.chat.composer.box import ComposerBox
+from server.models.enums.message_enums import MessagePartType, MessageContentType
 
 
 class ComposerFooter(ModelView):
@@ -131,8 +133,8 @@ class ComposerFooter(ModelView):
         '''
         if isinstance(parts, str):
             parts = [{
-                "type": "message",
-                "content_type": "text",
+                "type":  MessagePartType.MESSAGE,
+                "content_type": MessageContentType.TEXT,
                 "content": parts
             },]
         self.eval_javascript(f"document.getElementById('input_{self.parent.uid}').value = ''", skip_results=True)
@@ -140,11 +142,10 @@ class ComposerFooter(ModelView):
             self.subject.add_user_message(parts)
         except Exception as e:
             from server.models.message import Message as Msg
-            from server.models.enums.message_enums import MessagePartType, MessageContentType
             from runtime.events import publish_model_event
             session_version = self.subject.get_version_model()
             prev_message = self.subject.get_messages().filter(next_messages=None).last()
-            msg = Msg.objects.create(role="user", session_version=session_version, prev_message=prev_message)
+            msg = Msg.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
             msg.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=str(e))
             publish_model_event(msg, "create")
 

@@ -29,6 +29,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from server.models.enums.message_enums import MessagePartType
+
 
 def _walk_from_tail(messages: list) -> list:
     """Return the linear chain as a list of Message, newest first.
@@ -64,7 +66,7 @@ def _markers_in(messages: list) -> set[int]:
 
     comp = set(
         MessagePart.objects.filter(
-            message_id__in=ids, type="COMPACTION"
+            message_id__in=ids, type=MessagePartType.COMPACTION
         ).values_list("message_id", flat=True)
     )
     return comp

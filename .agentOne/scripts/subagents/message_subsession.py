@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
+from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.sessions.session import SessionModel
 
 
@@ -49,7 +50,7 @@ def message_subsession(
 
     child_session = Session(session_model=child_model)
 
-    parts = [{"type": "message", "content_type": "text", "content": prompt}]
+    parts = [{"type":  MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": prompt}]
     taskcall = child_session.add_user_message(parts=parts)
 
     if blocking:

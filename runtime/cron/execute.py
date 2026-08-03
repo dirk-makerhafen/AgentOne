@@ -9,6 +9,7 @@ from django.db import models
 from django.utils import timezone
 
 from server.models.cron import Cronjob
+from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.sessions.session import SessionModel
 from runtime.session.session import Session
 
@@ -52,7 +53,7 @@ def execute_cron_job(cronjob_id: int) -> None:
                 raise ValueError("Message must be a JSON object for function dispatch")
             dispatched_call = task.apply_async(kwargs=message_data, cronjob=cronjob)
         else:
-            dispatched_call = session.get_task("ingest_user_message").apply_async(kwargs=dict(parts=[{"type": "message", "content_type": "text", "content": message_data}]), cronjob=cronjob)
+            dispatched_call = session.get_task("ingest_user_message").apply_async(kwargs=dict(parts=[{"type":  MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": message_data}]), cronjob=cronjob)
         
         # 3. Update tracking
         next_run = croniter(cronjob.schedule, timezone.localtime()).get_next(datetime)

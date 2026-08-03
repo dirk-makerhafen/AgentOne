@@ -16,6 +16,7 @@ from typing import Any
 
 from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
+from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.workspace import WorkspaceModel
 
 
@@ -68,7 +69,7 @@ def call_projectmanager(_session: Session, project_path: str, task: str) -> dict
         pinned_session_version=child_sv,
     )
 
-    parts = [{"type": "message", "content_type": "text", "content": task}]
+    parts = [{"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": task}]
     taskcall = child_session.add_user_message(parts=parts)
 
     return {"result": taskcall, "session_pk": child_session.model.pk}

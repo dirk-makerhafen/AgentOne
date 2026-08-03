@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
 from server.models.queries.response import Response
 from server.models.enums.task_enums import TaskRunStatus
@@ -61,13 +61,15 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
 
     if warn_no_toolcall_loop:
         prev_message = message
+        sv = _session.get_version_model()
         message = Message.objects.create(
             role= MessageRole.USER,
-            session_version=_session.get_version_model(),
+            session=sv.session,
+            session_version=sv,
             prev_message=prev_message,
         )
         message.add_part(
-            type="message",
+            type=MessagePartType.MESSAGE,
             content_type=MessageContentType.TEXT,
             content="<SYSTEM HINT>Possible looping or inefficient behavior detected. You did multiple turns without any tool calling. Take a step back and correct if needed.</SYSTEM HINT>",
         )

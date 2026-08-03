@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
 from server.models.queries.response import Response
 
@@ -61,12 +61,12 @@ def ingest_compaction(
         # current tail so the linked list stays a single chain.
         sv = _session.get_version_model()
         current_tail = Message.objects.filter(session_version=sv, next_messages=None).order_by("-pk").first()
-        compaction_message = Message.objects.create(session_version=sv, response=response, role="user", prev_message=current_tail,)
+        compaction_message = Message.objects.create(session=sv.session, session_version=sv, response=response, role=MessageRole.USER, prev_message=current_tail,)
         compaction_message.add_part(
-            type="COMPACTION", content_type="text", content="Old messages before this summary have been compacted to save context tokens. Summary :"
+            type=MessagePartType.COMPACTION, content_type=MessageContentType.TEXT, content="Old messages before this summary have been compacted to save context tokens. Summary :"
         )
         compaction_message.add_part(
-            type="COMPACTION", content_type="text", content=summary_text
+            type=MessagePartType.COMPACTION, content_type=MessageContentType.TEXT, content=summary_text
         )
         from runtime.events import publish_model_event
         publish_model_event(compaction_message, "create")
@@ -90,17 +90,19 @@ def ingest_compaction(
     # chain would repoint the compaction message at itself).
     successor = newest_compacted.next_messages.order_by("pk").first()
 
+    sv = _session.get_version_model()
     compaction_message = Message.objects.create(
-        session_version=_session.get_version_model(),
+        session=sv.session,
+        session_version=sv,
         response=response,
-        role="user",
+        role=MessageRole.USER,
         prev_message=newest_compacted,
     )
     compaction_message.add_part(
-        type="COMPACTION", content_type=MessageContentType.TEXT, content="Old messages before this summary have been compacted to save context tokens. Summary:"
+        type=MessagePartType.COMPACTION, content_type=MessageContentType.TEXT, content="Old messages before this summary have been compacted to save context tokens. Summary:"
     )
     compaction_message.add_part(
-        type="COMPACTION",
+        type=MessagePartType.COMPACTION,
         content_type=MessageContentType.TEXT,
         content=summary_text,
     )

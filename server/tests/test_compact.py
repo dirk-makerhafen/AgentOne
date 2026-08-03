@@ -7,7 +7,7 @@ from django.test import TestCase
 
 from server.models.message import Message, MessagePart
 from server.models.content import GenericContent
-from server.models.enums.message_enums import MessageContentType, MessagePartType
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.settings import SettingsModel
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
@@ -35,8 +35,9 @@ class FindCompactionBoundaryTest(TestCase):
             pinned_agent_version=self.av,
         )
 
-    def _create_message(self, role: str = "user", text: str = "hello") -> Message:
+    def _create_message(self, role: str = MessageRole.USER, text: str = "hello") -> Message:
         msg = Message.objects.create(
+            session=self.sv.session,
             session_version=self.sv,
             role=role,
         )
@@ -51,6 +52,7 @@ class FindCompactionBoundaryTest(TestCase):
 
     def _create_compaction_message(self, text: str = "summary") -> Message:
         msg = Message.objects.create(
+            session=self.sv.session,
             session_version=self.sv,
             role="system",
         )
@@ -95,6 +97,7 @@ class FindTurnBoundaryTest(TestCase):
 
     def _msg(self, role: str, text: str) -> Message:
         msg = Message.objects.create(
+            session=self.sv.session,
             session_version=self.sv,
             role=role,
         )

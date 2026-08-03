@@ -5,7 +5,7 @@ from time import time
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
 
 
@@ -58,16 +58,16 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
     # conversation history at the point of the fork.
     parent_last = _session.get_messages().filter(next_messages=None).last()
     child_version = child_session.get_version_model()
-    fork_msg = Message.objects.create(role="user", session_version=child_version, prev_message=parent_last)
+    fork_msg = Message.objects.create(role=MessageRole.USER, session=child_version.session, session_version=child_version, prev_message=parent_last)
     fork_msg.add_part(
-        type="message",
+        type=MessagePartType.MESSAGE,
         content_type=MessageContentType.TEXT,
         content=(f"You have been forked from parent _session #{_session.model.pk} of agent '{_session.agent.name}'. Your task:\n"),
     )
 
     parts = [
-        {"type": "message", "content_type": "text", "content": prompt},
-        {"type": "message", "content_type": "text", "content": "\n\nYou are a doing a subtask for another agent. Remember to finalize your work by calling final_result(message='..your final result message..')"},
+        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": prompt},
+        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": "\n\nYou are a doing a subtask for another agent. Remember to finalize your work by calling final_result(message='..your final result message..')"},
     ]
     taskcall = child_session.add_user_message(parts=parts)
 

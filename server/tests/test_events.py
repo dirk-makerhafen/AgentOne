@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import patch, MagicMock, PropertyMock
 from django.test import TestCase, SimpleTestCase
+from server.models.enums.message_enums import MessageRole
 from server.tests.dc_test_helpers import create_agent, create_session, create_task
 from runtime.events import (
     publish,
@@ -20,7 +21,8 @@ class ExtractFilterContextTest(TestCase):
         session, sv = create_session(agent, av)
         from server.models.message import Message
         msg = Message.objects.create(
-            role="user",
+            role=MessageRole.USER,
+            session=sv.session,
             session_version=sv,
         )
         ctx = _extract_filter_context(msg)

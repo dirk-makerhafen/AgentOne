@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType
+from server.models.enums.message_enums import MessageContentType, MessageRole
 from server.models.message import Message
 from server.models.queries.query import Query
 
@@ -40,7 +40,7 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
             qm.delete()
 
     query.add_message(
-        role="user",
+        role = MessageRole.USER,
         content_type=MessageContentType.TEXT,
         content=_COMPACTION_SYSTEM_PROMPT,
     )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from server.models.enums.message_enums import MessageRole
 from server.models.message import Message
 from server.models.queries.query import Query
 from ui.lib.model_view import ModelView
@@ -20,7 +21,7 @@ class MessageView(ModelView):
     def __init__(self, subject: Message|Query, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         super().__init__(subject, parent, **kwargs)
         if isinstance(subject, Message):
-            if subject.role == "assistant":
+            if subject.role == MessageRole.ASSISTANT:
                 self.view = AssistantMessageView(subject, self)
             else:
                 self.view = UserMessageView(subject=subject, parent=self)

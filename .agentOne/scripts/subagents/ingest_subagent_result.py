@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
@@ -30,9 +30,9 @@ def ingest_subagent_result(_session: Session, child_session_pk: int, summary: st
 
     session_version = _session.get_version_model()
     prev_message = _session.get_messages().filter(next_messages=None).last()
-    message = Message.objects.create(role="user", session_version=session_version, prev_message=prev_message)
+    message = Message.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
     message.add_part(
-        type="message",
+        type=MessagePartType.MESSAGE,
         content_type=MessageContentType.TEMPLATE,
         content="A task was finished by subagent '{{child_agent.name}}' session #{{child_session_pk}}\nTask: {{task_summary}}\nResult: {{result}}",
         template_data=dict(

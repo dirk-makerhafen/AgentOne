@@ -26,7 +26,7 @@ from server.models.settings import SettingsModel
 
 _INGEST_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / ".agentone" / "scripts" / "core" / "ingest_compaction.py"
+    / ".agentone" / "scripts" / "compact" / "ingest_compaction.py"
 )
 
 
@@ -38,7 +38,7 @@ def _load_ingest():
 
 
 def _msg(sv, role, text, prev=None):
-    m = Message.objects.create(session_version=sv, role=role, prev_message=prev)
+    m = Message.objects.create(session=sv.session, session_version=sv, role=role, prev_message=prev)
     MessagePart.objects.create(
         message=m,
         type=MessagePartType.MESSAGE,
@@ -77,7 +77,7 @@ class CompactionForkTest(TestCase):
         response = Response.objects.create(query=query, session_version=self.sv, session=self.sv.session)
         session = Session(session_model=self.session)
         return self.ingest.ingest_compaction(
-            session, response, [{"type": "message", "content": summary}]
+            session, response, [{"type":  MessagePartType.MESSAGE, "content": summary}]
         )
 
     def _tails(self):
@@ -104,7 +104,7 @@ class CompactionForkTest(TestCase):
         comp = f.prev_message
         self.assertEqual(comp.pk, out["message"].pk)
         self.assertEqual(comp.prev_message_id, e.pk)  # newest_compacted
-        self.assertTrue(comp.parts.filter(type="COMPACTION").exists())
+        self.assertTrue(comp.parts.filter(type=MessagePartType.COMPACTION).exists())
 
         # Compacted range stays reachable, prev pointers intact (no orphaning)
         for msg, expected_prev in ((e, d), (d, c), (c, b)):
@@ -146,7 +146,7 @@ class CompactionForkTest(TestCase):
         d = _msg(self.sv, MessageRole.USER, "d", c)
 
         # Simulate compaction 1: marker X inserted between b and c.
-        x = Message.objects.create(session_version=self.sv, role=MessageRole.USER, prev_message=b)
+        x = Message.objects.create(session=self.sv.session, session_version=self.sv, role=MessageRole.USER, prev_message=b)
         MessagePart.objects.create(
             message=x,
             type=MessagePartType.COMPACTION,
@@ -185,7 +185,7 @@ class CompactionForkTest(TestCase):
         # Stack two markers into a run between b and c.  Each marker has a
         # HIGHER pk than c but sits BEFORE it in the chain.
         def _marker(prev):
-            m = Message.objects.create(session_version=self.sv, role=MessageRole.USER, prev_message=prev)
+            m = Message.objects.create(session=self.sv.session, session_version=self.sv, role=MessageRole.USER, prev_message=prev)
             MessagePart.objects.create(
                 message=m,
                 type=MessagePartType.COMPACTION,

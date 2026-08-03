@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
+from server.models.enums.message_enums import MessageRole
 from server.models.message import Message
 
 
@@ -42,7 +43,8 @@ def ingest_user_message(_session: Session, parts: list[dict[str, Any]]) -> Messa
     prev_message = _session.get_messages().filter(next_messages=None).last()
 
     message = Message.objects.create(
-        role="user",
+        role=MessageRole.USER,
+        session=session_version.session,
         session_version=session_version,
         prev_message=prev_message,
     )

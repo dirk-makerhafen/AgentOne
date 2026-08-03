@@ -92,7 +92,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         while current and len(messages) < _session.max_history_messages + 1:
             if not current.hide_from_context:
                 messages.append(current)
-                if current.parts.filter(type="COMPACTION").exists():
+                if current.parts.filter(type=MessagePartType.COMPACTION).exists():
                     break
             current = current.prev_message
         
@@ -142,7 +142,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
 
         d = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()[:-9]
         #query.add_message(
-        #    role="user",
+        #    role=MessageRole.USER,
         #    content_type=MessageContentType.TEXT,
         #    content=f"Your working dir is '{_session.workspace.path}', it is {d}",
         #    template_data={},

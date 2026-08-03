@@ -11,6 +11,7 @@ from server.models.cron import Cronjob
 from server.models.content import GenericContent
 from runtime.cron.crons import Cronjobs
 from runtime.cron.execute import compute_next_run
+from server.models.enums.message_enums import MessageContentType
 
 
 class CronjobModelTest(TestCase):
@@ -58,7 +59,7 @@ class CronjobModelTest(TestCase):
 
     def test_message_link(self):
         msg = GenericContent.objects.create(
-            content="hello from cron", content_type="TEXT",
+            content="hello from cron", content_type=MessageContentType.TEXT,
         )
         job = Cronjob.objects.create(
             name="msg-job", schedule="0 0 * * *", message=msg,

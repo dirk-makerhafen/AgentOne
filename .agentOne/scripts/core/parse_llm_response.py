@@ -13,6 +13,7 @@ import traceback
 from typing import Any, NotRequired, TypedDict
 
 from runtime.session.session import Session
+from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.queries.response import Response
 from server.models.settings import AgentToolCallSyntax
 
@@ -67,7 +68,7 @@ def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
     reasoning: str = (getattr(response, "reasoning", "") or "").strip()
 
     if reasoning:
-        result_parts.append(Part(type="reasoning", content_type="text", content=reasoning))
+        result_parts.append(Part(type=MessagePartType.REASONING, content_type=MessageContentType.TEXT, content=reasoning))
 
     try:
 
@@ -91,7 +92,7 @@ def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
                     }
                 )
         if content:
-            result_parts.append(Part(type="message", content_type="text", content=content))
+            result_parts.append(Part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=content))
 
         for toolcall in toolcalls:
             if isinstance(toolcall["arguments"], str):
@@ -100,7 +101,7 @@ def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
                 except json.JSONDecodeError:
                     pass
             result_parts.append(
-                Part(type="toolcall", content_type="json", content=toolcall)
+                Part(type=MessagePartType.TOOLCALL, content_type=MessageContentType.JSON, content=toolcall)
             )
 
         return dict(

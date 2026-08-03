@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from server.models.enums.message_enums import MessageRole
 from server.models.message import Message
 from server.models.queries.response import Response
 from runtime.session.session import Session
@@ -38,10 +39,12 @@ def ingest_assistant_message(
 
     prev_message = _session.get_messages().filter(next_messages=None).last()
 
+    sv = _session.get_version_model()
     message = Message.objects.create(
-        session_version=_session.get_version_model(),
+        session=sv.session,
+        session_version=sv,
         response=response,
-        role="assistant",
+        role=MessageRole.ASSISTANT,
         prev_message=prev_message,
     )
 

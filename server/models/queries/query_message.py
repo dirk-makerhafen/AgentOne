@@ -152,7 +152,7 @@ class QueryMessage(BaseModel):
                 merged = f"USER TOOLCALL RESPONSE: {merged}"
             else:
                 merged.insert(0, {"type": "text", "text": "USER TOOLCALL RESPONSE: "})
-            message: dict[str, Any] = {"role": "assistant", "content": merged}
+            message: dict[str, Any] = {"role": MessageRole.ASSISTANT, "content": merged}
 
         else:
             
@@ -169,7 +169,7 @@ class QueryMessage(BaseModel):
         # assistant messages when thinking mode is active.
         # Only include when the model requires this (requires_reasoning_echo
         # in provider YAML manifests).
-        if self.role == "assistant":
+        if self.role == MessageRole.ASSISTANT:
             try:
                 if requires_reasoning_echo:
                     reasoning = self.source_message.response.reasoning
