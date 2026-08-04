@@ -173,6 +173,8 @@ class AgentVersionModel(BaseModel):
         if (value := getattr(self.agent_settings, name)) is not None:
             if isinstance(value, (str, int, bool, float, GenericContent, BaseModel)):
                 return value
+            if isinstance(value, dict):
+                return value
             if isinstance(value, (list,)):
                 if "+" not in value:
                     return value
