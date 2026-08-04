@@ -167,8 +167,7 @@ class SessionViewSet(viewsets.ModelViewSet):
 
         bound_task = rt.get_task(task_name) or rt.get_tool(task_name) or rt.get_command(task_name)
         if not bound_task:
-            return Response({'error': f'Task "{task_name}" not found'},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': f'Task "{task_name}" not found'}, status=status.HTTP_404_NOT_FOUND)
 
         args = request.data.get('args', [])
         kwargs = request.data.get('kwargs', {})

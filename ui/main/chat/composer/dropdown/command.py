@@ -132,7 +132,7 @@ class CommandDropdown(ModelView):
         self.isopen = False
         self.search_string = ""
         self.selected_command: TaskDefinitionVersion | None = None
-        self.allowed_commands = ObservableList(subject.allowedCommands + subject.allowedTasks)
+        self.allowed_commands = ObservableList(subject.allowedCommands + subject.allowedTools)
         self.listView = ObservableListView(self.allowed_commands, self, CommandDropdownOption, dom_element="div", filter_function=self._filter_function)
 
     def toggle(self):

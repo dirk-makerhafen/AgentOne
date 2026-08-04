@@ -32,6 +32,8 @@ def process_slashcommand(_session: Session, name: str, **kwargs: Any) -> dict[st
 
     bound_task = _session.get_command(name)
     if not bound_task:
+        bound_task = _session.get_tool(name)
+    if not bound_task:
         raise Exception(f"Task {name} not found")
 
     session_version = _session.get_version_model()

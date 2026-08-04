@@ -61,5 +61,11 @@ tasks:
     chain:
       - process_slashcommand
       - handle_slashcommand_response
+
+  # Have the subagent return a result to the caller
+  - name: final_result
+    file: final_result.py
+    function: final_result
+    bound: True
 ---
 some desc

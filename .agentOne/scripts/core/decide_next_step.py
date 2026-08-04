@@ -52,23 +52,29 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
 
     MAX_NO_TOOL_ASSISTANT_TURNS = 5
     warn_no_toolcall_loop = True
+    no_tool_turn_count = 0
     pmessage = message
     for _ in range(MAX_NO_TOOL_ASSISTANT_TURNS):
         if not pmessage or (pmessage.role != MessageRole.ASSISTANT and pmessage.role != MessageRole.TOOL) or (pmessage.response and pmessage.response.tool_calls):
             warn_no_toolcall_loop = False
             break
+        no_tool_turn_count += 1
         pmessage = pmessage.prev_message
 
     if warn_no_toolcall_loop:
         prev_message = message
         sv = _session.get_version_model()
         message = Message.objects.create(
-            role= MessageRole.USER,
+            role=MessageRole.USER,
             session=sv.session,
             session_version=sv,
             prev_message=prev_message,
         )
-        hint_prompt = f"<SYSTEM HINT>Possible looping or inefficient behavior detected. You did multiple turns without any tool calling. Take a step back and correct if needed, or call final_result(message='..your final result message..') to finish and return your results.</SYSTEM HINT>"
+        hint_prompt = (
+            f"<SYSTEM NOTICE>You have responded {no_tool_turn_count} times in a row without using any tools. "
+            "If your task is complete, call final_result(content='your answer') to finish. "
+            "If you need to continue working, use a tool in your next response.</SYSTEM NOTICE>"
+        )
 
         message.add_part(
             type=MessagePartType.MESSAGE,
