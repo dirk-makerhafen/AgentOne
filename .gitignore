@@ -41,4 +41,5 @@ td1.py
 .shadowgit
 cert.pem
 key.pem
+# dont git track raw files, they can be downloaded any time.
 docs/providers/raw/

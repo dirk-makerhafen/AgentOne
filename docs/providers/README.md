@@ -2,60 +2,77 @@
 
 Curated provider and model metadata of **free, flagship-tier models only**.
 
-**Scope:** Top ~10 state-of-the-art models (e.g., GPT-4o, Claude Sonnet 4, Qwen3-235B, Nemotron 3 Ultra, DeepSeek V4, Llama 3.1 405B) — not the long tail of small/quantized/obscure models (e.g., Qwen-8B, Phi-3-mini, dozens of 7B/8B variants).
+**Scope:** Top ~10 state-of-the-art models (e.g., GPT-4o, Claude Sonnet 4, Qwen3-235B, Nemotron 3 Ultra, DeepSeek V3, Llama 3.1 405B) — not the long tail of small/quantized/obscure models (e.g., Qwen-8B, Phi-3-mini, dozens of 7B/8B variants).
 
 **Goal:** Maximize value for the user by providing only the best freely usable models — the ones you'd actually pick for production use.
-
-## Table of Contents
-
-- [Structure](#structure)
-- [Quick Start](#quick-start)
-- [Regenerate All](#regenerate-all)
-- [Format Reference](#format-reference)
-- [Data Sources](#data-sources)
 
 ## Structure
 
 ```
 providers/
   README.md
-  scripts/                     # reusable scripts for auto-extracting data
-  models/                      # free, SOTA models
+  scripts/                     # extraction scripts (helpers)
+  raw/                         # downloaded source data (gitignored)
+      awesome-free-llm-apis.json
+      opencode-models-api.json
+      awesome-repo-cache/
+      free-api-resources-data.py
+      hermes-agent-cache/
+  models/                      # CURATED model cards (final output)
       <model-slug>.md          # model card with YAML frontmatter
-  providers/                   # provider directory
+  providers/                   # CURATED provider cards (final output)
       <provider-slug>/
           provider.md          # provider card with YAML frontmatter
 ```
 
-## Quick Start
+## Workflow: Two-Part Process
 
-To add/update providers from structured data feeds:
+### Part 1: Extract Raw Data (Automated Helpers)
+
+Run extraction scripts to download source data into `raw/` and bootstrap providers/models:
 
 ```bash
 # Source 1: awesome-free-llm-apis data.json (24 free LLM providers)
-# Creates/updates: providers/<slug>/provider.md, models/<slug>.md
 python3 scripts/generate_from_awesome_apis.py --fetch
 
 # Source 2: opencode test fixtures (120 providers, 2000+ models)
-# Creates/updates: providers/<slug>/provider.md, models/<slug>.md
 python3 scripts/generate_from_opencode_fixtures.py --fetch
 
-# Source 3: awesome-free-llm-apis skill references (docs, limits, env vars)
-# Enriches: providers/<slug>/provider.md with limits, base URLs, env vars
+# Source 3: awesome-free-llm-apis skill references (limits, env vars, base URLs)
 python3 scripts/generate_from_awesome_repo.py --fetch
 
-# Source 4: free-llm-api-resources MODEL_TO_NAME_MAPPING (model name enrichment)
-# Enriches: models/<slug>.md with human-readable names
+# Source 4: free-llm-api-resources MODEL_TO_NAME_MAPPING (human-readable names)
 python3 scripts/generate_from_free_api_resources.py --fetch
 
-# Source 5: NousResearch/hermes-agent ProviderProfile (env vars, base URLs, fallback models)
-# Enriches: providers/<slug>/provider.md with auth types, aliases, fallback models
+# Source 5: NousResearch/hermes-agent ProviderProfile (auth, fallback models, aliases)
 python3 scripts/generate_from_hermes_agent.py --fetch
 ```
 
-Edit the `SKIP_IDS` set or `SLUG_OVERRIDES` dict in each script to control which providers are included. Scripts create provider dirs, `models.md`, and model cards, and update existing cards when a provider is newly added. Each script is self-contained and fetches its own data from its source URL — no hardcoded provider data.
+**Notes:**
+- Scripts are **helpers** — they download to `raw/` and can create initial provider/model files
+- When sources update, scripts may need updates (check source URLs in each script)
+- Edit `SKIP_IDS` / `SLUG_OVERRIDES` / `SLUG_MERGE_MAP` in scripts to control inclusion
+- Each script is self-contained; no hardcoded provider data
 
-## Regenerate All
+### Part 2: Curate Flagship Models (Manual Research)
+
+After extraction, **manually research and create the final curated files**:
+
+1. **Check source websites** (listed in Data Sources below) for new providers/models
+2. **Web search** for "best free LLM API 2024", "top free models production ready", etc.
+3. **Identify flagship models** — the ~10 models you'd actually use in production
+4. **Create/update curated files:**
+   - `providers/<slug>/provider.md` — provider info (name, URL, auth, free tier, notes)
+   - `models/<slug>.md` — model specs (family, series, vision, reasoning, tool_call, params, context, providers)
+
+**Curation criteria for flagship models:**
+- State-of-the-art performance on benchmarks (MMLU, HumanEval, etc.)
+- Available free via at least one provider (API or self-hosted)
+- Sufficient context length for production use (≥32K preferred)
+- Supports tool calling and/or reasoning
+- Actively maintained (not deprecated)
+
+## Regenerate Raw Data
 
 ```bash
 # Run all extraction scripts in sequence
@@ -89,7 +106,7 @@ providers:
 Description...
 ```
 
-### Provider card (`providers/<provider-slug>.md`)
+### Provider card (`providers/<provider-slug>/provider.md`)
 
 ```yaml
 ---
@@ -97,7 +114,7 @@ name: <display name>            # human-readable (e.g., "OpenRouter", "Groq", "T
 url: "<api base url>"           # e.g., "https://openrouter.ai/api/v1", "https://api.groq.com/openai/v1"
 self_hosted: true|false         # provider is a self-hosted platform
 ---
-Description, auth method (API key / OAuth / none), notes.
+Description, auth method (API key / OAuth / none), free tier details, notes.
 ```
 
 
@@ -115,9 +132,7 @@ Description, auth method (API key / OAuth / none), notes.
 
 ### Curated lists (reference-only — markdown, no structured extraction)
 
-These repos are manually curated lists. They contain structured data in markdown
-tables but no machine-parseable files. They are documented here for awareness and
-manual cross-reference, but do not have automated extraction scripts.
+These repos are manually curated lists. They contain structured data in markdown tables but no machine-parseable files. They are documented here for awareness and manual cross-reference, but do not have automated extraction scripts.
 
 | Source | URL | Notes |
 |--------|-----|-------|
@@ -128,7 +143,4 @@ manual cross-reference, but do not have automated extraction scripts.
 | eudk/awesome-ai-tools | https://github.com/eudk/awesome-ai-tools | Descriptive prose — model lineage, ecosystem overview. No structured data. |
 | zebbern/no-cost-ai | https://github.com/zebbern/no-cost-ai | 80+ services, no-signup endpoints, chat interfaces. Includes gray-market/g4f services. |
 
-Data may be out of date or partial — cross-check between multiple sources. When
-multiple sources provide overlapping metadata for the same provider, scripts use
-a `SLUG_MERGE_MAP` (or alias-based matching) to merge into the same provider
-directory, enriching `provider.md` with info from each source.
+Data may be out of date or partial — cross-check between multiple sources. When multiple sources provide overlapping metadata for the same provider, scripts use a `SLUG_MERGE_MAP` (or alias-based matching) to merge into the same provider directory, enriching `provider.md` with info from each source.
