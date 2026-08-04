@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List
+from urllib.parse import urlparse
 
 import yaml
 
@@ -9,11 +10,23 @@ from server.models.providers.ai_model import AiModel
 from server.models.providers.api_provider import ApiProvider
 
 
+def _is_loopback_url(url: str) -> bool:
+    """Whether a provider URL points at a loopback / local machine address."""
+    try:
+        host = urlparse(url).hostname
+    except ValueError:
+        return False
+    if not host:
+        return False
+    host = host.lower().rstrip(".")
+    return host in ("localhost", "127.0.0.1", "::1", "0.0.0.0") or host.startswith("127.")
+
+
 def load_providers_manifest(
     manifest_path: Path,
     details: List[Dict[str, str]],
 ) -> int:
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """Upsert providers and models from a YAML manifest.
 
     Expected format::
@@ -43,14 +56,24 @@ def load_providers_manifest(
     count = 0
     for provider_data in providers_list:
         name = provider_data["name"]
+        is_local = provider_data.get("is_local", False) or provider_data.get("type") == "local"
+        if not is_local:
+            is_local = _is_loopback_url(provider_data.get("url", ""))
         provider, created = ApiProvider.objects.get_or_create(
             name=name,
-            defaults={"url": provider_data.get("url", "")},
+            defaults={
+                "url": provider_data.get("url", ""),
+                "is_local": is_local,
+            },
         )
         if not created:
             url = provider_data.get("url")
             if url is not None and provider.url != url:
                 provider.url = url
+                provider.save()
+                action = "updated"
+            elif provider.is_local != is_local:
+                provider.is_local = is_local
                 provider.save()
                 action = "updated"
             else:

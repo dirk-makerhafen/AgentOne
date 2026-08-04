@@ -197,5 +197,6 @@ providers:
     supports_tool_call: true
     total_parameters: 27
     vision: true
+  is_local: true
   name: Ollama
   url: http://localhost:11434/v1/

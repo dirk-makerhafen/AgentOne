@@ -422,3 +422,139 @@ providers:
     vision: false
     supports_reasoning: false
     supports_tool_call: true
+- name: Ollama Cloud
+  url: https://ollama.com/v1
+  free_info:
+    api_key_url: https://ollama.com/settings/keys
+    setup_instructions: 'Ollama Cloud runs hosted models either through your local
+      Ollama setup or directly at ollama.com. Create a free account at ollama.com,
+      generate an API key under Settings > Keys, and paste it in AgentOne. When a
+      local Ollama installation has cloud models enabled, they appear in its /v1/models
+      list with a "-cloud" tag — those are routed to this provider instead of the
+      local Ollama card. Model ids here match ollama.com (no "-cloud" suffix).'
+  models:
+  - name: gpt-oss:120b
+    family: gpt-oss
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    open_weights: true
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: false
+    total_parameters: 120
+    active_parameters: 4
+  - name: gpt-oss:20b
+    family: gpt-oss
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    open_weights: true
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: false
+    total_parameters: 20
+    active_parameters: 2
+  - name: deepseek-v3.1:671b
+    family: deepseek
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    open_weights: true
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: false
+    total_parameters: 671
+    active_parameters: 37
+  - name: qwen3-coder:480b
+    family: qwen3-coder
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    open_weights: true
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: false
+    total_parameters: 480
+    active_parameters: 30
+  - name: kimi-k2:1t
+    family: kimi
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    supports_reasoning: false
+    supports_tool_call: true
+    vision: false
+    total_parameters: 1000
+    active_parameters: 32
+  - name: kimi-k2-thinking
+    family: kimi
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: false
+    total_parameters: 1000
+    active_parameters: 32
+  - name: glm-4.6
+    family: glm
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    supports_reasoning: false
+    supports_tool_call: true
+    vision: false
+    total_parameters: 130
+    active_parameters: 17
+  - name: minimax-m2
+    family: minimax
+    is_cloud: true
+    self_hosted: false
+    context_length: 100000
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: false
+    total_parameters: 145
+    active_parameters: 8
+  - name: qwen3-vl:235b
+    family: qwen3-vl
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    open_weights: true
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: true
+    total_parameters: 235
+    active_parameters: 21
+  - name: qwen3-vl:235b-instruct
+    family: qwen3-vl
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    open_weights: true
+    supports_reasoning: false
+    supports_tool_call: true
+    vision: true
+    total_parameters: 235
+    active_parameters: 21
+  - name: gemini-3-pro-preview
+    family: gemini
+    is_cloud: true
+    self_hosted: false
+    context_length: 1048576
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: true
+    total_parameters: 0
+  - name: cogito-2.1:671b
+    family: cogito
+    is_cloud: true
+    self_hosted: false
+    context_length: 131072
+    supports_reasoning: true
+    supports_tool_call: true
+    vision: false
+    total_parameters: 671
+    active_parameters: 32

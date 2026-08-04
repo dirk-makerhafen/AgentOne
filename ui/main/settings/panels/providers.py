@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from django.db.models import Q
 from server.models.providers.api_provider import ApiProvider
 from server.models.providers.api_key import ApiKey
 from ui.lib.model_view import ModelView
@@ -77,11 +78,24 @@ class ProviderCardView(ModelView):
 
     @property
     def model_count(self) -> int:
-        return self.subject.aimodels.count()
+        return self._model_qs().count()
+
+    def _model_qs(self):
+        """Models shown on this card, filtered to the provider's section.
+
+        A local provider (e.g. Ollama) can still serve cloud models, so its
+        card only lists local/self-hosted models — cloud ones are excluded.
+        """
+        qs = self.subject.aimodels.all().order_by("name")
+        if self.subject.is_local:
+            return qs.filter(Q(self_hosted=True) | Q(is_cloud=False)).exclude(
+                Q(name__endswith="-cloud") | Q(name__endswith=":cloud")
+            )
+        return qs.exclude(self_hosted=True).filter(is_cloud=True)
 
     @property
     def model_tags(self) -> list[str]:
-        return list(self.subject.aimodels.values_list("name", flat=True).order_by("name")[:100])
+        return list(self._model_qs().values_list("name", flat=True)[:100])
 
     @property
     def status_text(self) -> str:
@@ -177,15 +191,47 @@ class SettingPanelProviders(ModelView):
                 <div class="settings-section-meta" data-i18n="providers_section_meta">Manage API keys for AI providers. Changes take effect immediately.</div>
             </div>
         </div>
-        <div style="display:flex;flex-direction:column;margin-top:4px">
-            {{ pyview.provider_cards.render() }}
+        <div class="settings-subsection">
+            <div class="settings-subsection-title" data-i18n="providers_local_title">Local providers</div>
+            <div class="settings-subsection-meta" data-i18n="providers_local_meta">Services running on this machine (e.g. Ollama). Only local/self-hosted models are listed.</div>
         </div>
+        {% if pyview.has_local_providers %}
+        <div style="display:flex;flex-direction:column;margin-top:4px">
+            {{ pyview.local_provider_cards.render() }}
+        </div>
+        {% else %}
+        <div class="settings-empty" data-i18n="providers_local_empty">No local providers configured.</div>
+        {% endif %}
+        <div class="settings-subsection">
+            <div class="settings-subsection-title" data-i18n="providers_cloud_title">Cloud</div>
+            <div class="settings-subsection-meta" data-i18n="providers_cloud_meta">Remote providers accessed over the internet. Add an API key to enable their models.</div>
+        </div>
+        {% if pyview.has_cloud_providers %}
+        <div style="display:flex;flex-direction:column;margin-top:4px">
+            {{ pyview.cloud_provider_cards.render() }}
+        </div>
+        {% else %}
+        <div class="settings-empty" data-i18n="providers_cloud_empty">No cloud providers configured.</div>
+        {% endif %}
     '''
 
     def __init__(self, subject, parent: SettingsView, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.provider_cards = QuerySetView(
-            subject=ApiProvider.objects.all().order_by("name"),
+        self.local_provider_cards = QuerySetView(
+            subject=ApiProvider.objects.filter(is_local=True).order_by("name"),
             parent=self,
             item_class=ProviderCardView,
         )
+        self.cloud_provider_cards = QuerySetView(
+            subject=ApiProvider.objects.filter(is_local=False).order_by("name"),
+            parent=self,
+            item_class=ProviderCardView,
+        )
+
+    @property
+    def has_local_providers(self) -> bool:
+        return self.local_provider_cards.query.exists()
+
+    @property
+    def has_cloud_providers(self) -> bool:
+        return self.cloud_provider_cards.query.exists()

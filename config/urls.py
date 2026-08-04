@@ -10,7 +10,6 @@ from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.agent_task_run import AgentTaskRun
 from server.models.enums.task_enums import TaskType, TaskCallStatusDetail
 from server.models.sessions.session import SessionModel
-from old.register_client_api import register_client
 from ui.app_view import ui
 
 #@login_required
@@ -92,5 +91,4 @@ urlpatterns = [
     path('view/<instance_id>/<method>', agent_webapi_view    , name='agent_webapi_view'),
     path('call/<instance_id>/<method>', agent_webapi_call    , name='agent_webapi_call'),
     path('result/<call_id>'           , agent_webapi_response, name='agent_webapi_response'),
-    path('register_client/'           , register_client      , name='register_client'),
 ] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])

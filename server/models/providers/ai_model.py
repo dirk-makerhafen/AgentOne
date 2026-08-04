@@ -46,6 +46,16 @@ class AiModel(BaseModel):
     # 0 = unlimited.
     limit_parallel_calls = models.IntegerField(default=0)
 
+    @property
+    def is_local_model(self) -> bool:
+        """Whether this model runs on a local/self-hosted runtime.
+
+        A model is considered local when it is self-hosted or explicitly
+        flagged as not cloud.  A local provider (e.g. Ollama) may still serve
+        cloud models, so this is decided per-model, not per-provider.
+        """
+        return self.self_hosted or not self.is_cloud
+
     observable_fields = set([
         "pk",
         "api_provider"

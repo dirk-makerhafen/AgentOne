@@ -15,6 +15,12 @@ class ApiProvider(BaseModel):
     name = models.CharField(max_length=512)
     url = models.CharField(max_length=512, default="")
 
+    # Whether the provider runs on a local machine (e.g. Ollama on localhost).
+    # Local providers can still serve cloud models — those are distinguished
+    # per-model via ``AiModel.is_cloud`` / ``self_hosted`` and are filtered out
+    # of the "Local providers" settings section.
+    is_local = models.BooleanField(default=False)
+
     # Maximum simultaneous active runs across ALL models for this provider.
     # Useful for local providers (e.g. Ollama) where concurrency is hardware-bound.
     # 0 = unlimited.
@@ -22,6 +28,7 @@ class ApiProvider(BaseModel):
 
     observable_fields = set([
         "pk",
+        "is_local",
     ])
 
     @property
