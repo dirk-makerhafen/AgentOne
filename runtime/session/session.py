@@ -66,6 +66,11 @@ class Session:
     def session_type(self) -> str:
         """Return the session type (SessionType value)."""
         return self.model.session_type
+
+    @property
+    def is_permanent(self) -> bool:
+        """Return whether this is a permanent session (not a single-use subtask)."""
+        return self.model.is_permanent
     
     @property
     def description(self) -> str:

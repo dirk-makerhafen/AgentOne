@@ -5,13 +5,14 @@ import json
 from datetime import datetime, timezone as dt_timezone
 from typing import TYPE_CHECKING
 
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.utils import timezone
 
 from server.models.agents.agent import AgentModel
 from server.models.collections import DataCollection
 from server.models.cron import Cronjob
 from server.models.message import Message
+from server.models.queries.response import Response
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.task_definition import TaskDefinition
@@ -257,15 +258,19 @@ class DashboardView(ModelView):
                         <div class="insights-card-title">Token Breakdown</div>
                         <div class="insights-token-row">
                             <span class="insights-token-label">Input</span>
-                            <span class="insights-token-value">--</span>
+                            <span class="insights-token-value">{{ pyview.token_breakdown.input }}</span>
                         </div>
                         <div class="insights-token-row">
                             <span class="insights-token-label">Output</span>
-                            <span class="insights-token-value">--</span>
+                            <span class="insights-token-value">{{ pyview.token_breakdown.output }}</span>
+                        </div>
+                        <div class="insights-token-row">
+                            <span class="insights-token-label">Cached</span>
+                            <span class="insights-token-value">{{ pyview.token_breakdown.cached }}</span>
                         </div>
                         <div class="insights-token-row insights-token-total">
                             <span class="insights-token-label">Total</span>
-                            <span class="insights-token-value">--</span>
+                            <span class="insights-token-value">{{ pyview.token_breakdown.total }}</span>
                         </div>
                     </div>
 
@@ -343,6 +348,36 @@ class DashboardView(ModelView):
             {"label": "Cron jobs", "value": Cronjob.objects.count(),       "icon": METRIC_ICONS["cron"]},
             {"label": "Messages",  "value": Message.objects.count(),       "icon": METRIC_ICONS["messages"]},
         ]
+
+    # ------------------------------------------------------------------
+    # Token breakdown
+    # ------------------------------------------------------------------
+
+    @property
+    def token_breakdown(self) -> dict[str, str]:
+        agg = Response.objects.aggregate(
+            prompt=Sum("prompt_tokens"),
+            completion=Sum("completion_tokens"),
+            cached=Sum("cached_tokens"),
+        )
+
+        def fmt(v):
+            v = v or 0
+            if v >= 1_000_000:
+                return f"{v / 1_000_000:.2f}M"
+            if v >= 1_000:
+                return f"{v / 1_000:.1f}k"
+            return f"{v:,}"
+
+        prompt = agg["prompt"] or 0
+        completion = agg["completion"] or 0
+        cached = agg["cached"] or 0
+        return {
+            "input": fmt(prompt),
+            "output": fmt(completion),
+            "cached": fmt(cached),
+            "total": fmt(prompt + completion),
+        }
 
     # ------------------------------------------------------------------
     # Status breakdown

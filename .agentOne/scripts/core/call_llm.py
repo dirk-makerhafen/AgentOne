@@ -54,6 +54,9 @@ def run_streaming_query(
         session_version = sv,
         status=ResponseStatus.ACTIVE,
         tool_calls=[],
+        aimodel=session.aimodel,
+        model_name=session.aimodel.name if session.aimodel else "",
+        provider_name=session.aimodel.api_provider.name if session.aimodel and session.aimodel.api_provider else "",
     )
 
     client = OpenAI(
