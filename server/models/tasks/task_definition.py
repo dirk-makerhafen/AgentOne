@@ -23,6 +23,9 @@ class TaskDefinition(BaseModel):
 
     name = models.CharField(max_length=255)
     group_name =  models.CharField(max_length=255, default="")
+    # Filesystem access posture declared in the manifest: "read", "write", or
+    # None (unspecified — inferred from group_name at guardrail time).
+    access_posture = models.CharField(max_length=16, default=None, null=True, blank=True, choices=[("read", "read"), ("write", "write")])
     latest_task_version = models.ForeignKey(TaskDefinitionVersion,default=None,null=True,on_delete=models.SET_NULL,related_name="related_newest_task")
 
     observable_fields = set([

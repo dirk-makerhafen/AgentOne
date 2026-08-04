@@ -128,6 +128,67 @@ A `BoundTask` ties a `TaskDefinitionVersion` to a specific session. It is create
 
 - **`delay(*args, **kwargs)`** (line 97): Shorthand for `apply_async(args, kwargs)`.
 
+### Filesystem Access Policy — Guardrails
+
+**File:** `runtime/workspace_access.py`
+
+An optional `access:` block on a workspace (`project.md`) and/or agent
+(`agent.md`) restricts which paths filesystem, shell, and Python tools may read
+or write. See [docs/manifest-format.md](manifest-format.md) for the config
+schema.
+
+**Policy resolution** — `resolve_policy(session)` (line 175) merges the
+workspace's `access:` block (the *base* in-workspace rules) with the agent's
+`access:` block (`workspace:` override + `external:` rules). Sessions without a
+workspace get an unrestricted all-allow policy. Each `read:`/`write:` action
+resolves to an `ActionPolicy` (`default` posture + `allow`/`ask`/`deny` pattern
+lists). Deny patterns from any scope are merged into a `global_deny` list that
+wins everywhere.
+
+**Evaluation** — `evaluate(policy, target, action)` (line 227) classifies a
+path into `allow` / `ask` / `deny`:
+
+- Global deny patterns are checked first (any scope, anywhere).
+- `inside` vs `outside` is decided by `Path.relative_to(workspace_root)`;
+  inside uses the workspace/override rules, outside the agent `external:` rules.
+- Precedence per action: `deny` > `ask` > `allow` > `default`.
+- `write` implies `read`: a read also honours the write policy's allow/ask lists.
+- Targets are matched as globs (`fnmatch`) against the resolved absolute path,
+  the raw absolute path (macOS `/tmp` → `/private/tmp` symlink form), and the
+  workspace-relative form, so relative and absolute patterns both work.
+
+**Enforcement happens in three layers:**
+
+1. **Scheduling** — `CallScheduler._guardrail_filesystem_check` (in
+   `runtime/tasks/call_scheduler.py`) runs before a filesystem tool is
+   dispatched. The tool's posture is resolved via
+   `task_access_posture(task_definition)` (prefers the manifest `access:` field,
+   falls back to the `filesystem-read` / `filesystem-write` group convention);
+   its absolute-path arguments are extracted by `extract_path_args`. An `ask`
+   verdict sets `requires_approval=True` + `guardrail_reason` → the call enters
+   `HALTED_APPROVAL`. `deny` verdicts are not routed to approval — they are
+   enforced at execution.
+2. **Guardrail content checks** — `check_shell_paths` / `check_python_paths`
+   (in `runtime/guardrails.py`) analyse shell/python source for absolute
+   filesystem targets. Shell classification is **whitelist-based and
+   fail-safe**: commands in `_SHELL_READ_COMMANDS` (cat, grep, sort, diff,
+   …) classify their absolute operands as reads; anything else (explicit
+   writers like `cp`/`mv`/`rm`/`tar`, or any unknown command) is treated as
+   write-capable. In-place write flags flip whitelisted commands to write
+   (`sed -i`, `sort -o`, `perl -i`), redirect targets (`>`, `>>`, `2>`) are
+   always writes, and device nodes (`/dev/...`) are ignored. Python analysis
+   covers `open(..., "w")`, `os.remove`, `shutil.*`, `Path.write_*`, …). Their
+   verdict is merged with the content-risk verdict
+   (`_merge_guardrail_verdicts` — deny wins) before deciding approval.
+3. **Execution** — `BoundTask._filesystem_access_block` (in
+   `runtime/tasks/bound_task.py`) re-evaluates the call args at execution time.
+   Any `deny` verdict hard-blocks the call and returns
+   `(False, {status: error, stderr: reason, return_code: -1})` before the tool
+   runs — no approval can override a deny.
+
+Because `deny` is enforced at the execution boundary, a deny is a hard
+guarantee even if a call bypasses the scheduler path (e.g. direct `BoundTask.call`).
+
 ### ContextTracker — Parent-Child Tracking
 
 **File:** `runtime/context_manager.py` (28 lines)
@@ -590,6 +651,14 @@ No page reloads. No full re-renders. Only the specific view that called `update(
 | | 76–98 | `taskrun_result_reference_ended()` |
 | | 100–116 | `all_taskrun_result_references_ended()` |
 | `runtime/context_manager.py` | 6–28 | `ContextTracker` |
+| `runtime/workspace_access.py` | 175–213 | `resolve_policy()` |
+| | 228–314 | `evaluate()` |
+| | 316–328 | `task_access_posture()` |
+| | 331–412 | `extract_path_args()` |
+| | 417–437 | validation (`validate_workspace_access` / `validate_agent_access`) |
+| `runtime/guardrails.py` | — | `check_shell_paths` / `check_python_paths` path analysis; `_shell_targets` whitelist-based classifier |
+| `runtime/tasks/bound_task.py` | 129–188 | `_filesystem_access_block()` |
+| `runtime/tasks/call_scheduler.py` | 222–264 | `_guardrail_filesystem_check()` |
 | `runtime/session/session.py` | 236–242 | `get_task()` / `get_tool()` / `get_command()` |
 | | 448–480 | `add_user_message()` |
 | `.agentone/agents/baseagent/scripts/ingest_user_message.py` | 14–50 | `ingest_user_message()` |

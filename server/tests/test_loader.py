@@ -4,8 +4,8 @@ from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_chain_entry import load_chain_entry
 from server.tests.helpers import AgentMdTestMixin, TESTPROJECT
 from server.models.enums.task_enums import TaskType, TaskExecutionMode
+from server.models.workspace import WorkspaceModel
 from pathlib import Path
-
 
 class LoaderTest(AgentMdTestMixin, TestCase):
     """Tests for ``_resolve_agent_version_tasks`` via the real loader pipeline.
@@ -220,3 +220,211 @@ class LoadScriptsTwoPassTest(TestCase):
         msg = str(ctx.exception)
         self.assertIn("missing step(s)", msg)
         self.assertIn("does_not_exist", msg)
+
+
+class LoadToolAccessTest(TestCase):
+    """Tool-level ``access: read|write`` in scripts.md is persisted as
+    ``TaskDefinition.access_posture``, with reload updating the value."""
+
+    def setUp(self):
+        import shutil
+        import tempfile
+
+        from registry.install_repo import InstallRepo
+
+        self._tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        self.scripts_dir = self._tmp / "scripts"
+        self.scripts_dir.mkdir(parents=True)
+        (self.scripts_dir / "tool.py").write_text(
+            "def tool():\n    return 1\n"
+        )
+        self.repo = InstallRepo(repo_path=self._tmp / "install")
+        self.repo.source_root = self.scripts_dir
+        self.repo.sync()
+
+    def _write(self, body: str) -> None:
+        (self.scripts_dir / "scripts.md").write_text(body)
+
+    def _load(self):
+        from registry.loader.load_scripts_manifest import load_scripts_manifest
+
+        return load_scripts_manifest(self.scripts_dir, install_repo=self.repo)
+
+    def test_access_field_persisted(self):
+        self._write(
+            "---\ngroup: fs\ntasks:\n  - name: tool\n"
+            "    file: tool.py\n    function: tool\n    access: read\n---\n"
+        )
+        results = self._load()
+        td, _ = next(r for r in results if r[0].name == "tool")
+        self.assertEqual(td.access_posture, "read")
+
+    def test_write_access_persisted(self):
+        self._write(
+            "---\ngroup: fs\ntasks:\n  - name: tool\n"
+            "    file: tool.py\n    function: tool\n    access: write\n---\n"
+        )
+        results = self._load()
+        td, _ = next(r for r in results if r[0].name == "tool")
+        self.assertEqual(td.access_posture, "write")
+
+    def test_missing_access_is_none(self):
+        self._write(
+            "---\ngroup: fs\ntasks:\n  - name: tool\n"
+            "    file: tool.py\n    function: tool\n---\n"
+        )
+        results = self._load()
+        td, _ = next(r for r in results if r[0].name == "tool")
+        self.assertIsNone(td.access_posture)
+
+    def test_invalid_access_is_none(self):
+        self._write(
+            "---\ngroup: fs\ntasks:\n  - name: tool\n"
+            "    file: tool.py\n    function: tool\n    access: execute\n---\n"
+        )
+        results = self._load()
+        td, _ = next(r for r in results if r[0].name == "tool")
+        self.assertIsNone(td.access_posture)
+
+    def test_reload_updates_access(self):
+        from server.models.tasks.task_definition import TaskDefinition
+
+        self._write(
+            "---\ngroup: fs\ntasks:\n  - name: tool\n"
+            "    file: tool.py\n    function: tool\n    access: read\n---\n"
+        )
+        self._load()
+        self.assertEqual(
+            TaskDefinition.objects.get(name="tool").access_posture, "read"
+        )
+        # Same task_definition row (no duplicate), posture updated.
+        self._write(
+            "---\ngroup: fs\ntasks:\n  - name: tool\n"
+            "    file: tool.py\n    function: tool\n    access: write\n---\n"
+        )
+        results = self._load()
+        td, _ = next(r for r in results if r[0].name == "tool")
+        self.assertEqual(td.access_posture, "write")
+        self.assertEqual(
+            TaskDefinition.objects.filter(name="tool").count(), 1
+        )
+
+
+class LoadWorkspaceAccessTest(TestCase):
+    """project.md ``access:`` blocks are validated and persisted."""
+
+    def setUp(self):
+        import shutil
+        import tempfile
+
+        self._tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        self.project_root = self._tmp / "proj"
+        (self.project_root / ".agentone").mkdir(parents=True)
+        self.md_path = self.project_root / ".agentone" / "project.md"
+        self.md_path.write_text("---\nname: acc-proj\n---\n")
+
+    def _reload(self) -> None:
+        from registry.loader.load_project_folder import _project_to_database
+
+        _project_to_database(self.md_path, project_root=self.project_root)
+
+    def test_workspace_access_persisted(self):
+        self.md_path.write_text(
+            "---\nname: acc-proj\nworkspaces:\n"
+            "  - name: ws\n    path: ws\n"
+            "    access:\n"
+            "      read:\n"
+            "        default: allow\n"
+            "        deny: ['**/*.env']\n"
+            "      write:\n"
+            "        default: deny\n"
+            "---\n"
+        )
+        self._reload()
+        ws = WorkspaceModel.objects.get(name="ws")
+        self.assertEqual(ws.access["read"]["default"], "allow")
+        self.assertEqual(ws.access["write"]["default"], "deny")
+        self.assertEqual(ws.access["read"]["deny"], ["**/*.env"])
+
+    def test_invalid_workspace_access_raises(self):
+        self.md_path.write_text(
+            "---\nname: acc-proj\nworkspaces:\n"
+            "  - name: ws\n    path: ws\n"
+            "    access:\n"
+            "      read:\n"
+            "        default: allow\n"
+            "        deny: ['/etc/**']\n"
+            "---\n"
+        )
+        with self.assertRaises(ValueError):
+            self._reload()
+        self.assertFalse(WorkspaceModel.objects.filter(name="ws").exists())
+
+
+class LoadAgentAccessTest(AgentMdTestMixin, TestCase):
+    """agent.md ``access:`` blocks are validated and stored in extra_settings."""
+
+    @classmethod
+    def setUpTestData(cls):
+        import shutil
+        import tempfile
+
+        cls.setup_global_tasks()
+        cls._tmp = Path(tempfile.mkdtemp())
+        cls.addClassCleanup(shutil.rmtree, cls._tmp, ignore_errors=True)
+
+        from registry.install_repo import InstallRepo
+
+        cls._install_repo = InstallRepo(repo_path=cls._tmp / "install")
+        cls._install_repo.source_root = cls._tmp
+        cls._install_repo.sync()
+
+    def _write_agent(self, access_yaml: str) -> None:
+        d = self._tmp / "agents" / "accessor"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "agent.md").write_text(
+            "---\nname: accessor\n" + access_yaml + "---\n"
+        )
+
+    def test_agent_access_stored_in_extra_settings(self):
+        self._write_agent(
+            "access:\n"
+            "  workspace:\n"
+            "    write:\n"
+            "      default: deny\n"
+            "  external:\n"
+            "    read:\n"
+            "      default: deny\n"
+            "      allow: ['~/shared/**']\n"
+            "    write:\n"
+            "      default: deny\n"
+        )
+        agent, av = load_agent_manifest(
+            self._tmp / "agents" / "accessor" / "agent.md",
+            install_repo=self._install_repo,
+        )
+        settings = av.agent_settings
+        self.assertEqual(
+            settings.extra_settings["access"]["external"]["read"]["allow"],
+            ["~/shared/**"],
+        )
+        self.assertEqual(
+            settings.extra_settings["access"]["workspace"]["write"]["default"],
+            "deny",
+        )
+
+    def test_invalid_agent_access_raises(self):
+        self._write_agent(
+            "access:\n"
+            "  workspace:\n"
+            "    read:\n"
+            "      default: allow\n"
+            "      deny: ['/etc/**']\n"  # absolute pattern not allowed inside
+        )
+        with self.assertRaises(ValueError):
+            load_agent_manifest(
+                self._tmp / "agents" / "accessor" / "agent.md",
+                install_repo=self._install_repo,
+            )

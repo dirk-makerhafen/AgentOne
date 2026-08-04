@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
@@ -7,6 +7,19 @@ from runtime.tasks.call_fsm import TaskCallStateMachine
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_run import AgentTaskRun
     from server.models.tasks.task_instance import TaskInstance
+
+
+def _merge_guardrail_verdicts(*verdicts: Any) -> Any:
+    """Combine guardrail verdicts — ``deny`` wins, else ``ask``, else allow."""
+    best = None
+    for verdict in verdicts:
+        if verdict is None:
+            continue
+        if verdict.action == "deny":
+            return verdict
+        if verdict.action == "ask" and (best is None or best.action == "allow"):
+            best = verdict
+    return best if best is not None else (verdicts[0] if verdicts else None)
 
 
 class CallScheduler:
@@ -104,6 +117,7 @@ class CallScheduler:
         # --- Guardrail checks ---
         CallScheduler._guardrail_shell_check(task_call_id)
         CallScheduler._guardrail_python_check(task_call_id)
+        CallScheduler._guardrail_filesystem_check(task_call_id)
 
         if TaskCallStateMachine.request_approval(task_call_id):
             print(" # WAIT FOR APPROVAL")
@@ -119,7 +133,6 @@ class CallScheduler:
     def _guardrail_python_check(task_call_id: int) -> None:
         """Run guardrail on Python code and dynamically require approval if needed."""
         from server.models.tasks.agent_task_call import AgentTaskCall
-        from runtime.guardrails import check_python_command
 
         try:
             tc = AgentTaskCall.objects.get(pk=task_call_id)
@@ -144,7 +157,14 @@ class CallScheduler:
         if not source:
             return
 
-        verdict = check_python_command(source)
+        from runtime.guardrails import check_python_command, check_python_paths
+        from runtime.workspace_access import resolve_policy
+
+        policy = resolve_policy(tc.session_version.get_runtime())
+        verdict = _merge_guardrail_verdicts(
+            check_python_command(source),
+            check_python_paths(source, policy),
+        )
 
         if verdict.action == "ask" and not tc.requires_approval:
             from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
@@ -157,7 +177,6 @@ class CallScheduler:
     def _guardrail_shell_check(task_call_id: int) -> None:
         """Run guardrail on shell commands and dynamically require approval if needed."""
         from server.models.tasks.agent_task_call import AgentTaskCall
-        from runtime.guardrails import check_shell_command
 
         try:
             tc = AgentTaskCall.objects.get(pk=task_call_id)
@@ -183,7 +202,14 @@ class CallScheduler:
         if not source:
             return
 
-        verdict = check_shell_command(source)
+        from runtime.guardrails import check_shell_command, check_shell_paths
+        from runtime.workspace_access import resolve_policy
+
+        policy = resolve_policy(tc.session_version.get_runtime())
+        verdict = _merge_guardrail_verdicts(
+            check_shell_command(source),
+            check_shell_paths(source, policy),
+        )
 
         if verdict.action == "ask" and not tc.requires_approval:
             from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
@@ -191,6 +217,57 @@ class CallScheduler:
                 requires_approval=True, guardrail_reason = verdict.reason,
             )
             print(f"  # GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
+
+    @staticmethod
+    # pylint: disable=too-many-locals
+    def _guardrail_filesystem_check(task_call_id: int) -> None:
+        """Evaluate filesystem tool paths against the workspace access policy.
+
+        Out-of-scope ``ask`` verdicts mark the call as requiring approval.
+        ``deny`` verdicts are enforced at execution time in ``BoundTask.call``.
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.workspace_access import (
+            evaluate,
+            extract_path_args,
+            resolve_policy,
+            task_access_posture,
+        )
+
+        try:
+            tc = AgentTaskCall.objects.get(pk=task_call_id)
+        except AgentTaskCall.DoesNotExist:
+            return
+
+        task_definition = tc.task_definition
+        if not task_definition:
+            return
+        task_name = task_definition.name
+        posture = task_access_posture(task_definition)
+        if posture is None:
+            return
+
+        args = dict(tc.carguments_json or {})
+        if "*" in args:
+            args.pop("*")
+
+        policy = resolve_policy(tc.session_version.get_runtime())
+        ask_reasons: list[str] = []
+        for path, action in extract_path_args(task_name, posture, args):
+            verdict = evaluate(policy, path, action)
+            if verdict.action == "ask":
+                ask_reasons.append(f"{path} ({action})")
+            elif verdict.action == "deny":
+                # deny is enforced at execution; no approval can override it.
+                return
+
+        if ask_reasons and not tc.requires_approval:
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            _ATC.objects.filter(pk=tc.pk).update(
+                requires_approval=True,
+                guardrail_reason="Filesystem access policy: " + "; ".join(ask_reasons),
+            )
+            print(f"  # FILESYSTEM GUARDRAIL: {'; '.join(ask_reasons)}")
 
     # ------------------------------------------------------------------
     # Human approval

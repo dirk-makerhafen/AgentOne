@@ -7,6 +7,7 @@ from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
+from runtime.workspace_access import validate_workspace_access
 from server.models.cron import Cronjob
 from server.models.project import Project
 from server.models.workspace import WorkspaceModel
@@ -91,8 +92,11 @@ def _project_to_database(project_md_path: Path, project_root: Path | None = None
         name = (entry or {}).get("name", "").strip()
         desc = (entry or {}).get("description", "")
         raw_path = (entry or {}).get("path", "")
+        access = (entry or {}).get("access")
         if not name or not raw_path:
             continue
+
+        validate_workspace_access(access, source=f"project.md workspace {name!r}")
 
         p = Path(raw_path)
         if not p.is_absolute() and project_root is not None:
@@ -104,6 +108,7 @@ def _project_to_database(project_md_path: Path, project_root: Path | None = None
             defaults={
                 "description": desc or "",
                 "path": resolved,
+                "access": access or {},
             },
         )
 

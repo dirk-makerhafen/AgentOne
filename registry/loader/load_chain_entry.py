@@ -55,6 +55,9 @@ def load_chain_entry(
         entry, description, schema, commit, path=None,
         task_type=task_type, task_execution_mode=task_execution_mode,
     )
+    access_posture = entry.get("access")
+    if access_posture not in ("read", "write"):
+        access_posture = None
     task_def, _ = TaskDefinition.objects.get_or_create(
         parent_skill=parent_skill,
         parent_agent=parent_agent,
@@ -62,6 +65,11 @@ def load_chain_entry(
         name=name,
         group_name=group_name,
     )
+    if task_def.access_posture != access_posture:
+        TaskDefinition.objects.filter(pk=task_def.pk).update(
+            access_posture=access_posture
+        )
+        task_def.refresh_from_db()
     if parent_generation is not None and task_def.parent_generation_id != parent_generation.pk:
         TaskDefinition.objects.filter(pk=task_def.pk).update(
             parent_generation=parent_generation

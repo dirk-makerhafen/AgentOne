@@ -76,6 +76,17 @@ class BoundTask:
                 f"Use apply_async() or instance().apply_async() instead."
             )
 
+        # Enforce the workspace access policy before touching any files,
+        # importing modules, or executing arbitrary binaries (SCRIPT mode).
+        block_reason = self._filesystem_access_block(*args, **kwargs)
+        if block_reason:
+            return (False, {
+                "status": "error",
+                "stdout": "",
+                "stderr": block_reason,
+                "return_code": -1,
+            })
+
         file_name = self._runtime_file_name()
         runtime = RuntimeFolder(self.task_definition_version)
         folder = runtime.ensure_folder()
@@ -117,6 +128,64 @@ class BoundTask:
             if self.task_definition_version.bound:
                 return func(self.session, *args, **kwargs)
             return func(*args, **kwargs)
+
+    def _filesystem_access_block(self, *args: Any, **kwargs: Any) -> str | None:  # pylint: disable=too-many-locals
+        """Enforce the workspace access policy for this tool call.
+
+        Returns an error message when the call must be hard-blocked (a
+        ``deny`` verdict).  ``ask`` verdicts are handled at scheduling time
+        via the approval flow, not here.  Returns ``None`` to allow.
+        """
+        from runtime.workspace_access import (
+            evaluate,
+            extract_path_args,
+            resolve_policy,
+            task_access_posture,
+        )
+
+        task_name = getattr(self.task_definition, "name", "")
+        policy = resolve_policy(self.session)
+
+        # Normalize call arguments into a keyword dict.
+        call_args: dict[str, Any] = dict(kwargs)
+        if args:
+            arg_names = getattr(self.task_definition_version, "arg_names", None)
+            if isinstance(arg_names, list):
+                for name, value in zip(arg_names, args):
+                    call_args.setdefault(name, value)
+            else:
+                call_args.setdefault("source", args[0])
+
+        # --- filesystem tools ---
+        posture = task_access_posture(self.task_definition)
+        if posture is not None:
+            for path, action in extract_path_args(task_name, posture, call_args):
+                verdict = evaluate(policy, path, action)
+                if verdict.action == "deny":
+                    return (
+                        f"Blocked by workspace access policy.\n"
+                        f"Reason: {verdict.reason}\n"
+                        f"Path: {path} ({action})"
+                    )
+            return None
+
+        # --- shell / python source code ---
+        if task_name in ("shell", "python"):
+            source = call_args.get("source", "")
+            if isinstance(source, str) and source.strip():
+                from runtime.guardrails import check_python_paths, check_shell_paths
+
+                check = (
+                    check_shell_paths(source, policy)
+                    if task_name == "shell"
+                    else check_python_paths(source, policy)
+                )
+                if check.action == "deny":
+                    return (
+                        f"Blocked by workspace access policy.\n"
+                        f"Reason: {check.reason}"
+                    )
+        return None
 
     def _call_script(self, file_path: Path, *args: Any, **kwargs: Any) -> Any:
         """Execute a script/binary and return its output.

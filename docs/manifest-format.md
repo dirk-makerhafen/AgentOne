@@ -35,6 +35,17 @@ disallowedCommands: []         # denied command names
 skills: [my_skill]             # allowed skill names
 disallowedSkills: []           # denied skill names
 
+access:                        # optional — filesystem access policy (see below)
+  workspace:
+    write:
+      default: deny
+  external:
+    read:
+      default: deny
+      allow: ["~/shared/**"]
+    write:
+      default: deny
+
 maxRetries: 0                  # max retry attempts
 maxTurns: 0                    # max conversation turns (0 = unlimited)
 maxUnattendedTurns: 0          # max autonomous turns
@@ -63,7 +74,41 @@ Agent body content goes here — used as the system prompt.
 | `subagents` | list | Named subagent references (see [Subagent Entry](#subagent-entry)) |
 | `tools`/`tasks`/`commands`/`skills` | list | Allow-listed item names |
 | `disallowed*` | list | Denied item names |
+| `access` | dict | Filesystem access policy (see [Access Policy](#access-policy)) |
 | Priority/scheduling | various | Execution control knobs |
+
+### Access Policy
+
+The `access:` block defines a filesystem access policy for filesystem, shell,
+and Python tools. It has two scopes:
+
+- **`workspace`** — overrides the rules *inside* the workspace (see
+  [project.md workspace entry](#workspace-entry) for the base rules). Patterns
+  must be workspace-relative (no leading `/`, no `..`, no `~`).
+- **`external`** — rules for paths *outside* the workspace. Patterns must be
+  absolute or `~`-anchored. When unset, external `default` falls back to `deny`.
+
+Each scope holds `read:` and `write:` actions, and each action is a dict with
+`default` (`allow` | `ask` | `deny`) and per-path pattern lists (`allow`,
+`ask`, `deny`). Glob patterns use `*`, `**`, and `?` (e.g. `**/*.env`).
+
+Precedence per action: `deny` > `ask` > `allow` > `default`. Deny patterns from
+any scope apply globally. `write` implies `read` on allowed/asked paths; `read`
+rules never grant writes.
+
+```yaml
+access:
+  workspace:
+    write:                     # tighten workspace write rules for this agent
+      default: deny            # read-only workspace from this agent's perspective
+  external:
+    read:
+      default: deny
+      allow: ["~/shared/**"]   # a shared directory outside the workspace
+    write:
+      default: deny            # external writes blocked by default
+      allow: ["/tmp/work/**"]
+```
 
 ### Subagent Entry
 
@@ -172,6 +217,7 @@ commands:
 | `map` | for `map` type | list | Exactly 2 step names: `[producer, consumer]` — producer yields a list, consumer is called per item |
 | `script` | for `script` type | string | Path to executable (relative to scripts.md) — replaces `file` / `function` |
 | `trigger` | no | string | Slash command trigger (e.g. `ping` for `/ping`) |
+| `access` | no | `read` \| `write` | Filesystem posture for workspace access enforcement — see [Filesystem Access Posture](#filesystem-access-posture) |
 | `requires_approval` | no | bool | Whether human approval is required |
 | `max_retries` | no | int | Max retry attempts |
 | `retry_delay` | no | int | Delay between retries (seconds) |
@@ -196,6 +242,47 @@ Each top-level key defines the `task_type` for all entries within:
 | `group` | GROUP | Runs child steps in parallel, joins on completion |
 | `map` | MAP | Runs child[0] (producer) to get a list, then calls child[1] (consumer) per item in parallel |
 | `script` | SCRIPT | Runs a script file |
+
+### Filesystem Access Posture
+
+The optional `access:` field on a scripts.md entry classifies the tool's
+filesystem posture for workspace access enforcement. It takes exactly one of
+two values:
+
+| Value | Meaning |
+|---|---|
+| `read` | The tool only reads files; its absolute-path arguments are treated as reads |
+| `write` | The tool can create/modify/delete files; its absolute-path arguments are treated as writes |
+
+```yaml
+tools:
+  - name: read
+    file: read.py
+    function: read
+    access: read      # classified as a read-only filesystem tool
+
+  - name: edit
+    file: edit.py
+    function: edit
+    access: write     # classified as a write-capable filesystem tool
+```
+
+This posture drives three enforcement layers:
+
+1. **Scheduler** — when a call is dispatched, its absolute-path arguments are
+   evaluated against the workspace access policy and may set
+   `requires_approval` (see [Access Policy](#access-policy)).
+2. **Execution** — `BoundTask` hard-blocks any call whose path arguments (or
+   shell/python source) are denied by the policy.
+3. **Shell/python source analysis** — for `shell` / `python` tools, `read`
+   posture uses a read-only command whitelist; anything not whitelisted (or
+   any in-place write flag such as `sed -i` / `sort -o` / `perl -i`) is
+   treated as write-capable (fail-safe).
+
+The posture is persisted as `TaskDefinition.access_posture`. When `access:` is
+omitted, the posture is inferred from the legacy `group:` convention
+(`filesystem-read` → `read`, `filesystem-write` → `write`); tools in other
+groups are not filesystem-guarded.
 
 ### Chain/Group/Map Children
 
@@ -403,6 +490,13 @@ workspaces:
   - name: Workspace name
     path: some/path/relative/to/project/root
     description: some description
+    access:                       # optional — base filesystem access rules
+      read:
+        default: allow
+        deny: ["**/*.env", "secrets/**"]
+      write:
+        default: allow
+        ask: ["scratch/**"]
   - name: other workspace
     path: /absolute/path
     description: foobar
@@ -428,6 +522,28 @@ Each entry in the `workspaces:` list is a dict with:
 | `name` | yes | string | Unique workspace name |
 | `path` | yes | string | Filesystem path; absolute paths used as-is, relative paths resolved against the project root |
 | `description` | no | string | Optional description of the workspace |
+| `access` | no | dict | Base filesystem access policy (see [Access Policy](#access-policy)) |
+
+The `access:` block follows the same shape as the agent `access:` block but
+applies *inside* the workspace only — its patterns must be workspace-relative
+(no leading `/`, no `..`, no `~`). Agents inherit these rules as the base for
+their in-workspace behavior, and may tighten them via their own `workspace:`
+override. Leaving `access` unset allows unrestricted access inside the
+workspace.
+
+```yaml
+access:
+  read:
+    default: allow              # allow | ask | deny
+    allow: []
+    ask: []
+    deny: ["**/*.env", "secrets/**"]
+  write:
+    default: deny               # read-only workspace == write.default: deny
+    allow: ["inbox/**"]
+    ask: ["scratch/**"]
+    deny: []
+```
 
 When the project is loaded (via `reload_all`), each workspace is created or updated as a `WorkspaceModel` record. Relative paths are resolved relative to the project folder containing `.agentone/`. Workspaces are available for selection in cron jobs, session workspaces, and the workspace sidebar.
 

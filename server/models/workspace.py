@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from django.db import models
 
@@ -15,6 +16,17 @@ class WorkspaceModel(models.Model):
     name: str = models.CharField(default="", max_length=4096, help_text="")
     description: str = models.TextField(default="", max_length=10000, help_text="")
     path: str = models.CharField(max_length=4096, help_text="")
+
+    access: Any = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text=(
+            "Filesystem access policy for paths inside this workspace. "
+            "Shape: {\"read\": {\"default\": \"allow|ask|deny\", \"allow\": [], "
+            "\"ask\": [], \"deny\": []}, \"write\": {...}}. Patterns are "
+            "workspace-relative globs."
+        ),
+    )
 
     observable_fields = set([
         "pk",

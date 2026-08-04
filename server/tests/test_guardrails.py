@@ -2,6 +2,8 @@
 
 Uses SimpleTestCase (no DB) since all functions are pure.
 """
+from pathlib import Path
+
 from django.test import SimpleTestCase
 
 from runtime.guardrails import (
@@ -9,7 +11,6 @@ from runtime.guardrails import (
     check_python_command,
     lint_shell_command,
 )
-
 
 class CheckShellCommandTest(SimpleTestCase):
     """sh-guard based shell command safety checks."""
@@ -264,3 +265,211 @@ class LintShellCommandTest(SimpleTestCase):
     def test_variable_quoted_warning(self):
         findings = lint_shell_command("cat $file.txt")
         self.assertTrue(len(findings) > 0)
+
+
+class _FakeWorkspace:
+    def __init__(self, root):
+        self.path = str(root)
+
+
+class _FakeAgent:
+    def __init__(self, access=None):
+        self._access = access
+
+    def get_agent_setting(self, name):
+        if name == "extra_settings" and self._access is not None:
+            return {"access": self._access}
+        return None
+
+
+class _FakeSession:
+    def __init__(self, root, access=None, agent_access=None):
+        self.workspace = _FakeWorkspace(root)
+        self.agent = _FakeAgent(agent_access)
+
+
+class CheckShellPathsTest(SimpleTestCase):
+    """Filesystem-target analysis of shell commands (workspace policy)."""
+
+    def setUp(self):
+        import tempfile
+
+        self.td = tempfile.mkdtemp()
+        self.root = Path(self.td)
+        (self.root / "inbox").mkdir()
+
+    def _policy(self, workspace_access=None, agent_access=None):
+        from runtime.workspace_access import resolve_policy
+
+        session = _FakeSession(
+            self.root, access=workspace_access, agent_access=agent_access
+        )
+        return resolve_policy(session)
+
+    def test_no_absolute_paths_allowed(self):
+        from runtime.guardrails import check_shell_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_shell_paths("echo hello world", policy)
+        self.assertEqual(v.action, "allow")
+
+    def test_write_redirect_outside_denied(self):
+        from runtime.guardrails import check_shell_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_shell_paths("echo hi > /tmp/out.txt", policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_write_redirect_inside_allowed(self):
+        from runtime.guardrails import check_shell_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_shell_paths(f"echo hi > {self.root}/inbox/out.txt", policy)
+        self.assertEqual(v.action, "allow")
+
+    def test_rm_outside_denied(self):
+        from runtime.guardrails import check_shell_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_shell_paths("rm -rf /tmp/cache", policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_read_outside_denied_by_external_default(self):
+        from runtime.guardrails import check_shell_paths
+
+        policy = self._policy(workspace_access={"read": {"default": "allow"}})
+        v = check_shell_paths("cat /etc/passwd", policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_read_outside_allowed_via_external_allow(self):
+        from runtime.guardrails import check_shell_paths
+
+        policy = self._policy(
+            workspace_access={"read": {"default": "allow"}, "write": {"default": "deny"}},
+            agent_access={
+                "external": {
+                    "read": {"default": "deny", "allow": ["/tmp/shared/**"]},
+                    "write": {"default": "deny"},
+                }
+            },
+        )
+        v = check_shell_paths("cat /tmp/shared/notes.md", policy)
+        self.assertEqual(v.action, "allow")
+
+    def test_read_whitelist_cat_classified_read(self):
+        """A whitelisted read command classifies its operand as read."""
+        from runtime.guardrails import _shell_targets
+
+        self.assertEqual(_shell_targets("cat /etc/passwd"), [("/etc/passwd", "read")])
+
+    def test_unknown_command_failsafe_write(self):
+        """Unknown commands are treated as write-capable (fail-safe)."""
+        from runtime.guardrails import _shell_targets
+
+        self.assertEqual(_shell_targets("exotic_tool /tmp/thing"), [("/tmp/thing", "write")])
+
+    def test_explicit_writer_is_write(self):
+        from runtime.guardrails import _shell_targets
+
+        self.assertEqual(_shell_targets("tar -xf a.tar -C /tmp"), [("/tmp", "write")])
+
+    def test_sed_inplace_flag_makes_write(self):
+        from runtime.guardrails import _shell_targets
+
+        self.assertEqual(
+            _shell_targets("sed -i s/x/y/ /tmp/f"), [("/tmp/f", "write")]
+        )
+
+    def test_sort_output_flag_makes_write(self):
+        """sort is read-whitelisted; -o flips it to write."""
+        from runtime.guardrails import _shell_targets
+
+        self.assertEqual(
+            _shell_targets("sort /tmp/in"), [("/tmp/in", "read")]
+        )
+        self.assertEqual(
+            _shell_targets("sort -o /tmp/out /tmp/in"),
+            [("/tmp/out", "write"), ("/tmp/in", "write")],
+        )
+
+    def test_perl_inplace_flag_makes_write(self):
+        from runtime.guardrails import _shell_targets
+
+        self.assertEqual(
+            _shell_targets("perl -i -pe s/x/y/ /tmp/g"), [("/tmp/g", "write")]
+        )
+
+    def test_dev_null_write_ignored(self):
+        from runtime.guardrails import _shell_targets
+
+        self.assertEqual(_shell_targets("ls /tmp >/dev/null 2>&1"), [("/tmp", "read")])
+        self.assertEqual(_shell_targets("echo hi > /dev/null"), [])
+
+    def test_pipeline_resets_command_context(self):
+        from runtime.guardrails import _shell_targets
+
+        self.assertEqual(
+            _shell_targets("grep foo /tmp/x | tee /tmp/y"),
+            [("/tmp/x", "read"), ("/tmp/y", "write")],
+        )
+
+
+class CheckPythonPathsTest(SimpleTestCase):
+    """Filesystem-target analysis of Python code (workspace policy)."""
+
+    def setUp(self):
+        import tempfile
+
+        self.td = tempfile.mkdtemp()
+        self.root = Path(self.td)
+
+    def _policy(self, workspace_access=None, agent_access=None):
+        from runtime.workspace_access import resolve_policy
+
+        session = _FakeSession(
+            self.root, access=workspace_access, agent_access=agent_access
+        )
+        return resolve_policy(session)
+
+    def test_plain_code_allowed(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths('print("hello")', policy)
+        self.assertEqual(v.action, "allow")
+
+    def test_open_write_outside_denied(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths('open("/tmp/x.txt", "w")', policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_open_write_inside_allowed(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths(f'open("{self.root}/in.txt", "w")', policy)
+        self.assertEqual(v.action, "allow")
+
+    def test_open_read_inside_allowed(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths(f'open("{self.root}/in.txt", "r")', policy)
+        self.assertEqual(v.action, "allow")
+
+    def test_os_remove_outside_denied(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths('import os; os.remove("/tmp/x")', policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_dynamic_path_falls_back_to_allow(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths('import os; p = "/tmp/x"; os.remove(p)', policy)
+        # non-constant path → not evaluated (falls back to content scoring)
+        self.assertEqual(v.action, "allow")

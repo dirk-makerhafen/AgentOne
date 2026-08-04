@@ -231,7 +231,7 @@ class RightPanelSession(ModelView):
         """Return valid option strings for a choice-based setting."""
         choices_cls = CHOICE_FIELDS.get(name)
         if choices_cls:
-            return [v.value for v in choices_cls]
+            return [str(v.value) for v in choices_cls]
         return []
 
     # ------------------------------------------------------------------

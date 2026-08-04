@@ -340,6 +340,144 @@ class TestCallSchedulerGuardrails:
         call.refresh_from_db()
         assert call.requires_approval is True
 
+    # --- Filesystem access policy guardrail ---
+
+    def _make_fs_taskcall(self, task_name, group_name, cargs, workspace_access=None,
+                          root=None):
+        import tempfile
+        from pathlib import Path
+
+        from server.models.workspace import WorkspaceModel
+
+        agent = AgentModel.objects.create(name=f'fs-agent-{task_name}')
+        session = SessionModel.objects.create(name='fs-session')
+        root = root or Path(tempfile.mkdtemp())
+        ws = WorkspaceModel.objects.create(
+            name='fs-ws', path=root.as_posix(), access=workspace_access or {},
+        )
+        sv = SessionVersionModel.objects.create(
+            session=session, agent=agent, workspace=ws,
+        )
+        session.latest_session_version = sv
+        session.save()
+        td = TaskDefinition.objects.create(name=task_name, group_name=group_name)
+        tdv = TaskDefinitionVersion.objects.create(
+            task_definition=td, task_type=TaskType.TOOL,
+            description=task_name, function_schema={},
+        )
+        ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+            iarguments_json={},
+        )
+        return AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json=cargs, requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            status_detail=TaskCallStatusDetail.WAITING_DEPENDENCY,
+        )
+
+    def test_filesystem_write_ask_default_inside_marks(self, db):
+        """write default=ask inside workspace → requires_approval=True."""
+        import tempfile
+        from pathlib import Path
+
+        root = Path(tempfile.mkdtemp())
+        call = self._make_fs_taskcall(
+            "write", "filesystem-write",
+            {"path": (root / "inside.txt").as_posix()},
+            workspace_access={"write": {"default": "ask"}},
+            root=root,
+        )
+        from runtime.tasks.call_scheduler import CallScheduler
+        CallScheduler._guardrail_filesystem_check(call.pk)
+        call.refresh_from_db()
+        assert call.requires_approval is True
+        assert "access policy" in (call.guardrail_reason or "")
+
+    def test_filesystem_write_inside_workspace_allowed(self, db):
+        """filesystem-write path inside workspace → no approval needed."""
+        import tempfile
+        from pathlib import Path
+
+        root = Path(tempfile.mkdtemp())
+        call = self._make_fs_taskcall(
+            "write", "filesystem-write",
+            {"path": (root / "ok.txt").as_posix()},
+            workspace_access={"write": {"default": "allow"}},
+            root=root,
+        )
+        from runtime.tasks.call_scheduler import CallScheduler
+        CallScheduler._guardrail_filesystem_check(call.pk)
+        call.refresh_from_db()
+        assert call.requires_approval is False
+
+    def test_filesystem_ask_pattern_inside_marks(self, db):
+        """ask pattern match inside workspace → requires_approval=True."""
+        import tempfile
+        from pathlib import Path
+
+        root = Path(tempfile.mkdtemp())
+        call = self._make_fs_taskcall(
+            "write", "filesystem-write",
+            {"path": (root / "scratch" / "x.txt").as_posix()},
+            workspace_access={
+                "write": {"default": "allow", "ask": ["scratch/**"]},
+            },
+            root=root,
+        )
+        from runtime.tasks.call_scheduler import CallScheduler
+        CallScheduler._guardrail_filesystem_check(call.pk)
+        call.refresh_from_db()
+        assert call.requires_approval is True
+
+    def test_filesystem_outside_default_deny_not_approvable(self, db):
+        """Outside workspace defaults to deny → hard block, not approval."""
+        call = self._make_fs_taskcall(
+            "write", "filesystem-write",
+            {"path": "/tmp/outside-ws.txt"},
+            workspace_access={"write": {"default": "allow"}},
+        )
+        from runtime.tasks.call_scheduler import CallScheduler
+        CallScheduler._guardrail_filesystem_check(call.pk)
+        call.refresh_from_db()
+        # deny verdict → enforced at execution, never routed to approval
+        assert call.requires_approval is False
+
+    def test_filesystem_deny_does_not_set_approval(self, db):
+        """A global deny must not be approvable via requires_approval."""
+        import tempfile
+        from pathlib import Path
+
+        root = Path(tempfile.mkdtemp())
+        call = self._make_fs_taskcall(
+            "write", "filesystem-write",
+            {"path": (root / "secret.env").as_posix()},
+            workspace_access={"write": {"default": "allow", "deny": ["**/*.env"]}},
+            root=root,
+        )
+        from runtime.tasks.call_scheduler import CallScheduler
+        CallScheduler._guardrail_filesystem_check(call.pk)
+        call.refresh_from_db()
+        # deny verdict → not routed through approval (enforced at execution)
+        assert call.requires_approval is False
+
+    def test_filesystem_guardrail_skips_non_filesystem_group(self, db):
+        """Non filesystem group → guardrail skipped."""
+        call = self._make_fs_taskcall(
+            "shell", "execution", {"source": "ls"},
+        )
+        from runtime.tasks.call_scheduler import CallScheduler
+        CallScheduler._guardrail_filesystem_check(call.pk)
+        call.refresh_from_db()
+        assert call.requires_approval is False
+
 
 @pytest.mark.django_db
 class TestGuardrailFullFlow:

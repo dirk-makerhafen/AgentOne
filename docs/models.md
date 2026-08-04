@@ -176,6 +176,7 @@ File: `server/models/tasks/task_definition.py`
 | `parent_project` | `FK(Project, CASCADE)` | Owner project (optional) |
 | `name` | `CharField(255)` | Task name |
 | `group_name` | `CharField(255, default="")` | Group for wildcard matching |
+| `access_posture` | `CharField(16, null=True)` | Filesystem posture from the manifest `access:` field (`read`/`write`/`None`) — drives workspace access enforcement; falls back to the `filesystem-read`/`filesystem-write` group convention |
 | `latest_task_version` | `FK(TaskDefinitionVersion, SET_NULL)` | Current version |
 
 **Unique**: `(parent_skill, parent_agent, parent_project, name)`
@@ -539,6 +540,7 @@ File: `server/models/workspace.py`
 | `name` | `CharField(255)` | Workspace name |
 | `description` | `TextField(10000)` | |
 | `path` | `CharField(255)` | Filesystem path |
+| `access` | `JSONField` | Base filesystem access policy (`read:`/`write:` actions with `default` + `allow`/`ask`/`deny` patterns) — see [docs/manifest-format.md](manifest-format.md) |
 
 ### SettingsModel
 
@@ -563,7 +565,7 @@ Comprehensive agent/session settings. All nullable — values inherit through th
 | `commandNames` / `taskNames` / `toolNames` / `skillNames` / `subagentNames` | `JSONField(list)` | Allow lists (wildcards) |
 | `disallowed*Names` | `JSONField(list)` | Deny lists (wildcards) |
 | `subagentResultDelivery` | `CharField(choices)` | passive / immediate |
-| `extra_settings` | `JSONField` | Extensibility |
+| `extra_settings` | `JSONField` | Extensibility — agent `access:` policy stored under the `access` key |
 | `commit` | `TextField(1024)` | Git hash |
 
 **Immutable** — `save()` raises `ValidationError` if `pk` is set.

@@ -19,6 +19,7 @@ from server.models.skills.skill_version import SkillModelVersion
 from server.models.tasks.scripts_generation import ScriptsGeneration
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
+from runtime.workspace_access import validate_agent_access
 
 
 # ---------------------------------------------------------------------------
@@ -174,7 +175,16 @@ def load_agent_manifest(
     }
 
     settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}
-    
+
+    # Filesystem access policy (agent.md ``access:`` block) → extra_settings
+    access_block = manifest.get("access")
+    if access_block is not None:
+        validate_agent_access(access_block, source=f"agent.md {agent.name!r}")
+        extra_settings = settings_kwargs.get("extra_settings") or {}
+        extra_settings = dict(extra_settings)
+        extra_settings["access"] = access_block
+        settings_kwargs["extra_settings"] = extra_settings
+
     if settings_kwargs.get("precision",None):
         key = settings_kwargs.get("precision","").upper()
         settings_kwargs["precision"] = ResponseTemperature[key].value

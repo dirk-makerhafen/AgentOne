@@ -544,7 +544,9 @@ class Session:
         if parts[0] and parts[0].get("content", [None, ])[0] == "/":
             cmd = parts[0].get("content", [None, ]).split(None, 1)[0][1:].strip()
             bound_cmd = self.get_command(cmd)
-            if bound_cmd:
+            if not bound_cmd:
+                bound_cmd = self.get_tool(cmd)
+            if bound_cmd:          
                 is_command = True
                 full_cmd_str = "".join([part["content"] for part in parts]).strip() if parts else ""
                 cmd_payload = full_cmd_str[1 + len(cmd):].strip()

@@ -66,6 +66,26 @@ Approval can be triggered in two ways:
 - **Static** — the tool's `scripts.md` manifest has `requires_approval: true`
 - **Dynamic (guardrails)** — before a shell or Python command runs, it is scanned by safety guardrails. Shell commands are classified by **sh-guard** (AST-based risk scoring); Python code is analyzed by **bandit** (PyCQA security linter). If the guardrail deems a command risky (score ≥ 80), the call enters `HALTED_APPROVAL` state and an approval card is shown even if the tool itself does not require approval. Execution-time guardrails use a higher threshold (score ≥ 90) for a second line of defense.
 
+### Filesystem access control
+
+A workspace or agent can declare a **filesystem access policy** (`access:` in
+`project.md` / `agent.md` — see [docs/manifest-format.md](manifest-format.md)).
+It controls which paths filesystem, shell, and Python tools may read or write,
+both inside and outside the workspace.
+
+- Paths matching an `ask:` pattern (or an `ask` default) trigger an approval
+  card before execution.
+- Paths matching a `deny:` pattern (or a `deny` default) are **hard-blocked** —
+  no approval can override them; the tool returns an error immediately.
+- An explicit `allow:` pattern or `allow` default permits execution with no
+  approval.
+- `deny` always wins over `ask` and `allow`; `write` implies `read` on
+  allowed/asked paths.
+
+By default (no policy configured) all filesystem access inside the workspace is
+allowed; access outside the workspace defaults to **deny** unless an agent
+`external:` rule grants it.
+
 ### Queue
 
 If the agent is busy processing, a **Queue Card** shows the pending messages. You can cancel queued messages or wait for them to process.
