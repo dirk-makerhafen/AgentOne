@@ -162,10 +162,7 @@ class Agent:
     @property
     def inherit_system_prompt(self) -> bool:
         """Return whether this agent inherits parent system prompts."""
-        extra = self.get_version_model().resolve_setting("extra_settings")
-        if extra and isinstance(extra, dict):
-            return bool(extra.get("inheritSystemPrompt", False))
-        return False
+        return bool(self.get_version_model().resolve_setting("inherit_system_prompt"))
 
     @property
     def system_prompt_chain(self) -> list[str]:

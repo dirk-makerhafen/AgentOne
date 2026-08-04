@@ -7,6 +7,7 @@ description: >
   and the project manifest itself. Can run reload_project to sync changes
   to the database. Accessed via call_projectmanager tool.
 extends: baseagent
+inheritSystemPrompt: true
 reasoningEffort: medium
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project, wiki.*]
 skills: [+, agentone-admin, project-manager]

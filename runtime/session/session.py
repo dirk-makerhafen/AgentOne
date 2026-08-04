@@ -63,6 +63,11 @@ class Session:
         return self.model.name
 
     @property
+    def session_type(self) -> str:
+        """Return the session type (SessionType value)."""
+        return self.model.session_type
+    
+    @property
     def description(self) -> str:
         """Return the description from the active session version."""
         return self.get_version_model().description
@@ -233,7 +238,12 @@ class Session:
     @property
     def inherit_system_prompt(self) -> bool:
         """Return whether this session's agent inherits parent system prompts."""
-        return self.agent.inherit_system_prompt
+        return bool(self._get_session_setting("inherit_system_prompt"))
+
+    @property
+    def access(self) -> dict | None:
+        """Return the resolved filesystem access policy block, if any."""
+        return self._get_session_setting("access")
 
     @property
     def system_prompt_chain(self) -> list[str]:
@@ -464,6 +474,8 @@ class Session:
                 return session_settings_value
             extend_at_index = session_settings_value.index("+")
             session_settings_value[extend_at_index:extend_at_index + 1] = self.agent.get_agent_setting(name)
+        elif isinstance(session_settings_value, dict):
+            return session_settings_value
         elif isinstance(session_settings_value, AiModel): 
             return session_settings_value
         else:

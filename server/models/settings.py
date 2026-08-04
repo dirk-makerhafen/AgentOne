@@ -64,6 +64,7 @@ class SettingsModel(BaseModel):
 
     aimodel: models.ForeignKey | None = models.ForeignKey("server.AiModel",on_delete=models.CASCADE,related_name="related_agent_settings",blank=True,null=True)
     thinking: bool | None = models.BooleanField(default=None, null=True, blank=True)
+    inherit_system_prompt: bool | None = models.BooleanField(default=None, null=True, blank=True)
 
     reasoning_effort: str | None = models.CharField(max_length=20,choices=ReasoningEffort,default=None,null=True,blank=True)
     precision:float | None = models.FloatField(choices=ResponseTemperature.choices, default=None, null=True, blank=True)
@@ -98,6 +99,8 @@ class SettingsModel(BaseModel):
     disallowedSubagentNames: Any = models.JSONField(default=None, null=True, blank=True)
 
     subagentResultDelivery: str | None = models.CharField(  max_length=20,  choices=SubagentResultDelivery,  default=None,  null=True,  blank=True)
+
+    access: Any = models.JSONField(default=None, null=True, blank=True)
 
     extra_settings: Any = models.JSONField(default=None, null=True, blank=True)
     commit: str = models.TextField(max_length=1024, default="")

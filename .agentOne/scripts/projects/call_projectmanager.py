@@ -17,6 +17,7 @@ from typing import Any
 from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.enums.message_enums import MessageContentType, MessagePartType
+from server.models.enums.session_enums import SessionType
 from server.models.workspace import WorkspaceModel
 
 
@@ -63,6 +64,7 @@ def call_projectmanager(_session: Session, project_path: str, task: str) -> dict
         workspace=workspace,
         parent_session = session_version_model.session,
         parent_session_version = session_version_model,
+        session_type=SessionType.SUBSESSION,
     )
     child_session = Session(
         session_model=child_sv.session,

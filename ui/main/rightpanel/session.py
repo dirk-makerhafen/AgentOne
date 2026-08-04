@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from runtime.session.session import Session
 from server.models.enums.task_enums import TaskSchedulerStrategy
+from server.models.enums.session_enums import SessionType
 from server.models.providers.ai_model import AiModel
 from server.models.settings import (
     ResponseTemperature,
@@ -34,6 +35,10 @@ INT_FIELDS = {
     "priority",
 }
 
+BOOLEAN_FIELDS = {
+    "inherit_system_prompt",
+}
+
 
 class RightPanelSession(ModelView):
     DOM_ELEMENT = "div"
@@ -60,6 +65,10 @@ class RightPanelSession(ModelView):
                     <div class="detail-row-value">
                         <input type="text" value="{{ pyview.session.name }}" onchange="pyview.setSessionName(this.value)" class="setting-input" style="width:100%;font-size:12px">
                     </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-row-label">Type</div>
+                    <div class="detail-row-value">{{ pyview.session_type_label }}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Agent</div>
@@ -102,10 +111,18 @@ class RightPanelSession(ModelView):
                                 <option value="{{ opt }}"{% if pyview.setting_display_value(name) == opt %} selected{% endif %}>{{ opt }}</option>
                                 {% endfor %}
                             </select>
+                        {% elif name in pyview.bool_fields %}
+                            <select onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="max-width:80%;font-size:12px">
+                                <option value="">&mdash; Agent default &mdash;</option>
+                                <option value="true"{% if pyview.setting_display_value(name) == 'true' %} selected{% endif %}>true</option>
+                                <option value="false"{% if pyview.setting_display_value(name) == 'false' %} selected{% endif %}>false</option>
+                            </select>
                         {% elif name in pyview.int_fields %}
                             <input type="number" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px" min="0">
                         {% elif name == 'aimodel' %}
                             <input type="text" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px">
+                        {% elif name == 'access' %}
+                            <pre class="setting-json" style="width:100%;font-size:11px;max-height:120px;overflow:auto;margin:0">{{ pyview.setting_display_value(name) }}</pre>
                         {% else %}
                             {{ pyview.setting_value(name) }}
                         {% endif %}
@@ -156,6 +173,8 @@ class RightPanelSession(ModelView):
         ("auto_compact_limit", "Auto Compact Limit"),
         ("compact_size_limit", "Compact Size Limit"),
         ("priority", "Priority"),
+        ("inherit_system_prompt", "Inherit System Prompt"),
+        ("access", "Filesystem Access"),
     ]
 
     def __init__(self, subject: UiApp, parent: RightPanel, **kwargs):
@@ -183,6 +202,13 @@ class RightPanelSession(ModelView):
             return str(ws)
         return "\u2014"
 
+    @property
+    def session_type_label(self) -> str:
+        s = self.session
+        if s is None:
+            return "\u2014"
+        return dict(SessionType.choices).get(s.session_type, s.session_type)
+
     # ------------------------------------------------------------------
     # Setting helpers
     # ------------------------------------------------------------------
@@ -208,6 +234,12 @@ class RightPanelSession(ModelView):
         val = self._resolved_value(name)
         if val is None:
             return ""
+        if isinstance(val, bool):
+            return "true" if val else "false"
+        if isinstance(val, (dict, list)):
+            import json
+
+            return json.dumps(val, indent=2)
         if hasattr(val, "name"):
             return val.name
         return str(val)
@@ -226,6 +258,10 @@ class RightPanelSession(ModelView):
     @property
     def int_fields(self):
         return INT_FIELDS
+
+    @property
+    def bool_fields(self):
+        return BOOLEAN_FIELDS
 
     def setting_options(self, name: str) -> list[str]:
         """Return valid option strings for a choice-based setting."""
@@ -250,6 +286,15 @@ class RightPanelSession(ModelView):
             try:
                 value = int(raw_value)
             except (ValueError, TypeError):
+                return
+        elif name in BOOLEAN_FIELDS:
+            value = raw_value == "true"
+        elif name == "access":
+            import json
+
+            try:
+                value = json.loads(raw_value)
+            except json.JSONDecodeError:
                 return
         elif name == "aimodel":
             aimodel = AiModel.objects.filter(name=raw_value).first()

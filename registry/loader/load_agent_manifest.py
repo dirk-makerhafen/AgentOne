@@ -165,6 +165,7 @@ def load_agent_manifest(
         "compact_size_limit": manifest.get("compactSizeLimit"),
         "priority": manifest.get("priority"),
         "thinking": manifest.get("thinking"),
+        "inherit_system_prompt": manifest.get("inheritSystemPrompt"),
         "task_prompt": GenericContent.from_text(
             (manifest.get("task_prompt") or "").strip()
         ),
@@ -176,22 +177,11 @@ def load_agent_manifest(
 
     settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}
 
-    # Filesystem access policy (agent.md ``access:`` block) → extra_settings
+    # Filesystem access policy (agent.md ``access:`` block)
     access_block = manifest.get("access")
     if access_block is not None:
         validate_agent_access(access_block, source=f"agent.md {agent.name!r}")
-        extra_settings = settings_kwargs.get("extra_settings") or {}
-        extra_settings = dict(extra_settings)
-        extra_settings["access"] = access_block
-        settings_kwargs["extra_settings"] = extra_settings
-
-    # Inherit parent system prompt (agent.md ``inheritSystemPrompt:`` flag) → extra_settings
-    inherit_system_prompt = manifest.get("inheritSystemPrompt")
-    if inherit_system_prompt is not None:
-        extra_settings = settings_kwargs.get("extra_settings") or {}
-        extra_settings = dict(extra_settings)
-        extra_settings["inheritSystemPrompt"] = bool(inherit_system_prompt)
-        settings_kwargs["extra_settings"] = extra_settings
+        settings_kwargs["access"] = access_block
 
     if settings_kwargs.get("precision",None):
         key = settings_kwargs.get("precision","").upper()

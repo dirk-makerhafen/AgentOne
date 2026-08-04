@@ -11,7 +11,7 @@ class ResponseAdmin(admin.ModelAdmin):
 
     list_display: tuple[str, ...] = (
         "id", "query", "session_version__agent", "status",
-        "prompt_tokens", "completion_tokens", "status", "created_at",
+        "prompt_tokens", "completion_tokens", "cached_tokens", "reasoning_tokens", "status", "created_at",
     )
     list_display_links: tuple[str, ...] = ("id",)
     list_filter: tuple[str, ...] = ("status",)

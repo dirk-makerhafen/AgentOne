@@ -161,14 +161,11 @@ def _merge_action(base: ActionPolicy, override: ActionPolicy) -> ActionPolicy:
 
 
 def _agent_access(session: Any) -> dict[str, Any]:
-    """Return the agent's ``access`` block from extra_settings, if any."""
+    """Return the agent's ``access`` block, if any."""
     try:
-        extra = session.agent.get_agent_setting("extra_settings")
+        access = session.agent.get_agent_setting("access")
     except Exception:  # pylint: disable=broad-exception-caught
         return {}
-    if not isinstance(extra, dict):
-        return {}
-    access = extra.get("access")
     return access if isinstance(access, dict) else {}
 
 

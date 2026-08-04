@@ -6,6 +6,7 @@ from typing import Any
 
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 
 
@@ -28,7 +29,10 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
     agent), ``start_subsession`` (for persistent named background sessions).
 
     Args:
-        prompt: The task description for the subtask to execute.
+        prompt: The task description for the subtask to execute. This must be
+            a plain-language task description in your own words — not a
+            tool-call string, and never a final_result(...) call. The subtask
+            will call final_result itself when done.
         blocking: ``True`` to wait for the result, ``False`` to submit and
             receive the result later asynchronously. Defaults to ``False``.
 
@@ -50,6 +54,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
         description=prompt,
         workspace=_session.workspace,
         parent_session_version=_session.get_version_model(),
+        session_type=SessionType.SUBTASK_FORK,
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
@@ -67,7 +72,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
 
     parts = [
         {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": prompt},
-        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": "\n\nYou are doing a subtask for another agent. When your work is complete, call final_result(content='your result message') to return your answer."},
+        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": "\n\nYou are running as a subtask for another agent. When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. Do not return your result as plain text only."},
     ]
     taskcall = child_session.add_user_message(parts=parts)
 

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.session.session import Session
+from server.models.enums.session_enums import SessionType
 from server.models.sessions.session_version import SessionVersionModel
 from server.models.workspace import WorkspaceModel
 
@@ -52,6 +53,7 @@ def wiki_init(_session: Session, folder: str | None = None) -> dict[str, Any]:
         description=f"Wiki '{folder or _session.workspace.path}' main _session.",
         workspace=workspace,
         parent_session_version=_session.get_version_model(),
+        session_type=SessionType.SUBSESSION,
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 

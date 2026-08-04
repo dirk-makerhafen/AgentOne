@@ -54,7 +54,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         )
 
         # SYSTEM PROMPT
-        if _session.system_prompt:
+        if _session.system_prompt_chain:
             if _session.inherit_system_prompt and len(_session.system_prompt_chain) > 1:
                 # Add each parent prompt as a separate system message (parent first)
                 for prompt in _session.system_prompt_chain:

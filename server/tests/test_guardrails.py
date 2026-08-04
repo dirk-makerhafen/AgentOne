@@ -277,8 +277,8 @@ class _FakeAgent:
         self._access = access
 
     def get_agent_setting(self, name):
-        if name == "extra_settings" and self._access is not None:
-            return {"access": self._access}
+        if name == "access" and self._access is not None:
+            return self._access
         return None
 
 

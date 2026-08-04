@@ -6,7 +6,7 @@ from typing import Any
 
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType
-
+from server.models.enums.session_enums import SessionType
 
 def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "", blocking: bool = True) -> dict[str, Any]:
     """Send a one-off task to another agent.
@@ -27,7 +27,10 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
     ``start_subsession`` (named persistent background sessions).
 
     Args:
-        prompt: The task description to execute.
+        prompt: The task description to execute. This must be a plain-language
+            task description in your own words — not a tool-call string, and
+            never a final_result(...) call. The subagent will call final_result
+            itself when done.
         agentname: Optional name of the agent to perform the task. Run
             ``get_available_agents`` to see valid names. Defaults to the same agent as you.
         blocking: ``True`` to wait for the result, ``False`` to submit and
@@ -57,13 +60,13 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
         description=prompt,
         workspace=_session.workspace,
         parent_session_version=_session.get_version_model(),
+        session_type=SessionType.SUBTASK_DELEGATE,
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
     parts = [
         {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": prompt},
-        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": "\n\nYou are doing a subtask for another agent. When your work is complete, call final_result(content='your result message') to return your answer."},
-
+        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": "\n\nYou are running as a subtask for another agent. When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. Do not return your result as plain text only."},
     ]
     taskcall = child_session.add_user_message(parts=parts)
 

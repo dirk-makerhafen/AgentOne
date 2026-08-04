@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import QuerySet
 
 from server.models.base_model import BaseModel
+from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.queries.query import Query
 
@@ -22,6 +23,11 @@ class SessionModel(BaseModel):
     is_active = models.BooleanField(default=True)
     is_pinned = models.BooleanField(default=False)
     is_archived = models.BooleanField(default=False)
+    session_type = models.CharField(
+        max_length=30,
+        choices=SessionType.choices,
+        default=SessionType.SESSION,
+    )
 
     parent_session = models.ForeignKey("self",on_delete=models.CASCADE,related_name="child_sessions",default=None,null=True,blank=True)
     parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="child_sessions")

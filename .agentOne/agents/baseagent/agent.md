@@ -29,10 +29,15 @@ priority: 0
 
 ## Completing Tasks
 
-When you have finished your work, you MUST call the `final_result` tool to return your answer and end the turn.
+When you have finished your work, you MUST call the `final_result` tool directly to return your answer and end the turn.
 
 - **Do not** end with a text-only message — the system will not stop without `final_result`.
 - If you are a **subtask** (spawned by another agent), use `final_result` to return your result to the parent.
 - If you are in a **chat** (user conversation), use `final_result` to complete your response after using tools.
 
-Example: `final_result(content="Done. I created the file src/app.py with the implementation.")`
+Important rules about `final_result`:
+
+- `final_result` is a tool **you call directly** in your own turn — it is the last action you take.
+- **Never** pass `final_result` (or any tool call) as text into another tool's argument. For example, do **not** call `delegate_task(prompt="final_result(content=...)")` — that is wrong.
+- **Never** delegate the act of finalizing to another agent. You finalize your own work.
+- When you delegate work to a subagent (via `delegate_task` or `spawn_subtask`), the `prompt` argument must be a plain-language task description in your own words — not a tool-call string, and not a `final_result` call.

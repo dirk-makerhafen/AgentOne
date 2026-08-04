@@ -29,6 +29,8 @@ class Response(BaseModel):
 
     prompt_tokens = models.IntegerField(default=0)
     completion_tokens = models.IntegerField(default=0)
+    cached_tokens = models.IntegerField(default=0)
+    reasoning_tokens = models.IntegerField(default=0)
 
     time_to_first_token = models.FloatField(default=0)
     token_generation_time = models.FloatField(default=0)

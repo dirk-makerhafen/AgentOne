@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
+from server.models.enums.session_enums import SessionType
 
 
 def start_subsession(_session: Session, agentname: str, sessionname: str, prompt: str) -> dict[str, Any]:
@@ -39,6 +40,7 @@ def start_subsession(_session: Session, agentname: str, sessionname: str, prompt
         description=prompt,
         workspace=_session.workspace,
         parent_session_version=_session.get_version_model(),
+        session_type=SessionType.SUBSESSION,
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 

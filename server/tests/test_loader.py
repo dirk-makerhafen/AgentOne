@@ -364,7 +364,7 @@ class LoadWorkspaceAccessTest(TestCase):
 
 
 class LoadAgentAccessTest(AgentMdTestMixin, TestCase):
-    """agent.md ``access:`` blocks are validated and stored in extra_settings."""
+    """agent.md ``access:`` blocks are validated and stored on settings."""
 
     @classmethod
     def setUpTestData(cls):
@@ -388,7 +388,7 @@ class LoadAgentAccessTest(AgentMdTestMixin, TestCase):
             "---\nname: accessor\n" + access_yaml + "---\n"
         )
 
-    def test_agent_access_stored_in_extra_settings(self):
+    def test_agent_access_stored_in_settings(self):
         self._write_agent(
             "access:\n"
             "  workspace:\n"
@@ -407,11 +407,11 @@ class LoadAgentAccessTest(AgentMdTestMixin, TestCase):
         )
         settings = av.agent_settings
         self.assertEqual(
-            settings.extra_settings["access"]["external"]["read"]["allow"],
+            settings.access["external"]["read"]["allow"],
             ["~/shared/**"],
         )
         self.assertEqual(
-            settings.extra_settings["access"]["workspace"]["write"]["default"],
+            settings.access["workspace"]["write"]["default"],
             "deny",
         )
 

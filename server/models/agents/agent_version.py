@@ -89,6 +89,7 @@ class AgentVersionModel(BaseModel):
         display_name: Optional[str] = None,
         workspace: Optional[WorkspaceModel] = None,
         parent_session_version: SessionVersionModel | None = None,
+        session_type: str = "",
     ) -> SessionVersionModel:
         """Get or create a session for this agent version.
 
@@ -97,6 +98,9 @@ class AgentVersionModel(BaseModel):
             display_name: Human-readable display name.
             workspace: Workspace directory for the session.
             parent_session_version: Optional parent session version to inherit from.
+            session_type: SessionType value describing the session's purpose
+                (e.g. "session", "subsession", "subtask_delegate"). Empty
+                keeps the SessionModel default.
 
         Returns:
             The existing or newly created SessionVersionModel.
@@ -113,11 +117,15 @@ class AgentVersionModel(BaseModel):
         if not display_name:
             display_name = f"{self.agent.name}"
 
+        session_defaults = dict(
+            parent_session=parent_instance,
+        )
+        if session_type:
+            session_defaults["session_type"] = session_type
+
         session, _ = SessionModel.objects.get_or_create(
             name=name,
-            defaults=dict(
-                parent_session=parent_instance,
-            ),
+            defaults=session_defaults,
         )
 
         session_version:SessionVersionModel = session.latest_session_version
@@ -205,8 +213,7 @@ class AgentVersionModel(BaseModel):
         prompts: list[str] = []
 
         # Check if THIS agent inherits parent system prompts
-        extra = getattr(self.agent_settings, "extra_settings", None) or {}
-        if extra.get("inheritSystemPrompt", False):
+        if getattr(self.agent_settings, "inherit_system_prompt", False):
             # Walk the extends chain recursively (parent first)
             for extends_agent_version in self.extends_agent_versions.all():
                 prompts.extend(extends_agent_version.collect_system_prompts())

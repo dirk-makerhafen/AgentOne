@@ -2,6 +2,7 @@
 name: wiki
 description: Vault brain agent — markdown wiki maintainer and knowledge curator
 extends: [baseagent]
+inheritSystemPrompt: true
 reasoningEffort: high
 precision: FOCUSED
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, wiki.wiki_find_unlinked_raw]

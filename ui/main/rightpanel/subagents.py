@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from django.utils import timezone
 from server.models.agents.agent_version import AgentVersionModel
+from server.models.enums.session_enums import SessionType
 from server.models.sessions.session import SessionModel
 from runtime.session.session import Session
 from ui.lib.model_view import ModelView
@@ -153,7 +154,7 @@ class RightPanelSubagents(ModelView):
         if av is None:
             return
         ts = timezone.now().strftime("%Y%m%d%H%M%S")
-        sv = av.get_or_create_session(name=f"user-launch:{name}:{ts}", description="User created subagent", parent_session_version=self.session.get_version_model())
+        sv = av.get_or_create_session(name=f"user-launch:{name}:{ts}", description="User created subagent", parent_session_version=self.session.get_version_model(), session_type=SessionType.SUBSESSION)
         self.parent.main_panel.create_and_open_tab(Chat, sv.session)
 
     def refresh(self):
