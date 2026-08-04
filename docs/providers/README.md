@@ -6,30 +6,46 @@ Curated provider and model metadata of **free, flagship-tier models only**.
 
 **Goal:** Maximize value for the user by providing only the best freely usable models — the ones you'd actually pick for production use.
 
+---
+
+### ⚡ QUICK START FOR NEXT AGENT
+
+| Step | Action | Location |
+|------|--------|----------|
+| 1 | Run all extraction scripts | `python3 scripts/generate_from_*.py --fetch` |
+| 2 | Review extracted data | `raw/models/`, `raw/providers/` |
+| 3 | Research flagship models | Web search + source websites |
+| 4 | **Write curated files** | `models/<slug>.md`, `providers/<slug>/provider.md` |
+
+**Critical:** Scripts write ONLY to `raw/`. Final curated output goes to root `models/` and `providers/` — **manually created**.
+
 ## Structure
 
 ```
 providers/
   README.md
   scripts/                     # extraction scripts (helpers)
-  raw/                         # downloaded source data (gitignored)
+  raw/                         # downloaded source data (gitignored) — SCRIPTS WRITE HERE ONLY
       awesome-free-llm-apis.json
       opencode-models-api.json
       awesome-repo-cache/
       free-api-resources-data.py
       hermes-agent-cache/
-  models/                      # CURATED model cards (final output)
+      models/                  # extracted model cards (for reference during curation)
+      providers/               # extracted provider cards (for reference during curation)
+  models/                      # CURATED model cards (FINAL OUTPUT — manual creation only)
       <model-slug>.md          # model card with YAML frontmatter
-  providers/                   # CURATED provider cards (final output)
-      <provider-slug>/
-          provider.md          # provider card with YAML frontmatter
+  providers/                   # CURATED provider cards (FINAL OUTPUT — manual creation only)
+      <provider-slug>.md       # provider card with YAML frontmatter
 ```
+
+**KEY: Scripts ONLY read/write to `raw/`. The `models/` and `providers/` directories at the root are for MANUALLY CURATED final output only.**
 
 ## Workflow: Two-Part Process
 
 ### Part 1: Extract Raw Data (Automated Helpers)
 
-Run extraction scripts to download source data into `raw/` and bootstrap providers/models:
+Run extraction scripts to download source data into `raw/` and bootstrap extracted files in `raw/models/` and `raw/providers/`:
 
 ```bash
 # Source 1: awesome-free-llm-apis data.json (24 free LLM providers)
@@ -49,20 +65,22 @@ python3 scripts/generate_from_hermes_agent.py --fetch
 ```
 
 **Notes:**
-- Scripts are **helpers** — they download to `raw/` and can create initial provider/model files
+- Scripts are **helpers** — they download to `raw/` and write extracted data to `raw/models/` and `raw/providers/`
+- **Scripts NEVER write to the root `models/` or `providers/` directories** — those are for manual curation only
 - When sources update, scripts may need updates (check source URLs in each script)
 - Edit `SKIP_IDS` / `SLUG_OVERRIDES` / `SLUG_MERGE_MAP` in scripts to control inclusion
 - Each script is self-contained; no hardcoded provider data
 
 ### Part 2: Curate Flagship Models (Manual Research)
 
-After extraction, **manually research and create the final curated files**:
+After extraction, **manually research and create the final curated files** in the root `models/` and `providers/` directories:
 
-1. **Check source websites** (listed in Data Sources below) for new providers/models
-2. **Web search** for "best free LLM API 2024", "top free models production ready", etc.
-3. **Identify flagship models** — the ~10 models you'd actually use in production
-4. **Create/update curated files:**
-   - `providers/<slug>/provider.md` — provider info (name, URL, auth, free tier, notes)
+1. **Review extracted data** in `raw/models/` and `raw/providers/` for reference
+2. **Check source websites** (listed in Data Sources below) for new providers/models
+3. **Web search** for "best free LLM API 2026", "top free models production ready", etc.
+4. **Identify flagship models** — the ~10 models you'd actually use in production
+5. **Create/update curated files:**
+   - `providers/<slug>.md` — provider info (name, URL, auth, free tier, notes)
    - `models/<slug>.md` — model specs (family, series, vision, reasoning, tool_call, params, context, providers)
 
 **Curation criteria for flagship models:**
@@ -80,7 +98,8 @@ python3 scripts/generate_from_awesome_apis.py --fetch && \
 python3 scripts/generate_from_opencode_fixtures.py --fetch && \
 python3 scripts/generate_from_awesome_repo.py --fetch && \
 python3 scripts/generate_from_free_api_resources.py --fetch && \
-python3 scripts/generate_from_hermes_agent.py --fetch
+python3 scripts/generate_from_hermes_agent.py --fetch && \
+python3 scripts/generate_from_lmsys_arena.py --fetch
 ```
 
 ## Format Reference
@@ -106,7 +125,7 @@ providers:
 Description...
 ```
 
-### Provider card (`providers/<provider-slug>/provider.md`)
+### Provider card (`providers/<provider-slug>.md`)
 
 ```yaml
 ---
@@ -129,6 +148,7 @@ Description, auth method (API key / OAuth / none), free tier details, notes.
 | awesome-free-llm-apis (repo) | https://github.com/mnfst/awesome-free-llm-apis/tree/main | `scripts/generate_from_awesome_repo.py` | Limits, base URLs, env vars, model lists |
 | free-llm-api-resources | https://github.com/cheahjs/free-llm-api-resources/tree/main | `scripts/generate_from_free_api_resources.py` | Human-readable model names per model ID |
 | NousResearch/hermes-agent | https://github.com/NousResearch/hermes-agent/tree/main/plugins/model-providers | `scripts/generate_from_hermes_agent.py` | Env vars, base URLs, fallback models, auth types, aliases |
+| LMSYS Chatbot Arena | https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset | `scripts/generate_from_lmsys_arena.py` | Model Elo ratings, licenses, orgs — for flagship identification |
 
 ### Curated lists (reference-only — markdown, no structured extraction)
 
