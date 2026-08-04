@@ -231,6 +231,21 @@ class Session:
         return sp.get() if sp and isinstance(sp, GenericContent) else sp
 
     @property
+    def inherit_system_prompt(self) -> bool:
+        """Return whether this session's agent inherits parent system prompts."""
+        return self.agent.inherit_system_prompt
+
+    @property
+    def system_prompt_chain(self) -> list[str]:
+        """Return all system prompts in inheritance order.
+
+        When inheritSystemPrompt is enabled, returns prompts from parent
+        agents first, then the current agent's prompt. Otherwise returns
+        just the current agent's prompt.
+        """
+        return self.agent.system_prompt_chain
+
+    @property
     def scheduler_strategy(self) -> str | None:
         """Return the resolved scheduler strategy."""
         return self._get_session_setting("scheduler_strategy")

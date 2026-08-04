@@ -185,6 +185,14 @@ def load_agent_manifest(
         extra_settings["access"] = access_block
         settings_kwargs["extra_settings"] = extra_settings
 
+    # Inherit parent system prompt (agent.md ``inheritSystemPrompt:`` flag) → extra_settings
+    inherit_system_prompt = manifest.get("inheritSystemPrompt")
+    if inherit_system_prompt is not None:
+        extra_settings = settings_kwargs.get("extra_settings") or {}
+        extra_settings = dict(extra_settings)
+        extra_settings["inheritSystemPrompt"] = bool(inherit_system_prompt)
+        settings_kwargs["extra_settings"] = extra_settings
+
     if settings_kwargs.get("precision",None):
         key = settings_kwargs.get("precision","").upper()
         settings_kwargs["precision"] = ResponseTemperature[key].value

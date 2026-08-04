@@ -67,7 +67,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
 
     parts = [
         {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": prompt},
-        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": "\n\nYou are a doing a subtask for another agent. Remember to finalize your work by calling final_result(message='..your final result message..')"},
+        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": "\n\nYou are doing a subtask for another agent. When your work is complete, call final_result(content='your result message') to return your answer."},
     ]
     taskcall = child_session.add_user_message(parts=parts)
 

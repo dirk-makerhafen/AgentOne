@@ -17,7 +17,6 @@ from server.models.message import Message, MessagePart
 from server.models.queries.query import Query, QueryStatus
 from server.models.queries.query_message import QueryMessage
 from server.models.queries.query_message_part import QueryMessagePart
-from server.history_limiter import HistoryLimiter
 
 
 def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Query:
@@ -56,12 +55,23 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
 
         # SYSTEM PROMPT
         if _session.system_prompt:
-            query.add_message(
-                role=MessageRole.SYSTEM,
-                content_type=MessageContentType.TEMPLATE,
-                content=_session.system_prompt,
-                template_data={},
-            )
+            if _session.inherit_system_prompt and len(_session.system_prompt_chain) > 1:
+                # Add each parent prompt as a separate system message (parent first)
+                for prompt in _session.system_prompt_chain:
+                    query.add_message(
+                        role=MessageRole.SYSTEM,
+                        content_type=MessageContentType.TEMPLATE,
+                        content=prompt,
+                        template_data={},
+                    )
+            else:
+                # Single system prompt (default behavior)
+                query.add_message(
+                    role=MessageRole.SYSTEM,
+                    content_type=MessageContentType.TEMPLATE,
+                    content=_session.system_prompt,
+                    template_data={},
+                )
 
         # CUSTOM TOOLS
         if _session.tool_call_syntax == AgentToolCallSyntax.CUSTOM:
@@ -93,8 +103,6 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                     break
             current = current.prev_message
         
-        limiter = HistoryLimiter(_session, messages)
-
         cmessages: list[Any] = []
         fmessages = []
         for message in messages:

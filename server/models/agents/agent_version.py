@@ -189,6 +189,39 @@ class AgentVersionModel(BaseModel):
                     return ext_value
         return value
 
+    def collect_system_prompts(self) -> list[str]:
+        """Collect all system prompts from this agent and its ancestors.
+
+        Returns a list of system prompts in inheritance order (parent first,
+        then child), excluding empty prompts. This allows child agents to
+        inherit and extend parent system prompts when inheritSystemPrompt
+        is enabled.
+
+        The inheritSystemPrompt flag on THIS agent controls whether parent
+        prompts are included. If false, only this agent's own prompt is returned.
+        """
+        prompts: list[str] = []
+
+        # Check if THIS agent inherits parent system prompts
+        extra = getattr(self.agent_settings, "extra_settings", None) or {}
+        if extra.get("inheritSystemPrompt", False):
+            # Walk the extends chain recursively (parent first)
+            for extends_agent_version in self.extends_agent_versions.all():
+                prompts.extend(extends_agent_version.collect_system_prompts())
+
+        # Add this agent's own system prompt (if non-empty)
+        sp = getattr(self.agent_settings, "system_prompt", None)
+        if sp:
+            if isinstance(sp, GenericContent):
+                text = sp.get()
+            else:
+                text = str(sp)
+            text = text.strip()
+            if text:
+                prompts.append(text)
+
+        return prompts
+
     def resolve_property(self, name: str) -> Any:
         """Resolve a property value, walking the agent inheritance chain."""
         extend_at_index = None
