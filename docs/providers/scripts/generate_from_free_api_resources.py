@@ -15,7 +15,7 @@ import ast, os, re, subprocess, sys
 
 BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_URL = "https://raw.githubusercontent.com/cheahjs/free-llm-api-resources/refs/heads/main/src/data.py"
-CACHE_FILE = "/tmp/free-api-resources-data.py"
+CACHE_FILE = os.path.join(BASE, "raw", "free-api-resources-data.py")
 
 SKIP_PATTERNS = re.compile(
     r'(HF_MIRROR|FLUX\.|StableDiffusion|TTS|test|SDXL|Monad)', re.I
@@ -26,12 +26,11 @@ def sanitize(s):
     return s.strip('-')
 
 def find_card(slug):
-    """Find a model card by slug in the models directory (recursive)."""
-    models_dir = os.path.join(BASE, "models")
-    for root, dirs, files in os.walk(models_dir):
-        for fname in files:
-            if fname == f"{slug}.md":
-                return os.path.join(root, fname)
+    """Find a model card by slug in the models directory (flat)."""
+    models_dir = os.path.join(BASE, "raw", "models")
+    fpath = os.path.join(models_dir, f"{slug}.md")
+    if os.path.exists(fpath):
+        return fpath
     return None
 
 STRIP_PREFIXES = sorted([
@@ -79,7 +78,53 @@ def infer_series(slug):
     return bare
 
 
+def infer_family(slug):
+    """Infer family from model slug."""
+    bare = slug.lower()
+    for p in STRIP_PREFIXES:
+        if bare.startswith(p):
+            bare = bare[len(p):]
+            break
+    bare = bare.strip("-")
+    if bare.startswith("gpt"): return "gpt"
+    if bare.startswith("qwen"): return "qwen"
+    if bare.startswith("claude"): return "claude"
+    if bare.startswith("llama"): return "llama"
+    if bare.startswith("deepseek"): return "deepseek"
+    if bare.startswith("gemini"): return "gemini"
+    if bare.startswith("mistral"): return "mistral"
+    if bare.startswith("nemotron"): return "nemotron"
+    if bare.startswith("mixtral"): return "mixtral"
+    if bare.startswith("phi"): return "phi"
+    if bare.startswith("gemma"): return "gemma"
+    if bare.startswith("yi"): return "yi"
+    if bare.startswith("glm"): return "glm"
+    if bare.startswith("command"): return "command"
+    if bare.startswith("jamba"): return "jamba"
+    if bare.startswith("dbrx"): return "dbrx"
+    if bare.startswith("solar"): return "solar"
+    if bare.startswith("groq"): return "groq"
+    if bare.startswith("hermes"): return "hermes"
+    if bare.startswith("dolphin"): return "dolphin"
+    if bare.startswith("starling"): return "starling"
+    if bare.startswith("zephyr"): return "zephyr"
+    if bare.startswith("openchat"): return "openchat"
+    if bare.startswith("neural-chat"): return "neural-chat"
+    if bare.startswith("wizard"): return "wizard"
+    if bare.startswith("vicuna"): return "vicuna"
+    if bare.startswith("orca"): return "orca"
+    if bare.startswith("falcon"): return "falcon"
+    if bare.startswith("mpt"): return "mpt"
+    if bare.startswith("redpajama"): return "redpajama"
+    if bare.startswith("stablelm"): return "stablelm"
+    if bare.startswith("xgen"): return "xgen"
+    if bare.startswith("persimmon"): return "persimmon"
+    if bare.startswith("cerebras"): return "cerebras"
+    return "unknown"
+
+
 def fetch():
+    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
     subprocess.run(["curl", "-sSL", DATA_URL, "-o", CACHE_FILE], check=True)
 
 def parse_mapping():
@@ -141,7 +186,7 @@ def main():
 
     print(f"  Parsed {len(mapping)} entries from MODEL_TO_NAME_MAPPING")
 
-    models_dir = os.path.join(BASE, "models")
+    models_dir = os.path.join(BASE, "raw", "models")
     if not os.path.exists(models_dir):
         print(f"ERROR: {models_dir} does not exist")
         return
@@ -159,13 +204,12 @@ def main():
         mfile = find_card(mslug)
 
         if not mfile:
-            # Create minimal card in unknown/ family subdirectory
+            # Create minimal card in flat models/ directory
+            family = infer_family(mslug)
             series = infer_series(mslug)
-            fam_dir = os.path.join(models_dir, "unknown", series)
-            os.makedirs(fam_dir, exist_ok=True)
-            mfile = os.path.join(fam_dir, f"{mslug}.md")
+            mfile = os.path.join(models_dir, f"{mslug}.md")
             with open(mfile, "w") as f:
-                f.write(f"---\nname: {mslug}\nfamily: unknown\nseries: {series}\nvision: false\n")
+                f.write(f"---\nname: {mslug}\nfamily: {family}\nseries: {series}\nvision: false\n")
                 f.write("supports_reasoning: false\nsupports_tool_call: false\n")
                 f.write("open_weights: false\nself_hosted: false\nproviders: []\n")
                 f.write(f"---\n{human_name}\n")

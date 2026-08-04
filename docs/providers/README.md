@@ -89,7 +89,7 @@ providers:
 Description...
 ```
 
-### Provider card (`providers/<provider-slug>/provider.md`)
+### Provider card (`providers/<provider-slug>.md`)
 
 ```yaml
 ---

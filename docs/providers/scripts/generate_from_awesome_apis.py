@@ -15,7 +15,7 @@ import json, os, re, subprocess, sys, math, yaml
 
 BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_URL = "https://raw.githubusercontent.com/mnfst/awesome-free-llm-apis/refs/heads/main/data.json"
-CACHE_FILE = "/tmp/awesome-free-llm-apis.json"
+CACHE_FILE = os.path.join(BASE, "raw", "awesome-free-llm-apis.json")
 
 # Skip these provider slugs (already exist or should not be created)
 SKIP_PROVIDERS = {"google", "ollama"}
@@ -44,12 +44,11 @@ def sanitize(s):
     return s
 
 def find_card(slug):
-    """Find a model card by slug in the models directory (recursive)."""
-    models_dir = os.path.join(BASE, "models")
-    for root, dirs, files in os.walk(models_dir):
-        for fname in files:
-            if fname == f"{slug}.md":
-                return os.path.join(root, fname)
+    """Find a model card by slug in the models directory (flat)."""
+    models_dir = os.path.join(BASE, "raw", "models")
+    fpath = os.path.join(models_dir, f"{slug}.md")
+    if os.path.exists(fpath):
+        return fpath
     return None
 
 STRIP_PREFIXES = sorted([
@@ -114,6 +113,7 @@ def parse_context(ctx_str):
     except (ValueError, IndexError):
         return 0
 
+
 def infer_from_modality(modality):
     """Infer vision/reasoning/tool_call flags from modality string."""
     mod = modality.lower() if modality else ""
@@ -124,10 +124,58 @@ def infer_from_modality(modality):
                                               "rerank"])
     return vision, reasoning, tool_call
 
+
+def infer_family(slug):
+    """Infer family from model slug."""
+    bare = slug.lower()
+    for p in STRIP_PREFIXES:
+        if bare.startswith(p):
+            bare = bare[len(p):]
+            break
+    bare = bare.strip("-")
+    if bare.startswith("gpt"): return "gpt"
+    if bare.startswith("qwen"): return "qwen"
+    if bare.startswith("claude"): return "claude"
+    if bare.startswith("llama"): return "llama"
+    if bare.startswith("deepseek"): return "deepseek"
+    if bare.startswith("gemini"): return "gemini"
+    if bare.startswith("mistral"): return "mistral"
+    if bare.startswith("nemotron"): return "nemotron"
+    if bare.startswith("mixtral"): return "mixtral"
+    if bare.startswith("phi"): return "phi"
+    if bare.startswith("gemma"): return "gemma"
+    if bare.startswith("yi"): return "yi"
+    if bare.startswith("glm"): return "glm"
+    if bare.startswith("command"): return "command"
+    if bare.startswith("jamba"): return "jamba"
+    if bare.startswith("dbrx"): return "dbrx"
+    if bare.startswith("solar"): return "solar"
+    if bare.startswith("groq"): return "groq"
+    if bare.startswith("hermes"): return "hermes"
+    if bare.startswith("dolphin"): return "dolphin"
+    if bare.startswith("starling"): return "starling"
+    if bare.startswith("zephyr"): return "zephyr"
+    if bare.startswith("openchat"): return "openchat"
+    if bare.startswith("neural-chat"): return "neural-chat"
+    if bare.startswith("wizard"): return "wizard"
+    if bare.startswith("vicuna"): return "vicuna"
+    if bare.startswith("orca"): return "orca"
+    if bare.startswith("falcon"): return "falcon"
+    if bare.startswith("mpt"): return "mpt"
+    if bare.startswith("redpajama"): return "redpajama"
+    if bare.startswith("stablelm"): return "stablelm"
+    if bare.startswith("xgen"): return "xgen"
+    if bare.startswith("persimmon"): return "persimmon"
+    if bare.startswith("cerebras"): return "cerebras"
+    return "unknown"
+
+
 def fetch_data():
+    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
     subprocess.run(["curl", "-sSL", DATA_URL, "-o", CACHE_FILE], check=True)
     with open(CACHE_FILE) as f:
         return json.load(f)
+
 
 def main():
     if "--fetch" in sys.argv:
@@ -140,12 +188,14 @@ def main():
             with open(CACHE_FILE) as f:
                 data = json.load(f)
 
-    # Collect existing providers
+    # Collect existing providers from providers/ directory
     existing = set()
-    for d in os.listdir(BASE):
-        if os.path.isdir(os.path.join(BASE, d)) and d not in ("models", "scripts") and not d.startswith("."):
-            if os.path.exists(os.path.join(BASE, d, "provider.md")):
-                existing.add(d)
+    providers_dir = os.path.join(BASE, "raw", "providers")
+    if os.path.exists(providers_dir):
+        for d in os.listdir(providers_dir):
+            if os.path.isdir(os.path.join(providers_dir, d)):
+                if os.path.exists(os.path.join(providers_dir, d, "provider.md")):
+                    existing.add(d)
 
     model_providers_map = {}  # model_slug → [provider_slug, ...]
     provider_info_list = []   # (slug, name, base_url, description, models_list)
@@ -174,9 +224,9 @@ def main():
 
         provider_info_list.append((slug, name, base_url, description, model_entries))
 
-    # Write provider files
+    # Write provider files to providers/<slug>/provider.md
     for slug, name, base_url, description, model_entries in provider_info_list:
-        pdir = os.path.join(BASE, slug)
+        pdir = os.path.join(BASE, "raw", "providers", slug)
         os.makedirs(pdir, exist_ok=True)
 
         # provider.md
@@ -201,30 +251,24 @@ def main():
         with open(md_path, "w") as f:
             f.write("---\n" + yaml.dump(fm, default_flow_style=False, allow_unicode=True).strip() + "\n---\n" + description + "\n")
 
-        # models.md
-        with open(os.path.join(pdir, "models.md"), "w") as f:
-            f.write("---\nmodels:\n")
-            for msanitized, raw_id, _ in model_entries:
-                if msanitized != sanitize(raw_id):
-                    f.write(f"  - name: {msanitized}\n    model_name: {raw_id}\n")
-                else:
-                    f.write(f"  - name: {msanitized}\n")
-            f.write("---\n")
-
         if slug not in existing:
             print(f"  NEW: {slug} ({name}) — {len(model_entries)} models")
         else:
             print(f"  UPD: {slug} ({name}) — {len(model_entries)} models")
 
-    # Write/update model cards
+    # Write/update model cards to models/<slug>.md (flat)
     new_cards = 0
     updated_cards = 0
+    models_dir = os.path.join(BASE, "raw", "models")
+    os.makedirs(models_dir, exist_ok=True)
+
     for slug, name, base_url, description, model_entries in provider_info_list:
         for msanitized, raw_id, mobj in model_entries:
             mfile = find_card(msanitized)
 
             # Parse metadata
-            family = "unknown"
+            family = infer_family(msanitized)
+            series = infer_series(msanitized)
             ctx = parse_context(mobj.get("context", ""))
             vision, reasoning, tool_call = infer_from_modality(mobj.get("modality", ""))
 
@@ -252,12 +296,8 @@ def main():
                     f.write("\n".join(new_lines))
                 updated_cards += 1
             else:
-                # Create new model card in family subdirectory
-                models_dir = os.path.join(BASE, "models")
-                series = infer_series(msanitized)
-                fam_dir = os.path.join(models_dir, family, series)
-                os.makedirs(fam_dir, exist_ok=True)
-                mfile = os.path.join(fam_dir, f"{mslug}.md")
+                # Create new model card in flat models/ directory
+                mfile = os.path.join(models_dir, f"{msanitized}.md")
                 with open(mfile, "w") as f:
                     f.write("---\n")
                     f.write(f"name: {msanitized}\n")
@@ -266,7 +306,8 @@ def main():
                     f.write(f"vision: {'true' if vision else 'false'}\n")
                     f.write(f"supports_reasoning: {'true' if reasoning else 'false'}\n")
                     f.write(f"supports_tool_call: {'true' if tool_call else 'false'}\n")
-                    f.write(f"open_weights: false\nself_hosted: false\n")
+                    f.write(f"open_weights: false\n")
+                    f.write(f"self_hosted: false\n")
                     if ctx > 0:
                         f.write(f"context_length: {ctx}\n")
                     f.write("providers:\n")
@@ -278,6 +319,7 @@ def main():
 
     print(f"\nDone! Created/updated {len(provider_info_list)} providers")
     print(f"New model cards: {new_cards}, Updated: {updated_cards}")
+
 
 if __name__ == "__main__":
     main()

@@ -16,7 +16,7 @@ Usage:
 import ast, json, os, re, subprocess, sys, textwrap, yaml
 
 BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CACHE_DIR = "/tmp/hermes-agent-cache"
+CACHE_DIR = os.path.join(BASE, "raw", "hermes-agent-cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 REPO_API = "https://api.github.com/repos/NousResearch/hermes-agent/contents/plugins/model-providers"
@@ -69,6 +69,60 @@ def infer_series(slug):
     parts = bare.split("-")
     if len(parts) >= 2: return f"{parts[0]}-{parts[1]}"
     return bare
+
+
+def find_card(slug):
+    """Find a model card by slug in the models directory (flat)."""
+    models_dir = os.path.join(BASE, "raw", "models")
+    fpath = os.path.join(models_dir, f"{slug}.md")
+    if os.path.exists(fpath):
+        return fpath
+    return None
+
+
+def infer_family(slug):
+    """Infer family from model slug."""
+    bare = slug.lower()
+    for p in STRIP_PREFIXES:
+        if bare.startswith(p):
+            bare = bare[len(p):]
+            break
+    bare = bare.strip("-")
+    if bare.startswith("gpt"): return "gpt"
+    if bare.startswith("qwen"): return "qwen"
+    if bare.startswith("claude"): return "claude"
+    if bare.startswith("llama"): return "llama"
+    if bare.startswith("deepseek"): return "deepseek"
+    if bare.startswith("gemini"): return "gemini"
+    if bare.startswith("mistral"): return "mistral"
+    if bare.startswith("nemotron"): return "nemotron"
+    if bare.startswith("mixtral"): return "mixtral"
+    if bare.startswith("phi"): return "phi"
+    if bare.startswith("gemma"): return "gemma"
+    if bare.startswith("yi"): return "yi"
+    if bare.startswith("glm"): return "glm"
+    if bare.startswith("command"): return "command"
+    if bare.startswith("jamba"): return "jamba"
+    if bare.startswith("dbrx"): return "dbrx"
+    if bare.startswith("solar"): return "solar"
+    if bare.startswith("groq"): return "groq"
+    if bare.startswith("hermes"): return "hermes"
+    if bare.startswith("dolphin"): return "dolphin"
+    if bare.startswith("starling"): return "starling"
+    if bare.startswith("zephyr"): return "zephyr"
+    if bare.startswith("openchat"): return "openchat"
+    if bare.startswith("neural-chat"): return "neural-chat"
+    if bare.startswith("wizard"): return "wizard"
+    if bare.startswith("vicuna"): return "vicuna"
+    if bare.startswith("orca"): return "orca"
+    if bare.startswith("falcon"): return "falcon"
+    if bare.startswith("mpt"): return "mpt"
+    if bare.startswith("redpajama"): return "redpajama"
+    if bare.startswith("stablelm"): return "stablelm"
+    if bare.startswith("xgen"): return "xgen"
+    if bare.startswith("persimmon"): return "persimmon"
+    if bare.startswith("cerebras"): return "cerebras"
+    return "unknown"
 
 
 def fetch_manifests():
@@ -197,15 +251,20 @@ def main():
 
     print(f"\n  Total profiles extracted: {len(all_profiles)}")
 
-    # Update provider dirs
+    # Update provider dirs in providers/
     existing = set()
-    for d in os.listdir(BASE):
-        if os.path.isdir(os.path.join(BASE, d)) and d not in ("models", "scripts") and not d.startswith("."):
-            if os.path.exists(os.path.join(BASE, d, "provider.md")):
-                existing.add(d)
+    providers_dir = os.path.join(BASE, "raw", "providers")
+    if os.path.exists(providers_dir):
+        for d in os.listdir(providers_dir):
+            if os.path.isdir(os.path.join(providers_dir, d)):
+                if os.path.exists(os.path.join(providers_dir, d, "provider.md")):
+                    existing.add(d)
 
     updated = 0
     new_providers = 0
+    models_dir = os.path.join(BASE, "raw", "models")
+    os.makedirs(models_dir, exist_ok=True)
+
     for prof in all_profiles:
         name = prof.get("name", "")
         slug = sanitize(name)
@@ -229,7 +288,7 @@ def main():
                     target_slug = aslug
                     break
 
-        pdir = os.path.join(BASE, target_slug)
+        pdir = os.path.join(BASE, "raw", "providers", target_slug)
         is_new = target_slug not in existing
         if is_new:
             os.makedirs(pdir, exist_ok=True)
@@ -281,33 +340,43 @@ def main():
             fm.update(preserved)
             f.write("---\n" + yaml.dump(fm, default_flow_style=False, allow_unicode=True).strip() + "\n---\n" + merged_desc + "\n")
 
-        # Ensure models.md exists for new provider dirs; populate from fallback_models
-        models_md = os.path.join(pdir, "models.md")
-        existing_models = set()
-        if os.path.exists(models_md):
-            with open(models_md) as f:
-                content = f.read()
-            for line in content.split("\n"):
-                if line.strip().startswith("- name:"):
-                    m = line.split(":", 1)[1].strip()
-                    existing_models.add(m)
-
-        model_lines = []
+        # Update model cards with fallback models
         for fm in fallback_models:
             mslug = sanitize(fm)
-            if mslug not in existing_models:
-                if mslug != sanitize(fm):
-                    model_lines.append(f"  - name: {mslug}\n    model_name: {fm}")
-                else:
-                    model_lines.append(f"  - name: {mslug}")
-                existing_models.add(mslug)
-
-        if model_lines or is_new:
-            models_content = "---\nmodels:\n" + "\n".join(model_lines) + "\n---\n"
-            with open(models_md, "w") as f:
-                f.write(models_content)
-            if model_lines:
-                print(f"    Models: {len(model_lines)} added to {target_slug}")
+            mfile = find_card(mslug)
+            if not mfile:
+                # Create minimal model card in flat models/ directory
+                family = infer_family(mslug)
+                series = infer_series(mslug)
+                mfile = os.path.join(models_dir, f"{mslug}.md")
+                with open(mfile, "w") as f:
+                    f.write(f"---\nname: {mslug}\nfamily: {family}\nseries: {series}\nvision: false\n")
+                    f.write("supports_reasoning: false\nsupports_tool_call: false\n")
+                    f.write("open_weights: false\nself_hosted: false\nproviders: []\n")
+                    f.write(f"---\n{fm} (fallback for {display_name})\n")
+                print(f"    Created model card: {mslug}")
+            else:
+                # Update existing: add this provider if not listed
+                with open(mfile) as f:
+                    content = f.read()
+                if target_slug in content:
+                    continue
+                lines = content.split("\n")
+                in_providers = False
+                new_lines = []
+                added = False
+                for i, line in enumerate(lines):
+                    new_lines.append(line)
+                    if line.strip() == "providers:":
+                        in_providers = True
+                    elif in_providers and not line.strip().startswith("- "):
+                        new_lines.insert(len(new_lines) - 1, f"  - {target_slug}")
+                        in_providers = False
+                        added = True
+                if not added and in_providers:
+                    new_lines.append(f"  - {target_slug}")
+                with open(mfile, "w") as f:
+                    f.write("\n".join(new_lines))
 
         if is_new:
             new_providers += 1

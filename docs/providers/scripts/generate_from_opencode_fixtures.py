@@ -12,7 +12,7 @@ import json, os, re, subprocess, sys, yaml
 
 BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_URL = "https://raw.githubusercontent.com/anomalyco/opencode/refs/heads/dev/packages/opencode/test/tool/fixtures/models-api.json"
-DATA_FILE = "/tmp/opencode-models-api.json"
+DATA_FILE = os.path.join(BASE, "raw", "opencode-models-api.json")
 
 SKIP_IDS = {
     "alibaba-cn", "alibaba-coding-plan", "alibaba-coding-plan-cn",
@@ -33,12 +33,11 @@ def sanitize(s):
     return re.sub(r'[^a-z0-9-]', '', s.lower().replace(':', '-').replace('/', '-').replace('_', '-').replace('.', '-').replace(' ', '-'))
 
 def find_card(slug):
-    """Find a model card by slug in the models directory (recursive)."""
-    models_dir = os.path.join(BASE, "models")
-    for root, dirs, files in os.walk(models_dir):
-        for fname in files:
-            if fname == f"{slug}.md":
-                return os.path.join(root, fname)
+    """Find a model card by slug in the models directory (flat)."""
+    models_dir = os.path.join(BASE, "raw",  "models")
+    fpath = os.path.join(models_dir, f"{slug}.md")
+    if os.path.exists(fpath):
+        return fpath
     return None
 
 STRIP_PREFIXES = sorted([
@@ -86,10 +85,57 @@ def infer_series(slug):
     return bare
 
 
+def infer_family(slug):
+    """Infer family from model slug."""
+    bare = slug.lower()
+    for p in STRIP_PREFIXES:
+        if bare.startswith(p):
+            bare = bare[len(p):]
+            break
+    bare = bare.strip("-")
+    if bare.startswith("gpt"): return "gpt"
+    if bare.startswith("qwen"): return "qwen"
+    if bare.startswith("claude"): return "claude"
+    if bare.startswith("llama"): return "llama"
+    if bare.startswith("deepseek"): return "deepseek"
+    if bare.startswith("gemini"): return "gemini"
+    if bare.startswith("mistral"): return "mistral"
+    if bare.startswith("nemotron"): return "nemotron"
+    if bare.startswith("mixtral"): return "mixtral"
+    if bare.startswith("phi"): return "phi"
+    if bare.startswith("gemma"): return "gemma"
+    if bare.startswith("yi"): return "yi"
+    if bare.startswith("glm"): return "glm"
+    if bare.startswith("command"): return "command"
+    if bare.startswith("jamba"): return "jamba"
+    if bare.startswith("dbrx"): return "dbrx"
+    if bare.startswith("solar"): return "solar"
+    if bare.startswith("groq"): return "groq"
+    if bare.startswith("hermes"): return "hermes"
+    if bare.startswith("dolphin"): return "dolphin"
+    if bare.startswith("starling"): return "starling"
+    if bare.startswith("zephyr"): return "zephyr"
+    if bare.startswith("openchat"): return "openchat"
+    if bare.startswith("neural-chat"): return "neural-chat"
+    if bare.startswith("wizard"): return "wizard"
+    if bare.startswith("vicuna"): return "vicuna"
+    if bare.startswith("orca"): return "orca"
+    if bare.startswith("falcon"): return "falcon"
+    if bare.startswith("mpt"): return "mpt"
+    if bare.startswith("redpajama"): return "redpajama"
+    if bare.startswith("stablelm"): return "stablelm"
+    if bare.startswith("xgen"): return "xgen"
+    if bare.startswith("persimmon"): return "persimmon"
+    if bare.startswith("cerebras"): return "cerebras"
+    return "unknown"
+
+
 def fetch_data():
+    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
     subprocess.run(["curl", "-sSL", DATA_URL, "-o", DATA_FILE], check=True)
     with open(DATA_FILE) as f:
         return json.load(f)
+
 
 def main():
     if "--fetch" in sys.argv:
@@ -98,11 +144,17 @@ def main():
         with open(DATA_FILE) as f:
             data = json.load(f)
 
+    # Collect existing providers from providers/ directory
     existing_providers = set()
-    for d in os.listdir(BASE):
-        if os.path.isdir(os.path.join(BASE, d)) and d not in ("models", "scripts") and not d.startswith("."):
-            if os.path.exists(os.path.join(BASE, d, "provider.md")):
-                existing_providers.add(d)
+    providers_dir = os.path.join(BASE, "raw", "providers")
+    if os.path.exists(providers_dir):
+        for d in os.listdir(providers_dir):
+            if os.path.isdir(os.path.join(providers_dir, d)):
+                if os.path.exists(os.path.join(providers_dir, d, "provider.md")):
+                    existing_providers.add(d)
+
+    models_dir = os.path.join(BASE, "raw", "models")
+    os.makedirs(models_dir, exist_ok=True)
 
     for pid, info in sorted(data.items()):
         if pid in existing_providers:
@@ -112,7 +164,7 @@ def main():
         if not info.get("models"):
             continue
 
-        pdir = os.path.join(BASE, pid)
+        pdir = os.path.join(BASE, "raw", "providers", pid)
         os.makedirs(pdir, exist_ok=True)
 
         pname = info.get("name", pid)
@@ -144,41 +196,30 @@ def main():
         with open(md_path, "w") as f:
             f.write("---\n" + yaml.dump(fm, default_flow_style=False, allow_unicode=True).strip() + "\n---\n" + pdesc + "\n")
 
-        with open(os.path.join(pdir, "models.md"), "w") as f:
-            f.write("---\nmodels:\n")
-            for mid, _ in sorted(info["models"].items()):
-                mslug = sanitize(mid)
-                if mslug != sanitize(mid):
-                    f.write(f"  - name: {mslug}\n    model_name: {mid}\n")
-                else:
-                    f.write(f"  - name: {mslug}\n")
-            f.write("---\n")
-
         print(f"  Created {pid} ({pname})")
 
-    # Update existing model cards with new provider references
+    # Update existing model cards with new provider references, or create new ones
     for pid, info in sorted(data.items()):
         if pid in SKIP_IDS:
             continue
-        if not os.path.exists(os.path.join(BASE, pid, "provider.md")):
+        if not os.path.exists(os.path.join(BASE, "raw", "providers", pid, "provider.md")):
             continue
         for mid, minfo in info.get("models", {}).items():
             mslug = sanitize(mid)
             mfile = find_card(mslug)
             if not mfile:
-                # Create basic model card in family subdirectory
-                family = minfo.get("family", "unknown") or "unknown"
+                # Create basic model card in flat models/ directory
+                family = infer_family(mslug)
                 series = infer_series(mslug)
-                models_dir = os.path.join(BASE, "models")
-                fam_dir = os.path.join(models_dir, family, series)
-                os.makedirs(fam_dir, exist_ok=True)
-                mfile = os.path.join(fam_dir, f"{mslug}.md")
                 inp_mods = minfo.get("modalities", {}).get("input", []) if isinstance(minfo.get("modalities"), dict) else []
                 vision = "image" in inp_mods or "video" in inp_mods
                 ctx = minfo.get("limit", {}).get("context", 0)
+                mfile = os.path.join(models_dir, f"{mslug}.md")
                 with open(mfile, "w") as f:
                     f.write("---\n")
-                    f.write(f"name: {mslug}\nfamily: {family}\nseries: {series}\n")
+                    f.write(f"name: {mslug}\n")
+                    f.write(f"family: {family}\n")
+                    f.write(f"series: {series}\n")
                     f.write(f"vision: {'true' if vision else 'false'}\n")
                     f.write(f"supports_reasoning: {'true' if minfo.get('reasoning') else 'false'}\n")
                     f.write(f"supports_tool_call: {'true' if minfo.get('tool_call') else 'false'}\n")
@@ -191,7 +232,7 @@ def main():
                     for pid2, info2 in sorted(data.items()):
                         if pid2 in SKIP_IDS:
                             continue
-                        if not os.path.exists(os.path.join(BASE, pid2, "provider.md")):
+                        if not os.path.exists(os.path.join(BASE, "raw", "providers", pid2, "provider.md")):
                             continue
                         if mid in info2.get("models", {}):
                             f.write(f"  - {pid2}\n")
@@ -220,6 +261,7 @@ def main():
                         f.write("\n".join(new_lines))
 
     print(f"\nDone!")
+
 
 if __name__ == "__main__":
     main()

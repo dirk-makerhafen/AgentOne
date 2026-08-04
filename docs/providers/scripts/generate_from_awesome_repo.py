@@ -16,7 +16,7 @@ Usage:
 import json, os, re, subprocess, sys, yaml
 
 BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CACHE_DIR = "/tmp/awesome-repo-cache"
+CACHE_DIR = os.path.join(BASE, "raw", "awesome-repo-cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 REF_URLS = {
@@ -86,12 +86,11 @@ def parse_yaml_frontmatter(path):
 
 
 def find_card(slug):
-    """Find a model card by slug in the models directory (recursive)."""
-    models_dir = os.path.join(BASE, "models")
-    for root, dirs, files in os.walk(models_dir):
-        for fname in files:
-            if fname == f"{slug}.md":
-                return os.path.join(root, fname)
+    """Find a model card by slug in the models directory (flat)."""
+    models_dir = os.path.join(BASE, "raw", "models")
+    fpath = os.path.join(models_dir, f"{slug}.md")
+    if os.path.exists(fpath):
+        return fpath
     return None
 
 STRIP_PREFIXES = sorted([
@@ -223,12 +222,14 @@ def main():
         all_providers.extend(providers)
         print(f"  Parsed {len(providers)} providers from {name}.md")
 
-    # Load existing provider dirs
+    # Load existing provider dirs from providers/
     existing = set()
-    for d in os.listdir(BASE):
-        if os.path.isdir(os.path.join(BASE, d)) and d not in ("models", "scripts") and not d.startswith("."):
-            if os.path.exists(os.path.join(BASE, d, "provider.md")):
-                existing.add(d)
+    providers_dir = os.path.join(BASE, "raw", "providers")
+    if os.path.exists(providers_dir):
+        for d in os.listdir(providers_dir):
+            if os.path.isdir(os.path.join(providers_dir, d)):
+                if os.path.exists(os.path.join(providers_dir, d, "provider.md")):
+                    existing.add(d)
 
     updated_providers = 0
     updated_cards = 0
@@ -240,7 +241,7 @@ def main():
             skipped += 1
             continue
 
-        pdir = os.path.join(BASE, slug)
+        pdir = os.path.join(BASE, "raw", "providers", slug)
         is_new = slug not in existing
         if is_new:
             os.makedirs(pdir, exist_ok=True)
@@ -292,22 +293,6 @@ def main():
             f.write("\n---\n")
             if enhanced_desc:
                 f.write(enhanced_desc.strip() + "\n")
-
-        # Write models.md for genuinely new providers
-        is_free = data.get("free_tier") or False
-        if is_new:
-            existing_models_path = os.path.join(pdir, "models.md")
-            if not os.path.exists(existing_models_path):
-                with open(existing_models_path, "w") as f:
-                    f.write("---\nmodels:\n")
-                    for model_name in p["models"]:
-                        mslug = sanitize(model_name)
-                        f.write(f"  - name: {mslug}\n")
-                        if is_free:
-                            f.write(f"    free: true\n")
-                        if mslug != sanitize(model_name):
-                            f.write(f"    model_name: {model_name}\n")
-                    f.write("---\n")
 
         # Update model cards — add this provider to matching model cards
         for model_name in p["models"]:
