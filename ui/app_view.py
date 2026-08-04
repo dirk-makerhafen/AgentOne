@@ -30,6 +30,7 @@ class AppTitlebar(PyHtmlView):
         "SkillView": "SKILL",
         "SettingsView": "SETTINGS",
         "DashboardView": "DASHBOARD",
+        "AnalyticsView": "DASHBOARD",
     }
 
     TEMPLATE_STR = '''

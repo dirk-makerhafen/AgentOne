@@ -4123,3 +4123,17 @@ main.main.showing-logs > #mainLogs{display:flex;}
     font-size: 10px;
     color: var(--muted);
 }
+/* ── Token analytics ── */
+.analytics-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.analytics-filters select{width:auto;min-width:170px;margin-bottom:0;}
+.analytics-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.analytics-card{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;min-width:0;}
+.analytics-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.analytics-card-sub{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.4;}
+.analytics-chart-wrap{width:100%;}
+.analytics-svg{display:block;background:transparent;overflow:visible;}
+.analytics-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--muted);}
+.analytics-legend-item{display:inline-flex;align-items:center;gap:5px;}
+.analytics-legend-item i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.analytics-empty{font-size:12px;color:var(--muted);padding:32px 0;text-align:center;}
+@media (max-width:900px){.analytics-row{grid-template-columns:1fr;}}

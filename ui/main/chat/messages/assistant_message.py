@@ -39,12 +39,8 @@ class AssistantMessageView(ModelView):
                 <span class="msg-tps-inline" title="Total Time">total {{pyview.subject.response.total_time |round(2) }}s</span>
             {% endif %}
 
-            {% if pyview.subject.response.completion_tokens and pyview.subject.response.token_generation_time %}
-                <span class="msg-tps-inline" title="Tokens per second">{{(pyview.subject.response.completion_tokens / pyview.subject.response.token_generation_time) |round(2)}}tkn/s</span>
-            {% endif %} 
-
-            {% if pyview.subject.response.completion_tokens and pyview.subject.response.total_time %}
-                <span class="msg-tps-inline" title="Tokens per second">{{(pyview.subject.response.completion_tokens / pyview.subject.response.total_time) |round(2)}}tkn/s</span>
+            {% if pyview.subject.response.completion_tokens and pyview.subject.response.token_generation_time and pyview.subject.response.total_time %}
+                <span class="msg-tps-inline" title="Token/second while generating(Token/second overall)">{{(pyview.subject.response.completion_tokens / pyview.subject.response.token_generation_time) |round(2)}}({{(pyview.subject.response.completion_tokens / pyview.subject.response.total_time) |round(2)}})tkn/s</span>
             {% endif %} 
             
         </div>

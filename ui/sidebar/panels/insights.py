@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from ui.lib.model_view import ModelView
 from ui.main.insights.dashboard import DashboardView
+from ui.main.insights.analytics import AnalyticsView
 
 if TYPE_CHECKING:
     from ui.sidebar.sidebar import SidebarView
@@ -17,6 +18,9 @@ class SidebarPanelInsights(ModelView):
             <div class="panel-head-actions">
                 <button class="panel-head-btn" onclick="pyview.openDashboard()" title="Open dashboard" aria-label="Open dashboard">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </button>
+                <button class="panel-head-btn" onclick="pyview.openAnalytics()" title="Open token analytics" aria-label="Open token analytics">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 </button>
                 <button class="panel-head-btn" onclick="pyview.refresh()" title="Refresh" aria-label="Refresh">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -44,6 +48,9 @@ class SidebarPanelInsights(ModelView):
 
     def openDashboard(self) -> None:
         self.root_view.main_panel.create_and_open_tab(DashboardView, self.subject)
+
+    def openAnalytics(self) -> None:
+        self.root_view.main_panel.create_and_open_tab(AnalyticsView, self.subject)
 
     def refresh(self) -> None:
         self.root_view.main_panel.create_and_open_tab(DashboardView, self.subject)

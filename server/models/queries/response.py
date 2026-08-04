@@ -27,6 +27,10 @@ class Response(BaseModel):
 
     status = EnumField(ResponseStatus, default=ResponseStatus.WAITING)
 
+    aimodel = models.ForeignKey("server.AiModel", null=True, blank=True, on_delete=models.SET_NULL, related_name="related_responses")
+    model_name = models.CharField(max_length=512, default="", blank=True)
+    provider_name = models.CharField(max_length=512, default="", blank=True)
+
     prompt_tokens = models.IntegerField(default=0)
     completion_tokens = models.IntegerField(default=0)
     cached_tokens = models.IntegerField(default=0)
