@@ -19,7 +19,7 @@ class ModelDropdownOption(ModelView):
     '''
     @property
     def DOM_ELEMENT_CLASS(self):
-        return f'model-opt {"active" if self.parent.parent.subject.aimodel.name == self.subject.name else ""}'
+        return f'model-opt {"active" if self.parent.parent.subject.aimodel and self.parent.parent.subject.aimodel.name == self.subject.name else ""}'
     
     @property
     def DOM_ELEMENT_EXTRAS(self):

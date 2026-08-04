@@ -3,3 +3,7 @@ appearance:
   skin: default
   font_size: default
   workspace_panel_open: false
+
+preferences:
+  default_model: ""
+  send_key: ctrl+enter

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
+from ui.app import UiApp
 from ui.lib.model_view import ModelView
 from ui.main.chat.composer.dropdown.command import CommandDropdown
 from ui.main.chat.composer.footer import ComposerFooter
@@ -27,7 +28,7 @@ class ComposerBox(ModelView):
             <span class="voice-mode-label" id="voiceModeLabel"></span>
         </div>
         
-        <textarea id="input_{{pyview.uid}}" onchange="pyview.new_text_input(document.getElementById('input_{{pyview.uid}}').value)" onkeyup="pyview.new_text_input(document.getElementById('input_{{pyview.uid}}').value)"  class="composer-chat-message" rows="1"  oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Message AgentOne..."></textarea>
+        <textarea id="input_{{pyview.uid}}" onchange="pyview.new_text_input(document.getElementById('input_{{pyview.uid}}').value)" onkeyup="pyview.new_text_input(document.getElementById('input_{{pyview.uid}}').value)" onkeydown="{% if pyview.send_key == 'enter' %}if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();pyview.send(this.value)}{% else %}if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)&&!event.isComposing){event.preventDefault();pyview.send(this.value)}{% endif %}"  class="composer-chat-message" rows="1"  oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Message AgentOne..."></textarea>
 
         {{ pyview.footer.render() }}
         
@@ -40,6 +41,18 @@ class ComposerBox(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.footer = ComposerFooter(subject, self)
         self.command_dropdown = CommandDropdown(subject, self)
+
+    @property
+    def send_key(self) -> str:
+        """Return the configured send-key mode (default: ``"ctrl+enter"``)."""
+        app = UiApp.get_instance()
+        if app is not None:
+            return app.settings.send_key
+        return "ctrl+enter"
+
+    def send(self, parts):
+        """Delegate to the footer's send (used by the textarea send-key)."""
+        self.footer.send(parts)
 
     def new_text_input(self, input):
         print("new_text_input", input)

@@ -488,9 +488,12 @@ def _resolve_agent_version_subagents(
 def _get_ai_model(model_name: Optional[str]) -> Optional[AiModel]:
     """Return the ``AiModel`` for *model_name*, or ``None``.
 
-    Raises ``ValidationError`` when the model does not exist or is disabled.
+    ``None``, empty, or the sentinel ``"default"`` mean "no specific model" —
+    the resolved session model then falls back to the user's configured
+    default model.  Otherwise raises ``ValidationError`` when the model does
+    not exist or is disabled.
     """
-    if model_name is None:
+    if not model_name or model_name == "default":
         return None
     try:
         ai_model = AiModel.objects.get(name=model_name)

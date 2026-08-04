@@ -18,14 +18,19 @@ class SettingPanelPerferences(ModelView):
         </div>
         <div class="settings-field">
             <label for="settingsModel" data-i18n="settings_label_model">Default Model</label>
-            <select id="settingsModel" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px"></select>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="settings_desc_model">Used for new conversations. Existing conversations keep their selected model.</div>
+            <select id="settingsModel" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px" onchange="pyview.set_default_model(this.value)">
+                <option value=""{% if not pyview._default_model %} selected{% endif %} data-i18n="settings_desc_model_none">— None (use agent default) —</option>
+                {% for model in pyview._model_options %}
+                <option value="{{ model.name }}"{% if model.name == pyview._default_model %} selected{% endif %}>{{ model.name }}</option>
+                {% endfor %}
+            </select>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px" data-i18n="settings_desc_model">Used for new conversations. Existing conversations keep their selected model. Also used when an agent's model.md declares <code>model: default</code> or no model.</div>
         </div>
         <div class="settings-field">
             <label for="settingsSendKey" data-i18n="settings_label_send_key">Send Key</label>
-            <select id="settingsSendKey" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px">
-                <option value="enter">Enter (Shift+Enter for newline)</option>
-                <option value="ctrl+enter">Ctrl+Enter (Enter for newline)</option>
+            <select id="settingsSendKey" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px" onchange="pyview.set_send_key(this.value)">
+                <option value="ctrl+enter"{% if pyview._send_key == 'ctrl+enter' %} selected{% endif %}>Ctrl+Enter (Enter for newline)</option>
+                <option value="enter"{% if pyview._send_key == 'enter' %} selected{% endif %}>Enter (Shift+Enter for newline)</option>
             </select>
         </div>
         <div class="settings-field">
@@ -177,3 +182,28 @@ class SettingPanelPerferences(ModelView):
 
     def __init__(self, subject, parent: SettingsView, **kwargs):
         super().__init__(subject, parent, **kwargs)
+
+    @property
+    def _settings(self):
+        return self.subject.settings
+
+    @property
+    def _model_options(self):
+        from server.models.providers.ai_model import AiModel
+        return AiModel.objects.filter(enabled=True).order_by("name")
+
+    @property
+    def _default_model(self) -> str:
+        return self._settings.default_model
+
+    @property
+    def _send_key(self) -> str:
+        return self._settings.send_key
+
+    def set_default_model(self, value: str):
+        self._settings.default_model = value
+        self.update()
+
+    def set_send_key(self, value: str):
+        self._settings.send_key = value
+        self.update()

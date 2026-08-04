@@ -97,8 +97,27 @@ class Session:
 
     @property
     def aimodel(self) -> AiModel | None:
-        """Return the resolved AI model, or *None*."""
-        return self._get_session_setting("aimodel")
+        """Return the resolved AI model, or *None*.
+
+        When neither the session nor the agent pin a specific model (agent.md
+        ``model:`` empty or ``default``), falls back to the user's configured
+        Default Model.
+        """
+        model = self._get_session_setting("aimodel")
+        if model is not None:
+            return model
+        return self._default_aimodel()
+
+    def _default_aimodel(self) -> AiModel | None:
+        """Resolve the user's Default Model preference to an :class:`AiModel`."""
+        from runtime.settings import get_default_model_name
+        name = get_default_model_name()
+        if not name:
+            return None
+        try:
+            return AiModel.objects.filter(name=name, enabled=True).first()
+        except Exception:
+            return None
 
     def set_aimodel(self, model: AiModel | None) -> None:
         """Override the AI model setting (creates a new version)."""
