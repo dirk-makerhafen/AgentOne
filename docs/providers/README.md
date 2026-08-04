@@ -1,6 +1,9 @@
 # Provider & Model Research
 
-Curated provider and model metadata maintained by research agents.
+Curated provider and model metadata of free, state-of-the-art models. 
+Contains only the latest, greatest and best available models, not the mass of small or old free models. 
+Goal is to maximise value for the user by providing a list of the best availabe and freely usable ai. 
+
 
 ## Structure
 
@@ -8,26 +11,11 @@ Curated provider and model metadata maintained by research agents.
 providers/
   README.md
   scripts/                     # reusable scripts for auto-extracting data
-  models/                      # family/series/slug.md hierarchy
-    <family>/README.md         # describes the model family
-    <family>/<series>/<slug>.md  # model cards (provider-agnostic)
-  <provider>/
-    provider.md                # provider name, URL, description
-    models.md                  # which models this provider serves
+  models/                      # free, sota models.
+      model_name.md            # 
+  provider/
+      provider_name.md         # provider name, URL, description
 ```
-
-Model cards are organized in a 3-level hierarchy: `models/<family>/<series>/<slug>.md`.
-
-- **Family** is the broad model lineage (e.g. `gpt`, `qwen`, `claude`, `llama`). Granular sub-families like `claude-sonnet` are merged into their parent.
-- **Series** is the specific model generation/tier within the family (e.g. `gpt-4o`, `qwen3`, `sonnet`, `flash`). Populated from the `series` frontmatter field.
-- A `README.md` in each family directory provides an overview.
-
-## Stats
-
-- **99 providers** with `provider.md` + `models.md`
-- **1,998 model cards** in `models/`, organized into **94 families** and **631 series** subdirectories
-- **2,421 provider↔model links**, all bidirectional validated (0 stale)
-- **782 cards** with inferred `total_parameters`, **105** with `active_parameters`
 
 ## Quick Start
 
@@ -54,7 +42,7 @@ Edit the `SKIP_IDS` set or `SLUG_OVERRIDES` dict in each script to control which
 
 ## Format Reference
 
-### Model card (`models/<family>/<series>/<slug>.md`)
+### Model card (`models/<slug>.md`)
 
 ```yaml
 ---
@@ -86,15 +74,6 @@ self_hosted: true|false
 Description, auth method, notes.
 ```
 
-### Provider models (`<provider>/models.md`)
-
-```yaml
----
-models:
-  - name: <family>/<series>/<model-slug>  # references the model card
-    model_name: <api-name>                # optional: actual API name (defaults to slug)
----
-```
 
 ## Data Sources
 
