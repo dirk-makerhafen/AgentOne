@@ -12,10 +12,10 @@ Curated provider and model metadata of **free, flagship-tier models only**.
 
 | Step | Action | Location |
 |------|--------|----------|
-| 1 | Run all extraction scripts | `python3 scripts/generate_from_*.py --fetch` |
-| 2 | Review extracted data | `raw/models/`, `raw/providers/` |
-| 3 | Research flagship models | Web search + source websites |
-| 4 | **Write curated files** | `models/<slug>.md`, `providers/<slug>/provider.md` |
+| 1 | Run all extraction scripts, fix scripts on error  | `python3 scripts/generate_from_*.py --fetch` |
+| 2 | Research free models | source websites, web search |
+| 3 | Review extracted data, identify best free models | `raw/models/`, `raw/providers/` |
+| 4 | **Update curated files** | `models/<slug>.md`, `providers/<slug>/provider.md` |
 
 **Critical:** Scripts write ONLY to `raw/`. Final curated output goes to root `models/` and `providers/` — **manually created**.
 
@@ -135,7 +135,6 @@ self_hosted: true|false         # provider is a self-hosted platform
 ---
 Description, auth method (API key / OAuth / none), free tier details, notes.
 ```
-
 
 ## Data Sources
 
