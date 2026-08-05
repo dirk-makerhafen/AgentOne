@@ -85,23 +85,25 @@ def ingest_compaction(
         role=MessageRole.USER,
         prev_message=newest_compacted,
     )
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    working_dir = _session.workspace.path if _session.workspace else "unknown"
+    compaction_message.add_part(
+        type=MessagePartType.COMPACTION,
+        content_type=MessageContentType.TEXT,
+        content=f"It is now {now}, your working dir is {working_dir}\n",
+    )
     compaction_message.add_part(
         type=MessagePartType.COMPACTION, 
         content_type=MessageContentType.TEXT, 
-        content="Old messages before this summary have been compacted to save context tokens. Summary:"
+        content="Old messages before this summary have been compacted to save context tokens. Summary:\n"
     )
     compaction_message.add_part(
         type=MessagePartType.COMPACTION,
         content_type=MessageContentType.TEXT,
         content=summary_text,
     )
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    working_dir = _session.workspace.path if _session.workspace else "unknown"
-    compaction_message.add_part(
-        type=MessagePartType.COMPACTION,
-        content_type=MessageContentType.TEXT,
-        content=f"It is now {now}, your working dir is {working_dir}",
-    )
+
 
     # Relink the first message that followed the compacted range (if any) so
     # it now points back at the compaction message.  Without this the

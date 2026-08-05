@@ -9,7 +9,7 @@ from typing import Any
 WIKILINK_RE = re.compile(r'\[\[([^\[\]]+?)(?:\|([^\[\]]*?))?\]\]')
 FRONTMATTER_RE = re.compile(r'^---\s*\n(.*?)\n---', re.DOTALL)
 REQUIRED_FM_FIELDS = ('type', 'date', 'updated', 'tags', 'sources')
-CHECK_NAMES = ("dead_wikilinks", "link_format", "orphan_pages", "missing_index", "stale_index_entries", "frontmatter", "folder_structure", "encoding")
+CHECK_NAMES = ("dead_wikilinks", "link_format", "orphan_pages", "missing_index", "stale_index_entries", "frontmatter", "folder_structure", "encoding", "filenames")
 
 
 def _resolve_folder(folder: str | None, session: Any | None) -> str | None:
@@ -322,6 +322,53 @@ def _folder_structure_issues(rel: str) -> list[str]:
     return issues
 
 
+_FS_RESERVED_CHARS = frozenset('\\/:*?"<>|')
+
+
+def _filename_issues(name: str) -> list[str]:
+    """Return problems found in a single filename (not a full path).
+
+    Detects broken/illegal filenames:
+    - Invalid UTF-8 bytes (presented by the OS as lone surrogates)
+    - Control characters (U+0000-U+001F, U+007F)
+    - Reserved characters that break on Windows/many tools
+      (``\\ / : * ? " < > |``)
+    - Trailing dot or space (invisible/ambiguous on Windows)
+    """
+    issues: list[str] = []
+    for ch in name:
+        cp = ord(ch)
+        if ch in _FS_RESERVED_CHARS:
+            issues.append(f"reserved character '{ch}'")
+        elif cp < 32 or cp == 127:
+            issues.append(f"control character U+{cp:04X}")
+        elif 0xDC80 <= cp <= 0xDCFF:
+            issues.append(f"invalid UTF-8 byte ({hex(cp)})")
+    if name != name.rstrip(". "):
+        issues.append("trailing dot or space")
+    return issues
+
+
+def _valid_filename_suggestion(name: str) -> str:
+    """Return a filesystem-safe version of *name*, replacing offending chars.
+
+    Only used for suggestions — never auto-applied (renaming a file would
+    break its wikilinks).
+    """
+    out: list[str] = []
+    for ch in name:
+        cp = ord(ch)
+        if ch in _FS_RESERVED_CHARS:
+            out.append("_")
+        elif cp < 32 or cp == 127:
+            out.append("_")
+        elif 0xDC80 <= cp <= 0xDCFF:
+            out.append("\uFFFD")
+        else:
+            out.append(ch)
+    return "".join(out).rstrip(". ")
+
+
 def wiki_check(
     _session: Any,
     folder: str | None = None,
@@ -342,6 +389,8 @@ def wiki_check(
     - Missing or invalid YAML frontmatter
     - Folder-structure problems (duplicated date segments such as
       ``2020/2020``, invalid month/day values)
+    - Broken filenames (invalid UTF-8 bytes, control characters,
+      reserved characters such as ``/ : * ?``, trailing dots/spaces)
 
     Files under ``raw/`` are excluded from all checks (immutable sources).
 
@@ -361,7 +410,8 @@ def wiki_check(
         checks: Comma-separated check names to run, or ``""`` / ``"all"``
             for all checks. Valid names: ``dead_wikilinks``, ``link_format``,
             ``orphan_pages``, ``missing_index``, ``stale_index_entries``,
-            ``frontmatter``, ``folder_structure``.
+            ``frontmatter``, ``folder_structure``, ``encoding``,
+            ``filenames``.
             Default: ``""`` (all).
         files: Comma-separated file paths or glob patterns (relative to wiki
             root) to scope the check to. Supports ``*``, ``?``, ``**``
@@ -394,6 +444,7 @@ def wiki_check(
             - status: "error"
             - message: str
     """
+    import re
     try:
         resolved = _resolve_folder(folder, _session)
         if resolved is None:
@@ -540,7 +591,7 @@ def wiki_check(
             return items[:limit] if limit else items
 
         omitted_total = 0
-
+                        
         if _run_check("dead_wikilinks"):
             dead: list[dict] = []
             for fp in md_files:
@@ -889,13 +940,106 @@ def wiki_check(
                 "items": capped,
             })
 
+        if _run_check("filenames"):
+            # Scan every filename/dirname in the vault (non-raw, non-hidden)
+            # for broken UTF-8 bytes and illegal characters.  Same-named
+            # files in different folders are reported once (dedup by name).
+            # ``total`` is the number of non-raw, non-hidden paths actually
+            # scanned — NOT the markdown file count used by other checks.
+            scanned: list[Path] = [
+                fp for fp in root.rglob("*")
+                if not fp.relative_to(root).as_posix().startswith("raw/")
+                and not any(s.startswith(".") for s in fp.relative_to(root).as_posix().split("/"))
+            ]
+            name_issues: list[dict] = []
+            seen_names: set[str] = set()
+            all_issues_for_autofix: list[tuple[Path, str, list[str], str]] = []
+            for fp in scanned:
+                name = fp.name
+                issues = _filename_issues(name)
+                if not issues:
+                    continue
+                suggestion = _valid_filename_suggestion(name)
+                all_issues_for_autofix.append((fp, name, issues, suggestion))
+                if name in seen_names:
+                    continue
+                seen_names.add(name)
+                name_issues.append({
+                    "file": fp.relative_to(root).as_posix(),
+                    "name": name,
+                    "issues": issues,
+                    "suggestion": suggestion,
+                })
+            capped = _cap(name_issues, effective_limit)
+            omitted_total += len(name_issues) - len(capped)
+            findings.append({
+                "check": "filenames",
+                "total": len(scanned),
+                "wrong": len(name_issues),
+                "correct": len(scanned) - len(name_issues),
+                "returned": len(capped),
+                "items": capped,
+            })
+
+        if autofix and _run_check("filenames"):
+            # Auto-fix: rename files with illegal names and update wikilinks.
+            # Process ALL files with issues (including same basename in different
+            # folders).  Only process items that have a valid, collision-free
+            # suggestion.
+            renamed: list[tuple[str, str]] = []  # (old_rel, new_rel)
+            for fp, old_name, issues, suggestion in all_issues_for_autofix:
+                if not suggestion or suggestion == old_name:
+                    continue
+                old_rel = fp.relative_to(root).as_posix()
+                new_name = suggestion
+                new_fp = fp.parent / new_name
+                new_rel = new_fp.relative_to(root).as_posix()
+                if new_fp.exists():
+                    continue
+                try:
+                    fp.rename(new_fp)
+                    renamed.append((old_rel, new_rel))
+                except Exception:
+                    pass
+            # Now update wikilinks in all markdown files pointing to renamed files.
+            if renamed:
+                for fp in md_files:
+                    try:
+                        text = fp.read_text(encoding="utf-8")
+                    except Exception:
+                        continue
+                    new_text = text
+                    for old_rel, new_rel in renamed:
+                        old_name = Path(old_rel).name
+                        new_name = Path(new_rel).name
+                        # Pattern 1: bare filename link [[old_name]]
+                        old_bare = f"[[{old_name}]]"
+                        new_bare = f"[[{new_name}]]"
+                        if old_bare in new_text:
+                            new_text = new_text.replace(old_bare, new_bare)
+                        # Pattern 2: vault-relative with path [[path/old_name]]
+                        # Also handle [[path/old_name|alias]]
+                        import re
+                        old_escaped = re.escape(old_name)
+                        pattern = rf"\[\[([^\[\]]*/)?{old_escaped}(\|[^\[\]]*)?\]\]"
+                        def _repl(m):
+                            prefix = m.group(1) or ""
+                            alias = m.group(2) or ""
+                            return f"[[{prefix}{new_name}{alias}]]"
+                        new_text = re.sub(pattern, _repl, new_text)
+                    if new_text != text:
+                        try:
+                            fp.write_text(new_text, encoding="utf-8")
+                        except Exception:
+                            pass
+
         total_wrong = sum(f["wrong"] for f in findings)
         returned = sum(len(f["items"]) for f in findings)
         total_correct = sum(f["correct"] for f in findings)
         autofix_count = 0
         if autofix:
             for f in findings:
-                if f["check"] in ("dead_wikilinks", "link_format", "frontmatter"):
+                if f["check"] in ("dead_wikilinks", "link_format", "frontmatter", "filenames"):
                     autofix_count += sum(1 for item in f["items"] if item.get("autofixed"))
 
         summary_parts = []
@@ -957,7 +1101,7 @@ def wiki_find_unlinked_raw(
     are not linked anywhere are reported, sorted oldest-first by the
     date embedded in their folder structure.
 
-    Results are capped to *limit* entries.  Use ``limit=0`` for all.
+    Results are capped to *limit* entries.  Use ``limit=0`` for all. Limit output to number of items you actually want to handle.
 
     Args:
         _session: The calling agent's session (bound automatically).

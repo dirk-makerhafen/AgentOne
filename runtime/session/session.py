@@ -616,7 +616,7 @@ class Session:
 
         if is_command:
             bound_task = self.get_task("ingest_slash_command")
-            call_kwargs: dict = dict(name=cmd, **parsed_kwargs)
+            call_kwargs: dict = dict(command_name=cmd, **parsed_kwargs)
         else:
             bound_task = self.get_task("ingest_user_message")
             call_kwargs = dict(parts=parts)

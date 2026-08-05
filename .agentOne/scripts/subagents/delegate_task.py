@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from time import time
 from typing import Any
 
@@ -64,10 +65,27 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    working_dir = child_session.workspace.path if child_session.workspace else "unknown"
     parts = [
-        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": prompt},
-        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": "\n\nYou are running as a subtask for another agent. When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. Do not return your result as plain text only."},
-    ]
+        {
+            "type": MessagePartType.MESSAGE, 
+            "content_type": MessageContentType.TEXT, 
+            "content": f"It is now {now}, your working dir is {working_dir}\n"
+        },
+        {
+            "type": MessagePartType.MESSAGE, 
+            "content_type": MessageContentType.TEXT,
+            "content": "You are running as a subtask for another agent. \
+                When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. \
+                Do not return your result as plain text only. Your task:\n"
+        },
+        {
+            "type": MessagePartType.MESSAGE, 
+            "content_type": MessageContentType.TEXT, 
+            "content": prompt
+        },
+    ]  
     taskcall = child_session.add_user_message(parts=parts)
 
     if blocking:

@@ -14,7 +14,7 @@ from server.models.message import Message, MessagePart
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 
 
-def process_slashcommand(_session: Session, name: str, **kwargs: Any) -> dict[str, Any]:
+def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) -> dict[str, Any]:
     """
     Look up and dispatch a slash command, recording a user Message.
 
@@ -30,11 +30,11 @@ def process_slashcommand(_session: Session, name: str, **kwargs: Any) -> dict[st
     """
     import traceback
 
-    bound_task = _session.get_command(name)
+    bound_task = _session.get_command(command_name)
     if not bound_task:
-        bound_task = _session.get_tool(name)
+        bound_task = _session.get_tool(command_name)
     if not bound_task:
-        raise Exception(f"Task {name} not found")
+        raise Exception(f"Task {command_name} not found")
 
     session_version = _session.get_version_model()
     prev_message = _session.get_messages().filter(next_messages=None).last()
@@ -48,7 +48,7 @@ def process_slashcommand(_session: Session, name: str, **kwargs: Any) -> dict[st
     message.add_part(
         type=MessagePartType.TOOLCALL,
         content_type=MessageContentType.JSON,
-        content=f"/{name} {json.dumps(kwargs) if kwargs else ''}",
+        content=f"/{command_name} {json.dumps(kwargs) if kwargs else ''}",
     )
 
     from runtime.events import publish_model_event

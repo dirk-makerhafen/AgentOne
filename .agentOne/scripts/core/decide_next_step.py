@@ -31,21 +31,10 @@ def _is_subtask_execution(_session: Session) -> bool:
     back to the legacy parent-awaiting heuristic for sessions recorded before
     ``session_type`` was populated, so a subtask never skips ``final_result``.
     """
-    if _session.session_type in (
+    return _session.session_type in (
         SessionType.SUBTASK_DELEGATE,
         SessionType.SUBTASK_FORK,
-    ):
-        return True
-    current_taskrun = getattr(_session, '_current_taskrun', None)
-    if not current_taskrun or not current_taskrun.agent_task_call_id:
-        return False
-    root = current_taskrun.agent_task_call.session_root_task
-    if not root or not root.parent_taskrun_id:
-        return False
-    parent = root.parent_taskrun
-    if parent.session_version.session_id != _session.model.pk and parent.status == TaskRunStatus.WAITING_RESULTTASKS:
-        return True
-    return False
+    )
 
 
 def _looks_like_markdown(content: str) -> bool:

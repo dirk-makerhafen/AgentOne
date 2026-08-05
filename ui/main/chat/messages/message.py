@@ -41,7 +41,7 @@ class MessageView(ModelView):
 
 
 
-'''
+r'''
     
     <div class="tool-card-row">
     <div class="tool-card open">

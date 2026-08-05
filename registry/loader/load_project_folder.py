@@ -84,8 +84,11 @@ def _project_to_database(project_md_path: Path, project_root: Path | None = None
     project_md = frontmatter.load(project_md_path)
     project, created = Project.objects.get_or_create(
         name=project_md.get("name"),
-        description=project_md.content,
-        defaults={"path": project_md_path.parent.as_posix()},
+        
+        defaults={
+            "path": project_md_path.parent.as_posix(),
+            "description": project_md.content,
+        },
     )
 
     for entry in project_md.get("workspaces") or []:

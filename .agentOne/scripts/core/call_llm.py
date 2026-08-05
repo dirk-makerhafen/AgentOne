@@ -11,6 +11,7 @@ import traceback
 from typing import Any
 
 from runtime.session.session import Session
+from runtime.tool_argument_utils import normalize_tool_arguments
 from server.models.settings import AgentToolCallSyntax
 from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
@@ -171,12 +172,17 @@ def run_streaming_query(
 
     end_timestamp = time.time()
 
-    # Parse tool call arguments from JSON string to dict
+    # Parse tool call arguments from JSON string to dict.  Generate-style
+    # providers stream the arguments as a JSON string; some also emit it
+    # with double-escaped unicode (e.g. ``\\u00df`` for ``ß``).  We re-decode
+    # any surviving literal ``\uXXXX`` sequences so paths match the filesystem.
+
     for tool_call in response.tool_calls:
         try:
             tool_call["arguments"] = json.loads(tool_call["arguments"])
         except json.JSONDecodeError:
             pass
+        tool_call["arguments"] = normalize_tool_arguments(tool_call["arguments"])
 
     # Record timing metrics
     response.time_to_first_token = 0

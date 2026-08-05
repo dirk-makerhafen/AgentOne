@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from time import time
 from typing import Any
 
@@ -69,8 +70,14 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
         content_type=MessageContentType.TEXT,
         content=(f"You have been forked from parent session #{_session.model.pk} of agent '{_session.agent.name}'."),
     )
-
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    working_dir = child_session.workspace.path if child_session.workspace else "unknown"
     parts = [
+        {
+            "type": MessagePartType.MESSAGE, 
+            "content_type": MessageContentType.TEXT, 
+            "content": f"It is now {now}, your working dir is {working_dir}\n"
+        },
         {
             "type": MessagePartType.MESSAGE, 
             "content_type": MessageContentType.TEXT,

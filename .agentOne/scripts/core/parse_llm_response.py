@@ -7,12 +7,14 @@ tool call formats. Pure parse -- no side effects, no tool execution.
 
 from __future__ import annotations
 
+import codecs
 import json
 import re
 import traceback
 from typing import Any, NotRequired, TypedDict
 
 from runtime.session.session import Session
+from runtime.tool_argument_utils import normalize_tool_arguments
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.queries.response import Response
 from server.models.settings import AgentToolCallSyntax
@@ -84,7 +86,8 @@ def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
                     for p in parts_list:
                         if "=" in p:
                             k, v = p.split("=", 1)
-                            kwargs[k.strip()] = v.strip().strip("'").strip('"')
+
+                            kwargs[k.strip()] = normalize_tool_arguments(v.strip().strip("'").strip('"'))
                 toolcalls.append(
                     {
                         "id": f"custom_{func_name}",
