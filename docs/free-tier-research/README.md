@@ -15,7 +15,7 @@ Curated provider and model metadata of **free, flagship-tier models only**.
 | 1 | Run all extraction scripts, fix scripts on error  | `python3 scripts/generate_from_*.py --fetch` |
 | 2 | Research free models | source websites, web search |
 | 3 | Review extracted data, identify best free models | `raw/models/`, `raw/providers/` |
-| 4 | **Update curated files** | `models/<slug>.md`, `providers/<slug>/provider.md` |
+| 4 | **Update curated files** | `models/<slug>.md`, `providers/<slug>.md` |
 
 **Critical:** Scripts write ONLY to `raw/`. Final curated output goes to root `models/` and `providers/` — **manually created**.
 
@@ -162,4 +162,4 @@ These repos are manually curated lists. They contain structured data in markdown
 | eudk/awesome-ai-tools | https://github.com/eudk/awesome-ai-tools | Descriptive prose — model lineage, ecosystem overview. No structured data. |
 | zebbern/no-cost-ai | https://github.com/zebbern/no-cost-ai | 80+ services, no-signup endpoints, chat interfaces. Includes gray-market/g4f services. |
 
-Data may be out of date or partial — cross-check between multiple sources. When multiple sources provide overlapping metadata for the same provider, scripts use a `SLUG_MERGE_MAP` (or alias-based matching) to merge into the same provider directory, enriching `provider.md` with info from each source.
+Data may be out of date or partial — cross-check between multiple sources. When multiple sources provide overlapping metadata for the same provider, scripts use a `SLUG_MERGE_MAP` (or alias-based matching) to merge into the same provider directory, enriching the provider card with info from each source.

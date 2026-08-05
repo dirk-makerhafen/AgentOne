@@ -42,4 +42,4 @@ td1.py
 cert.pem
 key.pem
 # dont git track raw files, they can be downloaded any time.
-docs/providers/raw/
+docs/free-tier-research/raw/
