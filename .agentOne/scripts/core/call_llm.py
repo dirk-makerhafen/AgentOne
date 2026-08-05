@@ -16,7 +16,7 @@ from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
 from openai import OpenAI
 from runtime.rate_limiter import RateLimitChecker, RateLimitError
-
+import re
 
 def run_streaming_query(
     session: Session,
@@ -191,7 +191,8 @@ def run_streaming_query(
         response.reasoning_time = (
             last_reasoning_token_timestamp - first_reasoning_token_timestamp
         )
-
+    response.content = re.sub(r'\s*</parameter>\s?</function>\s?</tool_call>\s*$','',str(response.content))
+        
     if first_token_timestamp and response.finish_reason:
         response.status = ResponseStatus.SUCCESS
     else:

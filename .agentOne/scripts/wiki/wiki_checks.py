@@ -201,6 +201,23 @@ def _is_year_segment(seg: str) -> bool:
     return bool(_YEAR_SEGMENT_RE.match(seg)) and 2000 <= int(seg) <= 2030
 
 
+_YMD_SEGMENT_RE = re.compile(r'^(19|20)\d{6}$')
+
+
+def _is_ymd_segment(seg: str) -> bool:
+    if not _YMD_SEGMENT_RE.match(seg):
+        return False
+    y = int(seg[:4])
+    m = int(seg[4:6])
+    d = int(seg[6:8])
+    return 2000 <= y <= 2030 and 1 <= m <= 12 and 1 <= d <= 31
+
+
+def _looks_like_ymd(seg: str) -> bool:
+    """Check if segment matches YYYYMMDD pattern (without validating month/day)."""
+    return bool(_YMD_SEGMENT_RE.match(seg))
+
+
 def _folder_structure_issues(rel: str) -> list[str]:
     """Return structural problems found in a vault-root-relative path.
 
@@ -208,6 +225,8 @@ def _folder_structure_issues(rel: str) -> list[str]:
     - Multiple year segments: a date folder nested inside another date
       folder, e.g. ``timeline/2020/2020`` or ``timeline/2021/02/2021/02/08``
     - Invalid month/day values in date-stamped paths (e.g. month 13, day 32)
+    - YYYYMMDD segment appearing after year/month (e.g. ``timeline/2020/10/20201023``)
+      - Also validates month/day within the YYYYMMDD segment
     """
     segments = rel.split("/")
     issues: list[str] = []
@@ -223,12 +242,22 @@ def _folder_structure_issues(rel: str) -> list[str]:
                 mm = int(nxt)
                 if mm < 1 or mm > 12:
                     issues.append(f"invalid month '{nxt}' after year '{segments[y]}'")
-                elif y + 2 < len(segments):
-                    nxt2 = segments[y + 2]
-                    if nxt2.isdigit() and len(nxt2) <= 2:
-                        dd = int(nxt2)
-                        if dd < 1 or dd > 31:
-                            issues.append(f"invalid day '{nxt2}' after '{segments[y]}/{nxt}'")
+            # Always check the segment after month for day or YYYYMMDD
+            if y + 2 < len(segments):
+                nxt2 = segments[y + 2]
+                if nxt2.isdigit() and len(nxt2) <= 2:
+                    dd = int(nxt2)
+                    if dd < 1 or dd > 31:
+                        issues.append(f"invalid day '{nxt2}' after '{segments[y]}/{nxt}'")
+                elif _looks_like_ymd(nxt2):
+                    issues.append(f"YYYYMMDD segment '{nxt2}' after year/month '{segments[y]}/{nxt}'")
+                    # Also validate month/day within the YYYYMMDD
+                    ymd_mm = int(nxt2[4:6])
+                    ymd_dd = int(nxt2[6:8])
+                    if ymd_mm < 1 or ymd_mm > 12:
+                        issues.append(f"invalid month '{ymd_mm}' in YYYYMMDD '{nxt2}'")
+                    elif ymd_dd < 1 or ymd_dd > 31:
+                        issues.append(f"invalid day '{ymd_dd}' in YYYYMMDD '{nxt2}'")
     return issues
 
 
