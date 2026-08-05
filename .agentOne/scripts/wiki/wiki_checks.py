@@ -9,7 +9,7 @@ from typing import Any
 WIKILINK_RE = re.compile(r'\[\[([^\[\]]+?)(?:\|([^\[\]]*?))?\]\]')
 FRONTMATTER_RE = re.compile(r'^---\s*\n(.*?)\n---', re.DOTALL)
 REQUIRED_FM_FIELDS = ('type', 'date', 'updated', 'tags', 'sources')
-CHECK_NAMES = ("dead_wikilinks", "link_format", "orphan_pages", "missing_index", "stale_index_entries", "frontmatter", "folder_structure")
+CHECK_NAMES = ("dead_wikilinks", "link_format", "orphan_pages", "missing_index", "stale_index_entries", "frontmatter", "folder_structure", "encoding")
 
 
 def _resolve_folder(folder: str | None, session: Any | None) -> str | None:
@@ -192,6 +192,67 @@ def _autofix_link(fp: Path, old_link: str, new_link: str) -> bool:
         return False
     fp.write_text(new_text, encoding="utf-8")
     return True
+
+
+def _fix_utf8(fp: Path) -> tuple[bool, str | None]:
+    """Attempt to fix broken UTF-8 in a file.
+
+    Returns (modified, error_message). On success with modifications,
+    error_message is None. On failure, returns (False, error).
+    """
+    try:
+        raw = fp.read_bytes()
+    except Exception as e:
+        return (False, f"read error: {e}")
+
+    # First, try to decode as UTF-8 (strict) - if it works, nothing to fix
+    try:
+        raw.decode("utf-8")
+        return (False, None)  # Already valid UTF-8
+    except UnicodeDecodeError:
+        pass
+
+    # Try common fixes
+    fixed = None
+
+    # 1. Replace invalid bytes with replacement character
+    try:
+        fixed = raw.decode("utf-8", errors="replace")
+    except Exception:
+        pass
+
+    # 2. If that didn't produce clean text, try latin-1 -> utf-8 (common mojibake)
+    if fixed is None or "�" in fixed:
+        try:
+            # latin-1 never fails, maps bytes 0-255 directly to unicode
+            as_latin1 = raw.decode("latin-1")
+            # Re-encode to UTF-8
+            fixed = as_latin1
+        except Exception:
+            pass
+
+    # 3. Try cp1252 (Windows) -> utf-8
+    if fixed is None or "�" in fixed:
+        try:
+            fixed = raw.decode("cp1252")
+        except Exception:
+            pass
+
+    if fixed is None:
+        return (False, "could not decode with any strategy")
+
+    # Check if the fixed version is actually different and valid
+    try:
+        fixed.encode("utf-8")
+    except Exception as e:
+        return (False, f"fixed version still invalid: {e}")
+
+    # Write back
+    try:
+        fp.write_text(fixed, encoding="utf-8")
+        return (True, None)
+    except Exception as e:
+        return (False, f"write error: {e}")
 
 
 _YEAR_SEGMENT_RE = re.compile(r'^[12]\d{3}$')
@@ -782,6 +843,52 @@ def wiki_check(
                 "items": capped,
             })
 
+        if _run_check("encoding"):
+            encoding_issues: list[dict] = []
+            for fp in md_files:
+                rel = fp.relative_to(root).as_posix()
+                try:
+                    fp.read_text(encoding="utf-8")
+                except UnicodeDecodeError as e:
+                    item: dict[str, Any] = {
+                        "file": rel,
+                        "issue": f"UTF-8 decode error: {e.reason} at byte {e.start}",
+                    }
+                    if autofix:
+                        modified, err = _fix_utf8(fp)
+                        item["autofixed"] = modified
+                        if err:
+                            item["autofix_error"] = err
+                        else:
+                            item["can_autofix"] = True
+                    else:
+                        item["can_autofix"] = True
+                    encoding_issues.append(item)
+                except Exception as e:
+                    encoding_issues.append({
+                        "file": rel,
+                        "issue": f"read error: {e}",
+                    })
+            if autofix:
+                for item in encoding_issues:
+                    if not item.get("can_autofix") or item.get("autofixed") is not None:
+                        continue
+                    fp = root / item["file"]
+                    modified, err = _fix_utf8(fp)
+                    item["autofixed"] = modified
+                    if err:
+                        item["autofix_error"] = err
+            capped = _cap(encoding_issues, effective_limit)
+            omitted_total += len(encoding_issues) - len(capped)
+            findings.append({
+                "check": "encoding",
+                "total": len(md_files),
+                "wrong": len(encoding_issues),
+                "correct": len(md_files) - len(encoding_issues),
+                "returned": len(capped),
+                "items": capped,
+            })
+
         total_wrong = sum(f["wrong"] for f in findings)
         returned = sum(len(f["items"]) for f in findings)
         total_correct = sum(f["correct"] for f in findings)
@@ -976,7 +1083,7 @@ if __name__ == "__main__":
                              f"Valid: {', '.join(CHECK_NAMES)}")
     parser.add_argument("--files", "-f", type=str, default="",
                         help="Comma-separated file paths/globs to scope checks to")
-    parser.add_argument("--autofix", action="store_true", help="Auto-fix dead wikilinks and source→sources")
+    parser.add_argument("--autofix", action="store_true", help="Auto-fix dead wikilinks, source→sources, and UTF-8 encoding issues")
     args = parser.parse_args()
 
     # Try current session; if none exists, pass None and skip resolve
