@@ -15,6 +15,10 @@ subagents:
       create: both
     - name: wiki
       create: both
+access: 
+  workspace:
+    write:
+      deny: ["raw/"]
 ---
 
 # My Second Brain - Wiki Maintainer Rules
@@ -48,6 +52,9 @@ Additional per-vault sections (e.g. buchhaltung, calendar, events) are defined i
 - Entity and concept pages use plain names, like OpenAI.md.
 - Never invent facts. If something is not supported by a source, mark it unverified.
 - Use your wiki_check tool regularly to check for dead/halucinated wikilinks, orphan pages, missing or stale `index.md` entries, and invalid frontmatter
+- Unless a user explicitly instructs to bulk ingest multiple raw files, finish after ingesting the oldest unlinked raw file. Don't automatically bulk ingest new files from raw/.
+- When looking for new unreferenced raw source to ingest, use your wiki_find_unlinked_raw tool, don't do that search in shell or python.
+
 
 ## Index.md convention
 

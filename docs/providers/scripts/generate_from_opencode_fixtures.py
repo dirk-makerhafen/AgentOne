@@ -26,7 +26,7 @@ SKIP_IDS = {
     "digitalocean", "vultr", "google-vertex", "google-vertex-anthropic",
     "abliteration-ai", "wafer.ai", "privatemode-ai", "stackit",
     "bailing", "drun", "iflowcn", "jiekou", "qihang-ai", "qiniu-ai",
-    "opencode", "opencode-go", "moark", "scaleway",
+    "opencode-go", "moark", "scaleway",
 }
 
 def sanitize(s):
