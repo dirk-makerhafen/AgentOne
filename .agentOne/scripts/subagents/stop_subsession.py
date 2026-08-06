@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.utils import timezone
+
 from runtime.session.session import Session
 from server.models.sessions.session import SessionModel
 
@@ -24,8 +26,11 @@ def stop_subsession(_session: Session, sessionname: str) -> dict[str, Any]:
         parent_session=_session.model,
         name=sessionname,
         is_active=True,
-    ).update(is_active=False)
+    ).update(is_active=False, last_active_at=timezone.now())
 
     if updated:
+        from runtime.events import publish_model_event
+        child = SessionModel.objects.get(parent_session=_session.model, name=sessionname)
+        publish_model_event(child, "update")
         return {"result": f"Subsession '{sessionname}' ended"}
     return {"error": f"No active subsession '{sessionname}' found"}

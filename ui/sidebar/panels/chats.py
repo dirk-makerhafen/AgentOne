@@ -1,6 +1,8 @@
 from __future__ import annotations
+from datetime import timedelta
 from typing import TYPE_CHECKING
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
+from django.utils import timezone
 from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
@@ -12,6 +14,39 @@ if TYPE_CHECKING:
     from ui.sidebar.sidebar import SidebarView
     from ui.app import UiApp
     from ui.app_view import UiAppView
+
+
+RECENT_SUBSESSION_WINDOW = timedelta(minutes=30)
+MAX_INACTIVE_SUBSESSIONS = 5
+
+
+def _cap_inactive_children(
+    children: list[SessionModel],
+    max_inactive: int = MAX_INACTIVE_SUBSESSIONS,
+) -> list[SessionModel]:
+    """Show every active child plus the most-recently-active inactive ones,
+    bounded to *max_inactive* inactive rows."""
+    active = [c for c in children if c.is_active]
+    inactive = [c for c in children if not c.is_active]
+    inactive.sort(key=lambda c: c.last_active_at or c.created_at, reverse=True)
+    inactive = inactive[:max_inactive]
+    return sorted(active + inactive, key=lambda c: c.created_at, reverse=True)
+
+
+def visible_child_sessions(
+    session: SessionModel,
+    window: timedelta = RECENT_SUBSESSION_WINDOW,
+    max_inactive: int = MAX_INACTIVE_SUBSESSIONS,
+) -> list[SessionModel]:
+    """Children of *session* to show in the sidebar: active ones plus inactive
+    ones that were active within *window*, capped at *max_inactive* inactive."""
+    cutoff = timezone.now() - window
+    children = list(
+        SessionModel.objects.filter(parent_session=session).filter(
+            Q(is_active=True) | Q(last_active_at__gte=cutoff),
+        ).select_related("latest_session_version__agent").order_by("-created_at")
+    )
+    return _cap_inactive_children(children, max_inactive=max_inactive)
 
 
 class SidebarPanelChat(ModelView):
@@ -214,7 +249,7 @@ class SidebarPanelChat(ModelView):
 
     @property
     def active_children(self) -> list:
-        return list(self.subject.child_sessions.all())
+        return visible_child_sessions(self.subject)
 
     @property
     def child_tree(self) -> list[tuple]:
@@ -226,10 +261,7 @@ class SidebarPanelChat(ModelView):
     def _build_subtree(self, session, depth, result):
         if depth >= 10:
             return
-        if depth == 0:
-            children = self.subject.child_sessions.all()
-        else:
-            children = SessionModel.objects.filter(parent_session=session, is_active=True).select_related('latest_session_version__agent').order_by('-created_at')
+        children = visible_child_sessions(session)
         for child in children:
             model_name = ""
             try:
@@ -409,7 +441,7 @@ class SidebarPanelChats(ModelView):
 
     def _base_query(self):
         qs = self.subject.sessions.root().filter(parent_session__isnull=True)
-        qs = qs.prefetch_related(Prefetch('child_sessions', queryset=SessionModel.objects.filter(is_active=True).select_related('latest_session_version__agent').order_by('-created_at')))
+        qs = qs.prefetch_related(Prefetch('child_sessions', queryset=SessionModel.objects.filter(Q(is_active=True) | Q(last_active_at__gte=timezone.now() - RECENT_SUBSESSION_WINDOW)).select_related('latest_session_version__agent').order_by('-created_at')))
         if self._show_archived:
             return qs.filter(is_archived=True).order_by('-is_pinned', '-created_at')
         return qs.filter(is_archived=False).order_by('-is_pinned', '-created_at')
@@ -424,7 +456,7 @@ class SidebarPanelChats(ModelView):
             base = self.subject.sessions.root().filter(parent_session__isnull=True)
         else:
             base = SessionModel.objects.filter(parent_project_id=project_id, parent_session__isnull=True)
-        base = base.prefetch_related(Prefetch('child_sessions', queryset=SessionModel.objects.filter(is_active=True).select_related('latest_session_version__agent').order_by('-created_at')))
+        base = base.prefetch_related(Prefetch('child_sessions', queryset=SessionModel.objects.filter(Q(is_active=True) | Q(last_active_at__gte=timezone.now() - RECENT_SUBSESSION_WINDOW)).select_related('latest_session_version__agent').order_by('-created_at')))
         if self._show_archived:
             base = base.filter(is_archived=True)
         else:

@@ -394,8 +394,7 @@ def wiki_check(
 
     Files under ``raw/`` are excluded from all checks (immutable sources).
 
-    Results are capped to *limit* entries per check category. Use
-    ``limit=0`` to return all findings.
+    Results are capped to *limit* entries per check category to prevent excessive token usage.
 
     Fix suggestions (``suggestion`` / ``can_autofix`` keys) are included on every
     dead wikilink whose filename matches exactly one file in the vault.
@@ -1052,7 +1051,7 @@ def wiki_check(
         if autofix_count > 0:
             message += f" {autofix_count} auto-fixed."
         if omitted_total > 0:
-            message += f" ({omitted_total} more omitted, use limit=0 to see all)"
+            message += f" ({omitted_total} more omitted"
         message += f" [{summary}]"
 
         return (True, {
@@ -1101,7 +1100,7 @@ def wiki_find_unlinked_raw(
     are not linked anywhere are reported, sorted oldest-first by the
     date embedded in their folder structure.
 
-    Results are capped to *limit* entries.  Use ``limit=0`` for all. Limit output to number of items you actually want to handle.
+    Results are capped to *limit* entries to prevent excessive token usage.
 
     Args:
         _session: The calling agent's session (bound automatically).
@@ -1180,7 +1179,7 @@ def wiki_find_unlinked_raw(
 
         message = f"{len(unlinked)} unlinked of {len(raw_paths)} raw files."
         if omitted > 0:
-            message += f" ({omitted} more omitted, use limit=0 to see all)"
+            message += f" ({omitted} more omitted)"
 
         return (True, {
             "status": "success",

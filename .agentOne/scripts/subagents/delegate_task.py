@@ -58,7 +58,7 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
     session_name = f"p{_session.model.pk}:{agentname}:{int(time())}"
     child_sv = subagent_version.get_or_create_session(
         name=session_name,
-        description=prompt,
+        description=prompt[:100] + "..." if len(prompt) > 100 else "",
         workspace=_session.workspace,
         parent_session_version=_session.get_version_model(),
         session_type=SessionType.SUBTASK_DELEGATE,

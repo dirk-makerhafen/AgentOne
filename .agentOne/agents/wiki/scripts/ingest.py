@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 from datetime import datetime
+import json
 
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType
@@ -8,8 +9,10 @@ from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 
 
-def ingest_next(_session: Session, limit=1) -> None:
-    _, res = _session.get_tool("find_unlinked_raw").call(limit=limit)
+def ingest_next(_session: Session, limit=1) -> str:
+    success, res = _session.get_tool("find_unlinked_raw").call(limit=limit)
+    if not success:
+        return json.dumps(res)
     if res["items"]:
         results = []
         for item in res["items"]:

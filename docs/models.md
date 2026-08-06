@@ -125,7 +125,8 @@ File: `server/models/sessions/session.py`
 | `name` | `CharField(255)` | Session name |
 | `turn_count` | `IntegerField(default=0)` | User message count |
 | `unattended_turn_count` | `IntegerField(default=0)` | Auto-turn count |
-| `is_active` | `BooleanField(default=True)` | |
+| `is_active` | `BooleanField(default=True)` | Set False when a subsession calls `final_result` or is stopped; any new user message reactivates it |
+| `last_active_at` | `DateTimeField(null=True)` | Last activity (message arrival / final_result) — drives sidebar + `list_subsessions` recency |
 | `parent_session` | `FK(self, CASCADE)` | Parent session |
 | `latest_session_version` | `FK(SessionVersionModel, CASCADE)` | Current version pointer |
 

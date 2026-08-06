@@ -70,6 +70,27 @@ def _looks_like_markdown(content: str) -> bool:
     return markers >= 2
 
 
+def _mark_subsession_complete(_session: Session) -> None:
+    """A subsession that called ``final_result`` is done — mark it inactive.
+
+    Main (parentless) sessions stay active; only child sessions are
+    deactivated so the sidebar and ``list_subsessions`` can drop them once
+    they fall out of the recent window.
+    """
+    if not _is_subtask_execution(_session):
+        return
+    from django.utils import timezone
+    from runtime.events import publish_model_event
+    from server.models.sessions.session import SessionModel
+
+    SessionModel.objects.filter(pk=_session.model.pk).update(
+        is_active=False,
+        last_active_at=timezone.now(),
+    )
+    _session.model.is_active = False
+    publish_model_event(_session.model, "update")
+
+
 def decide_next_step(_session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any) -> Message:
     _session.count_turn()
     _session.count_unattended_turn()
@@ -81,6 +102,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         return message
 
     if kwargs.get("has_final_result"):
+        _mark_subsession_complete(_session)
         return message
 
 

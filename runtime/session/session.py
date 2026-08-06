@@ -588,6 +588,8 @@ class Session:
         if not parts:
             raise Exception("No message or message parts provided")
 
+        self._mark_active()
+
         is_command = False
         cmd = ""
         parsed_kwargs: dict = {}
@@ -641,6 +643,26 @@ class Session:
                 self._stop_active_ingest_calls()
 
         return bound_task.delay(**call_kwargs)
+
+    def _mark_active(self) -> None:
+        """Mark the session active and stamp the last-activity timestamp.
+
+        Any incoming message (user or subagent) reactivates an inactive
+        session and refreshes ``last_active_at``, which the sidebar and
+        ``list_subsessions`` use to decide which inactive sessions to show.
+        """
+        from django.utils import timezone
+        from runtime.events import publish_model_event
+
+        now = timezone.now()
+        was_inactive = not self.model.is_active
+        SessionModel.objects.filter(pk=self.model.pk).update(
+            is_active=True,
+            last_active_at=now,
+        )
+        self.model.is_active = True
+        if was_inactive:
+            publish_model_event(self.model, "update")
 
     def _has_active_call(self) -> bool:
         """Return True if there is a non-ended ingest or process_turn call
