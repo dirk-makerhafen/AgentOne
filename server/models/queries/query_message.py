@@ -106,6 +106,7 @@ class QueryMessage(BaseModel):
        
 
         content_parts: list[dict[str, Any]] = []
+        reasoning_parts: list[str] = []
         tool_call_dicts: list[dict[str, Any]] = []
         tool_call_objects: list[AgentTaskCall] = []
         has_user_toolcall = False
@@ -120,6 +121,10 @@ class QueryMessage(BaseModel):
                 else:
                     has_user_toolcall = True
                     content_parts.extend(part_contents)
+            elif part.source_message_part and part.source_message_part.type == MessagePartType.REASONING and part.source_message_part.content:
+                rc = part.source_message_part.content.get()
+                if rc:
+                    reasoning_parts.append(rc)
             else:
                 content_parts.extend(part_contents)
 
@@ -172,15 +177,8 @@ class QueryMessage(BaseModel):
         # assistant messages when thinking mode is active.
         # Only include when the model requires this (requires_reasoning_echo
         # in provider YAML manifests).
-        if self.role == MessageRole.ASSISTANT:
-            try:
-                if requires_reasoning_echo:
-                    reasoning = self.source_message.response.reasoning
-                    if reasoning:
-                        message["reasoning_content"] = reasoning
-            except Exception as e:
-                print("Failed to reasoning_content ", e)
-                pass
+        if self.role == MessageRole.ASSISTANT and requires_reasoning_echo and reasoning_parts:
+            message["reasoning_content"] = "".join(reasoning_parts)
 
         """Rough token estimate (OpenAI billing approximation)."""
         if isinstance(message, str):

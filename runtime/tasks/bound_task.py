@@ -6,10 +6,12 @@ import subprocess
 import sys
 from contextlib import contextmanager
 from pathlib import Path
+import traceback
 from typing import TYPE_CHECKING, Any
 
 from runtime.runtime_folder import RuntimeFolder
-from server.models.enums.task_enums import TaskCallStatusDetail
+from server.models.enums.task_enums import TaskCallStatusDetail, TaskType
+from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_instance import TaskInstance
 
 if TYPE_CHECKING:
@@ -49,8 +51,8 @@ class BoundTask:
 
     def __init__(self, session: Session, task_definition_version: TaskDefinitionVersion) -> None:
         self.session = session
-        self.task_definition_version = task_definition_version
-        self.task_definition = task_definition_version.task_definition
+        self.task_definition_version:TaskDefinitionVersion = task_definition_version
+        self.task_definition:TaskDefinition = task_definition_version.task_definition or TaskDefinition()
 
     def call(self, *args: Any, **kwargs: Any) -> Any:
         """
@@ -125,9 +127,16 @@ class BoundTask:
             else file_path.parent
         )
         with _chdir(cwd):
-            if self.task_definition_version.bound:
-                return func(self.session, *args, **kwargs)
-            return func(*args, **kwargs)
+            try:
+                if self.task_definition_version.bound:
+                    return func(self.session, *args, **kwargs)
+                return func(*args, **kwargs)
+            except Exception as e:
+                if self.task_definition_version.task_type == TaskType.TASK: # internal tasks fail
+                    raise e
+                # commands and tools get captured
+                return (False, {'status': 'exception', 'message': traceback.format_exc()})
+
 
     def _filesystem_access_block(self, *args: Any, **kwargs: Any) -> str | None:  # pylint: disable=too-many-locals
         """Enforce the workspace access policy for this tool call.

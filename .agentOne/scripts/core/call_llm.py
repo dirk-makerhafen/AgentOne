@@ -41,7 +41,7 @@ def run_streaming_query(
         A saved Response model with content, reasoning, tool_calls,
         token usage, and timing metrics.
     """
-    SAVE_INTERVAL = 0.150  # persist progress every 150ms
+    SAVE_INTERVAL = 0.500  # persist progress every 500ms
 
     last_save_time = time.time()
     first_token_timestamp: float | None = None

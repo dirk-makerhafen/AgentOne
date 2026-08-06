@@ -345,9 +345,13 @@ def _recover_stuck_calls() -> None:
     from server.tasks.task_dispatcher import celery_delay
 
     # 1. ACTIVE_QUEUED calls — recover or cancel:
-    #    a. Root task has ended → the call can never start (``start_running``
-    #       guard rejects ACTIVE_QUEUED → ACTIVE_RUNNING once the root turn is
-    #       done).  Re-queuing would loop forever, so fail its runs and cancel.
+    #    a. Root task was cancelled/stopped → the call can never start
+    #       (``start_running`` rejects ACTIVE_QUEUED → ACTIVE_RUNNING once the
+    #       root turn was aborted).  Re-queuing would loop forever, so fail its
+    #       runs and cancel.  A root that ended SUCCESS/FAILURE does NOT block
+    #       activation — a slash-command turn's short root CHAIN can end while
+    #       the agent loop continues underneath — so such calls are treated
+    #       like any other orphan below.
     #    b. No run → re-queue and re-dispatch.  pick_up() → AgentTaskRun.create()
     #       is synchronous, so any call stuck in ACTIVE_QUEUED without a run is
     #       immediately orphaned.
@@ -356,7 +360,10 @@ def _recover_stuck_calls() -> None:
     ).select_related("session_root_task"):
         try:
             root = call.session_root_task
-            if root and root.status == TaskCallStatus.ENDED:
+            if root and root.status == TaskCallStatus.ENDED and root.status_detail in (
+                TaskCallStatusDetail.ENDED_CANCELLED,
+                TaskCallStatusDetail.ENDED_STOPPED,
+            ):
                 AgentTaskRun.objects.filter(
                     agent_task_call=call,
                 ).exclude(
@@ -367,7 +374,7 @@ def _recover_stuck_calls() -> None:
                     updated_at=timezone.now(),
                 )
                 if _force_end_call(call):
-                    print(f"[recovery] cancelled ACTIVE_QUEUED call {call.pk} — root task {root.pk} ended")
+                    print(f"[recovery] cancelled ACTIVE_QUEUED call {call.pk} — root task {root.pk} cancelled/stopped")
                 continue
             if not AgentTaskRun.objects.filter(agent_task_call=call).exists():
                 if TaskCallStateMachine.re_queue(call.pk):

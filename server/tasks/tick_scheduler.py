@@ -2,10 +2,12 @@
 Celery beat periodic task handling the 10-second time-driven wakeups:
 
   1. Data flow dispatch (streams/sets) and collection propagation
-  2. WAITING_RATELIMIT - re-check LLM capacity, release calls in FIFO order
-  3. WAITING_RETRY     - release calls whose dont_start_before has passed
-  4. NEW (scheduled)   - release calls with dont_start_before in the past
-  5. Cron job dispatch
+  2. WAITING_QUEUE     - release calls waiting to start (normal-path fallback
+                         for the drain-in-``_on_taskcall_ended`` path)
+  3. WAITING_RATELIMIT - re-check LLM capacity, release calls in FIFO order
+  4. WAITING_RETRY     - release calls whose dont_start_before has passed
+  5. NEW (scheduled)   - release calls with dont_start_before in the past
+  6. Cron job dispatch
 
 Error recovery and startup cleanups live in ``recovery_scheduler.py``
 (``tasks.tick_scheduler_recovery`` every 60s, ``tasks.startup_cleanup`` once
@@ -42,8 +44,81 @@ def tick_scheduler() -> None:
     _release_scheduled_calls()
     _release_rate_limited_calls()
     _release_retry_calls()
+    _release_queued_calls()
 
     _process_cron_jobs()
+
+
+def _release_queued_calls() -> None:
+    """Release WAITING_QUEUE calls — the normal-path fallback for the
+    drain-in-``_on_taskcall_ended`` path.
+
+    Catches queue entries left behind when no ending call triggers the drain
+    (e.g. a call parked by the session queue strategy in ``session.py`` while
+    another turn is still active, whose blocking calls then never end).  The
+    per-TaskInstance parallel limit in ``start_new_taskrun`` prevents
+    concurrent runs, so a call that cannot start yet (its TI slot is held)
+    simply stays queued and is retried on the next tick.
+    """
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from runtime.tasks.call_scheduler import CallScheduler
+
+    for call in AgentTaskCall.objects.filter(
+        status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+    ).order_by("priority", "created_at"):
+        try:
+            # A call whose serialized arguments reference a deleted AgentTaskCall
+            # can never create a run (AgentTaskRun.create raises DoesNotExist).
+            # Cancel it instead of erroring on every tick.
+            if _has_dangling_call_refs(call.carguments_json):
+                if _cancel_dangling_queue_call(call.pk):
+                    print(f"[scheduler] cancelled WAITING_QUEUE call {call.pk} — dangling arg reference")
+                continue
+            CallScheduler.start_new_taskrun(call.pk)
+        except Exception as e:
+            print(f"[scheduler] error releasing queued call {call.pk}: {e}")
+
+
+def _has_dangling_call_refs(json_data: Any) -> bool:
+    """Check whether *json_data* contains a ``{"_type": "AgentTaskCall", "pk": N}``
+    reference to a call that no longer exists.
+
+    Such a call can never create a run — ``AgentTaskRun.create`` raises
+    ``DoesNotExist`` when resolving the reference — so the scheduler cancels it.
+    """
+    from server.models.tasks.agent_task_call import AgentTaskCall
+
+    if isinstance(json_data, dict):
+        if json_data.get("_type") == "AgentTaskCall":
+            return not AgentTaskCall.objects.filter(pk=json_data.get("pk")).exists()
+        return any(_has_dangling_call_refs(v) for v in json_data.values())
+    if isinstance(json_data, (list, tuple)):
+        return any(_has_dangling_call_refs(v) for v in json_data)
+    return False
+
+
+def _cancel_dangling_queue_call(call_pk: int) -> bool:
+    """Cancel a WAITING_QUEUE call whose args reference a deleted call."""
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from server.models.tasks.agent_task_run import AgentTaskRun
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from runtime.tasks.call_fsm import TaskCallStateMachine
+    from runtime.tasks.call_scheduler import CallScheduler
+    from django.utils import timezone
+
+    if not TaskCallStateMachine.transition(
+        call_pk, TaskCallStatusDetail.WAITING_QUEUE, TaskCallStatusDetail.ENDED_CANCELLED,
+        extra={"ended_at": timezone.now()},
+    ):
+        return False
+    last_run = AgentTaskRun.objects.filter(
+        agent_task_call_id=call_pk,
+    ).order_by("-pk").first()
+    CallScheduler._on_taskcall_ended(
+        call_pk, last_run.pk if last_run else 0, TaskCallStatusDetail.ENDED_CANCELLED,
+    )
+    return True
 
 
 def _release_rate_limited_calls() -> None:

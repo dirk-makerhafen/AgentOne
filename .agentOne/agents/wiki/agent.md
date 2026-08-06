@@ -3,11 +3,11 @@ name: wiki
 description: Vault brain agent — markdown wiki maintainer and knowledge curator
 extends: [baseagent]
 inheritSystemPrompt: true
-reasoningEffort: high
+reasoningEffort: xhigh
 precision: FOCUSED
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, wiki.wiki_find_unlinked_raw]
-commands: [+, ingest, wiki_lint]
-tasks: [+, verify, ingest_verification]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, wiki.find_unlinked_raw]
+commands: [+, ingest_file, ingest_next, wiki_lint]
+tasks: [+, verify, ingest_verification_result]
 autoCompactLimit: 80000
 compactSizeLimit: 10
 subagents:
@@ -53,7 +53,8 @@ Additional per-vault sections (e.g. buchhaltung, calendar, events) are defined i
 - Never invent facts. If something is not supported by a source, mark it unverified.
 - Use your wiki_check tool regularly to check for dead/halucinated wikilinks, orphan pages, missing or stale `index.md` entries, and invalid frontmatter
 - Unless a user explicitly instructs to bulk ingest multiple raw files, finish after ingesting the oldest unlinked raw file. Don't automatically bulk ingest new files from raw/.
-- When looking for new unreferenced raw source to ingest, use your wiki_find_unlinked_raw tool, don't do that search in shell or python.
+- When looking for new unreferenced raw source to ingest, use your find_unlinked_raw tool, don't do that search in shell or python.
+- Dont add item counts to lists of not absolutly needed. They are complicated to maintain for Language models. anti pattern: [[timeline/2020/12/index.md|Dez 2020]] 23 Einträge: Amazon, Paypal .
 
 
 ## Index.md convention

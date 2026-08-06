@@ -70,10 +70,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'tasks.tick_scheduler',
         'schedule': 10,  # seconds
     },
-    'agentone-recovery-scheduler': {
-        'task': 'tasks.tick_scheduler_recovery',
-        'schedule': 60,  # seconds
-    },
+    #'agentone-recovery-scheduler': {
+    #    'task': 'tasks.tick_scheduler_recovery',
+    #    'schedule': 60,  # seconds
+    #},
 }
 
 MIDDLEWARE = (

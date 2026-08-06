@@ -1,16 +1,20 @@
 ---
 commands:
-  - name: ingest
+  - name: ingest_next
     file: ingest.py
-    function: ingest
+    function: ingest_next
+    bound: True
+  - name: ingest_file
+    file: ingest.py
+    function: ingest_file
     bound: True
 tasks:
   - name: verify
     file: ingest.py
     function: verify
     bound: True
-  - name: ingest_verification
+  - name: ingest_verification_result
     file: ingest.py
-    function: ingest_verification
+    function: ingest_verification_result
     bound: True
 ---

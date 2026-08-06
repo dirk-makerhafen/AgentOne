@@ -76,7 +76,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
         {
             "type": MessagePartType.MESSAGE, 
             "content_type": MessageContentType.TEXT, 
-            "content": f"It is now {now}, your working dir is {working_dir}\n"
+            "content": f"It is now {now}, your working dir is '{working_dir}'.\n"
         },
         {
             "type": MessagePartType.MESSAGE, 

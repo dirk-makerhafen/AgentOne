@@ -275,17 +275,21 @@ class TaskCallStateMachine:
         ``QUEUED → ACTIVE``.  If this returns ``False`` the caller must roll
         the taskrun back to ``QUEUED``.
 
-        Includes a defensive guard: if this call has a root task
-        (``session_root_task``) and that root is already ``ENDED``, the
-        transition is rejected.  Prevents child calls from activating
-        after their root turn was cancelled (race safety).
+        Defensive guard: the transition is rejected only when the root task
+        (``session_root_task``) was cancelled or stopped — a child call must
+        not activate after its root turn was aborted (race safety).  A root
+        that ended ``SUCCESS``/``FAILURE`` does NOT block activation: the root
+        call can legitimately finish while its descendants are still queued to
+        run (e.g. a slash-command turn whose short ``ingest_slash_command``
+        CHAIN ends as soon as the command is handled, while the agent loop
+        ``ingest_user_message`` → ``process_turn`` continues underneath it).
         """
-        extra_filter = Q(session_root_task__status__in=[
-            TaskCallStatus.NEW,
-            TaskCallStatus.WAITING,
-            TaskCallStatus.ACTIVE,
-            TaskCallStatus.HALTED,
-        ]) | Q(session_root_task__isnull=True)
+        extra_filter = Q(session_root_task__isnull=True) | ~Q(
+            session_root_task__status_detail__in=[
+                TaskCallStatusDetail.ENDED_CANCELLED,
+                TaskCallStatusDetail.ENDED_STOPPED,
+            ],
+        )
 
         return TaskCallStateMachine.transition(
             call_id,

@@ -71,7 +71,7 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
         {
             "type": MessagePartType.MESSAGE, 
             "content_type": MessageContentType.TEXT, 
-            "content": f"It is now {now}, your working dir is {working_dir}\n"
+            "content": f"It is now {now}, your working dir is '{working_dir}'.\n"
         },
         {
             "type": MessagePartType.MESSAGE, 
@@ -89,7 +89,7 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
     taskcall = child_session.add_user_message(parts=parts)
 
     if blocking:
-        return {"result": taskcall, "session_pk": child_session.model.pk}
+        return taskcall
 
     _session.get_task("ingest_subagent_result").delay(
         child_session_pk=child_session.model.pk,

@@ -110,7 +110,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
             tool_call_parts = []
             for part in message.parts.all():
                 part: MessagePart
-                if part.type == MessagePartType.REASONING:
+                if (_session.aimodel and not _session.aimodel.requires_reasoning_echo) and part.type == MessagePartType.REASONING:
                     continue
                 query_message_parts.append(QueryMessagePart(source_message_part=part, tags=["ChatMessage", f"{message.role}"]))
                 if part.tool_call and part.tool_call.status == TaskCallStatus.ENDED:
@@ -137,14 +137,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         
         for index, message in enumerate(messages):
             message.save()
-
-        d = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()[:-9]
-        #query.add_message(
-        #    role=MessageRole.USER,
-        #    content_type=MessageContentType.TEXT,
-        #    content=f"Your working dir is '{_session.workspace.path}', it is {d}",
-        #    template_data={},
-        #)
+            
         from runtime.events import publish_model_event
         publish_model_event(query, "create")
         return query

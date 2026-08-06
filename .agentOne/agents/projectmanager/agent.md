@@ -18,6 +18,8 @@ subagents:
     create: agent
   - name: wiki
     create: agent
+  - name: AgentOne
+    create: user
 ---
 
 ## Role

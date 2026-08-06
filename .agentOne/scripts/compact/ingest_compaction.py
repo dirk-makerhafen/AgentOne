@@ -91,7 +91,7 @@ def ingest_compaction(
     compaction_message.add_part(
         type=MessagePartType.COMPACTION,
         content_type=MessageContentType.TEXT,
-        content=f"It is now {now}, your working dir is {working_dir}\n",
+        content=f"It is now {now}, your working dir is '{working_dir}'.\n",
     )
     compaction_message.add_part(
         type=MessagePartType.COMPACTION, 

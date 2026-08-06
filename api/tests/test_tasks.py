@@ -802,7 +802,7 @@ class TestRecoverStuckCalls:
         )
 
     def test_zombie_call_with_ended_root_is_cancelled(self, db):
-        """ACTIVE_QUEUED call whose root ended → cancelled, run failed, no redispatch."""
+        """ACTIVE_QUEUED call whose root was cancelled → cancelled, run failed, no redispatch."""
         from server.tasks.recovery_scheduler import _recover_stuck_calls
 
         session, sv, td, tdv, ti = self._make_setup()
@@ -810,7 +810,7 @@ class TestRecoverStuckCalls:
         root = self._make_call(ti, td, tdv, session, sv, root=None)
         AgentTaskCall.objects.filter(pk=root.pk).update(
             status=TaskCallStatus.ENDED,
-            status_detail=TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            status_detail=TaskCallStatusDetail.ENDED_CANCELLED,
             ended_at=None,
         )
         root.refresh_from_db()
@@ -836,7 +836,7 @@ class TestRecoverStuckCalls:
         mock_dispatch.assert_not_called()
 
     def test_zombie_call_with_no_run_is_cancelled(self, db):
-        """ACTIVE_QUEUED call (no run) with ended root → cancelled, not re-queued."""
+        """ACTIVE_QUEUED call (no run) with cancelled root → cancelled, not re-queued."""
         from server.tasks.recovery_scheduler import _recover_stuck_calls
 
         session, sv, td, tdv, ti = self._make_setup()
@@ -844,7 +844,7 @@ class TestRecoverStuckCalls:
         root = self._make_call(ti, td, tdv, session, sv, root=None)
         AgentTaskCall.objects.filter(pk=root.pk).update(
             status=TaskCallStatus.ENDED,
-            status_detail=TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            status_detail=TaskCallStatusDetail.ENDED_CANCELLED,
             ended_at=None,
         )
         root.refresh_from_db()
@@ -915,6 +915,196 @@ class TestRecoverStuckCalls:
         assert ghost.status == TaskCallStatus.ENDED
         assert ghost.status_detail == TaskCallStatusDetail.ENDED_CANCELLED
         mock_start.assert_not_called()
+
+
+@pytest.mark.django_db
+class TestTickReleaseQueuedCalls:
+    """Normal 10s tick releases WAITING_QUEUE calls without recovery."""
+
+    def _make_setup(self):
+        agent = AgentModel.objects.create(name='tick-agent')
+        session = SessionModel.objects.create(name='tick-session')
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+        td = TaskDefinition.objects.create(name='tick-task')
+        tdv = TaskDefinitionVersion.objects.create(
+            task_definition=td, task_type=TaskType.TOOL,
+            description='tick-task', function_schema={},
+        )
+        ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        return session, sv, td, tdv, ti
+
+    def _make_queued_call(self, ti, td, tdv, session, sv, carguments=None):
+        return AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json=carguments or {},
+            requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            session_root_task=None,
+            status=TaskCallStatus.WAITING,
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+        )
+
+    def test_releases_plain_queued_call(self, db):
+        """A plain WAITING_QUEUE call is released by the tick."""
+        from server.tasks.tick_scheduler import _release_queued_calls
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+        call = self._make_queued_call(ti, td, tdv, session, sv)
+
+        with patch.object(CallScheduler, 'start_new_taskrun') as mock_start:
+            _release_queued_calls()
+
+        mock_start.assert_called_once_with(call.pk)
+
+    def test_cancels_queued_call_with_dangling_ref(self, db):
+        """WAITING_QUEUE call referencing a deleted call → cancelled, not released."""
+        from server.tasks.tick_scheduler import _release_queued_calls
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+        ghost = self._make_queued_call(
+            ti, td, tdv, session, sv,
+            carguments={"_type": "AgentTaskCall", "pk": 999999},
+        )
+
+        with patch.object(CallScheduler, 'start_new_taskrun') as mock_start:
+            _release_queued_calls()
+
+        ghost.refresh_from_db()
+        assert ghost.status == TaskCallStatus.ENDED
+        assert ghost.status_detail == TaskCallStatusDetail.ENDED_CANCELLED
+        mock_start.assert_not_called()
+
+
+@pytest.mark.django_db
+class TestStartRunningRootGuard:
+    """The ACTIVE_QUEUED → ACTIVE_RUNNING guard only blocks aborted roots.
+
+    A root that ended SUCCESS/FAILURE must not block a legitimately-queued
+    continuation (a slash-command turn's short root CHAIN ends while the agent
+    loop continues underneath).  Only a cancelled/stopped root blocks, for race
+    safety."""
+
+    def _make_setup(self):
+        agent = AgentModel.objects.create(name='guard-agent')
+        session = SessionModel.objects.create(name='guard-session')
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+        td = TaskDefinition.objects.create(name='guard-task')
+        tdv = TaskDefinitionVersion.objects.create(
+            task_definition=td, task_type=TaskType.TOOL,
+            description='guard-task', function_schema={},
+        )
+        ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        return session, sv, td, tdv, ti
+
+    def _make_call(self, ti, td, tdv, session, sv, *, root):
+        return AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json={}, requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            session_root_task=root,
+            status=TaskCallStatus.ACTIVE,
+            status_detail=TaskCallStatusDetail.ACTIVE_QUEUED,
+        )
+
+    def test_allowed_when_root_ended_success(self, db):
+        """A child whose root ended SUCCESS can still activate (slash-command turn)."""
+        from runtime.tasks.call_fsm import TaskCallStateMachine
+
+        session, sv, td, tdv, ti = self._make_setup()
+        root = self._make_call(ti, td, tdv, session, sv, root=None)
+        AgentTaskCall.objects.filter(pk=root.pk).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
+            ended_at=None,
+        )
+        child = self._make_call(ti, td, tdv, session, sv, root=root)
+
+        assert TaskCallStateMachine.start_running(child.pk) is True
+        child.refresh_from_db()
+        assert child.status_detail == TaskCallStatusDetail.ACTIVE_RUNNING
+
+    def test_blocked_when_root_cancelled(self, db):
+        """A child whose root was cancelled is rejected (race safety)."""
+        from runtime.tasks.call_fsm import TaskCallStateMachine
+
+        session, sv, td, tdv, ti = self._make_setup()
+        root = self._make_call(ti, td, tdv, session, sv, root=None)
+        AgentTaskCall.objects.filter(pk=root.pk).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_CANCELLED,
+            ended_at=None,
+        )
+        child = self._make_call(ti, td, tdv, session, sv, root=root)
+
+        assert TaskCallStateMachine.start_running(child.pk) is False
+        child.refresh_from_db()
+        assert child.status_detail == TaskCallStatusDetail.ACTIVE_QUEUED
+
+    def test_allowed_when_root_null(self, db):
+        """A rootless call is always allowed to activate."""
+        from runtime.tasks.call_fsm import TaskCallStateMachine
+
+        session, sv, td, tdv, ti = self._make_setup()
+        child = self._make_call(ti, td, tdv, session, sv, root=None)
+
+        assert TaskCallStateMachine.start_running(child.pk) is True
+        child.refresh_from_db()
+        assert child.status_detail == TaskCallStatusDetail.ACTIVE_RUNNING
+
+    def test_success_rooted_orphan_not_cancelled_by_recovery(self, db):
+        """Recovery leaves an ACTIVE_QUEUED call alone when its root ended SUCCESS."""
+        from server.tasks.recovery_scheduler import _recover_stuck_calls
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        session, sv, td, tdv, ti = self._make_setup()
+        root = self._make_call(ti, td, tdv, session, sv, root=None)
+        AgentTaskCall.objects.filter(pk=root.pk).update(
+            status=TaskCallStatus.ENDED,
+            status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
+            ended_at=None,
+        )
+        child = self._make_call(ti, td, tdv, session, sv, root=root)
+        AgentTaskRun.objects.create(
+            agent_task_call=child, task_instance=ti, task_definition_version=tdv,
+            session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.QUEUED,
+        )
+
+        with patch.object(CallScheduler, 'start_new_taskrun') as mock_start, \
+             patch('server.tasks.task_dispatcher.celery_delay') as mock_dispatch:
+            _recover_stuck_calls()
+
+        child.refresh_from_db()
+        assert child.status_detail == TaskCallStatusDetail.ACTIVE_QUEUED
+        mock_start.assert_not_called()
+        mock_dispatch.assert_not_called()
 
 
 @pytest.mark.django_db

@@ -220,7 +220,7 @@ class AgentTaskRun(BaseModel):
 
                     args, kwargs = self._resolve_run_arguments(timeout=0)
                     result = bound_task.call(*args, **kwargs)
-
+          
                 self.result_json, ref_pks = self._create_result_json(result=result)
                 self.taskrun_result_references.set(ref_pks)
 
@@ -252,7 +252,7 @@ class AgentTaskRun(BaseModel):
                 from runtime.tasks.run_fsm import TaskRunStateMachine
                 TaskRunStateMachine.fail(
                     self.pk, extra={"result_json": exception_json}
-                )
+                ) 
 
     def _try_continuation_repoint(self, ref_pks: list[int]) -> bool:
         """Flatten a chain whose awaited tail step returned a continuation call.

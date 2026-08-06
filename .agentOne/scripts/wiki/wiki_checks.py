@@ -1219,7 +1219,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Wiki checks tool.")
     parser.add_argument("folder", type=str, nargs="?", default=None, help="Wiki root folder")
     parser.add_argument("--tool", "-t", type=str, default="check",
-                        choices=["check", "find-unlinked-raw"],
+                        choices=["check", "find_unlinked_raw"],
                         help="Which tool to run (default: check)")
     parser.add_argument("--limit", type=int, default=20, help="Max findings per check (0=unlimited)")
     parser.add_argument("--checks", "-c", type=str, default="",
@@ -1241,7 +1241,7 @@ if __name__ == "__main__":
 
     sess_kw = dict(_session=None) if session is None else dict(_session=session)
 
-    if args.tool == "find-unlinked-raw":
+    if args.tool == "find_unlinked_raw":
         success, result = wiki_find_unlinked_raw(**sess_kw, folder=args.folder, limit=args.limit)
     else:
         success, result = wiki_check(**sess_kw, folder=args.folder, limit=args.limit,
