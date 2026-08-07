@@ -67,5 +67,10 @@ tasks:
     file: final_result.py
     function: final_result
     bound: True
+    
+  - name: catch_tool_argument_error
+    file: catch_tool_argument_error.py
+    function: catch_tool_argument_error
+    bound: True
 ---
 some desc

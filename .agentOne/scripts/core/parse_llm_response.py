@@ -44,6 +44,88 @@ def _deduplicate(data: Any) -> Any:
     return data
 
 
+CATCH_TOOL_NAME = "catch_tool_argument_error"
+
+#: Tool names handled by the framework itself and never routed to the catch tool.
+_SKIP_VALIDATION_NAMES = frozenset({"final_result", CATCH_TOOL_NAME})
+
+#: JSON-schema property types we can safely coerce from the strings LLMs emit.
+_COERCION_TYPES = frozenset({"integer", "number", "boolean"})
+
+
+class _ToolArgumentError(Exception):
+    """Raised when a tool call fails schema validation."""
+
+
+def _validate_tool_call(_session: Session, name: str, arguments: Any) -> tuple[str, Any, str | None]:
+    """Validate and coerce a single tool call against the tool's JSON schema.
+
+    LLMs frequently emit JSON strings for scalar parameters (``"depth": "2"``
+    or ``"blocking": "true"``).  When the schema declares ``integer``,
+    ``number`` or ``boolean`` we coerce those strings so the downstream tool
+    receives the declared Python type.  Missing required arguments (without a
+    schema default) and arguments that cannot be coerced are treated as errors.
+
+    When the tool does not exist / is not allowed, or validation fails, the
+    call is routed to the ``catch_tool_argument_error`` task instead: *name*
+    is replaced with that tool name and the original name and arguments are
+    passed along so the agent can see exactly what went wrong.
+
+    Returns:
+        A ``(name, arguments, error)`` triple.  On success ``name`` is
+        unchanged and ``arguments`` may have been type-coerced.  On failure
+        ``name`` is ``catch_tool_argument_error`` and ``arguments`` contains
+        ``{"tool_name", "arguments"}`` (plus ``"error"``) describing the
+        original call.
+    """
+    if name in _SKIP_VALIDATION_NAMES:
+        return name, arguments, None
+
+    def _route(error: str) -> tuple[str, dict[str, Any], str]:
+        return CATCH_TOOL_NAME, {"tool_name": name, "arguments": arguments, "error": error}, error
+
+    if not isinstance(arguments, dict):
+        return _route(
+            f"arguments must be a JSON object, got {type(arguments).__name__}"
+        )
+
+    bound_task = _session.get_tool(name)
+    if bound_task is None:
+        return _route(f"tool '{name}' does not exist or is not allowed for this agent")
+
+    schema = bound_task.task_definition_version.function_schema or {}
+    properties = schema.get("properties") or {}
+    coerced: dict[str, Any] = dict(arguments)
+
+    try:
+        for key, value in list(coerced.items()):
+            expected = (properties.get(key) or {}).get("type")
+            if expected not in _COERCION_TYPES or not isinstance(value, str):
+                continue
+            stripped = value.strip()
+            try:
+                if expected == "integer":
+                    coerced[key] = int(stripped)
+                elif expected == "number":
+                    coerced[key] = float(stripped)
+                else:
+                    coerced[key] = stripped.lower() in ["true", "yes"]
+            except ValueError:
+                raise _ToolArgumentError(
+                    f"argument '{key}' must be a {expected}, got '{value}'"
+                )
+
+        for required in schema.get("required") or []:
+            if "default" in (properties.get(required) or {}):
+                continue
+            if required not in coerced or coerced[required] in (None, ""):
+                raise _ToolArgumentError(f"missing required argument '{required}'")
+    except _ToolArgumentError as e:
+        return _route(f"tool '{name}': {e}")
+
+    return name, coerced, None
+
+
 def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
     """
     Extract content, reasoning, and normalized tool call definitions.
@@ -94,19 +176,20 @@ def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
             result_parts.append(Part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=content))
 
         for toolcall in toolcalls:
-            if isinstance(toolcall["arguments"], str):
+            function = toolcall.get("function") or {}
+            name = function.get("name") or toolcall.get("name")
+            arguments = function.get("arguments", toolcall.get("arguments"))
+            if isinstance(arguments, str):
                 try:
-                    toolcall["arguments"] = json.loads(toolcall["arguments"])
+                    arguments = json.loads(arguments)
                 except json.JSONDecodeError:
                     pass
-            result_parts.append(
-                Part(type=MessagePartType.TOOLCALL, content_type=MessageContentType.JSON, content=toolcall)
-            )
+            name, arguments, _error = _validate_tool_call(_session, name, arguments)
+            toolcall["name"] = name
+            toolcall["arguments"] = arguments
+            result_parts.append(Part(type=MessagePartType.TOOLCALL, content_type=MessageContentType.JSON, content=toolcall))
 
-        return dict(
-            response=response,
-            parts=result_parts,
-        )
+        return dict(response=response, parts=result_parts)
 
     except Exception:
         from server.models.debug_log_entry import DebugLogEntry
