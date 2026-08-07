@@ -45,7 +45,7 @@ def ingest_file(_session: Session, path: str) -> None:
         description=f"Ingest session for {path}",
         workspace=_session.workspace,
         parent_session_version=_session.get_version_model(),
-        session_type=SessionType.SUBSESSION,
+        session_type=SessionType.SUBTASK_DELEGATE,
     )
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 

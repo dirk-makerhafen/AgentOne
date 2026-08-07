@@ -73,7 +73,6 @@ def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
         result_parts.append(Part(type=MessagePartType.REASONING, content_type=MessageContentType.TEXT, content=reasoning))
 
     try:
-
         if _session.tool_call_syntax == AgentToolCallSyntax.CUSTOM and content:
             pattern = r"\[call:(\w+)\((.*?)\)\]"
             matches = re.finditer(pattern, content)
@@ -86,14 +85,11 @@ def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
                     for p in parts_list:
                         if "=" in p:
                             k, v = p.split("=", 1)
-
                             kwargs[k.strip()] = normalize_tool_arguments(v.strip().strip("'").strip('"'))
-                toolcalls.append(
-                    {
-                        "id": f"custom_{func_name}",
-                        "function": {"name": func_name, "arguments": kwargs},
-                    }
-                )
+                toolcalls.append({
+                    "id": f"custom_{func_name}",
+                    "function": {"name": func_name, "arguments": kwargs},
+                })
         if content:
             result_parts.append(Part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=content))
 
