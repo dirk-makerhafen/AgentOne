@@ -58,7 +58,10 @@ def ingest_assistant_message(
                 part["content_type"] = MessageContentType.TEXT
                 part["content"] = part["content"]["arguments"].get("content", "")
             else:
-                bound_task = _session.get_tool(part["content"]["name"])
+                # Framework recovery tools (e.g. ``catch_tool_argument_error``,
+                # ``catch_approval_denied``) are registered as TASK-type so the
+                # LLM never sees them as callable; resolve via get_task too.
+                bound_task = _session.get_tool(part["content"]["name"]) or _session.get_task(part["content"]["name"])
                 if bound_task:
                     part["tool_call"] = bound_task.delay(**part["content"]["arguments"])
 

@@ -281,6 +281,78 @@ class CallScheduler:
             return  # was not queued, maybe some race condition
         CallScheduler.start_new_taskrun(task_call_id)
 
+    @staticmethod
+    def deny_taskcall(task_call_id: int, feedback: str = "") -> bool:
+        """Deny a halted approval call, feeding the denial back to the LLM.
+
+        Cancels the original call.  When the call is wired into a conversation
+        (a ``MessagePart`` references it via ``tool_call`` — i.e. it was
+        dispatched by ``ingest_assistant_message``), a ``catch_approval_denied``
+        report call is dispatched in its place and the message part + waiting
+        result references are re-pointed to it, so the tool-response slot the
+        LLM sees on the next turn carries the denial reason and any user
+        feedback instead of the chain dying silently.
+
+        Returns:
+            ``True`` if the call was cancelled (regardless of whether the
+            report dispatch succeeded), ``False`` if it could not be denied.
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatusDetail
+
+        call = AgentTaskCall.objects.filter(pk=task_call_id).first()
+        if call is None:
+            return False
+
+        cancelled = TaskCallStateMachine.cancel(
+            call.pk, TaskCallStatusDetail.HALTED_APPROVAL
+        )
+        if not cancelled:
+            return False
+
+        try:
+            CallScheduler._report_approval_denial(call, feedback)
+        except Exception as exc:  # pragma: no cover - defensive
+            print(f"deny_taskcall: failed to report denial back to LLM: {exc}")
+        return True
+
+    @staticmethod
+    def _report_approval_denial(call: AgentTaskCall, feedback: str) -> None:
+        """Dispatch a ``catch_approval_denied`` report for a denied call.
+
+        Re-points the conversation so the report call's result becomes the tool
+        response for the denied call.  No-op when the call is not linked to a
+        message part or the report tool is not registered for the session.
+        """
+        from server.models.message import MessagePart
+        from server.models.tasks.agent_task_run import AgentTaskRun
+        from server.models.enums.task_enums import TaskRunStatus
+
+        part = MessagePart.objects.filter(tool_call_id=call.pk).first()
+        if part is None:
+            return  # not part of a conversation — nothing to re-feed
+
+        rt = call.session_version.get_runtime()
+        bound = rt.get_tool("catch_approval_denied") or rt.get_task("catch_approval_denied")
+        if bound is None:
+            return  # report tool not registered — fall back to plain cancel
+
+        tool_name = call.task_definition.name if call.task_definition else "?"
+        report_call = bound.delay(
+            tool_name=tool_name,
+            reason=call.guardrail_reason or "",
+            feedback=feedback or "",
+        )
+
+        MessagePart.objects.filter(pk=part.pk).update(tool_call=report_call)
+
+        for waiter in AgentTaskRun.objects.filter(
+            taskrun_result_references__pk=call.pk,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        ):
+            waiter.taskrun_result_references.remove(call)
+            waiter.taskrun_result_references.add(report_call)
+
     # ------------------------------------------------------------------
     # Task-run dispatch
     # ------------------------------------------------------------------

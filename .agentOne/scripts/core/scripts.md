@@ -72,5 +72,9 @@ tasks:
     file: catch_tool_argument_error.py
     function: catch_tool_argument_error
     bound: True
+  - name: catch_approval_denied
+    file: catch_approval_denied.py
+    function: catch_approval_denied
+    bound: True
 ---
 some desc

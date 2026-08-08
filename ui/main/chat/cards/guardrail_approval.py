@@ -43,12 +43,15 @@ class GuardrailApprovalCard(ModelView):
                     {% endfor %}
                 </div>
                 {% endif %}
+                <div class="guardrail-call-feedback">
+                    <input class="guardrail-feedback-input" id="guardrail_feedback_{{ call.pk }}" type="text" placeholder="Reason for denying (optional)" autocomplete="off" spellcheck="false">
+                </div>
                 <div class="guardrail-call-btns">
                     <button class="guardrail-btn approve" onclick="pyview.approve_call({{ call.pk }})">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                         Approve
                     </button>
-                    <button class="guardrail-btn deny" onclick="pyview.deny_call({{ call.pk }})">
+                    <button class="guardrail-btn deny" onclick="pyview.deny_call({{ call.pk }}, document.getElementById('guardrail_feedback_{{ call.pk }}').value)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         Deny
                     </button>
@@ -103,11 +106,11 @@ class GuardrailApprovalCard(ModelView):
         if not self.pending_calls:
             self.update()
 
-    def deny_call(self, pk: int) -> None:
-        from runtime.tasks.call_fsm import TaskCallStateMachine
+    def deny_call(self, pk: int, feedback: str = "") -> None:
+        from runtime.tasks.call_scheduler import CallScheduler
         call = self._call_or_none(pk)
         if call:
-            TaskCallStateMachine.cancel(call.pk, TaskCallStatusDetail.HALTED_APPROVAL)
+            CallScheduler.deny_taskcall(call.pk, feedback=feedback)
         if not self.pending_calls:
             self.update()
 

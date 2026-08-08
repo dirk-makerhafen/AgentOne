@@ -41,8 +41,9 @@ class ToolCard(ModelView):
                 <div class="tool-card-result"><pre>{{pyview.subject.get_result(allow_partial_results=True)}}</pre></div>
                 {% if pyview.subject.status_detail == "HALTED_APPROVAL" %}
                     <div class="tool-card-approval">
+                        <input id="tool_feedback_{{ pyview.subject.pk }}" type="text" placeholder="Reason for denying (optional)" autocomplete="off" spellcheck="false">
                         <button class="tool-card-approve" onclick="pyview.approve_call()">Approve</button>
-                        <button class="tool-card-deny" onclick="pyview.deny_call()">Deny</button>
+                        <button class="tool-card-deny" onclick="pyview.deny_call(document.getElementById('tool_feedback_{{ pyview.subject.pk }}').value)">Deny</button>
                     </div>
                 {% endif %}
             </div>
@@ -62,7 +63,7 @@ class ToolCard(ModelView):
         from runtime.tasks.call_scheduler import CallScheduler
         CallScheduler.approve_taskcall(self.subject.pk)
 
-    def deny_call(self) -> None:
-        from runtime.tasks.call_fsm import TaskCallStateMachine
-        TaskCallStateMachine.cancel(self.subject.pk, TaskCallStatusDetail.HALTED_APPROVAL)
+    def deny_call(self, feedback: str = "") -> None:
+        from runtime.tasks.call_scheduler import CallScheduler
+        CallScheduler.deny_taskcall(self.subject.pk, feedback=feedback)
 

@@ -58,8 +58,12 @@ class TaskCallViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['post'])
     def deny(self, request, pk=None):
-        """Deny a task call that is halted for approval."""
-        from runtime.tasks.call_fsm import TaskCallStateMachine
+        """Deny a task call that is halted for approval.
+
+        Accepts an optional ``feedback`` body field: a comment from the user
+        that is passed back to the LLM together with the denial.
+        """
+        from runtime.tasks.call_scheduler import CallScheduler
         from server.models.enums.task_enums import TaskCallStatusDetail
 
         try:
@@ -73,12 +77,16 @@ class TaskCallViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        try:
-            cancelled = TaskCallStateMachine.cancel(task_call.pk, TaskCallStatusDetail.HALTED_APPROVAL)
-        except Exception:
-            cancelled = False
+        feedback = ""
+        if isinstance(request.data, dict):
+            feedback = str(request.data.get("feedback", "") or "")
 
-        if not cancelled:
+        try:
+            denied = CallScheduler.deny_taskcall(task_call.pk, feedback=feedback)
+        except Exception:
+            denied = False
+
+        if not denied:
             return Response(
                 {'error': 'Could not deny call'},
                 status=status.HTTP_409_CONFLICT,

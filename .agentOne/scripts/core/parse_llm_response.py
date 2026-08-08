@@ -47,7 +47,7 @@ def _deduplicate(data: Any) -> Any:
 CATCH_TOOL_NAME = "catch_tool_argument_error"
 
 #: Tool names handled by the framework itself and never routed to the catch tool.
-_SKIP_VALIDATION_NAMES = frozenset({"final_result", CATCH_TOOL_NAME})
+_SKIP_VALIDATION_NAMES = frozenset({"final_result", CATCH_TOOL_NAME, "catch_approval_denied"})
 
 #: JSON-schema property types we can safely coerce from the strings LLMs emit.
 _COERCION_TYPES = frozenset({"integer", "number", "boolean"})
