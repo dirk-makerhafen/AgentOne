@@ -100,14 +100,14 @@ def run_streaming_query(
 
         if usage := event_data.get("usage", None):
             unknown_chunk = False
-            response.completion_tokens = int(usage.get("completion_tokens", 0))
+            response.completion_tokens = int(usage.get("completion_tokens", 0) or 0)
             response.prompt_tokens = int(usage.get("prompt_tokens", 0))
 
             prompt_details = usage.get("prompt_tokens_details", {}) or {}
-            response.cached_tokens = int(prompt_details.get("cached_tokens", 0))
+            response.cached_tokens = int(prompt_details.get("cached_tokens", 0) or 0)
 
             completion_details = usage.get("completion_tokens_details", {}) or {}
-            response.reasoning_tokens = int(completion_details.get("reasoning_tokens", 0))
+            response.reasoning_tokens = int(completion_details.get("reasoning_tokens", 0) or 0)
 
         choices = event_data.get("choices", [{}])
         if not choices:
