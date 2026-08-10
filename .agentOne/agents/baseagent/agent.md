@@ -17,9 +17,9 @@ toolCallSyntax: default
 inheritSystemPrompt: false
 skills: []
 disallowedSkills: []
-tools: []
+tools: [core.*]
 disallowedTools: []
-tasks: [ core.*, compact.*  ]
+tasks: [ core.*, compact.*,   ]
 disallowedTasks: []
 commands: [ ping, debug, test-approval, tasks.* ]
 disallowedCommands: []

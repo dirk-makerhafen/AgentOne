@@ -31,6 +31,11 @@ class GuardrailApprovalCard(ModelView):
             {% for call in pyview.pending_calls %}
             <div class="guardrail-call">
                 <div class="guardrail-call-name">{{ call.task_definition_version.task_definition.name }}</div>
+                {% if call.auto_review_status == 'pending' %}
+                    <div class="guardrail-auto-badge">Auto-review in progress — the decision agent is checking this command. You may still approve or deny manually.</div>
+                {% elif call.auto_review_status == 'escalated' %}
+                    <div class="guardrail-auto-badge">Escalated by auto-review: {{ call.auto_review_reason }}</div>
+                {% endif %}
                 {% if call.carguments_json and call.guardrail_reason %}
                 <div class="guardrail-call-reason">{{ call.guardrail_reason }}</div>
                 {% endif %}

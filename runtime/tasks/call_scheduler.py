@@ -22,6 +22,9 @@ def _merge_guardrail_verdicts(*verdicts: Any) -> Any:
     return best if best is not None else (verdicts[0] if verdicts else None)
 
 
+AUTO_REVIEW_TOOL_NAMES = ("python", "shell")
+
+
 class CallScheduler:
     """
     Orchestrates the lifecycle of AgentTaskCall instances.
@@ -121,6 +124,7 @@ class CallScheduler:
 
         if TaskCallStateMachine.request_approval(task_call_id):
             print(" # WAIT FOR APPROVAL")
+            CallScheduler._dispatch_auto_review(task_call_id)
             return  # WAIT FOR APPROVAL
 
         if not TaskCallStateMachine.enqueue_after_dependencies(task_call_id):
@@ -268,6 +272,233 @@ class CallScheduler:
                 guardrail_reason="Filesystem access policy: " + "; ".join(ask_reasons),
             )
             print(f"  # FILESYSTEM GUARDRAIL: {'; '.join(ask_reasons)}")
+
+    # ------------------------------------------------------------------
+    # Automated approval review (approval_decider agent)
+    #
+    # python/shell calls that trip a guardrail and halt for approval are
+    # routed to a dedicated ``approval_decider`` subagent.  The decider
+    # receives the command, the guardrail reason, the requesting agent's
+    # allowed tools and its filesystem permissions, then renders an
+    # ``approval_verdict``: ``allow`` (auto-approve), ``deny`` (auto-deny,
+    # reason fed back via ``catch_approval_denied``) or ``ask_human``
+    # (leaves the call halted for the human).  Opt out per agent with
+    # ``extra_settings: {auto_review_approvals: false}``.
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _auto_review_enabled(parent_session: Any) -> bool:
+        """Return whether auto-review is enabled for *parent_session*.
+
+        Reads ``extra_settings.auto_review_approvals`` on the agent.  Omitting
+        it (or ``true``) enables auto-review; ``false`` or an empty list
+        disables it; a list restricts review to the named tools.
+        """
+        try:
+            extra = parent_session.agent.get_agent_setting("extra_settings") or {}
+        except Exception:  # pylint: disable=broad-exception-caught
+            extra = {}
+        setting = extra.get("auto_review_approvals", True)
+        if setting is False:
+            return False
+        if setting is True or setting is None:
+            return True
+        if isinstance(setting, (list, tuple)):
+            return bool(setting)
+        return True
+
+    @staticmethod
+    def _dispatch_auto_review(task_call_id: int) -> None:
+        """Mark a halted python/shell call for automated review and launch it.
+
+        Only fires for python/shell calls that are not already under review.
+        Marks the call ``auto_review_status="pending"`` and dispatches
+        :meth:`auto_review_approval` to a worker.
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+
+        call = _ATC.objects.filter(pk=task_call_id).first()
+        if call is None:
+            return
+        tool_name = call.task_definition.name if call.task_definition else ""
+        if tool_name not in AUTO_REVIEW_TOOL_NAMES:
+            return
+        if call.auto_review_status:
+            return  # already pending or decided
+
+        try:
+            from runtime.session.session import Session
+            parent_session = Session(
+                session_model=call.session, pinned_session_version=call.session_version
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            parent_session = None
+        if parent_session is None or not CallScheduler._auto_review_enabled(parent_session):
+            return
+
+        _ATC.objects.filter(pk=call.pk).update(auto_review_status="pending")
+        print(f"  # AUTO-REVIEW: reviewing {tool_name} call #{task_call_id}")
+        from server.tasks.task_dispatcher import celery_delay
+        celery_delay(CallScheduler.auto_review_approval, task_call_id)
+
+    @staticmethod
+    def auto_review_approval(task_call_id: int) -> None:
+        """Launch an ``approval_decider`` subagent to review a halted call.
+
+        Runs on a worker (dispatched via :meth:`_dispatch_auto_review`).
+        Builds the review brief, spawns the decider session and sends the
+        brief.  The decider's ``approval_verdict`` tool applies the result.
+        Any failure escalates: the call stays ``HALTED_APPROVAL`` for a human.
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+        from server.models.enums.task_enums import TaskCallStatusDetail
+
+        call = _ATC.objects.filter(pk=task_call_id).first()
+        if call is None:
+            return
+        if call.status_detail != TaskCallStatusDetail.HALTED_APPROVAL:
+            return  # a human (or another process) already decided
+        tool_name = call.task_definition.name if call.task_definition else ""
+        if tool_name not in AUTO_REVIEW_TOOL_NAMES:
+            return
+
+        try:
+            from runtime.session.session import Session
+            parent_session = Session(
+                session_model=call.session, pinned_session_version=call.session_version
+            )
+            brief = CallScheduler._build_review_brief(parent_session, call, tool_name)
+            CallScheduler._launch_review_session(parent_session, call, brief)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            print(f"auto_review_approval: review of call #{task_call_id} failed -> escalate: {exc}")
+            _ATC.objects.filter(pk=call.pk).update(
+                auto_review_status="escalated",
+                auto_review_reason=f"Auto-review failed: {exc}",
+            )
+
+    @staticmethod
+    def _build_review_brief(
+        parent_session: Any, call: Any, tool_name: str
+    ) -> str:
+        """Compose the review brief handed to the approval decider.
+
+        Includes the exact command, the guardrail reason, the requesting
+        agent's allowed tools and its resolved filesystem permissions — the
+        context the decider needs to judge whether the command grants the
+        agent more power than it already has.
+        """
+        from runtime.workspace_access import resolve_policy
+
+        source = call.carguments_json.get("source", "")
+        if not source:
+            args = call.carguments_json.get("*", [])
+            source = args[0] if args else ""
+
+        lines = [
+            "Review the command below and render your approval verdict.",
+            "",
+            f"Tool: {tool_name}",
+            f"task_call_id: {call.pk}  (copy this exact number verbatim into your approval_verdict call)",
+            "",
+            "Script source:",
+            "```",
+            str(source) if source else "(empty)",
+            "```",
+            "",
+            f"Guardrail reason: {call.guardrail_reason or 'unspecified'}",
+            "",
+            f"Requesting agent: {parent_session.agent.name}",
+            "Allowed tools: "
+            + (", ".join(sorted(parent_session.allowedToolNames)) or "(none)"),
+            "",
+            "Filesystem permissions:",
+            CallScheduler._render_policy(resolve_policy(parent_session)),
+        ]
+        return "\n".join(lines)
+
+    @staticmethod
+    def _render_policy(policy: Any) -> str:
+        """Human-readable rendering of a workspace access policy."""
+
+        def _fmt(action_policy: Any) -> str:
+            return (
+                f"default={action_policy.default or 'inherit'}; "
+                f"allow={action_policy.allow or []}; "
+                f"ask={action_policy.ask or []}; "
+                f"deny={action_policy.deny or []}"
+            )
+
+        lines = [f"workspace root: {policy.workspace_root or 'none'}"]
+        lines.append(f"  inside read:     {_fmt(policy.inside_read)}")
+        lines.append(f"  inside write:    {_fmt(policy.inside_write)}")
+        lines.append(f"  external read:   {_fmt(policy.external_read)}")
+        lines.append(f"  external write:  {_fmt(policy.external_write)}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _launch_review_session(
+        parent_session: Any, call: Any, brief: str
+    ) -> Any:
+        """Spawn an ``approval_decider`` session to review *call*.
+
+        Returns the child :class:`Session`.  The child session's settings
+        declare ``review_task_call_id`` so the decider's ``approval_verdict``
+        tool can validate the id it echoes back (never trust a hallucinated id).
+        """
+        from datetime import datetime
+        from time import time_ns
+
+        from server.models.agents.agent import AgentModel
+        from server.models.enums.message_enums import MessageContentType, MessagePartType
+        from server.models.enums.session_enums import SessionType
+        from server.models.settings import SettingsModel
+        from server.models.sessions.session_version import SessionVersionModel
+        from runtime.session.session import Session
+
+        decider = AgentModel.objects.filter(name="approval_decider").first()
+        if decider is None:
+            raise RuntimeError("approval_decider agent not loaded")
+
+        decider_av = decider.get_runtime().get_version_model()
+        child_sv = decider_av.get_or_create_session(
+            name=f"approval-review:{call.pk}:{time_ns()}",
+            display_name=f"Approval review of {call.task_definition.name} call #{call.pk}",
+            description=brief[:100],
+            workspace=parent_session.workspace,
+            parent_session_version=call.session_version,
+            session_type=SessionType.SUBTASK_FORK,
+        )
+
+        # Declare the review target on the child session settings.
+        settings = SettingsModel(extra_settings={"review_task_call_id": call.pk})
+        settings.save()
+        SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=settings)
+
+        child_session = Session(
+            session_model=child_sv.session, pinned_session_version=child_sv
+        )
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        working_dir = (
+            child_session.workspace.path if child_session.workspace else "unknown"
+        )
+        parts = [
+            {
+                "type": MessagePartType.MESSAGE,
+                "content_type": MessageContentType.TEXT,
+                "content": f"It is now {now}, your working dir is '{working_dir}'.\n",
+            },
+            {
+                "type": MessagePartType.MESSAGE,
+                "content_type": MessageContentType.TEXT,
+                "content": (
+                    "You are the Approval Decider reviewing a pending command. "
+                    "Analyse the brief, then call approval_verdict once with your "
+                    "decision, then end your turn with final_result.\n\n" + brief
+                ),
+            },
+        ]
+        child_session.add_user_message(parts=parts)
+        return child_session
 
     # ------------------------------------------------------------------
     # Human approval

@@ -46,6 +46,11 @@ class AgentTaskCall(BaseModel):
     requires_approval = models.BooleanField(default=None, null=False)
     guardrail_reason = models.TextField(default=None, blank=True, null= True)
 
+    auto_review_status = models.CharField(
+        max_length=20, default=None, null=True, blank=True
+    )
+    auto_review_reason = models.TextField(default=None, blank=True, null=True)
+
     time_limit = models.IntegerField(default=None, null=True, blank=True)
     max_subtask_errors = models.IntegerField(default=None, null=False)
     max_subtask_error_rate = models.IntegerField(default=None, null=False)

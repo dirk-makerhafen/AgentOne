@@ -1,5 +1,12 @@
 ---
 group: core
+tools:
+  # Have the subagent return a result to the caller
+  - name: final_result
+    file: final_result.py
+    function: final_result
+    bound: True
+    
 tasks:
   - name: ingest_user_message
     file: ingest_user_message.py
@@ -62,12 +69,6 @@ tasks:
       - process_slashcommand
       - handle_slashcommand_response
 
-  # Have the subagent return a result to the caller
-  - name: final_result
-    file: final_result.py
-    function: final_result
-    bound: True
-    
   - name: catch_tool_argument_error
     file: catch_tool_argument_error.py
     function: catch_tool_argument_error
