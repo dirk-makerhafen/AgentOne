@@ -7,3 +7,7 @@ appearance:
 preferences:
   default_model: ""
   send_key: ctrl+enter
+  prevent_sleep_when_local_ai: true
+  min_battery_pct_for_caffeinate: 30
+  pause_local_ai_below_battery_pct: 20
+  sleep_guard_release_delay_minutes: 5

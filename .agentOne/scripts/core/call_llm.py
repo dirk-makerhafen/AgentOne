@@ -17,6 +17,7 @@ from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
 from openai import OpenAI
 from runtime.rate_limiter import RateLimitChecker, RateLimitError
+from runtime.power import battery_gate_blocked
 import re
 
 def run_streaming_query(
@@ -225,6 +226,12 @@ def call_llm(_session: Session, query: Query) -> Response:
     try:
         if not _session.aimodel:
             raise Exception("No llm model specified")
+
+        # Low-battery pause for local models — parks the call via the
+        # existing RateLimitError mechanism (WAITING_RATELIMIT + auto-resume).
+        blocked, reason = battery_gate_blocked(_session.aimodel)
+        if blocked:
+            raise RateLimitError(reason)
 
         ratelimit_result = RateLimitChecker.check(_session.aimodel)
         if not ratelimit_result:

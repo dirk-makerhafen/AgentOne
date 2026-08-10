@@ -481,12 +481,22 @@ _PY_WRITE_ATTR_CALLS: dict[str, dict[str, int]] = {
         "remove": 90, "unlink": 90, "rmdir": 90, "removedirs": 90,
         "rename": 90, "replace": 90, "mkdir": 70, "makedirs": 70,
         "symlink": 85, "link": 85,
+        "open": 90,  # fail-safe: OS-level open may create/truncate → write
     },
     "shutil": {
         "rmtree": 95, "copy": 90, "copy2": 90, "move": 90,
         "copytree": 95,
     },
 }
+
+# Attribute calls that read content or list directory entries.
+_PY_READ_ATTR_CALLS: dict[str, set[str]] = {
+    "os": {"listdir", "scandir"},
+}
+
+# pathlib.Path(literal).<method>() file accessors.
+_PY_PATHLIB_READ_METHODS: set[str] = {"read_text", "read_bytes"}
+_PY_PATHLIB_WRITE_METHODS: set[str] = {"write_text", "write_bytes"}
 
 
 def _py_call_path(node: ast.Call) -> str | None:
@@ -513,11 +523,27 @@ def _py_open_mode(node: ast.Call) -> str | None:
 
 
 # pylint: disable=too-many-nested-blocks
-def _python_targets(source: str) -> list[tuple[str, str]]:
-    """Extract (path, action) write targets from Python source via AST.
+def _is_pathlib_constructor(node: ast.AST) -> bool:
+    """True if *node* is ``Path(...)`` or ``pathlib.Path(...)``."""
+    if isinstance(node, ast.Name):
+        return node.id == "Path"
+    if isinstance(node, ast.Attribute):
+        return _extract_module_name(node) == "pathlib.Path"
+    return False
 
-    Only *constant* path arguments are evaluated — dynamic paths fall back
-    to the existing content-based scoring (documented limitation).
+
+def _python_targets(source: str) -> list[tuple[str, str]]:
+    """Extract (path, action) filesystem targets from Python source via AST.
+
+    Classifies *constant* literal paths for both read and write actions:
+    - ``open(path)`` / ``open(path, 'r'*)`` and ``Path(path).read_*()`` are
+      reads; write-capable modes (``wax+``) and ``Path(path).write_*()``
+      are writes.
+    - ``os.*`` / ``shutil.*`` write calls and ``os.open`` (fail-safe, may
+      create/truncate) are writes; ``os.listdir`` / ``os.scandir`` are reads.
+
+    Dynamic (runtime-computed) paths fall back to the existing content-based
+    scoring (documented limitation).
     """
     targets: list[tuple[str, str]] = []
     try:
@@ -530,31 +556,62 @@ def _python_targets(source: str) -> list[tuple[str, str]]:
             continue
         func = node.func
 
-        # open(...) with a write mode
+        # open(...) — default / explicit-read modes are reads, write modes writes
         if isinstance(func, ast.Name) and func.id == "open":
             mode = _py_open_mode(node)
-            if mode and ("w" in mode or "a" in mode or "+" in mode or "x" in mode):
-                path = _py_call_path(node)
-                if path:
-                    targets.append((path, "write"))
+            action = "write" if mode and any(c in mode for c in "wax+") else "read"
+            path = _py_call_path(node)
+            if path:
+                targets.append((path, action))
             continue
 
-        # os.* / shutil.* write calls
-        if isinstance(func, ast.Attribute):
-            module = _extract_module_name(func)
-            if module:
-                for prefix, func_map in _PY_WRITE_ATTR_CALLS.items():
-                    if module == prefix or module.startswith(prefix + "."):
-                        if func.attr in func_map:
-                            path = _py_call_path(node)
-                            if path:
-                                targets.append((path, "write"))
-                        break
+        if not isinstance(func, ast.Attribute):
+            continue
+
+        # pathlib.Path(literal).read_text() / .read_bytes() / write_*()
+        receiver = func.value
+        if (
+            isinstance(receiver, ast.Call)
+            and func.attr in (*_PY_PATHLIB_READ_METHODS, *_PY_PATHLIB_WRITE_METHODS)
+            and _is_pathlib_constructor(receiver.func)
+        ):
+            path = _py_call_path(receiver)
+            if path:
+                action = (
+                    "write"
+                    if func.attr in _PY_PATHLIB_WRITE_METHODS
+                    else "read"
+                )
+                targets.append((path, action))
+            continue
+
+        module = _extract_module_name(func)
+        if not module:
+            continue
+
+        # os.listdir / os.scandir → directory reads
+        for prefix, methods in _PY_READ_ATTR_CALLS.items():
+            if module == prefix or module.startswith(prefix + "."):
+                if func.attr in methods:
+                    path = _py_call_path(node)
+                    if path:
+                        targets.append((path, "read"))
+                break
+
+        # os.* / shutil.* write calls (incl. os.open — fail-safe)
+        for prefix, func_map in _PY_WRITE_ATTR_CALLS.items():
+            if module == prefix or module.startswith(prefix + "."):
+                if func.attr in func_map:
+                    path = _py_call_path(node)
+                    if path:
+                        targets.append((path, "write"))
+                break
+
     return targets
 
 
 def check_python_paths(source: str, policy: Any) -> GuardrailVerdict:
-    """Evaluate write targets in Python *source* against a workspace policy."""
+    """Evaluate filesystem targets in Python *source* against a workspace policy."""
     from runtime.workspace_access import evaluate  # pylint: disable=import-outside-toplevel
 
     verdicts = [

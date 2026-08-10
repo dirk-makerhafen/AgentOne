@@ -459,6 +459,48 @@ class CheckPythonPathsTest(SimpleTestCase):
         v = check_python_paths(f'open("{self.root}/in.txt", "r")', policy)
         self.assertEqual(v.action, "allow")
 
+    def test_open_read_outside_denied(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths('open("/tmp/x.txt", "r")', policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_open_default_mode_read_outside_denied(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths('open("/tmp/x.txt")', policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_pathlib_read_text_outside_denied(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths("Path('/tmp/x.txt').read_text()", policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_pathlib_write_text_outside_denied(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths("Path('/tmp/x.txt').write_text('hi')", policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_os_listdir_outside_denied(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths('import os; os.listdir("/tmp")', policy)
+        self.assertEqual(v.action, "deny")
+
+    def test_os_open_outside_denied(self):
+        from runtime.guardrails import check_python_paths
+
+        policy = self._policy(workspace_access={"write": {"default": "deny"}})
+        v = check_python_paths('import os; os.open("/tmp/x.txt", os.O_CREAT)', policy)
+        self.assertEqual(v.action, "deny")
+
     def test_os_remove_outside_denied(self):
         from runtime.guardrails import check_python_paths
 

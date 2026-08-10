@@ -33,6 +33,74 @@ class SettingPanelPerferences(ModelView):
                 <option value="enter"{% if pyview._send_key == 'enter' %} selected{% endif %}>Enter (Shift+Enter for newline)</option>
             </select>
         </div>
+        <div class="settings-section-head">
+            <div>
+                <div class="settings-section-title">Power &amp; Battery</div>
+                <div class="settings-section-meta">Keeps a macOS laptop awake during local model inference and protects the battery.</div>
+            </div>
+        </div>
+        <div class="settings-field" id="settingsPowerStatus">
+            <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px">
+                <div>Battery: <b id="powerBattery">…</b></div>
+                <div>Power source: <b id="powerSource">…</b></div>
+                <div>Sleep prevention: <b id="powerSleep">…</b></div>
+                <div>Local AI: <b id="powerPause">…</b></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Refreshed every 30 seconds.</div>
+        </div>
+        <script>
+        (function(){
+            if (window.__agentonePowerPoll) { clearInterval(window.__agentonePowerPoll); window.__agentonePowerPoll = null; }
+            var refreshPowerStatus = function(){
+                var root = document.getElementById('settingsPowerStatus');
+                if (!root) return;
+                pyview.get_power_status().then(function(data){
+                    var s = data || {};
+                    var el = document.getElementById('powerBattery');
+                    if (el) el.textContent = (s.battery_percent == null) ? '—' : s.battery_percent + '%';
+                    el = document.getElementById('powerSource');
+                    if (el) el.textContent = s.source || '—';
+                    el = document.getElementById('powerSleep');
+                    if (el) {
+                        if (s.sleep_state === 'active') el.textContent = 'Active now';
+                        else if (s.sleep_state === 'ready') el.textContent = 'Armed — activates during local calls';
+                        else if (s.sleep_state === 'battery_low') el.textContent = 'Off — battery below ' + s.min_caffeinate_pct + '%';
+                        else if (s.sleep_state === 'disabled') el.textContent = 'Disabled';
+                        else el.textContent = 'Unavailable';
+                    }
+                    el = document.getElementById('powerPause');
+                    if (el) {
+                        if (s.paused) el.textContent = 'Paused — battery below ' + s.pause_local_pct + '%';
+                        else el.textContent = 'OK';
+                    }
+                });
+            };
+            refreshPowerStatus();
+            window.__agentonePowerPoll = setInterval(refreshPowerStatus, 30000);
+        })();
+        </script>
+        <div class="settings-field">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="settingsPreventSleep" style="width:15px;height:15px;accent-color:var(--accent)"{% if pyview._prevent_sleep_when_local_ai %} checked{% endif %} onchange="pyview.set_prevent_sleep_when_local_ai(this.checked)">
+                <span>Keep system awake while local AI is working</span>
+            </label>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Prevents the Mac from sleeping (<code>caffeinate</code>) during local model generation so it is not interrupted mid-inference. Only active while a local model call is running.</div>
+        </div>
+        <div class="settings-field">
+            <label for="settingsMinBatteryCaffeinate">Minimum battery for sleep prevention</label>
+            <input type="number" id="settingsMinBatteryCaffeinate" min="0" max="100" step="1" value="{{ pyview._min_battery_pct_for_caffeinate }}" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:13px" onchange="pyview.set_min_battery_pct_for_caffeinate(this.value)">
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">On battery power, sleep prevention only kicks in while remaining charge is at least this percent. On power supply it is always active.</div>
+        </div>
+        <div class="settings-field">
+            <label for="settingsPauseBattery">Pause local AI below battery</label>
+            <input type="number" id="settingsPauseBattery" min="0" max="100" step="1" value="{{ pyview._pause_local_ai_below_battery_pct }}" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:13px" onchange="pyview.set_pause_local_ai_below_battery_pct(this.value)">
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">On battery power, when charge drops below this percent local model tasks pause and wait until you plug in or charge back above the threshold. Cloud/remote models are unaffected.</div>
+        </div>
+        <div class="settings-field">
+            <label for="settingsGuardTimeout">Keep-awake grace period (minutes)</label>
+            <input type="number" id="settingsGuardTimeout" min="0" max="120" step="1" value="{{ pyview._sleep_guard_release_delay_minutes }}" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-size:13px" onchange="pyview.set_sleep_guard_release_delay_minutes(this.value)">
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">After the last local model call finishes, keep the system awake for this many more minutes so back-to-back calls don't sleep/wake the machine in between. 0 = release immediately.</div>
+        </div>
         <div class="settings-field">
             <label for="settingsLanguage" data-i18n="settings_label_language">Language</label>
             <select id="settingsLanguage" style="width:100%;padding:8px;background:var(--code-bg);color:var(--text);border:1px solid var(--border2);border-radius:6px"></select>
@@ -200,10 +268,61 @@ class SettingPanelPerferences(ModelView):
     def _send_key(self) -> str:
         return self._settings.send_key
 
+    @property
+    def _prevent_sleep_when_local_ai(self) -> bool:
+        return self._settings.prevent_sleep_when_local_ai
+
+    @property
+    def _min_battery_pct_for_caffeinate(self) -> int:
+        return self._settings.min_battery_pct_for_caffeinate
+
+    @property
+    def _pause_local_ai_below_battery_pct(self) -> int:
+        return self._settings.pause_local_ai_below_battery_pct
+
+    @property
+    def _sleep_guard_release_delay_minutes(self) -> int:
+        return self._settings.sleep_guard_release_delay_minutes
+
+    def get_power_status(self):
+        from runtime.power import power_state_summary
+        return power_state_summary()
+
     def set_default_model(self, value: str):
         self._settings.default_model = value
         self.update()
 
     def set_send_key(self, value: str):
         self._settings.send_key = value
+        self.update()
+
+    def set_prevent_sleep_when_local_ai(self, value):
+        self._settings.prevent_sleep_when_local_ai = bool(value)
+        self.update()
+
+    def set_min_battery_pct_for_caffeinate(self, value):
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            return
+        if 0 <= value <= 100:
+            self._settings.min_battery_pct_for_caffeinate = value
+        self.update()
+
+    def set_pause_local_ai_below_battery_pct(self, value):
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            return
+        if 0 <= value <= 100:
+            self._settings.pause_local_ai_below_battery_pct = value
+        self.update()
+
+    def set_sleep_guard_release_delay_minutes(self, value):
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            return
+        if 0 <= value <= 120:
+            self._settings.sleep_guard_release_delay_minutes = value
         self.update()

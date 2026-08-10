@@ -131,6 +131,7 @@ def _release_rate_limited_calls() -> None:
     from runtime.rate_limiter import RateLimitChecker, RateLimitError
     from runtime.tasks.call_fsm import TaskCallStateMachine
     from runtime.tasks.call_scheduler import CallScheduler
+    from runtime.power import battery_gate_blocked
 
     waiting = (
         AgentTaskCall.objects.filter(
@@ -138,7 +139,7 @@ def _release_rate_limited_calls() -> None:
         )
         .order_by("priority", "created_at")
     )
-    exhausted_models: set[int] = set()
+    blocked_models: set[int] = set()
     from runtime.session.session import Session
 
     for call in waiting:
@@ -147,13 +148,17 @@ def _release_rate_limited_calls() -> None:
                 session_model=call.session,
                 pinned_session_version=call.session_version,
             ).aimodel
-            if aimodel is None or aimodel.pk in exhausted_models:
+            if aimodel is None or aimodel.pk in blocked_models:
+                continue
+            # Low-battery pause: keep the call parked until power recovers.
+            if battery_gate_blocked(aimodel)[0]:
+                blocked_models.add(aimodel.pk)
                 continue
             try:
                 RateLimitChecker.check(aimodel)
             except RateLimitError as e:
                 print(f"{aimodel} is rate limited" ,e )
-                exhausted_models.add(aimodel.pk)
+                blocked_models.add(aimodel.pk)
                 continue
 
             if TaskCallStateMachine.release_rate_limit(call.pk):

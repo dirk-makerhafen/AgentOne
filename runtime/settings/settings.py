@@ -18,6 +18,10 @@ DEFAULT_CONFIG = {
     "preferences": {
         "default_model": "",
         "send_key": "ctrl+enter",
+        "prevent_sleep_when_local_ai": True,
+        "min_battery_pct_for_caffeinate": 30,
+        "pause_local_ai_below_battery_pct": 15,
+        "sleep_guard_release_delay_minutes": 5,
     },
 }
 
@@ -88,6 +92,36 @@ def get_send_key() -> str:
     return value if value in VALID_SEND_KEYS else "ctrl+enter"
 
 
+def get_prevent_sleep_when_local_ai() -> bool:
+    """Whether ``caffeinate`` may keep the system awake during local calls."""
+    return bool(
+        get_config().get("preferences", {}).get("prevent_sleep_when_local_ai", True)
+    )
+
+
+def _get_battery_pct_setting(key: str, default: int) -> int:
+    value = get_config().get("preferences", {}).get(key, default)
+    return value if isinstance(value, int) and 0 <= value <= 100 else default
+
+
+def get_min_battery_pct_for_caffeinate() -> int:
+    """Minimum battery percent (on battery power) that permits caffeinate."""
+    return _get_battery_pct_setting("min_battery_pct_for_caffeinate", 30)
+
+
+def get_pause_local_ai_below_battery_pct() -> int:
+    """Below this battery percent (on battery power) local calls are paused."""
+    return _get_battery_pct_setting("pause_local_ai_below_battery_pct", 15)
+
+
+def get_sleep_guard_release_delay_minutes() -> int:
+    """Grace period (minutes) before caffeinate is released after the last call."""
+    value = get_config().get("preferences", {}).get(
+        "sleep_guard_release_delay_minutes", 5
+    )
+    return value if isinstance(value, int) and 0 <= value <= 120 else 5
+
+
 class UserSettings(Observable):
     def __init__(self):
         super().__init__()
@@ -128,6 +162,14 @@ class UserSettings(Observable):
                 return isinstance(val, str)
             if key == "send_key":
                 return val in VALID_SEND_KEYS
+            if key == "prevent_sleep_when_local_ai":
+                return isinstance(val, bool)
+            if key in (
+                "min_battery_pct_for_caffeinate",
+                "pause_local_ai_below_battery_pct",
+                "sleep_guard_release_delay_minutes",
+            ):
+                return isinstance(val, int) and 0 <= val <= 100
         return True
 
     def _save(self):
@@ -198,3 +240,35 @@ class UserSettings(Observable):
     @send_key.setter
     def send_key(self, value: str):
         self.set("preferences", "send_key", value)
+
+    @property
+    def prevent_sleep_when_local_ai(self) -> bool:
+        return get_prevent_sleep_when_local_ai()
+
+    @prevent_sleep_when_local_ai.setter
+    def prevent_sleep_when_local_ai(self, value: bool):
+        self.set("preferences", "prevent_sleep_when_local_ai", bool(value))
+
+    @property
+    def min_battery_pct_for_caffeinate(self) -> int:
+        return get_min_battery_pct_for_caffeinate()
+
+    @min_battery_pct_for_caffeinate.setter
+    def min_battery_pct_for_caffeinate(self, value: int):
+        self.set("preferences", "min_battery_pct_for_caffeinate", int(value))
+
+    @property
+    def pause_local_ai_below_battery_pct(self) -> int:
+        return get_pause_local_ai_below_battery_pct()
+
+    @pause_local_ai_below_battery_pct.setter
+    def pause_local_ai_below_battery_pct(self, value: int):
+        self.set("preferences", "pause_local_ai_below_battery_pct", int(value))
+
+    @property
+    def sleep_guard_release_delay_minutes(self) -> int:
+        return get_sleep_guard_release_delay_minutes()
+
+    @sleep_guard_release_delay_minutes.setter
+    def sleep_guard_release_delay_minutes(self, value: int):
+        self.set("preferences", "sleep_guard_release_delay_minutes", int(value))

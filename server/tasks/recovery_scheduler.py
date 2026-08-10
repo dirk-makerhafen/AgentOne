@@ -46,6 +46,21 @@ def tick_scheduler_recovery() -> None:
     _recover_stuck_calls()
     _cancel_duplicate_queries()
     _recover_stale_queries()
+    _manage_sleep_guard()
+
+
+def _manage_sleep_guard() -> None:
+    """Reconcile the sleep guard (``caffeinate``) with recent local-LLM
+    activity and battery/AC state.  Run on the 60s cadence — Celery prefork
+    makes per-call worker-local state unreliable, so the guard is owned here.
+    """
+    try:
+        from runtime.sleep_guard import manage_sleep_guard
+        result = manage_sleep_guard()
+        if result["state"] != "off":
+            print(f"[recovery] sleep guard {result['state']} — {result['reason']}")
+    except Exception as e:
+        print(f"[recovery] error managing sleep guard: {e}")
 
 
 def startup_cleanup() -> None:
@@ -59,6 +74,7 @@ def startup_cleanup() -> None:
     _release_queued_calls()
     _recover_stuck_calls()
     _recover_stale_queries()
+    _manage_sleep_guard()
 
 
 def _release_queued_calls() -> None:
