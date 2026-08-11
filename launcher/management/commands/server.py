@@ -504,15 +504,75 @@ class Command(BaseCommand):
             f.write(cert.public_bytes(serialization.Encoding.PEM))
         return (cert_path, key_path)
 
+    def _current_ipv4_addresses(self):
+        """Return the set of non-loopback IPv4 addresses on up network interfaces."""
+        addrs: set = set()
+        try:
+            import psutil
+            stats = psutil.net_if_stats()
+            for iface, snics in psutil.net_if_addrs().items():
+                if not stats.get(iface) or not stats[iface].isup:
+                    continue
+                for snic in snics:
+                    if snic.family == socket.AF_INET and not snic.address.startswith("127."):
+                        addrs.add(snic.address)
+        except Exception:
+            addrs = set()
+        if addrs:
+            return addrs
+        # Fallback: the address used to reach the default gateway (best guess).
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(("8.8.8.8", 80))
+            addrs.add(s.getsockname()[0])
+        finally:
+            s.close()
+        return addrs
+
     def run_zeroconf(self):
         zeroconf = Zeroconf()
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.connect(("8.8.8.8", 80))
-        ip_address = s.getsockname()[0]; s.close()
-        info = ServiceInfo("_https._tcp.local.", f"{NAME}._https._tcp.local.",
-            addresses=[socket.inet_aton(ip_address)], port=5000, server=f"{NAME}.local.")
-        zeroconf.register_service(info)
+        current = self._current_ipv4_addresses()
+        if not current:
+            self.stdout.write(self.style.WARNING(
+                f"No IPv4 addresses found - {NAME}.local will not be advertised."
+            ))
+            zeroconf.close()
+            return
+        info = ServiceInfo(
+            "_https._tcp.local.", f"{NAME}._https._tcp.local.",
+            addresses=[socket.inet_aton(ip) for ip in sorted(current)],
+            port=5000, server=f"{NAME}.local.",
+        )
         try:
-            while True: time.sleep(1)
+            zeroconf.register_service(info)
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(
+                f"Could not advertise {NAME}.local: {e}"
+            ))
+            zeroconf.close()
+            return
+        self.stdout.write(self.style.SUCCESS(
+            f"mDNS service advertised: {NAME}.local -> {', '.join(sorted(current))}"
+        ))
+        try:
+            while True:
+                time.sleep(10)
+                addrs = self._current_ipv4_addresses()
+                if addrs == current or not addrs:
+                    continue
+                current = addrs
+                info.addresses = [socket.inet_aton(ip) for ip in sorted(current)]
+                try:
+                    zeroconf.update_service(info)
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"Failed to update mDNS service: {e}"))
+                    continue
+                self.stdout.write(self.style.SUCCESS(
+                    f"Network change detected - {NAME}.local now at {', '.join(sorted(current))}"
+                ))
         finally:
-            zeroconf.unregister_service(info); zeroconf.close()
+            try:
+                zeroconf.unregister_service(info)
+            finally:
+                zeroconf.close()
 

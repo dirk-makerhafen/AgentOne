@@ -150,9 +150,12 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
         
         result_files: list[tuple[datetime.datetime, Path]] = []
         timestamps = []
+        try:
+            to_ignore = [l.strip() for l in (OUTPUT_PATH  / "ignore.txt").read_text().splitlines()]
+        except:
+            to_ignore = []
         for eml_file in eml_files:
-            bads = ["__info@twitter.com__", "no-reply@mail.instagram.com__"]
-            if True in [ bad in eml_file.as_posix() for bad in bads]:
+            if True in [ bad in eml_file.as_posix() for bad in to_ignore]:
                 os.remove(eml_file)
                 os.rmdir(eml_file.parent)
                 continue
