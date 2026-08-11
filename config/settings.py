@@ -70,6 +70,18 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'tasks.tick_scheduler',
         'schedule': 10,  # seconds
     },
+    'agentone-cron-scheduler': {
+        'task': 'tasks.cron_scheduler',
+        'schedule': 60,  # seconds
+    },
+    'agentone-sleep-guard-scheduler': {
+        'task': 'tasks.sleep_guard_scheduler',
+        'schedule': 60,  # seconds
+    },
+    'agentone-heartbeat': {
+        'task': 'server.tasks.heartbeat.poll_remote_executors_for_heartbeat',
+        'schedule': 120,  # seconds
+    },
     #'agentone-recovery-scheduler': {
     #    'task': 'tasks.tick_scheduler_recovery',
     #    'schedule': 60,  # seconds

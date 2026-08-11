@@ -81,7 +81,7 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - Upstream sources (`.agentone/{skills}/skills.yaml`, `{agents}/sources.yaml`, `{scripts}/sources.yaml`) are merged via `~/.agentone/upstream/` on every reload. Local files always override upstream.
 - Data flows (`.agentone/streams/*.md`, `.agentone/sets/*.md`) replaced legacy named-pipe system.
 - `_trigger_on_removed` in `tick_scheduler.py` (not reprocess_collection.py — it imports it) — the `source_calls` param must contain the AgentTaskCalls whose items were removed, not all source calls.
-- Scheduler split: `tick_scheduler.py` runs the 10s tick (dispatch, propagate, release, cron); `recovery_scheduler.py` runs the 60s recovery pass (`tasks.tick_scheduler_recovery`) and one-time `tasks.startup_cleanup` (dispatched by `server run`).
+- Scheduler split: `tick_scheduler.py` runs the 10s tick (dispatch, propagate, release). One-minute sibling tasks live in their own modules: `cron_scheduler.py` (cron dispatch), `sleep_guard_scheduler.py` (keep-awake guard), `recovery_scheduler.py` (`tasks.tick_scheduler_recovery` — recovery passes, disabled in beat config), and `startup_cleanup.py` (one-time cleanup, dispatched by `server run`).
 - When writing tests for UI views (`ui/`), call `messages_view.set_visible(True)` in setUp to activate ObservableListView observer callbacks before exercising append/insert.
 
 ## Real-time UI events

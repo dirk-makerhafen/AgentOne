@@ -14,14 +14,3 @@ app.autodiscover_tasks()
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     print(f'Request: {self.request!r}')
-
-# Celery Beat scheduled tasks
-app.conf.beat_schedule = {
-    'poll-remote-executors-every-30-seconds': {
-        'task': 'systems.tasks.heartbeat.poll_remote_executors_for_heartbeat',
-        'schedule': 120.0, # Run every 30 seconds
-        'options': {
-            'queue': 'celery' # Ensure this runs on the main server's default queue
-        },
-    },
-}

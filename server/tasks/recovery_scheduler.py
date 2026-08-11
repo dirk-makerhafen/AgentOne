@@ -7,14 +7,13 @@ or stale queries) and one-time cleanups.  These run on a 60-second cadence via
 ``tasks.tick_scheduler_recovery`` instead of every 10s tick, because in a
 healthy system they mostly no-op.
 
-Two tasks are defined here:
+One task is defined here:
 
   ``tasks.tick_scheduler_recovery`` — runs every 60s (config/settings.py
   ``CELERY_BEAT_SCHEDULE``).  Sweeps all six recovery passes.
 
-  ``tasks.startup_cleanup`` — runs once at startup, dispatched by
-  ``python3 manage.py server run``.  Cleans leftover state from a previous run
-  (e.g. stale runtime folders).
+The one-time startup cleanup moved to ``tasks.startup_cleanup``
+(``startup_cleanup.py``), dispatched by ``python3 manage.py server run``.
 """
 
 from __future__ import annotations
@@ -46,35 +45,6 @@ def tick_scheduler_recovery() -> None:
     _recover_stuck_calls()
     _cancel_duplicate_queries()
     _recover_stale_queries()
-    _manage_sleep_guard()
-
-
-def _manage_sleep_guard() -> None:
-    """Reconcile the sleep guard (``caffeinate``) with recent local-LLM
-    activity and battery/AC state.  Run on the 60s cadence — Celery prefork
-    makes per-call worker-local state unreliable, so the guard is owned here.
-    """
-    try:
-        from runtime.sleep_guard import manage_sleep_guard
-        result = manage_sleep_guard()
-        if result["state"] != "off":
-            print(f"[recovery] sleep guard {result['state']} — {result['reason']}")
-    except Exception as e:
-        print(f"[recovery] error managing sleep guard: {e}")
-
-
-def startup_cleanup() -> None:
-    """One-time startup cleanup — called when the server starts.
-
-    Runs the recovery passes immediately so orphaned state left over from a
-    previous run (lost Celery messages, ACTIVE_QUEUED calls, QUEUED runs) is
-    recovered right away instead of waiting up to 60s for the beat pass.
-    """
-    _cleanup_stale_runtime_folders()
-    _release_queued_calls()
-    _recover_stuck_calls()
-    _recover_stale_queries()
-    _manage_sleep_guard()
 
 
 def _release_queued_calls() -> None:

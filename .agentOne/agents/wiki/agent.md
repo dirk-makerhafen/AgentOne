@@ -8,7 +8,7 @@ precision: FOCUSED
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, wiki.find_unlinked_raw]
 commands: [+, ingest_file, ingest_next, wiki_lint]
 tasks: [+, verify, ingest_verification_result]
-autoCompactLimit: 80000
+autoCompactLimit: 100000
 compactSizeLimit: 10
 subagents:
     - name: researcher

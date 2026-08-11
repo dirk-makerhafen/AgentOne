@@ -7,11 +7,13 @@ Celery beat periodic task handling the 10-second time-driven wakeups:
   3. WAITING_RATELIMIT - re-check LLM capacity, release calls in FIFO order
   4. WAITING_RETRY     - release calls whose dont_start_before has passed
   5. NEW (scheduled)   - release calls with dont_start_before in the past
-  6. Cron job dispatch
 
-Error recovery and startup cleanups live in ``recovery_scheduler.py``
-(``tasks.tick_scheduler_recovery`` every 60s, ``tasks.startup_cleanup`` once
-at startup).
+Sibling one-minute tasks live in their own modules:
+
+  * ``tasks.cron_scheduler``         - cron job dispatch (``cron_scheduler.py``)
+  * ``tasks.sleep_guard_scheduler``  - keep-awake guard (``sleep_guard_scheduler.py``)
+  * ``tasks.startup_cleanup``        - one-time startup cleanup (``startup_cleanup.py``)
+  * ``tasks.tick_scheduler_recovery``- error recovery (``recovery_scheduler.py``)
 
 Celery beat config (settings.py):
 
@@ -20,8 +22,12 @@ Celery beat config (settings.py):
             'task': 'tasks.tick_scheduler',
             'schedule': 10.0,  # seconds
         },
-        'agentone-recovery-scheduler': {
-            'task': 'tasks.tick_scheduler_recovery',
+        'agentone-cron-scheduler': {
+            'task': 'tasks.cron_scheduler',
+            'schedule': 60.0,  # seconds
+        },
+        'agentone-sleep-guard-scheduler': {
+            'task': 'tasks.sleep_guard_scheduler',
             'schedule': 60.0,  # seconds
         },
     }
@@ -45,8 +51,6 @@ def tick_scheduler() -> None:
     _release_rate_limited_calls()
     _release_retry_calls()
     _release_queued_calls()
-
-    _process_cron_jobs()
 
 
 def _release_queued_calls() -> None:
@@ -207,19 +211,6 @@ def _release_scheduled_calls() -> None:
             celery_delay(CallScheduler._apply_async, call.pk)
         except Exception as e:
             print(f"[scheduler] error dispatching scheduled call {call.pk}: {e}")
-
-
-def _process_cron_jobs() -> None:
-    """Dispatch due cron jobs to Celery workers."""
-    from runtime.cron.execute import execute_cron_job
-    from runtime.cron.crons import Cronjobs
-
-    for cronjob in Cronjobs().due():
-        try:
-            execute_cron_job(cronjob.pk)
-            print(f"[scheduler] dispatched cron job {cronjob.pk} ({cronjob.name})")
-        except Exception as e:
-            print(f"[scheduler] error dispatching cron job {cronjob.pk}: {e}")
 
 
 def _check_agent_pattern(call_agent_name: str, pattern: str) -> bool:

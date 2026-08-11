@@ -139,7 +139,7 @@ def _spawn_caffeinate() -> bool:
         return False
     try:
         proc = subprocess.Popen(
-            [binary, "-dimsu"],
+            [binary, "-ims"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )

@@ -47,6 +47,7 @@ class AgentModel(BaseModel):
         ])
 
 
+
     def get_runtime(self) -> Agent:
         """Return a runtime Agent wrapper for this model."""
         return Agent(agent_model=self)

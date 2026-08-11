@@ -281,7 +281,7 @@ class Command(BaseCommand):
         self.stdout.write(f" - Celery Worker & Beat starting...")
         self.stdout.write(f"Type {self.style.ERROR('.exit')} and press Enter to quit.")
 
-        from server.tasks.recovery_scheduler import startup_cleanup
+        from server.tasks.startup_cleanup import startup_cleanup
         startup_cleanup()
         self.stdout.write(" - Startup cleanup queued...")
         log_level = "DEBUG"
