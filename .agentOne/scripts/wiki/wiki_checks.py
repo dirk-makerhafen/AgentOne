@@ -678,6 +678,18 @@ def wiki_check(
                     is_fs_abs = link.startswith("/")
                     if not (is_bare or is_relative or is_fs_abs):
                         continue
+                    if is_bare:
+                        # A bare name is already the vault-root-relative form when
+                        # its target lives directly in the vault root (no folder to
+                        # disambiguate). Flagging it would suggest the identical link.
+                        root_target = _resolve_wikilink_target(link, fp.parent, root)
+                        if root_target is not None:
+                            try:
+                                root_rel = root_target.relative_to(root).as_posix()
+                            except ValueError:
+                                root_rel = None
+                            if root_rel and "/" not in root_rel:
+                                continue
                     if is_relative:
                         issue = "relative path - use a vault-root-relative path"
                     elif is_fs_abs:

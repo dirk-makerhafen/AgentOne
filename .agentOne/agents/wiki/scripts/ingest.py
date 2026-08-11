@@ -9,7 +9,17 @@ from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 
 
-def ingest_next(_session: Session, limit=1) -> str:
+def ingest_next(_session: Session, limit: int = 1) -> str:
+    """
+    ingest next unlinked raw item into the wiki
+
+    Args:
+        _session: The active agent session.
+        limit: Max new items to ingest
+
+    Returns:
+        A response message 
+    """
     success, res = _session.get_tool("find_unlinked_raw").call(limit=limit)
     if not success:
         return json.dumps(res)
