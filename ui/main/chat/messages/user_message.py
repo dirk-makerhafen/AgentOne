@@ -17,7 +17,7 @@ class UserMessageView(ModelView):
             {% endfor %}   
         </div>
         <div class="msg-foot">
-            <span class="msg-time" title="{{pyview.subject.create_at}}">{{pyview.subject.create_at}}</span>
+            <span class="msg-time" title="{{pyview.subject.created_at}}">{{pyview.subject.created_at}}</span>
             <span class="msg-actions">
                 <button class="msg-action-btn" title="Edit message" onclick="editMessage(this)">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>

@@ -143,27 +143,3 @@ class SidebarView(ModelView):
             if hasattr(panel, "set_project_filter"):
                 panel.set_project_filter(pid)
 
-'''
-
-        <!-- Memory panel -->
-        <div class="panel-view" id="panelMemory">
-            <div class="panel-head">
-                <span data-i18n="personal_memory">Personal memory</span>
-            </div>
-            <div class="side-menu" id="memoryPanel">
-                <div style="padding:12px;color:var(--muted);font-size:12px" data-i18n="loading">Loading...</div>
-            </div>
-        </div>
-
-        <!-- Todo panel -->
-        <div class="panel-view" id="panelTodos">
-            <div class="panel-head">
-                <span data-i18n="current_task_list">Current task list</span>
-            </div>
-            <div id="todoPanel" style="flex:1;overflow-y:auto;padding:8px 12px"></div>
-        </div>
-
-        
-
-
-'''
