@@ -12,7 +12,63 @@ from django.db import models
 from django.utils import timezone
 
 
-class BaseModel(DirtyFieldsMixin, models.Model):
+class Observables:
+    """Base helper for building stable observable keys for an ORM instance.
+
+    Subclasses add explicit ``@property`` names so IDEs can autocomplete them
+    (e.g. ``agent.observables.parent_project``).  The base provides ``any``
+    and ``pk`` plus a ``__getattr__`` fallback that derives a key for any
+    model attribute by name — both produce identical key strings to the ones
+    :meth:`BaseModel.notify_observers` publishes.
+
+    Key format::
+
+        <ModelName>            # "any" — the whole model
+        <ModelName>.pk:<pk>
+        <ModelName>.<field>:<value>
+    """
+
+    def __init__(self, model) -> None:
+        self.model = model
+
+    @property
+    def any(self) -> str:
+        return type(self.model).__name__
+
+    @property
+    def pk(self) -> str:
+        return f"{self.any}.pk:{self.model.pk}"
+
+    def __getattr__(self, name: str) -> str:
+        if name.startswith("_"):
+            raise AttributeError(name)
+        model = self.__dict__.get("model")
+        if model is None:
+            raise AttributeError(name)
+        # Prefer the *_pk / *_id column value (no related-object query).
+        for attname in (f"{name}_pk", f"{name}_id", name):
+            if hasattr(model, attname):
+                return f"{self.any}.{name}:{getattr(model, attname)}"
+        raise AttributeError(name)
+
+
+class ObservableMixin:
+    """Adds ``.observables`` to any model — including non-BaseModel ones
+    (e.g. ``Project``, ``SkillModel``) that only observe from the other side
+    of a relation.  Looks for a nested ``<ModelName>Observables`` class and
+    falls back to the generic :class:`Observables`."""
+
+    @property
+    def observables(self):
+        if not hasattr(self, "_observables") or self._observables is None:
+            obs_cls = getattr(self.__class__, f"{self.__class__.__name__}Observables", None)
+            if obs_cls is None:
+                obs_cls = Observables
+            self._observables = obs_cls(self)
+        return self._observables
+
+
+class BaseModel(ObservableMixin, DirtyFieldsMixin, models.Model):
     """Abstract base model providing created/updated timestamps, raw JSON data
     storage, and fork-based data deduplication."""
 
@@ -47,6 +103,39 @@ class BaseModel(DirtyFieldsMixin, models.Model):
         """Set new data (copy-on-write — breaks the fork reference).
         """
         self._data = new_data
+
+    def observable_keys(self) -> list[str]:
+        """Return the observable keys this instance notifies on.
+
+        Always includes the ``any`` and ``pk`` keys, plus one key per set FK
+        (e.g. ``AgentModel.parent_project:12``) so observers registered on the
+        other side of the relation (``project.observables.child_agents``) are
+        notified too.
+        """
+        keys = [self.observables.any]
+        if self.pk is not None:
+            keys.append(self.observables.pk)
+        for field in self._meta.fields:
+            if isinstance(field, models.ForeignKey):
+                fk_id = getattr(self, field.attname, None)
+                if fk_id is not None:
+                    keys.append(f"{self.observables.any}.{field.name}:{fk_id}")
+        return keys
+
+    def notify_observers(self, action: str = "update", data: dict[str, Any] | None = None) -> None:
+        """Notify subscribed UI observers for this instance's observable keys.
+
+        Observer-gated: :func:`runtime.observables.notify` only pushes to
+        instance queues that actually subscribed to one of the keys.
+        """
+        from runtime import observables as obs
+        obs.notify(
+            self.observable_keys(),
+            self.__class__.__name__,
+            self.pk,
+            action,
+            data,
+        )
 
     def save(self, *args: Any, **kwargs: Any) -> Any:
         """Save the model, auto-serialising ``_data`` to ``raw_data`` and tracking

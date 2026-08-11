@@ -1,9 +1,10 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 
-class ClarifyCard(ModelView):
+class ClarifyCard(PyHtmlView):
     DOM_ELEMENT_CLASS = 'clarify-card'
     DOM_ELEMENT_EXTRAS = 'role="dialog" aria-labelledby="clarifyHeading" aria-describedby="clarifyQuestion clarifyHint" style="display:none"'
     TEMPLATE_STR = '''

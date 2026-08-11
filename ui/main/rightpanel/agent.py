@@ -4,6 +4,7 @@ from django.utils import timezone
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.main.rightpanel.rightpanel import RightPanel
@@ -17,7 +18,7 @@ AGENT_ICONS = {
 }
 
 
-class RightPanelAgentInfo(ModelView):
+class RightPanelAgentInfo(PyHtmlView):
     DOM_ELEMENT = "div"
     DOM_ELEMENT_CLASS = "rightpanel-inner"
     TEMPLATE_STR = '''

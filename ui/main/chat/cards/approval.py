@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 
-class ApprovalCard(ModelView):
+class ApprovalCard(PyHtmlView):
     #DOM_ELEMENT_CLASS = 'approval-card'
     DOM_ELEMENT_EXTRAS = 'role="alertdialog" aria-labelledby="approvalHeading" aria-describedby="approvalDesc"'
     TEMPLATE_STR = '''

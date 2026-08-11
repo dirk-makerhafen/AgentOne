@@ -27,14 +27,3 @@ class WorkspaceModel(models.Model):
             "workspace-relative globs."
         ),
     )
-
-    observable_fields = set([
-        "pk",
-    ])
-
-    @property
-    def observable_keys(self):
-        return set([
-            "WorkspaceModel",
-            f"WorkspaceModel.pk:{self.pk}",
-        ])

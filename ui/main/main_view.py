@@ -1,12 +1,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
 
-class MainView(ModelView):
+class MainView(PyHtmlView):
     DOM_ELEMENT = "main"
     DOM_ELEMENT_CLASS = "main"
     TEMPLATE_STR = """

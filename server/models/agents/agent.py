@@ -1,17 +1,39 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import QuerySet
 
 from runtime.agents.agent import Agent
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 
 
 class AgentModel(BaseModel):
     """Uniquely identifies an Agent across all versions and variants."""
+
+    class AgentModelObservables(Observables):
+        """Explicit observable keys for an AgentModel (IDE autocomplete)."""
+
+        @property
+        def child_agents(self):
+            return f"AgentModel.parent_agent:{self.model.pk}"
+
+        @property
+        def child_skills(self):
+            return f"SkillModel.parent_agent:{self.model.pk}"
+
+        @property
+        def parent_skill(self):
+            return f"AgentModel.parent_skill:{self.model.parent_skill_id}"
+        @property
+        def parent_agent(self):
+            return f"AgentModel.parent_agent:{self.model.parent_agent_id}"
+        @property
+        def parent_project(self):
+            return f"AgentModel.parent_project:{self.model.parent_project_id}"
+
 
     name = models.CharField(max_length=255, unique=True)
     latest_agent_version = models.ForeignKey("server.AgentVersionModel",default=None,null=True,on_delete=models.SET_NULL,related_name="related_newest_version")
@@ -28,25 +50,6 @@ class AgentModel(BaseModel):
     def agent_versions(self) -> QuerySet:
         """Return related agent version instances."""
         return self.related_agent_versions  # pyright: ignore[reportAttributeAccessIssue]
-
-    observable_fields = set([
-        "pk",
-        "parent_skill"
-        "parent_agent",
-        "parent_project"
-    ])
-    
-    @property
-    def observable_keys(self):
-        return set([
-            "AgentModel",
-            f"AgentModel.pk:{self.pk}",
-            f"AgentModel.parent_skill:{self.parent_skill_pk}",     
-            f"AgentModel.parent_agent:{self.parent_agent_pk}",     
-            f"AgentModel.parent_project:{self.parent_project_pk}",        
-        ])
-
-
 
     def get_runtime(self) -> Agent:
         """Return a runtime Agent wrapper for this model."""

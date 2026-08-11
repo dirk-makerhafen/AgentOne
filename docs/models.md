@@ -35,7 +35,6 @@ models.Model
   ├── Cronjob                                  # Scheduled cron jobs
   ├── HistoryLimitingRule                      # Tool usage limits
   ├── Project                                  # Project grouping
-  ├── SkillDefinition                          # Registered skill
   ├── SkillModel                               # Skill (no versioning)
   ├── DataCollection                           # Stream / ordered set
   ├── CollectionItem                           # Data flow item
@@ -491,20 +490,7 @@ File: `server/models/skills/skill_version.py`
 | `path` | `CharField(255)` | File path |
 | `version_number` | `IntegerField(default=0)` | |
 
-### SkillDefinition
 
-File: `server/models/skill_definition.py`
-
-| Field | Type | Notes |
-|---|---|---|
-| `skill_slug` | `CharField(100, unique)` | Unique slug |
-| `name` | `CharField(200)` | Display name |
-| `description` | `TextField` | Capabilities |
-| `tool_description` | `TextField(nullable)` | Tool description |
-| `target_source` | `CharField(255, nullable)` | Module path |
-| `requires_auth` | `BooleanField(default=False)` | Auth requirement |
-
----
 ## Other models
 
 ### GenericContent

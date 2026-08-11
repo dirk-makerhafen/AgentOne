@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from ui.main.chat.composer.footer import ComposerFooter
 
 
-class ReasoningWrap(ModelView):
+class ReasoningWrap(PyHtmlView):
     DOM_ELEMENT_CLASS = 'composer-reasoning-wrap'
     TEMPLATE_STR = '''
         <button class="composer-reasoning-chip" id="composerReasoningChip" type="button" onclick="pyview.toggle()" title="Reasoning effort level">

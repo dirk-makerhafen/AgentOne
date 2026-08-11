@@ -2,11 +2,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 if TYPE_CHECKING:
     from ui.main.chat.composer.footer import ComposerFooter
 
 
-class ToolsetsWrap(ModelView):
+class ToolsetsWrap(PyHtmlView):
     DOM_ELEMENT_CLASS = 'composer-toolsets-wrap'
     TEMPLATE_STR = '''
         <button class="composer-toolsets-chip" id="composerToolsetsChip" type="button" onclick="pyview.toggle()" title="Session toolsets">

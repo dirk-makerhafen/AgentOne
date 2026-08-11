@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 
 
-class TerminalPanel(ModelView):
+class TerminalPanel(PyHtmlView):
     DOM_ELEMENT_CLASS = 'composer-terminal-panel'
     DOM_ELEMENT_EXTRAS = 'style="display:none"'
     TEMPLATE_STR = '''

@@ -7,12 +7,13 @@ from server.models.agents.agent import AgentModel
 from server.models.collections import DataCollection
 from runtime.agents.agent import Agent
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
 
 
-class CollectionCreateView(ModelView):
+class CollectionCreateView(PyHtmlView):
     """Create a new DataCollection (stream or set)."""
 
     DOM_ELEMENT_CLASS = "main-view"

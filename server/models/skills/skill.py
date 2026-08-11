@@ -4,10 +4,11 @@ from typing import Any
 
 from django.db import models
 
+from server.models.base_model import ObservableMixin, Observables
 from server.models.skills.skill_version import SkillModelVersion
 
 
-class SkillModel(models.Model):
+class SkillModel(ObservableMixin, models.Model):
     """A skill group that versions its configuration over time."""
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -20,21 +21,25 @@ class SkillModel(models.Model):
     parent_project = models.ForeignKey("server.Project",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_skills")
     parent_skill = models.ForeignKey("self",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_skills")
 
-    observable_fields = set([
-        "pk",
-        "latest_skill_version",
-        "parent_agent",
-        "parent_project",
-        "parent_skill",                       
-    ])
 
-    @property
-    def observable_keys(self):
-        return set([
-            "SkillModel",
-            f"SkillModel.pk:{self.pk}",
-            f"SkillModel.latest_skill_version:{self.latest_skill_version_pk}",
-            f"SkillModel.parent_agent:{self.parent_agent_pk}",
-            f"SkillModel.parent_project:{self.parent_project_pk}",
-            f"SkillModel.parent_skill:{self.parent_skill_pk}",          
-        ])
+    class SkillModelObservables(Observables):
+        """Explicit observable keys for an SkillModel (IDE autocomplete)."""
+
+        @property
+        def child_agents(self):
+            return f"AgentModel.parent_skill:{self.model.pk}"
+
+        @property
+        def child_skills(self):
+            return f"SkillModel.parent_skill:{self.model.pk}"
+
+        @property
+        def parent_agent(self):
+            return f"SkillModel.parent_agent:{self.model.parent_agent_id}"
+        @property
+        def parent_project(self):
+            return f"SkillModel.parent_project:{self.model.parent_project_id}"
+        @property
+        def parent_skill(self):
+            return f"SkillModel.parent_skill:{self.model.parent_skill_id}"
+

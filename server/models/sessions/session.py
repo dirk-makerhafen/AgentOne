@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from django.db import models
 from django.db.models import QuerySet
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.queries.query import Query
@@ -30,6 +30,21 @@ class SessionModel(BaseModel):
         default=SessionType.SESSION,
     )
 
+    class SessionModelObservables(Observables):
+        """Explicit observable keys for an SessionModel (IDE autocomplete)."""
+
+        @property
+        def child_sessions(self):
+            return f"SessionModel.parent_session:{self.model.pk}"
+        
+        @property
+        def messages(self):
+            return f"Message.session:{self.model.pk}"
+        @property
+        def queries(self):
+            return f"Query.session:{self.model.pk}"
+
+
     @property
     def is_permanent(self) -> bool:
         """True for user sessions and reusable subsessions (not single-use subtasks)."""
@@ -42,12 +57,6 @@ class SessionModel(BaseModel):
     parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="child_sessions")
     latest_session_version = models.ForeignKey("server.SessionVersionModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_newest_version")
 
-    observable_fields = set([
-        "pk",
-        "parent_session",  
-        "parent_project",
-        "latest_session_version",                         
-    ])
 
     @property
     def messages(self) -> QuerySet:
@@ -58,20 +67,6 @@ class SessionModel(BaseModel):
     def queries(self) -> QuerySet:
         """All queries belonging to this session across all versions."""
         return Query.objects.filter(session_version__session=self)
-
-    @property
-    def observable_keys(self):
-        k = f"SessionModel:{self.pk}"
-        k = f"SessionModel:{self.parent_session_pk}:child_sessions"
-        k = f"Project:{self.parent_project_pk}:child_sessions"
-        
-
-        return set([
-            "SessionModel",
-            f"SessionModel.pk:{self.pk}",
-            f"SessionModel.parent_session:{self.parent_session_pk}",
-            f"SessionModel.parent_project:{self.parent_project_pk}",
-        ])
 
     def get_runtime(self) -> Session:
         """Return a runtime Session wrapper for this model."""

@@ -8,6 +8,7 @@ from server.models.workspace import WorkspaceModel
 from runtime.agents.agent import Agent
 from runtime.cron.file_io import write_cron_file
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.cron.cron import CronView
 
 if TYPE_CHECKING:
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
-class CronCreateView(ModelView):
+class CronCreateView(PyHtmlView):
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="main-view-header">

@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.main.chat.composer.footer import ComposerFooter
 
-class ReasoningDropdown(ModelView):
+class ReasoningDropdown(PyHtmlView):
     TEMPLATE_STR = '''
         <div onclick="pyview.set_reasoning_effort('none')"    class="reasoning-option {% if pyview.parent.subject.reasoning_effort == 'none'    %}selected{% endif %}" data-effort="none">None</div>
         <div onclick="pyview.set_reasoning_effort('minimal')" class="reasoning-option {% if pyview.parent.subject.reasoning_effort == 'minimal' %}selected{% endif %}" data-effort="minimal">Minimal</div>

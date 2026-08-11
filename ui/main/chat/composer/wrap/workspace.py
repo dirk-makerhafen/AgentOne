@@ -2,12 +2,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.main.chat.composer.footer import ComposerFooter
 
 
-class WorkspaceWrap(ModelView):
+class WorkspaceWrap(PyHtmlView):
     DOM_ELEMENT_CLASS = 'composer-ws-wrap'
     TEMPLATE_STR = '''
         <div class="composer-workspace-group ws-chip" id="composerWorkspaceGroup" role="group" aria-label="Workspace controls">

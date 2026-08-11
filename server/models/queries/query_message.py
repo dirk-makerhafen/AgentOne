@@ -10,7 +10,7 @@ from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message, MessagePart
@@ -33,21 +33,13 @@ class QueryMessage(BaseModel):
     tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
-    observable_fields = set([
-        "pk",
-        "query",  
-    ])
+    class QueryMessageObservables(Observables):
+        """Explicit observable keys for an QueryMessage (IDE autocomplete)."""
 
-    @property
-    def observable_keys(self):
-        k = f"QueryMessage:{self.pk}"
-        k = f"Query:{self.query_pk}:related_query_messages"
+        @property
+        def parts(self):
+            return f"QueryMessagePart.query_message:{self.model.pk}"
 
-        return set([
-            "QueryMessage",
-            f"QueryMessage.pk:{self.pk}",
-            f"QueryMessage.query:{self.query_pk}",        
-        ])
 
     def add_part(
         self,
@@ -194,7 +186,6 @@ class QueryMessage(BaseModel):
         cache[cache_key] = message
         return message
 
-
     def _merge_text_parts(self, parts: list[dict[str, Any]], prefix_fk: GenericContent | None = None, postfix_fk: GenericContent | None = None) -> str | list[dict[str, Any]]:
         """Merge adjacent text parts, prepend prefix, append postfix."""
         if prefix_fk and (prefix := prefix_fk.get()):
@@ -216,7 +207,6 @@ class QueryMessage(BaseModel):
             return merged[0]["text"]
         return merged
 
-
     def _serialize_result(self, data: Any) -> str:
         """JSON-serialise a tool result, handling Message / Path model references."""
         def _walk(obj: Any) -> Any:
@@ -235,7 +225,6 @@ class QueryMessage(BaseModel):
                 return obj.as_posix()
             raise TypeError(f"Cannot serialize {type(obj).__name__}")
         return json.dumps(_walk(data))
-
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         super().save(*args, **kwargs)

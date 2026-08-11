@@ -9,7 +9,7 @@ from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 
@@ -33,21 +33,12 @@ class QueryMessagePart(BaseModel):
 
     tags = models.JSONField( default=list, null=True, blank=True, help_text="List of tags used")
 
-    observable_fields = set([
-        "pk",
-        "query_message",  
-    ])
+    class QueryMessagePartObservables(Observables):
+        """Explicit observable keys for a QueryMessagePart (IDE autocomplete)."""
 
-    @property
-    def observable_keys(self):
-        k = f"QueryMessagePart:{self.pk}"
-        k = f"QueryMessage:{self.query_message_pk}:query_message_parts"
-
-        return set([
-            "QueryMessagePart",
-            f"QueryMessagePart.pk:{self.pk}",
-            f"QueryMessagePart.query_message:{self.query_pk}",        
-        ])
+        @property
+        def query_message(self):
+            return f"QueryMessagePart.query_message:{self.model.query_message_id}"
 
     def to_openai_message(self, fail_on_error: bool = True) -> list[dict[str, Any]]:
         """Convert this part to the OpenAI content-part format.
@@ -130,4 +121,3 @@ class QueryMessagePart(BaseModel):
             return [{"type": "text", "text": json.dumps(content.get())}]
 
         raise ValueError(f"Unknown content type: {content_type}")
-

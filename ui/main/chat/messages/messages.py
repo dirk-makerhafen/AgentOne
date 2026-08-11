@@ -7,6 +7,7 @@ from server.models.queries.query import Query
 from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.lib.pyHtmlGui.pyhtmlgui.lib.observableList import ObservableList
 from ui.lib.pyHtmlGui.pyhtmlgui.view.observable_list_view import ObservableListView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.chat.messages.message import MessageView
 from ui.lib.model_view import ModelView
 from ui.app import UiApp
@@ -22,7 +23,7 @@ class ObservableMessageListView(ObservableListView):
         {% endfor %}
        
     '''
-class Messages(ModelView):
+class Messages(PyHtmlView):
     DOM_ELEMENT_CLASS = 'messages'
     TEMPLATE_STR = '''
     <style>
@@ -49,9 +50,6 @@ class Messages(ModelView):
             <div id="top-sentinel" style="height: 1px;position:relative;top:"></div>
             {{ pyview.messages_view.render() }}
             <div id="bottom-sentinel" style="height: 1px;"></div>    
-
-            <span onclick="var e=document.getElementById('{{pyview.uid}}');pyview.up()">UP</span>
-            <span onclick="pyview.down()">DOWN</span>
             <div id="liveCompressionCards" class="live-compression-cards"></div>
 
             <div id="liveToolCards" style="display:none1;max-width:800px;margin:0 auto;width:100%;padding:0 24px;"></div>

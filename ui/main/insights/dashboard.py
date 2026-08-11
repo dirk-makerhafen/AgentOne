@@ -19,6 +19,7 @@ from server.models.tasks.task_definition import TaskDefinition
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.lib.observableList import ObservableList
 from ui.lib.pyHtmlGui.pyhtmlgui.view.observable_list_view import ObservableListView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -96,7 +97,7 @@ def _timesince(dt: datetime | None) -> str:
 # ---------------------------------------------------------------------------
 
 
-class ResultCountView(ModelView):
+class ResultCountView(PyHtmlView):
     TEMPLATE_STR = """
     {{pyview.parent.result_count}} Items
     """
@@ -107,7 +108,7 @@ class ResultCountView(ModelView):
 # ---------------------------------------------------------------------------
 
 
-class InspectRowView(ModelView):
+class InspectRowView(PyHtmlView):
     TEMPLATE_STR = """
         <div class="inspect-row">
             <div class="inspect-row-content" onclick="pyview.toggle()">

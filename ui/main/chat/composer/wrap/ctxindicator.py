@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from ui.main.chat.composer.footer import ComposerFooter
 
 
-class CtxIndicatorWrap(ModelView):
+class CtxIndicatorWrap(PyHtmlView):
     DOM_ELEMENT_CLASS = 'ctx-indicator-wrap'
     TEMPLATE_STR = '''
         <button class="ctx-indicator" id="ctxIndicator" type="button" aria-label="Context window usage" aria-describedby="ctxTooltip">

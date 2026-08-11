@@ -7,7 +7,7 @@ from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 from server.models.content import GenericContent
 from server.models.enums.message_enums import (
     MessageContentType,
@@ -36,22 +36,12 @@ class Message(BaseModel):
     hide_from_context: bool = models.BooleanField(default=False)
     pin_to_context: bool = models.BooleanField(default=False)
 
-    observable_fields = set([
-        "pk",
-        "session_version",
-    ])
+    class MessageObservables(Observables):
+        """Explicit observable keys for an Message (IDE autocomplete)."""
 
-    @property
-    def observable_keys(self):
-        k = f"Message:{self.pk}",
-        k = f"SessionModel:{self.session_pk}.related_messages"
-        k = f"SessionVersionModel:{self.session_version_pk}.related_messages"
-
-        return set([
-            "Message",
-            f"Message.pk:{self.pk}",
-            f"Message.session_version:{self.session_version_pk}",        
-        ])
+        @property
+        def parts(self):
+            return f"MessagePart.message:{self.model.pk}"
 
 
     def add_part( self, type: str, content_type: MessageContentType, content: Any, template_data: Any = None, tool_call: Any = None) -> MessagePart:

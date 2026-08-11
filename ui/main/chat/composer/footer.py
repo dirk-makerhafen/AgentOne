@@ -4,6 +4,7 @@ from runtime.session.session import Session
 from server.models.enums.message_enums import MessageRole
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.chat.composer.dropdown.model import ModelDropdown
 from ui.main.chat.composer.dropdown.profile import ProfileDropdown
 from ui.main.chat.composer.dropdown.reasoning import ReasoningDropdown
@@ -21,27 +22,27 @@ if TYPE_CHECKING:
 from server.models.enums.message_enums import MessagePartType, MessageContentType
 
 
-class ComposerFooter(ModelView):
+class ComposerFooter(PyHtmlView):
     DOM_ELEMENT_CLASS = 'composer-footer'
     TEMPLATE_STR = '''
         <div class="composer-left">
             <input type="file" id="fileInput" multiple accept="image/*,text/*,application/pdf,application/json,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.md,.py,.js,.ts,.yaml,.yml,.toml,.csv,.sh,.txt,.log,.env,.xls,.xlsx,.doc,.docx,.zip,.tar,.gz,.tgz,.bz2,.xz" style="display:none">
             
-            <button class="icon-btn" id="btnAttach" title="Attach files">
+            <button class="icon-btn" id="btnAttach" title="Attach files" style="display:none">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             </button>
             
-            <button class="icon-btn mic-btn" id="btnMic" title="Dictate" data-i18n-title="voice_dictate" style="display:none1">
+            <button class="icon-btn mic-btn" id="btnMic" title="Dictate" data-i18n-title="voice_dictate" style="display:none">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
             </button>
             
-            <button class="icon-btn voice-mode-btn" id="btnVoiceMode" title="Voice mode" data-i18n-title="voice_mode_toggle" style="display:none1">
+            <button class="icon-btn voice-mode-btn" id="btnVoiceMode" title="Voice mode" data-i18n-title="voice_mode_toggle" style="display:none">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- Lucide audio-lines: signals two-way voice conversation, matches ChatGPT/Gemini convention. --><path d="M2 10v4"/><path d="M6 6v12"/><path d="M10 3v18"/><path d="M14 8v8"/><path d="M18 5v14"/><path d="M22 10v4"/></svg>
             </button>
             
             <div class="composer-divider" aria-hidden="true"></div>
 
-            <button class="yolo-pill" id="yoloPill" type="button" onclick="cmdYolo()" style="display:none1" title="YOLO mode — click to disable" data-i18n-title="yolo_pill_title_active">
+            <button style="display:none" class="yolo-pill" id="yoloPill" type="button" onclick="cmdYolo()" style="display:none1" title="YOLO mode — click to disable" data-i18n-title="yolo_pill_title_active">
                 <span class="yolo-pill-icon" aria-hidden="true">⚡</span>
                 <span class="yolo-pill-label" data-i18n="yolo_pill_label">YOLO</span>
             </button>
@@ -52,7 +53,7 @@ class ComposerFooter(ModelView):
             
             <button class="icon-btn composer-mobile-config-btn" id="composerMobileConfigBtn" type="button" onclick="toggleMobileComposerConfig()" title="Workspace, model, reasoning, and context settings" aria-label="Workspace, model, reasoning, and context settings" aria-haspopup="true" aria-expanded="false" aria-controls="composerMobileConfigPanel">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                <span class="composer-mobile-ctx-badge" id="composerMobileCtxBadge" aria-hidden="true" style="display:none1">0</span>
+                <span class="composer-mobile-ctx-badge" id="composerMobileCtxBadge" aria-hidden="true" style="display:none">0</span>
             </button>
             
             {{ pyview.model_wrap.render() }}

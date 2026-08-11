@@ -4,6 +4,7 @@ from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.lib.queryset_view import QuerySetView
 
 if TYPE_CHECKING:
@@ -31,7 +32,7 @@ class ProfileDropdownOption(ModelView):
         return f'profile-opt {"active" if self.parent.parent.subject.agent.name == self.subject.name else ""}'
 
 
-class ProfileDropdown(ModelView):
+class ProfileDropdown(PyHtmlView):
     TEMPLATE_STR = '''       
         <div class="profile-scope-note">Applies to this conversation from your next message.</div>
         <div class="profile-search-row">

@@ -9,12 +9,13 @@ from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.app import UiApp
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from runtime.session.session import Session
 
 
-class GuardrailApprovalCard(ModelView):
+class GuardrailApprovalCard(PyHtmlView):
     #DOM_ELEMENT_CLASS = 'guardrail-approval-card'
     DOM_ELEMENT_EXTRAS = 'role="alertdialog" aria-labelledby="guardrailHeading" aria-describedby="guardrailDesc"'
     TEMPLATE_STR = '''

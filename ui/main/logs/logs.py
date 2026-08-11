@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
-class MainLogsView(ModelView):
+class MainLogsView(PyHtmlView):
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="main-view-header">

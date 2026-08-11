@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
-class MainInsightsView(ModelView):
+class MainInsightsView(PyHtmlView):
     TEMPLATE_STR = '''
         <div id="mainInsights" class="main-view">
             <div class="main-view-header">

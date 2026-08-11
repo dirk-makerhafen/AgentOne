@@ -7,6 +7,7 @@ from django.conf import settings
 
 from server.models.providers.ai_model import AiModel
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.agent.agent_view import AgentView
 
 if TYPE_CHECKING:
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
-class AgentCreateView(ModelView):
+class AgentCreateView(PyHtmlView):
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="main-view-header">

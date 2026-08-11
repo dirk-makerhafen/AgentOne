@@ -7,7 +7,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 if TYPE_CHECKING:
     from ui.main.chat.chat import Chat
 
-class UpdateBanner(ModelView):
+class UpdateBanner(PyHtmlView):
     DOM_ELEMENT_CLASS = 'update-banner'
     TEMPLATE_STR = '''
         <div style="display:flex;flex-direction:column;flex:1;min-width:0">

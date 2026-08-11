@@ -2,12 +2,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from server.models.enums.task_enums import TaskCallStatusDetail
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from runtime.session.session import Session
 
 
-class QueueCard(ModelView):
+class QueueCard(PyHtmlView):
     DOM_ELEMENT_CLASS = 'queue-card'
     DOM_ELEMENT_EXTRAS = 'role="region" aria-label="Queued messages" aria-live="polite"'
     TEMPLATE_STR = '''

@@ -6,6 +6,7 @@ import yaml
 from django.conf import settings
 
 from ui.lib.model_view import ModelView
+from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.project.project_view import ProjectView
 
 if TYPE_CHECKING:
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
-class ProjectCreateView(ModelView):
+class ProjectCreateView(PyHtmlView):
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="main-view-header">
