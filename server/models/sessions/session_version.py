@@ -34,30 +34,6 @@ class SessionVersionModel(BaseModel):
     session_settings = models.ForeignKey("server.SettingsModel",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="related_instance_versions")
     version_number = models.IntegerField(default=0)
 
-    observable_fields = set([
-        "pk",
-        "session",  
-        "agent",
-        "pinned_agent_version",      
-        "parent_session",
-        "workspace",    
-    ])
-
-    @property
-    def observable_keys(self):
-        k = f"SessionVersionModel:{self.pk}"
-        k = f"Session:{self.session_pk}:related_session_versions"
-
-        return set([
-            "SessionVersionModel",
-            f"SessionVersionModel.pk:{self.pk}",
-            f"SessionVersionModel.session:{self.session_pk}",
-            f"SessionVersionModel.agent:{self.agent_pk}",
-            f"SessionVersionModel.pinned_agent_version:{self.pinned_agent_version_pk}",
-            f"SessionVersionModel.parent_session:{self.parent_session_pk}",
-            f"SessionVersionModel.workspace:{self.workspace_pk}",
-        ])
-
     def get_runtime(self) -> Session:
         """Return a runtime Session wrapper pinned to this version."""
         return Session(session_model=self.session, pinned_session_version=self)

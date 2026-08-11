@@ -69,12 +69,12 @@ class SidebarPanelChat(ModelView):
                 {% for child, depth, model_name, has_active, needs_approval in pyview.child_tree %}
                 <div class="session-tree-child session-item{% if child.pk == pyview._active_session_pk %} active{% endif %}" style="margin-left:{{ depth }}em" onclick="event.stopPropagation(); pyview.open_child({{ child.pk }})" title="{{ child.name }}">
                     <div style="display:flex;align-items:flex-start;gap:6px;flex:1;min-width:0">
-                        {% if has_active %}<span class="session-state-indicator is-streaming" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}
-                        {% if needs_approval %}<span class="session-state-indicator needs-approval" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}
                         <div style="flex:1;min-width:0">
                             <div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ child.name }}</div>
                             <div class="session-meta">{{ child.messages.count() }} msgs{% if model_name %} · {{ model_name }}{% endif %}</div>
                         </div>
+                        {% if has_active %}<span class="session-state-indicator is-streaming" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}
+                        {% if needs_approval %}<span class="session-state-indicator needs-approval" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}                        
                     </div>
                 </div>
                 {% endfor %}
