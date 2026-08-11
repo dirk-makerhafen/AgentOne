@@ -646,7 +646,13 @@ class CallScheduler:
                 running = _ATR.objects.filter(
                     task_instance=taskcall.task_instance,
                 ).exclude(
-                    status__in=[_TRS.SUCCESS, _TRS.FAILURE]
+                    # RATE_LIMITED runs are terminal: they never resume (the
+                    # run FSM has no transition out of RATE_LIMITED), and the
+                    # call is re-dispatched as a brand-new run when capacity
+                    # returns.  Counting the abandoned run here would let it
+                    # permanently hold the parallel slot and deadlock the call
+                    # in WAITING_QUEUE forever.
+                    status__in=[_TRS.SUCCESS, _TRS.FAILURE, _TRS.RATE_LIMITED]
                 ).exclude(
                     # A call that is a *descendant* of a running call on the
                     # same task_instance is a same-turn continuation (e.g.

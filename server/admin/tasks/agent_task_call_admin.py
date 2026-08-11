@@ -57,7 +57,7 @@ class AgentTaskCallAdmin(admin.ModelAdmin):
     search_fields: tuple[str, ...] = ("task_instance__name",)
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at", "carguments_json", "taskcall_arg_references", "taskcall_result_run",
                                         "taskcall_on_success_callbacks", "taskcall_on_error_callbacks", "task_instance", "task_definition", "task_definition_version",
-                                        "taskcall_before_run_hooks", "taskcall_after_run_hooks", "parent_taskrun", "session", "session_version")
+                                        "taskcall_before_run_hooks", "taskcall_after_run_hooks", "parent_taskrun", "session", "session_version", "session_root_task")
     list_per_page: int = 25
 
     def get_queryset(self, request: HttpRequest) -> QuerySet:
