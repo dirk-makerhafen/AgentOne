@@ -15,7 +15,7 @@ class ProjectView(ModelView):
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''  
         <div class="main-view-header">
-            <div class="main-view-title" id="workspaceDetailTitle">{{ pyview.subject.name }}</div>
+            <div class="main-view-title" id="projectTitle">{{ pyview.subject.name }}</div>
             <div class="main-view-actions">
                 <button id="btnActivateWorkspaceDetail" class="panel-head-btn" title="Use this space" data-i18n-title="workspace_use_title" onclick="activateCurrentWorkspace()" style="display:none1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></button>
                 <button id="btnEditWorkspaceDetail" class="panel-head-btn" title="Rename" data-i18n-title="edit" onclick="editCurrentWorkspace()" style="display:none1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>

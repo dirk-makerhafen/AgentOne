@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from server.models.agents.agent import AgentModel
 from server.models.project import Project
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView

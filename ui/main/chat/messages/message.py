@@ -29,8 +29,6 @@ class MessageView(ModelView):
         else:
             self.view = QueryView(subject=subject, parent=self)
             self.role = "query"
-       
-
 
     @property
     def DOM_ELEMENT_EXTRAS(self):
