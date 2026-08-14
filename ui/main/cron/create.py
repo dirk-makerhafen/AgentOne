@@ -10,6 +10,7 @@ from runtime.cron.file_io import write_cron_file
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.cron.cron import CronView
+from ui.main.rightpanel.cron.rightpanel_cron import RightPanelCron
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
 
 
 class CronCreateView(PyHtmlView):
+    RIGHTPANEL_VIEW = RightPanelCron
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="main-view-header">

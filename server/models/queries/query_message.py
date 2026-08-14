@@ -117,7 +117,7 @@ class QueryMessage(BaseModel):
                     content_parts.extend(part_contents)
             elif part.source_message_part and part.source_message_part.type == MessagePartType.REASONING:
                 if requires_reasoning_echo and part.source_message_part.content: 
-                    reasoning_parts.extend( [pc.get("text","") for pc in part_contents if p.get("type","") == "reasoning"])
+                    reasoning_parts.extend( [pc.get("text","") for pc in part_contents if pc.get("type","") == "reasoning"])
             else:
                 content_parts.extend(part_contents)
 

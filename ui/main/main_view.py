@@ -5,6 +5,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
+    from ui.app_view import UiAppView
 
 class MainView(PyHtmlView):
     DOM_ELEMENT = "main"
@@ -18,7 +19,7 @@ class MainView(PyHtmlView):
     """
    
     
-    def __init__(self, subject: "UiApp", parent, **kwargs):
+    def __init__(self, subject: "UiApp", parent:UiAppView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.open_tabs = {}
         self.selected_tab_id = ""
@@ -50,7 +51,7 @@ class MainView(PyHtmlView):
                 last_key = list(self.open_tabs.keys())[-1]
                 self.select_tab(last_key)
             else:
-                self.parent.rightpanel._update_context()
+                self.parent.rightpanel.close()
                 self.update()
                 self._titlebar_update()
                 self._update_sidebar_active()
@@ -61,7 +62,10 @@ class MainView(PyHtmlView):
             return
         self.selected_tab_id = tab_id
         self.selected_tab_view = self.open_tabs[tab_id]
-        self.parent.rightpanel._update_context()
+        if hasattr(self.selected_tab_view , "RIGHTPANEL_VIEW"):
+            self.parent.rightpanel.set_view(self.selected_tab_view.RIGHTPANEL_VIEW, self.selected_tab_view.subject)
+        else:
+            self.parent.rightpanel.close()
         self.update()
         self._titlebar_update()
         self._update_sidebar_active()

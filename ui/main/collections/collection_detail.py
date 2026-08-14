@@ -8,14 +8,16 @@ from server.models.agents.agent import AgentModel
 from server.models.collections import DataCollection, CollectionItem
 from runtime.agents.agent import Agent
 from ui.lib.model_view import ModelView
+from ui.main.rightpanel.collection.rightpanel_collection import RightPanelCollection
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
 class CollectionDetailView(ModelView):
-    DOM_ELEMENT_CLASS = "main-view"
+    RIGHTPANEL_VIEW = RightPanelCollection
 
+    DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <script>
             function filterSourceList(inputId, listId) {

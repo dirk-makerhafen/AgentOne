@@ -4,11 +4,13 @@ from server.models.workspace import WorkspaceModel
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+from ui.main.rightpanel.workspace.rightpanel_workspace import RightPanelWorkspace
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 class Workspace(ModelView):
+    RIGHTPANEL_VIEW = RightPanelWorkspace
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''  
         <div class="main-view-header">

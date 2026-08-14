@@ -4,6 +4,7 @@ from runtime.session.session import Session
 from server.models.enums.task_enums import TaskSchedulerStrategy
 from server.models.enums.session_enums import SessionType
 from server.models.providers.ai_model import AiModel
+from server.models.sessions.session import SessionModel
 from server.models.settings import (
     ResponseTemperature,
     AgentToolCallSyntax,
@@ -13,7 +14,7 @@ from server.models.settings import (
 from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
-    from ui.main.rightpanel.rightpanel import RightPanel
+    from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
     from ui.app import UiApp
 
 
@@ -40,9 +41,9 @@ BOOLEAN_FIELDS = {
 }
 
 
-class RightPanelSession(ModelView):
+class RightPanelSessionSettings(ModelView):
     DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel-inner"
+    DOM_ELEMENT_CLASS = "rightpanel-tab"
     TEMPLATE_STR = '''
         <div class="panel-header">
             <span>Session</span>
@@ -136,11 +137,11 @@ class RightPanelSession(ModelView):
                 {% endfor %}
                 <div class="detail-row">
                     <div class="detail-row-label">Current Turn Count</div>
-                    <div class="detail-row-value">{{ pyview.session.current_turn_count }}</div>
+                    <div class="detail-row-value">{{ pyview.subject.current_turn_count }}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Current Unattended</div>
-                    <div class="detail-row-value">{{ pyview.session.current_unattended_turn_count }}</div>
+                    <div class="detail-row-value">{{ pyview.subject.current_unattended_turn_count }}</div>
                 </div>
             </div>
 
@@ -148,11 +149,11 @@ class RightPanelSession(ModelView):
                 <div class="panel-header" style="margin-left:-8px">Prompts</div>
                 <div class="detail-row">
                     <div class="detail-row-label">System Prompt</div>
-                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.session.system_prompt }}</div>
+                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.subject.system_prompt }}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Task Prompt</div>
-                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.session.task_prompt }}</div>
+                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.subject.task_prompt }}</div>
                 </div>
             </div>
 
@@ -177,24 +178,19 @@ class RightPanelSession(ModelView):
         ("access", "Filesystem Access"),
     ]
 
-    def __init__(self, subject: UiApp, parent: RightPanel, **kwargs):
+    def __init__(self, subject: SessionModel, parent: RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
 
     # ------------------------------------------------------------------
     # Session access
     # ------------------------------------------------------------------
-
-    @property
-    def session(self) -> Session | None:
-        return self.parent.current_session
-
     @property
     def settings_fields(self):
         return self.SETTINGS_FIELDS
 
     @property
     def workspace_name(self) -> str:
-        s = self.session
+        s = self.subject
         if s is None:
             return ""
         ws = s.workspace
@@ -204,7 +200,7 @@ class RightPanelSession(ModelView):
 
     @property
     def session_type_label(self) -> str:
-        s = self.session
+        s = self.subject
         if s is None:
             return "\u2014"
         return dict(SessionType.choices).get(s.session_type, s.session_type)
@@ -215,7 +211,7 @@ class RightPanelSession(ModelView):
 
     def _resolved_value(self, name: str) -> Any:
         """Return the raw resolved setting value (session override → agent default)."""
-        s = self.session
+        s = self.subject
         if s is None:
             return None
         return getattr(s, name, None)
@@ -245,7 +241,7 @@ class RightPanelSession(ModelView):
         return str(val)
 
     def is_overridden(self, name: str) -> bool:
-        s = self.session
+        s = self.subject
         if s is None:
             return False
         ss = s.get_version_model().session_settings
@@ -276,7 +272,7 @@ class RightPanelSession(ModelView):
 
     def setSetting(self, name: str, raw_value: str) -> None:
         """Set a setting on the session (creates a new session version)."""
-        s = self.session
+        s = self.subject
         if s is None:
             return
 
@@ -311,7 +307,7 @@ class RightPanelSession(ModelView):
 
     def resetSetting(self, name: str) -> None:
         """Reset a setting override, restoring the agent default."""
-        s = self.session
+        s = self.subject
         if s is None:
             return
         if not self.is_overridden(name):
@@ -324,7 +320,7 @@ class RightPanelSession(ModelView):
         from server.models.sessions.session import SessionModel
         from runtime.events import publish_model_event
 
-        s = self.session
+        s = self.subject
         if s is None:
             return
         name = value.strip()

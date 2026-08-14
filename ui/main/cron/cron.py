@@ -7,12 +7,14 @@ from server.models.agents.agent import AgentModel
 from runtime.agents.agent import Agent
 from runtime.cron.file_io import write_cron_file, delete_cron_file, rename_cron_file
 from ui.lib.model_view import ModelView
+from ui.main.rightpanel.cron.rightpanel_cron import RightPanelCron
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
 class CronView(ModelView):
+    RIGHTPANEL_VIEW = RightPanelCron
     DOM_ELEMENT_CLASS = "main-view"
 
     TEMPLATE_STR = '''

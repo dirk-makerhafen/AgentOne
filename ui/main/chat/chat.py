@@ -14,12 +14,14 @@ from ui.main.chat.cards.queue import QueueCard
 from ui.main.chat.messages.messages import Messages
 from ui.main.chat.panel.terminal import TerminalPanel
 from ui.app import UiApp
+from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
 class Chat(ModelView):
+    RIGHTPANEL_VIEW = RightPanelSession
     DOM_ELEMENT_CLASS = 'main-view'
     TEMPLATE_STR = '''
         {{ pyview.messages.render() }}

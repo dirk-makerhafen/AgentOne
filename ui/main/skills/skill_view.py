@@ -9,12 +9,15 @@ from markupsafe import Markup
 from server.models.skills.skill import SkillModel
 from server.models.skills.skill_version import SkillModelVersion
 from ui.lib.model_view import ModelView
+from ui.main.rightpanel.skill.rightpanel_skill import RightPanelSkill
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
 class SkillView(ModelView):
+    RIGHTPANEL_VIEW = RightPanelSkill
+
     DOM_ELEMENT_CLASS = "main-view"
 
     CSS_STR = '''

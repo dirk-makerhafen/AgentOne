@@ -2,12 +2,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from collections import defaultdict
 from django.utils import timezone
+from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.enums.task_enums import TaskCallStatusDetail, TaskCallStatus
 from ui.lib.model_view import ModelView
 
+
 if TYPE_CHECKING:
-    from ui.main.rightpanel.rightpanel import RightPanel
+    from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
     from ui.app import UiApp
 
 
@@ -119,72 +121,10 @@ class CallNodeView(ModelView):
         return 'style="margin-left:{}em" data-depth="{}"'.format(self.depth, self.depth)
 
 
-def _build_flat_items(session_model, parent_view: ModelView) -> list[CallNodeView]:
-    from django.db.models import F as _F
 
-    MAX_SIBLINGS = 1000
-    MAX_DEPTH = 100
-
-    # Find the newest root call for this session via session_root_task.
-    # Root calls have session_root_task pointing to themselves.
-    root_call = AgentTaskCall.objects.filter(
-        session=session_model,
-        session_root_task=_F("pk"),
-    ).order_by("-created_at").first()
-    if not root_call:
-        return []
-
-    # Fetch only calls under this root (current turn's call tree).
-    calls = list(AgentTaskCall.objects.filter(
-        session_root_task=root_call,
-    ).select_related(
-        "task_definition",
-        "parent_taskrun__agent_task_call",
-    ).order_by("-created_at")[:500])
-
-    # Build tree using parent_taskrun.agent_task_call_id (multi-level nesting).
-    call_map = {c.pk: c for c in calls}
-    child_ids: dict[int, list[int]] = defaultdict(list)
-    roots: list[int] = []
-
-    for c in calls:
-        parent_call_id = None
-        if c.parent_taskrun and c.parent_taskrun.agent_task_call_id in call_map:
-            parent_call_id = c.parent_taskrun.agent_task_call_id
-            child_ids[parent_call_id].append(c.pk)
-        else:
-            roots.append(c.pk)
-
-    inserted: set[int] = set()
-    flat_items: list[CallNodeView] = []
-
-    def _walk(call_id: int, depth: int = 0) -> None:
-        if depth > MAX_DEPTH or call_id in inserted:
-            return
-        call = call_map.get(call_id)
-        if not call:
-            return
-        inserted.add(call_id)
-        children = child_ids.get(call_id, [])[:MAX_SIBLINGS]
-        node = CallNodeView(
-            subject=call,
-            parent=parent_view,
-            depth=depth,
-            has_children=bool(children),
-        )
-        flat_items.append(node)
-        for ccid in children:
-            _walk(ccid, depth + 1)
-
-    for rid in roots:
-        _walk(rid)
-
-    return flat_items
-
-
-class RightPanelCalls(ModelView):
+class RightPanelSessionCalls(ModelView):
     DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel-inner"
+    DOM_ELEMENT_CLASS = "rightpanel-tab"
     TEMPLATE_STR = '''
         <div class="panel-header">
             <span>Task Calls</span>
@@ -196,15 +136,16 @@ class RightPanelCalls(ModelView):
         </div>
         <div style="flex:1;overflow-y:auto;padding:8px">
             {% if pyview.active_count %}
-            <div style="font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px">{{ pyview.active_count }} active</div>
+                <div style="font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px">{{ pyview.active_count }} active</div>
             {% endif %}
+
             {% for item in pyview._items %}
-            {{ item.render() }}
+                {{ item.render() }}
             {% endfor %}
         </div>
     '''
 
-    def __init__(self, subject: UiApp, parent: RightPanel, **kwargs):
+    def __init__(self, subject: SessionModel, parent: RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._items: list[CallNodeView] = []
 
@@ -239,4 +180,67 @@ class RightPanelCalls(ModelView):
         self._items = []
         s = self.session
         if s is not None and s.model:
-            self._items = _build_flat_items(s.model, self)
+            self._items = self._build_flat_items(s.model, self)
+
+
+    def _build_flat_items(self, session_model, parent_view: ModelView) -> list[CallNodeView]:
+        from django.db.models import F as _F
+
+        MAX_SIBLINGS = 1000
+        MAX_DEPTH = 100
+
+        # Find the newest root call for this session via session_root_task.
+        # Root calls have session_root_task pointing to themselves.
+        root_call = AgentTaskCall.objects.filter(
+            session=session_model,
+            session_root_task=_F("pk"),
+        ).order_by("-created_at").first()
+        if not root_call:
+            return []
+
+        # Fetch only calls under this root (current turn's call tree).
+        calls = list(AgentTaskCall.objects.filter(
+            session_root_task=root_call,
+        ).select_related(
+            "task_definition",
+            "parent_taskrun__agent_task_call",
+        ).order_by("-created_at")[:500])
+
+        # Build tree using parent_taskrun.agent_task_call_id (multi-level nesting).
+        call_map = {c.pk: c for c in calls}
+        child_ids: dict[int, list[int]] = defaultdict(list)
+        roots: list[int] = []
+
+        for c in calls:
+            parent_call_id = None
+            if c.parent_taskrun and c.parent_taskrun.agent_task_call_id in call_map:
+                parent_call_id = c.parent_taskrun.agent_task_call_id
+                child_ids[parent_call_id].append(c.pk)
+            else:
+                roots.append(c.pk)
+
+        inserted: set[int] = set()
+        flat_items: list[CallNodeView] = []
+
+        def _walk(call_id: int, depth: int = 0) -> None:
+            if depth > MAX_DEPTH or call_id in inserted:
+                return
+            call = call_map.get(call_id)
+            if not call:
+                return
+            inserted.add(call_id)
+            children = child_ids.get(call_id, [])[:MAX_SIBLINGS]
+            node = CallNodeView(
+                subject=call,
+                parent=parent_view,
+                depth=depth,
+                has_children=bool(children),
+            )
+            flat_items.append(node)
+            for ccid in children:
+                _walk(ccid, depth + 1)
+
+        for rid in roots:
+            _walk(rid)
+
+        return flat_items

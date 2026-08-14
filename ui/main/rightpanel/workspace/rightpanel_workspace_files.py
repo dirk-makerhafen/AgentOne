@@ -3,49 +3,85 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
+
 from server.models.workspace import WorkspaceModel
 from ui.lib.model_view import ModelView
 
+
+
 if TYPE_CHECKING:
-    from ui.main.rightpanel.rightpanel import RightPanel
-    from ui.app import UiApp
+    from ui.main.rightpanel.workspace.rightpanel_workspace import RightPanelWorkspace
+    from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
+    from server.models.sessions.session import SessionModel
 
 
-@dataclass
-class FileEntry:
-    name: str
-    path: Path
-    is_dir: bool
-    size: int
+
+class RightPanelWorkspaceFiles(ModelView):
+    DOM_ELEMENT = "div"
+    DOM_ELEMENT_CLASS = "rightpanel-tab"
+    TEMPLATE_STR = '''
+        <div class="panel-header">
+            <span>Workspace</span>
+            <div class="panel-actions">
+                <button class="panel-icon-btn" onclick="pyview.update()" title="Refresh">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="workspace-root-label" style="padding:4px 8px;font-size:11px;color:var(--muted)">{{ pyview.root_label }}</div>
+        <div style="flex:1;overflow-y:auto">
+            {% if pyview.root_view %}
+            {{ pyview.root_view.render() }}
+            {% else %}
+            <div style="font-size:12px;color:var(--muted);padding:16px 8px;text-align:center">No workspace path set.</div>
+            {% endif %}
+        </div>
+    '''
+
+    def __init__(self, subject: SessionModel, parent: RightPanelWorkspace|RightPanelSession, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self._root_view: DirectoryView | None = None
+
 
     @property
-    def size_str(self) -> str:
-        if self.size < 1024:
-            return f"{self.size}B"
-        elif self.size < 1024 * 1024:
-            return f"{self.size / 1024:.1f}K"
-        return f"{self.size / (1024 * 1024):.1f}M"
+    def workspace_root(self) -> Path | None:
+        session:SessionModel = self.subject
+        if session:
+            workspace: WorkspaceModel = session.workspace
+        else:
+            subj = self.parent.current_subject
+            workspace = subj if isinstance(subj, WorkspaceModel) else None
+        if not workspace:
+            return None
+        working_dir = workspace.path
+        if not working_dir:
+            return None
+        working_path = Path(working_dir)
+        if working_path.is_dir() is False or working_path.exists() is False:
+            return None
+        return working_path.resolve()
+      
+
+    @property
+    def root_label(self) -> str:
+        rp = self.workspace_root
+        if rp:
+            return str(rp)
+        return "\u2014"
+
+    @property
+    def root_view(self) -> DirectoryView | None:
+        root = self.workspace_root
+        if root is None:
+            return None
+        if self._root_view is None or Path(self._root_view._path).resolve() != Path(root).resolve():
+            self._root_view = DirectoryView(subject=self.subject, parent=self, path=root, indent=8)
+        return self._root_view
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
 
 
-def _skip(name: str) -> bool:
-    return name in ("__pycache__", ".DS_Store")
-
-
-def _list_dir(path: Path) -> list[FileEntry]:
-    entries = []
-    try:
-        for child in sorted(path.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower())):
-            if _skip(child.name):
-                continue
-            entries.append(FileEntry(
-                name=child.name,
-                path=child,
-                is_dir=child.is_dir(),
-                size=child.stat().st_size if child.is_file() else 0,
-            ))
-    except (PermissionError, OSError):
-        pass
-    return entries
 
 
 class DirectoryView(ModelView):
@@ -97,7 +133,7 @@ class DirectoryView(ModelView):
     def entries(self) -> list[FileEntry]:
         try:
             p = Path(self._path)
-            return _list_dir(p)
+            return self._list_dir(p)
         except OSError:
             return []
 
@@ -124,70 +160,42 @@ class DirectoryView(ModelView):
         self.update()
 
 
-class RightPanelWorkspace(ModelView):
-    DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel-inner"
-    TEMPLATE_STR = '''
-        <div class="panel-header">
-            <span>Workspace</span>
-            <div class="panel-actions">
-                <button class="panel-icon-btn" onclick="pyview.update()" title="Refresh">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                </button>
-            </div>
-        </div>
-        <div class="workspace-root-label" style="padding:4px 8px;font-size:11px;color:var(--muted)">{{ pyview.root_label }}</div>
-        <div style="flex:1;overflow-y:auto">
-            {% if pyview.root_view %}
-            {{ pyview.root_view.render() }}
-            {% else %}
-            <div style="font-size:12px;color:var(--muted);padding:16px 8px;text-align:center">No workspace path set.</div>
-            {% endif %}
-        </div>
-    '''
 
-    def __init__(self, subject: UiApp, parent: RightPanel, **kwargs):
-        super().__init__(subject, parent, **kwargs)
-        self._root_view: DirectoryView | None = None
 
-    @property
-    def session(self) -> Session | None:
-        return self.parent.current_session
+    def _skip(self, name: str) -> bool:
+        return name in ("__pycache__", ".DS_Store")
 
-    @property
-    def workspace_root(self) -> Path | None:
-        session = self.session
-        if session:
-            workspace: WorkspaceModel = session.workspace
-        else:
-            subj = self.parent.current_subject
-            workspace = subj if isinstance(subj, WorkspaceModel) else None
-        if not workspace:
-            return None
-        working_dir = workspace.path
-        if not working_dir:
-            return None
-        working_path = Path(working_dir)
-        if working_path.is_dir() is False or working_path.exists() is False:
-            return None
-        return working_path.resolve()
-      
+
+    def _list_dir(self, path: Path) -> list[FileEntry]:
+        entries = []
+        try:
+            for child in sorted(path.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower())):
+                if self._skip(child.name):
+                    continue
+                entries.append(FileEntry(
+                    name=child.name,
+                    path=child,
+                    is_dir=child.is_dir(),
+                    size=child.stat().st_size if child.is_file() else 0,
+                ))
+        except (PermissionError, OSError):
+            pass
+        return entries
+
+
+
+
+@dataclass
+class FileEntry:
+    name: str
+    path: Path
+    is_dir: bool
+    size: int
 
     @property
-    def root_label(self) -> str:
-        rp = self.workspace_root
-        if rp:
-            return str(rp)
-        return "\u2014"
-
-    @property
-    def root_view(self) -> DirectoryView | None:
-        root = self.workspace_root
-        if root is None:
-            return None
-        if self._root_view is None or Path(self._root_view._path).resolve() != Path(root).resolve():
-            self._root_view = DirectoryView(subject=self.subject, parent=self, path=root, indent=8)
-        return self._root_view
-
-    def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
+    def size_str(self) -> str:
+        if self.size < 1024:
+            return f"{self.size}B"
+        elif self.size < 1024 * 1024:
+            return f"{self.size / 1024:.1f}K"
+        return f"{self.size / (1024 * 1024):.1f}M"

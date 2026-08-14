@@ -3,12 +3,15 @@ from typing import TYPE_CHECKING
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
+from ui.main.rightpanel.project.rightpanel_project import RightPanelProject
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
 
 class ProjectView(ModelView):
+    RIGHTPANEL_VIEW = RightPanelProject
+
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''  
         <div class="main-view-header">

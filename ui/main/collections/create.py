@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 
 class CollectionCreateView(PyHtmlView):
+    
     """Create a new DataCollection (stream or set)."""
 
     DOM_ELEMENT_CLASS = "main-view"

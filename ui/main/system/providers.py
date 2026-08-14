@@ -279,10 +279,7 @@ class ProvidersView(ModelView):
         self._rebuild_provider_views()
 
     def _rebuild_provider_views(self):
-        self.provider_views = [
-            ProviderListItemView(p, self)
-            for p in ApiProvider.objects.all()
-        ]
+        self.provider_views = [ProviderListItemView(p, self) for p in ApiProvider.objects.all()]
 
     def update(self):
         self._rebuild_provider_views()

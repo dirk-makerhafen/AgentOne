@@ -4,6 +4,8 @@ from server.models.agents.agent import AgentModel
 from ui.lib.model_view import ModelView
 from typing import TYPE_CHECKING
 
+from ui.main.rightpanel.agent.rightpanel_agent import RightPanelAgent
+
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
 
@@ -24,34 +26,8 @@ TYPE_CONFIG = [
 ]
 
 
-def _source_label(item, defined_pks) -> str:
-    if item.pk in defined_pks:
-        return "self"
-    tdv = getattr(item, "task_definition", None)
-    if tdv is not None:
-        if tdv.parent_agent is None and tdv.parent_skill is None and tdv.parent_project is None:
-            return "global"
-        return "inherited"
-    sv = getattr(item, "skill", None)
-    if sv is not None:
-        if sv.parent_agent is None and sv.parent_skill is None and sv.parent_project is None:
-            return "global"
-        return "inherited"
-    av = getattr(item, "agent", None)
-    if av is not None:
-        if av.parent_agent is None and av.parent_skill is None and av.parent_project is None:
-            return "global"
-        return "inherited"
-    return "inherited"
-
-
-def _check_allowed(name: str, allowed_set: set, disallowed_set: set) -> bool:
-    if name in disallowed_set:
-        return False
-    return name in allowed_set
-
-
 class AgentView(ModelView):
+    RIGHTPANEL_VIEW = RightPanelAgent
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div style="display:None">
@@ -404,8 +380,8 @@ class AgentView(ModelView):
             seen_tdv.add(tdv.pk)
             self._toolRows.append(CapabilityRow(
                 tdv.task_definition.name,
-                _source_label(tdv, defined_tools_pks),
-                _check_allowed(tdv.task_definition.name, allowed_tools, disallowed_tools),
+                self._source_label(tdv, defined_tools_pks),
+                self._check_allowed(tdv.task_definition.name, allowed_tools, disallowed_tools),
             ))
 
         def add_task(tdv):
@@ -414,8 +390,8 @@ class AgentView(ModelView):
             seen_tdv.add(tdv.pk)
             self._taskRows.append(CapabilityRow(
                 tdv.task_definition.name,
-                _source_label(tdv, defined_tasks_pks),
-                _check_allowed(tdv.task_definition.name, allowed_tasks, disallowed_tasks),
+                self._source_label(tdv, defined_tasks_pks),
+                self._check_allowed(tdv.task_definition.name, allowed_tasks, disallowed_tasks),
             ))
 
         def add_command(tdv):
@@ -424,8 +400,8 @@ class AgentView(ModelView):
             seen_tdv.add(tdv.pk)
             self._commandRows.append(CapabilityRow(
                 tdv.task_definition.name,
-                _source_label(tdv, defined_commands_pks),
-                _check_allowed(tdv.task_definition.name, allowed_commands, disallowed_commands),
+                self._source_label(tdv, defined_commands_pks),
+                self._check_allowed(tdv.task_definition.name, allowed_commands, disallowed_commands),
             ))
 
         def add_skill(sv):
@@ -434,8 +410,8 @@ class AgentView(ModelView):
             seen_skill.add(sv.pk)
             self._skillRows.append(CapabilityRow(
                 sv.skill.name,
-                _source_label(sv, defined_skill_pks),
-                _check_allowed(sv.skill.name, allowed_skills, disallowed_skills),
+                self._source_label(sv, defined_skill_pks),
+                self._check_allowed(sv.skill.name, allowed_skills, disallowed_skills),
             ))
 
         def add_subagent(sav):
@@ -444,8 +420,8 @@ class AgentView(ModelView):
             seen_subagent.add(sav.pk)
             self._subagentRows.append(CapabilityRow(
                 sav.agent.name,
-                _source_label(sav, defined_subagent_pks),
-                _check_allowed(sav.agent.name, allowed_subagents, disallowed_subagents),
+                self._source_label(sav, defined_subagent_pks),
+                self._check_allowed(sav.agent.name, allowed_subagents, disallowed_subagents),
             ))
 
         for tdv in self.agent.all_tools:
@@ -484,3 +460,30 @@ class AgentView(ModelView):
         self._commandRows.sort(key=lambda r: r.name)
         self._skillRows.sort(key=lambda r: r.name)
         self._subagentRows.sort(key=lambda r: r.name)
+
+
+    def _source_label(self, item, defined_pks) -> str:
+        if item.pk in defined_pks:
+            return "self"
+        tdv = getattr(item, "task_definition", None)
+        if tdv is not None:
+            if tdv.parent_agent is None and tdv.parent_skill is None and tdv.parent_project is None:
+                return "global"
+            return "inherited"
+        sv = getattr(item, "skill", None)
+        if sv is not None:
+            if sv.parent_agent is None and sv.parent_skill is None and sv.parent_project is None:
+                return "global"
+            return "inherited"
+        av = getattr(item, "agent", None)
+        if av is not None:
+            if av.parent_agent is None and av.parent_skill is None and av.parent_project is None:
+                return "global"
+            return "inherited"
+        return "inherited"
+
+
+    def _check_allowed(self, name: str, allowed_set: set, disallowed_set: set) -> bool:
+        if name in disallowed_set:
+            return False
+        return name in allowed_set

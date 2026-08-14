@@ -1,13 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
-from runtime.session.session import Session
+from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 
-if TYPE_CHECKING:
-    from ui.main.rightpanel.rightpanel import RightPanel
-    from ui.app import UiApp
 
+
+if TYPE_CHECKING:
+    from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
 
 @dataclass
 class CapabilityRow:
@@ -32,9 +32,9 @@ def _build_category(allowed_names: set[str], disallowed_names: set[str]) -> list
     return rows
 
 
-class RightPanelTasks(ModelView):
+class RightPanelSessionTasks(ModelView):
     DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel-inner"
+    DOM_ELEMENT_CLASS = "rightpanel-tab"
     TEMPLATE_STR = '''
         <div class="panel-header">
             <span>Capabilities</span>
@@ -76,7 +76,7 @@ class RightPanelTasks(ModelView):
         </div>
     '''
 
-    def __init__(self, subject: UiApp, parent: RightPanel, **kwargs):
+    def __init__(self, subject: SessionModel, parent: RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._toolRows: list[CapabilityRow] = []
         self._taskRows: list[CapabilityRow] = []
@@ -95,12 +95,8 @@ class RightPanelTasks(ModelView):
             Section("Subagents", self._subagentRows),
         ]
 
-    @property
-    def session(self) -> Session | None:
-        return self.parent.current_session
-
     def _build(self):
-        s = self.session
+        s = self.subject
         if s is None:
             self._toolRows.clear()
             self._taskRows.clear()

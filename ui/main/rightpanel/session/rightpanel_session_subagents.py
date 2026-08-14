@@ -8,11 +8,11 @@ from server.models.sessions.session import SessionModel
 from runtime.session.session import Session
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
-from ui.main.chat.chat import Chat
+
+
 
 if TYPE_CHECKING:
-    from ui.main.rightpanel.rightpanel import RightPanel
-    from ui.app import UiApp
+    from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
 
 
 @dataclass
@@ -72,6 +72,7 @@ class ChildSessionItem(ModelView):
         ).exists()
 
     def open_chat(self):
+        from ui.main.chat.chat import Chat
         self.parent.parent.main_panel.create_and_open_tab(Chat, self.subject)
 
     def close(self):
@@ -80,9 +81,9 @@ class ChildSessionItem(ModelView):
         self.parent.parent.update()
 
 
-class RightPanelSubagents(ModelView):
+class RightPanelSessionSubagents(ModelView):
     DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel-inner"
+    DOM_ELEMENT_CLASS = "rightpanel-tab"
     TEMPLATE_STR = '''
         <div class="panel-header">
             <span>Sub-agents</span>
@@ -114,7 +115,7 @@ class RightPanelSubagents(ModelView):
         </div>
     '''
 
-    def __init__(self, subject: UiApp, parent: RightPanel, **kwargs):
+    def __init__(self, subject: SessionModel, parent: RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.active_list = QuerySetView(
             subject=SessionModel.objects.none(),
@@ -126,12 +127,8 @@ class RightPanelSubagents(ModelView):
         self._rebuild_active()
 
     @property
-    def session(self) -> Session | None:
-        return self.parent.current_session
-
-    @property
     def available_subagents(self) -> list[AvailableSubagent]:
-        s = self.session
+        s = self.subject
         if s is None:
             return []
         result = []
@@ -147,7 +144,7 @@ class RightPanelSubagents(ModelView):
         return result
 
     def open(self, name: str):
-        s = self.session
+        s = self.subject
         if s is None:
             return
         av = s.get_subagent(name)
@@ -155,6 +152,7 @@ class RightPanelSubagents(ModelView):
             return
         ts = timezone.now().strftime("%Y%m%d%H%M%S")
         sv = av.get_or_create_session(name=f"user-launch:{name}:{ts}", description="User created subagent", parent_session_version=self.session.get_version_model(), session_type=SessionType.SUBSESSION)
+        from ui.main.chat.chat import Chat
         self.parent.main_panel.create_and_open_tab(Chat, sv.session)
 
     def refresh(self):
@@ -162,7 +160,7 @@ class RightPanelSubagents(ModelView):
         self.update()
 
     def _rebuild_active(self):
-        s = self.session
+        s = self.subject
         if s is not None:
             qs = SessionModel.objects.filter(
                 parent_session=s.model,
