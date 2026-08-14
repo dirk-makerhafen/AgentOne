@@ -141,7 +141,7 @@ def run_streaming_query(
         if tool_calls_chunk := message_chunk.get("tool_calls", None):
             unknown_chunk = False
             for tool_call in tool_calls_chunk:
-                index = tool_call.get("index", 0)
+                index = tool_call.get("index", 0) or 0
                 if not response.tool_calls:
                     response.tool_calls = []
                 while len(response.tool_calls) <= index:
