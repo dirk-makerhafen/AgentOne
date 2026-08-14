@@ -26,12 +26,8 @@ class QueryMessagePart(BaseModel):
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
     content = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_content")
-    content_prefix = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_prefix")
-    content_postfix = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_postfix")
     template_data = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_template_data")
     content_type = EnumField(MessageContentType, default=MessageContentType.TEXT)
-
-    tags = models.JSONField( default=list, null=True, blank=True, help_text="List of tags used")
 
     class QueryMessagePartObservables(Observables):
         """Explicit observable keys for a QueryMessagePart (IDE autocomplete)."""
@@ -39,6 +35,12 @@ class QueryMessagePart(BaseModel):
         @property
         def query_message(self):
             return f"QueryMessagePart.query_message:{self.model.query_message_id}"
+
+    @property
+    def has_toolcalls(self):
+        if self.source_message_part and self.source_message_part.tool_call:
+            return True
+        return False
 
     def to_openai_message(self, fail_on_error: bool = True) -> list[dict[str, Any]]:
         """Convert this part to the OpenAI content-part format.
@@ -65,15 +67,11 @@ class QueryMessagePart(BaseModel):
 
         message_contents = self._build_message_contents(content, content_type, template_data, part_type, fail_on_error)
 
-        if prefix := (self.content_prefix.get() if self.content_prefix else None):
-            message_contents.insert(0, {"type": "text", "text": prefix})
-        if postfix := (self.content_postfix.get() if self.content_postfix else None):
-            message_contents.append({"type": "text", "text": postfix})
-
-        tokens = sum( math.ceil(len(msg["text"]) / 3.8) for msg in message_contents if msg.get("text"))
-        if self.tokens != tokens:
-            self.tokens = tokens
-            self.save(update_fields=["tokens"])
+        if not self.tokens:
+            tokens = int(len(json.dumps(message_contents)) / 3.8)
+            if self.tokens != tokens:
+                self.tokens = tokens
+                self.save(update_fields=["tokens"])
         cache[cache_key] = message_contents
         return message_contents
 
@@ -86,8 +84,8 @@ class QueryMessagePart(BaseModel):
         fail_on_error: bool,
     ) -> list[dict[str, Any]]:
         """Route content rendering by type."""
-        if self.source_message_part and part_type == MessagePartType.REASONING:
-            return []
+        if part_type == MessagePartType.REASONING and self.source_message_part and self.source_message_part.content:
+            return [{"type": "reasoning", "text": self.source_message_part.content.get()}]
 
         if self.source_message_part and part_type == MessagePartType.TOOLCALL:
             tc = self.source_message_part.tool_call

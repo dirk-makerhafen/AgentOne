@@ -27,20 +27,6 @@ if TYPE_CHECKING:
 AGENT_VERSION_RUNTIME_CLASS_CACHE = LRUCache(maxsize=1024)
 
 
-@contextmanager
-def temp_sys_path(path: Path) -> Any:
-    """Temporarily adds a directory to sys.path."""
-    pathstr = path.as_posix()
-    if pathstr not in sys.path:
-        sys.path.insert(0, pathstr)
-        try:
-            yield
-        finally:
-            sys.path.remove(pathstr)
-    else:
-        yield
-
-
 class AgentVersionModel(BaseModel):
     """A versioned snapshot of an agent's configuration."""
 

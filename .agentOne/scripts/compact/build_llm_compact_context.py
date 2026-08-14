@@ -1,9 +1,11 @@
 from __future__ import annotations
+from typing import List
 
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessageRole
 from server.models.message import Message
 from server.models.queries.query import Query
+from server.models.queries.query_message import QueryMessage
 
 _COMPACTION_SYSTEM_PROMPT = """
 Context is running low, you have been switched to a session compaction agent. 
@@ -30,14 +32,22 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
         pct = 15
 
     # Count conversation QueryMessages (system/tool defs have source_message=None).
-    conv = [qm for qm in query.related_query_messages.order_by("pk").all() if qm.source_message_id]
-    keep_count = max(1, int(len(conv) * pct / 100))
+    conv:List[QueryMessage] = [qm for qm in query.related_query_messages.order_by("pk").all() if qm.source_message_id]
 
-    # Remove the kept messages from the compaction query so the LLM only
-    # sees the messages that need to be summarized.
-    if keep_count < len(conv):
-        for qm in conv[-keep_count:]:
-            qm.delete()
+    [x.to_openai_message() for x in conv] # pre calculate token count estimations
+
+    total_tokens = sum([x.tokens if x.tokens else 0 for x in conv])
+    keep_tokens = max(1, int(total_tokens * pct / 100))
+    kept_token_count = 0
+    # Remove the kept messages from the compaction query so the LLM only sees the messages that need to be summarized.
+    while kept_token_count < keep_tokens and len(conv) > 0:
+        msg = conv.pop()
+        kept_token_count += msg.tokens if msg.tokens else 0
+        msg.delete()
+
+    # in case the last message is an assistan toolcall, also keep that (remove from query) so llms dont complain about toolcalls without responses
+    if conv[-1].role == MessageRole.ASSISTANT and conv[-1].has_toolcalls:
+        conv.pop().delete()
 
     query.add_message(
         role = MessageRole.USER,

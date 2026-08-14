@@ -32,7 +32,6 @@ class Query(BaseModel):
     session_version = models.ForeignKey(  "server.SessionVersionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
     trigger_message = models.ForeignKey(  "server.Message",  null=True,  blank=True,  on_delete=models.CASCADE,  related_name="related_queries")
     status = EnumField(QueryStatus, default=QueryStatus.WAITING)
-    tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
 
@@ -81,7 +80,6 @@ class Query(BaseModel):
         """Convert all query messages to the OpenAI message format."""
         messages: list[dict[str, Any]] = []
         tokens = 0
-        tags_token_usages: list[dict[str, Any]] = []
         related_query_messages = getattr(self, "related_query_messages", None)
         if not related_query_messages:
             return []
@@ -105,35 +103,14 @@ class Query(BaseModel):
                 else:
                     messages.append(qm)
                 tokens += message.tokens if message.tokens else 0
-                tags_token_usages.append(message.tags_token_usage or {})
             except Exception as e:
                 print("Failed to_openai_message", message)
                 raise e
-        tags_token_usage = self.merge_tag_usage(tags_token_usages)
         if self.tokens != tokens:
             self.tokens = tokens
-            self.tags_token_usage = tags_token_usage
             self.save()
         cache[cache_key] = messages
         return messages
-
-    def merge_tag_usage(self, list_of_tag_dicts: list[dict[str, Any]]) -> dict[str, Any]:
-        """Merge a list of tag-token-usage dicts into a single nested dict."""
-
-        def merge_into(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
-            for key, bval in b.items():
-                if key == "tokens":
-                    a["tokens"] = a.get("tokens", 0) + bval
-                else:
-                    if key not in a:
-                        a[key] = {}
-                    merge_into(a[key], bval)
-            return a
-
-        result: dict[str, Any] = {}
-        for d in list_of_tag_dicts:
-            merge_into(result, d)
-        return result
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         super().save(*args, **kwargs)

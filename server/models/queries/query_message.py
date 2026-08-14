@@ -27,10 +27,7 @@ class QueryMessage(BaseModel):
     query = models.ForeignKey("server.Query", on_delete=models.CASCADE, related_name="related_query_messages")
     source_message = models.ForeignKey("server.Message",on_delete=models.SET_DEFAULT,related_name="related_query_messages",default=None,null=True)
     role = EnumField(MessageRole, default=None)
-    content_prefix = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="query_messages_prefix")
-    content_postfix = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="query_messages_postfix")
 
-    tags_token_usage = models.JSONField(default=dict, null=True, blank=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
     class QueryMessageObservables(Observables):
@@ -40,6 +37,12 @@ class QueryMessage(BaseModel):
         def parts(self):
             return f"QueryMessagePart.query_message:{self.model.pk}"
 
+    @property
+    def has_toolcalls(self):
+        for part in self.query_message_parts.all():
+            if part.has_toolcalls:
+                return True
+        return False
 
     def add_part(
         self,
@@ -102,7 +105,6 @@ class QueryMessage(BaseModel):
         tool_call_dicts: list[dict[str, Any]] = []
         tool_call_objects: list[AgentTaskCall] = []
         has_user_toolcall = False
-        tags_usage: dict[str, Any] = {}
 
         for part in self.query_message_parts.all():
             part_contents = part.to_openai_message(fail_on_error=fail_on_error)
@@ -113,17 +115,11 @@ class QueryMessage(BaseModel):
                 else:
                     has_user_toolcall = True
                     content_parts.extend(part_contents)
-            elif part.source_message_part and part.source_message_part.type == MessagePartType.REASONING and part.source_message_part.content:
-                rc = part.source_message_part.content.get()
-                if rc:
-                    reasoning_parts.append(rc)
+            elif part.source_message_part and part.source_message_part.type == MessagePartType.REASONING:
+                if requires_reasoning_echo and part.source_message_part.content: 
+                    reasoning_parts.extend( [pc.get("text","") for pc in part_contents if p.get("type","") == "reasoning"])
             else:
                 content_parts.extend(part_contents)
-
-            c = tags_usage
-            for tag in (part.tags or []):
-                c = c.setdefault(tag, {"tokens": 0})
-                c["tokens"] += part.tokens or 0
 
         if self.role == "tool" and tool_call_objects:
             for tc in tool_call_objects:
@@ -142,12 +138,11 @@ class QueryMessage(BaseModel):
                         "tool_call_id": f"tc-{tc.pk}",
                         "content": tool_response_string,
                     }
-                    
                 ]           
                 message = messages[0] if len(messages) == 1 else messages
 
         elif self.role == "tool":
-            merged = self._merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
+            merged = self._merge_text_parts(content_parts)
             if isinstance(merged, str):
                 merged = f"USER TOOLCALL RESPONSE: {merged}"
             else:
@@ -156,7 +151,7 @@ class QueryMessage(BaseModel):
 
         else:
             
-            merged = self._merge_text_parts(content_parts, self.content_prefix, self.content_postfix)
+            merged = self._merge_text_parts(content_parts)
             message: dict[str, Any] = {"role": self.role, "content": merged}
             if has_user_toolcall:
                 if isinstance(merged, str):
@@ -172,26 +167,18 @@ class QueryMessage(BaseModel):
         if self.role == MessageRole.ASSISTANT and requires_reasoning_echo and reasoning_parts:
             message["reasoning_content"] = "".join(reasoning_parts)
 
-        """Rough token estimate (OpenAI billing approximation)."""
-        if isinstance(message, str):
-            token_count =  math.ceil(len(message) / 3.8)
-        else:
+        if not self.tokens:
+            """Rough token estimate token counts"""
             token_count =  math.ceil(len(json.dumps(message)) / 3.8)
-            
-        if self.tokens != token_count:
-            self.tags_token_usage = tags_usage
-            self.tokens = token_count
-            self.save(update_fields=["tokens", "tags_token_usage"])
+            if self.tokens != token_count:
+                self.tokens = token_count
+                self.save(update_fields=["tokens"])
 
         cache[cache_key] = message
         return message
 
-    def _merge_text_parts(self, parts: list[dict[str, Any]], prefix_fk: GenericContent | None = None, postfix_fk: GenericContent | None = None) -> str | list[dict[str, Any]]:
+    def _merge_text_parts(self, parts: list[dict[str, Any]]) -> str | list[dict[str, Any]]:
         """Merge adjacent text parts, prepend prefix, append postfix."""
-        if prefix_fk and (prefix := prefix_fk.get()):
-            parts = [{"type": "text", "text": prefix}, *parts]
-        if postfix_fk and (postfix := postfix_fk.get()):
-            parts = [*parts, {"type": "text", "text": postfix}]
 
         if not parts:
             return ""

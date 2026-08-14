@@ -112,7 +112,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                 part: MessagePart
                 if (_session.aimodel and not _session.aimodel.requires_reasoning_echo) and part.type == MessagePartType.REASONING:
                     continue
-                query_message_parts.append(QueryMessagePart(source_message_part=part, tags=["ChatMessage", f"{message.role}"]))
+                query_message_parts.append(QueryMessagePart(source_message_part=part))
                 if part.tool_call and part.tool_call.status == TaskCallStatus.ENDED:
                     tool_call_parts.append(part)
             fmessages.append((message, query_message_parts,tool_call_parts))

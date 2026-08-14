@@ -93,23 +93,23 @@ class Response(BaseModel):
             actual_total = self.prompt_tokens
             if estimated_total and actual_total and estimated_total > 0 and actual_total > 0:
                 correction_factor = actual_total / estimated_total
-                if correction_factor > 1.01 or correction_factor < 0.99:
-                    # Scale at the *message* level, NOT the part level.  Tool
-                    # result tokens are rendered dynamically at the message
-                    # level (``_serialize_result(tc.get_result())``) and never
-                    # exist as part tokens, so a part-based recalculation
-                    # silently dropped them and collapsed ``query.tokens``.
-                    recalculated_total = 0
+                if correction_factor > 1.02 or correction_factor < 0.98:
                     for query_message in query.related_query_messages.all():
                         if not query_message.tokens:
                             continue
-                        corrected_tokens = int(
-                            round(query_message.tokens * correction_factor)
-                        )
+                        corrected_tokens = int(round(query_message.tokens * correction_factor))
                         if query_message.tokens != corrected_tokens:
                             query_message.tokens = corrected_tokens
                             query_message.save(update_fields=["tokens"])
-                        recalculated_total += corrected_tokens
+
+                        for part in query_message.query_message_parts.all():
+                            if not part.tokens:
+                                continue
+                            corrected_tokens = int(round(part.tokens * correction_factor))
+                            if part.tokens != corrected_tokens:
+                                part.tokens = corrected_tokens
+                                part.save(update_fields=["tokens"])
+                                
                     # ``query.tokens`` is the authoritative backend count, not
                     # the (rounded) scaled estimate.
                     if query.tokens != actual_total:

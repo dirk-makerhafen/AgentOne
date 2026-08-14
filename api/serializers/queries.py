@@ -7,7 +7,7 @@ from server.models.queries.response import Response
 class QueryMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = QueryMessage
-        fields = ['id', 'role', 'content_prefix', 'content_postfix',
+        fields = ['id', 'role',
                   'tokens', 'created_at']
 
 

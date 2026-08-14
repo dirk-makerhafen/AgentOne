@@ -41,7 +41,7 @@ class QueryAdmin(admin.ModelAdmin):
     search_fields: tuple[str, ...] = ("id", "session_version__name")
     autocomplete_fields: tuple[str, ...] = ("apikey", "session_version")
     readonly_fields: tuple[str, ...] = (
-        "created_at", "updated_at", "tokens", "tags_token_usage",
+        "created_at", "updated_at", "tokens", 
     )
     inlines: list[type] = [QueryMessageInline, ResponseInline]
     list_per_page: int = 25
@@ -51,7 +51,7 @@ class QueryAdmin(admin.ModelAdmin):
             "fields": ("session_version", "status", "apikey", "trigger_message"),
         }),
         ("Tracking & Usage", {
-            "fields": ("tokens", "tags_token_usage"),
+            "fields": ("tokens",),
             "classes": ("collapse",),
         }),
         ("Audit", {

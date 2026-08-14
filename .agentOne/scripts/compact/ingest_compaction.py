@@ -16,7 +16,10 @@ def ingest_compaction(
     for part in parts:
         if part["type"] == MessagePartType.MESSAGE:
             content = part["content"]
-            summary_text = str(content) if content else ""
+            summary_text += str(content) if content else ""
+
+        elif part["type"] == MessagePartType.TOOLCALL and part["content"]["name"] == "final_result":
+            summary_text += part["content"]["arguments"].get("content", "")
 
     # The remaining QueryMessages (kept messages were deleted by
     # build_llm_compact_context) are exactly the messages that were

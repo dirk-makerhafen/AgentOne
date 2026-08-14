@@ -353,7 +353,6 @@ File: `server/models/queries/query.py`
 | `session_version` | `FK(SessionVersionModel, CASCADE)` | Owning version |
 | `trigger_message` | `FK(Message, CASCADE, nullable)` | Triggering message |
 | `status` | `EnumField(QueryStatus)` | ACTIVE / WAITING / SUCCESS / FAILURE |
-| `tags_token_usage` | `JSONField(dict)` | Tagged token breakdowns |
 | `tokens` | `IntegerField` | Total token count. Set to the **authoritative backend `prompt_tokens`** on SUCCESS (see Response `save()`); otherwise the sum of `QueryMessage.tokens` estimates |
 
 **Relationship**: Each Query has one Response (OneToOneField).
@@ -365,9 +364,6 @@ File: `server/models/queries/query.py`
 | `query` | `FK(Query, CASCADE)` | Parent query |
 | `source_message` | `FK(Message, SET_DEFAULT)` | Source message |
 | `role` | `EnumField(MessageRole)` | user/assistant/system/tool |
-| `content_prefix` | `FK(GenericContent, SET_DEFAULT)` | Prepend content |
-| `content_postfix` | `FK(GenericContent, SET_DEFAULT)` | Append content |
-| `tags_token_usage` | `JSONField(dict)` | Tagged token usage |
 | `tokens` | `IntegerField` | Token count |
 
 ### QueryMessagePart
@@ -378,7 +374,6 @@ File: `server/models/queries/query.py`
 | `source_message_part` | `FK(MessagePart, SET_DEFAULT)` | Source part |
 | `content` | `FK(GenericContent, SET_DEFAULT)` | Content |
 | `content_type` | `EnumField(MessageContentType)` | TEXT / IMAGE / JSON / TEMPLATE |
-| `tags` | `JSONField(list)` | Tag labels |
 
 ### Response
 
