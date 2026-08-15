@@ -47,18 +47,14 @@ class ComposerFooter(PyHtmlView):
                 <span class="yolo-pill-label" data-i18n="yolo_pill_label">YOLO</span>
             </button>
 
-            {{ pyview.profile_wrap.render() }}
-            
-            {{ pyview.workspace_wrap.render() }}
-            
+
             <button class="icon-btn composer-mobile-config-btn" id="composerMobileConfigBtn" type="button" onclick="toggleMobileComposerConfig()" title="Workspace, model, reasoning, and context settings" aria-label="Workspace, model, reasoning, and context settings" aria-haspopup="true" aria-expanded="false" aria-controls="composerMobileConfigPanel">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
                 <span class="composer-mobile-ctx-badge" id="composerMobileCtxBadge" aria-hidden="true" style="display:none">0</span>
             </button>
             
-            {{ pyview.model_wrap.render() }}
 
-            {{ pyview.reasoning_wrap.render() }}
+            
 
             {{ pyview.toolsets_wrap.render() }}
             
@@ -94,19 +90,23 @@ class ComposerFooter(PyHtmlView):
 
         {{ pyview.mobileconfig_panel.render() }}
 
-        
-        
-        
-        {{ pyview.reasoning_dropdown.render() }}
 
         {{ pyview.toolsets_dropdown.render() }}
 
        
 
     '''
+    # {{ pyview.profile_wrap.render() }}
+    # {{ pyview.workspace_wrap.render() }}     
+    # {{ pyview.model_wrap.render() }}
+    # {{ pyview.reasoning_wrap.render() }}
+
     # {{ pyview.workspace_dropdown.render() }}
     # {{ pyview.profile_dropdown.render() }}
     # {{ pyview.model_dropdown.render() }}
+    # {{ pyview.reasoning_dropdown.render() }}
+
+
     def __init__(self, subject:Session, parent: ComposerBox, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.parent:ComposerBox

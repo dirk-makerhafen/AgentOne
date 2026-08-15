@@ -56,7 +56,7 @@ class WorkspaceDropdown(ModelView):
             </span>
         </div>
         <script>
-            document.getElementById('{{pyview.uid}}').style.left = document.getElementById('{{pyview.parent.workspace_wrap.uid}}').offsetLeft + "px";
+            //document.getElementById('{{pyview.uid}}').style.left = document.getElementById('{{pyview.anchor_uid}}').offsetLeft + "px";
             function set_workspace(pk){
                 pyview.set_workspace(pk);
             }
@@ -64,11 +64,12 @@ class WorkspaceDropdown(ModelView):
     '''
     @property
     def DOM_ELEMENT_CLASS(self):
-        return f'ws-dropdown ws-dropdown-footer {"open" if self.open else ""}'
+        return f'ws-dropdown ws-dropdown-footer {"open" if self.open else ""}{" rp-open-down" if self.open_downward else ""}'
 
     def __init__(self, subject: Session, parent: ComposerFooter, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.open = False
+        self.open_downward = False
         self.search_string = ""
         workspaces = WorkspaceModel.objects.all()
         self.workspace_list = QuerySetView(
@@ -78,17 +79,32 @@ class WorkspaceDropdown(ModelView):
             filter_function=self._filter_function,
             dom_element_class = "ws-list-container",
         )
-            
+
+    def _refresh_selection(self) -> None:
+        wrap = getattr(self.parent, "workspace_wrap", None)
+        if wrap is not None:
+            wrap.update()
+            return
+        if hasattr(self.parent, "update"):
+            self.parent.update()
+
+    @property
+    def anchor_uid(self) -> str:
+        wrap = getattr(self.parent, "workspace_wrap", None)
+        if wrap is not None:
+            return wrap.uid
+        return self.uid
+
     def set_workspace(self, workspace_pk):
-        print("set_workspace", workspace_pk)
         self.subject.set_workspace( WorkspaceModel.objects.get(pk=int(workspace_pk)))
         self.open = False
-        self.parent.workspace_wrap.update()
+        self._refresh_selection()
         self.update()
 
     def toggle(self):
-        if not self.open:
-            self.parent.close_dropdowns()
+        close = getattr(self.parent, "close_dropdowns", None)
+        if not self.open and close is not None:
+            close()
         self.open = not self.open
         self.update()
 
@@ -103,4 +119,3 @@ class WorkspaceDropdown(ModelView):
     def filter_workspaces(self, searchstring):
         self.search_string = searchstring
         self.workspace_list.update()
-        

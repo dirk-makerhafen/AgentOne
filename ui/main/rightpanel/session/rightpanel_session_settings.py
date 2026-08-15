@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Any
 from runtime.session.session import Session
 from server.models.enums.task_enums import TaskSchedulerStrategy
 from server.models.enums.session_enums import SessionType
-from server.models.providers.ai_model import AiModel
 from server.models.sessions.session import SessionModel
 from server.models.settings import (
     ResponseTemperature,
@@ -12,6 +11,9 @@ from server.models.settings import (
     SubagentResultDelivery,
 )
 from ui.lib.model_view import ModelView
+from ui.main.chat.composer.dropdown.model import ModelDropdown
+from ui.main.chat.composer.dropdown.profile import ProfileDropdown
+from ui.main.chat.composer.dropdown.workspace import WorkspaceDropdown
 
 if TYPE_CHECKING:
     from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
@@ -73,7 +75,15 @@ class RightPanelSessionSettings(ModelView):
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Agent</div>
-                    <div class="detail-row-value">{{ pyview.session.agent.name }}</div>
+                    <div class="detail-row-value" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <button type="button" class="rp-dropdown-trigger" onclick="pyview.toggle_profile_dropdown()">
+                            <span class="rp-dropdown-trigger-label">{{ pyview.session.agent.name }}</span>
+                            <span class="rp-dropdown-trigger-chev">▾</span>
+                        </button>
+                        <div class="rp-dropdown-anchor">
+                            {{ pyview.profile_dropdown.render() }}
+                        </div>
+                    </div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Version</div>
@@ -85,7 +95,15 @@ class RightPanelSessionSettings(ModelView):
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Workspace</div>
-                    <div class="detail-row-value">{{ pyview.workspace_name }}</div>
+                    <div class="detail-row-value" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <button type="button" class="rp-dropdown-trigger" onclick="pyview.toggle_workspace_dropdown()">
+                            <span class="rp-dropdown-trigger-label">{{ pyview.workspace_name }}</span>
+                            <span class="rp-dropdown-trigger-chev">▾</span>
+                        </button>
+                        <div class="rp-dropdown-anchor">
+                            {{ pyview.workspace_dropdown.render() }}
+                        </div>
+                    </div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Active</div>
@@ -101,6 +119,25 @@ class RightPanelSessionSettings(ModelView):
 
             <div class="settings-card" style="margin-bottom:8px">
                 <div class="panel-header" style="margin-left:-8px">Settings</div>
+                <div class="detail-row">
+                    <div class="detail-row-label">AI Model</div>
+                    <div class="detail-row-value" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <button type="button" class="rp-dropdown-trigger" onclick="pyview.toggle_model_dropdown()">
+                                <span class="rp-dropdown-trigger-label">{{ pyview.setting_display_value('aimodel') or '—' }}</span>
+                                <span class="rp-dropdown-trigger-chev">▾</span>
+                            </button>
+                            {% if pyview.is_overridden('aimodel') %}
+                                <span class="setting-reset-btn" onclick="pyview.resetSetting('aimodel')" title="Reset to agent default">⟳</span>
+                            {% else %}
+                                <span class="setting-default-dot" title="Agent default">⬤</span>
+                            {% endif %}
+                        </div>
+                        <div class="rp-dropdown-anchor">
+                            {{ pyview.model_dropdown.render() }}
+                        </div>
+                    </div>
+                </div>
                 {% for name, label in pyview.settings_fields %}
                     <div class="detail-row">
                         <div class="detail-row-label">{{ label }}</div>
@@ -120,8 +157,6 @@ class RightPanelSessionSettings(ModelView):
                                 </select>
                             {% elif name in pyview.int_fields %}
                                 <input type="number" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px" min="0">
-                            {% elif name == 'aimodel' %}
-                                <input type="text" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px">
                             {% elif name == 'access' %}
                                 <pre class="setting-json" style="width:100%;font-size:11px;max-height:120px;overflow:auto;margin:0">{{ pyview.setting_display_value(name) }}</pre>
                             {% else %}
@@ -161,7 +196,6 @@ class RightPanelSessionSettings(ModelView):
     '''
 
     SETTINGS_FIELDS = [
-        ("aimodel", "AI Model"),
         ("precision", "Precision"),
         ("reasoning_effort", "Reasoning Effort"),
         ("scheduler_strategy", "Scheduler Strategy"),
@@ -181,6 +215,34 @@ class RightPanelSessionSettings(ModelView):
     def __init__(self, subject: SessionModel, parent: RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.session = Session(session_model=subject)
+        self.profile_dropdown = ProfileDropdown(self.session, self)
+        self.workspace_dropdown = WorkspaceDropdown(self.session, self)
+        self.model_dropdown = ModelDropdown(self.session, self)
+        # Embedded in a settings card: open the panels downward, aligned under
+        # their trigger rows (composer keeps the default upward opening).
+        for dropdown in (
+            self.profile_dropdown,
+            self.workspace_dropdown,
+            self.model_dropdown,
+        ):
+            dropdown.open_downward = True
+
+    # ------------------------------------------------------------------
+    # Dropdown toggles (from the trigger buttons)
+    # ------------------------------------------------------------------
+    def toggle_profile_dropdown(self) -> None:
+        self.profile_dropdown.toggle()
+
+    def toggle_workspace_dropdown(self) -> None:
+        self.workspace_dropdown.toggle()
+
+    def toggle_model_dropdown(self) -> None:
+        self.model_dropdown.toggle()
+
+    def close_dropdowns(self) -> None:
+        self.profile_dropdown.close()
+        self.workspace_dropdown.close()
+        self.model_dropdown.close()
 
 
     # ------------------------------------------------------------------
@@ -290,13 +352,6 @@ class RightPanelSessionSettings(ModelView):
                 value = json.loads(raw_value)
             except json.JSONDecodeError:
                 return
-        elif name == "aimodel":
-            aimodel = AiModel.objects.filter(name=raw_value).first()
-            if aimodel is None:
-                return
-            self.session._set_session_setting(name, aimodel)
-            self.update()
-            return
         else:
             value = raw_value
 

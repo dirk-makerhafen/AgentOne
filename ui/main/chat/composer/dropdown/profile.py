@@ -14,9 +14,8 @@ if TYPE_CHECKING:
 class ProfileDropdownOption(ModelView):
     TEMPLATE_STR = '''
         <div class="profile-opt-name">
-            <span class="profile-opt-badge stopped"></span>
-            {{ pyview.subject.name }} 
-            <span style="opacity:.5;font-weight:400">(default)</span> 
+            {{ pyview.subject.name }}
+            <span style="opacity:.5;font-weight:400">(default)</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--link)" stroke-width="3" style="vertical-align:-1px"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <div class="profile-opt-meta">
@@ -33,7 +32,7 @@ class ProfileDropdownOption(ModelView):
 
 
 class ProfileDropdown(PyHtmlView):
-    TEMPLATE_STR = '''       
+    TEMPLATE_STR = '''
         <div class="profile-scope-note">Applies to this conversation from your next message.</div>
         <div class="profile-search-row">
             <input id="input_{{pyview.uid}}" class="profile-search-input" type="text" placeholder="Search agents.." spellcheck="false" autocomplete="off"  oninput="pyview.filter_agents(document.getElementById('input_{{pyview.uid}}').value)">
@@ -41,7 +40,7 @@ class ProfileDropdown(PyHtmlView):
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
-       
+
         {{ pyview.profile_list.render() }}
 
         <div class="ws-divider"></div>
@@ -51,7 +50,7 @@ class ProfileDropdown(PyHtmlView):
             Manage profiles
         </div>
         <script>
-            document.getElementById('{{pyview.uid}}').style.left = document.getElementById('{{pyview.parent.profile_wrap.uid}}').offsetLeft + "px";
+            document.getElementById('{{pyview.uid}}').style.left = document.getElementById('{{pyview.anchor_uid}}').offsetLeft + "px";
             function set_profile(pk){
                 pyview.set_profile(pk);
             }
@@ -59,11 +58,12 @@ class ProfileDropdown(PyHtmlView):
     '''
     @property
     def DOM_ELEMENT_CLASS(self):
-        return f'profile-dropdown {"open" if self.open else ""}'
+        return f'profile-dropdown {"open" if self.open else ""}{" rp-open-down" if self.open_downward else ""}'
 
     def __init__(self, subject: Session, parent: ComposerFooter, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.open = False
+        self.open_downward = False
         self.search_string = ""
         models = AgentModel.objects.all()
         self.profile_list = QuerySetView(
@@ -72,16 +72,32 @@ class ProfileDropdown(PyHtmlView):
             item_class=ProfileDropdownOption,
             filter_function=self._filter_function
         )
-        
+
+    def _refresh_selection(self) -> None:
+        wrap = getattr(self.parent, "profile_wrap", None)
+        if wrap is not None:
+            wrap.update()
+            return
+        if hasattr(self.parent, "update"):
+            self.parent.update()
+
+    @property
+    def anchor_uid(self) -> str:
+        wrap = getattr(self.parent, "profile_wrap", None)
+        if wrap is not None:
+            return wrap.uid
+        return self.uid
+
     def set_profile(self, pk):
         self.subject.set_agent(AgentModel.objects.get(pk=int(pk)))
         self.open = False
-        self.parent.profile_wrap.update()
+        self._refresh_selection()
         self.update()
 
     def toggle(self):
-        if not self.open:
-            self.parent.close_dropdowns()
+        close = getattr(self.parent, "close_dropdowns", None)
+        if not self.open and close is not None:
+            close()
         self.open = not self.open
         self.update()
 
@@ -96,4 +112,3 @@ class ProfileDropdown(PyHtmlView):
     def filter_agents(self, searchstring):
         self.search_string = searchstring
         self.profile_list.update()
-        

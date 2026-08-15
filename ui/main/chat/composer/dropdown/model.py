@@ -24,6 +24,9 @@ class ModelDropdownOption(ModelView):
                 {% if p.active %}<span class="model-opt-provider-check">✓</span>{% endif %}
             </li>
             {% endfor %}
+            {% if pyview.missing_count %}
+            <li class="model-opt-provider-note">{{ pyview.missing_note }}</li>
+            {% endif %}
         </ul>
         {% endif %}
     '''
@@ -68,6 +71,21 @@ class ModelDropdownOption(ModelView):
             )
         return rows
 
+    @property
+    def missing_count(self) -> int:
+        """Enabled providers serving this model that are NOT usable (no key)."""
+        usable = {(m.api_provider_id, m.name) for m in available_aimodels()}
+        return sum(
+            1
+            for member in self.subject.members
+            if member.enabled and (member.api_provider_id, member.name) not in usable
+        )
+
+    @property
+    def missing_note(self) -> str:
+        plural = "providers" if self.missing_count != 1 else "provider"
+        return f"{self.missing_count} more {plural} available — add an API key"
+
     def toggle_providers(self) -> None:
         self._providers_open = not self._providers_open
         self.update()
@@ -91,10 +109,10 @@ class ModelDropdown(ModelView):
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
-       
+
         {{ pyview.model_list.render() }}
         <script>
-            document.getElementById('{{pyview.uid}}').style.left = document.getElementById('{{pyview.parent.model_wrap.uid}}').offsetLeft + "px";
+            document.getElementById('{{pyview.uid}}').style.left = document.getElementById('{{pyview.anchor_uid}}').offsetLeft + "px";
             function set_model_group(name){
                 pyview.set_model_group(name);
             }
@@ -105,34 +123,62 @@ class ModelDropdown(ModelView):
     '''
     @property
     def DOM_ELEMENT_CLASS(self):
-        return f'model-dropdown {"open" if self.open else ""}'
+        return f'model-dropdown {"open" if self.open else ""}{" rp-open-down" if self.open_downward else ""}'
 
     def __init__(self, subject: Session, parent: ComposerFooter, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.open = False
+        self.open_downward = False
         self.search_string = ""
         self.model_list = QuerySetView(
             subject=model_groups(),
             parent=self,
             item_class=ModelDropdownOption,
-            filter_function=self._filter_function  
+            filter_function=self._filter_function
         )
-    
+
+    @property
+    def anchor_uid(self) -> str:
+        """Element the dropdown is horizontally aligned with when it opens.
+
+        In the composer this is the model chip (``model_wrap``); in the right
+        panel settings no chip exists, so the dropdown aligns to itself (its
+        ``position:relative`` anchor wrapper sets the containing block).
+        """
+        wrap = getattr(self.parent, "model_wrap", None)
+        if wrap is not None:
+            return wrap.uid
+        return self.uid
+
+    def _refresh_selection(self) -> None:
+        """Re-render whatever shows the selection after it changes.
+
+        The composer footer keeps a ``model_wrap`` reflecting the pinned model;
+        the right panel settings re-render themselves instead.
+        """
+        wrap = getattr(self.parent, "model_wrap", None)
+        if wrap is not None:
+            wrap.update()
+            return
+        if hasattr(self.parent, "update"):
+            self.parent.update()
+
     def set_model_group(self, name):
         self.subject.set_aimodel_by_name(name)
         self.open = False
-        self.parent.model_wrap.update()
+        self._refresh_selection()
         self.update()
 
     def set_specific_provider(self, name, provider_id):
         self.subject.set_aimodel_by_provider(name, int(provider_id))
         self.open = False
-        self.parent.model_wrap.update()
+        self._refresh_selection()
         self.update()
 
     def toggle(self):
-        if not self.open:
-            self.parent.close_dropdowns()
+        close = getattr(self.parent, "close_dropdowns", None)
+        if not self.open and close is not None:
+            close()
         self.open = not self.open
         if self.open:
             self._collapse_provider_lists()
