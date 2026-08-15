@@ -411,6 +411,7 @@ File: `server/models/providers/api_provider.py`
 |---|---|---|
 | `name` | `CharField(512)` | Provider name |
 | `url` | `CharField(512)` | Base URL |
+| `litellm_prefix` | `CharField(64, blank)` | LiteLLM native prefix (e.g. `groq`, `gemini`); empty = OpenAI-compatible (`openai/` + `url` api_base) |
 | `limit_parallel_calls` | `IntegerField(default=0)` | 0 = unlimited |
 
 ### AiModel

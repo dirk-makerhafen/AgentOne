@@ -51,6 +51,11 @@ class AimodelPickerTest(TestCase):
         self.gamma = AiModel.objects.create(
             api_provider=self.keyless, name="Gamma", provider_model_id="gamma"
         )
+        # A keyless provider serving an already-usable name: it should count in
+        # the group badge but must never be chosen by the picker.
+        self.alpha_keyless = AiModel.objects.create(
+            api_provider=self.keyless, name="Alpha", provider_model_id="keyless-alpha"
+        )
 
         # Minimal session fixture (needed for Response rows + Session wrapper).
         self.agent = AgentModel.objects.create(name="picker-agent")
@@ -90,10 +95,18 @@ class AimodelPickerTest(TestCase):
 
     def test_groups_by_name_with_distinct_provider_count(self):
         groups = {g.name: g for g in model_groups()}
-        self.assertEqual(groups["Alpha"].provider_count, 2)
-        self.assertEqual(len(groups["Alpha"].members), 2)
+        # The badge counts every enabled provider serving the name, keyed or not.
+        self.assertEqual(groups["Alpha"].provider_count, 3)
+        self.assertEqual(len(groups["Alpha"].members), 3)
         self.assertEqual(groups["Beta"].provider_count, 1)
         self.assertNotIn("Gamma", groups)
+
+    def test_group_members_include_keyless_provider(self):
+        alpha = next(g for g in model_groups() if g.name == "Alpha")
+        provider_ids = {m.api_provider_id for m in alpha.members}
+        self.assertEqual(provider_ids, {self.p1.id, self.p2.id, self.keyless.id})
+        # …but picking still only returns a usable (keyed) member.
+        self.assertIn(pick_aimodel("Alpha"), {self.alpha_sql, self.alpha_apisql})
 
     # ------------------------------------------------------------------
     # Selection

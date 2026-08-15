@@ -18,6 +18,11 @@ class ApiProvider(BaseModel):
     name = models.CharField(max_length=512)
     url = models.CharField(max_length=512, default="")
 
+    # LiteLLM provider prefix used when routing to this provider, e.g. ``groq``,
+    # ``gemini`` or ``openrouter``.  Empty means the provider is OpenAI-compatible
+    # and is routed through ``openai/`` with ``url`` as the api_base.
+    litellm_prefix = models.CharField(max_length=64, default="", blank=True)
+
     # Whether the provider runs on a local machine (e.g. Ollama on localhost).
     # Local providers can still serve cloud models — those are distinguished
     # per-model via ``AiModel.is_cloud`` and are filtered out of the
@@ -38,10 +43,6 @@ class ApiProvider(BaseModel):
     limit_tokens_per_day = models.IntegerField(default=0)
     limit_tokens_per_minute = models.IntegerField(default=0)
 
-    observable_fields = set([
-        "pk",
-        "is_local",
-    ])
 
     @property
     def total_llm_queries(self) -> int:
@@ -65,13 +66,6 @@ class ApiProvider(BaseModel):
             aimodel__api_provider=self
         ).aggregate(total=Sum("completion_tokens"))["total"]
         return result or 0
-
-    @property
-    def observable_keys(self):
-        return set([
-            "ApiProvider",
-            f"ApiProvider.pk:{self.pk}",
-        ])
 
     def active_call_count(self) -> int:
         """Total active runs across all models for this provider."""

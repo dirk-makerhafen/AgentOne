@@ -139,6 +139,27 @@ class Session:
             self.set_aimodel(model)
         return model
 
+    def set_aimodel_by_provider(self, name: str, provider_id: int) -> AiModel | None:
+        """Pin this session to an exact (provider, model) pair.
+
+        Used by the composer dropdown's provider chips to select a specific
+        provider for a canonical model *name*.  Prefers an enabled row whose
+        provider has a usable key; falls back to the first enabled row so a
+        keyless provider can still be pinned explicitly.
+        """
+        rows = list(
+            AiModel.objects.filter(name=name, api_provider_id=provider_id, enabled=True)
+        )
+        if not rows:
+            return None
+        usable = []
+        for row in rows:
+            if row.api_provider.api_keys.filter(enabled=True).exists() or '"default_api_key"' in (row.api_provider.data or {}):
+                usable.append(row)
+        model = (usable or rows)[0]
+        self.set_aimodel(model)
+        return model
+
     @property
     def reasoning_effort(self) -> ReasoningEffort:
         """Return the resolved reasoning effort (defaults to NONE)."""

@@ -41,13 +41,14 @@ class RightPanelWorkspaceFiles(ModelView):
     def __init__(self, subject: SessionModel, parent: RightPanelWorkspace|RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._root_view: DirectoryView | None = None
+        self.session = Session(session_model=subject)
 
 
     @property
     def workspace_root(self) -> Path | None:
-        session:SessionModel = self.subject
-        if session:
-            workspace: WorkspaceModel = session.workspace
+
+        if self.session:
+            workspace: WorkspaceModel = self.session.workspace
         else:
             subj = self.parent.current_subject
             workspace = subj if isinstance(subj, WorkspaceModel) else None

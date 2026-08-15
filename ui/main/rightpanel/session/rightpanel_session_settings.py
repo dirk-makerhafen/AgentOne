@@ -102,46 +102,46 @@ class RightPanelSessionSettings(ModelView):
             <div class="settings-card" style="margin-bottom:8px">
                 <div class="panel-header" style="margin-left:-8px">Settings</div>
                 {% for name, label in pyview.settings_fields %}
-                <div class="detail-row">
-                    <div class="detail-row-label">{{ label }}</div>
                     <div class="detail-row">
-                        {% if name in pyview.choice_fields %}
-                            <select onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="max-width:80%;font-size:12px">
-                                <option value="">&mdash; Agent default &mdash;</option>
-                                {% for opt in pyview.setting_options(name) %}
-                                <option value="{{ opt }}"{% if pyview.setting_display_value(name) == opt %} selected{% endif %}>{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        {% elif name in pyview.bool_fields %}
-                            <select onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="max-width:80%;font-size:12px">
-                                <option value="">&mdash; Agent default &mdash;</option>
-                                <option value="true"{% if pyview.setting_display_value(name) == 'true' %} selected{% endif %}>true</option>
-                                <option value="false"{% if pyview.setting_display_value(name) == 'false' %} selected{% endif %}>false</option>
-                            </select>
-                        {% elif name in pyview.int_fields %}
-                            <input type="number" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px" min="0">
-                        {% elif name == 'aimodel' %}
-                            <input type="text" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px">
-                        {% elif name == 'access' %}
-                            <pre class="setting-json" style="width:100%;font-size:11px;max-height:120px;overflow:auto;margin:0">{{ pyview.setting_display_value(name) }}</pre>
-                        {% else %}
-                            {{ pyview.setting_value(name) }}
-                        {% endif %}
-                        {% if pyview.is_overridden(name) %}
-                            <span class="setting-reset-btn" onclick="pyview.resetSetting('{{name}}')" title="Reset to agent default">⟳</span>
-                        {% else %}
-                            <span class="setting-default-dot" title="Agent default">⬤</span>
-                        {% endif %}
+                        <div class="detail-row-label">{{ label }}</div>
+                        <div class="detail-row">
+                            {% if name in pyview.choice_fields %}
+                                <select onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="max-width:80%;font-size:12px">
+                                    <option value="">&mdash; Agent default &mdash;</option>
+                                    {% for opt in pyview.setting_options(name) %}
+                                    <option value="{{ opt }}"{% if pyview.setting_display_value(name) == opt %} selected{% endif %}>{{ opt }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% elif name in pyview.bool_fields %}
+                                <select onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="max-width:80%;font-size:12px">
+                                    <option value="">&mdash; Agent default &mdash;</option>
+                                    <option value="true"{% if pyview.setting_display_value(name) == 'true' %} selected{% endif %}>true</option>
+                                    <option value="false"{% if pyview.setting_display_value(name) == 'false' %} selected{% endif %}>false</option>
+                                </select>
+                            {% elif name in pyview.int_fields %}
+                                <input type="number" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px" min="0">
+                            {% elif name == 'aimodel' %}
+                                <input type="text" value="{{ pyview.setting_display_value(name) }}" onchange="pyview.setSetting('{{name}}', this.value)" class="setting-input" style="width:80%;font-size:12px">
+                            {% elif name == 'access' %}
+                                <pre class="setting-json" style="width:100%;font-size:11px;max-height:120px;overflow:auto;margin:0">{{ pyview.setting_display_value(name) }}</pre>
+                            {% else %}
+                                {{ pyview.setting_value(name) }}
+                            {% endif %}
+                            {% if pyview.is_overridden(name) %}
+                                <span class="setting-reset-btn" onclick="pyview.resetSetting('{{name}}')" title="Reset to agent default">⟳</span>
+                            {% else %}
+                                <span class="setting-default-dot" title="Agent default">⬤</span>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
                 {% endfor %}
                 <div class="detail-row">
                     <div class="detail-row-label">Current Turn Count</div>
-                    <div class="detail-row-value">{{ pyview.subject.current_turn_count }}</div>
+                    <div class="detail-row-value">{{ pyview.session.current_turn_count }}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Current Unattended</div>
-                    <div class="detail-row-value">{{ pyview.subject.current_unattended_turn_count }}</div>
+                    <div class="detail-row-value">{{ pyview.session.current_unattended_turn_count }}</div>
                 </div>
             </div>
 
@@ -149,11 +149,11 @@ class RightPanelSessionSettings(ModelView):
                 <div class="panel-header" style="margin-left:-8px">Prompts</div>
                 <div class="detail-row">
                     <div class="detail-row-label">System Prompt</div>
-                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.subject.system_prompt }}</div>
+                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.session.system_prompt }}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Task Prompt</div>
-                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.subject.task_prompt }}</div>
+                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.session.task_prompt }}</div>
                 </div>
             </div>
 
@@ -180,6 +180,8 @@ class RightPanelSessionSettings(ModelView):
 
     def __init__(self, subject: SessionModel, parent: RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        self.session = Session(session_model=subject)
+
 
     # ------------------------------------------------------------------
     # Session access
@@ -190,10 +192,9 @@ class RightPanelSessionSettings(ModelView):
 
     @property
     def workspace_name(self) -> str:
-        s = self.subject
-        if s is None:
+        if self.session is None:
             return ""
-        ws = s.workspace
+        ws = self.session.workspace
         if ws:
             return str(ws)
         return "\u2014"
@@ -201,9 +202,9 @@ class RightPanelSessionSettings(ModelView):
     @property
     def session_type_label(self) -> str:
         s = self.subject
-        if s is None:
+        if self.session is None:
             return "\u2014"
-        return dict(SessionType.choices).get(s.session_type, s.session_type)
+        return dict(SessionType.choices).get(self.session.session_type, self.session.session_type)
 
     # ------------------------------------------------------------------
     # Setting helpers
@@ -211,10 +212,9 @@ class RightPanelSessionSettings(ModelView):
 
     def _resolved_value(self, name: str) -> Any:
         """Return the raw resolved setting value (session override → agent default)."""
-        s = self.subject
-        if s is None:
+        if self.session is None:
             return None
-        return getattr(s, name, None)
+        return getattr(self.session, name, None)
 
     def setting_value(self, name: str) -> str:
         """Return the string representation of the resolved setting value."""
@@ -241,10 +241,9 @@ class RightPanelSessionSettings(ModelView):
         return str(val)
 
     def is_overridden(self, name: str) -> bool:
-        s = self.subject
-        if s is None:
+        if self.session is None:
             return False
-        ss = s.get_version_model().session_settings
+        ss = self.session.get_version_model().session_settings
         return bool(ss and getattr(ss, name) is not None)
 
     @property
@@ -272,8 +271,7 @@ class RightPanelSessionSettings(ModelView):
 
     def setSetting(self, name: str, raw_value: str) -> None:
         """Set a setting on the session (creates a new session version)."""
-        s = self.subject
-        if s is None:
+        if self.session is None:
             return
 
         if raw_value == "":
@@ -296,37 +294,34 @@ class RightPanelSessionSettings(ModelView):
             aimodel = AiModel.objects.filter(name=raw_value).first()
             if aimodel is None:
                 return
-            s._set_session_setting(name, aimodel)
+            self.session._set_session_setting(name, aimodel)
             self.update()
             return
         else:
             value = raw_value
 
-        s._set_session_setting(name, value)
+        self.session._set_session_setting(name, value)
         self.update()
 
     def resetSetting(self, name: str) -> None:
         """Reset a setting override, restoring the agent default."""
-        s = self.subject
-        if s is None:
+        if self.session is None:
             return
         if not self.is_overridden(name):
             return
-        s._set_session_setting(name, None)
+        self.session._set_session_setting(name, None)
         self.update()
 
     def setSessionName(self, value: str) -> None:
         """Update the session name."""
         from server.models.sessions.session import SessionModel
         from runtime.events import publish_model_event
-
-        s = self.subject
-        if s is None:
+        if self.session is None:
             return
         name = value.strip()
         if not name:
             return
-        SessionModel.objects.filter(pk=s.model.pk).update(name=name)
-        session_model = SessionModel.objects.get(pk=s.model.pk)
+        SessionModel.objects.filter(pk=self.session.model.pk).update(name=name)
+        session_model = SessionModel.objects.get(pk=self.session.model.pk)
         publish_model_event(session_model, "update")
         self.update()

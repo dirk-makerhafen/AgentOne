@@ -42,6 +42,7 @@ class ModelDropdownTest(TestCase):
     def setUp(self):
         self.p1 = ApiProvider.objects.create(name="p1")
         self.p2 = ApiProvider.objects.create(name="p2")
+        self.keyless = ApiProvider.objects.create(name="keyless")
         ApiKey.objects.create(api_provider=self.p1, key="k1", enabled=True)
         ApiKey.objects.create(api_provider=self.p2, key="k2", enabled=True)
         self.alpha_sql = AiModel.objects.create(
@@ -49,6 +50,9 @@ class ModelDropdownTest(TestCase):
         )
         self.alpha_apisql = AiModel.objects.create(
             api_provider=self.p2, name="Alpha", provider_model_id="apisql-alpha"
+        )
+        self.alpha_keyless = AiModel.objects.create(
+            api_provider=self.keyless, name="Alpha", provider_model_id="keyless-alpha"
         )
         AiModel.objects.create(
             api_provider=self.p1, name="Beta", provider_model_id="beta"
@@ -77,7 +81,7 @@ class ModelDropdownTest(TestCase):
         self.assertIn("Alpha", names)
         alpha = next(g for g in dropdown.model_list.query if g.name == "Alpha")
         self.assertIsInstance(alpha, ModelGroup)
-        self.assertEqual(alpha.provider_count, 2)
+        self.assertEqual(alpha.provider_count, 3)
 
     def test_set_model_group_pins_a_group_member(self):
         dropdown = ModelDropdown(subject=Session(session_model=self.session), parent=MockFooter())
@@ -88,12 +92,50 @@ class ModelDropdownTest(TestCase):
         # The pinned provider row is what the session now stores.
         self.assertIn(runtime.aimodel.api_provider, {self.p1, self.p2})
 
-    def test_option_provider_label_lists_providers(self):
+    def test_option_provider_rows_show_only_working_providers(self):
         dropdown = ModelDropdown(subject=Session(session_model=self.session), parent=MockFooter())
+        dropdown.set_model_group("Alpha")
         option = ModelDropdownOption(
-            subject=ModelGroup(
-                "Alpha", [self.alpha_sql, self.alpha_apisql]
-            ),
+            subject=ModelGroup("Alpha", [self.alpha_sql, self.alpha_apisql, self.alpha_keyless]),
             parent=dropdown.model_list,
         )
-        self.assertEqual(option.providers_label, "p1, p2")
+        rows = {r["name"]: r for r in option.provider_rows}
+        # Only providers with an API key appear — the keyless one is hidden.
+        self.assertEqual(set(rows), {"p1", "p2"})
+        self.assertNotIn("keyless", rows)
+        # The pinned provider row is flagged active.
+        active = [r["name"] for r in option.provider_rows if r["active"]]
+        self.assertEqual(active, [option.parent.parent.subject.aimodel.api_provider.name])
+        # …and the keyless provider is surfaced as a "needs key" note instead.
+        self.assertEqual(option.missing_count, 1)
+        self.assertIn("add an API key", option.missing_note)
+
+    def test_option_toggle_providers_flips_state(self):
+        dropdown = ModelDropdown(subject=Session(session_model=self.session), parent=MockFooter())
+        option = ModelDropdownOption(
+            subject=ModelGroup("Alpha", [self.alpha_sql, self.alpha_apisql, self.alpha_keyless]),
+            parent=dropdown.model_list,
+        )
+        self.assertFalse(option.providers_open)
+        option.toggle_providers()
+        self.assertTrue(option.providers_open)
+        self.assertIn("hide", option.pin_label)
+        self.assertIn("hide", option.count_class)
+
+    def test_set_specific_provider_pins_exact_provider(self):
+        dropdown = ModelDropdown(subject=Session(session_model=self.session), parent=MockFooter())
+        dropdown.set_specific_provider("Alpha", self.p2.pk)
+        runtime = Session(session_model=self.session)
+        self.assertEqual(runtime.aimodel, self.alpha_apisql)
+        self.assertEqual(runtime.aimodel.api_provider, self.p2)
+
+    def test_set_specific_provider_can_pin_keyless_provider(self):
+        dropdown = ModelDropdown(subject=Session(session_model=self.session), parent=MockFooter())
+        dropdown.set_specific_provider("Alpha", self.keyless.pk)
+        runtime = Session(session_model=self.session)
+        self.assertEqual(runtime.aimodel, self.alpha_keyless)
+
+    def test_set_specific_provider_unknown_provider_is_noop(self):
+        dropdown = ModelDropdown(subject=Session(session_model=self.session), parent=MockFooter())
+        dropdown.set_specific_provider("Alpha", 9999)
+        self.assertIsNone(Session(session_model=self.session).aimodel)

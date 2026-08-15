@@ -1,6 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from runtime.session.aimodel_picker import model_groups
+from typing import TYPE_CHECKING, Dict, List
+from runtime.session.aimodel_picker import available_aimodels, model_groups
 from runtime.session.session import Session
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
@@ -12,17 +12,65 @@ class ModelDropdownOption(ModelView):
         <div class="model-opt-top">
             <span class="model-opt-name">{{ pyview.subject.name }}</span>
             {% if pyview.subject.provider_count > 1 %}
-            <span class="model-opt-count">{{ pyview.subject.provider_count }} providers</span>
+                <span class="{{ pyview.count_class }}" onclick="event.stopPropagation();pyview.toggle_providers()">{{ pyview.subject.provider_count }} providers {{ pyview.pin_label }}</span>
             {% endif %}
         </div>
-        <span class="model-opt-providers">{{ pyview.providers_label }}</span>
+        {% if pyview.providers_open %}
+        <ul class="model-opt-provider-list">
+            {% for p in pyview.provider_rows %}
+            <li class="model-opt-provider-row{% if p.active %} active{% endif %}"
+                onclick="event.stopPropagation();set_specific_provider('{{ pyview.name_escaped }}', {{ p.pk }})">
+                <span class="model-opt-provider-name">{{ p.name }}</span>
+                {% if p.active %}<span class="model-opt-provider-check">✓</span>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
     '''
+    _providers_open = False
+
     @property
-    def providers_label(self) -> str:
-        """Comma-separated list of providers serving this model."""
-        return ", ".join(
-            sorted({member.api_provider.name for member in self.subject.members})
-        )
+    def name_escaped(self) -> str:
+        return self.subject.name.replace("\\", "\\\\").replace("'", "\\'")
+
+    @property
+    def providers_open(self) -> bool:
+        return self._providers_open
+
+    @property
+    def count_class(self) -> str:
+        return "model-opt-count" + (" model-opt-count--hide" if self._providers_open else "")
+
+    @property
+    def pin_label(self) -> str:
+        return "(hide)" if self._providers_open else "▾"
+
+    @property
+    def provider_rows(self) -> List[Dict[str, object]]:
+        """One row per WORKING provider — an enabled model row whose provider
+        has a configured API key (or a default key)."""
+        current = self.parent.parent.subject.aimodel
+        usable = {(m.api_provider_id, m.name) for m in available_aimodels()}
+        rows: List[Dict[str, object]] = []
+        for member in sorted(self.subject.members, key=lambda m: m.api_provider.name):
+            if not member.enabled or (member.api_provider_id, member.name) not in usable:
+                continue
+            rows.append(
+                {
+                    "pk": member.api_provider_id,
+                    "name": member.api_provider.name,
+                    "active": bool(
+                        current is not None
+                        and current.name == self.subject.name
+                        and current.api_provider_id == member.api_provider_id
+                    ),
+                }
+            )
+        return rows
+
+    def toggle_providers(self) -> None:
+        self._providers_open = not self._providers_open
+        self.update()
 
     @property
     def DOM_ELEMENT_CLASS(self):
@@ -32,8 +80,7 @@ class ModelDropdownOption(ModelView):
 
     @property
     def DOM_ELEMENT_EXTRAS(self):
-        name = self.subject.name.replace("\\", "\\\\").replace("'", "\\'")
-        return f'onclick="set_model_group(\'{name}\')"'
+        return f'onclick="set_model_group(\'{self.name_escaped}\')"'
 
 class ModelDropdown(ModelView):
     TEMPLATE_STR = '''
@@ -44,20 +91,15 @@ class ModelDropdown(ModelView):
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
-        <div class="model-group model-custom-sep">Custom model ID</div>
-        <div class="model-custom-row">
-            <input class="model-custom-input" type="text" placeholder="e.g. openai/gpt-5.4" spellcheck="false" autocomplete="off">
-            <button class="model-custom-btn" title="Use this model">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </button>
-        </div>
-        <div class="model-group">Configured</div>
-        
+       
         {{ pyview.model_list.render() }}
         <script>
             document.getElementById('{{pyview.uid}}').style.left = document.getElementById('{{pyview.parent.model_wrap.uid}}').offsetLeft + "px";
             function set_model_group(name){
                 pyview.set_model_group(name);
+            }
+            function set_specific_provider(name, provider_id){
+                pyview.set_specific_provider(name, provider_id);
             }
         </script>
     '''
@@ -82,11 +124,26 @@ class ModelDropdown(ModelView):
         self.parent.model_wrap.update()
         self.update()
 
+    def set_specific_provider(self, name, provider_id):
+        self.subject.set_aimodel_by_provider(name, int(provider_id))
+        self.open = False
+        self.parent.model_wrap.update()
+        self.update()
+
     def toggle(self):
         if not self.open:
             self.parent.close_dropdowns()
         self.open = not self.open
+        if self.open:
+            self._collapse_provider_lists()
         self.update()
+
+    def _collapse_provider_lists(self):
+        # pylint: disable=protected-access
+        for child in self.model_list._wrapped_data:
+            if getattr(child, "_providers_open", False):
+                child._providers_open = False
+                child.update()
 
     def close(self):
         if self.open:

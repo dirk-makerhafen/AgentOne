@@ -168,6 +168,7 @@ def load_providers_manifest(
     providers:
       - name: Google
         url: "https://generativelanguage.googleapis.com/v1beta/"
+        litellm_prefix: gemini        # optional; omit = OpenAI-compatible (api_base = url)
         models:
           - name: gemini-2.5-flash
             family: gemini
@@ -210,6 +211,7 @@ def load_providers_manifest(
             defaults={
                 "url": provider_data.get("url", ""),
                 "is_local": is_local,
+                "litellm_prefix": provider_data.get("litellm_prefix", ""),
             },
         )
         if not created:
@@ -224,6 +226,11 @@ def load_providers_manifest(
                 action = "updated"
             else:
                 action = "up to date"
+            litellm_prefix = provider_data.get("litellm_prefix", "")
+            if provider.litellm_prefix != litellm_prefix:
+                provider.litellm_prefix = litellm_prefix
+                provider.save(update_fields=["litellm_prefix"])
+                action = "updated"
         else:
             action = "created"
 

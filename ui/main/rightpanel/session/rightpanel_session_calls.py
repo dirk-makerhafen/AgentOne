@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from collections import defaultdict
 from django.utils import timezone
+from runtime.session.session import Session
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.enums.task_enums import TaskCallStatusDetail, TaskCallStatus
@@ -147,17 +148,17 @@ class RightPanelSessionCalls(ModelView):
 
     def __init__(self, subject: SessionModel, parent: RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        self.session = Session(session_model=subject)
         self._items: list[CallNodeView] = []
 
     @property
     def active_count(self) -> int:
         from django.db.models import F as _F
-        s = self.session
-        if s is None:
+        if self.session is None:
             return 0
         # Count non-ended calls under the newest root task for the session
         root = AgentTaskCall.objects.filter(
-            session=s.model,
+            session=self.session.model,
             session_root_task=_F("pk"),
         ).order_by("-created_at").first()
         if not root:
@@ -165,10 +166,6 @@ class RightPanelSessionCalls(ModelView):
         return AgentTaskCall.objects.filter(
             session_root_task=root,
         ).exclude(status=TaskCallStatus.ENDED).count()
-
-    @property
-    def session(self):
-        return self.parent.current_session
 
     def refresh(self):
         self._rebuild()

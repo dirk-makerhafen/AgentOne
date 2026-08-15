@@ -1,6 +1,7 @@
 providers:
 - name: Ollama
   url: http://localhost:11434/v1/
+  litellm_prefix: ollama
   is_local: true
 
 - name: OMLX
@@ -28,6 +29,7 @@ providers:
 
 - name: Google
   url: https://generativelanguage.googleapis.com/v1beta
+  litellm_prefix: gemini
   free_info:
     RPM: 15
     RPD: 1500
@@ -71,6 +73,7 @@ providers:
 
 - name: OpenRouter
   url: https://openrouter.ai/api/v1
+  litellm_prefix: openrouter
   free_info:
     RPD: 200
     api_key_url: https://openrouter.ai/workspaces/default/keys
@@ -107,6 +110,7 @@ providers:
 
 - name: Groq
   url: https://api.groq.com/openai/v1
+  litellm_prefix: groq
   free_info:
     RPM: 30
     RPD: 250
@@ -119,6 +123,7 @@ providers:
 
 - name: Mistral
   url: https://api.mistral.ai/v1
+  litellm_prefix: mistral
   free_info:
     RPS: 1
     TPM: 500000

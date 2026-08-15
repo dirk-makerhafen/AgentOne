@@ -346,7 +346,7 @@
      and attention indicator (26x26 at right:6px) still need 40px reserved
      when they're visible — covered by the hover / streaming / unread /
      menu-open / focus-within rule below. */
-  .session-item{padding:8px 8px;margin-bottom:2px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:background .15s,color .15s;display:flex;align-items:flex-start;gap:8px;min-width:0;position:relative;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .session-item{padding:8px 8px;margin-bottom:2px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:background .15s,color .15s;display:flex;flex-direction:column;flex-start;gap:8px;min-width:0;position:relative;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
   .session-item.streaming,.session-item.unread,.session-item:focus-within,.session-item.menu-open{padding-right:40px;}
   .session-item:hover{background:var(--hover-bg);color:var(--text);}
   /* Suppress hover highlight during drag to avoid visual noise mid-scroll */
@@ -1225,11 +1225,14 @@
      user resizes the panel narrower. */
   .rightpanel{         padding-bottom: 8px;height:100%; padding-bottom: 30px;width:25%;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
   .rightpanel-inner {
-    /* padding-bottom: 8px; */
     height: calc(100% - 50px);
     width: -webkit-fill-available;
-    background: var(--sidebar);
-    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+    .rightpanel-tab {
+    height: 100%;
+    width: -webkit-fill-available;
     display: flex;
     flex-direction: column;
   }
@@ -1634,8 +1637,22 @@
 .model-opt-badge--fallback{background:rgba(255,184,77,.14);border-color:rgba(255,184,77,.28);color:#ffd18a;}
 .model-opt-id{display:block;font-size:10px;color:var(--muted);line-height:1.3;opacity:.72;word-break:break-word;}
 .model-opt-provider{display:inline-flex;align-items:center;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;letter-spacing:.03em;color:var(--muted);background:rgba(255,255,255,.05);border:1px solid var(--border2);margin-left:auto;white-space:nowrap;flex-shrink:0;}
-  .model-opt-providers{display:block;font-size:10px;color:var(--muted);line-height:1.3;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
-  .model-opt-count{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;font-size:9px;font-weight:600;letter-spacing:.02em;color:var(--muted);background:rgba(255,255,255,.06);border:1px solid var(--border2);white-space:nowrap;}
+  .model-opt-providers{display:flex;flex-wrap:wrap;gap:4px;align-items:center;width:100%;}
+  .model-opt-count{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:999px;font-size:9px;font-weight:600;letter-spacing:.02em;color:var(--muted);background:rgba(255,255,255,.06);border:1px solid var(--border2);white-space:nowrap;cursor:pointer;user-select:none;transition:background .12s,border-color .12s,color .12s;}
+  .model-opt-count:hover{background:rgba(50,184,198,.16);border-color:rgba(50,184,198,.4);color:#8fe7ef;}
+  .model-opt-count--hide{color:#8fe7ef;background:rgba(50,184,198,.14);border-color:rgba(50,184,198,.35);}
+  .model-opt-pin{display:inline-flex;align-items:center;gap:2px;padding:1px 7px;border-radius:4px;font-size:9px;font-weight:600;letter-spacing:.03em;color:#8fe7ef;cursor:pointer;background:rgba(50,184,198,.12);border:1px solid rgba(50,184,198,.3);white-space:nowrap;transition:background .12s;}
+  .model-opt-pin:hover{background:rgba(50,184,198,.2);}
+  .model-opt-provider-list{list-style:none;margin:3px 0 0;padding:0;width:100%;display:flex;flex-direction:column;gap:2px;}
+  .model-opt-provider-row{display:flex;align-items:center;gap:8px;width:100%;padding:6px 9px;border-radius:6px;font-size:12px;color:var(--text);background:rgba(255,255,255,.04);cursor:pointer;transition:background .12s,color .12s;}
+  .model-opt-provider-row:hover{background:rgba(50,184,198,.18);color:#eafafb;}
+  .model-opt-provider-row.active{background:rgba(50,184,198,.18);color:#8fe7ef;}
+  .model-opt-provider-row.disabled{opacity:.5;cursor:default;}
+  .model-opt-provider-row.disabled:hover{background:rgba(255,255,255,.04);}
+  .model-opt-provider-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .model-opt-provider-hint{font-size:9px;color:var(--muted);font-style:italic;letter-spacing:.02em;white-space:nowrap;}
+  .model-opt-provider-note{display:block;margin-top:2px;padding:4px 9px;font-size:9px;color:var(--muted);font-style:italic;letter-spacing:.02em;}
+  .model-opt-provider-check{color:#8fe7ef;font-size:11px;flex-shrink:0;}
 .model-custom-sep{padding-top:4px;border-top:1px solid var(--border);margin-top:4px;}
 .model-custom-row{display:flex;align-items:center;gap:6px;padding:6px 10px 8px;}
 .model-custom-input{flex:1;background:var(--code-bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;outline:none;font-family:inherit;min-width:0;}

@@ -64,23 +64,23 @@ class SidebarPanelChat(ModelView):
                 <span class="session-time">1w</span>
             </div>
             <div class="session-meta">{{pyview.subject.messages.count()}} msgs · {% if  pyview.session.aimodel %} {{ pyview.session.aimodel.name }}{% else %}No Model{% endif %}</div>
-            {% if pyview.active_children and pyview._show_children %}
+        </div>
+        {% if pyview.active_children and pyview._show_children %}
             <div class="session-child-sessions">
                 {% for child, depth, model_name, has_active, needs_approval in pyview.child_tree %}
-                <div class="session-tree-child session-item{% if child.pk == pyview._active_session_pk %} active{% endif %}" style="margin-left:{{ depth }}em" onclick="event.stopPropagation(); pyview.open_child({{ child.pk }})" title="{{ child.name }}">
-                    <div style="display:flex;align-items:flex-start;gap:6px;flex:1;min-width:0">
-                        <div style="flex:1;min-width:0">
-                            <div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ child.name }}</div>
-                            <div class="session-meta">{{ child.messages.count() }} msgs{% if model_name %} · {{ model_name }}{% endif %}</div>
+                    <div class="session-tree-child session-item{% if child.pk == pyview._active_session_pk %} active{% endif %}" style="margin-left:{{ depth }}em" onclick="event.stopPropagation(); pyview.open_child({{ child.pk }})" title="{{ child.name }}">
+                        <div style="display:flex;align-items:flex-start;gap:6px;flex:1;min-width:0">
+                            <div style="flex:1;min-width:0">
+                                <div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ child.name }}</div>
+                                <div class="session-meta">{{ child.messages.count() }} msgs{% if model_name %} · {{ model_name }}{% endif %}</div>
+                            </div>
+                            {% if has_active %}<span class="session-state-indicator is-streaming" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}
+                            {% if needs_approval %}<span class="session-state-indicator needs-approval" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}                        
                         </div>
-                        {% if has_active %}<span class="session-state-indicator is-streaming" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}
-                        {% if needs_approval %}<span class="session-state-indicator needs-approval" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}                        
                     </div>
-                </div>
                 {% endfor %}
             </div>
-            {% endif %}
-        </div>
+        {% endif %}
         <span class="session-attention-indicator session-state-indicator{% if pyview.mark_active %} is-streaming{% endif %}{% if pyview.mark_needs_approval %} needs-approval{% endif %}" aria-hidden="true"></span>
         <div class="session-actions">
             <button type="button" class="session-actions-trigger" title="Conversation actions" aria-haspopup="menu" aria-label="Conversation actions" onclick="toggleSessionMenu(event, '{{pyview.uid}}')">

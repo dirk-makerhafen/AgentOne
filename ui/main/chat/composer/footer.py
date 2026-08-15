@@ -94,17 +94,19 @@ class ComposerFooter(PyHtmlView):
 
         {{ pyview.mobileconfig_panel.render() }}
 
-        {{ pyview.profile_dropdown.render() }}
         
-        {{ pyview.workspace_dropdown.render() }}
+        
         
         {{ pyview.reasoning_dropdown.render() }}
 
         {{ pyview.toolsets_dropdown.render() }}
 
-        {{ pyview.model_dropdown.render() }}
+       
 
     '''
+    # {{ pyview.workspace_dropdown.render() }}
+    # {{ pyview.profile_dropdown.render() }}
+    # {{ pyview.model_dropdown.render() }}
     def __init__(self, subject:Session, parent: ComposerBox, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.parent:ComposerBox

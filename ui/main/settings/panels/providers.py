@@ -35,8 +35,8 @@ class ProviderCardView(ModelView):
                 </div>
                 {% endfor %}
                 <div class="provider-card-row" style="margin-top:4px;gap:4px">
-                    <input type="text" class="provider-card-input" id="comment_{{pyview.uid}}" placeholder="Label (optional)" style="min-width:80px;flex:0 0 100px" autocomplete="off">
-                    <input type="{{ pyview.input_type }}" class="provider-card-input" id="newkey_{{pyview.uid}}" placeholder="sk-..." style="min-width:140px" autocomplete="off">
+                    <input type="text" class="provider-card-input" id="comment_{{pyview.uid}}" placeholder="Name" style="min-width:80px;flex:0 0 100px" autocomplete="off">
+                    <input type="{{ pyview.input_type }}" class="provider-card-input" id="newkey_{{pyview.uid}}" placeholder="paste api key here" style="min-width:140px" autocomplete="off">
                     <button type="button" class="provider-card-btn provider-card-btn-primary" onclick="pyview.add_key(
                         document.getElementById('newkey_{{pyview.uid}}').value,
                         document.getElementById('comment_{{pyview.uid}}').value
@@ -54,12 +54,6 @@ class ProviderCardView(ModelView):
                     <span class="provider-card-model-tag">{{ tag }}</span>
                     {% endfor %}
                 </div>
-            </div>
-            <div class="provider-card-row" style="margin-top:6px">
-                <button type="button" class="provider-card-btn provider-card-btn-ghost" style="display:flex;align-items:center;gap:5px" onclick="pyview.refresh_models()">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>
-                    Refresh models
-                </button>
             </div>
         </div>
     '''
@@ -87,11 +81,7 @@ class ProviderCardView(ModelView):
         card only lists local/self-hosted models — cloud ones are excluded.
         """
         qs = self.subject.aimodels.all().order_by("name")
-        if self.subject.is_local:
-            return qs.filter(is_cloud=False).exclude(
-                Q(name__endswith="-cloud") | Q(name__endswith=":cloud")
-            )
-        return qs.filter(is_cloud=True)
+        return qs.filter(enabled=True)
 
     @property
     def model_tags(self) -> list[str]:
@@ -170,15 +160,6 @@ class ProviderCardView(ModelView):
 
     def delete_key(self, key_pk: int):
         ApiKey.objects.filter(pk=key_pk, api_provider=self.subject).delete()
-        self.update()
-
-    def refresh_models(self):
-        result = sync_provider_models(self.subject.pk)
-        if result["error"]:
-            msg = f"Sync failed: {result['error']}"
-        else:
-            msg = f"Synced: {result['created']} created, {result['updated']} updated, {result['total']} total"
-        self.eval_javascript("alert(arg.message)", message=msg)
         self.update()
 
 

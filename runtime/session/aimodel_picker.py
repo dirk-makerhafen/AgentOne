@@ -64,14 +64,39 @@ def available_aimodels() -> List[AiModel]:
 
 
 def model_groups() -> ModelGroupList:
-    """Return usable models grouped by canonical name, ordered by name."""
-    members_by_name: Dict[str, List[AiModel]] = {}
-    for model in available_aimodels():
-        members_by_name.setdefault(model.name, []).append(model)
+    """Return usable model groups ordered by name.
+
+    A group carries every ENABLED provider row serving the canonical name,
+    excluding providers without a configured API key yet.  Only
+    names with at least one usable member are offered, so clicking a group
+    always resolves to a concrete row.
+    """
+    usable_names = {m.name for m in available_aimodels()}
+    by_name: Dict[str, List[AiModel]] = {}
+    for model in AiModel.objects.filter(enabled=True):
+        if model.api_provider.api_keys.count() == 0:
+            continue
+        members = by_name.setdefault(model.name, [])
+        if model.api_provider_id not in {m.api_provider_id for m in members}:
+            members.append(model)
     return ModelGroupList(
         ModelGroup(name, members)
-        for name, members in sorted(members_by_name.items())
+        for name, members in sorted(by_name.items())
+        if name in usable_names
     )
+
+
+def sibling_aimodels(model: AiModel, *, exclude: List[int] | None = None) -> List[AiModel]:
+    """Return the other usable rows serving the same canonical name as *model*,
+    ordered by ascending live load (least-loaded first).
+
+    ``exclude`` may carry pks of rows already tried so a failed sibling is not
+    retried in the same fallback pass.
+    """
+    exclude_pks = {int(pk) for pk in (exclude or ())}
+    exclude_pks.add(model.pk)
+    members = [m for m in available_aimodels() if m.name == model.name and m.pk not in exclude_pks]
+    return sorted(members, key=_member_load)
 
 
 def pick_aimodel(name: str) -> AiModel | None:

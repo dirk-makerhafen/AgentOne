@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
+from runtime.session.session import Session
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 
@@ -83,6 +84,7 @@ class RightPanelSessionTasks(ModelView):
         self._commandRows: list[CapabilityRow] = []
         self._skillRows: list[CapabilityRow] = []
         self._subagentRows: list[CapabilityRow] = []
+        self.session = Session(subject)
 
     @property
     def sections(self):
@@ -96,19 +98,18 @@ class RightPanelSessionTasks(ModelView):
         ]
 
     def _build(self):
-        s = self.subject
-        if s is None:
+        if self.session is None:
             self._toolRows.clear()
             self._taskRows.clear()
             self._commandRows.clear()
             self._skillRows.clear()
             self._subagentRows.clear()
             return
-        self._toolRows[:] = _build_category(set(s.allowedToolNames), set(s.disallowedToolNames))
-        self._taskRows[:] = _build_category(set(s.allowedTaskNames), set(s.disallowedTaskNames))
-        self._commandRows[:] = _build_category(set(s.allowedCommandNames), set(s.disallowedCommandNames))
-        self._skillRows[:] = _build_category(set(s.allowedSkillNames), set(s.disallowedSkillNames))
-        self._subagentRows[:] = _build_category(set(s.allowedSubagentNames), set(s.disallowedSubagentNames))
+        self._toolRows[:] = _build_category(set(self.session.allowedToolNames), set(self.session.disallowedToolNames))
+        self._taskRows[:] = _build_category(set(self.session.allowedTaskNames), set(self.session.disallowedTaskNames))
+        self._commandRows[:] = _build_category(set(self.session.allowedCommandNames), set(self.session.disallowedCommandNames))
+        self._skillRows[:] = _build_category(set(self.session.allowedSkillNames), set(self.session.disallowedSkillNames))
+        self._subagentRows[:] = _build_category(set(self.session.allowedSubagentNames), set(self.session.disallowedSubagentNames))
 
     def update(self, *args, **kwargs):
         self._build()

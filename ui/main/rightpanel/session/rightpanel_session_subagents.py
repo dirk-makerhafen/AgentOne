@@ -117,6 +117,7 @@ class RightPanelSessionSubagents(ModelView):
 
     def __init__(self, subject: SessionModel, parent: RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        self.session = Session(subject)
         self.active_list = QuerySetView(
             subject=SessionModel.objects.none(),
             parent=self,
@@ -128,26 +129,24 @@ class RightPanelSessionSubagents(ModelView):
 
     @property
     def available_subagents(self) -> list[AvailableSubagent]:
-        s = self.subject
-        if s is None:
+        if self.session is None:
             return []
         result = []
-        for name in s.allowedSubagentNames:
-            av = s.get_subagent(name)
-            cfg = s.subagent_config(name)
+        for name in self.session.allowedSubagentNames:
+            av = self.session.get_subagent(name)
+            cfg = self.session.subagent_config(name)
             result.append(AvailableSubagent(
                 name=name,
-                parent_name=s.agent.name,
+                parent_name=self.session.agent.name,
                 max_turns=cfg.get("maxTurns", 0),
                 agent_version=av,
             ))
         return result
 
     def open(self, name: str):
-        s = self.subject
-        if s is None:
+        if self.session is None:
             return
-        av = s.get_subagent(name)
+        av = self.session.get_subagent(name)
         if av is None:
             return
         ts = timezone.now().strftime("%Y%m%d%H%M%S")
@@ -160,10 +159,9 @@ class RightPanelSessionSubagents(ModelView):
         self.update()
 
     def _rebuild_active(self):
-        s = self.subject
-        if s is not None:
+        if self.session is not None:
             qs = SessionModel.objects.filter(
-                parent_session=s.model,
+                parent_session=self.session.model,
                 is_active=True,
             ).order_by("-created_at").select_related(
                 "latest_session_version__agent",
