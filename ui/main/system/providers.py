@@ -216,7 +216,11 @@ class ProviderListItemView(ModelView):
 
     def add_model(self, model_name):
         if model_name:
-            AiModel.objects.create(name=model_name, api_provider=self.subject)
+            AiModel.objects.create(
+                name=model_name,
+                provider_model_id=model_name,
+                api_provider=self.subject,
+            )
             self.update()
 
     def save_key(self, key_val, comment_val):

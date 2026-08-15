@@ -88,10 +88,10 @@ class ProviderCardView(ModelView):
         """
         qs = self.subject.aimodels.all().order_by("name")
         if self.subject.is_local:
-            return qs.filter(Q(self_hosted=True) | Q(is_cloud=False)).exclude(
+            return qs.filter(is_cloud=False).exclude(
                 Q(name__endswith="-cloud") | Q(name__endswith=":cloud")
             )
-        return qs.exclude(self_hosted=True).filter(is_cloud=True)
+        return qs.filter(is_cloud=True)
 
     @property
     def model_tags(self) -> list[str]:

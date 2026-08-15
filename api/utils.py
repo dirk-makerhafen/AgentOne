@@ -46,15 +46,17 @@ def _resolve_target(provider, cloud_provider, raw_name, model_defaults):
     if provider.is_local and _is_cloud_suffixed(raw_name):
         target = cloud_provider
         stored_name = _strip_cloud_suffix(raw_name)
-        flags = {"self_hosted": False, "is_cloud": True}
+        flags = {"is_cloud": True}
     else:
         target = provider
         stored_name = raw_name
-        flags = {"self_hosted": model_defaults["self_hosted"], "is_cloud": model_defaults["is_cloud"]}
+        flags = {"is_cloud": model_defaults["is_cloud"]}
     return target, stored_name, flags
 
 
 def sync_provider_models(provider_id: int) -> dict:
+    # disabled for now, do not enable, we might switch to purely a currated list of model, not bulk annoying long lists
+    return {}
     """Fetch models from a provider's API and upsert AiModel records.
 
     Supports OpenAI-compatible APIs (``GET /v1/models``) and Google's
@@ -73,9 +75,9 @@ def sync_provider_models(provider_id: int) -> dict:
 
     # A local provider (e.g. Ollama) may still serve cloud models, so newly
     # discovered models default to the provider's locality but can be overridden
-    # per-model via explicit ``is_cloud`` / ``self_hosted`` keys in the payload.
-    local_defaults = {"self_hosted": True, "is_cloud": False}
-    cloud_defaults = {"self_hosted": False, "is_cloud": True}
+    # per-model via an explicit ``is_cloud`` key in the payload.
+    local_defaults = {"is_cloud": False}
+    cloud_defaults = {"is_cloud": True}
     model_defaults = local_defaults if provider.is_local else cloud_defaults
 
     api_key = provider.api_keys.filter(enabled=True).first()
@@ -130,11 +132,12 @@ def sync_provider_models(provider_id: int) -> dict:
 
         model, is_new = AiModel.objects.get_or_create(
             api_provider=target,
-            name=stored_name,
+            provider_model_id=stored_name,
             defaults={
+                "name": stored_name,
+                "provider_model_id": stored_name,
                 "family": family,
                 "description": description,
-                "self_hosted": flags["self_hosted"],
                 "is_cloud": flags["is_cloud"],
             },
         )
@@ -143,7 +146,7 @@ def sync_provider_models(provider_id: int) -> dict:
             continue
         updated += 1
 
-        # Existing models keep their manifest flags (is_cloud/self_hosted).
+        # Existing models keep their manifest flags (is_cloud).
         # Refresh metadata and re-enable models the provider still serves.
         re_enabled = not model.enabled
         if re_enabled:

@@ -73,14 +73,13 @@ def has_recent_local_activity(minutes: int | None = None) -> bool:
     window = minutes if minutes is not None else get_sleep_guard_release_delay_minutes()
     if window <= 0:
         return False
-    from django.db.models import Q
     from server.models.queries.response import Response
 
     threshold = timezone.now() - timedelta(minutes=window)
     return Response.objects.filter(
         created_at__gte=threshold,
     ).filter(
-        Q(aimodel__self_hosted=True) | Q(aimodel__is_cloud=False),
+        aimodel__is_cloud=False,
     ).exists()
 
 

@@ -167,15 +167,6 @@ def run_reload_all(folder: str) -> ReloadResult:
         except Exception as e:
             errors.append(f"Providers: {e}")
 
-    # Free-tier providers
-    free_providers_file = effective_root / "free_providers.yaml"
-    if free_providers_file.exists():
-        try:
-            free_count = load_providers_manifest(free_providers_file, details=details)
-            counts["providers"] = counts.get("providers", 0) + free_count
-        except Exception as e:
-            errors.append(f"Free providers: {e}")
-
     # Build summary
     summary = _format_detailed_summary(details, errors)
     status = "success" if not errors else "partial"

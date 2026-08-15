@@ -1,8 +1,8 @@
 """
 Streams the Query to the LLM API and records the Response.
 Handles rate limiting, API key selection, and streaming ingestion.
+Uses LiteLLM for unified API across providers.
 """
-
 from __future__ import annotations
 
 import json
@@ -15,35 +15,58 @@ from runtime.tool_argument_utils import normalize_tool_arguments
 from server.models.settings import AgentToolCallSyntax
 from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
-from openai import OpenAI
+import litellm
 from runtime.rate_limiter import RateLimitChecker, RateLimitError
 from runtime.power import battery_gate_blocked
 import re
 
+# Drop unsupported params (e.g. reasoning_effort on models without thinking)
+# instead of erroring, so the same request works across providers.
+litellm.drop_params = True
+
+
+PROVIDER_LITELLM_PREFIX = {
+    "Google": "gemini/",
+    "OpenRouter": "openrouter/",
+    "Groq": "groq/",
+    "DeepSeek": "deepseek/",
+    "Together AI": "together_ai/",
+    "Alibaba Cloud": "dashscope/",
+    "Ollama": "ollama/",
+}
+
+# OpenAI-compatible providers LiteLLM has no native prefix for; they are
+# routed through the openai provider using each provider URL as api_base.
+PROVIDER_OPENAI_COMPATIBLE = {
+    "Zhipu AI",
+    "SiliconFlow",
+    "OpenCode Zen",
+    "Ollama Cloud",
+}
+
+
+def _get_litellm_model_name(provider_name: str, model_name: str) -> str:
+    """Map provider name to a LiteLLM model name.
+
+    LiteLLM uses the {provider}/{model} format for providers it knows
+    natively.  OpenAI-compatible providers LiteLLM lacks a native prefix for
+    are routed through the ``openai`` provider with an explicit ``api_base``.
+    Unknown providers pass through unchanged (assumed OpenAI-compatible).
+    """
+    if provider_name in PROVIDER_LITELLM_PREFIX:
+        return f"{PROVIDER_LITELLM_PREFIX[provider_name]}{model_name}"
+    if provider_name in PROVIDER_OPENAI_COMPATIBLE:
+        return f"openai/{model_name}"
+    return model_name
+
+
 def run_streaming_query(
     session: Session,
-    tools: list[dict[str, Any]],
-    messages: list[dict[str, Any]],
+    tools: list[dict[Any, Any]],
+    messages: list[dict[Any, Any]],
     query: Query,
 ) -> Response:
-    """
-    Open a streaming chat completion and incrementally save the response.
-
-    Accumulates content, reasoning/thinking tokens, and tool call deltas
-    into the Response model. Saves every 150ms for progress visibility.
-
-    Args:
-        session:  The active agent session.
-        tools:    OpenAI-format tool definitions.
-        messages: OpenAI-API-compatible message list from the Query.
-        query:    The Query model this response belongs to.
-
-    Returns:
-        A saved Response model with content, reasoning, tool_calls,
-        token usage, and timing metrics.
-    """
-    SAVE_INTERVAL = 0.500  # persist progress every 500ms
-
+    SAVE_INTERVAL = 0.500
     last_save_time = time.time()
     first_token_timestamp: float | None = None
     first_reasoning_token_timestamp: float | None = None
@@ -52,74 +75,54 @@ def run_streaming_query(
     sv = query.session_version
     response = Response.objects.create(
         query=query,
-        session = sv.session,
-        session_version = sv,
+        session=sv.session,
+        session_version=sv,
         status=ResponseStatus.ACTIVE,
         tool_calls=[],
         aimodel=session.aimodel,
         model_name=session.aimodel.name if session.aimodel else "",
         provider_name=session.aimodel.api_provider.name if session.aimodel and session.aimodel.api_provider else "",
     )
-
-    client = OpenAI(
-        base_url=session.aimodel.api_provider.url,
+    provider = session.aimodel.api_provider.name if session.aimodel and session.aimodel.api_provider else ""
+    api_model_id = session.aimodel.provider_model_id or session.aimodel.name if session.aimodel else ""
+    model_name = _get_litellm_model_name(provider, api_model_id)
+    args = dict(
+        model=model_name,
+        messages=messages,
+        stream=True,
+        stream_options={"include_usage": True},
         api_key=query.apikey.key if query.apikey else (session.aimodel.api_provider.data or {}).get("default_api_key", ""),
     )
-
-
-    extra_body = {}
     if session.aimodel.supports_reasoning:
-        extra_body["reasoning_effort"] = session.reasoning_effort
-
-    args = dict(
-        model=session.aimodel.name,
-        messages=messages,
-        extra_body=extra_body,
-        stream_options={"include_usage": True},
-        stream=True,
-    )
+        args["reasoning_effort"] = session.reasoning_effort
+    if provider in PROVIDER_OPENAI_COMPATIBLE:
+        args["api_base"] = session.aimodel.api_provider.url
     if tools:
         args["tools"] = tools
         args["tool_choice"] = "auto"
-    
-    #from server.models.debug_log_entry import DebugLogEntry
-    #DebugLogEntry.objects.create(
-    #    session=session.model,
-    #    event="query",
-    #    data={"query_args": args}
-    #)
-
-    stream = client.chat.completions.create(**args)
+    stream = litellm.completion(**args)
     repeat_count = 0
     for event in stream:
         if repeat_count >= 5:
             response.finish_reason = "Looping detected"
             break
-
         event_data = event.model_dump()
         unknown_chunk = True
-
         if usage := event_data.get("usage", None):
             unknown_chunk = False
             response.completion_tokens = int(usage.get("completion_tokens", 0) or 0)
             response.prompt_tokens = int(usage.get("prompt_tokens", 0))
-
             prompt_details = usage.get("prompt_tokens_details", {}) or {}
             response.cached_tokens = int(prompt_details.get("cached_tokens", 0) or 0)
-
             completion_details = usage.get("completion_tokens_details", {}) or {}
             response.reasoning_tokens = int(completion_details.get("reasoning_tokens", 0) or 0)
-
         choices = event_data.get("choices", [{}])
         if not choices:
             continue
-
         message_chunk = choices[0].get("delta", {})
-
         if finish_reason := choices[0].get("finish_reason"):
             unknown_chunk = False
             response.finish_reason = finish_reason
-
         reasoning_chunk = message_chunk.get("reasoning", None) or message_chunk.get("thinking", None) or message_chunk.get("reasoning_content", None)
         if reasoning_chunk:
             if not first_reasoning_token_timestamp:
@@ -130,14 +133,12 @@ def run_streaming_query(
             r = response.reasoning
             if r and r.count(r[-255:]) > 1:
                 repeat_count += 1
-
         if content_chunk := message_chunk.get("content", None):
             unknown_chunk = False
             response.content += content_chunk
             r = response.content
             if r and r.count(r[-255:]) > 1:
                 repeat_count += 1
-
         if tool_calls_chunk := message_chunk.get("tool_calls", None):
             unknown_chunk = False
             for tool_call in tool_calls_chunk:
@@ -160,37 +161,25 @@ def run_streaming_query(
                         response.tool_calls[index]["name"] += fname
                     if arguments := func.get("arguments"):
                         response.tool_calls[index]["arguments"] += arguments
-
         if unknown_chunk:
             print("Unknown Chunk: ", event_data)
         else:
             if not first_token_timestamp:
                 first_token_timestamp = time.time()
-
         if time.time() - last_save_time > SAVE_INTERVAL:
             response.save()
             last_save_time = time.time()
-
     end_timestamp = time.time()
-
-    # Parse tool call arguments from JSON string to dict.  Generate-style
-    # providers stream the arguments as a JSON string; some also emit it
-    # with double-escaped unicode (e.g. ``\\u00df`` for ``ß``).  We re-decode
-    # any surviving literal ``\uXXXX`` sequences so paths match the filesystem.
-
     for tool_call in response.tool_calls:
         try:
             tool_call["arguments"] = json.loads(tool_call["arguments"])
         except json.JSONDecodeError:
             pass
         tool_call["arguments"] = normalize_tool_arguments(tool_call["arguments"])
-
-    # Record timing metrics
     response.time_to_first_token = 0
     response.token_generation_time = 0
     response.reasoning_time = 0
     response.total_time = end_timestamp - start_timestamp
-
     if first_token_timestamp:
         response.time_to_first_token = first_token_timestamp - start_timestamp
         response.token_generation_time = end_timestamp - first_token_timestamp
@@ -199,7 +188,7 @@ def run_streaming_query(
             last_reasoning_token_timestamp - first_reasoning_token_timestamp
         )
     response.content = re.sub(r'\s*</parameter>\s?</function>\s?</tool_call>\s*$','',str(response.content))
-        
+
     if first_token_timestamp and response.finish_reason:
         response.status = ResponseStatus.SUCCESS
     else:
@@ -244,7 +233,7 @@ def call_llm(_session: Session, query: Query) -> Response:
         query.status = QueryStatus.ACTIVE # no need to call save, this was done by .update()
 
         messages = query.to_openai_message()
-        api_tools: list[dict[str, Any]] = []
+        api_tools: list[dict[Any, Any]] = []
         if _session.tool_call_syntax == AgentToolCallSyntax.DEFAULT:
             for tool in _session.allowedTools:
                 if not tool.task_definition:

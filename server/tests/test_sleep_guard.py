@@ -72,13 +72,11 @@ class RecentLocalActivityTest(TestCase):
         self.aimodel_local = AiModel.objects.create(
             api_provider=self.provider,
             name="local",
-            self_hosted=True,
             is_cloud=False,
         )
         self.aimodel_cloud = AiModel.objects.create(
             api_provider=self.provider,
             name="cloud",
-            self_hosted=False,
             is_cloud=True,
         )
         self.agent = AgentModel.objects.create(name="sg-agent")

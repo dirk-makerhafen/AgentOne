@@ -1,8 +1,9 @@
 """Load default LLM providers and models from YAML manifests.
 
 Reads:
-  - .agentone/providers.yaml       (self-hosted / local models)
-  - .agentone/free_providers.yaml  (free-tier cloud models)
+  - .agentone/providers.yaml  (self-hosted / local models + cloud free tier)
+  - .agentone/models.yaml     (canonical model catalog, resolved by the
+                               provider loader via ``free_info.free_models``)
 Creates or updates ApiProvider and AiModel records via the standard YAML loader.
 """
 from pathlib import Path
@@ -14,7 +15,6 @@ AGENTONE_DIR = BASE_DIR / ".agentone"
 
 MANIFESTS = [
     "providers.yaml",
-    "free_providers.yaml",
 ]
 
 

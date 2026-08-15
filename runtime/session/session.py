@@ -111,17 +111,33 @@ class Session:
     def _default_aimodel(self) -> AiModel | None:
         """Resolve the user's Default Model preference to an :class:`AiModel`."""
         from runtime.settings import get_default_model_name
+        from runtime.session.aimodel_picker import pick_aimodel
+
         name = get_default_model_name()
         if not name:
             return None
         try:
-            return AiModel.objects.filter(name=name, enabled=True).first()
+            return pick_aimodel(name)
         except Exception:
             return None
 
     def set_aimodel(self, model: AiModel | None) -> None:
         """Override the AI model setting (creates a new version)."""
         self._set_session_setting("aimodel", model)
+
+    def set_aimodel_by_name(self, name: str) -> AiModel | None:
+        """Pin this session to a concrete provider for canonical model *name*.
+
+        Chooses a provider via the shared picker (preferring usable, least
+        throttled/loaded members), then persists the choice.  Returns the
+        chosen :class:`AiModel`, or *None* when no usable row exists.
+        """
+        from runtime.session.aimodel_picker import pick_aimodel
+
+        model = pick_aimodel(name)
+        if model is not None:
+            self.set_aimodel(model)
+        return model
 
     @property
     def reasoning_effort(self) -> ReasoningEffort:

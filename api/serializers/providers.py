@@ -18,7 +18,7 @@ class AiModelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = AiModel
         fields = ['id', 'name', 'family', 'provider_name', 'enabled',
-                  'context_length', 'vision', 'self_hosted',
+                  'context_length', 'vision', 'is_cloud',
                   'total_parameters', 'active_parameters', 'quantization',
                   'created_at', 'updated_at']
 
@@ -31,13 +31,17 @@ class AiModelDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AiModel
-        fields = ['id', 'name', 'family', 'provider', 'description',
-                  'enabled', 'context_length', 'is_cloud', 'self_hosted',
-                  'vision', 'total_parameters', 'active_parameters',
+        fields = ['id', 'name', 'provider_model_id', 'family', 'provider',
+                  'description',
+                  'enabled', 'context_length', 'is_cloud',
+                  'vision', 'audio', 'video',
+                  'total_parameters', 'active_parameters',
                   'quantization',
                   'max_prompt_tokens', 'max_response_tokens',
-                  'limit_request_per_day', 'limit_request_per_minute',
-                  'limit_tokens_per_day', 'limit_tokens_per_minute',
+                  'limit_request_per_day', 'limit_request_per_hour',
+                  'limit_request_per_minute',
+                  'limit_tokens_per_day', 'limit_tokens_per_hour',
+                  'limit_tokens_per_minute',
                   'limit_parallel_calls',
                   'created_at', 'updated_at']
 
@@ -52,6 +56,10 @@ class ProviderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiProvider
         fields = ['id', 'name', 'url', 'model_count', 'key_count',
+                  'limit_request_per_day', 'limit_request_per_hour',
+                  'limit_request_per_minute',
+                  'limit_tokens_per_day', 'limit_tokens_per_hour',
+                  'limit_tokens_per_minute',
                   'limit_parallel_calls', 'created_at', 'updated_at']
 
     def get_model_count(self, obj) -> int:
@@ -68,4 +76,8 @@ class ProviderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiProvider
         fields = ['id', 'name', 'url', 'models', 'keys',
+                  'limit_request_per_day', 'limit_request_per_hour',
+                  'limit_request_per_minute',
+                  'limit_tokens_per_day', 'limit_tokens_per_hour',
+                  'limit_tokens_per_minute',
                   'limit_parallel_calls', 'created_at', 'updated_at']

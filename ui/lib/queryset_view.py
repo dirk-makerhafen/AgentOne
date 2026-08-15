@@ -62,10 +62,17 @@ class QuerySetView(ModelView):
             return data
         return sorted(data, key=self.sort_key, reverse=self.sort_reverse)
  
-    # ------------------------------------------------------------------
+# ------------------------------------------------------------------
     # Visibility lifecycle
     # ------------------------------------------------------------------
- 
+
+    def _iter_subjects(self):
+        """Yield the subjects to wrap — a QuerySet flattened via ``.all()`` or
+        a plain list/tuple given directly as the subject."""
+        if isinstance(self.query, (list, tuple)):
+            return self.query
+        return self.query.all()
+
     def set_visible(self, visible: bool) -> None:
         if self.is_visible == visible:
             return
@@ -77,7 +84,7 @@ class QuerySetView(ModelView):
             self._wrapped_data = []
             # Rebuild only when becoming visible
             if self.is_visible is True:
-                for item in self.query.all():
+                for item in self._iter_subjects():
                     self._wrapped_data.append(self._create_item(item))
  
     # ------------------------------------------------------------------
@@ -99,7 +106,7 @@ class QuerySetView(ModelView):
             for item in self._wrapped_data:
                 item.delete(remove_from_dom=False)
             self._wrapped_data = []
-            for item in self.query.all():
+            for item in self._iter_subjects():
                 self._wrapped_data.append(self._create_item(item))
  
     def get_element_index(self, element) -> int:

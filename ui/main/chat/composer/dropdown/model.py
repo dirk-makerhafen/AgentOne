@@ -1,9 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from django.db.models import Q
+from runtime.session.aimodel_picker import model_groups
 from runtime.session.session import Session
-from server.models.providers.ai_model import AiModel
-from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
 if TYPE_CHECKING:
@@ -12,18 +10,30 @@ if TYPE_CHECKING:
 class ModelDropdownOption(ModelView):
     TEMPLATE_STR = '''
         <div class="model-opt-top">
-            <span class="model-opt-name"> {{ pyview.subject.name }} </span>
-            <span class="model-opt-provider"> {{pyview.subject.api_provider.name}}</span>
+            <span class="model-opt-name">{{ pyview.subject.name }}</span>
+            {% if pyview.subject.provider_count > 1 %}
+            <span class="model-opt-count">{{ pyview.subject.provider_count }} providers</span>
+            {% endif %}
         </div>
-        <span class="model-opt-id">gemma3:12b</span>
+        <span class="model-opt-providers">{{ pyview.providers_label }}</span>
     '''
     @property
+    def providers_label(self) -> str:
+        """Comma-separated list of providers serving this model."""
+        return ", ".join(
+            sorted({member.api_provider.name for member in self.subject.members})
+        )
+
+    @property
     def DOM_ELEMENT_CLASS(self):
-        return f'model-opt {"active" if self.parent.parent.subject.aimodel and self.parent.parent.subject.aimodel.name == self.subject.name else ""}'
-    
+        current = self.parent.parent.subject.aimodel
+        active = current is not None and current.name == self.subject.name
+        return f'model-opt {"active" if active else ""}'
+
     @property
     def DOM_ELEMENT_EXTRAS(self):
-        return f'onclick="set_model({self.subject.pk})"'
+        name = self.subject.name.replace("\\", "\\\\").replace("'", "\\'")
+        return f'onclick="set_model_group(\'{name}\')"'
 
 class ModelDropdown(ModelView):
     TEMPLATE_STR = '''
@@ -42,12 +52,12 @@ class ModelDropdown(ModelView):
             </button>
         </div>
         <div class="model-group">Configured</div>
-       
+        
         {{ pyview.model_list.render() }}
         <script>
             document.getElementById('{{pyview.uid}}').style.left = document.getElementById('{{pyview.parent.model_wrap.uid}}').offsetLeft + "px";
-            function set_model(pk){
-                pyview.set_model(pk);
+            function set_model_group(name){
+                pyview.set_model_group(name);
             }
         </script>
     '''
@@ -59,16 +69,15 @@ class ModelDropdown(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.open = False
         self.search_string = ""
-        models = AiModel.objects.filter(Q(api_provider__api_keys__enabled=True) | Q(api_provider__raw_data__contains='"default_api_key"')).distinct()
         self.model_list = QuerySetView(
-            subject=models,
+            subject=model_groups(),
             parent=self,
             item_class=ModelDropdownOption,
             filter_function=self._filter_function  
         )
     
-    def set_model(self, pk):
-        self.subject.set_aimodel(AiModel.objects.get(pk=int(pk)))
+    def set_model_group(self, name):
+        self.subject.set_aimodel_by_name(name)
         self.open = False
         self.parent.model_wrap.update()
         self.update()
@@ -84,10 +93,16 @@ class ModelDropdown(ModelView):
             self.open = False
             self.update()
 
-    def _filter_function(self, item:ModelDropdownOption):
-        return self.search_string not in item.subject.name
+    def _filter_function(self, item: ModelDropdownOption):
+        if not self.search_string:
+            return False
+        if self.search_string in item.subject.name:
+            return False
+        return all(
+            self.search_string not in member.api_provider.name
+            for member in item.subject.members
+        )
 
     def filter_models(self, searchstring):
         self.search_string = searchstring
         self.model_list.update()
-        

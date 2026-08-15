@@ -15,6 +15,7 @@ class AiModel(BaseModel):
 
     api_provider = models.ForeignKey("server.ApiProvider", on_delete=models.CASCADE, related_name="aimodels")
     name = models.CharField(max_length=512)
+    provider_model_id = models.CharField(max_length=512, default="", blank=True)
     family = models.CharField(max_length=512, default="", blank=True)
     description = models.TextField(max_length=65000, default="", blank=True)
 
@@ -22,13 +23,14 @@ class AiModel(BaseModel):
 
     context_length = models.IntegerField(default=1000000)
     is_cloud = models.BooleanField(default=True)
-    self_hosted = models.BooleanField(default=False)
     open_weights = models.BooleanField(default=False)
     supports_reasoning = models.BooleanField(default=False)
     requires_reasoning_echo = models.BooleanField(default=False)
     supports_tool_call = models.BooleanField(default=False)
     filesize = models.IntegerField(default=-1)
     vision = models.BooleanField(default=False)
+    audio = models.BooleanField(default=False)
+    video = models.BooleanField(default=False)
     total_parameters = models.FloatField(default=0)
     active_parameters = models.FloatField(default=0)
     quantization = models.CharField(max_length=64, default="", blank=True)
@@ -37,8 +39,10 @@ class AiModel(BaseModel):
     max_response_tokens = models.IntegerField(default=1000000)
 
     # 0 = unlimited
+    limit_request_per_hour = models.IntegerField(default=0)
     limit_request_per_day = models.IntegerField(default=0)
     limit_request_per_minute = models.IntegerField(default=0)
+    limit_tokens_per_hour = models.IntegerField(default=0)
     limit_tokens_per_day = models.IntegerField(default=0)
     limit_tokens_per_minute = models.IntegerField(default=0)
 
@@ -50,16 +54,12 @@ class AiModel(BaseModel):
     def is_local_model(self) -> bool:
         """Whether this model runs on a local/self-hosted runtime.
 
-        A model is considered local when it is self-hosted or explicitly
-        flagged as not cloud.  A local provider (e.g. Ollama) may still serve
-        cloud models, so this is decided per-model, not per-provider.
+        A model is considered local when it is not a cloud model.  A local
+        provider (e.g. Ollama) may still serve cloud models, so this is
+        decided per-model, not per-provider.
         """
-        return self.self_hosted or not self.is_cloud
+        return not self.is_cloud
 
-    observable_fields = set([
-        "pk",
-        "api_provider"
-    ])
 
     @property
     def total_llm_queries(self) -> int:
@@ -90,17 +90,16 @@ class AiModel(BaseModel):
         """Return the related Response queryset for this model."""
         return self.related_responses  # pyright: ignore[reportAttributeAccessIssue]
 
-    @property
-    def observable_keys(self):
-        return set([
-            "AiModel",
-            f"AiModel.pk:{self.pk}",
-            f"AiModel.api_provider:{self.api_provider_pk}",
-        ])
-
     def requests_last_minute(self) -> int:
         """Number of successful responses in the last 60 seconds."""
         since = timezone.now() - timedelta(seconds=60)
+        return self.related_responses.filter(
+            status="SUCCESS", created_at__gte=since
+        ).count()
+
+    def requests_last_hour(self) -> int:
+        """Number of successful responses in the last 60 minutes."""
+        since = timezone.now() - timedelta(minutes=60)
         return self.related_responses.filter(
             status="SUCCESS", created_at__gte=since
         ).count()
@@ -115,6 +114,14 @@ class AiModel(BaseModel):
     def tokens_last_minute(self) -> int:
         """Total tokens (prompt + completion) in the last 60 seconds."""
         since = timezone.now() - timedelta(seconds=60)
+        result = self.related_responses.filter(
+            status="SUCCESS", created_at__gte=since
+        ).aggregate(total=Sum("prompt_tokens") + Sum("completion_tokens"))
+        return result["total"] or 0
+
+    def tokens_last_hour(self) -> int:
+        """Total tokens (prompt + completion) in the last 60 minutes."""
+        since = timezone.now() - timedelta(minutes=60)
         result = self.related_responses.filter(
             status="SUCCESS", created_at__gte=since
         ).aggregate(total=Sum("prompt_tokens") + Sum("completion_tokens"))
@@ -157,6 +164,11 @@ class AiModel(BaseModel):
             if rpm >= self.limit_request_per_minute:
                 return True, f"rpm:{rpm}/{self.limit_request_per_minute}"
 
+        if self.limit_request_per_hour > 0:
+            rph = self.requests_last_hour()
+            if rph >= self.limit_request_per_hour:
+                return True, f"rph:{rph}/{self.limit_request_per_hour}"
+
         if self.limit_request_per_day > 0:
             rpd = self.requests_today()
             if rpd >= self.limit_request_per_day:
@@ -166,6 +178,11 @@ class AiModel(BaseModel):
             tpm = self.tokens_last_minute()
             if tpm >= self.limit_tokens_per_minute:
                 return True, f"tpm:{tpm}/{self.limit_tokens_per_minute}"
+
+        if self.limit_tokens_per_hour > 0:
+            tph = self.tokens_last_hour()
+            if tph >= self.limit_tokens_per_hour:
+                return True, f"tph:{tph}/{self.limit_tokens_per_hour}"
 
         if self.limit_tokens_per_day > 0:
             tpd = self.tokens_today()
