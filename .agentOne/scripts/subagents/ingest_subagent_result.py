@@ -29,7 +29,7 @@ def ingest_subagent_result(_session: Session, child_session_pk: int, summary: st
     child_session = Session(session_model=child_session_model)
 
     session_version = _session.get_version_model()
-    prev_message = _session.get_messages().filter(next_messages=None).last()
+    prev_message = _session.get_last_message()
     message = Message.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
     message.add_part(
         type=MessagePartType.MESSAGE,

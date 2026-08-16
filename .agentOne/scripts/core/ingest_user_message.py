@@ -40,7 +40,7 @@ def ingest_user_message(_session: Session, parts: list[dict[str, Any]]) -> Messa
     _session.reset_unattended_turn_count()
     _session.reset_turn_count()
     session_version = _session.get_version_model()
-    prev_message = _session.get_messages().filter(next_messages=None).last()
+    prev_message = _session.get_last_message()
 
     message = Message.objects.create(
         role=MessageRole.USER,

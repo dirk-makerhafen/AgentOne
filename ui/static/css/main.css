@@ -416,6 +416,7 @@
     margin-left:auto;
     color:var(--muted);
     font-size:10px;
+    padding-right: 5px;
     white-space:nowrap;
     flex-shrink:0;
   }
@@ -1682,7 +1683,7 @@
 .ws-opt-icon{display:inline-flex;align-items:center;justify-content:center;opacity:.82;flex-shrink:0;}
 .ws-opt-meta{font-size:11px;color:var(--muted);}
 /* ── Workspace management panel ── */
-.ws-row{display:flex;align-items:center;gap:8px;padding:8px 10px;margin-bottom:2px;border:1px solid transparent;border-radius:8px;cursor:pointer;color:var(--muted);transition:background .15s,border-color .15s,color .15s,opacity .15s;}
+.ws-row{display:flex;align-items:center;gap:8px;padding:0px 4px;margin-bottom:2px;border:1px solid transparent;border-radius:8px;cursor:pointer;color:var(--muted);transition:background .15s,border-color .15s,color .15s,opacity .15s;}
 .ws-row:hover{background:var(--surface);color:var(--text);}
 .ws-row.active{background:var(--accent-bg);border-color:var(--accent-bg-strong);color:var(--accent-text);}
 .ws-row-info{flex:1;min-width:0;}
@@ -1784,6 +1785,9 @@
 .msg-action-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:5px;transition:color .12s,background .12s;line-height:1;}
 .msg-action-btn:hover{color:var(--accent-text);background:var(--accent-bg);}
 .msg-action-btn.copied{color:var(--success);}
+.msg-copy-btn i{display:none;font-style:normal;font-weight:600;font-size:11px;white-space:nowrap;}
+.msg-copy-btn.copied svg{display:none;}
+.msg-copy-btn.copied i{display:inline-block !important;}
 /* TTS speaker button: hidden by default, shown when TTS is enabled.
  * Use body-class selector instead of JS inline-style so the rule survives
  * subsequent renderMd() passes and is not subject to inline-style cascade
@@ -2874,7 +2878,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .session-child-sessions{display:flex;flex-direction:column;gap:2px;margin-top:2px;padding-left:4px;border-left:1px solid var(--border,rgba(255,255,255,.1));}
 .session-child-session{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:11px;text-align:left;padding:3px 4px;border-radius:5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .session-child-session:hover,.session-child-session.active{background:rgba(255,255,255,.06);color:var(--text);}
-.session-tree-children{margin-left:16px;border-left:1px solid var(--border,rgba(255,255,255,.1));padding-left:4px;}
+.session-tree-children{margin-left:2px;border-left:1px solid var(--border,rgba(255,255,255,.1));padding-left:2px;}
 .session-tree-child.session-item{font-size:12px;opacity:.85;border-radius:6px}
 .session-tree-child.session-item:hover{opacity:1;}
 .subagent-session-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:default;}
@@ -3254,7 +3258,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
   border-top: 1px solid transparent;
   transition: max-height .22s ease, opacity .18s ease, padding .22s ease, border-top-color .22s ease;
 }
-.thinking-card.open .thinking-card-body { max-height: 260px; overflow-y: auto; opacity: 1; padding: 8px 12px; border-top-color: var(--accent-bg-strong); }
+.thinking-card.open .thinking-card-body { max-height: fit-content; overflow-y: auto; opacity: 1; padding: 8px 12px; border-top-color: var(--accent-bg-strong); }
 .thinking-card-body pre { font-family: 'SF Mono', ui-monospace, monospace; font-size: 11px; line-height: 1.6; color: var(--muted); white-space: pre-wrap; word-break: break-word; margin: 0; }
 
 /* ── Tool cards: tighter chrome to match quieter thinking card ── */

@@ -62,7 +62,7 @@ class AssistantMessageView(ModelView):
                 </div>
             {% endif %}
 
-            <div class="assistant-segment" data-msg-idx="13">
+            <div class="assistant-segment">
                 <div class="msg-body" id="message_body_{{pyview.subject.pk}}">{% for message_part in  pyview.subject.parts.filter(type__in=["MESSAGE"]) %}{{ message_part.content.get()}}{% endfor %}   
                 </div>
                 <div class="msg-foot">
@@ -78,6 +78,7 @@ class AssistantMessageView(ModelView):
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
                         </button>
                         <button class="msg-copy-btn msg-action-btn" title="Copy" onclick="copyMsg(this)">
+                            <i style="display:none">Copied</i>
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                         </button>
                     </span>

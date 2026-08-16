@@ -37,7 +37,7 @@ def ingest_assistant_message(
         AgentTaskCall objects that the framework will execute and resolve.
     """
 
-    prev_message = _session.get_messages().filter(next_messages=None).last()
+    prev_message = _session.get_last_message()
 
     sv = _session.get_version_model()
     message = Message.objects.create(

@@ -38,23 +38,13 @@ class RightPanelWorkspaceFiles(ModelView):
         </div>
     '''
 
-    def __init__(self, subject: SessionModel, parent: RightPanelWorkspace|RightPanelSession, **kwargs):
+    def __init__(self, subject: WorkspaceModel, parent: RightPanelWorkspace|RightPanelSession, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._root_view: DirectoryView | None = None
-        self.session = Session(session_model=subject)
-
 
     @property
     def workspace_root(self) -> Path | None:
-
-        if self.session:
-            workspace: WorkspaceModel = self.session.workspace
-        else:
-            subj = self.parent.current_subject
-            workspace = subj if isinstance(subj, WorkspaceModel) else None
-        if not workspace:
-            return None
-        working_dir = workspace.path
+        working_dir = self.subject.path
         if not working_dir:
             return None
         working_path = Path(working_dir)
@@ -62,7 +52,6 @@ class RightPanelWorkspaceFiles(ModelView):
             return None
         return working_path.resolve()
       
-
     @property
     def root_label(self) -> str:
         rp = self.workspace_root

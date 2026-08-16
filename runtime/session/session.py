@@ -748,3 +748,18 @@ class Session:
     def get_messages(self) -> Any:
         """Return all messages for this session."""
         return Message.objects.filter(session_version__session=self.model)
+
+    def get_last_message(self) -> Message | None:
+        """Return the newest message of this session's own chain.
+
+        A message is a tail when it has no ``next_messages`` *in this
+        session*.  Forks and subtasks anchor their first message to a parent
+        message via ``prev_message`` (cross-session), so a plain
+        ``filter(next_messages=None)`` would see those children and hide the
+        parent's real tail.
+        """
+        return (
+            self.get_messages()
+            .exclude(next_messages__session=self.model)
+            .last()
+        )

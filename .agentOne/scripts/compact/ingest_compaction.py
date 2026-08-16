@@ -50,7 +50,7 @@ def ingest_compaction(
         # Nothing to compact — create a trivial summary appended to the
         # current tail so the linked list stays a single chain.
         sv = _session.get_version_model()
-        current_tail = Message.objects.filter(session_version=sv, next_messages=None).order_by("-pk").first()
+        current_tail = _session.get_last_message()
         compaction_message = Message.objects.create(session=sv.session, session_version=sv, response=response, role=MessageRole.USER, prev_message=current_tail,)
         compaction_message.add_part(
             type=MessagePartType.COMPACTION, content_type=MessageContentType.TEXT, content="Old messages before this summary have been compacted to save context tokens. Summary :"

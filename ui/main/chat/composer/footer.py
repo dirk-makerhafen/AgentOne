@@ -147,7 +147,7 @@ class ComposerFooter(PyHtmlView):
             from server.models.message import Message as Msg
             from runtime.events import publish_model_event
             session_version = self.subject.get_version_model()
-            prev_message = self.subject.get_messages().filter(next_messages=None).last()
+            prev_message = self.subject.get_last_message()
             msg = Msg.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
             msg.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=str(e))
             publish_model_event(msg, "create")

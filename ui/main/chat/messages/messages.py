@@ -150,10 +150,7 @@ class Messages(PyHtmlView):
         )
 
     def load_message_from_bottom(self):
-        tail = Message.objects.filter(
-            session_version__session=self.subject.model,
-            next_messages=None,
-        ).last()
+        tail = self.subject.get_last_message()
         if self.message_list and tail == self.message_list[-1]:
             return
         messages = []

@@ -283,3 +283,60 @@ class MessagesTest(TestCase):
             current = current.prev_message
         self.assertEqual(chain, [next_msg.pk, anchor.pk, msg.pk],
                          "Branch chain should walk through the fork point")
+
+    def test_parent_tail_survives_fork_children(self):
+        """Forking must not hide the parent session's real tail in the UI.
+
+        A fork anchors its first message in the *child* session to the parent
+        message via ``prev_message``. That cross-session link shows up in the
+        parent message's ``next_messages`` reverse relation, so a naive
+        ``filter(next_messages=None)`` tail lookup no longer sees the
+        parent's last message — the parent conversation then renders empty
+        even though the sidebar still counts its messages.  The tail lookup
+        must be scoped to the same session.
+        """
+        from runtime.session.session import Session as RuntimeSession
+
+        chain = []
+        prev = None
+        for _ in range(3):
+            msg = Message.objects.create(
+                role=MessageRole.USER,
+                session=self.session_model,
+                session_version=self.session_version,
+                prev_message=prev,
+            )
+            chain.append(msg)
+            prev = msg
+
+        # Fork from the last message twice, like the reported bug.
+        last = chain[-1]
+        for _ in range(2):
+            wrapper = self._fork_wrapper(last)
+            wrapper.fork(last.pk)
+
+        parent_session = RuntimeSession(session_model=self.session_model)
+
+        old = Message.objects.filter(
+            session_version__session=self.session_model,
+            next_messages=None,
+        ).last()
+        self.assertIsNone(
+            old,
+            "Naive next_messages=None lookup is blinded by cross-session fork anchors",
+        )
+        self.assertEqual(
+            parent_session.get_last_message().pk, last.pk,
+            "get_last_message must return the parent's own chain tail",
+        )
+
+        messages = Messages(subject=parent_session, parent=self.chat)
+        messages.messages_view.set_visible(True)
+        loaded = [
+            item for item in messages.message_list
+            if isinstance(item, Message)
+        ]
+        self.assertEqual(
+            [m.pk for m in loaded], [m.pk for m in chain],
+            "Parent UI must render its own chain after forks",
+        )

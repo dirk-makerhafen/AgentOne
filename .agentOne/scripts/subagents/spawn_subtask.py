@@ -62,7 +62,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
     # Prepend a system message explaining the fork context.
     # Link prev_message to the parent's last message so the child sees the
     # conversation history at the point of the fork.
-    parent_last = _session.get_messages().filter(next_messages=None).last()
+    parent_last = _session.get_last_message()
     child_version = child_session.get_version_model()
     fork_msg = Message.objects.create(role=MessageRole.USER, session=child_version.session, session_version=child_version, prev_message=parent_last)
     fork_msg.add_part(

@@ -54,14 +54,22 @@ def visible_child_sessions(
     session: SessionModel,
     window: timedelta = RECENT_SUBSESSION_WINDOW,
     max_inactive: int = MAX_INACTIVE_SUBSESSIONS,
+    include_archived: bool = False,
 ) -> list[SessionModel]:
     """Children of *session* to show in the sidebar: active ones plus inactive
-    ones that were active within *window*, capped at *max_inactive* inactive."""
+    ones that were active within *window*, capped at *max_inactive* inactive.
+
+    Archived children are only shown when ``include_archived`` is ``True``
+    (i.e. the user has toggled the sidebar to show archived conversations).
+    """
     cutoff = timezone.now() - window
+    qs = SessionModel.objects.filter(parent_session=session)
+    if not include_archived:
+        qs = qs.filter(is_archived=False)
     children = list(
-        SessionModel.objects.filter(parent_session=session).filter(
+        qs.filter(
             Q(is_active=True) | Q(last_active_at__gte=cutoff),
-        ).select_related("latest_session_version__agent").order_by("-created_at")
+        ).select_related("latest_session_version__agent")
     )
     return _cap_inactive_children(children, max_inactive=max_inactive)
 
@@ -198,12 +206,30 @@ class SidebarPanelChat(ModelView):
             self.child_list = None
         else:
             self.child_list = QuerySetView(
-                subject=ChildSessionList(visible_child_sessions(subject)),
+                subject=ChildSessionList(
+                    visible_child_sessions(
+                        subject,
+                        include_archived=self._archived_visible(),
+                    )
+                ),
                 parent=self,
                 item_class=SidebarPanelChat,
                 dom_element_class="session-tree-children",
                 depth=self.depth + 1,
             )
+
+    def _archived_visible(self) -> bool:
+        """Whether the user has toggled the sidebar to show archived sessions.
+
+        Follows the same ancestor chain as :meth:`refresh_list` up to the
+        top-level chat panel, which owns the ``_show_archived`` flag.
+        """
+        node = self.parent
+        while node is not None and not isinstance(node, SidebarPanelChats):
+            node = getattr(node, "parent", None)
+        if node is not None:
+            return getattr(node, "_show_archived", False)
+        return False
 
     @property
     def DOM_ELEMENT_CLASS(self):
@@ -419,10 +445,18 @@ class SidebarPanelChats(ModelView):
 
     def _base_query(self):
         qs = self.subject.sessions.root().filter(parent_session__isnull=True)
-        qs = qs.prefetch_related(Prefetch('child_sessions', queryset=SessionModel.objects.filter(Q(is_active=True) | Q(last_active_at__gte=timezone.now() - RECENT_SUBSESSION_WINDOW)).select_related('latest_session_version__agent').order_by('-created_at')))
+        qs = qs.prefetch_related(Prefetch('child_sessions', queryset=self._child_sessions_queryset()))
         if self._show_archived:
             return qs.filter(is_archived=True).order_by('-is_pinned', '-created_at')
         return qs.filter(is_archived=False).order_by('-is_pinned', '-created_at')
+
+    def _child_sessions_queryset(self):
+        children = SessionModel.objects.filter(
+            Q(is_active=True) | Q(last_active_at__gte=timezone.now() - RECENT_SUBSESSION_WINDOW),
+        ).select_related('latest_session_version__agent').order_by('-created_at')
+        if not self._show_archived:
+            children = children.filter(is_archived=False)
+        return children
 
     def refresh_list(self):
         self.agent_list.query = self._base_query()
@@ -434,7 +468,7 @@ class SidebarPanelChats(ModelView):
             base = self.subject.sessions.root().filter(parent_session__isnull=True)
         else:
             base = SessionModel.objects.filter(parent_project_id=project_id, parent_session__isnull=True)
-        base = base.prefetch_related(Prefetch('child_sessions', queryset=SessionModel.objects.filter(Q(is_active=True) | Q(last_active_at__gte=timezone.now() - RECENT_SUBSESSION_WINDOW)).select_related('latest_session_version__agent').order_by('-created_at')))
+        base = base.prefetch_related(Prefetch('child_sessions', queryset=self._child_sessions_queryset()))
         if self._show_archived:
             base = base.filter(is_archived=True)
         else:

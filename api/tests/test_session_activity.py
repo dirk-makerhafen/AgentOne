@@ -33,7 +33,7 @@ def _load_script(relpath: str):
     return module
 
 
-def _make_session(name, *, parent=None, agent=None, is_active=True, last_active_at=None):
+def _make_session(name, *, parent=None, agent=None, is_active=True, last_active_at=None, is_archived=False):
     if agent is None:
         agent = AgentModel.objects.create(name=f"agent-{name}")
         from server.models.agents.agent_version import AgentVersionModel
@@ -47,6 +47,7 @@ def _make_session(name, *, parent=None, agent=None, is_active=True, last_active_
         parent_session=parent,
         is_active=is_active,
         last_active_at=last_active_at,
+        is_archived=is_archived,
     )
     sv = SessionVersionModel.objects.create(session=session, agent=agent)
     session.latest_session_version = sv
@@ -220,3 +221,30 @@ class TestSidebarVisibleChildren:
         _make_session("b", parent=parent, is_active=False, last_active_at=now - timedelta(hours=2))
         names = {c.name for c in self._visible(parent, window=timedelta(hours=3))}
         assert names == {"b"}
+
+    def test_archived_child_hidden_by_default(self):
+        parent = _make_session("parent")
+        now = timezone.now()
+        active = _make_session("active", parent=parent)
+        _make_session(
+            "archived", parent=parent, is_active=False,
+            last_active_at=now, is_archived=True,
+        )
+
+        visible = self._visible(parent)
+        assert active.name in {c.name for c in visible}
+        assert "archived" not in {c.name for c in visible}
+
+    def test_archived_child_shown_when_include_archived(self):
+        parent = _make_session("parent")
+        now = timezone.now()
+        active = _make_session("active", parent=parent)
+        archived = _make_session(
+            "archived", parent=parent, is_active=False,
+            last_active_at=now, is_archived=True,
+        )
+
+        visible = self._visible(parent, include_archived=True)
+        names = {c.name for c in visible}
+        assert active.name in names
+        assert archived.name in names

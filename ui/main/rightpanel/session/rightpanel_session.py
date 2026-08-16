@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from runtime.session.session import Session
 from server.models.sessions.session import SessionModel
+from server.models.workspace import WorkspaceModel
 from ui.lib.model_view import ModelView
 from ui.main.rightpanel.session.rightpanel_session_calls import RightPanelSessionCalls
 from ui.main.rightpanel.session.rightpanel_session_settings import RightPanelSessionSettings
@@ -51,6 +53,8 @@ class RightPanelSession(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.current_tab_name = None
         self.current_tab = None
+        self.session = Session(session_model=subject)
+
 
     def switchTab(self, name: str) -> None:
         if name == self.current_tab_name:
@@ -61,7 +65,10 @@ class RightPanelSession(ModelView):
         if self.current_tab:
             self.current_tab.delete(remove_from_dom=False)
         if name == "workspace":
-            self.current_tab = RightPanelWorkspaceFiles(self.subject, self)
+            workspace: WorkspaceModel = self.session.workspace
+            if not workspace:
+                return None
+            self.current_tab = RightPanelWorkspaceFiles(workspace, self)
         elif name == "settings":
             self.current_tab = RightPanelSessionSettings(self.subject, self)
         elif name == "tasks":

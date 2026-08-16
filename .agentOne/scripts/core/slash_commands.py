@@ -37,7 +37,7 @@ def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) ->
         raise Exception(f"Task {command_name} not found")
 
     session_version = _session.get_version_model()
-    prev_message = _session.get_messages().filter(next_messages=None).last()
+    prev_message = _session.get_last_message()
     message = Message.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
 
     try:
