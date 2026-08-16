@@ -346,8 +346,8 @@
      and attention indicator (26x26 at right:6px) still need 40px reserved
      when they're visible — covered by the hover / streaming / unread /
      menu-open / focus-within rule below. */
-  .session-item{padding:8px 8px;margin-bottom:2px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:background .15s,color .15s;display:flex;flex-direction:column;flex-start;gap:8px;min-width:0;position:relative;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
-  .session-item.streaming,.session-item.unread,.session-item:focus-within,.session-item.menu-open{padding-right:40px;}
+  .session-item{padding:0px 4px;padding-right:0px;margin-bottom:2px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:background .15s,color .15s;display:flex;flex-direction:column;justify-content:flex-start;gap:2px;min-width:0;position:relative;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .session-item.streaming,.session-item.unread,.session-item:focus-within,.session-item.menu-open{padding-right:0px;}
   .session-item:hover{background:var(--hover-bg);color:var(--text);}
   /* Suppress hover highlight during drag to avoid visual noise mid-scroll */
   .session-item.dragging:hover{background:transparent;color:var(--muted);}
@@ -422,7 +422,7 @@
   .session-time.is-hidden{display:none;}
   .session-item:hover .session-time,.session-item:focus-within .session-time,.session-item.menu-open .session-time{display:none;}
   /* ── Session action trigger + dropdown ── */
-  .session-actions{position:absolute;right:0px;top:1.75em%display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .15s ease;}
+  .session-actions{position:absolute;right:0px;top:2px;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .15s ease;}
   .session-item:hover .session-actions,.session-item:focus-within .session-actions,.session-item.menu-open .session-actions{opacity:1;pointer-events:auto;}
   .session-item.streaming:not(:hover):not(:focus-within):not(.menu-open) .session-actions,.session-item.unread:not(:hover):not(:focus-within):not(.menu-open) .session-actions{opacity:0;pointer-events:none;}
   .session-actions-trigger{width:26px;height:26px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer;padding:0;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:background .12s,color .12s,border-color .12s;}
@@ -2829,7 +2829,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .session-pin-indicator svg{width:10px;height:10px;}
 
 /* ── Expand/collapse caret for parent sessions ── */
-.session-caret{flex-shrink:0;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);cursor:pointer;user-select:none;border-radius:4px;transition:background .15s;margin-left:-2px;}
+.session-caret{flex-shrink:0;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);cursor:pointer;user-select:none;border-radius:4px;transition:background .15s;margin-left:-2px;}
 .session-caret:hover{background:var(--hover-bg);color:var(--text);}
 
 /* ── Fork lineage indicator (inline, subtle until row focus/hover) ── */
@@ -2875,7 +2875,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .session-child-session{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:11px;text-align:left;padding:3px 4px;border-radius:5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .session-child-session:hover,.session-child-session.active{background:rgba(255,255,255,.06);color:var(--text);}
 .session-tree-children{margin-left:16px;border-left:1px solid var(--border,rgba(255,255,255,.1));padding-left:4px;}
-.session-tree-child.session-item{font-size:12px;opacity:.85;border-radius:6px;padding:0px 8px;}
+.session-tree-child.session-item{font-size:12px;opacity:.85;border-radius:6px}
 .session-tree-child.session-item:hover{opacity:1;}
 .subagent-session-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:default;}
 .subagent-session-body{display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer;padding:2px 0;border-radius:6px;}

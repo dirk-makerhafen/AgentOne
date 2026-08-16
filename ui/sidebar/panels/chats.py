@@ -18,6 +18,23 @@ if TYPE_CHECKING:
 
 RECENT_SUBSESSION_WINDOW = timedelta(minutes=30)
 MAX_INACTIVE_SUBSESSIONS = 5
+MAX_TREE_DEPTH = 10
+
+
+class ChildSessionList:
+    """Weakref-compatible stand-in for a child-session list used as a
+    QuerySetView subject.
+
+    ``ModelView`` weakly references its subject, which a plain ``list`` cannot
+    be.  Wrapping the list keeps ``QuerySetView._iter_subjects`` happy (it
+    calls ``.all()`` on non-list subjects) while staying weakref-able.
+    """
+
+    def __init__(self, sessions: list[SessionModel]):
+        self._sessions = sessions
+
+    def all(self) -> list[SessionModel]:
+        return self._sessions
 
 
 def _cap_inactive_children(
@@ -52,9 +69,10 @@ def visible_child_sessions(
 class SidebarPanelChat(ModelView):
     DOM_ELEMENT_CLASS = "session-item"
     TEMPLATE_STR = '''
+        {% set children = pyview.active_children %}
         <div class="session-text" onclick="pyview.open_instance_detail()">
             <div class="session-title-row">
-                {% if pyview.active_children %}
+                {% if children %}
                 <span class="session-caret" onclick="event.stopPropagation(); pyview.toggle_children()">{% if pyview._show_children %}▾{% else %}▸{% endif %}</span>
                 {% endif %}
                 <span class="session-title" title="Double-click to rename">
@@ -65,21 +83,8 @@ class SidebarPanelChat(ModelView):
             </div>
             <div class="session-meta">{{pyview.subject.messages.count()}} msgs · {% if  pyview.session.aimodel %} {{ pyview.session.aimodel.name }}{% else %}No Model{% endif %}</div>
         </div>
-        {% if pyview.active_children and pyview._show_children %}
-            <div class="session-child-sessions">
-                {% for child, depth, model_name, has_active, needs_approval in pyview.child_tree %}
-                    <div class="session-tree-child session-item{% if child.pk == pyview._active_session_pk %} active{% endif %}" style="margin-left:{{ depth }}em" onclick="event.stopPropagation(); pyview.open_child({{ child.pk }})" title="{{ child.name }}">
-                        <div style="display:flex;align-items:flex-start;gap:6px;flex:1;min-width:0">
-                            <div style="flex:1;min-width:0">
-                                <div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ child.name }}</div>
-                                <div class="session-meta">{{ child.messages.count() }} msgs{% if model_name %} · {{ model_name }}{% endif %}</div>
-                            </div>
-                            {% if has_active %}<span class="session-state-indicator is-streaming" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}
-                            {% if needs_approval %}<span class="session-state-indicator needs-approval" style="visibility:visible;flex-shrink:0;margin-top:3px"></span>{% endif %}                        
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
+        {% if children and pyview._show_children and pyview.child_list %}
+            {{ pyview.child_list.render() }}
         {% endif %}
         <span class="session-attention-indicator session-state-indicator{% if pyview.mark_active %} is-streaming{% endif %}{% if pyview.mark_needs_approval %} needs-approval{% endif %}" aria-hidden="true"></span>
         <div class="session-actions">
@@ -182,16 +187,29 @@ class SidebarPanelChat(ModelView):
         {% endif %}
     '''
 
-    def __init__(self, subject: SessionModel, parent: QuerySetView, **kwargs):
+    def __init__(self, subject: SessionModel, parent: QuerySetView, depth: int = 0, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        self.depth = depth
         self.session = Session(subject)
         self.root_view: UiAppView = parent.parent.root_view
         self._show_project_dialog = False
         self._show_children = True
+        if self.depth >= MAX_TREE_DEPTH:
+            self.child_list = None
+        else:
+            self.child_list = QuerySetView(
+                subject=ChildSessionList(visible_child_sessions(subject)),
+                parent=self,
+                item_class=SidebarPanelChat,
+                dom_element_class="session-tree-children",
+                depth=self.depth + 1,
+            )
 
     @property
     def DOM_ELEMENT_CLASS(self):
         cls = "session-item"
+        if self.depth > 0:
+            cls += " session-tree-child"
         if self._is_current_session():
             cls += " active"
         return cls
@@ -214,17 +232,17 @@ class SidebarPanelChat(ModelView):
     def pin_session(self):
         self.subject.is_pinned = not self.subject.is_pinned
         self.subject.save(update_fields=["is_pinned"])
-        self.parent.parent.refresh_list()
+        self.refresh_list()
 
     def archive_session(self):
         self.subject.is_archived = True
         self.subject.save(update_fields=["is_archived"])
-        self.parent.parent.refresh_list()
+        self.refresh_list()
 
     def move_to_project(self, project_id: int | None):
         self.subject.parent_project_id = project_id if project_id else None
         self.subject.save(update_fields=["parent_project_id"])
-        self.parent.parent.refresh_list()
+        self.refresh_list()
 
     def show_project_dialog(self):
         self._show_project_dialog = True
@@ -240,7 +258,15 @@ class SidebarPanelChat(ModelView):
         self.subject.parent_project = project
         self.subject.save(update_fields=["parent_project_id"])
         self._show_project_dialog = False
-        self.parent.parent.refresh_list()
+        self.refresh_list()
+
+    def refresh_list(self):
+        """Bubble up to the top-level chats panel and force a rebuild."""
+        node = self.parent
+        while node is not None and not isinstance(node, SidebarPanelChats):
+            node = getattr(node, "parent", None)
+        if node is not None:
+            node.refresh_list()
 
     @property
     def all_projects(self):
@@ -249,51 +275,9 @@ class SidebarPanelChat(ModelView):
 
     @property
     def active_children(self) -> list:
-        return visible_child_sessions(self.subject)
-
-    @property
-    def child_tree(self) -> list[tuple]:
-        """Flat list of (session, depth, model_name, has_active, needs_approval) tuples."""
-        result = []
-        self._build_subtree(self.subject, 0, result)
-        return result
-
-    def _build_subtree(self, session, depth, result):
-        if depth >= 10:
-            return
-        children = visible_child_sessions(session)
-        for child in children:
-            model_name = ""
-            try:
-                sv = child.latest_session_version
-                if sv and sv.session_settings and sv.session_settings.aimodel:
-                    model_name = sv.session_settings.aimodel.name
-            except Exception:
-                pass
-            has_active = self._child_has_active(child)
-            needs_approval = self._child_needs_approval(child)
-            result.append((child, depth, model_name, has_active, needs_approval))
-            self._build_subtree(child, depth + 1, result)
-
-    @staticmethod
-    def _child_has_active(child: SessionModel) -> bool:
-        from server.models.queries.query import Query, QueryStatus
-        from server.models.tasks.agent_task_call import AgentTaskCall
-        from server.models.enums.task_enums import TaskCallStatus
-        return (
-            Query.objects.filter(session_version__session=child, status=QueryStatus.ACTIVE).exists()
-            or AgentTaskCall.objects.filter(session=child).exclude(status=TaskCallStatus.ENDED).exists()
-        )
-
-    @staticmethod
-    def _child_needs_approval(child: SessionModel) -> bool:
-        from server.models.tasks.agent_task_call import AgentTaskCall
-        from server.models.enums.task_enums import TaskCallStatusDetail
-        return AgentTaskCall.objects.filter(
-            session=child,
-            requires_approval=True,
-            status_detail=TaskCallStatusDetail.HALTED_APPROVAL,
-        ).exists()
+        """:return: The child sessions shown under this row (same set the
+        ``child_list`` QuerySetView wraps)."""
+        return list(self.child_list.query.all()) if self.child_list is not None else []
 
     def toggle_children(self):
         self._show_children = not self._show_children
@@ -318,12 +302,6 @@ class SidebarPanelChat(ModelView):
             requires_approval=True,
             status_detail=TaskCallStatusDetail.HALTED_APPROVAL,
         ).exists()
-
-    def open_child(self, pk: int):
-        from server.models.sessions.session import SessionModel
-        child = SessionModel.objects.get(pk=pk)
-        self.root_view.main_panel.create_and_open_tab(Chat, child)
-
 
 class SidebarPanelChats(ModelView):
     DOM_ELEMENT_CLASS = "panel-view active"
