@@ -64,18 +64,17 @@ def available_aimodels() -> List[AiModel]:
 
 
 def model_groups() -> ModelGroupList:
-    """Return usable model groups ordered by name.
+    """Return model groups ordered by name.
 
-    A group carries every ENABLED provider row serving the canonical name,
-    excluding providers without a configured API key yet.  Only
-    names with at least one usable member are offered, so clicking a group
-    always resolves to a concrete row.
+    A group carries every ENABLED provider row serving the canonical name —
+    including providers without an API key yet (the dropdown renders those
+    dimmed with an "add an API key" note).  Only names with at least one
+    usable member are offered, so clicking a group always resolves to a
+    concrete row.
     """
     usable_names = {m.name for m in available_aimodels()}
     by_name: Dict[str, List[AiModel]] = {}
     for model in AiModel.objects.filter(enabled=True):
-        if model.api_provider.api_keys.count() == 0:
-            continue
         members = by_name.setdefault(model.name, [])
         if model.api_provider_id not in {m.api_provider_id for m in members}:
             members.append(model)

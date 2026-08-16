@@ -22,7 +22,7 @@ class UserMessageView(ModelView):
                 <button class="msg-action-btn" title="Edit message" onclick="editMessage(this)">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
                 </button>
-                <button class="msg-action-btn" title="Fork from here" onclick="forkFromMessage(29)">
+                <button class="msg-action-btn" title="Fork from here" onclick="pyview.fork({{pyview.subject.pk}})">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
                 </button>
                 <button class="msg-copy-btn msg-action-btn" title="Copy" onclick="copyMsg(this)">
@@ -33,3 +33,6 @@ class UserMessageView(ModelView):
     '''
     def __init__(self, subject: Message, parent: MessageView, **kwargs):
         super().__init__(subject, parent, **kwargs)
+
+    def fork(self, message_id):
+        self.parent.fork(message_id)

@@ -1783,6 +1783,7 @@
 .msg-row:hover .msg-actions{opacity:1;}
 .msg-action-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:5px;transition:color .12s,background .12s;line-height:1;}
 .msg-action-btn:hover{color:var(--accent-text);background:var(--accent-bg);}
+.msg-action-btn.copied{color:var(--success);}
 /* TTS speaker button: hidden by default, shown when TTS is enabled.
  * Use body-class selector instead of JS inline-style so the rule survives
  * subsequent renderMd() passes and is not subject to inline-style cascade
@@ -3204,8 +3205,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
   justify-content: flex-start;
   padding-left: var(--msg-rail);
   max-width: var(--msg-max);
-  opacity: 0;
-  transition: opacity .15s;
+  opacity: 1;
 }
 .msg-row[data-role="assistant"]:hover .msg-foot,
 .assistant-turn:hover .msg-foot,

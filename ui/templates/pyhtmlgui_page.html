@@ -84,6 +84,56 @@
         
     </script>
 
+    <script>
+        function copyMsg(btn) {
+            var row = btn.closest('.msg-row');
+            if (!row) return;
+            var body = row.querySelector('.msg-body');
+            if (!body) return;
+            var text = (body.innerText || body.textContent || '').trim();
+            if (!text) return;
+            _copyToClipboard(text, function (ok) {
+                if (ok) _flashCopied(btn);
+            });
+        }
+
+        function _copyToClipboard(text, done) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(
+                    function () { done(true); },
+                    function () { _copyFallback(text, done); }
+                );
+            } else {
+                _copyFallback(text, done);
+            }
+        }
+
+        function _copyFallback(text, done) {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.top = '-9999px';
+            ta.style.left = '-9999px';
+            ta.setAttribute('readonly', '');
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            document.body.removeChild(ta);
+            done(ok);
+        }
+
+        function _flashCopied(btn) {
+            btn.classList.add('copied');
+            btn.setAttribute('title', 'Copied!');
+            setTimeout(function () {
+                btn.classList.remove('copied');
+                btn.setAttribute('title', 'Copy');
+            }, 2000);
+        }
+    </script>
+
 {% endblock %}
 
 

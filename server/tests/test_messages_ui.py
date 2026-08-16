@@ -2,7 +2,8 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 from django.test import TestCase
 from server.models.enums.message_enums import MessageRole
-from server.models.message import Message
+from server.models.enums.session_enums import SessionType
+from server.models.message import Message, MessagePartType, MessageContentType
 from server.models.queries.query import Query, QueryStatus
 from server.models import SessionModel, SessionVersionModel, AgentModel, AgentVersionModel
 from ui.app import UiApp
@@ -218,3 +219,67 @@ class MessagesTest(TestCase):
         subs_after = len(obs._subscriptions.get("message", []))
         self.assertEqual(subs_after, subs_before,
                          "Re-init should not increase subscription count")
+
+    def _fork_wrapper(self, msg):
+        """Append *msg* to the list and return its MessageView wrapper."""
+        self.messages.message_list.append(msg)
+        return next(
+            w for w in self.messages.messages_view._wrapped_data
+            if isinstance(w.subject, Message) and w.subject.pk == msg.pk
+        )
+
+    def test_fork_creates_child_session_anchored_at_message(self):
+        """MessageView.fork branches a new child session from the message."""
+        msg = self._create_message(role=MessageRole.USER)
+        msg.add_part(
+            type=MessagePartType.MESSAGE,
+            content_type=MessageContentType.TEXT,
+            content="Please continue from here.",
+        )
+        wrapper = self._fork_wrapper(msg)
+
+        wrapper.fork(msg.pk)
+
+        child = SessionModel.objects.filter(parent_session=self.session_model).first()
+        self.assertIsNotNone(child, "Fork should create a child session")
+        self.assertEqual(child.session_type, SessionType.SESSION,
+                         "A UI fork branch is a permanent user session")
+        child_version = child.latest_session_version
+        self.assertEqual(child_version.parent_session_version, self.session_version,
+                         "Child version should link to the forked-from version")
+        anchor = Message.objects.filter(
+            session_version__session=child,
+            prev_message=msg,
+        ).first()
+        self.assertIsNotNone(anchor, "Anchor message should point at the fork point")
+        self.assertTrue(anchor.hide_from_context,
+                        "Anchor should be hidden from LLM context")
+        self.assertTrue(anchor.parts.filter(content_type=MessageContentType.TEXT).exists(),
+                        "Anchor should carry a body for the UI chain")
+
+    def test_fork_chain_continues_from_anchor(self):
+        """After a fork, a new user message chains to the anchor."""
+        msg = self._create_message(role=MessageRole.USER)
+        wrapper = self._fork_wrapper(msg)
+        wrapper.fork(msg.pk)
+
+        child = SessionModel.objects.get(parent_session=self.session_model)
+        child_version = child.latest_session_version
+        anchor = Message.objects.get(
+            session_version__session=child,
+            prev_message=msg,
+        )
+        next_msg = Message.objects.create(
+            role=MessageRole.USER,
+            session=child_version.session,
+            session_version=child_version,
+            prev_message=anchor,
+        )
+        # Walk the chain backwards from the new tail: next_msg -> anchor -> msg
+        chain = []
+        current = next_msg
+        while current is not None and len(chain) < 10:
+            chain.append(current.pk)
+            current = current.prev_message
+        self.assertEqual(chain, [next_msg.pk, anchor.pk, msg.pk],
+                         "Branch chain should walk through the fork point")

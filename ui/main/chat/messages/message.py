@@ -14,10 +14,8 @@ from ui.main.chat.messages.user_message import UserMessageView
 class MessageView(ModelView):
     DOM_ELEMENT = "div"
     DOM_ELEMENT_CLASS = "MessageView msg-row"
+    TEMPLATE_STR = '''{{ pyview.view.render() }}'''
 
-    TEMPLATE_STR = '''
-        {{ pyview.view.render() }}
-    '''
     def __init__(self, subject: Message|Query, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         super().__init__(subject, parent, **kwargs)
         if isinstance(subject, Message):
@@ -33,6 +31,88 @@ class MessageView(ModelView):
     @property
     def DOM_ELEMENT_EXTRAS(self):
         return  f"style='display:flex;' data-pk='{self.subject.pk}' data-role='{self.role}'  "
+
+    def fork(self, message_id):
+        """Fork the conversation starting at *message_id*.
+
+        Creates a new child session (a permanent user branch) whose message
+        chain links back to the forked-from message via ``prev_message``, so
+        the branch inherits the conversation history up to and including that
+        message.  A hidden anchor message heads the new session's chain so the
+        next user turn continues from the fork point.  The UI then switches to
+        the new branch.
+
+        Mirrors ``spawn_subtask`` (``.agentone/scripts/subagents``), except
+        the branch is a normal user-facing SESSION (not a ``SUBTASK_FORK``),
+        because the user keeps chatting there instead of a subagent.
+        """
+        from time import time
+        from runtime.session.session import Session as RuntimeSession
+        from server.models.enums.message_enums import MessageContentType, MessagePartType
+        from server.models.enums.session_enums import SessionType
+
+        try:
+            fork_point = Message.objects.get(pk=message_id)
+        except Message.DoesNotExist:
+            return
+
+        parent_session = fork_point.session.get_runtime()
+
+        agent_version = parent_session.agent.get_version_model()
+        if agent_version is None:
+            from server.models.agents.agent_version import AgentVersionModel
+            agent_version = (
+                AgentVersionModel.objects.filter(agent=parent_session.agent.model)
+                .order_by("-version_number")
+                .first()
+            )
+        if agent_version is None:
+            return
+
+        session_name = f"p{parent_session.model.pk}:fork:{int(time())}"
+        child_sv = agent_version.get_or_create_session(
+            name=session_name,
+            description=f"Forked from message #{message_id}",
+            workspace=parent_session.workspace,
+            parent_session_version=parent_session.get_version_model(),
+            session_type=SessionType.SESSION,
+        )
+        child_session = RuntimeSession(session_model=child_sv.session, pinned_session_version=child_sv)
+        child_version = child_session.get_version_model()
+
+        # Anchor the branch's message chain to the fork point.  Hidden from
+        # LLM context, but keeps the UI chain (and later prev_message links)
+        # walking back into the parent conversation.
+        anchor = Message.objects.create(
+            role=MessageRole.USER,
+            session=child_version.session,
+            session_version=child_version,
+            prev_message=fork_point,
+            hide_from_context=True,
+        )
+        anchor.add_part(
+            type=MessagePartType.MESSAGE,
+            content_type=MessageContentType.TEXT,
+            content=f"Forked here from session #{parent_session.model.pk}.",
+        )
+
+        main_panel = self._main_panel()
+        if main_panel is not None:
+            from ui.main.chat.chat import Chat
+            main_panel.create_and_open_tab(Chat, child_version.session)
+
+    def _main_panel(self):
+        """Return the app's MainView (``main_panel``) from an ancestor view."""
+        node = self
+        try:
+            while node is not None:
+                main_panel = getattr(node, "main_panel", None)
+                if main_panel is not None:
+                    return main_panel
+                node = getattr(node, "parent", None)
+        except Exception:
+            return None
+        return None
 
 #animation: smoothAppear .5s ease-out forwards;
 

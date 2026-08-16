@@ -74,7 +74,7 @@ class AssistantMessageView(ModelView):
                         <button class="msg-action-btn msg-tts-btn" title="Listen" onclick="speakMessage(this)">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                         </button>
-                        <button class="msg-action-btn" title="Fork from here" onclick="forkFromMessage(14)">
+                        <button class="msg-action-btn" title="Fork from here" onclick="pyview.fork({{pyview.subject.pk}})">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
                         </button>
                         <button class="msg-copy-btn msg-action-btn" title="Copy" onclick="copyMsg(this)">
@@ -111,3 +111,5 @@ class AssistantMessageView(ModelView):
         self.is_reasoning_open = not self.is_reasoning_open
         self.update()
 
+    def fork(self, message_id):
+        self.parent.fork(message_id)
