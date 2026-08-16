@@ -69,10 +69,25 @@ class RightPanelSessionSettings(ModelView):
                         <input type="text" value="{{ pyview.session.name }}" onchange="pyview.setSessionName(this.value)" class="setting-input" style="width:100%;font-size:12px">
                     </div>
                 </div>
+
                 <div class="detail-row">
                     <div class="detail-row-label">Type</div>
                     <div class="detail-row-value">{{ pyview.session_type_label }}</div>
                 </div>
+
+                <div class="detail-row">
+                    <div class="detail-row-label">Workspace</div>
+                    <div class="detail-row-value" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                        <button type="button" class="rp-dropdown-trigger" onclick="pyview.toggle_workspace_dropdown()">
+                            <span class="rp-dropdown-trigger-label">{{ pyview.workspace_name }}</span>
+                            <span class="rp-dropdown-trigger-chev">▾</span>
+                        </button>
+                        <div class="rp-dropdown-anchor">
+                            {{ pyview.workspace_dropdown.render() }}
+                        </div>
+                    </div>
+                </div> 
+
                 <div class="detail-row">
                     <div class="detail-row-label">Agent</div>
                     <div class="detail-row-value" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
@@ -85,40 +100,7 @@ class RightPanelSessionSettings(ModelView):
                         </div>
                     </div>
                 </div>
-                <div class="detail-row">
-                    <div class="detail-row-label">Version</div>
-                    <div class="detail-row-value">{{ pyview.session.version_number }}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-row-label">Description</div>
-                    <div class="detail-row-value">{{ pyview.session.description }}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-row-label">Workspace</div>
-                    <div class="detail-row-value" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
-                        <button type="button" class="rp-dropdown-trigger" onclick="pyview.toggle_workspace_dropdown()">
-                            <span class="rp-dropdown-trigger-label">{{ pyview.workspace_name }}</span>
-                            <span class="rp-dropdown-trigger-chev">▾</span>
-                        </button>
-                        <div class="rp-dropdown-anchor">
-                            {{ pyview.workspace_dropdown.render() }}
-                        </div>
-                    </div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-row-label">Active</div>
-                    <div class="detail-row-value">
-                        {% if pyview.session.is_active %}
-                            <span style="color:var(--success)">yes</span>
-                        {% else %}
-                            <span style="color:var(--danger)">no</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
 
-            <div class="settings-card" style="margin-bottom:8px">
-                <div class="panel-header" style="margin-left:-8px">Settings</div>
                 <div class="detail-row">
                     <div class="detail-row-label">AI Model</div>
                     <div class="detail-row-value" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
@@ -138,6 +120,29 @@ class RightPanelSessionSettings(ModelView):
                         </div>
                     </div>
                 </div>
+
+                <div class="detail-row">
+                    <div class="detail-row-label">Description</div>
+                    <div class="detail-row-value">{{ pyview.session.description }}</div>
+                </div>
+
+
+                <div class="detail-row">
+                    <div class="detail-row-label">Active</div>
+                    <div class="detail-row-value">
+                        {% if pyview.session.is_active %}
+                            <span style="color:var(--success)">yes</span>
+                        {% else %}
+                            <span style="color:var(--danger)">no</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="settings-card" style="margin-bottom:8px">
+                <div class="panel-header" style="margin-left:-8px">Settings</div>
+
                 {% for name, label in pyview.settings_fields %}
                     <div class="detail-row">
                         <div class="detail-row-label">{{ label }}</div>
@@ -185,10 +190,6 @@ class RightPanelSessionSettings(ModelView):
                 <div class="detail-row">
                     <div class="detail-row-label">System Prompt</div>
                     <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.session.system_prompt }}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-row-label">Task Prompt</div>
-                    <div class="detail-row-value" style="white-space:pre-line;max-height:120px;overflow:auto">{{ pyview.session.task_prompt }}</div>
                 </div>
             </div>
 

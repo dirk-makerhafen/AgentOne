@@ -166,9 +166,6 @@ def load_agent_manifest(
         "priority": manifest.get("priority"),
         "thinking": manifest.get("thinking"),
         "inherit_system_prompt": manifest.get("inheritSystemPrompt"),
-        "task_prompt": GenericContent.from_text(
-            (manifest.get("task_prompt") or "").strip()
-        ),
         "system_prompt": GenericContent.from_text(
             (manifest.content or "").strip()
         ),

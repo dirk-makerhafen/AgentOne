@@ -308,14 +308,7 @@ class AgentView(ModelView):
                             </div>
                         </div>
                     </div>
-                    <div class="detail-card">
-                        <div class="detail-card-title">Task Prompt</div>
-                        <div class="detail-row">
-                            <div style="min-height:0px;white-space: pre-line;height: 238px; overflow: auto; resize: auto;">
-                                {{pyview.agent.task_prompt}}
-                            </div>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
             <div class="main-view-empty" id="profileDetailEmpty" style="display:None">

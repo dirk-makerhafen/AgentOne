@@ -49,12 +49,12 @@ class RailView(ModelView):
         </button>
 
 
-        <button class="rail-btn nav-tab{% if pyview.parent.sidebar.selected_panel_name == 'memory' %} active{% endif %}" data-panel="memory" onclick="pyview.parent.sidebar.switchPanel('memory')" title="Memory" data-i18n-title="tab_memory" aria-label="Memory">
+        <button class="rail-btn nav-tab{% if pyview.parent.sidebar.selected_panel_name == 'memory' %} active{% endif %}" data-panel="memory" onclick="pyview.parent.sidebar.switchPanel('memory')" title="Memory" data-i18n-title="tab_memory" aria-label="Memory" style="display:none">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z"/></svg>
             <div class="rail-button-text">Memory</div>
         </button>
 
-        <button class="rail-btn nav-tab{% if pyview.parent.sidebar.selected_panel_name == 'kanban' %} active{% endif %}" data-panel="kanban" onclick="pyview.parent.sidebar.switchPanel('kanban')" title="Kanban" data-i18n-title="tab_kanban" aria-label="Kanban">
+        <button class="rail-btn nav-tab{% if pyview.parent.sidebar.selected_panel_name == 'kanban' %} active{% endif %}" data-panel="kanban" onclick="pyview.parent.sidebar.switchPanel('kanban')" title="Kanban" data-i18n-title="tab_kanban" aria-label="Kanban" style="display:none">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16"/><path d="M16 4v16"/><path d="M3 10h18"/></svg>
             <div class="rail-button-text">Kanban</div>
         </button>
