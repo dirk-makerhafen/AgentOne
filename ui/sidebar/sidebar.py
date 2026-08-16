@@ -118,7 +118,8 @@ class SidebarView(ModelView):
             settings = SidebarPanelSettings(subject=self.subject, parent=self),
             skills = SidebarPanelSkills(subject=self.subject, parent=self),
         )
-        self.switchPanel("chat")
+        default_panel = self._instance.url_params.get("SidebarView", "chat")
+        self.switchPanel(default_panel)
 
     def switchPanel(self, panel_name):
         if panel_name not in self.panels:

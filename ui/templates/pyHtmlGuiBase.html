@@ -54,7 +54,13 @@
                     if(start_position != null){ window.moveTo(start_position[0], start_position[1]);}
 
                     pyhtmlgui.websocket_addr = (window.location.origin + '/ws').replace('http', 'ws');
-                    pyhtmlgui.websocket_addr += ('?token=' + csrf_token);
+                    var ws_params = new URLSearchParams();
+                    ws_params.set('token', csrf_token);
+                    var page_params = Array.from(new URLSearchParams(window.location.search));
+                    for (var i = 0; i < page_params.length; i++) {
+                        if (page_params[i][0] !== 'token') ws_params.append(page_params[i][0], page_params[i][1]);
+                    }
+                    pyhtmlgui.websocket_addr += ('?' + ws_params.toString());
 
                     document.addEventListener("DOMContentLoaded", function(event) {
                         pyhtmlgui._connect();

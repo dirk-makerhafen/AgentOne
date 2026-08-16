@@ -1,5 +1,6 @@
 
 from threading import Lock, Thread
+from urllib.parse import parse_qs
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -72,7 +73,19 @@ def loop():
 class PyHtmlGuiConsumer(WebsocketConsumer):
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
-        
+
+    def _url_params(self) -> dict[str, object]:
+        """URL query parameters from the page, passed on the websocket URL.
+
+        The browser appends ``?token=...`` plus every query parameter of the
+        page URL (from ``window.location.search``) when opening the socket.
+        """
+        qs = (self.scope.get("query_string") or b"").decode("utf-8", "replace")
+        return {
+            key: values[0] if len(values) == 1 else values
+            for key, values in parse_qs(qs, keep_blank_values=True).items()
+        }
+
     def connect(self):
         global _pyhtmlgui
         global _pyhtmlgui_instance
@@ -85,15 +98,17 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
                     view_class=UiAppView,
                     template_dir='ui/templates/',
                     base_template='pyhtmlgui_page.html',
-                    single_instance=True,
+                    single_instance=False,
                     enable_server=False,
                 )
-            if not _pyhtmlgui_instance:
-                _pyhtmlgui_instance = _pyhtmlgui.get_or_create_instance()
+            #if not _pyhtmlgui_instance:
+            _pyhtmlgui_instance = _pyhtmlgui.get_or_create_instance(
+                url_params=self._url_params(),
+            )
             _pyhtmlgui_instance.connect_send_function(self.send)
-            if not _loop_thread_started:
-                _loop_thread_started = True
-                Thread(target=loop, daemon=True).start()
+            #if not _loop_thread_started:
+            _loop_thread_started = True
+            Thread(target=loop, daemon=True).start()
 
         try:
             async_to_sync(get_channel_layer().group_add)(CHANNEL_GROUP, self.channel_name)
