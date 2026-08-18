@@ -149,6 +149,41 @@ class Messages(PyHtmlView):
             dom_element_class="messages-inner",
         )
 
+    def jump_to_message(self, message_pk: int) -> None:
+        """Load a window of messages ending at ``message_pk`` and scroll its
+        row to the top of the viewport.
+
+        Used by the chat table-of-contents to jump to a compaction boundary
+        that may be far outside the currently loaded window.
+        """
+        from server.models.message import Message as Msg
+        target = Msg.objects.filter(pk=message_pk, session__pk=self._session_id).first()
+        if target is None:
+            return
+        messages = []
+        current = target
+        while current and len(messages) < self.max_visible_items:
+            messages.append(current)
+            current = current.prev_message
+        messages.reverse()
+        with self._callback_lock:
+            self.message_list.clear()
+            for message in messages:
+                self.message_list.append(message)
+                for query in message.related_queries.filter(session_version__session=self.subject.model).order_by("-pk"):
+                    self.message_list.append(query)
+        self._scroll_to_row(message_pk)
+
+    def _scroll_to_row(self, message_pk: int) -> None:
+        try:
+            self._instance.call_javascript(
+                "pyhtmlgui.eval_script",
+                ["var c=document.getElementById('{}');var r=c&&c.querySelector('[data-pk=\"{}\"]');if(c&&r)c.scrollTop=r.getBoundingClientRect().top-c.getBoundingClientRect().top+c.scrollTop-16;".format(self.uid, message_pk), {}],
+                skip_results=True,
+            )
+        except Exception:
+            pass
+
     def load_message_from_bottom(self):
         tail = self.subject.get_last_message()
         if self.message_list and tail == self.message_list[-1]:

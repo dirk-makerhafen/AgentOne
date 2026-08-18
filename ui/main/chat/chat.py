@@ -12,6 +12,7 @@ from ui.main.chat.cards.clarify import ClarifyCard
 from ui.main.chat.cards.guardrail_approval import GuardrailApprovalCard
 from ui.main.chat.cards.queue import QueueCard
 from ui.main.chat.messages.messages import Messages
+from ui.main.chat.toc import ChatTocView
 from ui.main.chat.panel.terminal import TerminalPanel
 from ui.app import UiApp
 from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
@@ -23,7 +24,10 @@ if TYPE_CHECKING:
 class Chat(ModelView):
     RIGHTPANEL_VIEW = RightPanelSession
     DOM_ELEMENT_CLASS = 'main-view'
+    #  {{ pyview.chat_toc.render() }} we add this later.
     TEMPLATE_STR = '''
+       
+
         {{ pyview.messages.render() }}
         
         {{ pyview.update_banner.render() }}
@@ -70,6 +74,8 @@ class Chat(ModelView):
         app = UiApp.get_instance()
         self.live_session = app.get_live_session(subject.pk) if app is not None else None
         self.messages = Messages(self.session, self)
+
+        self.chat_toc = ChatTocView(self.session, self, messages_view=self.messages)
 
         self.update_banner = UpdateBanner(self.session, self)
         self.reconnect_banner = ReconnectBanner(self.session, self)
