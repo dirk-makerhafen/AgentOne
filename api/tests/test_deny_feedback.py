@@ -14,6 +14,7 @@ import pytest
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.enums.message_enums import MessageRole
+from server.models.enums.session_enums import SessionType
 from server.models.enums.task_enums import (
     TaskCallStatus, TaskCallStatusDetail, TaskRunStatus, TaskType,
 )
@@ -254,6 +255,85 @@ class TestIngestDispatchesTaskTypeCatchTool:
             "tool_name": "shell",
             "error": "bad argument",
         }
+
+
+@pytest.mark.django_db
+class TestApprovalVerdictEndsSession:
+    """``approval_verdict`` is a session-ending tool: once dispatched, the
+    review session is marked complete without a follow-up LLM round trip to
+    emit ``final_result``."""
+
+    def _make_verdict_session(self):
+        agent = AgentModel.objects.create(name="verdict-agent")
+        settings = SettingsModel.objects.create()
+        av = AgentVersionModel.objects.create(agent=agent, agent_settings=settings)
+        _, verdict_tdv = _make_tool("approval_verdict", TaskType.TOOL)
+        av.task_versions.add(verdict_tdv)
+        AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=av)
+        agent.refresh_from_db()
+
+        parent = SessionModel.objects.create(name="verdict-parent")
+        session = SessionModel.objects.create(
+            name="verdict-review",
+            parent_session=parent,
+            session_type=SessionType.SUBTASK_FORK,
+        )
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+        return session, sv
+
+    def test_ingest_sets_has_final_result(self):
+        session, sv = self._make_verdict_session()
+        response = Response.objects.create(session=session, session_version=sv)
+        module = _load_script(".agentone/scripts/core/ingest_assistant_message.py")
+        parts = [{
+            "type": "TOOLCALL",
+            "content_type": "JSON",
+            "content": {
+                "name": "approval_verdict",
+                "arguments": {"approved": True, "reason": "looks safe"},
+            },
+        }]
+        result = module.ingest_assistant_message(
+            session.get_runtime(), response, parts
+        )
+        assert result["has_final_result"] is True
+        assert result["message"].parts.first().tool_call is not None
+        assert (
+            result["message"].parts.first().tool_call.task_definition.name
+            == "approval_verdict"
+        )
+
+    def test_ingest_does_not_set_has_final_result_for_other_tools(self):
+        session, sv = self._make_verdict_session()
+        response = Response.objects.create(session=session, session_version=sv)
+        module = _load_script(".agentone/scripts/core/ingest_assistant_message.py")
+        parts = [{
+            "type": "TOOLCALL",
+            "content_type": "JSON",
+            "content": {
+                "name": "approval_verdict",
+                "arguments": {"approved": True, "reason": "ok"},
+            },
+        }]
+        parts[0]["content"]["name"] = "some_other_tool"
+        result = module.ingest_assistant_message(
+            session.get_runtime(), response, parts
+        )
+        assert "has_final_result" not in result
+
+    def test_decide_next_step_deactivates_after_verdict(self):
+        decide_next_step = _load_script(".agentone/scripts/core/decide_next_step.py").decide_next_step
+        session, sv = self._make_verdict_session()
+        rt = session.get_runtime()
+        msg = Message.objects.create(
+            session=session, session_version=sv, role=MessageRole.ASSISTANT
+        )
+        result = decide_next_step(rt, response=None, parts=[], message=msg, has_final_result=True)
+        assert result == msg
+        session.refresh_from_db()
+        assert session.is_active is False
 
 
 @pytest.mark.django_db

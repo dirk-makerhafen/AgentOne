@@ -15,6 +15,14 @@ from server.models.queries.response import Response
 from runtime.session.session import Session
 
 
+#: Tools whose call alone ends the turn — the session needs no follow-up LLM
+#: round trip to emit ``final_result``. ``approval_verdict`` is the
+#: approval_decider's single decision tool: once it is dispatched the verdict
+#: is applied to the parent call, so waiting for a second LLM response just to
+#: produce ``final_result`` would waste an API round trip.
+_SESSION_ENDING_TOOLS = frozenset({"approval_verdict"})
+
+
 def ingest_assistant_message(
     _session: Session, response: Response, parts: list[dict[str, Any]]
 ) -> dict[str, Any]:
@@ -64,6 +72,8 @@ def ingest_assistant_message(
                 bound_task = _session.get_tool(part["content"]["name"]) or _session.get_task(part["content"]["name"])
                 if bound_task:
                     part["tool_call"] = bound_task.delay(**part["content"]["arguments"])
+                    if part["content"]["name"] in _SESSION_ENDING_TOOLS:
+                        has_final_result = True
 
         message.add_part(
             type=part["type"],

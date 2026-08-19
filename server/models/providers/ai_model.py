@@ -140,10 +140,12 @@ class AiModel(BaseModel):
         from server.models.enums.task_enums import TaskRunStatus
         from server.models.tasks.agent_task_run import AgentTaskRun
 
-        return AgentTaskRun.objects.filter(
-            session_version__agent_version__profile__aimodel=self,
-            status=TaskRunStatus.ACTIVE,
-        ).count()
+        count = 0
+        for run in AgentTaskRun.objects.filter(status=TaskRunStatus.ACTIVE):
+            aimodel = run.session_version.unresolved_aimodel()
+            if aimodel is not None and aimodel.pk == self.pk:
+                count += 1
+        return count
 
     def is_rate_limited(self) -> tuple[bool, str]:
         """Check all model-level limits.
@@ -151,13 +153,10 @@ class AiModel(BaseModel):
         Returns:
             A tuple ``(is_limited, reason)`` where ``reason`` is empty when not limited.
         """
-        return False, ""
         if self.limit_parallel_calls > 0:
-            if self.active_call_count() >= self.limit_parallel_calls:
-                return (
-                    True,
-                    f"parallel_calls:{self.active_call_count()}/{self.limit_parallel_calls}",
-                )
+            active = self.active_call_count()
+            if active >= self.limit_parallel_calls:
+                return True, f"parallel_calls:{active}/{self.limit_parallel_calls}"
 
         if self.limit_request_per_minute > 0:
             rpm = self.requests_last_minute()
@@ -193,12 +192,13 @@ class AiModel(BaseModel):
 
     def pending_calls(self):
         """All AgentTaskCalls waiting due to this model's rate limits, FIFO order."""
-        from server.models.enums.task_enums import TaskCallStatusDetail
-        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.tasks.agent_task_call import (
+            AgentTaskCall,
+            pending_rate_limit_call_ids,
+        )
 
         return AgentTaskCall.objects.filter(
-            session_version__agent_version__profile__aimodel=self,
-            status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
+            pk__in=pending_rate_limit_call_ids(model_id=self.pk)
         ).order_by("created_at")
 
     def __str__(self) -> str:

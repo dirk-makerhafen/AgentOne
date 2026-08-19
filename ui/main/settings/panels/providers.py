@@ -30,6 +30,9 @@ class ProviderCardView(ModelView):
                 <div class="provider-card-row" style="margin-bottom:4px">
                     <span style="font-size:11px;color:var(--muted);min-width:60px">{{ ak.comment }}</span>
                     <code style="flex:1;font-size:12px;padding:4px 8px;background:var(--surface);border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ak.display }}</code>
+                    {% if ak.cooldown_text %}
+                    <span class="provider-card-btn provider-card-btn-ghost" style="font-size:10px;padding:3px 8px;color:#b7791f">{{ ak.cooldown_text }}</span>
+                    {% endif %}
                     <button type="button" class="provider-card-btn provider-card-btn-ghost" style="font-size:10px;padding:3px 8px" onclick="pyview.toggle_key_enabled({{ ak.pk }})">{{ 'Disable' if ak.enabled else 'Enable' }}</button>
                     <button type="button" class="provider-card-btn provider-card-btn-danger" style="font-size:10px;padding:3px 8px" onclick="pyview.delete_key({{ ak.pk }})">Delete</button>
                 </div>
@@ -114,6 +117,8 @@ class ProviderCardView(ModelView):
 
     @property
     def api_keys(self) -> list[dict]:
+        from django.utils import timezone
+
         qs = self.subject.api_keys.all().order_by("-enabled", "pk")
         result = []
         for k in qs:
@@ -122,11 +127,16 @@ class ProviderCardView(ModelView):
                 display = key_str[:4] + "…" + key_str[-4:]
             else:
                 display = key_str
+            cooldown_text = ""
+            if k.rate_limit_until and timezone.now() < k.rate_limit_until:
+                remaining = int((k.rate_limit_until - timezone.now()).total_seconds())
+                cooldown_text = f"cooling down {remaining // 60}m{remaining % 60:02d}s"
             result.append({
                 "pk": k.pk,
                 "comment": k.comment or "",
                 "display": display,
                 "enabled": k.enabled,
+                "cooldown_text": cooldown_text,
             })
         return result
 

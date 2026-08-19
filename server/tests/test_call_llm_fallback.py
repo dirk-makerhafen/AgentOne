@@ -74,6 +74,67 @@ class SiblingAimodelsTest(TestCase):
             self.assertEqual(sibling_aimodels(self.alpha_p2), [self.alpha_p1])
 
 
+class ApiKeyCooldownTest(TestCase):
+    """Provider-provided cooldown on the API key gates key selection."""
+
+    def setUp(self):
+        self.p1 = ApiProvider.objects.create(name="p1")
+        self.key = ApiKey.objects.create(api_provider=self.p1, key="k1", enabled=True)
+
+    def test_is_rate_limited_until_cooldown_passes(self):
+        from django.utils import timezone
+        from datetime import timedelta
+
+        self.key.record_provider_cooldown(120)
+        self.key.refresh_from_db()
+        limited, reason = self.key.is_rate_limited()
+        self.assertTrue(limited)
+        self.assertIn("cooldown_until", reason)
+        # Cooldown window covers the asked delay.
+        self.assertGreater(self.key.rate_limit_until, timezone.now() - timedelta(seconds=100))
+
+    def test_cooldown_expires(self):
+        from django.utils import timezone
+        from datetime import timedelta
+
+        ApiKey.objects.filter(pk=self.key.pk).update(
+            rate_limit_until=timezone.now() - timedelta(seconds=1)
+        )
+        self.key.refresh_from_db()
+        self.assertFalse(self.key.is_rate_limited()[0])
+
+    def test_clear_provider_cooldown(self):
+        self.key.record_provider_cooldown(120)
+        self.key.clear_provider_cooldown()
+        self.key.refresh_from_db()
+        self.assertIsNone(self.key.rate_limit_until)
+        self.assertFalse(self.key.is_rate_limited()[0])
+
+    def test_select_key_skips_cooling_down_key(self):
+        from runtime.rate_limiter import RateLimitChecker, RateLimitResult
+
+        from server.models.providers.ai_model import AiModel
+
+        AiModel.objects.create(api_provider=self.p1, name="Alpha", provider_model_id="sql-alpha")
+        model = AiModel.objects.get(api_provider=self.p1)
+        self.key.record_provider_cooldown(120)
+        with self.assertRaises(RateLimitError):
+            RateLimitChecker.check(model)
+
+    def test_select_key_uses_available_sibling_when_one_cools_down(self):
+        from runtime.rate_limiter import RateLimitChecker, RateLimitError
+
+        from server.models.providers.ai_model import AiModel
+
+        AiModel.objects.create(api_provider=self.p1, name="Alpha", provider_model_id="sql-alpha")
+        model = AiModel.objects.get(api_provider=self.p1)
+        other = ApiKey.objects.create(api_provider=self.p1, key="k2", enabled=True)
+        self.key.record_provider_cooldown(120)
+        result = RateLimitChecker.check(model)
+        self.assertIsNotNone(result.selected_key)
+        self.assertEqual(result.selected_key.pk, other.pk)
+
+
 class FallbackLoopTest(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -88,10 +149,10 @@ class FallbackLoopTest(TestCase):
         self.alpha_p1 = AiModel.objects.create(api_provider=self.p1, name="Alpha", provider_model_id="sql-alpha")
         self.alpha_p2 = AiModel.objects.create(api_provider=self.p2, name="Alpha", provider_model_id="apisql-alpha")
 
-    def _stub_query(self):
+    def _stub_query(self, apikey=None):
         return SimpleNamespace(
             pk=1,
-            apikey=None,
+            apikey=apikey,
             status=QueryStatus.WAITING,
             session_version=None,
             refresh_from_db=lambda: None,
@@ -99,6 +160,77 @@ class FallbackLoopTest(TestCase):
 
     def _ok(self):
         return SimpleNamespace(status=ResponseStatus.SUCCESS)
+
+    def test_rate_limit_detection_matches_litellm_errors(self):
+        from litellm.exceptions import RateLimitError as LiteLLMRateLimitError
+        from litellm.exceptions import MidStreamFallbackError, ServiceUnavailableError
+
+        module = self.call_llm
+        err = LiteLLMRateLimitError("rate limited", "openai", "gpt-4")
+        self.assertTrue(module._is_provider_rate_limit(err))
+
+        class _Stub429:
+            status_code = 429
+            message = "quota exceeded"
+
+        self.assertTrue(module._is_provider_rate_limit(_Stub429()))
+
+        class _Stub500:
+            status_code = 500
+            message = "server error"
+
+        self.assertFalse(module._is_provider_rate_limit(_Stub500()))
+
+        # Google's "high demand, try again later" 503 arrives as a
+        # MidStreamFallbackError (subclass of ServiceUnavailableError).
+        class _Stub503:
+            status_code = 503
+            message = "This model is currently experiencing high demand"
+
+        self.assertTrue(module._is_provider_rate_limit(_Stub503()))
+
+        real_503 = ServiceUnavailableError(
+            "high demand", "vertex_ai", "gemini-3.6-flash"
+        )
+        self.assertTrue(module._is_provider_rate_limit(real_503))
+        mid = MidStreamFallbackError(
+            message="fallback after 503",
+            llm_provider="vertex_ai",
+            model="gemini-3.6-flash",
+            original_exception=real_503,
+        )
+        self.assertTrue(module._is_provider_rate_limit(mid))
+
+    def test_retry_after_extraction(self):
+        module = self.call_llm
+
+        class _GoogleLike:
+            status_code = 429
+            message = (
+                "Quota exceeded for metric: generate_content_free_tier_requests. "
+                "Please retry in 58.184175815s."
+            )
+
+        self.assertAlmostEqual(module._extract_retry_after_seconds(_GoogleLike()), 58.184175815)
+
+        class _RetryDelayJson:
+            status_code = 429
+            message = '{"details": [{"retryDelay": "58s"}]}'
+
+        self.assertAlmostEqual(module._extract_retry_after_seconds(_RetryDelayJson()), 58.0)
+
+        class _Header:
+            status_code = 429
+            response = SimpleNamespace(headers={"retry-after": "120"})
+
+        self.assertEqual(module._extract_retry_after_seconds(_Header()), 120.0)
+
+        class _NoDelay:
+            status_code = 429
+            message = "Rate limit exceeded. Please try again later."
+
+        # No explicit retry delay → None, so the key's cooldown default decides.
+        self.assertIsNone(module._extract_retry_after_seconds(_NoDelay()))
 
     def test_falls_back_to_sibling_and_repins(self):
         response = self._ok()
@@ -170,3 +302,171 @@ class FallbackLoopTest(TestCase):
                     )
         self.assertEqual(stream.call_count, 0)
         self.assertEqual(session.repinned, [])
+
+    def test_provider_429_parks_when_every_candidate_rate_limited(self):
+        """A litellm 429 from run_streaming_query must be re-raised as the
+        runtime RateLimitError so AgentTaskRun parks the call instead of
+        hard-failing it (which would consume the retry budget)."""
+        from litellm.exceptions import RateLimitError as LiteLLMRateLimitError
+
+        provider_429 = LiteLLMRateLimitError("quota exceeded retry in 20s", "console", "SomeModel")
+        with mock.patch.object(self.call_llm, "RateLimitChecker") as checker, mock.patch.object(
+            self.call_llm, "Query"
+        ):
+            checker.check.return_value = RateLimitResult(selected_key=None)
+            with mock.patch.object(self.call_llm, "run_streaming_query", side_effect=provider_429) as stream:
+                session = _StubSession(aimodel=self.alpha_p1)
+                with self.assertRaises(RateLimitError):
+                    self.call_llm._call_with_fallback(
+                        session=session, query=self._stub_query(), messages=[], tools=[]
+                    )
+        self.assertEqual(stream.call_count, 2)
+
+    def test_provider_429_falls_back_to_working_sibling(self):
+        """When the pinned candidate 429s but a sibling works, the call must
+        succeed on the sibling, not park."""
+        from litellm.exceptions import RateLimitError as LiteLLMRateLimitError
+
+        provider_429 = LiteLLMRateLimitError("rate limit reached", "console", "SomeModel")
+        response = self._ok()
+        with mock.patch.object(self.call_llm, "RateLimitChecker") as checker, mock.patch.object(
+            self.call_llm, "Query"
+        ):
+            checker.check.return_value = RateLimitResult(selected_key=None)
+            with mock.patch.object(self.call_llm, "run_streaming_query", side_effect=[provider_429, response]) as stream:
+                session = _StubSession(aimodel=self.alpha_p1)
+                result = self.call_llm._call_with_fallback(
+                    session=session, query=self._stub_query(), messages=[], tools=[]
+                )
+        self.assertIs(result, response)
+        self.assertEqual(stream.call_count, 2)
+        self.assertEqual(session.aimodel, self.alpha_p2)
+
+    def test_provider_503_parks_when_every_candidate_unavailable(self):
+        """A Google 503 "high demand" mid-stream error must be re-raised as
+        the runtime RateLimitError so AgentTaskRun parks the call, instead of
+        hard-failing and consuming the retry budget."""
+        from litellm.exceptions import ServiceUnavailableError
+
+        provider_503 = ServiceUnavailableError(
+            "This model is currently experiencing high demand",
+            "vertex_ai",
+            "gemini-3.6-flash",
+        )
+        with mock.patch.object(self.call_llm, "RateLimitChecker") as checker, mock.patch.object(
+            self.call_llm, "Query"
+        ):
+            checker.check.return_value = RateLimitResult(selected_key=None)
+            with mock.patch.object(self.call_llm, "run_streaming_query", side_effect=provider_503) as stream:
+                session = _StubSession(aimodel=self.alpha_p1)
+                with self.assertRaises(RateLimitError):
+                    self.call_llm._call_with_fallback(
+                        session=session, query=self._stub_query(), messages=[], tools=[]
+                    )
+        self.assertEqual(stream.call_count, 2)
+        self.assertEqual(session.repinned, [])
+
+    def test_provider_503_falls_back_to_working_sibling(self):
+        from litellm.exceptions import ServiceUnavailableError
+
+        provider_503 = ServiceUnavailableError(
+            "high demand, try again later", "vertex_ai", "gemini-3.6-flash"
+        )
+        response = self._ok()
+        with mock.patch.object(self.call_llm, "RateLimitChecker") as checker, mock.patch.object(
+            self.call_llm, "Query"
+        ):
+            checker.check.return_value = RateLimitResult(selected_key=None)
+            with mock.patch.object(self.call_llm, "run_streaming_query", side_effect=[provider_503, response]) as stream:
+                session = _StubSession(aimodel=self.alpha_p1)
+                result = self.call_llm._call_with_fallback(
+                    session=session, query=self._stub_query(), messages=[], tools=[]
+                )
+        self.assertIs(result, response)
+        self.assertEqual(stream.call_count, 2)
+        self.assertEqual(session.aimodel, self.alpha_p2)
+
+    def test_run_streaming_query_records_provider_cooldown_on_key(self):
+        """A 429 in run_streaming_query must store the provider's retry delay
+        on the ApiKey so the rate limiter skips it until the cooldown passes."""
+        from litellm.exceptions import RateLimitError as LiteLLMRateLimitError
+
+        from django.utils import timezone
+
+        apikey = ApiKey.objects.create(api_provider=self.p1, key="k-cooldown", enabled=True)
+        sv = SimpleNamespace(session=SimpleNamespace())
+        query = SimpleNamespace(
+            pk=2,
+            apikey=apikey,
+            status=QueryStatus.ACTIVE,
+            session_version=sv,
+            refresh_from_db=lambda: None,
+        )
+        provider_429 = LiteLLMRateLimitError(
+            "quota exceeded Please retry in 20s", "gemini", "gemini-3.6-flash"
+        )
+        saved_statuses = []
+
+        class _Resp:
+            status = ResponseStatus.ACTIVE
+            content = ""
+            reasoning = ""
+            save = lambda self: saved_statuses.append(self.status)
+
+        with mock.patch(
+            "server.models.queries.response.Response.objects.create",
+            return_value=_Resp(),
+        ), mock.patch.object(self.call_llm.litellm, "completion", side_effect=provider_429):
+            with self.assertRaises(LiteLLMRateLimitError):
+                self.call_llm.run_streaming_query(
+                    session=_StubSession(aimodel=self.alpha_p1),
+                    tools=[],
+                    messages=[],
+                    query=query,
+                )
+        apikey.refresh_from_db()
+        self.assertIsNotNone(apikey.rate_limit_until)
+
+    def test_run_streaming_query_records_cooldown_on_503(self):
+        """A 503 "high demand" must also park the key — a transient capacity
+        error is the same retry-later signal as a 429."""
+        from litellm.exceptions import ServiceUnavailableError
+
+        from django.utils import timezone
+
+        apikey = ApiKey.objects.create(
+            api_provider=self.p1, key="k-503", enabled=True
+        )
+        sv = SimpleNamespace(session=SimpleNamespace())
+        query = SimpleNamespace(
+            pk=3,
+            apikey=apikey,
+            status=QueryStatus.ACTIVE,
+            session_version=sv,
+            refresh_from_db=lambda: None,
+        )
+        provider_503 = ServiceUnavailableError(
+            "This model is currently experiencing high demand", "vertex_ai", "gemini-3.6"
+        )
+        saved_statuses = []
+
+        class _Resp:
+            status = ResponseStatus.ACTIVE
+            content = ""
+            reasoning = ""
+            save = lambda self: saved_statuses.append(self.status)
+
+        with mock.patch(
+            "server.models.queries.response.Response.objects.create",
+            return_value=_Resp(),
+        ), mock.patch.object(self.call_llm.litellm, "completion", side_effect=provider_503):
+            with self.assertRaises(ServiceUnavailableError):
+                self.call_llm.run_streaming_query(
+                    session=_StubSession(aimodel=self.alpha_p1),
+                    tools=[],
+                    messages=[],
+                    query=query,
+                )
+        apikey.refresh_from_db()
+        self.assertIsNotNone(apikey.rate_limit_until)
+        self.assertGreater(apikey.rate_limit_until, timezone.now())

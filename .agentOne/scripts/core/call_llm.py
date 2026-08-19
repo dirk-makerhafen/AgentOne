@@ -29,6 +29,107 @@ litellm_logger.propagate = False  # Ve
 litellm.logging = False
 litellm.suppress_debug_info = True
 
+
+def _is_provider_rate_limit(exc) -> bool:
+    """True when *exc* is a provider-side rate limit or transient unavailability.
+
+    Matches:
+    * HTTP 429 (rate limit / quota) and HTTP 503 (service temporarily
+      unavailable — e.g. Google's "model is currently experiencing high
+      demand... try again later").
+    * litellm's ``RateLimitError`` and ``ServiceUnavailableError``
+      (``MidStreamFallbackError`` subclasses it), plus any error whose
+      ``original_exception``/``root_exception`` chain carries one of them.
+
+    Both are transient "retry later" signals: the caller records a key
+    cooldown and parks the call instead of hard-failing it.
+    """
+    status = getattr(exc, "status_code", None)
+    if status is not None:
+        try:
+            if int(status) in (429, 503):
+                return True
+        except (TypeError, ValueError):
+            pass
+    if isinstance(
+        exc,
+        (
+            litellm.exceptions.RateLimitError,
+            litellm.exceptions.ServiceUnavailableError,
+        ),
+    ):
+        return True
+    for attr in ("original_exception", "root_exception"):
+        root = getattr(exc, attr, None)
+        if isinstance(
+            root,
+            (
+                litellm.exceptions.RateLimitError,
+                litellm.exceptions.ServiceUnavailableError,
+            ),
+        ):
+            return True
+    return False
+
+
+def _extract_retry_after_seconds(exc) -> float | None:
+    """Return the cooldown the provider asked for, in seconds.
+
+    Precedence:
+      1. litellm ``RateLimitError.response.headers[Retry-After]``.
+      2. ``Retry-After`` on the wrapped ``httpx.Response``.
+      3. Text embedded in the error message — Google reports
+         ``Please retry in 58.184175815s`` and ``"retryDelay": "58s"``.
+
+    Returns ``None`` when the 429 carries no explicit delay, so the caller
+    can fall back to a sane default (see ``ApiKey.record_provider_cooldown``).
+    """
+    try:
+        messages: list[str] = []
+        candidate = exc
+        seen: set[int] = set()
+        while candidate is not None and id(candidate) not in seen:
+            seen.add(id(candidate))
+            messages.append(str(getattr(candidate, "message", "") or candidate))
+            response = getattr(candidate, "response", None)
+            if response is not None:
+                for source in (getattr(response, "headers", None), getattr(candidate, "headers", None)):
+                    if source is None:
+                        continue
+                    retry_after = source.get("retry-after") or source.get("Retry-After")
+                    if retry_after:
+                        try:
+                            return max(1.0, float(retry_after))
+                        except (TypeError, ValueError):
+                            pass
+            root = getattr(candidate, "original_exception", None)
+            if root is not None:
+                candidate = root
+            else:
+                deepest = None
+                walk = candidate
+                while walk is not None and id(walk) not in seen:
+                    deepest = walk
+                    walk = getattr(walk, "__cause__", None)
+                candidate = None if deepest is candidate else deepest
+        message = " ".join(messages)
+        patterns = (
+            r"retry in ([\d.]+)s",
+            r'"retryDelay"\s*:\s*"?([\d.]+)s',
+            r"retry[\s_-]*after[\s:=(]*([\d.]+)",
+        )
+        for pattern in patterns:
+            match = re.search(pattern, message, re.IGNORECASE)
+            if match:
+                try:
+                    return max(1.0, float(match.group(1)))
+                except (TypeError, ValueError):
+                    continue
+    except Exception:
+        return None
+    return None
+
+
 def _get_litellm_model_name(provider: Any, api_model_id: str) -> str:
     """Map an :class:`ApiProvider` to the LiteLLM model string.
 
@@ -159,6 +260,15 @@ def run_streaming_query(
         # Provider hard-failure (connection, 5xx, auth, etc.).  Record how far
         # the response got so the caller can avoid duplicating a partial stream,
         # then mark the orphaned response FAILURE instead of leaving it ACTIVE.
+        if _is_provider_rate_limit(exc):
+            # 429 with a retry delay — park the key the provider throttled so
+            # the rate limiter skips it until the cooldown passes.
+            apikey = query.apikey
+            if apikey is not None:
+                apikey.record_provider_cooldown(
+                    _extract_retry_after_seconds(exc),
+                    reason=str(getattr(exc, "message", "") or exc)[:500],
+                )
         exc.streamed_content = response.content or response.reasoning
         response.status = ResponseStatus.FAILURE
         response.save()
@@ -217,7 +327,7 @@ def _call_with_fallback(
     first = True
     for aimodel in candidates:
         try:
-            ratelimit_result = RateLimitChecker.check(aimodel)
+            ratelimit_result = RateLimitChecker.check(aimodel, session=session)
             if not ratelimit_result:
                 raise Exception("Error in ratelimiter")
             apikey = ratelimit_result.selected_key
@@ -239,6 +349,8 @@ def _call_with_fallback(
                 query=query,
                 aimodel=aimodel,
             )
+            if query.apikey is not None:
+                query.apikey.clear_provider_cooldown()
             if not first:
                 session.set_aimodel(aimodel)
             Query.objects.filter(pk=query.pk).update(
@@ -249,6 +361,14 @@ def _call_with_fallback(
         except RateLimitError as exc:
             last_error = exc
         except Exception as exc:
+            if _is_provider_rate_limit(exc):
+                # Provider 429 — the candidate's key is now on cooldown (set
+                # inside run_streaming_query).  Convert to our own rate-limit
+                # error so the whole task parks (WAITING_RATELIMIT) and the
+                # scheduler re-runs it once capacity/cooldown returns, instead
+                # of hard-failing and consuming the retry budget.
+                last_error = RateLimitError("provider_rate_limit")
+                continue
             last_error = exc
             if getattr(exc, "streamed_content", ""):
                 raise

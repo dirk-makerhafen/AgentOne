@@ -148,10 +148,11 @@ def _release_rate_limited_calls() -> None:
 
     for call in waiting:
         try:
-            aimodel = Session(
+            session = Session(
                 session_model=call.session,
                 pinned_session_version=call.session_version,
-            ).aimodel
+            )
+            aimodel = session.aimodel
             if aimodel is None or aimodel.pk in blocked_models:
                 continue
             # Low-battery pause: keep the call parked until power recovers.
@@ -159,7 +160,7 @@ def _release_rate_limited_calls() -> None:
                 blocked_models.add(aimodel.pk)
                 continue
             try:
-                RateLimitChecker.check(aimodel)
+                RateLimitChecker.check(aimodel, session=session)
             except RateLimitError as e:
                 print(f"{aimodel} is rate limited" ,e )
                 blocked_models.add(aimodel.pk)

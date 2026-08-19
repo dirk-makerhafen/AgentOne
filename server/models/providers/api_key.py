@@ -11,6 +11,28 @@ from server.models.base_model import BaseModel
 from server.models.queries.response import Response
 
 
+# Cooldown defaults (seconds) for provider rate-limits (429/503) that carry
+# no explicit retry delay.
+DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS = 60
+"""Sane default when a 429/503 arrives without a retry delay (dosage 429s)."""
+
+QUOTA_EXHAUSTED_COOLDOWN_SECONDS = 3600
+"""Long default when the limit reads like quota exhaustion (no retry will help
+until the window resets — e.g. OpenCode Zen's daily quota)."""
+
+MAX_COOLDOWN_SECONDS = 3600
+"""Ceiling for the escalating backoff (1 hour)."""
+
+QUOTA_REASON_PATTERNS = ("quota", "insufficient", "resource exhausted",
+                          "daily limit", "exceeded your daily")
+
+
+def _looks_like_quota(reason: str) -> bool:
+    """Best-effort detection of quota exhaustion from a 429 message."""
+    message = (reason or "").lower()
+    return any(pattern in message for pattern in QUOTA_REASON_PATTERNS)
+
+
 class ApiKey(BaseModel):
     """An API key for a provider, with independent rate-limit tracking."""
 
@@ -26,9 +48,21 @@ class ApiKey(BaseModel):
     limit_tokens_per_day = models.IntegerField(default=0)
     limit_tokens_per_minute = models.IntegerField(default=0)
 
+    # Provider-imposed cooldown.  When a provider returns a 429 with a retry
+    # delay (e.g. Google's ``RetryInfo.retryDelay``), the end of the wait is
+    # stored here so the rate limiter skips this key until then instead of
+    # hammering it.  ``None`` means no active cooldown.
+    rate_limit_until = models.DateTimeField(default=None, null=True, blank=True)
+
+    # Consecutive 429 hits since the last success (or cooldown reset).  Drives
+    # escalating backoff: each new 429 after an ``rate_limit_until`` that has
+    # already passed (re-slammed while still throttling) multiplies the wait.
+    rate_limit_hits = models.IntegerField(default=0)
+
     observable_fields = set([
         "pk",
-        "api_provider"
+        "api_provider",
+        "rate_limit_until",
     ])
 
     @property
@@ -65,6 +99,59 @@ class ApiKey(BaseModel):
             f"ApiKey.api_provider:{self.api_provider_pk}",
         ]
         )
+    def record_provider_cooldown(self, retry_after_seconds: float | None, *, reason: str = "") -> float:
+        """Park this key until the provider's requested cooldown passes.
+
+        Called when the provider returns a rate-limit or transient
+        unavailability error — HTTP 429 (e.g. Google's ``RetryInfo.retryDelay``
+        or a ``Retry-After`` header) or HTTP 503 ("high demand, try again
+        later").  The rate limiter then skips this key (``is_rate_limited``
+        returns True) until ``rate_limit_until``, so the scheduler doesn't
+        re-slam it.
+
+        Backoff is escalating: each consecutive 429/503 (no intervening
+        success) doubles the wait, capped at :data:`MAX_COOLDOWN_SECONDS`.
+        When the error carries no explicit delay, the default is long if the
+        reason reads like quota exhaustion
+        (``QUOTA_EXHAUSTED_COOLDOWN_SECONDS``) and short otherwise
+        (``DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS``).
+
+        Returns the cooldown, in seconds.
+        """
+        from datetime import timedelta
+
+        hits = (self.rate_limit_hits or 0) + 1
+        base = retry_after_seconds
+        if not base or base <= 0:
+            base = (
+                QUOTA_EXHAUSTED_COOLDOWN_SECONDS
+                if _looks_like_quota(reason)
+                else DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS
+            )
+        # level is 0-based; 4+ consecutive hits stop growing (8x ceiling).
+        level = min(hits - 1, 3)
+        cooldown = min(base * (2 ** level), MAX_COOLDOWN_SECONDS)
+        ApiKey.objects.filter(pk=self.pk).update(
+            rate_limit_until=timezone.now() + timedelta(seconds=cooldown),
+            rate_limit_hits=hits,
+        )
+        self.rate_limit_until = timezone.now() + timedelta(seconds=cooldown)
+        self.rate_limit_hits = hits
+        return cooldown
+
+    def clear_provider_cooldown(self) -> None:
+        """Clear any active provider cooldown (e.g. after a successful call).
+
+        Also resets the consecutive-hit counter so the next 429 starts from
+        the base cooldown again.
+        """
+        if self.rate_limit_until or self.rate_limit_hits:
+            ApiKey.objects.filter(pk=self.pk).update(
+                rate_limit_until=None, rate_limit_hits=0
+            )
+            self.rate_limit_until = None
+            self.rate_limit_hits = 0
+
     def requests_last_minute(self) -> int:
         """Number of successful responses in the last 60 seconds for this key."""
         since = timezone.now() - timedelta(seconds=60)
@@ -96,14 +183,10 @@ class ApiKey(BaseModel):
         return result["total"] or 0
 
     def active_call_count(self) -> int:
-        """Number of runs currently ACTIVE using this specific key."""
-        from server.models.enums.task_enums import TaskRunStatus
-        from server.models.tasks.agent_task_run import AgentTaskRun
+        """Number of LLM queries currently ACTIVE using this specific key."""
+        from server.models.queries.query import Query
 
-        return AgentTaskRun.objects.filter(
-            agent_settings__aimodel__api_provider=self.api_provider,
-            status=TaskRunStatus.ACTIVE,
-        ).count()
+        return Query.objects.filter(apikey=self, status="ACTIVE").count()
 
     def is_rate_limited(self) -> tuple[bool, str]:
         """Check all key-level limits.
@@ -111,9 +194,11 @@ class ApiKey(BaseModel):
         Returns:
             A tuple ``(is_limited, reason)`` where ``reason`` is empty when not limited.
         """
-        return False, ""
         if not self.enabled:
             return True, "disabled"
+
+        if self.rate_limit_until and timezone.now() < self.rate_limit_until:
+            return True, f"cooldown_until:{self.rate_limit_until.isoformat()}"
 
         if self.limit_request_per_minute > 0:
             rpm = self.requests_last_minute()
@@ -142,12 +227,13 @@ class ApiKey(BaseModel):
 
         Note: calls waiting on the model limit show up in ``AiModel.pending_calls()``.
         """
-        from server.models.enums.task_enums import TaskCallStatusDetail
-        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.tasks.agent_task_call import (
+            AgentTaskCall,
+            pending_rate_limit_call_ids,
+        )
 
         return AgentTaskCall.objects.filter(
-            session_version__agent_version__profile__aimodel__api_provider=self.api_provider,
-            status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
+            pk__in=pending_rate_limit_call_ids(provider_id=self.api_provider_id)
         ).order_by("created_at")
 
     def __str__(self) -> str:

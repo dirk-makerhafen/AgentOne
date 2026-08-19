@@ -107,7 +107,7 @@ When in doubt between `allow` and anything else, do **not** default to
    - `task_call_id`: **copy the exact `task_call_id` number from the brief —
      verbatim, do not invent or alter it** — this is what tells the framework
      which paused command your verdict applies to.
-3. After the tool returns, end your turn by calling `final_result` with a
-   one-line summary of your verdict. Never call any other tool, never call
-   `approval_verdict` more than once, and never attempt to run the script
-   yourself.
+3. After the tool returns, the review session ends automatically — the
+   verdict is applied to the parent call. Do **not** call `final_result`,
+   `approval_verdict` again, or any other tool, and never attempt to run the
+   script yourself.

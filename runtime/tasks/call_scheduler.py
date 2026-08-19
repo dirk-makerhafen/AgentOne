@@ -493,7 +493,8 @@ class CallScheduler:
                 "content": (
                     "You are the Approval Decider reviewing a pending command. "
                     "Analyse the brief, then call approval_verdict once with your "
-                    "decision, then end your turn with final_result.\n\n" + brief
+                    "decision. The verdict ends this review session — no final_result "
+                    "needed.\n\n" + brief
                 ),
             },
         ]
@@ -708,6 +709,128 @@ class CallScheduler:
         from server.models.tasks.agent_task_run import AgentTaskRun
 
         return AgentTaskRun.create(agent_task_call=taskcall, args=args, kwargs=kwargs)
+
+    @staticmethod
+    def release_waiting_ratelimit_calls(
+        session_model: Any, *, repoint: bool = True
+    ) -> int:
+        """Release this session's ``WAITING_RATELIMIT`` calls after a model or
+        provider switch initiated from the UI (rate-limit card).
+
+        When ``repoint`` is True each parked call is first re-pointed — together
+        with its entire chain subtree — to the session's *latest* session
+        version, so the re-dispatched run *and* every subsequent step of the
+        chain (e.g. ``parse_llm_response`` → ``decide_next_step`` and the next
+        ``process_turn`` it dispatches) use the newly selected model/key
+        instead of the pinned version captured when the call was created.
+        Capacity is re-checked with ``RateLimitChecker`` against the session's
+        current aimodel in FIFO order; releases stop as soon as a call hits the
+        limit again (mirrors ``_release_rate_limited_calls`` in
+        ``server.tasks.tick_scheduler``).
+
+        Returns the number of calls released.
+        """
+        from server.models.enums.task_enums import TaskCallStatusDetail
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.power import battery_gate_blocked
+        from runtime.rate_limiter import RateLimitChecker, RateLimitError
+        from runtime.session.session import Session
+        from runtime.tasks.call_fsm import TaskCallStateMachine
+
+        session = Session(session_model=session_model)
+        aimodel = session.aimodel
+        if aimodel is None:
+            return 0
+        latest = session_model.latest_session_version
+
+        calls = list(
+            AgentTaskCall.objects.filter(
+                session=session_model,
+                status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
+            ).order_by("priority", "created_at")
+        )
+        if not calls:
+            return 0
+
+        released = 0
+        for call in calls:
+            try:
+                if battery_gate_blocked(aimodel)[0]:
+                    break
+                try:
+                    RateLimitChecker.check(aimodel, session=session)
+                except RateLimitError:
+                    break
+                if repoint and latest is not None and call.session_version_id != latest.pk:
+                    CallScheduler._repoint_chain_to_latest(call, latest)
+                if TaskCallStateMachine.release_rate_limit(call.pk):
+                    CallScheduler.start_new_taskrun(call.pk)
+                    released += 1
+            except Exception as exc:  # pragma: no cover - defensive
+                print(f"[scheduler] error releasing rate-limited call {call.pk}: {exc}")
+        return released
+
+    @staticmethod
+    def _repoint_chain_to_latest(call: Any, latest: Any) -> None:
+        """Re-point *call* and its whole chain subtree to *latest*.
+
+        The parked call and its siblings (``parse_llm_response``,
+        ``ingest_assistant_message``, ``decide_next_step``) were captured
+        against the chain's original session version when the turn started.
+        Re-pointing only the parked call fixes the immediate retry, but the
+        ``decide_next_step`` tail would re-dispatch the next ``process_turn``
+        against the *old* version — falling back to the pre-switch key (the
+        reported bug).  Moving the entire subtree keeps the whole turn on the
+        switched key.
+
+        ``TaskInstance``/``AgentTaskCall`` ``save()`` forbid editing, so the
+        re-point is done with ``QuerySet.update()`` (SQL-level).
+        """
+        from server.models.enums.task_enums import TaskCallStatus
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.tasks.task_instance import TaskInstance
+
+        if latest is None:
+            return
+
+        if call.task_instance_id is None:
+            AgentTaskCall.objects.filter(pk=call.pk).update(session_version=latest)
+            return
+
+        # Walk up to the chain root (parent chain TaskInstance).
+        node = call.task_instance
+        seen: set[int] = set()
+        while node is not None and node.pk not in seen:
+            seen.add(node.pk)
+            parents = list(node.parent_instances.all())
+            if not parents:
+                break
+            node = parents[0] if parents else node
+        root = node
+
+        # Collect the whole subtree (root + all descendant instances).
+        subtree: set[int] = set()
+        stack = [root]
+        while stack:
+            node = stack.pop()
+            if node.pk in subtree:
+                continue
+            subtree.add(node.pk)
+            stack.extend(node.child_instances.all())
+
+        if not subtree:
+            AgentTaskCall.objects.filter(pk=call.pk).update(session_version=latest)
+            return
+
+        TaskInstance.objects.filter(pk__in=subtree).update(session_version=latest)
+        AgentTaskCall.objects.filter(
+            task_instance_id__in=subtree,
+            status__in=[
+                TaskCallStatus.NEW,
+                TaskCallStatus.WAITING,
+                TaskCallStatus.HALTED,
+            ],
+        ).update(session_version=latest)
 
     @staticmethod
     def on_taskrun_ended(taskrun_id: int, taskrun_status: TaskRunStatus) -> None:

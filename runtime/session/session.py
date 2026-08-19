@@ -108,6 +108,18 @@ class Session:
             return model
         return self._default_aimodel()
 
+    def unresolved_aimodel(self) -> AiModel | None:
+        """The AI model pinned by the session or its agent, or *None*.
+
+        Unlike :meth:`aimodel`, this does NOT fall back to the user's
+        configured Default Model.  Used by provider/model ``active_call_count``
+        accounting, where resolving the default would recurse through the
+        model picker (picker -> ``_provider_is_throttled`` ->
+        ``active_call_count``).
+        """
+        model = self._get_session_setting("aimodel")
+        return model if isinstance(model, AiModel) else None
+
     def _default_aimodel(self) -> AiModel | None:
         """Resolve the user's Default Model preference to an :class:`AiModel`."""
         from runtime.settings import get_default_model_name
@@ -159,6 +171,91 @@ class Session:
         model = (usable or rows)[0]
         self.set_aimodel(model)
         return model
+
+    # ------------------------------------------------------------------
+    # Rate-limit key policy  (per-session API-key stickiness)
+    # ------------------------------------------------------------------
+
+    def preferred_api_key(self) -> Any:
+        """The API key this session explicitly sticks to (user's "Switch key"
+        choice, or the key adopted by auto-failover).  *None* when unset.
+
+        Re-fetched from the DB so a cooldown written since the FK was cached
+        is always visible.
+        """
+        session_settings = self.get_version_model().session_settings
+        if not session_settings or not session_settings.preferred_api_key_id:
+            return None
+        from server.models.providers.api_key import ApiKey
+
+        try:
+            return ApiKey.objects.get(pk=session_settings.preferred_api_key_id)
+        except ApiKey.DoesNotExist:
+            return None
+
+    def set_preferred_api_key(self, key: Any) -> None:
+        """Persist the session's stick-to key (creates a new version)."""
+        self._set_session_setting("preferred_api_key", key)
+
+    def clear_preferred_api_key(self) -> None:
+        """Drop the session's stick-to key."""
+        settings = self.get_version_model().session_settings
+        if settings and settings.preferred_api_key_id:
+            self._set_session_setting("preferred_api_key", None)
+
+    def current_provider_api_key(self, aimodel: Any) -> Any:
+        """The key this session currently uses for *aimodel*'s provider.
+
+        The explicit sticky key wins; otherwise the most recent Query that
+        ran against this provider tells us which key the session is on.
+        """
+        preferred = self.preferred_api_key()
+        if preferred is not None and preferred.api_provider_id == aimodel.api_provider_id:
+            return preferred
+        from server.models.queries.query import Query
+
+        latest = (
+            Query.objects.filter(
+                session=self.model,
+                apikey__isnull=False,
+                apikey__api_provider=aimodel.api_provider,
+            )
+            .order_by("-pk")
+            .only("apikey")
+            .first()
+        )
+        return latest.apikey if latest is not None else None
+
+    def auto_failover_keys_enabled(self) -> bool:
+        """Return whether this session auto-switches API keys when one cools."""
+        settings = self.get_version_model().session_settings
+        if settings and settings.auto_failover_keys is not None:
+            return bool(settings.auto_failover_keys)
+        return False
+
+    def set_auto_failover_keys(self, enabled: bool) -> None:
+        """Enable/disable automatic key failover for this session."""
+        self._set_session_setting("auto_failover_keys", bool(enabled))
+
+    def key_max_wait_seconds(self) -> int:
+        """Maximum acceptable key-cooldown wait; 0 = no limit (always wait)."""
+        settings = self.get_version_model().session_settings
+        if settings and settings.max_rate_limit_wait_seconds is not None:
+            return int(settings.max_rate_limit_wait_seconds)
+        return 0
+
+    def set_key_max_wait_seconds(self, seconds: int | None) -> None:
+        """Set the max wait before auto-failover (0/None = no limit)."""
+        self._set_session_setting("max_rate_limit_wait_seconds", seconds)
+
+    def key_failover_policy(self) -> Any:
+        """The rate-limit key policy (auto-failover flag + max wait)."""
+        from runtime.rate_limiter import KeyFailoverPolicy
+
+        return KeyFailoverPolicy(
+            auto_failover=self.auto_failover_keys_enabled(),
+            max_wait_seconds=self.key_max_wait_seconds(),
+        )
 
     @property
     def reasoning_effort(self) -> ReasoningEffort:

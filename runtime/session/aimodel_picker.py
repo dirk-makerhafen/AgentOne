@@ -122,32 +122,16 @@ def pick_aimodel(name: str) -> AiModel | None:
 def _member_load(model: AiModel) -> int:
     """Coarse live load score for the provider serving *model*.
 
-    Based on successful requests in the last minute.  (The ``active_call_count``
-    helpers on the providers are currently non-functional, so parallelism is not
-    included in the score.)
+    Based on successful requests in the last minute plus currently active runs.
     """
-    return model.api_provider.requests_last_minute()
+    provider = model.api_provider
+    return provider.active_call_count() + provider.requests_last_minute()
 
 
 def _provider_is_throttled(model: AiModel) -> bool:
     """True when the provider serving *model* is at/over a live rate cap.
 
-    Mirrors the provider tier of :meth:`ApiProvider.is_rate_limited` using the
-    configured limit fields and live usage windows.  Parallel-call checks are
-    skipped — ``ApiProvider.active_call_count()`` is not functional yet.
+    Delegates to :meth:`ApiProvider.is_rate_limited`, which covers the
+    parallel-call limit plus all request/token windows.
     """
-    # pylint: disable=too-many-return-statements
-    provider = model.api_provider
-    if provider.limit_request_per_minute > 0 and provider.requests_last_minute() >= provider.limit_request_per_minute:
-        return True
-    if provider.limit_request_per_hour > 0 and provider.requests_last_hour() >= provider.limit_request_per_hour:
-        return True
-    if provider.limit_request_per_day > 0 and provider.requests_today() >= provider.limit_request_per_day:
-        return True
-    if provider.limit_tokens_per_minute > 0 and provider.tokens_last_minute() >= provider.limit_tokens_per_minute:
-        return True
-    if provider.limit_tokens_per_hour > 0 and provider.tokens_last_hour() >= provider.limit_tokens_per_hour:
-        return True
-    if provider.limit_tokens_per_day > 0 and provider.tokens_today() >= provider.limit_tokens_per_day:
-        return True
-    return False
+    return model.api_provider.is_rate_limited()[0]

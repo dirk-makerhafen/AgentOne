@@ -15,6 +15,7 @@ from django.utils import timezone
 from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.enums.message_enums import MessageRole
+from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
@@ -33,7 +34,7 @@ def _load_script(relpath: str):
     return module
 
 
-def _make_session(name, *, parent=None, agent=None, is_active=True, last_active_at=None, is_archived=False):
+def _make_session(name, *, parent=None, agent=None, is_active=True, last_active_at=None, is_archived=False, session_type=SessionType.SESSION):
     if agent is None:
         agent = AgentModel.objects.create(name=f"agent-{name}")
         from server.models.agents.agent_version import AgentVersionModel
@@ -48,6 +49,7 @@ def _make_session(name, *, parent=None, agent=None, is_active=True, last_active_
         is_active=is_active,
         last_active_at=last_active_at,
         is_archived=is_archived,
+        session_type=session_type,
     )
     sv = SessionVersionModel.objects.create(session=session, agent=agent)
     session.latest_session_version = sv
@@ -87,7 +89,7 @@ class TestFinalResultDeactivatesSubsession:
     def test_final_result_deactivates_subsession(self):
         decide_next_step = _load_script(".agentone/scripts/core/decide_next_step.py").decide_next_step
         parent = _make_session("parent")
-        child = _make_session("child", parent=parent)
+        child = _make_session("child", parent=parent, session_type=SessionType.SUBTASK_FORK)
         rt = child.get_runtime()
         sv = rt.get_version_model()
         msg = Message.objects.create(session=child, session_version=sv, role=MessageRole.ASSISTANT)
@@ -113,7 +115,7 @@ class TestFinalResultDeactivatesSubsession:
         """final_result on a subsession beats any prior reactivation."""
         decide_next_step = _load_script(".agentone/scripts/core/decide_next_step.py").decide_next_step
         parent = _make_session("parent")
-        child = _make_session("child", parent=parent, is_active=False)
+        child = _make_session("child", parent=parent, is_active=False, session_type=SessionType.SUBTASK_FORK)
         rt = child.get_runtime()
         rt._mark_active()
         child.refresh_from_db()

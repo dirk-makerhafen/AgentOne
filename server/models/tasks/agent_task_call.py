@@ -26,6 +26,32 @@ if TYPE_CHECKING:
     from server.models.tasks.agent_task_run import AgentTaskRun
 
 
+def pending_rate_limit_call_ids(
+    provider_id: int | None = None, model_id: int | None = None
+) -> list[int]:
+    """PKs of WAITING_RATELIMIT calls whose resolved model matches.
+
+    ``provider_id`` and ``model_id`` are ANDed; pass ``None`` to skip a filter.
+    Resolution goes through the session version's pinned settings (recursion-safe),
+    since ``AgentTaskCall`` has no direct aimodel/provider join.
+    """
+    from server.models.enums.task_enums import TaskCallStatusDetail
+
+    matching = []
+    for call in AgentTaskCall.objects.filter(
+        status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
+    ).iterator():
+        aimodel = call.session_version.unresolved_aimodel()
+        if aimodel is None:
+            continue
+        if provider_id is not None and aimodel.api_provider_id != provider_id:
+            continue
+        if model_id is not None and aimodel.pk != model_id:
+            continue
+        matching.append(call.pk)
+    return matching
+
+
 class AgentTaskCall(BaseModel):
     """Specific invocation of a task — equivalent to a Celery task message.
 

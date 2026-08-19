@@ -72,10 +72,12 @@ class ApiProvider(BaseModel):
         from server.models.enums.task_enums import TaskRunStatus
         from server.models.tasks.agent_task_run import AgentTaskRun
 
-        return AgentTaskRun.objects.filter(
-            agent_settings__aimodel__api_provider=self,
-            status=TaskRunStatus.ACTIVE,
-        ).count()
+        count = 0
+        for run in AgentTaskRun.objects.filter(status=TaskRunStatus.ACTIVE):
+            aimodel = run.session_version.unresolved_aimodel()
+            if aimodel is not None and aimodel.api_provider_id == self.pk:
+                count += 1
+        return count
 
     def _responses_since(self, since) -> int:
         return Response.objects.filter(
@@ -134,7 +136,6 @@ class ApiProvider(BaseModel):
         Returns:
             A tuple ``(is_limited, reason)`` where ``reason`` is empty when not limited.
         """
-        return False, ""
         if self.limit_parallel_calls > 0:
             active = self.active_call_count()
             if active >= self.limit_parallel_calls:
@@ -174,12 +175,13 @@ class ApiProvider(BaseModel):
 
     def pending_calls(self):
         """All rate-limited calls for any model on this provider, FIFO order."""
-        from server.models.enums.task_enums import TaskCallStatusDetail
-        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.tasks.agent_task_call import (
+            AgentTaskCall,
+            pending_rate_limit_call_ids,
+        )
 
         return AgentTaskCall.objects.filter(
-            session_version__agent_version__profile__aimodel__api_provider=self,
-            status_detail=TaskCallStatusDetail.WAITING_RATELIMIT,
+            pk__in=pending_rate_limit_call_ids(provider_id=self.pk)
         ).order_by("created_at")
 
     def __str__(self) -> str:

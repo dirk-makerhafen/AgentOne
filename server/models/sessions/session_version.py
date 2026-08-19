@@ -38,6 +38,19 @@ class SessionVersionModel(BaseModel):
         """Return a runtime Session wrapper pinned to this version."""
         return Session(session_model=self.session, pinned_session_version=self)
 
+    def unresolved_aimodel(self):
+        """The AiModel pinned by this version's settings, or *None*.
+
+        Session settings win, then the agent's settings.  Deliberately does
+        NOT fall back to the user's Default Model (that resolution goes through
+        the model picker, which can recurse back into provider rate-limit
+        accounting).
+        """
+        try:
+            return self.get_runtime().unresolved_aimodel()
+        except Exception:  # pylint: disable=broad-exception-caught  # defensive
+            return None
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Prevent updates to existing SessionVersionModel instances."""
         if self.pk:

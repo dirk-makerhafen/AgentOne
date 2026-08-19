@@ -100,6 +100,24 @@ class SettingsModel(BaseModel):
 
     subagentResultDelivery: str | None = models.CharField(  max_length=20,  choices=SubagentResultDelivery,  default=None,  null=True,  blank=True)
 
+    # Rate-limit card policy (per session):
+    #   preferred_api_key        — the key this session sticks to for its current
+    #                              provider (set by "Switch key" / auto-failover).
+    #   auto_failover_keys       — when True, a cooling key is bypassed by rotating
+    #                              to the next ready key of the same provider.
+    #   max_rate_limit_wait_seconds — if the key cooldown would exceed this, fail
+    #                              over automatically (0 = no max → always wait).
+    preferred_api_key = models.ForeignKey(
+        "server.ApiKey",
+        default=None,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="related_session_settings",
+    )
+    auto_failover_keys = models.BooleanField(default=None, null=True, blank=True)
+    max_rate_limit_wait_seconds = models.IntegerField(default=None, null=True, blank=True)
+
     access: Any = models.JSONField(default=None, null=True, blank=True)
 
     extra_settings: Any = models.JSONField(default=None, null=True, blank=True)
@@ -113,4 +131,3 @@ class SettingsModel(BaseModel):
                 f"You may not edit an existing {self._meta.model_name}"
             )
         return super().save(*args, **kwargs)
-
