@@ -183,8 +183,8 @@ class RightPanelSessionCalls(ModelView):
     def _build_flat_items(self, session_model, parent_view: ModelView) -> list[CallNodeView]:
         from django.db.models import F as _F
 
-        MAX_SIBLINGS = 1000
-        MAX_DEPTH = 100
+        MAX_SIBLINGS = 2000
+        MAX_DEPTH = 200
 
         # Find the newest root call for this session via session_root_task.
         # Root calls have session_root_task pointing to themselves.

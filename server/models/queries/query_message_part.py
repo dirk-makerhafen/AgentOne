@@ -20,6 +20,10 @@ cache = LRUCache(maxsize=100000)
 class QueryMessagePart(BaseModel):
     """A single content part within a query message."""
 
+    class QueryMessagePartObservables(Observables):
+        """Explicit observable keys for a QueryMessagePart (IDE autocomplete)."""
+        pass
+    
     query_message = models.ForeignKey("server.QueryMessage", on_delete=models.CASCADE, related_name="query_message_parts")
     source_message_part = models.ForeignKey( "server.MessagePart", default=None, null=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts")
 
@@ -28,13 +32,6 @@ class QueryMessagePart(BaseModel):
     content = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_content")
     template_data = models.ForeignKey( GenericContent, default=None, null=True, blank=True, on_delete=models.SET_DEFAULT, related_name="query_message_parts_template_data")
     content_type = EnumField(MessageContentType, default=MessageContentType.TEXT)
-
-    class QueryMessagePartObservables(Observables):
-        """Explicit observable keys for a QueryMessagePart (IDE autocomplete)."""
-
-        @property
-        def query_message(self):
-            return f"QueryMessagePart.query_message:{self.model.query_message_id}"
 
     @property
     def has_toolcalls(self):

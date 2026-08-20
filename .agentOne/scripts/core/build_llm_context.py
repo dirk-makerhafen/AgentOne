@@ -27,8 +27,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
     1. Create a Query record linked to the triggering message.
     2. Inject the system prompt (if set).
     3. For CUSTOM tool syntax, inject tool definitions as a system message.
-    4. Load conversation history up to and including the trigger message,
-       apply HistoryLimiter, and repack as QueryMessages with correct roles.
+    4. Load conversation history up to and including the trigger message, and repack as QueryMessages with correct roles.
 
     Args:
         _session: The active agent session.

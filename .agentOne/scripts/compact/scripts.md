@@ -18,8 +18,6 @@ tasks:
     type: chain
     chain:
       - build_llm_compact_context
-      - call_llm
-      - parse_llm_response
       - ingest_compaction
 ---
 

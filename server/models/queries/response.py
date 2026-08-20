@@ -19,7 +19,9 @@ class ResponseStatus(models.TextChoices):
 
 class Response(BaseModel):
     """Stores the result of a single LLM query including token usage and timing."""
-
+    class ResponseObservables(Observables):
+        """Explicit observable keys for an Response (IDE autocomplete)."""
+        
     query = models.ForeignKey("Query", null=True, on_delete=models.CASCADE, related_name="related_response")
 
     session = models.ForeignKey("server.SessionModel", on_delete=models.CASCADE, related_name="related_response")
@@ -47,36 +49,6 @@ class Response(BaseModel):
 
     finish_reason = models.CharField( default="", null=True, blank=True, max_length=5000)
 
-    observable_fields = set([
-        "pk",
-        "query",
-        "session",
-    ])
-    @property
-    def observable_keys(self):
-        return set([
-            "Response",
-            f"Response.pk:{self.pk}",
-            f"Response.query:{self.query_pk}",      
-            f"Response.session:{self.session_pk}",   
-        ])
-
-    def notify_observers(self):
-        keys = self.observable_keys
-        #observers = redis_get keys
-        #set(observers)
-        #for each observer:
-        # redis add observer self
-
-    def register_observer(self, observer, field = None, value=None):
-        redis_key = "Response"
-        if field:
-            if field not in self.observable_fields:
-                raise Exception(f"Failed, field {field} is not observable for model 'Response'")
-            redis_key += f".{field}"
-        if value:
-            redis_key += f":{value}"
-        #redis add redis_key observer
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Save the response and optionally recalibrate query token estimates.

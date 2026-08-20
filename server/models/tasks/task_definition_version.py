@@ -42,11 +42,7 @@ class TaskDefinitionVersion(BaseModel):
 
     child_tasks = SortedManyToManyField("self", help_text="", symmetrical=False, blank=True, related_name="parent_tasks")
 
-    observable_fields = set([
-        "pk",
-        "task_definition",
-    ])
-
+ 
     @property
     def task_instances(self):
         """Return related TaskInstance queryset."""
@@ -56,14 +52,6 @@ class TaskDefinitionVersion(BaseModel):
     def agent_versions(self):
         """Return related AgentVersionModel queryset."""
         return self.related_agent_versions  # pyright: ignore[reportAttributeAccessIssue]
-
-    @property
-    def observable_keys(self):
-        return set([
-            "TaskDefinitionVersion",
-            f"TaskDefinitionVersion.pk:{self.pk}",
-            f"TaskDefinitionVersion.task_definition:{self.task_definition_pk}",
-        ])
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Prevent updates to existing TaskDefinitionVersion instances."""

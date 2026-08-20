@@ -29,6 +29,9 @@ class CollectionItem(BaseModel):
         The actual payload (processor result data).
     """
 
+    class CollectionItemObservables(Observables):
+        """Explicit observable keys for an CollectionItem (IDE autocomplete)."""
+        
     collection = models.ForeignKey("DataCollection",on_delete=models.CASCADE,related_name="items")
     source_call = models.ForeignKey("server.AgentTaskCall",on_delete=models.SET_NULL,null=True,blank=True,default=None,related_name="collection_items")
     source_item = models.ForeignKey("self",on_delete=models.SET_NULL,null=True,blank=True,default=None,related_name="derived_items",help_text="The upstream CollectionItem whose propagation created this item")
@@ -37,10 +40,6 @@ class CollectionItem(BaseModel):
     score = models.FloatField(default=0.0)
     value = models.JSONField(default=dict, blank=True)
 
-    observable_fields = set([
-        "pk",
-        "collection"
-    ])
 
     class Meta:
         verbose_name = "Collection Item"
@@ -51,14 +50,6 @@ class CollectionItem(BaseModel):
             models.Index(fields=["score"]),
             models.Index(fields=["collection", "score"]),
         ]
-
-    @property
-    def observable_keys(self):
-        return set([
-            "CollectionItem",
-            f"CollectionItem.pk:{self.pk}",
-            f"CollectionItem.collection:{self.collection_pk}",
-        ])
 
     def __str__(self) -> str:
         return f"[{self.collection.name}] {self.member} (score={self.score})"

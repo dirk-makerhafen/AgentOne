@@ -33,8 +33,9 @@ class SystemConnectionMode(models.TextChoices):
 
 
 class System(BaseModel):
-    """A registered execution environment (local or remote) that agents can use
-    for tool execution."""
+    """A registered execution environment (local or remote) that agents can use for tool execution."""
+    class SystemObservables(Observables):
+        pass
 
     name: str = models.CharField(max_length=255, unique=True)
     description: str = models.TextField(blank=True, default="")

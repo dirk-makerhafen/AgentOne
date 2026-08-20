@@ -15,25 +15,15 @@ class AgentModel(BaseModel):
 
     class AgentModelObservables(Observables):
         """Explicit observable keys for an AgentModel (IDE autocomplete)."""
-
         @property
         def child_agents(self):
             return f"AgentModel.parent_agent:{self.model.pk}"
-
         @property
         def child_skills(self):
             return f"SkillModel.parent_agent:{self.model.pk}"
-
         @property
-        def parent_skill(self):
-            return f"AgentModel.parent_skill:{self.model.parent_skill_id}"
-        @property
-        def parent_agent(self):
-            return f"AgentModel.parent_agent:{self.model.parent_agent_id}"
-        @property
-        def parent_project(self):
-            return f"AgentModel.parent_project:{self.model.parent_project_id}"
-
+        def cron_jobs(self):
+            return f"Cronjob.agent:{self.model.pk}"
 
     name = models.CharField(max_length=255, unique=True)
     latest_agent_version = models.ForeignKey("server.AgentVersionModel",default=None,null=True,on_delete=models.SET_NULL,related_name="related_newest_version")

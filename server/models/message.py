@@ -22,6 +22,13 @@ _JINJA_ENV = Environment(loader=BaseLoader())
 class Message(BaseModel):
     """A single message within a conversation session."""
 
+    class MessageObservables(Observables):
+        """Explicit observable keys for an Message (IDE autocomplete)."""
+        @property
+        def parts(self):
+            return f"MessagePart.message:{self.model.pk}"
+
+
     session = models.ForeignKey( "server.SessionModel", on_delete=models.CASCADE, related_name="related_messages")
     session_version: models.ForeignKey | None = models.ForeignKey( "server.SessionVersionModel", on_delete=models.CASCADE, related_name="related_messages")
 
@@ -36,12 +43,6 @@ class Message(BaseModel):
     hide_from_context: bool = models.BooleanField(default=False)
     pin_to_context: bool = models.BooleanField(default=False)
 
-    class MessageObservables(Observables):
-        """Explicit observable keys for an Message (IDE autocomplete)."""
-
-        @property
-        def parts(self):
-            return f"MessagePart.message:{self.model.pk}"
 
 
     def add_part( self, type: str, content_type: MessageContentType, content: Any, template_data: Any = None, tool_call: Any = None) -> MessagePart:

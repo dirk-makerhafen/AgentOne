@@ -11,6 +11,15 @@ from server.models.skills.skill_version import SkillModelVersion
 class SkillModel(ObservableMixin, models.Model):
     """A skill group that versions its configuration over time."""
 
+    class SkillModelObservables(Observables):
+        """Explicit observable keys for an SkillModel (IDE autocomplete)."""
+        @property
+        def child_agents(self):
+            return f"AgentModel.parent_skill:{self.model.pk}"
+        @property
+        def child_skills(self):
+            return f"SkillModel.parent_skill:{self.model.pk}"
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -20,26 +29,4 @@ class SkillModel(ObservableMixin, models.Model):
     parent_agent = models.ForeignKey("server.AgentModel",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_skills")
     parent_project = models.ForeignKey("server.Project",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_skills")
     parent_skill = models.ForeignKey("self",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_skills")
-
-
-    class SkillModelObservables(Observables):
-        """Explicit observable keys for an SkillModel (IDE autocomplete)."""
-
-        @property
-        def child_agents(self):
-            return f"AgentModel.parent_skill:{self.model.pk}"
-
-        @property
-        def child_skills(self):
-            return f"SkillModel.parent_skill:{self.model.pk}"
-
-        @property
-        def parent_agent(self):
-            return f"SkillModel.parent_agent:{self.model.parent_agent_id}"
-        @property
-        def parent_project(self):
-            return f"SkillModel.parent_project:{self.model.parent_project_id}"
-        @property
-        def parent_skill(self):
-            return f"SkillModel.parent_skill:{self.model.parent_skill_id}"
 

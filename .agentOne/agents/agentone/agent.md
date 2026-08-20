@@ -74,10 +74,6 @@ When writing code:
 - Edge cases considered
 - Minimal dependencies
 
-## Safety Rules
-
-Decline harmful or illegal misuse.
-
 ## Truthfulness Rules
 
 Never claim actions not taken.

@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 AGENT_VERSION_RUNTIME_CLASS_CACHE = LRUCache(maxsize=1024)
 
 
+
 class AgentVersionModel(BaseModel):
     """A versioned snapshot of an agent's configuration."""
 
@@ -120,6 +121,17 @@ class AgentVersionModel(BaseModel):
             session.latest_session_version = session_version
             session.save()
 
+        # Forks/children inherit the parent's session-level settings instead of
+        # silently falling back to the raw agent defaults.  Without this a fork
+        # loses user-configured overrides (auto_compact_limit, preferred api
+        # key, disallowed lists, repeated session settings, ...).
+        if aiv_created and parent_session_version and parent_session_version.session_settings:
+            inherited = self._clone_settings(parent_session_version.session_settings)
+            SessionVersionModel.objects.filter(pk=session_version.pk).update(
+                session_settings=inherited
+            )
+            session_version.session_settings = inherited
+
         if parent_session_version:
             parent_session_version.child_session_versions.add(session_version)
             
@@ -171,6 +183,32 @@ class AgentVersionModel(BaseModel):
                 else:
                     return ext_value
         return value
+
+
+    def _clone_settings(self, settings: "SettingsModel", **overrides: Any) -> "SettingsModel":
+        """Create a fresh immutable SettingsModel row copying *settings'* fields.
+
+        ``SettingsModel`` instances are immutable (``save`` raises once a pk is
+        set), so forks can not share the parent's exact row — a fork must get its
+        own snapshot row with the same field values.  ``overrides`` are applied
+        on top (e.g. ``auto_compact_limit=0`` to stop a fork from re-forking).
+        """
+        clone = SettingsModel()
+        for field in SettingsModel._meta.fields:
+            name = field.name
+            if name in ("id", "created_at", "updated_at"):
+                continue
+            if getattr(field, "auto_created", False):
+                continue
+            try:
+                setattr(clone, field.attname, getattr(settings, field.attname))
+            except Exception:  # pylint: disable=broad-exception-caught
+                continue
+        for name, value in overrides.items():
+            setattr(clone, name, value)
+        clone.save()
+        return clone
+
 
     def collect_system_prompts(self) -> list[str]:
         """Collect all system prompts from this agent and its ancestors.

@@ -14,6 +14,9 @@ class DataCollection(BaseModel):
     reprocess settings) so each collection is self-contained.
     """
 
+    class DataCollectionObservables(Observables):
+        """Explicit observable keys for an DataCollection (IDE autocomplete)."""
+        
     COLLECTION_TYPES = [("stream", "Stream"), ("set", "Ordered Set")]
 
     name = models.CharField(max_length=255, unique=True)

@@ -10,6 +10,11 @@ from django.db import models
 class WorkspaceModel(models.Model):
     """A named workspace bound to a filesystem path."""
 
+    class WorkspaceModelObservables(Observables):
+        @property
+        def cron_jobs(self):
+            return f"Cronjob.workspace:{self.model.pk}"
+
     created_at: datetime = models.DateTimeField(auto_now_add=True)
     updated_at: datetime = models.DateTimeField(auto_now=True)
 

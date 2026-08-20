@@ -284,3 +284,185 @@ class CompactionForkTest(TestCase):
         self.assertEqual(comp.prev_message_id, e.pk)
         f.refresh_from_db()
         self.assertEqual(f.prev_message_id, h.pk)
+
+    def test_fork_flow_inserts_marker_from_child_result(self):
+        """The auto-compaction (fork) path: ``boundary_pk`` + ``result`` where
+        ``result`` is the child's final Message.  The child's summary arrives as
+        a MESSAGE part (``ingest_assistant_message`` converts the child's
+        ``final_result`` TOOLCALL into a MESSAGE part), and the marker lands
+        right after the boundary message."""
+        from runtime.session.session import Session
+
+        a = _msg(self.sv, MessageRole.USER, "a", None)
+        b = _msg(self.sv, MessageRole.USER, "b", a)
+        c = _msg(self.sv, MessageRole.USER, "c", b)
+        d = _msg(self.sv, MessageRole.USER, "d", c)
+
+        # Child session (SUBTASK_FORK) whose last message carries the summary.
+        child_model = SessionModel.objects.create(name="compaction-child", session_type="subtask_fork")
+        child_sv = SessionVersionModel.objects.create(
+            session=child_model,
+            agent=self.agent,
+            pinned_agent_version=self.av,
+        )
+        SessionModel.objects.filter(pk=child_model.pk).update(latest_session_version=child_sv)
+        child_msg = _msg(child_sv, MessageRole.ASSISTANT, "child summary content", None)
+
+        session = Session(session_model=self.session)
+        out = self.ingest.ingest_compaction(
+            session, boundary_pk=c.pk, result=child_msg
+        )
+
+        marker = out["message"]
+        self.assertEqual(marker.prev_message_id, c.pk)
+        d.refresh_from_db()
+        self.assertEqual(d.prev_message_id, marker.pk)
+        self.assertTrue(marker.parts.filter(type=MessagePartType.COMPACTION).exists())
+        comp_text = "".join(
+            str(p.content.get()) for p in marker.parts.all() if p.content
+        )
+        self.assertIn("child summary content", comp_text)
+
+        # Single linear chain with one tail.
+        tails = self._tails()
+        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
+        self.assertEqual(tails[0], d.pk)
+
+    def test_fork_flow_final_result_toolcall_part_extracts_summary(self):
+        """When the child's result message still contains a TOOLCALL part for
+        ``final_result`` (not yet converted), its content argument is used."""
+        from runtime.session.session import Session
+        from server.models.tasks.task_definition import TaskDefinition
+        from server.models.tasks.task_definition_version import TaskDefinitionVersion
+        from server.models.tasks.agent_task_call import AgentTaskCall
+
+        a = _msg(self.sv, MessageRole.USER, "a", None)
+        _msg(self.sv, MessageRole.USER, "b", a)
+
+        td = TaskDefinition.objects.create(name="final_result", group_name="")
+        TaskDefinitionVersion.objects.create(
+            task_definition=td,
+            description="test",
+            function_schema={"type": "object", "properties": {}},
+        )
+        toolcall = AgentTaskCall.objects.create(
+            task_definition=td,
+            session=self.sv.session,
+            session_version=self.sv,
+            carguments_json={},
+            requires_approval=False,
+            max_subtask_errors=0,
+            max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=0,
+            max_retries=0,
+            retry_delay=0,
+            retry_requires_approval=False,
+        )
+        result_msg = Message.objects.create(
+            session=self.sv.session, session_version=self.sv, role=MessageRole.ASSISTANT
+        )
+        result_msg.add_part(
+            type=MessagePartType.MESSAGE,
+            content_type=MessageContentType.TEXT,
+            content="prefix",
+        )
+        result_msg.add_part(
+            type=MessagePartType.TOOLCALL,
+            content_type=MessageContentType.JSON,
+            content={"name": "final_result", "arguments": {}},
+            tool_call=toolcall,
+        )
+        AgentTaskCall.objects.filter(pk=toolcall.pk).update(
+            carguments_json={"content": "summary from final_result"}
+        )
+
+        session = Session(session_model=self.session)
+        out = self.ingest.ingest_compaction(
+            session, boundary_pk=a.pk, result=result_msg
+        )
+
+        marker = out["message"]
+        comp_text = "".join(
+            str(p.content.get()) for p in marker.parts.all() if p.content
+        )
+        self.assertIn("prefix", comp_text)
+        self.assertIn("summary from final_result", comp_text)
+
+
+class ForkSessionSettingsTest(TestCase):
+    """Forks must inherit the parent's session settings, not agent defaults.
+
+    Regression: forks only had the agent's defaults because no session settings
+    were copied onto the child session version.  For a compaction fork this is
+    dangerous — the fork carries the same oversized context that triggered the
+    compaction, so if it inherits ``auto_compact_limit`` it immediately spawns
+    another compaction fork (infinite chain).  ``get_or_create_session`` must
+    clone the parent's settings, and the compaction fork must pin
+    ``auto_compact_limit=0``.
+    """
+
+    def setUp(self):
+        self.agent = AgentModel.objects.create(name="test-agent")
+        self.av = AgentVersionModel.objects.create(
+            agent=self.agent,
+            agent_settings=SettingsModel.objects.create(),
+        )
+        self.session = SessionModel.objects.create(name="parent-session")
+        self.sv = SessionVersionModel.objects.create(
+            session=self.session,
+            agent=self.agent,
+            pinned_agent_version=self.av,
+        )
+        SessionModel.objects.filter(pk=self.session.pk).update(latest_session_version=self.sv)
+        AgentModel.objects.filter(pk=self.agent.pk).update(latest_agent_version=self.av)
+        self.session.refresh_from_db()
+
+    def test_fork_inherits_parent_session_settings(self):
+        """A fork copies the parent's session settings row."""
+        parent_settings = SettingsModel.objects.create(
+            auto_compact_limit=150000,
+            max_retries=3,
+            disallowedTaskNames=["bad_task"],
+        )
+        SessionVersionModel.objects.filter(pk=self.sv.pk).update(
+            session_settings=parent_settings
+        )
+        self.sv.refresh_from_db()
+
+        child_sv = self.av.get_or_create_session(
+            name=f"fork-{self.sv.pk}",
+            parent_session_version=self.sv,
+            session_type="subtask_fork",
+        )
+        self.assertIsNotNone(child_sv.session_settings)
+        self.assertNotEqual(child_sv.session_settings.pk, parent_settings.pk)
+        self.assertEqual(child_sv.session_settings.auto_compact_limit, 150000)
+        self.assertEqual(child_sv.session_settings.max_retries, 3)
+        self.assertEqual(child_sv.session_settings.disallowedTaskNames, ["bad_task"])
+
+        # The parent's row is untouched (immutable snapshot semantics).
+        parent_settings.refresh_from_db()
+        self.assertEqual(parent_settings.auto_compact_limit, 150000)
+
+    def test_fork_without_parent_settings_keeps_agent_defaults(self):
+        """No parent session settings → child stays on agent defaults (None)."""
+        child_sv = self.av.get_or_create_session(
+            name=f"fork-none-{self.sv.pk}",
+            parent_session_version=self.sv,
+            session_type="subtask_delegate",
+        )
+        self.assertIsNone(child_sv.session_settings)
+
+    def test_compaction_fork_pins_auto_compact_limit_zero(self):
+        """The stable knob the compaction fork uses to stop re-forking."""
+        from server.models.agents.agent_version import _clone_settings
+
+        parent_settings = SettingsModel.objects.create(
+            auto_compact_limit=120000,
+            reasoning_effort="medium",
+        )
+        fork_settings = _clone_settings(parent_settings, auto_compact_limit=0)
+        self.assertEqual(fork_settings.auto_compact_limit, 0)
+        self.assertEqual(fork_settings.reasoning_effort, "medium")
+        self.assertNotEqual(fork_settings.pk, parent_settings.pk)

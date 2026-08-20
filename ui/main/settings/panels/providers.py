@@ -63,7 +63,7 @@ class ProviderCardView(ModelView):
 
     def __init__(self, subject: ApiProvider, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self._is_open = False
+        self._is_open = True
         self._keys_revealed = False
 
     @property

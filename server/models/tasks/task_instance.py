@@ -25,6 +25,9 @@ class TaskInstance(BaseModel):
     and references to child instances (for CHAIN/GROUP) and hooks.
     """
 
+    class TaskInstanceObservables(Observables):
+        """Explicit observable keys for an TaskInstance (IDE autocomplete)."""
+        
     task_definition_version = models.ForeignKey("TaskDefinitionVersion",default=None,null=True,on_delete=models.CASCADE,related_name="related_task_instances")
     session = models.ForeignKey("SessionModel",on_delete=models.CASCADE,related_name="related_task_instances")
     session_version = models.ForeignKey("SessionVersionModel",on_delete=models.CASCADE,related_name="related_task_instances")

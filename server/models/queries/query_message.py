@@ -23,19 +23,16 @@ cache = LRUCache(maxsize=50000)
 
 class QueryMessage(BaseModel):
     """A single message within a query, containing one or more parts."""
+    class QueryMessageObservables(Observables):
+        """Explicit observable keys for an QueryMessage (IDE autocomplete)."""
+        @property
+        def parts(self):
+            return f"QueryMessagePart.query_message:{self.model.pk}"
 
     query = models.ForeignKey("server.Query", on_delete=models.CASCADE, related_name="related_query_messages")
     source_message = models.ForeignKey("server.Message",on_delete=models.SET_DEFAULT,related_name="related_query_messages",default=None,null=True)
     role = EnumField(MessageRole, default=None)
-
     tokens = models.IntegerField(default=None, blank=True, null=True)
-
-    class QueryMessageObservables(Observables):
-        """Explicit observable keys for an QueryMessage (IDE autocomplete)."""
-
-        @property
-        def parts(self):
-            return f"QueryMessagePart.query_message:{self.model.pk}"
 
     @property
     def has_toolcalls(self):
@@ -44,13 +41,7 @@ class QueryMessage(BaseModel):
                 return True
         return False
 
-    def add_part(
-        self,
-        content_type: MessageContentType | None = None,
-        content: Any = None,
-        template_data: Any = None,
-        source_message_part: MessagePart | None = None,
-    ) -> QueryMessagePart:
+    def add_part(self, content_type: MessageContentType | None = None, content: Any = None, template_data: Any = None, source_message_part: MessagePart | None = None,) -> QueryMessagePart:
         """Add a part to this query message.
 
         Either provide ``source_message_part`` (copied) or provide
@@ -91,9 +82,7 @@ class QueryMessage(BaseModel):
             source_message_part=source_message_part,
         )
 
-    def to_openai_message(
-        self, requires_reasoning_echo: bool = False, fail_on_error: bool = True
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def to_openai_message(self, requires_reasoning_echo: bool = False, fail_on_error: bool = True) -> dict[str, Any] | list[dict[str, Any]]:
         """Convert this query message to the OpenAI message format."""
         cache_key = f"{self.pk}{requires_reasoning_echo}"
         if item := cache.get(cache_key):

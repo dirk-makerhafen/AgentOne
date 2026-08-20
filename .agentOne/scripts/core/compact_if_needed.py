@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from runtime.session.session import Session
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.queries.response import Response
 
@@ -17,7 +20,7 @@ def compact_if_needed(
     auto_limit = _session.auto_compact_limit
     if auto_limit <= 0 or response.prompt_tokens < auto_limit:
         return dict(response=response, parts=parts, message=message, **kwargs)
-    
+
     compact_task = _session.get_task("compact_turn")
     if not compact_task:
         return dict(response=response, parts=parts, message=message, **kwargs)

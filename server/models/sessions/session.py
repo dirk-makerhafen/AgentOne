@@ -17,26 +17,11 @@ if TYPE_CHECKING:
 class SessionModel(BaseModel):
     """A conversation session that versions its state over time."""
 
-    name = models.CharField(max_length=255)
-    turn_count = models.IntegerField(default=0)
-    unattended_turn_count = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    last_active_at = models.DateTimeField(null=True, blank=True)
-    is_pinned = models.BooleanField(default=False)
-    is_archived = models.BooleanField(default=False)
-    session_type = models.CharField(
-        max_length=30,
-        choices=SessionType.choices,
-        default=SessionType.SESSION,
-    )
-
     class SessionModelObservables(Observables):
         """Explicit observable keys for an SessionModel (IDE autocomplete)."""
-
         @property
         def child_sessions(self):
             return f"SessionModel.parent_session:{self.model.pk}"
-        
         @property
         def messages(self):
             return f"Message.session:{self.model.pk}"
@@ -44,19 +29,18 @@ class SessionModel(BaseModel):
         def queries(self):
             return f"Query.session:{self.model.pk}"
 
-
-    @property
-    def is_permanent(self) -> bool:
-        """True for user sessions and reusable subsessions (not single-use subtasks)."""
-        return self.session_type in (
-            SessionType.SESSION,
-            SessionType.SUBSESSION,
-        )
+    name = models.CharField(max_length=255)
+    turn_count = models.IntegerField(default=0)
+    unattended_turn_count = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    last_active_at = models.DateTimeField(null=True, blank=True)
+    is_pinned = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
+    session_type = models.CharField(max_length=30, choices=SessionType.choices, default=SessionType.SESSION)
 
     parent_session = models.ForeignKey("self",on_delete=models.CASCADE,related_name="child_sessions",default=None,null=True,blank=True)
     parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="child_sessions")
     latest_session_version = models.ForeignKey("server.SessionVersionModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_newest_version")
-
 
     @property
     def messages(self) -> QuerySet:
@@ -67,6 +51,7 @@ class SessionModel(BaseModel):
     def queries(self) -> QuerySet:
         """All queries belonging to this session across all versions."""
         return Query.objects.filter(session_version__session=self)
+
 
     def get_runtime(self) -> Session:
         """Return a runtime Session wrapper for this model."""

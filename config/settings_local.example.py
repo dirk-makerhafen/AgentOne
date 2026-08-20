@@ -57,4 +57,4 @@ Uncomment and change only what you need.
 # HTTP server (used by `manage.py server run`)
 # ---------------------------------------------------------------------------
 # LISTEN_ADDRESS = '0.0.0.0'
-# LISTEN_PORT = '8001'
+# LISTEN_PORT = '7999'

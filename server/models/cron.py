@@ -11,9 +11,11 @@ from server.models.content import GenericContent
 
 class Cronjob(BaseModel):
     """A scheduled job that runs an agent on a recurring schedule."""
-
-    SESSION_MODE_CHOICES = [ ("new", "New session each run"), ("existing", "Reuse existing session"),
-    ]
+    class CronjobObservables(Observables):
+        """Explicit observable keys for an Cronjob (IDE autocomplete)."""
+        pass
+    
+    SESSION_MODE_CHOICES = [ ("new", "New session each run"), ("existing", "Reuse existing session"),]
 
     FUNCTION_TYPE_CHOICES = [ 
         ("", "Send message (ingest_user_message)"), 
@@ -50,20 +52,3 @@ class Cronjob(BaseModel):
     next_run_at: datetime | None = models.DateTimeField(null=True, blank=True, default=None)
     last_status: str = models.CharField(max_length=50, blank=True, default="")
     total_runs: int = models.IntegerField(default=0)
-
-    observable_fields = set([
-        "pk",
-        "agent",
-        "parent_project",
-        "workspace",
-    ])
-
-    @property
-    def observable_keys(self):
-        return set([
-            "Cronjob",
-            f"Cronjob.pk:{self.pk}",
-            f"Cronjob.agent:{self.agent_pk}",
-            f"Cronjob.parent_project:{self.parent_project_pk}",
-            f"Cronjob.workspace:{self.workspace_pk}",
-        ])

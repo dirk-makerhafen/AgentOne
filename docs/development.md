@@ -44,7 +44,7 @@ Key settings you can override in `settings_local.py`:
 | `DATABASES` | SQLite | Switch to MySQL for production |
 | `REDIS_URL` | `redis://localhost:6379/1` | Cache, channels, Celery broker |
 | `LISTEN_ADDRESS` | `0.0.0.0` | Daphne bind address |
-| `LISTEN_PORT` | `8001` | Daphne TLS port |
+| `LISTEN_PORT` | `7999` | Daphne TLS port |
 
 No secrets are stored in version control — `settings_local.py` is gitignored.
 
@@ -63,7 +63,7 @@ No secrets are stored in version control — `settings_local.py` is gitignored.
 | MySQL password | *(blank for no password)* | Only asked if user is non-empty |
 | **Redis URL** | `redis://localhost:6379/1` | Cache, channels, Celery broker |
 | **HTTP listen address** | `0.0.0.0` | Daphne bind address |
-| **HTTP listen port** | `8001` | Daphne TLS port |
+| **HTTP listen port** | `7999` | Daphne TLS port |
 | **Generate TLS cert** | Yes | Creates `cert.pem` + `key.pem` (self-signed) |
 | **Create superuser** | Yes | Only shown if no superuser exists |
 | Admin username | `admin` | |

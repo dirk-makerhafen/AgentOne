@@ -36,6 +36,9 @@ class AgentTaskRun(BaseModel):
     Captures resolved arguments, the runtime result, status transitions,
     and references to other runs/calls used in arguments or results.
     """
+    class AgentTaskRunObservables(Observables):
+        """Explicit observable keys for an AgentTaskRun (IDE autocomplete)."""
+        
 
     agent_task_call = models.ForeignKey("AgentTaskCall",on_delete=models.CASCADE,related_name="related_agent_task_runs",)
     task_instance = models.ForeignKey("TaskInstance",on_delete=models.CASCADE,related_name="related_agent_task_runs",default=None,null=True,)

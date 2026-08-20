@@ -49,7 +49,7 @@ class Command(BaseCommand):
         db_config = self._ask_database()
         redis_url = self._ask("Redis URL", "redis://localhost:6379/1")
         listen_addr = self._ask("HTTP listen address", "0.0.0.0")
-        listen_port = self._ask("HTTP listen port", "8001")
+        listen_port = self._ask("HTTP listen port", "7999")
         secret_key = secrets.token_urlsafe(50)
         client_key = secrets.token_urlsafe(16)
 
@@ -274,7 +274,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("--- AgentOne Server ---"))
 
         listen_address = getattr(settings, 'LISTEN_ADDRESS', '0.0.0.0')
-        listen_port = getattr(settings, 'LISTEN_PORT', '8001')
+        listen_port = getattr(settings, 'LISTEN_PORT', '7999')
 
         self.stdout.write(f"Starting server components...")
         self.stdout.write(f" - Daphne listening on: {self.style.SUCCESS(listen_address + ':' + listen_port)}")

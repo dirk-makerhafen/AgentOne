@@ -98,7 +98,7 @@ sudo supervisorctl start agentone-server
 
 ```nginx
 upstream agentone {
-    server 127.0.0.1:8001;
+    server 127.0.0.1:7999;
 }
 
 server {

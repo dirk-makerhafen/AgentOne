@@ -33,7 +33,6 @@ models.Model
   │
   ├── GenericContent                           # Content-addressed storage
   ├── Cronjob                                  # Scheduled cron jobs
-  ├── HistoryLimitingRule                      # Tool usage limits
   ├── Project                                  # Project grouping
   ├── SkillModel                               # Skill (no versioning)
   ├── DataCollection                           # Stream / ordered set
@@ -596,21 +595,6 @@ File: `server/models/system.py`
 | `executor_mode` | `CharField(choices)` | LOCAL / HTTP / WEBSOCKET |
 | `executor_url` | `URLField(1024)` | |
 | `executor_api_key` | `CharField(255)` | |
-
-### HistoryLimitingRule
-
-File: `server/models/history_limit.py`
-
-| Field | Type | Notes |
-|---|---|---|
-| `agent` | `FK(AgentModel, CASCADE)` | Target agent |
-| `group_name` | `CharField(255, default="default")` | Tool group |
-| `rule_name` | `CharField(255)` | Rule name |
-| `description` | `TextField` | |
-| `limit_success` | `PositiveIntegerField(nullable)` | |
-| `limit_failed` | `PositiveIntegerField(nullable)` | |
-| `limit_pending` | `PositiveIntegerField(nullable)` | |
-| `limit_max` | `PositiveIntegerField(nullable)` | |
 
 **Unique**: `(agent, group_name, rule_name)`
 
