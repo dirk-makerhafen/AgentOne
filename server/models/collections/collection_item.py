@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from django.db import models
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 
 
 class CollectionItem(BaseModel):

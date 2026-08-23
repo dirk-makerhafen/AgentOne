@@ -52,12 +52,11 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
     # *this* compaction — so it would immediately exceed the auto-compact
     # limit itself and spawn yet another compaction fork (infinite chain).
     # Fork off the inherited session settings but pin auto_compact_limit to 0.
-    from server.models.agents.agent_version import _clone_settings
     from server.models.settings import SettingsModel
     from server.models.sessions.session_version import SessionVersionModel
 
     if child_sv.session_settings:
-        fork_settings = _clone_settings(child_sv.session_settings, auto_compact_limit=0)
+        fork_settings = agent_version.clone_settings(child_sv.session_settings, auto_compact_limit=0)
     else:
         fork_settings = SettingsModel(auto_compact_limit=0)
         fork_settings.save()

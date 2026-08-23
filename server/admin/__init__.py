@@ -41,7 +41,7 @@ from .message_part_admin import MessagePartAdmin
 
 # Misc admins
 from .debug_log_entry_admin import DebugLogEntryAdmin
-from .history_limit_admin import HistoryLimitAdmin
+
 
 # Query admins
 from .queries.query_admin import QueryAdmin

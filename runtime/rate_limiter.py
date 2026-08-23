@@ -59,6 +59,22 @@ class RateLimitChecker:
     """
 
     @staticmethod
+    def _current_taskrun_id(session) -> int | None:
+        """The id of the run currently being executed by *session*, if any.
+
+        ``AgentTaskRun.apply()`` stamps ``session._current_taskrun = self``
+        before running the task body, and ``RunScheduler._apply_async`` has
+        already transitioned that run to ``ACTIVE`` by then.  Excluding it
+        from the parallel-call counts prevents the admission check from
+        counting the very call it is deciding on.
+        """
+        current = getattr(session, "_current_taskrun", None)
+        if current is None:
+            return None
+        pk = getattr(current, "pk", None)
+        return int(pk) if pk is not None else None
+
+    @staticmethod
     def check(aimodel: "AiModel", session=None) -> RateLimitResult:
         """Check all rate-limit tiers and return the best available API key.
 
@@ -67,13 +83,17 @@ class RateLimitChecker:
         on* (no rotation to a sibling key of the same provider); auto-failover
         or an exceeded max-wait rotates to the next ready key instead.
         """
-        # 1. Provider parallel limit
-        limited, reason = aimodel.api_provider.is_rate_limited()
+        exclude = RateLimitChecker._current_taskrun_id(session)
+
+        # 1. Provider limits — per-API-key for keyed providers.  The aggregate
+        #    gate trips only when EVERY enabled key is at its own cap, so a
+        #    busy key never blocks a free sibling.
+        limited, reason = aimodel.api_provider.is_rate_limited(exclude_taskrun_id=exclude)
         if limited:
             raise RateLimitError(f"provider:{reason}")
 
         # 2. Model-level limits
-        limited, reason = aimodel.is_rate_limited()
+        limited, reason = aimodel.is_rate_limited(exclude_taskrun_id=exclude)
         if limited:
             raise RateLimitError(f"model:{reason}")
 
@@ -107,12 +127,17 @@ class RateLimitChecker:
         ready key of the same provider is selected and adopted.
         """
         current = session.current_provider_api_key(aimodel)
+        provider = aimodel.api_provider
 
         if current is not None:
             limited, reason = current.is_rate_limited()
             if not limited:
-                return RateLimitResult(selected_key=current)
-            # Current key is cooling — decide whether we may rotate.
+                # Also honor provider per-key caps for the sticky key.
+                prov_limited, prov_reason = provider.is_rate_limited(apikey=current)
+                if not prov_limited:
+                    return RateLimitResult(selected_key=current)
+                limited, reason = prov_limited, prov_reason
+            # Current key is cooling / provider-capped — decide whether we may rotate.
             if session.key_failover_policy().switch_now(
                 RateLimitChecker._key_wait_seconds(current)
             ):
@@ -135,19 +160,25 @@ class RateLimitChecker:
     def _select_key(aimodel: "AiModel", exclude: "ApiKey | None" = None) -> "ApiKey | None":
         """
         From all enabled keys for this model's provider, return the one with
-        the fewest currently ACTIVE queries — i.e. the least-loaded key.
-        Keys that are individually rate-limited are excluded.
+        the fewest currently ACTIVE queries — i.e. the least-loaded key that
+        is neither individually rate-limited nor at its provider per-key cap.
         """
         from server.models.queries.query import Query
 
-        keys = list(aimodel.api_provider.api_keys.filter(enabled=True))
+        provider = aimodel.api_provider
+        keys = list(provider.api_keys.filter(enabled=True))
         if not keys:
             return None
 
-        available = [
-            k for k in keys
-            if k.pk != (exclude.pk if exclude is not None else None) and not k.is_rate_limited()[0]
-        ]
+        available = []
+        for k in keys:
+            if k.pk == (exclude.pk if exclude is not None else None):
+                continue
+            if k.is_rate_limited()[0]:
+                continue
+            if provider.is_rate_limited(apikey=k)[0]:
+                continue
+            available.append(k)
         if not available:
             return None
 

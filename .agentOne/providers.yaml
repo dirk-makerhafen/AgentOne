@@ -141,7 +141,7 @@ providers:
   free_info:
     api_key_url: https://opencode.ai/auth
     default_api_key: public
-    RPD: 100
+    RPD: 1000
     setup_instructions: 'Create an OpenCode Zen account. 
       Sign up at opencode.ai/auth — no billing details required. 
       Get your API key from the workspace Keys page. 

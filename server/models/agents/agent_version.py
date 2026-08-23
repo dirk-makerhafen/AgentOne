@@ -126,7 +126,7 @@ class AgentVersionModel(BaseModel):
         # loses user-configured overrides (auto_compact_limit, preferred api
         # key, disallowed lists, repeated session settings, ...).
         if aiv_created and parent_session_version and parent_session_version.session_settings:
-            inherited = self._clone_settings(parent_session_version.session_settings)
+            inherited = self.clone_settings(parent_session_version.session_settings)
             SessionVersionModel.objects.filter(pk=session_version.pk).update(
                 session_settings=inherited
             )
@@ -185,7 +185,7 @@ class AgentVersionModel(BaseModel):
         return value
 
 
-    def _clone_settings(self, settings: "SettingsModel", **overrides: Any) -> "SettingsModel":
+    def clone_settings(self, settings: "SettingsModel", **overrides: Any) -> "SettingsModel":
         """Create a fresh immutable SettingsModel row copying *settings'* fields.
 
         ``SettingsModel`` instances are immutable (``save`` raises once a pk is

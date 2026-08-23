@@ -456,13 +456,12 @@ class ForkSessionSettingsTest(TestCase):
 
     def test_compaction_fork_pins_auto_compact_limit_zero(self):
         """The stable knob the compaction fork uses to stop re-forking."""
-        from server.models.agents.agent_version import _clone_settings
 
         parent_settings = SettingsModel.objects.create(
             auto_compact_limit=120000,
             reasoning_effort="medium",
         )
-        fork_settings = _clone_settings(parent_settings, auto_compact_limit=0)
+        fork_settings = self.av.clone_settings(parent_settings, auto_compact_limit=0)
         self.assertEqual(fork_settings.auto_compact_limit, 0)
         self.assertEqual(fork_settings.reasoning_effort, "medium")
         self.assertNotEqual(fork_settings.pk, parent_settings.pk)

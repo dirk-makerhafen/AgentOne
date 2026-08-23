@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from django.db import models
+from server.models.base_model import BaseModel, Observables
 
 
 class WorkspaceModel(models.Model):

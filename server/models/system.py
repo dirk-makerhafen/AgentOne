@@ -5,7 +5,7 @@ from datetime import datetime
 
 from django.db import models
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 
 
 class SystemStatus(models.TextChoices):

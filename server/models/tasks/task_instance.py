@@ -10,7 +10,7 @@ from django.db import models
 from sortedm2m.fields import SortedManyToManyField
 
 from runtime.context_manager import ContextTracker
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 

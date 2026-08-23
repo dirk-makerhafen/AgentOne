@@ -20,17 +20,11 @@ QUOTA_EXHAUSTED_COOLDOWN_SECONDS = 3600
 """Long default when the limit reads like quota exhaustion (no retry will help
 until the window resets — e.g. OpenCode Zen's daily quota)."""
 
-MAX_COOLDOWN_SECONDS = 3600
+MAX_COOLDOWN_SECONDS = 3600  
 """Ceiling for the escalating backoff (1 hour)."""
 
-QUOTA_REASON_PATTERNS = ("quota", "insufficient", "resource exhausted",
-                          "daily limit", "exceeded your daily")
+QUOTA_REASON_PATTERNS = ("quota", "insufficient", "resource exhausted", "daily limit", "exceeded your daily")
 
-
-def _looks_like_quota(reason: str) -> bool:
-    """Best-effort detection of quota exhaustion from a 429 message."""
-    message = (reason or "").lower()
-    return any(pattern in message for pattern in QUOTA_REASON_PATTERNS)
 
 
 class ApiKey(BaseModel):
@@ -39,7 +33,6 @@ class ApiKey(BaseModel):
     api_provider = models.ForeignKey("server.ApiProvider", on_delete=models.CASCADE, related_name="api_keys")
     comment = models.CharField(max_length=512, default="", null=True)
     key = models.CharField(max_length=512)
-
     enabled = models.BooleanField(default=True)
 
     # 0 = unlimited
@@ -58,12 +51,6 @@ class ApiKey(BaseModel):
     # escalating backoff: each new 429 after an ``rate_limit_until`` that has
     # already passed (re-slammed while still throttling) multiplies the wait.
     rate_limit_hits = models.IntegerField(default=0)
-
-    observable_fields = set([
-        "pk",
-        "api_provider",
-        "rate_limit_until",
-    ])
 
     @property
     def total_llm_queries(self) -> int:
@@ -91,14 +78,6 @@ class ApiKey(BaseModel):
         """Return the related Query queryset for this API key."""
         return self.related_queries  # pyright: ignore[reportAttributeAccessIssue]
 
-    @property
-    def observable_keys(self):
-        return set([
-            "ApiKey",
-            f"ApiKey.pk:{self.pk}",
-            f"ApiKey.api_provider:{self.api_provider_pk}",
-        ]
-        )
     def record_provider_cooldown(self, retry_after_seconds: float | None, *, reason: str = "") -> float:
         """Park this key until the provider's requested cooldown passes.
 
@@ -125,7 +104,7 @@ class ApiKey(BaseModel):
         if not base or base <= 0:
             base = (
                 QUOTA_EXHAUSTED_COOLDOWN_SECONDS
-                if _looks_like_quota(reason)
+                if self._looks_like_quota(reason)
                 else DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS
             )
         # level is 0-based; 4+ consecutive hits stop growing (8x ceiling).
@@ -159,6 +138,13 @@ class ApiKey(BaseModel):
             query__apikey=self, status="SUCCESS", created_at__gte=since
         ).count()
 
+    def requests_last_hour(self) -> int:
+        """Number of successful responses in the last 60 minutes for this key."""
+        since = timezone.now() - timedelta(minutes=60)
+        return Response.objects.filter(
+            query__apikey=self, status="SUCCESS", created_at__gte=since
+        ).count()
+
     def requests_today(self) -> int:
         """Number of successful responses since midnight today for this key."""
         today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -169,6 +155,14 @@ class ApiKey(BaseModel):
     def tokens_last_minute(self) -> int:
         """Total tokens (prompt + completion) in last 60 seconds for this key."""
         since = timezone.now() - timedelta(seconds=60)
+        result = Response.objects.filter(
+            query__apikey=self, status="SUCCESS", created_at__gte=since
+        ).aggregate(total=Sum("prompt_tokens") + Sum("completion_tokens"))
+        return result["total"] or 0
+
+    def tokens_last_hour(self) -> int:
+        """Total tokens (prompt + completion) in the last 60 minutes for this key."""
+        since = timezone.now() - timedelta(minutes=60)
         result = Response.objects.filter(
             query__apikey=self, status="SUCCESS", created_at__gte=since
         ).aggregate(total=Sum("prompt_tokens") + Sum("completion_tokens"))
@@ -227,14 +221,13 @@ class ApiKey(BaseModel):
 
         Note: calls waiting on the model limit show up in ``AiModel.pending_calls()``.
         """
-        from server.models.tasks.agent_task_call import (
-            AgentTaskCall,
-            pending_rate_limit_call_ids,
-        )
+        from server.models.tasks.agent_task_call import (AgentTaskCall, pending_rate_limit_call_ids)
+        return AgentTaskCall.objects.filter(pk__in=pending_rate_limit_call_ids(provider_id=self.api_provider_id)).order_by("created_at")
 
-        return AgentTaskCall.objects.filter(
-            pk__in=pending_rate_limit_call_ids(provider_id=self.api_provider_id)
-        ).order_by("created_at")
+    def _looks_like_quota(self, reason: str) -> bool:
+        """Best-effort detection of quota exhaustion from a 429 message."""
+        message = (reason or "").lower()
+        return any(pattern in message for pattern in QUOTA_REASON_PATTERNS)
 
     def __str__(self) -> str:
         return f"ApiKey:{self.comment or self.pk} ({self.api_provider})"

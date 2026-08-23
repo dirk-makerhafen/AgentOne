@@ -5,7 +5,7 @@ from typing import Any
 from django.db import models
 from django_enum import EnumField
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 
 
 class ResponseStatus(models.TextChoices):
@@ -21,7 +21,7 @@ class Response(BaseModel):
     """Stores the result of a single LLM query including token usage and timing."""
     class ResponseObservables(Observables):
         """Explicit observable keys for an Response (IDE autocomplete)."""
-        
+
     query = models.ForeignKey("Query", null=True, on_delete=models.CASCADE, related_name="related_response")
 
     session = models.ForeignKey("server.SessionModel", on_delete=models.CASCADE, related_name="related_response")

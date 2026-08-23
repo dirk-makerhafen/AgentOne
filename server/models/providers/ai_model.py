@@ -135,26 +135,39 @@ class AiModel(BaseModel):
         ).aggregate(total=Sum("prompt_tokens") + Sum("completion_tokens"))
         return result["total"] or 0
 
-    def active_call_count(self) -> int:
-        """Number of runs currently ACTIVE for this model across all keys."""
+    def active_call_count(self, exclude_taskrun_id: int | None = None) -> int:
+        """Number of runs currently ACTIVE for this model across all keys.
+
+        ``exclude_taskrun_id`` optionally skips a run — the admission check
+        inside ``RateLimitChecker`` runs from an already-``ACTIVE`` task run,
+        so without this the checker counts *itself* against the parallel cap
+        and a single call at ``limit_parallel_calls=1`` deadlocks.
+        """
         from server.models.enums.task_enums import TaskRunStatus
         from server.models.tasks.agent_task_run import AgentTaskRun
 
+        qs = AgentTaskRun.objects.filter(status=TaskRunStatus.ACTIVE)
+        if exclude_taskrun_id is not None:
+            qs = qs.exclude(pk=exclude_taskrun_id)
+
         count = 0
-        for run in AgentTaskRun.objects.filter(status=TaskRunStatus.ACTIVE):
+        for run in qs:
             aimodel = run.session_version.unresolved_aimodel()
             if aimodel is not None and aimodel.pk == self.pk:
                 count += 1
         return count
 
-    def is_rate_limited(self) -> tuple[bool, str]:
+    def is_rate_limited(self, exclude_taskrun_id: int | None = None) -> tuple[bool, str]:
         """Check all model-level limits.
+
+        ``exclude_taskrun_id`` forwards to :meth:`active_call_count` so the
+        run performing the admission check is not counted against itself.
 
         Returns:
             A tuple ``(is_limited, reason)`` where ``reason`` is empty when not limited.
         """
         if self.limit_parallel_calls > 0:
-            active = self.active_call_count()
+            active = self.active_call_count(exclude_taskrun_id=exclude_taskrun_id)
             if active >= self.limit_parallel_calls:
                 return True, f"parallel_calls:{active}/{self.limit_parallel_calls}"
 
@@ -192,14 +205,8 @@ class AiModel(BaseModel):
 
     def pending_calls(self):
         """All AgentTaskCalls waiting due to this model's rate limits, FIFO order."""
-        from server.models.tasks.agent_task_call import (
-            AgentTaskCall,
-            pending_rate_limit_call_ids,
-        )
-
-        return AgentTaskCall.objects.filter(
-            pk__in=pending_rate_limit_call_ids(model_id=self.pk)
-        ).order_by("created_at")
+        from server.models.tasks.agent_task_call import (AgentTaskCall, pending_rate_limit_call_ids)
+        return AgentTaskCall.objects.filter(pk__in=pending_rate_limit_call_ids(model_id=self.pk)).order_by("created_at")
 
     def __str__(self) -> str:
         return "Model:" + self.name
