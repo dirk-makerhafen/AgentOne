@@ -845,6 +845,8 @@ class CallScheduler:
         from server.models.tasks.agent_task_run import AgentTaskRun
 
         run = AgentTaskRun.objects.get(pk=taskrun_id)
+        if not run:
+            return
         call = run.agent_task_call
         print("on_taskrun_ended", taskrun_status, run, call)
 
@@ -876,6 +878,8 @@ class CallScheduler:
                 hook_arguments = run
                 for i, hook_instance in enumerate(after_hooks):
                     hook_instance: TaskInstance
+                    if not hook_instance:
+                        return
                     print(
                         f"  -> Launching after_run hook "
                         f"{hook_instance.task_definition_version.name} "
@@ -1067,6 +1071,8 @@ class CallScheduler:
                 )
                 for i, callback_instance in enumerate(callback_instances):
                     callback_instance: TaskInstance
+                    if not callback_instance:
+                        continue
                     print(
                         f"  -> Launching taskcall_on_error_callback "
                         f"{callback_instance.task_definition_version.name} "

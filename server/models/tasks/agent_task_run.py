@@ -103,11 +103,20 @@ class AgentTaskRun(BaseModel):
         task_name = agent_task_call.task_definition.name
 
         if task_type == TaskType.TASK:
-            task_definition_version = session.get_task(task_name).task_definition_version
+            t = session.get_task(task_name)
+            if not t:
+                return None
+            task_definition_version = t.task_definition_version
         elif task_type == TaskType.TOOL:
-            task_definition_version = session.get_tool(task_name).task_definition_version
+            t = session.get_tool(task_name)
+            if not t:
+                return None
+            task_definition_version = t.task_definition_version
         elif task_type == TaskType.COMMAND:
-            task_definition_version = session.get_command(task_name).task_definition_version
+            t = session.get_command(task_name)
+            if not t:
+                return None
+            task_definition_version = t.task_definition_version
         else:
             task_definition_version = agent_task_call.task_definition_version
 

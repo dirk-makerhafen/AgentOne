@@ -35,6 +35,7 @@ Celery beat config (settings.py):
 
 from __future__ import annotations
 
+import traceback
 from typing import Any
 
 from celery import shared_task
@@ -81,7 +82,7 @@ def _release_queued_calls() -> None:
                 continue
             CallScheduler.start_new_taskrun(call.pk)
         except Exception as e:
-            print(f"[scheduler] error releasing queued call {call.pk}: {e}")
+            print(f"[scheduler] error releasing queued call {call.pk}: {e} {traceback.format_exc()}")
 
 
 def _has_dangling_call_refs(json_data: Any) -> bool:

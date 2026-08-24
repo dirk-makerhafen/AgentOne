@@ -13,6 +13,8 @@ class TaskRunSerializer(serializers.ModelSerializer):
                   'priority', 'ended_at', 'created_at', 'updated_at']
 
     def get_task_name(self, obj) -> str | None:
+        if not obj:
+            return None
         tdv = obj.task_definition_version
         return tdv.task_definition.name if tdv and tdv.task_definition else None
 
@@ -29,6 +31,8 @@ class TaskCallListSerializer(serializers.ModelSerializer):
                   'ended_at', 'created_at', 'updated_at']
 
     def get_task_name(self, obj) -> str | None:
+        if not obj:
+            return None
         tdv = obj.task_definition_version
         return tdv.task_definition.name if tdv and tdv.task_definition else None
 
@@ -54,6 +58,8 @@ class TaskCallDetailSerializer(serializers.ModelSerializer):
                   'ended_at', 'runs', 'created_at', 'updated_at']
 
     def get_task_name(self, obj) -> str | None:
+        if not obj:
+            return None
         tdv = obj.task_definition_version
         return tdv.task_definition.name if tdv and tdv.task_definition else None
 

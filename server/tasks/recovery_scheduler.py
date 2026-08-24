@@ -19,6 +19,7 @@ The one-time startup cleanup moved to ``tasks.startup_cleanup``
 from __future__ import annotations
 
 import datetime
+import traceback
 from typing import Any
 
 from celery import shared_task
@@ -71,7 +72,7 @@ def _release_queued_calls() -> None:
                 continue
             CallScheduler.start_new_taskrun(call.pk)
         except Exception as e:
-            print(f"[recovery] error releasing queued call {call.pk}: {e}")
+            print(f"[recovery] error releasing queued call {call.pk}: {e}  {traceback.format_exc()}")
 
 
 def _timeout_active_runs() -> None:
