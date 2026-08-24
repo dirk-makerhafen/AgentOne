@@ -7,6 +7,8 @@ from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.enums.session_enums import SessionType
 from server.models.message import Message
+from server.models.sessions.session_version import SessionVersionModel
+from server.models.settings import SettingsModel
 
 
 def ingest_next(_session: Session, limit: int = 1) -> str:
@@ -57,6 +59,13 @@ def ingest_file(_session: Session, path: str) -> None:
         parent_session_version=_session.get_version_model(),
         session_type=SessionType.SUBTASK_DELEGATE,
     )
+    # Fork inherits parent's session settings (auto_compact_limit, api key, disallowed lists, etc.)
+    parent_sv = _session.get_version_model()
+    if parent_sv and parent_sv.session_settings:
+        fork_settings = subagent_version.clone_settings(parent_sv.session_settings)
+        child_sv.session_settings = fork_settings
+        SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=fork_settings)
+       
     child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
