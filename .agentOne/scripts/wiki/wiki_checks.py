@@ -1100,11 +1100,7 @@ def _extract_date_from_path(rel_path: str) -> str:
     return ""
 
 
-def wiki_find_unlinked_raw(
-    _session: Any,
-    folder: str | None = None,
-    limit: int = 20,
-) -> tuple[bool, dict]:
+def wiki_find_unlinked_raw(_session: Any, folder: str | None = None, limit: int = 20, **kwargs) -> tuple[bool, dict]:
     """Find raw files that are never referenced from any wiki page.
 
     Scans all ``.md`` files under ``raw/`` and cross-references them

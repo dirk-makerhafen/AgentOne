@@ -1,17 +1,14 @@
 
 from __future__ import annotations
 from datetime import datetime
-import json
-
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.sessions.session_version import SessionVersionModel
-from server.models.settings import SettingsModel
 
 
-def ingest_next(_session: Session, limit: int = 1) -> str:
+def ingest_next(_session: Session, limit: int = 1) -> str|list:
     """
     ingest next unlinked raw item into the wiki
 
@@ -22,12 +19,20 @@ def ingest_next(_session: Session, limit: int = 1) -> str:
     Returns:
         A response message 
     """
-    success, res = _session.get_tool("find_unlinked_raw").call(limit=limit)
-    if not success:
-        return json.dumps(res)
-    if res["items"]:
+    prev_result = None
+    results = []
+    for _ in range(limit):
+        unlinked_raw_results = _session.get_tool("find_unlinked_raw").delay(limit=1, prev=prev_result)
+        prev_result          = _session.get_task("ingest_unlinked_raw_results").delay(result=unlinked_raw_results)
+        results.append(prev_result)
+    return results
+
+
+def ingest_unlinked_raw_results(_session: Session, result: dict, **kwargs) -> str|list:
+    success, data = result
+    if data["items"]:
         results = []
-        for item in res["items"]:
+        for item in data["items"]:
             results.append({
                 "path": item["file"], 
                 "result": _session.get_command("ingest_file").delay(path=item["file"])
@@ -83,14 +88,9 @@ def ingest_file(_session: Session, path: str) -> None:
         },
     ])
 
-    verification_result = child_session.get_task("verify").delay(
-        message=ingest_result_message, 
-        path=path
-    )
+    verification_result = child_session.get_task("verify").delay(message=ingest_result_message, path=path)
 
-    final_result = child_session.get_task("ingest_verification_result").delay(
-        verification_result=verification_result, 
-    )
+    final_result = child_session.get_task("ingest_verification_result").delay(verification_result=verification_result)
 
     return final_result
 

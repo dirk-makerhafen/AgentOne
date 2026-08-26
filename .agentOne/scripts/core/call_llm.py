@@ -10,8 +10,6 @@ import time
 import traceback
 from typing import Any
 
-from litellm.router import Router
-
 from runtime.session.session import Session
 from runtime.tool_argument_utils import normalize_tool_arguments
 from server.models.settings import AgentToolCallSyntax
@@ -45,8 +43,11 @@ def _is_provider_rate_limit(exc) -> bool:
     * Vertex AI wraps 429 quota errors as ``BadRequestError`` with the real
       status embedded in the JSON body (``"code": 429``,
       ``"RESOURCE_EXHAUSTED"``).  We match on the string representation.
+    * ``litellm.Timeout`` — the stream timed out waiting for the next chunk
+      (e.g. a model accepted the request but never streamed back).  Treated
+      as transient so the caller can try the next sibling provider.
 
-    Both are transient "retry later" signals: the caller records a key
+    All are transient "retry later" signals: the caller records a key
     cooldown and parks the call instead of hard-failing it.
     """
     status = getattr(exc, "status_code", None)
@@ -61,6 +62,7 @@ def _is_provider_rate_limit(exc) -> bool:
         (
             litellm.exceptions.RateLimitError,
             litellm.exceptions.ServiceUnavailableError,
+            litellm.Timeout,
         ),
     ):
         return True
@@ -71,6 +73,7 @@ def _is_provider_rate_limit(exc) -> bool:
             (
                 litellm.exceptions.RateLimitError,
                 litellm.exceptions.ServiceUnavailableError,
+                litellm.Timeout,
             ),
         ):
             return True
@@ -156,49 +159,6 @@ def _get_litellm_model_name(provider: Any, api_model_id: str) -> str:
     return f"openai/{api_model_id}"
 
 
-_DEFAULT_STREAM_TIMEOUT = 120
-_DEFAULT_TIMEOUT = 1800
-
-def _build_router(
-    model_name: str,
-    api_key: str,
-    api_base: str | None = None,
-    stream_timeout: int | float | None = None,
-    timeout: int | float | None = None,    
-) -> Router:
-    """Create a per-request :class:`Router` with ``stream_timeout``.
-
-    ``litellm.completion()`` ignores ``stream_timeout`` — it only accepts a
-    single ``timeout`` kwarg that covers the *entire* request including all
-    streaming chunks.  The Router resolves ``stream_timeout`` from its
-    ``litellm_params`` and converts it to the per-chunk timeout that LiteLLM
-    actually needs.
-
-    We build a throwaway Router per call because each request targets a
-    different model/provider/key and the overhead is negligible vs the LLM
-    latency.
-    """
-    litellm_params: dict[str, Any] = {
-        "model": model_name,
-        "api_key": api_key,
-    }
-    if api_base:
-        litellm_params["api_base"] = api_base
-    if stream_timeout is not None:
-        litellm_params["stream_timeout"] = stream_timeout
-    if timeout is not None:
-        litellm_params["timeout"] = timeout
-
-
-    return Router(
-        model_list=[{
-            "model_name": model_name,
-            "litellm_params": litellm_params,
-        }],
-        stream_timeout=stream_timeout,
-    )
-
-
 def run_streaming_query(
     session: Session,
     tools: list[dict[Any, Any]],
@@ -227,29 +187,22 @@ def run_streaming_query(
     api_provider = aimodel.api_provider if aimodel and aimodel.api_provider else None
     api_model_id = aimodel.provider_model_id or aimodel.name if aimodel else ""
     model_name = _get_litellm_model_name(api_provider, api_model_id)
-    api_key = query.apikey.key if query.apikey else (api_provider.data or {}).get("default_api_key", "") if api_provider else ""
-    api_base = api_provider.url if api_provider is not None and not (api_provider.litellm_prefix or "").strip() else None
-
-    router = _build_router(
-        model_name=model_name,
-        api_key=api_key,
-        api_base=api_base,
-        stream_timeout=_DEFAULT_STREAM_TIMEOUT,
-        timeout = _DEFAULT_TIMEOUT,
-    )
-
-    args: dict[str, Any] = dict(
+    args = dict(
+        model=model_name,
         messages=messages,
         stream=True,
         stream_options={"include_usage": True},
+        api_key=query.apikey.key if query.apikey else (api_provider.data or {}).get("default_api_key", "") if api_provider else "",
     )
     if aimodel and aimodel.supports_reasoning:
         args["reasoning_effort"] = session.reasoning_effort
+    if api_provider is not None and not (api_provider.litellm_prefix or "").strip():
+        args["api_base"] = api_provider.url
     if tools:
         args["tools"] = tools
         args["tool_choice"] = "auto"
     try:
-        stream = router.completion(model=model_name, **args)
+        stream = litellm.completion(**args, timeout=1800)
         repeat_count = 0
         for event in stream:
             if repeat_count >= 5:
