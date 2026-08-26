@@ -50,6 +50,18 @@ models:
       NIM, Kilo Code, OpenRouter and Ollama Cloud. 1M-token context, reasoning
       and tool calling. Open weights. Text only.
 
+  - name: Nemotron 3 Super 120B A12B
+    family: nemotron
+    context_length: 1000000
+    max_response_tokens: 65536
+    supports_reasoning: true
+    supports_tool_call: true
+    open_weights: true
+    total_parameters: 120
+    active_parameters: 12
+    description: >-
+      pass
+
   - name: Gemini 3.6 Flash
     family: gemini
     context_length: 1000000

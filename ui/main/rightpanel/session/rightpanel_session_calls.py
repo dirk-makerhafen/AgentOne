@@ -74,7 +74,7 @@ class CallNodeView(ModelView):
         {% endif %}
         <div style="flex:1;min-width:min-content">
             <div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pyview.subject.task_definition.name }}:{{pyview.subject.pk}}</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:1px">{{ pyview.time_label }}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:1px">{{ pyview.time_label }} - {{pyview.time_label_ended_at}}</div>
         </div>
         {% if pyview.is_active %}
         <span class="session-state-indicator is-streaming" style="visibility:visible;flex-shrink:0;width:8px;height:8px"></span>
@@ -97,6 +97,12 @@ class CallNodeView(ModelView):
             return self.subject.created_at.strftime("%H:%M:%S")
         return ""
 
+    @property
+    def time_label_ended_at(self) -> str:
+        if self.subject.ended_at:
+            return self.subject.ended_at.strftime("%H:%M:%S")
+        return ""
+    
     @property
     def is_active(self) -> bool:
         return self.subject.status_detail in _ACTIVE_DETAILS

@@ -68,7 +68,7 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_BEAT_SCHEDULE = {
     'agentone-scheduler': {
         'task': 'tasks.tick_scheduler',
-        'schedule': 15,  # seconds
+        'schedule': 10,  # seconds
     },
     'agentone-cron-scheduler': {
         'task': 'tasks.cron_scheduler',

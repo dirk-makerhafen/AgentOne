@@ -40,6 +40,9 @@ def _is_provider_rate_limit(exc) -> bool:
     * litellm's ``RateLimitError`` and ``ServiceUnavailableError``
       (``MidStreamFallbackError`` subclasses it), plus any error whose
       ``original_exception``/``root_exception`` chain carries one of them.
+    * Vertex AI wraps 429 quota errors as ``BadRequestError`` with the real
+      status embedded in the JSON body (``"code": 429``,
+      ``"RESOURCE_EXHAUSTED"``).  We match on the string representation.
 
     Both are transient "retry later" signals: the caller records a key
     cooldown and parks the call instead of hard-failing it.
@@ -69,6 +72,13 @@ def _is_provider_rate_limit(exc) -> bool:
             ),
         ):
             return True
+    # Vertex AI wraps 429 as BadRequestError; detect via string patterns.
+    try:
+        msg = str(exc)
+        if re.search(r'"code"\s*:\s*429', msg) or "RESOURCE_EXHAUSTED" in msg:
+            return True
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
     return False
 
 
@@ -151,7 +161,7 @@ def run_streaming_query(
     query: Query,
     aimodel: Any | None = None,
 ) -> Response:
-    SAVE_INTERVAL = 0.500
+    SAVE_INTERVAL = 1.000
     last_save_time = time.time()
     first_token_timestamp: float | None = None
     first_reasoning_token_timestamp: float | None = None

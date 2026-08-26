@@ -62,7 +62,7 @@ def ingest_file(_session: Session, path: str) -> None:
     # Fork inherits parent's session settings (auto_compact_limit, api key, disallowed lists, etc.)
     parent_sv = _session.get_version_model()
     if parent_sv and parent_sv.session_settings:
-        fork_settings = subagent_version.clone_settings(parent_sv.session_settings)
+        fork_settings = subagent_version.clone_settings(parent_sv.session_settings, disallowedToolNames=["+", "find_unlinked_raw"])
         child_sv.session_settings = fork_settings
         SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=fork_settings)
        
@@ -97,7 +97,7 @@ def ingest_file(_session: Session, path: str) -> None:
 
 def verify(_session: Session, message:Message, path: str | None = None) -> None:
     msg = "".join( part.to_string() for part in message.parts.filter(type=MessagePartType.MESSAGE))
-    return _session.get_tool("delegate_task").delay(prompt=f"The following item has been ingested by another agent: '{path}'\nResult: {msg}\n\nVerify that the ingestion was processed correctly. Correct errors.",blocking=True)
+    return _session.get_tool("delegate_task").delay(prompt=f"The following item has been ingested by another agent: '{path}'\nResult: {msg}\n\nVerify that the ingestion was processed correctly. Correct errors if needed, dont ingest any new files, just double check the other agents work.",blocking=True)
 
 
 def ingest_verification_result(_session: Session, verification_result:Message) -> None:

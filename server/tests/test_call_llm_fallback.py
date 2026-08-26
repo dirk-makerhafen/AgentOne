@@ -201,6 +201,27 @@ class FallbackLoopTest(TestCase):
         )
         self.assertTrue(module._is_provider_rate_limit(mid))
 
+    def test_vertex_ai_badrequest_wrapping_429(self):
+        """Vertex AI wraps 429 quota errors as BadRequestError with status 400;
+        the real 429 lives in the JSON body.  Verify we still catch it."""
+        from litellm.exceptions import BadRequestError
+
+        module = self.call_llm
+        vertex_err = BadRequestError(
+            message=(
+                'litellm.BadRequestError: Vertex_ai_betaException BadRequestError - b\'{\\n '
+                '\\"error\\": {\\n \\"code\\": 429,\\n \\"message\\": \\"You exceeded your current '
+                'quota, please check your plan and billing details.\\",\\n \\"status\\": '
+                '\\"RESOURCE_EXHAUSTED\\"\\n }\\n}\''
+            ),
+            model="gemini-3.6-flash",
+            llm_provider="vertex_ai",
+        )
+        self.assertTrue(module._is_provider_rate_limit(vertex_err))
+        self.assertAlmostEqual(
+            module._extract_retry_after_seconds(vertex_err), 4.94, places=1
+        )
+
     def test_retry_after_extraction(self):
         module = self.call_llm
 
