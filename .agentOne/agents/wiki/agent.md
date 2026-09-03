@@ -7,7 +7,7 @@ reasoningEffort: xhigh
 precision: FOCUSED
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, wiki.find_unlinked_raw]
 commands: [+, ingest_file, ingest_next, wiki_lint]
-tasks: [+, verify, ingest_verification_result]
+tasks: [+, verify, ingest_verification_result, ingest_unlinked_raw_results]
 autoCompactLimit: 100000
 compactSizeLimit: 10
 subagents:

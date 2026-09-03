@@ -45,7 +45,7 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
         description=f"Session compaction for {_session.name} at {int(time.time())}",
         workspace=_session.workspace,
         parent_session_version=_session.get_version_model(),
-        session_type=SessionType.SUBTASK_FORK,
+        session_type=SessionType.SUBTASK_COMPACT,
     )
 
     # The compaction fork carries the same (oversized) context that triggered
