@@ -118,8 +118,6 @@ def _build_compaction_message(
 
 def ingest_compaction(
     _session: Session,
-    response: Any = None,
-    parts: list[dict[str, Any]] | None = None,
     child_session_pk: int | None = None,
     boundary_pk: int | None = None,
     result: Message | None = None,
@@ -139,61 +137,20 @@ def ingest_compaction(
     leftovers.  Kept for the ``/compact`` command and backward compatibility.
     """
     summary_text = ""
+    from server.models.sessions.session import SessionModel
 
-    if result is not None or child_session_pk is not None or boundary_pk is not None:
-        if result is None:
-            from server.models.sessions.session import SessionModel
+    child_session_model = SessionModel.objects.get(pk=child_session_pk)
+    child_session = Session(session_model=child_session_model)
 
-            child_session_model = SessionModel.objects.get(pk=child_session_pk)
-            child_session = Session(session_model=child_session_model)
-            result = child_session.get_last_message()
-        summary_text = _extract_summary_text(result)
-        boundary = Message.objects.get(pk=boundary_pk) if boundary_pk else None
-        marker = _build_compaction_message(
-            _session, newest_compacted=boundary, summary_text=summary_text
-        )
-        return dict(response=response, parts=parts or [], message=marker, **kwargs)
+    child_session.set_is_active(False)
 
-    for part in parts or []:
-        if part.get("type") == MessagePartType.MESSAGE:
-            content = part.get("content")
-            summary_text += str(content) if content else ""
-        elif (
-            part.get("type") == MessagePartType.TOOLCALL
-            and part.get("content", {}).get("name") == "final_result"
-        ):
-            summary_text += part.get("content", {}).get("arguments", {}).get("content", "")
+    if result is None:            
+        result = child_session.get_last_message()
 
-    # The remaining QueryMessages (kept messages were deleted by
-    # build_llm_compact_context) are exactly the messages that were
-    # compacted — no need to recalculate the split.
-    #
-    # ``build_llm_context`` creates QueryMessages in chain order: the
-    # compaction-boundary marker first (oldest), then the remaining messages
-    # oldest → newest, so ``related_query_messages.all()`` (pk = creation
-    # order) is already in chain order.  The newest compacted message is the
-    # LAST entry — never re-sort by source-message pk or by walking the
-    # ``prev_message`` links: a marker created later than the messages that
-    # follow it has a HIGHER source-message pk yet sits BEFORE them, so a
-    # pk-based "newest" pick would choose the marker and place the boundary
-    # too early, leaving the live conversation un-compacted.
-    #
-    # Deduplicate by source_message.  Multiple QueryMessages for the same
-    # source_message (e.g. content + toolcall parts) are adjacent, so the
-    # first occurrence preserves the order.
-    newest_compacted: Message | None = None
-    if response is not None and getattr(response, "query", None) is not None:
-        seen: set[int] = set()
-        compacted_messages: list[Message] = []
-        for qm in response.query.related_query_messages.all():
-            msg = qm.source_message
-            if msg and msg.pk not in seen:
-                seen.add(msg.pk)
-                compacted_messages.append(msg)
-        if compacted_messages:
-            newest_compacted = compacted_messages[-1]
+    summary_text = _extract_summary_text(result)
 
-    marker = _build_compaction_message(
-        _session, newest_compacted=newest_compacted, summary_text=summary_text, response=response
-    )
-    return dict(response=response, parts=parts or [], message=marker, **kwargs)
+    boundary = Message.objects.get(pk=boundary_pk) if boundary_pk else None
+
+    marker = _build_compaction_message( _session, newest_compacted=boundary, summary_text=summary_text)
+         
+    return dict(message=marker, **kwargs)

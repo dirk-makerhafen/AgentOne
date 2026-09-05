@@ -9,8 +9,9 @@ description: >
 extends: baseagent
 inheritSystemPrompt: true
 reasoningEffort: medium
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project, wiki.*]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project, wiki.*, todo.*]
 skills: [+, agentone-admin, project-manager]
+commands: [+, todo.*]
 subagents:
   - name: researcher
     create: agent

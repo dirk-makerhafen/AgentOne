@@ -120,6 +120,11 @@ class SettingsModel(BaseModel):
 
     access: Any = models.JSONField(default=None, null=True, blank=True)
 
+    # Session todo list auto-processing (user-controlled through the Todos
+    # panel / /todo command; the list items themselves are event-sourced
+    # from the todo task-call history, not stored here).  None = off.
+    todo_auto_process: bool | None = models.BooleanField(default=None, null=True, blank=True)
+
     extra_settings: Any = models.JSONField(default=None, null=True, blank=True)
     commit: str = models.TextField(max_length=1024, default="")
 

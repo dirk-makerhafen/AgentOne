@@ -8,25 +8,15 @@ from server.models.message import Message
 from server.models.sessions.session_version import SessionVersionModel
 
 
-def ingest_next(_session: Session, limit: int = 1) -> str|list:
-    """
-    ingest next unlinked raw item into the wiki
-
-    Args:
-        _session: The active agent session.
-        limit: Max new items to ingest
-
-    Returns:
-        A response message 
-    """
-    prev_result = None
-    results = []
-    for _ in range(limit):
-        unlinked_raw_results = _session.get_tool("find_unlinked_raw").delay(limit=1, prev=prev_result)
-        prev_result          = _session.get_task("ingest_unlinked_raw_results").delay(result=unlinked_raw_results)
-        results.append(prev_result)
-    return results
-
+def ingest_next(_session: Session, limit:int=1):
+    _session.get_command("todo_clear").call(include_done=True)
+    success, data = _session.get_task("find_unlinked_raw").call(limit=limit)
+    cnt = 0
+    if data.get("items", None):
+        for item in data["items"]:
+            cnt += 1
+            _session.get_command("todo_append").call(text=f'ingest: {item["file"]}')
+    return True, f"{cnt} todo items created"
 
 def ingest_unlinked_raw_results(_session: Session, result: dict, **kwargs) -> str|list:
     success, data = result

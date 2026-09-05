@@ -4,12 +4,15 @@ import json
 from typing import TYPE_CHECKING, Any, Dict, List
 
 from django.db import transaction
+from django.db.models import Sum
 
 from runtime.agents.agent import Agent, is_name_disallowed
 from runtime.tasks.bound_task import BoundTask
 from server.models.content import GenericContent
 from server.models.message import Message
 from server.models.providers.ai_model import AiModel
+from server.models.queries.query import Query, QueryStatus
+from server.models.queries.response import Response, ResponseStatus
 from server.models.settings import ReasoningEffort, SettingsModel
 from server.models.skills.skill_version import SkillModelVersion
 from server.models.sessions.session import SessionModel
@@ -717,7 +720,7 @@ class Session:
         if not parts:
             raise Exception("No message or message parts provided")
 
-        self._mark_active()
+        self.set_is_active(True)
 
         is_command = False
         cmd = ""
@@ -773,7 +776,7 @@ class Session:
 
         return bound_task.delay(**call_kwargs)
 
-    def _mark_active(self) -> None:
+    def set_is_active(self, new_value: bool) -> None:
         """Mark the session active and stamp the last-activity timestamp.
 
         Any incoming message (user or subagent) reactivates an inactive
@@ -855,3 +858,68 @@ class Session:
             .exclude(next_messages__session=self.model)
             .last()
         )
+
+    def context_usage(self) -> Dict[str, Any]:
+        """Return the session's current context-window usage.
+
+        Source of truth is the latest ``SUCCESS`` query: ``Query.tokens`` is
+        recalibrated to the backend-reported ``prompt_tokens`` on
+        ``Response.save()``, so it is an accurate count, not an estimate.
+        Falls back to the newest query of any status (estimates) when no
+        successful query exists yet, and to ``has_data=False`` when the
+        session has never queried.
+
+        Returns a dict with ``used_tokens`` (prompt), ``completion_tokens``
+        (latest response output), ``context_length`` (model window, 0 when
+        unknown), ``percent`` (0-100+, >100 means over window).
+        """
+        empty: Dict[str, Any] = {
+            "tokens_send": 0,
+            "tokens_received": 0,
+            "tokens_cached": 0,
+            "cache_hit_rate": 0,
+            "tokens_reasoning": 0,
+            "tokens_reasoning_percent": 0,
+            "max_context_tokens": 0,
+            "used_context_tokens": 0,
+            "used_context_percent": 0,
+        }
+        try:
+            successful = Response.objects.filter(session=self.model, status=ResponseStatus.SUCCESS)
+            latest_response = successful.order_by("-id").first()
+            if latest_response is None:
+                return empty
+
+            # Single DB-side aggregation instead of fetching every row and
+            # summing in Python: one query, constant memory, no N+1.
+            totals = successful.aggregate(
+                tokens_send=Sum("prompt_tokens"),
+                tokens_received=Sum("completion_tokens"),
+                tokens_cached=Sum("cached_tokens"),
+                tokens_reasoning=Sum("reasoning_tokens"),
+            )
+            tokens_send = int(totals["tokens_send"] or 0)
+            tokens_received = int(totals["tokens_received"] or 0)
+            tokens_cached = int(totals["tokens_cached"] or 0)
+            tokens_reasoning = int(totals["tokens_reasoning"] or 0)
+
+            aimodel = self.aimodel
+            max_context_tokens = int(getattr(aimodel, "context_length", 0) or 0) if aimodel else 0
+            if not max_context_tokens:
+                max_context_tokens = self.auto_compact_limit
+            elif (self.auto_compact_limit or 0) > 0:
+                max_context_tokens = min(max_context_tokens, self.auto_compact_limit)
+
+            return {
+                "tokens_send": tokens_send,
+                "tokens_received": tokens_received,
+                "tokens_cached": tokens_cached,
+                "cache_hit_rate": (100 / tokens_send * tokens_cached) if tokens_send > 0 else 0,
+                "tokens_reasoning": tokens_reasoning,
+                "tokens_reasoning_percent": (100 / tokens_received * tokens_reasoning) if tokens_received > 0 else 0,
+                "max_context_tokens": max_context_tokens,
+                "used_context_tokens": latest_response.prompt_tokens,
+                "used_context_percent": (latest_response.prompt_tokens / max_context_tokens * 100.0) if max_context_tokens > 0 else 0.0,
+            }
+        except Exception:  # pylint: disable=broad-exception-caught
+            return empty

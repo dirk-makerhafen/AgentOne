@@ -91,6 +91,77 @@ def _mark_subsession_complete(_session: Session) -> None:
     publish_model_event(_session.model, "update")
 
 
+def _pop_next_todo_message(_session: Session, message: Message) -> Message | None:
+    """If todo auto-processing is on and items remain, inject the next one.
+
+    Called when the current task just finished (``final_result`` was seen).
+    The list is event-sourced from the ``todolist_store`` anchor history;
+    the pop is recorded via an async dispatch and the oldest pending item
+    read just before is wrapped as a USER message, so the loop continues
+    with the next item instead of returning to the user.  The auto flag is
+    user-controlled (session settings) and never settable by the agent.
+
+    Returns the new message, or *None* when there is nothing to do (auto
+    off, list empty, subtask session, anchor unavailable).  Kept
+    dependency-free on purpose: scripts run from isolated runtime folders,
+    so the state is (re-)read inline instead of importing the todo group.
+    """
+    if _is_subtask_execution(_session):
+        return None
+    try:
+        if not bool(_session._get_session_setting("todo_auto_process")):
+            return None
+        anchor = _session.get_task("todolist_store") or _session.get_tool("todolist_store")
+        raw = anchor.lastest_result() if anchor is not None else None
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+    items = []
+    # NOTE: get_result() returns the raw (success, payload) pair, not the
+    # payload dict — unwrap before reading "items" (see todolist.unwrap_result).
+    if isinstance(raw, (list, tuple)) and len(raw) == 2 and isinstance(raw[1], dict):
+        raw = raw[1]
+    if isinstance(raw, dict):
+        raw_items = raw.get("items", raw)
+        if isinstance(raw_items, list):
+            items = [it for it in raw_items if isinstance(it, dict)]
+    pending = [it for it in items if it.get("status") == "pending"]
+    if not pending or anchor is None:
+        return None
+    first = pending[0]
+    remaining = len(pending) - 1
+    try:
+        # Record the pop asynchronously (fire-and-forget).  It runs before
+        # the process_turn dispatch below, so by the time the next turn
+        # reads the anchor history this item is marked done.  The message
+        # content is predicted from the history just read — safe under FIFO
+        # order as long as nothing else pops concurrently.
+        anchor.delay(action="pop", count=1)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+
+    sv = _session.get_version_model()
+    next_message = Message.objects.create(
+        role=MessageRole.USER,
+        session=sv.session,
+        session_version=sv,
+        prev_message=message,
+    )
+    next_message.add_part(
+        type=MessagePartType.MESSAGE,
+        content_type=MessageContentType.TEXT,
+        content=(
+            f"<SYSTEM NOTICE>Todo list auto-processing is ON. "
+            f"Next item ({remaining} remaining after this one):\n"
+            f"{first.get('text', '')}\n"
+            f"Work on this now. When done, call final_result(content='...') "
+            f"and the following item will be fed automatically.</SYSTEM NOTICE>"
+        ),
+    )
+    from runtime.events import publish_model_event
+    publish_model_event(next_message, "create")
+    return next_message
+
+
 def decide_next_step(_session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any) -> Message:
     _session.count_turn()
     _session.count_unattended_turn()
@@ -103,6 +174,9 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
 
     if kwargs.get("has_final_result"):
         _mark_subsession_complete(_session)
+        next_todo = _pop_next_todo_message(_session, message)
+        if next_todo is not None:
+            _session.get_task("process_turn").delay(message=next_todo)
         return message
 
 
@@ -146,7 +220,5 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         all_content = "\n".join(str(part.get("content", "")) for part in message_parts).strip()
         if _looks_like_markdown(all_content): # the result is markdown formatted, return to user
             return message
-
-
 
     return _session.get_task("process_turn").delay(message=message)

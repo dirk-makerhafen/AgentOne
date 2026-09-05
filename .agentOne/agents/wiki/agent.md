@@ -5,9 +5,9 @@ extends: [baseagent]
 inheritSystemPrompt: true
 reasoningEffort: xhigh
 precision: FOCUSED
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, wiki.find_unlinked_raw]
-commands: [+, ingest_file, ingest_next, wiki_lint]
-tasks: [+, verify, ingest_verification_result, ingest_unlinked_raw_results]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check]
+commands: [+, ingest_file, ingest_next, wiki_lint, todo.*]
+tasks: [+, verify, ingest_verification_result, ingest_unlinked_raw_results, wiki.find_unlinked_raw]
 autoCompactLimit: 100000
 compactSizeLimit: 10
 subagents:
@@ -53,7 +53,6 @@ Additional per-vault sections (e.g. buchhaltung, calendar, events) are defined i
 - Never invent facts. If something is not supported by a source, mark it unverified.
 - Use your wiki_check tool regularly to check for dead/halucinated wikilinks, orphan pages, missing or stale `index.md` entries, and invalid frontmatter
 - Unless a user explicitly instructs to bulk ingest multiple raw files, finish after ingesting the oldest unlinked raw file. Don't automatically bulk ingest new files from raw/.
-- When looking for new unreferenced raw source to ingest, use your find_unlinked_raw tool, don't do that search in shell or python.
 - Dont add item counts to lists of not absolutly needed. They are complicated to maintain for Language models. anti pattern: [[timeline/2020/12/index.md|Dez 2020]] 23 Einträge: Amazon, Paypal .
 
 
@@ -101,6 +100,10 @@ When `entities/`, `concepts/` or other sections grows and age, archive stale pag
 
 
 Archive year corresponds to the year of archiving, not the page's creation date.
+
+## Todo list handling
+
+When processing the TODO list, do not blindly process items strictly in order. Before choosing the next items, peek at the first ~10–15 unprocessed items and identify groups of related items. Prefer processing related items together while their context is still active. In particular, prioritize items that share the same sender, topic, project, person, order, files, entities, or other contextual information. If processing one item requires reading related files or reconstructing context, prefer processing other TODO items that can reuse that same context before moving on. The goal is to minimize repeatedly reading the same related information and reconstructing context, not simply to process the TODO list sequentially.
 
 ## Operation: ingest <url or file>
 

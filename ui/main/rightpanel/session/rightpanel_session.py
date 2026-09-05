@@ -10,6 +10,7 @@ from ui.main.rightpanel.session.rightpanel_session_calls import RightPanelSessio
 from ui.main.rightpanel.session.rightpanel_session_settings import RightPanelSessionSettings
 from ui.main.rightpanel.session.rightpanel_session_subagents import RightPanelSessionSubagents
 from ui.main.rightpanel.session.rightpanel_session_tasks import RightPanelSessionTasks
+from ui.main.rightpanel.session.rightpanel_session_todos import RightPanelSessionTodos
 from ui.main.rightpanel.workspace.rightpanel_workspace_files import RightPanelWorkspaceFiles
 
 if TYPE_CHECKING:
@@ -29,6 +30,9 @@ class RightPanelSession(ModelView):
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
             <button class="nav-tab{% if pyview.current_tab_name == "tasks" %} active{% endif %}" data-panel="tasks" data-label="Capabilities" onclick="pyview.switchTab('tasks')" title="Capabilities">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </button>
+            <button class="nav-tab{% if pyview.current_tab_name == "todos" %} active{% endif %}" data-panel="todos" data-label="Todos" onclick="pyview.switchTab('todos')" title="Todos">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </button>
             <button class="nav-tab{% if pyview.current_tab_name == "calls" %} active{% endif %}" data-panel="calls" data-label="Calls" onclick="pyview.switchTab('calls')" title="Calls">
@@ -59,7 +63,7 @@ class RightPanelSession(ModelView):
     def switchTab(self, name: str) -> None:
         if name == self.current_tab_name:
             return 
-        if name not in ["workspace", "settings", "tasks", "calls", "subagents"]:
+        if name not in ["workspace", "settings", "tasks", "todos", "calls", "subagents"]:
             return
         self.current_tab_name = name
         if self.current_tab:
@@ -73,6 +77,8 @@ class RightPanelSession(ModelView):
             self.current_tab = RightPanelSessionSettings(self.subject, self)
         elif name == "tasks":
             self.current_tab = RightPanelSessionTasks(self.subject, self)
+        elif name == "todos":
+            self.current_tab = RightPanelSessionTodos(self.subject, self)
         elif name == "calls":
             self.current_tab = RightPanelSessionCalls(self.subject, self)
         elif name == "subagents":

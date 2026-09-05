@@ -9,8 +9,7 @@ from server.models.queries.query_message import QueryMessage
 import time
 from server.models.enums.session_enums import SessionType
 
-_COMPACTION_SYSTEM_PROMPT = """
-Context is running low, you have been switched to a session compaction agent. 
+_COMPACTION_SYSTEM_PROMPT = """<SYSTEM NOTICE>
 Your job is to produce a concise, information-dense summary that preserves key context from the existing summary and incorporates relevant new information from the conversation above so the AI agent can continue working without losing important context.
 
 Focus on:
@@ -22,7 +21,9 @@ Focus on:
 - File paths, function names, and specific technical details
 
 Format as a clear, structured summary. Be specific — avoid generic statements.
-"""
+
+When you are done, call the final_result tool with the summary as its content argument.
+<SYSTEM NOTICE>"""
 
 
 def build_llm_compact_context(_session: Session, message: Message) -> Query:
@@ -68,25 +69,13 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
     fork_msg.add_part(
         type=MessagePartType.MESSAGE,
         content_type=MessageContentType.TEXT,
-        content="IMPORTANT: Context is running low, you have been switched to a session compaction agent.",
+        content="<SYSTEM NOTICE> IMPORTANT: Context is running low, you have been switched to a session compaction agent. </SYSTEM NOTICE>",
     )
     prompt_parts = [
         {
             "type": MessagePartType.MESSAGE,
             "content_type": MessageContentType.TEXT,
-            "content": f"""Your job is to produce a concise, information-dense summary that preserves key context from the existing summary and incorporates relevant new information from the conversation above so the AI agent can continue working without losing important context.
-
-Focus on:
-- Key decisions made and their rationale
-- Current constraints and requirements
-- What has been accomplished so far
-- What remains to be done
-- Important context the model must remember
-- File paths, function names, and specific technical details
-
-Format as a clear, structured summary. Be specific — avoid generic statements.
-
-When you are done, call the final_result tool with the summary as its content argument."""
+            "content": _COMPACTION_SYSTEM_PROMPT
         },
     ]
 

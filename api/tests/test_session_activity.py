@@ -72,14 +72,14 @@ class TestSessionActivation:
     def test_message_reactivates_inactive_session(self):
         session = _make_session("child", is_active=False)
         assert session.is_active is False
-        session.get_runtime()._mark_active()
+        session.get_runtime().set_is_active(True)
         session.refresh_from_db()
         assert session.is_active is True
         assert session.last_active_at is not None
 
     def test_message_stamps_last_active_at_on_active_session(self):
         session = _make_session("child")
-        session.get_runtime()._mark_active()
+        session.get_runtime().set_is_active(True)
         session.refresh_from_db()
         assert session.last_active_at is not None
 
@@ -117,7 +117,7 @@ class TestFinalResultDeactivatesSubsession:
         parent = _make_session("parent")
         child = _make_session("child", parent=parent, is_active=False, session_type=SessionType.SUBTASK_FORK)
         rt = child.get_runtime()
-        rt._mark_active()
+        rt.set_is_active(True)
         child.refresh_from_db()
         assert child.is_active is True
 
