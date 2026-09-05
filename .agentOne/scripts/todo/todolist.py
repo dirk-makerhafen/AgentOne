@@ -260,6 +260,11 @@ def _run(action: str, _session: Any, **kwargs: Any) -> tuple[bool, dict]:
     The returned list is predicted from the last recorded state; the same
     action is replayed on the anchor so the shared history converges.
     """
+    if "ids" in kwargs:
+        if isinstance(kwargs["ids"], str):
+            kwargs["ids"] = kwargs["ids"].split(",")
+        kwargs["ids"] = [int(x) for x in kwargs["ids"]]
+
     try:
         items, extra = apply_todo_action(load_todo_items(_session), action, **kwargs)
         _record(_session, action, **kwargs)

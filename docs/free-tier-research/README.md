@@ -1,4 +1,4 @@
-Your goal is to find **currently available free LLM API resources** and maintain a clean, accurate provider list.
+Your goal is to find **currently available free LLM API resources** and maintain a clean, accurate provider list in `providers/` plus a cross-referenced model catalog in `models/`.
 
 Your task is to research these discovery sources:
 
@@ -11,6 +11,12 @@ Opencode (popular agent harness) also often has for a short time very good model
 For every provider you find that offers a **genuinely usable free LLM API**, create or update a Markdown file in:
 
 `providers/<provider-name>.md`
+
+For every model that is free through at least one verified provider, create or update a model card in:
+
+`models/<model-name>.md`
+
+Each model card captures the model facts once (developer, context, capabilities) and carries a providers table showing, per provider, the provider-side model ID plus the provider+model specific free conditions and limits — so for each model you can see who serves it for free under what terms.
 
 ## Research
 
@@ -31,10 +37,9 @@ For every provider:
    * token limits
    * context limits
    * other important restrictions
-4. Prefer official documentation and pricing/free-tier pages.
+4. Prefer official documentation and pricing/free-tier pages if available.
 5. If sources disagree, investigate and use the most recent/reliable information.
-6. Do not include providers whose free API access cannot be verified.
-7. Do not infer or guess limits.
+6. Do not infer or guess limits.
 
 A provider discovered outside the three lists may also be added if it has a verifiable free API.
 
@@ -68,6 +73,7 @@ Include services that provide usable LLM API inference without requiring payment
 Do **not** treat the following as free API access:
 
 * free trials requiring payment
+* low one-time signup credits
 * promotional credits unless clearly useful as a free offering
 * free web/chat access with no free API
 * models advertised as free but requiring a paid subscription
@@ -81,11 +87,15 @@ Create one canonical file per provider:
 
 `providers/<provider-name>.md`
 
+Create one canonical file per model:
+
+`models/<model-name>.md`
+
 Check for an existing file first. If it exists, update it rather than creating a duplicate.
 
 Use stable, human-readable filenames.
 
-Do not create separate files for individual models.
+Do not create separate provider files for individual models — models live in `models/`, not `providers/`.
 
 ## File format
 
@@ -302,6 +312,103 @@ For important free models, document when reliably available:
 
 Do not invent capabilities.
 
+## Model files
+
+Create a card for a model when it is free through at least one verified provider. Prioritize models free at two or more providers (the cross-provider comparison is the point of the catalog).
+
+### Filenames
+
+- One canonical file per model: `models/<model-slug>.md`, lowercase slug (e.g. `models/gpt-oss-120b.md`, `models/glm-4.5-flash.md`).
+- Strip access suffixes from the filename: no `:free` / `-free` (e.g. `gemma-4-31b-it.md`, not `gemma-4-31b-it-free.md`).
+- Omit the vendor prefix unless needed for uniqueness (e.g. `nemotron-3-nano-30b-a3b.md`, not `nvidia-nemotron-...md`).
+- Closely related version variants may share one family card named after the family (e.g. `models/laguna.md` covering `laguna-s-2.1` / `laguna-xs.2`) with a versions table; split into per-version cards only if their free availability diverges significantly.
+
+### File format
+
+Use this structure:
+
+```markdown
+---
+name: Model Display Name
+developer: Organization
+canonical_id: vendor/model-slug
+family: model-family
+context_window: 131072
+max_output_tokens: 32768
+reasoning: true
+tool_call: true
+structured_output: true
+temperature: true
+modalities:
+  input: [text, image]
+  output: [text]
+open_weights: true
+knowledge_cutoff: "2025-05"
+providers:
+  - name: Provider Name
+    file: provider-file-slug
+    model_id: id-on-that-provider
+    conditions: who gets it free, what is required
+    limits:
+      requests:
+        minute: 1
+    verified: "2026-09-05"
+---
+
+Short factual description of the model.
+
+**Capabilities:**
+
+- ...
+
+**Providers (free access):**
+
+| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
+|---|---|---|---|---|
+| [Provider Name](../providers/<file>.md) | `id-on-that-provider` | who gets it free, what is required | limits applying to this provider+model combo | 2026-09-05 |
+| ... | ... | ... | ... | ... |
+
+**Notes:**
+
+- ...
+
+**Sources**
+
+- https://...
+- https://...
+```
+
+Frontmatter is the machine-readable source of truth, including the `providers` list. The markdown table mirrors it 1:1 for human reading — same providers, same order, same values. When updating one, update the other. Omit any frontmatter field that cannot be verified; never invent values. Fixture-derived facts (`raw/opencode-models-api/`) are discovery data: usable for capabilities/context with a `(fixture-reported, verify live)` flag, never as the sole source for free availability.
+
+### Providers entry schema
+
+Each `providers` entry:
+
+- `name` — provider display name (matches its `providers/` file `name`).
+- `file` — slug mapping to `providers/<file>.md` (no path, no extension).
+- `model_id` — exact string(s) to send as `model` on that provider; a list when versions/variants differ per host.
+- `conditions` — concise string: who gets it free, what is required, any gating (trial-use, promo expiry).
+- `limits` — only limits specific to this provider+model combo, using the same nested `requests`/`tokens` shape as provider frontmatter. Omit entirely when no combo-specific numerics are documented.
+- `context_window` / `max_output_tokens` — only when this provider serves the model with different values than the card default (e.g. a capped variant).
+- `gate` — reason string for payment-gated rows (renders as a ⚠ table row, never a plain free row).
+- `notes` — combo-specific constraints that fit neither `limits` nor overrides (e.g. neuron budgets, context-tiered pricing).
+- `verified` — date of last verification (`YYYY-MM-DD`).
+
+### Providers table rules
+
+- One row per provider serving this model for free. Link the provider name to its `providers/` file.
+- Every table row corresponds 1:1 to a frontmatter `providers` entry (same order); frontmatter is authoritative for tooling.
+- `Provider-side ID` is the exact string to send as `model` on that provider (e.g. `deepseek-v4-flash:free` on UnoRouter vs `deepseek-v4-flash` on DeepSeek's own platform).
+- `Free conditions` states what the user needs (account, key, tier, no card) and any gating (trial-use, promo expiry, paid billing required).
+- `Model-specific limits` holds only limits applying to this provider+model combination (per-model RPM, quota multipliers, neuron budgets). Provider-wide defaults stay in the provider file — reference them, do not duplicate numbers that drift.
+- Rows that are payment-gated (e.g. free lane requiring paid billing) may be listed only with an explicit ⚠ flag explaining the gate — never as plain free rows.
+- Fixture-observed but file-unverified rows do not go in the table; mention them under **Notes** as re-verification leads.
+
+### Cross-linking
+
+- `providers/` and `models/` are maintained together: when you add a free model to a provider file, add/update its model card table row; when you add a model card, make sure each listed provider file documents that model ID.
+- Provider-file model bullets SHOULD link to the model card (`[id](../models/<slug>.md)`) when one exists; backfill links opportunistically during verification passes.
+
 ## Accuracy
 
 Every important, changeable claim must be supported by a source.
@@ -384,5 +491,7 @@ Before completing each provider, verify:
 * Are important claims supported by sources?
 * Does a provider file already exist?
 * Is this actually a distinct provider rather than a duplicate/service wrapper?
+* For each free model on the provider: does its `models/` card exist, and does the providers table row match the provider file (ID, conditions, limits, verified date)?
+* For each model card: is every table row backed by its linked provider file, and are payment-gated rows ⚠-flagged rather than listed as plain free?
 
 The final `providers/` directory should be a **clean, deduplicated, independently verified database of genuinely usable free LLM API providers**, not a transcription of the source lists.

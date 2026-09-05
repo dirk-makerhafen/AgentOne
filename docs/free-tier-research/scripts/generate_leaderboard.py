@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import trueskill
 import json
-
+from .secrets import ZEROEVAL_API_KEY
 model_id_to_name = {}
 model_id_to_org = {}
 model_scores = {}
@@ -62,7 +62,7 @@ def from_hf():
 
 def from_zeroeval():
     API_URL = "https://api.zeroeval.com/stats/v1/"
-    API_KEY = "sk_ze_lNf97wkCzJC7uX5lBmYs3jy09M011RjbCHg5LZQgbyo"
+    
     next_cursor = None
     dlcnt = 0
     for cat in ["code", "coding", "reasoning", "agents", "tool_calling"]:
@@ -70,7 +70,7 @@ def from_zeroeval():
             url = API_URL + f"scores?category={cat}&limit=500"
             if next_cursor:
                 url += f"&cursor={next_cursor}"
-            response = requests.get(url, headers={"Authorization": f"Bearer {API_KEY}"})
+            response = requests.get(url, headers={"Authorization": f"Bearer {ZEROEVAL_API_KEY}"})
             data = response.json()
             next_cursor = data.get("next_cursor", None)
             scores = data.get("scores", [])

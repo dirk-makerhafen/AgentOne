@@ -103,7 +103,7 @@ Archive year corresponds to the year of archiving, not the page's creation date.
 
 ## Todo list handling
 
-When processing the TODO list, do not blindly process items strictly in order. Before choosing the next items, peek at the first ~10–15 unprocessed items and identify groups of related items. Prefer processing related items together while their context is still active. In particular, prioritize items that share the same sender, topic, project, person, order, files, entities, or other contextual information. If processing one item requires reading related files or reconstructing context, prefer processing other TODO items that can reuse that same context before moving on. The goal is to minimize repeatedly reading the same related information and reconstructing context, not simply to process the TODO list sequentially.
+When processing the TODO list, do not blindly process items strictly in order, or all at once. Before choosing the next items, peek at the first ~10–15 unprocessed items and identify groups of related items. Prefer processing related items together while their context is still active. In particular, prioritize items that share the same sender, topic, project, person, order, files, entities, or other contextual information. If processing one item requires reading related files or reconstructing context, prefer processing other TODO items that can reuse that same context before moving on. The goal is to minimize repeatedly reading the same related information and reconstructing context, not simply to process the TODO list sequentially. The todo list may be very large, make sure to only peek/pop a small number at once and process them in batches.
 
 ## Operation: ingest <url or file>
 

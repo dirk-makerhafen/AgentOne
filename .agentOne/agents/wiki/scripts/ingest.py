@@ -18,6 +18,7 @@ def ingest_next(_session: Session, limit:int=1):
             _session.get_command("todo_append").call(text=f'ingest: {item["file"]}')
     return True, f"{cnt} todo items created"
 
+
 def ingest_unlinked_raw_results(_session: Session, result: dict, **kwargs) -> str|list:
     success, data = result
     if data["items"]:
