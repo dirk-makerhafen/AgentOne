@@ -21,9 +21,9 @@ UnoRouter is an open-source OpenRouter alternative: one API key for 200+ models 
 
 **Free Models (examples observed 2026-09-05; the set shifts as pools drain/recover — resolve live at https://unorouter.com/models filtered for free):**
 
-- `deepseek-v4-flash:free` / `deepseek-v4-pro:free` — DeepSeek.
+- [`deepseek-v4-flash:free`](../models/deepseek-v4-flash.md) / [`deepseek-v4-pro:free`](../models/deepseek-v4-pro.md) — DeepSeek.
 - `glm-5.3:free` / `glm-5.3-flash:free` — Z.AI GLM, 1M context.
-- `gemma-4-31b-it:free` — Google Gemma.
+- [`gemma-4-31b-it:free`](../models/gemma-4-31b-it.md) — Google Gemma.
 - `qwen-3.8-27b:free` — Alibaba Qwen, 262K context.
 - `gemini-3.6-flash:free` — Google Gemini.
 - `deepseek-reasoner:free` — DeepSeek reasoning.

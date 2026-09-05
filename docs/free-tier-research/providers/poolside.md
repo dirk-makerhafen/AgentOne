@@ -18,8 +18,8 @@ Poolside trains its own Laguna coding models and serves them via an OpenAI-compa
 
 **Free Models:**
 
-- `poolside/laguna-s-2.1` — frontier-class agentic coding, 118B total / 8B active MoE, 1M context.
-- `poolside/laguna-xs-2.1` — light/fast agentic coding, 33B total / 3B active MoE, 256K context.
+- [`poolside/laguna-s-2.1`](../models/laguna.md) — frontier-class agentic coding, 118B total / 8B active MoE, 1M context.
+- [`poolside/laguna-xs-2.1`](../models/laguna.md) — light/fast agentic coding, 33B total / 3B active MoE, 256K context.
 - Older `laguna-m.1` / `laguna-xs.2` rows appear on third-party free routers (verify live).
 
 **Limits:**

@@ -19,7 +19,8 @@ MegaNova is a model gateway with a free Tier 1 (registration only, no card): fre
 
 **Free Models:**
 
-- Free-access pool (<100B, verify live): includes Manta Mini and rotating sub-100B models; one observed free row is `mistralai/Mistral-Small-3.2-24B-Instruct-2506`.
+- `mistralai/Mistral-Small-3.2-24B-Instruct-2506` — 24B text model, Tier 1 free quota 50 requests/day, daily reset 00:00 UTC, per account (confirmed 2026-09-05; Tier 2/3 = 300, Tier 4 = 1,000).
+- Free-access pool (<100B, verify live): includes Manta Mini and rotating sub-100B models. Note: not every sub-100B model is free at Tier 1 — the quota table shows Tier 1 = 0 for e.g. `GLM-4.7-Flash`, `Manta-Pro-1.0`, `Faster-Whisper-Large-V3`.
 - Paid-model RPD quotas do not apply on Tier 1.
 
 **Limits:**
@@ -35,3 +36,5 @@ MegaNova is a model gateway with a free Tier 1 (registration only, no card): fre
 **Sources**
 
 - https://docs.meganova.ai/tiers.md (tier table verified 2026-09-05)
+- https://docs.meganova.ai/free-model-quota (per-model daily quotas, verified 2026-09-05)
+- https://docs.meganova.ai/inference-models/model-list

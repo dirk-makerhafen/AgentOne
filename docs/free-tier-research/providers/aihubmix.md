@@ -19,7 +19,7 @@ AIHubMix is a gateway over 860+ models with a "56 free models — no credit card
 **Free Models ($0/M rows observed 2026-09-05, verify live):**
 
 - `hy3-free` — Tencent Hy3, 256K context.
-- `minimax-m3-free` — MiniMax M3, 1M context.
+- [`minimax-m3-free`](../models/minimax-m3.md) — MiniMax M3, 1M context.
 - `minimax-m2.7-free` — MiniMax M2.7, 196K context.
 - `gemini-3.7-flash-free` — Google Gemini 3.7 Flash (trial-use caveat).
 - `dots-3-note-preview-free` — Dots Studio 280B MoE preview, 512K context.

@@ -19,7 +19,7 @@ NVIDIA NIM hosted endpoints on build.nvidia.com provide free prototyping access 
 
 **Free Models:**
 
-- Representative, verify live (catalog slugs churn; 50+ hosted from NVIDIA, Meta, Mistral, Microsoft, DeepSeek, Qwen): Nemotron 3 family, `meta/llama-3.3-70b-instruct`, DeepSeek-V4 variants, `openai/gpt-oss-120b` — confirm exact slug at build.nvidia.com before use.
+- Representative, verify live (catalog slugs churn; 50+ hosted from NVIDIA, Meta, Mistral, Microsoft, DeepSeek, Qwen): Nemotron 3 family, `meta/llama-3.3-70b-instruct`, DeepSeek-V4 variants, [`openai/gpt-oss-120b`](../models/gpt-oss-120b.md) — confirm exact slug at build.nvidia.com before use.
 
 **Limits:**
 

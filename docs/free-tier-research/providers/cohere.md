@@ -18,6 +18,7 @@ Cohere offers free Trial (evaluation) API keys with limited usage across its Cha
 
 - Permanent free Trial keys, not expiring trial credits; production keys are paid with much higher limits.
 - Trial keys (and production keys on newer Chat model variants) are limited to 1,000 API calls per month.
+- Trial keys are rate-limited and not for production/commercial use. The discovery-fixture cost-0 row for `north-mini-code-1-0` mirrors trial-key $0, not a free production model — the exact API string `north-mini-code-1-0` is unconfirmed verbatim in official docs; verify in console before publishing it as a model ID.
 
 **Free Models:**
 

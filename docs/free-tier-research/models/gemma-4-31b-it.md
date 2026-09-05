@@ -31,6 +31,11 @@ providers:
         minute: 20
         day: 200
     verified: "2026-09-05"
+  - name: InferX
+    file: inferx
+    model_id: gemma-4-31B-it-fp8
+    conditions: "InferX Free $0/mo promo ('Free · 100% off'); account + key; promos rotate, re-verify pricing page"
+    verified: "2026-09-05"
 ---
 
 Gemma 4 31B IT is Google's largest open Gemma instruction model, with image input alongside text (fixture-reported facts; verify live).
@@ -47,6 +52,7 @@ Gemma 4 31B IT is Google's largest open Gemma instruction model, with image inpu
 |---|---|---|---|---|
 | [UnoRouter](../providers/unorouter.md) | `gemma-4-31b-it:free` | `:free` lane; account + key, no card | ~1 req/min per user + upstream caps | 2026-09-05 |
 | [Requesty](../providers/requesty.md) | `google/gemma-4-31b-it` | Free-models tier ("free for now"); account + key, no card | New orgs: 200 req/day + 20 req/min shared across all free models combined | 2026-09-05 |
+| [InferX](../providers/inferx.md) | `gemma-4-31B-it-fp8` | InferX Free $0/mo promo ("Free · 100% off"); account + key | No published numbers | 2026-09-05 |
 
 **Notes:**
 
@@ -57,3 +63,4 @@ Gemma 4 31B IT is Google's largest open Gemma instruction model, with image inpu
 - raw/opencode-models-api/google/model_gemma-4-31b-it.json (capabilities/context — discovery data)
 - https://unorouter.com/en/models
 - https://docs.requesty.ai/features/free-models
+- https://inferx.net/pricing/endpoints

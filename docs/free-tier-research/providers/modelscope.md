@@ -19,11 +19,12 @@ ModelScope (Alibaba 魔搭) is a CN-hosted model hub whose API-Inference serves 
 
 - `Qwen/Qwen3.5-35B-A3B` — 256K context (representative, verify live).
 - `Qwen/Qwen3.5-27B` — 256K context (representative, verify live).
+- Reachable under the free API-Inference quota (discovery-consistent set, confirm each model page): `ZhipuAI/GLM-4.5`, `ZhipuAI/GLM-4.6`, `Qwen/Qwen3-235B-A22B-Instruct-2507`, `Qwen/Qwen3-235B-A22B-Thinking-2507`, `Qwen/Qwen3-30B-A3B-Instruct-2507`, `Qwen/Qwen3-30B-A3B-Thinking-2507`, `Qwen/Qwen3-Coder-30B-A3B-Instruct`.
 - Any API-Inference-enabled model ID (Qwen3/Qwen3-VL/Coder series, DeepSeek-V4-Pro/Flash, GLM-4.7-Flash/5.x, MiniMax, Kimi-K2.5, ERNIE-4.5 family reported) — roster is dynamic; confirm API-Inference availability on each model page.
 
 **Limits:**
 
-- No exact quota figures extractable from official docs (limit pages are JS-rendered). Secondary sources consistently report 2,000 requests/day total account quota with ≤500 RPD per model — unverified against official docs, confirm after signup.
+- Free API-Inference quota: 2,000 API calls/day per user, shared across all models, reset daily 00:00 (UTC+8), no carryover; `429` past the limit. Corroborated by three secondaries citing official billing rules; the official intro/limits pages are JS-rendered and could not be directly re-confirmed — re-confirm after signup before relying on the number.
 - Official docs state quotas and concurrency are dynamically adjusted based on resource utilization.
 
 **Notes:**

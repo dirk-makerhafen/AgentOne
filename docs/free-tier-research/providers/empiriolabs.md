@@ -18,7 +18,7 @@ EmpirioLabs is a model gateway whose pay-as-you-go plan starts at $0 and whose p
 
 **Free Models (marked "Free" on the official pricing page, verify live):**
 
-- `glm-4-7-flash`, `glm-4-6v-flash`, `glm-4-5-flash` — Z.ai GLM flash models, free to run.
+- [`glm-4-7-flash`](../models/glm-4.7-flash.md), `glm-4-6v-flash`, [`glm-4-5-flash`](../models/glm-4.5-flash.md) — Z.ai GLM flash models, free to run.
 - Free roster rotates; the pricing page's "3 of these are free to run" note and model badges are the source of truth.
 
 **Limits:**

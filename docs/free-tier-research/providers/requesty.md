@@ -23,11 +23,11 @@ LLM gateway with a rotating selection of $0/token models behind one OpenAI-compa
 
 - `nvidia/nemotron-3-ultra-550b-a55b` — free input/output.
 - `nvidia/nemotron-3-super-120b-a12b` — free input/output.
-- `nvidia/nemotron-3-nano-30b-a3b` — free input/output.
+- [`nvidia/nemotron-3-nano-30b-a3b`](../models/nemotron-3-nano-30b-a3b.md) — free input/output.
 - `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` — free input/output.
-- `poolside/laguna-xs.2` — free input/output.
-- `poolside/laguna-m.1` — free input/output.
-- `google/gemma-4-31b-it` — free input/output.
+- [`poolside/laguna-xs.2`](../models/laguna.md) — free input/output.
+- [`poolside/laguna-m.1`](../models/laguna.md) — free input/output.
+- [`google/gemma-4-31b-it`](../models/gemma-4-31b-it.md) — free input/output.
 - `mistral/leanstral-1-5` — free input/output.
 - `nvidia/nemotron-3.5-content-safety` — free input/output.
 

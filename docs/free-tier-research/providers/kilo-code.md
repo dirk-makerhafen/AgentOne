@@ -24,8 +24,8 @@ Kilo Code's Kilo Gateway is a unified OpenAI-compatible API over 500+ models wit
 **Free Models:**
 
 - `stepfun/step-3.7-flash:free` (representative, verify live; roster rotates server-side).
-- `poolside/laguna-s-2.1:free` (representative, verify live).
-- `poolside/laguna-xs-2.1:free` (representative, verify live).
+- [`poolside/laguna-s-2.1:free`](../models/laguna.md) (representative, verify live).
+- [`poolside/laguna-xs-2.1:free`](../models/laguna.md) (representative, verify live).
 - `nvidia/nemotron-3-ultra-550b-a55b:free` (representative, verify live).
 - `tencent/hy3:free` (representative, verify live).
 - `openrouter/free` — best-available-free-model alias (representative, verify live).

@@ -19,8 +19,9 @@ Kenari (Indonesian gateway, billing in Rupiah) bills `:free`-suffixed models Rp 
 
 **Free Models (verify live via `GET /v1/models`):**
 
-- `deepseek-v4-flash:free`, `deepseek-v4-pro:free` (observed in fixtures).
+- [`deepseek-v4-flash:free`](../models/deepseek-v4-flash.md), [`deepseek-v4-pro:free`](../models/deepseek-v4-pro.md) (observed in fixtures).
 - `step-3-7-flash:free` (official docs example).
+- Live-catalog `:free` IDs observed 2026-09-05 (discovery data, confirm via `GET /v1/models` before use): `kimi-k2-7-code:free`, `kimi-k2-6:free`, `mistral-medium-3-5:free`, `hy3:free`, `mistral-large:free`, `mimo-v2-5:free`, `nemotron-3-super-120b-a12b:free`, `glm-4-7-flash:free`.
 - Only `:free`-suffixed IDs are free; same-name non-suffixed models are metered.
 
 **Limits:**

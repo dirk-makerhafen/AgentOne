@@ -26,7 +26,7 @@ SambaNova Cloud hosts fast inference for open and partner models. Accounts with 
 - `DeepSeek-V3.1` — reasoning, free-tier limits apply.
 - `DeepSeek-V3.2` (preview) — reasoning, free-tier limits apply.
 - `Meta-Llama-3.3-70B-Instruct` — chat, free-tier limits apply.
-- `gpt-oss-120b` — reasoning/agentic, free-tier limits apply.
+- [`gpt-oss-120b`](../models/gpt-oss-120b.md) — reasoning/agentic, free-tier limits apply.
 - `gemma-4-31B-it` (preview) — chat, free-tier limits apply.
 - Preview models can change or be removed; confirm the live catalog before use.
 

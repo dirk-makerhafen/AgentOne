@@ -19,7 +19,7 @@ ONE-TIME trial grant, not a permanent tier: DeepSeek's API is pay-per-token with
 
 **Free Models:**
 
-- No officially designated free models; the grant applies generally to API use. Current API model IDs (official docs): `deepseek-v4-flash` (→ DeepSeek-V4-Flash-0731), `deepseek-v4-pro` (→ DeepSeek-V4-Pro-0813), `deepseek-v4-flash-vision-exp` (experimental, image input).
+- No officially designated free models; the grant applies generally to API use. Current API model IDs (official docs): [`deepseek-v4-flash`](../models/deepseek-v4-flash.md) (→ DeepSeek-V4-Flash-0731), [`deepseek-v4-pro`](../models/deepseek-v4-pro.md) (→ DeepSeek-V4-Pro-0813), `deepseek-v4-flash-vision-exp` (experimental, image input).
 
 **Limits:**
 

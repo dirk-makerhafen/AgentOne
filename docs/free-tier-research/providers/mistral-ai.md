@@ -20,7 +20,8 @@ Mistral's La Plateforme (Studio) API defaults new organizations to Free mode wit
 
 **Free Models:**
 
-- No fixed free-model list is published; any Studio API model is usable within the included monthly usage and the per-model rate limits shown on the account Limits page.
+- `labs-devstral-small-2512` — free of charge per the official Labs / model-lifecycle policy: experimental, limited-time, not for production; silent updates; 1-month deprecation/removal notice; no data-collection opt-out. Access via La Plateforme account + API key (free mode default, no card); per-model rate limits on the console Limits page, no fixed public token/month figure.
+- No fixed free-model list is published beyond Labs (`labs-` prefix) models; any Studio API model is usable within the included monthly usage and the per-model rate limits shown on the account Limits page.
 - `mistral-large-latest` — used in the official Free-mode quickstart (example only, not a free-model designation).
 - Discovery-listed IDs (`mistral-medium-3-5`, `mistral-small-2603`, `mistral-large-2512`, `ministral-8b-2512`, `codestral-2508`, `ministral-3b-2512`, `ministral-14b-2512`) are **unverified in official docs**.
 
@@ -39,6 +40,8 @@ Mistral's La Plateforme (Studio) API defaults new organizations to Free mode wit
 
 **Sources**
 
+- https://docs.mistral.ai/inference/labs (Labs models free of charge, verified 2026-09-05)
+- https://docs.mistral.ai/inference/model-lifecycle
 - https://docs.mistral.ai/ (getting-started quickstart: first-api-request; admin/billing-usage/subscriptions; admin/billing-usage/usage-limits; resources/migration-guides; /api chat endpoints)
 - https://mistral.ai/pricing/
 - https://help.mistral.ai/en/articles/698531-why-am-i-hitting-api-rate-limits-and-how-do-i-increase-them

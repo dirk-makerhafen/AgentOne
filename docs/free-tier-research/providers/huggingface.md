@@ -29,6 +29,7 @@ Hugging Face Inference Providers is a unified gateway routing requests to 200+ m
 
 - Account required; token required; no credit card for free start (card needed for credit purchases/PRO); phone verification unknown.
 - Credits apply only to HF-routed requests; bring-your-own provider-key requests are billed by the provider with no HF credits.
+- No routed model is $0: e.g. `zai-org/GLM-4.7-Flash` is paid per token (Novita $0.07 in / $0.40 out, DeepInfra $0.06 / $0.40) — discovery-fixture cost-0 rows for it are artifacts; it only draws from the same monthly credit pool.
 - Usage visible at `huggingface.co/settings/inference-providers/overview`; org billing via `X-HF-Bill-To` / `bill_to`.
 
 **Sources**

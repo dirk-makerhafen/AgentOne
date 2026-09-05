@@ -31,7 +31,7 @@ PrivateMode (Edgeless Systems, confidential-AI proxy) has a documented Free subs
 - `Kimi K2.6` — chat, multiplier 1.0 (full 1M/month quota).
 - `GLM-5.3` — chat, multiplier 1.0.
 - `DeepSeek OCR 2` — vision OCR, multiplier 1.0.
-- `gpt-oss-120b` — reasoning, multiplier 2.0 (effective 500K/month).
+- [`gpt-oss-120b`](../models/gpt-oss-120b.md) — reasoning, multiplier 2.0 (effective 500K/month).
 - `Qwen3-Embedding 4B` — embeddings, multiplier 0.5 (effective 2M/month).
 
 **Limits:**

@@ -24,7 +24,7 @@ GroqCloud is Groq's LPU-powered inference API with a permanent rate-limited free
 
 **Free Models:**
 
-- `openai/gpt-oss-120b` — 131K context, reasoning; flagship open-weight model.
+- [`openai/gpt-oss-120b`](../models/gpt-oss-120b.md) — 131K context, reasoning; flagship open-weight model.
 - `openai/gpt-oss-20b` — 131K context.
 - `openai/gpt-oss-safeguard-20b` — 131K context moderation variant.
 - `qwen/qwen3.6-27b`, `qwen/qwen3.8-27b` — 131K context.

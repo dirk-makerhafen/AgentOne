@@ -19,7 +19,7 @@ FastRouter is an OpenAI-compatible model router whose models directory labels se
 **Free Models (verify live in the catalog):**
 
 - `openai/gpt-oss-20b:free` — reasoning/agentic, 131,072 context.
-- `openai/gpt-oss-120b:free` — reasoning/agentic, 131,072 context.
+- [`openai/gpt-oss-120b:free`](../models/gpt-oss-120b.md) — reasoning/agentic, 131,072 context.
 - Image lane: `flux-schnell`, `seedream-5-lite` listed "Free (with limits)".
 - Paid image/video models on the same endpoint (e.g. `gpt-image-2`, `veo`, `seedance`) are NOT free despite zero-cost fixture artifacts elsewhere — trust the official models page.
 
