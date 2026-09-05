@@ -1,191 +1,388 @@
-# Provider & Model Research
+Your goal is to find **currently available free LLM API resources** and maintain a clean, accurate provider list.
 
-Curated provider and model metadata of **free, flagship-tier models only**.
+Your task is to research these discovery sources:
 
-**Scope:** Top ~10 state-of-the-art models (e.g., GPT-4o, Claude Sonnet 4, Qwen3-235B, Nemotron 3 Ultra, DeepSeek V3, Llama 3.1 405B) — not the long tail of small/quantized/obscure models (e.g., Qwen-8B, Phi-3-mini, dozens of 7B/8B variants).
+* https://github.com/nejib1/Free-LLM
+* https://github.com/CYBIRD-D/FREE-LLM-API-Provider
+* https://freellms.org/providers/
 
-**Goal:** Maximize value for the user by providing only the best freely usable model APIs — the ones you'd actually pick for production use.
+Opencode (popular agent harness) also often has for a short time very good models for free via opencode zen, using their api_key "public" , easy extractable via https://raw.githubusercontent.com/anomalyco/opencode/refs/heads/dev/packages/web/src/content/docs/zen.mdx
 
----
+For every provider you find that offers a **genuinely usable free LLM API**, create or update a Markdown file in:
 
-### ⚡ QUICK START FOR NEXT AGENT
+`providers/<provider-name>.md`
 
-| Step | Action | Location |
-|------|--------|----------|
-| 1 | Run all extraction scripts, fix scripts on error  | `python3 scripts/generate_from_*.py --fetch` |
-| 2 | Research free models | source websites, web search |
-| 3 | Review extracted data, identify best free models | `raw/models/`, `raw/providers/` |
-| 4 | **Update curated files** | `models/<slug>.md`, `providers/<slug>.md` |
+## Research
 
-**Critical:** Scripts write ONLY to `raw/`. Final curated output goes to root `models/` and `providers/` — **manually created**.
+The three sources are **discovery sources, not authoritative sources**. Do not blindly copy them.
 
-## Structure
+For every provider:
 
-```
-providers/
-  README.md
-  scripts/                     # extraction scripts (helpers)
-  raw/                         # downloaded source data (gitignored) — SCRIPTS WRITE HERE ONLY
-      awesome-free-llm-apis.json
-      opencode-models-api.json
-      awesome-repo-cache/
-      free-api-resources-data.py
-      hermes-agent-cache/
-      models/                  # extracted model cards (for reference during curation)
-      providers/               # extracted provider cards (for reference during curation)
-  models/                      # CURATED model cards (FINAL OUTPUT — manual creation only)
-      <model-slug>.md          # model card with YAML frontmatter
-  providers/                   # CURATED provider cards (FINAL OUTPUT — manual creation only)
-      <provider-slug>.md       # provider card with YAML frontmatter
-```
+1. Find the provider's official website and API documentation.
+2. Verify that free API access is currently available.
+3. Determine:
 
-**KEY: Scripts ONLY read/write to `raw/`. The `models/` and `providers/` directories at the root are for MANUALLY CURATED final output only.**
+   * whether an account is required
+   * whether an API key is required
+   * whether payment/billing information is required
+   * API endpoint
+   * free models
+   * request limits
+   * token limits
+   * context limits
+   * other important restrictions
+4. Prefer official documentation and pricing/free-tier pages.
+5. If sources disagree, investigate and use the most recent/reliable information.
+6. Do not include providers whose free API access cannot be verified.
+7. Do not infer or guess limits.
 
-## Workflow: Two-Part Process
+A provider discovered outside the three lists may also be added if it has a verifiable free API.
 
-### Part 1: Extract Raw Data (Automated Helpers)
+## Data Extraction Scripts
 
-Run extraction scripts to download source data into `raw/` and bootstrap extracted files in `raw/models/` and `raw/providers/`:
+Run extraction scripts to download data into `raw/`, these files, especially the opencode data provides valuable structured information about providers and models.
 
 ```bash
 # Source 1: awesome-free-llm-apis data.json (24 free LLM providers)
-python3 scripts/generate_from_awesome_apis.py --fetch
+python3 scripts/generate_from_awesome_apis.py
 
 # Source 2: opencode test fixtures (120 providers, 2000+ models)
-python3 scripts/generate_from_opencode_fixtures.py --fetch
+python3 scripts/generate_from_opencode_fixtures.py
 
-# Source 3: awesome-free-llm-apis skill references (limits, env vars, base URLs)
-python3 scripts/generate_from_awesome_repo.py --fetch
+# Source 3: Leaderboard generation. do not edit. creates raw/leaderboard.csv
+python3 scripts/generate_leaderboard.py
 
-# Source 4: free-llm-api-resources MODEL_TO_NAME_MAPPING (human-readable names)
-python3 scripts/generate_from_free_api_resources.py --fetch
-
-# Source 5: NousResearch/hermes-agent ProviderProfile (auth, fallback models, aliases)
-python3 scripts/generate_from_hermes_agent.py --fetch
 ```
+
+## What counts as free
+
+Include services that provide usable LLM API inference without requiring payment, even if they have:
+
+* daily/monthly quotas
+* RPM/RPD limits
+* limited free tokens
+* only selected free models
+* account registration
+* API-key registration
+
+Do **not** treat the following as free API access:
+
+* free trials requiring payment
+* promotional credits unless clearly useful as a free offering
+* free web/chat access with no free API
+* models advertised as free but requiring a paid subscription
+* services where payment is required to obtain the API access
+
+Clearly distinguish free API access from free application/web access.
+
+## Files
+
+Create one canonical file per provider:
+
+`providers/<provider-name>.md`
+
+Check for an existing file first. If it exists, update it rather than creating a duplicate.
+
+Use stable, human-readable filenames.
+
+Do not create separate files for individual models.
+
+## File format
+
+Use this structure:
+
+```markdown
+---
+name: Provider Name
+url: "https://..."
+
+setup_instructions: |
+  Explain exactly how a new user obtains access.
+
+api_key_url: "https://..."
+
+default_api_key: public
+
+limits:
+  requests:
+    minute: 20
+    day: 1000
+  tokens:
+    minute: 100000
+    day: 1000000
+---
+
+Short factual description of the provider and its free offering.
+
+**Free Tier:**
+
+- ...
+
+**Free Models:**
+
+- `model-name` — context, capabilities, relevant limitations
+- `model-name` — ...
+
+**Limits:**
+
+- ...
 
 **Notes:**
-- Scripts are **helpers** — they download to `raw/` and write extracted data to `raw/models/` and `raw/providers/`
-- **Scripts NEVER write to the root `models/` or `providers/` directories** — those are for manual curation only
-- When sources update, scripts may need updates (check source URLs in each script)
-- Edit `SKIP_IDS` / `SLUG_OVERRIDES` / `SLUG_MERGE_MAP` in scripts to control inclusion
-- Each script is self-contained; no hardcoded provider data
 
-### Part 2: Curate Flagship Models (Ai Driven Research)
+...
 
-After extraction, **research and create the final curated files** in the root `models/` and `providers/` directories:
+**Sources**
 
-1. **Review extracted data** in `raw/models/` and `raw/providers/` for reference
-2. **Check source websites** (listed in Data Sources below) for new providers/models
-3. **Web search** for "best free LLM API 2026", "top free models production ready", etc.
-4. **Identify flagship models** — the ~10 models you'd actually use in production
-5. **Create/update curated files:**
-   - `providers/<slug>.md` — provider info (name, URL, auth, free tier, notes)
-   - `models/<slug>.md` — model specs (family, series, vision, reasoning, tool_call, params, context, providers)
-
-**Curation criteria for flagship models:**
-- State-of-the-art performance on benchmarks (MMLU, HumanEval, etc.)
-- Available free via at least one cloud api provider
-- Sufficient context length for production use (≥32K preferred)
-- Supports tool calling and/or reasoning
-- Actively maintained (not deprecated)
-
-## Regenerate Raw Data
-
-```bash
-# Run all extraction scripts in sequence
-python3 scripts/generate_from_awesome_apis.py --fetch && \
-python3 scripts/generate_from_opencode_fixtures.py --fetch && \
-python3 scripts/generate_from_awesome_repo.py --fetch && \
-python3 scripts/generate_from_free_api_resources.py --fetch && \
-python3 scripts/generate_from_hermes_agent.py --fetch && \
-python3 scripts/generate_from_lmsys_arena.py --fetch
+- https://...
+- https://...
 ```
 
-## Format Reference
+Adapt the fields when necessary. **Never invent missing values.**
 
-### Model card (`models/<slug>.md`)
+## Frontmatter
+
+Keep frontmatter concise and machine-readable.
+
+Use:
+
+* `name`
+* `url`
+* `setup_instructions`
+* `api_key_url`
+* `default_api_key`
+* `limits`
+
+`default_api_key: public` means that the documented free access method does not require a user-specific API key. Do not use it merely because obtaining a key is easy.
+
+## Limits
+
+Represent usage limits using a nested `limits` object.
+
+Supported categories:
+
+* `requests`
+* `tokens`
+
+Supported periods:
+
+* `second`
+* `minute`
+* `hour`
+* `day`
+* `week`
+* `month`
+
+Example:
 
 ```yaml
----
-name: <slug>                    # colons→dashes, lowercase (e.g., "gpt-4o", "qwen3-235b")
-family: <family>                # broad family e.g. gpt, qwen, claude, llama
-series: <series>                # model series e.g. gpt-4o, qwen3, sonnet-4
-vision: true|false              # supports image input
-supports_reasoning: true|false  # supports chain-of-thought / reasoning tokens
-supports_tool_call: true|false  # supports function/tool calling
-open_weights: true|false        # weights publicly available
-self_hosted: true|false         # can be self-hosted
-total_parameters: <float>       # billions (e.g., 7.0, 70.0, 235.0)
-active_parameters: <float>      # MoE only — active params in billions (e.g., 21.0 for 235B MoE)
-context_length: <int>           # max context tokens (e.g., 128000, 1000000)
-providers:
-  - <provider-slug>             # e.g., "openrouter", "groq", "together"
----
-Description...
+limits:
+  requests:
+    second: 2
+    minute: 30
+    hour: 500
+    day: 1000
+    week: 5000
+    month: 20000
+
+  tokens:
+    second: 5000
+    minute: 100000
+    hour: 1000000
+    day: 5000000
+    week: 20000000
+    month: 50000000
 ```
 
-### Provider card (`providers/<provider-slug>.md`)
+Only include limits that are actually documented or reliably verified.
+
+**Never derive additional limits.**
+
+If the provider says `1000 requests/day`, record only:
 
 ```yaml
----
-name: <display name>            # human-readable (e.g., "OpenRouter", "Groq", "Together AI")
-url: "<api base url>"           # e.g., "https://openrouter.ai/api/v1", "https://api.groq.com/openai/v1"
-self_hosted: true|false         # provider is a self-hosted platform
-free_info:
-  api_key_url: "<url>"          # URL to get API key (e.g., "https://console.groq.com/keys")
-  setup_instructions: "<text>"  # Step-by-step setup for free tier
-  requires_credit_card: true|false  # whether credit card needed for free tier
-  free_tier_description: "<text>"   # summary of free tier limits/models
----
-Description, auth method (API key / OAuth / none), free tier details, notes.
+limits:
+  requests:
+    day: 1000
 ```
 
-## Data Sources
+Do not calculate hourly/minute limits from it.
 
-### Extraction scripts (machine-parseable, actively maintained)
+Omit unknown limits rather than guessing.
 
-| Source | URL | Script | Data |
-|--------|-----|--------|------|
-| awesome-free-llm-apis (JSON) | https://raw.githubusercontent.com/mnfst/awesome-free-llm-apis/refs/heads/main/data.json | `scripts/generate_from_awesome_apis.py` | Provider names, models, context, modalities |
-| opencode test fixtures (JSON) | https://raw.githubusercontent.com/anomalyco/opencode/refs/heads/dev/packages/opencode/test/tool/fixtures/models-api.json | `scripts/generate_from_opencode_fixtures.py` | Provider names, models, env vars, capabilities |
-| awesome-free-llm-apis (repo) | https://github.com/mnfst/awesome-free-llm-apis/tree/main | `scripts/generate_from_awesome_repo.py` | Limits, base URLs, env vars, model lists |
-| free-llm-api-resources | https://github.com/cheahjs/free-llm-api-resources/tree/main | `scripts/generate_from_free_api_resources.py` | Human-readable model names per model ID |
-| NousResearch/hermes-agent | https://github.com/NousResearch/hermes-agent/tree/main/plugins/model-providers | `scripts/generate_from_hermes_agent.py` | Env vars, base URLs, fallback models, auth types, aliases |
-| LMSYS Chatbot Arena | https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset | `scripts/generate_from_lmsys_arena.py` | Model Elo ratings, licenses, orgs — for flagship identification |
+### Token limits
 
-### Curated lists (reference-only — markdown, no structured extraction)
+Distinguish between:
 
-These repos are manually curated lists. They contain structured data in markdown tables but no machine-parseable files. They are documented here for awareness and manual cross-reference, but do not have automated extraction scripts.
+* input tokens
+* output tokens
+* combined input/output tokens
 
-| Source | URL | Notes |
-|--------|-----|-------|
-| nejib1/Free-LLM | https://github.com/nejib1/Free-LLM | 45+ providers, self-hosted section, trial credits. Heavy overlap with Sources 1-2. |
-| CYBIRD-D/FREE-LLM-API-Provider | https://github.com/CYBIRD-D/FREE-LLM-API-Provider | Chinese platforms (ModelScope, SiliconFlow), NVIDIA full model catalog (129 models). Unique CN coverage. |
-| amardeeplakshkar/awesome-free-llm-apis | https://github.com/amardeeplakshkar/awesome-free-llm-apis | Fork of mnfst/awesome-free-llm-apis — already covered by Source 1. |
-| ShaikhWarsi/free-ai-tools | https://github.com/ShaikhWarsi/free-ai-tools | Broad scope (IDEs, copilots, RAG). Env variable names for many providers. |
-| eudk/awesome-ai-tools | https://github.com/eudk/awesome-ai-tools | Descriptive prose — model lineage, ecosystem overview. No structured data. |
-| zebbern/no-cost-ai | https://github.com/zebbern/no-cost-ai | 80+ services, no-signup endpoints, chat interfaces. Includes gray-market/g4f services. |
+If the provider distinguishes them:
 
-Data may be out of date or partial — cross-check between multiple sources. When multiple sources provide overlapping metadata for the same provider, scripts use a `SLUG_MERGE_MAP` (or alias-based matching) to merge into the same provider directory, enriching the provider card with info from each source.
+```yaml
+limits:
+  tokens:
+    input:
+      minute: 100000
+      day: 1000000
+    output:
+      minute: 50000
+      day: 500000
+```
 
-## Free Tier Research — Curated Providers
+If the limit is combined:
 
-The following table summarizes free tier access details for each curated provider, suitable for populating `free_info` in provider cards.
+```yaml
+limits:
+  tokens:
+    minute: 100000
+    day: 1000000
+```
 
-| Provider | API Key URL | Setup Instructions | Requires Credit Card | Free Tier Description |
-|----------|-------------|-------------------|---------------------|----------------------|
-| **OpenRouter** | https://openrouter.ai/keys | Sign up with email, go to API Keys page, create key. No credit card. | No | 200 req/day per free model (`:free` suffix). 50+ free models including Nemotron 3 Ultra, Qwen3-235B, DeepSeek V3, GLM-5.2, Gemma 4, GPT-OSS-120B, Kimi K2. Rate limits ~20 req/min. |
-| **Groq** | https://console.groq.com/keys | Sign up with email (no card), create API key. | No | All models free (rate-limited). ~30 req/min, ~14,400 req/day. Models: Llama 3.3 70B, Llama 4 Scout/Maverick, Qwen3 32B, GPT-OSS-120B/20B, Gemma 7B/27B, DeepSeek R1 Distill. No credits system. |
-| **Google AI Studio** | https://aistudio.google.com/app/apikey | Sign in with Google account, create API key. No credit card. | No | Gemini 2.5 Flash (10 RPM, 250K TPM, 1,500 RPD), 2.5 Flash-Lite (15 RPM, 1,000 RPD), 2.0 Flash (15 RPM, 1,500 RPD), 3 Flash (10 RPM, 1,500 RPD), 3.1 Flash-Lite (15 RPM, 1,000 RPD). All 1M context. Pro models paid-only. Free tier data may be used for model improvement. |
-| **Together AI** | https://api.together.ai/settings/api-keys | Sign up with email, get $5 free credits (never expire). | No | $5 free credits on signup. Free tier endpoints for 200+ open models (reduced rate limits vs Turbo). Includes DeepSeek V3, Qwen3-235B, Nemotron 3 Ultra/Super, Llama 3.3 70B, Llama 4 Maverick, GLM-5.2, GPT-OSS-120B. |
-| **NVIDIA NIM** | https://build.nvidia.com | Create NVIDIA NGC account (free), generate API key. | No | Free prototyping endpoints for all models on build.nvidia.com. Includes Nemotron 3 Ultra/Super/Nano, Llama-Nemotron. Rate limits suitable for development only. Production requires NVIDIA AI Enterprise. |
-| **Cerebras** | https://cloud.cerebras.ai/ | Sign up with email, create API key. No credit card. | No | Free access to select open models: Llama 3.3 70B, Llama 4 Scout/Maverick, Qwen3-235B, GPT-OSS-120B. Ultra-fast inference on wafer-scale hardware. Rate limits not publicly documented. |
-| **DeepSeek** | https://platform.deepseek.com/api_keys | Sign up with email, get $5 free credits. | No | $5 free credits on signup. Direct access to DeepSeek V3, R1, V3.1. Competitive per-token pricing after credits. China-based; consider data residency. |
-| **Kenari** | https://kenari.id | Sign up with email, create API key. No credit card. | No | Free tier with `:free` suffix models: DeepSeek V4 Flash/Pro, GLM-5.2, GPT-OSS-120B, GPT-5.4-mini, Kimi K2.6, Gemma 4 31B. Indonesian aggregator; latency may vary outside APAC. |
-| **UnoRouter** | https://unorouter.com | Sign up with email, create API key. No credit card. | No | 20+ free models with `:free` suffix: GPT-5.5/5.4/5.2, Nemotron 3 Ultra, DeepSeek V4 Flash/Pro, GLM-5.2/4.5-Flash, Gemma 4 31B, Qwen3.5-397B, Kimi K2.6, Minimax M2.7, Step 3.7 Flash. Broadest free catalog among aggregators. |
-| **OpenCode Zen** | (Built into opencode) | No setup needed — uses your opencode session. | N/A | Built-in provider for opencode users. 79 models free including: DeepSeek V4 Flash, Nemotron 3 Ultra/Super, GLM-5.2/5/4.7, Kimi K2.6/2.5, Minimax M3, Mimo v2.5, Qwen3.6 Plus, Ring 2.6 1T. Zero config, no separate API key. |
+If it is unclear, do not guess. Explain the ambiguity in the document.
 
----
+### Quotas vs rate limits
 
-**Note:** All providers listed offer genuine free tiers (no credit card required for free access). Rate limits and model availability may change; verify on provider websites before production use.
+Use the same structure for fixed quotas and rate limits.
+
+For example:
+
+```yaml
+limits:
+  requests:
+    minute: 20
+    day: 1000
+  tokens:
+    month: 10000000
+```
+
+Explain unusual quota semantics in the document body.
+
+### Model-specific limits
+
+The frontmatter `limits` should represent provider-wide/default limits.
+
+If limits differ by model, document them in the body instead:
+
+```markdown
+**Model-specific limits:**
+
+- `model-a`: 10 RPM, 500K tokens/day
+- `model-b`: 30 RPM, 1M tokens/day
+```
+
+Do not put one model's limits into the provider-wide frontmatter.
+
+### Per-request limits
+
+Do not put context windows or maximum tokens per request into `limits`.
+
+For example:
+
+* 128K context
+* 8192 maximum output tokens
+* 1M maximum input tokens per request
+
+These are model/request constraints, not usage-over-time limits. Document them under the relevant model.
+
+## Models
+
+List models that are **actually free through the API**.
+
+Do not list every model offered by the provider if only some are free.
+
+For important free models, document when reliably available:
+
+* model ID
+* context window
+* reasoning
+* tool/function calling
+* multimodal support
+* other significant limitations
+
+Do not invent capabilities.
+
+## Accuracy
+
+Every important, changeable claim must be supported by a source.
+
+This includes:
+
+* free-tier availability
+* models
+* model IDs
+* rate limits
+* token quotas
+* context lengths
+* API endpoints
+* API-key requirements
+* billing requirements
+* privacy/data usage
+* expiration dates
+* other restrictions
+
+Do not infer limits from testing or observed behavior.
+
+If information cannot be verified, say so or omit it.
+
+## Sources
+
+End every provider file with:
+
+```markdown
+**Sources**
+
+- https://...
+- https://...
+```
+
+Include the most relevant sources used to construct the entry.
+
+Prefer:
+
+1. Official API documentation
+2. Official pricing/free-tier documentation
+3. Official model documentation
+4. Official announcements
+5. The three discovery sources
+6. Other reputable sources when necessary
+
+Use specific documentation URLs where possible rather than only the provider homepage.
+
+The sources should allow another agent to quickly re-check whether information such as models, rate limits, or free-tier availability has changed.
+
+## Writing style
+
+Be factual, concise, and practical.
+
+Avoid marketing language.
+
+Prefer:
+
+> Provides an OpenAI-compatible API with 20 RPM and 1000 requests/day for models A and B. An account and API key are required. No payment method is required.
+
+over:
+
+> This amazing provider gives developers powerful access to cutting-edge AI models for free!
+
+Focus on information useful to someone who wants to actually use the free API.
+
+## Final verification
+
+Before completing each provider, verify:
+
+* Is the provider still operational?
+* Is free API inference actually available?
+* Is it available to normal users?
+* Is an account required?
+* Is an API key required?
+* Is payment information required?
+* Which models are actually free?
+* What are the documented limits?
+* Is the API endpoint correct?
+* Are the model IDs correct?
+* Are important claims supported by sources?
+* Does a provider file already exist?
+* Is this actually a distinct provider rather than a duplicate/service wrapper?
+
+The final `providers/` directory should be a **clean, deduplicated, independently verified database of genuinely usable free LLM API providers**, not a transcription of the source lists.
