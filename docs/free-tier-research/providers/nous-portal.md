@@ -2,7 +2,7 @@
 name: Nous Portal
 url: "https://portal.nousresearch.com/"
 setup_instructions: |
-  1. Register an account at https://portal.nousresearch.com/ and stay on the Free ($0) plan.
+  1. Register an account at https://portal.nousresearch.com/ and stay on the Free ($0/mo, $0 monthly credits) plan.
   2. Generate an API key in the portal.
   3. Point any OpenAI-compatible client at base URL https://inference-api.nousresearch.com/v1 with the key as Bearer token and a Portal-price-FREE model ID.
 api_key_url: "https://portal.nousresearch.com/"
@@ -13,20 +13,23 @@ limits:
     minute: 500000
 ---
 
-Nous Research's official API portal exposes 390 models (including its Hermes family) through an OpenAI-compatible API at `https://inference-api.nousresearch.com/v1`, with a standing $0 Free plan limited to free models.
+Nous Research's official API portal exposes 390 models (live count 2026-09-05, including its Hermes family) through an OpenAI-compatible API at `https://inference-api.nousresearch.com/v1`, with a standing $0 Free plan limited to free models.
 
 **Free Tier:**
 
 - **Free Tier:** Standing $0 Free plan — "Free models only, standard rate limits, $0 monthly credits" (official overview). Not a one-time grant; paid models require a subscription (Plus $20→$22 credits, Super $100→$110, Ultra $200→$220) or top-up.
+- Free set verified live on the models page 2026-09-05 (Portal price FREE).
 
 **Free Models:**
 
-- Free set is representative, verify live: the catalog at https://portal.nousresearch.com/models marks rows with Portal price FREE (rotating third-party free routes; observed 2026-09-05: LongCat 2.0, Laguna S/XS 2.1, Step 3.7 Flash, Solar Pro 4, Ling 3.0 Flash Fin, Ling 3.0 Flash Sante). `Hy3` is currently paid ($0.10 in / $0.42 out per 1M); `Ox Alpha` is no longer in the free list.
+- Free set (Portal price FREE, live 2026-09-05): Meituan LongCat 2.0, Upstage Solar Pro 4, StepFun Step 3.7 Flash, Poolside Laguna S 2.1, Poolside Laguna XS 2.1, inclusionAI Ling 3.0 Flash Fin, inclusionAI Ling 3.0 Flash Sante (free). Rotating third-party free routes — verify live at https://portal.nousresearch.com/models.
+- [`poolside/laguna-s-2.1`](../models/laguna-s-2.1.md) / [`laguna-xs-2.1`](../models/laguna-xs-2.1.md) free rows confirmed among the FREE set; paid duplicate routes for the same models also exist (e.g. Laguna S 2.1 at $0.07 in / $0.14 out per 1M) — send the FREE-priced route for free use.
+- `Hy3` is currently paid ($0.10 in / $0.42 out per 1M); `Ox Alpha` is no longer in the free list.
 - Nous's own `Hermes-4-70B`, `Hermes-4-405B`, `Hermes-4.3-36B` (128K context, reasoning via system prompt) are documented API models but paid/discounted via Portal — not verified as free-tier models.
 
 **Limits:**
 
-- Free (official api-docs, quoted exactly): 50 RPM, 500,000 TPM.
+- Free: 50 RPM, 500,000 TPM. Official api-docs page is JS-rendered (not directly fetchable); figures corroborated 2026-09-05 by two independent secondaries citing official docs (dev.to 2026-08-02; TorchTree citing Portal API docs).
 - Requests/day and monthly token figures: unknown (not published).
 
 **Notes:**
@@ -39,9 +42,10 @@ Nous Research's official API portal exposes 390 models (including its Hermes fam
 
 **Sources**
 
-- https://portal.nousresearch.com/
-- https://portal.nousresearch.com/api-docs
-- https://portal.nousresearch.com/models
-- https://portal.nousresearch.com/manage-subscription
-- https://hermes-agent.nousresearch.com/docs/integrations/nous-portal
+- https://portal.nousresearch.com/ (Free plan: free models only, $0 monthly credits)
+- https://portal.nousresearch.com/api-docs (rate limits, x402 beta — JS-rendered; corroborated via secondaries below)
+- https://portal.nousresearch.com/models (live FREE rows + 390-model count, checked 2026-09-05)
+- https://portal.nousresearch.com/manage-subscription (Plus/Super/Ultra credit figures)
+- https://hermes-agent.nousresearch.com/docs/integrations/nous-portal (base URL `https://inference-api.nousresearch.com/v1`, backend routing)
+- https://dev.to/zackchew/nous-portal-explained-plans-models-tools-and-hermes-cloud-9hh (2026-08-02: Free $0/mo, 50 RPM / 500K TPM)
 - https://github.com/nejib1/Free-LLM

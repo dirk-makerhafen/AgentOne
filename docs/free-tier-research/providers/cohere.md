@@ -10,38 +10,42 @@ api_key_url: "https://dashboard.cohere.com/api-keys"
 limits:
   requests:
     minute: 20
+    month: 1000
 ---
 
 Cohere offers free Trial (evaluation) API keys with limited usage across its Chat, Embed, and Rerank APIs.
 
 **Free Tier:**
 
-- Permanent free Trial keys, not expiring trial credits; production keys are paid with much higher limits.
-- Trial keys (and production keys on newer Chat model variants) are limited to 1,000 API calls per month.
-- Trial keys are rate-limited and not for production/commercial use. The discovery-fixture cost-0 row for `north-mini-code-1-0` mirrors trial-key $0, not a free production model — the exact API string `north-mini-code-1-0` is unconfirmed verbatim in official docs; verify in console before publishing it as a model ID.
+- Permanent free Trial keys, not expiring trial credits; production keys are paid with much higher limits (verified 2026-09-05).
+- Trial keys (and production keys on newer Chat model variants) are limited to 1,000 API calls per month — official rate-limits page (verified 2026-09-05).
+- Trial keys are rate-limited and not for production use ("Prod keys work like trial keys for newer model variants ... contact sales@cohere.com").
 
 **Free Models:**
 
-- Command A+, Command A Reasoning, Command A Translate, Command A Vision, Command A, Command R+, Command R, Command R7B, North Mini Code — each at 20 req/min on Trial keys (per official rate-limits table; exact versioned IDs such as `command-a-03-2025` are secondary-reported, confirm live).
-- Trial limits also documented for Embed, Embed (Images), EmbedJob, Rerank, Tokenize, Audio Transcriptions, and Parse endpoints.
+- Exact model IDs confirmed on the official models overview page (verified 2026-09-05): `command-a-plus-05-2026` (128K context, 64K max output, text+images), `command-a-03-2025` (256K context, 8K max output), `command-a-reasoning-08-2025` (256K context, 32K max output), `command-a-translate-08-2025` (8K context, 8K max output), `command-a-vision-07-2025` (128K context, 8K max output), `command-r-plus-08-2024` (128K context, 4K max output), `command-r-08-2024` (128K context, 4K max output), `command-r7b-12-2024` (128K context, 4K max output) — each at 20 req/min on Trial keys per the official rate-limits table.
+- `North Mini Code` — listed by display name in the official rate-limits table (20 req/min trial, 500 req/min production); exact versioned API string unconfirmed in official docs, verify in console before publishing it as a model ID.
+- Discovery-listed IDs `command-r7b-arabic-02-2025`, `c4ai-aya-expanse-32b`, `c4ai-aya-vision-32b` are secondary-reported, confirm live.
+- None of the 9 catalogued model cards is served through this provider — no model-card links apply.
 
 **Limits:**
 
-- Chat API (Trial, per model): 20 req/min; overall Trial cap: 1,000 API calls/month.
-- Other Trial endpoints: Embed 2,000 inputs/min; Embed (Images) 5 inputs/min; EmbedJob 5 req/min; Rerank 10 req/min; Tokenize 100 req/min; Audio Transcriptions 5 req/min; Parse 500 req/min; default 500 req/min.
-- Production Chat rate for Command A / R+ / R / R7B / North Mini Code: 500 req/min.
+- Chat API (Trial, per model): 20 req/min; overall Trial cap: 1,000 API calls/month (both official, verified 2026-09-05).
+- Other Trial endpoints (official): Embed 2,000 inputs/min; Embed (Images) 5 inputs/min; EmbedJob 5 req/min; Rerank 10 req/min; Tokenize 100 req/min; Audio Transcriptions 5 req/min; Parse 500 req/min; default 500 req/min.
+- Production Chat rate for Command A / R+ / R / R7B / North Mini Code: 500 req/min; newer variants (A+, Reasoning, Translate, Vision) have no paid production tier — contact sales@cohere.com.
 
 **Notes:**
 
-- Account required; Trial API key required; no credit card required for trial; phone verification: **unknown** (secondary source reports none required).
-- OpenAI-compatible via https://api.cohere.ai/compatibility/v1; native base URL https://api.cohere.com/v2.
-- Newer variants (Command A Reasoning, A Translate, A Vision, A+) have no paid production tier — production keys behave like trial keys; contact sales@cohere.com for production use.
-- "Non-commercial use only" claim from discovery data is **unconfirmed in official docs fetched**.
+- Account required; Trial API key required; no credit card required for trial; phone verification: **unknown** (secondary sources report none required — unverified).
+- Endpoints (verified 2026-09-05): native base URL https://api.cohere.com/v2 (`POST /v2/chat`); OpenAI-compatible via https://api.cohere.ai/compatibility/v1 (`POST /chat/completions`).
+- "Non-commercial use only" claim from discovery data is **unconfirmed in official docs fetched** — official wording is "not for production use".
+- `command-a-03-2025` playground link confirms the exact ID string: https://dashboard.cohere.com/playground?model=command-a-03-2025.
 
 **Sources**
 
-- https://docs.cohere.com/docs/rate-limits
+- https://docs.cohere.com/docs/rate-limits (trial/prod limits, 1,000 calls/month — verified 2026-09-05)
+- https://docs.cohere.com/docs/models (exact model IDs, context/output — verified 2026-09-05)
+- https://docs.cohere.com/docs/compatibility-api (OpenAI-compatible base URL — verified 2026-09-05)
 - https://docs.cohere.com/v2/docs/how-does-cohere-pricing-work
-- https://docs.cohere.com/docs/compatibility-api
 - https://cohere.com/pricing
-- Secondary: docs/free-tier-research/raw/awesome-free-llm-apis/Cohere.json; https://freellm.net/providers/cohere (no-card/no-phone claim, unverified)
+- Secondary (unverified claims only): docs/free-tier-research/raw/awesome-free-llm-apis/Cohere.json

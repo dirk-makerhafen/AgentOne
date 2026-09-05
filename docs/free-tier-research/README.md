@@ -321,7 +321,7 @@ Create a card for a model when it is free through at least one verified provider
 - One canonical file per model: `models/<model-slug>.md`, lowercase slug (e.g. `models/gpt-oss-120b.md`, `models/glm-4.5-flash.md`).
 - Strip access suffixes from the filename: no `:free` / `-free` (e.g. `gemma-4-31b-it.md`, not `gemma-4-31b-it-free.md`).
 - Omit the vendor prefix unless needed for uniqueness (e.g. `nemotron-3-nano-30b-a3b.md`, not `nvidia-nemotron-...md`).
-- Closely related version variants may share one family card named after the family (e.g. `models/laguna.md` covering `laguna-s-2.1` / `laguna-xs.2`) with a versions table; split into per-version cards only if their free availability diverges significantly.
+- One leaderboard entry = one model file: if `raw/rankings/leaderboard.csv` lists versions as separate Model IDs (e.g. `laguna-s-2.1` vs `laguna-xs-2.1`, `glm-5.3` vs `glm-5.2`, `qwen3.6-27b` vs `qwen3.6-35b-a3b`), they get separate cards (`models/laguna-s-2.1.md`, `models/laguna-xs-2.1.md`), because free availability varies per version. Record the mapping in frontmatter as `leaderboard_id:` (exact Model ID string from the CSV; omit only when no entry denotes the card's model). Ranks/scores live in `raw/rankings/` — do not copy them into cards (the CSV is a stale snapshot; the generator is currently broken, see line 57).
 
 ### File format
 
@@ -332,6 +332,7 @@ Use this structure:
 name: Model Display Name
 developer: Organization
 canonical_id: vendor/model-slug
+leaderboard_id: leaderboard-model-id
 family: model-family
 context_window: 131072
 max_output_tokens: 32768

@@ -11,7 +11,7 @@ default_api_key: public
 limits:
 ---
 
-Korean-specialized enterprise LLM (Qwen2.5-based) by SK Telecom, with a free anonymous guest API.
+Korean-specialized enterprise LLM by SK Telecom, with a free anonymous guest API (re-verified 2026-09-05 against the official repo README and API docs).
 
 **Free Tier:**
 
@@ -19,7 +19,7 @@ Korean-specialized enterprise LLM (Qwen2.5-based) by SK Telecom, with a free ano
 
 **Free Models:**
 
-- `ax4` — A.X 4.0 chat model via the guest endpoint.
+- `ax4` — A.X 4.0 chat model via the guest endpoint. Qwen2.5-based, further trained on Korean data (released 2025-04-30); repo documents up to 131,072-token context and 72B standard / 7B light variants. No `models/` card exists for it, so no card link applies.
 
 **Limits:**
 
@@ -28,7 +28,8 @@ Korean-specialized enterprise LLM (Qwen2.5-based) by SK Telecom, with a free ano
 **Notes:**
 
 - Account required: no. API key required: yes, but published (guest key `sktax-XyeKFrq67ZjS4EpsDlrHHXV8it` from the official README — no signup). Payment/billing info required: no. Phone verification: no.
-- Guest endpoint only; usage-based enterprise API plans and on-premise/hybrid deployment are described separately in the repo.
+- Guest endpoint only (`POST https://guest-api.sktax.chat/v1/chat/completions`); usage-based enterprise API plans and on-premise/hybrid deployment are described separately in the repo.
+- Whether the guest key is rate-limited, rotated, or time-bounded is undocumented — build for failure.
 
 **Sources**
 
