@@ -7,13 +7,37 @@ from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.sessions.session_version import SessionVersionModel
 
+def _extract_date_from_path(rel_path: str) -> list:
+    parts = rel_path.split("/")
+    for i, p in enumerate(parts):
+        if p.isdigit() and len(p) == 4 and 2000 <= int(p) <= 2030:
+            mm = parts[i + 1] if i + 1 < len(parts) and parts[i + 1].isdigit() and 1 <= int(parts[i + 1]) <= 12 else None
+            dd = parts[i + 2] if mm and i + 2 < len(parts) and parts[i + 2].isdigit() and 1 <= int(parts[i + 2]) <= 31 else None
+            if dd:
+                return [p, mm, dd]
+            if mm:
+                return [p, mm, None]
+            return [p, None, None]
+    return None,None,None
 
 def ingest_next(_session: Session, limit:int=1):
     _session.get_command("todo_clear").call(include_done=True)
     success, data = _session.get_task("find_unlinked_raw").call(limit=limit)
     cnt = 0
+    last_y,last_m,last_d = None,None,None
     if data.get("items", None):
         for item in data["items"]:
+            p = item["file"]
+            y,m,d = _extract_date_from_path(p)
+            if last_y and y != last_y:
+                _session.get_command("todo_append").call(text=f'Lint your work for {last_y}')   
+            if last_m and m != last_m:
+                _session.get_command("todo_append").call(text=f'Lint your work for {last_y}-{last_m}')   
+            if last_d and d != last_d:
+                _session.get_command("todo_append").call(text=f'Lint your work for {last_y}-{last_m}-{last_d}')                    
+            last_y = y if y else last_y
+            last_m = m if m else last_m
+            last_d = d if d else last_d
             cnt += 1
             _session.get_command("todo_append").call(text=f'ingest: {item["file"]}')
     return True, f"{cnt} todo items created"
