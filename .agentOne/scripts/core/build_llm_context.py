@@ -45,7 +45,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
             status__in=[QueryStatus.WAITING, QueryStatus.ACTIVE],
         ).exists()
         if existing:
-            raise RuntimeError(f"Session {sv.session_id} already has a WAITING or ACTIVE query - refusing to create a duplicate")
+            raise RuntimeError(f"Session {sv.pk} already has a WAITING or ACTIVE query - refusing to create a duplicate")
         query = Query.objects.create(
             session=sv.session,
             session_version=sv,

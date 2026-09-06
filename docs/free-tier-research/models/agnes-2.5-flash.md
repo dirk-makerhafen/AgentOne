@@ -22,6 +22,11 @@ providers:
     model_id: agnes-2-5-flash:free
     conditions: ":free lane billed Rp 0, best-effort; account + key (kn-...), no top-up"
     verified: "2026-09-05"
+  - name: ZenMux
+    file: zenmux
+    model_id: sapiens-ai/agnes-2.5-flash
+    conditions: "Free lane billed $0/token (in, out); account + key, no card; rate-limited; roster rotates"
+    verified: "2026-09-06"
 ---
 
 Agnes 2.5 Flash is Agnes AI's generally-available fast coding/agent text model, with improved coding, agent workflows, tool calling, and image understanding over the deprecated Agnes 2.0 Flash (official model docs). No official SWE-bench score is published; internal/company-reported figures (~75.6 SWE-bench Verified, ~62.3 Terminal-Bench 2.1) suggest frontier-adjacent coding, so the leaderboard rank is an estimate (see Notes).
@@ -40,10 +45,11 @@ Agnes 2.5 Flash is Agnes AI's generally-available fast coding/agent text model, 
 |---|---|---|---|---|
 | [Agnes AI](../providers/agnes-ai.md) | `agnes-2.5-flash` | Core models free indefinitely per platform FAQ; account + key | Text-model RPM for free/default users per provider file (no combo-specific cap) | 2026-09-05 |
 | [Kenari](../providers/kenari.md) | `agnes-2-5-flash:free` | `:free` lane billed Rp 0, best-effort; account + key (`kn-...`), no top-up | Per-minute cap plus tiered daily quotas, operator-set (see provider file) | 2026-09-05 |
+| [ZenMux](../providers/zenmux.md) | `sapiens-ai/agnes-2.5-flash` | Free lane billed $0/token (in, out); account + key, no card | Served at 524K context; rate-limited; exact limits unpublished; roster rotates | 2026-09-06 |
 
 **Notes:**
 
-- Same-model $0 coverage: `agnes-2.5-flash` is $0 on Agnes AI itself and `:free` on Kenari.
+- Same-model $0 coverage: `agnes-2.5-flash` is $0 on Agnes AI itself, `:free` on Kenari, and on ZenMux's free lane as `sapiens-ai/agnes-2.5-flash`.
 - Kenari's non-suffixed `agnes-2-5-flash` is metered per that file's own notes — only the `:free`-suffixed ID is claimed here.
 - Context: official Agnes docs state `512K` for 2.5-flash (card default 524288); Kenari catalogs 512K for `agnes-2-5-flash:free`. No per-provider override recorded.
 - `max_output_tokens`: official docs state `65.5K` (not an exact integer) — omitted rather than converted.

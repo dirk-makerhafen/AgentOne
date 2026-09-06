@@ -14,7 +14,7 @@ class AssistantMessageView(ModelView):
     DOM_ELEMENT_CLASS = 'msg-row'
 
     TEMPLATE_STR = '''
-        <div class="msg-role assistant" title="{{pyview.subject.created_at}}">
+        <div class="msg-role assistant" title="Message:{{pyview.subject.pk}}">
             <div class="role-icon assistant">A</div>
             <span style="font-size:12px">{{ pyview.subject.session_version.agent.name}} v{{ pyview.subject.session_version.pinned_agent_version if pyview.subject.session_version.pinned_agent_version else "-1"}}</span>
 

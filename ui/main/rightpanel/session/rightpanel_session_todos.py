@@ -19,14 +19,10 @@ def _read_todo_state(session: Session | None) -> dict[str, Any]:
     if session is None:
         return empty
     auto = False
-    try:
-        anchor = session.get_task("todolist_action") or session.get_tool("todolist_action")
-        raw = anchor.lastest_result() if anchor is not None else None
-        items = raw.get("items", [])
-        #auto = bool(session._get_session_setting("todo_auto_process"))
-    except Exception:  # pylint: disable=broad-exception-caught
-        return empty
 
+    anchor = session.get_task("todolist_action") or session.get_tool("todolist_action")
+    raw = anchor.lastest_result() if anchor else None
+    items = raw.get("items", []) if raw else []
     return {"items": items, "auto": auto}
 
 
@@ -57,10 +53,12 @@ class RightPanelSessionTodos(ModelView):
                 <div class="task-card" style="margin-bottom:6px;display:flex;gap:8px;align-items:flex-start">
                     <span style="font-size:11px;color:var(--muted);min-width:22px">#{{ item["task_id"] }}</span>
                     <div style="flex:1;font-size:12px;color:var(--text);white-space:pre-wrap">{{ item["text"] }}</div>
-                    {% if item["status"] == "done" %}
-                        <span style="font-size:10px;color:var(--success)">done</span>
-                    {% else %}
+                    {% if item["status"] == "completed" %}
+                        <span style="font-size:10px;color:var(--success)">completed</span>
+                    {% elif  item["status"] == "pending" %}
                         <span style="font-size:10px;color:var(--warning)">pending</span>
+                    {% else %}
+                        <span style="font-size:10px;color:var(--muted)">in-progress</span>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -105,10 +103,13 @@ class RightPanelSessionTodos(ModelView):
         self.refreshTodos()
 
     def refreshTodos(self) -> None:
+        print("refreshTodos11")
         self.update()
 
     def update(self, *args, **kwargs):
         self.state = _read_todo_state(self.session)
+        print("refreshTodosrefreshTodosrefreshTodos",self.state )
+
         super().update(*args, **kwargs)
 
     def refresh(self):

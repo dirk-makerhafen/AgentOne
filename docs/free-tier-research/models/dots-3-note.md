@@ -32,6 +32,12 @@ providers:
     model_id: dots-3-note-preview-free
     conditions: "10 trial calls strictly free (account + key, no card); sustained daily quotas after one-time $1+ top-up"
     verified: "2026-09-05"
+  - name: ZenMux
+    file: zenmux
+    model_id: dots-studio/dots3-note-prev
+    conditions: "Free lane billed $0/token (in, out); account + key, no card; rate-limited; roster rotates"
+    context_window: 393100
+    verified: "2026-09-06"
 ---
 
 Dots-3-Note Preview is an open-weights multimodal Mixture-of-Experts model from Dots Studio (the AI lab at Xiaohongshu / RedNote; earlier dots.llm and dots.ocr releases used the rednote-hilab name): 280B total parameters with 16B active, released Aug 14 2026 under Apache 2.0. It is the lightest model in the Dots 3 family, optimized for reasoning, agents, and multimodal perception.
@@ -52,11 +58,12 @@ Dots-3-Note Preview is an open-weights multimodal Mixture-of-Experts model from 
 | [OpenRouter](../providers/openrouter.md) | `dots-studio/dots-3-note-preview:free` | Free `:free` variant; account + key, no card | None combo-specific; provider-wide free-variant caps apply (see provider file) | 2026-09-05 |
 | [UnoRouter](../providers/unorouter.md) | `dots-3-note-preview:free` | `:free` suffix lane; Discord/GitHub signup + key, no card | None combo-specific; ~1 req/min per-model fairness cap applies (see provider file) | 2026-09-05 |
 | [AIHubMix](../providers/aihubmix.md) | `dots-3-note-preview-free` | 10 trial calls strictly free; sustained daily quotas after one-time $1+ top-up | None combo-specific beyond provider file; topped-up quotas are 100 req/day · 10 req/min shared catalog-wide (see provider file) | 2026-09-05 |
+| [ZenMux](../providers/zenmux.md) | `dots-studio/dots3-note-prev` | Free lane billed $0/token (in, out); account + key, no card | Served at ~393K context (card default 512K); rate-limited; exact limits unpublished; roster rotates | 2026-09-06 |
 
 **Notes:**
 
 - Developer attribution: the model org is `dots-studio` on Hugging Face / ModelScope and `studio-dots-ai` on GitHub, with contact at a xiaohongshu.com address; third-party catalogs describe it as "the AI lab at Xiaohongshu (RedNote), also behind the dots.llm and dots.ocr models released under the rednote-hilab name". Use `dots-studio` as the canonical vendor prefix.
-- No `limits` in frontmatter: no combo-specific numerics are documented for any of the four rows; provider-wide defaults stay in the provider files.
+- No `limits` in frontmatter: no combo-specific numerics are documented for any of the rows; provider-wide defaults stay in the provider files (ZenMux row recorded at 393,100 context per its live model entry, vs 512K card default).
 - Max output tokens: catalogs disagree (512K vs ~460.8K/461K) — omitted.
 - Temperature / structured output / top_p: catalog-reported only, not verified against official sources — omitted.
 - Knowledge cutoff is unpublished — omitted.

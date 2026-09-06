@@ -10,10 +10,64 @@ import re
 import shutil
 from subprocess import PIPE, Popen
 import textwrap
+import unicodedata
 import email.utils
 import html2text
 import yaml
 from bs4 import BeautifulSoup  # pip install beautifulsoup4
+
+def clean_filename(raw: str, max_len: int = 100, fallback: str = "unnamed") -> str:
+    '''Return an ASCII-only, filesystem- and pipeline-safe file/folder name.
+
+    The AppleScript exporter only strips ``/ : \\ * ? " < > |`` and truncates
+    to 50 chars (possibly splitting emoji), so sender/subject-derived names
+    can still contain emoji, non-Latin scripts, control chars or newlines,
+    which break git, shell tools and downstream parsing later. This maps
+    everything to ``[A-Za-z0-9._-]``:
+
+    1. German umlauts transliterated (ae/oe/ue/ss, existing convention).
+    2. NFKD decomposition + strip combining marks (e -> e, n -> n, ...).
+    3. Drop whatever is still non-ASCII (emoji, CJK, zero-width chars, ...).
+    4. Replace any remaining unsafe char (incl. whitespace, newlines,
+       brackets, slashes) with ``_``, collapse repeats, strip leading
+       dots/dashes/underscores (hidden files, ``..``) and trailing dots
+       (Windows-unfriendly).
+    5. Truncate to ``max_len`` chars; empty results become ``fallback``.
+    '''
+    name = raw or ""
+    name = name.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
+    name = name.replace('Ä', 'Ae').replace('Ö', 'Oe').replace('Ü', 'Ue')
+    name = name.replace('ß', 'ss')
+    name = unicodedata.normalize("NFKD", name)
+    name = "".join(c for c in name if not unicodedata.combining(c))
+    name = name.encode("ascii", "ignore").decode("ascii")
+    name = re.sub(r'[^A-Za-z0-9._-]+', '_', name)
+    name = re.sub(r'_+', '_', name)
+    name = name.strip('._- ')
+    if re.fullmatch(r'(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])', name, re.IGNORECASE):
+        name = "_" + name  # reserved on Windows/SMB
+    if not name:
+        name = fallback
+    if len(name) > max_len:
+        name = name[:max_len].rstrip('._- ')
+        if not name:
+            name = fallback
+    return name
+
+
+def clean_attachment_name(filename: str, max_stem_len: int = 80) -> str:
+    '''Clean an email attachment filename, preserving a safe extension.'''
+    raw = (filename or "").strip().replace("\x00", "")
+    # Senders sometimes ship full client paths ("C:\\docs\\file.pdf").
+    raw = re.split(r'[\\/]', raw)[-1]
+    suffix = Path(raw).suffix  # keeps the last ".ext"
+    stem = raw[: -len(suffix)] if suffix else raw
+    clean_stem = clean_filename(stem, max_len=max_stem_len, fallback="attachment")
+    clean_suffix = re.sub(r'[^A-Za-z0-9]+', '', suffix[1:] if suffix else "")
+    if clean_suffix:
+        clean_suffix = "." + clean_suffix.lower()
+    return clean_stem + clean_suffix
+
 
 def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
     '''
@@ -273,25 +327,40 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                     except:
                         print("failed to parse date")
 
-            # Create target dir
-            def _clean_name(raw: str) -> str:
-                name = raw
-                name = re.sub(r'<[^>]+>', '', name)
-                name = name.replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue')
-                name = name.replace('Ä', 'Ae').replace('Ö', 'Oe').replace('Ü', 'Ue')
-                name = name.replace('ß', 'ss')
-                name = re.sub(r'[()\[\]{}]', '', name)
-                name = re.sub(r'\s+', '_', name)
-                name = name.strip('-._ ')
-                return name
-
-            clean_folder = _clean_name(eml_file.parent.name)
+            # Create target dir. The AppleScript folder name (sender/subject
+            # derived) may contain emoji/unicode — clean it so every path
+            # this script creates is ASCII-safe for git and downstream tools.
+            clean_folder = clean_filename(eml_file.parent.name, max_len=120)
             if email_date:
-                target_path = OUTPUT_PATH / metadata["direction"] / str(email_date.year) / f"{email_date.month:02d}" / clean_folder
+                target_base = OUTPUT_PATH / metadata["direction"] / str(email_date.year) / f"{email_date.month:02d}"
             else:
-                target_path = OUTPUT_PATH / metadata["direction"] / "kein_datum" / clean_folder
+                target_base = OUTPUT_PATH / metadata["direction"] / "kein_datum"
+
+            # Disambiguate: distinct mails can clean to the same folder name.
+            # Identical bytes = re-export duplicate -> drop; otherwise suffix.
+            new_eml_bytes = eml_file.read_bytes()
+            target_path = target_base / clean_folder
+            suffix_counter = 1
+            while (target_path / "message.eml").exists():
+                try:
+                    if (target_path / "message.eml").read_bytes() == new_eml_bytes:
+                        break  # same mail re-exported, keep existing files
+                except OSError:
+                    pass
+                suffix_counter += 1
+                target_path = target_base / f"{clean_folder}_{suffix_counter}"
 
             target_path.mkdir(parents=True, exist_ok=True) # Ensure parent directories exist
+
+            target_file = target_path / "message.eml"
+            target_file_md = target_path / "message.md"
+
+            if target_file.exists():
+                # Identical mail re-exported (timestamp overlap): nothing new.
+                os.remove(eml_file)
+                if not any(eml_file.parent.glob("*")):
+                    eml_file.parent.rmdir()
+                continue
 
             #Extract attachments
             attachment_names = set()
@@ -299,17 +368,17 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                 if part.is_multipart():
                     continue
                 if filename := part.get_filename():
-                    clean_name = "".join(c for c in filename if c not in "\\/:*?\"<>|")
+                    clean_name = clean_attachment_name(filename)
                     i=1
                     original_clean_name = clean_name
-                    while clean_name in attachment_names:
+                    while clean_name in attachment_names or (target_path / "attachments" / clean_name).exists():
                         clean_name = f"{Path(original_clean_name).stem}_{i}{Path(original_clean_name).suffix}"
                         i += 1
                     attachment_names.add(clean_name)
                     attachment_path = target_path / "attachments"
                     attachment_path.mkdir(exist_ok=True, parents=True)
                     attachment_file = target_path / "attachments" / clean_name
-                    attachment_file.write_bytes(part.get_payload(decode=True))
+                    attachment_file.write_bytes(part.get_payload(decode=True) or b"")
                     if "attachments" not in metadata:
                         metadata["attachments"] = []
                     metadata["attachments"].append(clean_name)
@@ -348,17 +417,11 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                 if is_placeholder or len(message_text) < 150 and len(message_html) > 2000:
                     message_text = clean_html_email_to_markdown(message_html)
 
-            target_file = target_path / "message.eml"
-            target_file_md = target_path / "message.md"
-
-            if target_file.exists():
-                os.remove(eml_file)
-            else:
-                shutil.move(eml_file, target_file) # Move the entire temporary email folder to its permanent structured location
-                yaml_string = yaml.dump(metadata, default_flow_style=False, allow_unicode=True)
-                markdown_file_content = f"---\n{yaml_string}---\n\n{message_text}"
-                target_file_md.write_text(markdown_file_content)
-                result_files.append((email_date or datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc), target_file_md))
+            shutil.move(eml_file, target_file) # Move the entire temporary email folder to its permanent structured location
+            yaml_string = yaml.dump(metadata, default_flow_style=False, allow_unicode=True)
+            markdown_file_content = f"---\n{yaml_string}---\n\n{message_text}"
+            target_file_md.write_text(markdown_file_content)
+            result_files.append((email_date or datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc), target_file_md))
 
             if not any(eml_file.parent.glob("*")): # eml folder
                 eml_file.parent.rmdir()

@@ -371,6 +371,12 @@ class Messages(PyHtmlView):
         for _ in range(self.max_visible_items//4):
             newer = last.next_messages.filter(session_version__session=self.subject.model).first()
             if newer is None:
+                # Window was scrolled up across a fork into another session's
+                # chain (up() follows prev_message unfiltered). The foreign
+                # chain is linear here, so walk it back toward the fork;
+                # at the fork itself the filtered lookup above already hits.
+                newer = last.next_messages.order_by("pk").first()
+            if newer is None:
                 break
             self.message_list.append(newer)
             for query in newer.related_queries.filter(session_version__session=self.subject.model).order_by("pk"):

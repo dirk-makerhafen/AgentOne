@@ -25,6 +25,11 @@ providers:
     model_id: glm-4.7-flash-free
     conditions: "Free-model lane; account + key, no card for 10 trial calls; daily quotas need one-time $1+ top-up"
     verified: "2026-09-05"
+  - name: ZenMux
+    file: zenmux
+    model_id: z-ai/glm-4.7-flash-free
+    conditions: "Free lane billed $0/token (in, out); account + key, no card; rate-limited; roster rotates"
+    verified: "2026-09-06"
 ---
 
 GLM-4.7-Flash is Z.AI's efficient reasoning/coding model with a permanent zero-price API tier (context ≈200K per secondary data; verify live).
@@ -41,12 +46,13 @@ GLM-4.7-Flash is Z.AI's efficient reasoning/coding model with a permanent zero-p
 |---|---|---|---|---|
 | [Z.AI](../providers/z-ai.md) | `glm-4.7-flash` | Permanent zero-price (in, cache, out all Free); account + key, no card | Official numeric limits unpublished; account- and model-specific rate-limit view | 2026-09-05 |
 | [AIHubMix](../providers/aihubmix.md) | `glm-4.7-flash-free` | Free-model lane; account + key, no card for 10 trial calls; daily quotas need one-time $1+ top-up | None published combo-specific; free versions are trial-use (limited resources, 429s possible under load) | 2026-09-05 |
+| [ZenMux](../providers/zenmux.md) | `z-ai/glm-4.7-flash-free` | Free lane billed $0/token (in, out); account + key, no card | Rate-limited; exact limits unpublished; roster rotates | 2026-09-06 |
 
 **Notes:**
 
 - Do not confuse with `glm-4.7-flashx` (paid FlashX lane) or the GLM Coding Plan subscription (separate product/endpoints, from $18/mo).
 - KUAE Cloud's $0 GLM-4.7 row is a 30-day trial, not a standing tier — excluded.
-- ZenMux `$0` GLM-4.7-Flash rows require a paid plan for any API access — excluded.
+- ZenMux runs a standing free lane for `z-ai/glm-4.7-flash-free` at $0/token (verified live 2026-09-06). Earlier iterations had ZenMux `$0` rows gated behind a paid plan — the free roster rotates, so re-check https://zenmux.ai/models before relying on it; nothing here documents a paid-plan-free combination anymore.
 - Hugging Face `zai-org/GLM-4.7-Flash` is paid per token (draws from the $0.10/mo credit pool; fixture cost-0 rows are artifacts) — excluded.
 - MegaNova `zai-org/GLM-4.7-Flash` has Tier 1 quota 0 and needs a Tier 2 $1 deposit — excluded as a free row.
 

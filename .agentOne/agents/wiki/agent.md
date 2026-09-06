@@ -44,7 +44,7 @@ Additional per-vault sections (e.g. buchhaltung, calendar, events) are defined i
 
 ## Conventions
 
-- Use wikilinks everywhere. Use this link syntax with double quotes to link files inside the vault: Example: "[[raw/some/file.md]]"
+- Use wikilinks everywhere. Use this link syntax with double quotes to link files inside the vault: Example: [[raw/some/file.md]]
 - Every company, person, product, organization, or concept with a page gets a wikilink on first mention.
 - Every note starts with YAML frontmatter: type, date, updated, tags, and sources. Source references are wikilinks
 - Use absolute dates, like 2026-07-13. Never write "yesterday" or "last week" without the date.
@@ -53,8 +53,8 @@ Additional per-vault sections (e.g. buchhaltung, calendar, events) are defined i
 - Never invent facts. If something is not supported by a source, mark it unverified.
 - Use your wiki_check tool regularly to check for dead/halucinated wikilinks, orphan pages, missing or stale `index.md` entries, and invalid frontmatter
 - Unless a user explicitly instructs to bulk ingest multiple raw files, finish after ingesting the oldest unlinked raw file. Don't automatically bulk ingest new files from raw/.
-- Dont add item counts to lists of not absolutly needed. They are complicated to maintain for Language models. anti pattern: [[timeline/2020/12/index.md|Dez 2020]] 23 Einträge: Amazon, Paypal .
-
+- Dont add item counts to lists of not absolutly needed. They are complicated to maintain for Language models. anti pattern: [[timeline/2020/12/index.md|Dez 2020]] 23 Einträge: Amazon, Paypal . If you encounter accidentally added file/entry counts, remove them.
+- Never mass ingest files without actually reading them, each file must be properly ingested following the rules below.
 
 ## Index.md convention
 
@@ -103,7 +103,7 @@ Archive year corresponds to the year of archiving, not the page's creation date.
 
 ## Todo list handling
 
-When processing the TODO list, do not blindly process items strictly in order, or all at once. Before choosing the next items, peek at the first ~10–15 unprocessed items and identify groups of related items. Prefer processing related items together while their context is still active. In particular, prioritize items that share the same sender, topic, project, person, order, files, entities, or other contextual information. If processing one item requires reading related files or reconstructing context, prefer processing other TODO items that can reuse that same context before moving on. The goal is to minimize repeatedly reading the same related information and reconstructing context, not simply to process the TODO list sequentially. The todo list may be very large, make sure to only peek/pop a small number at once and process them in batches.
+When processing the TODO list, do not blindly process items strictly in order, or all at once. Before choosing the next items, peek at the first ~10 unprocessed items and identify groups of related items. Prefer processing related items together while their context is still active. In particular, prioritize items that share the same sender, topic, project, person, order, files, entities, or other contextual information. If processing one item requires reading related files or reconstructing context, prefer processing other TODO items that can reuse that same context before moving on. The goal is to minimize repeatedly reading the same related information and reconstructing context, not simply to process the TODO list sequentially. The todo list may be very large, make sure to only peek/pop a small number at once and process them in batches. Todo lists are there to help you keep the context window small, to make use of that by processing many tasks step by step, without reading them all at once. 
 
 ## Operation: ingest <url or file>
 
@@ -125,7 +125,7 @@ When processing the TODO list, do not blindly process items strictly in order, o
    <Key claims, numbers, quotes, why this matters. Bullet points preferred.>
    ```
 
-   The `sources` field is a list of wikilinks and MUST point to the original raw file(s) (e.g. `[[raw/emails/.../message.md]]`) or the URL. Singular `source` is invalid — the lint tool flags and auto-fixes it. Use tags consistently — derive them from the section or topic (e.g. `buchhaltung`, `mitglieder`, `workshop`, `lieferung`). Every raw file must have a timeline entry, otherwise that the file counts as "not been ingested yet".
+   The `sources` field is a list of wikilinks and MUST point to the original raw file(s) (e.g. `[[raw/emails/.../message.md]]`) or the URL. Singular `source` is invalid — the lint tool flags and auto-fixes it. Use tags consistently — derive them from the section or topic (e.g. `buchhaltung`, `mitglieder`, `workshop`, `lieferung`). Every raw file must have a timeline entry, otherwise the file counts as "not been ingested yet". Dont cheat on this, you must read the url/file and properly process it, DO NOT create code to mass create files that are meaningless autogenerated generated stubs. 
 
 4. Ripple through every entity, concept, and section it touches (usually 5–15 pages).
 5. Create missing entity, concept, and section pages.

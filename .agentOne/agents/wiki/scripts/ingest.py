@@ -37,7 +37,7 @@ def ingest_next(_session: Session, limit:int=1):
         description=f"Ingest session for parent session {_session.name}, pk:{_session.model.pk}",
         workspace=_session.workspace,
         parent_session_version=_session.get_version_model(),
-        session_type=SessionType.SUBTASK_DELEGATE,
+        session_type=SessionType.SUBSESSION,
     )
     # Fork inherits parent's session settings (auto_compact_limit, api key, disallowed lists, etc.)
     parent_sv = _session.get_version_model()
@@ -47,7 +47,7 @@ def ingest_next(_session: Session, limit:int=1):
         SessionVersionModel.objects.filter(pk=ingest_session_version.pk).update(session_settings=fork_settings)
        
     ingest_session = Session(session_model=ingest_session_version.session, pinned_session_version=ingest_session_version)
-
+    ingest_session.set_is_active(True)
 
     success, data = ingest_session.get_task("find_unlinked_raw").call(limit=limit)
     prev_res =  ingest_session.get_tool("todo_clear").delay()

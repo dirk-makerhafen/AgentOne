@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 from typing import Any
-
+import json
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.enums.session_enums import SessionType
@@ -23,18 +23,6 @@ from server.models.message import Message
 from server.models.queries.response import Response
 from server.models.enums.task_enums import TaskRunStatus
 
-
-def _is_subtask_execution(_session: Session) -> bool:
-    """Return whether this is a single-use subtask session (delegate/fork).
-
-    Uses the ``session_type`` classification set at session creation. Falls
-    back to the legacy parent-awaiting heuristic for sessions recorded before
-    ``session_type`` was populated, so a subtask never skips ``final_result``.
-    """
-    return _session.session_type in (
-        SessionType.SUBTASK_DELEGATE,
-        SessionType.SUBTASK_FORK,
-    )
 
 
 def _looks_like_markdown(content: str) -> bool:
@@ -70,28 +58,29 @@ def _looks_like_markdown(content: str) -> bool:
     return markers >= 2
 
 
-def _mark_subsession_complete(_session: Session) -> None:
-    """A subsession that called ``final_result`` is done — mark it inactive.
+def _load_todolist_items(_session: Session) -> list[dict[str, Any]]:
+    """Return the current todo items from the latest stored call payload.
 
-    Main (parentless) sessions stay active; only child sessions are
-    deactivated so the sidebar and ``list_subsessions`` can drop them once
-    they fall out of the recent window.
+    Reads the most recent successful ``todolist_action`` call and returns
+    its ``"items"`` list. Returns an empty list when no call was recorded
+    yet or the payload carries no items. Never raises: unusable payloads
+    (missing anchor, malformed envelope) read as an empty list.
     """
-    if not _is_subtask_execution(_session):
-        return
-    from django.utils import timezone
-    from runtime.events import publish_model_event
-    from server.models.sessions.session import SessionModel
+    action_task = _session.get_task("todolist_action")
+    if not action_task:
+        return []
+    raw = action_task.lastest_result()
+    if isinstance(raw, (list, tuple)) and len(raw) == 2 and isinstance(raw[1], dict):
+        payload = raw[1]
+    elif isinstance(raw, dict):
+        payload= raw
+    else:
+        payload = {}
+    items = payload.get("items", [])
+    return [it for it in items if isinstance(it, dict)]
 
-    SessionModel.objects.filter(pk=_session.model.pk).update(
-        is_active=False,
-        last_active_at=timezone.now(),
-    )
-    _session.model.is_active = False
-    publish_model_event(_session.model, "update")
 
-
-def _pop_next_todo_message(_session: Session, message: Message) -> Message | None:
+def _pop_next_todo_message(_session: Session, message: Message) -> tuple[Message | None , Any]:
     """If todo auto-processing is on and items remain, inject the next one.
 
     Called when the current task just finished (``final_result`` was seen).
@@ -106,38 +95,29 @@ def _pop_next_todo_message(_session: Session, message: Message) -> Message | Non
     dependency-free on purpose: scripts run from isolated runtime folders,
     so the state is (re-)read inline instead of importing the todo group.
     """
-    if _is_subtask_execution(_session):
+
+
+
+    if not _session._get_session_setting("todo_auto_process"):
         return None
-    try:
-        if not bool(_session._get_session_setting("todo_auto_process")):
-            return None
-        anchor = _session.get_task("todolist_action") or _session.get_tool("todolist_action")
-        raw = anchor.lastest_result() if anchor is not None else None
-    except Exception:  # pylint: disable=broad-exception-caught
-        return None
-    items = []
-    # NOTE: get_result() returns the raw (success, payload) pair, not the
-    # payload dict — unwrap before reading "items" (see todolist.unwrap_result).
-    if isinstance(raw, (list, tuple)) and len(raw) == 2 and isinstance(raw[1], dict):
-        raw = raw[1]
-    if isinstance(raw, dict):
-        raw_items = raw.get("items", raw)
-        if isinstance(raw_items, list):
-            items = [it for it in raw_items if isinstance(it, dict)]
+     
+    items = _load_todolist_items(_session)
     pending = [it for it in items if it.get("status") == "pending"]
-    if not pending or anchor is None:
+    if not pending:
         return None
     first = pending[0]
     remaining = len(pending) - 1
-    try:
-        # Record the pop asynchronously (fire-and-forget).  It runs before
-        # the process_turn dispatch below, so by the time the next turn
-        # reads the anchor history this item is marked done.  The message
-        # content is predicted from the history just read — safe under FIFO
-        # order as long as nothing else pops concurrently.
-        anchor.delay(action="pop", count=1)
-    except Exception:  # pylint: disable=broad-exception-caught
-        return None
+
+
+    action_task = _session.get_task("todolist_action")
+    store_function_response = action_task.delay(
+        action="update",
+        task_id=first.get("task_id"),
+        text=first.get("text"),
+        status="in_progress",
+        **(dict(depends_on=first.get("depends_on")) if first.get("depends_on") else {}),
+    )
+    todolist_task_result = _session.get_task("todolist_action_response").delay(store_function_response=store_function_response)
 
     sv = _session.get_version_model()
     next_message = Message.objects.create(
@@ -151,20 +131,21 @@ def _pop_next_todo_message(_session: Session, message: Message) -> Message | Non
         content_type=MessageContentType.TEXT,
         content=(
             f"<SYSTEM NOTICE>Todo list auto-processing is ON. "
-            f"Next item ({remaining} remaining after this one):\n"
-            f"{first.get('text', '')}\n"
+            f"Next item: {json.dumps(first)}\n"
+            f"({remaining} remaining after this one)\n"
             f"Work on this now. When done, call final_result(content='...') "
             f"and the following item will be fed automatically.</SYSTEM NOTICE>"
         ),
     )
     from runtime.events import publish_model_event
     publish_model_event(next_message, "create")
-    return next_message
+    return next_message, todolist_task_result
 
 
 def decide_next_step(_session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any) -> Message:
     _session.count_turn()
     _session.count_unattended_turn()
+    is_final_result = False
 
     if _session.max_turns and _session.current_turn_count >= _session.max_turns:
         return message
@@ -172,11 +153,28 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     if _session.max_unattended_turns and _session.current_unattended_turn_count >= _session.max_unattended_turns:
         return message
 
-    if kwargs.get("has_final_result"):
-        _mark_subsession_complete(_session)
+    has_tool_calls = any(True for part in parts if "tool_call" in part)
+    has_message =  any(True for part in parts if part["type"] == MessagePartType.MESSAGE)
+
+    if kwargs.get("has_final_result"):  # agent did call final_result tool
+        is_final_result = True
+
+    elif not has_tool_calls and has_message and _session.session_type in (SessionType.SESSION, SessionType.SUBSESSION):  
+        # if we have toolcalls, its not the final message # we got a message, and its a session or subsession, not a delegated task
+        message_parts = [ part for part in parts if part["type"] == MessagePartType.MESSAGE]
+        last_content = str(message_parts[-1].get("content", "")).strip()
+        if last_content.endswith("?"): # the agent ended with a question, return to user
+            is_final_result = True
+        else:
+            all_content = "\n".join(str(part.get("content", "")) for part in message_parts).strip()
+            if _looks_like_markdown(all_content): # the result is markdown formatted, return to user
+                is_final_result = True
+ 
+    if is_final_result:
         next_todo = _pop_next_todo_message(_session, message)
         if next_todo is not None:
-            _session.get_task("process_turn").delay(message=next_todo)
+            next_message, todolist_task_result = next_todo
+            _session.get_task("process_turn").delay(message=next_message, todolist_task_result_to_ignore=todolist_task_result) # chain these, process_turn ignores kwargs anyway
         return message
 
 
@@ -211,14 +209,5 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
             content_type=MessageContentType.TEXT,
             content=hint_prompt,
         )
-
-    if not _is_subtask_execution(_session) and not any(True for part in parts if "tool_call" in part) and any(True for part in parts if part["type"] == MessagePartType.MESSAGE):
-        message_parts = [ part for part in parts if part["type"] == MessagePartType.MESSAGE]
-        last_content = str(message_parts[-1].get("content", "")).strip()
-        if last_content.endswith("?"): # the agent ended with a question, return to user
-            return message
-        all_content = "\n".join(str(part.get("content", "")) for part in message_parts).strip()
-        if _looks_like_markdown(all_content): # the result is markdown formatted, return to user
-            return message
 
     return _session.get_task("process_turn").delay(message=message)

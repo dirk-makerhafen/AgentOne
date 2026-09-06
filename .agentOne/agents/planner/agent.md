@@ -8,7 +8,7 @@ description: >
   but never writes files or executes modifying commands.
 extends: researcher
 inheritSystemPrompt: true
-reasoningEffort: xhigh
+reasoningEffort: high
 precision: precise
 tools: [+, execution.python]
 ---
