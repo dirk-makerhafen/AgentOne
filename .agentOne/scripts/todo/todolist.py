@@ -1,7 +1,7 @@
 """Session todo list — one focused tool per action, event-sourced state.
 
 State lives NOWHERE in the DB.  It is event-sourced from the shared history
-of the hidden ``todolist_store`` task (registered as TASK-type, so the LLM
+of the hidden ``todolist_action`` task (registered as TASK-type, so the LLM
 never sees it): every store call returns the full item list in its result
 under the ``"items"`` key, and the current list is the payload of the most
 recent successful store call.  The in-flight call is never ``ENDED_SUCCESS``

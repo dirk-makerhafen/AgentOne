@@ -95,7 +95,7 @@ def _pop_next_todo_message(_session: Session, message: Message) -> Message | Non
     """If todo auto-processing is on and items remain, inject the next one.
 
     Called when the current task just finished (``final_result`` was seen).
-    The list is event-sourced from the ``todolist_store`` anchor history;
+    The list is event-sourced from the ``todolist_action`` anchor history;
     the pop is recorded via an async dispatch and the oldest pending item
     read just before is wrapped as a USER message, so the loop continues
     with the next item instead of returning to the user.  The auto flag is
@@ -111,7 +111,7 @@ def _pop_next_todo_message(_session: Session, message: Message) -> Message | Non
     try:
         if not bool(_session._get_session_setting("todo_auto_process")):
             return None
-        anchor = _session.get_task("todolist_store") or _session.get_tool("todolist_store")
+        anchor = _session.get_task("todolist_action") or _session.get_tool("todolist_action")
         raw = anchor.lastest_result() if anchor is not None else None
     except Exception:  # pylint: disable=broad-exception-caught
         return None

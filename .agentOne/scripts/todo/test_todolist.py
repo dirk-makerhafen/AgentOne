@@ -21,7 +21,7 @@ from todolist import (
 
 
 class FakeAnchor:
-    """Simulates the todolist_store history: delay() replays synchronously.
+    """Simulates the todolist_action history: delay() replays synchronously.
 
     lastest_result() returns the enveloped ``[True, payload]`` pair, exactly
     like AgentTaskCall.get_result() in production — this guards the unwrap
@@ -50,7 +50,7 @@ class StubSession:
         self.settings = {}
 
     def get_task(self, name):
-        return self.anchor if name == "todolist_store" else None
+        return self.anchor if name == "todolist_action" else None
 
     def get_tool(self, name):
         return None

@@ -785,16 +785,17 @@ class Session:
         """
         from django.utils import timezone
         from runtime.events import publish_model_event
+        if new_value == self.model.is_active:
+            return
 
         now = timezone.now()
         was_inactive = not self.model.is_active
         SessionModel.objects.filter(pk=self.model.pk).update(
-            is_active=True,
+            is_active=new_value,
             last_active_at=now,
         )
-        self.model.is_active = True
-        if was_inactive:
-            publish_model_event(self.model, "update")
+        self.model.is_active = new_value
+        publish_model_event(self.model, "update")
 
     def _has_active_call(self) -> bool:
         """Return True if there is a non-ended ingest or process_turn call

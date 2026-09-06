@@ -52,6 +52,6 @@ tasks:
     function: todolist_action_response
     bound: True
 ---
-Session todo list. Items are event-sourced from the todolist_store call
+Session todo list. Items are event-sourced from the todolist_action call
 history (no DB); auto-processing is user-controlled via the /todo command
 or the Todos tab.
