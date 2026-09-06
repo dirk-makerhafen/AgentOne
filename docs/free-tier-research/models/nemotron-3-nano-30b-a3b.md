@@ -3,7 +3,7 @@ name: Nemotron 3 Nano 30B A3B
 developer: Nvidia
 canonical_id: nvidia/nemotron-3-nano-30b-a3b
 leaderboard_id: nemotron-3-nano-30b-a3b
-leaderboard_rank: 243
+leaderboard_rank: 219
 family: nemotron
 context_window: 131072
 reasoning: true

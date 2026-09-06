@@ -3,7 +3,7 @@ name: Tencent Hunyuan Hy3
 developer: Tencent (Hy Team)
 canonical_id: tencent/hy3
 leaderboard_id: hy3
-leaderboard_rank: 53
+leaderboard_rank: 51
 family: hunyuan
 context_window: 256000
 reasoning: true

@@ -45,7 +45,7 @@ Step 3.7 Flash is StepFun's high-efficiency multimodal MoE model (198B total / ~
 - Context: official StepFun docs state "256K tokens"; third-party catalogs list 262144 (256K). Card default is 262144, matching both free providers' catalog figures (Kilo 262K, Kenari 262K).
 - `max_output_tokens`: no official per-request max confirmed — omitted.
 - Kenari's non-suffixed `step-3-7-flash` (if seen in fixtures) is metered — only the `:free`-suffixed ID is Rp 0.
-- `leaderboard_rank_estimated: "~60"` (2026-09-05): no `leaderboard.csv` entry for step-3.7-flash (snapshot predates its release by ~3 months). Basis: successor to step-3.5-flash (CSV rank 69); independent third-party aggregates put step-3.7-flash above that predecessor (ModelCap top-44 of 236, BenchAlign ~111/231, SWE-Bench PRO 56.3 second place at release, Terminal-Bench 2.1 59.5) — directional, within the ~55–65 band.
+- `leaderboard_rank_estimated: "~60"` (2026-09-05): no `leaderboard.csv` entry for step-3.7-flash (absent from the 2026-09-06 CSV refresh). Basis: successor to step-3.5-flash (CSV rank 67); independent third-party aggregates put step-3.7-flash above that predecessor (ModelCap top-44 of 236, BenchAlign ~111/231, SWE-Bench PRO 56.3 second place at release, Terminal-Bench 2.1 59.5) — directional, within the ~55–65 band.
 
 **Sources**
 

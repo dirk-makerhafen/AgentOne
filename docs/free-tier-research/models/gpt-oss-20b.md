@@ -3,7 +3,7 @@ name: GPT-OSS 20B
 developer: OpenAI
 canonical_id: openai/gpt-oss-20b
 leaderboard_id: gpt-oss-20b
-leaderboard_rank: 295
+leaderboard_rank: 198
 family: gpt-oss
 context_window: 131072
 reasoning: true

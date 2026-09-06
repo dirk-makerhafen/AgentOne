@@ -22,23 +22,23 @@ tools:
     function: todo_clear
     bound: True
 commands:
-  - name: todo_append
+  - name: todo_append_cmd
     file: todolist.py
     function: todo_append
     bound: True
-  - name: todo_list
+  - name: todo_list_cmd
     file: todolist.py
     function: todo_list
     bound: True
-  - name: todo_update
+  - name: todo_update_cmd
     file: todolist.py
     function: todo_update
     bound: True
-  - name: todo_delete
+  - name: todo_delete_cmd
     file: todolist.py
     function: todo_delete
     bound: True
-  - name: todo_clear
+  - name: todo_clear_cmd
     file: todolist.py
     function: todo_clear
     bound: True

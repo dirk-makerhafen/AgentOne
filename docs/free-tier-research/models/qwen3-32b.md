@@ -3,7 +3,7 @@ name: Qwen3-32B
 developer: Alibaba (Qwen team)
 canonical_id: qwen/qwen3-32b
 leaderboard_id: qwen3-32b
-leaderboard_rank: 163
+leaderboard_rank: 155
 family: qwen3
 context_window: 32768
 max_output_tokens: 32768

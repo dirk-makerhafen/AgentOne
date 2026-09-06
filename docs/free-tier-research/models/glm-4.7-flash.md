@@ -3,7 +3,7 @@ name: GLM-4.7-Flash
 developer: Zhipu AI (Z.AI)
 canonical_id: z-ai/glm-4.7-flash
 leaderboard_id: glm-4.7-flash
-leaderboard_rank: 195
+leaderboard_rank: 178
 family: glm-flash
 context_window: 200000
 reasoning: true

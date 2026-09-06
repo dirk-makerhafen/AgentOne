@@ -3,7 +3,7 @@ name: Qwen3.8-27B
 developer: Alibaba (Qwen team)
 canonical_id: qwen/qwen3.8-27b
 leaderboard_id: qwen3.8-27b
-leaderboard_rank: 46
+leaderboard_rank: 43
 family: qwen3
 context_window: 262144
 max_output_tokens: 131072

@@ -43,14 +43,19 @@ def set_todo_auto(_session: Any, enabled: bool) -> None:
 
 def _load_todolist_items(_session: Session) ->list:
     action_task = _session.get_task("todolist_action")
+    print("\n####\n####\n####\n####\n####")
+    print(action_task)
     if not action_task:
         return []
     
     latest_response = action_task.lastest_result()
+    print("latest_response", latest_response)
+
     if not latest_response:
         return []
-    return latest_response.get("items",[])
-
+    r = latest_response.get("items",[])
+    print("r", r)
+    return r
 
 def todolist_action(_session: Any, action: str , **kwargs: Any) -> dict:
     """Shared-history anchor (TASK-type — never shown to the LLM).
@@ -60,7 +65,7 @@ def todolist_action(_session: Any, action: str , **kwargs: Any) -> dict:
     tools and the user command funnel through here for persistence.
     """
     items = _load_todolist_items(_session)
-
+    print("todolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_actiontodolist_action")
     if action == "clear":
         return {
             "status": "success",
@@ -147,7 +152,7 @@ def todolist_action_response(_session: Any, store_function_response:dict) -> dic
     }
     
 
-def todo_append(_session: Any, text: str, depends_on: Optional[str|list] = None) -> Dict[str, Any]:
+def todo_append(_session: Any, text: str, depends_on: Optional[str|list] = None, **kwargs) -> Dict[str, Any]:
     """Add todo item(s) to the session list.
 
     Break a larger request into trackable steps with this, work them one at
@@ -180,7 +185,7 @@ def todo_delete(_session: Any, task_ids: Optional[str|list] = None) -> tuple[boo
     return _session.get_task("todolist_action_response").delay(store_function_response=store_function_response)
 
 
-def todo_clear(_session: Any) ->  tuple[bool, dict[str,Any]]:
+def todo_clear(_session: Any, **kwargs) ->  tuple[bool, dict[str,Any]]:
     action_task =  _session.get_task("todolist_action")
     store_function_response = action_task.delay(action="clear")
     return _session.get_task("todolist_action_response").delay(store_function_response=store_function_response)

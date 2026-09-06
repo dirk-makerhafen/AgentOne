@@ -49,7 +49,7 @@ Agnes 2.5 Flash is Agnes AI's generally-available fast coding/agent text model, 
 - `max_output_tokens`: official docs state `65.5K` (not an exact integer) — omitted rather than converted.
 - Deprecated sibling Agnes 2.0 Flash is intentionally not catalogued (superseded ≥1yr-old generation; see README "Filenames" rule) — it remains `:free` on Kenari/UnoRouter only as a legacy row there.
 - Agnes 2.5 Pro (flagship, previewed July 2026) is billed, not free — not claimed.
-- `leaderboard_rank_estimated: "~60"` (2026-09-05): no `leaderboard.csv` entry (newer than the snapshot); internal/company-reported figures (~75.6 SWE-bench Verified, ~62.3 Terminal-Bench 2.1) place it near the hy3/step-3-flash cluster (rank ~53–69) — directional, unverified externally.
+- `leaderboard_rank_estimated: "~60"` (2026-09-05): no `leaderboard.csv` entry (absent from the 2026-09-06 CSV refresh); internal/company-reported figures (~75.6 SWE-bench Verified, ~62.3 Terminal-Bench 2.1) place it near the hy3/step-3-flash cluster (rank ~51–67) — directional, unverified externally.
 
 **Sources**
 

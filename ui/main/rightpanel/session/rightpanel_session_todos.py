@@ -12,38 +12,22 @@ if TYPE_CHECKING:
 def _read_todo_state(session: Session | None) -> dict[str, Any]:
     """Best-effort read of the session todo state (empty state on any error).
 
-    Items come from the ``todolist_store`` anchor history (event-sourced, no
+    Items come from the ``todolist_action`` anchor history (event-sourced, no
     DB); the auto flag comes from the session settings (user-controlled).
     """
     empty: dict[str, Any] = {"items": [], "auto": False}
     if session is None:
         return empty
+    auto = False
     try:
-        anchor = session.get_task("todolist_store") or session.get_tool("todolist_store")
+        anchor = session.get_task("todolist_action") or session.get_tool("todolist_action")
         raw = anchor.lastest_result() if anchor is not None else None
-        auto = bool(session._get_session_setting("todo_auto_process"))
+        items = raw.get("items", [])
+        #auto = bool(session._get_session_setting("todo_auto_process"))
     except Exception:  # pylint: disable=broad-exception-caught
         return empty
-    raw_items = []
-    # NOTE: get_result() returns the raw (success, payload) pair — unwrap
-    # before reading "items" (see todolist.unwrap_result).
-    if isinstance(raw, (list, tuple)) and len(raw) == 2 and isinstance(raw[1], dict):
-        raw = raw[1]
-    if isinstance(raw, dict):
-        raw_items = raw.get("items", [])
-    clean = []
-    if isinstance(raw_items, list):
-        for it in raw_items:
-            if isinstance(it, dict):
-                text = str(it.get("text", "")).strip()
-                if not text:
-                    continue
-                clean.append({
-                    "id": it.get("id", 0),
-                    "text": text,
-                    "status": "done" if it.get("status") == "done" else "pending",
-                })
-    return {"items": clean, "auto": auto}
+
+    return {"items": items, "auto": auto}
 
 
 class RightPanelSessionTodos(ModelView):
@@ -71,7 +55,7 @@ class RightPanelSessionTodos(ModelView):
             {% if pyview.state["items"] %}
                 {% for item in pyview.state["items"] %}
                 <div class="task-card" style="margin-bottom:6px;display:flex;gap:8px;align-items:flex-start">
-                    <span style="font-size:11px;color:var(--muted);min-width:22px">#{{ item["id"] }}</span>
+                    <span style="font-size:11px;color:var(--muted);min-width:22px">#{{ item["task_id"] }}</span>
                     <div style="flex:1;font-size:12px;color:var(--text);white-space:pre-wrap">{{ item["text"] }}</div>
                     {% if item["status"] == "done" %}
                         <span style="font-size:10px;color:var(--success)">done</span>
@@ -113,7 +97,7 @@ class RightPanelSessionTodos(ModelView):
 
     def clearTodos(self) -> None:
         try:
-            anchor = self.session.get_task("todolist_store") or self.session.get_tool("todolist_store")
+            anchor = self.session.get_task("todolist_action") or self.session.get_tool("todolist_action")
             if anchor is not None:
                 anchor.delay(action="clear")
         except Exception:  # pylint: disable=broad-exception-caught

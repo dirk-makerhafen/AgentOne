@@ -3,7 +3,7 @@ name: Nemotron 3.5 Lightning 30B A3B
 developer: Nvidia
 canonical_id: nvidia/nemotron-3.5-lightning-30b-a3b
 leaderboard_id: nemotron-3.5-lightning-30b-a3b
-leaderboard_rank: 253
+leaderboard_rank: 227
 family: nemotron
 context_window: 1048576
 reasoning: true

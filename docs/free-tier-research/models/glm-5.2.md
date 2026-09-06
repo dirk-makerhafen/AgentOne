@@ -4,7 +4,7 @@ developer: Zhipu AI (Z.AI)
 canonical_id: z-ai/glm-5.2
 family: glm
 leaderboard_id: glm-5.2
-leaderboard_rank: 35
+leaderboard_rank: 34
 context_window: 1000000
 reasoning: true
 tool_call: true

@@ -3,7 +3,7 @@ name: DeepSeek V4 Pro
 developer: DeepSeek
 canonical_id: deepseek/deepseek-v4-pro
 leaderboard_id: deepseek-v4-pro
-leaderboard_rank: 174
+leaderboard_rank: 19
 family: deepseek-thinking
 context_window: 1000000
 max_output_tokens: 384000

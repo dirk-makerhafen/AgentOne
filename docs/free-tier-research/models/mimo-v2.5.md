@@ -3,7 +3,7 @@ name: Xiaomi MiMo-V2.5
 developer: Xiaomi
 canonical_id: xiaomi/mimo-v2.5
 leaderboard_id: mimo-v2.5
-leaderboard_rank: 99
+leaderboard_rank: 94
 family: mimo
 context_window: 1048576
 reasoning: true

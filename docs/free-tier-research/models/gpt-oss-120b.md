@@ -3,7 +3,7 @@ name: GPT-OSS 120B
 developer: OpenAI
 canonical_id: openai/gpt-oss-120b
 leaderboard_id: gpt-oss-120b
-leaderboard_rank: 172
+leaderboard_rank: 133
 family: gpt-oss
 context_window: 131072
 max_output_tokens: 65536

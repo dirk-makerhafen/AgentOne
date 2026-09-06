@@ -4,7 +4,7 @@ developer: Meta
 canonical_id: meta/muse-spark-1-2-contributor
 family: muse-spark
 leaderboard_id: muse-spark-1.2
-leaderboard_rank: 66
+leaderboard_rank: 63
 context_window: 1048576
 max_output_tokens: 943718
 reasoning: true

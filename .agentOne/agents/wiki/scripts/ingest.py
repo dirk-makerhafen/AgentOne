@@ -48,8 +48,9 @@ def ingest_next(_session: Session, limit:int=1):
        
     ingest_session = Session(session_model=ingest_session_version.session, pinned_session_version=ingest_session_version)
 
-    ingest_session.get_command("todo_clear").call()
+
     success, data = ingest_session.get_task("find_unlinked_raw").call(limit=limit)
+    prev_res =  ingest_session.get_tool("todo_clear").delay()
     cnt = 0
     last_y,last_m,last_d = None,None,None
     if data.get("items", None):
@@ -57,17 +58,17 @@ def ingest_next(_session: Session, limit:int=1):
             p = item["file"]
             y,m,d = _extract_date_from_path(p)
             if last_d and d != last_d:
-                ingest_session.get_command("todo_append").call(text=f'Lint your work for {last_y}-{last_m}-{last_d}')                    
+                prev_res = ingest_session.get_tool("todo_append").delay(text=f'Lint your work for {last_y}-{last_m}-{last_d}', prev_res=prev_res)
             if last_m and m != last_m:
-                ingest_session.get_command("todo_append").call(text=f'Lint your work for {last_y}-{last_m}')   
+                prev_res = ingest_session.get_tool("todo_append").delay(text=f'Lint your work for {last_y}-{last_m}', prev_res=prev_res)
             if last_y and y != last_y:
-                ingest_session.get_command("todo_append").call(text=f'Lint your work for {last_y}')   
+                prev_res = ingest_session.get_tool("todo_append").delay(text=f'Lint your work for {last_y}', prev_res=prev_res)
             
             last_y = y if y else last_y
             last_m = m if m else last_m
             last_d = d if d else last_d
             cnt += 1
-            ingest_session.get_command("todo_append").call(text=f'ingest: {item["file"]}')
+            prev_res = ingest_session.get_tool("todo_append").delay(text=f'ingest: {item["file"]}', prev_res=prev_res)
     return True, f"{cnt} todo items created"
 
 '''
