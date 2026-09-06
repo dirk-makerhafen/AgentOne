@@ -4,6 +4,7 @@ developer: Zhipu AI (Z.AI)
 canonical_id: z-ai/glm-5.3-flash
 family: glm
 leaderboard_id: glm-5.3-flash
+leaderboard_rank: 21
 reasoning: true
 tool_call: true
 temperature: true

@@ -177,7 +177,7 @@ def parse_llm_response(_session: Session, response: Response) -> dict[str, Any]:
 
         for toolcall in toolcalls:
             function = toolcall.get("function") or {}
-            name = function.get("name") or toolcall.get("name")
+            name:str = function.get("name","") or toolcall.get("name","")
             arguments = function.get("arguments", toolcall.get("arguments"))
             if isinstance(arguments, str):
                 try:

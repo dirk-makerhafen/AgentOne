@@ -23,7 +23,7 @@ ModelScope (Alibaba 魔搭) is a CN-hosted model hub whose API-Inference serves 
 - `Qwen/Qwen3.5-27B` — 256K context (representative, verify live).
 - Reachable under the free API-Inference quota (discovery-consistent set, confirm each model page): `ZhipuAI/GLM-4.5`, `ZhipuAI/GLM-4.6`, `Qwen/Qwen3-235B-A22B-Instruct-2507`, `Qwen/Qwen3-235B-A22B-Thinking-2507`, `Qwen/Qwen3-30B-A3B-Instruct-2507`, `Qwen/Qwen3-30B-A3B-Thinking-2507`, `Qwen/Qwen3-Coder-30B-A3B-Instruct`.
 - Any API-Inference-enabled model ID (Qwen3/Qwen3-VL/Coder series, DeepSeek-V4-Pro/Flash, GLM-4.7-Flash/5.x, MiniMax, Kimi-K2.5, ERNIE-4.5 family reported) — roster is dynamic; confirm API-Inference availability on each model page.
-- No model-catalog links added: none of the 9 model cards has a verified ModelScope-side free ID. A secondary (itsfree.ai, 2026) reports MiniMax M3, DeepSeek V4, and GLM as reachable via the free tier — re-verification lead only, not a verified free listing.
+- No model-catalog links added: none of the `models/` cards has a verified ModelScope-side free ID. A secondary (itsfree.ai, 2026) reports MiniMax M3, DeepSeek V4, and GLM as reachable via the free tier — re-verification lead only, not a verified free listing.
 
 **Limits:**
 

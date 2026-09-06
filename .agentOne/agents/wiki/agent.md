@@ -6,8 +6,8 @@ inheritSystemPrompt: true
 reasoningEffort: xhigh
 precision: FOCUSED
 tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check]
-commands: [+, ingest_file, ingest_next, wiki_lint, todo.*]
-tasks: [+, verify, ingest_verification_result, ingest_unlinked_raw_results, wiki.find_unlinked_raw]
+commands: [+, ingest_next, wiki_lint, todo.*]
+tasks: [+, wiki.find_unlinked_raw, todo.*]
 autoCompactLimit: 100000
 compactSizeLimit: 10
 subagents:

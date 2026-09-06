@@ -2,6 +2,7 @@
 name: Ling 3.0 Flash Sante
 developer: inclusionAI
 canonical_id: inclusionai/ling-3.0-flash-sante
+leaderboard_rank_estimated: "~85"
 family: ling
 context_window: 262144
 max_output_tokens: 32768
@@ -47,6 +48,7 @@ Ling 3.0 Flash Sante is inclusionAI's (Ant Group) health-and-medicine-specialize
 - Temperature: not verified against Sante-specific official sources — omitted (unlike the Fin card, which cites its own model card).
 - The Hugging Face `inclusionAI/Ling-3.0-flash-Sante` repo required authentication at check time (401); the MIT/open-weights claim follows the family's published licensing track (base Ling-3.0-flash and Fin sibling cards) — re-verify the Sante weights repo directly.
 - No `limits` in frontmatter: no combo-specific numerics are documented for either row; provider-wide defaults stay in the provider files.
+- `leaderboard_rank_estimated: "~85"` (2026-09-05): no `leaderboard.csv` entry. Basis: same shared Ling-3.0-Flash base (124B/5.1B) as the Fin sibling — AA Intelligence Index ~38, reported level with MiMo-V2.5 (CSV rank 99) and Qwen3.6-27B (CSV rank 67); midpoint placement, directional only.
 
 **Sources**
 

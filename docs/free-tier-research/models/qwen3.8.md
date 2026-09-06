@@ -3,6 +3,7 @@ name: Qwen3.8-27B
 developer: Alibaba (Qwen team)
 canonical_id: qwen/qwen3.8-27b
 leaderboard_id: qwen3.8-27b
+leaderboard_rank: 46
 family: qwen3
 context_window: 262144
 max_output_tokens: 131072
@@ -46,7 +47,7 @@ providers:
     verified: "2026-09-05"
 ---
 
-Qwen3.8-27B is Alibaba Qwen team's August 2026 generation of compact open-weight dense models (27B parameters, native multimodal) — "the most capable generation in the Qwen open-model family to date", outperforming Qwen3.7-Plus on coding and office workflows. Qwen3.6 (April 2026) is a separate, earlier generation with its own [card](qwen3.6.md).
+Qwen3.8-27B is Alibaba Qwen team's August 2026 generation of compact open-weight dense models (27B parameters, native multimodal) — "the most capable generation in the Qwen open-model family to date", outperforming Qwen3.7-Plus on coding and office workflows. Qwen3.6 (April 2026) is a separate, earlier generation with its own cards ([qwen3.6-27b](qwen3.6-27b.md), [qwen3.6-35b-a3b](qwen3.6-35b-a3b.md)).
 
 **Capabilities:**
 
@@ -67,7 +68,7 @@ Qwen3.8-27B is Alibaba Qwen team's August 2026 generation of compact open-weight
 **Notes:**
 
 - Excluded (paid, not free): InferX `Qwen3.8-27B-FP8` is 96% off but paid — despite discovery-fixture cost-0 rows.
-- Qwen3.6 (April 2026) and Qwen3.8 (August 2026) are distinct generations sharing an architectural foundation — split into separate cards; see [qwen3.6.md](qwen3.6.md) for the earlier generation (Groq/InferX/Hetzner 3.6 rows).
+- Qwen3.6 (April 2026) and Qwen3.8 (August 2026) are distinct generations sharing an architectural foundation — split into separate cards; see [qwen3.6-27b](qwen3.6-27b.md) / [qwen3.6-35b-a3b](qwen3.6-35b-a3b.md) for the earlier generation (Groq/InferX/Hetzner 3.6 rows).
 - Do not confuse with `Qwen3-32B` ([card](qwen3-32b.md)), `Qwen3.5-397B-A17B` ([card](qwen3.5-397b.md)), or the Qwen3.8-2.4T-A95B flagship (separate bespoke licence).
 
 **Sources**

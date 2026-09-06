@@ -3,6 +3,7 @@ name: LFM 2.5 2.6B
 developer: Liquid AI
 canonical_id: liquid/lfm-2.5-2.6b
 leaderboard_id: lfm-2.5-2.6b
+leaderboard_rank: 283
 family: lfm
 context_window: 131072
 reasoning: true

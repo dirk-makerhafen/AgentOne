@@ -3,6 +3,7 @@ name: MiniMax M3
 developer: MiniMax
 canonical_id: minimax/minimax-m3
 leaderboard_id: minimax-m3
+leaderboard_rank: 56
 family: minimax
 context_window: 1000000
 max_output_tokens: 262144

@@ -22,7 +22,7 @@ Google AI Studio is Google's developer console for the Gemini Developer API, off
 - Confirmed free of charge on the official pricing page (verified 2026-09-05): `gemini-2.5-flash`, `gemini-2.5-flash-lite` — 1M-token context window, 65K max output.
 - Also listed on the official models page; free status verify live per model: `gemini-2.0-flash`, `gemini-2.0-flash-lite`, `gemini-3.5-flash`, `gemini-3.5-flash-lite` (discovery-reported IDs `gemini-3.6-flash`, `gemini-3.7-flash`, `gemini-3.1-flash-lite` are unverified — confirm live).
 - `gemini-2.5-pro`: pricing-page tables show "Not available" free-tier rows for some Pro pricing dimensions; secondary sources report a small free RPD allowance (25–100 RPD, conflicting) — treat Pro free access as unverified, check `aistudio.google.com/rate-limit` before building on it.
-- None of the 9 catalogued model cards (`deepseek-v4-flash`, `glm-4.5-flash`, etc.) is served through this provider — no model-card links apply.
+- None of the catalogued model cards (`deepseek-v4-flash`, `hy3`, etc.) is served through this provider — no model-card links apply.
 
 **Limits:**
 

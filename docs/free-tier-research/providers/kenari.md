@@ -27,9 +27,8 @@ Kenari (Indonesian gateway, billing in Rupiah) bills `:free`-suffixed models Rp 
 - [`nemotron-3-ultra-550b-a55b:free`](../models/nemotron-3-ultra-550b-a55b.md) — 1M context, reasoning + tool call.
 - [`mimo-v2-5:free`](../models/mimo-v2.5.md) — ~1.05M context, reasoning + tool call.
 - `mistral-medium-3-5:free` — 262K context, reasoning + tool call.
-- `hy3:free` — 262K context, reasoning + tool call.
-- [`agnes-2-0-flash:free`](../models/agnes-flash.md) — ~256K context.
-- [`agnes-2-5-flash:free`](../models/agnes-flash.md) — 512K context.
+- [`hy3:free`](../models/hy3.md) — 262K context, reasoning + tool call (Tencent Hunyuan Hy3).
+- [`agnes-2-5-flash:free`](../models/agnes-2.5-flash.md) — 512K context. (Deprecated `agnes-2-0-flash:free` legacy row still exists live but is deliberately not catalogued — superseded ≥1yr-old generation.)
 - [`muse-spark-1-2-contributor:free`](../models/muse-spark-1.2-contributor.md) — ~1M context, reasoning + tool call.
 - [`muse-spark-1-3-contributor:free`](../models/muse-spark-1.3-contributor.md) — ~1M context, reasoning + tool call.
 - Only `:free`-suffixed IDs are free; same-name non-suffixed models are metered.

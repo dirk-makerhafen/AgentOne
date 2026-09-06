@@ -29,7 +29,7 @@ ONE-TIME free packs (not a permanent tier), plus a documented free Lite version:
 - `max-32k` (Max-32K) — 32K max input, 8K max output.
 - `4.0Ultra` (Ultra) — 32K max input, 32K max output (max_tokens range [1,32768], default 32768).
 - Versions meter tokens independently ("各版本独立计量tokens"); which versions the one-time free pack meters against is undocumented — verify in console.
-- No overlap with the model catalog verified: iFlytek serves only its own Spark version IDs, so none of the 9 model cards applies here.
+- No overlap with the model catalog: iFlytek serves only its own Spark version IDs, so none of the `models/` cards applies here.
 
 **Limits:**
 

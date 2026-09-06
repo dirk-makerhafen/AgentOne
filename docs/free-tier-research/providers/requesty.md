@@ -30,7 +30,7 @@ LLM gateway with a rotating selection of $0/token models behind one OpenAI-compa
 - `poolside/laguna-m.1` — free input/output (M-class, no dedicated card).
 - [`google/gemma-4-31b-it`](../models/gemma-4-31b-it.md) — free input/output.
 - `mistral/leanstral-1-5` — free input/output.
-- [`nvidia/nemotron-3.5-content-safety`](../models/nemotron-3.5-content-safety.md) — free input/output (guardrail classifier).
+- `nvidia/nemotron-3.5-content-safety` — free input/output (4B guardrail classifier; small specialist, deliberately not catalogued as a model card).
 
 **Limits:**
 

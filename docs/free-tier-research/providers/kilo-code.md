@@ -35,7 +35,7 @@ Live catalog (`GET https://api.kilo.ai/api/gateway/models`, no auth) returned 37
 - [`nvidia/nemotron-3-super-120b-a12b:free`](../models/nemotron-3-super-120b-a12b.md) — 262144 context.
 - `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` — 256K context, multimodal reasoning.
 - [`nvidia/nemotron-3.5-lightning:free`](../models/nemotron-3.5-lightning.md) — 1M context.
-- [`nvidia/nemotron-3.5-content-safety:free`](../models/nemotron-3.5-content-safety.md) — 128K context (guardrail classifier, not a chat model).
+- `nvidia/nemotron-3.5-content-safety:free` — 128K context (4B guardrail classifier, not a chat model; small specialist, deliberately not catalogued as a model card).
 - [`inclusionai/ling-3.0-flash-fin:free`](../models/ling-3.0-flash-fin.md) — 262144 context.
 - [`inclusionai/ling-3.0-flash-sante:free`](../models/ling-3.0-flash-sante.md) — 262144 context.
 - [`cohere/north-mini-code:free`](../models/north-mini-code.md) — 256K context, code-specialized.

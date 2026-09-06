@@ -26,7 +26,7 @@ Cohere offers free Trial (evaluation) API keys with limited usage across its Cha
 - Exact model IDs confirmed on the official models overview page (verified 2026-09-05): `command-a-plus-05-2026` (128K context, 64K max output, text+images), `command-a-03-2025` (256K context, 8K max output), `command-a-reasoning-08-2025` (256K context, 32K max output), `command-a-translate-08-2025` (8K context, 8K max output), `command-a-vision-07-2025` (128K context, 8K max output), `command-r-plus-08-2024` (128K context, 4K max output), `command-r-08-2024` (128K context, 4K max output), `command-r7b-12-2024` (128K context, 4K max output) — each at 20 req/min on Trial keys per the official rate-limits table.
 - `North Mini Code` — listed by display name in the official rate-limits table (20 req/min trial, 500 req/min production); exact versioned API string unconfirmed in official docs, verify in console before publishing it as a model ID.
 - Discovery-listed IDs `command-r7b-arabic-02-2025`, `c4ai-aya-expanse-32b`, `c4ai-aya-vision-32b` are secondary-reported, confirm live.
-- None of the 9 catalogued model cards is served through this provider — no model-card links apply.
+- None of the catalogued model cards is served through this provider — no model-card links apply.
 
 **Limits:**
 

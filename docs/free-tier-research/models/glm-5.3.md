@@ -4,6 +4,7 @@ developer: Zhipu AI (Z.AI)
 canonical_id: z-ai/glm-5.3
 family: glm
 leaderboard_id: glm-5.3
+leaderboard_rank: 11
 context_window: 1000000
 max_output_tokens: 131072
 reasoning: true

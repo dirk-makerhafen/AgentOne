@@ -26,7 +26,7 @@ ONE-TIME trial grant, not a permanent tier (re-verified 2026-09-05 against the b
 - `Tencent HY Vision 1.5 Instruct` / `Hunyuan-turbos-vision` / `Hunyuan-t1-vision` / `Hunyuan-turbos-vision-video` — vision/video-understanding models, share the 1M-token pack.
 - `Hunyuan-embedding` — embedding model, own 1M-token pack.
 - Model IDs above are quoted exactly as listed on the billing page (2026-06-26); doc code examples use lowercase IDs such as `hunyuan-turbos-latest` and `hunyuan-vision` — verify exact live casing in the console. Context windows unknown.
-- None of these models has a card in `models/` (no overlap with the 9 catalog cards), so no card links apply.
+- None of these models has a card in `models/` (no overlap with the catalog cards), so no card links apply.
 
 **Limits:**
 

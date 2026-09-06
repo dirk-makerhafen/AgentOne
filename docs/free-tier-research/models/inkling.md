@@ -4,6 +4,7 @@ developer: Thinking Machines Lab
 canonical_id: thinkingmachines/inkling
 family: inkling
 leaderboard_id: inkling
+leaderboard_rank: 225
 context_window: 1048576
 reasoning: true
 tool_call: true

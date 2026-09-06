@@ -43,3 +43,4 @@ cert.pem
 key.pem
 # dont git track raw files, they can be downloaded any time.
 docs/free-tier-research/raw/
+docs/free-tier-research/scripts/secret_api_keys

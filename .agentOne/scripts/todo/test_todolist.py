@@ -41,6 +41,7 @@ class FakeAnchor:
         result.update(extra)
         self.history.append(result)
         return result
+    
 class StubSession:
     """Minimal stand-in for Session (anchor history + settings flag)."""
 

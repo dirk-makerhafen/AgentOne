@@ -19,7 +19,7 @@ Z.AI (Zhipu AI) API offers three permanently zero-priced GLM Flash models alongs
 **Free Models:**
 
 - [glm-4.7-flash](../models/glm-4.7-flash.md) — text/reasoning; described in official release notes (2026-01-19) as the free-tier version of GLM-4.7. (Context per discovery data: 200K; verify live.)
-- [glm-4.5-flash](../models/glm-4.5-flash.md) — text/reasoning. (Context per discovery data: 128K; verify live.) No official retirement/deprecation found as of 2026-09-05.
+- `glm-4.5-flash` — text/reasoning; ≥1yr-old superseded generation, deliberately not catalogued as a model card (see README "Filenames" rule). Still permanently $0 here (in/cache/out all Free); context per discovery data 128K, verify live.
 - `glm-4.6v-flash` — vision/multimodal. (Context per discovery data: 128K; verify live.)
 
 **Limits:**

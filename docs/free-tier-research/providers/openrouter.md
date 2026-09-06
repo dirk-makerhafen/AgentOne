@@ -33,7 +33,7 @@ OpenRouter exposes free (`:free`-suffixed) variants of models through its unifie
 - [`minimax/minimax-m2.7:free`](../models/minimax-m2.7.md)
 - [`minimax/minimax-m3:free`](../models/minimax-m3.md)
 - `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` — Nemotron 3 Nano reasoning variant; see [model card](../models/nemotron-3-nano-30b-a3b.md) (provider ID differs from card default)
-- [`nvidia/nemotron-3-super-120b-a12b:free`](../models/nemotron-3-super-120b-a12b.md) / [`nvidia/nemotron-3-ultra-550b-a55b:free`](../models/nemotron-3-ultra-550b-a55b.md) / [`nvidia/nemotron-3.5-lightning:free`](../models/nemotron-3.5-lightning.md) / [`nvidia/nemotron-3.5-content-safety:free`](../models/nemotron-3.5-content-safety.md)
+- [`nvidia/nemotron-3-super-120b-a12b:free`](../models/nemotron-3-super-120b-a12b.md) / [`nvidia/nemotron-3-ultra-550b-a55b:free`](../models/nemotron-3-ultra-550b-a55b.md) / [`nvidia/nemotron-3.5-lightning:free`](../models/nemotron-3.5-lightning.md). (`nvidia/nemotron-3.5-content-safety:free` remains a free row but is a 4B guardrail specialist, deliberately not catalogued as a model card.)
 - [`poolside/laguna-s-2.1:free`](../models/laguna-s-2.1.md) — Laguna S 2.1; see [model card](../models/laguna-s-2.1.md)
 - [`poolside/laguna-xs-2.1:free`](../models/laguna-xs-2.1.md) — Laguna XS 2.1; see [model card](../models/laguna-xs-2.1.md)
 - [`thinkingmachines/inkling:free`](../models/inkling.md) / [`thinkingmachines/inkling-small:free`](../models/inkling-small.md)

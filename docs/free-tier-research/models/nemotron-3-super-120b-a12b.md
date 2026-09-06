@@ -3,6 +3,7 @@ name: Nemotron 3 Super 120B A12B
 developer: Nvidia
 canonical_id: nvidia/nemotron-3-super-120b-a12b
 leaderboard_id: nemotron-3-super-120b-a12b
+leaderboard_rank: 160
 family: nemotron
 context_window: 262144
 reasoning: true

@@ -3,6 +3,7 @@ name: North Mini Code
 developer: Cohere
 canonical_id: cohere/north-mini-code
 leaderboard_id: north-mini-code-1.0
+leaderboard_rank: 256
 family: north
 context_window: 256000
 max_output_tokens: 64000

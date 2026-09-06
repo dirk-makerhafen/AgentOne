@@ -19,7 +19,7 @@ Unified OpenAI-compatible API for Agnes text, image, video, and multimodal model
 
 **Free Models:**
 
-- [`agnes-2.5-flash`](../models/agnes-flash.md) — text, input and output currently $0/M (list $0.03/$0.15). (`agnes-2.0-flash` is deprecated per the pricing page — migrate to 2.5-flash.)
+- [`agnes-2.5-flash`](../models/agnes-2.5-flash.md) — text, input and output currently $0/M (list $0.03/$0.15). (Deprecated `agnes-2.0-flash` is deliberately not catalogued — superseded ≥1yr-old generation, see README "Filenames" rule.)
 - `agnes-image-2.0-flash`, `agnes-image-2.1-flash`, `agnes-image-2.5-flash` — image generation, all output-resolution tiers and input reference images currently $0.
 - `agnes-video-v2.0` — video generation, currently $0/s.
 - `agnes-video-2.5-flash` — video generation, currently $0/s but explicitly a limited-time free promotion (not stated as indefinite).
@@ -34,7 +34,7 @@ Unified OpenAI-compatible API for Agnes text, image, video, and multimodal model
 
 - Account required: yes. API key required: yes. Payment/billing info required: unknown (no card requirement documented for free use). Phone verification: unknown.
 - Account bill is the source of truth; promotional $0 prices and end dates are subject to platform announcement.
-- Model card: [agnes-flash](../models/agnes-flash.md) covers `agnes-2.5-flash` (plus deprecated `agnes-2.0-flash` via Kenari/UnoRouter).
+- Model card: [agnes-2.5-flash](../models/agnes-2.5-flash.md).
 
 **Sources**
 

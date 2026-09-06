@@ -3,6 +3,7 @@ name: Kimi K3
 developer: Moonshot AI
 canonical_id: moonshot-ai/kimi-k3
 leaderboard_id: kimi-k3
+leaderboard_rank: 9
 family: kimi
 context_window: 1048576
 reasoning: true

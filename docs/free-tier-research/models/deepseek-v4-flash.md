@@ -3,6 +3,7 @@ name: DeepSeek V4 Flash
 developer: DeepSeek
 canonical_id: deepseek/deepseek-v4-flash
 leaderboard_id: deepseek-v4-flash
+leaderboard_rank: 252
 family: deepseek-flash
 context_window: 1000000
 max_output_tokens: 384000

@@ -3,6 +3,7 @@ name: Nemotron 3.5 Lightning 30B A3B
 developer: Nvidia
 canonical_id: nvidia/nemotron-3.5-lightning-30b-a3b
 leaderboard_id: nemotron-3.5-lightning-30b-a3b
+leaderboard_rank: 253
 family: nemotron
 context_window: 1048576
 reasoning: true
@@ -38,7 +39,7 @@ providers:
     verified: "2026-09-05"
 ---
 
-Nemotron 3.5 Lightning 30B A3B is Nvidia's efficiency-tuned 3.5-generation chat/reasoning model: a hybrid MoE (30B total / 3B active, Mamba-2 + MoE + Attention with Multi-Token Prediction) pre-trained on 20T+ tokens for agents, chatbots, RAG, and instruction following, with single-H100 deployability. It is a distinct 3.5-generation model — not the Nemotron 3 Nano ([Nemotron 3 Nano 30B A3B](nemotron-3-nano-30b-a3b.md)) despite the matching 30B/3B shape, and not the guardrail model ([Nemotron 3.5 Content Safety](nemotron-3.5-content-safety.md)).
+Nemotron 3.5 Lightning 30B A3B is Nvidia's efficiency-tuned 3.5-generation chat/reasoning model: a hybrid MoE (30B total / 3B active, Mamba-2 + MoE + Attention with Multi-Token Prediction) pre-trained on 20T+ tokens for agents, chatbots, RAG, and instruction following, with single-H100 deployability. It is a distinct 3.5-generation model — not the Nemotron 3 Nano ([Nemotron 3 Nano 30B A3B](nemotron-3-nano-30b-a3b.md)) despite the matching 30B/3B shape, and not the guardrail Nemotron 3.5 Content Safety model (a 4B specialist deliberately not catalogued).
 
 **Capabilities:**
 

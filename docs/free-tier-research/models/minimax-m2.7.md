@@ -3,6 +3,7 @@ name: MiniMax M2.7
 developer: MiniMax
 canonical_id: minimax/minimax-m2.7
 leaderboard_id: minimax-m2.7
+leaderboard_rank: 109
 family: minimax
 context_window: 204800
 reasoning: true

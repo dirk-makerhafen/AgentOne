@@ -28,7 +28,7 @@ ONE-TIME trial grant, not a permanent tier: new accounts receive a one-time free
 - `Doubao-Seed-Character` — 500,000 tokens.
 - `Doubao-embedding-vision` — 500,000 tokens.
 - Base and fine-tuned variants of a model share that model's quota. Whether hosted third-party models (DeepSeek, Qwen, GLM, Kimi) carry a free quota is unknown — the product-page quota table lists Doubao models only. Context windows unknown.
-- No model-catalog links added: the free quota table covers Doubao models only, so none of the 9 model cards applies here.
+- No model-catalog links added: the free quota table covers Doubao models only, so none of the `models/` cards applies here.
 
 **Limits:**
 

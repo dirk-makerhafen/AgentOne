@@ -3,6 +3,7 @@ name: Qwen3.6-35B-A3B
 developer: Alibaba (Qwen team)
 canonical_id: qwen/qwen3.6-35b-a3b
 leaderboard_id: qwen3.6-35b-a3b
+leaderboard_rank: 100
 family: qwen3
 context_window: 262144
 modalities:

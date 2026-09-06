@@ -3,6 +3,7 @@ name: GPT-OSS 120B
 developer: OpenAI
 canonical_id: openai/gpt-oss-120b
 leaderboard_id: gpt-oss-120b
+leaderboard_rank: 172
 family: gpt-oss
 context_window: 131072
 max_output_tokens: 65536
@@ -26,7 +27,7 @@ providers:
       tokens:
         minute: 8000
         day: 200000
-    verified: "2026-09"
+    verified: "2026-09-05"
   - name: SambaNova Cloud
     file: sambanova
     model_id: gpt-oss-120b
@@ -101,7 +102,7 @@ GPT-OSS 120B is OpenAI's flagship open-weight reasoning model and the most widel
 
 | Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
 |---|---|---|---|---|
-| [Groq](../providers/groq.md) | `openai/gpt-oss-120b` | Free Plan; account + key | 30 RPM / 1,000 RPD / 8K TPM / 200K TPD | 2026-09 |
+| [Groq](../providers/groq.md) | `openai/gpt-oss-120b` | Free Plan; account + key | 30 RPM / 1,000 RPD / 8K TPM / 200K TPD | 2026-09-05 |
 | [SambaNova Cloud](../providers/sambanova.md) | `gpt-oss-120b` | Free tier; account + key, no card | Provider-wide free tier: 20 RPM / 20 RPD / 200K TPD | 2026-09-05 |
 | [FastRouter](../providers/fastrouter.md) | `openai/gpt-oss-120b:free` | ⚠ `:free` lane; org must hold a paid credit balance above $1 or free calls 402 | 10 req/day per org per model, UTC-midnight reset | 2026-09-05 |
 | [UnoRouter](../providers/unorouter.md) | `gpt-oss-120b:free` | `:free` lane; account + key, no card | ~1 req/min per user + upstream caps | 2026-09-05 |

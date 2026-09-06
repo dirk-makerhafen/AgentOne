@@ -26,8 +26,30 @@ def _extract_date_from_path(rel_path: str) -> list:
     return[ None,None,None]
 
 def ingest_next(_session: Session, limit:int=1):
-    _session.get_command("todo_clear").call(include_done=True)
-    success, data = _session.get_task("find_unlinked_raw").call(limit=limit)
+
+    subagent_version = _session.get_subagent("wiki")
+    if not subagent_version:
+        return {"error": f"Agent 'wiki' not found"}
+
+    now = datetime.now().strftime("%Y%m%d.%H%M")
+    ingest_session_version = subagent_version.get_or_create_session(
+        name=f"{_session.name}:INGEST",
+        description=f"Ingest session for parent session {_session.name}, pk:{_session.model.pk}",
+        workspace=_session.workspace,
+        parent_session_version=_session.get_version_model(),
+        session_type=SessionType.SUBTASK_DELEGATE,
+    )
+    # Fork inherits parent's session settings (auto_compact_limit, api key, disallowed lists, etc.)
+    parent_sv = _session.get_version_model()
+    if parent_sv and parent_sv.session_settings:
+        fork_settings = subagent_version.clone_settings(parent_sv.session_settings, disallowedToolNames=["+", "find_unlinked_raw"])
+        ingest_session_version.session_settings = fork_settings
+        SessionVersionModel.objects.filter(pk=ingest_session_version.pk).update(session_settings=fork_settings)
+       
+    ingest_session = Session(session_model=ingest_session_version.session, pinned_session_version=ingest_session_version)
+
+    ingest_session.get_command("todo_clear").call()
+    success, data = ingest_session.get_task("find_unlinked_raw").call(limit=limit)
     cnt = 0
     last_y,last_m,last_d = None,None,None
     if data.get("items", None):
@@ -35,20 +57,20 @@ def ingest_next(_session: Session, limit:int=1):
             p = item["file"]
             y,m,d = _extract_date_from_path(p)
             if last_d and d != last_d:
-                _session.get_command("todo_append").call(text=f'Lint your work for {last_y}-{last_m}-{last_d}')                    
+                ingest_session.get_command("todo_append").call(text=f'Lint your work for {last_y}-{last_m}-{last_d}')                    
             if last_m and m != last_m:
-                _session.get_command("todo_append").call(text=f'Lint your work for {last_y}-{last_m}')   
+                ingest_session.get_command("todo_append").call(text=f'Lint your work for {last_y}-{last_m}')   
             if last_y and y != last_y:
-                _session.get_command("todo_append").call(text=f'Lint your work for {last_y}')   
+                ingest_session.get_command("todo_append").call(text=f'Lint your work for {last_y}')   
             
             last_y = y if y else last_y
             last_m = m if m else last_m
             last_d = d if d else last_d
             cnt += 1
-            _session.get_command("todo_append").call(text=f'ingest: {item["file"]}')
+            ingest_session.get_command("todo_append").call(text=f'ingest: {item["file"]}')
     return True, f"{cnt} todo items created"
 
-
+'''
 def ingest_unlinked_raw_results(_session: Session, result: dict, **kwargs) -> str|list:
     success, data = result
     if data["items"]:
@@ -140,3 +162,4 @@ def ingest_verification_result(_session: Session, verification_result:Message) -
         },
     ])
     return final_result
+'''

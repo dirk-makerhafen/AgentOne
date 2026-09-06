@@ -7,21 +7,50 @@ import pandas as pd
 import numpy as np
 import trueskill
 import json
-from .secrets import ZEROEVAL_API_KEY
+
 model_id_to_name = {}
 model_id_to_org = {}
 model_scores = {}
 
-BASE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE = Path(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 DATA_URL = "https://raw.githubusercontent.com/anomalyco/opencode/refs/heads/dev/packages/opencode/test/tool/fixtures/models-api.json"
 TARGET_DIR = Path(os.path.join(BASE, "raw", "rankings"))
 TARGET_DIR.mkdir(exist_ok=True)
+
+API_KEYS = {}
+content = (BASE / "scripts" / "secret_api_keys").read_text(encoding="utf8")
+for line in content.split("\n"):
+    name, apikey = [x.strip() for x in line.split(":", 1)]
+    API_KEYS[name] = apikey
 
 try:
     with open(TARGET_DIR / "model_scores.json", "r") as f:
         model_scores = json.loads(f.read())
 except:
     pass
+
+def clean_model_id(model_id):
+    model_id = model_id.strip()
+    if "-202" in model_id: # split year/date away
+        model_id = model_id.split("-202",1)[0]
+    if "-preview-" in model_id:
+        model_id = model_id.split("-preview-")[0]
+    for postfix in [" (xHigh)", "-xhigh", "-high", "-medium", " (thinking-minimal)", " (non-thinking)", "-preview"]:
+        if model_id.endswith(postfix):
+            model_id = model_id[:-len(postfix)]
+            break
+    if model_id.endswith("-max") and not "qwen" in model_id:
+        model_id = model_id[:-4]
+
+    if "-" in model_id:
+        try:
+            p = model_id.split("-")[-1]
+            if len(p) == 4 and int(p):
+                model_id = model_id[:-5]
+        except:
+            pass
+
+    return model_id
 
 def from_hf():
     DATA_URL = "https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset/resolve/main/text/latest-00000-of-00001.parquet"
@@ -37,14 +66,7 @@ def from_hf():
 
     models = []
     for _, row in df_overall.iterrows():
-        model_id = row.get("model_name", "")
-        for postfix in [" (xHigh)", "-xhigh", "-high", "-medium", " (thinking-minimal)", " (non-thinking)"]:
-            if model_id.endswith(postfix):
-                model_id = model_id[:-len(postfix)]
-                break
-        if model_id.endswith("-max") and not "qwen" in model_id:
-            model_id = model_id[:-4]
-
+        model_id = clean_model_id(row.get("model_name", ""))
         if row.get("organization"):
             model_id_to_org[model_id] = row.get("organization")
 
@@ -70,13 +92,13 @@ def from_zeroeval():
             url = API_URL + f"scores?category={cat}&limit=500"
             if next_cursor:
                 url += f"&cursor={next_cursor}"
-            response = requests.get(url, headers={"Authorization": f"Bearer {ZEROEVAL_API_KEY}"})
+            response = requests.get(url, headers={"Authorization": f'Bearer {API_KEYS["ZEROEVAL"]}'})
             data = response.json()
             next_cursor = data.get("next_cursor", None)
             scores = data.get("scores", [])
             dlcnt += len(scores)
             for item in scores:
-                model_id = item.get("model_id")
+                model_id = clean_model_id(item.get("model_id"))
                 model_name = item.get("model_name")
                 model_id_to_name[model_id] = model_name
                 model_id_to_org[model_id] = item.get("organization","")

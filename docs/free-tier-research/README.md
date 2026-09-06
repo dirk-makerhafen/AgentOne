@@ -318,10 +318,13 @@ Create a card for a model when it is free through at least one verified provider
 
 ### Filenames
 
-- One canonical file per model: `models/<model-slug>.md`, lowercase slug (e.g. `models/gpt-oss-120b.md`, `models/glm-4.5-flash.md`).
+- One canonical file per model: `models/<model-slug>.md`, lowercase slug (e.g. `models/gpt-oss-120b.md`, `models/glm-4.7-flash.md`).
 - Strip access suffixes from the filename: no `:free` / `-free` (e.g. `gemma-4-31b-it.md`, not `gemma-4-31b-it-free.md`).
 - Omit the vendor prefix unless needed for uniqueness (e.g. `nemotron-3-nano-30b-a3b.md`, not `nvidia-nemotron-...md`).
-- One leaderboard entry = one model file: if `raw/rankings/leaderboard.csv` lists versions as separate Model IDs (e.g. `laguna-s-2.1` vs `laguna-xs-2.1`, `glm-5.3` vs `glm-5.2`, `qwen3.6-27b` vs `qwen3.6-35b-a3b`), they get separate cards (`models/laguna-s-2.1.md`, `models/laguna-xs-2.1.md`), because free availability varies per version. Record the mapping in frontmatter as `leaderboard_id:` (exact Model ID string from the CSV; omit only when no entry denotes the card's model). Ranks/scores live in `raw/rankings/` — do not copy them into cards (the CSV is a stale snapshot; the generator is currently broken, see line 57).
+- The leaderboard (`raw/rankings/leaderboard.csv`, columns `Rank,Model ID,Name,Organization,Score`) is the reference for what counts as a "top-level" model. One leaderboard entry = one model file: if the CSV lists versions as separate Model IDs (e.g. `laguna-s-2.1` vs `laguna-xs-2.1`, `glm-5.3` vs `glm-5.2`, `qwen3.6-27b` vs `qwen3.6-35b-a3b`), they get separate cards (`models/laguna-s-2.1.md`, `models/laguna-xs-2.1.md`), because free availability varies per version. Two entries in the leaderboard ⇒ two card files; never merge multiple leaderboard entries into one "family" card.
+- Record the mapping in frontmatter as `leaderboard_id:` (exact Model ID string from the CSV) and `leaderboard_rank:` (exact `Rank` column value, integer). If the CSV has several spellings for the same model (e.g. `inkling` vs `Inkling Small`, `inkling-small`), use the canonical lowercase `Model ID` and note the alias collision in the card. Ranks/scores otherwise live in `raw/rankings/` — only the `leaderboard_rank` integer goes into the card; do not copy score tables into cards (the CSV is a stale snapshot; the generator is currently broken, see line 57).
+- Missing from the leaderboard: if no CSV entry denotes the card's model but you have reason to believe it is a top-level model (large parameter count, recent release, frontier-class), research public benchmarks and record an **estimated** rank as `leaderboard_rank_estimated: "~N"` (note the basis/source and date in the card). Example: `agnes-2.5-flash` is newer than the leaderboard snapshot, so it gets an estimated rank.
+- Do **not** estimate ranks for models clearly not top-level: names carrying a small-model size suffix (e.g. `-8b`, `-2.6b`, `-10b` or models that are ≥1 year old, or are clearly superseeded by a newer version. We dont need these models, and thus these models dont need a model card at all. 
 
 ### File format
 
@@ -333,6 +336,7 @@ name: Model Display Name
 developer: Organization
 canonical_id: vendor/model-slug
 leaderboard_id: leaderboard-model-id
+leaderboard_rank: 53
 family: model-family
 context_window: 131072
 max_output_tokens: 32768
@@ -380,6 +384,17 @@ Short factual description of the model.
 ```
 
 Frontmatter is the machine-readable source of truth, including the `providers` list. The markdown table mirrors it 1:1 for human reading — same providers, same order, same values. When updating one, update the other. Omit any frontmatter field that cannot be verified; never invent values. Fixture-derived facts (`raw/opencode-models-api/`) are discovery data: usable for capabilities/context with a `(fixture-reported, verify live)` flag, never as the sole source for free availability.
+
+### Model frontmatter fields
+
+Model-card frontmatter adds these per-model keys alongside `name`/`developer`/`canonical_id`:
+
+- `leaderboard_id` — exact `Model ID` from `raw/rankings/leaderboard.csv` when an entry denotes this model; see Filenames above for the two-entries-two-cards rule.
+- `leaderboard_rank` — integer `Rank` column value from the CSV for that `leaderboard_id`.
+- `leaderboard_rank_estimated` — only when there is no CSV entry but the model is plausibly top-level: an approximate rank (e.g. `"~25"`) derived from public benchmark aggregates, with the basis/source and date noted in the card body. Never estimated for small-model names (e.g. `-8b`) or models ≥1 year old.
+- `family` — short slug grouping version variants (used in cross-reviews).
+
+Both rank keys are presentation-only: they never change free-access rows.
 
 ### Providers entry schema
 
@@ -494,5 +509,6 @@ Before completing each provider, verify:
 * Is this actually a distinct provider rather than a duplicate/service wrapper?
 * For each free model on the provider: does its `models/` card exist, and does the providers table row match the provider file (ID, conditions, limits, verified date)?
 * For each model card: is every table row backed by its linked provider file, and are payment-gated rows ⚠-flagged rather than listed as plain free?
+* For each model card: is the leaderboard mapping present — `leaderboard_id` + exact integer `leaderboard_rank` when the CSV denotes the model, `leaderboard_rank_estimated: "~N"` (with basis/source/date in the body) when it is a plausible top-level model missing from the snapshot, and neither when it is small, ≥1 year old, superseded, or a specialist (in which case no card should exist at all)?
 
 The final `providers/` directory should be a **clean, deduplicated, independently verified database of genuinely usable free LLM API providers**, not a transcription of the source lists.

@@ -26,7 +26,7 @@ Mistral's La Plateforme (Studio) API defaults new organizations to Free mode wit
 - Any Studio API model is usable within the included monthly Free-mode usage and the per-model rate limits shown on the account Limits page.
 - `mistral-large-latest` — used in the official Free-mode quickstart (example only, not a free-model designation).
 - Discovery-listed IDs (`mistral-medium-3-5`, `mistral-small-2603`, `mistral-large-2512`, `ministral-8b-2512`, `codestral-2508`, `ministral-3b-2512`, `ministral-14b-2512`) and discovery figures ("~1 RPS, 500K TPM", "~1B tokens/month", "Experiment tier") are **secondary and unverified**.
-- None of the 9 catalogued model cards is served through this provider — no model-card links apply.
+- None of the catalogued model cards is served through this provider — no model-card links apply.
 
 **Limits:**
 

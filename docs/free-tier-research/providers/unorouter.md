@@ -30,7 +30,7 @@ UnoRouter is an open-source OpenRouter alternative: one API key for 300+ models 
 - `deepseek-reasoner:free` — DeepSeek reasoning.
 - [`dots-3-note-preview:free`](../models/dots-3-note.md) — Dots Studio.
 - [`nemotron-3.5-lightning:free`](../models/nemotron-3.5-lightning.md) — Nvidia.
-- [`agnes-2.0-flash:free`](../models/agnes-flash.md), `aion-3.0-mini:free`, `codestral-latest:free`, `command-r-plus:free` — misc free rows.
+- `agnes-2.0-flash:free` (deprecated, deliberately not catalogued — superseded ≥1yr-old generation), `aion-3.0-mini:free`, `codestral-latest:free`, `command-r-plus:free` — misc free rows.
 
 **Limits:**
 

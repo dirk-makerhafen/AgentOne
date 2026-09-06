@@ -3,6 +3,7 @@ name: Nemotron 3 Ultra 550B A55B
 developer: Nvidia
 canonical_id: nvidia/nemotron-3-ultra-550b-a55b
 leaderboard_id: nemotron-3-ultra-550b-a55b
+leaderboard_rank: 72
 family: nemotron
 context_window: 1048576
 reasoning: true

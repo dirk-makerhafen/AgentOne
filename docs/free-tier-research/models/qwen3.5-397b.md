@@ -3,6 +3,7 @@ name: Qwen3.5-397B-A17B
 developer: Alibaba (Qwen team)
 canonical_id: qwen/qwen3.5-397b-a17b
 leaderboard_id: qwen3.5-397b-a17b
+leaderboard_rank: 41
 family: qwen3.5
 context_window: 262144
 reasoning: true

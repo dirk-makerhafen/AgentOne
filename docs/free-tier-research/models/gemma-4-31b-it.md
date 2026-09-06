@@ -3,6 +3,7 @@ name: Gemma 4 31B IT
 developer: Google
 canonical_id: google/gemma-4-31b-it
 leaderboard_id: gemma-4-31b-it
+leaderboard_rank: 83
 family: gemma
 context_window: 262144
 max_output_tokens: 32768

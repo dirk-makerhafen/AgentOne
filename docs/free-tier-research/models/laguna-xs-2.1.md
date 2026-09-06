@@ -4,6 +4,7 @@ developer: Poolside
 canonical_id: poolside/laguna-xs-2.1
 family: laguna
 leaderboard_id: laguna-xs-2.1
+leaderboard_rank: 262
 context_window: 262144
 reasoning: true
 tool_call: true

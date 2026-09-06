@@ -2,6 +2,7 @@
 name: Dots-3-Note Preview
 developer: Dots Studio
 canonical_id: dots-studio/dots-3-note-preview
+leaderboard_rank_estimated: "~48"
 family: dots
 context_window: 512000
 reasoning: true
@@ -59,6 +60,7 @@ Dots-3-Note Preview is an open-weights multimodal Mixture-of-Experts model from 
 - Max output tokens: catalogs disagree (512K vs ~460.8K/461K) — omitted.
 - Temperature / structured output / top_p: catalog-reported only, not verified against official sources — omitted.
 - Knowledge cutoff is unpublished — omitted.
+- `leaderboard_rank_estimated: "~48"` (2026-09-05): no `leaderboard.csv` entry (released Aug 14 2026, newer than the snapshot). Basis: official benchmark table shows it matching/beating Hy3 (CSV rank 53) on headline axes — SWE-bench Verified 78.4 vs 78.0, Terminal-Bench 2.1 75.1 vs 71.7, ARC-AGI-2 81.4 vs 35.8, Codeforces 3056. Company-reported table, so directional; independent ModelCap composite estimate is lower (~147). Estimate sits just above Hy3.
 
 **Sources**
 

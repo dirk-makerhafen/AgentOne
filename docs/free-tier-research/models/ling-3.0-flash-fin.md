@@ -2,6 +2,7 @@
 name: Ling 3.0 Flash Fin
 developer: inclusionAI
 canonical_id: inclusionai/ling-3.0-flash-fin
+leaderboard_rank_estimated: "~85"
 family: ling
 context_window: 262144
 max_output_tokens: 32768
@@ -53,6 +54,7 @@ Ling 3.0 Flash Fin is inclusionAI's (Ant Group) finance-enhanced Mixture-of-Expe
 - Nous Portal lists Ling 3.0 Flash Fin in its Portal-price-FREE set, but its provider file publishes no exact `model` ID string — no row added until the ID is confirmed live at https://portal.nousresearch.com/models (re-verification lead).
 - Knowledge cutoff is unpublished — omitted.
 - While free on Opencode Zen, collected data may be used to improve the model (per the Zen provider file).
+- `leaderboard_rank_estimated: "~85"` (2026-09-05): no `leaderboard.csv` entry. Basis: AA Intelligence Index ~38 for the shared Ling-3.0-Flash base (124B/5.1B), reported level with MiMo-V2.5 (CSV rank 99) and Qwen3.6-27B (CSV rank 67); midpoint placement, directional only.
 - No `limits` in frontmatter: no combo-specific numerics are documented for any of the three rows; provider-wide defaults stay in the provider files.
 
 **Sources**

@@ -21,7 +21,7 @@ EmpirioLabs is a model gateway with an OpenAI-compatible API whose pay-as-you-go
 
 - [`glm-4-7-flash`](../models/glm-4.7-flash.md) (`glm-4-7-flash`) — Z.ai GLM flash model, input/output per 1M tokens Free.
 - `glm-4-6v-flash` (`glm-4-6v-flash`) — Z.ai GLM vision flash model, input/output per 1M tokens Free.
-- [`glm-4-5-flash`](../models/glm-4.5-flash.md) (`glm-4-5-flash`) — Z.ai GLM flash model, input/output per 1M tokens Free.
+- `glm-4-5-flash` — Z.ai GLM flash model, input/output per 1M tokens Free (≥1-yr-old superseded generation, deliberately not catalogued as a model card; see README "Filenames" rule).
 - The free roster rotates (the page notes "3 of these are free to run"); the pricing page badges are the source of truth — resolve live via `GET /v1/models` or https://empiriolabs.ai/pricing, not hardcoded here.
 
 **Limits:**

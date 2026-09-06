@@ -42,7 +42,7 @@ MegaNova is a model gateway with a free Tier 1 (registration only, no card): fre
 
 - Account required; API key required; no card for Tier 1.
 - Endpoint `https://api.meganova.ai/v1` verified in inference docs (the old `https://inference.meganova.ai/v1` base URL is deprecated but still works).
-- None of the catalog's 9 model cards is free on MegaNova Tier 1: `GLM-4.7-Flash` (card `glm-4.7-flash`) has Tier 1 quota 0 and needs a Tier 2 $1 deposit — do not link it as a free row.
+- None of the catalog's model cards is free on MegaNova Tier 1 (verified against the current `models/` catalog): `GLM-4.7-Flash` (card `glm-4.7-flash`) has Tier 1 quota 0 and needs a Tier 2 $1 deposit — do not link it as a free row.
 - Doc discrepancy (verified 2026-09-05): the Tier 1 detail page lists `Faster-Whisper-Large-V3` at 50 RPD, but the free-model-quota doc (the specialized quota source) lists Tier 1 = 0; quota-doc values are used above.
 - Full live catalog (IDs, prices, context, per-tier daily limits) at https://console.meganova.ai/serverless and via authenticated `GET https://api.meganova.ai/v1/models`.
 
