@@ -130,11 +130,11 @@ def _pop_next_todo_message(_session: Session, message: Message) -> tuple[Message
         type=MessagePartType.MESSAGE,
         content_type=MessageContentType.TEXT,
         content=(
-            f"<SYSTEM NOTICE>Todo list auto-processing is ON. "
+            f"<SYSTEM NOTICE>Todo list auto-processing is enabled."
             f"Next item: {json.dumps(first)}\n"
             f"({remaining} remaining after this one)\n"
-            f"Work on this now. When done, call final_result(content='...') "
-            f"and the following item will be fed automatically.</SYSTEM NOTICE>"
+            f"Work on this now. When done with this task, call final_result(content='...') "
+            f"and the next task will be fed automatically from the todo list</SYSTEM NOTICE>"
         ),
     )
     from runtime.events import publish_model_event
@@ -143,6 +143,18 @@ def _pop_next_todo_message(_session: Session, message: Message) -> tuple[Message
 
 
 def decide_next_step(_session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any) -> Message:
+    violated = kwargs.get("tool_allowlist_violated")
+    if violated:
+        # Strict allowlist breach (see SettingsModel.tool_call_allowlist):
+        # the off-task session (e.g. a compaction fork that kept working
+        # instead of summarizing) ends here — no turn counted, no
+        # process_turn dispatched.  The parent sees no usable result and
+        # reforks cache-hot.  This deliberately wins over a co-emitted
+        # final_result: a mixed response proves the fork is off-task, and a
+        # fresh cache-hot fork is cheaper than trusting it.
+        _session.set_is_active(False)
+        return message
+
     _session.count_turn()
     _session.count_unattended_turn()
     is_final_result = False

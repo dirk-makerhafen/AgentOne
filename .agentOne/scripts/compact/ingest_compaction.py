@@ -8,6 +8,26 @@ from server.models.enums.message_enums import MessageContentType, MessagePartTyp
 from server.models.message import Message
 
 
+#: Total compaction attempts per trigger (initial fork + retries).  Each
+#: retry is a fresh cache-hot fork; the budget caps cost when the model
+#: persistently fails to summarize.
+MAX_COMPACT_ATTEMPTS = 3
+
+
+def _next_compact_attempt(compact_attempt: int) -> int | None:
+    """Return the next attempt number, or *None* when the budget is spent.
+
+    Pure helper (no side effects) so the retry budget stays unit-testable
+    without a DB.
+    """
+    try:
+        attempt = int(compact_attempt or 0)
+    except (TypeError, ValueError):
+        attempt = 0
+    nxt = attempt + 1
+    return nxt if nxt < MAX_COMPACT_ATTEMPTS else None
+
+
 def _extract_summary_text(message: Message | None) -> str:
     """Extract the compaction summary from a child's final result message."""
     if message is None:
@@ -121,6 +141,7 @@ def ingest_compaction(
     child_session_pk: int | None = None,
     boundary_pk: int | None = None,
     result: Message | None = None,
+    compact_attempt: int = 0,
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Insert the COMPACTION boundary marker and return the marker message.
@@ -148,6 +169,37 @@ def ingest_compaction(
         result = child_session.get_last_message()
 
     summary_text = _extract_summary_text(result)
+
+    if not summary_text.strip():
+        # Never insert an empty marker: it would hide the compacted range
+        # behind no summary (silent context loss).  The usual cause is a
+        # fork that never produced final_result — e.g. killed by the
+        # tool_call_allowlist after going off-task.
+        #
+        # Retry IMMEDIATELY with a fresh fork instead of hoping for the
+        # parent's next over-limit turn: at this point the parent is already
+        # at/over its context budget, so its next LLM call may itself
+        # overflow before any future compaction runs.  The re-dispatched
+        # compact_turn is async (no blocking wait); under the queue strategy
+        # it runs right after this call ends.
+        nxt = _next_compact_attempt(compact_attempt)
+        if nxt is not None:
+            retry_call = _session.get_task("compact_turn").delay(
+                message=None, compact_attempt=nxt
+            )
+            return dict(
+                compaction_retried=True,
+                compact_attempt=nxt,
+                child_session_pk=child_session_pk,
+                boundary_pk=boundary_pk,
+                retry_call=retry_call,
+            )
+        raise ValueError(
+            "Compaction fork produced no summary "
+            f"(child_session_pk={child_session_pk}) after "
+            f"{MAX_COMPACT_ATTEMPTS} attempts; refusing to insert an "
+            "empty COMPACTION marker."
+        )
 
     boundary = Message.objects.get(pk=boundary_pk) if boundary_pk else None
 

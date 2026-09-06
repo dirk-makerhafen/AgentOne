@@ -2,29 +2,12 @@
 name: approval_decider
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Reviews python/shell scripts that another agent asked to run and renders an approval verdict — allow automatically, deny automatically, or escalate to a human.
-extends: []
-inheritSystemPrompt: false
 maxRetries: 0
-maxTurns: 10
-maxUnattendedTurns: 10
-maxHistoryMessages: 200
-autoCompactLimit: 120000
-compactSizeLimit: 15
+maxTurns: 3
 reasoningEffort: high
-schedulerStrategy: queue
 precision: precise
-subagentResultDelivery: immediate
-toolCallSyntax: default
-sound: false
-skills: []
-disallowedSkills: []
 tools: [approval_verdict]
-disallowedTools: []
 tasks: [core.*]
-disallowedTasks: []
-commands: []
-disallowedCommands: []
-priority: 0
 ---
 
 ## Role

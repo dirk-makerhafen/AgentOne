@@ -26,7 +26,7 @@ When you are done, call the final_result tool with the summary as its content ar
 <SYSTEM NOTICE>"""
 
 
-def build_llm_compact_context(_session: Session, message: Message) -> Query:
+def build_llm_compact_context(_session: Session, message: Message, compact_attempt: int = 0, **kwargs) -> Query:
 
     from server.history_limiter import find_compaction_boundary
 
@@ -40,7 +40,11 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
     if not agent_version:
         return {"error": "Current agent version not found"}
 
+    # Attempt suffix: SessionModel is get_or_create'd by name, so a retry
+    # within the same second must not reuse the dead fork's session.
     session_name = f"p{_session.model.pk}:compaction:{int(time.time())}"
+    if compact_attempt:
+        session_name += f":a{compact_attempt}"
     child_sv = agent_version.get_or_create_session(
         name=session_name,
         description=f"Session compaction for {_session.name} at {int(time.time())}",
@@ -53,13 +57,21 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
     # *this* compaction — so it would immediately exceed the auto-compact
     # limit itself and spawn yet another compaction fork (infinite chain).
     # Fork off the inherited session settings but pin auto_compact_limit to 0.
+    # Also pin tool_call_allowlist to ["final_result"]: the advertised tools
+    # stay identical (KV/prompt cache preserved), but any other attempted
+    # call aborts the fork instead of letting it wander the old task — the
+    # parent then reforks cache-hot.
     from server.models.settings import SettingsModel
     from server.models.sessions.session_version import SessionVersionModel
 
     if child_sv.session_settings:
-        fork_settings = agent_version.clone_settings(child_sv.session_settings, auto_compact_limit=0)
+        fork_settings = agent_version.clone_settings(
+            child_sv.session_settings,
+            auto_compact_limit=0,
+            tool_call_allowlist=["final_result"],
+        )
     else:
-        fork_settings = SettingsModel(auto_compact_limit=0)
+        fork_settings = SettingsModel(auto_compact_limit=0, tool_call_allowlist=["final_result"])
         fork_settings.save()
     SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=fork_settings)
     child_sv.session_settings = fork_settings
@@ -69,7 +81,7 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
     fork_msg.add_part(
         type=MessagePartType.MESSAGE,
         content_type=MessageContentType.TEXT,
-        content="<SYSTEM NOTICE> IMPORTANT: Context is running low, you have been switched to a session compaction agent. </SYSTEM NOTICE>",
+        content="<SYSTEM NOTICE> IMPORTANT: Context window is running low, you have been switched to a session compaction agent. </SYSTEM NOTICE>",
     )
     prompt_parts = [
         {
@@ -83,6 +95,7 @@ def build_llm_compact_context(_session: Session, message: Message) -> Query:
     return dict(
         child_session_pk=child_sv.session.pk,
         boundary_pk=boundary.pk,
+        compact_attempt=compact_attempt,
         result=compact_result
     )
      

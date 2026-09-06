@@ -92,6 +92,20 @@ class SettingsModel(BaseModel):
     toolNames: Any = models.JSONField(default=None, null=True, blank=True)
     disallowedToolNames: Any = models.JSONField(default=None, null=True, blank=True)
 
+    # Strict call-time tool allowlist (execution gate, NOT advertisement).
+    # None (default) = no restriction: attempted calls are validated/dispatched
+    # as usual, disallowed ones surfacing as soft ``catch_tool_argument_error``
+    # retries.  When set to a list of tool names, the session still advertises
+    # the full ``allowedTools`` set to the LLM (so the API request — and with
+    # it the provider KV/prompt cache — stays byte-identical), but any
+    # *attempted* call outside the list is a violation: it is never dispatched
+    # and aborts the session with an error instead of looping on soft retries.
+    # Compaction forks use ``["final_result"]`` so a fork that goes off-task
+    # dies immediately and the parent reforks cache-hot, instead of burning
+    # turns wandering the pre-compaction task.  [] allows nothing (not even
+    # ``final_result``).
+    tool_call_allowlist: Any = models.JSONField(default=None, null=True, blank=True)
+
     skillNames: Any = models.JSONField(default=None, null=True, blank=True)
     disallowedSkillNames: Any = models.JSONField(default=None, null=True, blank=True )
 

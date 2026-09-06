@@ -174,9 +174,7 @@ def todolist_action(_session: Session, action: str, **kwargs: Any) -> dict[str, 
     }
 
 
-def todolist_action_response(
-    _session: Session, store_function_response: dict[str, Any]
-) -> dict[str, Any]:
+def todolist_action_response(_session: Session, store_function_response: dict[str, Any]) -> dict[str, Any]:
     """Slim resolver for the anchor call (TASK-type — never shown to the LLM).
 
     Runs after ``todolist_action`` and returns only the
@@ -190,12 +188,7 @@ def todolist_action_response(
     }
 
 
-def todo_append(
-    _session: Session,
-    text: str,
-    depends_on: Optional[Union[int, List[int]]] = None,
-    **kwargs
-) -> tuple[bool, dict[str, Any]]:
+def todo_append(_session: Session, text: str, depends_on: Optional[Union[int, List[int]]] = None, **kwargs) -> tuple[bool, dict[str, Any]]:
     """Add one todo item to the session list.
 
     Break a larger request into trackable steps with this: append one item
