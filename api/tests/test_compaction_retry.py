@@ -43,3 +43,38 @@ class TestCompactRetryBudget:
     def test_garbage_attempt_counts_as_fresh(self):
         assert ingest_mod._next_compact_attempt("bad") == 1
         assert ingest_mod._next_compact_attempt(None) == 1
+
+
+class TestCompactionResponseWrapper:
+    """ingest_compaction_response reshapes the awaited retry result into the
+    old success shape (response/parts/message) without touching the DB."""
+
+    def test_dict_result_unpacks_marker(self):
+        marker, response = object(), object()
+        parts = [{"type": "text"}]
+        out = ingest_mod.ingest_compaction_response(
+            None,
+            compaction_result={"message": marker},
+            response=response,
+            parts=parts,
+            message=object(),
+            compact_attempt=1,
+        )
+        assert out["message"] is marker
+        assert out["response"] is response
+        assert out["parts"] == parts
+        assert out["compaction_retried"] is True
+        assert out["compact_attempt"] == 1
+
+    def test_missing_marker_falls_back_to_carried_message(self):
+        carried = object()
+        out = ingest_mod.ingest_compaction_response(
+            None, compaction_result={}, response=None, parts=None, message=carried
+        )
+        assert out["message"] is carried
+
+    def test_none_result_falls_back_to_carried_message(self):
+        carried = object()
+        out = ingest_mod.ingest_compaction_response(None, compaction_result=None, message=carried)
+        assert out["message"] is carried
+        assert out["response"] is None

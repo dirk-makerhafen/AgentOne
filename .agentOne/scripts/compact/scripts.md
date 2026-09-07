@@ -14,6 +14,10 @@ tasks:
     file: ingest_compaction.py
     function: ingest_compaction
     bound: True
+  - name: ingest_compaction_response
+    file: ingest_compaction.py
+    function: ingest_compaction_response
+    bound: True
   - name: compact_turn
     type: chain
     chain:

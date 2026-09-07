@@ -171,8 +171,9 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     if kwargs.get("has_final_result"):  # agent did call final_result tool
         is_final_result = True
 
-    elif not has_tool_calls and has_message and _session.session_type in (SessionType.SESSION, SessionType.SUBSESSION):  
-        # if we have toolcalls, its not the final message # we got a message, and its a session or subsession, not a delegated task
+
+    elif has_message and not has_tool_calls and _session.session_type in (SessionType.SESSION, SessionType.SUBSESSION, SessionType.SUBTASK_COMPACT):  
+        # Heuristic guestimation if session is over
         message_parts = [ part for part in parts if part["type"] == MessagePartType.MESSAGE]
         last_content = str(message_parts[-1].get("content", "")).strip()
         if last_content.endswith("?"): # the agent ended with a question, return to user
@@ -183,6 +184,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
                 is_final_result = True
  
     if is_final_result:
+        # return final result, add new task from todo list of needed/possible
         next_todo = _pop_next_todo_message(_session, message)
         if next_todo is not None:
             next_message, todolist_task_result = next_todo
@@ -190,6 +192,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         return message
 
 
+    # Check empty/dumm assistant responses, insert hint if needed
     MAX_NO_TOOL_ASSISTANT_TURNS = 3
     warn_no_toolcall_loop = True
     no_tool_turn_count = 0

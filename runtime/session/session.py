@@ -353,7 +353,7 @@ class Session:
     @property
     def max_history_messages(self) -> int:
         """Return the resolved max history messages."""
-        return self._get_session_setting("max_history_messages")
+        return self._get_session_setting("max_history_messages") or 0
 
     @property
     def auto_compact_limit(self) -> int:

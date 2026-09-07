@@ -120,6 +120,11 @@ limits:
   tokens:
     minute: 100000
     day: 1000000
+
+wire:
+  transports: [chat_completions]
+  required_headers: []
+  wire_verified: "2026-09-06"
 ---
 
 Short factual description of the provider and its free offering.
@@ -163,6 +168,25 @@ Use:
 * `limits`
 
 `default_api_key: public` means that the documented free access method does not require a user-specific API key. Do not use it merely because obtaining a key is easy.
+
+### Provider wire block
+
+The optional frontmatter `wire:` block records request-shape facts about the provider's API surface: which transports exist and which headers the provider requires. It is the provider half of the wire schema (the model half lives on the model card). Omit the whole block when nothing below is verified.
+
+```yaml
+wire:
+  transports: [chat_completions]   # every transport the provider serves; see vocabulary below
+  required_headers: []             # header NAMES the provider requires/recommends (values are app identity, filled by the caller)
+  notes: "..."                     # transport quirks that fit no key (e.g. lane-specific paths, promo transports)
+  wire_verified: "2026-09-06"
+```
+
+Rules:
+
+* `transports` uses the transport vocabulary (`chat_completions`, `responses`, ...). List only transports verified live or in official docs.
+* `required_headers` holds names only (e.g. `[HTTP-Referer, X-Title]`), never app-specific values — the calling framework stamps its own identity. Document recommended values in `notes` when the provider publishes them.
+* Protocol paths (`/v1`, `/api/anthropic`, ...) belong in `setup_instructions`, not in `wire:`.
+* `wire_verified` is mandatory whenever `wire:` is present; re-check it on every refresh pass like any other changeable claim.
 
 ## Limits
 
@@ -420,6 +444,77 @@ Each `providers` entry:
 - Rows that are payment-gated (e.g. free lane requiring paid billing) may be listed only with an explicit ⚠ flag explaining the gate — never as plain free rows.
 - Fixture-observed but file-unverified rows do not go in the table; mention them under **Notes** as re-verification leads.
 
+### Wire schema (model card)
+
+The optional frontmatter `wire:` block records request-shape facts: what a caller must send (or must not send) for this model to work. It is the machine-readable input for the future docs→JSON generator that will replace `providers.yaml`/`models.yaml` — the loader only understands the keys and enum values defined here, so stick to the schema exactly. Omit the whole block when nothing below is verified; omit individual keys when unknown. **Never invent values.**
+
+```yaml
+wire:
+  transport: chat_completions   # which HTTP API serves this model; see vocabulary
+  reasoning_mode: effort        # effort | thinking_toggle | always_on | none
+  efforts: [low, high, max]     # allowed reasoning_effort values, weakest first
+  default_effort: high          # must be a member of efforts
+  temperature: 1.0              # fixed/required value ONLY; omit when freely tunable
+  top_p: 0.95                   # same rule
+  top_k: 40                     # same rule
+  max_tokens_cap: 131072        # provider-side max_tokens ceiling below context; omit when unknown
+  thinking: {type: enabled}     # static fragment required to enable thinking; omit when n/a
+  extra_body: {enable_thinking: true}  # other required static body params; omit when none
+  message_repairs: [drop_empty_text]   # named strategies from the vocabulary; omit when none
+  wire_verified: "2026-09-06"   # mandatory whenever wire: is present
+```
+
+Key semantics:
+
+* Card-level `wire:` is the default verified across **all** listed free rows. If any provider serves the model differently, keep the card default and put only the differing keys in that row's entry-level `wire:` override (see below).
+* `temperature` / `top_p` / `top_k` are for REQUIRED values from official docs (the call fails or degrades without them). Mere recommendations ("temperature 1.0 recommended") stay in body prose, never in `wire:`.
+* `max_tokens_cap` is for a documented per-request ceiling below the context window (e.g. a relay cap). The card-level `context_window` / `max_output_tokens` remain the authority for size; a provider serving a smaller window uses the entry-level `context_window` override, not this key.
+* `efforts` lists every selectable tier including `none`/`minimal`/`minimal`-style off-tiers where the API accepts them; order weakest first. `default_effort` is the tier to use when the caller sets none.
+* `thinking` / `extra_body` hold static fragments only. Conditional logic ("send X XOR Y") is expressed via `reasoning_mode`, never by stuffing logic into these maps.
+* `wire_verified` is re-checked on every refresh pass like any other changeable claim; wire claims need supporting sources under **Sources** like everything in Accuracy.
+
+### Wire overrides (per provider entry)
+
+A `providers` entry may carry a `wire:` sub-block holding **only the keys that differ** from the card default — typically `transport` (e.g. served on `/v1/responses` on one provider, chat completions on another). Omit it when the row matches the card default.
+
+```yaml
+providers:
+  - name: OpenCode Zen
+    file: opencode-zen
+    model_id: muse-spark-1.3-contributor-free
+    conditions: "Anonymous free pool; served ONLY on POST /v1/responses (never chat/completions); limited-time free"
+    wire:
+      transport: responses
+    verified: "2026-09-05"
+```
+
+A transport override MUST also be stated in the row's `Free conditions` cell prose (the human mirror of the machine block), the same way the table already mirrors frontmatter 1:1.
+
+### Wire vocabulary (closed)
+
+The loader implements these values as named strategies; unknown values are ignored downstream, so **do not invent new enum values or new keys**. A quirk that fits no value goes under **Notes** in prose, flagged for schema review.
+
+Transports (`wire.transport`, provider `wire.transports[]`):
+
+* `chat_completions` — OpenAI-style `POST .../chat/completions` (including compatible relays).
+* `responses` — OpenAI-style `POST .../responses`; never interchangeable with chat completions for that row.
+
+Reasoning modes (`wire.reasoning_mode`):
+
+* `effort` — standard `reasoning_effort` param; out-of-set values are clamped to the nearest allowed tier. The common case.
+* `thinking_toggle` — Kimi/DeepSeek-style XOR rule: reasoning disabled → send `thinking: {type: disabled}`; an effort set → send clamped `reasoning_effort` with NO thinking key; otherwise send `thinking: {type: enabled}`. Sending both is an HTTP 400.
+* `always_on` — the model always reasons; `efforts` only scales it, there is no off-tier. (Differs from `effort`, where the lowest tier may disable reasoning.)
+* `none` — no reasoning control exposed; the caller sends nothing reasoning-related.
+
+Message repairs (`wire.message_repairs[]`, applied in listed order):
+
+* `drop_empty_text` — drop empty text/reasoning parts (Anthropic-style APIs 400 on them).
+* `scrub_tool_ids_claude` — replace characters outside `[A-Za-z0-9_-]` in tool-call IDs.
+* `scrub_tool_ids_mistral` — Mistral-style 9-char alphanumeric tool-call IDs plus the tool→user sequence bridge.
+* `inject_empty_reasoning` — append an empty reasoning part to assistant messages lacking one (DeepSeek-style).
+* `echo_reasoning_content` — replay `reasoning_content` on subsequent turns (same meaning as the existing `requires_reasoning_echo` path).
+* `interleaved_reasoning_field` — move reasoning text into the provider-specific per-message field instead of a reasoning part.
+
 ### Cross-linking
 
 - `providers/` and `models/` are maintained together: when you add a free model to a provider file, add/update its model card table row; when you add a model card, make sure each listed provider file documents that model ID.
@@ -510,5 +605,7 @@ Before completing each provider, verify:
 * For each free model on the provider: does its `models/` card exist, and does the providers table row match the provider file (ID, conditions, limits, verified date)?
 * For each model card: is every table row backed by its linked provider file, and are payment-gated rows ⚠-flagged rather than listed as plain free?
 * For each model card: is the leaderboard mapping present — `leaderboard_id` + exact integer `leaderboard_rank` when the CSV denotes the model, `leaderboard_rank_estimated: "~N"` (with basis/source/date in the body) when it is a plausible top-level model missing from the snapshot, and neither when it is small, ≥1 year old, superseded, or a specialist (in which case no card should exist at all)?
+* For each `wire:` block (provider or model): is `wire_verified` present and current, are all enum values from the closed vocabulary (`transport`, `reasoning_mode`, `message_repairs`), is `default_effort` a member of `efforts`, are `temperature`/`top_p`/`top_k` required values (not recommendations), and do entry-level overrides contain only keys differing from the card default?
+* For each entry-level `wire.transport` override: is it mirrored in that row's `Free conditions` table cell?
 
 The final `providers/` directory should be a **clean, deduplicated, independently verified database of genuinely usable free LLM API providers**, not a transcription of the source lists.

@@ -6,6 +6,7 @@ from typing import Any
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
+from server.models.queries.response import Response
 
 
 #: Total compaction attempts per trigger (initial fork + retries).  Each
@@ -142,6 +143,8 @@ def ingest_compaction(
     boundary_pk: int | None = None,
     result: Message | None = None,
     compact_attempt: int = 0,
+    response: Response | None = None,
+    parts = [],
     **kwargs: Any,
 ) -> dict[str, Any]:
     """Insert the COMPACTION boundary marker and return the marker message.
@@ -184,15 +187,28 @@ def ingest_compaction(
         # it runs right after this call ends.
         nxt = _next_compact_attempt(compact_attempt)
         if nxt is not None:
+            # Todo-style retry: dispatch the fresh fork, then resolve the slim
+            # ``ingest_compaction_response`` task over its call — the same
+            # action/response split as ``todolist_action`` /
+            # ``todolist_action_response``.  Returning the wrapper call lets
+            # the framework await the retry and resume downstream with the
+            # wrapper's properly-shaped result (response/parts/message).
+            # Returning the raw retry call (or a dict containing it) would
+            # trip the single-ref continuation repoint with a dict that
+            # cannot carry the parent turn's response/parts, breaking the
+            # resumed decide_next_step with missing arguments.
             retry_call = _session.get_task("compact_turn").delay(
-                message=None, compact_attempt=nxt
-            )
-            return dict(
-                compaction_retried=True,
+                message=kwargs.get("message"),
+                response=response,
+                parts=parts,
                 compact_attempt=nxt,
-                child_session_pk=child_session_pk,
-                boundary_pk=boundary_pk,
-                retry_call=retry_call,
+            )
+            return _session.get_task("ingest_compaction_response").delay(
+                compaction_result=retry_call,
+                response=response,
+                parts=parts,
+                message=kwargs.get("message"),
+                compact_attempt=nxt,
             )
         raise ValueError(
             "Compaction fork produced no summary "
@@ -204,5 +220,49 @@ def ingest_compaction(
     boundary = Message.objects.get(pk=boundary_pk) if boundary_pk else None
 
     marker = _build_compaction_message( _session, newest_compacted=boundary, summary_text=summary_text)
-         
-    return dict(message=marker, **kwargs)
+
+    return dict(
+        response=response,
+        parts=parts,
+        message=marker,
+        **kwargs,
+    )
+
+
+def ingest_compaction_response(
+    _session: Session,
+    compaction_result: Any = None,
+    response: Any = None,
+    parts: list[dict[str, Any]] | None = None,
+    message: Message | None = None,
+    compact_attempt: int = 0,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Slim resolver for a retried compaction fork (mirrors todolist_action_response).
+
+    ``compaction_result`` arrives auto-resolved to the retry ``compact_turn``
+    chain's final result — the success-shaped ``dict(response, parts,
+    message=marker, ...)`` its ``ingest_compaction`` returned.  This wrapper
+    re-emits exactly that shape (marker message swapped in, parent turn's
+    response/parts preserved) so the waiting ``process_turn`` chain resumes
+    ``decide_next_step`` with all required arguments.  The wrapper's own
+    result is ref-free, so no further continuation repointing applies.
+    """
+    marker = message
+    if isinstance(compaction_result, dict):
+        marker = compaction_result.get("message", marker)
+    elif isinstance(compaction_result, Message):
+        marker = compaction_result
+    if isinstance(marker, dict) and marker.get("_type") == "Message" and "pk" in marker:
+        try:
+            marker = Message.objects.get(pk=marker["pk"])
+        except Message.DoesNotExist:
+            marker = message
+    return dict(
+        response=response,
+        parts=parts,
+        message=marker,
+        compaction_retried=True,
+        compact_attempt=compact_attempt,
+        **kwargs,
+    )

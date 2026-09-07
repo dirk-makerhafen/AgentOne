@@ -26,7 +26,14 @@ When you are done, call the final_result tool with the summary as its content ar
 <SYSTEM NOTICE>"""
 
 
-def build_llm_compact_context(_session: Session, message: Message, compact_attempt: int = 0, **kwargs) -> Query:
+def build_llm_compact_context(
+    _session: Session,
+    message: Message,
+    response=None,
+    parts=None,
+    compact_attempt: int = 0,
+    **kwargs,
+) -> dict:
 
     from server.history_limiter import find_compaction_boundary
 
@@ -96,6 +103,9 @@ def build_llm_compact_context(_session: Session, message: Message, compact_attem
         child_session_pk=child_sv.session.pk,
         boundary_pk=boundary.pk,
         compact_attempt=compact_attempt,
-        result=compact_result
+        result=compact_result,
+        response=response,
+        parts=parts,
+        **kwargs,
     )
      
