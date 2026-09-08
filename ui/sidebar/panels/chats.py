@@ -5,6 +5,7 @@ from django.db.models import Prefetch, Q
 from django.utils import timezone
 from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
+from server.models.enums.session_enums import SessionType
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
@@ -63,7 +64,7 @@ def visible_child_sessions(
     (i.e. the user has toggled the sidebar to show archived conversations).
     """
     cutoff = timezone.now() - window
-    qs = SessionModel.objects.filter(parent_session=session)
+    qs = SessionModel.objects.filter(parent_session=session, session_type__in=[SessionType.SESSION, SessionType.SUBSESSION])
     if not include_archived:
         qs = qs.filter(is_archived=False)
     children = list(
@@ -416,20 +417,7 @@ class SidebarPanelChats(ModelView):
             dom_element_class="session-date-body"
         )
         app = subject
-        app.model_observer.watch(
-            SessionModel,
-            filter={},
-            callback_name="_on_session_updated",
-            view=self,
-            action="update",
-        )
-        app.model_observer.watch(
-            SessionModel,
-            filter={},
-            callback_name="_on_session_created",
-            view=self,
-            action="create",
-        )
+      
 
     def _on_session_updated(self, pk: int, action: str, filter_context: dict) -> None:
         """Re-render sidebar when a session is renamed (or otherwise updated)."""
@@ -441,10 +429,10 @@ class SidebarPanelChats(ModelView):
 
     @property
     def subagent_count(self) -> int:
-        return SessionModel.objects.filter(parent_session__isnull=False, is_active=True).count()
+        return SessionModel.objects.filter(parent_session__isnull=False, is_active=True, session_type=SessionType.SESSION).count()
 
     def _base_query(self):
-        qs = self.subject.sessions.root().filter(parent_session__isnull=True)
+        qs = self.subject.sessions.root().filter(parent_session__isnull=True, session_type=SessionType.SESSION)
         qs = qs.prefetch_related(Prefetch('child_sessions', queryset=self._child_sessions_queryset()))
         if self._show_archived:
             return qs.filter(is_archived=True).order_by('-is_pinned', '-created_at')
@@ -452,7 +440,7 @@ class SidebarPanelChats(ModelView):
 
     def _child_sessions_queryset(self):
         children = SessionModel.objects.filter(
-            Q(is_active=True) | Q(last_active_at__gte=timezone.now() - RECENT_SUBSESSION_WINDOW),
+            Q(is_active=True) | Q(last_active_at__gte=timezone.now() - RECENT_SUBSESSION_WINDOW), session_type=SessionType.SESSION,
         ).select_related('latest_session_version__agent').order_by('-created_at')
         if not self._show_archived:
             children = children.filter(is_archived=False)
@@ -465,9 +453,9 @@ class SidebarPanelChats(ModelView):
 
     def set_project_filter(self, project_id: int | None) -> None:
         if project_id is None:
-            base = self.subject.sessions.root().filter(parent_session__isnull=True)
+            base = self.subject.sessions.root().filter(parent_session__isnull=True, session_type=SessionType.SESSION)
         else:
-            base = SessionModel.objects.filter(parent_project_id=project_id, parent_session__isnull=True)
+            base = SessionModel.objects.filter(parent_project_id=project_id, parent_session__isnull=True, session_type=SessionType.SESSION)
         base = base.prefetch_related(Prefetch('child_sessions', queryset=self._child_sessions_queryset()))
         if self._show_archived:
             base = base.filter(is_archived=True)

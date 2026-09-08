@@ -16,14 +16,14 @@ import html2text
 import yaml
 from bs4 import BeautifulSoup  # pip install beautifulsoup4
 
-def clean_filename(raw: str, max_len: int = 100, fallback: str = "unnamed") -> str:
+def clean_filename(raw: str, max_len: int = 150, fallback: str = "unnamed") -> str:
     '''Return an ASCII-only, filesystem- and pipeline-safe file/folder name.
 
     The AppleScript exporter only strips ``/ : \\ * ? " < > |`` and truncates
-    to 50 chars (possibly splitting emoji), so sender/subject-derived names
+    to 150 chars (possibly splitting emoji), so sender/subject-derived names
     can still contain emoji, non-Latin scripts, control chars or newlines,
     which break git, shell tools and downstream parsing later. This maps
-    everything to ``[A-Za-z0-9._-]``:
+    everything to ``[A-Za-z0-9@._-]``:
 
     1. German umlauts transliterated (ae/oe/ue/ss, existing convention).
     2. NFKD decomposition + strip combining marks (e -> e, n -> n, ...).
@@ -41,11 +41,16 @@ def clean_filename(raw: str, max_len: int = 100, fallback: str = "unnamed") -> s
     name = unicodedata.normalize("NFKD", name)
     name = "".join(c for c in name if not unicodedata.combining(c))
     name = name.encode("ascii", "ignore").decode("ascii")
-    name = re.sub(r'[^A-Za-z0-9._-]+', '_', name)
+    name = re.sub(r'[^A-Za-z0-9@._-]+', '_', name)
     name = re.sub(r'_+', '_', name)
+    name = re.sub(r'-+', '-', name)
+    name = re.sub(r'.+', '.', name)
+    name = re.sub(r'_-_', '-', name)
+    name = re.sub(r'-_-', '-', name)
+    name = re.sub(r'_-', '-', name)
+    name = re.sub(r'-_', '-', name)
     name = name.strip('._- ')
-    if re.fullmatch(r'(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])', name, re.IGNORECASE):
-        name = "_" + name  # reserved on Windows/SMB
+
     if not name:
         name = fallback
     if len(name) > max_len:
@@ -55,7 +60,7 @@ def clean_filename(raw: str, max_len: int = 100, fallback: str = "unnamed") -> s
     return name
 
 
-def clean_attachment_name(filename: str, max_stem_len: int = 80) -> str:
+def clean_attachment_name(filename: str, max_stem_len: int = 150) -> str:
     '''Clean an email attachment filename, preserving a safe extension.'''
     raw = (filename or "").strip().replace("\x00", "")
     # Senders sometimes ship full client paths ("C:\\docs\\file.pdf").
@@ -113,7 +118,7 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                 set cleanText to theList as string
             end repeat
             -- Limit length to avoid path errors
-            if length of cleanText > 50 then set cleanText to text 1 thru 50 of cleanText
+            if length of cleanText > 150 then set cleanText to text 1 thru 150 of cleanText
             return cleanText
         end sanitize
 
@@ -330,7 +335,7 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
             # Create target dir. The AppleScript folder name (sender/subject
             # derived) may contain emoji/unicode — clean it so every path
             # this script creates is ASCII-safe for git and downstream tools.
-            clean_folder = clean_filename(eml_file.parent.name, max_len=120)
+            clean_folder = clean_filename(eml_file.parent.name, max_len=150)
             if email_date:
                 target_base = OUTPUT_PATH / metadata["direction"] / str(email_date.year) / f"{email_date.month:02d}"
             else:

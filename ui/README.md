@@ -27,7 +27,7 @@ ui/
 │       ├── projects.py     # Project list
 │       ├── settings.py     # Settings menu (opens SettingsView in main)
 │       ├── skills.py       # Skill list with search
-│       └── workspaces.py   # Workspace list
+│       └── workspaces.py   # Workspace tree (path-derived nesting) + overview entry
 │
 ├── main/                   # Main content area (tabs)
 │   ├── main_view.py        # MainView — tab container, open/close/select
@@ -49,7 +49,7 @@ ui/
 │   ├── settings/           # Full settings tabs (conversation, appearance, preferences, providers, system)
 │   ├── skills/             # Skill detail/editor
 │   ├── system/             # Providers view, systems view
-│   └── workspace/          # Workspace detail + creation
+│   └── workspace/          # Workspace cards view, access editor + creation
 │
 ├── overlay/                # Overlay views
 │   ├── appdialog.py        # Modal dialog (confirm, input)

@@ -4,15 +4,26 @@ model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Reviews python/shell scripts that another agent asked to run and renders an approval verdict — allow automatically, deny automatically, or escalate to a human.
 extends: []
 inheritSystemPrompt: false
-maxRetries: 3
-maxTurns: 2
-maxUnattendedTurns: 2
-maxHistoryMessages: 5
+maxRetries: 0
+maxTurns: 10
+maxUnattendedTurns: 10
+maxHistoryMessages: 200
+autoCompactLimit: 120000
+compactSizeLimit: 15
 reasoningEffort: high
 schedulerStrategy: queue
 precision: precise
+subagentResultDelivery: immediate
+toolCallSyntax: default
+sound: false
+skills: []
+disallowedSkills: []
 tools: [approval_verdict]
+disallowedTools: []
 tasks: [core.*]
+disallowedTasks: []
+commands: []
+disallowedCommands: []
 priority: 0
 ---
 
@@ -96,7 +107,3 @@ When in doubt between `allow` and anything else, do **not** default to
    - `task_call_id`: **copy the exact `task_call_id` number from the brief —
      verbatim, do not invent or alter it** — this is what tells the framework
      which paused command your verdict applies to.
-3. After the tool returns, the review session ends automatically — the
-   verdict is applied to the parent call. Do **not** call `final_result`,
-   `approval_verdict` again, or any other tool, and never attempt to run the
-   script yourself.
