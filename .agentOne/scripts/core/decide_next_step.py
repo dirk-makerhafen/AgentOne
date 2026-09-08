@@ -142,6 +142,35 @@ def _pop_next_todo_message(_session: Session, message: Message) -> tuple[Message
     return next_message, todolist_task_result
 
 
+def _persisted_parts_dicts(message: Message) -> list[dict[str, Any]]:
+    """Rebuild decide-readable part dicts from persisted ``MessagePart`` rows.
+
+    Same shape as the live ``parts`` list (``type``/``content`` keys plus a
+    ``tool_call`` key exactly when a call is attached), in insertion order.
+    Pure read — used when the live list did not survive the chain (see the
+    ``parent_message`` fallback in ``decide_next_step``).  Never raises.
+    """
+    try:
+        rows = message.parts.order_by("pk")
+    except Exception:
+        return []
+    out: list[dict[str, Any]] = []
+    for part in rows:
+        try:
+            content = part.content.get() if part.content else ""
+        except Exception:
+            content = ""
+        entry: dict[str, Any] = {"type": part.type, "content": content}
+        try:
+            tool_call = part.tool_call
+        except Exception:
+            tool_call = None
+        if tool_call is not None:
+            entry["tool_call"] = tool_call
+        out.append(entry)
+    return out
+
+
 def decide_next_step(_session: Session, response: Response, parts: list[dict[str, Any]], message: Message, **kwargs: Any) -> Message:
     violated = kwargs.get("tool_allowlist_violated")
     if violated:
@@ -165,8 +194,25 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     if _session.max_unattended_turns and _session.current_unattended_turn_count >= _session.max_unattended_turns:
         return message
 
-    has_tool_calls = any(True for part in parts if "tool_call" in part)
-    has_message =  any(True for part in parts if part["type"] == MessagePartType.MESSAGE)
+    parent_message = kwargs.get("parent_message")
+    walk_message = message
+    if not parts and parent_message is not None:
+        # Compaction-retry flattening (see parts_vs_message.md §8): the
+        # continuation repoint replaced this step's result with the
+        # wrapper's dict, whose response/parts are the compact chain's
+        # (empty) — so read this turn back off the parent assistant
+        # message's persisted parts instead.  Without this, every
+        # retried-compaction turn looks like "no tool calls, no message".
+        parts = _persisted_parts_dicts(parent_message)
+        walk_message = parent_message
+
+    has_tool_calls = kwargs.get("has_tool_calls")
+    if has_tool_calls is None:
+        # Direct/test invocation without the ingest flags: derive locally.
+        has_tool_calls = any(True for part in parts if "tool_call" in part) if parts else False
+    has_message = kwargs.get("has_message")
+    if has_message is None:
+        has_message = any(True for part in parts if part["type"] == MessagePartType.MESSAGE) if parts else False
 
     if kwargs.get("has_final_result"):  # agent did call final_result tool
         is_final_result = True
@@ -196,7 +242,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     MAX_NO_TOOL_ASSISTANT_TURNS = 3
     warn_no_toolcall_loop = True
     no_tool_turn_count = 0
-    pmessage = message
+    pmessage = walk_message
     for _ in range(MAX_NO_TOOL_ASSISTANT_TURNS):
         if not pmessage or (pmessage.role != MessageRole.ASSISTANT and pmessage.role != MessageRole.TOOL) or (pmessage.response and pmessage.response.tool_calls):
             warn_no_toolcall_loop = False

@@ -25,13 +25,24 @@ from server.models.sessions.session_version import SessionVersionModel
 from server.models.settings import SettingsModel
 
 _INGEST_PATH = (
-    Path(__file__).resolve().parent.parent.parent
+    Path(__file).resolve().parent.parent.parent
     / ".agentone" / "scripts" / "compact" / "ingest_compaction.py"
+)
+_DECIDE_PATH = (
+    Path(__file).resolve().parent.parent.parent
+    / ".agentone" / "scripts" / "core" / "decide_next_step.py"
 )
 
 
 def _load_ingest():
     spec = importlib.util.spec_from_file_location("_manifest_ingest_compaction", _INGEST_PATH)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _load_decide():
+    spec = importlib.util.spec_from_file_location("_manifest_decide_next_step", _DECIDE_PATH)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -465,3 +476,57 @@ class ForkSessionSettingsTest(TestCase):
         self.assertEqual(fork_settings.auto_compact_limit, 0)
         self.assertEqual(fork_settings.reasoning_effort, "medium")
         self.assertNotEqual(fork_settings.pk, parent_settings.pk)
+
+    def test_decide_falls_back_to_parent_message_when_parts_missing(self):
+        """Retry-flattened resume (parts_vs_message.md §8): after a
+        compaction retry the wrapper's dict *is* decide's kwargs, with the
+        compact chain's empty response/parts.  The turn must still be read
+        off the parent assistant message — here its "?"-ending text ends
+        the turn instead of looping."""
+        from types import SimpleNamespace
+
+        from server.models.enums.session_enums import SessionType
+
+        decide = _load_decide()
+        parent = _msg(self.sv, MessageRole.ASSISTANT, "Shall I proceed?", None)
+        marker = _msg(self.sv, MessageRole.USER, "summary", parent)
+        session = SimpleNamespace(
+            count_turn=lambda: None,
+            count_unattended_turn=lambda: None,
+            max_turns=None,
+            max_unattended_turns=None,
+            current_turn_count=0,
+            current_unattended_turn_count=0,
+            session_type=SessionType.SESSION,
+            _get_session_setting=lambda name: False,
+            get_task=lambda name: MagicMock(),
+        )
+        out = decide.decide_next_step(
+            session, None, None, marker, parent_message=parent,
+        )
+        self.assertIs(out, marker)
+
+    def test_decide_without_fallback_still_sees_no_tool_calls(self):
+        """Control: without parent_message, parts=None behaves as before
+        (no tool calls, no message) — the fallback only triggers on the
+        retry-flattened shape."""
+        from types import SimpleNamespace
+        from unittest.mock import MagicMock
+
+        from server.models.enums.session_enums import SessionType
+
+        decide = _load_decide()
+        marker = _msg(self.sv, MessageRole.USER, "summary", None)
+        session = SimpleNamespace(
+            count_turn=lambda: None,
+            count_unattended_turn=lambda: None,
+            max_turns=None,
+            max_unattended_turns=None,
+            current_turn_count=0,
+            current_unattended_turn_count=0,
+            session_type=SessionType.SESSION,
+            _get_session_setting=lambda name: False,
+            get_task=lambda name: MagicMock(),
+        )
+        next_turn = decide.decide_next_step(session, None, [], marker)
+        self.assertIsNotNone(next_turn)

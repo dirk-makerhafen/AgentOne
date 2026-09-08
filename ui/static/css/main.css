@@ -4278,6 +4278,20 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .ws-sub-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:16px;}
 .ws-sub-title{margin:0;font-size:16px;font-weight:650;color:var(--text);}
 .ws-sub-count{color:var(--muted);font-weight:500;font-size:13px;margin-left:4px;}
+/* related chats (workspace detail) */
+.ws-chat-head{margin-top:22px;}
+.ws-chat-list{display:flex;flex-direction:column;gap:6px;}
+.ws-chat-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 14px;cursor:pointer;transition:border-color .15s,background .15s;}
+.ws-chat-row:hover{border-color:var(--accent);background:var(--sidebar);}
+.ws-chat-name{font-weight:600;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+.ws-chat-type{font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:1px 8px;flex-shrink:0;}
+.ws-chat-meta{font-size:12px;color:var(--muted);flex-shrink:0;}
+/* chats pager */
+.ws-chat-pager{display:flex;align-items:center;gap:8px;}
+.ws-chat-pager .ws-ov-view-btn{width:32px;border:1px solid var(--border);border-radius:6px;}
+.ws-chat-pager .ws-ov-view-btn + .ws-ov-view-btn{border-left:1px solid var(--border);}
+.ws-chat-pager .ws-ov-view-btn:disabled{opacity:.35;cursor:default;}
+.ws-chat-page-label{font-size:12px;color:var(--muted);white-space:nowrap;}
 /* current-card inline editing */
 .ws-current-input{width:100%;box-sizing:border-box;background:var(--sidebar);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 10px;font-size:14px;outline:none;font-family:inherit;margin-bottom:8px;}
 .ws-current-input:focus{border-color:var(--accent);}

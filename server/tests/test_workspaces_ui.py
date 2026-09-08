@@ -145,6 +145,7 @@ class TestWorkspaceTemplates:
         pyview = SimpleNamespace(
             subject=subject, view_mode="grid", ancestors=[],
             children_cards=[child], child_count=1, active_workspace_pk=1,
+            related_chats=[], chat_count=0, chat_page=0, chat_page_count=1,
         )
         html = _render_template(Workspace.TEMPLATE_STR, pyview=pyview)
         assert "Demo" in html and "/demo" in html
@@ -153,10 +154,11 @@ class TestWorkspaceTemplates:
         assert "ws-card-menu" in html and "wsRename" in html
         assert "ws-detail-about" not in html
         assert "checkpointListContainer" not in html
-        # Current-workspace card on top, then the section headline.
+        # Current-workspace card on top, then chats, then the section headline.
         assert "ws-current-card" in html
         assert "Sub workspaces" in html
-        assert html.index("ws-current-card") < html.index("ws-sub-head")
+        assert html.index("ws-current-card") < html.index("ws-chat-head")
+        assert html.index("ws-chat-head") < html.index("Sub workspaces")
         assert html.index("ws-sub-head") < html.index("wsOvGrid")
         # Child cards: name next to the icon, no per-card menu button
         # (only the current-workspace card keeps one).
@@ -171,11 +173,78 @@ class TestWorkspaceTemplates:
         pyview = SimpleNamespace(
             subject=subject, view_mode="grid", ancestors=[],
             children_cards=[], child_count=0, active_workspace_pk=None,
-            editing=False,
+            editing=False, related_chats=[], chat_count=0,
+            chat_page=0, chat_page_count=1,
         )
         html = _render_template(Workspace.TEMPLATE_STR, pyview=pyview)
         assert "Sub workspaces" in html
         assert "No sub workspaces found" in html
+        assert "Chats" in html
+        assert "No chats found" in html
+
+    def test_detail_template_chats(self):
+        from ui.main.workspace.workspace import Workspace
+
+        subject = SimpleNamespace(name="Demo", path="/demo", pk=1)
+        chats = [
+            {"pk": 11, "name": "Main chat", "type_label": "Session",
+             "is_active": True, "turn_count": 5},
+            {"pk": 12, "name": "Helper", "type_label": "Subsession",
+             "is_active": False, "turn_count": 0},
+        ]
+        pyview = SimpleNamespace(
+            subject=subject, view_mode="grid", ancestors=[],
+            children_cards=[], child_count=0, active_workspace_pk=None,
+            editing=False, related_chats=chats, chat_count=2,
+            chat_page=0, chat_page_count=1,
+        )
+        html = _render_template(Workspace.TEMPLATE_STR, pyview=pyview)
+        assert "Chats" in html
+        assert "Main chat" in html and "Helper" in html
+        assert "Subsession" in html and "5 turn(s)" in html
+        assert "pyview.openChat(11)" in html
+        # Inactive chat gets the idle dot; active one does not.
+        assert "ws-ov-dot--idle" in html
+        # Empty state stays in the DOM but hidden when chats exist.
+        assert html.count("No chats found") == 1
+        assert 'class="ws-ov-empty" style="display:none"' in html
+
+    def test_detail_template_chat_pager(self):
+        from ui.main.workspace.workspace import Workspace
+
+        subject = SimpleNamespace(name="Demo", path="/demo", pk=1)
+        base = dict(
+            subject=subject, view_mode="grid", ancestors=[],
+            children_cards=[], child_count=0, active_workspace_pk=None,
+            editing=False, related_chats=[], chat_count=25,
+        )
+        # Single page: no pager at all.
+        html = _render_template(
+            Workspace.TEMPLATE_STR,
+            pyview=SimpleNamespace(**{**base, "chat_page": 0,
+                                      "chat_page_count": 1}),
+        )
+        assert "ws-chat-pager" not in html
+        # Multi-page: label plus prev/next wiring, prev disabled on page 1.
+        html = _render_template(
+            Workspace.TEMPLATE_STR,
+            pyview=SimpleNamespace(**{**base, "chat_page": 0,
+                                      "chat_page_count": 3}),
+        )
+        assert "ws-chat-pager" in html
+        assert "1 / 3" in html
+        assert "pyview.setChatPage(1)" in html
+        assert "pyview.setChatPage(-1)" in html
+        assert html.count("disabled") == 1
+        # Last page: next disabled instead.
+        html = _render_template(
+            Workspace.TEMPLATE_STR,
+            pyview=SimpleNamespace(**{**base, "chat_page": 2,
+                                      "chat_page_count": 3}),
+        )
+        assert "3 / 3" in html
+        assert html.count("disabled") == 1
+        assert "pyview.setChatPage(3)" in html
 
     def test_detail_template_edit_mode(self):
         from ui.main.workspace.workspace import Workspace
@@ -189,6 +258,7 @@ class TestWorkspaceTemplates:
             editing=True,
             edit_data={"name": "Demo", "path": "/demo", "description": "d"},
             edit_error="", access_editor=access_stub,
+            related_chats=[], chat_count=0, chat_page=0, chat_page_count=1,
         )
         html = _render_template(Workspace.TEMPLATE_STR, pyview=pyview)
         assert "ws-current-input" in html
@@ -460,6 +530,81 @@ class TestWorkspaceDetailActions(TestCase):
         view.setEditField("path", "/does/not/exist")
         view.saveEdit()
         assert view.editing is True and "directory" in view.edit_error
+
+    def _bind_session(self, name, session_type, ws=None):
+        from server.models.agent import AgentModel, AgentVersionModel
+        from server.models.sessions.session import SessionModel
+        from server.models.sessions.session_version import SessionVersionModel
+        from server.models.settings import SettingsModel
+
+        agent = AgentModel.objects.create(name=f"ag-{name}")
+        av = AgentVersionModel.objects.create(
+            agent=agent, agent_settings=SettingsModel.objects.create(),
+        )
+        session = SessionModel.objects.create(
+            name=name, session_type=session_type,
+        )
+        sv = SessionVersionModel.objects.create(
+            session=session, agent=agent, pinned_agent_version=av,
+            workspace=ws,
+        )
+        SessionModel.objects.filter(pk=session.pk).update(
+            latest_session_version=sv,
+        )
+        return session
+
+    def test_related_chats_filters_by_type_and_workspace(self):
+        from server.models.enums.session_enums import SessionType
+        from server.models.workspace import WorkspaceModel
+
+        other = WorkspaceModel.objects.create(name="Other", path="/t/other")
+        keep = self._bind_session("Main", SessionType.SESSION, ws=self.ws)
+        sub = self._bind_session("Helper", SessionType.SUBSESSION, ws=self.ws)
+        self._bind_session("Delegated", SessionType.SUBTASK_DELEGATE, ws=self.ws)
+        self._bind_session("Elsewhere", SessionType.SESSION, ws=other)
+        self._bind_session("Unbound", SessionType.SESSION)
+        view, _ = self._detail()
+        assert [c["pk"] for c in view.related_chats] == [sub.pk, keep.pk]
+        assert view.chat_count == 2
+        assert {c["type_label"] for c in view.related_chats} == {
+            "Session", "Subsession",
+        }
+
+    def test_open_chat_opens_session_tab(self):
+        from server.models.enums.session_enums import SessionType
+        from ui.main.chat.chat import Chat
+
+        session = self._bind_session("Main", SessionType.SESSION, ws=self.ws)
+        view, main = self._detail()
+        view.openChat(session.pk)
+        main.create_and_open_tab.assert_called_once_with(Chat, session)
+
+    def test_open_chat_ignores_unknown_pk(self):
+        view, main = self._detail()
+        view.openChat(999999)
+        main.create_and_open_tab.assert_not_called()
+
+    def test_related_chats_paginates(self):
+        from server.models.enums.session_enums import SessionType
+        from ui.main.workspace.workspace import Workspace
+
+        for i in range(12):
+            self._bind_session(f"Paged {i:02d}", SessionType.SESSION,
+                               ws=self.ws)
+        view, _ = self._detail()
+        assert view.chat_count == 12
+        assert view.chat_page_count == 2
+        assert len(view.related_chats) == Workspace.CHAT_PAGE_SIZE == 10
+        view.setChatPage(1)
+        assert view.chat_page == 1
+        assert len(view.related_chats) == 2
+        # Out-of-range pages clamp instead of going empty.
+        view.setChatPage(99)
+        assert view.chat_page == 1
+        assert len(view.related_chats) == 2
+        view.setChatPage(-5)
+        assert view.chat_page == 0
+        assert len(view.related_chats) == 10
 
 
 class TestCreateWorkspace(TestCase):

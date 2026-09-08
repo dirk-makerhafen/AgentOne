@@ -64,7 +64,7 @@ def visible_child_sessions(
     (i.e. the user has toggled the sidebar to show archived conversations).
     """
     cutoff = timezone.now() - window
-    qs = SessionModel.objects.filter(parent_session=session, session_type__in=[SessionType.SESSION, SessionType.SUBSESSION])
+    qs = SessionModel.objects.filter(parent_session=session, session_type__in=[SessionType.SESSION, SessionType.SUBSESSION, SessionType.SUBTASK_COMPACT])
     if not include_archived:
         qs = qs.filter(is_archived=False)
     children = list(

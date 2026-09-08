@@ -143,6 +143,13 @@ def ingest_assistant_message(
         response=response,
         parts=parts,
         message=message,
+        # Turn-shape flags, computed on the final mutated list (after the
+        # final_result rewrite and tool_call attachment above) so downstream
+        # steps need not read parts themselves.  Unconditional (unlike
+        # has_final_result) so decide can distinguish "no tools" from
+        # "flag lost in transit".
+        has_tool_calls=any("tool_call" in part for part in parts),
+        has_message=any(part["type"] == MessagePartType.MESSAGE for part in parts),
     )
     if has_final_result:
         result["has_final_result"] = True

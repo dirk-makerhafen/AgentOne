@@ -208,6 +208,16 @@ def ingest_compaction(
                 response=response,
                 parts=parts,
                 message=kwargs.get("message"),
+                # The wrapper's dict replaces the parent step's result after
+                # the continuation-repoint flattening, so the parent turn's
+                # message and outcome flags must travel explicitly — the
+                # compact chain's own response/parts are empty (None) and
+                # its kwargs never carried the flags
+                parent_message=kwargs.get("message"),
+                has_final_result=kwargs.get("has_final_result"),
+                tool_allowlist_violated=kwargs.get("tool_allowlist_violated"),
+                has_tool_calls=kwargs.get("has_tool_calls"),
+                has_message=kwargs.get("has_message"),
                 compact_attempt=nxt,
             )
         raise ValueError(
@@ -235,6 +245,7 @@ def ingest_compaction_response(
     response: Any = None,
     parts: list[dict[str, Any]] | None = None,
     message: Message | None = None,
+    parent_message: Message | None = None,
     compact_attempt: int = 0,
     **kwargs: Any,
 ) -> dict[str, Any]:
@@ -247,6 +258,13 @@ def ingest_compaction_response(
     response/parts preserved) so the waiting ``process_turn`` chain resumes
     ``decide_next_step`` with all required arguments.  The wrapper's own
     result is ref-free, so no further continuation repointing applies.
+
+    ``parent_message`` is the parent turn's assistant message (the compact
+    chain's ``message``, carried through untouched): after the repoint
+    flattening this dict *is* ``decide_next_step``'s kwargs, so the parent
+    message must be present for the ``parts``-fallback there.  Outcome flags
+    (``has_final_result``, ``tool_allowlist_violated``) arrive via ``kwargs``
+    and are re-emitted the same way.
     """
     marker = message
     if isinstance(compaction_result, dict):
@@ -262,6 +280,7 @@ def ingest_compaction_response(
         response=response,
         parts=parts,
         message=marker,
+        parent_message=parent_message,
         compaction_retried=True,
         compact_attempt=compact_attempt,
         **kwargs,

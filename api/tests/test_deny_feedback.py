@@ -258,6 +258,56 @@ class TestIngestDispatchesTaskTypeCatchTool:
 
 
 @pytest.mark.django_db
+class TestIngestSetsTurnShapeFlags:
+    """``ingest_assistant_message`` reports the turn shape (computed on the
+    final mutated parts, after the ``final_result`` rewrite) so downstream
+    steps need not read ``parts`` themselves."""
+
+    def _make_session(self):
+        agent = AgentModel.objects.create(name="flags-agent")
+        settings = SettingsModel.objects.create()
+        av = AgentVersionModel.objects.create(agent=agent, agent_settings=settings)
+        _, catch_tdv = _make_tool("catch_tool_argument_error", TaskType.TASK)
+        av.task_versions.add(catch_tdv)
+        AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=av)
+        agent.refresh_from_db()
+
+        session = SessionModel.objects.create(name="flags-session")
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+        response = Response.objects.create(session=session, session_version=sv)
+        return session, sv, response
+
+    def test_text_only_turn(self):
+        session, sv, response = self._make_session()
+        module = _load_script(".agentone/scripts/core/ingest_assistant_message.py")
+        result = module.ingest_assistant_message(
+            session.get_runtime(), response,
+            [{"type": "MESSAGE", "content_type": "TEXT", "content": "hello"}],
+        )
+        assert result["has_tool_calls"] is False
+        assert result["has_message"] is True
+
+    def test_toolcall_turn(self):
+        session, sv, response = self._make_session()
+        module = _load_script(".agentone/scripts/core/ingest_assistant_message.py")
+        parts = [{
+            "type": "TOOLCALL",
+            "content_type": "JSON",
+            "content": {
+                "name": "catch_tool_argument_error",
+                "arguments": {"tool_name": "shell", "error": "bad argument"},
+            },
+        }]
+        result = module.ingest_assistant_message(
+            session.get_runtime(), response, parts
+        )
+        assert result["has_tool_calls"] is True
+        assert result["has_message"] is False
+
+
+@pytest.mark.django_db
 class TestApprovalVerdictEndsSession:
     """``approval_verdict`` is a session-ending tool: once dispatched, the
     review session is marked complete without a follow-up LLM round trip to

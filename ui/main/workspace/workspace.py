@@ -94,6 +94,25 @@ def workspace_card_data(ws) -> dict:
     }
 
 
+def related_chat_data(session) -> dict:
+    """Row info dict for a session bound to a workspace (no raise)."""
+    try:
+        from server.models.enums.session_enums import SessionType
+
+        type_label = dict(SessionType.choices).get(
+            session.session_type, session.session_type or ""
+        )
+    except Exception:
+        type_label = ""
+    return {
+        "pk": session.pk,
+        "name": session.name or f"Session {session.pk}",
+        "type_label": type_label,
+        "is_active": bool(getattr(session, "is_active", False)),
+        "turn_count": getattr(session, "turn_count", 0) or 0,
+    }
+
+
 # NOTE: ``; pyview.`` (with the semicolon/space prefix) matters — the
 # pyHtmlGui template rewrite only picks up ``pyview.method(`` after one of
 # ``> (= "' ;`` whitespace etc.  Never call it directly after ``)`` or ``{``.
@@ -153,6 +172,7 @@ WS_CARD_MENU_SCRIPT = '''
 class Workspace(ModelView):
     RIGHTPANEL_VIEW = RightPanelWorkspace
     DOM_ELEMENT_CLASS = "main-view"
+    CHAT_PAGE_SIZE = 10
     TEMPLATE_STR = '''
         <div class="ws-ov-topbar">
             <div class="ws-ov-breadcrumb">
@@ -213,6 +233,32 @@ class Workspace(ModelView):
                     {% endif %}
                 </div>
 
+                <div class="ws-sub-head ws-chat-head">
+                    <h2 class="ws-sub-title">Chats <span class="ws-sub-count">{{ pyview.chat_count }}</span></h2>
+                    {% if pyview.chat_page_count > 1 %}
+                    <div class="ws-chat-pager">
+                        <button class="ws-ov-view-btn" onclick="pyview.setChatPage({{ pyview.chat_page - 1 }})"{% if pyview.chat_page == 0 %} disabled{% endif %} title="Previous page">‹</button>
+                        <span class="ws-chat-page-label">{{ pyview.chat_page + 1 }} / {{ pyview.chat_page_count }}</span>
+                        <button class="ws-ov-view-btn" onclick="pyview.setChatPage({{ pyview.chat_page + 1 }})"{% if pyview.chat_page + 1 >= pyview.chat_page_count %} disabled{% endif %} title="Next page">›</button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="ws-chat-list">
+                    {% for c in pyview.related_chats %}
+                    <div class="ws-chat-row" onclick="pyview.openChat({{ c.pk }})">
+                        <span class="ws-ov-dot{% if not c.is_active %} ws-ov-dot--idle{% endif %}"></span>
+                        <span class="ws-chat-name">{{ c.name }}</span>
+                        <span class="ws-chat-type">{{ c.type_label }}</span>
+                        <span class="ws-chat-meta">{{ c.turn_count }} turn(s)</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="ws-ov-empty" style="display:{% if pyview.related_chats %}none{% else %}block{% endif %}">
+                    <h2>No chats found</h2>
+                    <div>Start a conversation in this workspace.</div>
+                </div>
+
                 <div class="ws-sub-head">
                     <h2 class="ws-sub-title">Sub workspaces <span class="ws-sub-count">{{ pyview.child_count }}</span></h2>
                     <div class="ws-ov-view-controls">
@@ -262,6 +308,7 @@ class Workspace(ModelView):
         self._editing = False
         self._edit_data: dict = {}
         self._edit_error = ""
+        self._chat_page = 0
         self.access_editor = AccessEditor(subject=subject, parent=self)
 
     # ------------------------------------------------------------------
@@ -322,6 +369,42 @@ class Workspace(ModelView):
     def child_count(self) -> int:
         return len(self.children_cards)
 
+    def _all_related_chats(self) -> list[dict]:
+        """All Sessions/SubSessions bound to this workspace, newest first."""
+        try:
+            from server.models.enums.session_enums import SessionType
+            from server.models.sessions.session import SessionModel
+
+            sessions = SessionModel.objects.filter(
+                latest_session_version__workspace=self.subject,
+                session_type__in=[SessionType.SESSION, SessionType.SUBSESSION],
+            ).order_by("-created_at")
+            return [related_chat_data(s) for s in sessions]
+        except Exception:
+            return []
+
+    @property
+    def related_chats(self) -> list[dict]:
+        """Current page of related chats (see ``CHAT_PAGE_SIZE``)."""
+        chats = self._all_related_chats()
+        start = self.chat_page * self.CHAT_PAGE_SIZE
+        return chats[start:start + self.CHAT_PAGE_SIZE]
+
+    @property
+    def chat_count(self) -> int:
+        return len(self._all_related_chats())
+
+    @property
+    def chat_page(self) -> int:
+        """Current chat page, 0-indexed and clamped to the valid range."""
+        pages = self.chat_page_count
+        return min(max(self._chat_page, 0), pages - 1)
+
+    @property
+    def chat_page_count(self) -> int:
+        total = len(self._all_related_chats())
+        return max(1, -(-total // self.CHAT_PAGE_SIZE))
+
     @property
     def active_workspace_pk(self) -> int | None:
         try:
@@ -337,6 +420,13 @@ class Workspace(ModelView):
         if mode in ("grid", "list"):
             self._view_mode = mode
             self.update()
+
+    def setChatPage(self, page: int) -> None:
+        try:
+            self._chat_page = int(page)
+        except (TypeError, ValueError):
+            self._chat_page = 0
+        self.update()
 
     def openWorkspace(self, pk: int) -> None:
         try:
@@ -360,6 +450,19 @@ class Workspace(ModelView):
         main_view = self._find_main_view()
         if main_view is not None:
             main_view.create_and_open_tab(CreateWorkspace, main_view.subject)
+
+    def openChat(self, pk: int) -> None:
+        from ui.main.chat.chat import Chat
+
+        try:
+            from server.models.sessions.session import SessionModel
+
+            session = SessionModel.objects.get(pk=int(pk))
+        except (SessionModel.DoesNotExist, ValueError):
+            return
+        main_view = self._find_main_view()
+        if main_view is not None:
+            main_view.create_and_open_tab(Chat, session)
 
     def renameWorkspace(self, pk: int, name: str) -> None:
         name = (name or "").strip()
