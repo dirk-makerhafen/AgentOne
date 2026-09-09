@@ -162,12 +162,33 @@ Use:
 
 * `name`
 * `url`
+* `api_base`
+* `litellm_prefix`
+* `is_local`
 * `setup_instructions`
 * `api_key_url`
 * `default_api_key`
 * `limits`
 
 `default_api_key: public` means that the documented free access method does not require a user-specific API key. Do not use it merely because obtaining a key is easy.
+
+### Loader keys (`api_base`, `litellm_prefix`, `is_local`)
+
+These three keys are the machine-readable input for the framework loader
+(`registry/loader/load_providers.py`), which upserts `ApiProvider` rows from
+`providers/*.md` frontmatter:
+
+* `api_base` — the exact base URL the framework calls (e.g.
+  `https://zenmux.ai/api/v1`). This is almost never the same as `url:`
+  (the homepage for humans). Required unless `url:` already points at an
+  API surface. Omit it when the endpoint is per-user/region-specific with
+  no fixed base (e.g. IBM watsonx) — the loader then skips the provider
+  rather than routing calls at a homepage.
+* `litellm_prefix` — LiteLLM routing prefix (`gemini`, `groq`, `mistral`,
+  `openrouter`, …). Omit for OpenAI-compatible APIs (routed as `openai/`
+  with `api_base` as the base URL).
+* `is_local` — `true` for loopback-served providers (local proxies).
+  Omit otherwise (loopback `api_base` URLs auto-detect).
 
 ### Provider wire block
 

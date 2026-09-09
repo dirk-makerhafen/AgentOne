@@ -209,12 +209,12 @@ class SettingPanelProviders(ModelView):
     def __init__(self, subject, parent: SettingsView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.local_provider_cards = QuerySetView(
-            subject=ApiProvider.objects.filter(is_local=True).order_by("name"),
+            subject=ApiProvider.objects.filter(is_local=True, enabled=True).order_by("name"),
             parent=self,
             item_class=ProviderCardView,
         )
         self.cloud_provider_cards = QuerySetView(
-            subject=ApiProvider.objects.filter(is_local=False).order_by("name"),
+            subject=ApiProvider.objects.filter(is_local=False, enabled=True).order_by("name"),
             parent=self,
             item_class=ProviderCardView,
         )

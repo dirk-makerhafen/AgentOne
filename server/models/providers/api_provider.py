@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from django.db import models
 from django.db.models import Sum
@@ -17,6 +18,16 @@ class ApiProvider(BaseModel):
 
     name = models.CharField(max_length=512)
     url = models.CharField(max_length=512, default="")
+
+    # Stable identity for file-based loading: the ``providers/<slug>.md``
+    # filename stem.  Upserts match on slug so a frontmatter ``name:`` rename
+    # updates the row instead of creating a duplicate.  Auto-filled from
+    # ``name`` on save when empty, so UI/test creations keep working.
+    slug = models.CharField(max_length=128, unique=True)
+
+    # Set to False by the provider loader when no manifest file supplies this
+    # provider anymore (instead of deleting the row, so history stays intact).
+    enabled = models.BooleanField(default=True)
 
     # LiteLLM provider prefix used when routing to this provider, e.g. ``groq``,
     # ``gemini`` or ``openrouter``.  Empty means the provider is OpenAI-compatible
@@ -34,14 +45,18 @@ class ApiProvider(BaseModel):
     # 0 = unlimited.
     limit_parallel_calls = models.IntegerField(default=0)
 
-    # Free-tier rate limits, mirrors the ``AiModel`` limit family.  Configured
-    # from the provider's ``free_info`` block in providers.yaml; 0 = unlimited.
+
+    limit_request_per_minute = models.IntegerField(default=0)
     limit_request_per_hour = models.IntegerField(default=0)
     limit_request_per_day = models.IntegerField(default=0)
-    limit_request_per_minute = models.IntegerField(default=0)
+    limit_request_per_week = models.IntegerField(default=0)
+    limit_request_per_month = models.IntegerField(default=0)
+
+    limit_tokens_per_minute = models.IntegerField(default=0)
     limit_tokens_per_hour = models.IntegerField(default=0)
     limit_tokens_per_day = models.IntegerField(default=0)
-    limit_tokens_per_minute = models.IntegerField(default=0)
+    limit_tokens_per_week = models.IntegerField(default=0)
+    limit_tokens_per_month = models.IntegerField(default=0)
 
 
     @property
@@ -283,6 +298,21 @@ class ApiProvider(BaseModel):
         """All rate-limited calls for any model on this provider, FIFO order."""
         from server.models.tasks.agent_task_call import (AgentTaskCall, pending_rate_limit_call_ids)
         return AgentTaskCall.objects.filter(pk__in=pending_rate_limit_call_ids(provider_id=self.pk)).order_by("created_at")
+
+    def save(self, *args, **kwargs) -> Any:
+        if not self.slug:
+            import re
+
+            base = re.sub(r"[^a-z0-9]+", "-", (self.name or "").lower()).strip("-") or "provider"
+            slug, n = base, 2
+            while (
+                ApiProvider.objects.filter(slug=slug)
+                .exclude(pk=self.pk)
+                .exists()
+            ):
+                slug, n = f"{base}-{n}", n + 1
+            self.slug = slug
+        return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return "ApiProvider:" + self.name

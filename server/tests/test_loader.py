@@ -348,6 +348,24 @@ class LoadWorkspaceAccessTest(TestCase):
         self.assertEqual(ws.access["write"]["default"], "deny")
         self.assertEqual(ws.access["read"]["deny"], ["**/*.env"])
 
+    def test_reload_without_access_preserves_db_policy(self):
+        # Regression: the loader used to reset access to {} on every
+        # reload, silently wiping policy configured via the workspace UI.
+        # An entry without an `access` key must leave the DB value alone.
+        self.md_path.write_text(
+            "---\nname: acc-proj\nworkspaces:\n"
+            "  - name: ws\n    path: ws\n---\n"
+        )
+        self._reload()
+        ws = WorkspaceModel.objects.get(name="ws")
+        ws.access = {"read": {"default": "ask", "allow": [], "ask": [], "deny": []},
+                     "write": {"default": "deny", "allow": [], "ask": [], "deny": []}}
+        ws.save()
+        self._reload()
+        ws.refresh_from_db()
+        self.assertEqual(ws.access["read"]["default"], "ask")
+        self.assertEqual(ws.access["write"]["default"], "deny")
+
     def test_invalid_workspace_access_raises(self):
         self.md_path.write_text(
             "---\nname: acc-proj\nworkspaces:\n"

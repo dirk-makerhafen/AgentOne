@@ -317,11 +317,23 @@ class TestAccessEditor:
         data = editor.access_data
         assert data["read"]["default"] == "allow"
         assert data["read"]["allow"] == []
-        assert data["write"]["default"] == "ask"
+        # Unset sections fall back to the runtime inside-default (allow),
+        # so saving an untouched workspace never narrows its policy.
+        assert data["write"]["default"] == "allow"
 
     def test_invalid_default_falls_back(self):
         editor = self._editor(access={"write": {"default": "bogus"}})
-        assert editor.access_data["write"]["default"] == "ask"
+        assert editor.access_data["write"]["default"] == "allow"
+
+    def test_unconfigured_workspace_stays_open(self):
+        # Regression: saving a workspace whose access was never configured
+        # must not narrow it to ask/ask (which halted every read behind an
+        # approval popup the auto-reviewer never sees).
+        for access in (None, {}, {"read": {}, "write": {}}):
+            editor = self._editor(access=access)
+            data = editor.access_data
+            assert data["read"]["default"] == "allow", access
+            assert data["write"]["default"] == "allow", access
 
     def test_set_access_and_lists(self):
         editor = self._editor()
@@ -335,7 +347,7 @@ class TestAccessEditor:
         editor = self._editor()
         editor.setAccess("bogus", "default", "allow")
         editor.setAccess("read", "default", "bogus")
-        assert editor.access_data["read"]["default"] == "ask"
+        assert editor.access_data["read"]["default"] == "allow"
 
 
 class FakeRootView:

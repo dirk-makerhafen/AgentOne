@@ -49,7 +49,7 @@ def _stub_model_list(monkeypatch, models):
 @pytest.mark.skip(
     reason="sync_provider_models is temporarily disabled "
     "(early `return {}` in api/utils.py); model lists are curated via "
-    "models.yaml / providers.yaml instead."
+    ".agentone/models/ + .agentone/providers/ frontmatter instead."
 )
 class TestSyncProviderModels:
     def test_sync_applies_provider_free_tier_rate_limits(self, monkeypatch):

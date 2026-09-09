@@ -62,7 +62,7 @@ class LiteLLMRoutingTest(TestCase):
 
 
 class LiteLLMPrefixLoadingTest(TestCase):
-    """The loader persists ``litellm_prefix`` from providers.yaml."""
+    """The loader persists ``litellm_prefix`` from the provider manifest."""
 
     def test_prefix_persisted_from_manifest(self):
         manifest = Path("/tmp/opencode-test-prefix.yaml")

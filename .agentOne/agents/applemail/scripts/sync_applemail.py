@@ -29,9 +29,12 @@ def clean_filename(raw: str, max_len: int = 150, fallback: str = "unnamed") -> s
     2. NFKD decomposition + strip combining marks (e -> e, n -> n, ...).
     3. Drop whatever is still non-ASCII (emoji, CJK, zero-width chars, ...).
     4. Replace any remaining unsafe char (incl. whitespace, newlines,
-       brackets, slashes) with ``_``, collapse repeats, strip leading
-       dots/dashes/underscores (hidden files, ``..``) and trailing dots
-       (Windows-unfriendly).
+       brackets, slashes) with ``_``, then fold ``._`` into ``_``
+       (period-space artifacts like ``bald._Jetzt``). Runs of 3+
+       underscores collapse to one — but a double ``__`` is kept as-is,
+       since the mail exporter uses it as the date/sender/subject
+       separator. Strip leading dots/dashes/underscores (hidden files,
+       ``..``) and trailing dots (Windows-unfriendly).
     5. Truncate to ``max_len`` chars; empty results become ``fallback``.
     '''
     name = raw or ""
@@ -42,13 +45,28 @@ def clean_filename(raw: str, max_len: int = 150, fallback: str = "unnamed") -> s
     name = "".join(c for c in name if not unicodedata.combining(c))
     name = name.encode("ascii", "ignore").decode("ascii")
     name = re.sub(r'[^A-Za-z0-9@._-]+', '_', name)
-    name = re.sub(r'_+', '_', name)
+    name = name.replace('._', '_')
+    name = re.sub(r'_{3,}', '_', name)
     name = re.sub(r'-+', '-', name)
-    name = re.sub(r'.+', '.', name)
-    name = re.sub(r'_-_', '-', name)
-    name = re.sub(r'-_-', '-', name)
-    name = re.sub(r'_-', '-', name)
-    name = re.sub(r'-_', '-', name)
+    name = re.sub(r'\.+', '.', name)
+    # Dot-collapse can re-create "._" (e.g. "3D_..._3D" -> "3D_._3D"),
+    # and folding can rebuild 3+ runs — repeat both once to a fixpoint
+    # (no later step creates dots or underscores, so two passes settle).
+    name = name.replace('._', '_')
+    name = re.sub(r'_{3,}', '_', name)
+    # The dash/underscore mix rules feed each other in a single pass
+    # (e.g. "X__-10" -> "X_-10", which still contains "_-"; "a-_-_b"
+    # -> "a--b", which needs a dash re-collapse), so loop to a fixpoint.
+    # Every hit strictly shortens the string, so this always terminates —
+    # and it makes the function idempotent.
+    prev = None
+    while prev != name:
+        prev = name
+        name = re.sub(r'-+', '-', name)
+        name = re.sub(r'_-_', '-', name)
+        name = re.sub(r'-_-', '-', name)
+        name = re.sub(r'_-', '-', name)
+        name = re.sub(r'-_', '-', name)
     name = name.strip('._- ')
 
     if not name:

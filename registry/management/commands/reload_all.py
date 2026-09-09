@@ -8,7 +8,7 @@ from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_data_collection import load_data_collection_manifest
 from registry.loader.load_project_folder import load_project_folder
-from registry.loader.load_providers import load_providers_manifest
+from registry.loader.load_providers import load_providers_dir
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.utils import find_agent_md_files
@@ -158,11 +158,17 @@ def run_reload_all(folder: str) -> ReloadResult:
             except Exception as e:
                 errors.append(f"Project {project_path}: {e}")
 
-    # Providers
-    providers_file = effective_root / "providers.yaml"
-    if providers_file.exists():
+    # Providers + models from research frontmatter dirs.  Missing files
+    # disable (not delete) their rows so call history stays intact.
+    providers_dir = effective_root / "providers"
+    if providers_dir.is_dir():
         try:
-            provider_count = load_providers_manifest(providers_file, details=details)
+            provider_count = load_providers_dir(
+                providers_dir,
+                effective_root / "models",
+                details=details,
+                disable_missing=True,
+            )
             counts["providers"] = provider_count
         except Exception as e:
             errors.append(f"Providers: {e}")

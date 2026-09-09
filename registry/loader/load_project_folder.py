@@ -111,7 +111,11 @@ def _project_to_database(project_md_path: Path, project_root: Path | None = None
             defaults={
                 "description": desc or "",
                 "path": resolved,
-                "access": access or {},
+                # Only touch access when the manifest declares it: the
+                # workspace UI edits the same field, and an unconditional
+                # write here would silently wipe UI-made policy on every
+                # reload.  Absent key = leave the DB value alone.
+                **({"access": access or {}} if "access" in (entry or {}) else {}),
             },
         )
 

@@ -877,7 +877,7 @@
   @media(max-width:900px){.chat-toc{right:8px;}.chat-toc-item{width:14px;}}
   @media(min-width:1400px){.messages-inner{max-width:1100px;}}
   @media(min-width:1800px){.messages-inner{max-width:1200px;}}
-  .msg-row{padding:10px 0;}
+  .msg-row{padding:10px 0;width: -webkit-fill-available;}
   .msg-row+.msg-row{border-top:none;}
   .msg-role{font-size:12px;font-weight:500;letter-spacing:.01em;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
   .msg-role.user{color:var(--accent);}
@@ -3038,7 +3038,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
      • tighter type scale (11/12/13/14/16 — no more 10/10.5/12.5)
    ═══════════════════════════════════════════════════════════════════ */
 :root {
-  --msg-rail: 0;
+  --msg-rail: 15px;
   --msg-max: 1024px;
   --user-bubble-bg: var(--accent);
   --user-bubble-border: var(--accent-hover);
@@ -3068,7 +3068,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .msg-body table { font-family: 'SF Mono', ui-monospace, monospace; }
 .msg-body:empty { display: none; }
 .assistant-turn { width: 100%; }
-.assistant-turn-blocks { display: flex; flex-direction: column; margin-left:20px ;}
+.assistant-turn-blocks { display: flex; flex-direction: column;}
 .status-card{margin:8px 0 8px var(--msg-rail);max-width:min(var(--msg-max),760px);border:1px solid var(--border-subtle);background:var(--surface-subtle);border-radius:var(--radius-card);box-shadow:0 10px 24px rgba(0,0,0,.05);overflow:hidden;}
 .status-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border-subtle);background:linear-gradient(180deg,var(--surface-subtle-hover),var(--surface-subtle));}
 .status-card-title-wrap{min-width:0;}
@@ -4271,11 +4271,11 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .ws-ov-empty{display:none;border:1px dashed var(--border2);border-radius:10px;padding:55px 30px;text-align:center;color:var(--muted);}
 .ws-ov-empty-icon{font-size:32px;margin-bottom:12px;}
 .ws-ov-empty h2{color:var(--text);font-size:17px;margin:0 0 7px;}
-.ws-current-card{position:relative;display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:22px;}
+.ws-current-card{position:relative;display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:0px;}
 .ws-current-info{flex:1;min-width:0;}
 .ws-current-name{font-size:16px;font-weight:650;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .ws-current-card .ws-ov-desc{-webkit-line-clamp:4;}
-.ws-sub-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:16px;}
+.ws-sub-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:16px;}
 .ws-sub-title{margin:0;font-size:16px;font-weight:650;color:var(--text);}
 .ws-sub-count{color:var(--muted);font-weight:500;font-size:13px;margin-left:4px;}
 /* related chats (workspace detail) */

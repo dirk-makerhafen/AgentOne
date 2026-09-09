@@ -124,7 +124,7 @@ class TestDeepSeekV4Hangs:
         if result["success"]:
             pytest.fail(
                 "deepseek-v4-flash responded — Nvidia may have fixed the hang. "
-                "Update this test and providers.yaml if stable."
+                "Update this test and nvidia-nim.md if stable."
             )
         else:
             print(f"  CONFIRMED HANG: {result.get('error', 'timeout')} ({result['elapsed']:.1f}s)")

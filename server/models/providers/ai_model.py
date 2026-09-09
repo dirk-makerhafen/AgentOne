@@ -21,6 +21,17 @@ class AiModel(BaseModel):
 
     enabled = models.BooleanField(default=True)
 
+    # Model-card facts (from ``models/<slug>.md`` frontmatter).
+    developer = models.CharField(max_length=512, default="", blank=True)
+    canonical_id = models.CharField(max_length=512, default="", blank=True)
+
+    # Leaderboard identity + rank as ONE sortable integer.  Estimated ranks
+    # (card ``leaderboard_rank_estimated: "~N"``) are stored as their numeric
+    # value with ``leaderboard_rank_is_estimate`` set, so sorting just works.
+    leaderboard_id = models.CharField(max_length=512, default="", blank=True)
+    leaderboard_rank = models.IntegerField(null=True, default=None)
+    leaderboard_rank_is_estimate = models.BooleanField(default=False)
+
     context_length = models.IntegerField(default=1000000)
     is_cloud = models.BooleanField(default=True)
     open_weights = models.BooleanField(default=False)
@@ -39,12 +50,17 @@ class AiModel(BaseModel):
     max_response_tokens = models.IntegerField(default=1000000)
 
     # 0 = unlimited
+    limit_request_per_minute = models.IntegerField(default=0)
     limit_request_per_hour = models.IntegerField(default=0)
     limit_request_per_day = models.IntegerField(default=0)
-    limit_request_per_minute = models.IntegerField(default=0)
+    limit_request_per_week = models.IntegerField(default=0)
+    limit_request_per_month = models.IntegerField(default=0)
+            
+    limit_tokens_per_minute = models.IntegerField(default=0)
     limit_tokens_per_hour = models.IntegerField(default=0)
     limit_tokens_per_day = models.IntegerField(default=0)
-    limit_tokens_per_minute = models.IntegerField(default=0)
+    limit_tokens_per_week = models.IntegerField(default=0)
+    limit_tokens_per_month = models.IntegerField(default=0)
 
     # Maximum number of simultaneously active runs across all keys for this model.
     # 0 = unlimited.

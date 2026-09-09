@@ -14,7 +14,7 @@ from ui.lib.model_view import ModelView
 SECTIONS = ("read", "write")
 KEYS = ("allow", "ask", "deny")
 DEFAULTS = ("allow", "ask", "deny")
-FALLBACK_DEFAULT = "ask"
+FALLBACK_DEFAULT = "aks"
 
 
 def normalize_access(raw: dict | None) -> dict:
