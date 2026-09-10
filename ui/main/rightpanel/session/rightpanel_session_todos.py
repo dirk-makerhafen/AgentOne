@@ -52,7 +52,6 @@ class RightPanelSessionTodos(ModelView):
                 {% for item in pyview.state["items"] %}
                 <div class="task-card" style="margin-bottom:6px;display:flex;gap:8px;align-items:flex-start">
                     <span style="font-size:11px;color:var(--muted);min-width:22px">#{{ item["task_id"] }}</span>
-                    <div style="flex:1;font-size:12px;color:var(--text);white-space:pre-wrap">{{ item["text"] }}</div>
                     {% if item["status"] == "completed" %}
                         <span style="font-size:10px;color:var(--success)">completed</span>
                     {% elif  item["status"] == "pending" %}
@@ -60,6 +59,7 @@ class RightPanelSessionTodos(ModelView):
                     {% else %}
                         <span style="font-size:10px;color:var(--muted)">in-progress</span>
                     {% endif %}
+                    <div style="flex:1;font-size:12px;color:var(--text);white-space:pre-wrap">{{ item["text"] }}</div>
                 </div>
                 {% endfor %}
             {% else %}

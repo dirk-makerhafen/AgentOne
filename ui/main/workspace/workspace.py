@@ -377,7 +377,7 @@ class Workspace(ModelView):
 
             sessions = SessionModel.objects.filter(
                 latest_session_version__workspace=self.subject,
-                session_type__in=[SessionType.SESSION, SessionType.SUBSESSION],
+                session_type__in=[SessionType.SESSION],
             ).order_by("-created_at")
             return [related_chat_data(s) for s in sessions]
         except Exception:

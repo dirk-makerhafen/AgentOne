@@ -8,6 +8,8 @@ from ui.main.rightpanel.collection.rightpanel_collection import RightPanelCollec
 from ui.main.rightpanel.agent.rightpanel_agent import RightPanelAgent
 from ui.main.rightpanel.project.rightpanel_project import RightPanelProject
 from ui.main.rightpanel.skill.rightpanel_skill import RightPanelSkill
+from ui.main.rightpanel.provider.rightpanel_provider import RightPanelProvider
+from ui.main.rightpanel.model.rightpanel_model import RightPanelModel
 
 if TYPE_CHECKING:
     from ui.app import UiApp
