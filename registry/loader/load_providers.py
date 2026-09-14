@@ -726,13 +726,13 @@ def load_providers_dir(
                     seen_models.add(seen_key)
 
     if disable_missing:
-        stale_providers = ApiProvider.objects.exclude(slug__in=list(by_slug)).filter(enabled=True)
+        stale_providers = ApiProvider.objects.exclude(slug__in=list(by_slug)).filter(enabled=True, is_local=False)
         for provider in stale_providers:
             provider.enabled = False
             provider.save(update_fields=["enabled"])
             details.append({"type": "provider", "name": provider.name, "action": "disabled (no file)"})
         seen_pairs = {(int(k.split(":")[0]), k.split(":", 1)[1]) for k in seen_models}
-        stale_models = AiModel.objects.filter(enabled=True)
+        stale_models = AiModel.objects.filter(enabled=True, is_cloud = True)
         for model in stale_models:
             if (model.api_provider_id, model.provider_model_id) not in seen_pairs:
                 model.enabled = False

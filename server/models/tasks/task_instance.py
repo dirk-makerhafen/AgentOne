@@ -1,6 +1,8 @@
 """TaskInstance model — binds a task definition version to a specific session."""
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 from types import GeneratorType
 from typing import TYPE_CHECKING, Any, Optional
@@ -50,6 +52,17 @@ class TaskInstance(BaseModel):
     is_approved = models.BooleanField(default=None, null=True)
     retry_count = models.IntegerField(default=0)
 
+    dedupe_hash = models.CharField(
+        max_length=64,
+        default=None,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="SHA256 over the get_or_create lookup keys; "
+        "part of the uniqueness constraint that prevents duplicate instances. "
+        "NULL (e.g. ad-hoc objects.create rows) is exempt from dedup.",
+    )
+
     child_instances = SortedManyToManyField("self", symmetrical=False, blank=True, related_name="parent_instances")
 
     taskinstance_arg_references = models.ManyToManyField("self",help_text="AgentTaskInstances used in instance args/kwargs",symmetrical=False,blank=True,related_name="rev_taskinstance_arg_references")
@@ -66,6 +79,19 @@ class TaskInstance(BaseModel):
         "session",
         "session_version",
     ])
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "task_definition_version",
+                    "session",
+                    "session_version",
+                    "dedupe_hash",
+                ],
+                name="uniq_taskinstance_dedupe",
+            ),
+        ]
 
     @property
     def task_type(self) -> str:
@@ -86,6 +112,51 @@ class TaskInstance(BaseModel):
             raise Exception("task_execution_mode not set")
         return self.task_definition_version.task_execution_mode
 
+    #: Option fields that participate in the get_or_create lookup identity.
+    #: Explicit allow-list so ``**options`` overrides can't inject arbitrary fields.
+    _LOOKUP_OPTION_FIELDS = (
+        "requires_approval",
+        "time_limit",
+        "max_subtask_errors",
+        "max_subtask_error_rate",
+        "limit_subtask_parallel_runs",
+        "limit_per_instance_parallel_runs",
+        "priority",
+        "max_retries",
+        "retry_delay",
+        "retry_requires_approval",
+        "is_approved",
+    )
+
+    @staticmethod
+    def _dedupe_hash(
+        task_definition: Any,
+        session: Any,
+        session_version: Any,
+        arguments_json: Any,
+        lookup_options: dict[str, Any],
+    ) -> str:
+        """Compute the stable identity hash for a TaskInstance lookup.
+
+        Covers exactly the fields of the uniqueness constraint, so equal
+        lookup keys always map to the same hash.  ``sort_keys`` + ``default=str``
+        keep the digest stable across JSON key order and non-JSON scalars
+        (e.g. tuples vs lists both serialise as arrays).
+        """
+        canonical = {
+            "tdv": getattr(task_definition, "pk", task_definition),
+            "session": getattr(session, "pk", session),
+            "session_version": getattr(session_version, "pk", session_version),
+            "iarguments": arguments_json,
+            "options": {
+                key: lookup_options.get(key)
+                for key in TaskInstance._LOOKUP_OPTION_FIELDS
+            },
+        }
+        return hashlib.sha256(
+            json.dumps(canonical, sort_keys=True, default=str).encode()
+        ).hexdigest()
+
     @classmethod
     def get_or_create(
         cls,
@@ -100,9 +171,19 @@ class TaskInstance(BaseModel):
         Merges call-level arguments, serialises references, and auto-creates
         child instances for CHAIN/GROUP execution modes.
 
+        Concurrency-safe: the ``uniq_taskinstance_dedupe`` constraint makes the
+        winner of a create race discoverable via ``IntegrityError`` retry, and
+        pre-existing duplicates (created before the constraint existed) resolve
+        to the earliest row instead of raising ``MultipleObjectsReturned``.
+
+        Extra ``**options`` whose names match a lookup option field override
+        the corresponding ``task_definition`` default.
+
         Returns:
             The existing or newly created TaskInstance.
         """
+        from django.db import IntegrityError, transaction
+
         session = session_version.session
 
         args = args if args else []
@@ -114,24 +195,56 @@ class TaskInstance(BaseModel):
 
         arguments_json, ref_pks = TaskInstance._create_instance_arguments_json(arguments=arguments)
 
-        task_instance, created = TaskInstance.objects.get_or_create(
-            task_definition_version=task_definition,
-            session=session,
-            session_version=session_version,
-            iarguments_json=arguments_json,
-            requires_approval=task_definition.requires_approval,
-            time_limit=task_definition.time_limit,
-            max_subtask_errors=task_definition.max_subtask_errors,
-            max_subtask_error_rate=task_definition.max_subtask_error_rate,
-            limit_subtask_parallel_runs=task_definition.limit_subtask_parallel_runs,
-            limit_per_instance_parallel_runs=task_definition.limit_per_instance_parallel_runs,
-            priority=task_definition.priority,
-            max_retries=task_definition.max_retries,
-            retry_delay=task_definition.retry_delay,
-            retry_requires_approval=task_definition.retry_requires_approval,
-            is_approved=False if task_definition.requires_approval else None,
+        lookup_options: dict[str, Any] = {
+            "requires_approval": task_definition.requires_approval,
+            "time_limit": task_definition.time_limit,
+            "max_subtask_errors": task_definition.max_subtask_errors,
+            "max_subtask_error_rate": task_definition.max_subtask_error_rate,
+            "limit_subtask_parallel_runs": task_definition.limit_subtask_parallel_runs,
+            "limit_per_instance_parallel_runs": task_definition.limit_per_instance_parallel_runs,
+            "priority": task_definition.priority,
+            "max_retries": task_definition.max_retries,
+            "retry_delay": task_definition.retry_delay,
+            "retry_requires_approval": task_definition.retry_requires_approval,
+            "is_approved": False if task_definition.requires_approval else None,
+        }
+        for key, value in options.items():
+            if key in TaskInstance._LOOKUP_OPTION_FIELDS:
+                lookup_options[key] = value
+
+        dedupe_hash = TaskInstance._dedupe_hash(
+            task_definition, session, session_version,
+            arguments_json, lookup_options,
         )
-        if not created:
+        lookup = {
+            "task_definition_version": task_definition,
+            "session": session,
+            "session_version": session_version,
+            "dedupe_hash": dedupe_hash,
+        }
+
+        # Fast path — reuse the existing instance.  ``order_by("pk").first()``
+        # (instead of ``get()``) tolerates duplicate rows that predate the
+        # uniqueness constraint.
+        existing = TaskInstance.objects.filter(**lookup).order_by("pk").first()
+        if existing is not None:
+            return existing
+
+        try:
+            with transaction.atomic():
+                task_instance = TaskInstance.objects.create(
+                    **lookup,
+                    iarguments_json=arguments_json,
+                    **lookup_options,
+                )
+        except IntegrityError:
+            # Lost a create race — the winner committed first; read it back.
+            # (Each statement here runs in autocommit, so the winner is visible.)
+            task_instance = (
+                TaskInstance.objects.filter(**lookup).order_by("pk").first()
+            )
+            if task_instance is None:
+                raise
             return task_instance
 
         task_instance.taskinstance_arg_references.set(ref_pks)

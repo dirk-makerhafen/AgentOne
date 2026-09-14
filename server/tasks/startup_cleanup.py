@@ -22,17 +22,25 @@ def startup_cleanup() -> None:
     recovered right away instead of waiting up to 60s for the recovery pass.
     """
     from server.tasks.recovery_scheduler import (
+        _cancel_duplicate_queries,
         _cleanup_stale_runtime_folders,
-        _release_queued_calls,
+        _fail_ancient_parked_calls,
         _recover_stale_queries,
         _recover_stuck_calls,
+        _release_queued_calls,
+        _resolve_stuck_waiting_runs,
+        _timeout_active_runs,
     )
 
     for pass_ in (
         _cleanup_stale_runtime_folders,
-        _release_queued_calls,
+        _timeout_active_runs,
+        _cancel_duplicate_queries,
+        _fail_ancient_parked_calls,
         _recover_stuck_calls,
+        _resolve_stuck_waiting_runs,
         _recover_stale_queries,
+        _release_queued_calls,
     ):
         try:
             pass_()

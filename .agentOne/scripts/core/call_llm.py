@@ -159,6 +159,38 @@ def _get_litellm_model_name(provider: Any, api_model_id: str) -> str:
     return f"openai/{api_model_id}"
 
 
+def _close_stream(stream: Any | None) -> None:
+    """Close an abandoned LiteLLM stream so the server drops its generation.
+
+    ``CustomStreamWrapper`` only exposes async ``aclose``; the sync path
+    holds a sync httpx ``completion_stream`` underneath.  Closing it releases
+    the server-side generation (e.g. the OMLX parallel slot) — without this,
+    breaking out of ``for event in stream`` leaves a ghost generation
+    running server-side while our Query has long moved on.
+    """
+    if stream is None:
+        return
+    inner = getattr(stream, "completion_stream", None)
+    if inner is not None:
+        try:
+            stream.completion_stream = None
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        close = getattr(inner, "close", None)
+        if callable(close):
+            try:
+                close()
+                return
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+    close = getattr(stream, "close", None)
+    if callable(close):
+        try:
+            close()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+
 def run_streaming_query(
     session: Session,
     tools: list[dict[Any, Any]],
@@ -201,12 +233,15 @@ def run_streaming_query(
     if tools:
         args["tools"] = tools
         args["tool_choice"] = "auto"
+    stream = None
+    loop_detected = False
+    output_type = None
     try:
         stream = litellm.completion(**args, timeout=1800)
         repeat_count = 0
         for event in stream:
-            if repeat_count >= 5:
-                response.finish_reason = "Looping detected"
+            if repeat_count >= 6:
+                loop_detected = True
                 break
             event_data = event.model_dump()
             unknown_chunk = True
@@ -226,7 +261,11 @@ def run_streaming_query(
                 unknown_chunk = False
                 response.finish_reason = finish_reason
             reasoning_chunk = message_chunk.get("reasoning", None) or message_chunk.get("thinking", None) or message_chunk.get("reasoning_content", None)
+
             if reasoning_chunk:
+                if output_type != "reasoning":
+                    repeat_count = 0
+                    output_type = "reasoning"
                 if not first_reasoning_token_timestamp:
                     first_reasoning_token_timestamp = time.time()
                 last_reasoning_token_timestamp = time.time()
@@ -235,13 +274,19 @@ def run_streaming_query(
                 r = response.reasoning
                 if r and r.count(r[-255:]) > 1:
                     repeat_count += 1
+
             if content_chunk := message_chunk.get("content", None):
+                if output_type != "content":
+                    repeat_count = 0
+                    output_type = "content"
                 unknown_chunk = False
                 response.content += content_chunk
                 r = response.content
                 if r and r.count(r[-255:]) > 1:
                     repeat_count += 1
+
             if tool_calls_chunk := message_chunk.get("tool_calls", None):
+                output_type = "toolcall"
                 unknown_chunk = False
                 for tool_call in tool_calls_chunk:
                     index = tool_call.get("index", 0) or 0
@@ -284,10 +329,25 @@ def run_streaming_query(
                     _extract_retry_after_seconds(exc),
                     reason=str(getattr(exc, "message", "") or exc)[:500],
                 )
-        exc.streamed_content = response.content or response.reasoning
+        #exc.streamed_content = response.content or response.reasoning
         response.status = ResponseStatus.FAILURE
         response.save()
         raise
+    finally:
+        _close_stream(stream)
+    if loop_detected:
+        # Repetitive output is detected early, so the partial reasoning is
+        # counted as a valid response (finish_reason flags it for inspection).
+        # If the garbage ever feeds the chain, flip this back to FAILURE and
+        # raise with streamed_content set so _call_with_fallback re-raises
+        # immediately (no sibling retry) and the task retry budget bounds
+        # re-attempts.
+        response.finish_reason = "Looping detected"
+        response.status = ResponseStatus.SUCCESS
+        response.save()
+        #err = RuntimeError("Looping detected; partial output kept in FAILURE response")
+        #err.streamed_content = response.content or response.reasoning
+        #raise err
     end_timestamp = time.time()
     for tool_call in response.tool_calls:
         try:
@@ -340,20 +400,28 @@ def _call_with_fallback(
     candidates = [pinned] + sibling_aimodels(pinned)
     last_error: Exception | None = None
     first = True
+    claimed = False
     for aimodel in candidates:
         try:
             ratelimit_result = RateLimitChecker.check(aimodel, session=session)
             if not ratelimit_result:
                 raise Exception("Error in ratelimiter")
             apikey = ratelimit_result.selected_key
-            if first:
+            if not claimed:
+                # Claim the query exactly once per attempt: only an unowned
+                # (WAITING) or retry-reusable (FAILURE) row may flip to
+                # ACTIVE.  Never resurrect a terminal (SUCCESS) query or
+                # hijack a foreign ACTIVE one — a retry of an ancient call
+                # must fail here, not open a ghost stream on a sibling.
                 updated = Query.objects.filter(pk=query.pk, status__in=[QueryStatus.WAITING, QueryStatus.FAILURE]).update(
                     apikey=apikey, status=QueryStatus.ACTIVE
                 )
                 if not updated:
                     raise Exception("Failed to update query to active state")
+                claimed = True
             else:
-                Query.objects.filter(pk=query.pk).update(apikey=apikey, status=QueryStatus.ACTIVE)
+                # Our own in-flight ACTIVE row — just refresh the key.
+                Query.objects.filter(pk=query.pk).update(apikey=apikey)
             query.apikey = apikey
             query.status = QueryStatus.ACTIVE  # DB row was set by the filter update above
 

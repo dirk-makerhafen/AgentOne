@@ -44,14 +44,24 @@ from django.utils import timezone
 
 @shared_task(name="tasks.tick_scheduler")
 def tick_scheduler() -> None:
-    """Main scheduler tick - each routine is independent."""
+    """Main scheduler tick - each routine is independent.
 
-    _dispatch_data_flows()
-    _propagate_from_collections()
-    _release_scheduled_calls()
-    _release_rate_limited_calls()
-    _release_retry_calls()
-    _release_queued_calls()
+    Routines are isolated: a recurring error in one (e.g. a broken data-flow
+    processor raising on every tick) must never starve the release passes
+    behind it.
+    """
+    for routine in (
+        _dispatch_data_flows,
+        _propagate_from_collections,
+        _release_scheduled_calls,
+        _release_rate_limited_calls,
+        _release_retry_calls,
+        _release_queued_calls,
+    ):
+        try:
+            routine()
+        except Exception as e:
+            print(f"[scheduler] error in {routine.__name__}: {e} {traceback.format_exc()}")
 
 
 def _release_queued_calls() -> None:
@@ -68,6 +78,7 @@ def _release_queued_calls() -> None:
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.enums.task_enums import TaskCallStatusDetail
     from runtime.tasks.call_scheduler import CallScheduler
+    from server.tasks.recovery_scheduler import _is_ancient
 
     for call in AgentTaskCall.objects.filter(
         status_detail=TaskCallStatusDetail.WAITING_QUEUE,
@@ -79,6 +90,14 @@ def _release_queued_calls() -> None:
             if _has_dangling_call_refs(call.carguments_json):
                 if _cancel_dangling_queue_call(call.pk):
                     print(f"[scheduler] cancelled WAITING_QUEUE call {call.pk} — dangling arg reference")
+                continue
+            # Session FIFO: a parked ingest waits while a live turn or an
+            # older parked message is ahead of it — releasing everything at
+            # once would run turns concurrently and collide on the Query.
+            # Ancient rows are left to the recovery pass (see TURN_DEATH_AGE).
+            if CallScheduler._session_queue_blocked(call):
+                continue
+            if _is_ancient(call.updated_at):
                 continue
             CallScheduler.start_new_taskrun(call.pk)
         except Exception as e:
@@ -146,9 +165,14 @@ def _release_rate_limited_calls() -> None:
     )
     blocked_models: set[int] = set()
     from runtime.session.session import Session
+    from server.tasks.recovery_scheduler import _is_ancient
 
     for call in waiting:
         try:
+            # Ancient parked turns are left to the recovery pass, which fails
+            # them instead of resuming day-old context (see TURN_DEATH_AGE).
+            if _is_ancient(call.updated_at):
+                continue
             session = Session(
                 session_model=call.session,
                 pinned_session_version=call.session_version,
@@ -185,8 +209,14 @@ def _release_retry_calls() -> None:
         status_detail=TaskCallStatusDetail.WAITING_RETRY,
         dont_start_before__lte=timezone.now(),
     ).order_by("priority", "dont_start_before")
+    from server.tasks.recovery_scheduler import _is_ancient
+
     for call in due:
         try:
+            # Ancient retries are left to the recovery pass, which fails them
+            # instead of replaying day-old context (see TURN_DEATH_AGE).
+            if _is_ancient(call.updated_at):
+                continue
             if TaskCallStateMachine.enter_dependency_wait(call.pk):
                 tc = AgentTaskCall.objects.get(pk=call.pk)
                 if tc.taskcall_arg_references.exclude(status=TaskCallStatus.ENDED).exists():
@@ -206,8 +236,14 @@ def _release_scheduled_calls() -> None:
         status_detail=TaskCallStatusDetail.NEW,
         dont_start_before__lte=timezone.now(),
     ).order_by("priority", "dont_start_before")
+    from server.tasks.recovery_scheduler import _is_ancient
+
     for call in due:
         try:
+            # Ancient scheduled calls are left to the recovery pass, which
+            # cancels them instead of dispatching day-old work.
+            if _is_ancient(call.updated_at):
+                continue
             from server.tasks.task_dispatcher import celery_delay
 
             celery_delay(CallScheduler._apply_async, call.pk)
@@ -386,16 +422,16 @@ def _dispatch_processor(flow, call, source_item=None):
         },
     )
 
-    # Create a TaskInstance for the consumer.
+    # Create (or reuse) a TaskInstance for the consumer.
     # We intentionally set iarguments_json to {} — copying it from the source
     # call would double positional args when start_new_taskrun merges
     # iarguments_json["*"] + carguments_json["*"].
+    # get_or_create (not objects.create) so repeated dispatches share one
+    # instance row instead of violating uniq_taskinstance_dedupe.
     src_ti = call.task_instance
-    task_instance = TaskInstance.objects.create(
-        task_definition_version=tdv.latest_task_version,
-        session=session_model,
+    task_instance = TaskInstance.get_or_create(
+        task_definition=tdv.latest_task_version,
         session_version=session_obj.latest_version if hasattr(session_obj, 'latest_version') else session_version,
-        iarguments_json={},
         requires_approval=src_ti.requires_approval if src_ti else False,
         max_subtask_errors=src_ti.max_subtask_errors if src_ti else 0,
         max_subtask_error_rate=src_ti.max_subtask_error_rate if src_ti else 0,
@@ -530,11 +566,9 @@ def _trigger_on_removed(collection, source_calls):
 
     for call in source_calls:
         src_ti = call.task_instance
-        ti = TaskInstance.objects.create(
-            task_definition_version=tdv.latest_task_version,
-            session=session_model,
+        ti = TaskInstance.get_or_create(
+            task_definition=tdv.latest_task_version,
             session_version=session_version,
-            iarguments_json={},
             requires_approval=src_ti.requires_approval if src_ti else False,
             max_subtask_errors=src_ti.max_subtask_errors if src_ti else 0,
             max_subtask_error_rate=src_ti.max_subtask_error_rate if src_ti else 0,

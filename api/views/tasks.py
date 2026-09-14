@@ -94,6 +94,35 @@ class TaskCallViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response({'status': 'denied'})
 
+    @action(detail=True, methods=['post'])
+    def answer(self, request, pk=None):
+        """Submit answers for a halted ``ask_user`` question call.
+
+        Body: ``{"answers": {"<question>": "<label>" | ["<label>", ...]}}``.
+        Partial answers are accepted (``{"status": "recorded"}``); once every
+        question is answered the call is approved and runs
+        (``{"status": "answered"}``).
+        """
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        try:
+            task_call = self.get_object()
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        answers = None
+        if isinstance(request.data, dict):
+            answers = request.data.get("answers")
+
+        ok, detail = CallScheduler.answer_question_call(task_call.pk, answers)
+        if not ok:
+            return Response(
+                {'error': detail},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response({'status': detail})
+
 
 class TaskRunFilter(filters.FilterSet):
     task_call = filters.NumberFilter(field_name='agent_task_call_id')

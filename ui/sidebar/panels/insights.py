@@ -25,7 +25,7 @@ class SidebarPanelInsights(ModelView):
         </div>
         <div class="insights-nav">
             {% for item in pyview.nav_items %}
-            <div class="insights-nav-item{% if pyview.active_view == item.view %} active{% endif %}" onclick="pyview.openPanel({{ item.method }})">
+            <div class="insights-nav-item{% if pyview.active_view == item.view %} active{% endif %}" onclick="pyview.openPanel('{{ item.method }}')">
                 <span class="insights-nav-icon">{{ item.icon|safe }}</span>
                 <span class="insights-nav-text">
                     <span class="insights-nav-title">{{ item.title }}</span>

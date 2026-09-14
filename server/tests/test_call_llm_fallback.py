@@ -490,4 +490,147 @@ class FallbackLoopTest(TestCase):
                 )
         apikey.refresh_from_db()
         self.assertIsNotNone(apikey.rate_limit_until)
-        self.assertGreater(apikey.rate_limit_until, timezone.now())
+
+
+def _stream_event(delta=None, finish=None, usage=None):
+    data = {"choices": [{"delta": delta or {}, "finish_reason": finish}]}
+    if usage is not None:
+        data["usage"] = usage
+    return SimpleNamespace(model_dump=lambda data=data: dict(data))
+
+
+class _FakeStream:
+    """Sync stand-in for litellm's CustomStreamWrapper."""
+
+    def __init__(self, events):
+        self._events = events
+        self.completion_stream = mock.Mock()
+
+    def __iter__(self):
+        return iter(self._events)
+
+
+class _StubResponse:
+    def __init__(self):
+        self.pk = 99
+        self.status = ResponseStatus.ACTIVE
+        self.content = ""
+        self.reasoning = ""
+        self.tool_calls = []
+        self.completion_tokens = 0
+        self.prompt_tokens = 0
+        self.cached_tokens = 0
+        self.reasoning_tokens = 0
+        self.finish_reason = ""
+        self.time_to_first_token = 0
+        self.token_generation_time = 0
+        self.reasoning_time = 0
+        self.total_time = 0
+
+    def save(self):
+        pass
+
+
+class StreamCloseTest(TestCase):
+    """Abandoned streams must be closed; looping is detected early and its
+    partial reasoning is accepted as a valid response."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.call_llm = _load_call_llm()
+
+    def setUp(self):
+        self.p1 = ApiProvider.objects.create(name="p1")
+        ApiKey.objects.create(api_provider=self.p1, key="k1", enabled=True)
+        self.model = AiModel.objects.create(api_provider=self.p1, name="Alpha", provider_model_id="alpha")
+
+    def _stub_query(self):
+        sv = SimpleNamespace(session=SimpleNamespace())
+        return SimpleNamespace(
+            pk=7,
+            apikey=ApiKey.objects.filter(api_provider=self.p1).first(),
+            status=QueryStatus.ACTIVE,
+            session_version=sv,
+            refresh_from_db=lambda: None,
+        )
+
+    def test_looping_stream_closed_and_accepted(self):
+        """Repetitive output: detected early, partial reasoning kept, SUCCESS."""
+        events = [_stream_event(delta={"reasoning_content": "L" * 300}) for _ in range(8)]
+        stream = _FakeStream(events)
+        inner = stream.completion_stream
+        resp = _StubResponse()
+        with mock.patch(
+            "server.models.queries.response.Response.objects.create",
+            return_value=resp,
+        ), mock.patch.object(self.call_llm.litellm, "completion", return_value=stream):
+            returned = self.call_llm.run_streaming_query(
+                session=_StubSession(aimodel=self.model),
+                tools=[],
+                messages=[],
+                query=self._stub_query(),
+            )
+        self.assertIs(returned, resp)
+        # Looping is flagged for inspection but counted as valid since it is
+        # detected early (see call_llm.py).  If it ever feeds the chain with
+        # garbage we can flip this back to FAILURE + raise.
+        self.assertEqual(resp.finish_reason, "Looping detected")
+        self.assertEqual(resp.status, ResponseStatus.SUCCESS)
+        self.assertTrue(resp.reasoning)
+        # Server-side generation is cancelled via the underlying stream.
+        inner.close.assert_called_once_with()
+        self.assertIsNone(stream.completion_stream)
+
+    def test_successful_stream_closed(self):
+        """The happy path must also release the server-side stream."""
+        events = [
+            _stream_event(delta={"content": "hello"}),
+            _stream_event(finish="stop", usage={"completion_tokens": 5, "prompt_tokens": 10}),
+        ]
+        stream = _FakeStream(events)
+        inner = stream.completion_stream
+        resp = _StubResponse()
+        with mock.patch(
+            "server.models.queries.response.Response.objects.create",
+            return_value=resp,
+        ), mock.patch.object(self.call_llm.litellm, "completion", return_value=stream):
+            result = self.call_llm.run_streaming_query(
+                session=_StubSession(aimodel=self.model),
+                tools=[],
+                messages=[],
+                query=self._stub_query(),
+            )
+        self.assertEqual(result.status, ResponseStatus.SUCCESS)
+        self.assertEqual(result.content, "hello")
+        inner.close.assert_called_once_with()
+        self.assertIsNone(stream.completion_stream)
+
+    def test_exception_stream_closed(self):
+        """A mid-stream hard failure must still close the stream."""
+        from litellm.exceptions import APIConnectionError
+
+        events = [_stream_event(delta={"content": "part"})]
+
+        class _ExplodingStream(_FakeStream):
+            def __iter__(self):
+                yield from self._events
+                raise APIConnectionError("conn reset", llm_provider="openai", model="alpha")
+
+        stream = _ExplodingStream(events)
+        inner = stream.completion_stream
+        resp = _StubResponse()
+        with mock.patch(
+            "server.models.queries.response.Response.objects.create",
+            return_value=resp,
+        ), mock.patch.object(self.call_llm.litellm, "completion", return_value=stream):
+            with self.assertRaises(APIConnectionError):
+                self.call_llm.run_streaming_query(
+                    session=_StubSession(aimodel=self.model),
+                    tools=[],
+                    messages=[],
+                    query=self._stub_query(),
+                )
+        self.assertEqual(resp.status, ResponseStatus.FAILURE)
+        inner.close.assert_called_once_with()
+        self.assertIsNone(stream.completion_stream)

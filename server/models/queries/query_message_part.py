@@ -10,11 +10,48 @@ from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
 from server.models.base_model import BaseModel, Observables
-from server.models.content import GenericContent
+from server.models.content import GenericContent, IMAGE_TOKEN_ESTIMATE
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 
 _JINJA_ENV = Environment(loader=BaseLoader())
 cache = LRUCache(maxsize=100000)
+
+
+def estimate_openai_tokens(obj: Any) -> int:
+    """Estimate tokens for an OpenAI-style message dict/list.
+
+    For text/tool/reasoning content this reproduces the previous heuristic
+    (``math.ceil(len(json.dumps(message))/3.8)``) exactly, so compaction and
+    history-limiter budgets are unchanged.  ``image_url`` blocks are priced at
+    a fixed per-image rate — providers bill per image/detail, not per base64
+    character, so counting a raw data URI as text would over-estimate by
+    ~350x.
+    """
+    def _dedupe_image_blocks(item: Any) -> tuple[Any, int]:
+        """Replace image_url payloads with a small marker, count image blocks."""
+        image_marker = "data:image/[inline]"
+        if isinstance(item, dict):
+            if item.get("type") == "image_url":
+                return {"type": "image_url", "image_url": {"url": image_marker}}, 1
+            images = 0
+            for key, value in item.items():
+                cleaned, imgs = _dedupe_image_blocks(value)
+                item[key] = cleaned
+                images += imgs
+            return item, images
+        if isinstance(item, list):
+            images = 0
+            for index, value in enumerate(item):
+                cleaned, imgs = _dedupe_image_blocks(value)
+                item[index] = cleaned
+                images += imgs
+            return item, images
+        return item, 0
+
+    clone = json.loads(json.dumps(obj))
+    cleaned, image_count = _dedupe_image_blocks(clone)
+    text_body = "" if cleaned in (None, "", [], {}) else json.dumps(cleaned)
+    return math.ceil(len(text_body) / 3.8) + image_count * IMAGE_TOKEN_ESTIMATE
 
 
 class QueryMessagePart(BaseModel):
@@ -65,7 +102,7 @@ class QueryMessagePart(BaseModel):
         message_contents = self._build_message_contents(content, content_type, template_data, part_type, fail_on_error)
 
         if not self.tokens:
-            tokens = int(len(json.dumps(message_contents)) / 3.8)
+            tokens = estimate_openai_tokens(message_contents)
             if self.tokens != tokens:
                 self.tokens = tokens
                 self.save(update_fields=["tokens"])

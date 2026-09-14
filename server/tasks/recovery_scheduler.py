@@ -37,15 +37,74 @@ from django.utils import timezone
 STALE_WAITING_QUEUE_TIMEOUT = datetime.timedelta(minutes=15)
 
 
+# A turn whose rows went untouched for longer than this is context-dead: no
+# worker, tick, or capacity return will legitimately resume 24h-stale
+# arguments, queries, and prompts as if no time passed (resuming them
+# replays dead context into fresh LLM calls).  Such rows are failed/
+# cancelled instead of retried or re-dispatched.  Human-gated states
+# (HALTED_APPROVAL) are exempt — a user may take days to decide.
+TURN_DEATH_AGE = datetime.timedelta(hours=24)
+
+
+def _is_ancient(updated_at) -> bool:
+    """True when *updated_at* is older than :data:`TURN_DEATH_AGE`."""
+    if not updated_at:
+        return False
+    return timezone.now() - updated_at > TURN_DEATH_AGE
+
+
 @shared_task(name="tasks.tick_scheduler_recovery")
 def tick_scheduler_recovery() -> None:
-    """One-minute recovery pass — each routine is independent."""
+    """One-minute recovery pass — each routine is independent.
+
+    ``_cancel_duplicate_queries`` is intentionally NOT here: concurrent turns
+    on different session versions of one session are legitimate, so periodic
+    dedup could murder a live turn.  It runs only in ``startup_cleanup``,
+    when no worker is alive and every ACTIVE query is either resumed or dead.
+
+    ``_fail_ancient_parked_calls`` runs first so the release passes behind it
+    never pick up context-dead rows.
+    """
+    _fail_ancient_parked_calls()
     _release_queued_calls()
     _timeout_active_runs()
     _resolve_stuck_waiting_runs()
     _recover_stuck_calls()
-    _cancel_duplicate_queries()
     _recover_stale_queries()
+
+
+def _fail_ancient_parked_calls() -> None:
+    """Cancel parked calls whose context died of old age.
+
+    WAITING_QUEUE / WAITING_RETRY / NEW / WAITING_RATELIMIT rows untouched
+    for longer than :data:`TURN_DEATH_AGE` are never resumed — resuming them
+    would replay day-old arguments and prompts into fresh LLM calls (the
+    resurrection cascade).  They are ended via :func:`_force_end_call` so
+    dependents and parents unblock with terminal notifications instead of
+    hanging.  The tick skips ancient rows (see :data:`TURN_DEATH_AGE`) and
+    leaves them to this pass.
+    """
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+
+    for call in AgentTaskCall.objects.filter(
+        status_detail__in=[
+            TaskCallStatusDetail.WAITING_QUEUE,
+            TaskCallStatusDetail.WAITING_RETRY,
+            TaskCallStatusDetail.NEW,
+            TaskCallStatusDetail.WAITING_RATELIMIT,
+        ],
+    ).exclude(status=TaskCallStatus.ENDED):
+        try:
+            if not _is_ancient(call.updated_at):
+                continue
+            if _force_end_call(call):
+                print(
+                    f"[recovery] cancelled ancient parked call {call.pk} "
+                    f"({call.status_detail}, untouched since {call.updated_at})"
+                )
+        except Exception as e:
+            print(f"[recovery] error failing ancient call {call.pk}: {e}")
 
 
 def _release_queued_calls() -> None:
@@ -69,6 +128,9 @@ def _release_queued_calls() -> None:
             if _has_dangling_call_refs(call.carguments_json):
                 if _force_end_call(call):
                     print(f"[recovery] cancelled WAITING_QUEUE call {call.pk} — dangling arg reference")
+                continue
+            # Session FIFO (see CallScheduler._session_queue_blocked).
+            if CallScheduler._session_queue_blocked(call):
                 continue
             CallScheduler.start_new_taskrun(call.pk)
         except Exception as e:
@@ -165,6 +227,14 @@ def _resolve_stuck_waiting_runs() -> None:
                 TaskCallStatusDetail.ACTIVE_QUEUED.value,
                 TaskCallStatusDetail.ACTIVE_RUNNING.value,
                 TaskCallStatusDetail.HALTED_APPROVAL.value,
+                # Parked-but-live: the 10s tick releases WAITING_RATELIMIT as
+                # soon as capacity returns and WAITING_RETRY once
+                # dont_start_before passes.  A run whose refs are parked here
+                # is a healthy-but-waiting pipeline — failing it would murder
+                # a live rate-limited turn (they never resolve on their own,
+                # they just wait).  Same rationale as HALTED_APPROVAL below.
+                TaskCallStatusDetail.WAITING_RATELIMIT.value,
+                TaskCallStatusDetail.WAITING_RETRY.value,
             }
             pending_details = set(pending)
             if pending_details.isdisjoint(active_states):
@@ -272,6 +342,11 @@ def _resolve_stuck_waiting_runs() -> None:
                             TaskCallStatusDetail.ACTIVE_QUEUED,
                             TaskCallStatusDetail.ACTIVE_RUNNING,
                             TaskCallStatusDetail.HALTED_APPROVAL,
+                            # Parked-but-live (see active_states above): a
+                            # rate-limited or retry-parked call resumes via
+                            # the scheduler — its tree is progressing.
+                            TaskCallStatusDetail.WAITING_RATELIMIT,
+                            TaskCallStatusDetail.WAITING_RETRY,
                         ],
                     ).exclude(
                         related_agent_task_runs__status=TaskRunStatus.WAITING_RESULTTASKS,
@@ -319,6 +394,29 @@ def _resolve_stuck_waiting_runs() -> None:
             print(f"[recovery] error recovering WAITING_RESULTTASKS run {run.pk}: {e}")
 
 
+def _call_shows_live_progress(call: "AgentTaskCall", cutoff) -> bool:
+    """True when an old ACTIVE_RUNNING call still has a live worker.
+
+    A streaming ``call_llm`` worker saves its ACTIVE response ~1/s, so a
+    recently-updated ACTIVE response in the same session means LLM work is
+    progressing and the call must not be touched (a healthy 20 min local
+    generation is old by ``updated_at`` but alive).  Non-LLM tasks never
+    legitimately run past the timeout, so they report no progress.
+    Session (not version) scope avoids false "stalled" verdicts when a call
+    was re-pointed across session versions mid-turn.
+    """
+    from server.models.queries.response import Response, ResponseStatus
+
+    task_name = call.task_definition.name if call.task_definition_id else ""
+    if task_name != "call_llm":
+        return False
+    return Response.objects.filter(
+        session_id=call.session_id,
+        status=ResponseStatus.ACTIVE,
+        updated_at__gte=cutoff,
+    ).exists()
+
+
 def _recover_stuck_calls() -> None:
     """Recover calls/runs whose Celery dispatch message was lost on restart."""
     from datetime import timedelta
@@ -328,6 +426,7 @@ def _recover_stuck_calls() -> None:
     from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
     from runtime.tasks.call_fsm import TaskCallStateMachine
     from runtime.tasks.call_scheduler import CallScheduler
+    from runtime.tasks.run_fsm import TaskRunStateMachine
     from runtime.tasks.run_scheduler import RunScheduler
     from server.tasks.task_dispatcher import celery_delay
 
@@ -383,7 +482,11 @@ def _recover_stuck_calls() -> None:
         except Exception as e:
             print(f"[recovery] error re-dispatching QUEUED run {run.pk}: {e}")
 
-    # 3. ACTIVE_RUNNING calls with no active run → retry or fail.
+    # 3. ACTIVE_RUNNING calls untouched for > timeout → retry or fail.
+    # Two orphan shapes: (a) no ACTIVE run at all (worker died before/after
+    # the run row), and (b) an ACTIVE run whose worker is gone (restart or
+    # crash mid-stream) — the run row stays ACTIVE forever because no worker
+    # will ever transition it, and nothing else touches ACTIVE_RUNNING.
     for call in AgentTaskCall.objects.filter(
         status_detail=TaskCallStatusDetail.ACTIVE_RUNNING,
         updated_at__lt=cutoff,
@@ -403,12 +506,53 @@ def _recover_stuck_calls() -> None:
                     ended_at=timezone.now(),
                     updated_at=timezone.now(),
                 )
-                if call.max_retries > 0 and call.retry_count < call.max_retries:
+                # Ancient calls are failed, never retried: retrying would
+                # replay day-old context (see TURN_DEATH_AGE).
+                if (
+                    not _is_ancient(call.updated_at)
+                    and call.max_retries > 0
+                    and call.retry_count < call.max_retries
+                ):
                     if TaskCallStateMachine.schedule_retry(call.pk, call.retry_delay, call.max_retries):
                         print(f"[recovery] retrying orphaned ACTIVE_RUNNING call {call.pk}")
                         continue
                 if TaskCallStateMachine.fail(call.pk):
                     print(f"[recovery] failed orphaned ACTIVE_RUNNING call {call.pk}")
+            elif not _call_shows_live_progress(call, cutoff):
+                # Workerless ACTIVE run: fail each run through the normal
+                # FAILURE path so the retry budget bounds any re-attempt —
+                # unless the call's context is ancient (see TURN_DEATH_AGE),
+                # in which case retrying would replay dead context: fail the
+                # runs and the call with full propagation instead.
+                ancient = _is_ancient(call.updated_at)
+                failed_pks: list[int] = []
+                for run in AgentTaskRun.objects.filter(
+                    agent_task_call=call,
+                    status=TaskRunStatus.ACTIVE,
+                ):
+                    if not TaskRunStateMachine.fail(run.pk):
+                        continue
+                    failed_pks.append(run.pk)
+                    if ancient:
+                        print(
+                            f"[recovery] failed ancient run {run.pk} "
+                            f"of call {call.pk} — no retry, context dead "
+                            f"since {call.updated_at}"
+                        )
+                    else:
+                        CallScheduler.on_taskrun_ended(run.pk, TaskRunStatus.FAILURE)
+                        print(
+                            f"[recovery] failed workerless ACTIVE run {run.pk} "
+                            f"of call {call.pk} — no progress since {call.updated_at}"
+                        )
+                if ancient and failed_pks and TaskCallStateMachine.fail(call.pk):
+                    CallScheduler._on_taskcall_ended(
+                        call.pk,
+                        failed_pks[-1],
+                        TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+                    )
+                    print(f"[recovery] failed ancient ACTIVE_RUNNING call {call.pk}")
+                    continue
         except Exception as e:
             print(f"[recovery] error recovering ACTIVE_RUNNING call {call.pk}: {e}")
 
@@ -489,6 +633,9 @@ def _recover_stuck_calls() -> None:
                     if _has_dangling_call_refs(child.carguments_json):
                         if _force_end_call(child):
                             print(f"[recovery] cancelled WAITING_QUEUE child {child.pk} — dangling arg reference")
+                        continue
+                    # Session FIFO (see CallScheduler._session_queue_blocked).
+                    if CallScheduler._session_queue_blocked(child):
                         continue
                     CallScheduler.start_new_taskrun(child.pk)
                     continue
@@ -744,6 +891,31 @@ def _recover_stale_queries() -> None:
 
     for query in stale:
         try:
+            # Liveness: a streaming worker saves its ACTIVE response ~1/s, but
+            # the Query row itself only changes on status flips — so a healthy
+            # long generation (e.g. 20 min on a local model) looks "stale" by
+            # Query.updated_at.  Only resume when the response is stale too;
+            # otherwise we would kill a live stream and double-dispatch it.
+            if Response.objects.filter(
+                query=query, status=ResponseStatus.ACTIVE, updated_at__gte=cutoff
+            ).exists():
+                continue
+            if _is_ancient(query.updated_at):
+                # Context-dead: fail it instead of resuming — re-dispatching
+                # would replay a day-old prompt into a fresh LLM call.
+                Response.objects.filter(
+                    query=query, status=ResponseStatus.ACTIVE
+                ).update(status=ResponseStatus.FAILURE)
+                Query.objects.filter(
+                    pk=query.pk, status=QueryStatus.ACTIVE
+                ).update(status=QueryStatus.FAILURE)
+                query.refresh_from_db()
+                publish_model_event(query, "update")
+                print(
+                    f"[recovery] failed ancient query {query.pk} "
+                    f"(ACTIVE since {query.updated_at}) — no re-dispatch"
+                )
+                continue
             print(f"[recovery] resuming stale query {query.pk} (ACTIVE since {query.updated_at})")
 
             # 1. Fail orphaned ACTIVE Responses
@@ -804,11 +976,12 @@ def _recover_stale_queries() -> None:
                 publish_model_event(query, "update")
                 continue
 
+            # NOTE: the query goes in CALL args only — instance args
+            # (``TaskInstance.get_or_create``) only accept TaskInstance refs
+            # and raise ``Type Query unknown`` otherwise.
             ti = TaskInstance.get_or_create(
                 task_definition=call_llm_tdv.latest_task_version,
                 session_version=query.session_version,
-                args=(query,),
-                kwargs={},
             )
             taskcall = AgentTaskCall.create(
                 task_instance=ti,

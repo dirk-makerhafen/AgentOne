@@ -167,19 +167,22 @@ class TaskRunStateMachine:
 
         Tries ``WAITING_RESULTTASKS`` first (all referenced calls just
         finished), then falls back to ``ACTIVE`` (no result references).
+        ``ended_at`` and *extra* apply to whichever path wins (previously
+        the WAITING path silently dropped both).
         """
-        succeeded = TaskRunStateMachine.transition(
-            run_id, TaskRunStatus.WAITING_RESULTTASKS, TaskRunStatus.SUCCESS
-        )
         extras = {"ended_at": timezone.now()}
         if extra:
             extras.update(extra)
+        succeeded = TaskRunStateMachine.transition(
+            run_id, TaskRunStatus.WAITING_RESULTTASKS, TaskRunStatus.SUCCESS,
+            extra=extras,
+        )
         if not succeeded:
             succeeded = TaskRunStateMachine.transition(
                 run_id=run_id,
                 from_status=TaskRunStatus.ACTIVE,
                 to_status=TaskRunStatus.SUCCESS,
-                extra = extras,
+                extra=extras,
             )
         return succeeded
 
@@ -194,15 +197,16 @@ class TaskRunStateMachine:
         Parameters
         ----------
         extra : dict | None
-            Additional field updates to apply atomically with the fallback
-            transition (e.g. ``result_json``).
+            Additional field updates to apply atomically with the transition
+            (e.g. ``result_json``).
         """
-        failed = TaskRunStateMachine.transition(
-            run_id, TaskRunStatus.WAITING_RESULTTASKS, TaskRunStatus.FAILURE
-        )
         extras = {"ended_at": timezone.now()}
         if extra:
             extras.update(extra)
+        failed = TaskRunStateMachine.transition(
+            run_id, TaskRunStatus.WAITING_RESULTTASKS, TaskRunStatus.FAILURE,
+            extra=extras,
+        )
         if not failed:
             failed = TaskRunStateMachine.transition(
                 run_id=run_id,

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import math
 from typing import Any
 
 import tiktoken
@@ -9,6 +8,7 @@ import tiktoken
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
+from server.models.queries.query_message_part import estimate_openai_tokens
 
 
 _ENCODER_CACHE: dict[str, tiktoken.Encoding] = {}
@@ -70,7 +70,7 @@ def estimate_message_tokens(message: Message) -> int:
     if message.role == MessageRole.ASSISTANT and reasoning_parts:
         message_dict["reasoning_content"] = "".join(reasoning_parts)
 
-    return math.ceil(len(json.dumps(message_dict)) / 3.8)
+    return estimate_openai_tokens(message_dict)
 
 
 def _merge_text_parts(parts: list[dict[str, Any]]) -> str | list[dict[str, Any]]:

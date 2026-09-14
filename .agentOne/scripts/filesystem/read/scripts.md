@@ -13,6 +13,10 @@ tools:
     file: read.py
     function: read
     access: read
+  - name: read_image
+    file: image.py
+    function: read_image
+    access: read
   - name: stat
     file: stat.py
     function: stat

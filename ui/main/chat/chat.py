@@ -10,6 +10,7 @@ from ui.main.chat.composer.box import ComposerBox
 from ui.main.chat.cards.approval import ApprovalCard
 from ui.main.chat.cards.clarify import ClarifyCard
 from ui.main.chat.cards.guardrail_approval import GuardrailApprovalCard
+from ui.main.chat.cards.question import QuestionCard
 from ui.main.chat.cards.queue import QueueCard
 from ui.main.chat.cards.rate_limit import RateLimitCard
 from ui.main.chat.messages.messages import Messages
@@ -45,6 +46,8 @@ class Chat(ModelView):
                 {{ pyview.approval_card.render() }}
 
                 {{ pyview.guardrail_card.render() }}
+
+                {{ pyview.question_card.render() }}
 
                 {{ pyview.rate_limit_card.render() }}
                 
@@ -87,6 +90,7 @@ class Chat(ModelView):
         self.queue_card = QueueCard(self.session, self)
         self.approval_card = ApprovalCard(self.session, self)
         self.guardrail_card = GuardrailApprovalCard(self.session, self)
+        self.question_card = QuestionCard(self.session, self)
         self.rate_limit_card = RateLimitCard(self.session, self)
         self.clarify_card = ClarifyCard(self.session, self)
         self.terminal_panel = TerminalPanel(self.session, self)

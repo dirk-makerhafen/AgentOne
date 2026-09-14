@@ -235,13 +235,16 @@ class Workspace(ModelView):
 
                 <div class="ws-sub-head ws-chat-head">
                     <h2 class="ws-sub-title">Chats <span class="ws-sub-count">{{ pyview.chat_count }}</span></h2>
-                    {% if pyview.chat_page_count > 1 %}
-                    <div class="ws-chat-pager">
+                    <div class="ws-chat-actions">
+                        <button class="ws-ov-primary" onclick="pyview.newChat()">＋ New chat</button>
+                        {% if pyview.chat_page_count > 1 %}
+                        <div class="ws-chat-pager">
                         <button class="ws-ov-view-btn" onclick="pyview.setChatPage({{ pyview.chat_page - 1 }})"{% if pyview.chat_page == 0 %} disabled{% endif %} title="Previous page">‹</button>
                         <span class="ws-chat-page-label">{{ pyview.chat_page + 1 }} / {{ pyview.chat_page_count }}</span>
                         <button class="ws-ov-view-btn" onclick="pyview.setChatPage({{ pyview.chat_page + 1 }})"{% if pyview.chat_page + 1 >= pyview.chat_page_count %} disabled{% endif %} title="Next page">›</button>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
 
                 <div class="ws-chat-list">
@@ -463,6 +466,38 @@ class Workspace(ModelView):
         main_view = self._find_main_view()
         if main_view is not None:
             main_view.create_and_open_tab(Chat, session)
+
+    def newChat(self) -> None:
+        """Create a fresh chat session bound to this workspace and open it."""
+        from ui.main.chat.chat import Chat
+
+        try:
+            from server.models.agents.agent import AgentModel
+            from server.models.sessions.session import SessionModel
+
+            agent = AgentModel.objects.filter(
+                parent_skill=None, parent_agent=None, parent_project=None
+            ).first()
+            if agent is None or agent.latest_agent_version is None:
+                return
+            base = f"{self.subject.name or 'workspace'}-{agent.name}"
+            name, i = base, 1
+            while SessionModel.objects.filter(name=name).exists():
+                i += 1
+                name = f"{base}-{i}"
+            session_version = agent.latest_agent_version.get_or_create_session(
+                name=name,
+                display_name=name,
+                workspace=self.subject,
+            )
+            session = session_version.session
+        except Exception:
+            return
+        main_view = self._find_main_view()
+        if main_view is not None:
+            main_view.create_and_open_tab(Chat, session)
+        self._chat_page = 0
+        self.update()
 
     def renameWorkspace(self, pk: int, name: str) -> None:
         name = (name or "").strip()

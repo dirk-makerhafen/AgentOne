@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -14,7 +13,7 @@ from server.models.base_model import BaseModel, Observables
 from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message, MessagePart
-from server.models.queries.query_message_part import QueryMessagePart
+from server.models.queries.query_message_part import QueryMessagePart, estimate_openai_tokens
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_call import AgentTaskCall
 
@@ -112,23 +111,12 @@ class QueryMessage(BaseModel):
 
         if self.role == "tool" and tool_call_objects:
             for tc in tool_call_objects:
-                tool_response_string = self._serialize_result(tc.get_result())
-                l = len(tool_response_string)
-                if l > 30000*4:  # more than ~30k tokens
-                    removed_chars = l - 24000*4
-                    s = tool_response_string[:12000*4]
-                    m = f"\n<RESPONSE SHORTEND BY TOOL RESPONSE BACKEND>{removed_chars} chars omited here to save context tokens.</RESPONSE SHORTEND BY TOOL RESPONSE BACKEND>\n"
-                    e = tool_response_string[-12000*4:]
-                    e1 = f"\n\n{removed_chars} of {l} characters ommited from response to save context tokens"
-                    tool_response_string = f"{s}{m}{e}{e1}" 
-                messages = [
-                    {
-                        "role": "tool",
-                        "tool_call_id": f"tc-{tc.pk}",
-                        "content": tool_response_string,
-                    }
-                ]           
-                message = messages[0] if len(messages) == 1 else messages
+                tool_content = self._build_tool_message_content(tc.get_result())
+                message: dict[str, Any] = {
+                    "role": "tool",
+                    "tool_call_id": f"tc-{tc.pk}",
+                    "content": tool_content,
+                }
 
         elif self.role == "tool":
             merged = self._merge_text_parts(content_parts)
@@ -158,7 +146,7 @@ class QueryMessage(BaseModel):
 
         if not self.tokens:
             """Rough token estimate token counts"""
-            token_count =  math.ceil(len(json.dumps(message)) / 3.8)
+            token_count = estimate_openai_tokens(message)
             if self.tokens != token_count:
                 self.tokens = token_count
                 self.save(update_fields=["tokens"])
@@ -201,6 +189,41 @@ class QueryMessage(BaseModel):
                 return obj.as_posix()
             raise TypeError(f"Cannot serialize {type(obj).__name__}")
         return json.dumps(_walk(data))
+
+    def _build_tool_message_content(self, result: Any) -> str | list[dict[str, Any]]:
+        """Serialise a tool result, inlining any base64 image data URIs.
+
+        Tools such as ``filesystem.read_image`` return a dict carrying an
+        ``image`` key with a ``data:image/...`` URI.  Those are emitted as
+        OpenAI-style ``image_url`` content blocks next to the JSON text so the
+        vision LLM actually sees the image (a raw data URI dumped into the text
+        would render as a useless base64 blob).  The truncated-text protection
+        is applied to the textual part only.
+        """
+        image_urls: list[str] = []
+        display = result
+        if isinstance(result, dict):
+            display = dict(result)
+            for key, value in list(display.items()):
+                if isinstance(value, str) and value.startswith("data:image/"):
+                    image_urls.append(value)
+                    display[key] = "[inline image — see image_url content block]"
+
+        tool_response_string = self._serialize_result(display)
+        if len(tool_response_string) > 30000 * 4:  # more than ~30k tokens
+            removed_chars = len(tool_response_string) - 24000 * 4
+            s = tool_response_string[:12000 * 4]
+            m = f"\n<RESPONSE SHORTEND BY TOOL RESPONSE BACKEND>{removed_chars} chars omited here to save context tokens.</RESPONSE SHORTEND BY TOOL RESPONSE BACKEND>\n"
+            e = tool_response_string[-12000 * 4:]
+            e1 = f"\n\n{removed_chars} of {len(tool_response_string)} characters ommited from response to save context tokens"
+            tool_response_string = f"{s}{m}{e}{e1}"
+
+        if not image_urls:
+            return tool_response_string
+        return [
+            {"type": "text", "text": tool_response_string},
+            *({"type": "image_url", "image_url": {"url": uri}} for uri in image_urls),
+        ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         super().save(*args, **kwargs)

@@ -28,7 +28,7 @@ class ComposerBox(ModelView):
             <span class="voice-mode-label" id="voiceModeLabel"></span>
         </div>
         
-        <textarea id="input_{{pyview.uid}}" onchange="pyview.new_text_input(document.getElementById('input_{{pyview.uid}}').value)" onkeyup="pyview.new_text_input(document.getElementById('input_{{pyview.uid}}').value)" onkeydown="{% if pyview.send_key == 'enter' %}if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();pyview.send(this.value)}{% else %}if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)&&!event.isComposing){event.preventDefault();pyview.send(this.value)}{% endif %}"  class="composer-chat-message" rows="1"  oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Message AgentOne..."></textarea>
+        <textarea id="input_{{pyview.uid}}" onchange="pyview.new_text_input(document.getElementById('input_{{pyview.uid}}').value)" onkeyup="pyview.new_text_input(document.getElementById('input_{{pyview.uid}}').value)" onkeydown="{% if pyview.send_key == 'enter' %}if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();window.sendChatDraft('{{pyview.uid}}')}{% else %}if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)&&!event.isComposing){event.preventDefault();window.sendChatDraft('{{pyview.uid}}')}{% endif %}"  class="composer-chat-message" rows="1"  oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Message AgentOne..."></textarea>
 
         {{ pyview.footer.render() }}
         

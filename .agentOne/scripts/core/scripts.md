@@ -6,7 +6,12 @@ tools:
     file: final_result.py
     function: final_result
     bound: True
-    
+  # Ask the user structured questions (options card); resumes with answers
+  - name: ask_user
+    file: ask_user.py
+    function: ask_user
+    bound: True
+        
 tasks:
   - name: ingest_user_message
     file: ingest_user_message.py

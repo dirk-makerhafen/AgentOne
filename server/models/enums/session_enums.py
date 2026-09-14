@@ -21,7 +21,3 @@ class SessionType(models.TextChoices):
     SUBTASK_FORK = "subtask_fork", "Subtask (fork)"
     SUBTASK_COMPACT = "subtask_compaczt", "Subtask (session compaction)"
 
-'''
-CHAT
-
-'''

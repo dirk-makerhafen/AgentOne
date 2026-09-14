@@ -13,7 +13,11 @@ class UserMessageView(ModelView):
     TEMPLATE_STR = '''
         <div class="msg-body">
             {% for message_part in  pyview.subject.parts.all() %}
-                {{ message_part.content.get()}}
+                {% if message_part.content_type.value == 'IMAGE' %}
+                    <img class="chat-image" src="{{ message_part.content.get() }}" alt="attached image">
+                {% else %}
+                    {{ message_part.content.get()}}
+                {% endif %}
             {% endfor %}   
         </div>
         <div class="msg-foot">

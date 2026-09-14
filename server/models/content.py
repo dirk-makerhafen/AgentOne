@@ -1,6 +1,7 @@
 """Generic content model with deduplication by SHA-256 hash and expiry support."""
 from __future__ import annotations
 
+import base64
 import json
 from datetime import datetime, timedelta
 from hashlib import sha256
@@ -8,6 +9,14 @@ from typing import Any
 
 from django.db import models
 from django_enum import EnumField
+
+
+# Context-budget estimate for a single image part.  Providers bill per image
+# (OpenAI: base 85 tokens + 170 per 512px tile at ``high`` detail), NOT per
+# base64 character — so counting the raw data-URI string like text would
+# massively over-estimate (a 2048px JPEG would look like ~700k tokens).
+# 1500 approximates a 2048px long-edge image at ``auto``/``high`` detail.
+IMAGE_TOKEN_ESTIMATE = 1500
 
 
 class ContentType(models.TextChoices):
@@ -107,6 +116,10 @@ class GenericContent(models.Model):
 
         The content type is guessed from the file extension.
 
+        Image files are read as binary and stored as base64 data URIs so they
+        can flow straight into ``image_url`` content blocks; everything else
+        is read as text.
+
         Parameters
         ----------
         path:
@@ -114,13 +127,28 @@ class GenericContent(models.Model):
         max_age:
             Optional maximum age in days before expiry.
         """
-        with open(path, "r", encoding="utf-8") as fh:
-            content = fh.read()
-        content_type = ContentType.TEXT
-        if path[-3:] in (".py", ".js") or path[-4:] in (".txt", ".css") or path[-5:] in (".html",):
-            content_type = ContentType.TEXT
-        elif path[-4:] in (".jpg", "png") or path[-5:] in (".jpeg", "tiff"):
+        path = str(path)
+        low = path.lower()
+        image_exts = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tiff", ".tif")
+        if low.endswith(image_exts):
+            with open(path, "rb") as fh:
+                raw = fh.read()
+            mime = {
+                ".png": "image/png",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".webp": "image/webp",
+                ".gif": "image/gif",
+                ".bmp": "image/bmp",
+                ".tiff": "image/tiff",
+                ".tif": "image/tiff",
+            }[low[low.rfind("."):]]
+            content = f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}"
             content_type = ContentType.IMAGE
+        else:
+            with open(path, "r", encoding="utf-8") as fh:
+                content = fh.read()
+            content_type = ContentType.TEXT
         h = sha256(content.encode()).hexdigest()
         item = cls.objects.get_or_create(
             sha256=h,

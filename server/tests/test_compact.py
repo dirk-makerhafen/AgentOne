@@ -16,6 +16,7 @@ from server.history_limiter import (
     estimate_message_tokens,
     find_compaction_boundary,
 )
+from server.models.content import IMAGE_TOKEN_ESTIMATE
 
 
 def _runtime(sv):
@@ -173,6 +174,20 @@ class EstimateMessageTokensTest(TestCase):
 
     def test_estimate_returns_zero_for_none(self):
         self.assertEqual(estimate_message_tokens(None), 0)
+
+    def test_estimate_image_is_fixed_not_base64_proportional(self):
+        uri = "data:image/jpeg;base64," + "A" * 2_000_000  # ~500k raw chars
+        msg = Message.objects.create(session=self.sv.session, session_version=self.sv, role=MessageRole.USER)
+        MessagePart.objects.create(
+            message=msg,
+            type=MessagePartType.MESSAGE,
+            content=GenericContent.from_image(uri),
+            content_type=MessageContentType.IMAGE,
+        )
+        # A raw-string estimate would be ~526k tokens; the fixed image estimate
+        # must be far smaller (fixed per-image billing, not per base64 char).
+        self.assertLess(estimate_message_tokens(msg), 5000)
+        self.assertGreater(estimate_message_tokens(msg), IMAGE_TOKEN_ESTIMATE)
 
 
 class FindTurnBoundaryTest(TestCase):

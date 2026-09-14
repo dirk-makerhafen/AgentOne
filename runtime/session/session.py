@@ -720,8 +720,34 @@ class Session:
         if not parts:
             raise Exception("No message or message parts provided")
 
+        self._guard_image_parts_against_non_vision_model(parts)
+
         self.set_is_active(True)
 
+        bound_task, call_kwargs, _ = self._resolve_inbound_task(parts)
+
+        if not force:
+            strategy = self.scheduler_strategy
+            if strategy == "queue":
+                if self._has_active_call():
+                    return self._park_call(bound_task, call_kwargs)
+                return bound_task.delay(**call_kwargs)
+            if strategy == "interrupt":
+                if self._has_active_call():
+                    self.stop_generation()
+                return bound_task.delay(**call_kwargs)
+            if strategy == "merge":
+                if self._has_active_call():
+                    return self.steer_message(parts)
+
+        return bound_task.delay(**call_kwargs)
+
+    def _resolve_inbound_task(self, parts: List[Dict]) -> tuple:
+        """Parse inbound *parts* into ``(bound_task, call_kwargs, is_command)``.
+
+        A leading ``/`` in the first part routes to ``ingest_slash_command``;
+        everything else routes to ``ingest_user_message``.
+        """
         is_command = False
         cmd = ""
         parsed_kwargs: dict = {}
@@ -731,7 +757,7 @@ class Session:
             bound_cmd = self.get_command(cmd)
             if not bound_cmd:
                 bound_cmd = self.get_tool(cmd)
-            if bound_cmd:          
+            if bound_cmd:
                 is_command = True
                 full_cmd_str = "".join([part["content"] for part in parts]).strip() if parts else ""
                 cmd_payload = full_cmd_str[1 + len(cmd):].strip()
@@ -754,27 +780,228 @@ class Session:
         else:
             bound_task = self.get_task("ingest_user_message")
             call_kwargs = dict(parts=parts)
+        return bound_task, call_kwargs, is_command
 
-        if not force:
-            strategy = self.scheduler_strategy
-            if strategy == "queue":
-                with transaction.atomic():
-                    SessionModel.objects.select_for_update().get(pk=self.model.pk)
-                    if self._has_active_call():
-                        ti = bound_task.instance(kwargs=call_kwargs)
-                        taskcall = ti.create_call(kwargs=call_kwargs)
-                        from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-                        from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
-                        _ATC.objects.filter(pk=taskcall.pk).update(
-                            status=TaskCallStatus.WAITING,
-                            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
-                        )
-                        return taskcall
-                    return bound_task.delay(**call_kwargs)
-            if strategy == "interrupt":
-                self._stop_active_ingest_calls()
+    def _park_call(self, bound_task, call_kwargs):
+        """Create the call parked at ``WAITING_QUEUE``.
 
+        The parked call waits while a live turn runs and is released FIFO
+        when the turn ends (drain in ``_on_taskcall_ended`` + tick fallback).
+        """
+        with transaction.atomic():
+            SessionModel.objects.select_for_update().get(pk=self.model.pk)
+            ti = bound_task.instance(kwargs=call_kwargs)
+            taskcall = ti.create_call(kwargs=call_kwargs)
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+            _ATC.objects.filter(pk=taskcall.pk).update(
+                status=TaskCallStatus.WAITING,
+                status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+            )
+            return taskcall
+
+    def queue_message(self, parts: List[Dict] | None = None) -> Any:
+        """Park *parts* to run after the live turn finishes ("Queue message").
+
+        Parks whenever a turn is active, regardless of scheduler strategy;
+        dispatches immediately when idle.
+        """
+        if not parts:
+            raise Exception("No message or message parts provided")
+
+        self._guard_image_parts_against_non_vision_model(parts)
+
+        self.set_is_active(True)
+
+        bound_task, call_kwargs, _ = self._resolve_inbound_task(parts)
+        if self._has_active_call():
+            return self._park_call(bound_task, call_kwargs)
         return bound_task.delay(**call_kwargs)
+
+    def steer_message(self, parts: List[Dict] | None = None) -> Any:
+        """Insert *parts* into the running turn ("Steer current response").
+
+        Persists the user message immediately so the next ``process_turn``
+        of the live chain picks it up via history.  Slash commands bypass
+        steering and dispatch immediately (their chain builds no LLM query).
+        When the turn ended in the meantime, a fresh ``process_turn`` is
+        dispatched for the message instead of leaving it unprocessed.
+        """
+        if not parts:
+            raise Exception("No message or message parts provided")
+
+        self._guard_image_parts_against_non_vision_model(parts)
+
+        self.set_is_active(True)
+
+        bound_task, call_kwargs, is_command = self._resolve_inbound_task(parts)
+        if is_command:
+            return bound_task.delay(**call_kwargs)
+
+        process_turn = self.get_task("process_turn")
+        if process_turn is None:
+            return bound_task.delay(**call_kwargs)
+
+        from server.models.enums.message_enums import MessageRole as _MsgRole
+        from server.models.message import Message as _Msg
+        from runtime.events import publish_model_event
+
+        session_version = self.get_version_model()
+        prev_message = self.get_last_message()
+        message = _Msg.objects.create(
+            role=_MsgRole.USER,
+            session=session_version.session,
+            session_version=session_version,
+            prev_message=prev_message,
+        )
+        for part in parts:
+            message.add_part(
+                type=part["type"],
+                content_type=part["content_type"],
+                content=part["content"],
+                template_data=part.get("template_data", None),
+                tool_call=part.get("tool_call", None),
+            )
+        publish_model_event(message, "create")
+
+        if not self._has_active_call():
+            # Turn ended between the check and the insert — start a fresh
+            # turn for the message instead of leaving it unprocessed.
+            return self._dispatch_steer_continuation(process_turn, message)
+        return message
+
+    def _dispatch_steer_continuation(self, process_turn, message) -> Any:
+        """Dispatch exactly one continuation turn for a steered message.
+
+        The idle check above can lose a race with a concurrently starting
+        turn (e.g. the tick releasing a parked message in the same moment).
+        Two live turns would collide on the session's single ``Query`` —
+        so when a sibling turn call exists right after our dispatch and
+        ours hasn't started yet, ours is re-parked at ``WAITING_QUEUE``
+        instead of running in parallel: the tick/session drain releases it
+        FIFO once the sibling ends. Sequential, nothing lost (our trigger
+        message is intact), never parallel.
+
+        A sibling on the same task instance usually never gets this far:
+        ``start_new_taskrun`` already holds the second call at
+        ``WAITING_QUEUE`` (``limit_per_instance_parallel_runs=1``) — the
+        re-park below then just re-asserts that state.
+        """
+        from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+        from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+
+        new_call = process_turn.delay(message=message)
+        sibling_live = (
+            _ATC.objects.filter(
+                session=self.model,
+                task_definition__name__in=[
+                    "ingest_user_message",
+                    "ingest_slash_command",
+                    "process_turn",
+                    "compact_turn",
+                ],
+            )
+            .exclude(status=TaskCallStatus.ENDED)
+            .exclude(pk=new_call.pk)
+            .exclude(status_detail=TaskCallStatusDetail.WAITING_QUEUE)
+            .exists()
+        )
+        if not sibling_live:
+            return new_call
+        # Sibling turn is really running (not just parked) — park ours
+        # behind it. Only valid while ours hasn't started; an already
+        # running call is left alone (never observed in practice — a
+        # worker cannot pick the run up within this window).
+        _ATC.objects.filter(
+            pk=new_call.pk,
+            status_detail__in=[
+                TaskCallStatusDetail.NEW,
+                TaskCallStatusDetail.WAITING_DEPENDENCY,
+                TaskCallStatusDetail.WAITING_QUEUE,
+            ],
+        ).update(
+            status=TaskCallStatus.WAITING,
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+        )
+        return new_call
+
+    def is_busy(self) -> bool:
+        """Return True while a turn is running or pending for this session."""
+        return self._has_active_call()
+
+    def stop_generation(self) -> int:
+        """Cancel the currently running/pending turn, if any ("Stop generation").
+
+        Cancels the whole root trees (ingest + ``process_turn`` children, so
+        in-flight LLM streaming cannot continue the turn) and fails open
+        queries so query cards refresh.  Parked queue entries are pending
+        turn calls too, so they are cancelled as well (full stop — use the
+        queue card to drop individual messages).  Safe no-op when idle.
+        Returns the number of active calls stopped.
+        """
+        from server.models.enums.task_enums import TaskCallStatus
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        active = list(
+            AgentTaskCall.objects.filter(
+                session=self.model,
+                task_definition__name__in=[
+                    "ingest_user_message",
+                    "ingest_slash_command",
+                    "process_turn",
+                    "compact_turn",
+                ],
+            ).exclude(status=TaskCallStatus.ENDED).values_list("pk", "session_root_task_id")
+        )
+        roots = {root_id or pk for pk, root_id in active}
+        for root_id in roots:
+            CallScheduler.cancel_root_tasktree(root_id)
+
+        from server.models.queries.query import Query, QueryStatus
+        from runtime.events import publish_model_event
+
+        for query in Query.objects.filter(
+            session=self.model,
+            status__in=[QueryStatus.WAITING, QueryStatus.ACTIVE],
+        ):
+            Query.objects.filter(pk=query.pk).update(status=QueryStatus.FAILURE)
+            try:
+                publish_model_event(Query.objects.get(pk=query.pk), "update")
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+        return len(active)
+
+    def _guard_image_parts_against_non_vision_model(self, parts: list[Dict]) -> None:
+        """Block image parts when the selected model cannot see images.
+
+        Providers bill image input against vision models only; sending an
+        ``image_url`` block to a text-only model either errors or silently
+        drops the image.  Raise a clear error naming a few vision-capable
+        models so the user can switch instead of losing the image silently.
+        """
+        if not any(part.get("content_type", "").upper() == "IMAGE" for part in parts):
+            return
+
+        aimodel = self.aimodel
+        if aimodel is not None and aimodel.vision:
+            return
+
+        model_label = "None"
+        if aimodel is not None:
+            model_label = f"{aimodel.name} ({aimodel.provider_model_id})"
+
+        vision_models = list(
+            AiModel.objects.filter(enabled=True, vision=True)
+            .exclude(api_provider__enabled=False)
+            .values_list("name", flat=True)
+            .order_by("name")[:6]
+        )
+        suggestions = ", ".join(vision_models) if vision_models else "(no vision models enabled)"
+        raise TypeError(
+            f"Cannot attach images: the selected model {model_label} is not vision-capable. "
+            f"Switch to a vision-capable model in the composer (e.g. {suggestions}) to send images."
+        )
 
     def set_is_active(self, new_value: bool) -> None:
         """Mark the session active and stamp the last-activity timestamp.
@@ -811,35 +1038,6 @@ class Session:
                 "compact_turn",
             ],
         ).exclude(status=TaskCallStatus.ENDED).exists()
-
-    def _stop_active_ingest_calls(self) -> None:
-        """Force-stop all active ingest calls for this session."""
-        from server.models.tasks.agent_task_call import AgentTaskCall
-        from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
-        from runtime.tasks.call_fsm import TaskCallStateMachine
-        from django.utils import timezone
-
-        active = AgentTaskCall.objects.filter(
-            session=self.model,
-            task_definition__name__in=["ingest_user_message", "ingest_slash_command"],
-        ).exclude(status=TaskCallStatus.ENDED)
-
-        stoppable = {
-            TaskCallStatusDetail.WAITING_DEPENDENCY,
-            TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
-            TaskCallStatusDetail.WAITING_RATELIMIT,
-        }
-
-        for call in active:
-            detail = call.status_detail
-            if detail in stoppable:
-                TaskCallStateMachine.stop(call.pk, detail)
-            else:
-                AgentTaskCall.objects.filter(pk=call.pk).update(
-                    status=TaskCallStatus.ENDED,
-                    status_detail=TaskCallStatusDetail.ENDED_STOPPED,
-                    ended_at=timezone.now(),
-                )
 
     def get_messages(self) -> Any:
         """Return all messages for this session."""

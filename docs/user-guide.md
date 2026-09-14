@@ -94,6 +94,22 @@ If the agent is busy processing, a **Queue Card** shows the pending messages. Yo
 
 When the AI needs clarification, a **Clarify Card** presents choices. Select an option to continue.
 
+### User questions (`ask_user`)
+
+When the agent hits a decision only you can make, it calls the `ask_user`
+tool and a **question card** slides up over the composer showing 1-4
+questions, each with clickable options, checkboxes for multi-select
+questions, and a free-text "Other" field:
+
+- **Click an option** (or Submit checked boxes / Send free text) — your
+  answer is recorded; once every question is answered the agent resumes
+  automatically with your answers.
+- **Decline** — skip answering; the agent proceeds with its best judgment.
+  You can leave a note explaining why.
+
+The agent asks sparingly — only for genuine forks (ambiguous requirements,
+architecture trade-offs), never for routine confirmations or secrets.
+
 ### Session management
 
 In the chat sidebar, each conversation has a context menu (three dots icon) with actions:

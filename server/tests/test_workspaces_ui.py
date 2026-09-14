@@ -203,6 +203,7 @@ class TestWorkspaceTemplates:
         assert "Main chat" in html and "Helper" in html
         assert "Subsession" in html and "5 turn(s)" in html
         assert "pyview.openChat(11)" in html
+        assert "pyview.newChat()" in html
         # Inactive chat gets the idle dot; active one does not.
         assert "ws-ov-dot--idle" in html
         # Empty state stays in the DOM but hidden when chats exist.
@@ -518,6 +519,52 @@ class TestWorkspaceDetailActions(TestCase):
         view.deleteWorkspace(self.ws.pk)
         assert not WorkspaceModel.objects.filter(pk=self.ws.pk).exists()
         main.close_tab.assert_called_once_with(view)
+
+    def test_new_chat_creates_workspace_bound_session_and_opens_tab(self):
+        from server.models.agents.agent import AgentModel
+        from server.models.agents.agent_version import AgentVersionModel
+        from server.models.sessions.session import SessionModel
+        from ui.main.chat.chat import Chat
+
+        agent = AgentModel.objects.create(name="chatbot")
+        av = AgentVersionModel.objects.create(agent=agent, version_number=1)
+        AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=av)
+
+        view, main = self._detail()
+        main.create_and_open_tab = MagicMock()
+        view.newChat()
+
+        session = SessionModel.objects.get(name="Demo-chatbot")
+        assert session.latest_session_version.workspace_id == self.ws.pk
+        args, _ = main.create_and_open_tab.call_args
+        assert args[0] is Chat and args[1].pk == session.pk
+
+    def test_new_chat_second_click_gets_fresh_name(self):
+        from server.models.agents.agent import AgentModel
+        from server.models.agents.agent_version import AgentVersionModel
+        from server.models.sessions.session import SessionModel
+
+        agent = AgentModel.objects.create(name="chatbot")
+        av = AgentVersionModel.objects.create(agent=agent, version_number=1)
+        AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=av)
+
+        view, main = self._detail()
+        main.create_and_open_tab = MagicMock()
+        view.newChat()
+        view.newChat()
+
+        names = sorted(
+            SessionModel.objects.filter(name__startswith="Demo-chatbot").values_list(
+                "name", flat=True
+            )
+        )
+        assert names == ["Demo-chatbot", "Demo-chatbot-2"]
+
+    def test_new_chat_without_agent_is_noop(self):
+        view, main = self._detail()
+        main.create_and_open_tab = MagicMock()
+        view.newChat()
+        main.create_and_open_tab.assert_not_called()
 
     def test_save_edit_persists_all_fields(self):
         view, _ = self._detail()

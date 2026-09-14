@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
+from django.utils import timezone
+
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
 from runtime.tasks.call_fsm import TaskCallStateMachine
@@ -121,6 +123,7 @@ class CallScheduler:
         CallScheduler._guardrail_shell_check(task_call_id)
         CallScheduler._guardrail_python_check(task_call_id)
         CallScheduler._guardrail_filesystem_check(task_call_id)
+        CallScheduler._question_gate_check(task_call_id)
 
         if TaskCallStateMachine.request_approval(task_call_id):
             print(" # WAIT FOR APPROVAL")
@@ -272,6 +275,122 @@ class CallScheduler:
                 guardrail_reason="Filesystem access policy: " + "; ".join(ask_reasons),
             )
             print(f"  # FILESYSTEM GUARDRAIL: {'; '.join(ask_reasons)}")
+
+    # ------------------------------------------------------------------
+    # User questions (ask_user tool)
+    #
+    # An ``ask_user`` tool call never executes straight away: the gate below
+    # validates the questions and parks the call at ``HALTED_APPROVAL`` so the
+    # question card can collect the user's answers.  Answering (via
+    # :meth:`answer_question_call`) merges the answers into the call arguments
+    # and approves the call, at which point the tool runs and returns the
+    # answers to the LLM.  Denying reuses the approval-denial feedback
+    # (``deny_taskcall`` → ``catch_approval_denied``), i.e. "proceed with best
+    # judgment".  Malformed questions are NOT halted — the tool runs
+    # immediately and returns the validation error so the LLM can fix it.
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _question_gate_check(task_call_id: int) -> None:
+        """Park valid ``ask_user`` calls so the user can answer them."""
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.user_questions import (
+            ASK_USER_TOOL_NAME,
+            normalize_questions,
+            validate_questions,
+        )
+
+        try:
+            tc = AgentTaskCall.objects.get(pk=task_call_id)
+        except AgentTaskCall.DoesNotExist:
+            return
+
+        task_name = getattr(tc.task_definition, "name", "") if tc.task_definition else ""
+        if task_name != ASK_USER_TOOL_NAME:
+            return
+        if tc.requires_approval:
+            return
+
+        ok, reason = validate_questions((tc.carguments_json or {}).get("questions"))
+        if not ok:
+            print(f"  # ASK_USER: invalid questions, letting tool report: {reason[:80]}")
+            return
+
+        args = dict(tc.carguments_json or {})
+        # Never trust LLM-supplied answers — the user answers via the card.
+        args.pop("answers", None)
+        count = len(normalize_questions(args.get("questions")))
+        AgentTaskCall.objects.filter(pk=tc.pk).update(
+            carguments_json=args,
+            requires_approval=True,
+            guardrail_reason="Awaiting your answers to "
+            f"{count} question{'s' if count != 1 else ''}.",
+        )
+        print(f"  # ASK_USER: halted call #{task_call_id} for user answers")
+
+    @staticmethod
+    def answer_question_call(
+        task_call_id: int, answers: dict | None
+    ) -> tuple[bool, str]:
+        """Record user answers for a halted ``ask_user`` call.
+
+        Merges *answers* (``{question: label | [labels]}``) into any answers
+        recorded so far.  When every question is answered the call is
+        approved and a new task run starts, so the tool result carries the
+        answers back to the LLM.
+
+        Returns:
+            ``(True, "answered")`` when complete and approved,
+            ``(True, "recorded")`` when partially answered (still halted),
+            ``(False, reason)`` when the call cannot accept answers.
+        """
+        from server.models.enums.task_enums import TaskCallStatusDetail
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.events import publish_model_event
+        from runtime.user_questions import (
+            ASK_USER_TOOL_NAME,
+            all_answered,
+            normalize_questions,
+            validate_answers,
+            validate_questions,
+        )
+
+        call = AgentTaskCall.objects.filter(pk=task_call_id).first()
+        if call is None:
+            return False, "Unknown question call."
+        if call.status_detail != TaskCallStatusDetail.HALTED_APPROVAL:
+            return False, "This question is no longer awaiting answers."
+        task_name = call.task_definition.name if call.task_definition else ""
+        if task_name != ASK_USER_TOOL_NAME:
+            return False, "This call is not a user question."
+
+        args = dict(call.carguments_json or {})
+        questions = normalize_questions(args.get("questions"))
+        ok, reason = validate_questions(args.get("questions"))
+        if not ok:
+            return False, f"Invalid questions: {reason}"
+
+        merged = dict(args.get("answers") or {})
+        if isinstance(answers, dict):
+            merged.update(answers)
+        ok, reason, normalized = validate_answers(questions, merged)
+        if not ok:
+            return False, reason
+        merged.update(normalized)
+
+        args["answers"] = merged
+        AgentTaskCall.objects.filter(pk=call.pk).update(carguments_json=args)
+        try:
+            publish_model_event(
+                AgentTaskCall.objects.get(pk=call.pk), "update"
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+        if all_answered(questions, merged):
+            CallScheduler.approve_taskcall(call.pk)
+            return True, "answered"
+        return True, "recorded"
 
     # ------------------------------------------------------------------
     # Automated approval review (approval_decider agent)
@@ -1186,7 +1305,11 @@ class CallScheduler:
 
     @staticmethod
     def _release_next_queued_call(session) -> None:
-        """Dispatch the oldest WAITING_QUEUE call for *session*, if any."""
+        """Dispatch the oldest WAITING_QUEUE call for *session*, if any.
+
+        Honors the session FIFO gate: a parked ingest still waits when a
+        live turn or an older parked message is ahead of it.
+        """
         from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
         from server.models.enums.task_enums import TaskCallStatusDetail
 
@@ -1194,5 +1317,60 @@ class CallScheduler:
             session=session,
             status_detail=TaskCallStatusDetail.WAITING_QUEUE,
         ).order_by("created_at").first()
-        if next_call:
+        if next_call and not CallScheduler._session_queue_blocked(next_call):
             CallScheduler.start_new_taskrun(next_call.pk)
+
+    # Calls parked by the session "queue" strategy (or piled up while a turn
+    # runs) must start strictly FIFO: one live turn per session.  Releasing
+    # every parked ingest at once lets the turns collide on the single
+    # per-session-version Query (``build_llm_context`` refuses a second
+    # WAITING/ACTIVE query and the losing turn dies).  Non-ingest
+    # WAITING_QUEUE calls (parallel-limit overflow, retries) are unaffected —
+    # only ingest-family ordering is gated here.
+    INGEST_TURN_TASK_NAMES = (
+        "ingest_user_message",
+        "ingest_slash_command",
+        "process_turn",
+        "compact_turn",
+    )
+
+    @staticmethod
+    def _session_queue_blocked(call: AgentTaskCall) -> bool:
+        """True when a parked ingest-family call must keep waiting.
+
+        Blocked when the session has (a) any other live turn call
+        (non-ended ingest-family call that is not itself parked), or (b) an
+        older parked ingest-family call (a previous message still waiting for
+        its turn — FIFO).  The session drain in ``_on_taskcall_ended``
+        releases the head of the line when a turn ends; the tick only retries
+        admission for the head.
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+        from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+
+        task_name = call.task_definition.name if call.task_definition_id else ""
+        if task_name not in CallScheduler.INGEST_TURN_TASK_NAMES:
+            return False
+        others = (
+            _ATC.objects.filter(
+                session_id=call.session_id,
+                task_definition__name__in=CallScheduler.INGEST_TURN_TASK_NAMES,
+            )
+            .exclude(status=TaskCallStatus.ENDED)
+            .exclude(pk=call.pk)
+        )
+        if others.exclude(
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE
+        ).exists():
+            return True
+        return (
+            others.filter(
+                status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+                created_at__lt=call.created_at,
+            ).exists()
+            or others.filter(
+                status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+                created_at=call.created_at,
+                pk__lt=call.pk,
+            ).exists()
+        )

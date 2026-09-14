@@ -188,7 +188,7 @@ def todolist_action_response(_session: Session, store_function_response: dict[st
     }
 
 
-def todo_append(_session: Session, text: str, depends_on: Optional[Union[int, List[int]]] = None, **kwargs) -> tuple[bool, dict[str, Any]]:
+def todo_append(_session: Session, text: str, depends_on: Optional[Union[int, List[int]]] = None) -> tuple[bool, dict[str, Any]]:
     """Add one todo item to the session list.
 
     Break a larger request into trackable steps with this: append one item
@@ -279,7 +279,7 @@ def todo_delete(
     )
 
 
-def todo_clear(_session: Session,  **kwargs) -> tuple[bool, dict[str, Any]]:
+def todo_clear(_session: Session) -> tuple[bool, dict[str, Any]]:
     """Delete every todo item in the session.
 
     This wipes the whole list at once and cannot be undone. Only use it
