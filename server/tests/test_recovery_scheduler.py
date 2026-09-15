@@ -256,6 +256,128 @@ class RatelimitParkedTurnTest(RecoveryFixture):
         )
 
 
+class CompactionForkRecoveryTest(RecoveryFixture):
+    """A >30s compaction fork must never be force-failed as a deadlock.
+
+    ``build_llm_compact_context`` returns the CHILD summarizer session's
+    ``ingest_user_message`` call as its run result, so while the summarizer's
+    ``call_llm`` is generating the parent chain looks quiet to the deadlock
+    detector:
+
+    * ``compact_turn`` run is WAITING_RESULTTASKS on its ``ingest_compaction``
+      CHAIN step (WAITING_DEPENDENCY — no run yet, so the old walk stopped there
+      and never reached the cross-session reference),
+    * the ``build_llm_compact_context`` step is WAITING_RESULTTASKS on the child
+      session's call (cross-session, invisible to the parent tree).
+
+    The old walk ended without the child session's ACTIVE ``call_llm`` in
+    ``root_task_ids``, so anything slower than the 30s grace got force-failed —
+    killing the turn before the summarizer finished ("session never continues
+    after a compaction").  The walk must descend through a ref's argument
+    references to see the child tree.
+    """
+
+    def _child_session(self, name="compaction-fork"):
+        sess = SessionModel.objects.create(name=name)
+        sv = SessionVersionModel.objects.create(
+            session=sess, agent=self.agent, pinned_agent_version=self.av
+        )
+        SessionModel.objects.filter(pk=sess.pk).update(latest_session_version=sv)
+        return sess, sv
+
+    def test_spares_turn_while_summarizing_cross_session(self):
+        from server.tasks.recovery_scheduler import _resolve_stuck_waiting_runs
+
+        root = self._call(
+            TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
+            status=TaskCallStatus.WAITING,
+            age_min=1,
+        )
+        AgentTaskCall.objects.filter(pk=root.pk).update(session_root_task=root)
+        root.refresh_from_db()
+
+        # compact_turn CHAIN run waiting on its ingest_compaction step.
+        chain_call = self._call(
+            TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
+            status=TaskCallStatus.WAITING,
+            age_min=60,
+        )
+        AgentTaskCall.objects.filter(pk=chain_call.pk).update(
+            session_root_task=root
+        )
+        chain_run = self._run(
+            chain_call, status=TaskRunStatus.WAITING_RESULTTASKS, age_min=60
+        )
+
+        # ingest_compaction CHAIN step — WAITING_DEPENDENCY on its build arg.
+        ingest = self._call(
+            TaskCallStatusDetail.WAITING_DEPENDENCY,
+            status=TaskCallStatus.WAITING,
+            age_min=60,
+        )
+        AgentTaskCall.objects.filter(pk=ingest.pk).update(session_root_task=root)
+        chain_run.taskrun_result_references.add(ingest)
+
+        # build_llm_compact_context step — WAITING cross-session on the child.
+        build = self._call(
+            TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
+            status=TaskCallStatus.WAITING,
+            age_min=60,
+        )
+        AgentTaskCall.objects.filter(pk=build.pk).update(session_root_task=root)
+        ingest.taskcall_arg_references.add(build)
+        build_run = self._run(
+            build, status=TaskRunStatus.WAITING_RESULTTASKS, age_min=60
+        )
+
+        # The child summarizer session is genuinely working — its root call and
+        # call_llm are ACTIVE_RUNNING past the grace period.
+        child_sess, child_sv = self._child_session()
+        kw_defaults = dict(
+            task_instance=self.ti,
+            task_definition=self.tdv.task_definition,
+            task_definition_version=self.tdv,
+            requires_approval=False,
+            max_subtask_errors=0,
+            max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=0,
+            max_retries=0,
+            retry_delay=0,
+            retry_requires_approval=False,
+        )
+        child_root = AgentTaskCall.objects.create(
+            session=child_sess,
+            session_version=child_sv,
+            status=TaskCallStatus.ACTIVE,
+            status_detail=TaskCallStatusDetail.ACTIVE_RUNNING,
+            **kw_defaults,
+        )
+        AgentTaskCall.objects.filter(pk=child_root.pk).update(
+            session_root_task=child_root, updated_at=_old(60)
+        )
+        child_root.refresh_from_db()
+        child_ingest = AgentTaskCall.objects.create(
+            session=child_sess,
+            session_version=child_sv,
+            status=TaskCallStatus.ACTIVE,
+            status_detail=TaskCallStatusDetail.ACTIVE_RUNNING,
+            **kw_defaults,
+        )
+        AgentTaskCall.objects.filter(pk=child_ingest.pk).update(
+            session_root_task=child_root, updated_at=_old(60)
+        )
+        child_ingest.refresh_from_db()
+        build_run.taskrun_result_references.add(child_ingest)
+
+        _resolve_stuck_waiting_runs()
+
+        chain_run.refresh_from_db()
+        build_run.refresh_from_db()
+        self.assertEqual(chain_run.status, TaskRunStatus.WAITING_RESULTTASKS)
+        self.assertEqual(build_run.status, TaskRunStatus.WAITING_RESULTTASKS)
+
+
 class SessionFifoTest(RecoveryFixture):
     """Parked ingests must start strictly FIFO — one live turn per session.
 

@@ -25,11 +25,11 @@ from server.models.sessions.session_version import SessionVersionModel
 from server.models.settings import SettingsModel
 
 _INGEST_PATH = (
-    Path(__file).resolve().parent.parent.parent
+    Path(__file__).resolve().parent.parent.parent
     / ".agentone" / "scripts" / "compact" / "ingest_compaction.py"
 )
 _DECIDE_PATH = (
-    Path(__file).resolve().parent.parent.parent
+    Path(__file__).resolve().parent.parent.parent
     / ".agentone" / "scripts" / "core" / "decide_next_step.py"
 )
 

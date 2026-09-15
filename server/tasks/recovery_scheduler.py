@@ -284,6 +284,23 @@ def _resolve_stuck_waiting_runs() -> None:
                 # chain, so a genuinely-executing leaf anywhere in the graph
                 # (e.g. the subagent's active ``call_llm``) protects the whole
                 # chain.
+                #
+                # A WRINKLE: the walk above only descends through a call that
+                # already HAS a WAITING_RESULTTASKS run.  A CHAIN step that is
+                # parked at WAITING_DEPENDENCY (its argument calls still
+                # running) has no run yet, so the walk stops there — even when
+                # one of its arguments is itself waiting cross-session on a
+                # live child.  This happens in the compaction fork: the
+                # ``ingest_compaction`` CHAIN step waits on ``build_llm_compact_context``,
+                # whose WAITING_RESULTTASKS run references the CHILD
+                # summarizer session's ``ingest_user_message`` call; while the
+                # summarizer's ``call_llm`` generates for >30s the parent tree
+                # looks quiet and the whole turn gets force-failed (the "turn
+                # never resumes after compaction" bug).  So for refs without a
+                # waiting run, descend through their non-ended argument
+                # references too — a live leaf anywhere in the subtree
+                # (e.g. the compaction summarizer's active ``call_llm``) still
+                # protects the whole chain.
                 root_task_ids: set[int] = set()
                 if call and call.session_root_task_id:
                     root_task_ids.add(call.session_root_task_id)
@@ -307,6 +324,22 @@ def _resolve_stuck_waiting_runs() -> None:
                         if waiting_run and waiting_run.pk not in seen_runs:
                             seen_runs.add(waiting_run.pk)
                             frontier.append(waiting_run)
+                            continue
+                        # No waiting run yet — descend through this call's
+                        # non-ended argument references (CHAIN step still
+                        # waiting for its predecessor to finish).
+                        for sub in ref.taskcall_arg_references.exclude(
+                            status=TaskCallStatus.ENDED,
+                        ):
+                            if sub.session_root_task_id:
+                                root_task_ids.add(sub.session_root_task_id)
+                            sub_run = AgentTaskRun.objects.filter(
+                                agent_task_call=sub,
+                                status=TaskRunStatus.WAITING_RESULTTASKS,
+                            ).order_by("-pk").first()
+                            if sub_run and sub_run.pk not in seen_runs:
+                                seen_runs.add(sub_run.pk)
+                                frontier.append(sub_run)
 
                 if root_task_ids:
                     # A call counts as *progressing* when it is on a
