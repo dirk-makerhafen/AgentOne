@@ -125,7 +125,7 @@ def find_compaction_boundary(session: Session, last_message: Message | None) -> 
     entries: list[Message] = []
     current = last_message
     while current is not None and (walk_limit is None or len(entries) < walk_limit):
-        if not current.hide_from_context:
+        if not current.hide_from_context and current.role != MessageRole.INFO:
             entries.append(current)
             if current.parts.filter(type=MessagePartType.COMPACTION).exists():
                 break

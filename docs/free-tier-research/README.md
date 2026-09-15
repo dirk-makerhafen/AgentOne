@@ -20,7 +20,9 @@ Each model card captures the model facts once (developer, context, capabilities)
 
 ## Research
 
-The three sources are **discovery sources, not authoritative sources**. Do not blindly copy them.
+The sources are **discovery sources, not authoritative sources**. Do not blindly copy them.
+When updating existing research, focus in exploration first to find new  models and providers. 
+New and very good models are often only available for free for a limited time, so we want to catch them early. 
 
 For every provider:
 

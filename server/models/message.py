@@ -93,6 +93,11 @@ class Message(BaseModel):
     def save(self, *args: Any, **kwargs: Any) -> Any:
         """Ensure ``pin_to_context`` and ``hide_from_context`` are not both
         ``True`` (pin wins)."""
+        if self.role == MessageRole.INFO:
+            # INFO messages are UI-only (e.g. "compaction started"): never
+            # sent to the LLM, but still rendered in the chat chain.
+            self.hide_from_context = True
+            self.pin_to_context = False
         if self.hide_from_context is True and self.pin_to_context is True:
             self.pin_to_context = False
         return super().save(*args, **kwargs)

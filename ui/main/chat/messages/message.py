@@ -8,6 +8,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 from ui.main.chat.messages.assistant_message import AssistantMessageView
+from ui.main.chat.messages.info_message import InfoMessageView
 from ui.main.chat.messages.query import QueryView
 from ui.main.chat.messages.user_message import UserMessageView
 
@@ -21,6 +22,8 @@ class MessageView(ModelView):
         if isinstance(subject, Message):
             if subject.role == MessageRole.ASSISTANT:
                 self.view = AssistantMessageView(subject, self)
+            elif subject.role == MessageRole.INFO:
+                self.view = InfoMessageView(subject, self)
             else:
                 self.view = UserMessageView(subject=subject, parent=self)
             self.role = self.subject.role

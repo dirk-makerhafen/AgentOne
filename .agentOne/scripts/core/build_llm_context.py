@@ -96,7 +96,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         messages: list[Message] = []
         current = message
         while current and len(messages) < _session.max_history_messages + 1:
-            if not current.hide_from_context:
+            if not current.hide_from_context and current.role != MessageRole.INFO:
                 messages.append(current)
                 if current.parts.filter(type=MessagePartType.COMPACTION).exists():
                     break

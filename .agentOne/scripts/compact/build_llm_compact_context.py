@@ -43,6 +43,28 @@ def build_llm_compact_context(
     if not boundary:
         return dict(response=response, parts=parts, message=message, **kwargs)
 
+    
+    
+    parent_sv = _session.get_version_model()
+    info_message = Message.objects.create(
+        role=MessageRole.INFO,
+        session=parent_sv.session,
+        session_version=parent_sv,
+        prev_message=_session.get_last_message(),
+    )
+    extra = f" Attempt {compact_attempt+1}" if compact_attempt else ""
+    info_message.add_part(
+        type=MessagePartType.MESSAGE,
+        content_type=MessageContentType.TEXT,
+        content="Compaction started — summarizing older messages to save context." + extra ,
+    )
+    try:
+        from runtime.events import publish_model_event
+
+        publish_model_event(info_message, "create")
+    except Exception:
+        pass
+
     agent_version = _session.agent.get_version_model()
     if not agent_version:
         return {"error": "Current agent version not found"}

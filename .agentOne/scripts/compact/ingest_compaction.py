@@ -174,6 +174,24 @@ def ingest_compaction(
     summary_text = _extract_summary_text(result)
 
     if not summary_text.strip():
+        parent_sv = _session.get_version_model()
+        info_message = Message.objects.create(
+            role=MessageRole.INFO,
+            session=parent_sv.session,
+            session_version=parent_sv,
+            prev_message=_session.get_last_message(),
+        )
+        info_message.add_part(
+            type=MessagePartType.MESSAGE,
+            content_type=MessageContentType.TEXT,
+            content=f"Compaction failed, {compact_attempt+1} of {MAX_COMPACT_ATTEMPTS} attempts",
+        )
+        try:
+            from runtime.events import publish_model_event
+    
+            publish_model_event(info_message, "create")
+        except Exception:
+            pass
         # Never insert an empty marker: it would hide the compacted range
         # behind no summary (silent context loss).  The usual cause is a
         # fork that never produced final_result — e.g. killed by the

@@ -83,6 +83,8 @@ class QueryMessage(BaseModel):
 
     def to_openai_message(self, requires_reasoning_echo: bool = False, fail_on_error: bool = True) -> dict[str, Any] | list[dict[str, Any]]:
         """Convert this query message to the OpenAI message format."""
+        if self.role == MessageRole.INFO:
+            raise ValueError("INFO messages are UI-only and must never reach the LLM context")
         cache_key = f"{self.pk}{requires_reasoning_echo}"
         if item := cache.get(cache_key):
             return item

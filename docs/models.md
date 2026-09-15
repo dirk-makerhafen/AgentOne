@@ -641,7 +641,7 @@ File: `server/models/debug_log_entry.py`
 
 ### MessageRole
 
-`USER`, `ASSISTANT`, `SYSTEM`, `TOOL`
+`USER`, `ASSISTANT`, `SYSTEM`, `TOOL`, `DEVELOPER`, `INFO` (`INFO` = UI-only, never sent to the LLM)
 
 ### MessageContentType
 

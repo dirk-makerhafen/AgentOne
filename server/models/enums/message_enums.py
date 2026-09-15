@@ -11,6 +11,7 @@ class MessageRole(models.TextChoices):
     SYSTEM = "system"
     TOOL = "tool"
     DEVELOPER = "developer"
+    INFO = "info"
 
 
 class MessageSource(models.TextChoices):
