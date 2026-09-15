@@ -72,7 +72,13 @@ def handle_slashcommand_response(
         The raw tool response value.
     """
     sv = _session.get_version_model()
-    conv_msg = Message.objects.create(role="tool", session=sv.session, session_version=sv, prev_message=message)
+    # Chain after the current tail, not the command message: a side effect
+    # dispatched by the command may have extended the chain in between (e.g.
+    # /compact's async compact_turn inserts an INFO "started" notice before
+    # this response is recorded).  Pointing at the command message would fork
+    # the chain and strand the notice as an invisible side branch on reload.
+    tail = _session.get_last_message()
+    conv_msg = Message.objects.create(role="tool", session=sv.session, session_version=sv, prev_message=tail if tail is not None else message)
 
     def _serialize_result(obj: Any) -> Any:
         """JSON-serialise a tool result, handling Message / Path model references."""

@@ -124,7 +124,10 @@ def _pop_next_todo_message(_session: Session, message: Message) -> tuple[Message
         role=MessageRole.USER,
         session=sv.session,
         session_version=sv,
-        prev_message=message,
+        # Chain after the current tail, not the just-finished message: an
+        # async side effect (e.g. a compaction INFO notice) may have
+        # extended the chain in between — reusing `message` would fork it.
+        prev_message=_session.get_last_message() or message,
     )
     next_message.add_part(
         type=MessagePartType.MESSAGE,
@@ -251,7 +254,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         pmessage = pmessage.prev_message
 
     if warn_no_toolcall_loop:
-        prev_message = message
+        prev_message = _session.get_last_message() or message
         sv = _session.get_version_model()
         message = Message.objects.create(
             role=MessageRole.USER,

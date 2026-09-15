@@ -173,14 +173,16 @@ def ingest_compaction(
 
     summary_text = _extract_summary_text(result)
 
+    parent_sv = _session.get_version_model()
+    info_message = Message.objects.create(
+        role=MessageRole.INFO,
+        session=parent_sv.session,
+        session_version=parent_sv,
+        prev_message=_session.get_last_message(),
+    )
+
     if not summary_text.strip():
-        parent_sv = _session.get_version_model()
-        info_message = Message.objects.create(
-            role=MessageRole.INFO,
-            session=parent_sv.session,
-            session_version=parent_sv,
-            prev_message=_session.get_last_message(),
-        )
+
         info_message.add_part(
             type=MessagePartType.MESSAGE,
             content_type=MessageContentType.TEXT,
@@ -188,10 +190,11 @@ def ingest_compaction(
         )
         try:
             from runtime.events import publish_model_event
-    
+
             publish_model_event(info_message, "create")
         except Exception:
             pass
+
         # Never insert an empty marker: it would hide the compacted range
         # behind no summary (silent context loss).  The usual cause is a
         # fork that never produced final_result — e.g. killed by the
@@ -245,6 +248,17 @@ def ingest_compaction(
             "empty COMPACTION marker."
         )
 
+    info_message.add_part(
+        type=MessagePartType.MESSAGE,
+        content_type=MessageContentType.TEXT,
+        content="Compaction successful",
+    )
+
+    try:
+        from runtime.events import publish_model_event
+        publish_model_event(info_message, "create")
+    except Exception:
+        pass
     boundary = Message.objects.get(pk=boundary_pk) if boundary_pk else None
 
     marker = _build_compaction_message( _session, newest_compacted=boundary, summary_text=summary_text)
