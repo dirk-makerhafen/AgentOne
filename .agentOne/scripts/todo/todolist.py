@@ -188,7 +188,7 @@ def todolist_action_response(_session: Session, store_function_response: dict[st
     }
 
 
-def todo_append(_session: Session, text: str, depends_on: Optional[Union[int, List[int]]] = None) -> tuple[bool, dict[str, Any]]:
+def todo_append(_session: Session, text: str, depends_on: Optional[Union[int, List[int]]] = None, **kwargs: Optional[Any]) -> tuple[bool, dict[str, Any]]:
     """Add one todo item to the session list.
 
     Break a larger request into trackable steps with this: append one item
