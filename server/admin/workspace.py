@@ -9,8 +9,8 @@ from server.models.workspace import WorkspaceModel
 class WorkspaceAdmin(admin.ModelAdmin):
     """Admin for workspace configurations."""
 
-    list_display = ("name", "path", "updated_at")
+    list_display = ("name", "path", "color", "updated_at")
     search_fields = ("name", "path")
     fieldsets = (
-        (None, {"fields": ("name", "description", "path", "access")}),
+        (None, {"fields": ("name", "description", "path", "color", "access")}),
     )

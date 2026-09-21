@@ -35,10 +35,11 @@ def _norm(path: str) -> str:
 def build_workspace_tree(items: list) -> list[dict]:
     """Build DFS-ordered tree rows from workspace-like objects.
 
-    Each item needs ``pk``, ``name`` and ``path`` attributes.  Returns a
-    flat list of row dicts (``pk``, ``name``, ``path``, ``display_path``,
-    ``depth``, ``has_children``) in pre-order: parents before children,
-    siblings sorted by name (roots) or by name within a parent.
+    Each item needs ``pk``, ``name`` and ``path`` attributes (``color`` is
+    optional and defaults to "").  Returns a flat list of row dicts
+    (``pk``, ``name``, ``path``, ``display_path``, ``color``, ``depth``,
+    ``has_children``) in pre-order: parents before children, siblings
+    sorted by name (roots) or by name within a parent.
     """
     by_pk = {}
     for ws in items:
@@ -69,6 +70,7 @@ def build_workspace_tree(items: list) -> list[dict]:
                     "name": ws.name or mine,
                     "path": ws.path,
                     "display_path": display_path,
+                    "color": getattr(ws, "color", "") or "",
                     "depth": depth,
                     "has_children": bool(children.get(ws.pk)),
                 }
@@ -113,6 +115,7 @@ class SidebarPanelWorkspaces(ModelView):
                 {% endif %}
                 <div class="ws-row-info">
                     <div class="ws-row-name">
+                        {% if row.color %}<span class="ws-color-dot" style="background:{{ row.color }}"></span>{% endif %}
                         {{ row.name }}
                         {% if row.pk == pyview.active_workspace_pk %}
                         <span class="detail-badge active" style="margin-left:6px;font-size:9px;padding:1px 6px">ACTIVE</span>

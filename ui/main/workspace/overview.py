@@ -49,7 +49,7 @@ class WorkspacesOverview(ModelView):
                     {% for ws in pyview.workspaces %}
                     <div class="ws-ov-card" data-name="{{ ws.name|lower }} {{ ws.path|lower }}" onclick="pyview.openWorkspace({{ ws.pk }})">
                         <div class="ws-ov-card-top">
-                            <div class="ws-ov-icon">
+                            <div class="ws-ov-icon"{% if ws.color %} style="background:{{ ws.color }}"{% endif %}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                             </div>
                              <h3>{{ ws.name }}</h3>

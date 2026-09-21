@@ -85,6 +85,15 @@ class SidebarPanelProjects(ModelView):
     def openProjectCreate(self):
         self.root_view.main_panel.create_and_open_tab(ProjectCreateView, self.subject)
 
+    def panel_activated(self) -> None:
+        """Show the projects overview when the projects sidebar icon is clicked."""
+        try:
+            from ui.main.project.overview import ProjectsOverview
+
+            self.root_view.main_panel.create_and_open_tab(ProjectsOverview, self.subject)
+        except Exception:
+            pass
+
     def reloadFromDisk(self):
         pass
 

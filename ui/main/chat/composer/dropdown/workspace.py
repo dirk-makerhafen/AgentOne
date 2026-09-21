@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class WorkspaceDropdownOption(ModelView):
     TEMPLATE_STR = '''
+        {% if pyview.subject.color %}<span class="ws-color-dot" style="background:{{ pyview.subject.color }}"></span>{% endif %}
         <span class="ws-opt-name">{{ pyview.subject.name }}</span>
         <span class="ws-opt-path">{{ pyview.subject.path }}</span>
     '''

@@ -292,6 +292,15 @@ class SidebarPanelCronjobs(ModelView):
     def openCronCreate(self):
         self.root_view.main_panel.create_and_open_tab(CronCreateView, self.subject)
 
+    def panel_activated(self) -> None:
+        """Show the cron overview when the cron sidebar icon is clicked."""
+        try:
+            from ui.main.cron.overview import CronOverview
+
+            self.root_view.main_panel.create_and_open_tab(CronOverview, self.subject)
+        except Exception:
+            pass
+
     def refreshList(self):
         self.cronjob_list.query = self._base_query()
         self.cronjob_list._recreate()

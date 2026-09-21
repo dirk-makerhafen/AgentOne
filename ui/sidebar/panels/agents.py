@@ -107,5 +107,14 @@ class SidebarPanelAgents(ModelView):
     def openProfileCreate(self):
         self.root_view.main_panel.create_and_open_tab(AgentCreateView, self.subject)
 
+    def panel_activated(self) -> None:
+        """Show the agents dashboard when the agents sidebar icon is clicked."""
+        try:
+            from ui.main.agent.overview import AgentsOverview
+
+            self.root_view.main_panel.create_and_open_tab(AgentsOverview, self.subject)
+        except Exception:
+            pass
+
     def reloadFromDisk(self):
         pass

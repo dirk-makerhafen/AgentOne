@@ -18,6 +18,7 @@ class WorkspaceWrap(PyHtmlView):
                 </span>
             </button>
             <button class="composer-workspace-chip" id="composerWorkspaceChip" type="button" onclick="pyview.toggle()" title="Switch workspace">
+                {% if pyview.subject.workspace.color %}<span class="ws-color-dot" style="background:{{ pyview.subject.workspace.color }}"></span>{% endif %}
                 <span class="composer-workspace-label" id="composerWorkspaceLabel">
                     {{ pyview.subject.workspace.name }}
                 </span>

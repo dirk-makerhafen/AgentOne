@@ -41,6 +41,14 @@ class CreateWorkspace(ModelView):
                         <textarea id="workspaceFormDescription" rows="3" placeholder="What is this workspace for?" onchange="pyview.setWsField('description', this.value)">{{ pyview.form.description }}</textarea>
                     </div>
                     <div class="detail-form-row">
+                        <label for="workspaceFormColor">Color</label>
+                        <div class="ws-form-color-row">
+                            <input type="color" id="workspaceFormColor" value="{{ pyview.form.color }}" onchange="pyview.setWsField('color', this.value)">
+                            <span class="ws-current-color-value">{{ pyview.form.color }}</span>
+                        </div>
+                        <div class="detail-form-hint">Randomly assigned — pick any color to identify this workspace.</div>
+                    </div>
+                    <div class="detail-form-row">
                         <label>Filesystem access</label>
                         {{ pyview.access_editor.render() }}
                     </div>
@@ -54,7 +62,9 @@ class CreateWorkspace(ModelView):
 
     def __init__(self, subject: UiApp, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self._form = {"name": "", "path": "", "description": ""}
+        from server.models.workspace import random_workspace_color
+
+        self._form = {"name": "", "path": "", "description": "", "color": random_workspace_color()}
         self._form_error = ""
         self.access_editor = AccessEditor(subject=subject, parent=self)
 
@@ -75,14 +85,23 @@ class CreateWorkspace(ModelView):
     # ------------------------------------------------------------------
 
     def setWsField(self, field: str, value: str) -> None:
-        if field in ("name", "path", "description"):
+        if field in ("name", "path", "description", "color"):
             self._form[field] = value
 
     def saveWorkspaceForm(self) -> None:
+        from server.models.workspace import random_workspace_color, validate_workspace_color
+
         name = (self._form.get("name") or "").strip()
         path = (self._form.get("path") or "").strip()
+        color = (self._form.get("color") or "").strip() or random_workspace_color()
         if not path or not os.path.isdir(path):
             self._form_error = "Path must be an existing directory."
+            self.update()
+            return
+        try:
+            validate_workspace_color(color)
+        except Exception:
+            self._form_error = "Color must be a #rrggbb hex string."
             self.update()
             return
         try:
@@ -90,6 +109,7 @@ class CreateWorkspace(ModelView):
                 name=name or path,
                 path=path,
                 description=self._form.get("description", ""),
+                color=color,
                 access=self.access_editor.access_data,
             )
         except Exception as e:

@@ -86,6 +86,7 @@ class SidebarPanelChat(ModelView):
                 {% endif %}
                 <span class="session-title" title="Double-click to rename">
                     {% if pyview.subject.is_pinned %}<svg class="session-pin-icon" width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><polygon points="8,2 9.8,6.2 14.2,6.2 10.7,9.2 12,13.8 8,11 4,13.8 5.3,9.2 1.8,6.2 6.2,6.2"/></svg>{% endif %}
+                    {% if pyview.workspace_color %}<span class="ws-color-dot session-ws-dot" style="background:{{ pyview.workspace_color }}" title="{{ pyview.workspace_name }}"></span>{% endif %}
                     {{ pyview.session.name }}
                 </span>
                 <span class="session-time">1w</span>
@@ -306,6 +307,26 @@ class SidebarPanelChat(ModelView):
         ``child_list`` QuerySetView wraps)."""
         return list(self.child_list.query.all()) if self.child_list is not None else []
 
+    @property
+    def workspace_color(self) -> str:
+        """Accent color of the workspace this chat belongs to ("" if none)."""
+        try:
+            sv = getattr(self.subject, "latest_session_version", None)
+            ws = getattr(sv, "workspace", None)
+            return getattr(ws, "color", "") or ""
+        except Exception:
+            return ""
+
+    @property
+    def workspace_name(self) -> str:
+        """Name of the workspace this chat belongs to (for the tooltip)."""
+        try:
+            sv = getattr(self.subject, "latest_session_version", None)
+            ws = getattr(sv, "workspace", None)
+            return getattr(ws, "name", "") or ""
+        except Exception:
+            return ""
+
     def toggle_children(self):
         self._show_children = not self._show_children
         self.update()
@@ -433,6 +454,7 @@ class SidebarPanelChats(ModelView):
 
     def _base_query(self):
         qs = self.subject.sessions.root().filter(parent_session__isnull=True, session_type=SessionType.SESSION)
+        qs = qs.select_related("latest_session_version__workspace")
         qs = qs.prefetch_related(Prefetch('child_sessions', queryset=self._child_sessions_queryset()))
         if self._show_archived:
             return qs.filter(is_archived=True).order_by('-is_pinned', '-created_at')
@@ -441,7 +463,7 @@ class SidebarPanelChats(ModelView):
     def _child_sessions_queryset(self):
         children = SessionModel.objects.filter(
             Q(is_active=True) | Q(last_active_at__gte=timezone.now() - RECENT_SUBSESSION_WINDOW), session_type=SessionType.SESSION,
-        ).select_related('latest_session_version__agent').order_by('-created_at')
+        ).select_related('latest_session_version__agent', 'latest_session_version__workspace').order_by('-created_at')
         if not self._show_archived:
             children = children.filter(is_archived=False)
         return children
@@ -456,6 +478,7 @@ class SidebarPanelChats(ModelView):
             base = self.subject.sessions.root().filter(parent_session__isnull=True, session_type=SessionType.SESSION)
         else:
             base = SessionModel.objects.filter(parent_project_id=project_id, parent_session__isnull=True, session_type=SessionType.SESSION)
+        base = base.select_related("latest_session_version__workspace")
         base = base.prefetch_related(Prefetch('child_sessions', queryset=self._child_sessions_queryset()))
         if self._show_archived:
             base = base.filter(is_archived=True)
@@ -474,5 +497,16 @@ class SidebarPanelChats(ModelView):
         self.refresh_list()
 
     def new_conversation(self):
-        self.subject.agents.root().first().get_runtime()
-        self.subject.agents.root().first().latest_agent_version.get_or_create_session()
+        """Open the new-chat page so the user picks agent/workspace/name first."""
+        from ui.main.chat.overview import ChatsOverview
+
+        self.root_view.main_panel.create_and_open_tab(ChatsOverview, self.subject)
+
+    def panel_activated(self) -> None:
+        """Show the chat overview when the chat sidebar icon is clicked."""
+        try:
+            from ui.main.chat.overview import ChatsOverview
+
+            self.root_view.main_panel.create_and_open_tab(ChatsOverview, self.subject)
+        except Exception:
+            pass

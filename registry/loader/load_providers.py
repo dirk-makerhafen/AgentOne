@@ -163,6 +163,49 @@ def _read_md_frontmatter(path: Path) -> Dict[str, Any]:
     return dict(meta) if isinstance(meta, dict) else {}
 
 
+def _provider_body_description(path: Path, max_len: int = 240) -> str:
+    """First content paragraph of a provider ``*.md`` file, single-lined.
+
+    Skips headings, code fences and list/table markup so the settings
+    providers table can show a short human description.  Returns "" when
+    nothing usable is found.  Never raises — a bad file just has no
+    description.
+    """
+    try:
+        post = frontmatter.loads(path.read_text(encoding="utf-8"))
+        body = post.content if isinstance(post, frontmatter.Post) else ""
+    except Exception:
+        return ""
+    if not body:
+        return ""
+    in_fence = False
+    paragraph: list[str] = []
+    for line in body.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if not stripped or stripped.startswith(("#", "-", "*", "|", ">", "[")):
+            if paragraph:
+                break
+            continue
+        # Inline markdown links/images → plain text.
+        import re
+
+        stripped = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", stripped)
+        stripped = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", stripped)
+        stripped = re.sub(r"[*_`]+", "", stripped)
+        paragraph.append(stripped)
+        if len(" ".join(paragraph)) >= max_len:
+            break
+    text = " ".join(paragraph).strip()
+    if len(text) > max_len:
+        text = text[: max_len - 1].rstrip() + "…"
+    return text
+
+
 # Nested ``limits:`` periods (research frontmatter) mapped to the flat
 # ``AiModel`` / ``ApiProvider`` limit fields.  ``second`` has no per-second
 # field, so it is converted to the nearest supported window (per-minute),
@@ -371,12 +414,14 @@ def load_providers_manifest(
 
         # Store free-tier / setup info in raw_data
         free_info = provider_data.get("free_info")
-        if free_info or provider_data.get("api_key_url") or provider_data.get("setup_instructions"):
-            info = free_info or {}
+        if free_info or provider_data.get("api_key_url") or provider_data.get("setup_instructions") or provider_data.get("description"):
+            info = dict(free_info) if isinstance(free_info, dict) else {}
             if provider_data.get("api_key_url"):
                 info["api_key_url"] = provider_data["api_key_url"]
             if provider_data.get("setup_instructions"):
                 info["setup_instructions"] = provider_data["setup_instructions"]
+            if provider_data.get("description"):
+                info["description"] = provider_data["description"]
             provider.data = info
             provider.save(update_fields=["raw_data"])
 
@@ -491,6 +536,7 @@ def _upsert_provider_from_frontmatter(
     slug: str,
     meta: Dict[str, Any],
     details: List[Dict[str, str]],
+    description: str = "",
 ) -> ApiProvider | None:
     """Upsert one ``ApiProvider`` from a ``providers/<slug>.md`` frontmatter.
 
@@ -525,6 +571,7 @@ def _upsert_provider_from_frontmatter(
     info: Dict[str, Any] = {
         "api_key_url": meta.get("api_key_url") or "",
         "setup_instructions": meta.get("setup_instructions") or "",
+        "description": description or meta.get("description") or "",
     }
     if meta.get("default_api_key"):
         info["default_api_key"] = meta["default_api_key"]
@@ -694,7 +741,10 @@ def load_providers_dir(
         except Exception as e:  # noqa: BLE001 — one bad file must not abort the reload
             details.append({"type": "provider", "name": md_path.stem, "action": f"skipped ({e})"})
             continue
-        provider = _upsert_provider_from_frontmatter(md_path.stem, meta, details)
+        provider = _upsert_provider_from_frontmatter(
+            md_path.stem, meta, details,
+            description=_provider_body_description(md_path),
+        )
         if provider is not None:
             by_slug[md_path.stem] = provider
             count += 1

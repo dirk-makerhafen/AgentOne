@@ -5,7 +5,7 @@ from server.models.workspace import WorkspaceModel
 class WorkspaceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkspaceModel
-        fields = ['id', 'name', 'description', 'path', 'access', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'path', 'color', 'access', 'created_at', 'updated_at']
 
 
 class WorkspaceDetailSerializer(serializers.ModelSerializer):
@@ -14,7 +14,7 @@ class WorkspaceDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkspaceModel
-        fields = ['id', 'name', 'description', 'path', 'access',
+        fields = ['id', 'name', 'description', 'path', 'color', 'access',
                   'session_count', 'cron_count',
                   'created_at', 'updated_at']
 
@@ -28,4 +28,4 @@ class WorkspaceDetailSerializer(serializers.ModelSerializer):
 class WorkspaceWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkspaceModel
-        fields = ['name', 'description', 'path', 'access']
+        fields = ['name', 'description', 'path', 'color', 'access']

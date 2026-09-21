@@ -89,6 +89,7 @@ def workspace_card_data(ws) -> dict:
         "name": ws.name or ws.path,
         "path": ws.path,
         "description": ws.description or "",
+        "color": getattr(ws, "color", "") or "",
         "session_count": sessions,
         "agent_count": agents,
     }
@@ -194,7 +195,7 @@ class Workspace(ModelView):
         <div class="main-view-body" id="workspaceDetailBody">
             <div class="main-view-content ws-ov-content">
                 <div class="ws-current-card">
-                    <div class="ws-ov-icon">
+                    <div class="ws-ov-icon"{% if pyview.subject.color %} style="background:{{ pyview.subject.color }}"{% endif %}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                     </div>
                     {% if pyview.editing %}
@@ -202,6 +203,11 @@ class Workspace(ModelView):
                         <input class="ws-current-input" value="{{ pyview.edit_data.name }}" onchange="pyview.setEditField('name', this.value)" autocomplete="off" placeholder="Name">
                         <input class="ws-current-input ws-current-input--path" value="{{ pyview.edit_data.path }}" onchange="pyview.setEditField('path', this.value)" autocomplete="off" placeholder="Path">
                         <textarea class="ws-current-input" rows="2" onchange="pyview.setEditField('description', this.value)" placeholder="What is this workspace for?">{{ pyview.edit_data.description }}</textarea>
+                        <div class="ws-current-color-row">
+                            <label for="wsEditColor">Color</label>
+                            <input type="color" id="wsEditColor" value="{{ pyview.edit_data.color }}" onchange="pyview.setEditField('color', this.value)">
+                            <span class="ws-current-color-value">{{ pyview.edit_data.color }}</span>
+                        </div>
                         {{ pyview.access_editor.render() }}
                         {% if pyview.edit_error %}
                         <div class="detail-form-error">{{ pyview.edit_error }}</div>
@@ -214,6 +220,7 @@ class Workspace(ModelView):
                     {% else %}
                     <div class="ws-current-info">
                         <div class="ws-current-name">
+                            {% if pyview.subject.color %}<span class="ws-color-dot" style="background:{{ pyview.subject.color }}"></span>{% endif %}
                             <span id="workspaceDetailTitle">{{ pyview.subject.name }}</span>
                             {% if pyview.subject.pk == pyview.active_workspace_pk %}
                             <span class="detail-badge active">ACTIVE</span>
@@ -274,7 +281,7 @@ class Workspace(ModelView):
                     {% for ws in pyview.children_cards %}
                     <div class="ws-ov-card" data-name="{{ ws.name|lower }} {{ ws.path|lower }}" onclick="pyview.openWorkspace({{ ws.pk }})">
                         <div class="ws-ov-card-top">
-                            <div class="ws-ov-icon">
+                            <div class="ws-ov-icon"{% if ws.color %} style="background:{{ ws.color }}"{% endif %}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                             </div>
                             <h3>{{ ws.name }}</h3>
@@ -468,36 +475,12 @@ class Workspace(ModelView):
             main_view.create_and_open_tab(Chat, session)
 
     def newChat(self) -> None:
-        """Create a fresh chat session bound to this workspace and open it."""
-        from ui.main.chat.chat import Chat
+        """Open the new-chat page preset to this workspace (no session yet)."""
+        from ui.main.chat.overview import ChatsOverview
 
-        try:
-            from server.models.agents.agent import AgentModel
-            from server.models.sessions.session import SessionModel
-
-            agent = AgentModel.objects.filter(
-                parent_skill=None, parent_agent=None, parent_project=None
-            ).first()
-            if agent is None or agent.latest_agent_version is None:
-                return
-            base = f"{self.subject.name or 'workspace'}-{agent.name}"
-            name, i = base, 1
-            while SessionModel.objects.filter(name=name).exists():
-                i += 1
-                name = f"{base}-{i}"
-            session_version = agent.latest_agent_version.get_or_create_session(
-                name=name,
-                display_name=name,
-                workspace=self.subject,
-            )
-            session = session_version.session
-        except Exception:
-            return
         main_view = self._find_main_view()
         if main_view is not None:
-            main_view.create_and_open_tab(Chat, session)
-        self._chat_page = 0
-        self.update()
+            main_view.create_and_open_tab(ChatsOverview, self.subject)
 
     def renameWorkspace(self, pk: int, name: str) -> None:
         name = (name or "").strip()
@@ -518,6 +501,7 @@ class Workspace(ModelView):
             "name": self.subject.name,
             "description": self.subject.description or "",
             "path": self.subject.path,
+            "color": getattr(self.subject, "color", "") or "#6366f1",
         }
         self.update()
 
@@ -527,12 +511,15 @@ class Workspace(ModelView):
         self.update()
 
     def setEditField(self, field: str, value: str) -> None:
-        if field in ("name", "description", "path"):
+        if field in ("name", "description", "path", "color"):
             self._edit_data[field] = value
 
     def saveEdit(self) -> None:
+        from server.models.workspace import validate_workspace_color
+
         name = (self._edit_data.get("name") or "").strip()
         path = (self._edit_data.get("path") or "").strip()
+        color = (self._edit_data.get("color") or "").strip()
         if not name:
             self._edit_error = "Name must not be empty."
             self.update()
@@ -541,9 +528,16 @@ class Workspace(ModelView):
             self._edit_error = "Path must be an existing directory."
             self.update()
             return
+        try:
+            validate_workspace_color(color)
+        except Exception:
+            self._edit_error = "Color must be a #rrggbb hex string."
+            self.update()
+            return
         self.subject.name = name
         self.subject.description = self._edit_data.get("description", "")
         self.subject.path = path
+        self.subject.color = color
         self.subject.access = self.access_editor.access_data
         self.subject.save()
         self._editing = False
