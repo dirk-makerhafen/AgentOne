@@ -2570,7 +2570,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .side-menu-item svg{flex-shrink:0;width:16px;height:16px;opacity:.9;}
 
 /* Main canvas: centered, comfortable max-width */
-.settings-main{padding:24px;max-width:768px;width:100%;margin:0 auto;min-width:0;}
+.settings-main{padding:24px;width:100%;margin:0 auto;min-width:0;}
 .settings-pane{display:block;}
 .settings-pane.active{display:block;}
 
@@ -2758,7 +2758,8 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .settings-providers-actions .provider-card-btn{margin-left:6px;}
 .settings-providers-actions .provider-card-btn:first-child{margin-left:0;}
 .settings-providers-editor-row td{background:var(--surface-subtle);}
-.settings-providers-editor{padding:6px 2px;max-width:720px;}
+.settings-providers-editor{padding:6px 2px;max-width:75%;    margin-right: auto;
+    margin-left: auto;}
 .provider-card{
   border:1px solid var(--border);
   border-radius:12px;
@@ -4387,6 +4388,14 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .ws-chat-pager .ws-ov-view-btn + .ws-ov-view-btn{border-left:1px solid var(--border);}
 .ws-chat-pager .ws-ov-view-btn:disabled{opacity:.35;cursor:default;}
 .ws-chat-page-label{font-size:12px;color:var(--muted);white-space:nowrap;}
+/* workspace manager chat tab (right panel) */
+.manager-session-row{padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.manager-session-row select{width:100%;box-sizing:border-box;background:var(--sidebar);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;outline:none;font-family:inherit;}
+.manager-chat-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
+.manager-chat{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.manager-chat-messages{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.manager-composer-wrap{flex-shrink:0;}
+.manager-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:13px;padding:24px 16px;text-align:center;}
 /* current-card inline editing */
 .ws-current-input{width:100%;box-sizing:border-box;background:var(--sidebar);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 10px;font-size:14px;outline:none;font-family:inherit;margin-bottom:8px;}
 .ws-current-input:focus{border-color:var(--accent);}

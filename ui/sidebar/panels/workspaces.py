@@ -109,13 +109,12 @@ class SidebarPanelWorkspaces(ModelView):
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v5H3z"/><path d="M3 12h18v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                 </span>
                 {% else %}
-                <span class="ws-tree-folder">
+                <span class="ws-tree-folder" style="color:{{ row.color }}">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 </span>
                 {% endif %}
                 <div class="ws-row-info">
                     <div class="ws-row-name">
-                        {% if row.color %}<span class="ws-color-dot" style="background:{{ row.color }}"></span>{% endif %}
                         {{ row.name }}
                         {% if row.pk == pyview.active_workspace_pk %}
                         <span class="detail-badge active" style="margin-left:6px;font-size:9px;padding:1px 6px">ACTIVE</span>

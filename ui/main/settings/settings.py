@@ -37,6 +37,16 @@ class SettingsView(ModelView):
         if settings_section_name not in self.settings_sections:
             print(f"No main view named {settings_section_name}")
             return 
+        if settings_section_name != "providers":
+            # Avoid a stale provider detail lingering in the rightbar.
+            try:
+                providers_panel = self.settings_sections["providers"]
+                providers_panel.clear_detail()
+                rightpanel = getattr(getattr(self, "parent", None), "rightpanel", None)
+                if rightpanel is not None:
+                    rightpanel.close()
+            except Exception:
+                pass
         self.selected_settings_panel_name = settings_section_name
         self.selected_settings_panel = self.settings_sections[settings_section_name]
         self.update()

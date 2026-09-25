@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from ui.lib.model_view import ModelView
 from ui.main.rightpanel.workspace.rightpanel_workspace_files import RightPanelWorkspaceFiles
+from ui.main.rightpanel.workspace.rightpanel_workspace_manager import RightPanelWorkspaceManager
 from ui.main.rightpanel.workspace.rightpanel_workspace_usage import RightPanelWorkspaceUsage
 
 if TYPE_CHECKING:
@@ -22,6 +23,9 @@ class RightPanelWorkspace(ModelView):
             </button>
             <button class="nav-tab{% if pyview.current_tab_name == "usage" %} active{% endif %}" data-panel="usage" data-label="Usage" onclick="pyview.switchTab('usage')" title="Usage">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </button>
+            <button class="nav-tab{% if pyview.current_tab_name == "manager" %} active{% endif %}" data-panel="manager" data-label="Manager" onclick="pyview.switchTab('manager')" title="Workspace Manager">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </button>
 
         </div>
@@ -43,7 +47,7 @@ class RightPanelWorkspace(ModelView):
     def switchTab(self, name: str) -> None:
         if name == self.current_tab_name:
             return 
-        if name not in ["files", "usage"]:
+        if name not in ["files", "usage", "manager"]:
             return
         self.current_tab_name = name
         if self.current_tab:
@@ -52,5 +56,7 @@ class RightPanelWorkspace(ModelView):
             self.current_tab = RightPanelWorkspaceFiles(self.subject, self)
         elif name == "usage":
             self.current_tab = RightPanelWorkspaceUsage(self.subject, self)
+        elif name == "manager":
+            self.current_tab = RightPanelWorkspaceManager(self.subject, self)
         self.update()
 

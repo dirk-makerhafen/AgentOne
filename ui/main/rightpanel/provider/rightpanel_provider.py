@@ -29,6 +29,9 @@ class RightPanelProvider(ModelView):
                 {% if not pyview.subject.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
             </div>
 
+            <div class="rp-section-title">About</div>
+            <div class="rp-desc">{{ pyview.full_description }}</div>
+
             <div class="rp-section-title">Routing</div>
             <div class="rp-kv"><span>Endpoint</span><span>{{ pyview.subject.url or "—" }}</span></div>
             <div class="rp-kv"><span>Protocol</span><span>{{ pyview.subject.litellm_prefix or "OpenAI-compatible" }}</span></div>
@@ -74,6 +77,22 @@ class RightPanelProvider(ModelView):
         model = AiModel.objects.filter(pk=model_id).first()
         if model is not None:
             self.parent.parent.rightpanel.set_view(RightPanelModel, model)
+
+    @property
+    def full_description(self) -> str:
+        """Full provider blurb: research-doc description, else the setup
+        instructions, else the endpoint URL (never raises)."""
+        try:
+            info = getattr(self.subject, "data", None) or {}
+            desc = (info.get("description") or "").strip()
+            if desc:
+                return desc
+            setup = (info.get("setup_instructions") or "").strip()
+            if setup:
+                return setup
+            return getattr(self.subject, "url", "") or "—"
+        except Exception:
+            return "—"
 
     @property
     def key_rows(self) -> list[dict]:

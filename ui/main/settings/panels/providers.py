@@ -9,9 +9,33 @@ if TYPE_CHECKING:
     from ui.main.settings.settings import SettingsView
 
 
-def _provider_description(provider: ApiProvider) -> str:
-    """Short human description for the settings table.
+def sort_provider_rows(rows: list[dict], col: str, desc: bool) -> list[dict]:
+    """Sort settings provider row dicts (pure, DB-free).
 
+    ``col`` is one of name/models/limits/key; unknown columns keep the
+    input order. Names/limits sort ascending, numbers/keys descending
+    unless ``desc`` says otherwise.
+    """
+    key_order = {"none": 0, "built-in": 1, "keys": 2}
+
+    def sort_key(row: dict):
+        if col == "models":
+            return row["model_count"]
+        if col == "key":
+            return (key_order[row["key_state"]], row["key_count"])
+        if col == "limits":
+            return row["limits"].lower()
+        if col == "name":
+            return row["name"].lower()
+        return 0
+
+    if col not in ("name", "models", "limits", "key"):
+        return rows
+    return sorted(rows, key=sort_key, reverse=desc)
+
+
+def _provider_description(provider: ApiProvider) -> str:    
+    """Short human description for the settings table.
     Prefers the research-doc blurb stored by the provider loader
     (``data["description"]``), then the first line of the setup
     instructions, then the endpoint URL.
@@ -51,16 +75,16 @@ class SettingPanelProviders(ModelView):
         {% if pyview.provider_rows %}
         <table class="insights-table settings-providers-table">
             <thead><tr>
-                <th>Provider</th>
-                <th class="num">Models</th>
-                <th>Limits</th>
-                <th>API key</th>
+                <th class="sortable" onclick="pyview.apply_sort('name')">Provider{{ pyview.sort_arrow('name') }}</th>
+                <th class="num sortable" onclick="pyview.apply_sort('models')">Models{{ pyview.sort_arrow('models') }}</th>
+                <th class="sortable" onclick="pyview.apply_sort('limits')">Limits{{ pyview.sort_arrow('limits') }}</th>
+                <th class="sortable" onclick="pyview.apply_sort('key')">API key{{ pyview.sort_arrow('key') }}</th>
                 <th>Description</th>
                 <th></th>
             </tr></thead>
             <tbody>
             {% for row in pyview.provider_rows %}
-            <tr class="{% if row.id == pyview._expanded_id %}selected{% endif %}">
+            <tr class="clickable{% if row.id == pyview._expanded_id or row.id == pyview._detail_id %} selected{% endif %}" onclick="pyview.open_provider({{ row.id }})">
                 <td><strong>{{ row.name }}</strong>{% if row.is_local %} <span class="mode-badge">local</span>{% endif %}</td>
                 <td class="num">{{ row.model_count }}</td>
                 <td class="muted">{{ row.limits }}</td>
@@ -71,9 +95,9 @@ class SettingPanelProviders(ModelView):
                     <a href="{{ row.api_key_url }}" target="_blank" class="provider-card-btn provider-card-btn-ghost" onclick="event.stopPropagation()" style="text-decoration:none">Get key</a>
                     {% endif %}
                     {% if row.key_state == "none" %}
-                    <button type="button" class="provider-card-btn provider-card-btn-primary" onclick="pyview.open_add({{ row.id }})">Add API key</button>
+                    <button type="button" class="provider-card-btn provider-card-btn-primary" onclick="event.stopPropagation(); pyview.open_add({{ row.id }})">Add API key</button>
                     {% else %}
-                    <button type="button" class="provider-card-btn provider-card-btn-ghost" onclick="pyview.toggle_expanded({{ row.id }})">{% if row.id == pyview._expanded_id %}Close{% else %}Edit keys{% endif %}</button>
+                    <button type="button" class="provider-card-btn provider-card-btn-ghost" onclick="event.stopPropagation(); pyview.toggle_expanded({{ row.id }})">{% if row.id == pyview._expanded_id %}Close{% else %}Edit keys{% endif %}</button>
                     {% endif %}
                 </td>
             </tr>
@@ -114,10 +138,15 @@ class SettingPanelProviders(ModelView):
         {% endif %}
     '''
 
+    NUMERIC_COLS = ("models",)
+
     def __init__(self, subject, parent: SettingsView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._expanded_id: int | None = None
+        self._detail_id: int | None = None
         self._keys_revealed = False
+        self._sort_col = "name"
+        self._sort_desc = False
 
     # ------------------------------------------------------------------
     # Rows
@@ -152,7 +181,8 @@ class SettingPanelProviders(ModelView):
                 "api_key_url": info.get("api_key_url", ""),
                 "setup_instructions": info.get("setup_instructions", ""),
             })
-        return rows
+
+        return sort_provider_rows(rows, self._sort_col, self._sort_desc)
 
     def _expanded_provider(self) -> ApiProvider | None:
         if self._expanded_id is None:
@@ -202,6 +232,49 @@ class SettingPanelProviders(ModelView):
         provider_id = int(provider_id)
         self._expanded_id = None if self._expanded_id == provider_id else provider_id
         self.update()
+
+    def apply_sort(self, col: str) -> None:
+        """Header click: toggle direction on repeat, else sort the column
+        (names/limits ascending, numbers/keys descending)."""
+        if col not in ("name", "models", "limits", "key"):
+            return
+        if col == self._sort_col:
+            self._sort_desc = not self._sort_desc
+        else:
+            self._sort_col = col
+            self._sort_desc = col in self.NUMERIC_COLS or col == "key"
+        self.update()
+
+    def sort_arrow(self, col: str) -> str:
+        if col != self._sort_col:
+            return ""
+        return " ▼" if self._sort_desc else " ▲"
+
+    def open_provider(self, provider_id: int) -> None:
+        """Show the provider detail (description, models, stats) in the rightbar."""
+        from ui.main.rightpanel.provider.rightpanel_provider import RightPanelProvider
+
+        try:
+            provider = ApiProvider.objects.filter(pk=int(provider_id)).first()
+        except (TypeError, ValueError):
+            return
+        if provider is None:
+            return
+        self._detail_id = provider.pk
+        rightpanel = self._find_rightpanel()
+        if rightpanel is not None:
+            rightpanel.set_view(RightPanelProvider, provider)
+        self.update()
+
+    def clear_detail(self) -> None:
+        """Forget the rightbar selection (called when leaving the section)."""
+        self._detail_id = None
+
+    def _find_rightpanel(self):
+        parent = self.parent
+        while parent is not None and not hasattr(parent, "rightpanel"):
+            parent = getattr(parent, "parent", None)
+        return getattr(parent, "rightpanel", None) if parent is not None else None
 
     def open_add(self, provider_id: int) -> None:
         self._expanded_id = int(provider_id)
