@@ -17,7 +17,7 @@ Quick reference for developers working on AgentOne. See also:
 | `config/` | Django settings, ASGI/WSGI, Celery app, URL routes |
 | `server/` | Core Django app: models (~30), admin, Celery tasks, migrations |
 | `registry/` | YAML manifest loader, install repo management, upstream source sync; legacy decorators (dead) |
-| `runtime/` | Agent/session/task runtime wrappers, state machines, rate limiter |
+| `runtime/` | Agent/session/task runtime wrappers, state machines, rate limiter; `runtime/workitems/` holds the WorkItem FSM + verifier |
 | `launcher/` | Launcher service for remote agent management |
 | `ui/` | Web UI (pyHtmlGui): views, sidebar, chat, settings, overlays |
 | `old/` | Dead legacy code — do not touch |
@@ -81,7 +81,7 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - Upstream sources (`.agentone/{skills}/skills.yaml`, `{agents}/sources.yaml`, `{scripts}/sources.yaml`) are merged via `~/.agentone/upstream/` on every reload. Local files always override upstream.
 - Data flows (`.agentone/streams/*.md`, `.agentone/sets/*.md`) replaced legacy named-pipe system.
 - `_trigger_on_removed` in `tick_scheduler.py` (not reprocess_collection.py — it imports it) — the `source_calls` param must contain the AgentTaskCalls whose items were removed, not all source calls.
-- Scheduler split: `tick_scheduler.py` runs the 10s tick (dispatch, propagate, release). One-minute sibling tasks live in their own modules: `cron_scheduler.py` (cron dispatch), `sleep_guard_scheduler.py` (keep-awake guard), `recovery_scheduler.py` (`tasks.tick_scheduler_recovery` — recovery passes every 60s; `_cancel_duplicate_queries` runs only in `startup_cleanup` since concurrent turns on different session versions are legitimate), and `startup_cleanup.py` (one-time full cleanup, dispatched by `server run`).
+- Scheduler split: `tick_scheduler.py` runs the 10s tick (dispatch, propagate, release, plus the three work-item routines). One-minute sibling tasks live in their own modules: `cron_scheduler.py` (cron dispatch), `sleep_guard_scheduler.py` (keep-awake guard), `recovery_scheduler.py` (`tasks.tick_scheduler_recovery` — **currently DISABLED**: its `agentone-recovery-scheduler` beat entry is commented out in `config/settings.py:85`, so recovery does not run; `_cancel_duplicate_queries` lives in `startup_cleanup.py`), and `startup_cleanup.py` (one-time full cleanup, dispatched by `server run`).
 - When writing tests for UI views (`ui/`), call `messages_view.set_visible(True)` in setUp to activate ObservableListView observer callbacks before exercising append/insert.
 
 ## Real-time UI events

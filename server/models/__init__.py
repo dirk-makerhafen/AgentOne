@@ -21,5 +21,6 @@ try:
     from .tasks.task_definition_version import TaskDefinitionVersion
     from .workspace import WorkspaceModel
     from .collections import DataCollection, CollectionItem
+    from .workitems.work_item import WorkItem
 except Exception as e:
     print("Failed to import models:", e)

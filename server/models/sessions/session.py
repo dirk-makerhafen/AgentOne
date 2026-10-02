@@ -42,6 +42,25 @@ class SessionModel(BaseModel):
     parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="child_sessions")
     latest_session_version = models.ForeignKey("server.SessionVersionModel",default=None,null=True,on_delete=models.CASCADE,related_name="related_newest_version")
 
+    class Meta:
+        # Session names must be unique *within a parent*, not globally: two
+        # projects may each own a session called "research".  The old code
+        # looked sessions up by name alone (see
+        # ``AgentVersionModel.get_or_create_session``), so those two sessions
+        # silently shared one row — one turn_count, one message chain.
+        #
+        # Scope: this covers every session with a non-NULL ``parent_session``
+        # (all forks and subsessions, including every work-item executor).
+        # MariaDB and SQLite treat NULLs as distinct in unique indexes, so
+        # top-level sessions are not covered by the index itself — those are
+        # kept correct by the scoped lookup, not by this constraint.
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "parent_session"],
+                name="uniq_session_name_per_parent",
+            ),
+        ]
+
     @property
     def messages(self) -> QuerySet:
         """All messages belonging to this session across all versions."""

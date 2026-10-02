@@ -5,7 +5,7 @@ extends: [baseagent]
 inheritSystemPrompt: true
 reasoningEffort: high
 precision: FOCUSED
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check, todo.*]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check,  workitems.*]
 commands: [+, ingest_next, wiki_lint]
 tasks: [+, wiki.find_unlinked_raw, ]
 autoCompactLimit: 100000

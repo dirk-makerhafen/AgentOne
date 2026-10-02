@@ -29,7 +29,7 @@ The interface has four main zones:
 
 | Zone | Purpose |
 |---|---|
-| **Rail** (left icon strip) | Switch between sidebar panels: Chats, Cron, Data Flows, Agents, Projects, Workspaces, Skills, Memory, Kanban, Todos, Insights, Logs, Settings |
+| **Rail** (left icon strip) | Switch between sidebar panels: Chats, Cron, Data Flows, Work Items, Agents, Projects, Workspaces, Skills, Memory, Todos, Insights, Logs, Settings |
 | **Sidebar** | Lists items for the selected panel: sessions, agents, skills, cron jobs, etc. |
 | **Main panel** | Primary workspace — opens tabs for chatting, editing settings, viewing agent details, etc. |
 | **Right panel** | Contextual details about the active selection: session info, task calls, workspace files, subagents |
@@ -221,6 +221,52 @@ Workspaces provide file system context for sessions.
 ### Workspace in sessions
 
 When a session is bound to a workspace, the right panel's **Workspace** tab shows the workspace files and structure.
+
+---
+
+## Work Items
+
+Work items are durable units of work — "a thing someone wants done" that may
+take days and many agent turns, as opposed to a chat turn that ends when you
+close the tab. They are listed in the sidebar and shown as a board in the main
+panel. See [work-items.md](work-items.md) for the full design.
+
+### Opening the board
+
+1. Click the **Work items** icon in the rail (the three-column board icon)
+2. The board opens in the main panel, scoped to the project selected in the
+   project selector; the sidebar lists the same items compactly
+
+### The board
+
+Each column is a status in the work-item lifecycle, in pipeline order:
+
+| Column | Meaning |
+|---|---|
+| **Backlog** | Captured, not yet eligible for the queue |
+| **Ready** | Queued — the scheduler will dispatch it to its assigned agent |
+| **In Progress** | An agent is working on it right now |
+| **In Review** | A reviewer agent is judging the result against the requirement |
+| **Blocked** | Waiting on a human, or deferred after a failed attempt |
+| **Done** | Complete |
+| **Cancelled** | Abandoned |
+
+By default the board hides **Done** and **Cancelled** so it opens on live
+work. Tick *Show done & cancelled* to bring them back. The other toggles
+filter by assignee, by verification state, and to *only needs a human*
+(Ready, In Review and Blocked).
+
+### Acting on an item
+
+Click a card to open its detail pane below the board. The buttons offered
+depend on the item's current status — for example an item in review offers
+**Approve**, **Reject**, **Send back to agent** and **Cancel**, while a
+blocked item offers **Requeue** and **Cancel**. The optional reason box is
+recorded on the item and shown on the card.
+
+You are not steering execution: dispatch and verification are done by the
+scheduler. These buttons only record a human decision, and they are refused
+if the item has already moved on.
 
 ---
 

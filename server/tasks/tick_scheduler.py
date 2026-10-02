@@ -57,6 +57,9 @@ def tick_scheduler() -> None:
         _release_rate_limited_calls,
         _release_retry_calls,
         _release_queued_calls,
+        _dispatch_work_items,
+        _report_work_item_outcomes,
+        _verify_work_items,
     ):
         try:
             routine()
@@ -698,3 +701,231 @@ def _propagate_from_collections(collection: Any = None) -> None:
                             break
                         _dispatch_processor(flow, item.source_call, source_item=item)
                     break
+
+
+# ---------------------------------------------------------------------------
+# Work items — the durable long-term task layer (docs/work-items.md §7)
+#
+# These routines are the *only* operator of WorkItemStateMachine.  No ATC/Run
+# FSM code may write WorkItem.status: the arrow between the two lifecycles
+# points one way, and the tick observes a terminal ATC to report in.
+#
+# They also must never call _is_ancient.  A 24h turn-death guard is right for a
+# turn and fatal for a backlog — a work item may legitimately sit in `ready`
+# for a month.
+# ---------------------------------------------------------------------------
+
+#: Ready items considered per tick.  Bounds the work one tick can do when a
+#: large backlog is promoted at once.
+WORKITEM_DISPATCH_LIMIT = 20
+
+
+def _dispatch_work_items() -> None:
+    """Dispatch ``ready`` work items to their assigned agent.
+
+    Idempotent by construction: an item is only selected while its ``root_task``
+    is unset *and* it is still ``ready``, and the transition to ``in_progress``
+    is atomic, so two concurrent ticks cannot both claim it.  Running this
+    every 10s is safe.
+    """
+    from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+    from server.models.enums.session_enums import SessionType
+    from server.models.message import Message
+    from server.models.workitems.enums import WorkItemStatus
+    from server.models.workitems.work_item import WorkItem
+    from runtime.events import publish_model_event
+    from runtime.session.session import Session
+    from runtime.workitems.workitem_fsm import WorkItemStateMachine
+
+    candidates = (
+        WorkItem.objects.filter(status=WorkItemStatus.READY, root_task__isnull=True)
+        .order_by("-priority", "created_at")[:WORKITEM_DISPATCH_LIMIT]
+    )
+
+    for item in candidates:
+        try:
+            # An unassigned item is blocked, never dispatched.  Guessing an agent
+            # here would run work the user never routed.
+            if not item.assigned_agent_id:
+                WorkItemStateMachine.mark_blocked(
+                    item.pk, "no agent assigned — set assigned_agent before it can run"
+                )
+                continue
+
+            agent_version = item.assigned_agent.get_runtime().get_version_model()
+            if not agent_version:
+                WorkItemStateMachine.mark_blocked(
+                    item.pk, f"agent {item.assigned_agent.name} has no version model"
+                )
+                continue
+
+            # "workitem:{pk}" is globally unique by construction, which keeps
+            # the executor session immune to the name-scoping pitfalls of
+            # human-chosen session names (docs/work-items.md §4).
+            child_sv = agent_version.get_or_create_session(
+                name=f"workitem:{item.pk}",
+                display_name=f"Work item #{item.pk}: {item.title}"[:255],
+                description=(item.body or "")[:255],
+                session_type=SessionType.SUBSESSION,
+            )
+            executor = Session(
+                session_model=child_sv.session, pinned_session_version=child_sv
+            )
+
+            # Claim the item before dispatching.  If the claim loses a race, do
+            # not dispatch — the winner owns this turn.
+            if not WorkItemStateMachine.start_dispatch(
+                item.pk,
+                executor_session=executor.model,
+                dispatch_count=item.dispatch_count + 1,
+            ):
+                continue
+
+            prompt = item.body or item.title
+            executor.reset_unattended_turn_count()
+            executor.reset_turn_count()
+            version = executor.get_version_model()
+            message = Message.objects.create(
+                role=MessageRole.USER,
+                session=version.session,
+                session_version=version,
+                prev_message=executor.get_last_message(),
+            )
+            message.add_part(
+                type=MessagePartType.MESSAGE,
+                content_type=MessageContentType.TEXT,
+                content=prompt,
+            )
+            publish_model_event(message, "create")
+
+            # Dispatch process_turn directly rather than going through
+            # ingest_user_message, for two reasons:
+            #
+            #  1. It yields the turn's own ATC, which is the row whose ENDED
+            #     state marks the whole turn.  The ingest call ends the moment
+            #     the message is stored and would report a finished item
+            #     before the agent did anything.
+            #  2. add_user_message() would apply the session queue strategy,
+            #     which parks a message behind a live turn.  The executor
+            #     session belongs to exactly one work item, so there is nothing
+            #     to serialise against.
+            turn_task = executor.get_task("process_turn")
+            if turn_task is None:
+                raise RuntimeError(
+                    f"agent {item.assigned_agent.name} cannot run process_turn "
+                    "(missing from its tasks list)"
+                )
+            turn_call = turn_task.delay(message=message)
+            WorkItemStateMachine.attach_root_task(item.pk, turn_call.pk)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(
+                f"[scheduler] error dispatching work item {item.pk}: {e} "
+                f"{traceback.format_exc()}"
+            )
+            WorkItemStateMachine.mark_blocked(item.pk, f"dispatch failed: {e}")
+
+
+def _report_work_item_outcomes() -> None:
+    """Observe finished dispatches and move items to review or blocked.
+
+    Cannot fire twice for one dispatch: the item must be ``in_progress`` and
+    its ``root_task`` must be terminal, and every branch ends in a state the
+    next tick no longer selects.
+    """
+    from server.models.enums.task_enums import TaskCallStatus
+    from server.models.workitems.enums import WorkItemStatus
+    from server.models.workitems.work_item import WorkItem
+
+    for item in WorkItem.objects.filter(status=WorkItemStatus.IN_PROGRESS):
+        try:
+            if not item.root_task_id:
+                # The dispatch claimed the item but died before recording its
+                # turn; nothing to observe.  Only an executor-less item can
+                # stall here, and it was already failed into `blocked`.
+                continue
+            if not item.root_task or item.root_task.status != TaskCallStatus.ENDED:
+                continue
+            _report_outcome(item)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(
+                f"[scheduler] error reporting work item {item.pk}: {e} "
+                f"{traceback.format_exc()}"
+            )
+
+
+def _report_outcome(item: Any) -> None:
+    """Route a finished dispatch to review or blocked."""
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from runtime.workitems.workitem_fsm import WorkItemStateMachine
+
+    detail = item.root_task.status_detail
+    outcome = _work_item_outcome_text(item)
+
+    if detail == TaskCallStatusDetail.ENDED_SUCCESS:
+        if item.requires_verification:
+            WorkItemStateMachine.begin_review(item.pk, outcome)
+        else:
+            # Success without verification parks for a human.  It must never
+            # return to `ready` — see docs/work-items.md §7.4.
+            WorkItemStateMachine.report_success(item.pk, outcome)
+        return
+
+    WorkItemStateMachine.report_failure(
+        item.pk, f"{detail}: {outcome}" if outcome else str(detail)
+    )
+
+
+def _work_item_outcome_text(item: Any) -> str:
+    """Summarise the dispatch for ``last_outcome``.
+
+    Prefers the executor's own final_result over the ATC status: §3.1 — a
+    crashed tool still ends SUCCESS, so the status alone says nothing about
+    whether the work happened.
+    """
+    from runtime.workitems.work_item_verifier import WorkItemVerifier
+
+    final = WorkItemVerifier._final_result_text(item)  # pylint: disable=protected-access
+    detail = item.root_task.status_detail if item.root_task_id and item.root_task else "unknown"
+    if final:
+        return f"{detail} — final_result: {final}"
+    return f"{detail} (no final_result)"
+
+
+def _verify_work_items() -> None:
+    """Dispatch the agent reviewer for items awaiting verification.
+
+    A thin launcher: the review itself runs on a worker so a long LLM turn can
+    never stall the tick.
+
+    Only rows with a NULL ``verify_status`` are claimed, and the claim is written
+    *before* the worker is dispatched.  That is what makes this idempotent — a
+    second tick sees ``pending`` and leaves the in-flight review alone.  It also
+    means a reviewer that dies leaves the item pending for a human instead of
+    being retried in a loop (``docs/work-items.md`` §8.5).
+    """
+    from server.models.workitems.enums import WorkItemStatus, WorkItemVerifyStatus
+    from server.models.workitems.work_item import WorkItem
+
+    for item in WorkItem.objects.filter(
+        status=WorkItemStatus.IN_REVIEW, verify_status__isnull=True
+    ):
+        try:
+            if not item.requires_verification:
+                continue
+            claimed = WorkItem.objects.filter(
+                pk=item.pk, verify_status__isnull=True
+            ).update(
+                verify_status=WorkItemVerifyStatus.PENDING,
+                updated_at=timezone.now(),
+            )
+            if not claimed:
+                continue
+            from server.tasks.task_dispatcher import celery_delay
+            from runtime.workitems.work_item_verifier import WorkItemVerifier
+
+            celery_delay(WorkItemVerifier.verify, item.pk)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(
+                f"[scheduler] error verifying work item {item.pk}: {e} "
+                f"{traceback.format_exc()}"
+            )

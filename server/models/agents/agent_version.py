@@ -97,8 +97,15 @@ class AgentVersionModel(BaseModel):
         if session_type:
             session_defaults["session_type"] = session_type
 
+        # ``parent_session`` belongs in the *lookup*, not only in ``defaults``.
+        # As a default it applied on create alone, so a second caller reusing
+        # the name got back the first caller's session — two projects each
+        # naming a session "research" shared one row, one turn_count and one
+        # message chain.  ``None`` is translated to IS NULL, which also scopes
+        # top-level sessions correctly.
         session, _ = SessionModel.objects.get_or_create(
             name=name,
+            parent_session=parent_instance,
             defaults=session_defaults,
         )
 

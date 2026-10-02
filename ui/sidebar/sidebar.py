@@ -11,6 +11,7 @@ from ui.sidebar.panels.logs import SidebarPanelLogs
 from ui.sidebar.panels.projects import SidebarPanelProjects
 from ui.sidebar.panels.settings import SidebarPanelSettings
 from ui.sidebar.panels.skills import SidebarPanelSkills
+from ui.sidebar.panels.workitems import SidebarPanelWorkItems
 from ui.sidebar.panels.workspaces import SidebarPanelWorkspaces
 from ui.sidebar.project_selector import ProjectSelector
 
@@ -42,9 +43,9 @@ class SidebarView(ModelView):
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
                 <div class="rail-button-text" style="display:none">Data flows</div>
             </button>
-            <button class="nav-tab" data-panel="kanban" data-label="Kanban" onclick="pyview.switchPanel('kanban')" title="Kanban" data-i18n-title="tab_kanban" style="display:none">
+            <button class="nav-tab" data-panel="workitems" data-label="Work items" onclick="pyview.switchPanel('workitems')" title="Work items (durable task queue)" data-i18n-title="tab_workitems">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16"/><path d="M16 4v16"/><path d="M3 10h18"/></svg>
-                <div class="rail-button-text" style="display:none">Agent</div>
+                <div class="rail-button-text" style="display:none">Work items</div>
             </button>
             <button class="nav-tab" data-panel="skills" data-label="Skills" onclick="pyview.switchPanel('skills')" title="Skills" data-i18n-title="tab_skills">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -110,6 +111,7 @@ class SidebarView(ModelView):
             chat = SidebarPanelChats(subject=self.subject, parent=self),
             cron = SidebarPanelCronjobs(subject=self.subject, parent=self),
             dataflows = SidebarPanelCollections(subject=self.subject, parent=self),
+            workitems = SidebarPanelWorkItems(subject=self.subject, parent=self),
 
             insights = SidebarPanelInsights(subject=self.subject, parent=self),
             logs = SidebarPanelLogs(subject=self.subject, parent=self),

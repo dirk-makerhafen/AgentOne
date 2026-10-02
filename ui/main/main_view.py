@@ -82,7 +82,8 @@ class MainView(PyHtmlView):
         panel = getattr(sidebar, 'selected_panel', None)
         if panel is None:
             return
-        for attr in ('agent_list', 'cronjob_list', 'collection_list', 'project_list', 'workspace_list', 'skill_list'):
+        for attr in ('agent_list', 'cronjob_list', 'collection_list', 'project_list',
+                     'workspace_list', 'skill_list', 'workitem_list'):
             lst = getattr(panel, attr, None)
             if lst is not None:
                 lst.update()
