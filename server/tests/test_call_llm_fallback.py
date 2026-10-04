@@ -218,9 +218,10 @@ class FallbackLoopTest(TestCase):
             llm_provider="vertex_ai",
         )
         self.assertTrue(module._is_provider_rate_limit(vertex_err))
-        self.assertAlmostEqual(
-            module._extract_retry_after_seconds(vertex_err), 4.94, places=1
-        )
+        # This quota message carries no explicit retry delay (no "retry in
+        # Xs", no retryDelay, no headers) → None, so the key's cooldown
+        # default decides (same contract as _NoDelay below).
+        self.assertIsNone(module._extract_retry_after_seconds(vertex_err))
 
     def test_retry_after_extraction(self):
         module = self.call_llm

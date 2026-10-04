@@ -394,8 +394,12 @@ class TestSidebarTreePanel(TestCase):
         return panel
 
     def test_tree_rows_nest_by_path(self):
-        panel = self._panel()
-        rows = panel.tree_rows
+        # Nesting structure (depth / has_children) comes from the pure
+        # builder; panel.tree_rows additionally hides collapsed subtrees
+        # (see test_subtrees_collapsed_by_default).
+        from ui.sidebar.panels.workspaces import build_workspace_tree
+
+        rows = build_workspace_tree([self.root, self.child, self.other])
         by_pk = {r["pk"]: r for r in rows}
         assert by_pk[self.root.pk]["depth"] == 0
         assert by_pk[self.child.pk]["depth"] == 1
@@ -520,7 +524,26 @@ class TestWorkspaceDetailActions(TestCase):
         assert not WorkspaceModel.objects.filter(pk=self.ws.pk).exists()
         main.close_tab.assert_called_once_with(view)
 
-    def test_new_chat_creates_workspace_bound_session_and_opens_tab(self):
+    def test_new_chat_opens_preset_overview(self):
+        from ui.main.chat.overview import ChatsOverview
+
+        view, main = self._detail()
+        main.create_and_open_tab = MagicMock()
+        view.newChat()
+        args, _ = main.create_and_open_tab.call_args
+        assert args[0] is ChatsOverview and args[1].pk == self.ws.pk
+
+    def _overview(self, agent=None):
+        from ui.main.chat.overview import ChatsOverview
+
+        main = MagicMock()
+        view = ChatsOverview(subject=self.ws, parent=main)
+        view.update = MagicMock()
+        if agent is not None:
+            view.setFormField("agent_id", str(agent.pk))
+        return view, main
+
+    def test_create_chat_creates_workspace_bound_session_and_opens_tab(self):
         from server.models.agents.agent import AgentModel
         from server.models.agents.agent_version import AgentVersionModel
         from server.models.sessions.session import SessionModel
@@ -530,16 +553,16 @@ class TestWorkspaceDetailActions(TestCase):
         av = AgentVersionModel.objects.create(agent=agent, version_number=1)
         AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=av)
 
-        view, main = self._detail()
+        view, main = self._overview(agent)
         main.create_and_open_tab = MagicMock()
-        view.newChat()
+        view.createChat()
 
         session = SessionModel.objects.get(name="Demo-chatbot")
         assert session.latest_session_version.workspace_id == self.ws.pk
         args, _ = main.create_and_open_tab.call_args
         assert args[0] is Chat and args[1].pk == session.pk
 
-    def test_new_chat_second_click_gets_fresh_name(self):
+    def test_create_chat_second_click_gets_fresh_name(self):
         from server.models.agents.agent import AgentModel
         from server.models.agents.agent_version import AgentVersionModel
         from server.models.sessions.session import SessionModel
@@ -548,10 +571,10 @@ class TestWorkspaceDetailActions(TestCase):
         av = AgentVersionModel.objects.create(agent=agent, version_number=1)
         AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=av)
 
-        view, main = self._detail()
+        view, main = self._overview(agent)
         main.create_and_open_tab = MagicMock()
-        view.newChat()
-        view.newChat()
+        view.createChat()
+        view.createChat()
 
         names = sorted(
             SessionModel.objects.filter(name__startswith="Demo-chatbot").values_list(
@@ -560,11 +583,15 @@ class TestWorkspaceDetailActions(TestCase):
         )
         assert names == ["Demo-chatbot", "Demo-chatbot-2"]
 
-    def test_new_chat_without_agent_is_noop(self):
-        view, main = self._detail()
+    def test_create_chat_without_agent_is_noop(self):
+        from server.models.sessions.session import SessionModel
+
+        view, main = self._overview()
         main.create_and_open_tab = MagicMock()
-        view.newChat()
+        view.createChat()
         main.create_and_open_tab.assert_not_called()
+        assert not SessionModel.objects.filter(name__startswith="Demo-").exists()
+        assert "agent" in view.form_error.lower()
 
     def test_save_edit_persists_all_fields(self):
         view, _ = self._detail()
@@ -591,7 +618,8 @@ class TestWorkspaceDetailActions(TestCase):
         assert view.editing is True and "directory" in view.edit_error
 
     def _bind_session(self, name, session_type, ws=None):
-        from server.models.agent import AgentModel, AgentVersionModel
+        from server.models.agents.agent import AgentModel
+        from server.models.agents.agent_version import AgentVersionModel
         from server.models.sessions.session import SessionModel
         from server.models.sessions.session_version import SessionVersionModel
         from server.models.settings import SettingsModel

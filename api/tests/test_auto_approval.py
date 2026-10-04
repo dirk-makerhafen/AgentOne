@@ -128,7 +128,7 @@ def _decider_env(review_task_call_id: int) -> Session:
 
 
 def _verdict_module():
-    return _load_script(".agentone/scripts/decider/approval_verdict.py")
+    return _load_script(".agentone/agents/approval_decider/scripts/approval_verdict.py")
 
 
 @pytest.mark.django_db

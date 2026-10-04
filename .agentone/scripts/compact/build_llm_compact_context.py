@@ -69,6 +69,25 @@ def build_llm_compact_context(
     
     
     parent_sv = _session.get_version_model()
+    # Session hooks (``pre_compact`` event): fired once per compaction —
+    # retries (compact_attempt > 0) do not refire. The fork anchors at the
+    # current tail, so it sees the doomed range with no boundary surgery.
+    if not compact_attempt:
+        try:
+            from runtime.hooks import maybe_fire_hooks
+
+            tail = _session.get_last_message()
+            maybe_fire_hooks(
+                _session,
+                "pre_compact",
+                {
+                    "trigger": "idle" if idle_trigger else "auto",
+                    "anchor_message": tail.pk if tail is not None else None,
+                    "compact_attempt": compact_attempt,
+                },
+            )
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"[hooks] error firing pre_compact hooks: {e}")
     info_message = Message.objects.create(
         role=MessageRole.INFO,
         session=parent_sv.session,

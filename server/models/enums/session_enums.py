@@ -13,6 +13,10 @@ class SessionType(models.TextChoices):
       ``delegate_task`` (single-use).
     - ``SUBTASK_FORK``: a forked child session via ``spawn_subtask``
       (single-use).
+    - ``SUBTASK_COMPACT``: a one-off compaction summarizer fork via
+      ``compact_turn`` (single-use).
+    - ``SUBTASK_HOOK``: a one-off session-hook worker fork (single-use;
+      see ``docs/session-hooks.md``). Never fires hooks itself.
     """
 
     SESSION = "session", "Session"
@@ -20,4 +24,5 @@ class SessionType(models.TextChoices):
     SUBTASK_DELEGATE = "subtask_delegate", "Subtask (delegate)"
     SUBTASK_FORK = "subtask_fork", "Subtask (fork)"
     SUBTASK_COMPACT = "subtask_compaczt", "Subtask (session compaction)"
+    SUBTASK_HOOK = "subtask_hook", "Subtask (hook)"
 

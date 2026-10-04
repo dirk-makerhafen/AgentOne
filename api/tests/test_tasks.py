@@ -596,6 +596,7 @@ class TestTaskRuns:
         )
         run = AgentTaskRun.objects.create(
             agent_task_call=call, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -657,6 +658,7 @@ class TestParallelRunLimit:
         # call1 already holds the single run slot (limit=1).
         AgentTaskRun.objects.create(
             agent_task_call=call1, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -700,6 +702,7 @@ class TestParallelRunLimit:
         old = self._make_queued_call(ti, td, tdv, session, sv)
         old_run = AgentTaskRun.objects.create(
             agent_task_call=old, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -713,6 +716,7 @@ class TestParallelRunLimit:
         )
         next_step_run = AgentTaskRun.objects.create(
             agent_task_call=next_step, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -741,6 +745,7 @@ class TestParallelRunLimit:
         call1 = AgentTaskCall.objects.get(pk=call1.pk)
         AgentTaskRun.objects.create(
             agent_task_call=call1, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -818,6 +823,7 @@ class TestRecoverStuckCalls:
         zombie = self._make_call(ti, td, tdv, session, sv, root=root)
         AgentTaskRun.objects.create(
             agent_task_call=zombie, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -869,6 +875,7 @@ class TestRecoverStuckCalls:
         root = self._make_call(ti, td, tdv, session, sv, root=None)
         AgentTaskRun.objects.create(
             agent_task_call=root, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1090,6 +1097,7 @@ class TestStartRunningRootGuard:
         child = self._make_call(ti, td, tdv, session, sv, root=root)
         AgentTaskRun.objects.create(
             agent_task_call=child, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1162,6 +1170,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.ACTIVE_RUNNING)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1184,6 +1193,7 @@ class TestResolveStuckWaitingRuns:
                                   detail=TaskCallStatusDetail.ACTIVE_RUNNING)
         AgentTaskRun.objects.create(
             agent_task_call=sibling, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1215,6 +1225,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.ACTIVE_RUNNING)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1260,6 +1271,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1299,6 +1311,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1315,6 +1328,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         parked_run = AgentTaskRun.objects.create(
             agent_task_call=parked, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1363,6 +1377,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1404,6 +1419,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1450,6 +1466,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1469,6 +1486,7 @@ class TestResolveStuckWaitingRuns:
                                   detail=TaskCallStatusDetail.ACTIVE_RUNNING)
         AgentTaskRun.objects.create(
             agent_task_call=sibling, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1503,6 +1521,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1579,6 +1598,7 @@ class TestResolveStuckWaitingRuns:
                                  detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         run = AgentTaskRun.objects.create(
             agent_task_call=parent, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1596,6 +1616,7 @@ class TestResolveStuckWaitingRuns:
                               detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
         mid_run = AgentTaskRun.objects.create(
             agent_task_call=mid, task_instance=ti, task_definition_version=tdv,
+            session=session,
             session_version=sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
@@ -1640,6 +1661,7 @@ class TestResolveStuckWaitingRuns:
                 status_detail=TaskCallStatusDetail.ACTIVE_RUNNING,
             ).first(),
             task_instance=child_ti, task_definition_version=tdv,
+            session=child_session,
             session_version=child_sv, arguments_json={},
             requires_approval=False, max_subtask_errors=0,
             max_subtask_error_rate=0, limit_subtask_parallel_runs=0,

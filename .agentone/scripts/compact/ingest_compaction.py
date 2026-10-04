@@ -273,6 +273,24 @@ def ingest_compaction(
     except Exception:
         pass
 
+    # Session hooks (``post_compact`` event): fired once, after the marker is
+    # the chain tip. The fork anchors at the marker, so it sees the summary
+    # and reaches the compacted range via the boundary link.
+    try:
+        from runtime.hooks import maybe_fire_hooks
+
+        maybe_fire_hooks(
+            _session,
+            "post_compact",
+            {
+                "trigger": "idle" if kwargs.get("idle_trigger") else "auto",
+                "anchor_message": marker.pk,
+                "boundary_pk": boundary_pk,
+            },
+        )
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
     return dict(
         response=response,
         parts=parts,

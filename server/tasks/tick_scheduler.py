@@ -9,6 +9,8 @@ Celery beat periodic task handling the 10-second time-driven wakeups:
   5. NEW (scheduled)   - release calls with dont_start_before in the past
   6. Idle compaction   - dispatch ``compact_turn`` for quiet, oversized
                          sessions before their KV cache expires
+  7. Hook reaping      - cancel expired session-hook runs, delete finished
+                         ones (``runtime.hooks`` owns the logic)
 
 Sibling one-minute tasks live in their own modules:
 
@@ -63,6 +65,7 @@ def tick_scheduler() -> None:
         _report_work_item_outcomes,
         _verify_work_items,
         _compact_idle_sessions,
+        _reap_hook_timeouts,
     ):
         try:
             routine()
@@ -411,17 +414,19 @@ def _dispatch_processor(flow, call, source_item=None):
         pinned_session_version=session_version,
     )
 
-    # Determine member BEFORE creating the processor call so we can persist
-    # a CollectionItem (dedup token) immediately — even if the processor
-    # fails or this function throws an exception later.
-    member = _extract_member(flow, None, call)
+    # Determine the pre-dispatch member/score from the source call so we can
+    # persist a CollectionItem (dedup token) immediately — even if the
+    # processor fails or this function throws an exception later.  When the
+    # processor runs synchronously (eager mode) the token is reconciled
+    # below against the real result (result-based member, None-filtering).
+    pre_member = _extract_member(flow, None, call)
     score = _extract_score(flow, None, call)
 
     # Upsert the dedup token right away so the source call won't be
     # re-dispatched on the next tick regardless of what happens below.
     CollectionItem.objects.update_or_create(
         collection=flow,
-        member=member,
+        member=pre_member,
         defaults={
             "score": score,
             "value": call.carguments_json,
@@ -455,27 +460,48 @@ def _dispatch_processor(flow, call, source_item=None):
     )
     processor_call.apply_async()
 
-    # Try to capture the processor function's return value (eager mode only).
-    # In non-eager (production) mode the call hasn't completed yet, so we fall
-    # back to the raw input arguments for backward compatibility.
+    # Try to capture the processor function's return value (synchronous path:
+    # eager mode, where the call completed before we got here).  In async
+    # (production) mode the call hasn't completed yet, so we keep the
+    # args-derived token as-is — the result is unknowable at this point.
     from server.models.enums.task_enums import TaskCallStatusDetail, TaskRunStatus
     from server.models.tasks.agent_task_run import AgentTaskRun
 
     processor_call.refresh_from_db()
-    processor_result = None
     completed_run = None
     if processor_call.status_detail == TaskCallStatusDetail.ENDED_SUCCESS:
         completed_run = processor_call.related_agent_task_runs.filter(
             status=TaskRunStatus.SUCCESS
         ).first()
-        if completed_run and completed_run.result_json is not None:
-            processor_result = completed_run.result_json
+
+    member = pre_member
+    if completed_run is not None:
+        # The processor really ran: its return value is authoritative.
+        processor_result = completed_run.result_json
+        if processor_result is None:
+            # Filtered out (processor returned None): drop the pre-created
+            # dedup token and report no item.
+            CollectionItem.objects.filter(
+                collection=flow, member=pre_member
+            ).delete()
+            return None
+        # Re-derive member/score from the processor result (set member_field
+        # / score_field read the result, not the raw args).  A changed
+        # member orphans the pre-created token — remove it.
+        member = _extract_member(flow, processor_call, call, processor_result)
+        score = _extract_score(flow, processor_call, call, processor_result)
+        if member != pre_member:
+            CollectionItem.objects.filter(
+                collection=flow, member=pre_member
+            ).delete()
 
     # Update the CollectionItem with the actual processor call and result
     defaults: dict = {
         "source_call": processor_call,
         "score": score,
-        "value": processor_result if processor_result is not None else call.carguments_json,
+        "value": completed_run.result_json
+        if completed_run is not None
+        else call.carguments_json,
     }
     if source_item is not None:
         defaults["source_item"] = source_item
@@ -645,6 +671,9 @@ def _dispatch_data_flows() -> None:
                 if CollectionItem.objects.filter(collection=flow, member=member).exists():
                     continue  # Already dispatched
                 _dispatch_processor(flow, call)
+                break  # One fresh dispatch per flow per tick (conservative
+                # throttling — drains catch-up backlogs over several ticks
+                # instead of flooding processors after downtime).
 
 
 def _propagate_from_collections(collection: Any = None) -> None:
@@ -1029,3 +1058,22 @@ def _compact_idle_sessions() -> None:
                 f"[scheduler] error in _compact_idle_sessions "
                 f"for session {session_model.pk}: {e}"
             )
+
+
+#: Max hook runs reaped per tick: bounds one tick's work when many hooks
+#: expire at once (same rationale as _MAX_IDLE_COMPACTIONS_PER_TICK).
+_MAX_HOOK_REAPS_PER_TICK = 20
+
+
+def _reap_hook_timeouts() -> None:
+    """Cancel expired session-hook runs and delete finished ones.
+
+    Thin launcher over ``runtime.hooks.reap_hook_timeouts`` (which owns the
+    FSM transitions) plus ``delete_expired_hook_runs`` audit hygiene. Never
+    applies the 24h ``_is_ancient`` turn-death guard — the hook deadline *is*
+    the lifetime (see ``docs/session-hooks.md`` §8.3).
+    """
+    from runtime.hooks import delete_expired_hook_runs, reap_hook_timeouts
+
+    reap_hook_timeouts(limit=_MAX_HOOK_REAPS_PER_TICK)
+    delete_expired_hook_runs()

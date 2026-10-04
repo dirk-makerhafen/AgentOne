@@ -25,6 +25,7 @@ def _panel_pyview(**overrides):
         provider_rows=[_row(1), _row(2, key_state="none", description="No key yet")],
         _expanded_id=None, _detail_id=None, expanded_keys=[],
         key_visibility_btn="Reveal all", input_type="password", uid="t1",
+        sort_arrow=lambda col: "",
     )
     base.update(overrides)
     return SimpleNamespace(**base)

@@ -73,6 +73,13 @@ class AgentVersionModel(BaseModel):
     subagent_versions = models.ManyToManyField("self",default=None,related_name="used_by_agent_versions",symmetrical=False,blank=True)
     subagent_configs = models.JSONField(default=dict, blank=True)
 
+    #: Session-hook entries from ``agent.md`` (``hooks:`` list of dicts:
+    #: on/matcher/agent/task/ingest/max_tokens/timeout_seconds — see
+    #: ``docs/session-hooks.md`` §7). Own entries only; the extends-chain
+    #: merge happens at runtime (``Agent.hooks``). Same pattern as
+    #: ``subagent_configs``: set on create, not part of version identity.
+    hooks = models.JSONField(default=list, blank=True)
+
     agent_settings = models.ForeignKey(SettingsModel,default=None,null=True,on_delete=models.SET_NULL,related_name="related_agent_versions")
 
     version_number = models.IntegerField(default=0)

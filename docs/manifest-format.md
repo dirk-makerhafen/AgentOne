@@ -65,6 +65,15 @@ reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel
 toolCallSyntax: default        # default | custom
 visibility: user               # user | subagent | internal (who the agent is for)
+hooks:                          # optional — session hooks (see docs/session-hooks.md)
+  - name: reflect
+    on: stop                    # stop | pre_compact | post_compact | session_end
+    matcher: session            # optional event-field filter (default per event)
+    agent: memory               # optional — hook agent (default: self)
+    task: distill_turn          # task/chain to run detached in a fork
+    ingest: record_memory       # optional parent-side task on the fork result
+    max_tokens: 40000           # fork context budget (0 = unbounded)
+    timeout_seconds: 300        # wall-clock deadline (0 = none)
 priority: 0                    # 0 = highest
 thinking: false                # enable thinking tokens
 
@@ -89,6 +98,7 @@ Agent body content goes here — used as the system prompt.
 | `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default false — opt-in) |
 | `guidanceFileIndexLimit` | int | Max nested guidance files listed in the index (default 10, 0 = omit) |
 | `visibility` | enum | Who the agent is for: `user` (default, shown in pickers), `subagent` (hidden from pickers, spawnable), `internal` (framework-only, spawned by name) |
+| `hooks` | list | Session-hook entries (`on`/`matcher`/`agent`/`task`/`ingest`/`max_tokens`/`timeout_seconds`) — detached agent work at lifecycle points, see [Session hooks](session-hooks.md). `on:` works unquoted (loader normalizes the YAML-1.1 bool). `blocking: true` is rejected (deferred sync tier). |
 | Priority/scheduling | various | Execution control knobs |
 
 ### Access Policy

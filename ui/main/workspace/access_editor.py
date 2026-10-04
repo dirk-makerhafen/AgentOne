@@ -14,7 +14,9 @@ from ui.lib.model_view import ModelView
 SECTIONS = ("read", "write")
 KEYS = ("allow", "ask", "deny")
 DEFAULTS = ("allow", "ask", "deny")
-FALLBACK_DEFAULT = "aks"
+# Unset/invalid defaults fall back to the runtime inside-default (allow),
+# so saving an untouched workspace never narrows its policy.
+FALLBACK_DEFAULT = "allow"
 
 
 def normalize_access(raw: dict | None) -> dict:

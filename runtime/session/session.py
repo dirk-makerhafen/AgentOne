@@ -1042,26 +1042,55 @@ class Session:
             f"Switch to a vision-capable model in the composer (e.g. {suggestions}) to send images."
         )
 
-    def set_is_active(self, new_value: bool) -> None:
+    def set_is_active(self, new_value: bool, reason: str | None = None) -> None:
         """Mark the session active and stamp the last-activity timestamp.
 
         Any incoming message (user or subagent) reactivates an inactive
         session and refreshes ``last_active_at``, which the sidebar and
         ``list_subsessions`` use to decide which inactive sessions to show.
+
+        A True→False transition additionally fires ``session_end`` hooks
+        (see ``docs/session-hooks.md`` §5.3) — detached and fail-open, so
+        deactivation never waits on reflection. Pausing is not deactivation
+        (no event); reactivation fires nothing.
         """
         from django.utils import timezone
         from runtime.events import publish_model_event
+        now = timezone.now()
         if new_value == self.model.is_active:
+            if new_value:
+                # Idempotent activation still signals activity: every inbound
+                # message path calls this, so the stamp tracks real use.
+                SessionModel.objects.filter(pk=self.model.pk).update(
+                    last_active_at=now
+                )
+                self.model.last_active_at = now
             return
 
-        now = timezone.now()
         was_inactive = not self.model.is_active
         SessionModel.objects.filter(pk=self.model.pk).update(
             is_active=new_value,
             last_active_at=now,
         )
         self.model.is_active = new_value
+        self.model.last_active_at = now
         publish_model_event(self.model, "update")
+
+        if not new_value and not was_inactive:
+            try:
+                from runtime.hooks import maybe_fire_hooks
+
+                tail = self.get_last_message()
+                maybe_fire_hooks(
+                    self,
+                    "session_end",
+                    {
+                        "reason": reason or "deactivated",
+                        "anchor_message": tail.pk if tail is not None else None,
+                    },
+                )
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"[hooks] error firing session_end hooks: {e}")
 
     def _has_active_call(self) -> bool:
         """Return True if there is a non-ended ingest or process_turn call

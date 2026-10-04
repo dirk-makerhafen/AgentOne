@@ -94,6 +94,35 @@ class Agent:
         return self.visibility == "user"
 
     @property
+    def hooks(self) -> list[dict]:
+        """Return merged session-hook entries (see ``docs/session-hooks.md``).
+
+        Own version's entries first, then the extends chain depth-first. A
+        child entry with the same ``(on, name)`` replaces the parent entry —
+        so agents specialize inherited hooks without duplicating the list.
+        """
+        merged: list[dict] = []
+        seen: set[tuple] = set()
+        visited: set[int] = set()
+
+        def collect(version: Any) -> None:
+            if version is None or version.pk in visited:
+                return
+            visited.add(version.pk)
+            for entry in version.hooks or []:
+                if not isinstance(entry, dict):
+                    continue
+                key = (entry.get("on"), entry.get("name"))
+                if key not in seen:
+                    seen.add(key)
+                    merged.append(dict(entry))
+            for parent in version.extends_agent_versions.all():
+                collect(parent)
+
+        collect(self.get_version_model())
+        return merged
+
+    @property
     def version_number(self) -> int:
         """Return the version number of the active version."""
         return self.get_version_model().version_number

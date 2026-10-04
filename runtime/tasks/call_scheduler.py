@@ -179,6 +179,13 @@ class CallScheduler:
                 requires_approval=True, guardrail_reason = verdict.reason
             )
             print(f"  # PYTHON GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
+        elif verdict.action == "ask" and not tc.guardrail_reason:
+            # Already gated (e.g. by policy): don't escalate, but record why
+            # for the approval card when no reason was stored yet.
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            _ATC.objects.filter(pk=tc.pk).update(
+                guardrail_reason=verdict.reason
+            )
 
     @staticmethod
     def _guardrail_shell_check(task_call_id: int) -> None:
@@ -224,6 +231,13 @@ class CallScheduler:
                 requires_approval=True, guardrail_reason = verdict.reason,
             )
             print(f"  # GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
+        elif verdict.action == "ask" and not tc.guardrail_reason:
+            # Already gated (e.g. by policy): don't escalate or touch args,
+            # but record why for the approval card when no reason was stored.
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            _ATC.objects.filter(pk=tc.pk).update(
+                guardrail_reason=verdict.reason,
+            )
 
     @staticmethod
     # pylint: disable=too-many-locals

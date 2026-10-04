@@ -10,6 +10,7 @@ from server.models.collections import DataCollection, CollectionItem
 from server.models.enums.task_enums import TaskCallStatusDetail, TaskType
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
+from server.models.settings import SettingsModel
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 from server.models.tasks.task_instance import TaskInstance
@@ -20,7 +21,9 @@ TESTPROJECT = Path(__file__).parent / "testproject" / ".agentone"
 
 def create_agent(name: str = "test-agent") -> tuple[AgentModel, AgentVersionModel]:
     agent = AgentModel.objects.create(name=name)
-    av = AgentVersionModel.objects.create(agent=agent)
+    av = AgentVersionModel.objects.create(
+        agent=agent, agent_settings=SettingsModel.objects.create()
+    )
     AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=av)
     agent.refresh_from_db()
     return agent, av

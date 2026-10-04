@@ -238,6 +238,31 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         if next_todo is not None:
             next_message, todolist_task_result = next_todo
             _session.get_task("process_turn").delay(message=next_message, todolist_task_result_to_ignore=todolist_task_result) # chain these, process_turn ignores kwargs anyway
+        # Session hooks (``stop`` event): reflect/distill detached — the
+        # hook fork never makes the session wait. Fail-open by contract.
+        try:
+            from runtime.hooks import maybe_fire_hooks
+
+            maybe_fire_hooks(
+                _session,
+                "stop",
+                {
+                    "anchor_message": walk_message.pk,
+                    "has_todo_continuation": next_todo is not None,
+                },
+            )
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"[hooks] error firing stop hooks: {e}")
+        # Single-use subtask sessions end with their final result (they are
+        # never returned to). Persistent SESSION/SUBSESSION stay active.
+        # Deactivation fires ``session_end`` hooks via set_is_active.
+        if _session.session_type in (
+            SessionType.SUBTASK_FORK,
+            SessionType.SUBTASK_DELEGATE,
+            SessionType.SUBTASK_COMPACT,
+            SessionType.SUBTASK_HOOK,
+        ):
+            _session.set_is_active(False, reason="final_result")
         return message
 
 

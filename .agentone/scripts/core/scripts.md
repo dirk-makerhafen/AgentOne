@@ -1,5 +1,10 @@
 ---
 group: core
+commands:
+  - name: ping
+    file: ping.py
+    function: ping
+    bound: True
 tools:
   # Have the subagent return a result to the caller
   - name: final_result
