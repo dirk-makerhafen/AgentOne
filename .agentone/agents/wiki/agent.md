@@ -9,7 +9,7 @@ tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.
 commands: [+, ingest_next, wiki_lint]
 tasks: [+, wiki.find_unlinked_raw, ]
 autoCompactLimit: 100000
-compactSizeLimit: 10
+autoCompactKeepPercent: 10
 subagents:
     - name: researcher
       create: both

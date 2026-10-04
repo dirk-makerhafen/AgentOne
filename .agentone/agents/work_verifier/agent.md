@@ -1,6 +1,6 @@
 ---
 name: work_verifier
-model: Nail-Qwen3.6-35B-A3B-MLX
+model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Reviews finished work against its requirement and renders a verdict — approve automatically, reject for rework, or escalate to a human.
 extends: []
 inheritSystemPrompt: false
@@ -9,7 +9,7 @@ maxTurns: 10
 maxUnattendedTurns: 10
 maxHistoryMessages: 200
 autoCompactLimit: 120000
-compactSizeLimit: 15
+autoCompactKeepPercent: 15
 reasoningEffort: high
 schedulerStrategy: queue
 precision: precise

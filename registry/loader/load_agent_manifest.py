@@ -163,7 +163,7 @@ def load_agent_manifest(
         "subagentNames": subagent_names or [],
         "disallowedSubagentNames": get_list("disallowedSubagents"),
         "auto_compact_limit": manifest.get("autoCompactLimit"),
-        "compact_size_limit": manifest.get("compactSizeLimit"),
+        "auto_compact_keep_percent": manifest.get("autoCompactKeepPercent"),
         "priority": manifest.get("priority"),
         "thinking": manifest.get("thinking"),
         "inherit_system_prompt": manifest.get("inheritSystemPrompt"),

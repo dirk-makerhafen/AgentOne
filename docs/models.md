@@ -541,14 +541,14 @@ Comprehensive agent/session settings. All nullable — values inherit through th
 | `max_unattended_turns` | `IntegerField` | |
 | `max_history_messages` | `IntegerField` | |
 | `auto_compact_limit` | `IntegerField(nullable)` | Token threshold triggering auto-compaction (0 = disabled) |
-| `compact_size_limit` | `IntegerField(nullable)` | Percentage of newest messages to keep in full during compaction |
+| `auto_compact_keep_percent` | `IntegerField(nullable)` | Percentage of newest tokens kept in full on compaction (0 = default 15) |
 | `scheduler_strategy` | `CharField(choices=TaskSchedulerStrategy)` | interrupt / queue / merge / parallel |
 | `tool_call_syntax` | `CharField(choices)` | default / custom |
 | `commandNames` / `taskNames` / `toolNames` / `skillNames` / `subagentNames` | `JSONField(list)` | Allow lists (wildcards) |
 | `disallowed*Names` | `JSONField(list)` | Deny lists (wildcards) |
 | `subagentResultDelivery` | `CharField(choices)` | passive / immediate |
 | `autoload` | `JSONField` | AGENTS.md autoload config (files, maxFiles, maxChars, maxCharsPerFile) |
-| `load_guidance_file_index` | `BooleanField(nullable)` | Nested guidance-file index toggle (default true) |
+| `load_guidance_file_index` | `BooleanField(nullable)` | Nested guidance-file index toggle (default false — opt-in) |
 | `guidance_file_index_limit` | `IntegerField(nullable)` | Max nested guidance files in the index (default 10, 0 = omit) |
 | `extra_settings` | `JSONField` | Extensibility — agent `access:` policy stored under the `access` key |
 | `commit` | `TextField(1024)` | Git hash |

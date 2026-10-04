@@ -123,8 +123,8 @@ class AgentView(ModelView):
                                     <div class="detail-row-value">{{pyview.agent.auto_compact_limit}}</div>
                                 </div>
                                 <div class="detail-row">
-                                    <div class="detail-row-label">compact_size_limit</div>
-                                    <div class="detail-row-value">{{pyview.agent.compact_size_limit}}</div>
+                                    <div class="detail-row-label">auto_compact_keep_percent</div>
+                                    <div class="detail-row-value">{{pyview.agent.auto_compact_keep_percent}}</div>
                                 </div>
                             </div>
                         </div>

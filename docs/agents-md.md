@@ -57,13 +57,17 @@ growing history tail, where append-only growth is already cache-friendly.
 
 ```yaml
 autoload:
-  files: [AGENTS.md, "docs/**/*.md"]  # workspace-relative path patterns
+  files: []               # default [] — nothing pinned; opt in per agent
   maxFiles: 10          # default 10 — how many pattern matches load
   maxChars: 32768       # default 32768 — total chars of autoloaded content
   maxCharsPerFile: 8192 # default 8192 — per-file truncation cap
-loadGuidanceFileIndex: true  # default true — index nested guidance files
-guidanceFileIndexLimit: 10   # default 10 — max index entries (0 = omit index)
+loadGuidanceFileIndex: false  # default false — index nested guidance files
+guidanceFileIndexLimit: 10    # default 10 — max index entries (0 = omit index)
 ```
+
+Both mechanisms are opt-in: with `files: []` (the default) nothing is
+pinned, and with `loadGuidanceFileIndex: false` (the default) no index
+is built and no hints fire.
 
 - The `autoload:` block and both index keys inherit through `extends` and
   resolve through the standard settings chain (session-overridable) like

@@ -58,7 +58,7 @@ autoload:                      # optional — AGENTS.md autoload (see below)
   maxChars: 32768              # total char budget (0 = disable contents)
   maxCharsPerFile: 8192        # per-file char cap (remainder truncated with marker)
 autoCompactLimit: 100000        # token threshold for auto-compaction (0 = disabled)
-compactSizeLimit: 15            # percentage of newest messages to keep in full
+autoCompactKeepPercent: 15     # percentage of newest tokens to keep in full on compaction
 reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel
 toolCallSyntax: default        # default | custom
@@ -83,7 +83,7 @@ Agent body content goes here — used as the system prompt.
 | `disallowed*` | list | Denied item names |
 | `access` | dict | Filesystem access policy (see [Access Policy](#access-policy)) |
 | `autoload` | dict | AGENTS.md autoload (see [Autoload](#autoload)) |
-| `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default true) |
+| `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default false — opt-in) |
 | `guidanceFileIndexLimit` | int | Max nested guidance files listed in the index (default 10, 0 = omit) |
 | Priority/scheduling | various | Execution control knobs |
 
@@ -146,7 +146,7 @@ Pattern rules (workspace-relative, files only):
   a `[truncated …]` marker. Counts are chars, not tokens.
 
 The nested guidance-file index is a separate feature controlled by the
-standalone `loadGuidanceFileIndex` key (default `true`) and capped by
+standalone `loadGuidanceFileIndex` key (default `false` — opt-in) and capped by
 `guidanceFileIndexLimit` (default 10, `0` omits the index message). It lists
 nested `AGENTS.md`/`CLAUDE.md` files *not* already pinned by `autoload:`
 — the two never duplicate each other — and touching a listed subtree

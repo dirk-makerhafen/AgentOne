@@ -1,6 +1,6 @@
 ---
 name: baseagent
-model: Nail-Qwen3.6-35B-A3B-MLX
+model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Core functions available for all.
 extends: []
 maxRetries: 0
@@ -8,7 +8,14 @@ maxTurns: 200
 maxUnattendedTurns: 200
 maxHistoryMessages: 1000
 autoCompactLimit: 120000
-compactSizeLimit: 15
+autoCompactKeepPercent: 15
+autoload:
+  files: []
+  maxFiles: 10
+  maxChars: 32768
+  maxCharsPerFile: 8192
+loadGuidanceFileIndex: true
+guidanceFileIndexLimit: 10
 reasoningEffort: medium
 schedulerStrategy: queue
 precision: balanced

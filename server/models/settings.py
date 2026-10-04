@@ -74,7 +74,7 @@ class SettingsModel(BaseModel):
     max_unattended_turns: int | None = models.IntegerField(default=None, null=True, blank=True)
     max_history_messages: int | None = models.IntegerField(default=None, null=True, blank=True)
     auto_compact_limit: int | None = models.IntegerField(default=None, null=True, blank=True)
-    compact_size_limit: int | None = models.IntegerField(default=None, null=True, blank=True)
+    auto_compact_keep_percent: int | None = models.IntegerField(default=None, null=True, blank=True)
     priority: int | None = models.IntegerField(default=None, null=True, blank=True)  # 0 = highest, 1..999 less important
 
     task_prompt: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_task_prompt")

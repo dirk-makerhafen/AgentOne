@@ -47,7 +47,7 @@ def _write(root: str, rel: str, content: str = "x") -> str:
 class ValidateAutoloadBlockTest(SimpleTestCase):
     def test_defaults_when_empty_mapping(self):
         cfg = validate_autoload_block({})
-        self.assertEqual(cfg, {"files": ["AGENTS.md"]})
+        self.assertEqual(cfg, {"files": []})
 
     def test_string_files_becomes_list(self):
         cfg = validate_autoload_block({"files": "AGENTS.md"})
@@ -431,13 +431,24 @@ class GuidanceFileSessionTest(TestCase):
             guidance_files.clear_guidance_cache, self.session_model.pk
         )
 
-    def test_config_defaults_and_overrides(self):
+    def test_config_defaults_are_opt_in(self):
+        from server.models.settings import SettingsModel
+
+        SettingsModel.objects.filter(
+            pk=self.av.agent_settings.pk
+        ).update(
+            autoload=None,
+            load_guidance_file_index=None,
+            guidance_file_index_limit=None,
+        )
+        self.av.refresh_from_db()
         cfg = get_autoload_config(self.runtime)
-        self.assertEqual(cfg["files"], ["AGENTS.md"])
-        self.assertEqual(cfg["maxFiles"], 10)
-        self.assertNotIn("index", cfg)
-        self.assertTrue(get_guidance_file_index_enabled(self.runtime))
+        self.assertEqual(cfg["files"], [])
+        self.assertFalse(get_guidance_file_index_enabled(self.runtime))
         self.assertEqual(get_guidance_file_index_limit(self.runtime), 10)
+        autoload_text, index_text = guidance_files.ensure_pinned(self.runtime)
+        self.assertIsNone(autoload_text)
+        self.assertIsNone(index_text)
 
     def test_index_disabled_independently_of_autoload(self):
         from server.models.settings import SettingsModel

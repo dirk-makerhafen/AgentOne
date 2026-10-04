@@ -78,15 +78,6 @@ in-memory copy, so the approval card appears exactly when the limit is hit.
 
 ## Remaining / known limitations
 
-- Workspace writes publish (done): the create form
-  (`ui/main/workspace/create.py:saveWorkspaceForm`), the edit form
-  (`ui/main/workspace/workspace.py` save + `deleteWorkspace`), the DRF
-  `WorkspaceViewSet` (`api/views/workspaces.py`
-  `perform_create/update/destroy`), and the `get_or_create` sites in the
-  projectmanager/wiki scripts all call `publish_model_event`, so the
-  sidebar panel re-renders live. Covered by `TestWorkspacePublish`
-  (UI create/edit/delete publish, API create/update/delete publish, and a
-  fakeredis end-to-end: create → queue → panel re-render).
 - Queued messages carry `keys` (all matched keys) alongside `key` (first
   match, kept for compatibility).
 

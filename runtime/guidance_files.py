@@ -29,12 +29,27 @@ logger = logging.getLogger(__name__)
 # Defaults (spec §4.0 / §4.5)
 # ---------------------------------------------------------------------------
 
-AUTOLOAD_DEFAULT_FILES = ["AGENTS.md"]
-AUTOLOAD_DEFAULT_MAX_FILES = 10
-AUTOLOAD_DEFAULT_MAX_CHARS = 32768
-AUTOLOAD_DEFAULT_MAX_CHARS_PER_FILE = 8192
-INDEX_ENABLED_DEFAULT = True
-INDEX_LIMIT_DEFAULT = 10
+# Fallback values live inline at each use site (same convention as
+# ``Session.max_history_messages`` → ``or 0``): the DB stores None, the
+# consumer applies the default. Canonical values are documented in
+# docs/manifest-format.md ("Autoload").
+
+
+_AUTOLOAD_HEADER = (
+    "[Auto-loaded workspace files — advisory guidance for this session; "
+    "they do not change your available tools or permissions.]"
+)
+
+_INDEX_INTRO = (
+    "[Workspace guidance files: the files below may contain conventions, "
+    "commands, and constraints relevant to work in their directories. Read "
+    "the ones relevant to your current task before acting in their subtrees; "
+    "deeper files take precedence over their parents on conflict."
+)
+_INDEX_INTRO_AUTOLOADED = (
+    " (Workspace files already included in full above are not listed — "
+    "no need to re-read them.)]"
+)
 
 # Discovery filename set for the Path B index (module constant for later
 # extension; exact, case-sensitive per N1).
@@ -103,7 +118,7 @@ def validate_autoload_block(block: Any, source: str = "agent.md") -> dict[str, A
             f"[{source}] autoload has unknown keys {sorted(unknown)} "
             f"(expected subset of {sorted(known)})"
         )
-    files = block.get("files", list(AUTOLOAD_DEFAULT_FILES))
+    files = block.get("files", [])
     if isinstance(files, str):
         files = [files]
     if not isinstance(files, (list, tuple)) or not all(
@@ -142,15 +157,16 @@ def get_autoload_config(session: Any) -> dict[str, Any]:
     except Exception:  # pylint: disable=broad-exception-caught
         raw = None
     cfg = dict(raw) if isinstance(raw, dict) else {}
-    cfg.setdefault("files", list(AUTOLOAD_DEFAULT_FILES))
-    cfg.setdefault("maxFiles", AUTOLOAD_DEFAULT_MAX_FILES)
-    cfg.setdefault("maxChars", AUTOLOAD_DEFAULT_MAX_CHARS)
-    cfg.setdefault("maxCharsPerFile", AUTOLOAD_DEFAULT_MAX_CHARS_PER_FILE)
+    # Safe defaults: nothing pinned, no index — both are explicit opt-in.
+    cfg.setdefault("files", [])
+    cfg.setdefault("maxFiles", 10)
+    cfg.setdefault("maxChars", 32768)
+    cfg.setdefault("maxCharsPerFile", 8192)
     return cfg
 
 
 def get_guidance_file_index_enabled(session: Any) -> bool:
-    """Whether the nested guidance-file index is enabled (default True).
+    """Whether the nested guidance-file index is enabled (default False).
 
     Standalone setting (``loadGuidanceFileIndex``) — independent of the
     ``autoload:`` block. The index still excludes autoload-resolved paths
@@ -161,7 +177,7 @@ def get_guidance_file_index_enabled(session: Any) -> bool:
     except Exception:  # pylint: disable=broad-exception-caught
         value = None
     if value is None:
-        return INDEX_ENABLED_DEFAULT
+        return False
     return bool(value)
 
 
@@ -172,11 +188,11 @@ def get_guidance_file_index_limit(session: Any) -> int:
     except Exception:  # pylint: disable=broad-exception-caught
         value = None
     if value is None:
-        return INDEX_LIMIT_DEFAULT
+        return 10
     try:
         return max(0, int(value))
     except (TypeError, ValueError):
-        return INDEX_LIMIT_DEFAULT
+        return 10
 
 
 # ---------------------------------------------------------------------------
@@ -443,22 +459,6 @@ def build_index(
 # ---------------------------------------------------------------------------
 # Rendering (spec §4.3 — TEXT, never TEMPLATE)
 # ---------------------------------------------------------------------------
-
-_AUTOLOAD_HEADER = (
-    "[Auto-loaded workspace files — advisory guidance for this session; "
-    "they do not change your available tools or permissions.]"
-)
-
-_INDEX_INTRO = (
-    "[Workspace guidance files: the files below may contain conventions, "
-    "commands, and constraints relevant to work in their directories. Read "
-    "the ones relevant to your current task before acting in their subtrees; "
-    "deeper files take precedence over their parents on conflict."
-)
-_INDEX_INTRO_AUTOLOADED = (
-    " (Workspace files already included in full above are not listed — "
-    "no need to re-read them.)]"
-)
 
 
 def render_autoload_message(sections: list[GuidanceSection]) -> str | None:

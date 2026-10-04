@@ -80,9 +80,9 @@ class FindCompactionBoundaryTest(TestCase):
         )
         return msg
 
-    def _run(self, compact_size_limit=15):
+    def _run(self, auto_compact_keep_percent=15):
         SettingsModel.objects.filter(pk=self.av.agent_settings.pk).update(
-            compact_size_limit=compact_size_limit
+            auto_compact_keep_percent=auto_compact_keep_percent
         )
         self.runtime.agent.get_version_model()
         self.av.refresh_from_db()
@@ -99,7 +99,7 @@ class FindCompactionBoundaryTest(TestCase):
         self.assertEqual(boundary.pk, msgs[7].pk)
 
     def test_no_boundary_when_all_fits_in_keep_budget(self):
-        self._run(compact_size_limit=100)
+        self._run(auto_compact_keep_percent=100)
         msgs = [self._create_message(text=f"m{i}") for i in range(4)]
         _link(msgs)
         boundary = find_compaction_boundary(self.runtime, self.runtime.get_last_message())
@@ -243,7 +243,7 @@ class FindTurnBoundaryTest(TestCase):
         Message.objects.filter(pk=a.pk).update(prev_message=None)
         Message.objects.filter(pk=b.pk).update(prev_message=a)
         Message.objects.filter(pk=c.pk).update(prev_message=b)
-        SettingsModel.objects.filter(pk=settings.pk).update(compact_size_limit=5)
+        SettingsModel.objects.filter(pk=settings.pk).update(auto_compact_keep_percent=5)
         self.av.refresh_from_db()
         the_runtime = _runtime(self.sv)
         boundary = find_compaction_boundary(the_runtime, the_runtime.get_last_message())

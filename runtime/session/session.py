@@ -369,9 +369,9 @@ class Session:
         return self._get_session_setting("auto_compact_limit") or 0
 
     @property
-    def compact_size_limit(self) -> int:
-        """Target token count to compact down to."""
-        return self._get_session_setting("compact_size_limit") or 0
+    def auto_compact_keep_percent(self) -> int:
+        """Percentage of newest tokens kept in full on compaction (0 = default)."""
+        return self._get_session_setting("auto_compact_keep_percent") or 0
 
     @property
     def priority(self) -> int:

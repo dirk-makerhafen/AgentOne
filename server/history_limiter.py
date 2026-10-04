@@ -98,8 +98,8 @@ def find_compaction_boundary(session: Session, last_message: Message | None) -> 
     Replicates the split logic in ``build_llm_compact_context`` without
     creating a ``Query``:
 
-    - ``compact_size_limit`` (percentage, 0–100, default 15) is the portion of
-      tokens to **keep** in full.
+    - ``auto_compact_keep_percent`` (percentage, 0–100, default 15) is the
+      portion of newest tokens to **keep** in full.
     - Walks the ``prev_message`` chain from ``last_message`` backwards, stops
       at the first message with a ``COMPACTION`` part (boundary marker),
       respects ``max_history_messages + 1``.
@@ -114,9 +114,9 @@ def find_compaction_boundary(session: Session, last_message: Message | None) -> 
     summarized, everything newer is kept.  Returns ``None`` when the whole
     conversation fits within the keep budget (nothing to compact).
     """
-    pct = session.compact_size_limit
-    if pct <= 0:
-        pct = 15
+    pct = session.auto_compact_keep_percent
+    if pct < 0:
+        pct = 0
 
     max_history = session.max_history_messages
     walk_limit = max_history + 1 if max_history is not None else None
@@ -135,15 +135,15 @@ def find_compaction_boundary(session: Session, last_message: Message | None) -> 
 
     # entries is newest -> oldest.
     total_tokens = sum(estimate_message_tokens(m) for m in entries)
-    keep_tokens = max(1, int(total_tokens * pct / 100))
+    keep_tokens = max(0, int(total_tokens * pct / 100))
 
     kept_token_count = 0
     kept_messages: list[Message] = []
     for msg in entries:
         kept_token_count += estimate_message_tokens(msg)
-        kept_messages.append(msg)
-        if kept_token_count >= keep_tokens:
+        if kept_token_count > keep_tokens:
             break
+        kept_messages.append(msg)
 
     kept_ids = {m.pk for m in kept_messages}
     compacted = [m for m in entries if m.pk not in kept_ids]

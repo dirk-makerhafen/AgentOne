@@ -34,7 +34,7 @@ INT_FIELDS = {
     "max_unattended_turns",
     "max_history_messages",
     "auto_compact_limit",
-    "compact_size_limit",
+    "auto_compact_keep_percent",
     "priority",
 }
 
@@ -207,7 +207,7 @@ class RightPanelSessionSettings(ModelView):
         ("max_unattended_turns", "Max Unattended Turns"),
         ("max_history_messages", "Max History Messages"),
         ("auto_compact_limit", "Auto Compact Limit"),
-        ("compact_size_limit", "Compact Size Limit"),
+        ("auto_compact_keep_percent", "Auto Compact Keep Percent"),
         ("priority", "Priority"),
         ("inherit_system_prompt", "Inherit System Prompt"),
         ("access", "Filesystem Access"),
