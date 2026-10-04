@@ -369,9 +369,14 @@ class Session:
         return self._get_session_setting("auto_compact_limit") or 0
 
     @property
-    def auto_compact_keep_percent(self) -> int:
-        """Percentage of newest tokens kept in full on compaction (0 = default)."""
-        return self._get_session_setting("auto_compact_keep_percent") or 0
+    def auto_compact_keep_percent(self) -> int | None:
+        """Percentage of newest tokens kept in full on compaction.
+
+        *None* (unset) means the default (15); an explicit ``0`` keeps
+        nothing — the whole range is compacted. No ``or 0`` coercion here:
+        ``history_limiter`` must tell unset apart from explicit zero.
+        """
+        return self._get_session_setting("auto_compact_keep_percent")
 
     @property
     def priority(self) -> int:

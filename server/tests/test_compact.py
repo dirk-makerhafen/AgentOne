@@ -37,7 +37,11 @@ class FindCompactionBoundaryTest(TestCase):
         self.agent = AgentModel.objects.create(name="test-agent")
         self.av = AgentVersionModel.objects.create(
             agent=self.agent,
-            agent_settings=SettingsModel.objects.create(),
+            # Production-like history window: the boundary finder mirrors
+            # build_llm_context's max_history_messages + 1 walk, so a bare
+            # (0/None) window would only ever see the newest message and no
+            # boundary could exist.
+            agent_settings=SettingsModel.objects.create(max_history_messages=100),
         )
         self.session = SessionModel.objects.create(name="test-session")
         self.sv = SessionVersionModel.objects.create(
@@ -104,6 +108,15 @@ class FindCompactionBoundaryTest(TestCase):
         _link(msgs)
         boundary = find_compaction_boundary(self.runtime, self.runtime.get_last_message())
         self.assertIsNone(boundary)
+
+    def test_zero_keep_percent_compacts_everything(self):
+        self._run(auto_compact_keep_percent=0)
+        msgs = [self._create_message(text=f"m{i}") for i in range(5)]
+        _link(msgs)
+        boundary = find_compaction_boundary(self.runtime, self.runtime.get_last_message())
+        # Explicit 0 keeps nothing: the boundary is the newest message itself.
+        self.assertIsNotNone(boundary)
+        self.assertEqual(boundary.pk, msgs[-1].pk)
 
     def test_walk_stops_at_compaction_marker(self):
         a = self._create_message(text="a")
@@ -195,7 +208,8 @@ class FindTurnBoundaryTest(TestCase):
         self.agent = AgentModel.objects.create(name="test-agent")
         self.av = AgentVersionModel.objects.create(
             agent=self.agent,
-            agent_settings=SettingsModel.objects.create(),
+            # See FindCompactionBoundaryTest: the walk needs a real window.
+            agent_settings=SettingsModel.objects.create(max_history_messages=100),
         )
         self.session = SessionModel.objects.create(name="test-session")
         self.sv = SessionVersionModel.objects.create(
