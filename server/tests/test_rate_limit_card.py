@@ -747,3 +747,149 @@ class SwitchKeyMovesWholeChainTest(MultiKeySessionTest):
         cont = Session(session_model=self.session, pinned_session_version=latest)
         r = RateLimitChecker.check(self.model, session=cont)
         self.assertEqual(r.selected_key.pk, self.key_b.pk)
+
+
+class _FakeInstance:
+    """Minimal stand-in for PyHtmlGuiInstance (redis subscription side)."""
+
+    def __init__(self, instance_key="card-test"):
+        from ui.lib.pyHtmlGui.pyhtmlgui.lib.weakFunctionReferences import (
+            WeakFunctionReferences,
+        )
+
+        self.instance_key = instance_key
+        self._function_references = WeakFunctionReferences()
+        self.observed_views = {}
+
+
+class _CardOrmTestBase(TestCase):
+    """Build cards against a real instance so redis subscriptions register."""
+
+    def setUp(self):
+        import fakeredis
+
+        from runtime import observables
+
+        self.agent = AgentModel.objects.create(name="card-obs-agent")
+        self.av = AgentVersionModel.objects.create(agent=self.agent)
+        self.session = SessionModel.objects.create(name="card-obs-session")
+        self.sv = SessionVersionModel.objects.create(
+            session=self.session, agent=self.agent, pinned_agent_version=self.av,
+        )
+        SessionModel.objects.filter(pk=self.session.pk).update(
+            latest_session_version=self.sv
+        )
+        self.session.refresh_from_db()
+        self._runtime = Session(session_model=self.session)
+        fake = fakeredis.FakeStrictRedis(decode_responses=True)
+        self._redis_patch = patch.object(observables, "get_redis", return_value=fake)
+        self._redis_patch.start()
+        self.addCleanup(self._redis_patch.stop)
+        self.redis = fake
+
+    def _parent(self):
+        parent = MockParent()
+        parent._instance = _FakeInstance()
+        return parent
+
+    def _drain_to(self, instance, queue_key):
+        import json
+
+        from ui.consumer import process_queue_messages
+
+        queued = self.redis.lrange(queue_key, 0, -1)
+        self.assertEqual(len(queued), 1, "worker write reached the UI queue")
+        process_queue_messages(instance, [json.loads(queued[0])])
+
+
+class ApprovalCardOrmTest(_CardOrmTestBase):
+    def test_session_update_rerenders_approval_card(self):
+        from ui.main.chat.cards.approval import ApprovalCard
+
+        parent = self._parent()
+        card = ApprovalCard(subject=self._runtime, parent=parent)
+        rendered = []
+        card.update = lambda *a, **k: rendered.append(1)
+        self.session.notify_observers("update")
+        self._drain_to(parent._instance, "agentone:uiq:card-test")
+        self.assertTrue(rendered, "no re-render on SessionModel update")
+
+    def test_unrelated_model_does_not_rerender(self):
+        from ui.main.chat.cards.approval import ApprovalCard
+
+        parent = self._parent()
+        card = ApprovalCard(subject=self._runtime, parent=parent)
+        rendered = []
+        card.update = lambda *a, **k: rendered.append(1)
+        card._on_orm_event(key="X", model="AgentTaskCall", pk=1, action="update", data={})
+        self.assertEqual(rendered, [], "wrong model triggered re-render")
+
+
+class QueueCardOrmTest(_CardOrmTestBase):
+    def test_taskcall_event_rerenders_queue_card(self):
+        from ui.main.chat.cards.queue import QueueCard
+
+        parent = self._parent()
+        card = QueueCard(subject=self._runtime, parent=parent)
+        rendered = []
+        card.update = lambda *a, **k: rendered.append(1)
+        card._on_orm_event(
+            key=f"AgentTaskCall.session:{self.session.pk}",
+            model="AgentTaskCall", pk=5, action="create", data={},
+        )
+        self.assertTrue(rendered, "no re-render on queued-call create")
+        # Pill sync must not crash without a frontend.
+        card._sync_pill()
+
+    def test_full_chain_taskcall_create_to_card(self):
+        from ui.main.chat.cards.queue import QueueCard
+
+        parent = self._parent()
+        card = QueueCard(subject=self._runtime, parent=parent)
+        rendered = []
+        card.update = lambda *a, **k: rendered.append(1)
+        from server.models.tasks.agent_task_call import AgentTaskCall
+
+        call = AgentTaskCall.objects.create(
+            session=self.session,
+            session_version=self.sv,
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+            requires_approval=False,
+            max_subtask_errors=0,
+            max_subtask_error_rate=0.0,
+            limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1,
+            max_retries=0,
+            retry_delay=0,
+            retry_requires_approval=False,
+        )
+        call.notify_observers("create")
+        self._drain_to(parent._instance, "agentone:uiq:card-test")
+        self.assertTrue(rendered, "no re-render on queued-call create")
+
+
+class SessionCounterPublishTest(TestCase):
+    """Turn-counter bumps publish SessionModel updates for the approval card."""
+
+    def setUp(self):
+        self.agent = AgentModel.objects.create(name="counter-agent")
+        self.av = AgentVersionModel.objects.create(agent=self.agent)
+        self.session = SessionModel.objects.create(name="counter-session")
+        self.sv = SessionVersionModel.objects.create(
+            session=self.session, agent=self.agent, pinned_agent_version=self.av,
+        )
+        self.runtime = Session(session_model=self.session)
+
+    def test_count_unattended_turn_publishes(self):
+        with patch("runtime.events.publish_model_event") as mock_publish:
+            self.runtime.count_unattended_turn()
+        mock_publish.assert_called_once_with(self.session, "update")
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.unattended_turn_count, 1)
+
+    def test_count_turn_publishes(self):
+        with patch("runtime.events.publish_model_event") as mock_publish:
+            self.runtime.count_turn()
+        mock_publish.assert_called_once_with(self.session, "update")
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.turn_count, 1)

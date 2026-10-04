@@ -312,41 +312,30 @@ class ComposerFooter(PyHtmlView):
 
         ``Messages`` watches the same models for the chat log; the footer
         watches them too so the send/stop buttons flip as turns start and
-        end.  Must run after ``Messages.__init__`` (which clears stale
-        session subscriptions) — guaranteed by ``Chat.__init__`` order.
+        end.  Redis subscriptions are per UI instance, so unlike the old
+        ModelObserver watches there is no stale-subscription clearing and
+        no ordering constraint vs ``Messages.__init__``.
         """
         try:
-            from ui.app import UiApp
-            from server.models.message import Message as Msg
-            from server.models.queries.query import Query
-            from server.models.tasks.agent_task_call import AgentTaskCall
+            from ui.lib.model_view import orm_subscribe
         except Exception:  # pylint: disable=broad-exception-caught
             return
         try:
-            app = UiApp.get_instance()
-            if app is None:
-                return
             session_id = self.subject.model.pk
-            app.model_observer.watch(
-                Msg, filter={"session_id": session_id},
-                callback_name="_on_activity_event", view=self, action="create",
-            )
-            app.model_observer.watch(
-                Query, filter={"session_id": session_id},
-                callback_name="_on_activity_event", view=self, action="create",
-            )
-            app.model_observer.watch(
-                Query, filter={"session_id": session_id},
-                callback_name="_on_activity_event", view=self, action="update",
-            )
-            app.model_observer.watch(
-                AgentTaskCall, filter={"session_id": session_id},
-                callback_name="_on_activity_event", view=self, action="update",
-            )
+            for key in (
+                f"Message.session:{session_id}",
+                f"Query.session:{session_id}",
+                f"AgentTaskCall.session:{session_id}",
+            ):
+                orm_subscribe(self, key, self._on_orm_event)
         except Exception:  # pylint: disable=broad-exception-caught
             pass
 
-    def _on_activity_event(self, pk: int, action: str, filter_context: dict) -> None:
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: turn activity changed, maybe re-render."""
+        self._on_activity_event()
+
+    def _on_activity_event(self, pk: int | None = None, action: str | None = None, filter_context: dict | None = None) -> None:
         """Re-render the buttons, but only when the busy/mode state flipped
         (task-call events fire on every FSM transition — re-rendering each
         time would collapse open composer dropdowns for no reason)."""

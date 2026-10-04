@@ -16,7 +16,6 @@ from ui.main.chat.cards.rate_limit import RateLimitCard
 from ui.main.chat.messages.messages import Messages
 from ui.main.chat.toc import ChatTocView
 from ui.main.chat.panel.terminal import TerminalPanel
-from ui.app import UiApp
 from ui.main.rightpanel.session.rightpanel_session import RightPanelSession
 
 if TYPE_CHECKING:
@@ -77,8 +76,6 @@ class Chat(ModelView):
     def __init__(self, subject: SessionModel, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.session = Session(subject)
-        app = UiApp.get_instance()
-        self.live_session = app.get_live_session(subject.pk) if app is not None else None
         self.messages = Messages(self.session, self)
 
         self.chat_toc = ChatTocView(self.session, self, messages_view=self.messages)

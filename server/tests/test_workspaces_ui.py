@@ -1,7 +1,7 @@
 """Tests for the workspace sidebar tree, overview grid and detail page."""
 from __future__ import annotations
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import jinja2
 from django.test import TestCase
@@ -704,6 +704,93 @@ class TestCreateWorkspace(TestCase):
         args, _ = main.create_and_open_tab.call_args
         assert args[0] is Workspace and args[1].pk == ws.pk
         main.close_tab.assert_called_once_with(view)
+
+
+class _FakeInstance:
+    """Minimal stand-in for PyHtmlGuiInstance (redis subscription side)."""
+
+    def __init__(self, instance_key="test-instance"):
+        from ui.lib.pyHtmlGui.pyhtmlgui.lib.weakFunctionReferences import (
+            WeakFunctionReferences,
+        )
+
+        self.instance_key = instance_key
+        self._function_references = WeakFunctionReferences()
+        self.observed_views = {}
+
+
+class TestWorkspacePublish(TestCase):
+    """Workspace writes publish events so the sidebar stays live."""
+
+    def test_create_form_publishes_create(self):
+        import tempfile
+
+        from server.models.workspace import WorkspaceModel
+
+        tmp = tempfile.mkdtemp()
+        view, _ = TestCreateWorkspace()._create_view()
+        with patch("runtime.events.publish_model_event") as mock_publish:
+            view.setWsField("name", "Live One")
+            view.setWsField("path", tmp)
+            view.saveWorkspaceForm()
+        ws = WorkspaceModel.objects.get(path=tmp)
+        mock_publish.assert_called_once_with(ws, "create")
+
+    def test_save_edit_publishes_update(self):
+        import tempfile
+
+        from server.models.workspace import WorkspaceModel
+
+        ws = WorkspaceModel.objects.create(name="E", path="/h/e")
+        view, _ = TestWorkspaceHierarchy()._detail(ws)
+        tmp = tempfile.mkdtemp()
+        with patch("runtime.events.publish_model_event") as mock_publish:
+            view.startEdit()
+            view.setEditField("path", tmp)
+            view.saveEdit()
+        mock_publish.assert_called_once_with(ws, "update")
+
+    def test_delete_publishes_delete(self):
+        from server.models.workspace import WorkspaceModel
+
+        ws = WorkspaceModel.objects.create(name="D", path="/h/d")
+        other = WorkspaceModel.objects.create(name="D2", path="/h/d2")
+        view, _ = TestWorkspaceHierarchy()._detail(ws)
+        with patch("runtime.events.publish_model_event") as mock_publish:
+            view.deleteWorkspace(other.pk)
+        # NOTE: Django nulls pk on the in-memory instance after delete, so
+        # only the action (and the WorkspaceModel any-key delivery) is asserted.
+        mock_publish.assert_called_once()
+        assert mock_publish.call_args[0][1] == "delete"
+        assert not WorkspaceModel.objects.filter(pk=other.pk).exists()
+
+    def test_sidebar_receives_workspace_create(self):
+        """End-to-end: create → redis queue → sidebar panel re-renders."""
+        import json
+
+        import fakeredis
+
+        from runtime import observables
+        from runtime.events import publish_model_event
+        from server.models.workspace import WorkspaceModel
+        from ui.app import UiApp
+        from ui.consumer import process_queue_messages
+        from ui.sidebar.panels.workspaces import SidebarPanelWorkspaces
+
+        fake = fakeredis.FakeStrictRedis(decode_responses=True)
+        with patch.object(observables, "get_redis", return_value=fake):
+            parent = MagicMock()
+            parent._instance = _FakeInstance()
+            parent.root_view = MagicMock()
+            panel = SidebarPanelWorkspaces(subject=UiApp(), parent=parent)
+            UiApp._instance = None
+            panel.update = MagicMock()
+            ws = WorkspaceModel.objects.create(name="live-ws", path="/tmp/live")
+            publish_model_event(ws, "create")
+            queued = fake.lrange("agentone:uiq:test-instance", 0, -1)
+            assert len(queued) == 1, "workspace create reached the UI queue"
+            process_queue_messages(parent._instance, [json.loads(queued[0])])
+            panel.update.assert_called_once()
 
 
 class TestWorkspaceHierarchy(TestCase):

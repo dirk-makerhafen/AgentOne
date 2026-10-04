@@ -19,6 +19,7 @@ Focus on:
 - What remains to be done
 - Important context the model must remember
 - File paths, function names, and specific technical details
+- Do NOT restate workspace guidance files (AGENTS.md/CLAUDE.md etc.) in the summary — they are re-loaded automatically after compaction.
 
 Format as a clear, structured summary. Be specific — avoid generic statements.
 

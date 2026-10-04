@@ -4,13 +4,11 @@ from typing import TYPE_CHECKING
 from runtime.session.session import Session
 from server.models.message import Message
 from server.models.queries.query import Query
-from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.lib.pyHtmlGui.pyhtmlgui.lib.observableList import ObservableList
 from ui.lib.pyHtmlGui.pyhtmlgui.view.observable_list_view import ObservableListView
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.chat.messages.message import MessageView
 from ui.lib.model_view import ModelView
-from ui.app import UiApp
 
 if TYPE_CHECKING:
     from ui.main.chat.chat import Chat
@@ -95,48 +93,22 @@ class Messages(PyHtmlView):
         self.max_visible_items = 100
         
         self._session_id = subject.model.pk
-        app = UiApp.get_instance()
-        if app is not None:
-            app.model_observer.unwatch_filter(
-                model_class=Message,
-                filter={"session_id": self._session_id},
-            )
-            app.model_observer.unwatch_filter(
-                model_class=Query,
-                filter={"session_id": self._session_id},
-            )
-            app.model_observer.watch(
-                Message,
-                filter={"session_id": self._session_id},
-                callback_name="_on_message_created",
-                view=self,
-                action="create",
-            )
-            app.model_observer.watch(
-                Query,
-                filter={"session_id": self._session_id},
-                callback_name="_on_query_created",
-                view=self,
-                action="create",
-            )
-            app.model_observer.watch(
-                Query,
-                filter={"session_id": self._session_id},
-                callback_name="_on_query_updated",
-                view=self,
-                action="update",
-            )
-            app.model_observer.unwatch_filter(
-                model_class=AgentTaskCall,
-                filter={"session_id": self._session_id},
-            )
-            app.model_observer.watch(
-                AgentTaskCall,
-                filter={"session_id": self._session_id},
-                callback_name="_on_taskcall_updated",
-                view=self,
-                action="update",
-            )
+        # Redis observable path (replaces the ModelObserver watches): the
+        # session-scoped keys are exactly what notify_observers() publishes
+        # for these models' writes (dual-published from publish_model_event).
+        # Subscriptions are per UI instance, so no unwatch_filter clearing
+        # of stale/other views' subscriptions is needed.
+        try:
+            from ui.lib.model_view import orm_subscribe
+
+            for _key in (
+                f"Message.session:{self._session_id}",
+                f"Query.session:{self._session_id}",
+                f"AgentTaskCall.session:{self._session_id}",
+            ):
+                orm_subscribe(self, _key, self._on_orm_event)
+        except Exception:
+            pass
 
         self.message_list = ObservableList()
 
@@ -233,6 +205,20 @@ class Messages(PyHtmlView):
 
     _callback_lock = threading.Lock()
 
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: route to the matching chat-log handler."""
+        try:
+            if model == "Message" and action == "create":
+                self._on_message_created(pk, action, {})
+            elif model == "Query" and action == "create":
+                self._on_query_created(pk, action, {})
+            elif model == "Query" and action == "update":
+                self._on_query_updated(pk, action, {})
+            elif model == "AgentTaskCall" and action == "update":
+                self._on_taskcall_updated(pk, action, {})
+        except Exception:
+            pass
+
     def _on_message_created(self, pk: int, action: str, filter_context: dict) -> None:
         from server.models.message import Message as Msg
         import traceback
@@ -249,7 +235,9 @@ class Messages(PyHtmlView):
                 self._log(f"Messages._on_message_created: {pk} already in list, skipping (found {len(existing)} existing)")
                 return
 
-            prev_id = filter_context.get("prev_message_id")
+            prev_id = (filter_context or {}).get("prev_message_id")
+            if prev_id is None:
+                prev_id = getattr(msg, "prev_message_id", None)
             inserted = False
             if prev_id is not None:
                 for idx, item in enumerate(self.message_list):
@@ -275,7 +263,9 @@ class Messages(PyHtmlView):
                 query = QueryModel.objects.get(pk=pk)
             except QueryModel.DoesNotExist:
                 return
-            trigger_msg_pk = filter_context.get("trigger_message_id")
+            trigger_msg_pk = (filter_context or {}).get("trigger_message_id")
+            if trigger_msg_pk is None:
+                trigger_msg_pk = getattr(query, "trigger_message_id", None)
             if trigger_msg_pk is None:
                 return
             if any(isinstance(item, Query) and item.pk == pk for item in self.message_list):

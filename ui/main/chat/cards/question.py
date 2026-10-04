@@ -18,7 +18,6 @@ from runtime.user_questions import (
     ASK_USER_TOOL_NAME,
     normalize_questions,
 )
-from ui.app import UiApp
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
@@ -105,22 +104,17 @@ class QuestionCard(PyHtmlView):
 
     def __init__(self, subject: Session, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        if getattr(self.parent, 'live_session', None):
-            self.add_observable(self.parent.live_session)
-        app = UiApp.get_instance()
-        if app is not None:
-            self._session_id = subject.model.pk
-            app.model_observer.unwatch_filter(
-                model_class=AgentTaskCall,
-                filter={"session_id": self._session_id},
+        self._session_id = subject.model.pk
+        try:
+            from ui.lib.model_view import orm_subscribe
+
+            orm_subscribe(
+                self,
+                f"AgentTaskCall.session:{self._session_id}",
+                self._on_orm_event,
             )
-            app.model_observer.watch(
-                AgentTaskCall,
-                filter={"session_id": self._session_id},
-                callback_name="_on_question_taskcall_updated",
-                view=self,
-                action="update",
-            )
+        except Exception:
+            pass
 
     @property
     def pending_calls(self) -> list[AgentTaskCall]:
@@ -248,6 +242,7 @@ class QuestionCard(PyHtmlView):
             CallScheduler.deny_taskcall(call.pk, feedback=feedback)
         self.update()
 
-    def _on_question_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:
-        """Re-render when an AgentTaskCall for this session changes status."""
-        self.update()
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: a session task call changed, re-render."""
+        if model == "AgentTaskCall" and action == "update":
+            self.update()

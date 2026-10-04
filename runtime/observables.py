@@ -31,6 +31,7 @@ Flow
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from typing import Any
 
 import redis
@@ -85,7 +86,7 @@ def unsubscribe_all(instance_key: str) -> None:
 
 
 def notify(
-    observable_keys: list[str],
+    observable_keys: Sequence[str],
     model: str,
     pk: int,
     action: str,
@@ -93,10 +94,12 @@ def notify(
 ) -> None:
     """Push a message to every UI instance subscribed to any of *observable_keys*.
 
-    Called by ORM ``notify_observers`` (not wired up yet).  Only queues that
-    actually have an observer for one of the keys receive a message, and all
-    their function_ids for that key are batched into a single message so the
-    UI loop can coalesce repeated updates.
+    Called by ORM ``notify_observers`` (which ``publish_model_event`` invokes
+    for dual-publish during the migration).  Only queues that actually have
+    an observer for one of the keys receive a message, and all their
+    function_ids are batched into a single message per instance so the UI
+    loop can coalesce repeated updates.  ``key`` is the first matched key
+    (kept for backward compatibility); ``keys`` lists every matched key.
     """
     if not observable_keys:
         return
@@ -117,11 +120,10 @@ def notify(
                 "action": action,
                 "data": data or {},
                 "function_ids": [],
+                "keys": [],
             })
-            if observable_key != msg["key"]:
-                # multiple keys matched on the same instance — keep the first
-                # key, but merge the function ids.
-                pass
+            if observable_key not in msg["keys"]:
+                msg["keys"].append(observable_key)
             for fid in fids:
                 if fid not in msg["function_ids"]:
                     msg["function_ids"].append(fid)

@@ -8,7 +8,7 @@ from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel, ObservableMixin, Observables
 
 
 WORKSPACE_COLOR_PALETTE = [
@@ -40,7 +40,7 @@ def validate_workspace_color(value: str) -> None:
         raise ValidationError("Color must be a #rrggbb hex string.")
 
 
-class WorkspaceModel(models.Model):
+class WorkspaceModel(ObservableMixin, models.Model):
     """A named workspace bound to a filesystem path."""
 
     class WorkspaceModelObservables(Observables):

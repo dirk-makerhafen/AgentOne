@@ -165,6 +165,22 @@ class Agent:
         return bool(self.get_version_model().resolve_setting("inherit_system_prompt"))
 
     @property
+    def autoload(self) -> dict | None:
+        """Return the AGENTS.md autoload config (or *None* when unset)."""
+        value = self.get_version_model().resolve_setting("autoload")
+        return dict(value) if isinstance(value, dict) else None
+
+    @property
+    def guidance_file_index_limit(self) -> int | None:
+        """Return the guidance-file index cap override (or *None*)."""
+        return self.get_version_model().resolve_setting("guidance_file_index_limit")
+
+    @property
+    def load_guidance_file_index(self) -> bool | None:
+        """Return the guidance-file index toggle override (or *None*)."""
+        return self.get_version_model().resolve_setting("load_guidance_file_index")
+
+    @property
     def system_prompt_chain(self) -> list[str]:
         """Return all system prompts in inheritance order (if inheritSystemPrompt is enabled).
 

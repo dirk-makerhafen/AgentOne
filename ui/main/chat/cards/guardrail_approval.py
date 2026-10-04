@@ -7,7 +7,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
-from ui.app import UiApp
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
@@ -72,22 +71,17 @@ class GuardrailApprovalCard(PyHtmlView):
 
     def __init__(self, subject: Session, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        if getattr(self.parent, 'live_session', None):
-            self.add_observable(self.parent.live_session)
-        app = UiApp.get_instance()
-        if app is not None:
-            self._session_id = subject.model.pk
-            app.model_observer.unwatch_filter(
-                model_class=AgentTaskCall,
-                filter={"session_id": self._session_id},
+        self._session_id = subject.model.pk
+        try:
+            from ui.lib.model_view import orm_subscribe
+
+            orm_subscribe(
+                self,
+                f"AgentTaskCall.session:{self._session_id}",
+                self._on_orm_event,
             )
-            app.model_observer.watch(
-                AgentTaskCall,
-                filter={"session_id": self._session_id},
-                callback_name="_on_guardrail_taskcall_updated",
-                view=self,
-                action="update",
-            )
+        except Exception:
+            pass
 
     @property
     def pending_calls(self) -> list[AgentTaskCall]:
@@ -120,6 +114,7 @@ class GuardrailApprovalCard(PyHtmlView):
         if not self.pending_calls:
             self.update()
 
-    def _on_guardrail_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:
-        """Re-render when an AgentTaskCall for this session changes status."""
-        self.update()
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: a session task call changed, re-render."""
+        if model == "AgentTaskCall" and action == "update":
+            self.update()

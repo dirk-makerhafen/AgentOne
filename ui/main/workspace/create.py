@@ -116,6 +116,9 @@ class CreateWorkspace(ModelView):
             self._form_error = f"Error: {e}"
             self.update()
             return
+        from runtime.events import publish_model_event
+
+        publish_model_event(created, "create")
         self._form_error = ""
         from ui.main.workspace.workspace import Workspace
 

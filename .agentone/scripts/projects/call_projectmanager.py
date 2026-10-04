@@ -52,11 +52,15 @@ def call_projectmanager(_session: Session, project_path: str, task: str) -> dict
     session_name = f"projectmanager:{project_path}"
 
     session_version_model = _session.get_version_model()
-    workspace, _ = WorkspaceModel.objects.get_or_create(
-        name=f"{project_path} project root", 
-        path=project_path, 
+    workspace, ws_created = WorkspaceModel.objects.get_or_create(
+        name=f"{project_path} project root",
+        path=project_path,
         description="project root directory"
     )
+    if ws_created:
+        from runtime.events import publish_model_event
+
+        publish_model_event(workspace, "create")
 
     child_sv = agent_version.get_or_create_session(
         name=session_name,

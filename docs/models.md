@@ -547,6 +547,9 @@ Comprehensive agent/session settings. All nullable — values inherit through th
 | `commandNames` / `taskNames` / `toolNames` / `skillNames` / `subagentNames` | `JSONField(list)` | Allow lists (wildcards) |
 | `disallowed*Names` | `JSONField(list)` | Deny lists (wildcards) |
 | `subagentResultDelivery` | `CharField(choices)` | passive / immediate |
+| `autoload` | `JSONField` | AGENTS.md autoload config (files, maxFiles, maxChars, maxCharsPerFile) |
+| `load_guidance_file_index` | `BooleanField(nullable)` | Nested guidance-file index toggle (default true) |
+| `guidance_file_index_limit` | `IntegerField(nullable)` | Max nested guidance files in the index (default 10, 0 = omit) |
 | `extra_settings` | `JSONField` | Extensibility — agent `access:` policy stored under the `access` key |
 | `commit` | `TextField(1024)` | Git hash |
 

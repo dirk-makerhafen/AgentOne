@@ -47,8 +47,29 @@ class QueueCard(PyHtmlView):
 
     def __init__(self, subject: Session, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        if getattr(self.parent, 'live_session', None):
-            self.add_observable(self.parent.live_session)
+        # DB observable: the card renders queued AgentTaskCalls.  Worker-side
+        # queue transitions publish call events; UI-side mutations
+        # (cancel/clear/combine) re-render directly.
+        self._session_id = subject.model.pk
+        try:
+            from ui.lib.model_view import orm_subscribe
+
+            orm_subscribe(
+                self,
+                f"AgentTaskCall.session:{self._session_id}",
+                self._on_orm_event,
+            )
+        except Exception:
+            pass
+
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: queue membership may have changed."""
+        if model == "AgentTaskCall" and action in ("create", "update", "delete"):
+            try:
+                self.update()
+            except Exception:
+                pass
+            self._sync_pill()
 
     @property
     def queued_calls(self):
@@ -103,10 +124,14 @@ class QueueCard(PyHtmlView):
             self.subject.add_user_message(combined_parts, force=True)
         self.update()
 
-    def _on_subject_updated(self, source, **kwargs):
-        super()._on_subject_updated(source, **kwargs)
-        count = self.queue_count
-        self.eval_javascript("""
+    def _sync_pill(self) -> None:
+        """Push the current queue count to the header pill via JS."""
+        try:
+            count = self.queue_count
+        except Exception:
+            return
+        try:
+            self.eval_javascript("""
             var pill = document.querySelector('.queue-pill-outer');
             if (pill) {
                 if (""" + str(count) + """ > 0) {
@@ -118,6 +143,8 @@ class QueueCard(PyHtmlView):
                 }
             }
         """, skip_results=True)
+        except Exception:
+            pass
 
     def hideCard(self):
         self.eval_javascript("""

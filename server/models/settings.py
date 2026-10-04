@@ -134,6 +134,12 @@ class SettingsModel(BaseModel):
 
     access: Any = models.JSONField(default=None, null=True, blank=True)
 
+    # Guidance-file autoload (agent.md ``autoload:`` block — files, maxFiles,
+    # maxChars, maxCharsPerFile, index). Resolved per session workspace.
+    autoload: Any = models.JSONField(default=None, null=True, blank=True)
+    guidance_file_index_limit: int | None = models.IntegerField(default=None, null=True, blank=True)
+    load_guidance_file_index: bool | None = models.BooleanField(default=None, null=True, blank=True)
+
     # Session todo list auto-processing (user-controlled through the Todos
     # panel / /todo command; the list items themselves are event-sourced
     # from the todo task-call history, not stored here).  None = off.

@@ -53,10 +53,15 @@ class Observables:
 
 
 class ObservableMixin:
-    """Adds ``.observables`` to any model — including non-BaseModel ones
-    (e.g. ``Project``, ``SkillModel``) that only observe from the other side
-    of a relation.  Looks for a nested ``<ModelName>Observables`` class and
-    falls back to the generic :class:`Observables`."""
+    """Makes any Django model observable.
+
+    Adds ``.observables`` (looks for a nested ``<ModelName>Observables``
+    class, falls back to the generic :class:`Observables`), plus
+    :meth:`observable_keys` and :meth:`notify_observers` so every model —
+    including non-``BaseModel`` ones (e.g. ``Project``, ``WorkspaceModel``)
+    — can publish to the Redis observable registry.  Only relies on
+    ``pk`` / ``_meta``, so it works on plain ``models.Model`` subclasses.
+    """
 
     @property
     def observables(self):
@@ -66,6 +71,39 @@ class ObservableMixin:
                 obs_cls = Observables
             self._observables = obs_cls(self)
         return self._observables
+
+    def observable_keys(self) -> list[str]:
+        """Return the observable keys this instance notifies on.
+
+        Always includes the ``any`` and ``pk`` keys, plus one key per set FK
+        (e.g. ``AgentModel.parent_project:12``) so observers registered on the
+        other side of the relation (``project.observables.child_agents``) are
+        notified too.
+        """
+        keys = [self.observables.any]
+        if self.pk is not None:
+            keys.append(self.observables.pk)
+        for field in self._meta.fields:
+            if isinstance(field, models.ForeignKey):
+                fk_id = getattr(self, field.attname, None)
+                if fk_id is not None:
+                    keys.append(f"{self.observables.any}.{field.name}:{fk_id}")
+        return keys
+
+    def notify_observers(self, action: str = "update", data: dict[str, Any] | None = None) -> None:
+        """Notify subscribed UI observers for this instance's observable keys.
+
+        Observer-gated: :func:`runtime.observables.notify` only pushes to
+        instance queues that actually subscribed to one of the keys.
+        """
+        from runtime import observables as obs
+        obs.notify(
+            self.observable_keys(),
+            self.__class__.__name__,
+            self.pk,
+            action,
+            data,
+        )
 
 
 class BaseModel(ObservableMixin, DirtyFieldsMixin, models.Model):
@@ -103,39 +141,6 @@ class BaseModel(ObservableMixin, DirtyFieldsMixin, models.Model):
         """Set new data (copy-on-write — breaks the fork reference).
         """
         self._data = new_data
-
-    def observable_keys(self) -> list[str]:
-        """Return the observable keys this instance notifies on.
-
-        Always includes the ``any`` and ``pk`` keys, plus one key per set FK
-        (e.g. ``AgentModel.parent_project:12``) so observers registered on the
-        other side of the relation (``project.observables.child_agents``) are
-        notified too.
-        """
-        keys = [self.observables.any]
-        if self.pk is not None:
-            keys.append(self.observables.pk)
-        for field in self._meta.fields:
-            if isinstance(field, models.ForeignKey):
-                fk_id = getattr(self, field.attname, None)
-                if fk_id is not None:
-                    keys.append(f"{self.observables.any}.{field.name}:{fk_id}")
-        return keys
-
-    def notify_observers(self, action: str = "update", data: dict[str, Any] | None = None) -> None:
-        """Notify subscribed UI observers for this instance's observable keys.
-
-        Observer-gated: :func:`runtime.observables.notify` only pushes to
-        instance queues that actually subscribed to one of the keys.
-        """
-        from runtime import observables as obs
-        obs.notify(
-            self.observable_keys(),
-            self.__class__.__name__,
-            self.pk,
-            action,
-            data,
-        )
 
     def save(self, *args: Any, **kwargs: Any) -> Any:
         """Save the model, auto-serialising ``_data`` to ``raw_data`` and tracking

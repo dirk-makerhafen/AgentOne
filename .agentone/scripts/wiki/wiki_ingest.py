@@ -9,11 +9,15 @@ from server.models.workspace import WorkspaceModel
 
 
 def _session_name(folder: str) -> str:
-    WorkspaceModel.objects.get_or_create(
+    workspace, ws_created = WorkspaceModel.objects.get_or_create(
         name=f"wiki:{folder}",
         path=folder,
         description=f"wiki '{folder}' root directory",
     )
+    if ws_created:
+        from runtime.events import publish_model_event
+
+        publish_model_event(workspace, "create")
     return f"wiki:{folder}:Main"
 
 

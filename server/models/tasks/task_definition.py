@@ -43,19 +43,6 @@ class TaskDefinition(BaseModel):
     class Meta:
         unique_together = ["parent_skill", "parent_agent", "parent_project", "name"]
 
-
-
-    @property
-    def observable_keys(self):
-        return set([
-            "TaskDefinition",
-            f"TaskDefinition.pk:{self.pk}",
-            f"TaskDefinition.parent_skill:{self.parent_skill_pk}",
-            f"TaskDefinition.parent_agent:{self.parent_agent_pk}",
-            f"TaskDefinition.parent_project:{self.parent_project_pk}",
-            f"TaskDefinition.parent_generation:{self.parent_generation_pk}",
-        ])
-
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Prevent updates to existing TaskDefinition instances."""
         if self.pk:

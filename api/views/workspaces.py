@@ -21,3 +21,21 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         if self.action in ('create', 'partial_update', 'update'):
             return WorkspaceWriteSerializer
         return WorkspaceDetailSerializer
+
+    def perform_create(self, serializer):
+        from runtime.events import publish_model_event
+
+        instance = serializer.save()
+        publish_model_event(instance, "create")
+
+    def perform_update(self, serializer):
+        from runtime.events import publish_model_event
+
+        instance = serializer.save()
+        publish_model_event(instance, "update")
+
+    def perform_destroy(self, instance):
+        from runtime.events import publish_model_event
+
+        super().perform_destroy(instance)
+        publish_model_event(instance, "delete")

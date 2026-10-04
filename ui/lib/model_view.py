@@ -13,6 +13,52 @@ if TYPE_CHECKING:
 
 CHARACTERS = list(string.ascii_lowercase + string.digits)
 
+
+def orm_subscribe(view: PyHtmlView, observable_key: str, target_function: typing.Callable) -> int | None:
+    """Subscribe *view* to a Redis observable key (cross-process ORM→UI path).
+
+    Works for any view (``ModelView`` or plain ``PyHtmlView``) — unlike
+    :meth:`ModelView.add_observable` it takes an explicit key instead of
+    resolving ``subject.observables.pk``, so views whose subject is a
+    runtime wrapper can subscribe to e.g. ``"Message.session:5"``.
+
+    Returns the registered function_id, or None when there is no UI
+    instance (e.g. in unit tests).
+    """
+    instance = getattr(view, "_instance", None)
+    if instance is None:
+        return None
+    if not hasattr(view, "_observed_function_ids") or view._observed_function_ids is None:
+        view._observed_function_ids = []
+    function_id = instance._function_references.add(target_function)
+    observables.subscribe(instance.instance_key, observable_key, function_id)
+    instance.observed_views.setdefault(observable_key, []).append(function_id)
+    view._observed_function_ids.append((observable_key, function_id))
+    return function_id
+
+
+def orm_unsubscribe_view(view: PyHtmlView, observable_key: str | None = None) -> None:
+    """Remove all (or one key's) Redis subscriptions registered via :func:`orm_subscribe`."""
+    instance = getattr(view, "_instance", None)
+    if instance is None:
+        return
+    for key, function_id in list(getattr(view, "_observed_function_ids", None) or []):
+        if observable_key is not None and key != observable_key:
+            continue
+        try:
+            observables.unsubscribe(instance.instance_key, key, function_id)
+        except Exception:
+            pass
+        try:
+            instance.observed_views[key].remove(function_id)
+        except Exception:
+            pass
+        try:
+            view._observed_function_ids.remove((key, function_id))
+        except ValueError:
+            pass
+
+
 class ModelView(PyHtmlView):
     def __init__(self, subject, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         self.uid = "pv%s" % ("".join(random.choices(CHARACTERS, k=16)))
@@ -30,11 +76,15 @@ class ModelView(PyHtmlView):
         self._observed_function_ids = []  # function_ids registered in redis (tracked here for cleanup)
         if self.CSS_STR:
             self._instance.add_css_string(self.__class__.__name__, self.CSS_STR )        
-        if self._on_subject_updated is not None: # by default we observe the subject
+        if self._on_subject_updated is not None and hasattr(subject, "observables"):
+            # by default we observe the subject — but only when it is an ORM
+            # instance exposing ``.observables``.  Runtime wrappers (Session,
+            # UiApp, …) have no observable keys; those views subscribe
+            # explicitly via orm_subscribe()/add_observable(observable_key=…).
             try:
                 self.add_observable(self.subject)
-            except Exception as e:
-                pass#ogging.warning("object type '%s' can not be observed, %s" % (type(subject),e))
+            except Exception:
+                pass
 
         self._subject_ref = subject
         self._parent_ref = parent
@@ -67,22 +117,14 @@ class ModelView(PyHtmlView):
             observable_key = subject.observables.pk
         if target_function is None:
             target_function = self.on_orm_updated
-        function_id = self._instance._function_references.add(target_function)
-        observables.subscribe(self._instance.instance_key, observable_key, function_id)
-        self._instance.observed_views.setdefault(observable_key, []).append(function_id)
-        self._observed_function_ids.append((observable_key, function_id))
+        orm_subscribe(self, observable_key, target_function)
 
     def remove_observable(self, subject: Observable, target_function: typing.Callable = None,
                           observable_key: str = None) -> None:
-        for key, function_id in list(self._observed_function_ids):
-            if observable_key is not None and key != observable_key:
-                continue
-            observables.unsubscribe(self._instance.instance_key, key, function_id)
-            try:
-                self._instance.observed_views[key].remove(function_id)
-            except Exception:
-                pass
-            self._observed_function_ids.remove((key, function_id))
+        orm_unsubscribe_view(self, observable_key)
         if target_function is None:
             target_function = self._on_subject_updated
-        self._observables.remove(subject, target_function)
+        try:
+            self._observables.remove(subject, target_function)
+        except Exception:
+            pass

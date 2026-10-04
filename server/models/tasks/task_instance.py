@@ -265,17 +265,7 @@ class TaskInstance(BaseModel):
                 task_instance.child_instances.add(child_instance)
 
         return task_instance
-
-    @property
-    def observable_keys(self):
-        return set([
-            "TaskInstance",
-            f"TaskInstance.pk:{self.pk}",
-            f"TaskInstance.task_definition_version:{self.task_definition_version_pk}",
-            f"TaskInstance.session:{self.session_pk}",
-            f"TaskInstance.session_version:{self.session_version_pk}",
-        ])
-
+    
     def delay(self, *partial_args: Any, **partial_kwargs: Any) -> AgentTaskCall:
         """Shortcut to :meth:`apply_async` using star arguments."""
         return self.apply_async(args=partial_args, kwargs=partial_kwargs)

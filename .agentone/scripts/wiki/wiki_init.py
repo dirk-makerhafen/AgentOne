@@ -16,11 +16,15 @@ def _workspace_and_name(_session: Session, folder: str | None = None) -> tuple[W
         p = Path(folder)
         if not p.is_absolute():
             folder = (Path(_session.workspace.path) / p).resolve().as_posix()
-    workspace, _ = WorkspaceModel.objects.get_or_create(
+    workspace, ws_created = WorkspaceModel.objects.get_or_create(
         name=f"wiki:{folder}",
         path=folder,
         description=f"wiki '{folder}' root directory",
     )
+    if ws_created:
+        from runtime.events import publish_model_event
+
+        publish_model_event(workspace, "create")
     return workspace, f"wiki:{folder}:main"
 
 

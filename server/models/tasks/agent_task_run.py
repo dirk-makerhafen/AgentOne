@@ -158,17 +158,6 @@ class AgentTaskRun(BaseModel):
 
         return taskrun
 
-    @property
-    def observable_keys(self):
-        return set([
-            "AgentTaskRun",
-            f"AgentTaskRun.pk:{self.pk}",
-            f"AgentTaskRun.agent_task_call:{self.agent_task_call_pk}",
-            f"AgentTaskRun.task_instance:{self.task_instance_pk}",
-            f"AgentTaskRun.task_definition_version:{self.task_definition_version_pk}",  
-            f"AgentTaskRun.session_version:{self.session_version_pk}", 
-        ])
-
 
     def apply_async(self) -> None:
         """Dispatch this run asynchronously via Celery."""

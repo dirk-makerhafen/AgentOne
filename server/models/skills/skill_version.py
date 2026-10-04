@@ -4,8 +4,10 @@ from typing import Any
 
 from django.db import models
 
+from server.models.base_model import ObservableMixin
 
-class SkillModelVersion(models.Model):
+
+class SkillModelVersion(ObservableMixin, models.Model):
     """A specific versioned snapshot of a skill's configuration."""
 
     created_at = models.DateTimeField(auto_now_add=True)

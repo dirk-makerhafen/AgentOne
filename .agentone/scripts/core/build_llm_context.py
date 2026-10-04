@@ -72,6 +72,35 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                     template_data={},
                 )
 
+        # GUIDANCE-FILE AUTOLOAD (e.g. AGENTS.md / CLAUDE.md — pinned
+        # first-turn USER messages, deliberately outside the
+        # `system_prompt_chain` guard above so agents without a prompt chain
+        # still get workspace guidance; spec docs/agents-md.md §4.3)
+        try:
+            from runtime import guidance_files as _guidance
+
+            _autoload_text, _index_text = _guidance.ensure_pinned(_session)
+            if _autoload_text:
+                query.add_message(
+                    role=MessageRole.USER,
+                    content_type=MessageContentType.TEXT,
+                    content=_autoload_text,
+                )
+            if _index_text:
+                query.add_message(
+                    role=MessageRole.USER,
+                    content_type=MessageContentType.TEXT,
+                    content=_index_text,
+                )
+        except Exception:
+            from server.models.debug_log_entry import DebugLogEntry
+
+            DebugLogEntry.objects.create(
+                session=_session.model,
+                event="guidance_skip",
+                data={"exception": traceback.format_exc()},
+            )
+
         # CUSTOM TOOLS
         if _session.tool_call_syntax == AgentToolCallSyntax.CUSTOM:
             allowed_tools: list[Any] = list(_session.allowedTools)

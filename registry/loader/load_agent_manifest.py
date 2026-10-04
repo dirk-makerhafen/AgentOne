@@ -20,6 +20,7 @@ from server.models.tasks.scripts_generation import ScriptsGeneration
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 from runtime.workspace_access import validate_agent_access
+from runtime.guidance_files import validate_autoload_block
 
 
 # ---------------------------------------------------------------------------
@@ -179,6 +180,36 @@ def load_agent_manifest(
     if access_block is not None:
         validate_agent_access(access_block, source=f"agent.md {agent.name!r}")
         settings_kwargs["access"] = access_block
+
+    # AGENTS.md autoload (agent.md ``autoload:`` block + ``agentsMdIndexLimit``)
+    autoload_block = manifest.get("autoload")
+    if autoload_block is not None:
+        settings_kwargs["autoload"] = validate_autoload_block(
+            autoload_block, source=f"agent.md {agent.name!r}"
+        )
+    index_limit = manifest.get("guidanceFileIndexLimit")
+    if index_limit is not None:
+        if (
+            isinstance(index_limit, bool)
+            or not isinstance(index_limit, int)
+            or index_limit < 0
+        ):
+            raise ValueError(
+                f"[agent.md {agent.name!r}] guidanceFileIndexLimit must be an "
+                f"integer >= 0, got {index_limit!r}"
+            )
+        settings_kwargs["guidance_file_index_limit"] = index_limit
+
+    # Nested guidance-file index (standalone ``loadGuidanceFileIndex`` key —
+    # independent of ``autoload:``, which only controls pinned contents).
+    load_index = manifest.get("loadGuidanceFileIndex")
+    if load_index is not None:
+        if not isinstance(load_index, bool):
+            raise ValueError(
+                f"[agent.md {agent.name!r}] loadGuidanceFileIndex must be a "
+                f"boolean, got {load_index!r}"
+            )
+        settings_kwargs["load_guidance_file_index"] = load_index
 
     if settings_kwargs.get("precision",None):
         key = settings_kwargs.get("precision","").upper()

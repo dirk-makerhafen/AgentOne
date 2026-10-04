@@ -1,5 +1,6 @@
 from __future__ import annotations
-from unittest.mock import MagicMock
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 from django.test import TestCase
 from server.models.enums.message_enums import MessageRole
 from server.models.enums.session_enums import SessionType
@@ -206,19 +207,43 @@ class MessagesTest(TestCase):
         })
         wrapper.view.update.assert_called_once()
 
-    def test_unwatch_filter_cleans_up_old_subscriptions(self):
-        """Calling Messages.__init__ twice cleans up old model_observer subs."""
-        obs = self.ui_app.model_observer
-        subs_before = len(obs._subscriptions.get("message", []))
-        # Re-initialize (simulates closing + reopening a tab)
-        messages2 = Messages(
-            subject=self.runtime_session,
-            parent=self.chat,
+    def test_redis_event_reaches_message_list(self):
+        """End-to-end over fakeredis: notify → queue → router → list insert."""
+        import json
+
+        import fakeredis
+
+        from runtime import observables
+        from ui.consumer import process_queue_messages
+        from ui.lib.pyHtmlGui.pyhtmlgui.lib.weakFunctionReferences import (
+            WeakFunctionReferences,
         )
-        self.assertIsNotNone(messages2)
-        subs_after = len(obs._subscriptions.get("message", []))
-        self.assertEqual(subs_after, subs_before,
-                         "Re-init should not increase subscription count")
+
+        fake = fakeredis.FakeStrictRedis(decode_responses=True)
+        instance = SimpleNamespace(
+            instance_key="messages-test",
+            _function_references=WeakFunctionReferences(),
+            observed_views={},
+            add_css_string=lambda *a, **k: None,
+            call_javascript=lambda *a, **k: None,
+        )
+        chat = MockChat()
+        chat._instance = instance
+        with patch.object(observables, "get_redis", return_value=fake):
+            messages2 = Messages(subject=self.runtime_session, parent=chat)
+            self.assertEqual(
+                fake.llen("agentone:uiq:messages-test"), 0, "queue starts empty"
+            )
+            msg = self._create_message(role=MessageRole.USER)
+            msg.notify_observers("create")
+            queued = fake.lrange("agentone:uiq:messages-test", 0, -1)
+            self.assertEqual(len(queued), 1, "worker write reached the UI queue")
+            process_queue_messages(instance, [json.loads(queued[0])])
+            self.assertIn(
+                msg.pk,
+                [item.pk for item in messages2.message_list],
+                "dispatched event inserted the message",
+            )
 
     def _fork_wrapper(self, msg):
         """Append *msg* to the list and return its MessageView wrapper."""

@@ -86,7 +86,7 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 
 ## Real-time UI events
 
-The system uses `publish_model_event(instance, action)` in Celery tasks to push model changes to the browser via WebSocket:
+The system uses `publish_model_event(instance, action)` in Celery tasks to push model changes to the browser. Delivery is via the Redis observable registry (`runtime/observables.py`): the call invokes `instance.notify_observers(action)`, which RPUSHes to the per-UI-instance queue (`agentone:uiq:<instance_key>`) only for instances subscribed to the affected keys. The consumer drain thread (`ui/consumer.py:loop`, one per instance) coalesces and dispatches to view callbacks. The old Channels-group broadcast is gone.
 
 | Model | Action | Celery file | Purpose |
 |---|---|---|---|
@@ -94,14 +94,17 @@ The system uses `publish_model_event(instance, action)` in Celery tasks to push 
 | `Query` | `create` | `build_llm_context.py` | Insert query-card after trigger_message |
 | `Query` | `update` | `call_llm.py` (after each status transition) | Re-render query-card status |
 
+Views subscribe with `orm_subscribe(view, "<Model>.session:<sid>", router)` from `ui/lib/model_view.py` (session-scoped keys) or `"WorkItem"` / `"WorkspaceModel"` (any-keys); routers receive `(key, model, pk, action, data)`.
+
 ### Key UI callback files
 
 | File | Role |
 |---|---|
-| `ui/main/chat/messages/messages.py` | `_on_message_created`, `_on_query_created`, `_on_query_updated` |
+| `ui/main/chat/messages/messages.py` | `_on_orm_event` router → `_on_message_created`, `_on_query_created`, `_on_query_updated` |
 | `ui/lib/pyHtmlGui/pyhtmlgui/view/observable_list_view.py` | `set_visible` snapshot fix, dedup guard in `_on_subject_updated` |
-| `ui/model_observer.py` | `unwatch_filter` for subscription cleanup on tab re-open |
-| `runtime/events.py` | `publish_model_event`, `_extract_filter_context` |
+| `ui/lib/model_view.py` | `orm_subscribe` / `orm_unsubscribe_view` shared subscription helpers |
+| `runtime/events.py` | `publish_model_event` (redis notify only) |
+| `runtime/observables.py` | `subscribe` / `notify` / `unsubscribe` registry |
 
 Skills provide specialized instructions and workflows for specific tasks.
 Use the skill tool to load a skill when a task matches its description.

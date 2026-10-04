@@ -10,6 +10,8 @@ from typing import Any
 from django.db import models
 from django_enum import EnumField
 
+from server.models.base_model import ObservableMixin
+
 
 # Context-budget estimate for a single image part.  Providers bill per image
 # (OpenAI: base 85 tokens + 170 per 512px tile at ``high`` detail), NOT per
@@ -27,7 +29,7 @@ class ContentType(models.TextChoices):
     JSON = "JSON"
 
 
-class GenericContent(models.Model):
+class GenericContent(ObservableMixin, models.Model):
     """Content-addressed storage deduplicated by SHA-256 hash.
 
     Each piece of content is stored once and referenced by its hash, with an

@@ -50,6 +50,13 @@ maxRetries: 0                  # max retry attempts
 maxTurns: 0                    # max conversation turns (0 = unlimited)
 maxUnattendedTurns: 0          # max autonomous turns
 maxHistoryMessages: 0          # max stored messages
+loadGuidanceFileIndex: true    # list nested guidance files (AGENTS.md/CLAUDE.md) not already loaded
+guidanceFileIndexLimit: 10         # max nested guidance files listed in the index (0 = omit index)
+autoload:                      # optional — AGENTS.md autoload (see below)
+  files: [AGENTS.md]           # workspace-relative patterns (*, **, ?); bare name = root only
+  maxFiles: 10                 # max files pinned into context
+  maxChars: 32768              # total char budget (0 = disable contents)
+  maxCharsPerFile: 8192        # per-file char cap (remainder truncated with marker)
 autoCompactLimit: 100000        # token threshold for auto-compaction (0 = disabled)
 compactSizeLimit: 15            # percentage of newest messages to keep in full
 reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
@@ -75,6 +82,9 @@ Agent body content goes here — used as the system prompt.
 | `tools`/`tasks`/`commands`/`skills` | list | Allow-listed item names |
 | `disallowed*` | list | Denied item names |
 | `access` | dict | Filesystem access policy (see [Access Policy](#access-policy)) |
+| `autoload` | dict | AGENTS.md autoload (see [Autoload](#autoload)) |
+| `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default true) |
+| `guidanceFileIndexLimit` | int | Max nested guidance files listed in the index (default 10, 0 = omit) |
 | Priority/scheduling | various | Execution control knobs |
 
 ### Access Policy
@@ -109,6 +119,40 @@ access:
       default: deny            # external writes blocked by default
       allow: ["/tmp/work/**"]
 ```
+
+### Autoload
+
+The `autoload:` block names workspace files to pin into the session's
+first user messages (see `docs/agents-md.md`). It inherits through
+`extends` and is session-overridable like every other agent setting.
+
+```yaml
+autoload:
+  files: [AGENTS.md, "docs/*.md", "**/loadmeall.file"]
+  maxFiles: 10
+  maxChars: 32768
+  maxCharsPerFile: 8192
+```
+
+Pattern rules (workspace-relative, files only):
+
+- Bare filenames (`AGENTS.md`) match at the workspace root only —
+  use `**/` for recursion (`**/AGENTS.md`).
+- `*` / `?` never cross `/`; `**` crosses directories.
+- Config order is priority order (decides what survives the caps).
+- No leading `/`, no `~`, no `..` (rejected at load); matches outside
+  the workspace (symlink escapes) and policy-denied files are skipped.
+- `maxChars: 0` disables contents; over-budget files are truncated with
+  a `[truncated …]` marker. Counts are chars, not tokens.
+
+The nested guidance-file index is a separate feature controlled by the
+standalone `loadGuidanceFileIndex` key (default `true`) and capped by
+`guidanceFileIndexLimit` (default 10, `0` omits the index message). It lists
+nested `AGENTS.md`/`CLAUDE.md` files *not* already pinned by `autoload:`
+— the two never duplicate each other — and touching a listed subtree
+produces a one-line read hint. Either feature works without the other:
+with contents disabled (`maxChars: 0`) the index lists everything,
+including the root file.
 
 ### Subagent Entry
 

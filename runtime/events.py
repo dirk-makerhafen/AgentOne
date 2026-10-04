@@ -1,15 +1,10 @@
 """
 Real-time event publishing for the UI reactive layer.
 
-Celery workers and state machines publish events via Django's channel layer.
-The WebSocket consumer subscribes and dispatches them to the in-process UiApp.
-
-Event types
-───────────
-- ``model_event``      ORM model created/updated/deleted (primary mechanism)
-- ``taskcall.status``  AgentTaskCall status_detail transition (legacy, phased out)
-- ``taskrun.status``   AgentTaskRun status transition (legacy, phased out)
-- ``message.created``  New Message in a session (legacy, phased out)
+Producers call :func:`publish_model_event` after an ORM write; delivery to
+subscribed browser views goes through the Redis observable registry
+(``runtime/observables.py``), drained per UI instance by the consumer loop
+in ``ui/consumer.py``.
 
 Usage (Celery worker)
 --------------------
@@ -21,27 +16,6 @@ Usage (Celery worker)
 from __future__ import annotations
 
 from typing import Any
-
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-
-CHANNEL_GROUP = "agentone_live"
-
-
-def publish(session_id: int | None, event_type: str, payload: dict[str, Any]) -> None:
-    """Publish an event to the live channel group."""
-    channel_layer = get_channel_layer()
-    if channel_layer is None:
-        return
-    async_to_sync(channel_layer.group_send)(
-        CHANNEL_GROUP,
-        {
-            "type": "session_event",
-            "session_id": session_id,
-            "event_type": event_type,
-            "payload": payload,
-        },
-    )
 
 
 def _extract_filter_context(instance: Any) -> dict[str, Any]:
@@ -76,19 +50,21 @@ def publish_model_event(instance: Any, action: str) -> None:
     Args:
         instance: The Django model instance that was just written.
         action:   ``"create"``, ``"update"``, or ``"delete"``.
+
+    Delivers to subscribed UI instances through the Redis observable
+    registry (see ``runtime/observables.py``).  The old channel-layer
+    broadcast is gone: all views subscribe to observable keys, so a
+    fan-out to every connected consumer would only waste Redis round
+    trips.  Instances without ``notify_observers`` (non-BaseModel
+    mixins) are silently skipped.
     """
     filter_context = _extract_filter_context(instance)
     session_id = filter_context.get("session_id")
     mn = instance._meta.model_name
     _log(f"PUBLISH_MODEL_EVENT: model={mn} action={action} pk={instance.pk} sid={session_id}")
-    publish(
-        session_id,
-        "model_event",
-        {
-            "model_name": mn,
-            "app_label": instance._meta.app_label,
-            "pk": instance.pk,
-            "action": action,
-            "filter_context": filter_context,
-        },
-    )
+    notify = getattr(instance, "notify_observers", None)
+    if callable(notify):
+        try:
+            notify(action)
+        except Exception:
+            pass

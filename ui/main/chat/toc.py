@@ -6,7 +6,6 @@ from runtime.session.session import Session
 from server.models.message import Message, MessagePart
 from server.models.enums.message_enums import MessagePartType
 from ui.lib.model_view import ModelView
-from ui.app import UiApp
 
 if TYPE_CHECKING:
     from ui.main.chat.chat import Chat
@@ -63,15 +62,14 @@ class ChatTocView(ModelView):
         self.messages_view = messages_view
         self._session_id = subject.model.pk
         self._segments: list[dict] | None = None
-        app = UiApp.get_instance()
-        if app is not None:
-            app.model_observer.watch(
-                Message,
-                filter={"session_id": self._session_id},
-                callback_name="_on_message_created",
-                view=self,
-                action="create",
+        try:
+            from ui.lib.model_view import orm_subscribe
+
+            orm_subscribe(
+                self, f"Message.session:{self._session_id}", self._on_orm_event
             )
+        except Exception:
+            pass
         self._segments_lock = threading.Lock()
 
     @property
@@ -118,7 +116,12 @@ class ChatTocView(ModelView):
             return
         self.messages_view.jump_to_message(segments[index]["pk"])
 
-    def _on_message_created(self, pk: int, action: str, filter_context: dict) -> None:
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: only message creates can add segments."""
+        if model == "Message" and action == "create":
+            self._on_message_created(pk)
+
+    def _on_message_created(self, pk: int) -> None:
         is_compaction = MessagePart.objects.filter(
             message_id=pk,
             type=MessagePartType.COMPACTION,

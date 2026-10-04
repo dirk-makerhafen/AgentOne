@@ -17,6 +17,7 @@ break the FSM's atomic filters without any test failing otherwise.
 from __future__ import annotations
 
 from types import SimpleNamespace
+from unittest import mock
 
 import re
 
@@ -769,20 +770,42 @@ class WorkItemsBoardCacheTest(TestCase):
             assert spy.call_count == 2, "stale rows survived a re-render"
 
 
+class _FakeInstance:
+    """Minimal stand-in for PyHtmlGuiInstance (redis subscription side)."""
+
+    def __init__(self, instance_key="test-instance"):
+        from ui.lib.pyHtmlGui.pyhtmlgui.lib.weakFunctionReferences import (
+            WeakFunctionReferences,
+        )
+
+        self.instance_key = instance_key
+        self._function_references = WeakFunctionReferences()
+        self.observed_views = {}
+
+
 class WorkItemsBoardObserverTest(TestCase):
     """The board must re-render when a Celery worker moves an item."""
 
-    def _app(self):
-        from ui.model_observer import ModelObserver
+    def setUp(self):
+        import fakeredis
 
-        app = SimpleNamespace(model_observer=ModelObserver())
-        return app
+        from runtime import observables
 
-    def _board(self, app):
+        fake = fakeredis.FakeStrictRedis(decode_responses=True)
+        self._redis_patch = mock.patch.object(
+            observables, "get_redis", return_value=fake
+        )
+        self._redis_patch.start()
+        self.addCleanup(self._redis_patch.stop)
+        self.redis = fake
+
+    def _board(self):
         from ui.main.workitems.board import WorkItemsBoard
 
         view = WorkItemsBoard.__new__(WorkItemsBoard)
         view.root_view = SimpleNamespace(sidebar=SimpleNamespace(selected_project_id=None))
+        view._instance = _FakeInstance()
+        view._observed_function_ids = []
         view.agent_filter = ""
         view.verify_filter = ""
         view.show_terminal = False
@@ -795,39 +818,39 @@ class WorkItemsBoardObserverTest(TestCase):
         return view
 
     def test_subscribing_registers_a_work_item_watch(self):
-        from server.models.workitems.work_item import WorkItem
+        import json
 
-        app = self._app()
-        view = self._board(app)
-        view._watch_work_items(app)
-        assert len(app.model_observer._subscriptions["workitem"]) == 1
+        view = self._board()
+        view._watch_work_items(SimpleNamespace())
+        fids = json.loads(self.redis.hget("agentone:obs:WorkItem", "test-instance"))
+        assert len(fids) == 1
 
     def test_reopening_a_tab_does_not_double_subscribe(self):
-        app = self._app()
-        view = self._board(app)
-        view._watch_work_items(app)
-        view._watch_work_items(app)
-        assert len(app.model_observer._subscriptions["workitem"]) == 1, "leaked a subscription"
+        import json
+
+        view = self._board()
+        view._watch_work_items(SimpleNamespace())
+        view._watch_work_items(SimpleNamespace())
+        fids = json.loads(self.redis.hget("agentone:obs:WorkItem", "test-instance"))
+        assert len(fids) == 1, "leaked a subscription"
+        assert len(view._observed_function_ids) == 1
 
     def test_a_model_event_clears_the_caches_and_rerenders(self):
-        from server.models.workitems.work_item import WorkItem
-
-        app = self._app()
-        view = self._board(app)
-        view._watch_work_items(app)
+        view = self._board()
+        view._watch_work_items(SimpleNamespace())
         rendered = []
         view.update = lambda *a, **k: rendered.append(1)
 
-        # publish_model_event sends _meta.model_name (lowercase), and
-        # ModelObserver.watch keys its subscriptions the same way.
-        app.model_observer.dispatch("workitem", "update", 7, {"id": 7, "project": None})
+        # What the consumer loop invokes on notify(WorkItem keys…).
+        view._on_orm_event(key="WorkItem", model="WorkItem", pk=7, action="update", data={})
 
         assert view._rows_cache is None, "served stale rows after a worker moved an item"
         assert view._scope_label_cache is None
         assert rendered, "no re-render"
 
-    def test_missing_observer_leaves_the_board_usable(self):
+    def test_missing_instance_leaves_the_board_usable(self):
         """A board must still render if registration fails."""
-        view = self._board(SimpleNamespace())
-        view._watch_work_items(SimpleNamespace())  # no model_observer attribute
-        view._watch_work_items(SimpleNamespace(model_observer=None))
+        from ui.main.workitems.board import WorkItemsBoard
+
+        view = WorkItemsBoard.__new__(WorkItemsBoard)
+        view._watch_work_items(SimpleNamespace())  # no _instance attribute

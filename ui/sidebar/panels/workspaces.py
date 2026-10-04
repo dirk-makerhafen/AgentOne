@@ -138,27 +138,13 @@ class SidebarPanelWorkspaces(ModelView):
         # attribute and calls update() on it — the panel itself fills that role.
         self.workspace_list = self
         try:
-            subject.model_observer.watch(
-                WorkspaceModel,
-                filter={},
-                callback_name="_on_workspace_changed",
-                view=self,
-                action="create",
-            )
-            subject.model_observer.watch(
-                WorkspaceModel,
-                filter={},
-                callback_name="_on_workspace_changed",
-                view=self,
-                action="update",
-            )
-            subject.model_observer.watch(
-                WorkspaceModel,
-                filter={},
-                callback_name="_on_workspace_changed",
-                view=self,
-                action="delete",
-            )
+            # Redis observable path: "WorkspaceModel" is the `any` key every
+            # WorkspaceModel write notifies on (create/update/delete alike).
+            # Published by the workspace UI views, the API ViewSet and the
+            # wiki/projectmanager scripts.
+            from ui.lib.model_view import orm_subscribe
+
+            orm_subscribe(self, "WorkspaceModel", self._on_orm_event)
         except Exception:
             pass
 
@@ -217,7 +203,8 @@ class SidebarPanelWorkspaces(ModelView):
     # Actions
     # ------------------------------------------------------------------
 
-    def _on_workspace_changed(self, pk: int, action: str, filter_context: dict) -> None:
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: any WorkspaceModel write re-renders."""
         self.update()
 
     def toggle_collapse(self, pk: int) -> None:

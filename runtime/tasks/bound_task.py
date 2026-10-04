@@ -129,14 +129,64 @@ class BoundTask:
         with _chdir(cwd):
             try:
                 if self.task_definition_version.bound:
-                    return func(self.session, *args, **kwargs)
-                return func(*args, **kwargs)
+                    result = func(self.session, *args, **kwargs)
+                else:
+                    result = func(*args, **kwargs)
             except Exception as e:
                 if self.task_definition_version.task_type == TaskType.TASK: # internal tasks fail
                     raise e
                 # commands and tools get captured
                 return (False, {'status': 'exception', 'message': traceback.format_exc()})
+            return self._maybe_append_guidance_hint(
+                result, self._normalized_call_kwargs(args, kwargs)
+            )
 
+
+    def _normalized_call_kwargs(self, args: Any, kwargs: Any) -> dict[str, Any]:
+        """Normalize positional + keyword call arguments into a keyword dict."""
+        call_args: dict[str, Any] = dict(kwargs)
+        if args:
+            arg_names = getattr(self.task_definition_version, "arg_names", None)
+            if isinstance(arg_names, list):
+                for name, value in zip(arg_names, args):
+                    call_args.setdefault(name, value)
+            else:
+                call_args.setdefault("source", args[0])
+        return call_args
+
+    def _maybe_append_guidance_hint(self, result: Any, call_args: dict[str, Any]) -> Any:
+        """Append a Path B touch hint to a successful ``(True, dict)`` result.
+
+        Only filesystem-postured tools trigger (spec ``docs/agents-md.md``
+        §4.3). Never raises — failures are logged and the result passes
+        through unchanged.
+        """
+        if not (isinstance(result, tuple) and len(result) == 2):
+            return result
+        ok, payload = result
+        if ok is not True or not isinstance(payload, dict):
+            return result
+        try:
+            from runtime import guidance_files as _guidance
+            from runtime.workspace_access import task_access_posture
+
+            posture = task_access_posture(self.task_definition)
+            hint = _guidance.hint_for_call(
+                self.session,
+                getattr(self.task_definition, "name", ""),
+                posture,
+                call_args,
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            import logging as _logging
+
+            _logging.getLogger(__name__).warning(
+                "guidance hint hook failed", exc_info=True
+            )
+            return result
+        if hint:
+            payload["guidance_hint"] = hint
+        return (ok, payload)
 
     def _filesystem_access_block(self, *args: Any, **kwargs: Any) -> str | None:  # pylint: disable=too-many-locals
         """Enforce the workspace access policy for this tool call.
@@ -156,14 +206,7 @@ class BoundTask:
         policy = resolve_policy(self.session)
 
         # Normalize call arguments into a keyword dict.
-        call_args: dict[str, Any] = dict(kwargs)
-        if args:
-            arg_names = getattr(self.task_definition_version, "arg_names", None)
-            if isinstance(arg_names, list):
-                for name, value in zip(arg_names, args):
-                    call_args.setdefault(name, value)
-            else:
-                call_args.setdefault("source", args[0])
+        call_args: dict[str, Any] = self._normalized_call_kwargs(args, kwargs)
 
         # --- filesystem tools ---
         posture = task_access_posture(self.task_definition)

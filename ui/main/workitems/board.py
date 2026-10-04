@@ -211,30 +211,25 @@ class WorkItemsBoard(ModelView):
         workers, minutes after the click that queued them. Without this the
         board silently shows the pre-dispatch state until the user reloads,
         which is exactly when they are watching to see whether it ran.
-        """
-        app = subject if hasattr(subject, "model_observer") else None
-        if app is None:
-            return
-        from server.models.workitems.work_item import WorkItem
 
+        Subscribes to the ``WorkItem`` any-key: every WorkItem write
+        notifies on it via ``BaseModel.notify_observers`` (dual-published
+        from ``publish_model_event``).
+        """
         try:
-            # One board per tab: drop any subscription this tab left behind
-            # when it was closed and reopened, then resubscribe. unwatch()
-            # is per-view across all models, and this view only watches
-            # WorkItem.
-            app.model_observer.unwatch(self)
-            app.model_observer.watch(
-                WorkItem,
-                callback_name="_on_work_item_changed",
-                view=self,
-            )
+            from ui.lib.model_view import orm_subscribe, orm_unsubscribe_view
+
+            # One board per tab: drop subscriptions this view left behind
+            # when it was closed and reopened, then resubscribe.
+            orm_unsubscribe_view(self)
+            orm_subscribe(self, "WorkItem", self._on_orm_event)
         except Exception:
             # Live refresh is an enhancement; a board that renders statically
             # is still correct, so never let registration break the tab.
             pass
 
-    def _on_work_item_changed(self, pk=None, action=None, filter_context=None) -> None:
-        """ModelObserver callback: drop caches and re-render."""
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: drop caches and re-render."""
         self._rows_cache = None
         self._rows_signature = None
         self._scope_label_cache = None

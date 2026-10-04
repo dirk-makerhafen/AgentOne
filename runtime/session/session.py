@@ -317,7 +317,11 @@ class Session:
 
     def count_turn(self) -> None:
         """Increment the turn counter on the session model."""
-        SessionModel.objects.filter(pk=self.model.pk).update(turn_count=self.model.turn_count + 1)
+        from runtime.events import publish_model_event
+
+        self.model.turn_count = self.model.turn_count + 1
+        SessionModel.objects.filter(pk=self.model.pk).update(turn_count=self.model.turn_count)
+        publish_model_event(self.model, "update")
 
     def reset_turn_count(self) -> None:
         """Reset the turn counter to zero."""
@@ -341,7 +345,11 @@ class Session:
 
     def count_unattended_turn(self) -> None:
         """Increment the unattended turn counter."""
-        SessionModel.objects.filter(pk=self.model.pk).update(unattended_turn_count=self.model.unattended_turn_count + 1)
+        from runtime.events import publish_model_event
+
+        self.model.unattended_turn_count = self.model.unattended_turn_count + 1
+        SessionModel.objects.filter(pk=self.model.pk).update(unattended_turn_count=self.model.unattended_turn_count)
+        publish_model_event(self.model, "update")
 
     def reset_unattended_turn_count(self) -> None:
         """Reset the unattended turn counter to zero."""
@@ -395,6 +403,22 @@ class Session:
     def inherit_system_prompt(self) -> bool:
         """Return whether this session's agent inherits parent system prompts."""
         return bool(self._get_session_setting("inherit_system_prompt"))
+
+    @property
+    def autoload(self) -> dict | None:
+        """Return the resolved AGENTS.md autoload config (or *None*)."""
+        value = self._get_session_setting("autoload")
+        return dict(value) if isinstance(value, dict) else None
+
+    @property
+    def guidance_file_index_limit(self) -> int | None:
+        """Return the resolved guidance-file index cap override (or *None*)."""
+        return self._get_session_setting("guidance_file_index_limit")
+
+    @property
+    def load_guidance_file_index(self) -> bool | None:
+        """Return the resolved guidance-file index toggle override (or *None*)."""
+        return self._get_session_setting("load_guidance_file_index")
 
     @property
     def access(self) -> dict | None:

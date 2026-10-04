@@ -62,8 +62,25 @@ class ApprovalCard(PyHtmlView):
     
     def __init__(self, subject: Session, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        if getattr(self.parent, 'live_session', None):
-            self.add_observable(self.parent.live_session)
+        # DB observable: the card renders needs_approval(), which reads the
+        # SessionModel turn counters.  Counter bumps happen in Celery workers
+        # (decide_next_step) and publish SessionModel "update" events.
+        self._session_id = subject.model.pk
+        try:
+            from ui.lib.model_view import orm_subscribe
+
+            orm_subscribe(
+                self,
+                f"SessionModel.pk:{self._session_id}",
+                self._on_orm_event,
+            )
+        except Exception:
+            pass
+
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: turn counters changed, re-render."""
+        if model == "SessionModel" and action == "update":
+            self.update()
 
     def approve(self, mode: str) -> None:
         """Handle approval button clicks.

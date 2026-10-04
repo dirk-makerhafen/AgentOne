@@ -53,22 +53,17 @@ class CtxIndicatorWrap(PyHtmlView):
     '''
     def __init__(self, subject:Session, parent: ComposerFooter, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        # NOTE: deliberately NO unwatch_filter here.  The chat messages view
-        # owns Query subscriptions for this session and its re-init would
-        # wipe ours.  An empty filter survives that (unwatch only removes
-        # entries whose filter contains the given pairs) — we check the
-        # session inside the callback instead.
+        # Redis observable path: session-scoped Query key.  The old
+        # ModelObserver watch used an empty filter (all sessions) with an
+        # in-callback session check; subscribing to our own session's key
+        # delivers exactly the events we act on.
         try:
-            from ui.app import UiApp
-            from server.models.queries.query import Query
-            app = UiApp.get_instance()
-            if app is not None:
-                app.model_observer.watch(
-                    Query,
-                    filter={},
-                    callback_name="_on_query_event",
-                    view=self,
-                    action="update",
+            from ui.lib.model_view import orm_subscribe
+
+            session_id = getattr(getattr(subject, "model", None), "pk", None)
+            if session_id is not None:
+                orm_subscribe(
+                    self, f"Query.session:{session_id}", self._on_orm_event
                 )
         except Exception:  # pylint: disable=broad-exception-caught
             pass
@@ -107,15 +102,10 @@ class CtxIndicatorWrap(PyHtmlView):
             f"Reasoning: {_fmt_tokens(usage.get('tokens_reasoning', 0))} · {usage.get('tokens_reasoning_percent',0):.0f}%",
         ]
 
-    def _on_query_event(self, pk: int, action: str, filter_context: dict) -> None:
-        try:
-            session_id = (filter_context or {}).get("session_id")
-            own_id = getattr(getattr(self.subject, "model", None), "pk", None)
-            if session_id is not None and own_id is not None and session_id != own_id:
-                return
-        except Exception:  # pylint: disable=broad-exception-caught
-            return
-        try:
-            self.update()
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
+        """Redis observable callback: token counts changed, refresh the ring."""
+        if model == "Query" and action == "update":
+            try:
+                self.update()
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass

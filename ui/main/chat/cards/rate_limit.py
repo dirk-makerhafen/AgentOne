@@ -21,7 +21,6 @@ from django.utils import timezone
 
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
-from ui.app import UiApp
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
@@ -136,20 +135,17 @@ class RateLimitCard(PyHtmlView):
     def __init__(self, subject: Session, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._snap: Dict[str, Any] | None = None
-        app = UiApp.get_instance()
-        if app is not None:
-            self._session_id = subject.model.pk
-            app.model_observer.unwatch_filter(
-                model_class=AgentTaskCall,
-                filter={"session_id": self._session_id},
+        self._session_id = subject.model.pk
+        try:
+            from ui.lib.model_view import orm_subscribe
+
+            orm_subscribe(
+                self,
+                f"AgentTaskCall.session:{self._session_id}",
+                self._on_orm_event,
             )
-            app.model_observer.watch(
-                AgentTaskCall,
-                filter={"session_id": self._session_id},
-                callback_name="_on_ratelimit_taskcall_updated",
-                view=self,
-                action="update",
-            )
+        except Exception:
+            pass
 
     @property
     def DOM_ELEMENT_CLASS(self):
@@ -465,6 +461,6 @@ class RateLimitCard(PyHtmlView):
             return
         wrap.update()
 
-    def _on_ratelimit_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:  # pylint: disable=unused-argument
-        """Re-render when an AgentTaskCall for this session changes status."""
+    def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:  # pylint: disable=unused-argument
+        """Redis observable callback: a session task call changed, re-render."""
         self.update()

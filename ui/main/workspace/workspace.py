@@ -540,6 +540,9 @@ class Workspace(ModelView):
         self.subject.color = color
         self.subject.access = self.access_editor.access_data
         self.subject.save()
+        from runtime.events import publish_model_event
+
+        publish_model_event(self.subject, "update")
         self._editing = False
         self._edit_error = ""
         self.update()
@@ -550,6 +553,9 @@ class Workspace(ModelView):
         except (WorkspaceModel.DoesNotExist, ValueError):
             return
         ws.delete()
+        from runtime.events import publish_model_event
+
+        publish_model_event(ws, "delete")
         if int(pk) == self.subject.pk:
             main_view = self._find_main_view()
             if main_view is not None and hasattr(main_view, "close_tab"):

@@ -1,15 +1,13 @@
 """Tests for runtime/events.py — event publishing infrastructure."""
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock
 from django.test import TestCase, SimpleTestCase
 from server.models.enums.message_enums import MessageRole
 from server.tests.dc_test_helpers import create_agent, create_session, create_task
 from runtime.events import (
-    publish,
     publish_model_event,
     _extract_filter_context,
-    CHANNEL_GROUP,
 )
 
 
@@ -70,15 +68,10 @@ class ExtractFilterContextTest(TestCase):
             self.assertTrue(key.endswith("_id"), f"Unexpected non-FK key: {key}")
 
 
-@patch("runtime.events.get_channel_layer", return_value=None)
-class PublishNoChannelLayerTest(SimpleTestCase):
-    """publish() is a no-op when no channel layer is configured."""
+class PublishModelEventTest(SimpleTestCase):
+    """publish_model_event() needs no channel layer and skips non-observables."""
 
-    def test_publish_returns_silently(self, mock_get_cl):
-        result = publish(1, "test.event", {"foo": "bar"})
-        self.assertIsNone(result)
-
-    def test_publish_model_event_returns_silently(self, mock_get_cl):
+    def test_publish_model_event_returns_silently(self):
         from django.db.models.base import Model
         instance = MagicMock(spec=Model)
         type(instance)._meta = PropertyMock(return_value=MagicMock(
