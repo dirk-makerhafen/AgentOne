@@ -58,7 +58,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
         parent_session_version=_session.get_version_model(),
         session_type=SessionType.SUBTASK_FORK,
     )
-    # Fork inherits parent's session settings (auto_compact_limit, api key, disallowed lists, etc.)
+    # Fork inherits parent's session settings (auto_compact_max_tokens, api key, disallowed lists, etc.)
     parent_sv = _session.get_version_model()
     if parent_sv and parent_sv.session_settings:
         fork_settings = agent_version.clone_settings(parent_sv.session_settings)

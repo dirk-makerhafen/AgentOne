@@ -9,6 +9,7 @@ must stay reachable (so the UI can still render the full history in order).
 from __future__ import annotations
 
 import importlib.util
+import uuid
 from pathlib import Path
 
 from django.test import TestCase
@@ -18,8 +19,6 @@ from server.models.agents.agent_version import AgentVersionModel
 from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message, MessagePart
-from server.models.queries.query import Query
-from server.models.queries.response import Response
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
 from server.models.settings import SettingsModel
@@ -77,24 +76,75 @@ class CompactionForkTest(TestCase):
         self.ingest = _load_ingest()
 
     def _run_compaction(self, compacted, trigger, summary="summary"):
+        """Drive ``ingest_compaction`` via the fork-flow contract.
+
+        ``compacted`` is the chain-ordered set of messages to summarize; the
+        boundary is its chain-last member (walk back from ``trigger``).  A
+        throwaway child session carries the summary result message, as the
+        real compaction fork does.
+        """
         from runtime.session.session import Session
-        query = Query.objects.create(
-            session=self.sv.session,
-            session_version=self.sv,
-            trigger_message=trigger
+
+        compacted_ids = {m.pk for m in compacted}
+        boundary = None
+        current = trigger
+        while current is not None:
+            if current.pk in compacted_ids:
+                boundary = current
+                break
+            current = current.prev_message
+
+        child_model = SessionModel.objects.create(
+            name=f"compaction-child-{uuid.uuid4().hex[:8]}",
+            session_type="subtask_fork",
         )
-        for m in compacted:
-            query.add_message(role=m.role, source_message=m).save()
-        response = Response.objects.create(query=query, session_version=self.sv, session=self.sv.session)
+        child_sv = SessionVersionModel.objects.create(
+            session=child_model,
+            agent=self.agent,
+            pinned_agent_version=self.av,
+        )
+        SessionModel.objects.filter(pk=child_model.pk).update(
+            latest_session_version=child_sv
+        )
+        result_msg = Message.objects.create(
+            session=child_model,
+            session_version=child_sv,
+            role=MessageRole.ASSISTANT,
+        )
+        MessagePart.objects.create(
+            message=result_msg,
+            type=MessagePartType.MESSAGE,
+            content=GenericContent.from_text(summary),
+            content_type=MessageContentType.TEXT,
+        )
+
         session = Session(session_model=self.session)
         return self.ingest.ingest_compaction(
-            session, response, [{"type":  MessagePartType.MESSAGE, "content": summary}]
+            session,
+            child_session_pk=child_model.pk,
+            boundary_pk=boundary.pk if boundary else None,
+            result=result_msg,
         )
 
     def _tails(self):
         return list(Message.objects.filter(
             session_version=self.sv,
         ).filter(next_messages=None).order_by("pk").values_list("pk", flat=True))
+
+    def _success_toast(self):
+        """Assert the single chain tip is the success toast; return it."""
+        tails = self._tails()
+        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
+        tail = Message.objects.get(pk=tails[0])
+        self.assertEqual(tail.role, MessageRole.INFO)
+        texts = [
+            str(p.content.get()) for p in tail.parts.all() if p.content
+        ]
+        self.assertTrue(
+            any("Compaction successful" in t for t in texts),
+            f"tail is not the success toast: {texts}",
+        )
+        return tail
 
     def test_partial_compaction_preserves_chain(self):
         a = _msg(self.sv, MessageRole.USER, "a", None)
@@ -106,9 +156,7 @@ class CompactionForkTest(TestCase):
 
         out = self._run_compaction([c, d, e], trigger=f)
 
-        tails = self._tails()
-        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
-        self.assertEqual(tails[0], f.pk)
+        self._success_toast()
 
         # Active chain: a -> b -> c -> d -> e -> compaction -> f
         f.refresh_from_db()
@@ -129,9 +177,7 @@ class CompactionForkTest(TestCase):
 
         out = self._run_compaction([a, b, c, d], trigger=d)
 
-        tails = self._tails()
-        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
-        self.assertEqual(tails[0], out["message"].pk)  # compaction becomes the tail
+        self._success_toast()
 
         # Active chain: a -> b -> c -> d -> compaction
         comp = out["message"]
@@ -143,7 +189,7 @@ class CompactionForkTest(TestCase):
         f = _msg(self.sv, MessageRole.USER, "f", None)
         out = self._run_compaction([], trigger=f)
         self.assertIsNotNone(out["message"])
-        self.assertEqual(len(self._tails()), 1)
+        self._success_toast()
 
     def test_second_compaction_boundary_follows_chain_not_pk(self):
         # A prior compaction inserted marker X mid-chain.  X was created
@@ -174,8 +220,7 @@ class CompactionForkTest(TestCase):
         self.assertEqual(out["message"].prev_message_id, c.pk)
         d.refresh_from_db()
         self.assertEqual(d.prev_message_id, out["message"].pk)
-        self.assertEqual(len(self._tails()), 1, f"expected single tail, got {self._tails()}")
-        self.assertEqual(self._tails()[0], d.pk)
+        self._success_toast()
 
     def test_stacked_markers_boundary_is_chain_tail_not_pk_max(self):
         # Regression for the real-world corruption: when a session compacts on
@@ -219,9 +264,7 @@ class CompactionForkTest(TestCase):
         self.assertEqual(out["message"].prev_message_id, c.pk)
         d.refresh_from_db()
         self.assertEqual(d.prev_message_id, out["message"].pk)
-        tails = self._tails()
-        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
-        self.assertEqual(tails[0], f.pk)
+        self._success_toast()
 
         # Active chain: a -> b -> m_low -> m_high -> c -> compaction -> d -> e -> f
         f.refresh_from_db()
@@ -268,9 +311,7 @@ class CompactionForkTest(TestCase):
         self.assertEqual(out["message"].prev_message_id, d.pk)
         e.refresh_from_db()
         self.assertEqual(e.prev_message_id, out["message"].pk)
-        tails = self._tails()
-        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
-        self.assertEqual(tails[0], e.pk)
+        self._success_toast()
 
     def test_hidden_child_after_compaction_not_a_tail(self):
         a = _msg(self.sv, MessageRole.USER, "a", None)
@@ -285,9 +326,7 @@ class CompactionForkTest(TestCase):
 
         self._run_compaction([c, d, e], trigger=f)
 
-        tails = self._tails()
-        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
-        self.assertEqual(tails[0], f.pk)
+        self._success_toast()
 
         # Active chain: a -> b -> c -> d -> e -> compaction -> h -> f
         h.refresh_from_db()
@@ -321,7 +360,10 @@ class CompactionForkTest(TestCase):
 
         session = Session(session_model=self.session)
         out = self.ingest.ingest_compaction(
-            session, boundary_pk=c.pk, result=child_msg
+            session,
+            child_session_pk=child_model.pk,
+            boundary_pk=c.pk,
+            result=child_msg,
         )
 
         marker = out["message"]
@@ -334,10 +376,8 @@ class CompactionForkTest(TestCase):
         )
         self.assertIn("child summary content", comp_text)
 
-        # Single linear chain with one tail.
-        tails = self._tails()
-        self.assertEqual(len(tails), 1, f"expected single tail, got {tails}")
-        self.assertEqual(tails[0], d.pk)
+        # Single linear chain with one tail (the success toast).
+        self._success_toast()
 
     def test_fork_flow_final_result_toolcall_part_extracts_summary(self):
         """When the child's result message still contains a TOOLCALL part for
@@ -389,8 +429,23 @@ class CompactionForkTest(TestCase):
         )
 
         session = Session(session_model=self.session)
+        child_model = SessionModel.objects.create(
+            name=f"compaction-child-{uuid.uuid4().hex[:8]}",
+            session_type="subtask_fork",
+        )
+        child_sv = SessionVersionModel.objects.create(
+            session=child_model,
+            agent=self.agent,
+            pinned_agent_version=self.av,
+        )
+        SessionModel.objects.filter(pk=child_model.pk).update(
+            latest_session_version=child_sv
+        )
         out = self.ingest.ingest_compaction(
-            session, boundary_pk=a.pk, result=result_msg
+            session,
+            child_session_pk=child_model.pk,
+            boundary_pk=a.pk,
+            result=result_msg,
         )
 
         marker = out["message"]
@@ -407,10 +462,10 @@ class ForkSessionSettingsTest(TestCase):
     Regression: forks only had the agent's defaults because no session settings
     were copied onto the child session version.  For a compaction fork this is
     dangerous — the fork carries the same oversized context that triggered the
-    compaction, so if it inherits ``auto_compact_limit`` it immediately spawns
+    compaction, so if it inherits ``auto_compact_max_tokens`` it immediately spawns
     another compaction fork (infinite chain).  ``get_or_create_session`` must
     clone the parent's settings, and the compaction fork must pin
-    ``auto_compact_limit=0``.
+    ``auto_compact_max_tokens=0``.
     """
 
     def setUp(self):
@@ -432,7 +487,7 @@ class ForkSessionSettingsTest(TestCase):
     def test_fork_inherits_parent_session_settings(self):
         """A fork copies the parent's session settings row."""
         parent_settings = SettingsModel.objects.create(
-            auto_compact_limit=150000,
+            auto_compact_max_tokens=150000,
             max_retries=3,
             disallowedTaskNames=["bad_task"],
         )
@@ -448,13 +503,13 @@ class ForkSessionSettingsTest(TestCase):
         )
         self.assertIsNotNone(child_sv.session_settings)
         self.assertNotEqual(child_sv.session_settings.pk, parent_settings.pk)
-        self.assertEqual(child_sv.session_settings.auto_compact_limit, 150000)
+        self.assertEqual(child_sv.session_settings.auto_compact_max_tokens, 150000)
         self.assertEqual(child_sv.session_settings.max_retries, 3)
         self.assertEqual(child_sv.session_settings.disallowedTaskNames, ["bad_task"])
 
         # The parent's row is untouched (immutable snapshot semantics).
         parent_settings.refresh_from_db()
-        self.assertEqual(parent_settings.auto_compact_limit, 150000)
+        self.assertEqual(parent_settings.auto_compact_max_tokens, 150000)
 
     def test_fork_without_parent_settings_keeps_agent_defaults(self):
         """No parent session settings → child stays on agent defaults (None)."""
@@ -465,15 +520,15 @@ class ForkSessionSettingsTest(TestCase):
         )
         self.assertIsNone(child_sv.session_settings)
 
-    def test_compaction_fork_pins_auto_compact_limit_zero(self):
+    def test_compaction_fork_pins_auto_compact_max_tokens_zero(self):
         """The stable knob the compaction fork uses to stop re-forking."""
 
         parent_settings = SettingsModel.objects.create(
-            auto_compact_limit=120000,
+            auto_compact_max_tokens=120000,
             reasoning_effort="medium",
         )
-        fork_settings = self.av.clone_settings(parent_settings, auto_compact_limit=0)
-        self.assertEqual(fork_settings.auto_compact_limit, 0)
+        fork_settings = self.av.clone_settings(parent_settings, auto_compact_max_tokens=0)
+        self.assertEqual(fork_settings.auto_compact_max_tokens, 0)
         self.assertEqual(fork_settings.reasoning_effort, "medium")
         self.assertNotEqual(fork_settings.pk, parent_settings.pk)
 

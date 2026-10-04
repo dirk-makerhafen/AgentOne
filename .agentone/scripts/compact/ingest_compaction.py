@@ -174,14 +174,15 @@ def ingest_compaction(
     summary_text = _extract_summary_text(result)
 
     parent_sv = _session.get_version_model()
-    info_message = Message.objects.create(
-        role=MessageRole.INFO,
-        session=parent_sv.session,
-        session_version=parent_sv,
-        prev_message=_session.get_last_message(),
-    )
 
     if not summary_text.strip():
+        # Failure toast anchored at the current tail; the chain is untouched.
+        info_message = Message.objects.create(
+            role=MessageRole.INFO,
+            session=parent_sv.session,
+            session_version=parent_sv,
+            prev_message=_session.get_last_message(),
+        )
 
         info_message.add_part(
             type=MessagePartType.MESSAGE,
@@ -247,7 +248,18 @@ def ingest_compaction(
             f"{MAX_COMPACT_ATTEMPTS} attempts; refusing to insert an "
             "empty COMPACTION marker."
         )
+    boundary = Message.objects.get(pk=boundary_pk) if boundary_pk else None
 
+    marker = _build_compaction_message( _session, newest_compacted=boundary, summary_text=summary_text)
+
+    # Success toast anchored at the then-current tail — the marker itself when
+    # everything was compacted — so the chain keeps exactly one tip.
+    info_message = Message.objects.create(
+        role=MessageRole.INFO,
+        session=parent_sv.session,
+        session_version=parent_sv,
+        prev_message=_session.get_last_message(),
+    )
     info_message.add_part(
         type=MessagePartType.MESSAGE,
         content_type=MessageContentType.TEXT,
@@ -256,12 +268,10 @@ def ingest_compaction(
 
     try:
         from runtime.events import publish_model_event
+
         publish_model_event(info_message, "create")
     except Exception:
         pass
-    boundary = Message.objects.get(pk=boundary_pk) if boundary_pk else None
-
-    marker = _build_compaction_message( _session, newest_compacted=boundary, summary_text=summary_text)
 
     return dict(
         response=response,

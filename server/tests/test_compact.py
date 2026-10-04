@@ -118,6 +118,48 @@ class FindCompactionBoundaryTest(TestCase):
         self.assertIsNotNone(boundary)
         self.assertEqual(boundary.pk, msgs[-1].pk)
 
+    def _mark_toolcall(self, msg: Message) -> None:
+        MessagePart.objects.create(
+            message=msg,
+            type=MessagePartType.TOOLCALL,
+            content=GenericContent.from_data({"name": "some_tool"}),
+            content_type=MessageContentType.JSON,
+        )
+
+    def test_zero_keep_percent_keeps_approval_halted_tail(self):
+        # Approval-halt shape: assistant toolcall with no tool response yet.
+        # Keep-nothing must still leave the open turn live.
+        self._run(auto_compact_keep_percent=0)
+        a = self._create_message(text="a")
+        b = self._create_message(text="b")
+        t = self._create_message(role=MessageRole.ASSISTANT, text="call")
+        self._mark_toolcall(t)
+        _link([a, b, t])
+        boundary = find_compaction_boundary(self.runtime, self.runtime.get_last_message())
+        self.assertIsNotNone(boundary)
+        self.assertEqual(boundary.pk, b.pk)
+
+    def test_zero_keep_percent_single_toolcall_compacts_nothing(self):
+        self._run(auto_compact_keep_percent=0)
+        t = self._create_message(role=MessageRole.ASSISTANT, text="call")
+        self._mark_toolcall(t)
+        _link([t])
+        self.assertIsNone(find_compaction_boundary(self.runtime, self.runtime.get_last_message()))
+
+    def test_zero_keep_percent_compacts_dangling_older_toolcall(self):
+        # Adjacent toolcalls: T1 can never receive a response (T2 already
+        # follows it), so only the last one must stay live.
+        self._run(auto_compact_keep_percent=0)
+        a = self._create_message(text="a")
+        t1 = self._create_message(role=MessageRole.ASSISTANT, text="call1")
+        t2 = self._create_message(role=MessageRole.ASSISTANT, text="call2")
+        self._mark_toolcall(t1)
+        self._mark_toolcall(t2)
+        _link([a, t1, t2])
+        boundary = find_compaction_boundary(self.runtime, self.runtime.get_last_message())
+        self.assertIsNotNone(boundary)
+        self.assertEqual(boundary.pk, t1.pk)
+
     def test_walk_stops_at_compaction_marker(self):
         a = self._create_message(text="a")
         b = self._create_message(text="b")

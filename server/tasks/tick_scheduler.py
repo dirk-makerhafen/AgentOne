@@ -7,6 +7,8 @@ Celery beat periodic task handling the 10-second time-driven wakeups:
   3. WAITING_RATELIMIT - re-check LLM capacity, release calls in FIFO order
   4. WAITING_RETRY     - release calls whose dont_start_before has passed
   5. NEW (scheduled)   - release calls with dont_start_before in the past
+  6. Idle compaction   - dispatch ``compact_turn`` for quiet, oversized
+                         sessions before their KV cache expires
 
 Sibling one-minute tasks live in their own modules:
 
@@ -60,6 +62,7 @@ def tick_scheduler() -> None:
         _dispatch_work_items,
         _report_work_item_outcomes,
         _verify_work_items,
+        _compact_idle_sessions,
     ):
         try:
             routine()
@@ -928,4 +931,101 @@ def _verify_work_items() -> None:
             print(
                 f"[scheduler] error verifying work item {item.pk}: {e} "
                 f"{traceback.format_exc()}"
+            )
+
+
+# Pre-filter floor for the idle-compaction candidate scan: sessions with
+# activity newer than this are never eligible. Only a floor — the precise
+# per-session ``auto_compact_idle_seconds`` threshold governs firing.
+_IDLE_PRECHECK_FLOOR_SECONDS = 60
+
+# Max idle compactions dispatched per tick: drains a backlog of stale
+# sessions over several ticks instead of spiking LLM spend at once.
+_MAX_IDLE_COMPACTIONS_PER_TICK = 2
+
+
+def _compact_idle_sessions() -> None:
+    """Dispatch ``compact_turn`` for quiet, oversized sessions.
+
+    Proactive compaction: a session sitting at 100k tokens for minutes would
+    otherwise pay a full cold prefill on its next turn (KV cache expired)
+    just before the reactive ``auto_compact_max_tokens`` trigger fires
+    anyway. Compacting while the cache is still warm bills the summarization
+    prefill at cache-read rates instead.
+
+    A session is eligible only when all hold:
+
+    - active, with idle compaction configured (min tokens > 0 and
+      idle seconds > 0 — both unset mean disabled; ``baseagent`` declares
+      the stock 50k/240s so the whole tree inherits it),
+    - no live work: no non-ended call outside ``HALTED`` (approval/input
+      halts count as idle — the boundary guard keeps the open turn live),
+      and never ``HALTED_PAUSED`` (paused means hands off),
+    - its newest message is older than its idle threshold,
+    - its walked context reaches the min-tokens floor with a real boundary.
+
+    The dispatched chain re-verifies idleness at run time (a turn may have
+    started in between) and passes through quietly when stale.
+    """
+    from datetime import timedelta
+
+    from django.db.models import Max
+
+    from runtime.session.session import Session
+    from server.history_limiter import (
+        estimate_entries_tokens,
+        find_compaction_boundary,
+        idle_seconds,
+        walk_compaction_entries,
+    )
+    from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+    from server.models.sessions.session import SessionModel
+    from server.models.tasks.agent_task_call import AgentTaskCall
+
+    floor = timezone.now() - timedelta(seconds=_IDLE_PRECHECK_FLOOR_SECONDS)
+    candidates = (
+        SessionModel.objects.filter(is_active=True)
+        .annotate(last_msg_at=Max("related_messages__created_at"))
+        .filter(last_msg_at__lt=floor)
+        .order_by("last_msg_at")
+    )
+    dispatched = 0
+    for session_model in candidates:
+        if dispatched >= _MAX_IDLE_COMPACTIONS_PER_TICK:
+            break
+        try:
+            live = AgentTaskCall.objects.filter(
+                session_id=session_model.pk
+            ).exclude(status=TaskCallStatus.ENDED)
+            if live.exclude(status=TaskCallStatus.HALTED).exists():
+                continue  # live turn, queued work, or retry pending
+            if live.filter(
+                status_detail=TaskCallStatusDetail.HALTED_PAUSED
+            ).exists():
+                continue  # paused by user: hands off
+
+            session = Session(session_model=session_model)
+            min_tokens = session.auto_compact_min_tokens or 0
+            idle_s = session.auto_compact_idle_seconds or 0
+            if min_tokens <= 0 or idle_s <= 0:
+                continue
+            last_message = session.get_last_message()
+            if last_message is None:
+                continue
+            if (idle_seconds(session) or 0) < idle_s:
+                continue
+            entries = walk_compaction_entries(session, last_message)
+            if estimate_entries_tokens(entries) < min_tokens:
+                continue
+            if find_compaction_boundary(session, last_message) is None:
+                continue
+            compact_task = session.get_task("compact_turn")
+            if compact_task is None:
+                continue
+            compact_task.delay(message=last_message, idle_trigger=True)
+            dispatched += 1
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(
+                f"[scheduler] error in _compact_idle_sessions "
+                f"for session {session_model.pk}: {e}"
             )

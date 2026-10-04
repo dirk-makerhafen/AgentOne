@@ -57,7 +57,9 @@ autoload:                      # optional — AGENTS.md autoload (see below)
   maxFiles: 10                 # max files pinned into context
   maxChars: 32768              # total char budget (0 = disable contents)
   maxCharsPerFile: 8192        # per-file char cap (remainder truncated with marker)
-autoCompactLimit: 100000        # token threshold for auto-compaction (0 = disabled)
+autoCompactMaxTokens: 120000      # hard token threshold for reactive auto-compaction (0 = disabled)
+autoCompactMinTokens: 50000       # context floor for idle-triggered compaction (0 = idle compaction disabled)
+autoCompactIdleSeconds: 240       # idle seconds after which an oversized session is compacted (0 = disabled)
 autoCompactKeepPercent: 15     # percentage of newest tokens to keep in full on compaction (0 = compact everything)
 reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel

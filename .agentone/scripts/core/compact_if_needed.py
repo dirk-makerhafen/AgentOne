@@ -13,7 +13,7 @@ def compact_if_needed(
     message: Message,
     **kwargs: Any,
 ) -> dict[str, Any]:
-    auto_limit = _session.auto_compact_limit
+    auto_limit = _session.auto_compact_max_tokens
     if auto_limit <= 0 or response.prompt_tokens < auto_limit:
         return dict(response=response, parts=parts, message=message, **kwargs)
 

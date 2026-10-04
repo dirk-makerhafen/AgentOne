@@ -119,8 +119,16 @@ class AgentView(ModelView):
                                     <div class="detail-row-value">{{pyview.agent.max_history_messages}}</div>
                                 </div>
                                 <div class="detail-row">
-                                    <div class="detail-row-label">auto_compact_limit</div>
-                                    <div class="detail-row-value">{{pyview.agent.auto_compact_limit}}</div>
+                                    <div class="detail-row-label">auto_compact_max_tokens</div>
+                                    <div class="detail-row-value">{{pyview.agent.auto_compact_max_tokens}}</div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-row-label">auto_compact_min_tokens</div>
+                                    <div class="detail-row-value">{{pyview.agent.auto_compact_min_tokens}}</div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-row-label">auto_compact_idle_seconds</div>
+                                    <div class="detail-row-value">{{pyview.agent.auto_compact_idle_seconds}}</div>
                                 </div>
                                 <div class="detail-row">
                                     <div class="detail-row-label">auto_compact_keep_percent</div>

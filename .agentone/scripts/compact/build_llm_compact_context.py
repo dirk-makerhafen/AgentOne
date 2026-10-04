@@ -33,16 +33,38 @@ def build_llm_compact_context(
     response=None,
     parts=None,
     compact_attempt: int = 0,
+    idle_trigger: bool = False,
     **kwargs,
 ) -> dict:
 
-    from server.history_limiter import find_compaction_boundary
+    from server.history_limiter import (
+        estimate_entries_tokens,
+        find_compaction_boundary,
+        idle_seconds,
+        walk_compaction_entries,
+    )
 
     # Query-free: compute the newest message to compact from the message
     # chain, so the compaction fork only summarizes the old (compacted) range.
     boundary = find_compaction_boundary(_session, _session.get_last_message())
     if not boundary:
         return dict(response=response, parts=parts, message=message, **kwargs)
+
+    if idle_trigger:
+        # Re-verify at run time: a turn may have started (or settings may
+        # have changed) between the tick's dispatch and this run.  A stale
+        # trigger passes through quietly — same shape as "nothing to
+        # compact" — before any side effect (no INFO, no fork).
+        idle_s = _session.auto_compact_idle_seconds or 0
+        min_tokens = _session.auto_compact_min_tokens or 0
+        last_message = _session.get_last_message()
+        if (
+            idle_s <= 0
+            or min_tokens <= 0
+            or (idle_seconds(_session) or 0) < idle_s
+            or estimate_entries_tokens(walk_compaction_entries(_session, last_message)) < min_tokens
+        ):
+            return dict(response=response, parts=parts, message=message, **kwargs)
 
     
     
@@ -86,7 +108,9 @@ def build_llm_compact_context(
     # The compaction fork carries the same (oversized) context that triggered
     # *this* compaction — so it would immediately exceed the auto-compact
     # limit itself and spawn yet another compaction fork (infinite chain).
-    # Fork off the inherited session settings but pin auto_compact_limit to 0.
+    # Fork off the inherited session settings but pin auto_compact_max_tokens
+    # to 0.  Also pin auto_compact_idle_seconds to 0: the fork must never
+    # idle-compact itself while it works through the oversized context.
     # Also pin tool_call_allowlist to ["final_result"]: the advertised tools
     # stay identical (KV/prompt cache preserved), but any other attempted
     # call aborts the fork instead of letting it wander the old task — the
@@ -97,11 +121,12 @@ def build_llm_compact_context(
     if child_sv.session_settings:
         fork_settings = agent_version.clone_settings(
             child_sv.session_settings,
-            auto_compact_limit=0,
+            auto_compact_max_tokens=0,
+            auto_compact_idle_seconds=0,
             tool_call_allowlist=["final_result"],
         )
     else:
-        fork_settings = SettingsModel(auto_compact_limit=0, tool_call_allowlist=["final_result"])
+        fork_settings = SettingsModel(auto_compact_max_tokens=0, auto_compact_idle_seconds=0, tool_call_allowlist=["final_result"])
         fork_settings.save()
     SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=fork_settings)
     child_sv.session_settings = fork_settings

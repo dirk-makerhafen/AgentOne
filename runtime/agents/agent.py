@@ -133,6 +133,21 @@ class Agent:
         return self.get_version_model().resolve_setting("max_history_messages")
 
     @property
+    def auto_compact_max_tokens(self) -> int:
+        """Return the hard token threshold for reactive auto-compaction (0 = disabled)."""
+        return self.get_version_model().resolve_setting("auto_compact_max_tokens") or 0
+
+    @property
+    def auto_compact_min_tokens(self) -> int:
+        """Return the context floor for idle-triggered compaction (0 = disabled)."""
+        return self.get_version_model().resolve_setting("auto_compact_min_tokens") or 0
+
+    @property
+    def auto_compact_idle_seconds(self) -> int:
+        """Return idle seconds triggering compaction of oversized sessions (0 = disabled)."""
+        return self.get_version_model().resolve_setting("auto_compact_idle_seconds") or 0
+
+    @property
     def priority(self) -> int:
         """Return the scheduling priority."""
         return self.get_version_model().resolve_setting("priority")

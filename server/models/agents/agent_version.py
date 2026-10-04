@@ -156,7 +156,7 @@ class AgentVersionModel(BaseModel):
 
         # Forks/children inherit the parent's session-level settings instead of
         # silently falling back to the raw agent defaults.  Without this a fork
-        # loses user-configured overrides (auto_compact_limit, preferred api
+        # loses user-configured overrides (auto_compact_max_tokens, preferred api
         # key, disallowed lists, repeated session settings, ...).
         if aiv_created and parent_session_version and parent_session_version.session_settings:
             inherited = self.clone_settings(parent_session_version.session_settings)
@@ -224,7 +224,7 @@ class AgentVersionModel(BaseModel):
         ``SettingsModel`` instances are immutable (``save`` raises once a pk is
         set), so forks can not share the parent's exact row — a fork must get its
         own snapshot row with the same field values.  ``overrides`` are applied
-        on top (e.g. ``auto_compact_limit=0`` to stop a fork from re-forking).
+        on top (e.g. ``auto_compact_max_tokens=0`` to stop a fork from re-forking).
         """
         clone = SettingsModel()
         for field in SettingsModel._meta.fields:

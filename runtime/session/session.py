@@ -364,9 +364,19 @@ class Session:
         return self._get_session_setting("max_history_messages") or 0
 
     @property
-    def auto_compact_limit(self) -> int:
-        """Token threshold triggering auto-compaction (0 = disabled)."""
-        return self._get_session_setting("auto_compact_limit") or 0
+    def auto_compact_max_tokens(self) -> int:
+        """Hard token threshold triggering reactive auto-compaction (0 = disabled)."""
+        return self._get_session_setting("auto_compact_max_tokens") or 0
+
+    @property
+    def auto_compact_min_tokens(self) -> int:
+        """Context floor for idle-triggered compaction (0 = idle compaction disabled)."""
+        return self._get_session_setting("auto_compact_min_tokens") or 0
+
+    @property
+    def auto_compact_idle_seconds(self) -> int:
+        """Idle seconds after which an oversized session is compacted (0 = disabled)."""
+        return self._get_session_setting("auto_compact_idle_seconds") or 0
 
     @property
     def auto_compact_keep_percent(self) -> int | None:
@@ -1134,9 +1144,9 @@ class Session:
             aimodel = self.aimodel
             max_context_tokens = int(getattr(aimodel, "context_length", 0) or 0) if aimodel else 0
             if not max_context_tokens:
-                max_context_tokens = self.auto_compact_limit
-            elif (self.auto_compact_limit or 0) > 0:
-                max_context_tokens = min(max_context_tokens, self.auto_compact_limit)
+                max_context_tokens = self.auto_compact_max_tokens
+            elif (self.auto_compact_max_tokens or 0) > 0:
+                max_context_tokens = min(max_context_tokens, self.auto_compact_max_tokens)
 
             return {
                 "tokens_send": tokens_send,

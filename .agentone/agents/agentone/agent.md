@@ -15,6 +15,11 @@ subagents:
       create: both
     - name: wiki
       create: both
+autoload:
+  files: [AGENTS.md, CLAUDE.md]
+  maxFiles: 10
+  maxChars: 32768
+  maxCharsPerFile: 8192
 ---
 
 ## Role

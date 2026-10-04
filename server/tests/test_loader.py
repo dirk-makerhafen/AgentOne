@@ -518,3 +518,42 @@ class LoadVisibilityTest(AgentMdTestMixin, TestCase):
     def test_invalid_visibility_raises(self):
         with self.assertRaises(ValueError):
             self.load_agent("vis_bogus")
+
+
+class LoadCompactionSettingsTest(AgentMdTestMixin, TestCase):
+    """agent.md compaction knobs — max/min/idle, legacy fallback, validation."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.setup_global_tasks()
+        cls.setup_install_repo()
+        cls.base_agent, cls.base_av = cls.load_agent("base")
+        cls.comp_agent, cls.comp_av = cls.load_agent("compaction_settings")
+        cls.legacy_agent, cls.legacy_av = cls.load_agent("compaction_legacy")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.teardown_install_repo()
+        super().tearDownClass()
+
+    def test_compaction_knobs_stored(self):
+        s = self.comp_av.agent_settings
+        self.assertEqual(s.auto_compact_max_tokens, 111000)
+        self.assertEqual(s.auto_compact_min_tokens, 22000)
+        self.assertEqual(s.auto_compact_idle_seconds, 333)
+
+    def test_legacy_limit_key_maps_to_max_tokens(self):
+        s = self.legacy_av.agent_settings
+        self.assertEqual(s.auto_compact_max_tokens, 777000)
+        self.assertIsNone(s.auto_compact_min_tokens)
+        self.assertIsNone(s.auto_compact_idle_seconds)
+
+    def test_undeclared_knobs_are_none(self):
+        s = self.base_av.agent_settings
+        self.assertIsNone(s.auto_compact_max_tokens)
+        self.assertIsNone(s.auto_compact_min_tokens)
+        self.assertIsNone(s.auto_compact_idle_seconds)
+
+    def test_negative_min_tokens_raises(self):
+        with self.assertRaises(ValueError):
+            self.load_agent("compaction_bogus")

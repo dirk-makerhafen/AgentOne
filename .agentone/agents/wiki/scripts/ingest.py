@@ -39,7 +39,7 @@ def ingest_next(_session: Session, limit:int=1):
         parent_session_version=_session.get_version_model(),
         session_type=SessionType.SUBSESSION,
     )
-    # Fork inherits parent's session settings (auto_compact_limit, api key, disallowed lists, etc.)
+    # Fork inherits parent's session settings (auto_compact_max_tokens, api key, disallowed lists, etc.)
     parent_sv = _session.get_version_model()
     if parent_sv and parent_sv.session_settings:
         fork_settings = subagent_version.clone_settings(parent_sv.session_settings, disallowedToolNames=["+", "find_unlinked_raw"])

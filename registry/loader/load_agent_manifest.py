@@ -27,6 +27,17 @@ from runtime.guidance_files import validate_autoload_block
 # Agent loader (agent.md)
 # ---------------------------------------------------------------------------
 
+def _validate_non_negative_int(value: Any, key: str, agent_name: str) -> Any:
+    """Validate an optional non-negative-int manifest key; *None* passes through."""
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(
+            f"[agent.md {agent_name!r}] {key} must be an integer >= 0, got {value!r}"
+        )
+    return value
+
+
 def load_agent_manifest(
     agent_md_path: Path,
     install_repo: InstallRepo,
@@ -162,7 +173,15 @@ def load_agent_manifest(
         "disallowedSkillNames": get_list("disallowedSkills"),
         "subagentNames": subagent_names or [],
         "disallowedSubagentNames": get_list("disallowedSubagents"),
-        "auto_compact_limit": manifest.get("autoCompactLimit"),
+        "auto_compact_max_tokens": manifest.get(
+            "autoCompactMaxTokens", manifest.get("autoCompactLimit")
+        ),
+        "auto_compact_min_tokens": _validate_non_negative_int(
+            manifest.get("autoCompactMinTokens"), "autoCompactMinTokens", agent.name
+        ),
+        "auto_compact_idle_seconds": _validate_non_negative_int(
+            manifest.get("autoCompactIdleSeconds"), "autoCompactIdleSeconds", agent.name
+        ),
         "auto_compact_keep_percent": manifest.get("autoCompactKeepPercent"),
         "priority": manifest.get("priority"),
         "thinking": manifest.get("thinking"),

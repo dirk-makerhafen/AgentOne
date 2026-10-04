@@ -73,7 +73,9 @@ class SettingsModel(BaseModel):
     max_turns: int | None = models.IntegerField(default=None, null=True, blank=True)
     max_unattended_turns: int | None = models.IntegerField(default=None, null=True, blank=True)
     max_history_messages: int | None = models.IntegerField(default=None, null=True, blank=True)
-    auto_compact_limit: int | None = models.IntegerField(default=None, null=True, blank=True)
+    auto_compact_max_tokens: int | None = models.IntegerField(default=None, null=True, blank=True)
+    auto_compact_min_tokens: int | None = models.IntegerField(default=None, null=True, blank=True)
+    auto_compact_idle_seconds: int | None = models.IntegerField(default=None, null=True, blank=True)
     auto_compact_keep_percent: int | None = models.IntegerField(default=None, null=True, blank=True)
     priority: int | None = models.IntegerField(default=None, null=True, blank=True)  # 0 = highest, 1..999 less important
 

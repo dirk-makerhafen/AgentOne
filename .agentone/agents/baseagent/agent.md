@@ -7,7 +7,9 @@ maxRetries: 0
 maxTurns: 200
 maxUnattendedTurns: 200
 maxHistoryMessages: 1000
-autoCompactLimit: 120000
+autoCompactMaxTokens: 120000
+autoCompactMinTokens: 50000
+autoCompactIdleSeconds: 240
 autoCompactKeepPercent: 15
 autoload:
   files: []

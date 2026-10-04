@@ -540,7 +540,9 @@ Comprehensive agent/session settings. All nullable — values inherit through th
 | `max_turns` | `IntegerField` | |
 | `max_unattended_turns` | `IntegerField` | |
 | `max_history_messages` | `IntegerField` | |
-| `auto_compact_limit` | `IntegerField(nullable)` | Token threshold triggering auto-compaction (0 = disabled) |
+| `auto_compact_max_tokens` | `IntegerField(nullable)` | Hard token threshold triggering reactive auto-compaction (0 = disabled) |
+| `auto_compact_min_tokens` | `IntegerField(nullable)` | Context floor for idle-triggered compaction (0 = idle compaction disabled) |
+| `auto_compact_idle_seconds` | `IntegerField(nullable)` | Idle seconds after which an oversized session is compacted (0 = disabled) |
 | `auto_compact_keep_percent` | `IntegerField(nullable)` | Percentage of newest tokens kept in full on compaction (unset = 15, explicit 0 = compact everything) |
 | `scheduler_strategy` | `CharField(choices=TaskSchedulerStrategy)` | interrupt / queue / merge / parallel |
 | `tool_call_syntax` | `CharField(choices)` | default / custom |

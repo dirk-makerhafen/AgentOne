@@ -92,6 +92,54 @@ def _merge_text_parts(parts: list[dict[str, Any]]) -> str | list[dict[str, Any]]
     return merged
 
 
+def walk_compaction_entries(session: Session, last_message: Message | None) -> list[Message]:
+    """Walk the ``prev_message`` chain newest-first for compaction math.
+
+    Skips ``INFO``/hidden messages, stops at the first ``COMPACTION`` part
+    (boundary marker) and respects ``max_history_messages + 1`` — mirroring
+    ``build_llm_context``.  Shared by the boundary finder and the token
+    estimate so both agree on the walked range.
+    """
+    max_history = session.max_history_messages
+    walk_limit = max_history + 1 if max_history is not None else None
+
+    entries: list[Message] = []
+    current = last_message
+    while current is not None and (walk_limit is None or len(entries) < walk_limit):
+        if not current.hide_from_context and current.role != MessageRole.INFO:
+            entries.append(current)
+            if current.parts.filter(type=MessagePartType.COMPACTION).exists():
+                break
+        current = current.prev_message
+    return entries
+
+
+def estimate_entries_tokens(entries: list[Message]) -> int:
+    """Sum :func:`estimate_message_tokens` over walked entries."""
+    return sum(estimate_message_tokens(m) for m in entries)
+
+
+def last_activity_at(session: Session) -> Any | None:
+    """Return the newest message timestamp of the session, or *None* if empty."""
+    latest = (
+        Message.objects.filter(session_id=session.model.pk)
+        .order_by("-created_at")
+        .values_list("created_at", flat=True)
+        .first()
+    )
+    return latest
+
+
+def idle_seconds(session: Session) -> float | None:
+    """Return seconds since the session's newest message, or *None* if empty."""
+    from django.utils import timezone
+
+    latest = last_activity_at(session)
+    if latest is None:
+        return None
+    return (timezone.now() - latest).total_seconds()
+
+
 def find_compaction_boundary(session: Session, last_message: Message | None) -> Message | None:
     """Find the newest message to compact in a session's chain, query-free.
 
@@ -109,7 +157,9 @@ def find_compaction_boundary(session: Session, last_message: Message | None) -> 
       full; the remaining (older) messages are the compacted range.
     - Edge case: if the newest compacted message is an ``ASSISTANT`` message
       with toolcalls (toolcalls require a companion response later), it is
-      kept too so the conversation is never split mid-tool-call.
+      kept too so the conversation is never split mid-tool-call.  This also
+      protects an approval-halted tail under keep-percent 0: the undecided
+      toolcall stays live, everything before it is summarized.
 
     Returns the newest message that should be compacted — everything older is
     summarized, everything newer is kept.  Returns ``None`` when the whole
@@ -119,23 +169,12 @@ def find_compaction_boundary(session: Session, last_message: Message | None) -> 
     if pct is None:
         pct = 15
 
-    max_history = session.max_history_messages
-    walk_limit = max_history + 1 if max_history is not None else None
-
-    # Walk the chain from the newest message backwards.
-    entries: list[Message] = []
-    current = last_message
-    while current is not None and (walk_limit is None or len(entries) < walk_limit):
-        if not current.hide_from_context and current.role != MessageRole.INFO:
-            entries.append(current)
-            if current.parts.filter(type=MessagePartType.COMPACTION).exists():
-                break
-        current = current.prev_message
+    # entries is newest -> oldest.
+    entries = walk_compaction_entries(session, last_message)
     if not entries:
         return None
 
-    # entries is newest -> oldest.
-    total_tokens = sum(estimate_message_tokens(m) for m in entries)
+    total_tokens = estimate_entries_tokens(entries)
     if pct <= 0:
         # Explicit zero: keep nothing, compact the whole walked range.
         compacted = list(entries)
@@ -155,19 +194,23 @@ def find_compaction_boundary(session: Session, last_message: Message | None) -> 
     if not compacted:
         return None
 
-    # The newest compacted message is compacted[0] (entries newest->oldest).
-    newest_compacted = compacted[0]
-
     # Toolcall guard: never split a tool-call turn.  If the newest compacted
-    # is an assistant toolcall message, keep it too (move the boundary older).
+    # message is an assistant toolcall message, keep it too (move the
+    # boundary older) — its response arrives after it, so only the last such
+    # message must stay live; older toolcalls (with their responses compacted
+    # alongside them, or dangling with no response possible anymore) are safe
+    # to summarize.  This also protects an approval-halted tail under
+    # keep-percent 0: the undecided toolcall stays live, everything before it
+    # is summarized.
     if (
-        newest_compacted.role == MessageRole.ASSISTANT
-        and newest_compacted.parts.filter(type=MessagePartType.TOOLCALL).exists()
+        compacted
+        and compacted[0].role == MessageRole.ASSISTANT
+        and compacted[0].parts.filter(type=MessagePartType.TOOLCALL).exists()
     ):
         compacted = compacted[1:]
-        if not compacted:
-            return None
-        newest_compacted = compacted[0]
+    if not compacted:
+        return None
+    newest_compacted = compacted[0]
 
     return newest_compacted
 
