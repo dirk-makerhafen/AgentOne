@@ -7,14 +7,12 @@ description: >
   before acting — exploring an unfamiliar codebase, searching for relevant docs,
   researching best practices, or investigating a bug's root cause.
   Never writes files or executes code that modifies state.
-extends: baseagent
-inheritSystemPrompt: true
-reasoningEffort: high
-precision: precise
-tools: [+, filesystem-read.*, web.*, subagents.*]
+extends: AgentOne
+tools: [core.*, filesystem-read.*, web.*, subagents.*]
 subagents:
   - name: researcher
     create: agent
+    
 ---
 
 ## Role

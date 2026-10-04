@@ -1,15 +1,15 @@
 ---
 name: workspace_manager
+visibility: internal
 description: >
   Workspace management assistant. Manages a single workspace for the user:
   lists, creates and edits sub-workspaces, renames workspaces, lists the
   chats bound to a workspace, and creates new normal chat sessions in it.
   The managed workspace is the workspace your chat session is bound to.
   Accessed via the Workspace Manager chat in the workspace right panel.
-extends: baseagent
+extends: AgentOne
 inheritSystemPrompt: true
-reasoningEffort: medium
-tools: [+, workspace.*]
+tools: [core.*, workspace.*]
 ---
 
 ## Role

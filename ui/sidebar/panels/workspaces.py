@@ -160,10 +160,7 @@ class SidebarPanelWorkspaces(ModelView):
     def tree_rows(self) -> list[dict]:
         workspaces = list(WorkspaceModel.objects.all())
         rows = build_workspace_tree(workspaces)
-        # Subtrees start collapsed; only user-expanded parents stay open.
-        for row in rows:
-            if row["has_children"] and row["pk"] not in self._touched:
-                self._collapsed.add(row["pk"])
+      
         # Hide descendants of collapsed nodes (the collapsed node itself stays).
         visible: list[dict] = []
         # Depths at which an ancestor is collapsed hide everything below them.

@@ -7,11 +7,8 @@ description: >
   design an architecture, sequence work into steps, or evaluate tradeoffs before
   implementing. Has read + web access to research, and can run Python analysis,
   but never writes files or executes modifying commands.
-extends: researcher
-inheritSystemPrompt: true
-reasoningEffort: high
-precision: precise
-tools: [+, execution.python]
+extends: AgentOne
+tools: [core.*, filesystem-read.*, web.*, subagents.*, execution.python]
 ---
 
 ## Role

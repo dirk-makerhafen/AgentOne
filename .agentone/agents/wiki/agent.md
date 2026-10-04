@@ -1,7 +1,7 @@
 ---
 name: wiki
 description: Vault brain agent — markdown wiki maintainer and knowledge curator.
-extends: [baseagent]
+extends: AgentOne
 inheritSystemPrompt: true
 reasoningEffort: high
 precision: FOCUSED
