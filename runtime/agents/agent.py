@@ -80,6 +80,20 @@ class Agent:
         return self._get_agent_property("description")
 
     @property
+    def visibility(self) -> str:
+        """Return ``user`` | ``subagent`` | ``internal`` for the active version.
+
+        Inherits through the extends chain (``planner`` inherits ``subagent``
+        from ``researcher``); undeclared anywhere means ``user``.
+        """
+        return self._get_agent_property("visibility") or "user"
+
+    @property
+    def is_user_visible(self) -> bool:
+        """Return whether the agent may be picked by a human user."""
+        return self.visibility == "user"
+
+    @property
     def version_number(self) -> int:
         """Return the version number of the active version."""
         return self.get_version_model().version_number
@@ -430,7 +444,12 @@ class Agent:
     def get_subagent(self, name: str) -> AgentVersionModel | None:
         """Return the subagent *name* as an AgentVersionModel, or *None*."""
         if name in self.allowedSubagentNames:
-            return self.get_version_model().subagent_versions.filter(agent__name=name).first()
+            av = self.get_version_model().subagent_versions.filter(agent__name=name).first()
+            if av is not None and av.get_runtime().visibility == "internal":
+                # Internal agents (approval_decider, …) are framework-only:
+                # instantiated by name in runtime code, never as subagents.
+                return None
+            return av
         return None
 
     def subagent_config(self, name: str) -> dict:

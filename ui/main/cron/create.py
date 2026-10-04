@@ -167,7 +167,7 @@ class CronCreateView(PyHtmlView):
 
     @property
     def agent_list(self) -> list[AgentModel]:
-        return list(self.subject.agents.root())
+        return [a for a in self.subject.agents.root() if a.is_user_visible]
 
     @property
     def agent_functions(self) -> list[tuple[str, list[tuple[str, str]]]]:

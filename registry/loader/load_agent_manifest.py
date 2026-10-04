@@ -11,7 +11,7 @@ from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
 from server.models.agents.agent import AgentModel
-from server.models.agents.agent_version import AgentVersionModel
+from server.models.agents.agent_version import AgentVersionModel, AgentVisibility
 from server.models.content import GenericContent
 from server.models.providers.ai_model import AiModel
 from server.models.settings import ResponseTemperature, SettingsModel
@@ -181,6 +181,17 @@ def load_agent_manifest(
         validate_agent_access(access_block, source=f"agent.md {agent.name!r}")
         settings_kwargs["access"] = access_block
 
+    # Agent visibility (``visibility: user | subagent | internal``) — who the
+    # agent is meant for. Undeclared stays NULL (inherit through extends,
+    # else user) so existing rows keep matching and no version bumps.
+    visibility = manifest.get("visibility")
+    if visibility is not None:
+        valid = {c.value for c in AgentVisibility}
+        if visibility not in valid:
+            raise ValueError(
+                f"[agent.md {agent.name!r}] visibility must be one of "
+                f"{sorted(valid)}, got {visibility!r}"
+            )
     # AGENTS.md autoload (agent.md ``autoload:`` block + ``agentsMdIndexLimit``)
     autoload_block = manifest.get("autoload")
     if autoload_block is not None:
@@ -244,6 +255,7 @@ def load_agent_manifest(
     agent_version, created = AgentVersionModel.objects.get_or_create(
         agent=agent,
         description=manifest.get("description", ""),
+        visibility=visibility,
         extends_agent_names=extend_agent_names,
         commit=commit,
         agent_settings=settings,

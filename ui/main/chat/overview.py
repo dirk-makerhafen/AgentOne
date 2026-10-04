@@ -122,16 +122,19 @@ class ChatsOverview(ModelView):
         preset = self.preset_workspace
         if preset is not None:
             self._form["workspace_id"] = str(preset.pk)
-        # Default to the first root agent (mirrors the old instant-create).
+        # Default to the first user-visible root agent (mirrors the old instant-create).
         try:
             from server.models.agents.agent import AgentModel
 
-            first = (
-                AgentModel.objects.filter(
-                    parent_skill=None, parent_agent=None, parent_project=None
-                )
-                .order_by("name")
-                .first()
+            first = next(
+                (
+                    a
+                    for a in AgentModel.objects.filter(
+                        parent_skill=None, parent_agent=None, parent_project=None
+                    ).order_by("name")
+                    if a.is_user_visible
+                ),
+                None,
             )
             if first is not None:
                 self._form["agent_id"] = str(first.pk)
@@ -160,7 +163,7 @@ class ChatsOverview(ModelView):
         from server.models.agents.agent import AgentModel
 
         try:
-            return list(AgentModel.objects.all().order_by("name"))
+            return [a for a in AgentModel.objects.all().order_by("name") if a.is_user_visible]
         except Exception:
             return []
 
@@ -248,6 +251,10 @@ class ChatsOverview(ModelView):
                 return
         if agent.latest_agent_version is None:
             self._form_error = f"Agent '{agent.name}' has no version yet."
+            self.update()
+            return
+        if not agent.is_user_visible:
+            self._form_error = f"Agent '{agent.name}' is not available for chats."
             self.update()
             return
         name = (self._form.get("name") or "").strip()

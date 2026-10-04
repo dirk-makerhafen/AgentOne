@@ -1,5 +1,6 @@
 ---
 name: approval_decider
+visibility: internal
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Reviews python/shell scripts that another agent asked to run and renders an approval verdict — allow automatically, deny automatically, or escalate to a human.
 extends: []

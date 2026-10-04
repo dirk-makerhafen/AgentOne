@@ -235,7 +235,7 @@ class CronView(ModelView):
 
     @property
     def agent_list(self) -> list[AgentModel]:
-        return list(AgentModel.objects.all().order_by("name"))
+        return [a for a in AgentModel.objects.all().order_by("name") if a.is_user_visible]
 
     @property
     def last_run_display(self) -> str:

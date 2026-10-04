@@ -45,6 +45,16 @@ class AgentModel(BaseModel):
         """Return a runtime Agent wrapper for this model."""
         return Agent(agent_model=self)
 
+    @property
+    def is_user_visible(self) -> bool:
+        """Return whether a human user may pick this agent (visibility ``user``)."""
+        if self.latest_agent_version is None:
+            return True
+        try:
+            return self.get_runtime().is_user_visible
+        except Exception:
+            return True
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Prevent updates to existing AgentModel instances."""
         if self.pk:

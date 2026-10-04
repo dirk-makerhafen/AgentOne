@@ -62,6 +62,7 @@ autoCompactKeepPercent: 15     # percentage of newest tokens to keep in full on 
 reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel
 toolCallSyntax: default        # default | custom
+visibility: user               # user | subagent | internal (who the agent is for)
 priority: 0                    # 0 = highest
 thinking: false                # enable thinking tokens
 
@@ -85,6 +86,7 @@ Agent body content goes here — used as the system prompt.
 | `autoload` | dict | AGENTS.md autoload (see [Autoload](#autoload)) |
 | `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default false — opt-in) |
 | `guidanceFileIndexLimit` | int | Max nested guidance files listed in the index (default 10, 0 = omit) |
+| `visibility` | enum | Who the agent is for: `user` (default, shown in pickers), `subagent` (hidden from pickers, spawnable), `internal` (framework-only, spawned by name) |
 | Priority/scheduling | various | Execution control knobs |
 
 ### Access Policy

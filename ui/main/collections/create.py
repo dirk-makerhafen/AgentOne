@@ -292,7 +292,7 @@ class CollectionCreateView(PyHtmlView):
 
     @property
     def agent_list(self):
-        return list(AgentModel.objects.all().order_by("name"))
+        return [a for a in AgentModel.objects.all().order_by("name") if a.is_user_visible]
 
     @property
     def project_list(self):

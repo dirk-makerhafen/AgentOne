@@ -107,7 +107,7 @@ class ProfileDropdown(PyHtmlView):
             self.update()
 
     def _filter_function(self, item:ProfileDropdownOption):
-        return self.search_string not in item.subject.name
+        return self.search_string not in item.subject.name or not item.subject.is_user_visible
 
     def filter_agents(self, searchstring):
         self.search_string = searchstring

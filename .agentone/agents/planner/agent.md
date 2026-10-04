@@ -1,5 +1,6 @@
 ---
 name: planner
+visibility: subagent
 description: >
   Planning specialist. Creates and refines structured, actionable plans on behalf
   of other agents. Use this subagent when you need to break down a complex goal,

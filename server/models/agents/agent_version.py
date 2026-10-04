@@ -24,7 +24,24 @@ from server.models.workspace import WorkspaceModel
 if TYPE_CHECKING:
     from server.models.sessions.session_version import SessionVersionModel
 
-AGENT_VERSION_RUNTIME_CLASS_CACHE = LRUCache(maxsize=1024)
+
+class AgentVisibility(models.TextChoices):
+    """Who an agent version is meant for.
+
+    - ``USER``: appears in user pickers (new chat, composer, cron) and is
+      spawnable as a subagent. The default.
+    - ``SUBAGENT``: hidden from user pickers, but other agents may spawn it
+      (planner, researcher, …).
+    - ``INTERNAL``: hidden from user pickers *and* from subagent spawning;
+      only framework code may instantiate it by name (approval_decider, …).
+    """
+
+    USER = "user", "user"
+    SUBAGENT = "subagent", "subagent"
+    INTERNAL = "internal", "internal"
+
+
+DEFAULT_AGENT_VISIBILITY = AgentVisibility.USER.value
 
 
 
@@ -34,6 +51,15 @@ class AgentVersionModel(BaseModel):
     agent = models.ForeignKey("server.AgentModel",on_delete=models.CASCADE,related_name="related_agent_versions")
 
     description = models.TextField(max_length=65500, default="")
+
+    # Undeclared (NULL) means "inherit through extends, else user".
+    # Stored per version so changing it bumps the agent version.
+    visibility = models.CharField(
+        max_length=16,
+        choices=AgentVisibility.choices,
+        default=None,
+        null=True,
+    )
 
     extends_agent_names = models.JSONField(default=list, blank=True)
     extends_agent_versions = SortedManyToManyField("self", related_name="related_inheritors", default=None, symmetrical=False)

@@ -446,3 +446,75 @@ class LoadAgentAccessTest(AgentMdTestMixin, TestCase):
                 self._tmp / "agents" / "accessor" / "agent.md",
                 install_repo=self._install_repo,
             )
+
+
+class LoadVisibilityTest(AgentMdTestMixin, TestCase):
+    """agent.md ``visibility:`` — user (default) | subagent | internal."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.setup_global_tasks()
+        cls.setup_install_repo()
+        cls.base_agent, cls.base_av = cls.load_agent("base")
+        cls.internal_agent, cls.internal_av = cls.load_agent("vis_internal")
+        cls.sub_agent, cls.sub_av = cls.load_agent("vis_subagent")
+        cls.child_agent, cls.child_av = cls.load_agent("vis_child")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.teardown_install_repo()
+        super().tearDownClass()
+
+    def test_undeclared_visibility_stays_null_and_reads_as_user(self):
+        from runtime.agents.agent import Agent
+
+        self.assertIsNone(self.base_av.visibility)
+        agent = Agent(agent_model=self.base_agent)
+        self.assertEqual(agent.visibility, "user")
+        self.assertTrue(agent.is_user_visible)
+        self.base_agent.refresh_from_db()
+        self.assertTrue(self.base_agent.is_user_visible)
+
+    def test_internal_stored_and_hidden(self):
+        from runtime.agents.agent import Agent
+
+        self.assertEqual(self.internal_av.visibility, "internal")
+        agent = Agent(agent_model=self.internal_agent)
+        self.assertEqual(agent.visibility, "internal")
+        self.assertFalse(agent.is_user_visible)
+        self.internal_agent.refresh_from_db()
+        self.assertFalse(self.internal_agent.is_user_visible)
+
+    def test_subagent_stored_and_hidden_from_users(self):
+        from runtime.agents.agent import Agent
+
+        self.assertEqual(self.sub_av.visibility, "subagent")
+        agent = Agent(agent_model=self.sub_agent)
+        self.assertEqual(agent.visibility, "subagent")
+        self.assertFalse(agent.is_user_visible)
+
+    def test_internal_not_spawnable_as_subagent(self):
+        from runtime.agents.agent import Agent
+
+        parent = Agent(agent_model=self.sub_agent)
+        # vis_internal IS listed in vis_subagent's subagents: block —
+        # the spawn guard still refuses to resolve it.
+        self.assertIn("vis_internal", parent.subagentNames)
+        self.assertIsNone(parent.get_subagent("vis_internal"))
+        self.assertNotIn(
+            "vis_internal",
+            [av.agent.name for av in parent.allowedSubagents],
+        )
+
+    def test_visibility_inherited_through_extends(self):
+        from runtime.agents.agent import Agent
+
+        # vis_child declares nothing — inherits "subagent" from vis_subagent.
+        self.assertIsNone(self.child_av.visibility)
+        agent = Agent(agent_model=self.child_agent)
+        self.assertEqual(agent.visibility, "subagent")
+        self.assertFalse(agent.is_user_visible)
+
+    def test_invalid_visibility_raises(self):
+        with self.assertRaises(ValueError):
+            self.load_agent("vis_bogus")

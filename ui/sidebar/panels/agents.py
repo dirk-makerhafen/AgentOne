@@ -23,6 +23,9 @@ class SidebarPanelAgent(ModelView):
                     <span class="profile-opt-badge stopped" title="Gateway stopped"></span>
                     
                     {{ pyview.subject.name }} 
+                    {% if pyview.agent.visibility != "user" %}
+                    <span style="opacity:.55;font-size:10px;font-weight:600;margin-left:6px" title="Not shown in user pickers">{{ pyview.agent.visibility }}</span>
+                    {% endif %}
                     
                     <span style="opacity:.5">
                         (default1)
