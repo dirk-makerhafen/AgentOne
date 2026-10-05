@@ -120,6 +120,13 @@ Precedence per action: `deny` > `ask` > `allow` > `default`. Deny patterns from
 any scope apply globally. `write` implies `read` on allowed/asked paths; `read`
 rules never grant writes.
 
+**Session-private storage carve-out** — independent of the `access:` blocks
+above, every session may always read/write its own private folder at
+`~/.agentone/sessions/<session_pk>/`, and may never touch another session's
+folder (nor list the base dir). Only an explicit global `deny` pattern
+overrides the own-folder allow. See [core-mechanisms.md](core-mechanisms.md)
+(Session-Private Storage).
+
 ```yaml
 access:
   workspace:
@@ -409,7 +416,7 @@ Runtime flow:
 - Keyword arguments are serialised as JSON on stdin.
 - On success, stdout is returned (parsed as JSON if valid, otherwise as plain text).
 - On non-zero exit, a ``RuntimeError`` is raised with stderr.
-- If ``bound: True``, the environment variable ``AGENTONE_SESSION_ID`` is set.
+- If ``bound: True``, the environment variables ``AGENTONE_SESSION_ID`` and ``AGENTONE_SESSION_DIR`` (the session-private folder) are set.
 
 ---
 

@@ -140,15 +140,21 @@ schema.
 **Policy resolution** — `resolve_policy(session)` (line 175) merges the
 workspace's `access:` block (the *base* in-workspace rules) with the agent's
 `access:` block (`workspace:` override + `external:` rules). Sessions without a
-workspace get an unrestricted all-allow policy. Each `read:`/`write:` action
+workspace get an all-allow policy except for other sessions' private folders
+(which stay denied). Each `read:`/`write:` action
 resolves to an `ActionPolicy` (`default` posture + `allow`/`ask`/`deny` pattern
 lists). Deny patterns from any scope are merged into a `global_deny` list that
 wins everywhere.
 
-**Evaluation** — `evaluate(policy, target, action)` (line 227) classifies a
+**Evaluation** — `evaluate(policy, target, action)` (line 296) classifies a
 path into `allow` / `ask` / `deny`:
 
 - Global deny patterns are checked first (any scope, anywhere).
+- Session-private storage carve-out second: paths under
+  `~/.agentone/sessions/<own_pk>/` are always `allow` (read and write),
+  paths under another session's folder (or the base dir itself) are always
+  `deny`. Only an explicit global `deny` pattern overrides the own-folder
+  allow. Applies even to sessions without a workspace.
 - `inside` vs `outside` is decided by `Path.relative_to(workspace_root)`;
   inside uses the workspace/override rules, outside the agent `external:` rules.
 - Precedence per action: `deny` > `ask` > `allow` > `default`.
@@ -188,6 +194,25 @@ path into `allow` / `ask` / `deny`:
 
 Because `deny` is enforced at the execution boundary, a deny is a hard
 guarantee even if a call bypasses the scheduler path (e.g. direct `BoundTask.call`).
+
+### Session-Private Storage
+
+**Files:** `runtime/session_folder.py`, `runtime/session/session.py`
+(`private_dir` / `ensure_private_dir`), `.agentone/scripts/core/build_llm_context.py`
+
+Every session owns an isolated private folder at
+`<AGENTONE_SESSIONS_DIR>/<session_pk>/` (`~/.agentone/sessions` by default,
+overridable via `config/settings_local.py`). It holds scratch files,
+temporary memory, ad-hoc prompts/tools, intermediate results, generated
+scripts and other session-specific artifacts; subsessions get their own
+folder. The LLM is told its folder via a `SYSTEM` message injected by
+`build_llm_context` and uses the normal `filesystem-read`/`filesystem-write`
+tools — no special tools. Creation is lazy (`ensure_session_dir`, also
+triggered by `BoundTask._ensure_private_dir_on_access` on first use; never
+inside `evaluate()`, which stays a pure policy check). Archived sessions are
+kept forever; folders whose session row is hard-deleted are removed by the
+`_cleanup_orphaned_session_folders` startup pass
+(`server/tasks/recovery_scheduler.py`, `server/tasks/startup_cleanup.py`).
 
 ### ContextTracker — Parent-Child Tracking
 
@@ -651,16 +676,18 @@ No page reloads. No full re-renders. Only the specific view that called `update(
 | | 76–98 | `taskrun_result_reference_ended()` |
 | | 100–116 | `all_taskrun_result_references_ended()` |
 | `runtime/context_manager.py` | 6–28 | `ContextTracker` |
-| `runtime/workspace_access.py` | 175–213 | `resolve_policy()` |
-| | 228–314 | `evaluate()` |
-| | 316–328 | `task_access_posture()` |
-| | 331–412 | `extract_path_args()` |
-| | 417–437 | validation (`validate_workspace_access` / `validate_agent_access`) |
+| `runtime/workspace_access.py` | 175–215 | `resolve_policy()` |
+| | 296–394 | `evaluate()` |
+| | 397–409 | `task_access_posture()` |
+| | 412–437 | `extract_path_args()` |
+| | 449–522 | validation (`validate_workspace_access` / `validate_agent_access`) |
 | `runtime/guardrails.py` | — | `check_shell_paths` / `check_python_paths` path analysis; `_shell_targets` whitelist-based classifier |
-| `runtime/tasks/bound_task.py` | 129–188 | `_filesystem_access_block()` |
+| `runtime/tasks/bound_task.py` | 196–245 | `_filesystem_access_block()` |
+| | 247–273 | `_ensure_private_dir_on_access()` |
 | `runtime/tasks/call_scheduler.py` | 222–264 | `_guardrail_filesystem_check()` |
-| `runtime/session/session.py` | 236–242 | `get_task()` / `get_tool()` / `get_command()` |
-| | 448–480 | `add_user_message()` |
+| `runtime/session/session.py` | 84–99 | `private_dir` / `ensure_private_dir()` |
+| | 545–585 | `get_task()` / `get_tool()` |
+| | 759–800 | `add_user_message()` |
 | `.agentone/agents/baseagent/scripts/ingest_user_message.py` | 14–50 | `ingest_user_message()` |
 | `.agentone/agents/baseagent/scripts/decide_next_step.py` | 19–62 | `decide_next_step()` |
 | `.agentone/agents/baseagent/scripts/scripts.md` | 35–42 | `process_turn` CHAIN definition |

@@ -16,8 +16,19 @@ tools:
     file: ask_user.py
     function: ask_user
     bound: True
-        
+
+  - name: llm_query
+    file: call_llm_direct.py
+    function: llm_query
+    bound: True
+          
 tasks:
+  - name: call_llm_direct
+    file: call_llm_direct.py
+    function: call_llm_direct
+    bound: True
+    max_retries: 3
+    retry_delay: 60
   - name: ingest_user_message
     file: ingest_user_message.py
     function: ingest_user_message

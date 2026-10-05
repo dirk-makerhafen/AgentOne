@@ -7,6 +7,10 @@ import warnings
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENTONE_ROOT = os.path.join(BASE_DIR, ".agentone")
 
+# Session-private storage: per-session isolated folders at
+# <AGENTONE_SESSIONS_DIR>/<session_pk>/.  Override in settings_local.py.
+AGENTONE_SESSIONS_DIR = os.path.expanduser("~/.agentone/sessions")
+
 # ---------------------------------------------------------------------------
 # Default settings — override any of these in config/settings_local.py
 # ---------------------------------------------------------------------------

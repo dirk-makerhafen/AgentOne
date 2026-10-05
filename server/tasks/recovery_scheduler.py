@@ -1048,3 +1048,19 @@ def _cleanup_stale_runtime_folders() -> None:
             print(f"[recovery] cleaned {removed} stale runtime folder(s)")
     except Exception as e:
         print(f"[recovery] error cleaning runtime folders: {e}")
+
+
+def _cleanup_orphaned_session_folders() -> None:
+    """Remove session-private folders (``~/.agentone/sessions/<pk>/``) whose
+    session row no longer exists (hard delete).
+
+    Archived/inactive sessions are kept forever — only folders with no
+    matching ``SessionModel`` row are removed.
+    """
+    try:
+        from runtime.session_folder import cleanup_orphaned_session_folders
+        removed = cleanup_orphaned_session_folders()
+        if removed:
+            print(f"[recovery] cleaned {removed} orphaned session folder(s)")
+    except Exception as e:
+        print(f"[recovery] error cleaning session folders: {e}")

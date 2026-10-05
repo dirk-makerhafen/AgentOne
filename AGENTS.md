@@ -70,6 +70,8 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 ## Constraints & gotchas
 
 - **Use `python3`**, not `python`.
+- **Run tests with the repo venv** (`venv/bin/python -m pytest ...`, or with the venv activated) — system `python3` has the wrong Django version and DB tests error out.
+- Session-private folders live at `~/.agentone/sessions/<session_pk>/` (`runtime/session_folder.py`, base overridable via `AGENTONE_SESSIONS_DIR` in `settings_local.py`). Own folder is always guardrail-allowed, other sessions' folders always denied; archived sessions keep theirs forever, orphans are swept at startup.
 - `.pylintrc`: `max-line-length=200`, disables `C0114/C0115/C0116`, loads `pylint_django`.
 - `config/settings.py` defaults to SQLite. Override in `config/settings_local.py` for MySQL or custom config. File is gitignored. Run `python3 manage.py server setup` to generate one.
 - `db.sqlite3` is gitignored and stale.

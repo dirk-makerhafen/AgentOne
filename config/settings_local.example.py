@@ -54,6 +54,11 @@ Uncomment and change only what you need.
 # REDIS_URL = 'redis://localhost:6379/1'
 
 # ---------------------------------------------------------------------------
+# Session-private storage — per-session folders (<base>/<session_pk>/)
+# ---------------------------------------------------------------------------
+# AGENTONE_SESSIONS_DIR = os.path.expanduser("~/.agentone/sessions")
+
+# ---------------------------------------------------------------------------
 # HTTP server (used by `manage.py server run`)
 # ---------------------------------------------------------------------------
 # LISTEN_ADDRESS = '0.0.0.0'

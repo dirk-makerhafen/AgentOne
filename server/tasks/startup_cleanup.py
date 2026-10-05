@@ -23,6 +23,7 @@ def startup_cleanup() -> None:
     """
     from server.tasks.recovery_scheduler import (
         _cancel_duplicate_queries,
+        _cleanup_orphaned_session_folders,
         _cleanup_stale_runtime_folders,
         _fail_ancient_parked_calls,
         _recover_stale_queries,
@@ -34,6 +35,7 @@ def startup_cleanup() -> None:
 
     for pass_ in (
         _cleanup_stale_runtime_folders,
+        _cleanup_orphaned_session_folders,
         _timeout_active_runs,
         _cancel_duplicate_queries,
         _fail_ancient_parked_calls,

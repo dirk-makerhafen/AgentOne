@@ -1,3 +1,4 @@
+pydantic
 asgiref
 bandit
 celery

@@ -26,9 +26,10 @@ track. It makes no priority recommendation; §7 lists the decision factors.
   broker). ASGI router exposes a single WebSocket route `ws`
   (`config/asgi.py:14-18`); REST lives at `api/v1/` (`config/urls.py:90`).
 - **UI:** one global pyHtmlGui instance over that socket. The Redis→UI pump
-  (`ui/consumer.py:23-71`) and `UiApp.dispatch_session_event`
-  (`ui/app.py:46-56`) fan model changes out to views via `ModelObserver`
-  (`ui/model_observer.py:24-124`).
+  (per-instance drain threads in `ui/consumer.py`, coalescing in
+  `process_queue_messages`) delivers `runtime/observables.py` registry
+  messages to subscribed views (see `docs/observables-migration.md`).
+  The old channel-group + `ModelObserver` fan-out is removed.
 - **Sessions:** `SessionModel` (identity) + `SessionVersion` (copy-on-write state);
   runtime facade `runtime/session/session.py` (`Session.add_user_message()`,
   `get_task/get_tool/get_command`, allowlists, `set_is_active`).
@@ -172,8 +173,11 @@ The UI learns about turns only at coarse boundaries (`Query create` in
 **Plan.**
 
 1. Add `publish_token_event()` / `publish_agui_event()` beside
-   `publish_model_event()` in `runtime/events.py:73-94`, reusing `CHANNEL_GROUP`
-   (`runtime/events.py:28`) and `_extract_filter_context`.
+   `publish_model_event()` in `runtime/events.py`, publishing through
+   `runtime.observables.notify()` on dedicated stream keys (the retired
+   `CHANNEL_GROUP` broadcast no longer exists). The registry is already
+   gated on active subscriptions, which satisfies step 4's near-zero
+   overhead requirement by construction.
 2. Hook the chunk loop (`call_llm.py:207-273`): emit text deltas + tool-call-arg
    deltas; throttle to ~10–20 Hz or N characters to bound Redis traffic.
    Alternative hook: `Response.save()` throttled path — coarser, less code.

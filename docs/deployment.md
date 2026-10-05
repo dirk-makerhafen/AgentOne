@@ -209,6 +209,9 @@ cp db.sqlite3 backup_$(date +%Y%m%d).sqlite3
 # Runtime data
 tar czf runtime_backup_$(date +%Y%m%d).tar.gz ~/.agentone/runtime/
 
+# Session-private storage (scratch files, temp memory, ad-hoc artifacts)
+tar czf sessions_backup_$(date +%Y%m%d).tar.gz ~/.agentone/sessions/
+
 # Local configuration
 cp config/settings_local.py config/settings_local.py.backup
 ```

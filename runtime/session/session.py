@@ -80,6 +80,23 @@ class Session:
         """Return the workspace from the active session version."""
         return self.get_version_model().workspace
 
+    @property
+    def private_dir(self) -> Any:
+        """Return this session's private folder path (pure, no I/O).
+
+        Lives at ``<AGENTONE_SESSIONS_DIR>/<session_pk>/``.  Each session
+        — including subsessions — gets its own folder.
+        """
+        from runtime.session_folder import session_dir
+
+        return session_dir(self.model.pk)
+
+    def ensure_private_dir(self) -> Any:
+        """Create this session's private folder if missing and return it."""
+        from runtime.session_folder import ensure_session_dir
+
+        return ensure_session_dir(self.model.pk)
+
     def set_workspace(self, value: Any) -> None:
         """Set the workspace for this session (creates a new version)."""
         self._set_session_property("workspace", value)

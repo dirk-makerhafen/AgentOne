@@ -86,6 +86,15 @@ By default (no policy configured) all filesystem access inside the workspace is
 allowed; access outside the workspace defaults to **deny** unless an agent
 `external:` rule grants it.
 
+Each session also has a **private session folder** at
+`~/.agentone/sessions/<session_pk>/` (subsessions get their own). It is for
+scratch files, temporary memory, ad-hoc prompts/tools, intermediate results,
+and other session-specific artifacts. The agent is told its folder and uses
+the normal filesystem tools with it — no `access:` configuration needed:
+reads and writes to your own folder are always allowed, while other
+sessions' folders are always denied. Archived sessions keep their folder
+forever.
+
 ### Queue
 
 If the agent is busy processing, a **Queue Card** shows the pending messages. You can cancel queued messages or wait for them to process.

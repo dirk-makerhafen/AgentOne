@@ -30,7 +30,14 @@ patterns are **global**: a deny in any scope blocks the path everywhere.
 ``write`` implies ``read`` on allowed/asked paths; ``read`` rules never
 grant writes.
 
-Sessions without a workspace are not restricted (returns ``allow``).
+Sessions without a workspace are not restricted (returns ``allow``),
+except for other sessions' private-storage folders (always ``deny``).
+
+Session-private storage (``~/.agentone/sessions/<pk>/``, see
+``runtime/session_folder.py``) is carved out in :func:`evaluate`: the owning
+session's own folder is always ``allow`` (read and write); other sessions'
+folders and the base dir itself are always ``deny``.  Only an explicit
+global ``deny`` pattern overrides the own-folder allow.
 """
 
 from __future__ import annotations
@@ -85,6 +92,9 @@ class _WorkspaceAccessPolicy:
     inside_write: _ActionPolicy = field(default_factory=_ActionPolicy)
     external_read: _ActionPolicy = field(default_factory=_ActionPolicy)
     external_write: _ActionPolicy = field(default_factory=_ActionPolicy)
+    # Owning session pk for the session-private storage carve-out
+    # (``~/.agentone/sessions/<pk>/``).  *None* when unknown.
+    session_pk: int | None = None
 
     @property
     def global_deny(self) -> list[str]:
@@ -208,7 +218,75 @@ def resolve_policy(session: Any) -> _WorkspaceAccessPolicy:
         inside_write=_merge_action(base_write, override_write),
         external_read=ext_read,
         external_write=ext_write,
+        session_pk=_session_pk(session),
     )
+
+
+def _session_pk(session: Any) -> int | None:
+    """Extract the owning session pk from a session object, if available."""
+    for attr in ("model",):
+        try:
+            model = getattr(session, attr, None)
+            if model is not None:
+                pk = getattr(model, "pk", None)
+                if isinstance(pk, int):
+                    return pk
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    for attr in ("pk", "id", "session_pk", "session_id"):
+        try:
+            pk = getattr(session, attr, None)
+            if isinstance(pk, int):
+                return pk
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    return None
+
+
+def _session_dir_verdict(session_pk: int | None, target_abs: str, target_abs_raw: str) -> GuardrailVerdict | None:  # pylint: disable=too-many-return-statements
+    """Session-private storage carve-out (``~/.agentone/sessions/<pk>/``).
+
+    Own folder → ``allow`` (read and write); another session's folder (or
+    the base dir itself) → ``deny``.  Returns *None* when the target is
+    outside the sessions base or the owning pk is unknown.
+    """
+    if session_pk is None:
+        return None
+    try:
+        from runtime.session_folder import get_sessions_base
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+    try:
+        base_resolved = get_sessions_base().expanduser().resolve().as_posix()
+    except OSError:
+        return None
+    for candidate in (target_abs, target_abs_raw):
+        rel: str | None = None
+        if candidate == base_resolved:
+            rel = ""
+        elif candidate.startswith(base_resolved.rstrip("/") + "/"):
+            rel = candidate[len(base_resolved.rstrip("/") + "/"):]
+        if rel is None:
+            continue
+        if not rel:
+            return GuardrailVerdict(
+                action="deny",
+                score=100,
+                level="critical",
+                reason="Session-private storage base directory is not listable",
+                risk_factors=["session_private_storage"],
+            )
+        owner = rel.split("/")[0]
+        if owner == str(session_pk):
+            return GuardrailVerdict(action="allow", score=0, level="safe", reason="")
+        return GuardrailVerdict(
+            action="deny",
+            score=100,
+            level="critical",
+            reason=f"Path belongs to another session's private storage: {target_abs}",
+            risk_factors=["session_private_storage"],
+        )
+    return None
 
 
 def _inside_workspace(policy: _WorkspaceAccessPolicy, target: Path) -> bool:
@@ -221,7 +299,7 @@ def _inside_workspace(policy: _WorkspaceAccessPolicy, target: Path) -> bool:
         return False
 
 
-# pylint: disable=too-many-return-statements
+# pylint: disable=too-many-return-statements,too-many-branches
 def evaluate(policy: _WorkspaceAccessPolicy, target: str, action: str) -> GuardrailVerdict:
     """Evaluate *target* against *policy* for *action* (``read`` or ``write``).
 
@@ -232,18 +310,21 @@ def evaluate(policy: _WorkspaceAccessPolicy, target: str, action: str) -> Guardr
     if action not in ACCESS_ACTIONS:
         action = "read"
 
-    if policy.workspace_root is None:
-        return GuardrailVerdict(action="allow", score=0, level="safe", reason="")
-
     raw = Path(target).expanduser()
-    if not raw.is_absolute():
+    if not raw.is_absolute() and policy.workspace_root is not None:
         raw = policy.workspace_root / raw
-    target_resolved = raw.resolve()
+    try:
+        target_resolved = raw.resolve()
+    except OSError:
+        target_resolved = raw
     target_abs = target_resolved.as_posix()
     target_abs_raw = raw.as_posix()  # pre-symlink-resolution form (e.g. /tmp on macOS)
-    try:
-        target_rel = target_resolved.relative_to(policy.workspace_root).as_posix()
-    except ValueError:
+    if policy.workspace_root is not None:
+        try:
+            target_rel = target_resolved.relative_to(policy.workspace_root).as_posix()
+        except ValueError:
+            target_rel = None
+    else:
         target_rel = None
 
     # Global deny floor — deny from any scope wins everywhere.
@@ -255,6 +336,16 @@ def evaluate(policy: _WorkspaceAccessPolicy, target: str, action: str) -> Guardr
             reason=f"Path is denied by workspace access policy: {target_abs}",
             risk_factors=["workspace_access_deny"],
         )
+
+    # Session-private storage carve-out — own folder always allowed,
+    # other sessions' folders (and the base dir itself) always denied.
+    # Applies even to sessions without a workspace.
+    session_verdict = _session_dir_verdict(policy.session_pk, target_abs, target_abs_raw)
+    if session_verdict is not None:
+        return session_verdict
+
+    if policy.workspace_root is None:
+        return GuardrailVerdict(action="allow", score=0, level="safe", reason="")
 
     inside = _inside_workspace(policy, target_resolved)
     # pylint: disable=protected-access

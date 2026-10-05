@@ -101,6 +101,37 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                 data={"exception": traceback.format_exc()},
             )
 
+        # SESSION-PRIVATE STORAGE (e.g. scratch files, temp memory, ad-hoc
+        # prompts/tools, intermediate results).  Each session — including
+        # subsessions — has its own isolated folder.  Announced here so the
+        # LLM can use the normal filesystem tools with it; the guardrail
+        # (runtime/workspace_access.py) allows own-folder read/write and
+        # denies other sessions' folders.  Creation is lazy and must never
+        # break context assembly.
+        try:
+            from runtime.session_folder import ensure_session_dir
+
+            _private_dir = ensure_session_dir(_session.model.pk)
+            query.add_message(
+                role=MessageRole.SYSTEM,
+                content_type=MessageContentType.TEXT,
+                content=(
+                    f"Your private session folder is {_private_dir.as_posix()}. "
+                    "Use the normal filesystem tools for scratch files, temporary "
+                    "memory, ad-hoc prompts/tools, intermediate results, generated "
+                    "scripts and other session-specific artifacts. It is private "
+                    "to this session — other sessions cannot access it."
+                ),
+            )
+        except Exception:
+            from server.models.debug_log_entry import DebugLogEntry
+
+            DebugLogEntry.objects.create(
+                session=_session.model,
+                event="private_dir_skip",
+                data={"exception": traceback.format_exc()},
+            )
+
         # CUSTOM TOOLS
         if _session.tool_call_syntax == AgentToolCallSyntax.CUSTOM:
             allowed_tools: list[Any] = list(_session.allowedTools)

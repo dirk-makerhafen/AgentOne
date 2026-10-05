@@ -89,6 +89,11 @@ class BoundTask:
                 "return_code": -1,
             })
 
+        # Lazy-create the session-private folder on first use: if any path
+        # argument targets the session's own private dir, ensure it exists.
+        # (Kept out of ``evaluate()`` deliberately — policy checks stay pure.)
+        self._ensure_private_dir_on_access(*args, **kwargs)
+
         file_name = self._runtime_file_name()
         runtime = RuntimeFolder(self.task_definition_version)
         folder = runtime.ensure_folder()
@@ -239,6 +244,34 @@ class BoundTask:
                     )
         return None
 
+    def _ensure_private_dir_on_access(self, *args: Any, **kwargs: Any) -> None:
+        """Lazily create the session-private folder when it is targeted.
+
+        If any path argument (or ``shell``/``python`` source text) references
+        the session's own private dir, ensure it exists.  Never raises —
+        failures are ignored so tool execution is unaffected.
+        """
+        try:
+            from runtime.session_folder import ensure_session_dir, parse_session_pk
+
+            model = getattr(self.session, "model", None)
+            pk = getattr(model, "pk", None)
+            if not isinstance(pk, int):
+                return
+            call_args: dict[str, Any] = self._normalized_call_kwargs(args, kwargs)
+            candidates: list[str] = [
+                str(v) for v in call_args.values() if isinstance(v, str) and v.strip()
+            ]
+            source = call_args.get("source")
+            if isinstance(source, str) and source not in candidates:
+                candidates.append(source)
+            for candidate in candidates:
+                if parse_session_pk(candidate) == str(pk):
+                    ensure_session_dir(pk)
+                    return
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
     def _call_script(self, file_path: Path, *args: Any, **kwargs: Any) -> Any:
         """Execute a script/binary and return its output.
 
@@ -252,7 +285,7 @@ class BoundTask:
         making relative output/config paths session-scoped.
 
         When the task is *bound*, session metadata is injected via environment
-        variables (``AGENTONE_SESSION_ID``).
+        variables (``AGENTONE_SESSION_ID``, ``AGENTONE_SESSION_DIR``).
         """
         # Ensure the file is executable
         st = file_path.stat()
@@ -270,7 +303,16 @@ class BoundTask:
         env["PATH"] = f"{script_dir}{os.pathsep}{env['PATH']}"
 
         if self.task_definition_version.bound:
-            env["AGENTONE_SESSION_ID"] = str(getattr(self.session, "id", ""))
+            try:
+                from runtime.session_folder import session_dir
+
+                pk = getattr(getattr(self.session, "model", None), "pk", None)
+                if pk is None:
+                    pk = getattr(self.session, "id", "")
+                env["AGENTONE_SESSION_ID"] = str(pk)
+                env["AGENTONE_SESSION_DIR"] = str(session_dir(pk))
+            except Exception:  # pylint: disable=broad-exception-caught
+                env["AGENTONE_SESSION_ID"] = str(getattr(self.session, "id", ""))
 
         cwd = str(Path(self.session.workspace.path).resolve()) if self.session.workspace else file_path.parent
 
