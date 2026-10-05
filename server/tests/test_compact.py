@@ -12,7 +12,7 @@ from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
-from server.history_limiter import (
+from runtime.history_limiter import (
     estimate_message_tokens,
     find_compaction_boundary,
 )

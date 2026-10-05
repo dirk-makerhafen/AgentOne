@@ -23,7 +23,7 @@ from runtime.guidance_files import (
     resolve_patterns,
     validate_autoload_block,
 )
-from runtime.workspace_access import ActionPolicy, WorkspaceAccessPolicy
+from runtime.workspace_access import _ActionPolicy as ActionPolicy, _WorkspaceAccessPolicy as WorkspaceAccessPolicy
 from server.tests.helpers import AgentMdTestMixin
 
 CORE_SCRIPTS = os.path.join(

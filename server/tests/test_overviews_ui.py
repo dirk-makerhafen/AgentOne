@@ -82,6 +82,10 @@ class TestAgentsOverviewTemplate:
                 "pk": 1, "name": "Helper", "description": "Helps",
                 "model_name": "gpt-x", "skill_count": 2, "tool_count": 3,
                 "task_count": 1, "command_count": 0, "session_count": 4,
+                "active_session_count": 1, "message_count": 10,
+                "tokens_display": "5K", "run_count": 3,
+                "success_run_count": 2, "failure_run_count": 1,
+                "failure_rate": 33.3,
             },
         ]
         html = _render(AgentsOverview.TEMPLATE_STR, pyview=SimpleNamespace(agents=agents))

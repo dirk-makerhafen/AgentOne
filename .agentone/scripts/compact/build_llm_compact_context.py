@@ -37,7 +37,7 @@ def build_llm_compact_context(
     **kwargs,
 ) -> dict:
 
-    from server.history_limiter import (
+    from runtime.history_limiter import (
         estimate_entries_tokens,
         find_compaction_boundary,
         idle_seconds,

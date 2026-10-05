@@ -11,16 +11,6 @@ from server.models.message import Message
 from server.models.queries.query_message_part import estimate_openai_tokens
 
 
-_ENCODER_CACHE: dict[str, tiktoken.Encoding] = {}
-
-
-def _get_encoder() -> tiktoken.Encoding:
-    name = "cl100k_base"
-    if name not in _ENCODER_CACHE:
-        _ENCODER_CACHE[name] = tiktoken.get_encoding(name)
-    return _ENCODER_CACHE[name]
-
-
 def estimate_message_tokens(message: Message) -> int:
     """Estimate the token count of a single :class:`Message`.
 

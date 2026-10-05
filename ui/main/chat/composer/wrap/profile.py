@@ -26,7 +26,6 @@ class ProfileWrap(ModelView):
     '''
     
     def __init__(self, subject:Session, parent: ComposerFooter, **kwargs):
-        print("PROFILEWARP", subject, type(subject), print(subject.agent))
         super().__init__(subject, parent, **kwargs)
 
     def toggle(self):

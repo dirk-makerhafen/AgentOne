@@ -1,5 +1,8 @@
+import logging.handlers
 import os
+import sys
 import warnings
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENTONE_ROOT = os.path.join(BASE_DIR, ".agentone")
@@ -28,7 +31,12 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [{ "address": REDIS_URL }], # Assumes Redis is running on localhost:6379
+            "hosts": [
+                { 
+                    "address": REDIS_URL,  # Assumes Redis is running on localhost:6379
+                    "socket_timeout": 90,  # Fixes the 5-second client-side cutoff
+                }
+            ], 
         },
     }
 }
@@ -122,6 +130,31 @@ WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+# Daphne >= 4.2.2 enforces a 1 MiB WebSocket message/frame limit by default
+# (CVE-2026-44545). The UI pushes whole-view HTML in single frames, so a chat
+# re-render exceeds 1 MiB and drops the socket. Raise it; 0 = unlimited.
+WEBSOCKET_MAX_MESSAGE_SIZE = 16 * 1024 * 1024
+WEBSOCKET_MAX_FRAME_SIZE = 16 * 1024 * 1024
+# Same values, under the names `daphne`'s own `runserver` command reads.
+DAPHNE_WEBSOCKET_MAX_MESSAGE_SIZE = WEBSOCKET_MAX_MESSAGE_SIZE
+DAPHNE_WEBSOCKET_MAX_FRAME_SIZE = WEBSOCKET_MAX_FRAME_SIZE
+# Daphne keepalive. After `ping_interval` seconds of silence from the browser,
+# daphne sends a protocol-level ping and then arms a `ping_timeout` timer; if no
+# data arrives back before it fires, autobahn calls `dropConnection(abort=True)`.
+# That path logs only a Twisted `log.warn`, and daphne discards every Twisted log
+# at verbosity <= 1, so the abort surfaces in the UI as a silent drop with no
+# close code and no error. The client pings every WEBSOCKET_CLIENT_PING_INTERVAL
+# ms; any stall or background-tab timer throttling longer than the timeout
+# (daphne defaults are 20s/30s) kills the socket with no diagnostics.
+WEBSOCKET_PING_INTERVAL = 20
+WEBSOCKET_PING_TIMEOUT = 300
+# Daphne verbosity. 0/1 redirects *every* Twisted log to nowhere
+# (daphne/server.py: "Redirect the Twisted log to nowhere"), which hides
+# autobahn's onClose(code, reason) and the keepalive/drop warnings. 2 routes
+# Twisted logs through the stdlib `daphne` logger, which LOGGING below sends to
+# a file. Use 3 only when hunting event-loop blocking (turns on asyncio debug).
+DAPHNE_VERBOSITY = int(os.environ.get("AGENTONE_DAPHNE_VERBOSITY", "2"))
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -230,3 +263,112 @@ try:
     from .settings_local import *  # noqa
 except ImportError:
     pass
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+# Without this, LOGGING is empty and there is nowhere to see *why* a WebSocket
+# dropped. Daphne routes Twisted/autobahn records into the stdlib "daphne"
+# logger only when its verbosity is >= 2 (see DAPHNE_VERBOSITY), and autobahn
+# reports the close code/reason there. WebSocket lifecycle events therefore need
+# to be captured from the UI consumer itself as well.
+# ---------------------------------------------------------------------------
+# Logging handler hardening
+# ---------------------------------------------------------------------------
+# Daphne at verbosity >= 2 installs Twisted's stdio redirection, which turns
+# every write to dynamic sys.stderr into a Twisted log event that is forwarded
+# back into stdlib logging (STDLibLogObserver). The default
+# Handler.handleError writes its diagnostics ("--- Logging error ---",
+# "Call stack:", "Message:", "Arguments:") to dynamic sys.stderr — so a
+# single emit() failure becomes new log records, which can fail again:
+# a logging-while-logging spiral ending in "maximum recursion depth exceeded"
+# ("Unable to format event ...") plus "reentrant call" on the file stream.
+# These handlers run the stock implementation with sys.stderr temporarily
+# pointed at the real stderr (sys.__stderr__, never redirected), which breaks
+# the loop: diagnostics land on the true fd and generate no new records.
+class _SafeHandlerMixin:
+    def handleError(self, record):
+        real, current = sys.__stderr__, sys.stderr
+        if current is real:
+            super().handleError(record)
+            return
+        sys.stderr = real
+        try:
+            super().handleError(record)
+        finally:
+            sys.stderr = current
+
+
+class SafeRotatingFileHandler(_SafeHandlerMixin,
+                              logging.handlers.RotatingFileHandler):
+    pass
+
+
+class SafeStreamHandler(_SafeHandlerMixin, logging.StreamHandler):
+    pass
+
+
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+except OSError:
+    LOG_DIR = None
+
+_HANDLERS = {
+    "console": {
+        # Bind the real stderr explicitly: dictConfig would otherwise capture
+        # dynamic sys.stderr, which under Daphne -v >= 2 is Twisted's
+        # LoggingFile (every write becomes a new log record).
+        "class": "config.settings.SafeStreamHandler",
+        "stream": "ext://sys.__stderr__",
+    },
+}
+if LOG_DIR:
+    _HANDLERS["file"] = {
+        "class": "config.settings.SafeRotatingFileHandler",
+        "filename": os.path.join(LOG_DIR, "daphne.log"),
+        "maxBytes": 10 * 1024 * 1024,
+        "backupCount": 5,
+        "encoding": "utf-8",
+    }
+
+_ROOT_HANDLERS = ["console"] + (["file"] if LOG_DIR else [])
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "%(asctime)s %(levelname)-8s [%(name)s] %(message)s",
+        },
+    },
+    "handlers": _HANDLERS,
+    "root": {
+        "handlers": _ROOT_HANDLERS,
+        "level": "INFO",
+    },
+    "loggers": {
+        # Daphne forwards Twisted + autobahn records here at verbosity >= 2.
+        # autobahn logs onClose(wasClean=, code=, reason=) and the
+        # keepalive "dropping connection to peer ... abort=True" warning,
+        # which is the only way to tell a ping timeout (1006, no close frame)
+        # apart from a clean 1000 close or an application error (1011).
+        "daphne": {
+            "handlers": _ROOT_HANDLERS,
+            "level": "INFO",
+            "propagate": False,
+        },
+        "twisted": {
+            "handlers": _ROOT_HANDLERS,
+            "level": "INFO",
+            "propagate": False,
+        },
+        # WebSocket lifecycle from the UI consumer. DEBUG is off by default
+        # because it is chatty; raise to DEBUG to trace connect/disconnect.
+        "ui.consumer": {
+            "handlers": _ROOT_HANDLERS,
+            "level": os.environ.get("AGENTONE_WS_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+    },
+}

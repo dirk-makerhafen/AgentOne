@@ -292,7 +292,7 @@ class HookDispatchTest(TestCase):
         self._set_hooks([_hook_entry(max_tokens=1)])
         self._route_tasks()
         msgs = self._chain(8)
-        from server.history_limiter import find_compaction_boundary
+        from runtime.history_limiter import find_compaction_boundary
 
         self.assertIsNotNone(find_compaction_boundary(self.runtime, msgs[-1]))
         runs = maybe_fire_hooks(

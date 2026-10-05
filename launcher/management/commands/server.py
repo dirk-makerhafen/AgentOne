@@ -285,8 +285,30 @@ class Command(BaseCommand):
         startup_cleanup()
         self.stdout.write(" - Startup cleanup queued...")
         log_level = "DEBUG"
+        # Daphne >= 4.2.2 caps WebSocket messages/frames at 1 MiB by default
+        # (CVE-2026-44545).  The UI sends whole-view HTML in single frames, so
+        # a chat re-render can exceed 1 MiB and kill the socket.
+        ws_max_message_size = getattr(settings, 'WEBSOCKET_MAX_MESSAGE_SIZE', 16 * 1024 * 1024)
+        ws_max_frame_size = getattr(settings, 'WEBSOCKET_MAX_FRAME_SIZE', 16 * 1024 * 1024)
+        # Keepalive: daphne sends a protocol ping after ping_interval of silence
+        # and aborts the TCP connection (no close frame, browser shows 1006) if
+        # nothing comes back within ping_timeout. Keep the timeout well above the
+        # client's application-level ping interval.
+        ws_ping_interval = getattr(settings, 'WEBSOCKET_PING_INTERVAL', 20)
+        ws_ping_timeout = getattr(settings, 'WEBSOCKET_PING_TIMEOUT', 300)
+        # Verbosity >= 2 routes Twisted/autobahn records into the stdlib `daphne`
+        # logger instead of discarding them, which is the only place autobahn
+        # reports onClose(code, reason) and keepalive drop warnings.
+        daphne_verbosity = getattr(settings, 'DAPHNE_VERBOSITY', 2)
         commands = {
-            "daphne":        ['daphne', '-b', listen_address, "-e", "tcp:8003", "-b", "0.0.0.0", "-p","8002", "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem", 'config.asgi:application'],
+            "daphne":        ['daphne', '-b', listen_address, "-e", "tcp:8003", "-b", "0.0.0.0", "-p","8002", "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem",
+                              "--websocket-max-message-size", str(ws_max_message_size),
+                              "--websocket-max-frame-size", str(ws_max_frame_size),
+                              "--ping-interval", str(ws_ping_interval),
+                              "--ping-timeout", str(ws_ping_timeout),
+                              "-v", str(daphne_verbosity),
+                              'config.asgi:application'],
+
             "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '5'],
             "celery_beat":   ['celery', '-A', 'config', 'beat',   '-l', log_level]
         }

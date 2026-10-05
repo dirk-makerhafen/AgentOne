@@ -29,7 +29,7 @@ class TaskDefinitionVersion(BaseModel):
     max_subtask_error_rate = models.IntegerField(default=0)
     limit_subtask_parallel_runs = models.IntegerField(default=0)
     limit_per_instance_parallel_runs = models.IntegerField(default=1)
-    priority = models.IntegerField(default=0)
+    priority = models.IntegerField(default=99)  # 0 = most urgent, 99 = lowest
 
     max_retries = models.IntegerField(default=0)
     retry_delay = models.IntegerField(default=10)

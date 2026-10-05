@@ -4419,3 +4419,68 @@ textarea.ws-current-input{resize:vertical;line-height:1.5;}
 }
 
 
+
+/* ── Agent detail page: statistics grid ─────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.stat-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);}
+.stat-icon{color:var(--muted);opacity:.7;}
+.stat-value{font-size:22px;font-weight:700;color:var(--text);line-height:1.2;}
+.stat-value--error{color:var(--error);}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+
+/* Success/failure bar */
+.stats-bar{height:22px;border-radius:6px;background:var(--surface);border:1px solid var(--border);overflow:hidden;display:flex;margin-bottom:6px;}
+.stats-bar-segment{display:flex;align-items:center;justify-content:center;transition:width .3s ease;}
+.stats-bar--success{background:var(--success);}
+.stats-bar--failure{background:var(--error);}
+.stats-bar-label{font-size:11px;font-weight:600;color:#fff;padding:0 8px;white-space:nowrap;}
+.stats-bar-legend{display:flex;gap:16px;font-size:12px;color:var(--muted);}
+.stats-bar-legend-item{display:flex;align-items:center;gap:6px;}
+.stats-bar-legend-item::before{content:'';width:10px;height:10px;border-radius:2px;}
+.stats-bar-legend-item.stats-bar--success::before{background:var(--success);}
+.stats-bar-legend-item.stats-bar--failure::before{background:var(--error);}
+
+/* Capability table */
+.capability-table{width:100%;border-collapse:collapse;font-size:13px;}
+.capability-table thead{border-bottom:1px solid var(--border);}
+.capability-table th{text-align:left;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;}
+.capability-table td{padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text);}
+.capability-table tbody tr:last-child td{border-bottom:none;}
+.capability-disabled{text-decoration:line-through;opacity:.5;}
+.capability-status{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500;}
+.capability-status--allowed{background:rgba(61,139,64,.1);color:var(--success);}
+.capability-status--disallowed{background:rgba(198,40,40,.1);color:var(--error);}
+
+/* Capability call stats */
+.capability-calls{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text);font-weight:500;}
+.capability-calls--fail{color:var(--error);font-weight:600;}
+.capability-calls--none{color:var(--muted);opacity:.4;font-size:12px;}
+
+/* System prompt box */
+.system-prompt-box{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;font-family:'SF Mono',ui-monospace,monospace;color:var(--text);}
+
+/* Settings 3-column grid */
+.settings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.settings-column{display:flex;flex-direction:column;gap:8px;}
+
+/* Empty value */
+.detail-row-value--empty{color:var(--muted);opacity:.5;font-style:italic;}
+
+/* ── Overview: summary strip ────────────────────────────────────── */
+.ws-ov-summary-strip{display:flex;gap:20px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;align-items:center;}
+.ws-ov-stat-item{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.ws-ov-stat-value{font-size:18px;font-weight:700;color:var(--text);}
+.ws-ov-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+
+/* Overview agent card enhancements */
+.ws-ov-card--agent{min-height:auto;}
+.ws-ov-card-capabilities{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.ws-ov-cap{font-size:11px;color:var(--muted);background:var(--surface-subtle);padding:2px 8px;border-radius:999px;}
+.ws-ov-card-stats{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.ws-ov-stat-row{display:flex;gap:16px;margin-bottom:6px;align-items:center;}
+.ws-ov-stat-cell{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text);}
+.ws-ov-stat-cell svg{flex-shrink:0;}
+.ws-ov-stat-cell--tokens{font-weight:600;color:var(--accent-text);}
+.ws-ov-stat-cell--error{color:var(--error);font-weight:600;}
+.ws-ov-stat-cell--ok{color:var(--success);font-weight:600;}
+.ws-ov-dot--active{background:var(--success) !important;opacity:1 !important;}

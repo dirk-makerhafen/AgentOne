@@ -557,17 +557,29 @@ def _upsert_provider_from_frontmatter(
         return None
     is_local = bool(meta.get("is_local", False)) or _is_loopback_url(str(api_base))
 
+    # Build the defaults dict used by update_or_create so we can compare
+    # against the existing row afterwards (update_or_create always fires an
+    # UPDATE when the object exists, even if nothing changed).
+    defaults = {
+        "name": name,
+        "url": str(api_base),
+        "is_local": is_local,
+        "litellm_prefix": meta.get("litellm_prefix") or "",
+        "enabled": True,
+    }
     provider, created = ApiProvider.objects.update_or_create(
         slug=slug,
-        defaults={
-            "name": name,
-            "url": str(api_base),
-            "is_local": is_local,
-            "litellm_prefix": meta.get("litellm_prefix") or "",
-            "enabled": True,
-        },
+        defaults=defaults,
     )
 
+    # Compare each default field; skip the save when nothing changed.
+    changed_fields: list[str] = []
+    for field, value in defaults.items():
+        if getattr(provider, field) != value:
+            setattr(provider, field, value)
+            changed_fields.append(field)
+
+    # Build the raw_data dict and save only when it changed.
     info: Dict[str, Any] = {
         "api_key_url": meta.get("api_key_url") or "",
         "setup_instructions": meta.get("setup_instructions") or "",
@@ -577,9 +589,11 @@ def _upsert_provider_from_frontmatter(
         info["default_api_key"] = meta["default_api_key"]
     if meta.get("wire"):
         info["wire"] = meta["wire"]
-    provider.data = info
-    provider.save(update_fields=["raw_data"])
+    if provider.data != info:
+        provider.data = info
+        changed_fields.append("raw_data")
 
+    # Rate-limit fields.
     flat = _nested_limits_to_flat(meta.get("limits"))
     nested = meta.get("limits")
     if isinstance(nested, dict) and "parallel_calls" in nested:
@@ -589,18 +603,18 @@ def _upsert_provider_from_frontmatter(
                 flat["limit_parallel_calls"] = parallel
         except (TypeError, ValueError):
             pass
-    changed_fields = []
     for field, value in flat.items():
         if field in LIMIT_FIELDS + ("limit_parallel_calls",) and getattr(provider, field) != value:
             setattr(provider, field, value)
             changed_fields.append(field)
+
     if changed_fields:
         provider.save(update_fields=changed_fields)
 
     details.append({
         "type": "provider",
         "name": name,
-        "action": "created" if created else "updated",
+        "action": "created" if created else ("updated" if changed_fields else "up to date"),
     })
     return provider
 
@@ -684,23 +698,38 @@ def _upsert_model_from_card_entry(
             if k in model_limits:
                 defaults[k] = model_limits[k]
 
+        # update_or_create always fires an UPDATE when the object exists,
+        # so compare each default field against the existing row to avoid
+        # unnecessary saves and timestamp churn.
         model_obj, model_created = AiModel.objects.update_or_create(
             api_provider=provider,
             provider_model_id=provider_model_id,
             defaults=defaults,
         )
-        model_obj.data = {
+        changed_fields: list[str] = []
+        for field, value in defaults.items():
+            if getattr(model_obj, field) != value:
+                setattr(model_obj, field, value)
+                changed_fields.append(field)
+
+        # Build the raw_data dict and save only when it changed.
+        raw_data = {
             "card": card_slug,
             "conditions": entry.get("conditions") or "",
             "verified": entry.get("verified") or "",
             "wire": wire,
         }
-        model_obj.save(update_fields=["raw_data"])
+        if model_obj.data != raw_data:
+            model_obj.data = raw_data
+            changed_fields.append("raw_data")
+
+        if changed_fields:
+            model_obj.save(update_fields=changed_fields)
 
         details.append({
             "type": "model",
             "name": f"{provider.name}/{provider_model_id}",
-            "action": "created" if model_created else "updated",
+            "action": "created" if model_created else ("updated" if changed_fields else "up to date"),
         })
         seen_key = f"{provider.pk}:{provider_model_id}"
 

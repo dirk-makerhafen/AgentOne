@@ -247,7 +247,7 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
     compact_call = None
     max_tokens = hook.get("max_tokens") or 0
     if max_tokens > 0 and anchor is not None:
-        from server.history_limiter import (
+        from runtime.history_limiter import (
             estimate_entries_tokens,
             find_compaction_boundary,
             walk_compaction_entries,
@@ -277,9 +277,7 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
     hook_call = hook_task.delay(**hook_kwargs)
 
     timeout_seconds = hook.get("timeout_seconds") or 0
-    deadline = (
-        tz.now() + timedelta(seconds=timeout_seconds) if timeout_seconds > 0 else None
-    )
+    deadline = (tz.now() + timedelta(seconds=timeout_seconds) if timeout_seconds > 0 else None)
     run = SessionHookRun.objects.create(
         session=session.model,
         hook_name=hook_name,

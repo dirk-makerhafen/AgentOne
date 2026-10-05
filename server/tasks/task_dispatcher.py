@@ -37,11 +37,9 @@ def _celery_run(
             _class = CallScheduler
         elif classname == "RunScheduler":
             _class = RunScheduler
-        print("HEHREHR23")
         f = getattr(_class, fname)
-
         f(*args, **kwargs)
-        print("FOND")
+
 
 
 def celery_delay(func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:

@@ -8,7 +8,7 @@ from server.models.providers.api_provider import ApiProvider
 
 # pylint: disable=protected-access  # testing the internal routing helper
 
-CALL_LLM_PATH = (Path(__file__).resolve().parent.parent.parent / ".agentone" / "scripts" / "core" / "call_llm.py")
+CALL_LLM_PATH = Path(__file__).resolve().parent.parent.parent / "runtime" / "call_llm.py"
 
 
 def _load_call_llm():

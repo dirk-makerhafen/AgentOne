@@ -60,7 +60,7 @@ autoload:                      # optional — AGENTS.md autoload (see below)
 autoCompactMaxTokens: 120000      # hard token threshold for reactive auto-compaction (0 = disabled)
 autoCompactMinTokens: 50000       # context floor for idle-triggered compaction (0 = idle compaction disabled)
 autoCompactIdleSeconds: 240       # idle seconds after which an oversized session is compacted (0 = disabled)
-autoCompactKeepPercent: 15     # percentage of newest tokens to keep in full on compaction (0 = compact everything)
+autoCompactKeepPercent: 10     # percentage of newest tokens to keep in full on compaction (0 = compact everything)
 reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel
 toolCallSyntax: default        # default | custom

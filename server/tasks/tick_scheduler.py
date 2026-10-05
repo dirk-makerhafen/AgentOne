@@ -1001,7 +1001,7 @@ def _compact_idle_sessions() -> None:
     from django.db.models import Max
 
     from runtime.session.session import Session
-    from server.history_limiter import (
+    from runtime.history_limiter import (
         estimate_entries_tokens,
         find_compaction_boundary,
         idle_seconds,

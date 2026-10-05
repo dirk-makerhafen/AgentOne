@@ -16,7 +16,7 @@ priority: 0
 autoCompactMaxTokens: 120000
 autoCompactMinTokens: 50000
 autoCompactIdleSeconds: 240
-autoCompactKeepPercent: 15
+autoCompactKeepPercent: 10
 
 maxRetries: 0
 maxTurns: 200

@@ -85,7 +85,7 @@ class AgentTaskCall(BaseModel):
     max_subtask_error_rate = models.IntegerField(default=None, null=False)
     limit_subtask_parallel_runs = models.IntegerField(default=None, null=False)
     limit_per_instance_parallel_runs = models.IntegerField(default=None, null=False)
-    priority = models.IntegerField(default=0)
+    priority = models.IntegerField(default=99)  # 0 = most urgent, 99 = lowest
 
     max_retries = models.IntegerField(default=None, null=False)
     retry_delay = models.IntegerField(default=None, null=False)

@@ -108,7 +108,6 @@ class ModelView(PyHtmlView):
         self.update()
 
     def _on_subject_died(self, wr) -> None:
-        print("subject dies", self.subject)
         self.remove_observable(self.subject)
 
     def add_observable(self, subject: AgentModel, target_function: typing.Callable = None,

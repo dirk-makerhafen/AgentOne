@@ -67,7 +67,7 @@ PATH_ARG_NAMES: dict[str, list[str]] = {
 
 
 @dataclass
-class ActionPolicy:
+class _ActionPolicy:
     """Per-action policy: default posture + per-path overrides."""
 
     default: str = "allow"
@@ -77,14 +77,14 @@ class ActionPolicy:
 
 
 @dataclass
-class WorkspaceAccessPolicy:
+class _WorkspaceAccessPolicy:
     """Resolved, merged access policy for a session."""
 
     workspace_root: Path | None
-    inside_read: ActionPolicy = field(default_factory=ActionPolicy)
-    inside_write: ActionPolicy = field(default_factory=ActionPolicy)
-    external_read: ActionPolicy = field(default_factory=ActionPolicy)
-    external_write: ActionPolicy = field(default_factory=ActionPolicy)
+    inside_read: _ActionPolicy = field(default_factory=_ActionPolicy)
+    inside_write: _ActionPolicy = field(default_factory=_ActionPolicy)
+    external_read: _ActionPolicy = field(default_factory=_ActionPolicy)
+    external_write: _ActionPolicy = field(default_factory=_ActionPolicy)
 
     @property
     def global_deny(self) -> list[str]:
@@ -99,10 +99,10 @@ class WorkspaceAccessPolicy:
             deny.extend(policy.deny)
         return deny
 
-    def _inside_policy(self, action: str) -> ActionPolicy:
+    def _inside_policy(self, action: str) -> _ActionPolicy:
         return self.inside_read if action == "read" else self.inside_write
 
-    def _external_policy(self, action: str) -> ActionPolicy:
+    def _external_policy(self, action: str) -> _ActionPolicy:
         return self.external_read if action == "read" else self.external_write
 
 
@@ -131,8 +131,8 @@ def _matches(
     return any(_pattern_matches(p, c, target_rel) for p in patterns for c in candidates)
 
 
-def _action_config(scope: dict[str, Any] | None, action: str) -> ActionPolicy:
-    """Extract an ActionPolicy from an ``access`` scope dict (unmerged).
+def _action_config(scope: dict[str, Any] | None, action: str) -> _ActionPolicy:
+    """Extract an _ActionPolicy from an ``access`` scope dict (unmerged).
 
     ``default`` is ``None`` when not explicitly configured — the caller
     decides the effective fallback so an explicit ``allow`` can override a
@@ -142,7 +142,7 @@ def _action_config(scope: dict[str, Any] | None, action: str) -> ActionPolicy:
     default = cfg.get("default")
     if default is not None and default not in ACCESS_POSTURES:
         default = None
-    return ActionPolicy(
+    return _ActionPolicy(
         default=default,
         allow=[str(p) for p in (cfg.get("allow") or [])],
         ask=[str(p) for p in (cfg.get("ask") or [])],
@@ -150,9 +150,9 @@ def _action_config(scope: dict[str, Any] | None, action: str) -> ActionPolicy:
     )
 
 
-def _merge_action(base: ActionPolicy, override: ActionPolicy) -> ActionPolicy:
+def _merge_action(base: _ActionPolicy, override: _ActionPolicy) -> _ActionPolicy:
     """Merge an agent ``workspace`` override on top of the workspace base."""
-    return ActionPolicy(
+    return _ActionPolicy(
         default=override.default if override.default is not None else base.default,
         allow=list(base.allow) + list(override.allow),
         ask=list(base.ask) + list(override.ask),
@@ -169,7 +169,7 @@ def _agent_access(session: Any) -> dict[str, Any]:
     return access if isinstance(access, dict) else {}
 
 
-def resolve_policy(session: Any) -> WorkspaceAccessPolicy:
+def resolve_policy(session: Any) -> _WorkspaceAccessPolicy:
     """Build the merged access policy for *session*.
 
     Combines the workspace ``access`` block with the agent's ``access``
@@ -202,7 +202,7 @@ def resolve_policy(session: Any) -> WorkspaceAccessPolicy:
     base_read.default = base_read.default if base_read.default is not None else "allow"
     base_write.default = base_write.default if base_write.default is not None else "allow"
 
-    return WorkspaceAccessPolicy(
+    return _WorkspaceAccessPolicy(
         workspace_root=root,
         inside_read=_merge_action(base_read, override_read),
         inside_write=_merge_action(base_write, override_write),
@@ -211,7 +211,7 @@ def resolve_policy(session: Any) -> WorkspaceAccessPolicy:
     )
 
 
-def _inside_workspace(policy: WorkspaceAccessPolicy, target: Path) -> bool:
+def _inside_workspace(policy: _WorkspaceAccessPolicy, target: Path) -> bool:
     if policy.workspace_root is None:
         return False
     try:
@@ -222,7 +222,7 @@ def _inside_workspace(policy: WorkspaceAccessPolicy, target: Path) -> bool:
 
 
 # pylint: disable=too-many-return-statements
-def evaluate(policy: WorkspaceAccessPolicy, target: str, action: str) -> GuardrailVerdict:
+def evaluate(policy: _WorkspaceAccessPolicy, target: str, action: str) -> GuardrailVerdict:
     """Evaluate *target* against *policy* for *action* (``read`` or ``write``).
 
     Returns an ``allow`` / ``ask`` / ``deny`` verdict.  ``ask`` means the

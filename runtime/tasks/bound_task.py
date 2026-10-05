@@ -334,13 +334,13 @@ class BoundTask:
         self,
         args: tuple | None = None,
         kwargs: dict | None = None,
-        countdown: int = 0,
+        countdown: int = 0, # TODO THESE ARGS WERE TAKEN FROM CELERYS apply_async, check at some point how we correctly use them, if we even keep them.
         eta: Any = None,
         expires: Any = None,
         retry: bool = False,
         time_limit: int = 0,
         soft_time_limit: int = 0,
-        priority: int = 0,
+        priority: int = 99,  # 0 = most urgent, 99 = lowest
          **options: Any
     ) -> Any:
         """
@@ -365,7 +365,7 @@ class BoundTask:
         soft_time_limit : int
             Soft time limit in seconds.
         priority : int
-            Task priority.
+            Task priority. Lower number = higher priority (0 = most urgent, 99 = lowest).
         """
         task_instance = self.instance()
         return task_instance.apply_async(args=args, kwargs=kwargs, **options)

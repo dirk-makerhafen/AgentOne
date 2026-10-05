@@ -77,7 +77,7 @@ class SettingsModel(BaseModel):
     auto_compact_min_tokens: int | None = models.IntegerField(default=None, null=True, blank=True)
     auto_compact_idle_seconds: int | None = models.IntegerField(default=None, null=True, blank=True)
     auto_compact_keep_percent: int | None = models.IntegerField(default=None, null=True, blank=True)
-    priority: int | None = models.IntegerField(default=None, null=True, blank=True)  # 0 = highest, 1..999 less important
+    priority: int | None = models.IntegerField(default=None, null=True, blank=True)  # 0 = most urgent, 99 = lowest
 
     task_prompt: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_task_prompt")
     system_prompt: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_system_prompt")

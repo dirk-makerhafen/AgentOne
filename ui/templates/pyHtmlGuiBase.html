@@ -6,6 +6,7 @@
             let start_size =  "";
             let start_position = "";
             let connected = false;
+            let connected_at = Date.now();
             let pyhtmlqtChannel = null;
             let pyhtmlapp = null;
 
@@ -85,6 +86,7 @@
                         let python_call_object = pyhtmlgui._create_python_call_obj("frontend_ready", [], skip_results = true);
                         pyhtmlgui._websocket.send(pyhtmlgui._toJSON(python_call_object));
                         connected = true;
+                        connected_at = Date.now();
                     };
 
                     pyhtmlgui._websocket.onmessage = function (e) {
@@ -136,7 +138,9 @@
                                 window.location.reload();
                             }, 2000);
                         }else{
-                            console.warn("Socket is closed, Reconnect in 2 second", e.reason);
+                            console.warn("Socket is closed, Reconnect in 2 second", e.reason,
+                                    "code=" + e.code, "wasClean=" + e.wasClean,
+                                    "uptime_ms=" + (Date.now() - connected_at));
                             setTimeout(function (){
                                 pyhtmlgui._connect();
                             }, 2000);

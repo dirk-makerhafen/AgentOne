@@ -19,7 +19,7 @@ from server.models.queries.query import Query
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
 from server.models.settings import SettingsModel
-from server.history_limiter import estimate_message_tokens
+from runtime.history_limiter import estimate_message_tokens
 
 _URI = "data:image/jpeg;base64,/9j/4AAQSkZJRg=="
 

@@ -24,7 +24,7 @@ from server.models.queries.response import ResponseStatus
 
 # pylint: disable=protected-access  # exercising internal helpers
 
-CALL_LLM_PATH = (Path(__file__).resolve().parent.parent.parent / ".agentone" / "scripts" / "core" / "call_llm.py")
+CALL_LLM_PATH = Path(__file__).resolve().parent.parent.parent / "runtime" / "call_llm.py"
 
 
 def _load_call_llm():

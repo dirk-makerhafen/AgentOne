@@ -110,7 +110,7 @@ def workitem_create(
     assigned_agent: str = "",
     project: str = "",
     parent_id: int = 0,
-    priority: int = 0,
+    priority: int = 99,  # 0 = most urgent, 99 = lowest
     requires_verification: bool = False,
     status: Literal["backlog", "ready"] = "backlog",
 ) -> tuple[bool, dict]:
@@ -143,7 +143,7 @@ def workitem_create(
         parent_id: Optional id of a parent work item, for subtasks. The child
             is dispatched on its own like any other item — it is not run as
             part of its parent, and the parent does not wait for it.
-        priority: Higher runs first among ready items. Defaults to 0.
+        priority: Lower number = higher priority (0 = most urgent, 99 = lowest). Defaults to 99.
         requires_verification: Set true when the result needs a second opinion
             before it counts as done — research, analysis, anything where
             "it ran without errors" is not evidence of quality. A separate
@@ -459,7 +459,7 @@ def workitem_add_child(
     body: str = "",
     assigned_agent: str = "",
     requires_verification: bool = False,
-    priority: int = 0,
+    priority: int = 99,  # 0 = most urgent, 99 = lowest
     status: Literal["backlog", "ready"] = "ready",
 ) -> tuple[bool, dict]:
     """
@@ -477,7 +477,7 @@ def workitem_add_child(
             its parent's context. Without it the child gets only the title.
         assigned_agent: Agent to run this piece. Required for it to dispatch.
         requires_verification: true if this piece needs a second opinion.
-        priority: Higher runs first.
+        priority: Lower number = higher priority (0 = most urgent, 99 = lowest). Defaults to 99.
         status: "ready" (default) to queue it, or "backlog" to hold it.
 
     Returns:

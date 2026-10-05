@@ -77,7 +77,7 @@ class WorkItem(BaseModel):
         default=WorkItemStatus.BACKLOG,
         db_index=True,
     )
-    priority: int = models.IntegerField(default=0)
+    priority: int = models.IntegerField(default=99)  # 0 = most urgent, 99 = lowest
     order: int = models.IntegerField(default=0)
     started_at: datetime | None = models.DateTimeField(null=True, blank=True, default=None)
     completed_at: datetime | None = models.DateTimeField(null=True, blank=True, default=None)

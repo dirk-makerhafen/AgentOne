@@ -52,7 +52,7 @@ class AgentTaskRun(BaseModel):
     dont_start_before = models.DateTimeField(default=None, null=True, blank=True)
     dont_start_after = models.DateTimeField(default=None, null=True, blank=True)
     requires_approval = models.BooleanField(default=None, null=False)
-    priority = models.IntegerField(default=0)
+    priority = models.IntegerField(default=99)  # 0 = most urgent, 99 = lowest
 
     time_limit = models.IntegerField(default=None, null=True, blank=True)
     max_subtask_errors = models.IntegerField(default=None, null=False)
