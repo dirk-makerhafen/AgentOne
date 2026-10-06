@@ -9,6 +9,7 @@ Quick reference for developers working on AgentOne. See also:
 - [docs/deployment.md](docs/deployment.md) — production deployment, supervisor, nginx
 - [docs/manifest-format.md](docs/manifest-format.md) — YAML manifest format (agents, scripts, cron, streams, sets)
 - [docs/models.md](docs/models.md) — model reference (all ~30 models including DataCollection)
+- [docs/terminals.md](docs/terminals.md) — persistent tmux terminals + external CLI agents (tools, allowlist, guardrails, UI tab)
 
 ## Directory ownership
 
