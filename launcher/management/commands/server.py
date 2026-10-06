@@ -1,6 +1,9 @@
 import datetime
+import importlib.util
 import os
 import socket
+import subprocess
+import sys
 from threading import Thread
 import time
 
@@ -23,6 +26,8 @@ class Command(BaseCommand):
         parser_update = subparsers.add_parser("update", help="Update AgentOne to the latest version.")
         parser_service = subparsers.add_parser("service", help="Manages the server system service.")
         parser_service.add_argument("action", choices=["install", "start", "stop", "status", "uninstall"], help="Service action to perform.")
+        parser_browser = subparsers.add_parser("browser", help="Manages the Camoufox browser daemon.")
+        parser_browser.add_argument("action", choices=["start", "stop", "status", "fetch", "profiles"], help="Browser daemon action.")
 
     def handle(self, *args, **options):
         subcommand = options["subcommand"]
@@ -34,8 +39,120 @@ class Command(BaseCommand):
             self.handle_update(**options)
         elif subcommand == "service":
             self.handle_service(**options)
+        elif subcommand == "browser":
+            self.handle_browser(**options)
         else:
             self.stdout.write(self.style.ERROR(f"Unknown subcommand: {subcommand}"))
+
+    # ------------------------------------------------------------------
+    # Browser daemon
+    # ------------------------------------------------------------------
+
+    def handle_browser(self, **options):
+        """Inspect or control the Camoufox browser daemon."""
+        action = options.get("action", "status")
+        handler = {
+            "fetch": self._browser_fetch,
+            "profiles": self._browser_profiles,
+            "start": self._browser_start,
+            "stop": self._browser_stop,
+            "status": self._browser_status,
+        }.get(action, self._browser_status)
+        handler()
+
+    def _browser_fetch(self):
+        """Download the pinned Camoufox browser build."""
+        self.stdout.write("Fetching a Camoufox browser build (one-time, large download)...")
+        if importlib.util.find_spec("camoufox") is None:
+            self.stdout.write(self.style.ERROR(
+                "camoufox is not installed. Run: pip install -r requirements.txt"
+            ))
+            return
+        # camoufox exposes `fetch` only as a click CLI command, never as an
+        # importable function — shell out to its module entrypoint.
+        try:
+            proc = subprocess.run(
+                [sys.executable, "-m", "camoufox", "fetch"],
+                capture_output=True, text=True, check=False,
+            )
+        except OSError as exc:
+            self.stdout.write(self.style.ERROR(f"Fetch failed to start: {exc}"))
+            return
+        if proc.returncode != 0:
+            detail = (proc.stderr or proc.stdout).strip()
+            self.stdout.write(self.style.ERROR(f"Fetch failed (exit {proc.returncode}): {detail}"))
+            return
+        self.stdout.write(self.style.SUCCESS("Camoufox browser build fetched."))
+
+    def _browser_profiles(self):
+        """List on-disk browser profiles."""
+        from runtime.browser import paths  # pylint: disable=import-outside-toplevel
+        base = paths.profiles_base()
+        if not base.exists():
+            self.stdout.write("No browser profiles yet.")
+            return
+        self.stdout.write(f"Profiles in {base}:")
+        for entry in sorted(base.iterdir()):
+            if not entry.is_dir():
+                continue
+            suffix = "" if (entry / "launch_options.json").exists() else "  (no identity yet)"
+            self.stdout.write(f"  {entry.name}{suffix}")
+
+    def _browser_start(self):
+        """Start the daemon on demand."""
+        from runtime.browser.client import ClientError, ensure_daemon  # pylint: disable=import-outside-toplevel
+        try:
+            ensure_daemon()
+        except ClientError as exc:
+            self.stdout.write(self.style.ERROR(str(exc)))
+            return
+        self.stdout.write(self.style.SUCCESS("Browser daemon is ready."))
+
+    def _browser_stop(self):
+        """Graceful shutdown; never starts the daemon just to stop it."""
+        from runtime.browser import client  # pylint: disable=import-outside-toplevel
+        try:
+            if client.probe_status() is None:
+                self.stdout.write(self.style.WARNING("Daemon not running."))
+                return
+            client.call("shutdown", {}, timeout=10)
+        except client.ClientError as exc:
+            self.stdout.write(self.style.WARNING(f"Daemon not running ({exc})."))
+            return
+        self.stdout.write(self.style.SUCCESS("Browser daemon stopping."))
+
+    def _browser_status(self):
+        """Report daemon state. Read-only: never starts the daemon."""
+        from runtime.browser.client import ClientError, probe_status  # pylint: disable=import-outside-toplevel
+        try:
+            info = probe_status()
+        except ClientError as exc:
+            self.stdout.write(self.style.WARNING(f"Daemon not running: {exc}"))
+            return
+        if info is None:
+            self.stdout.write(self.style.WARNING("Daemon not running."))
+            self.stdout.write("Start it with: python3 manage.py server browser start")
+            return
+        self.stdout.write(self.style.SUCCESS("--- Browser Daemon ---"))
+        self.stdout.write(
+            f"max processes: {info.get('max_processes')}   "
+            f"idle reap: {info.get('idle_seconds')}s"
+        )
+        if not info.get("browser_installed"):
+            self.stdout.write(self.style.WARNING(
+                "No Camoufox browser build found. Run: python3 manage.py server browser fetch"
+            ))
+        bindings = info.get("bindings") or []
+        if not bindings:
+            self.stdout.write("No live browsers.")
+            return
+        for binding in bindings:
+            self.stdout.write(
+                f"  {binding['profile_key']} (root session {binding['root_pk']}, "
+                f"{len(binding['pages'])} tabs, idle {binding['idle']}s)"
+            )
+            for page in binding["pages"]:
+                self.stdout.write(f"    {page['page_id']}  (owner {page['owner_pk']})  {page['url'][:100]}")
 
     # ------------------------------------------------------------------
     # Setup
@@ -112,7 +229,6 @@ class Command(BaseCommand):
         return self._ask_sqlite()
 
     def _ask_sqlite(self):
-        import os
         from django.conf import settings
         default_path = os.path.join(settings.BASE_DIR, "db.sqlite3")
         path = self._ask("SQLite database path", default_path)
@@ -167,7 +283,6 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
 
     def _write_local_config(self, db_config, redis_url, listen_addr, listen_port, secret_key, client_key):
-        import os
         from django.conf import settings
 
         path = os.path.join(settings.BASE_DIR, "config", "settings_local.py")
@@ -285,10 +400,6 @@ class Command(BaseCommand):
             ))
 
     def handle_run(self, **options):
-        import subprocess
-        import sys
-        import os
-        import time
         import select
         from django.conf import settings
 
@@ -331,7 +442,11 @@ class Command(BaseCommand):
                               'config.asgi:application'],
 
             "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '5'],
-            "celery_beat":   ['celery', '-A', 'config', 'beat',   '-l', log_level]
+            "celery_beat":   ['celery', '-A', 'config', 'beat',   '-l', log_level],
+            # Browser daemon: one process owns every Camoufox instance so the
+            # five prefork workers share them (and survive worker restarts).
+            # Harmless if Camoufox is not installed — it only reports on use.
+            "browser":       [sys.executable, '-m', 'runtime.browser.daemon'],
         }
 
         mdns_thread = Thread(target=self.run_zeroconf, daemon=True)
@@ -383,8 +498,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("All server components shut down."))
 
     def handle_update(self, **options):
-        import subprocess
-        import sys
         from pathlib import Path
         from django.conf import settings
 

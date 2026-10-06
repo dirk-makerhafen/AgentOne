@@ -55,7 +55,11 @@ ACCESS_POSTURES = ("allow", "ask", "deny")
 
 # Tool name → path argument names.  Group name determines the action:
 # ``filesystem-write`` → write, ``filesystem-read`` → read.
-PATH_ARG_NAMES: dict[str, list[str]] = {
+# A value may also be a ``{arg: action}`` mapping for tools that mix actions
+# in one signature (``browser``: ``path``/``download_path`` are written,
+# ``upload_path`` is read).
+PATH_ARG_NAMES: dict[str, list[str] | dict[str, str]] = {
+    "browser": {"path": "write", "download_path": "write", "upload_path": "read"},
     "read": ["path"],
     "grep": ["path"],
     "glob": ["path"],
@@ -428,12 +432,16 @@ def extract_path_args(
     if posture not in ("read", "write"):
         return []
     action = posture
-    arg_names = PATH_ARG_NAMES.get(task_name, [])
+    declared = PATH_ARG_NAMES.get(task_name, [])
+    if isinstance(declared, dict):
+        pairs = list(declared.items())
+    else:
+        pairs = [(name, action) for name in declared]
     paths: list[tuple[str, str]] = []
-    for name in arg_names:
+    for name, act in pairs:
         value = args.get(name)
         if isinstance(value, str) and value.strip():
-            paths.append((value, action))
+            paths.append((value, act))
     return paths
 
 

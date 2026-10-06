@@ -47,3 +47,4 @@ pureshellcheck
 html2text
 tiktoken
 libtmux
+camoufox==0.5.7

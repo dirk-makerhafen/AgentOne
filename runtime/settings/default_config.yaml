@@ -11,3 +11,19 @@ preferences:
   min_battery_pct_for_caffeinate: 30
   pause_local_ai_below_battery_pct: 20
   sleep_guard_release_delay_minutes: 5
+
+browser:
+  mode: headful
+  minimize: false
+  scope: session
+  max_processes: 6
+  idle_seconds: 900
+  ephemeral_by_default: false
+  block_images: false
+  humanize: 1.5
+  enable_cache: true
+  nav_timeout: 45
+  action_timeout: 15
+  audit: true
+  allow_domains: []
+  deny_domains: []

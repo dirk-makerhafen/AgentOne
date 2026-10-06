@@ -205,6 +205,22 @@ class ExtractPathArgsTest(SimpleTestCase):
     def test_non_string_path_ignored(self):
         self.assertEqual(extract_path_args("write", "write", {"path": 42}), [])
 
+    def test_browser_mixes_read_and_write_paths(self):
+        """browser declares a per-argument action: screenshots/downloads are
+        writes, the file a form uploads is a read."""
+        result = extract_path_args(
+            "browser",
+            "write",
+            {"path": "shots/a.png", "upload_path": "docs/in.pdf", "download_path": "out.zip"},
+        )
+        self.assertEqual(
+            result,
+            [("shots/a.png", "write"), ("out.zip", "write"), ("docs/in.pdf", "read")],
+        )
+
+    def test_browser_without_paths(self):
+        self.assertEqual(extract_path_args("browser", "write", {"action": "snapshot"}), [])
+
 
 class TaskAccessPostureTest(SimpleTestCase):
     def _td(self, posture=None, group=""):

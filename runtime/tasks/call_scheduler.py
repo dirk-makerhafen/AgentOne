@@ -124,6 +124,7 @@ class CallScheduler:
         CallScheduler._guardrail_python_check(task_call_id)
         CallScheduler._guardrail_terminal_check(task_call_id)
         CallScheduler._guardrail_filesystem_check(task_call_id)
+        CallScheduler._guardrail_browser_check(task_call_id)
         CallScheduler._question_gate_check(task_call_id)
 
         if TaskCallStateMachine.request_approval(task_call_id):
@@ -369,6 +370,57 @@ class CallScheduler:
                 guardrail_reason="Filesystem access policy: " + "; ".join(ask_reasons),
             )
             print(f"  # FILESYSTEM GUARDRAIL: {'; '.join(ask_reasons)}")
+
+    @staticmethod
+    def _guardrail_browser_check(task_call_id: int) -> None:
+        """Require approval for browser actions that change remote state.
+
+        Read-only browser actions (snapshot/read/tabs/status/wait) run
+        straight away; anything that navigates, submits, evaluates JS, or
+        moves bytes in or out (open, navigate, click, type, back, evaluate,
+        upload, download) parks for a human.  ``evaluate`` is included
+        because page JS can do anything the page can — including submitting
+        the form the agent was only asked to read.
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall
+
+        try:
+            tc = AgentTaskCall.objects.get(pk=task_call_id)
+        except AgentTaskCall.DoesNotExist:
+            return
+
+        task_name = getattr(tc.task_definition, "name", "") if tc.task_definition else ""
+        if task_name != "browser":
+            return
+
+        args = dict(tc.carguments_json or {})
+        action = str(args.get("action") or "").strip()
+        if not action:
+            return
+
+        from runtime.browser.actions import is_known, requires_approval
+
+        if not is_known(action):
+            if not tc.requires_approval:
+                AgentTaskCall.objects.filter(pk=tc.pk).update(
+                    requires_approval=True,
+                    guardrail_reason=f"Unknown browser action: {action}",
+                )
+            return
+
+        if not requires_approval(action):
+            return
+
+        if not tc.requires_approval:
+            detail = args.get("url") or args.get("ref") or args.get("selector") or ""
+            reason = f"Browser action '{action}' interacts with a live website."
+            if detail:
+                reason += f" Target: {str(detail)[:120]}"
+            AgentTaskCall.objects.filter(pk=tc.pk).update(
+                requires_approval=True,
+                guardrail_reason=reason,
+            )
+            print(f"  # BROWSER GUARDRAIL: {action} requires approval")
 
     # ------------------------------------------------------------------
     # User questions (ask_user tool)
