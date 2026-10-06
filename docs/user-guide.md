@@ -324,10 +324,12 @@ Each cron job shows:
 
 ## Query templates
 
-Reusable prompts with typed variables. A template is a Markdown file with a
-frontmatter head (`name`, `description`, `variables`) and a Jinja body, stored
-in the session-private folder at `~/.agentone/sessions/<session_id>/templates/<name>.md`.
-Templates belong to one session; archived sessions keep theirs forever.
+Reusable prompts with typed variables. Each template is a database row scoped
+to one session: an immutable, content-addressed version plus a per-session
+link to the current version. Every save mints a new version (old ones are
+kept as history); forks inherit the parent's templates and diverge on first
+edit; deleting removes the link only. Templates belong to one session;
+archived sessions keep theirs forever.
 
 ### Running a template
 
@@ -341,7 +343,7 @@ Templates belong to one session; archived sessions keep theirs forever.
 
 ### Writing a template
 
-```markdown
+```
 ---
 name: summarize
 description: Summarize text into N bullet points
@@ -359,6 +361,10 @@ Summarize the following in {{ max_points }} bullet points:
 
 {{ text }}
 ```
+
+The same frontmatter is stored inside each version row (body + schema
+together, content-addressed); the `name` is also kept as a column so
+template lineage never requires parsing stored text.
 
 Variable types are `string`, `integer`, `number` (`float` is an alias) and
 `boolean`. Values are coerced leniently: `"5"` becomes `5` for numeric types,

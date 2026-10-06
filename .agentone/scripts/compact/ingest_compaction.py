@@ -34,7 +34,8 @@ def _extract_summary_text(message: Message | None) -> str:
     if message is None:
         return ""
     summary_text = ""
-    for part in message.parts.all():
+    # pk order == part creation order, matching prompt serialisation order.
+    for part in message.parts.order_by("pk"):
         if part.type == MessagePartType.MESSAGE:
             content = part.content.get() if part.content else None
             summary_text += str(content) if content else ""

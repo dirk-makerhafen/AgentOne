@@ -4,11 +4,13 @@ from __future__ import annotations
 try:
     from .agents.agent import AgentModel
     from .agents.agent_version import AgentVersionModel
+    from .adhoc_tool import AdhocToolVersion, SessionAdhocTool
     from .cron import Cronjob
     from .debug_log_entry import DebugLogEntry
     from .message import Message
     from .message import MessagePart
     from .project import Project
+    from .queries.query_template import QueryTemplateVersion, SessionQueryTemplate
     from .providers.ai_model import AiModel
     from .providers.api_key import ApiKey
     from .providers.api_provider import ApiProvider

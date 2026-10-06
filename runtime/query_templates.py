@@ -1,11 +1,15 @@
-"""Reusable query (prompt) templates stored in the session-private folder.
+"""Reusable query (prompt) templates stored in the database.
 
-Each template is a Markdown file at::
+Each session's *current* template is a ``SessionQueryTemplate`` link row
+``(session, name, version)``; every save mints a new immutable
+``QueryTemplateVersion`` row pointing at content-addressed
+``GenericContent`` (no session FK — identical bodies dedupe across
+sessions) and moves only the writer's link.  Forks inherit the parent's
+links (see :func:`inherit_templates`); deletes remove the link row only,
+leaving version rows as the audit trail (author, timestamp, source).
 
-    <SESSIONS_BASE>/<session_pk>/templates/<slug>.md
-
-with YAML frontmatter (``name``, ``description``, ``variables``) and a Jinja2
-body rendered with caller-supplied structured data::
+File format of a version's content (``name``, ``description``,
+``variables`` frontmatter + Jinja2 body)::
 
     ---
     name: summarize
@@ -44,14 +48,12 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
 import frontmatter
 import yaml
+from django.db import IntegrityError
 from jinja2 import BaseLoader, Environment, StrictUndefined
-
-from runtime.session_folder import ensure_session_templates_dir, session_templates_dir
 
 _JINJA_ENV = Environment(loader=BaseLoader(), undefined=StrictUndefined)
 
@@ -78,7 +80,7 @@ _FALSE_STRINGS = {"false", "0", "no", "n", "off"}
 
 
 class TemplateError(ValueError):
-    """Raised when a template file, schema, or supplied variables are invalid."""
+    """Raised when a template, schema, or supplied variables are invalid."""
 
 
 @dataclass
@@ -122,18 +124,13 @@ class QueryTemplate:
 
 
 def slugify_name(name: str) -> str:
-    """Return the filename slug for *name* (lowercase, safe chars)."""
+    """Return the canonical slug for *name* (lowercase, safe chars)."""
     slug = re.sub(r"[^a-z0-9-_]+", "-", str(name or "").strip().lower()).strip("-")
     if not slug or not _NAME_RE.match(slug):
         raise TemplateError(
             f"Invalid template name {name!r}: use lowercase letters, digits, '-' or '_'."
         )
     return slug
-
-
-def template_path(session_pk: int | str, name: str) -> Path:
-    """Return the file path for template *name* (pure, no I/O)."""
-    return session_templates_dir(session_pk) / f"{slugify_name(name)}.md"
 
 
 def _normalize_variable(raw: Any, index: int) -> TemplateVariable:
@@ -269,19 +266,19 @@ def _normalize_variables(raw_vars: Any) -> list[TemplateVariable]:
 
 
 def parse_template_text(raw_text: str) -> QueryTemplate:
-    """Parse template file text into a :class:`QueryTemplate`.
+    """Parse template text into a :class:`QueryTemplate`.
 
     Raises :class:`TemplateError` on any schema problem.
     """
     if not raw_text or not raw_text.strip():
-        raise TemplateError("Template file is empty.")
+        raise TemplateError("Template is empty.")
     try:
         post = frontmatter.loads(raw_text)
     except Exception as exc:
         raise TemplateError(f"Could not parse frontmatter: {exc}") from exc
     meta = post.metadata or {}
     body = (post.content or "").strip("\n")
-    # A file without a frontmatter block yields empty metadata — require it.
+    # A text without a frontmatter block yields empty metadata — require it.
     if not meta:
         raise TemplateError("Template is missing its frontmatter head (name, description, variables).")
     name = meta.get("name")
@@ -435,39 +432,96 @@ def render_template(template: QueryTemplate, variables: dict | str | None) -> st
         raise TemplateError(f"Could not render template {template.name!r}: {exc}") from exc
 
 
+def _template_from_version(version) -> QueryTemplate:
+    """Parse a version row's content, checking it against the version's name."""
+    template = parse_template_text(version.content.get())
+    if slugify_name(template.name) != version.name:
+        raise TemplateError(
+            f"Template version {version.pk} declares name {template.name!r}, "
+            f"expected {version.name!r}."
+        )
+    return template
+
+
 def list_templates(session_pk: int | str) -> list[dict]:
     """List this session's templates as ``{name, description, variables}`` dicts."""
-    folder = session_templates_dir(session_pk)
-    if not folder.is_dir():
-        return []
+    from server.models.queries.query_template import SessionQueryTemplate
+
+    links = (
+        SessionQueryTemplate.objects.filter(session_id=session_pk)
+        .select_related("version__content")
+        .order_by("name")
+    )
     out: list[dict] = []
-    for path in sorted(folder.glob("*.md")):
+    for link in links:
         try:
-            template = parse_template_text(path.read_text(encoding="utf-8"))
-        except (OSError, TemplateError):
-            continue  # skip unreadable/invalid files; get_template reports them
-        if slugify_name(template.name) != path.stem:
-            continue  # file does not own this name — skip to avoid duplicates
+            template = _template_from_version(link.version)
+        except (TemplateError, AttributeError):
+            continue  # corrupt version; get_template reports per-template
+        if slugify_name(template.name) != link.name:
+            continue  # link does not own this name — skip to avoid duplicates
         out.append(template.to_dict(include_body=False))
     return out
 
 
 def get_template(session_pk: int | str, name: str) -> QueryTemplate:
     """Load template *name* for *session_pk*, raising :class:`TemplateError`."""
+    from server.models.queries.query_template import SessionQueryTemplate
+
     slug = slugify_name(name)
-    path = session_templates_dir(session_pk) / f"{slug}.md"
-    if not path.is_file():
-        raise TemplateError(f"Template {name!r} not found.")
     try:
-        raw = path.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise TemplateError(f"Could not read template {name!r}: {exc}") from exc
-    template = parse_template_text(raw)
+        link = (
+            SessionQueryTemplate.objects.select_related("version__content").get(
+                session_id=session_pk, name=slug
+            )
+        )
+    except SessionQueryTemplate.DoesNotExist:
+        raise TemplateError(f"Template {name!r} not found.") from None
+    template = _template_from_version(link.version)
     if slugify_name(template.name) != slug:
         raise TemplateError(
-            f"Template file {path.name} declares name {template.name!r} — rename one of them."
+            f"Template {name!r} declares name {template.name!r} — contact an admin."
         )
     return template
+
+
+def _store_versioned_text(
+    session_pk: int | str, slug: str, raw_text: str, source: str
+) -> None:
+    """Mint a version row for *raw_text* and move this session's link to it.
+
+    Identical content is a no-op (content-addressed dedup hits the current
+    version).  Only the writer's link moves — siblings and forks keep
+    theirs.
+    """
+    from server.models.content import GenericContent
+    from server.models.queries.query_template import (
+        QueryTemplateVersion,
+        SessionQueryTemplate,
+    )
+
+    content = GenericContent.from_text(raw_text)
+    try:
+        link = (
+            SessionQueryTemplate.objects.select_related("version").filter(
+                session_id=session_pk, name=slug
+            ).first()
+        )
+        if link is not None and link.version.content_id == content.pk:
+            return  # identical content — no new version
+        version = QueryTemplateVersion.objects.create(
+            content=content,
+            name=slug,
+            created_by_session_id=session_pk,
+            source=source or "",
+        )
+        SessionQueryTemplate.objects.update_or_create(
+            session_id=session_pk, name=slug, defaults={"version": version}
+        )
+    except IntegrityError as exc:
+        raise TemplateError(
+            f"Could not save template {slug!r}: {exc}"
+        ) from exc
 
 
 def save_template(
@@ -476,8 +530,15 @@ def save_template(
     body: str,
     description: str = "",
     variables: list | dict | str | None = None,
+    source: str = "api",
 ) -> QueryTemplate:
-    """Validate and write template *name* for *session_pk* (create or overwrite)."""
+    """Validate and save template *name* for *session_pk* (create or overwrite).
+
+    Mints a new immutable version row and moves only this session's link to
+    it — siblings and forks keep their own versions.  Saving identical
+    content is a no-op (no new version).  ``source`` records how the version
+    was created (panel, tool, ...) for later audit/discovery.
+    """
     slug = slugify_name(name)
     if not body or not str(body).strip():
         raise TemplateError("Template body must not be empty.")
@@ -488,7 +549,7 @@ def save_template(
     if not isinstance(description, str):
         raise TemplateError("'description' must be a string.")
     # Canonical form: the slug is the name (lowercase, file-stable), so the
-    # frontmatter name always matches the file stem exactly.
+    # frontmatter name always matches the link name exactly.
     frontmatter_data: dict = {"name": slug, "description": description}
     normalized_vars: list[dict] = []
     for i, raw in enumerate(normalize_variables_list(variables)):
@@ -498,25 +559,25 @@ def save_template(
     raw_text = "---\n" + yaml.safe_dump(frontmatter_data, sort_keys=False).strip() + "\n---\n" + str(body).strip() + "\n"
     template = parse_template_text(raw_text)
     if slugify_name(template.name) != slug:
-        raise TemplateError(f"Template name {name!r} does not match file {slug!r}.")
-    folder = ensure_session_templates_dir(session_pk)
-    try:
-        (folder / f"{slug}.md").write_text(raw_text, encoding="utf-8")
-    except OSError as exc:
-        raise TemplateError(f"Could not write template {name!r}: {exc}") from exc
+        raise TemplateError(f"Template name {name!r} does not match {slug!r}.")
+    _store_versioned_text(session_pk, slug, raw_text, source)
     return template
 
 
 def delete_template(session_pk: int | str, name: str) -> None:
-    """Delete template *name*, raising :class:`TemplateError` if absent."""
+    """Delete template *name* for *session_pk* (removes the link only).
+
+    Version rows stay as the audit trail.  No new session version is
+    created — template state is working state, not session configuration.
+    """
+    from server.models.queries.query_template import SessionQueryTemplate
+
     slug = slugify_name(name)
-    path = session_templates_dir(session_pk) / f"{slug}.md"
-    if not path.is_file():
+    deleted, _ = SessionQueryTemplate.objects.filter(
+        session_id=session_pk, name=slug
+    ).delete()
+    if not deleted:
         raise TemplateError(f"Template {name!r} not found.")
-    try:
-        path.unlink()
-    except OSError as exc:
-        raise TemplateError(f"Could not delete template {name!r}: {exc}") from exc
 
 
 def render_template_by_name(
@@ -525,3 +586,31 @@ def render_template_by_name(
     """Load *name* and render it with *variables*; returns ``(template, text)``."""
     template = get_template(session_pk, name)
     return template, render_template(template, variables)
+
+
+def inherit_templates(parent_session_pk: int | str, child_session_pk: int | str) -> int:
+    """Copy a parent session's template links to a fork (copy-on-write).
+
+    Called from ``AgentVersionModel.get_or_create_session`` for newly
+    created sessions only — no version rows are minted, so parent and fork
+    share history until the fork first saves.  Returns the link count.
+    """
+    from server.models.queries.query_template import SessionQueryTemplate
+
+    rows = list(
+        SessionQueryTemplate.objects.filter(session_id=parent_session_pk).values_list(
+            "name", "version_id"
+        )
+    )
+    if not rows:
+        return 0
+    SessionQueryTemplate.objects.bulk_create(
+        [
+            SessionQueryTemplate(
+                session_id=child_session_pk, name=name, version_id=version_id
+            )
+            for name, version_id in rows
+        ],
+        ignore_conflicts=True,
+    )
+    return len(rows)

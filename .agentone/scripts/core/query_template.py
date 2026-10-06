@@ -1,10 +1,9 @@
 """Tools: store and execute reusable query (prompt) templates.
 
-Templates live in the session-private folder at
-``<SESSIONS_BASE>/<session_pk>/templates/<name>.md`` — each file has a
-frontmatter head (``name``, ``description``, ``variables``) and a Jinja2
-body.  See ``runtime/query_templates.py`` for the file format and coercion
-rules.
+Templates are database rows scoped to a session (link) with immutable,
+content-addressed versions — each template has a frontmatter head
+(``name``, ``description``, ``variables``) and a Jinja2 body.  See
+``runtime/query_templates.py`` for the format and coercion rules.
 
 Tools (all bound, ``_session`` first):
 
@@ -111,6 +110,7 @@ def template_save(
             # as JSON/YAML strings (list("...") here would split one
             # variable name into per-character specs).
             variables=variables,
+            source="tool",
         )
     except TemplateError as exc:
         return False, {"status": "error", "message": str(exc)}

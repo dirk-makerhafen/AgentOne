@@ -35,7 +35,8 @@ class QueryMessage(BaseModel):
 
     @property
     def has_toolcalls(self):
-        for part in self.query_message_parts.all():
+        # pk order == part creation order (explicit: DB gives no guarantee).
+        for part in self.query_message_parts.order_by("pk"):
             if part.has_toolcalls:
                 return True
         return False
@@ -96,7 +97,8 @@ class QueryMessage(BaseModel):
         tool_call_objects: list[AgentTaskCall] = []
         has_user_toolcall = False
 
-        for part in self.query_message_parts.all():
+        # pk order == part creation order (explicit: DB gives no guarantee).
+        for part in self.query_message_parts.order_by("pk"):
             part_contents = part.to_openai_message(fail_on_error=fail_on_error)
             if part.source_message_part and part.source_message_part.type == MessagePartType.TOOLCALL:
                 if part.source_message_part.tool_call:
@@ -183,9 +185,10 @@ class QueryMessage(BaseModel):
             if isinstance(obj, (list, set, tuple)):
                 return type(obj)(_walk(item) for item in obj)
             if isinstance(obj, Message):
+                # pk order == part creation order (explicit: DB gives no guarantee).
                 return "".join(
                     part.to_string()
-                    for part in obj.parts.filter(type=MessagePartType.MESSAGE)
+                    for part in obj.parts.filter(type=MessagePartType.MESSAGE).order_by("pk")
                 )
             if isinstance(obj, Path):
                 return obj.as_posix()

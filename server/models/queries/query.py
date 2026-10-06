@@ -59,7 +59,9 @@ class Query(BaseModel):
                     "Set either source_message or content_type,content,template_data"
                 )
             query_message = QueryMessage.objects.create(role=role, query=self, source_message=source_message)
-            for part in source_message.parts.all():
+            # pk order == part creation order; explicit so prompt bytes are
+            # deterministic (no ORDER BY guarantee from the DB, esp. MySQL).
+            for part in source_message.parts.order_by("pk"):
                 if part.type not in [MessagePartType.MESSAGE, MessagePartType.TOOLCALL]:
                     continue
                 _ = query_message.add_part(source_message_part=part)
@@ -91,7 +93,10 @@ class Query(BaseModel):
             return item
        
 
-        for message in related_query_messages.all():
+        # pk order == message creation order, which is the prompt order
+        # (build_llm_context creates head-to-tail). Explicit ORDER BY:
+        # related-manager iteration order is undefined per SQL.
+        for message in related_query_messages.order_by("pk"):
             message: QueryMessage
             try:
                 qm = message.to_openai_message(requires_reasoning_echo)

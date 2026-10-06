@@ -101,13 +101,16 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                 data={"exception": traceback.format_exc()},
             )
 
-        # SESSION-PRIVATE STORAGE (e.g. scratch files, temp memory, ad-hoc
-        # prompts/tools, intermediate results).  Each session — including
+        # SESSION-PRIVATE STORAGE (e.g. scratch files, temp memory,
+        # intermediate results).  Each session — including
         # subsessions — has its own isolated folder.  Announced here so the
         # LLM can use the normal filesystem tools with it; the guardrail
         # (runtime/workspace_access.py) allows own-folder read/write and
         # denies other sessions' folders.  Creation is lazy and must never
         # break context assembly.
+        # NOTE: reusable helpers live in the database, not here — ad-hoc
+        # tools via the adhoc_* tools, prompt templates via template_*.
+        # Do not write tool/template files into this folder by hand.
         try:
             from runtime.session_folder import ensure_session_dir
 
@@ -118,8 +121,10 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                 content=(
                     f"Your private session folder is {_private_dir.as_posix()}. "
                     "Use the normal filesystem tools for scratch files, temporary "
-                    "memory, ad-hoc prompts/tools, intermediate results, generated "
-                    "scripts and other session-specific artifacts. It is private "
+                    "memory, intermediate results, generated "
+                    "scripts and other session-specific artifacts. Reusable "
+                    "helpers belong in the database (adhoc_* tools, template_* "
+                    "tools), not as files here. It is private "
                     "to this session — other sessions cannot access it."
                 ),
             )
@@ -167,7 +172,9 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         for message in messages:
             query_message_parts: list[QueryMessagePart] = []
             tool_call_parts = []
-            for part in message.parts.all():
+            # pk order == part creation order; explicit ORDER BY so prompt
+            # bytes are deterministic (undefined order per SQL, esp. MySQL).
+            for part in message.parts.order_by("pk"):
                 part: MessagePart
                 if (_session.aimodel and not _session.aimodel.requires_reasoning_echo) and part.type == MessagePartType.REASONING:
                     continue

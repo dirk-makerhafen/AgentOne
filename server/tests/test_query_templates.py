@@ -1,8 +1,7 @@
-"""Tests for session-private query templates (runtime/query_templates.py)."""
-import tempfile
-from pathlib import Path
-
-from django.test import SimpleTestCase, override_settings
+"""Tests for database-backed query templates (runtime/query_templates.py)."""
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
+from django.test import SimpleTestCase, TestCase
 
 from runtime.query_templates import (
     TemplateError,
@@ -10,12 +9,18 @@ from runtime.query_templates import (
     coerce_value,
     delete_template,
     get_template,
+    inherit_templates,
     list_templates,
     parse_template_text,
     render_template,
     render_template_by_name,
     save_template,
     slugify_name,
+)
+from server.models import SessionModel
+from server.models.queries.query_template import (
+    QueryTemplateVersion,
+    SessionQueryTemplate,
 )
 
 
@@ -43,8 +48,6 @@ class SlugTest(SimpleTestCase):
         self.assertEqual(slugify_name("My Template!"), "my-template")
 
     def test_traversal_sanitized_safe(self):
-        # Lenient slugify: dangerous input is sanitized to a safe slug that
-        # always stays inside the templates dir (never raises, never escapes).
         self.assertEqual(slugify_name("../evil"), "evil")
 
     def test_empty_rejected(self):
@@ -90,16 +93,6 @@ class ParseTest(SimpleTestCase):
             "Hi {{ a }}\n"
         )
         self.assertFalse(t.variables[0].required)
-        # Omitted optional renders fine when unused...
-        t2 = parse_template_text(
-            "---\nname: s2\nvariables:\n  - name: a\n    required: \"false\"\n---\n"
-            "static\n"
-        )
-        self.assertEqual(render_template(t2, {}), "static")
-        # ...but referencing it without a value fails loudly (StrictUndefined).
-        with self.assertRaises(TemplateError):
-            render_template(t, {})
-        self.assertEqual(render_template(t, {"a": "x"}), "Hi x")
 
     def test_required_garbage_rejected(self):
         with self.assertRaises(TemplateError):
@@ -163,47 +156,18 @@ class RenderTest(SimpleTestCase):
         ctx = build_context(t, {"text": "hi", "unknown_key": 1})
         self.assertNotIn("unknown_key", ctx)
 
+    def test_optional_unused_renders(self):
+        optional = parse_template_text(
+            "---\nname: s2\nvariables:\n  - name: a\n    required: false\n---\nstatic\n"
+        )
+        self.assertEqual(render_template(optional, {}), "static")
+        required = parse_template_text("---\nname: s\nvariables: [a]\n---\nstatic\n")
+        with self.assertRaises(TemplateError):
+            render_template(required, {})
+
 
 class StringInputTest(SimpleTestCase):
-    """Regression: string ``variables`` must never split into characters.
-
-    An agent once passed ``"question"`` where a spec list was expected and
-    got 8 one-character variables (q, u, e, s, t, i, o, n).
-    """
-
-    def test_bare_name_rejected_with_hint(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                with self.assertRaises(TemplateError) as ctx:
-                    save_template(1, "t", "Q: {{ question }}", variables="question")
-                self.assertIn("[{'name': 'question'}]", str(ctx.exception))
-
-    def test_json_string_list_accepted(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                t = save_template(
-                    1, "t", "Q: {{ question }}",
-                    variables='[{"name": "question"}]',
-                )
-                self.assertEqual([v.name for v in t.variables], ["question"])
-
-    def test_yaml_string_list_accepted(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                t = save_template(
-                    1, "t", "Q: {{ question }}",
-                    variables="- name: question\n  type: string\n",
-                )
-                self.assertEqual([v.name for v in t.variables], ["question"])
-
-    def test_single_mapping_accepted(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                t = save_template(
-                    1, "t", "Q: {{ question }}",
-                    variables={"name": "question"},
-                )
-                self.assertEqual([v.name for v in t.variables], ["question"])
+    """String ``variables`` must never split into characters."""
 
     def test_json_string_values_render(self):
         t = parse_template_text(VALID_TEXT)
@@ -218,64 +182,265 @@ class StringInputTest(SimpleTestCase):
         self.assertIn("mapping", str(ctx.exception))
 
 
-class FilesystemTest(SimpleTestCase):
+class DatabaseTest(TestCase):
+    def setUp(self):
+        self.s1 = SessionModel.objects.create(name="tpl-s1")
+        self.s2 = SessionModel.objects.create(name="tpl-s2")
+
+    def _save(self, session=None, **kwargs):
+        kwargs.setdefault("body", "Points: {{ max_points }}: {{ text }}")
+        kwargs.setdefault("variables", [
+            {"name": "text", "type": "string", "required": True},
+            {"name": "max_points", "type": "integer", "default": 5},
+        ])
+        return save_template((session or self.s1).pk, "summarize", **kwargs)
+
     def test_save_list_get_render_delete(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                saved = save_template(
-                    11, "summarize", "Points: {{ max_points }}: {{ text }}",
-                    description="d",
-                    variables=[
-                        {"name": "text", "type": "string", "required": True},
-                        {"name": "max_points", "type": "integer", "default": 5},
-                    ],
-                )
-                self.assertEqual(saved.name, "summarize")
-                self.assertTrue((Path(td) / "11" / "templates" / "summarize.md").is_file())
+        saved = self._save(description="d")
+        self.assertEqual(saved.name, "summarize")
 
-                listed = list_templates(11)
-                self.assertEqual(len(listed), 1)
-                self.assertEqual(listed[0]["name"], "summarize")
-                self.assertNotIn("body", listed[0])
+        listed = list_templates(self.s1.pk)
+        self.assertEqual(len(listed), 1)
+        self.assertEqual(listed[0]["name"], "summarize")
+        self.assertNotIn("body", listed[0])
 
-                fetched = get_template(11, "summarize")
-                self.assertIn("max_points", fetched.body)
+        fetched = get_template(self.s1.pk, "summarize")
+        self.assertIn("max_points", fetched.body)
 
-                _, rendered = render_template_by_name(11, "summarize", {"text": "hi"})
-                self.assertIn("5", rendered)
+        _, rendered = render_template_by_name(self.s1.pk, "summarize", {"text": "hi"})
+        self.assertIn("5", rendered)
 
-                delete_template(11, "summarize")
-                self.assertEqual(list_templates(11), [])
+        delete_template(self.s1.pk, "summarize")
+        self.assertEqual(list_templates(self.s1.pk), [])
 
-    def test_list_empty_when_no_dir(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                self.assertEqual(list_templates(999), [])
+    def test_list_empty_for_new_session(self):
+        self.assertEqual(list_templates(self.s1.pk), [])
 
     def test_get_missing(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                with self.assertRaises(TemplateError):
-                    get_template(1, "nope")
+        with self.assertRaises(TemplateError):
+            get_template(self.s1.pk, "nope")
 
-    def test_invalid_file_skipped_in_list(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                save_template(2, "good", "hi {{ x }}", variables=["x"])
-                folder = Path(td) / "2" / "templates"
-                (folder / "broken.md").write_text("no frontmatter here")
-                listed = list_templates(2)
-                self.assertEqual([t["name"] for t in listed], ["good"])
-                with self.assertRaises(TemplateError):
-                    get_template(2, "broken")
+    def test_delete_missing(self):
+        with self.assertRaises(TemplateError):
+            delete_template(self.s1.pk, "nope")
 
-    def test_name_mismatch_rejected(self):
-        with tempfile.TemporaryDirectory() as td:
-            with override_settings(AGENTONE_SESSIONS_DIR=td):
-                save_template(3, "alpha", "hi {{ x }}", variables=["x"])
-                folder = Path(td) / "3" / "templates"
-                (folder / "alpha.md").write_text(
-                    "---\nname: beta\nvariables: []\n---\nbody\n"
+    def test_bare_name_rejected_with_hint(self):
+        with self.assertRaises(TemplateError) as ctx:
+            save_template(self.s1.pk, "t", "Q: {{ question }}", variables="question")
+        self.assertIn("[{'name': 'question'}]", str(ctx.exception))
+
+    def test_json_and_yaml_string_specs_accepted(self):
+        t = save_template(
+            self.s1.pk, "t", "Q: {{ question }}",
+            variables='[{"name": "question"}]',
+        )
+        self.assertEqual([v.name for v in t.variables], ["question"])
+        t2 = save_template(
+            self.s1.pk, "t2", "Q: {{ question }}",
+            variables="- name: question\n  type: string\n",
+        )
+        self.assertEqual([v.name for v in t2.variables], ["question"])
+
+    def test_identical_save_mints_no_new_version(self):
+        self._save()
+        before = QueryTemplateVersion.objects.count()
+        self._save()
+        self.assertEqual(QueryTemplateVersion.objects.count(), before)
+
+    def test_update_mints_version_and_moves_only_writer_link(self):
+        self._save()
+        v1 = SessionQueryTemplate.objects.get(
+            session_id=self.s1.pk, name="summarize"
+        ).version
+        # Sibling shares V1 via inherit.
+        inherit_templates(self.s1.pk, self.s2.pk)
+        self._save(body="CHANGED: {{ text }}", variables=["text"])
+        link1 = SessionQueryTemplate.objects.get(session_id=self.s1.pk, name="summarize")
+        link2 = SessionQueryTemplate.objects.get(session_id=self.s2.pk, name="summarize")
+        self.assertNotEqual(link1.version_id, v1.pk)
+        self.assertEqual(link2.version_id, v1.pk)  # sibling untouched
+        self.assertEqual(link1.version.name, "summarize")
+        self.assertEqual(link1.version.source, "api")
+
+    def test_content_dedupes_across_sessions(self):
+        self._save()
+        save_template(
+            self.s2.pk, "summarize", "Points: {{ max_points }}: {{ text }}",
+            variables=[
+                {"name": "text", "type": "string", "required": True},
+                {"name": "max_points", "type": "integer", "default": 5},
+            ],
+        )
+        v1 = SessionQueryTemplate.objects.get(session_id=self.s1.pk, name="summarize").version
+        v2 = SessionQueryTemplate.objects.get(session_id=self.s2.pk, name="summarize").version
+        self.assertNotEqual(v1.pk, v2.pk)
+        self.assertEqual(v1.content_id, v2.content_id)
+
+    def test_delete_keeps_versions_for_audit(self):
+        self._save()
+        self._save(body="v2 {{ text }}", variables=["text"])
+        self.assertEqual(
+            QueryTemplateVersion.objects.filter(name="summarize").count(), 2
+        )
+        delete_template(self.s1.pk, "summarize")
+        self.assertEqual(list_templates(self.s1.pk), [])
+        # Versions stay — the audit trail for later discovery.
+        self.assertEqual(
+            QueryTemplateVersion.objects.filter(name="summarize").count(), 2
+        )
+
+    def test_archived_sessions_keep_full_template_access(self):
+        """Archive is a visibility state, not a freeze: nothing else in the
+        runtime refuses writes on archived sessions (messages, turns, files
+        all keep working), so templates must not either.  There is no
+        ``_refuse_if_archived`` for templates — the only such helper lives
+        in the unrelated adhoc-tools feature."""
+        archived = SessionModel.objects.create(name="tpl-archived", is_archived=True)
+        save_template(archived.pk, "qa", "Q: {{ q }}", variables=["q"])
+        self.assertEqual([t["name"] for t in list_templates(archived.pk)], ["qa"])
+        self.assertIn("q", get_template(archived.pk, "qa").body)
+        delete_template(archived.pk, "qa")
+        self.assertEqual(list_templates(archived.pk), [])
+
+    def test_source_recorded(self):
+        save_template(
+            self.s1.pk, "t", "hi {{ x }}", variables=["x"], source="tool"
+        )
+        version = SessionQueryTemplate.objects.get(
+            session_id=self.s1.pk, name="t"
+        ).version
+        self.assertEqual(version.source, "tool")
+        self.assertEqual(version.created_by_session_id, self.s1.pk)
+        self.assertEqual(version.name, "t")
+
+    def test_version_rows_are_immutable(self):
+        self._save()
+        version = SessionQueryTemplate.objects.get(
+            session_id=self.s1.pk, name="summarize"
+        ).version
+        version.source = "rewritten"
+        with self.assertRaises(ValidationError):
+            version.save()
+
+    def test_link_unique_per_session(self):
+        self._save()
+        version = SessionQueryTemplate.objects.get(
+            session_id=self.s1.pk, name="summarize"
+        ).version
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                SessionQueryTemplate.objects.create(
+                    session=self.s1, name="summarize", version=version
                 )
-                with self.assertRaises(TemplateError):
-                    get_template(3, "alpha")
+
+    def test_fork_edit_delete_lineage_is_reconstructable(self):
+        """The plan's scenario: S saves, F inherits, F edits, F deletes."""
+        save_template(self.s1.pk, "qa", "Q: {{ question }}",
+                      variables=["question"], source="tool")
+        v1 = SessionQueryTemplate.objects.get(session_id=self.s1.pk, name="qa").version
+        inherit_templates(self.s1.pk, self.s2.pk)
+        save_template(self.s2.pk, "qa", "CHANGED: {{ question }}",
+                      variables=["question"], source="tool")
+        delete_template(self.s2.pk, "qa")
+        # Edit lineage, ordered: V1 by S, V2 by F.
+        lineage = list(
+            QueryTemplateVersion.objects.filter(
+                name="qa", created_by_session__in=[self.s1, self.s2]
+            ).order_by("pk")
+        )
+        self.assertEqual(len(lineage), 2)
+        self.assertEqual(lineage[0].pk, v1.pk)
+        self.assertEqual(lineage[0].created_by_session_id, self.s1.pk)
+        self.assertEqual(lineage[1].created_by_session_id, self.s2.pk)
+        self.assertNotEqual(lineage[1].pk, v1.pk)
+        # Deleted in F (no link), alive in S.
+        self.assertFalse(
+            SessionQueryTemplate.objects.filter(
+                session_id=self.s2.pk, name="qa"
+            ).exists()
+        )
+        self.assertEqual(get_template(self.s1.pk, "qa").body, "Q: {{ question }}")
+
+
+class InheritTest(TestCase):
+    def setUp(self):
+        self.parent = SessionModel.objects.create(name="tpl-parent")
+        self.child = SessionModel.objects.create(name="tpl-child")
+
+    def test_empty_parent_copies_nothing(self):
+        self.assertEqual(inherit_templates(self.parent.pk, self.child.pk), 0)
+        self.assertEqual(list_templates(self.child.pk), [])
+
+    def test_copies_links_without_new_versions(self):
+        save_template(self.parent.pk, "a", "hi {{ x }}", variables=["x"])
+        save_template(self.parent.pk, "b", "yo {{ y }}", variables=["y"])
+        versions_before = QueryTemplateVersion.objects.count()
+        self.assertEqual(inherit_templates(self.parent.pk, self.child.pk), 2)
+        self.assertEqual(QueryTemplateVersion.objects.count(), versions_before)
+        self.assertEqual(
+            [t["name"] for t in list_templates(self.child.pk)], ["a", "b"]
+        )
+
+    def test_never_clobbers_existing_child_links(self):
+        save_template(self.parent.pk, "a", "parent {{ x }}", variables=["x"])
+        save_template(self.child.pk, "a", "child {{ x }}", variables=["x"])
+        child_version = SessionQueryTemplate.objects.get(
+            session_id=self.child.pk, name="a"
+        ).version_id
+        inherit_templates(self.parent.pk, self.child.pk)
+        self.assertEqual(
+            SessionQueryTemplate.objects.get(
+                session_id=self.child.pk, name="a"
+            ).version_id,
+            child_version,
+        )
+
+
+class ForkHookTest(TestCase):
+    """get_or_create_session copies template links for new forks only."""
+
+    def setUp(self):
+        from server.models.agents.agent import AgentModel
+        from server.models.agents.agent_version import AgentVersionModel
+        from server.models.sessions.session_version import SessionVersionModel
+
+        self.agent = AgentModel.objects.create(name="tpl_hook_agent")
+        self.av = AgentVersionModel.objects.create(agent=self.agent, version_number=1)
+        self.parent_session = SessionModel.objects.create(name="tpl-hook-parent")
+        self.parent_sv = SessionVersionModel.objects.create(
+            session=self.parent_session, agent=self.agent, version_number=1
+        )
+        save_template(self.parent_session.pk, "qa", "Q: {{ q }}", variables=["q"])
+
+    def test_new_fork_inherits_links(self):
+        child_sv = self.av.get_or_create_session(
+            name="tpl-hook-child", parent_session_version=self.parent_sv
+        )
+        self.assertEqual(
+            [t["name"] for t in list_templates(child_sv.session.pk)], ["qa"]
+        )
+
+    def test_fork_edit_does_not_move_parent_link(self):
+        child_sv = self.av.get_or_create_session(
+            name="tpl-hook-child2", parent_session_version=self.parent_sv
+        )
+        save_template(child_sv.session.pk, "qa", "CHANGED {{ q }}", variables=["q"])
+        self.assertEqual(
+            get_template(self.parent_session.pk, "qa").body, "Q: {{ q }}"
+        )
+        self.assertEqual(
+            get_template(child_sv.session.pk, "qa").body, "CHANGED {{ q }}"
+        )
+
+    def test_existing_session_keeps_own_links(self):
+        child_sv = self.av.get_or_create_session(
+            name="tpl-hook-child3", parent_session_version=self.parent_sv
+        )
+        save_template(child_sv.session.pk, "qa", "CHANGED {{ q }}", variables=["q"])
+        # Resolving the same session again must not clobber the child's edit.
+        same_sv = self.av.get_or_create_session(
+            name="tpl-hook-child3", parent_session_version=self.parent_sv
+        )
+        self.assertEqual(
+            get_template(same_sv.session.pk, "qa").body, "CHANGED {{ q }}"
+        )

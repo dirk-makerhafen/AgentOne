@@ -1,10 +1,9 @@
 from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
-from django.test import TestCase, override_settings
-import tempfile
+from django.test import TestCase
 
-from runtime.query_templates import save_template
+from runtime.query_templates import delete_template, save_template
 from server.models import SessionModel
 from ui.app import UiApp
 from ui.main.rightpanel.session.rightpanel_session_templates import (
@@ -31,13 +30,6 @@ class TemplatesPanelTest(TestCase):
         self.panel = RightPanelSessionTemplates(
             subject=self.session_model, parent=self.parent
         )
-        self._td = tempfile.TemporaryDirectory()
-        self._override = override_settings(
-            AGENTONE_SESSIONS_DIR=self._td.name
-        )
-        self._override.enable()
-        self.addCleanup(self._override.disable)
-        self.addCleanup(self._td.cleanup)
         save_template(
             self.session_model.pk,
             "summarize",
@@ -47,6 +39,7 @@ class TemplatesPanelTest(TestCase):
                 {"name": "text", "type": "string", "required": True},
                 {"name": "max_points", "type": "integer", "default": 5},
             ],
+            source="panel",
         )
 
     def tearDown(self):
@@ -207,11 +200,8 @@ class TemplatesPanelTest(TestCase):
         self.assertIsNone(self.panel._selected)
 
     def test_refresh_clears_deleted_selection(self):
-        from pathlib import Path
-        from runtime.session_folder import session_templates_dir
-
         self.panel.selectTemplate("summarize")
-        (session_templates_dir(self.session_model.pk) / "summarize.md").unlink()
+        delete_template(self.session_model.pk, "summarize")
         self.panel.refreshTemplates()
         self.assertIsNone(self.panel._selected)
         self.assertIsNone(self.panel.selected_template)

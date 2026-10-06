@@ -239,6 +239,14 @@ def test_my_tool():
 
 4. The schema (function signature + docstring) is auto-extracted — no decorators needed.
 
+**Annotation gotcha:** the schema generator maps `Any` and bare `dict` to
+`{"type": "string"}` — only `typing.Dict` / `dict[...]` (optionally
+`Optional[...]`-wrapped) produce `{"type": "object", ...}`. So for any
+parameter that must arrive as a JSON object, annotate it e.g.
+`params: Optional[Dict] = None`, never `params: Any = None`. A wrong
+annotation does not fail at load time; the LLM just sends a JSON string
+and the tool has to parse (or reject) it at runtime.
+
 ## How to add a new agent
 
 1. Create agent manifest at `.agentone/agents/<name>/agent.md`:

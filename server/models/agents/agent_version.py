@@ -174,7 +174,19 @@ class AgentVersionModel(BaseModel):
 
         if parent_session_version:
             parent_session_version.child_session_versions.add(session_version)
-            
+
+        # Forks/children inherit the parent's query-template links
+        # (copy-on-write: no version rows minted, history shared until the
+        # child first saves).  Only for newly created sessions — a
+        # pre-existing session already has its own links.
+        if aiv_created and parent_session_version:
+            from runtime.query_templates import inherit_templates
+
+            inherit_templates(parent_session_version.session_id, session.pk)
+            from runtime.adhoc_tools import inherit_adhoc_tools
+
+            inherit_adhoc_tools(parent_session_version.session_id, session.pk)
+
         return session_version
 
     def get_runtime(self) -> Agent:
@@ -183,15 +195,28 @@ class AgentVersionModel(BaseModel):
 
     def tasks(self) -> QuerySet:
         """Return task versions classified as TASK type."""
-        return self.task_versions.filter(task_type=TaskType.TASK)
+        # Deterministic order: the tools/tasks/commands arrays are rendered
+        # into the LLM request, so their order is part of the prefix-cache
+        # key.  The M2M join has no inherent order (nondeterministic on
+        # MySQL) — sort by definition name so the same tool set always
+        # serialises to the same bytes.
+        return self.task_versions.filter(task_type=TaskType.TASK).order_by(
+            "task_definition__name", "pk"
+        )
 
     def tools(self) -> QuerySet:
         """Return task versions classified as TOOL type."""
-        return self.task_versions.filter(task_type=TaskType.TOOL)
+        # Deterministic order: see tasks() — prompt prefix stability.
+        return self.task_versions.filter(task_type=TaskType.TOOL).order_by(
+            "task_definition__name", "pk"
+        )
 
     def commands(self) -> QuerySet:
         """Return task versions classified as COMMAND type."""
-        return self.task_versions.filter(task_type=TaskType.COMMAND)
+        # Deterministic order: see tasks() — prompt prefix stability.
+        return self.task_versions.filter(task_type=TaskType.COMMAND).order_by(
+            "task_definition__name", "pk"
+        )
 
     def skills(self):
         """Return all skill versions available to this agent version."""

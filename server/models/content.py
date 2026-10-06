@@ -103,7 +103,7 @@ class GenericContent(ObservableMixin, models.Model):
         max_age:
             Optional maximum age in days before the content expires.
         """
-        data_str = json.dumps(data)
+        data_str = json.dumps(data, sort_keys=True)
         h = sha256(data_str.encode()).hexdigest()
         item = cls.objects.get_or_create(
             sha256=h,

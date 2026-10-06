@@ -13,8 +13,8 @@ class RightPanelSessionTemplates(ModelView):
     # pylint: disable=too-many-instance-attributes
     """Session-scoped query-template picker: list, fill variables, run.
 
-    Templates live in the session-private folder
-    (``<sessions>/<pk>/templates/*.md``).  Selecting a template builds a
+    Templates are database rows scoped to this session (immutable versions
+    + a per-session link).  Selecting a template builds a
     variable form from its frontmatter schema; Preview renders locally via
     ``runtime.query_templates`` and Run dispatches ``call_llm_direct``
     (ephemeral session, same as the ``template_execute`` tool).  The run
@@ -35,7 +35,7 @@ class RightPanelSessionTemplates(ModelView):
         <div style="flex:1;overflow-y:auto;padding:8px">
             {% if not pyview.templates %}
             <div class="detail-row">
-                <div class="detail-row-value" style="color:var(--muted);font-size:12px">No templates yet. Save a <code>.md</code> file with a frontmatter head (<code>name</code>, <code>description</code>, <code>variables</code>) into this session&apos;s <code>templates/</code> folder — via the <code>template_save</code> tool or the filesystem tools.</div>
+                <div class="detail-row-value" style="color:var(--muted);font-size:12px">No templates yet. Ask the agent to save one with the <code>template_save</code> tool (name, body, and variable specs).</div>
             </div>
             {% else %}
             {% for t in pyview.templates %}

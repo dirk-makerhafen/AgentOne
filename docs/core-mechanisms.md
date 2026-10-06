@@ -214,15 +214,22 @@ kept forever; folders whose session row is hard-deleted are removed by the
 `_cleanup_orphaned_session_folders` startup pass
 (`server/tasks/recovery_scheduler.py`, `server/tasks/startup_cleanup.py`).
 
-The reserved `templates/` subfolder holds reusable query templates
-(`runtime/query_templates.py`): Markdown files with a frontmatter head
-(`name`, `description`, `variables` with typed entries) and a Jinja body
-rendered with `StrictUndefined`, so missing variables and body typos fail
-loudly. The `template_*` tools (`.agentone/scripts/core/query_template.py`)
-list/get/save/delete/render them, and `template_execute` dispatches the
-rendered prompt through the `call_llm_direct` ephemeral pipeline; the
-Templates tab (`ui/main/rightpanel/session/rightpanel_session_templates.py`)
-offers the same flow in the UI and tracks the run via the
+Reusable query templates live in the database, not the folder
+(`runtime/query_templates.py`, models `QueryTemplateVersion` +
+`SessionQueryTemplate` in `server/models/queries/query_template.py`).
+Each version is an immutable row pointing at content-addressed
+`GenericContent` (frontmatter head with `name`, `description`, typed
+`variables` + Jinja body, rendered with `StrictUndefined`); a session's
+current template is a link row `(session, name, version)`. Saves mint a new
+version and move only the writer's link, forks copy the parent's links
+(`inherit_templates`, hooked into
+`AgentVersionModel.get_or_create_session`), and deletes remove the link
+only — version rows stay as the audit trail. The `template_*` tools
+(`.agentone/scripts/core/query_template.py`) list/get/save/delete/render
+them, and `template_execute` dispatches the rendered prompt through the
+`call_llm_direct` ephemeral pipeline; the Templates tab
+(`ui/main/rightpanel/session/rightpanel_session_templates.py`) offers the
+same flow in the UI and tracks the run via the
 `AgentTaskCall.session:<sid>` observable.
 
 ### ContextTracker — Parent-Child Tracking

@@ -24,7 +24,8 @@ def estimate_message_tokens(message: Message) -> int:
     content_parts: list[dict[str, Any]] = []
     tool_calls: list[dict[str, Any]] = []
     reasoning_parts: list[str] = []
-    for part in message.parts.all():
+    # Same iteration order as build_llm_context so estimates match payload.
+    for part in message.parts.order_by("pk"):
         if part.type == MessagePartType.TOOLCALL:
             tc = part.tool_call
             if tc:
