@@ -46,3 +46,4 @@ psutil
 pureshellcheck
 html2text
 tiktoken
+libtmux

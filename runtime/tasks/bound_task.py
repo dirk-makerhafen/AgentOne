@@ -226,16 +226,22 @@ class BoundTask:
                     )
             return None
 
-        # --- shell / python source code ---
-        if task_name in ("shell", "python"):
+        # --- shell / python / terminal source code ---
+        # ``terminal_exec``/``terminal_send`` carry shell text in ``command``/
+        # ``text``. All are evaluated with the shell path analysis (deny
+        # hard-blocks here; ``ask`` is handled at scheduling time via
+        # approval, including the agent-CLI recognition gate).
+        if task_name in ("shell", "python", "terminal_exec", "terminal_send"):
             source = call_args.get("source", "")
+            if not source:
+                source = call_args.get("command", "") or call_args.get("text", "")
             if isinstance(source, str) and source.strip():
                 from runtime.guardrails import check_python_paths, check_shell_paths
 
                 check = (
-                    check_shell_paths(source, policy)
-                    if task_name == "shell"
-                    else check_python_paths(source, policy)
+                    check_python_paths(source, policy)
+                    if task_name == "python"
+                    else check_shell_paths(source, policy)
                 )
                 if check.action == "deny":
                     return (
@@ -247,9 +253,11 @@ class BoundTask:
     def _ensure_private_dir_on_access(self, *args: Any, **kwargs: Any) -> None:
         """Lazily create the session-private folder when it is targeted.
 
-        If any path argument (or ``shell``/``python`` source text) references
-        the session's own private dir, ensure it exists.  Never raises —
-        failures are ignored so tool execution is unaffected.
+        Mirrors the target extraction of :meth:`_filesystem_access_block`, so
+        the set of paths that can trigger creation is exactly the set the
+        guardrail evaluates: filesystem-tool path arguments *and* the
+        absolute paths inside shell/python/terminal source text.
+        Never raises — failures are ignored so tool execution is unaffected.
         """
         try:
             from runtime.session_folder import ensure_session_dir, parse_session_pk
@@ -259,18 +267,56 @@ class BoundTask:
             if not isinstance(pk, int):
                 return
             call_args: dict[str, Any] = self._normalized_call_kwargs(args, kwargs)
-            candidates: list[str] = [
-                str(v) for v in call_args.values() if isinstance(v, str) and v.strip()
-            ]
-            source = call_args.get("source")
-            if isinstance(source, str) and source not in candidates:
-                candidates.append(source)
-            for candidate in candidates:
+            for candidate in self._filesystem_target_paths(call_args):
                 if parse_session_pk(candidate) == str(pk):
                     ensure_session_dir(pk)
                     return
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+
+    def _filesystem_target_paths(self, call_args: dict[str, Any]) -> list[str]:
+        """Return every filesystem path this call touches (see the layer above).
+
+        Two sources, in the same order :meth:`_filesystem_access_block` uses:
+        ``extract_path_args`` for filesystem-posture tools, and the shell /
+        Python target tokenizers for source-carrying tools.
+        """
+        from runtime.workspace_access import extract_path_args, task_access_posture
+
+        task_name = getattr(self.task_definition, "name", "")
+        paths: list[str] = [
+            path
+            for path, _action in extract_path_args(
+                task_name, task_access_posture(self.task_definition), call_args
+            )
+        ]
+        if task_name in ("shell", "python", "terminal_exec", "terminal_send"):
+            from runtime.guardrails import python_path_targets, shell_path_targets
+
+            source = self._call_source_text(call_args)
+            if source.strip():
+                targets = python_path_targets(source) if task_name == "python" else shell_path_targets(source)
+                paths.extend(path for path, _action in targets)
+        else:
+            # ``_normalized_call_kwargs`` maps a leading positional argument to
+            # ``source`` when the version has no ``arg_names`` — which is always
+            # the case today (TaskDefinitionVersion has no such field).  That
+            # key is not in ``PATH_ARG_NAMES``, so cover it here as well.
+            positional = call_args.get("source")
+            if isinstance(positional, str) and positional not in paths:
+                paths.append(positional)
+        return paths
+
+    @staticmethod
+    def _call_source_text(call_args: dict[str, Any]) -> str:
+        """Return the shell/Python source text carried by a call, if any.
+
+        ``terminal_exec``/``terminal_send`` carry it in ``command``/``text``.
+        """
+        source = call_args.get("source", "")
+        if not source:
+            source = call_args.get("command", "") or call_args.get("text", "")
+        return source if isinstance(source, str) else ""
 
     def _call_script(self, file_path: Path, *args: Any, **kwargs: Any) -> Any:
         """Execute a script/binary and return its output.

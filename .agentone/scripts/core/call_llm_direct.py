@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING, Any
 
 from django.utils import timezone
 
+from runtime.rate_limiter import RateLimitError
 from server.models.enums.message_enums import MessageContentType, MessageRole
 from server.models.enums.session_enums import SessionType
 from server.models.queries.query import Query, QueryStatus
@@ -134,7 +135,9 @@ def _build_ephemeral_session(
         from server.models.agents.agent import AgentModel
 
         agent = AgentModel.objects.create(
-            name=f"LLM Direct Call Agent {now.strftime('%H:%M:%S')}",
+            # Microseconds: AgentModel.name is globally unique, and two
+            # direct calls within the same second must not collide.
+            name=f"LLM Direct Call Agent {now.strftime('%H:%M:%S.%f')}",
         )
 
     # 1. SessionModel (single-use subtask type — "llm_direct" is not a
@@ -259,7 +262,7 @@ def call_llm_direct(
             _spec.loader.exec_module(_mod)
             response = _mod.call_llm(ephemeral, query)
 
-        return {
+        result = {
             "content": response.content or "",
             "model": response.model_name,
             "prompt_tokens": response.prompt_tokens,
@@ -272,7 +275,20 @@ def call_llm_direct(
             "query_pk": query.pk,
             "response_pk": response.pk,
         }
+        if response.status != ResponseStatus.SUCCESS:
+            # call_llm can return (not raise) a FAILURE response, e.g. an
+            # empty stream — surface why, or the caller sees status-only.
+            result["error"] = (
+                response.finish_reason
+                or "LLM returned an empty response."
+            )
+        return result
 
+    except RateLimitError:
+        # Must propagate: AgentTaskRun.apply() parks the run as
+        # RATE_LIMITED with auto-resume. Swallowing it here would turn a
+        # cooldown into a permanent FAILURE.
+        raise
     except Exception as exc:
         # The call_llm pipeline may have left a FAILURE response — read it
         try:
@@ -292,6 +308,7 @@ def call_llm_direct(
             "total_time": 0,
             "status": "FAILURE",
             "session_pk": session_model.pk,
+            "query_pk": query.pk,
             "error": str(exc),
         }
 

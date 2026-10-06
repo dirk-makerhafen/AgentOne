@@ -15,7 +15,8 @@ Open AgentOne in your browser at the URL where it's hosted (default: `http://loc
 │ a  ├──────────┤                               │  (session,    │
 │ i  │ Sidebar  │  Chat / Settings / Agent /    │   tasks,      │
 │ l  │ Panels   │  Project / Workspace / ...    │   workspace,  │
-│    │          │                               │   subagents)  │
+│    │          │                               │   subagents,  │
+│    │          │                               │   terminals)  │
 │    │ Chats    │                               │               │
 │    │ Agents   │                               │               │
 │    │ Skills   │                               │               │
@@ -32,7 +33,7 @@ The interface has four main zones:
 | **Rail** (left icon strip) | Switch between sidebar panels: Chats, Cron, Data Flows, Work Items, Agents, Projects, Workspaces, Skills, Memory, Todos, Insights, Logs, Settings |
 | **Sidebar** | Lists items for the selected panel: sessions, agents, skills, cron jobs, etc. |
 | **Main panel** | Primary workspace — opens tabs for chatting, editing settings, viewing agent details, etc. |
-| **Right panel** | Contextual details about the active selection: session info, task calls, workspace files, subagents |
+| **Right panel** | Contextual details about the active selection: session info, task calls, workspace files, subagents, terminals |
 
 ---
 
@@ -64,7 +65,7 @@ When a tool or command requires human approval, an **Approval Card** slides up o
 Approval can be triggered in two ways:
 
 - **Static** — the tool's `scripts.md` manifest has `requires_approval: true`
-- **Dynamic (guardrails)** — before a shell or Python command runs, it is scanned by safety guardrails. Shell commands are classified by **sh-guard** (AST-based risk scoring); Python code is analyzed by **bandit** (PyCQA security linter). If the guardrail deems a command risky (score ≥ 80), the call enters `HALTED_APPROVAL` state and an approval card is shown even if the tool itself does not require approval. Execution-time guardrails use a higher threshold (score ≥ 90) for a second line of defense.
+- **Dynamic (guardrails)** — before a shell, Python, or terminal command runs, it is scanned by safety guardrails. Shell commands are classified by **sh-guard** (AST-based risk scoring); Python code is analyzed by **bandit** (PyCQA security linter). A recognized external agent CLI outside the terminal allowlist (see [docs/terminals.md](terminals.md)) also halts for approval. If the guardrail deems a command risky (score ≥ 80), the call enters `HALTED_APPROVAL` state and an approval card is shown even if the tool itself does not require approval. Execution-time guardrails use a higher threshold (score ≥ 90) for a second line of defense.
 
 ### Filesystem access control
 
@@ -230,6 +231,20 @@ Workspaces provide file system context for sessions.
 ### Workspace in sessions
 
 When a session is bound to a workspace, the right panel's **Workspace** tab shows the workspace files and structure.
+
+---
+
+## Terminals
+
+Agents can keep **named persistent shells** (e.g. `default`, `dev`, `agent`)
+for long-running commands, interactive programs, and external CLI agents
+such as Claude Code. Open the session's right panel and switch to the
+**Terminals** tab to see each terminal (status, cwd, last activity), view
+the tail of its output log, refresh the list, or kill a terminal. The view
+is read-only — only the agent can type into a terminal.
+
+Recognized external agent CLIs outside the allowlist halt for your
+approval before they ever run. See [docs/terminals.md](terminals.md) for details.
 
 ---
 

@@ -81,7 +81,8 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  ├── Skills: SkillModel → SkillModelVersion                     │
 │  ├── Queries: Query → Response (LLM interaction)                │
 │  ├── Providers: ApiProvider → AiModel → ApiKey                  │
-│  ├── SettingsModel, Project, WorkspaceModel, Cronjob            │
+│  ├── SettingsModel, Project, WorkspaceModel, Cronjob,           │
+│  │   TerminalSession (persistent tmux terminals)                │
 │  └── BaseModel (abstract: created_at, updated_at, raw_data,    │
 │                  dirty-tracking, immutable save)       │
 │                                                                 │

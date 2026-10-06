@@ -332,9 +332,9 @@ class EphemeralSessionTest(TestCase):
         from server.models.agents.agent import AgentModel
         mod = _load_module()
 
+        caller_agent = AgentModel.objects.create(name="test-caller-agent")
         before = AgentModel.objects.count()
         mock_aimodel = self._create_aimodel()
-        caller_agent = MagicMock()
         caller_version = MagicMock()
         caller_version.agent = caller_agent
         caller = MagicMock()
@@ -344,7 +344,7 @@ class EphemeralSessionTest(TestCase):
             mock_aimodel, caller_session=caller
         )
 
-        self.assertIs(session_version.agent, caller_agent)
+        self.assertEqual(session_version.agent, caller_agent)
         self.assertEqual(AgentModel.objects.count(), before)
 
 
@@ -474,6 +474,72 @@ class CallLlmDirectTaskTest(TestCase):
                         mock_ephemeral.get_task.assert_called_once_with("call_llm")
                         mock_call_llm_task.call.assert_called_once_with(query=mock_query)
 
+    def test_rate_limit_error_propagates(self):
+        """RateLimitError is re-raised so the run parks (not FAILURE)."""
+        from runtime.rate_limiter import RateLimitError
+        mod = _load_module()
+
+        mock_query = MagicMock(pk=2)
+        mock_call_llm_task = MagicMock()
+        mock_call_llm_task.call.side_effect = RateLimitError("key:cooldown")
+        mock_ephemeral = MagicMock()
+        mock_ephemeral.get_task.return_value = mock_call_llm_task
+
+        with patch.object(mod, "_resolve_aimodel", return_value=MagicMock()):
+            with patch.object(
+                mod,
+                "_build_ephemeral_session",
+                return_value=(MagicMock(pk=1), MagicMock(), MagicMock()),
+            ):
+                with patch("server.models.queries.query.Query.objects.create") as mock_qc:
+                    with patch("runtime.session.session.Session") as mock_sc:
+                        mock_qc.return_value = mock_query
+                        mock_sc.return_value = mock_ephemeral
+                        with self.assertRaises(RateLimitError):
+                            mod.call_llm_direct(
+                                MagicMock(),
+                                messages=[{"role": "user", "content": "test"}],
+                            )
+
+    def test_failure_response_carries_error(self):
+        """A returned (not raised) FAILURE response includes an error key."""
+        from server.models.queries.response import ResponseStatus
+        mod = _load_module()
+
+        mock_query = MagicMock(pk=2)
+        mock_response = MagicMock(
+            content="",
+            model_name="gpt-4o",
+            prompt_tokens=0,
+            completion_tokens=0,
+            cached_tokens=0,
+            reasoning_tokens=0,
+            total_time=0.5,
+            status=ResponseStatus.FAILURE,
+            finish_reason="",
+            pk=3,
+        )
+        mock_call_llm_task = MagicMock()
+        mock_call_llm_task.call.return_value = mock_response
+        mock_ephemeral = MagicMock()
+        mock_ephemeral.get_task.return_value = mock_call_llm_task
+
+        with patch.object(mod, "_resolve_aimodel", return_value=MagicMock()):
+            with patch.object(
+                mod,
+                "_build_ephemeral_session",
+                return_value=(MagicMock(pk=1), MagicMock(), MagicMock()),
+            ):
+                with patch("server.models.queries.query.Query.objects.create") as mock_qc:
+                    with patch("runtime.session.session.Session") as mock_sc:
+                        mock_qc.return_value = mock_query
+                        mock_sc.return_value = mock_ephemeral
+                        result = mod.call_llm_direct(
+                            MagicMock(),
+                            messages=[{"role": "user", "content": "test"}],
+                        )
+                        self.assertEqual(result["status"], "FAILURE")
+                        self.assertIn("error", result)
     def test_call_failure_returns_error(self):
         """Task returns error dict when the synchronous LLM call raises."""
         mod = _load_module()

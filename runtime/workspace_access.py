@@ -223,23 +223,22 @@ def resolve_policy(session: Any) -> _WorkspaceAccessPolicy:
 
 
 def _session_pk(session: Any) -> int | None:
-    """Extract the owning session pk from a session object, if available."""
-    for attr in ("model",):
-        try:
-            model = getattr(session, attr, None)
-            if model is not None:
-                pk = getattr(model, "pk", None)
-                if isinstance(pk, int):
-                    return pk
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
-    for attr in ("pk", "id", "session_pk", "session_id"):
-        try:
-            pk = getattr(session, attr, None)
-            if isinstance(pk, int):
-                return pk
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
+    """Extract the owning session pk from a session object, if available.
+
+    Only unambiguous pk carriers are consulted.  ``id``/``session_id`` are
+    deliberately *not* used: an int that merely looks like an id would
+    mis-attribute the carve-out and deny the session's own folder while
+    allowing a different session's.
+    """
+    model = getattr(session, "model", None)
+    if model is not None:
+        pk = getattr(model, "pk", None)
+        if isinstance(pk, int):
+            return pk
+    for attr in ("pk", "session_pk"):
+        pk = getattr(session, attr, None)
+        if isinstance(pk, int):
+            return pk
     return None
 
 

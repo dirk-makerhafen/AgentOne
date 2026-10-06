@@ -19,6 +19,7 @@ try:
     from .tasks.scripts_generation import ScriptsGeneration
     from .tasks.task_definition import TaskDefinition
     from .tasks.task_definition_version import TaskDefinitionVersion
+    from .terminal import TerminalSession, TerminalStatus
     from .workspace import WorkspaceModel
     from .collections import DataCollection, CollectionItem
     from .hooks import SessionHookRun

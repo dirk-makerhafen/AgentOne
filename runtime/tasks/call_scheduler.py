@@ -24,7 +24,7 @@ def _merge_guardrail_verdicts(*verdicts: Any) -> Any:
     return best if best is not None else (verdicts[0] if verdicts else None)
 
 
-AUTO_REVIEW_TOOL_NAMES = ("python", "shell")
+AUTO_REVIEW_TOOL_NAMES = ("python", "shell", "terminal_exec", "terminal_send")
 
 
 class CallScheduler:
@@ -122,6 +122,7 @@ class CallScheduler:
         # --- Guardrail checks ---
         CallScheduler._guardrail_shell_check(task_call_id)
         CallScheduler._guardrail_python_check(task_call_id)
+        CallScheduler._guardrail_terminal_check(task_call_id)
         CallScheduler._guardrail_filesystem_check(task_call_id)
         CallScheduler._question_gate_check(task_call_id)
 
@@ -234,6 +235,85 @@ class CallScheduler:
         elif verdict.action == "ask" and not tc.guardrail_reason:
             # Already gated (e.g. by policy): don't escalate or touch args,
             # but record why for the approval card when no reason was stored.
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            _ATC.objects.filter(pk=tc.pk).update(
+                guardrail_reason=verdict.reason,
+            )
+
+    @staticmethod
+    def _terminal_source_arg(tc: Any) -> str:
+        """Extract the shell-text argument for terminal tools."""
+        args = tc.carguments_json or {}
+        for key in ("command", "text", "source"):
+            value = args.get(key, "")
+            if isinstance(value, str) and value.strip():
+                return value
+        star = args.get("*", [])
+        if star and isinstance(star[0], str):
+            return star[0]
+        instance_args = getattr(tc.task_instance, "iarguments_json", {}).get("*", [])
+        if instance_args and isinstance(instance_args[0], str):
+            return instance_args[0]
+        return ""
+
+    @staticmethod
+    def _guardrail_terminal_check(task_call_id: int) -> None:
+        """Run shell guardrails on ``terminal_exec`` / ``terminal_send`` text.
+
+        Two gates, in order:
+
+        1. **Agent-CLI recognition** — a *recognized but unapproved* agent
+           CLI (see ``runtime/terminal/allowlist.py``) parks the call for
+           approval, no matter which tool invoked it.
+        2. **Content** — same verdicts as the ``shell`` check: risky
+           content (sh-guard) or an out-of-policy path parks the call.
+        """
+        from server.models.tasks.agent_task_call import AgentTaskCall
+
+        try:
+            tc = AgentTaskCall.objects.get(pk=task_call_id)
+        except AgentTaskCall.DoesNotExist:
+            return
+
+        task_name = getattr(tc.task_definition, "name", "") if tc.task_definition else ""
+        if task_name not in ("terminal_exec", "terminal_send"):
+            return
+
+        source = CallScheduler._terminal_source_arg(tc)
+        if not source:
+            return
+
+        from runtime.terminal.allowlist import unapproved_agent_cli
+
+        unapproved = unapproved_agent_cli(source)
+        if unapproved and not tc.requires_approval:
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            _ATC.objects.filter(pk=tc.pk).update(
+                requires_approval=True,
+                guardrail_reason=(
+                    f"External agent CLI '{unapproved}' is not on the terminal "
+                    "allowlist — approval required."
+                ),
+            )
+            print(f"  # TERMINAL GUARDRAIL: unapproved agent CLI '{unapproved}'")
+            return
+
+        from runtime.guardrails import check_shell_command, check_shell_paths
+        from runtime.workspace_access import resolve_policy
+
+        policy = resolve_policy(tc.session_version.get_runtime())
+        verdict = _merge_guardrail_verdicts(
+            check_shell_command(source),
+            check_shell_paths(source, policy),
+        )
+
+        if verdict.action == "ask" and not tc.requires_approval:
+            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
+            _ATC.objects.filter(pk=tc.pk).update(
+                requires_approval=True, guardrail_reason=verdict.reason,
+            )
+            print(f"  # TERMINAL GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
+        elif verdict.action == "ask" and not tc.guardrail_reason:
             from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
             _ATC.objects.filter(pk=tc.pk).update(
                 guardrail_reason=verdict.reason,

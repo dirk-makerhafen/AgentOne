@@ -55,6 +55,7 @@ from .project_admin import ProjectAdmin
 from .workspace import WorkspaceAdmin
 from .cron_admin import CronjobAdmin
 from .collection_admin import DataCollectionAdmin, CollectionItemAdmin
+from .terminal_admin import TerminalSessionAdmin
 
 # Legacy commented-out imports (kept for reference):
 # from .tool_call_admin import ToolCallAdmin

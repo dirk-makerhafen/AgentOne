@@ -66,6 +66,7 @@ def tick_scheduler() -> None:
         _verify_work_items,
         _compact_idle_sessions,
         _reap_hook_timeouts,
+        _reap_idle_terminals,
     ):
         try:
             routine()
@@ -1077,3 +1078,22 @@ def _reap_hook_timeouts() -> None:
 
     reap_hook_timeouts(limit=_MAX_HOOK_REAPS_PER_TICK)
     delete_expired_hook_runs()
+
+
+def _reap_idle_terminals() -> None:
+    """Kill persistent terminals idle past ``TERMINAL_IDLE_TTL_SECONDS``.
+
+    Thin launcher over ``runtime.terminal.reap_idle_terminals`` (which owns
+    the tmux calls). Disabled when ``TERMINAL_ENABLED`` is false or the
+    TTL is 0. Never raises — errors are logged by the tick isolation.
+    """
+    from django.conf import settings
+
+    if not getattr(settings, "TERMINAL_ENABLED", True):
+        return
+    ttl = getattr(settings, "TERMINAL_IDLE_TTL_SECONDS", 3600) or 0
+    if ttl <= 0:
+        return
+    from runtime.terminal import reap_idle_terminals
+
+    reap_idle_terminals(max_idle_seconds=ttl)

@@ -468,6 +468,16 @@ def _shell_targets(source: str) -> list[tuple[str, str]]:
     return targets
 
 
+def shell_path_targets(source: str) -> list[tuple[str, str]]:
+    """Public accessor for the ``(path, action)`` targets found in shell *source*.
+
+    Same extraction :func:`check_shell_paths` enforces on, so callers that need
+    the raw targets (e.g. lazy session-folder creation) cannot drift from the
+    policy layer.
+    """
+    return _shell_targets(source)
+
+
 def check_shell_paths(source: str, policy: Any) -> GuardrailVerdict:
     """Evaluate filesystem targets in *source* against a workspace policy."""
     from runtime.workspace_access import evaluate  # pylint: disable=import-outside-toplevel
@@ -608,6 +618,15 @@ def _python_targets(source: str) -> list[tuple[str, str]]:
                 break
 
     return targets
+
+
+def python_path_targets(source: str) -> list[tuple[str, str]]:
+    """Public accessor for the ``(path, action)`` targets found in Python *source*.
+
+    Same extraction :func:`check_python_paths` enforces on — see
+    :func:`shell_path_targets`.
+    """
+    return _python_targets(source)
 
 
 def check_python_paths(source: str, policy: Any) -> GuardrailVerdict:

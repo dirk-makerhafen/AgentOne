@@ -43,8 +43,18 @@ def startup_cleanup() -> None:
         _resolve_stuck_waiting_runs,
         _recover_stale_queries,
         _release_queued_calls,
+        _cleanup_orphaned_terminals,
     ):
         try:
             pass_()
         except Exception as e:
             print(f"[startup-cleanup] error in {pass_.__name__}: {e}")
+
+
+def _cleanup_orphaned_terminals() -> None:
+    """Kill tmux sessions with no live TerminalSession row (reboot leftovers)."""
+    from runtime.terminal import cleanup_orphans
+
+    cleaned = cleanup_orphans()
+    if cleaned:
+        print(f"[startup-cleanup] removed {cleaned} orphaned terminal(s)")

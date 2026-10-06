@@ -71,29 +71,26 @@ def parse_session_pk(target: Path | str) -> str | None:
     """Return the ``<session_pk>`` path segment if *target* is inside the
     sessions base, else *None*.
 
-    Compares both the resolved and the raw (pre-symlink-resolution) forms
-    so macOS ``/tmp`` → ``/private/tmp`` style aliases match, mirroring
-    ``runtime/workspace_access.py``.
+    Both sides are resolved (symlinks expanded, ``..`` collapsed) before the
+    containment check, so a symlink pointing into another session's folder is
+    attributed to that session, not to the link's own folder.
     """
     base = get_sessions_base()
     try:
         base_resolved = base.expanduser().resolve()
     except OSError:
         base_resolved = base.expanduser()
-    for candidate in (Path(target),):
-        for form in (candidate.expanduser(),):
-            try:
-                resolved = form.resolve()
-            except OSError:
-                resolved = form
-            try:
-                rel = resolved.relative_to(base_resolved)
-            except ValueError:
-                continue
-            if rel.parts:
-                return rel.parts[0]
-            return ""  # target IS the base dir itself
-    return None
+    try:
+        resolved = Path(target).expanduser().resolve()
+    except OSError:
+        resolved = Path(target).expanduser()
+    try:
+        rel = resolved.relative_to(base_resolved)
+    except ValueError:
+        return None
+    if not rel.parts:
+        return ""  # target IS the base dir itself
+    return rel.parts[0]
 
 
 def cleanup_orphaned_session_folders() -> int:

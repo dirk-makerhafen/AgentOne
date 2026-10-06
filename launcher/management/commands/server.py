@@ -70,10 +70,31 @@ class Command(BaseCommand):
         self._run_migrations()
         self._create_superuser_if_needed()
 
+        self._check_terminal_backend()
+
         self.stdout.write(self.style.SUCCESS("\nSetup complete!"))
         self.stdout.write(self.style.WARNING(
             "Run 'python3 manage.py server run' to start the server."
         ))
+
+    def _check_terminal_backend(self):
+        """Report whether the persistent-terminal backend (tmux + libtmux) is ready."""
+        import shutil
+
+        if shutil.which("tmux") is None:
+            self.stdout.write(self.style.WARNING(
+                "Persistent terminals: tmux binary not found — install tmux "
+                "(e.g. `brew install tmux`) to enable terminal_* tools."
+            ))
+            return
+        try:
+            import libtmux  # noqa: F401
+        except ImportError:
+            self.stdout.write(self.style.WARNING(
+                "Persistent terminals: libtmux not installed — run `pip install libtmux`."
+            ))
+            return
+        self.stdout.write(self.style.SUCCESS("Persistent terminals: tmux + libtmux ready."))
 
     # ------------------------------------------------------------------
     # Database configuration

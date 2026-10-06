@@ -9,6 +9,7 @@ from ui.lib.model_view import ModelView
 from ui.main.rightpanel.session.rightpanel_session_calls import RightPanelSessionCalls
 from ui.main.rightpanel.session.rightpanel_session_settings import RightPanelSessionSettings
 from ui.main.rightpanel.session.rightpanel_session_subagents import RightPanelSessionSubagents
+from ui.main.rightpanel.session.rightpanel_session_terminal import RightPanelSessionTerminals
 from ui.main.rightpanel.session.rightpanel_session_tasks import RightPanelSessionTasks
 from ui.main.rightpanel.session.rightpanel_session_todos import RightPanelSessionTodos
 from ui.main.rightpanel.workspace.rightpanel_workspace_files import RightPanelWorkspaceFiles
@@ -41,6 +42,9 @@ class RightPanelSession(ModelView):
             <button class="nav-tab{% if pyview.current_tab_name == "subagents" %} active{% endif %}" data-panel="subagents" data-label="Subagents" onclick="pyview.switchTab('subagents')" title="Subagents">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
             </button>
+            <button class="nav-tab{% if pyview.current_tab_name == "terminal" %} active{% endif %}" data-panel="terminal" data-label="Terminals" onclick="pyview.switchTab('terminal')" title="Terminals">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </button>
 
         </div>
         {% if pyview.current_tab %}
@@ -63,7 +67,7 @@ class RightPanelSession(ModelView):
     def switchTab(self, name: str) -> None:
         if name == self.current_tab_name:
             return 
-        if name not in ["workspace", "settings", "tasks", "todos", "calls", "subagents"]:
+        if name not in ["workspace", "settings", "tasks", "todos", "calls", "subagents", "terminal"]:
             return
         self.current_tab_name = name
         if self.current_tab:
@@ -83,5 +87,7 @@ class RightPanelSession(ModelView):
             self.current_tab = RightPanelSessionCalls(self.subject, self)
         elif name == "subagents":
             self.current_tab = RightPanelSessionSubagents(self.subject, self)
+        elif name == "terminal":
+            self.current_tab = RightPanelSessionTerminals(self.subject, self)
         self.update()
 

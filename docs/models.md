@@ -615,6 +615,25 @@ File: `server/models/debug_log_entry.py`
 
 **Immutable**.
 
+### TerminalSession
+
+File: `server/models/terminal.py`
+
+Bookkeeping row for one named persistent terminal (the PTY itself lives in
+tmux — see [docs/terminals.md](terminals.md)). Unique per `(session, name)`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `session` | `FK(SessionModel, CASCADE, null)` | Owning session |
+| `workspace` | `FK(WorkspaceModel, SET_NULL, null)` | Workspace at creation time |
+| `name` | `CharField(64)` | Terminal name (`default`, `dev`, …) |
+| `tmux_session_name` | `CharField(128, unique)` | `agentone-s<sid>-<name>` |
+| `status` | `CharField(choices)` | created / running / dead |
+| `shell` | `CharField(255)` | Override shell (empty = tmux default) |
+| `cwd` | `CharField(4096)` | Working directory |
+| `log_path` | `CharField(4096)` | `pipe-pane` log file |
+| `last_active_at` | `DateTimeField(nullable)` | Drives idle reaping |
+
 ---
 
 ## Enum references

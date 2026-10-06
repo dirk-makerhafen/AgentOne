@@ -259,6 +259,15 @@ SIMPLE_JWT = {
 }
 
 # ---------------------------------------------------------------------------
+# Persistent terminals (runtime/terminal, libtmux backend, agent-only)
+# Override in config/settings_local.py (gitignored).
+# ---------------------------------------------------------------------------
+TERMINAL_ENABLED = True
+TERMINAL_IDLE_TTL_SECONDS = 3600
+TERMINAL_MAX_OUTPUT_CHARS = 20000
+TERMINAL_EXTERNAL_ALLOWLIST: list = []
+
+# ---------------------------------------------------------------------------
 # Load local overrides from config/settings_local.py (gitignored)
 # Create one with: python3 manage.py server setup
 # Variables set here override everything above.

@@ -5,6 +5,7 @@
 - Python 3.10+
 - MySQL 8+ (or MariaDB 10.5+) — optional, SQLite works for development
 - Redis 6+
+- tmux + `libtmux` (Python package, in `requirements.txt`) — required for persistent agent terminals; without the tmux binary the `terminal_*` tools return an error
 - Supervisor (recommended) or systemd
 - Nginx (recommended as reverse proxy)
 
