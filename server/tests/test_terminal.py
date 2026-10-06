@@ -61,6 +61,7 @@ class FakePane:
     def __init__(self, lines=None):
         self.lines = list(lines or ["$ "])
         self.sent = []
+        self.piped = []
 
     def capture_pane(self):
         return list(self.lines)
@@ -68,7 +69,8 @@ class FakePane:
     def send_keys(self, text, enter=True):
         self.sent.append((text, enter))
 
-    def pipe_pane(self, _cmd):
+    def cmd(self, subcommand, *args, **kwargs):
+        self.piped.append((subcommand, args))
         return None
 
 
@@ -79,34 +81,46 @@ class FakeWindow:
 
 class FakeTmuxSession:
     def __init__(self, name, pane=None):
-        self._name = name
+        self.session_name = name
         self.pane = pane or FakePane()
         self.active_window = FakeWindow(self.pane)
         self.killed = False
 
-    def get(self, key):
-        if key == "session_name":
-            return self._name
-        raise KeyError(key)
-
-    def kill_session(self):
+    def kill(self):
         self.killed = True
+
+
+class FakeSessionList:
+    """Mirrors the libtmux ``Server.sessions`` query surface we rely on."""
+
+    def __init__(self, store):
+        self._store = store
+
+    def get(self, session_name=None, default=None, **_kwargs):
+        return self._store.get(session_name, default)
+
+    def __iter__(self):
+        return iter(list(self._store.values()))
+
+    def __len__(self):
+        return len(self._store)
+
+    def __contains__(self, name):
+        return name in self._store
 
 
 class FakeServer:
     def __init__(self):
-        self.sessions: dict[str, FakeTmuxSession] = {}
+        self._sessions: dict[str, FakeTmuxSession] = {}
 
-    def find_where(self, where):
-        return self.sessions.get(where.get("session_name"))
+    @property
+    def sessions(self):
+        return FakeSessionList(self._sessions)
 
     def new_session(self, session_name, start_directory=None, attach=False, **_kw):
         session = FakeTmuxSession(session_name)
-        self.sessions[session_name] = session
+        self._sessions[session_name] = session
         return session
-
-    def list_sessions(self):
-        return list(self.sessions.values())
 
 
 class TerminalManagerTest(TestCase):
@@ -139,7 +153,7 @@ class TerminalManagerTest(TestCase):
         server = FakeServer()
         with mock.patch.object(mgr, "_server", return_value=server):
             row = mgr.ensure_terminal(self.session_model(), name="default", cwd="/tmp")
-            pane = server.sessions[row.tmux_session_name].pane
+            pane = server.sessions.get(session_name=row.tmux_session_name).pane
             seen = {"n": 0}
             real_capture = pane.capture_pane
 
@@ -183,6 +197,106 @@ class TerminalManagerTest(TestCase):
         self.assertEqual(count, 1)
         row = TerminalSession.objects.get(session=self.session, name="old")
         self.assertEqual(row.status, TerminalStatus.DEAD)
+
+    def test_exec_recreates_missing_tmux_session(self) -> None:
+        """The reported live failure: row is RUNNING but tmux has no such
+        session (externally killed). exec must recreate transparently
+        instead of raising 'Terminal died — re-run'."""
+        from runtime.terminal import manager as mgr
+
+        server = FakeServer()
+        with mock.patch.object(mgr, "_server", return_value=server):
+            row = mgr.ensure_terminal(self.session_model(), name="default", cwd="/tmp")
+            # Simulate an externally killed tmux session: row says RUNNING,
+            # tmux knows nothing about it.
+            del server._sessions[row.tmux_session_name]
+            pane_holder: dict = {}
+
+            real_new_session = server.new_session
+
+            def _new_session(*args, **kwargs):
+                session = real_new_session(*args, **kwargs)
+                pane_holder["pane"] = session.pane
+                seen = {"n": 0}
+                real_capture = session.pane.capture_pane
+
+                def _capture():
+                    seen["n"] += 1
+                    base = real_capture()
+                    if seen["n"] >= 2:
+                        return base + ["recreated output", "__AGENTONE_DONE_abc=0"]
+                    return base
+
+                session.pane.capture_pane = _capture  # type: ignore[method-assign]
+                return session
+
+            with mock.patch.object(server, "new_session", side_effect=_new_session):
+                with mock.patch.object(mgr.uuid, "uuid4", return_value=mock.Mock(hex="abc")):
+                    result = mgr.exec_command(
+                        self.session_model(), "ls", name="default", timeout=5
+                    )
+        self.assertEqual(result["return_code"], 0)
+        self.assertIn("recreated output", result["stdout"])
+        row.refresh_from_db()
+        self.assertEqual(row.status, TerminalStatus.RUNNING)
+
+    def test_exec_reports_shell_exit_fast(self) -> None:
+        """Commands that kill their own shell (`exit`, `exec`) fail fast
+        with ``shell_exited`` instead of polling until timeout, and the
+        row is marked dead so the next call recreates it."""
+        import time
+
+        from runtime.terminal import manager as mgr
+
+        server = FakeServer()
+        with mock.patch.object(mgr, "_server", return_value=server):
+            row = mgr.ensure_terminal(self.session_model(), name="default", cwd="/tmp")
+            pane = server.sessions.get(session_name=row.tmux_session_name).pane
+            real_find = mgr._find_tmux_session
+            calls = {"n": 0}
+
+            def _flaky_find(tmux_server, name):
+                calls["n"] += 1
+                if calls["n"] >= 3:
+                    return None  # shell died mid-command
+                return real_find(tmux_server, name)
+
+            with mock.patch.object(mgr, "_find_tmux_session", side_effect=_flaky_find):
+                with mock.patch.object(pane, "capture_pane", return_value=["partial"]):
+                    started = time.time()
+                    result = mgr.exec_command(
+                        self.session_model(), "exit 3", name="default", timeout=30
+                    )
+                    elapsed = time.time() - started
+        self.assertTrue(result.get("shell_exited"))
+        self.assertEqual(result["return_code"], -1)
+        self.assertLess(elapsed, 10)
+        row.refresh_from_db()
+        self.assertEqual(row.status, TerminalStatus.DEAD)
+
+    def test_pipe_pane_uses_pane_cmd(self) -> None:
+        """Log setup must use the current ``Pane.cmd('pipe-pane', …)`` API."""
+        from runtime.terminal import manager as mgr
+
+        server = FakeServer()
+        with mock.patch.object(mgr, "_server", return_value=server):
+            row = mgr.ensure_terminal(self.session_model(), name="dev", cwd="/tmp")
+        pane = server.sessions.get(session_name=row.tmux_session_name).pane
+        self.assertTrue(
+            any(call[0] == "pipe-pane" for call in pane.piped),
+            f"expected a pipe-pane call, got: {pane.piped}",
+        )
+
+    def test_api_surface_check_rejects_old_libtmux(self) -> None:
+        """A libtmux without ``Server.sessions.get`` fails fast with a clear
+        error instead of degrading into misleading 'terminal died'."""
+        from types import SimpleNamespace
+
+        from runtime.terminal import manager as mgr
+
+        with self.assertRaises(RuntimeError) as ctx:
+            mgr._check_libtmux_api(SimpleNamespace())
+        self.assertIn("libtmux", str(ctx.exception))
 
     def test_terminal_source_arg_extraction(self) -> None:
         from runtime.tasks.call_scheduler import CallScheduler

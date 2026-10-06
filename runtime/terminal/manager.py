@@ -10,6 +10,7 @@ import-time crash. Unit tests stub ``_server`` / pane objects.
 """
 from __future__ import annotations
 
+import logging
 import re
 import shutil
 import time
@@ -19,6 +20,8 @@ from typing import Any
 
 from django.conf import settings
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 _NAME_RE = re.compile(r"[^a-z0-9-]+")
 
@@ -52,7 +55,37 @@ def _server() -> Any:
             "libtmux is not installed. Add it (`pip install libtmux`) "
             "to use persistent terminals."
         ) from exc
-    return Server()
+    server = Server()
+    _check_libtmux_api(server)
+    return server
+
+
+def _check_libtmux_api(server: Any) -> None:
+    """Fail fast with a clear error when the libtmux API surface moved.
+
+    libtmux removed ``find_where`` / ``list_sessions`` / ``.get()`` /
+    ``kill_session`` / ``pipe_pane`` across the 0.x series; those used to
+    surface here as a misleading "terminal died". Verify the surface we
+    rely on instead.
+    """
+    missing = []
+    sessions = getattr(server, "sessions", None)
+    if sessions is None or not callable(getattr(sessions, "get", None)):
+        missing.append("Server.sessions.get()")
+    if not callable(getattr(server, "new_session", None)):
+        missing.append("Server.new_session()")
+    if missing:
+        try:
+            import libtmux
+
+            version = getattr(libtmux, "__version__", "unknown")
+        except Exception:  # pylint: disable=broad-exception-caught
+            version = "unknown"
+        raise RuntimeError(
+            f"Incompatible libtmux version ({version}): missing "
+            f"{', '.join(missing)}. Persistent terminals need a libtmux "
+            "with the post-0.17 attribute API (e.g. `pip install -U libtmux`)."
+        )
 
 
 def slugify(name: str) -> str:
@@ -86,10 +119,53 @@ def _default_cwd(session_model: Any) -> str:
 
 
 def _find_tmux_session(server: Any, tmux_name: str) -> Any | None:
+    """Find a tmux session by name (``None`` when absent).
+
+    Unexpected libtmux errors are logged — never silently swallowed: a
+    lookup failure used to masquerade as "terminal died".
+    """
     try:
-        return server.find_where({"session_name": tmux_name})
-    except Exception:  # pylint: disable=broad-exception-caught
+        return server.sessions.get(session_name=tmux_name, default=None)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logger.warning("tmux lookup for %s failed: %s", tmux_name, exc)
         return None
+
+
+def _session_names(server: Any) -> set[str]:
+    """Return the names of all live tmux sessions (empty set on error)."""
+    try:
+        return {s.session_name for s in server.sessions}
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logger.warning("tmux session listing failed: %s", exc)
+        return set()
+
+
+def _live_tmux_session(server: Any, session_model: Any, row: Any) -> tuple[Any, Any]:
+    """Return ``(row, tmux_session)`` for a live terminal, recreating once.
+
+    When the tmux side is gone (externally killed, reboot, stale row) the
+    terminal is recreated transparently instead of failing with "re-run
+    to recreate it". Recreates at most once per call; a second miss means
+    tmux itself is broken and raises.
+    """
+    from server.models.terminal import TerminalStatus
+
+    tmux_session = _find_tmux_session(server, row.tmux_session_name)
+    if tmux_session is not None:
+        return row, tmux_session
+    logger.info(
+        "terminal '%s' (%s) missing in tmux — recreating",
+        row.name, row.tmux_session_name,
+    )
+    type(row).objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
+    row = ensure_terminal(session_model, name=row.name)
+    tmux_session = _find_tmux_session(server, row.tmux_session_name)
+    if tmux_session is None:
+        raise RuntimeError(
+            f"Terminal '{row.name}' could not be (re)created in tmux — "
+            "is the tmux server running (`tmux ls`)?"
+        )
+    return row, tmux_session
 
 
 def _active_pane(tmux_session: Any) -> Any:
@@ -98,11 +174,7 @@ def _active_pane(tmux_session: Any) -> Any:
 
 
 def _capture(pane: Any) -> str:
-    try:
-        lines = pane.capture_pane()
-    except TypeError:
-        # Older libtmux versions take no kwargs / different call shape.
-        lines = pane.capture_pane()  # type: ignore[no-untyped-call]
+    lines = pane.capture_pane()
     if isinstance(lines, str):
         return lines
     return "\n".join(str(line) for line in (lines or []))
@@ -174,13 +246,14 @@ def ensure_terminal(
             )
             Path(log_path).parent.mkdir(parents=True, exist_ok=True)
             try:
-                pane.pipe_pane(f"cat >> {log_path}")
-            except Exception:  # pylint: disable=broad-exception-caught
-                pass
+                # pipe-pane targets the pane via Pane.cmd's -t binding.
+                pane.cmd("pipe-pane", "-o", f"cat >> {log_path}")
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                logger.warning("pipe-pane for %s failed: %s", tmux_name, exc)
             type(row).objects.filter(pk=row.pk).update(log_path=log_path)
             row.refresh_from_db()
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.warning("terminal log setup for %s failed: %s", tmux_name, exc)
     type(row).objects.filter(pk=row.pk).update(
         status=TerminalStatus.RUNNING, last_active_at=timezone.now()
     )
@@ -198,9 +271,10 @@ def exec_command(
 
     Sends the command plus a sentinel ``echo`` marker, then polls
     ``capture_pane`` until the marker appears or *timeout* elapses.
-    """
-    from server.models.terminal import TerminalStatus
 
+    A missing tmux session is recreated transparently (see
+    :func:`_live_tmux_session`).
+    """
     command = (command or "").strip()
     if not command:
         return {"status": "error", "stdout": "", "stderr": "Empty command.", "return_code": -1}
@@ -208,10 +282,7 @@ def exec_command(
 
     row = ensure_terminal(session_model, name=name)
     server = _server()
-    tmux_session = _find_tmux_session(server, row.tmux_session_name)
-    if tmux_session is None:
-        type(row).objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
-        raise RuntimeError(f"Terminal '{row.name}' died — re-run to recreate it.")
+    row, tmux_session = _live_tmux_session(server, session_model, row)
     pane = _active_pane(tmux_session)
     before = _capture(pane)
     token = uuid.uuid4().hex[:12]
@@ -219,12 +290,36 @@ def exec_command(
     pane.send_keys(f"{command}\necho {marker}=$?")
     deadline = time.time() + timeout
     output = before
+    shell_exited = False
     while time.time() < deadline:
         time.sleep(0.3)
         output = _capture(pane)
         if marker in output:
             break
+        # `exit` / `exec` / `kill $$` kill the shell itself, so the
+        # sentinel never prints and the session vanishes. Fail fast with
+        # a clear message instead of polling until timeout.
+        if _find_tmux_session(server, row.tmux_session_name) is None:
+            shell_exited = True
+            break
     _touch(row)
+    if shell_exited:
+        from server.models.terminal import TerminalStatus
+
+        type(row).objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
+        return {
+            "status": "error",
+            "stdout": _tail(output, 20000),
+            "stderr": (
+                "The terminal's shell exited before the command finished "
+                "(the command likely ended the shell itself, e.g. `exit`, "
+                "`exec`, or killing its own PID). The terminal was closed; "
+                "re-run to get a fresh one."
+            ),
+            "return_code": -1,
+            "terminal": row.name,
+            "shell_exited": True,
+        }
     if marker not in output:
         return {
             "status": "timeout",
@@ -234,14 +329,18 @@ def exec_command(
             "terminal": row.name,
         }
     new_text = output[len(before):] if len(output) >= len(before) else output
+    result_re = re.compile(rf"{re.escape(marker)}=(-?\d+)")
     return_code = -1
     stdout_lines: list[str] = []
     for line in new_text.splitlines():
-        if marker in line:
-            match = re.search(rf"{marker}=(-?\d+)", line)
-            if match:
-                return_code = int(match.group(1))
+        match = result_re.search(line)
+        if match:
+            return_code = int(match.group(1))
             break
+        if marker in line:
+            # Echoed input line (the shell echoing our own
+            # ``echo <marker>=$?``) — not command output, keep scanning.
+            continue
         stdout_lines.append(line)
     # Drop the echoed command line itself when present.
     if stdout_lines and stdout_lines[0].strip() == command.strip().splitlines()[0][:200]:
@@ -262,12 +361,7 @@ def send_input(
     """Send keystrokes to a terminal (interactive CLIs, prompts)."""
     row = ensure_terminal(session_model, name=name)
     server = _server()
-    tmux_session = _find_tmux_session(server, row.tmux_session_name)
-    if tmux_session is None:
-        from server.models.terminal import TerminalStatus
-
-        type(row).objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
-        raise RuntimeError(f"Terminal '{row.name}' died — re-run to recreate it.")
+    row, tmux_session = _live_tmux_session(server, session_model, row)
     pane = _active_pane(tmux_session)
     pane.send_keys(text or "", enter=submit)
     _touch(row)
@@ -281,12 +375,7 @@ def poll_output(
     """Read the visible buffer of a terminal without executing anything."""
     row = ensure_terminal(session_model, name=name)
     server = _server()
-    tmux_session = _find_tmux_session(server, row.tmux_session_name)
-    if tmux_session is None:
-        from server.models.terminal import TerminalStatus
-
-        type(row).objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
-        raise RuntimeError(f"Terminal '{row.name}' died — re-run to recreate it.")
+    row, tmux_session = _live_tmux_session(server, session_model, row)
     pane = _active_pane(tmux_session)
     text = _capture(pane)
     _touch(row)
@@ -299,8 +388,7 @@ def list_terminals(session_model: Any) -> list[dict[str, Any]]:
     from server.models.terminal import TerminalSession
 
     try:
-        server = _server()
-        live = {s.get("session_name") for s in server.list_sessions()}
+        live = _session_names(_server())
     except Exception:  # pylint: disable=broad-exception-caught
         live = set()
     rows = []
@@ -330,7 +418,7 @@ def kill_terminal(session_model: Any, name: str = "default") -> dict[str, Any]:
         server = _server()
         tmux_session = _find_tmux_session(server, row.tmux_session_name)
         if tmux_session is not None:
-            tmux_session.kill_session()
+            tmux_session.kill()
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return {"status": "error", "message": f"Kill failed: {exc}"}
     TerminalSession.objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
@@ -357,7 +445,7 @@ def reap_idle_terminals(max_idle_seconds: int = 3600, limit: int = 10) -> int:
             server = _server()
             tmux_session = _find_tmux_session(server, row.tmux_session_name)
             if tmux_session is not None:
-                tmux_session.kill_session()
+                tmux_session.kill()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
         TerminalSession.objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
@@ -374,7 +462,10 @@ def cleanup_orphans() -> int:
     except Exception:  # pylint: disable=broad-exception-caught
         return 0
     try:
-        owned = [s for s in server.list_sessions() if str(s.get("session_name", "")).startswith(TMUX_PREFIX)]
+        owned = [
+            s for s in server.sessions
+            if str(s.session_name).startswith(TMUX_PREFIX)
+        ]
     except Exception:  # pylint: disable=broad-exception-caught
         return 0
     live_names = set(
@@ -385,20 +476,17 @@ def cleanup_orphans() -> int:
     count = 0
     for tmux_session in owned:
         try:
-            name = tmux_session.get("session_name")
+            name = tmux_session.session_name
         except Exception:  # pylint: disable=broad-exception-caught
             continue
         if name not in live_names:
             try:
-                tmux_session.kill_session()
+                tmux_session.kill()
                 count += 1
             except Exception:  # pylint: disable=broad-exception-caught
                 pass
     # Mark rows whose tmux session vanished as dead.
-    try:
-        present = {s.get("session_name") for s in server.list_sessions()}
-    except Exception:  # pylint: disable=broad-exception-caught
-        present = set()
+    present = _session_names(server)
     TerminalSession.objects.filter(status=TerminalStatus.RUNNING).exclude(
         tmux_session_name__in=present
     ).update(status=TerminalStatus.DEAD)

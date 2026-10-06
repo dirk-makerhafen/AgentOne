@@ -81,7 +81,11 @@ through the `approval_decider` review.
 ## Lifecycle & settings
 
 - Created lazily on first tool use; `ensure` is idempotent (one tmux session
-  per row, repaired if missing).
+  per row, repaired if missing). A tmux session that vanished (externally
+  killed, reboot) is recreated transparently on the next tool call.
+- Commands that end their own shell (`exit`, `exec`, killing their own PID)
+  close the terminal: the call fails fast with `shell_exited: true` instead
+  of polling until timeout, and the next call gets a fresh terminal.
 - Idle reaping: the 10s `tick_scheduler` kills terminals idle longer than
   `TERMINAL_IDLE_TTL_SECONDS` (default 3600; 0 disables).
 - Startup: `startup_cleanup` kills tmux sessions with no live row and marks
