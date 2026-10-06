@@ -179,6 +179,10 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 6. UI views update via WebSocket → browser DOM patches
 ```
 
+### Direct LLM call (side path)
+
+The `llm_query` tool (task `call_llm_direct`, `.agentone/scripts/core/call_llm_direct.py`) runs a lightweight Input → LLM → result query on an ephemeral inactive session, reusing the `call_llm` pipeline. See [Core mechanisms](core-mechanisms.md#direct-llm-call-llm_query--call_llm_direct) for the full contract. The `template_execute` tool renders a session-private query template (`runtime/query_templates.py`) and dispatches it through the same path; the Templates right-panel tab does the same for human users.
+
 ### Task dispatch pipeline
 
 ```

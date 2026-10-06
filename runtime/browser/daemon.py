@@ -158,11 +158,11 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
 
     @property
     def nav_timeout(self) -> int:
-        return int(self.cfg.get("nav_timeout") or 45) * 1000
+        return int(self.cfg.get("nav_timeout") or 60) * 1000
 
     @property
     def action_timeout(self) -> int:
-        return int(self.cfg.get("action_timeout") or 15) * 1000
+        return int(self.cfg.get("action_timeout") or 30) * 1000
 
     def _binding_for(self, scope: dict) -> "registry_mod.Binding":
         key = scope["profile_key"]

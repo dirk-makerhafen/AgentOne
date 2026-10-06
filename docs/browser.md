@@ -130,17 +130,24 @@ browser:
   mode: headful              # headful | headless
   scope: session             # session | named
   max_processes: 6           # concurrent browsers
-  idle_seconds: 900          # close a browser after this idle time
+  idle_seconds: 3600         # close a browser after this idle time (1h default)
   ephemeral_by_default: false
   block_images: false
   humanize: 1.5              # Camoufox cursor/typing humanisation
   enable_cache: true
-  nav_timeout: 45
-  action_timeout: 15
+  nav_timeout: 60            # per navigation / load-state wait
+  action_timeout: 30         # per click / fill / press
   audit: true
   allow_domains: []          # empty = allow all
   deny_domains: []
 ```
+
+Idle accounting uses the monotonic clock, so system sleep does not count as
+idleness: closing the lid for lunch no longer reaps the browser. Note that
+an idle eviction (or any browser restart) drops **session** cookies by
+definition — sites that keep consent in session cookies (heise.de's
+`consentUUID`/`consentDate`) will show their banner again afterwards. If that
+bothers you, raise `idle_seconds` further rather than fighting the banner.
 
 The daemon re-reads this file every couple of seconds, so edits apply without a
 restart.

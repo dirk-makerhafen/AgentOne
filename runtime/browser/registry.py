@@ -8,6 +8,10 @@ case two sessions attach to the same process but keep separate page ownership.
 All browser work is serialized on the daemon's single driver thread (Playwright
 sync objects are thread-bound), so the maps below are only *read* by the HTTP
 handler; a re-entrant lock keeps the health/status views consistent.
+
+Idle accounting uses :func:`time.monotonic`, never wall-clock time: the clock
+jumping forward across system sleep (or an NTP step) must not read as user
+idleness and reap a browser the user just stepped away from.
 """
 
 from __future__ import annotations
@@ -47,12 +51,12 @@ class Binding:
     root_pk: int
     context: Any
     ephemeral: bool = False
-    created_at: float = field(default_factory=time.time)
-    last_used: float = field(default_factory=time.time)
+    created_at: float = field(default_factory=time.monotonic)
+    last_used: float = field(default_factory=time.monotonic)
     pages: dict[str, PageRecord] = field(default_factory=dict)
 
     def touch(self) -> None:
-        self.last_used = time.time()
+        self.last_used = time.monotonic()
 
     def page_list(self) -> list[dict]:
         return [rec.to_dict() for rec in self.pages.values()]
@@ -102,8 +106,8 @@ class Registry:
             self._close_binding(oldest)
 
     def idle_deadline(self) -> float:
-        idle = int(self._cfg_provider().get("idle_seconds") or 900)
-        return time.time() - idle
+        idle = int(self._cfg_provider().get("idle_seconds") or 3600)
+        return time.monotonic() - idle
 
     def reap_idle(self) -> int:
         """Close bindings past the idle deadline. Returns count closed."""
@@ -137,8 +141,8 @@ class Registry:
                         "profile_key": b.profile_key,
                         "root_pk": b.root_pk,
                         "pages": b.page_list(),
-                        "age": round(time.time() - b.created_at, 1),
-                        "idle": round(time.time() - b.last_used, 1),
+                        "age": round(time.monotonic() - b.created_at, 1),
+                        "idle": round(time.monotonic() - b.last_used, 1),
                         "ephemeral": b.ephemeral,
                     }
                     for b in self._bindings.values()
@@ -154,7 +158,7 @@ class Registry:
 
     def add_page(self, binding: Binding, owner_pk: int) -> PageRecord:
         """Register a newly opened tab owned by *owner_pk*."""
-        rec = PageRecord(page_id=self.new_page_id(), owner_pk=owner_pk, created_at=time.time())
+        rec = PageRecord(page_id=self.new_page_id(), owner_pk=owner_pk, created_at=time.monotonic())
         binding.pages[rec.page_id] = rec
         binding.touch()
         return rec

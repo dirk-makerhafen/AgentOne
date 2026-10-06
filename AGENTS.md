@@ -65,7 +65,7 @@ python3 manage.py makemigrations && migrate     # DB schema
 python3 -m pytest server/tests/ -v --reuse-db   # server tests (245+)
 python3 -m pytest api/tests/ -v --reuse-db      # API tests (86)
 python3 -m pytest .agentone/scripts/ -v         # tool tests (75)
-python3 -m pytest server/tests/test_browser_*.py -v   # browser capability tests (73)
+python3 -m pytest server/tests/test_browser_*.py -v   # browser capability tests (74)
 python3 -m pylint config/ server/ registry/     # lint
 python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 ```

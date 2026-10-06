@@ -214,6 +214,17 @@ kept forever; folders whose session row is hard-deleted are removed by the
 `_cleanup_orphaned_session_folders` startup pass
 (`server/tasks/recovery_scheduler.py`, `server/tasks/startup_cleanup.py`).
 
+The reserved `templates/` subfolder holds reusable query templates
+(`runtime/query_templates.py`): Markdown files with a frontmatter head
+(`name`, `description`, `variables` with typed entries) and a Jinja body
+rendered with `StrictUndefined`, so missing variables and body typos fail
+loudly. The `template_*` tools (`.agentone/scripts/core/query_template.py`)
+list/get/save/delete/render them, and `template_execute` dispatches the
+rendered prompt through the `call_llm_direct` ephemeral pipeline; the
+Templates tab (`ui/main/rightpanel/session/rightpanel_session_templates.py`)
+offers the same flow in the UI and tracks the run via the
+`AgentTaskCall.session:<sid>` observable.
+
 ### ContextTracker — Parent-Child Tracking
 
 **File:** `runtime/context_manager.py` (28 lines)
@@ -313,6 +324,35 @@ def delegate_task(session, subagent_name, query):
 ```
 
 The `taskcall` is an `AgentTaskCall`. When the parent receives this dict, the framework serialises it, finds the `AgentTaskCall` ref, enters `WAITING_RESULTTASKS`, waits for the subagent's entire chain to resolve, then transparently substitutes the `AgentTaskCall` with the final `Message`. The parent never blocks in its own code — it just returns the call and the framework handles the rest.
+
+---
+
+## Direct LLM Call (`llm_query` / `call_llm_direct`)
+
+Agents sometimes need a lightweight LLM judgment — classification, a rewrite, a small decision — without spawning a subsession or polluting the current turn's context. The `llm_query` **tool** (`.agentone/scripts/core/call_llm_direct.py`, registered in `.agentone/scripts/core/scripts.md`) covers this: input in, result out, no separate agent session.
+
+### Tool vs task split
+
+- `llm_query(messages, model)` is the LLM-facing **tool**. It accepts a plain string, a list of strings, or OpenAI-format `{"role", "content"}` dicts (`system`/`user`/`assistant` only; `message` accepted as an alias for `content`), normalises them, and dispatches the task — returning the `AgentTaskCall` so the turn auto-awaits it (see Auto-Await above).
+- `call_llm_direct(messages, model_name)` is the bound **task** that does the work: resolve model → build ephemeral session + `Query` → run the existing `call_llm` pipeline synchronously → return a result dict.
+
+The split exists so failures behave correctly: the task carries `max_retries: 3`, and `RateLimitError` is re-raised (never swallowed) so the run parks as `RATE_LIMITED` with auto-resume instead of failing. Any other error returns `{"status": "FAILURE", "error": ...}` for the LLM to react to.
+
+### Ephemeral session
+
+The task creates an inactive `SessionModel` (`SUBTASK_DELEGATE`) + `SessionVersionModel` + `SettingsModel` purely to host the `Query`/`Response` records. It reuses the caller's agent (so `call_llm` task allow-lists resolve), pins `latest_session_version` so `Session(model)` resolves, and sets `tool_call_syntax=CUSTOM` since a direct call takes no tools. This isolates the call from the caller's in-flight turn, which forbids a second WAITING/ACTIVE query on the same session version (`build_llm_context.py:48`).
+
+### Model fallback
+
+Explicit `model` → caller's model (`session.aimodel`) → user's Default Model setting. No model anywhere returns a `FAILURE` dict instead of calling.
+
+### Result contract
+
+```python
+{"content", "model", "prompt_tokens", "completion_tokens",
+ "cached_tokens", "reasoning_tokens", "total_time", "status",
+ "session_pk", "query_pk", "response_pk"}  # + "error" on failure
+```
 
 ---
 

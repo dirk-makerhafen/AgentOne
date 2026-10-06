@@ -322,6 +322,58 @@ Each cron job shows:
 
 ---
 
+## Query templates
+
+Reusable prompts with typed variables. A template is a Markdown file with a
+frontmatter head (`name`, `description`, `variables`) and a Jinja body, stored
+in the session-private folder at `~/.agentone/sessions/<session_id>/templates/<name>.md`.
+Templates belong to one session; archived sessions keep theirs forever.
+
+### Running a template
+
+1. Open any chat session and switch the right panel to the **Templates** tab
+2. Click a template — a form is generated from its variable schema, with
+   defaults prefilled and required fields marked `*`
+3. Fill in the values and click **Preview** to render locally, or **Run** to
+   execute: the rendered prompt is sent to the LLM in an isolated call (same
+   pipeline as `llm_query`, no chat history attached) and the result streams
+   back into the panel. **Check result** re-polls if the live update was missed
+
+### Writing a template
+
+```markdown
+---
+name: summarize
+description: Summarize text into N bullet points
+variables:
+  - name: text
+    type: string
+    required: true
+    description: Text to summarize
+  - name: max_points
+    type: integer
+    required: false
+    default: 5
+---
+Summarize the following in {{ max_points }} bullet points:
+
+{{ text }}
+```
+
+Variable types are `string`, `integer`, `number` (`float` is an alias) and
+`boolean`. Values are coerced leniently: `"5"` becomes `5` for numeric types,
+and `"true"`/`"1"`/`"yes"` (case-insensitive) count as true. Missing or blank
+required variables — and misspelled `{{ names }}` in the body — fail with an
+error instead of rendering silently. A plain string entry (`variables: [text]`)
+means a required string.
+
+Agents manage templates with the `core` tools: `template_list`,
+`template_get`, `template_save`, `template_delete`, `template_render` and
+`template_execute` (render + run in one step, auto-awaited). Pass `variables`
+as an object (`{"text": "..."}`), never as a bare string.
+
+---
+
 ## Data flows (streams &amp; sets)
 
 Data flows replace the legacy named-pipe system. A flow is a `DataCollection`

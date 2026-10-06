@@ -248,14 +248,14 @@ class ConfigTests(SimpleTestCase):
         cfg = get_browser_config()
         self.assertEqual(cfg["max_processes"], 2)
         self.assertEqual(cfg["mode"], "headless")
-        self.assertEqual(cfg["idle_seconds"], 900)  # default kept
+        self.assertEqual(cfg["idle_seconds"], 3600)  # default kept
 
     def test_invalid_values_fall_back(self):
         self._write("browser:\n  max_processes: 'lots'\n  mode: sideways\n  idle_seconds: -5\n")
         cfg = get_browser_config()
         self.assertEqual(cfg["max_processes"], 6)
         self.assertEqual(cfg["mode"], "headful")
-        self.assertEqual(cfg["idle_seconds"], 900)
+        self.assertEqual(cfg["idle_seconds"], 3600)
 
     def test_unknown_keys_ignored(self):
         self._write("browser:\n  wat: true\n")

@@ -13,13 +13,13 @@ Example::
       minimize: false        # best-effort window minimize (macOS: unsupported)
       scope: session         # session | named (per-call override wins)
       max_processes: 6
-      idle_seconds: 900
+      idle_seconds: 3600
       ephemeral_by_default: false
       block_images: false
       humanize: 1.5
       enable_cache: true
-      nav_timeout: 45
-      action_timeout: 15
+      nav_timeout: 60
+      action_timeout: 30
       audit: true
 """
 
@@ -41,13 +41,19 @@ DEFAULTS: dict[str, Any] = {
     "minimize": False,
     "scope": "session",
     "max_processes": 6,
-    "idle_seconds": 900,
+    # An hour: stepping away (or leaving an approval card open) must not kill
+    # the browser. Idle eviction also drops session cookies, so a short idle
+    # window makes consent banners reappear on sites that keep consent in
+    # session cookies (e.g. heise.de).
+    "idle_seconds": 3600,
     "ephemeral_by_default": False,
     "block_images": False,
     "humanize": 1.5,
     "enable_cache": True,
-    "nav_timeout": 45,
-    "action_timeout": 15,
+    # Playwright's own default action timeout is 30s; slow ad-heavy pages
+    # regularly exceed anything shorter on click/fill.
+    "nav_timeout": 60,
+    "action_timeout": 30,
     "audit": True,
     # Domain policy is intentionally permissive for now (allow-all); the audit
     # log below is the record of what was visited. Allow/deny lists can be

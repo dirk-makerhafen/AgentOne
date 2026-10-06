@@ -67,6 +67,27 @@ def ensure_session_dir(session_pk: int | str) -> Path:
     return folder
 
 
+#: Subfolder of a session-private folder holding reusable query templates.
+TEMPLATES_SUBDIR = "templates"
+
+
+def session_templates_dir(session_pk: int | str) -> Path:
+    """Return the query-templates folder for *session_pk* (pure, no I/O)."""
+    return session_dir(session_pk) / TEMPLATES_SUBDIR
+
+
+def ensure_session_templates_dir(session_pk: int | str) -> Path:
+    """Create the query-templates folder for *session_pk* if missing.
+
+    Ensures the parent session folder first (with ``0o700``), then the
+    ``templates/`` subfolder.  Idempotent.
+    """
+    ensure_session_dir(session_pk)
+    folder = session_templates_dir(session_pk)
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
+
+
 def parse_session_pk(target: Path | str) -> str | None:
     """Return the ``<session_pk>`` path segment if *target* is inside the
     sessions base, else *None*.

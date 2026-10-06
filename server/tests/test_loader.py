@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_chain_entry import load_chain_entry
@@ -557,3 +557,71 @@ class LoadCompactionSettingsTest(AgentMdTestMixin, TestCase):
     def test_negative_min_tokens_raises(self):
         with self.assertRaises(ValueError):
             self.load_agent("compaction_bogus")
+
+
+class SchemaUnionTest(SimpleTestCase):
+    """PEP 604 unions (``X | None``) must resolve like typing.Optional.
+
+    Regression: ``get_origin(X | None)`` is ``types.UnionType``, not
+    ``typing.Union`` — the resolver used to miss it and emitted
+    ``{"type": "string"}`` for every ``| None`` annotation, which led
+    LLM callers to serialize list/dict arguments as strings.
+    """
+
+    def _schema_of(self, func):
+        from registry.loader.load_python_entry import generate_schema_for_function
+
+        _, schema = generate_schema_for_function(func)
+        return schema
+
+    def test_pep604_optional_list(self):
+        def f(items: list[dict] | None = None):
+            """Doc."""
+
+        props = self._schema_of(f)["properties"]
+        self.assertEqual(props["items"]["type"], "array")
+
+    def test_pep604_optional_dict(self):
+        from typing import Any
+
+        def f(variables: dict[str, Any] | None = None):
+            """Doc."""
+
+        props = self._schema_of(f)["properties"]
+        self.assertEqual(props["variables"]["type"], "object")
+
+    def test_typing_optional_still_works(self):
+        from typing import Optional
+
+        def f(name: Optional[str] = None):
+            """Doc."""
+
+        props = self._schema_of(f)["properties"]
+        self.assertEqual(props["name"]["type"], "string")
+
+    def test_pep604_multi_union(self):
+        def f(v: str | list[str] | None = None):
+            """Doc."""
+
+        props = self._schema_of(f)["properties"]
+        self.assertIn("anyOf", props["v"])
+
+    def test_template_tool_schemas(self):
+        import importlib.util
+        from pathlib import Path
+
+        path = (
+            Path(__file__).resolve().parent.parent.parent
+            / ".agentone" / "scripts" / "core" / "query_template.py"
+        )
+        spec = importlib.util.spec_from_file_location(
+            "_query_template_schema_test", path
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        save_schema = self._schema_of(module.template_save)["properties"]
+        self.assertEqual(save_schema["variables"]["type"], "array")
+        render_schema = self._schema_of(module.template_render)["properties"]
+        self.assertEqual(render_schema["variables"]["type"], "object")
+        exec_schema = self._schema_of(module.template_execute)["properties"]
+        self.assertEqual(exec_schema["variables"]["type"], "object")

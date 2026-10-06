@@ -6,6 +6,7 @@ Fake contexts stand in for Playwright: the registry only needs ``new_page()``,
 import os
 import tempfile
 import time
+from unittest import mock
 
 from django.test import SimpleTestCase
 
@@ -131,7 +132,7 @@ class RegistryTests(SimpleTestCase):
         reg = self._registry()
         first = reg.get_or_launch("s1", 1)
         reg.get_or_launch("s2", 2)
-        first.last_used = time.time() - 100
+        first.last_used = time.monotonic() - 100
         reg.get_or_launch("s3", 3)
         self.assertTrue(first.context.closed)
         self.assertIsNone(reg.get("s1"))
@@ -140,9 +141,26 @@ class RegistryTests(SimpleTestCase):
         reg = self._registry()
         stale = reg.get_or_launch("s1", 1)
         reg.get_or_launch("s2", 2)
-        stale.last_used = time.time() - 10_000
+        stale.last_used = time.monotonic() - 10_000
         self.assertEqual(reg.reap_idle(), 1)
         self.assertIsNone(reg.get("s1"))
+
+    def test_idle_accounting_survives_wall_clock_jump(self):
+        """System sleep / NTP steps jump wall-clock time forward.
+
+        Idle accounting must use the monotonic clock, so such a jump is not
+        mistaken for user idleness and a just-used browser is not reaped.
+        """
+        self.cfg["idle_seconds"] = 3600
+        reg = self._registry()
+        with mock.patch("time.monotonic", return_value=1_000.0):
+            reg.get_or_launch("s1", 1)
+        # Ten seconds of monotonic time pass, but the wall clock jumps an hour
+        # (sleep + wake). Reaping consults only the monotonic clock.
+        with mock.patch("time.monotonic", return_value=1_010.0):
+            with mock.patch("time.time", return_value=1_000.0 + 3_600 + 60):
+                self.assertEqual(reg.reap_idle(), 0)
+                self.assertIsNotNone(reg.get("s1"))
 
     def test_ephemeral_profile_is_deleted_on_close(self):
         reg = self._registry()

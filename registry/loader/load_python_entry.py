@@ -2,6 +2,7 @@ import importlib
 import inspect
 import re
 import enum
+import types
 from pathlib import Path
 from typing import (
     Any,
@@ -213,7 +214,10 @@ def generate_schema_for_function(
             return base
 
         # --- Optional / Union ---
-        if origin is Union:
+        # PEP 604 unions (``X | Y``) have origin types.UnionType, not
+        # typing.Union — without this, every ``| None`` annotation
+        # degrades to {"type": "string"} in the LLM schema.
+        if origin is Union or origin is types.UnionType:
             non_none = [a for a in args if a is not type(None)]
             if len(non_none) == 1:
                 return resolve(non_none[0])
