@@ -48,6 +48,54 @@ class AllowlistTest(SimpleTestCase):
             self.assertEqual(unapproved_agent_cli("ls"), "")
 
 
+class CleanOutputTest(SimpleTestCase):
+    def test_strips_sgr_colors(self) -> None:
+        from runtime.terminal.manager import clean_terminal_output
+
+        self.assertEqual(
+            clean_terminal_output("\x1b[31mred\x1b[0m and \x1b[1;32mok\x1b[0m"),
+            "red and ok",
+        )
+
+    def test_strips_prompt_redraws_and_paste_toggles(self) -> None:
+        from runtime.terminal.manager import clean_terminal_output
+
+        raw = (
+            "l\x08ls\x1b[?2004l\n"
+            "AGENTS.md\t\tlauncher\n"
+            "echo __AGENTONE_DONE_abc=$?\x1b[1m\x1b[7m%\x1b[27m\x1b[1m\x1b[0m\n"
+            "\x1b[0m\x1b[27m\x1b[24m\x1b[JUser@Mac AgentOne % \x1b[K\x1b[?2004h"
+        )
+        cleaned = clean_terminal_output(raw)
+        self.assertNotIn("\x1b", cleaned)
+        self.assertNotIn("2004", cleaned)
+        self.assertIn("AGENTS.md", cleaned)
+        self.assertIn("launcher", cleaned)
+
+    def test_resolves_backspaces_and_carriage_returns(self) -> None:
+        from runtime.terminal.manager import clean_terminal_output
+
+        self.assertEqual(clean_terminal_output("l\x08ls"), "ls")
+        self.assertEqual(clean_terminal_output("10%\r20%\r100%\n"), "100%")
+        self.assertEqual(clean_terminal_output("a\r\nb\r\n"), "a\nb")
+
+    def test_preserves_tabs_and_structure(self) -> None:
+        from runtime.terminal.manager import clean_terminal_output
+
+        self.assertEqual(
+            clean_terminal_output("AGENTS.md\t\tlauncher\nREADME.md\tlogs\n"),
+            "AGENTS.md\t\tlauncher\nREADME.md\tlogs",
+        )
+
+    def test_osc_sequences_stripped(self) -> None:
+        from runtime.terminal.manager import clean_terminal_output
+
+        self.assertEqual(
+            clean_terminal_output("\x1b]0;my-title\x07hello"),
+            "hello",
+        )
+
+
 class SlugTest(SimpleTestCase):
     def test_slugify(self) -> None:
         self.assertEqual(slugify("Dev Env!"), "dev-env")

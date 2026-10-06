@@ -28,6 +28,44 @@ _NAME_RE = re.compile(r"[^a-z0-9-]+")
 #: Prefix for every tmux session we own (used by orphan cleanup).
 TMUX_PREFIX = "agentone-s"
 
+# Raw pty bytes that leak into captures / pipe-pane logs from interactive
+# shells (zsh bracketed-paste toggles, prompt redraws, SGR colors).
+_ANSI_OSC_RE = re.compile(r"\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)")
+_ANSI_CSI_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+_ANSI_OTHER_RE = re.compile(r"\x1b(?:[PX^_][^\x1b]*?\x1b\\|[@-Z\\-_])")
+_C0_EXCEPT_WS_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def clean_terminal_output(text: str) -> str:
+    """Strip terminal control bytes from captured pty text.
+
+    ``capture_pane`` (no ``-e``) already drops most attributes, but the
+    ``pipe-pane`` log inspected by the UI viewer records the raw stream:
+    ANSI CSI/OSC sequences, bracketed-paste toggles (``?2004h/l``), zsh
+    prompt redraws (``[K``, ``[J``, reverse-video ``%``), backspace
+    overstrikes from input echo, and ``\\r`` progress-bar redraws. This
+    reduces all of that to plain readable text, preserving tabs,
+    newlines, and line-internal spacing.
+    """
+    if not text:
+        return ""
+    text = _ANSI_OSC_RE.sub("", text)
+    text = _ANSI_CSI_RE.sub("", text)
+    text = _ANSI_OTHER_RE.sub("", text)
+    # Backspace overstrikes from input echo ("l\\x08ls" → "ls").
+    while "\x08" in text:
+        reduced = re.sub(r"[^\n]\x08", "", text)
+        if reduced == text:
+            text = text.replace("\x08", "")
+            break
+        text = reduced
+    # Lone carriage returns redraw the line (progress bars): keep the
+    # final segment of each line; CRLF is just a newline.
+    lines = []
+    for line in text.replace("\r\n", "\n").split("\n"):
+        lines.append(line.split("\r")[-1].rstrip())
+    return "\n".join(lines).strip("\n")
+
 
 def tmux_available() -> bool:
     """True when both the ``tmux`` binary and ``libtmux`` are importable."""
@@ -309,7 +347,7 @@ def exec_command(
         type(row).objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
         return {
             "status": "error",
-            "stdout": _tail(output, 20000),
+            "stdout": _tail(clean_terminal_output(output), 20000),
             "stderr": (
                 "The terminal's shell exited before the command finished "
                 "(the command likely ended the shell itself, e.g. `exit`, "
@@ -323,7 +361,7 @@ def exec_command(
     if marker not in output:
         return {
             "status": "timeout",
-            "stdout": _tail(output[len(before):], 20000),
+            "stdout": _tail(clean_terminal_output(output[len(before):]), 20000),
             "stderr": f"Timed out after {timeout}s waiting for command to finish.",
             "return_code": -1,
             "terminal": row.name,
@@ -345,7 +383,7 @@ def exec_command(
     # Drop the echoed command line itself when present.
     if stdout_lines and stdout_lines[0].strip() == command.strip().splitlines()[0][:200]:
         stdout_lines = stdout_lines[1:]
-    stdout = _tail("\n".join(stdout_lines).strip(), _max_output_chars())
+    stdout = _tail(clean_terminal_output("\n".join(stdout_lines).strip()), _max_output_chars())
     return {
         "status": "success" if return_code == 0 else "error",
         "stdout": stdout,
@@ -380,7 +418,7 @@ def poll_output(
     text = _capture(pane)
     _touch(row)
     tail = "\n".join(text.splitlines()[-max(1, min(int(lines or 200), 2000)):])
-    return {"status": "success", "terminal": row.name, "output": tail}
+    return {"status": "success", "terminal": row.name, "output": clean_terminal_output(tail)}
 
 
 def list_terminals(session_model: Any) -> list[dict[str, Any]]:

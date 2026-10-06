@@ -106,7 +106,10 @@ TERMINAL_EXTERNAL_ALLOWLIST = []
 Session right panel → **Terminals** tab (`RightPanelSessionTerminals`):
 lists each terminal (name, status, tmux liveness, cwd, last activity),
 shows the tail of its `pipe-pane` log on selection, and offers Refresh and
-Kill. No input — control stays with the agent.
+Kill. No input — control stays with the agent. The log is the raw pty
+stream, so the viewer (like the tool results) strips ANSI sequences,
+bracketed-paste toggles, backspace overstrikes, and `\r` redraws via
+`clean_terminal_output` before display.
 
 ## Tests
 

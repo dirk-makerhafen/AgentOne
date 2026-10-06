@@ -112,7 +112,11 @@ class RightPanelSessionTerminals(ModelView):
             return "(no output captured yet)"
         if len(text) > 8000:
             text = "...[truncated]...\n" + text[-8000:]
-        return html.escape(text)
+        from runtime.terminal.manager import clean_terminal_output
+
+        # The pipe-pane log is the raw pty stream (ANSI colors,
+        # bracketed-paste toggles, prompt redraws) — reduce it first.
+        return html.escape(clean_terminal_output(text))
 
     def select(self, name: str) -> None:
         self.selected_name = name
