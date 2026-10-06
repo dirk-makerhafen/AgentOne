@@ -10,6 +10,7 @@ Quick reference for developers working on AgentOne. See also:
 - [docs/manifest-format.md](docs/manifest-format.md) — YAML manifest format (agents, scripts, cron, streams, sets)
 - [docs/models.md](docs/models.md) — model reference (all ~30 models including DataCollection)
 - [docs/terminals.md](docs/terminals.md) — persistent tmux terminals + external CLI agents (tools, allowlist, guardrails, UI tab)
+- [docs/browser.md](docs/browser.md) — Camoufox browser capability (daemon, session/tab scope, approvals, config)
 
 ## Directory ownership
 
@@ -18,8 +19,8 @@ Quick reference for developers working on AgentOne. See also:
 | `config/` | Django settings, ASGI/WSGI, Celery app, URL routes |
 | `server/` | Core Django app: models (~30), admin, Celery tasks, migrations |
 | `registry/` | YAML manifest loader, install repo management, upstream source sync; legacy decorators (dead) |
-| `runtime/` | Agent/session/task runtime wrappers, state machines, rate limiter; `runtime/workitems/` holds the WorkItem FSM + verifier |
-| `launcher/` | Launcher service for remote agent management |
+| `runtime/` | Agent/session/task runtime wrappers, state machines, rate limiter; `runtime/browser/` holds the Camoufox daemon + client; `runtime/workitems/` holds the WorkItem FSM + verifier |
+| `launcher/` | Launcher service for remote agent management; supervises the browser daemon |
 | `ui/` | Web UI (pyHtmlGui): views, sidebar, chat, settings, overlays |
 | `old/` | Dead legacy code — do not touch |
 | `.agentone/` | Active tool/agent config: YAML manifests, scripts, skills, streams, sets |
@@ -64,6 +65,7 @@ python3 manage.py makemigrations && migrate     # DB schema
 python3 -m pytest server/tests/ -v --reuse-db   # server tests (245+)
 python3 -m pytest api/tests/ -v --reuse-db      # API tests (86)
 python3 -m pytest .agentone/scripts/ -v         # tool tests (75)
+python3 -m pytest server/tests/test_browser_*.py -v   # browser capability tests (73)
 python3 -m pylint config/ server/ registry/     # lint
 python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 ```
@@ -83,6 +85,7 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - UI tools in `.agentone/scripts/` must return `(bool, dict)` and be registered in a `scripts.md` manifest.
 - Upstream sources (`.agentone/{skills}/skills.yaml`, `{agents}/sources.yaml`, `{scripts}/sources.yaml`) are merged via `~/.agentone/upstream/` on every reload. Local files always override upstream.
 - Data flows (`.agentone/streams/*.md`, `.agentone/sets/*.md`) replaced legacy named-pipe system.
+- Browser: one long-lived daemon (`runtime/browser/`) owns every Camoufox process, because the Celery pool is 5 prefork workers and per-worker globals would give 5 disconnected browsers. The daemon listens on loopback with a `0600` bearer token, reaps idle browsers, and persists Camoufox fingerprints so a reopened profile keeps its identity. One process per top-level chat session; child/subsession agents inherit the root's browser but only see tabs they opened. `browser` is `access: write`, and mutating actions (`open`/`navigate`/`click`/`type`/`back`/`evaluate`/`upload`/`download`) require approval — see [docs/browser.md](docs/browser.md).
 - `_trigger_on_removed` in `tick_scheduler.py` (not reprocess_collection.py — it imports it) — the `source_calls` param must contain the AgentTaskCalls whose items were removed, not all source calls.
 - Scheduler split: `tick_scheduler.py` runs the 10s tick (dispatch, propagate, release, the three work-item routines, plus idle compaction). One-minute sibling tasks live in their own modules: `cron_scheduler.py` (cron dispatch), `sleep_guard_scheduler.py` (keep-awake guard), `recovery_scheduler.py` (`tasks.tick_scheduler_recovery` — **currently DISABLED**: its `agentone-recovery-scheduler` beat entry is commented out in `config/settings.py:85`, so recovery does not run; `_cancel_duplicate_queries` lives in `startup_cleanup.py`), and `startup_cleanup.py` (one-time full cleanup, dispatched by `server run`).
 - When writing tests for UI views (`ui/`), call `messages_view.set_visible(True)` in setUp to activate ObservableListView observer callbacks before exercising append/insert.
