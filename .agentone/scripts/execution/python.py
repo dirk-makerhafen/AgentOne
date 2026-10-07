@@ -17,7 +17,12 @@ def python(source: str) -> tuple[bool, dict]:
     - Installing packages via subprocess
 
     Args:
-        source: The Python source code to execute.
+        source: The Python source code to execute. Must be self-contained:
+            include all imports (a bare interpreter runs it, nothing is
+            pre-imported). Stdlib only. The source runs top to bottom as
+            a script — use print() to produce stdout. This is NOT a
+            function definition: a bare `def run(...)` does nothing
+            (that pattern belongs to adhoc tools, not this tool).
 
     Returns:
         A tuple of (success, result).
@@ -27,6 +32,10 @@ def python(source: str) -> tuple[bool, dict]:
             - stderr: str
             - return_code: int
         On error, result contains the same keys with status "error".
+        Like any script runner: text out, exit code back. If you need
+        structured data flowing between steps, write an adhoc tool
+        (def run(...) returning JSON) or use a workflow inline
+        function step instead of parsing stdout.
     '''
 
     # --- Guardrail check ---
@@ -56,7 +65,7 @@ def python(source: str) -> tuple[bool, dict]:
         )
 
         result = {
-            'status': 'success',
+            'status': 'success' if proc.returncode == 0 else 'error',
             'stdout': proc.stdout,
             'stderr': proc.stderr,
             'return_code': proc.returncode,

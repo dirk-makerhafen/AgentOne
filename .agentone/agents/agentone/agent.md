@@ -35,13 +35,13 @@ guidanceFileIndexLimit: 10
 commands: [ ping, tasks.*, wiki_lint, todo.* ]
 disallowedCommands: []
 
-tools: [core.*, filesystem-read.*, filesystem-write.*, subagents.*, history.*, web.*, execution.*, adhoc.*, skills.*, projects.*, wiki.*, todo.*, workitems.*, browser.*]
+tools: [core.*, filesystem-read.*, filesystem-write.*, subagents.*, history.*, web.*, execution.*, adhoc.*, workflow.*, skills.*, projects.*, wiki.*, todo.*, workitems.*, browser.*]
 disallowedTools: []
 
 skills: []
 disallowedSkills: []
 
-tasks: [ core.*, compact.*,   ]
+tasks: [ core.*, compact.*, workflow.*,  ]
 disallowedTasks: []
 
 subagents: 

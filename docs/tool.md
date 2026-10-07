@@ -22,13 +22,20 @@ See [docs/manifest-format.md](manifest-format.md) for the complete manifest form
 Agents with `adhoc.*` in their tool allowlist can create throwaway single-function
 helpers for the current session — no manifest edit, no `reload_all`:
 
-- `adhoc_create(name, source, description, params_schema)` — source must define
-  `def run(params)`; auto-allowed but safety-scanned (same Python guardrails as
-  the `execution.python` tool plus a workspace-policy path check).
+- `adhoc_create(name, source, description, params_schema?)` — source must
+  define `def run(...)` with a normal signature
+  (`def run(text: str, limit: int = 10)`) whose parameters become keyword
+  arguments. `params_schema` is optional — it is inferred from the
+  signature. `run` may return anything JSON-safe; auto-allowed but
+  safety-scanned (same Python guardrails as the `execution.python` tool
+  plus a workspace-policy path check).
 - `adhoc_list` / `adhoc_read` — discover and inspect (metadata only in list).
 - `adhoc_update` / `adhoc_delete` — mint a new version / remove the link.
-- `adhoc_function_call(name, params)` — the **only** way to execute one
-  (isolated subprocess, 60s timeout, truncated output).
+  A source-only update refreshes an inferred schema; an explicit schema
+  is never clobbered.
+- `adhoc_function_call(adhoc_tool_name, **kwargs)` — the **only** way to
+  execute one (isolated subprocess, 60s timeout, truncated output).
+  Result is namespaced under `result`.
 
 Storage is database rows, same pattern as query templates
 (`server/models/queries/query_template.py`): immutable `AdhocToolVersion`

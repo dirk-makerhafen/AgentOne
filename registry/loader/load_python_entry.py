@@ -291,6 +291,13 @@ def generate_schema_for_function(
     for name, param in sig.parameters.items():
         if name in ("self", "task_run", "task_context"):
             continue
+        if param.kind in (inspect.Parameter.VAR_POSITIONAL,
+                          inspect.Parameter.VAR_KEYWORD):
+            # *args/**kwargs are calling-convention plumbing, not LLM
+            # parameters — a schema property named "kwargs" would show up
+            # as bogus and required. Extra keys already pass validation
+            # (parse_llm_response only checks required/known-type keys).
+            continue
 
         annotation = type_hints.get(name, param.annotation)
         field_schema = resolve(annotation)

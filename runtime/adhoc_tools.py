@@ -150,10 +150,109 @@ def _check_has_run(source: str) -> str | None:
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "run":
             return None
-    return "Source must define a top-level `def run(params)` function."
+    return "Source must define a top-level `def run(...)` function."
 
 
-def _scan_source(source: str, policy: Any, own_pk: int | None) -> str | None:
+_INFER_ANNOTATION_TYPES = {
+    "str": "string",
+    "int": "integer",
+    "float": "number",
+    "bool": "boolean",
+    "dict": "object",
+    "list": "array",
+}
+
+
+def _infer_annotation_type(node: ast.expr | None) -> str:
+    """Best-effort AST annotation -> params-schema type key.
+
+    The stored schema subset has no unions, so ``Optional[X]`` / ``X | None``
+    unwrap to ``X`` and anything else unrecognized falls back to ``string``
+    (same fallback as the manifest loader for unannotated params).
+    Never executes the source — pure ``ast`` inspection.
+    """
+    if node is None or isinstance(node, ast.Constant):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return _INFER_ANNOTATION_TYPES.get(node.value, "string")
+        return "string"
+    if isinstance(node, ast.Name):
+        lowered = _INFER_ANNOTATION_TYPES.get(node.id)
+        if lowered is not None:
+            return lowered
+        return _INFER_ANNOTATION_TYPES.get(node.id.lower(), "string")
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+        arms = (node.left, node.right)
+        non_none = [a for a in arms
+                    if not (isinstance(a, ast.Constant) and a.value is None)]
+        if len(non_none) == 1:
+            return _infer_annotation_type(non_none[0])
+        return "string"
+    if isinstance(node, ast.Subscript):
+        func = node.value
+        fname = ""
+        if isinstance(func, ast.Name):
+            fname = func.id
+        elif isinstance(func, ast.Attribute):
+            fname = func.attr
+        if fname in ("List", "list"):
+            return "array"
+        if fname in ("Dict", "dict"):
+            return "object"
+        if fname in ("Optional", "Union"):
+            sl = node.slice
+            elts = sl.elts if isinstance(sl, ast.Tuple) else [sl]
+            non_none = [e for e in elts
+                        if not (isinstance(e, ast.Constant) and e.value is None)]
+            if len(non_none) == 1:
+                return _infer_annotation_type(non_none[0])
+        return "string"
+    return "string"
+
+
+def infer_params_schema(source: str) -> dict | None:
+    """Derive a params-schema-subset from ``def run``'s signature (AST only).
+
+    Every parameter maps to a property (defaults -> not required);
+    ``**kwargs`` maps to ``additionalProperties: true``; ``*args`` is
+    ignored since a kwargs dict cannot fill it. Returns ``None`` only
+    when there is no ``run`` to inspect or the source does not parse —
+    meaning "no validation".
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return None
+    func = next(
+        (n for n in tree.body
+         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == "run"),
+        None,
+    )
+    if func is None:
+        return None
+    pos_all = list(func.args.posonlyargs) + list(func.args.args)
+    properties: dict[str, Any] = {}
+    required: list[str] = []
+    pos_default_from = len(pos_all) - len(func.args.defaults)
+    for i, arg in enumerate(pos_all):
+        properties[arg.arg] = {"type": _infer_annotation_type(arg.annotation)}
+        if i < pos_default_from:
+            required.append(arg.arg)
+    for arg, default in zip(func.args.kwonlyargs, func.args.kw_defaults):
+        properties[arg.arg] = {"type": _infer_annotation_type(arg.annotation)}
+        if default is None:  # ast uses None for "no default" (and for =None)
+            required.append(arg.arg)
+    schema: dict[str, Any] = {
+        "type": "object",
+        "properties": properties,
+        "required": required,
+    }
+    if func.args.kwarg is not None:
+        schema["additionalProperties"] = True
+    return schema
+
+
+def _scan_source(source: str, policy: Any, own_pk: int | None,
+                 label: str = "Ad-hoc tool") -> str | None:
     """Static safety scan.  Returns a block message or None to allow."""
     from runtime.guardrails import check_python_command, check_python_paths
 
@@ -163,7 +262,7 @@ def _scan_source(source: str, policy: Any, own_pk: int | None) -> str | None:
         verdict = None
     if verdict is not None and verdict.action == "ask":
         return (
-            "Ad-hoc tool blocked by Python safety guardrail.\n"
+            f"{label} blocked by Python safety guardrail.\n"
             f"Reason: {verdict.reason}\n"
             f"Risk: {verdict.level} (score: {verdict.score})"
         )
@@ -174,16 +273,16 @@ def _scan_source(source: str, policy: Any, own_pk: int | None) -> str | None:
             path_verdict = None
         if path_verdict is not None and path_verdict.action == "deny":
             return (
-                "Ad-hoc tool blocked by workspace access policy.\n"
+                f"{label} blocked by workspace access policy.\n"
                 f"Reason: {path_verdict.reason}"
             )
     if own_pk is not None:
         for other in _SESSIONS_REF_RE.findall(source):
             if other != str(own_pk):
                 return (
-                    "Ad-hoc tool blocked: it references another session's "
-                    f"private storage (sessions/{other}). Ad-hoc tools are "
-                    "session-private and may only touch their own session folder."
+                    f"{label} blocked: it references another session's "
+                    f"private storage (sessions/{other}). Session-private "
+                    "code may only touch its own session folder."
                 )
     return None
 
@@ -295,7 +394,8 @@ def _not_found(name: str) -> tuple[bool, dict]:
 
 
 def _mint_version(session_pk: int, name: str, source: str, description: str,
-                  params_schema: dict | None, source_label: str):
+                  params_schema: dict | None, source_label: str,
+                  schema_inferred: bool = False):
     """Store *source* content-addressed and mint an immutable version row."""
     from server.models.adhoc_tool import AdhocToolVersion
     from server.models.content import GenericContent
@@ -308,6 +408,7 @@ def _mint_version(session_pk: int, name: str, source: str, description: str,
         params_schema=params_schema,
         created_by_session_id=session_pk,
         source=source_label,
+        schema_inferred=schema_inferred,
     )
 
 
@@ -338,6 +439,12 @@ def create_adhoc_tool(
     schema_err = validate_params_schema(params_schema)
     if schema_err:
         return (False, {"status": "error", "message": schema_err})
+    explicit_schema = params_schema is not None
+    if not explicit_schema:
+        # Like any other tool, the signature declares the params: infer
+        # the schema from `def run` so callers are validated without the
+        # author writing params_schema by hand.
+        params_schema = infer_params_schema(source)
     own_pk = _session_pk(session)
     if own_pk is None:
         return (False, {"status": "error", "message": "Cannot determine owning session."})
@@ -363,7 +470,8 @@ def create_adhoc_tool(
     try:
         with transaction.atomic():
             version = _mint_version(own_pk, name, source, description or "",
-                                    params_schema, source_label)
+                                    params_schema, source_label,
+                                    schema_inferred=not explicit_schema)
             SessionAdhocTool.objects.create(
                 session_id=own_pk, name=name, version=version
             )
@@ -373,7 +481,10 @@ def create_adhoc_tool(
             "status": "error",
             "message": f"Ad-hoc tool '{name}' already exists. Use adhoc_update to change it.",
         })
-    return (True, {"status": "success", "name": name, "version": version.pk})
+    result: dict[str, Any] = {"status": "success", "name": name, "version": version.pk}
+    if not explicit_schema and params_schema is not None:
+        result["schema_inferred"] = True
+    return (True, result)
 
 
 def list_adhoc_tools(session: Any) -> tuple[bool, dict]:
@@ -470,9 +581,10 @@ def update_adhoc_tool(
         block = _scan_source(source, _policy(session), own_pk)
         if block:
             return (False, {"status": "error", "message": block})
-    new_schema = None
+    new_schema: Any = None
+    schema_mode = "auto"
     if _clear_schema:
-        new_schema = None
+        schema_mode = "clear"
     elif params_schema is not None:
         new_schema, schema_err = _coerce_dict_arg(params_schema, "params_schema")
         if schema_err:
@@ -480,8 +592,8 @@ def update_adhoc_tool(
         schema_err = validate_params_schema(new_schema)
         if schema_err:
             return (False, {"status": "error", "message": schema_err})
-    else:
-        new_schema = "KEEP"  # sentinel: leave the stored schema alone
+        schema_mode = "explicit"
+    inferred_now = False
 
     try:
         with transaction.atomic():
@@ -499,21 +611,42 @@ def update_adhoc_tool(
             current = link.version
             eff_source = source if source is not None else current.content.get()
             eff_description = description if description is not None else current.description
+            eff_inferred = current.schema_inferred
+            if schema_mode == "auto":
+                if source is not None and (current.schema_inferred
+                                           or current.params_schema is None):
+                    # Stored schema was inferred (or absent): refresh it from
+                    # the new signature. An explicit schema is never
+                    # clobbered by a source-only update.
+                    new_schema = infer_params_schema(eff_source)
+                    eff_inferred = True
+                    inferred_now = new_schema is not None
+                else:
+                    new_schema = "KEEP"  # sentinel: leave stored schema alone
+            elif schema_mode == "clear":
+                eff_inferred = False
+            else:  # explicit
+                eff_inferred = False
             eff_schema = current.params_schema if new_schema == "KEEP" else new_schema
             from server.models.content import GenericContent
 
             if (GenericContent.from_text(eff_source).pk == current.content_id
                     and eff_description == current.description
-                    and eff_schema == current.params_schema):
+                    and eff_schema == current.params_schema
+                    and eff_inferred == current.schema_inferred):
                 return (True, {"status": "success", "name": name,
                                "version": current.pk, "unchanged": True})
             version = _mint_version(own_pk, name, eff_source, eff_description,
-                                    eff_schema, source_label)
+                                    eff_schema, source_label,
+                                    schema_inferred=eff_inferred)
             link.version = version
             link.save(update_fields=["version"])
     except IntegrityError as exc:
         return (False, {"status": "error", "message": f"Could not update tool: {exc}"})
-    return (True, {"status": "success", "name": name, "version": version.pk})
+    result = {"status": "success", "name": name, "version": version.pk}
+    if inferred_now:
+        result["schema_inferred"] = True
+    return (True, result)
 
 
 def delete_adhoc_tool(session: Any, name: str) -> tuple[bool, dict]:
@@ -598,22 +731,20 @@ def main():
         print(json.dumps({"ok": False, "error": "No top-level run() defined."}))
         return 1
     try:
-        import inspect
-        try:
-            result = func(params)
-        except TypeError:
-            sig = inspect.signature(func)
-            if len(sig.parameters) == 0:
-                result = func()
-            else:
-                raise
+        if not isinstance(params, dict):
+            raise TypeError(
+                "Tool params must be a JSON object, "
+                f"got {type(params).__name__}."
+            )
+        # Normal-tool style: run(**params). A TypeError here is a genuine
+        # signature mismatch and surfaces as-is — there is no legacy
+        # whole-dict fallback.
+        result = func(**params)
         if isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], bool):
             ok, data = result
-            print(json.dumps({"ok": bool(ok), "result": data if isinstance(data, dict) else {"result": data}}))
-        elif isinstance(result, dict):
-            print(json.dumps({"ok": True, "result": result}))
+            print(json.dumps({"ok": bool(ok), "result": data}))
         else:
-            print(json.dumps({"ok": True, "result": {"result": result}}))
+            print(json.dumps({"ok": True, "result": result}))
         return 0
     except Exception:
         print(json.dumps({"ok": False, "error": traceback.format_exc()}))
@@ -628,6 +759,143 @@ def _truncate(text: str, limit: int = MAX_OUTPUT_CHARS) -> str:
     if len(text) > limit:
         return text[:limit] + f"\n...[truncated {len(text) - limit} chars]"
     return text
+
+
+def _execute_isolated_source(source: str, params: Any, cwd: str) -> tuple[bool, dict]:
+    """Run *source* in an isolated subprocess and return ``(ok, payload)``.
+
+    Shared by ad-hoc tool calls and workflow inline-function steps: the
+    source is materialized to a temp file next to the runner, executed
+    with ``params`` on stdin, and the ``{"ok", "result"/"error"}``
+    envelope is converted to a namespaced payload —
+    ``{status, return_code, result}`` on success — so tool output never
+    collides with the envelope keys.
+    """
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as src_file:
+        src_file.write(source)
+        tool_path = src_file.name
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as runner_file:
+        runner_file.write(_RUNNER_SOURCE)
+        runner_path = runner_file.name
+    try:
+        proc = subprocess.run(
+            [sys.executable, runner_path, tool_path],
+            input=json.dumps({"params": params}),
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=CALL_TIMEOUT_SECONDS,
+            env={**os.environ},
+        )
+    except subprocess.TimeoutExpired:
+        return (False, {
+            "status": "error",
+            "stdout": "",
+            "stderr": f"Tool timed out after {CALL_TIMEOUT_SECONDS} seconds.",
+            "return_code": -1,
+        })
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        return (False, {
+            "status": "error",
+            "stdout": "",
+            "stderr": f"Tool failed to start: {exc}",
+            "return_code": -1,
+        })
+    finally:
+        for tmp in (tool_path, runner_path):
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+
+    stdout, stderr = _truncate(proc.stdout or ""), _truncate(proc.stderr or "")
+    try:
+        envelope = json.loads(stdout) if stdout.strip() else {}
+    except ValueError:
+        return (False, {
+            "status": "error",
+            "stdout": stdout,
+            "stderr": stderr or "Tool printed non-JSON output.",
+            "return_code": proc.returncode,
+        })
+    if not envelope.get("ok"):
+        detail = envelope.get("error", envelope.get("result", "Tool failed."))
+        payload: dict[str, Any] = {
+            "status": "error",
+            "stdout": "",
+            "stderr": _truncate(str(detail)),
+            "return_code": proc.returncode or -1,
+        }
+        if "result" in envelope:
+            payload["result"] = envelope["result"]
+        return (False, payload)
+    success: dict[str, Any] = {
+        "status": "success",
+        "return_code": proc.returncode,
+        "result": envelope.get("result"),
+    }
+    if stderr:
+        success["stderr"] = stderr
+    return (True, success)
+
+
+def build_inline_module(body: str, arg_names: list) -> str:
+    """Wrap a workflow inline-function *body* as an executable module.
+
+    The body is a function body (bare ``return`` allowed): argument names
+    arrive as variables, e.g. body ``"foo = content + 'bar'\\nreturn foo"``
+    with ``arg_names=["content"]`` becomes ``def run(content): ...``.
+    Raises :class:`ValueError` when the body is empty, an argument name
+    is not a valid parameter name, or the wrapped module does not parse.
+    """
+    import keyword
+    import textwrap
+
+    if not isinstance(body, str) or not body.strip():
+        raise ValueError("Inline function body must be non-empty Python code.")
+    clean: list[str] = []
+    for name in arg_names:
+        if not isinstance(name, str) or not name.isidentifier() \
+                or keyword.iskeyword(name):
+            raise ValueError(
+                f"Inline function argument {name!r} is not a valid Python "
+                "parameter name (args become run()'s parameter names)."
+            )
+        clean.append(name)
+    module = f"def run({', '.join(clean)}):\n{textwrap.indent(body, '    ')}\n"
+    try:
+        tree = ast.parse(module)
+    except SyntaxError as exc:
+        raise ValueError(f"Inline function has a syntax error: {exc}") from exc
+    if not any(isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+               and n.name == "run" for n in tree.body):
+        raise ValueError("Inline function body did not wrap cleanly.")
+    return module
+
+
+def run_inline_function(session: Any, body: str, params: Any = None) -> tuple[bool, dict]:
+    """Execute one ephemeral workflow inline-function body.
+
+    Same isolation as ad-hoc tools (subprocess, 60s timeout): the body is
+    wrapped via :func:`build_inline_module` with the params-dict keys as
+    parameter names, then run through the shared executor. Returns the
+    namespaced ``(ok, {status, return_code, result})`` payload, so inline
+    steps behave exactly like tool calls downstream (``path``, ``when``,
+    fail-fast).
+    """
+    params, params_err = _coerce_dict_arg(params, "params")
+    if params_err:
+        return (False, {"status": "error", "message": params_err})
+    if params is None:
+        params = {}
+    path_block = _check_param_paths(params, _policy(session))
+    if path_block:
+        return (False, {"status": "error", "message": path_block})
+    try:
+        module = build_inline_module(body, sorted(params.keys()))
+    except ValueError as exc:
+        return (False, {"status": "error", "message": str(exc)})
+    return _execute_isolated_source(module, params, _workspace_cwd(session))
 
 
 def call_adhoc_tool(session: Any, name: str, params: Any = None) -> tuple[bool, dict]:
@@ -676,66 +944,4 @@ def call_adhoc_tool(session: Any, name: str, params: Any = None) -> tuple[bool, 
         return (False, {"status": "error", "message": path_block})
 
     cwd = _workspace_cwd(session)
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as src_file:
-        src_file.write(source)
-        tool_path = src_file.name
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as runner_file:
-        runner_file.write(_RUNNER_SOURCE)
-        runner_path = runner_file.name
-    try:
-        proc = subprocess.run(
-            [sys.executable, runner_path, tool_path],
-            input=json.dumps({"params": params}),
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=CALL_TIMEOUT_SECONDS,
-            env={**os.environ},
-        )
-    except subprocess.TimeoutExpired:
-        return (False, {
-            "status": "error",
-            "stdout": "",
-            "stderr": f"Ad-hoc tool timed out after {CALL_TIMEOUT_SECONDS} seconds.",
-            "return_code": -1,
-        })
-    except Exception as exc:  # pylint: disable=broad-exception-caught
-        return (False, {
-            "status": "error",
-            "stdout": "",
-            "stderr": f"Ad-hoc tool failed to start: {exc}",
-            "return_code": -1,
-        })
-    finally:
-        for tmp in (tool_path, runner_path):
-            try:
-                os.unlink(tmp)
-            except OSError:
-                pass
-
-    stdout, stderr = _truncate(proc.stdout or ""), _truncate(proc.stderr or "")
-    try:
-        envelope = json.loads(stdout) if stdout.strip() else {}
-    except ValueError:
-        return (False, {
-            "status": "error",
-            "stdout": stdout,
-            "stderr": stderr or "Tool printed non-JSON output.",
-            "return_code": proc.returncode,
-        })
-    if not envelope.get("ok"):
-        return (False, {
-            "status": "error",
-            "stdout": "",
-            "stderr": _truncate(str(envelope.get("error", "Tool failed."))),
-            "return_code": proc.returncode or -1,
-        })
-    result = envelope.get("result")
-    payload: dict[str, Any] = {"status": "success", "return_code": proc.returncode}
-    if isinstance(result, dict):
-        payload.update(result)
-    else:
-        payload["result"] = result
-    if stderr:
-        payload["stderr"] = stderr
-    return (proc.returncode == 0, payload)
+    return _execute_isolated_source(source, params, cwd)

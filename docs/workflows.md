@@ -1,6 +1,25 @@
-# Session-Private Dynamic Workflows (Proposal — not implemented)
+# Session-Private Dynamic Workflows
 
-Status: proposal only. No code has been written for this yet.
+Status: **implemented** (V1, with the deviations in §12).
+
+- Models: `server/models/workflow.py` (`WorkflowVersion` immutable +
+  `SessionWorkflow` link) + migration `0142`, re-exported from
+  `server/models/__init__.py`. No admin registration (ad-hoc tools and
+  query templates have none either).
+- Runtime: `runtime/session_workflows.py` (validation, CRUD, Jinja
+  rendering, `when` evaluation, chained execution).
+- Wrappers: `.agentone/scripts/workflow/workflow.py` (7 tools) +
+  `.agentone/scripts/workflow/workflow_tasks.py` (5 internal
+  continuations) + `scripts.md` (`group: workflow`; tools are TOOL,
+  continuations are TASK).
+- Fork inheritance: `inherit_workflows`, hooked into
+  `AgentVersionModel.get_or_create_session` next to
+  `inherit_templates` / `inherit_adhoc_tools`.
+- Grants: `workflow.*` added to the AgentOne agent's `tools:` and
+  `tasks:` lists.
+- Tests: `server/tests/test_session_workflows.py` (56: DSL/validation
+  unit, DB lifecycle, stub-session chain logic) +
+  `.agentone/scripts/workflow/test_workflow.py` (19 wrapper tests).
 
 ## 1. Goal
 
@@ -119,7 +138,8 @@ pks except the thin tool wrappers (duck-typed session).
 ## 5. DSL (V1)
 
 A workflow is an ordered `steps` list. Each step has an `id`, exactly one
-action (tool call, `group`, or `map`), and an optional `when` conditional.
+action (tool call, inline `function`, `group`, or `map`), and an optional
+`when` conditional.
 
 ```json
 {
@@ -128,9 +148,10 @@ action (tool call, `group`, or `map`), and an optional `when` conditional.
   "inputs_schema": {"type": "object", "properties": {"topic": {"type": "string"}}, "required": ["topic"]},
   "steps": [
     {"id": "fetch", "tool": "inbox_search", "args": {"query": "{{ inputs.topic }}", "limit": 20}},
+    {"id": "ids", "function": "return [m['id'] for m in messages]", "args": {"messages": "{{ steps.fetch.output }}"}},
     {"id": "per_item",
      "map": {
-       "producer": {"step": "fetch"},
+       "producer": {"step": "ids"},
        "consumer": {"tool": "summarize_text", "args": {"text": "{{ item.body }}"}},
        "item_var": "item", "max_parallel": 8
      }},
@@ -148,14 +169,28 @@ action (tool call, `group`, or `map`), and an optional `when` conditional.
 Semantics:
 
 - **Sequence (default):** steps run in order with templated args.
+- **`function` (inline Python):** a step-local helper for reshaping data
+  between calls — no adhoc tool needed. The body is a function *body*
+  (bare `return` allowed): `args` keys arrive as variables and whatever
+  it returns flows on natively (reach it via `path: "result.<key>"`).
+  In map consumers `item`/`index` arrive as variables with no explicit
+  arg needed. Bodies are guardrail-scanned and syntax-checked at save
+  time (32KB cap), run isolated in a subprocess like adhoc tools, and
+  dispatched through the internal `workflow_inline` task so the step
+  gets a recorded call — fail-fast, `path`, and `when` work unchanged.
+  Do not `print()` (stdout carries the result envelope). Reach for
+  `adhoc_create` only when the same helper is reused across steps or
+  workflows; reserve `python` for scripts whose printed text is the
+  point (its output is text + exit code only).
 - **`group`:** 2+ tool invocations fired with the same resolved context, in
   parallel. Result = outputs in branch order. Optional
   `"tolerate_failures": true` returns per-branch `{ok, output/error}`
   instead of failing the step. Analogue of static `GROUP`.
 - **`map` (the for_each):** `{producer, consumer, item_var?, max_parallel?}`.
-  Producer is `{"step": "<prior_id>"}` (must resolve to a list) or an inline
-  tool call returning a list. Consumer is one tool template applied per
-  element with `{{ item }}` (+ `{{ index }}`) bound. Empty list → skipped,
+  Producer is `{"step": "<prior_id>"}` (must resolve to a list), an
+  inline tool call, or an inline `function` returning a list. Consumer
+  is one tool call, one function (or one group) applied per element
+  with `{{ item }}` (+ `{{ index }}`) bound. Empty list → skipped,
   output `[]`. Overflow beyond `max_parallel` goes through successive
   continuation waves. Analogue of static `MAP` + `map.py`.
 - **Nesting:** `group` branches and `map.consumer` may contain one nested
@@ -253,9 +288,11 @@ don't change semantics) and dispatches `workflow_step` for step 1:
   error); absolute-looking rendered args checked against the workspace
   policy; literal `sessions/<other_pk>` rejected; `map.producer` must yield
   a list.
-- No new code execution: workflows compose only already-registered tools,
-  so the Python/shell guardrail surface does not grow. Sub-calls inherit
-  their own `requires_approval` / posture enforcement.
+- Inline `function` bodies are scanned like adhoc tools at save time
+  (guardrail + path policy + syntax check), so no unvetted code reaches
+  the runner; at run time they execute isolated in a subprocess with a
+  60s timeout. Sub-calls inherit their own `requires_approval` / posture
+  enforcement.
 
 ## 10. Explicitly out of V1
 
@@ -279,3 +316,51 @@ currently lives in the call graph).
   `runtime/session_workflows.py`, new `.agentone/scripts/workflow/` wrappers,
   `inherit_workflows` hook in `get_or_create_session`, tests, and this doc.
   No loader, scheduler, or `build_llm_context` changes.
+
+## 12. V1 implementation notes (deviations from §§3–9)
+
+- **No archived refusal.** Both predecessors converged on "archive is a
+  visibility state, not a freeze" (`test_archived_sessions_keep_full_access`
+  in `test_query_templates.py` / `test_adhoc_tools.py`; the old
+  `_refuse_if_archived` was removed from `runtime/adhoc_tools.py`).
+  Workflows follow: full access on archived sessions, no helper.
+- **No `tolerate_failures` on groups.** A failed branch cancels the join
+  via dependency-failure propagation (same as static GROUP), so the
+  workflow fails fast. Partial-results groups are future work.
+- **Nesting: one nested `group` only (flattened at dispatch).** Group
+  branches and map consumers must be single tool calls or one nested
+  group; nested `map` is rejected at save time (it would need recursive
+  continuation waves). Arbitrary composition still works via
+  `workflow_run` steps (visited stack, depth ≤3, cycle error).
+- **Map producer `path` (small extension).** `{"step": id}` producers may
+  add `"path": "items.list"` (dotted, list-index aware) to select the
+  list inside a dict output — without it, maps over dict-returning tools
+  would be unusable.
+- **`when` type mismatches are runtime `False`, not save-time errors.**
+  Static validation covers grammar + prior-step refs only; comparing
+  incompatible types (or missing paths) evaluates to false rather than
+  failing the save, since output shapes are only known at run time.
+- **`workflow_delete` has no in-flight refusal.** It is unnecessary:
+  continuations pin `version.pk` directly, so deleting the link mid-run
+  cannot break the execution (covered by
+  `test_delete_mid_run_is_safe`).
+- **Envelope unwrapping.** A step's `output` is its tool call's payload
+  (the `(True, payload)` envelope is unwrapped for any payload type);
+  `count` is `len` for lists, `0` for skipped/null, else `1`.
+- **Inline `function` steps (post-V1 addition).** `{"function": <body>,
+  "args"?}` leaves work anywhere a tool call goes (steps, group
+  branches, map consumers/producers). See §5. Dispatched via the
+  internal `workflow_inline` task; `item`/`index` auto-injected in map
+  consumers.
+- **`python` is text-only.** The `data` key (stdout parsed as JSON) was
+  removed: scripts return `{status, stdout, stderr, return_code}`.
+  Structured flow between steps goes through `function` steps or adhoc
+  tools (whose `run` may return anything JSON-safe, namespaced under
+  `result`).
+- **Adhoc tools infer their schema.** `params_schema` is optional at
+  creation — it is inferred from `def run`'s signature (AST, never
+  imported) and refreshed on source updates; explicit schemas are never
+  clobbered. `adhoc_function_call` takes `adhoc_tool_name` plus
+  `**kwargs` like any other tool. The manifest loader skips
+  `*args`/`**kwargs` in schema generation (previously a bogus required
+  `kwargs` property).

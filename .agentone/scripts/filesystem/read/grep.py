@@ -27,7 +27,7 @@ def grep(
 
     Args:
         pattern: The regex pattern to search for in file contents.
-        path: The directory to search in.
+        path: The directory to search in, or a single file to search.
         include: File pattern to include in the search
             (e.g., "*.js", "*.{ts,tsx}").
 
@@ -58,31 +58,41 @@ def grep(
         matches = []
         files_with_matches = set()
 
-        for root, dirs, files in os.walk(search_dir):
-            dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', '.DS_Store', 'node_modules', '.pytest_cache', '_staticfiles']]
-
-            for filename in files:
-                if include and not fnmatch.fnmatch(filename, include):
-                    continue
-
-                filepath = os.path.join(root, filename)
+        def _search_file(filepath: str) -> None:
+            try:
+                p = Path(filepath)
                 try:
-                    p = Path(filepath)
-                    try:
-                        content = p.read_text(encoding='utf-8')
-                    except UnicodeDecodeError:
+                    content = p.read_text(encoding='utf-8')
+                except UnicodeDecodeError:
+                    return
+
+                for line_num, line in enumerate(content.split('\n'), 1):
+                    if regex.search(line):
+                        matches.append({
+                            'file': str(filepath),
+                            'line_number': line_num,
+                            'line': line.strip(),
+                        })
+                        files_with_matches.add(filepath)
+            except (OSError, PermissionError):
+                return
+
+        # A file path searches just that file (os.walk on a file would
+        # silently yield nothing — a bare "success, 0 matches" trap).
+        if search_dir.is_file():
+            if include and not fnmatch.fnmatch(search_dir.name, include):
+                pass
+            else:
+                _search_file(str(search_dir))
+        else:
+            for root, dirs, files in os.walk(search_dir):
+                dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', '.DS_Store', 'node_modules', '.pytest_cache', '_staticfiles']]
+
+                for filename in files:
+                    if include and not fnmatch.fnmatch(filename, include):
                         continue
 
-                    for line_num, line in enumerate(content.split('\n'), 1):
-                        if regex.search(line):
-                            matches.append({
-                                'file': str(filepath),
-                                'line_number': line_num,
-                                'line': line.strip(),
-                            })
-                            files_with_matches.add(filepath)
-                except (OSError, PermissionError):
-                    continue
+                    _search_file(os.path.join(root, filename))
 
         return (True, {
             'status': 'success',

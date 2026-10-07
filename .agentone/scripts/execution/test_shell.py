@@ -26,6 +26,7 @@ class TestShell(unittest.TestCase):
         """Run a command that exits with a non-zero code."""
         success, result = shell(source="exit 42")
         self.assertFalse(success)
+        self.assertEqual(result['status'], 'error')
         self.assertEqual(result['return_code'], 42)
 
     def test_shell_env(self) -> None:

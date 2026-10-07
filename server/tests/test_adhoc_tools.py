@@ -24,8 +24,7 @@ from server.models.adhoc_tool import AdhocToolVersion, SessionAdhocTool
 
 
 GOOD_SOURCE = """\
-def run(params):
-    text = params.get("text", "")
+def run(text: str = ""):
     return {"length": len(text), "upper": text.upper()}
 """
 
@@ -108,8 +107,8 @@ class LifecycleTest(TestCase):
 
         ok, res = adhoc.call_adhoc_tool(self.stub, "wordstats", {"text": "hi"})
         self.assertTrue(ok, res)
-        self.assertEqual(res["length"], 2)
-        self.assertEqual(res["upper"], "HI")
+        self.assertEqual(res["result"]["length"], 2)
+        self.assertEqual(res["result"]["upper"], "HI")
 
         ok, res = adhoc.update_adhoc_tool(
             self.stub, "wordstats", description="new desc")
@@ -170,7 +169,7 @@ class LifecycleTest(TestCase):
         self.assertIn("limit", res["message"].lower())
 
     def test_source_size_cap(self):
-        big = "def run(params):\n    return {}\n" + "#" * adhoc.MAX_SOURCE_BYTES
+        big = "def run():\n    return {}\n" + "#" * adhoc.MAX_SOURCE_BYTES
         ok, res = adhoc.create_adhoc_tool(self.stub, "big", big)
         self.assertFalse(ok)
         self.assertIn("exceeds", res["message"])
@@ -182,9 +181,9 @@ class LifecycleTest(TestCase):
         self.assertTrue(ok)
         self.assertEqual(res["meta"]["params_schema"], SCHEMA)
         ok, res = adhoc.call_adhoc_tool(self.stub, "strschema",
-                                        json.dumps({"text": "hey"}))
+                                         json.dumps({"text": "hey"}))
         self.assertTrue(ok, res)
-        self.assertEqual(res["upper"], "HEY")
+        self.assertEqual(res["result"]["upper"], "HEY")
 
     def test_delete_keeps_versions_for_audit(self):
         ok, res = adhoc.create_adhoc_tool(self.stub, "audit", GOOD_SOURCE)
@@ -210,11 +209,192 @@ class LifecycleTest(TestCase):
 
     def test_call_exception_reported(self):
         ok, _ = adhoc.create_adhoc_tool(
-            self.stub, "boom", "def run(params):\n    raise ValueError('kaput')\n")
+            self.stub, "boom", "def run():\n    raise ValueError('kaput')\n")
         self.assertTrue(ok)
         ok, res = adhoc.call_adhoc_tool(self.stub, "boom", {})
         self.assertFalse(ok)
         self.assertIn("kaput", res.get("stderr", ""))
+
+
+class InferenceTest(SimpleTestCase):
+    def test_typed_signature_inferred(self):
+        schema = adhoc.infer_params_schema(
+            "def run(text: str, limit: int = 10):\n    return text\n")
+        self.assertEqual(schema, {
+            "type": "object",
+            "properties": {"text": {"type": "string"},
+                           "limit": {"type": "integer"}},
+            "required": ["text"],
+        })
+
+    def test_single_params_arg_is_a_normal_property(self):
+        schema = adhoc.infer_params_schema(
+            "def run(params):\n    return params\n")
+        self.assertEqual(schema, {
+            "type": "object",
+            "properties": {"params": {"type": "string"}},
+            "required": ["params"],
+        })
+
+    def test_zero_arg_gives_empty_schema(self):
+        self.assertEqual(
+            adhoc.infer_params_schema("def run():\n    return 1\n"),
+            {"type": "object", "properties": {}, "required": []})
+
+    def test_annotations_mapped(self):
+        schema = adhoc.infer_params_schema(
+            "from typing import Optional\n"
+            "def run(name: str, tags: list, meta: dict, score: float,\n"
+            "        flag: bool, nick: Optional[str] = None,\n"
+            "        pipe: int | None = None, **extra):\n"
+            "    return name\n")
+        props = schema["properties"]
+        self.assertEqual(props["name"], {"type": "string"})
+        self.assertEqual(props["tags"], {"type": "array"})
+        self.assertEqual(props["meta"], {"type": "object"})
+        self.assertEqual(props["score"], {"type": "number"})
+        self.assertEqual(props["flag"], {"type": "boolean"})
+        self.assertEqual(props["nick"], {"type": "string"})
+        self.assertEqual(props["pipe"], {"type": "integer"})
+        self.assertEqual(schema["required"],
+                         ["name", "tags", "meta", "score", "flag"])
+        self.assertNotIn("nick", schema["required"])
+        self.assertNotIn("pipe", schema["required"])
+        self.assertTrue(schema["additionalProperties"])
+
+    def test_unknown_annotation_falls_back_to_string(self):
+        schema = adhoc.infer_params_schema(
+            "def run(weird: SomeCustomType, bare):\n    return 1\n")
+        self.assertEqual(schema["properties"]["weird"], {"type": "string"})
+        self.assertEqual(schema["properties"]["bare"], {"type": "string"})
+        self.assertEqual(schema["required"], ["weird", "bare"])
+
+    def test_syntax_error_gives_none(self):
+        self.assertIsNone(adhoc.infer_params_schema("def run(:\n"))
+
+    def test_build_inline_module(self):
+        module = adhoc.build_inline_module(
+            "foo = content + 'bar'\nreturn foo", ["content"])
+        self.assertIn("def run(content):", module)
+        self.assertIn("    return foo", module)
+
+    def test_build_inline_module_no_args(self):
+        module = adhoc.build_inline_module("return [1, 2]", [])
+        self.assertIn("def run():", module)
+
+    def test_build_inline_module_rejects_empty(self):
+        with self.assertRaises(ValueError):
+            adhoc.build_inline_module("   ", [])
+
+    def test_build_inline_module_rejects_bad_names(self):
+        for bad in ["my-key", "class", "0x", "has space"]:
+            with self.assertRaises(ValueError, msg=bad):
+                adhoc.build_inline_module("return 1", [bad])
+
+    def test_build_inline_module_rejects_syntax_errors(self):
+        with self.assertRaises(ValueError):
+            adhoc.build_inline_module("def broken(:", [])
+
+
+class InferredLifecycleTest(TestCase):
+    def setUp(self):
+        self.session = SessionModel.objects.create(name="adhoc-inf")
+        self.stub = _Stub(self.session, tempfile.gettempdir())
+
+    def test_create_without_schema_infers(self):
+        ok, res = adhoc.create_adhoc_tool(
+            self.stub, "shout",
+            "def run(text: str, loud: bool = True):\n    return text.upper()\n",
+            "shouts")
+        self.assertTrue(ok, res)
+        self.assertTrue(res.get("schema_inferred"))
+        ok, res = adhoc.read_adhoc_tool(self.stub, "shout")
+        self.assertEqual(res["meta"]["params_schema"], {
+            "type": "object",
+            "properties": {"text": {"type": "string"},
+                           "loud": {"type": "boolean"}},
+            "required": ["text"],
+        })
+
+    def test_inferred_schema_enforced_on_call(self):
+        adhoc.create_adhoc_tool(
+            self.stub, "shout",
+            "def run(text: str):\n    return text.upper()\n")
+        ok, res = adhoc.call_adhoc_tool(self.stub, "shout", {})
+        self.assertFalse(ok)
+        self.assertIn("required", res["message"])
+        ok, res = adhoc.call_adhoc_tool(self.stub, "shout", {"text": "hi"})
+        self.assertTrue(ok, res)
+        self.assertEqual(res["result"], "HI")
+
+    def test_unannotated_tool_infers_string_schema(self):
+        ok, res = adhoc.create_adhoc_tool(self.stub, "leg", GOOD_SOURCE)
+        self.assertTrue(ok, res)
+        self.assertTrue(res.get("schema_inferred"))
+        ok, res = adhoc.read_adhoc_tool(self.stub, "leg")
+        self.assertEqual(res["meta"]["params_schema"], {
+            "type": "object",
+            "properties": {"text": {"type": "string"}},
+            "required": [],
+        })
+
+    def test_non_dict_return_namespaced(self):
+        adhoc.create_adhoc_tool(
+            self.stub, "items",
+            "def run(count: int):\n    return list(range(count))\n")
+        ok, res = adhoc.call_adhoc_tool(self.stub, "items", {"count": 3})
+        self.assertTrue(ok, res)
+        self.assertEqual(res["result"], [0, 1, 2])
+
+    def test_bool_tuple_return_unwrapped(self):
+        adhoc.create_adhoc_tool(
+            self.stub, "pair", "def run():\n    return (True, [1, 2])\n")
+        ok, res = adhoc.call_adhoc_tool(self.stub, "pair", {})
+        self.assertTrue(ok, res)
+        self.assertEqual(res["result"], [1, 2])
+
+    def test_false_tuple_reports_result(self):
+        adhoc.create_adhoc_tool(
+            self.stub, "neg",
+            "def run():\n    return (False, {'reason': 'nope'})\n")
+        ok, res = adhoc.call_adhoc_tool(self.stub, "neg", {})
+        self.assertFalse(ok)
+        self.assertEqual(res["result"], {"reason": "nope"})
+
+    def test_zero_arg_run(self):
+        adhoc.create_adhoc_tool(
+            self.stub, "const", "def run():\n    return 42\n")
+        ok, res = adhoc.call_adhoc_tool(self.stub, "const", {})
+        self.assertTrue(ok, res)
+        self.assertEqual(res["result"], 42)
+        ok, res = adhoc.call_adhoc_tool(self.stub, "const", {"x": 1})
+        self.assertFalse(ok)
+
+    def test_update_source_refreshes_inferred_schema(self):
+        adhoc.create_adhoc_tool(
+            self.stub, "flex", "def run(text: str):\n    return text\n")
+        ok, res = adhoc.update_adhoc_tool(
+            self.stub, "flex",
+            "def run(words: list):\n    return len(words)\n")
+        self.assertTrue(ok, res)
+        self.assertTrue(res.get("schema_inferred"))
+        ok, res = adhoc.read_adhoc_tool(self.stub, "flex")
+        self.assertEqual(
+            res["meta"]["params_schema"]["properties"], {"words": {"type": "array"}})
+        ok, res = adhoc.call_adhoc_tool(self.stub, "flex", {"words": ["a"]})
+        self.assertTrue(ok, res)
+        self.assertEqual(res["result"], 1)
+
+    def test_explicit_schema_survives_source_update(self):
+        adhoc.create_adhoc_tool(
+            self.stub, "fixed", "def run(text: str):\n    return text\n",
+            "fixed desc", SCHEMA)
+        ok, res = adhoc.update_adhoc_tool(
+            self.stub, "fixed", "def run(other: int):\n    return other\n")
+        self.assertTrue(ok, res)
+        self.assertNotIn("schema_inferred", res)
+        ok, res = adhoc.read_adhoc_tool(self.stub, "fixed")
+        self.assertEqual(res["meta"]["params_schema"], SCHEMA)
 
 
 class GuardrailTest(TestCase):
@@ -224,18 +404,18 @@ class GuardrailTest(TestCase):
 
     def test_eval_blocked_at_create(self):
         ok, res = adhoc.create_adhoc_tool(
-            self.stub, "evlx", "def run(params):\n    return eval('1')\n")
+            self.stub, "evlx", "def run():\n    return eval('1')\n")
         self.assertFalse(ok)
         self.assertIn("guardrail", res["message"].lower())
 
     def test_shell_out_blocked_at_create(self):
         ok, res = adhoc.create_adhoc_tool(
-            self.stub, "shlx", "import os\ndef run(params):\n    os.system('ls')\n    return {}\n")
+            self.stub, "shlx", "import os\ndef run():\n    os.system('ls')\n    return {}\n")
         self.assertFalse(ok)
         self.assertIn("guardrail", res["message"].lower())
 
     def test_cross_session_reference_blocked(self):
-        src = ("def run(params):\n"
+        src = ("def run():\n"
                "    p = '/x/.agentone/sessions/999/adhoc_tools/a.py'\n"
                "    return {'p': p}\n")
         ok, res = adhoc.create_adhoc_tool(self.stub, "xray", src)
@@ -255,7 +435,7 @@ class ArchiveTest(TestCase):
         self.assertTrue(ok, res)
         ok, res = adhoc.call_adhoc_tool(stub, "keep", {"text": "hi"})
         self.assertTrue(ok, res)
-        self.assertEqual(res["upper"], "HI")
+        self.assertEqual(res["result"]["upper"], "HI")
         ok, res = adhoc.update_adhoc_tool(stub, "keep", description="edit")
         self.assertTrue(ok, res)
         ok, res = adhoc.delete_adhoc_tool(stub, "keep")

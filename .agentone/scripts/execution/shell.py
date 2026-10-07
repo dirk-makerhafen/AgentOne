@@ -104,7 +104,7 @@ def shell(source: str, interpreter: str = "auto") -> tuple[bool, dict]:
         )
 
         result = {
-            'status': 'success',
+            'status': 'success' if proc.returncode == 0 else 'error',
             'stdout': proc.stdout,
             'stderr': proc.stderr,
             'return_code': proc.returncode,

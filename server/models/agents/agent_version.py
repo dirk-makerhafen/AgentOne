@@ -186,6 +186,9 @@ class AgentVersionModel(BaseModel):
             from runtime.adhoc_tools import inherit_adhoc_tools
 
             inherit_adhoc_tools(parent_session_version.session_id, session.pk)
+            from runtime.session_workflows import inherit_workflows
+
+            inherit_workflows(parent_session_version.session_id, session.pk)
 
         return session_version
 

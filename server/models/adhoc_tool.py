@@ -42,7 +42,7 @@ class AdhocToolVersion(BaseModel):
         "server.GenericContent",
         on_delete=models.PROTECT,
         related_name="adhoc_tool_versions",
-        help_text="Python source defining run(params), content-addressed.",
+        help_text="Python source defining run(...), content-addressed.",
     )
     name = models.CharField(
         max_length=255,
@@ -59,6 +59,12 @@ class AdhocToolVersion(BaseModel):
         default=None,
         blank=True,
         help_text="Optional JSON-schema-subset dict calls are validated against.",
+    )
+    schema_inferred = models.BooleanField(
+        default=False,
+        help_text="True when params_schema was inferred from run's signature "
+        "(vs explicitly set). Lets source-only updates refresh inferred "
+        "schemas without ever clobbering explicit ones.",
     )
     created_by_session = models.ForeignKey(
         "server.SessionModel",

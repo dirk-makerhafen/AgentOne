@@ -40,6 +40,23 @@ class TestGrep(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn('not found', result['message'])
 
+    def test_grep_file_path_searches_that_file(self) -> None:
+        """Grep with a file path searches the file (not silent empty)."""
+        target = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              'grep.py')
+        success, result = grep(r'def grep\(', path=target)
+        self.assertTrue(success)
+        self.assertGreater(result['match_count'], 0)
+        self.assertEqual(result['file_count'], 1)
+
+    def test_grep_file_path_no_match(self) -> None:
+        """Grep with a file path and no hit returns empty success."""
+        target = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              'grep.py')
+        success, result = grep('zzz_no_such_token_zzz', path=target)
+        self.assertTrue(success)
+        self.assertEqual(result['match_count'], 0)
+
 
 if __name__ == '__main__':
     unittest.main()
