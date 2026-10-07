@@ -25,6 +25,10 @@ tools:
     file: wiki_checks.py
     function: wiki_check
     bound: True
+  - name: find_unlinked_raw_files
+    file: wiki_checks.py
+    function: wiki_find_unlinked_raw
+    bound: True
 tasks:
   - name: find_unlinked_raw
     file: wiki_checks.py

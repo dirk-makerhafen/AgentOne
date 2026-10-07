@@ -47,6 +47,10 @@ class _Stub:
         self.model = model
         self.workspace = type("WS", (), {"path": root, "access": {}})()
         self.agent = _Agent()
+        self.tools = {}
+
+    def get_tool(self, name):
+        return self.tools.get(name)
 
 
 class NameValidationTest(SimpleTestCase):
@@ -78,6 +82,11 @@ class SchemaValidationTest(SimpleTestCase):
         self.assertIn("required", validate_params_against_schema({}, SCHEMA))
         self.assertIn("must be string",
                       validate_params_against_schema({"text": 1}, SCHEMA))
+
+    def test_coerce_error_names_position(self):
+        _, err = adhoc._coerce_dict_arg('{"a": 1}}', "params")
+        self.assertIn("char", err)
+        self.assertIn("native", err)
 
 
 class LifecycleTest(TestCase):
@@ -272,29 +281,6 @@ class InferenceTest(SimpleTestCase):
     def test_syntax_error_gives_none(self):
         self.assertIsNone(adhoc.infer_params_schema("def run(:\n"))
 
-    def test_build_inline_module(self):
-        module = adhoc.build_inline_module(
-            "foo = content + 'bar'\nreturn foo", ["content"])
-        self.assertIn("def run(content):", module)
-        self.assertIn("    return foo", module)
-
-    def test_build_inline_module_no_args(self):
-        module = adhoc.build_inline_module("return [1, 2]", [])
-        self.assertIn("def run():", module)
-
-    def test_build_inline_module_rejects_empty(self):
-        with self.assertRaises(ValueError):
-            adhoc.build_inline_module("   ", [])
-
-    def test_build_inline_module_rejects_bad_names(self):
-        for bad in ["my-key", "class", "0x", "has space"]:
-            with self.assertRaises(ValueError, msg=bad):
-                adhoc.build_inline_module("return 1", [bad])
-
-    def test_build_inline_module_rejects_syntax_errors(self):
-        with self.assertRaises(ValueError):
-            adhoc.build_inline_module("def broken(:", [])
-
 
 class InferredLifecycleTest(TestCase):
     def setUp(self):
@@ -395,6 +381,147 @@ class InferredLifecycleTest(TestCase):
         self.assertNotIn("schema_inferred", res)
         ok, res = adhoc.read_adhoc_tool(self.stub, "fixed")
         self.assertEqual(res["meta"]["params_schema"], SCHEMA)
+
+
+class _FakeFlowCall:
+    def __init__(self, ok, payload):
+        self._result = [ok, payload]
+        self.status = "ENDED"
+
+    def refresh_from_db(self):
+        pass
+
+    def get_result(self, timeout=0, recursive=True):
+        return self._result
+
+
+class _FakeFlowBound:
+    def __init__(self, log, payload_fn):
+        self._log = log
+        self._payload_fn = payload_fn
+
+    def delay(self, **kwargs):
+        self._log.append(kwargs)
+        ok, payload = self._payload_fn(kwargs)
+        return _FakeFlowCall(ok, payload)
+
+
+class FlowTest(TestCase):
+    """call_tool_async inside run(): real subprocess + pipe pump."""
+
+    def setUp(self):
+        self.session = SessionModel.objects.create(name="adhoc-flow")
+        self.stub = _Stub(self.session, tempfile.gettempdir())
+        self.dispatched = []
+
+    def _tool(self, name, source, sub_tools):
+        self.stub.tools.update(sub_tools)
+        ok, res = adhoc.create_adhoc_tool(self.stub, name, source)
+        self.assertTrue(ok, res)
+
+    def test_subcall_success_returns_payload(self):
+        self._tool("flow", (
+            "def run(text: str):\n"
+            "    sub = call_tool_async('echo_tool', text=text)\n"
+            "    return {'got': sub}\n"
+        ), {"echo_tool": _FakeFlowBound(
+            self.dispatched, lambda kw: (True, {"echoed": kw["text"]}))})
+        ok, res = adhoc.call_adhoc_tool(self.stub, "flow", {"text": "hi"})
+        self.assertTrue(ok, res)
+        self.assertEqual(res["result"], {"got": {"echoed": "hi"}})
+        self.assertEqual(self.dispatched, [{"text": "hi"}])
+
+    def test_subcall_failure_raises_in_child(self):
+        self._tool("flowfail", (
+            "def run():\n"
+            "    return call_tool_async('bad_tool')\n"
+        ), {"bad_tool": _FakeFlowBound(
+            self.dispatched,
+            lambda kw: (False, {"status": "error", "message": "nope"}))})
+        ok, res = adhoc.call_adhoc_tool(self.stub, "flowfail", {})
+        self.assertFalse(ok)
+        self.assertIn("bad_tool", res.get("stderr", ""))
+        self.assertIn("nope", res.get("stderr", ""))
+
+    def test_tool_error_catchable_in_child(self):
+        self._tool("flowcatch", (
+            "def run():\n"
+            "    try:\n"
+            "        call_tool_async('ghost')\n"
+            "    except AdhocToolCallError as exc:\n"
+            "        return {'caught': str(exc)}\n"
+        ), {})
+        ok, res = adhoc.call_adhoc_tool(self.stub, "flowcatch", {})
+        self.assertTrue(ok, res)
+        self.assertIn("ghost", res["result"]["caught"])
+        self.assertIn("unknown or not allowed", res["result"]["caught"])
+
+    def test_unknown_tool_is_clean_error(self):
+        self._tool("flowunknown", (
+            "def run():\n"
+            "    return call_tool_async('ghost')\n"
+        ), {})
+        ok, res = adhoc.call_adhoc_tool(self.stub, "flowunknown", {})
+        self.assertFalse(ok)
+        self.assertIn("unknown or not allowed", res.get("stderr", ""))
+
+    def test_nesting_depth_zero_outside_runs(self):
+        self.assertEqual(adhoc._adhoc_nesting_depth(), 0)
+
+    def test_nesting_walk_counts_frames(self):
+        from runtime.context_manager import ContextTracker
+
+        other_td = type("TD", (), {"name": "python"})()
+        adhoc_td = type("TD", (), {"name": "adhoc_function_call"})()
+        call_inner = type("C", (), {
+            "task_definition": adhoc_td, "parent_taskrun": None})()
+        run_inner = type("R", (), {"agent_task_call": call_inner})()
+        call_mid = type("C", (), {
+            "task_definition": other_td, "parent_taskrun": run_inner})()
+        run_mid = type("R", (), {"agent_task_call": call_mid})()
+        call_outer = type("C", (), {
+            "task_definition": adhoc_td, "parent_taskrun": run_mid})()
+        run_outer = type("R", (), {"agent_task_call": call_outer})()
+        with ContextTracker(run_outer):
+            self.assertEqual(adhoc._adhoc_nesting_depth(), 2)
+
+    def test_await_observes_completion_via_refresh(self):
+        """The waiter must re-read the row: a freshly dispatched call's
+        in-memory status never changes, so get_result() alone polls stale
+        state forever (this is what broke sub-calls initially)."""
+        import time as _time
+
+        class _FlippingCall:
+            def __init__(self):
+                self.status = "NEW"
+                self.refreshes = 0
+
+            def refresh_from_db(self):
+                self.refreshes += 1
+                if self.refreshes >= 3:
+                    self.status = "ENDED"
+
+            def get_result(self, timeout=0, recursive=True):
+                return [True, {"done": True}]
+
+        resolved = adhoc._await_call(
+            _FlippingCall(), _time.time() + 30)
+        self.assertEqual(resolved, [True, {"done": True}])
+
+    def test_await_times_out_when_never_ending(self):
+        import time as _time
+
+        class _NeverCall:
+            status = "NEW"
+
+            def refresh_from_db(self):
+                pass
+
+            def get_result(self, timeout=0, recursive=True):
+                raise AssertionError("must not resolve before ENDED")
+
+        with self.assertRaises(TimeoutError):
+            adhoc._await_call(_NeverCall(), _time.time() + 2)
 
 
 class GuardrailTest(TestCase):

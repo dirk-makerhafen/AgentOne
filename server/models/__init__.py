@@ -25,7 +25,6 @@ try:
     from .workspace import WorkspaceModel
     from .collections import DataCollection, CollectionItem
     from .hooks import SessionHookRun
-    from .workflow import WorkflowVersion, SessionWorkflow
     from .workitems.work_item import WorkItem
 except Exception as e:
     print("Failed to import models:", e)

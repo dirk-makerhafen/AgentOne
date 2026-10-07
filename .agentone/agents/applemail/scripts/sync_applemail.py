@@ -505,6 +505,3 @@ def clean_html_email_to_markdown(html_content):
     markdown = converter.handle(clean_html)
     markdown = re.sub(r'\n{3,}', '\n\n', markdown)
     return markdown.strip()
-
-def email_received(markdown_file: str) -> str:
-    return markdown_file

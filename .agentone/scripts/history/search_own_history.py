@@ -95,7 +95,6 @@ def search_own_history(
     limit: int = DEFAULT_LIMIT,
     offset: int = 0,
     order: str = "newest",
-    workflow: str | None = None,  # reserved for later; currently ignored
 ) -> dict[str, Any]:
     """Search your own session history.
 
@@ -117,7 +116,6 @@ def search_own_history(
             Default False (own session only).
         limit: Max hits (1-100, default 20). offset: Skip first N hits.
         order: "newest" (default) or "oldest".
-        workflow: Reserved for later workflow filtering; ignored in v1.
 
     Returns:
         ``{"results": [...], "total_count": int, "has_more": bool,
