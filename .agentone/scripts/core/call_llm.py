@@ -190,6 +190,15 @@ def _close_stream(stream: Any | None) -> None:
         except Exception:  # pylint: disable=broad-exception-caught
             pass
 
+def detect_repeat(content):
+    for blocksize in [255, 512, 1024]:
+        windowsize = blocksize * 5
+        if len(content) < windowsize:
+            break
+        window = content[-windowsize:]
+        if window and window.count(content[-blocksize:]) >= 3:
+            return True
+    return False
 
 def run_streaming_query(
     session: Session,
@@ -239,6 +248,7 @@ def run_streaming_query(
     try:
         stream = litellm.completion(**args, timeout=1800)
         repeat_count = 0
+        new_chars_count = 0
         for event in stream:
             if repeat_count >= 6:
                 loop_detected = True
@@ -271,9 +281,10 @@ def run_streaming_query(
                 last_reasoning_token_timestamp = time.time()
                 unknown_chunk = False
                 response.reasoning += reasoning_chunk
-                r = response.reasoning
-                if r and r.count(r[-255:]) > 1:
-                    repeat_count += 1
+                new_chars_count += len(reasoning_chunk)
+                if new_chars_count >= 128:
+                    new_chars_count = 0
+                    repeat_count += 1 if detect_repeat(response.reasoning) else -0.2 if repeat_count > 0.2 else 0
 
             if content_chunk := message_chunk.get("content", None):
                 if output_type != "content":
@@ -281,10 +292,11 @@ def run_streaming_query(
                     output_type = "content"
                 unknown_chunk = False
                 response.content += content_chunk
-                r = response.content
-                if r and r.count(r[-255:]) > 1:
-                    repeat_count += 1
-
+                new_chars_count += len(content_chunk)
+                if new_chars_count >= 128:
+                    new_chars_count = 0
+                    repeat_count += 1 if detect_repeat(response.content) else -0.2 if repeat_count > 0.2 else 0
+               
             if tool_calls_chunk := message_chunk.get("tool_calls", None):
                 output_type = "toolcall"
                 unknown_chunk = False

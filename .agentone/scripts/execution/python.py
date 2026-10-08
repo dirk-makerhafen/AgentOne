@@ -34,8 +34,8 @@ def python(source: str) -> tuple[bool, dict]:
         On error, result contains the same keys with status "error".
         Like any script runner: text out, exit code back. If you need
         structured data flowing between steps, write an adhoc tool
-        (def run(...) returning JSON) or use a workflow inline
-        function step instead of parsing stdout.
+        (def run(...) returning JSON natively, with call_tool_async
+        for orchestrating other tools) instead of parsing stdout.
     '''
 
     # --- Guardrail check ---

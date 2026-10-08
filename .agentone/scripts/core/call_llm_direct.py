@@ -54,7 +54,7 @@ from server.models.enums.message_enums import MessageContentType, MessageRole
 from server.models.enums.session_enums import SessionType
 from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
-from server.models.settings import AgentToolCallSyntax, SettingsModel
+from server.models.settings import AgentToolCallSyntax, ReasoningEffort, SettingsModel
 
 if TYPE_CHECKING:
     from server.models.providers.ai_model import AiModel
@@ -158,6 +158,7 @@ def _build_ephemeral_session(
     settings = SettingsModel.objects.create(
         aimodel=aimodel,
         tool_call_syntax=AgentToolCallSyntax.CUSTOM,
+        reasoning_effort =ReasoningEffort.NONE,
     )
 
     # 3. SessionVersionModel (links session to agent + settings) and pin

@@ -34,8 +34,15 @@ helpers for the current session — no manifest edit, no `reload_all`:
   A source-only update refreshes an inferred schema; an explicit schema
   is never clobbered.
 - `adhoc_function_call(adhoc_tool_name, **kwargs)` — the **only** way to
-  execute one (isolated subprocess, 60s timeout, truncated output).
+  execute one (isolated subprocess, 1800s flow budget, truncated output).
   Result is namespaced under `result`.
+- Inside `run`, `call_tool_async(tool_name, **kwargs)` calls any other
+  tool this session allows and waits for its result payload (failed
+  sub-calls raise `AdhocToolCallError`). Sub-calls dispatch through the
+  normal path — approvals, workspace policy, audit rows — so flows are
+  plain Python orchestration with no separate workflow system. Nested
+  adhoc flows recurse up to 3 levels; prefer auto-allowed tools inside
+  flows (approval-gated ones stall until decided).
 
 Storage is database rows, same pattern as query templates
 (`server/models/queries/query_template.py`): immutable `AdhocToolVersion`

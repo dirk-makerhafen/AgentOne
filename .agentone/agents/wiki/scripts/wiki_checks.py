@@ -9,7 +9,7 @@ from typing import Any
 WIKILINK_RE = re.compile(r'\[\[([^\[\]]+?)(?:\|([^\[\]]*?))?\]\]')
 FRONTMATTER_RE = re.compile(r'^---\s*\n(.*?)\n---', re.DOTALL)
 REQUIRED_FM_FIELDS = ('type', 'date', 'updated', 'tags', 'sources')
-CHECK_NAMES = ("dead_wikilinks", "link_format", "orphan_pages", "missing_index", "stale_index_entries", "frontmatter", "folder_structure", "encoding", "filenames")
+CHECK_NAMES = ("dead_wikilinks", "link_format", "orphan_pages", "missing_index", "stale_index_entries", "frontmatter", "folder_structure", "timeline_naming", "encoding", "filenames")
 
 
 def _resolve_folder(folder: str | None, session: Any | None) -> str | None:
@@ -369,6 +369,54 @@ def _valid_filename_suggestion(name: str) -> str:
     return "".join(out).rstrip(". ")
 
 
+_TIMELINE_NEW_RE = re.compile(r'^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})_(.+)\.md$')
+_TIMELINE_LEGACY_RE = re.compile(r'^(\d{4})(\d{2})(\d{2})[_-](.+)\.md$')
+
+
+def _timeline_filename_issues(rel: str) -> list[str]:
+    """Return naming problems for a vault-root-relative timeline path.
+
+    Every timeline summary must live at ``timeline/YYYY/MM/DD/`` and be
+    named ``YYYYMMDD-HHMM_<Title>.md`` with the prefix matching the
+    directory date, so same-day summaries sort chronologically. The legacy
+    day-only form ``YYYYMMDD-<Title>.md`` / ``YYYYMMDD_<Title>.md`` is
+    still accepted (it sorts by day, just not by time within the day).
+    ``index.md`` files are exempt (handled by ``missing_index``).
+    """
+    issues: list[str] = []
+    parts = rel.split("/")
+    if parts[-1] == "index.md":
+        return []
+    if len(parts) != 5 or parts[0] != "timeline":
+        return ["must live at timeline/YYYY/MM/DD/ (day folder)"]
+    _, y, mo, d, name = parts
+    try:
+        dir_ymd = (int(y), int(mo), int(d))
+    except ValueError:
+        return [f"directory date '{y}/{mo}/{d}' is not numeric"]
+    m = _TIMELINE_NEW_RE.match(name)
+    if m:
+        hh, mi = int(m.group(4)), int(m.group(5))
+        if not (0 <= hh <= 23 and 0 <= mi <= 59):
+            issues.append(f"prefix time {m.group(4)}{m.group(5)} is not a real time (HH 00-23, MM 00-59)")
+        title_part = m.group(6)
+    else:
+        legacy = _TIMELINE_LEGACY_RE.match(name)
+        if not legacy:
+            return ["filename must be YYYYMMDD-HHMM_<Title>.md (legacy YYYYMMDD-<Title>.md accepted)"]
+        title_part = legacy.group(4)
+    prefix_ymd = (int(m.group(1)), int(m.group(2)), int(m.group(3))) if m else (
+        int(legacy.group(1)), int(legacy.group(2)), int(legacy.group(3)))
+    if prefix_ymd != dir_ymd:
+        issues.append(
+            f"prefix date {prefix_ymd[0]:04d}{prefix_ymd[1]:02d}{prefix_ymd[2]:02d} "
+            f"does not match directory {y}/{mo}/{d}"
+        )
+    if not title_part.strip("._- "):
+        issues.append("empty title after the date prefix")
+    return issues
+
+
 def wiki_check(
     _session: Any,
     folder: str | None = None,
@@ -389,6 +437,10 @@ def wiki_check(
     - Missing or invalid YAML frontmatter
     - Folder-structure problems (duplicated date segments such as
       ``2020/2020``, invalid month/day values)
+    - Timeline summaries not following
+      ``timeline/YYYY/MM/DD/YYYYMMDD-HHMM_<Title>.md`` (wrong location,
+      missing date prefix, prefix/date mismatch; legacy day-only
+      ``YYYYMMDD-<Title>.md`` accepted)
     - Broken filenames (invalid UTF-8 bytes, control characters,
       reserved characters such as ``/ : * ?``, trailing dots/spaces)
 
@@ -409,8 +461,8 @@ def wiki_check(
         checks: Comma-separated check names to run, or ``""`` / ``"all"``
             for all checks. Valid names: ``dead_wikilinks``, ``link_format``,
             ``orphan_pages``, ``missing_index``, ``stale_index_entries``,
-            ``frontmatter``, ``folder_structure``, ``encoding``,
-            ``filenames``.
+            ``frontmatter``, ``folder_structure``, ``timeline_naming``,
+            ``encoding``, ``filenames``.
             Default: ``""`` (all).
         files: Comma-separated file paths or glob patterns (relative to wiki
             root) to scope the check to. Supports ``*``, ``?``, ``**``
@@ -901,6 +953,33 @@ def wiki_check(
                 "total": len(candidate),
                 "wrong": len(structure),
                 "correct": len(candidate) - len(structure),
+                "returned": len(capped),
+                "items": capped,
+            })
+
+        if _run_check("timeline_naming"):
+            # Every timeline summary must live at timeline/YYYY/MM/DD/ and
+            # be named YYYYMMDD-HHMM_<Title>.md with the prefix matching
+            # the directory date (legacy day-only YYYYMMDD-<Title>.md
+            # accepted). Report-only: renaming would break wikilinks, so
+            # fixing is left to the reviewer agent.
+            naming: list[dict] = []
+            timeline_total = 0
+            for fp in md_files:
+                rel = fp.relative_to(root).as_posix()
+                if not rel.startswith("timeline/") or fp.name == "index.md":
+                    continue
+                timeline_total += 1
+                problems = _timeline_filename_issues(rel)
+                if problems:
+                    naming.append({"file": rel, "issues": problems})
+            capped = _cap(naming, effective_limit)
+            omitted_total += len(naming) - len(capped)
+            findings.append({
+                "check": "timeline_naming",
+                "total": timeline_total,
+                "wrong": len(naming),
+                "correct": timeline_total - len(naming),
                 "returned": len(capped),
                 "items": capped,
             })

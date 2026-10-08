@@ -13,11 +13,20 @@ Rules:
   ``params_schema`` is optional — pass one only to override).
   ``run`` may return anything JSON-safe (a dict, a list,
   ``(True, {...})``); the result is namespaced under ``result``.
+- Inside ``run``, ``call_tool_async(tool_name, **kwargs)`` calls any
+  other tool this session allows and waits for its result payload (a
+  failed sub-call raises ``AdhocToolCallError``, catchable with
+  try/except). Sub-calls go through the normal dispatch — approvals,
+  workspace policy, and audit rows apply exactly as if you called the
+  tool yourself. Prefer auto-allowed tools inside flows: an
+  approval-gated sub-call stalls the whole flow until a human decides.
+  Nested adhoc flows recurse up to 3 levels.
 - Creation is auto-allowed but scanned: dangerous code (network, ctypes,
   shell-out, cross-session paths, …) is rejected with a reason.
 - Archive is a visibility state, not a freeze: tools keep working on
   archived sessions, like messages, files, and templates.
-- Max 20 tools per session, 64KB source each, 60s call timeout.
+- Max 20 tools per session, 64KB source each. One flow shares an 1800s
+  budget (body + all sub-calls); the worker slot is held meanwhile.
 
 All real logic lives in ``runtime/adhoc_tools.py`` so it is unit-testable
 without the loader; these functions only forward the bound session.
@@ -41,7 +50,10 @@ def adhoc_create(
 
     Use this when you need the same small computation in several steps and
     inlining it via ``python`` every time would be wasteful or error-prone
-    (parsing, scoring, formatting, reshaping tool output).
+    (parsing, scoring, formatting, reshaping tool output). An adhoc tool
+    can also orchestrate: ``call_tool_async`` inside ``run`` calls other
+    tools and waits for their results, so multi-step flows live in plain
+    Python — no workflow DSL needed.
 
     Do NOT use this for one-shot code — call ``python`` directly instead.
     Do NOT use this for anything that must outlive the session (work items,
@@ -52,11 +64,14 @@ def adhoc_create(
         source: Full Python source. Must define ``def run(...)`` with a
             normal signature like ``def run(text: str, limit: int = 10)``
             whose parameters become keyword arguments (schema inferred).
+            Inside ``run``, ``call_tool_async(tool_name, **kwargs)``
+            calls another allowed tool and returns its result payload
+            (raises ``AdhocToolCallError`` when the sub-call fails).
             Keep it dependency-free (stdlib only) and side-effect free apart
-            from returning data. Do NOT print() — stdout must stay clean
-            for the result envelope; return data instead. Must pass the
-            safety scan — no network, no ctypes, no subprocess/shell-out,
-            no cross-session paths.
+            from returning data and calling tools. Do NOT print() — stdout
+            must stay clean for the result envelope; return data instead.
+            Must pass the safety scan — no network, no ctypes, no
+            subprocess/shell-out, no cross-session paths.
         description: One line on what it does (shown by ``adhoc_list``).
         params_schema: Optional JSON-schema-subset dict, e.g.
             ``{"type": "object", "properties": {"text": {"type": "string"}},
@@ -179,8 +194,9 @@ def adhoc_function_call(
     unless overridden at creation) and absolute-looking path strings
     are checked against the workspace policy.
 
-    Execution is an isolated subprocess (60s timeout, truncated output), so
-    a crashing helper cannot harm the session.
+    Execution is an isolated subprocess (1800s flow budget shared by the
+    body and its sub-calls, truncated output), so a crashing helper
+    cannot harm the session.
 
     Extra keyword arguments are passed straight through to ``run`` —
     exactly like calling any other tool. (A tool argument literally named

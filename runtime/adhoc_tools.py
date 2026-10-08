@@ -28,6 +28,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -39,8 +40,17 @@ MAX_ADHOC_TOOLS = 20
 #: Cap on one tool's source bytes.
 MAX_SOURCE_BYTES = 65536
 
-#: Shorter than the 300s permanent-tool default — ad-hoc helpers are small.
-CALL_TIMEOUT_SECONDS = 60
+#: Overall budget for one isolated flow: the tool body plus every sub-call
+#: it makes via ``call_tool_async``. Generous on purpose — a sub-call
+#: parked on a human approval can take a while, and the worker slot is
+#: held for the whole flow (same posture as the execution.python 300s
+#: default, scaled for multi-call flows). Prefer auto-allowed tools
+#: inside flows; approval-gated ones stall the flow until decided.
+FLOW_TIMEOUT_SECONDS = 1800
+
+#: Max nested ``adhoc_function_call`` frames in one dispatch chain
+#: (counted by walking parent_taskrun links, so no signature changes).
+MAX_ADHOC_NESTING = 3
 
 #: Mirrors ``config/settings.py`` TERMINAL_MAX_OUTPUT_CHARS.
 MAX_OUTPUT_CHARS = 20000
@@ -113,6 +123,20 @@ def validate_tool_name(name: Any) -> str | None:
     return None
 
 
+def _json_error_hint(text: str, exc: ValueError) -> str:
+    """Render a JSON parse failure for an LLM author (position + snippet).
+
+    Hand-written JSON strings usually break on brace balance near the
+    reported position — say exactly where, so the agent looks at its own
+    serialization instead of blaming downstream content.
+    """
+    pos = getattr(exc, "pos", None)
+    if pos is None:
+        return f"{exc} ({len(text)} chars)"
+    snippet = text[max(0, pos - 25):pos + 25]
+    return f"{exc} (char {pos} of {len(text)}, near ...{snippet!r}...)"
+
+
 def _coerce_dict_arg(value: Any, arg: str) -> tuple[dict | None, str | None]:
     """Accept a dict or a JSON-encoded dict string (LLMs often stringify).
 
@@ -131,7 +155,8 @@ def _coerce_dict_arg(value: Any, arg: str) -> tuple[dict | None, str | None]:
         except ValueError as exc:
             return None, (
                 f"'{arg}' must be a JSON object. The text you sent is not "
-                f"valid JSON: {exc}"
+                f"valid JSON: {_json_error_hint(value, exc)} Pass a native "
+                "object instead of a JSON string when possible."
             )
         if not isinstance(parsed, dict):
             if parsed is None:
@@ -708,8 +733,69 @@ def inherit_adhoc_tools(parent_session_pk: int | str, child_session_pk: int | st
 _RUNNER_SOURCE = '''\
 import importlib.util
 import json
+import os
 import sys
 import traceback
+
+class AdhocToolCallError(Exception):
+    """A call_tool_async sub-call failed. Carries the tool payload."""
+
+    def __init__(self, tool_name, message, result=None):
+        super().__init__(f"Tool '{tool_name}' failed: {message}")
+        self.tool_name = tool_name
+        self.result = result
+
+
+class _ToolBridge:
+    """Synchronous RPC client over the parent pump's pipes.
+
+    The parent passes two fds on argv: ``req_w`` (we write requests) and
+    ``rep_r`` (we block reading the reply). One outstanding request at a
+    time — ``call_tool_async`` waits for its reply before returning.
+    """
+
+    def __init__(self, req_fd, rep_fd):
+        self._req = os.fdopen(req_fd, "w", buffering=1)
+        self._rep = os.fdopen(rep_fd, "r", buffering=1)
+        self._next_id = 0
+
+    def call(self, tool_name, **kwargs):
+        if not isinstance(tool_name, str) or not tool_name:
+            raise TypeError("call_tool_async needs a tool name string.")
+        self._next_id += 1
+        rid = self._next_id
+        try:
+            self._req.write(json.dumps(
+                {"id": rid, "tool": tool_name, "args": kwargs}) + "\\n")
+            self._req.flush()
+        except (BrokenPipeError, OSError) as exc:
+            raise AdhocToolCallError(
+                tool_name, f"flow channel broken: {exc}")
+        line = self._rep.readline()
+        if not line:
+            raise AdhocToolCallError(
+                tool_name, "flow channel closed (parent gone?).")
+        try:
+            reply = json.loads(line)
+        except ValueError:
+            raise AdhocToolCallError(
+                tool_name, f"bad reply: {line[:200]}")
+        if not isinstance(reply, dict) or reply.get("id") != rid:
+            raise AdhocToolCallError(
+                tool_name, f"bad reply: {line[:200]}")
+        if not reply.get("ok"):
+            raise AdhocToolCallError(
+                tool_name, reply.get("error", "unknown error"),
+                reply.get("result"))
+        return reply.get("result")
+
+    def close(self):
+        for stream in (self._req, self._rep):
+            try:
+                stream.close()
+            except OSError:
+                pass
+
 
 def _load(tool_path):
     spec = importlib.util.spec_from_file_location("_adhoc_tool", tool_path)
@@ -719,6 +805,12 @@ def _load(tool_path):
 
 def main():
     tool_path = sys.argv[1]
+    bridge = None
+    if len(sys.argv) > 3:
+        try:
+            bridge = _ToolBridge(int(sys.argv[2]), int(sys.argv[3]))
+        except (ValueError, OSError):
+            bridge = None
     payload = json.loads(sys.stdin.read() or "{}")
     params = payload.get("params", {})
     try:
@@ -730,6 +822,12 @@ def main():
     if func is None:
         print(json.dumps({"ok": False, "error": "No top-level run() defined."}))
         return 1
+    # Names available inside run(): call_tool_async only works when the
+    # parent passed the flow pipes (always, from call_adhoc_tool);
+    # setdefault so agent-defined helpers of the same name still win.
+    if bridge is not None:
+        module.__dict__.setdefault("call_tool_async", bridge.call)
+    module.__dict__.setdefault("AdhocToolCallError", AdhocToolCallError)
     try:
         if not isinstance(params, dict):
             raise TypeError(
@@ -749,6 +847,9 @@ def main():
     except Exception:
         print(json.dumps({"ok": False, "error": traceback.format_exc()}))
         return 1
+    finally:
+        if bridge is not None:
+            bridge.close()
 
 if __name__ == "__main__":
     raise SystemExit(main())
@@ -761,15 +862,93 @@ def _truncate(text: str, limit: int = MAX_OUTPUT_CHARS) -> str:
     return text
 
 
-def _execute_isolated_source(source: str, params: Any, cwd: str) -> tuple[bool, dict]:
+def _reply(rep, rid, ok, payload=None, error=None):
+    """Write one pump reply; a dead child surfaces via the envelope below."""
+    doc = {"id": rid, "ok": bool(ok)}
+    if ok:
+        doc["result"] = payload
+    else:
+        doc["error"] = error or "sub-call failed."
+        if payload is not None:
+            doc["result"] = payload
+    try:
+        rep.write(json.dumps(doc) + "\n")
+        rep.flush()
+    except (BrokenPipeError, OSError):
+        pass
+
+
+def _await_call(call: Any, deadline: float) -> Any:
+    """Wait for a dispatched sub-call to end, then resolve its result.
+
+    Polls with ``refresh_from_db()``: model instances cache field values,
+    so the in-memory ``status`` of a freshly dispatched call never changes
+    and ``get_result()`` alone would poll it forever — every observation
+    must re-read the row. Once ENDED, one ``get_result()`` resolves
+    (recursively, via freshly fetched rows) with a short grace for the
+    call-ended/run-visible race. Raises :class:`TimeoutError` past
+    *deadline*.
+    """
+    from server.models.enums.task_enums import TaskCallStatus
+
+    while True:
+        try:
+            call.refresh_from_db()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass  # transient DB hiccup; the deadline still bounds us
+        if call.status == TaskCallStatus.ENDED:
+            break
+        if time.time() >= deadline:
+            raise TimeoutError("flow budget exhausted waiting for sub-call.")
+        time.sleep(1)
+    return call.get_result(timeout=60, recursive=True)
+
+
+def _adhoc_nesting_depth() -> int:
+    """Count ``adhoc_function_call`` frames up the current dispatch chain.
+
+    Lets nested flows recurse a bounded depth without any signature
+    changes: each ``run()`` executes inside its call's run, so walking
+    ``parent_taskrun`` links counts exactly the enclosing adhoc frames.
+    Outside a run (plain unit tests) the depth is 0.
+    """
+    from runtime.context_manager import ContextTracker
+
+    depth = 0
+    seen: set[int] = set()
+    run = ContextTracker.current
+    while run is not None and id(run) not in seen:
+        seen.add(id(run))
+        try:
+            call = getattr(run, "agent_task_call", None)
+            if call is None:
+                break
+            taskdef = getattr(call, "task_definition", None)
+            if getattr(taskdef, "name", None) == "adhoc_function_call":
+                depth += 1
+            run = getattr(call, "parent_taskrun", None)
+        except Exception:  # pylint: disable=broad-exception-caught
+            break
+    return depth
+
+
+def _execute_isolated_source(source: str, params: Any, cwd: str,
+                             dispatch: Any) -> tuple[bool, dict]:
     """Run *source* in an isolated subprocess and return ``(ok, payload)``.
 
-    Shared by ad-hoc tool calls and workflow inline-function steps: the
-    source is materialized to a temp file next to the runner, executed
-    with ``params`` on stdin, and the ``{"ok", "result"/"error"}``
-    envelope is converted to a namespaced payload —
-    ``{status, return_code, result}`` on success — so tool output never
-    collides with the envelope keys.
+    ``dispatch(tool_name, args, deadline) -> (bool, payload)`` serves the
+    child's ``call_tool_async`` requests: each request line is answered
+    with one reply line, so flows orchestrate real tool calls (with
+    approvals, policy checks, and audit rows, exactly like the LLM's own
+    calls) while the tool body stays sandboxed. The worker running the
+    pump is held for the flow's lifetime (same posture as the
+    execution.python default); ``FLOW_TIMEOUT_SECONDS`` bounds it.
+
+    The ``{"ok", "result"/"error"}`` stdout envelope converts to a
+    namespaced payload — ``{status, return_code, result}`` on success —
+    so tool output never collides with the envelope keys. Stdout/stderr
+    go to temp files (never pipes) so a chatty child cannot deadlock the
+    pump; ``print()`` output still breaks the envelope — return data.
     """
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as src_file:
         src_file.write(source)
@@ -777,38 +956,122 @@ def _execute_isolated_source(source: str, params: Any, cwd: str) -> tuple[bool, 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as runner_file:
         runner_file.write(_RUNNER_SOURCE)
         runner_path = runner_file.name
+    out_file = tempfile.TemporaryFile(mode="w+", encoding="utf-8")
+    err_file = tempfile.TemporaryFile(mode="w+", encoding="utf-8")
+    # Child ends: req_w (child writes requests), rep_r (child reads
+    # replies). Parent keeps req_r/rep_w; child ends are closed here so
+    # EOF reliably signals child exit. POSIX-only (os.pipe + pass_fds).
+    req_r, req_w = os.pipe()
+    rep_r, rep_w = os.pipe()
     try:
-        proc = subprocess.run(
-            [sys.executable, runner_path, tool_path],
-            input=json.dumps({"params": params}),
+        proc = subprocess.Popen(
+            [sys.executable, runner_path, tool_path, str(req_w), str(rep_r)],
+            stdin=subprocess.PIPE,
+            stdout=out_file,
+            stderr=err_file,
             cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=CALL_TIMEOUT_SECONDS,
             env={**os.environ},
+            pass_fds=(req_w, rep_r),
+            text=True,
+            bufsize=1,
         )
-    except subprocess.TimeoutExpired:
-        return (False, {
-            "status": "error",
-            "stdout": "",
-            "stderr": f"Tool timed out after {CALL_TIMEOUT_SECONDS} seconds.",
-            "return_code": -1,
-        })
     except Exception as exc:  # pylint: disable=broad-exception-caught
+        for fd in (req_r, req_w, rep_r, rep_w):
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+        for tmp in (tool_path, runner_path):
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
         return (False, {
             "status": "error",
             "stdout": "",
             "stderr": f"Tool failed to start: {exc}",
             "return_code": -1,
         })
-    finally:
-        for tmp in (tool_path, runner_path):
+    os.close(req_w)
+    os.close(rep_r)
+    try:
+        proc.stdin.write(json.dumps({"params": params}))
+        proc.stdin.close()
+    except (BrokenPipeError, OSError):
+        pass  # child died instantly; the envelope below reports it
+    req = os.fdopen(req_r, "r", buffering=1)
+    rep = os.fdopen(rep_w, "w", buffering=1)
+    deadline = time.time() + FLOW_TIMEOUT_SECONDS
+    timed_out = False
+    try:
+        while True:
+            if time.time() >= deadline:
+                timed_out = True
+                break
+            line = req.readline()
+            if not line:
+                break  # EOF: child exited or closed the channel
             try:
-                os.unlink(tmp)
+                request = json.loads(line)
+            except ValueError:
+                _reply(rep, None, False,
+                       error="malformed tool request (not JSON).")
+                continue
+            rid = request.get("id") if isinstance(request, dict) else None
+            if not isinstance(request, dict) \
+                    or not isinstance(request.get("tool"), str):
+                _reply(rep, rid, False, error=(
+                    "tool request needs {'tool': name, 'args'?: {...}}."))
+                continue
+            args = request.get("args", {})
+            if not isinstance(args, dict):
+                _reply(rep, rid, False,
+                       error="'args' must be a JSON object.")
+                continue
+            ok, payload = dispatch(request["tool"], args, deadline)
+            _reply(rep, rid, ok, payload if ok else None,
+                   None if ok else _payload_message(payload))
+            if proc.poll() is not None:
+                break  # child died around the reply; collect below
+    finally:
+        for stream in (req, rep):
+            try:
+                stream.close()
             except OSError:
                 pass
-
-    stdout, stderr = _truncate(proc.stdout or ""), _truncate(proc.stderr or "")
+    if timed_out:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+    else:
+        try:
+            proc.wait(timeout=max(0, deadline - time.time()))
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+    for tmp in (tool_path, runner_path):
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+    if timed_out:
+        return (False, {
+            "status": "error",
+            "stdout": "",
+            "stderr": f"Tool timed out after {FLOW_TIMEOUT_SECONDS} seconds.",
+            "return_code": -1,
+        })
+    out_file.seek(0)
+    err_file.seek(0)
+    stdout, stderr = _truncate(out_file.read()), _truncate(err_file.read())
+    out_file.close()
+    err_file.close()
     try:
         envelope = json.loads(stdout) if stdout.strip() else {}
     except ValueError:
@@ -839,63 +1102,16 @@ def _execute_isolated_source(source: str, params: Any, cwd: str) -> tuple[bool, 
     return (True, success)
 
 
-def build_inline_module(body: str, arg_names: list) -> str:
-    """Wrap a workflow inline-function *body* as an executable module.
-
-    The body is a function body (bare ``return`` allowed): argument names
-    arrive as variables, e.g. body ``"foo = content + 'bar'\\nreturn foo"``
-    with ``arg_names=["content"]`` becomes ``def run(content): ...``.
-    Raises :class:`ValueError` when the body is empty, an argument name
-    is not a valid parameter name, or the wrapped module does not parse.
-    """
-    import keyword
-    import textwrap
-
-    if not isinstance(body, str) or not body.strip():
-        raise ValueError("Inline function body must be non-empty Python code.")
-    clean: list[str] = []
-    for name in arg_names:
-        if not isinstance(name, str) or not name.isidentifier() \
-                or keyword.iskeyword(name):
-            raise ValueError(
-                f"Inline function argument {name!r} is not a valid Python "
-                "parameter name (args become run()'s parameter names)."
-            )
-        clean.append(name)
-    module = f"def run({', '.join(clean)}):\n{textwrap.indent(body, '    ')}\n"
+def _payload_message(payload: Any) -> str:
+    """Best-effort one-line summary of a failed tool payload for the child."""
+    if isinstance(payload, dict):
+        for key in ("message", "error", "stderr"):
+            if payload.get(key):
+                return str(payload[key])[:500]
     try:
-        tree = ast.parse(module)
-    except SyntaxError as exc:
-        raise ValueError(f"Inline function has a syntax error: {exc}") from exc
-    if not any(isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
-               and n.name == "run" for n in tree.body):
-        raise ValueError("Inline function body did not wrap cleanly.")
-    return module
-
-
-def run_inline_function(session: Any, body: str, params: Any = None) -> tuple[bool, dict]:
-    """Execute one ephemeral workflow inline-function body.
-
-    Same isolation as ad-hoc tools (subprocess, 60s timeout): the body is
-    wrapped via :func:`build_inline_module` with the params-dict keys as
-    parameter names, then run through the shared executor. Returns the
-    namespaced ``(ok, {status, return_code, result})`` payload, so inline
-    steps behave exactly like tool calls downstream (``path``, ``when``,
-    fail-fast).
-    """
-    params, params_err = _coerce_dict_arg(params, "params")
-    if params_err:
-        return (False, {"status": "error", "message": params_err})
-    if params is None:
-        params = {}
-    path_block = _check_param_paths(params, _policy(session))
-    if path_block:
-        return (False, {"status": "error", "message": path_block})
-    try:
-        module = build_inline_module(body, sorted(params.keys()))
-    except ValueError as exc:
-        return (False, {"status": "error", "message": str(exc)})
-    return _execute_isolated_source(module, params, _workspace_cwd(session))
+        return json.dumps(payload)[:500]
+    except (ValueError, TypeError):
+        return str(payload)[:500]
 
 
 def call_adhoc_tool(session: Any, name: str, params: Any = None) -> tuple[bool, dict]:
@@ -905,6 +1121,13 @@ def call_adhoc_tool(session: Any, name: str, params: Any = None) -> tuple[bool, 
     no re-scan is needed: every write was scanned before it was stored.
     ``params`` are validated against the stored schema (if any) and
     absolute-looking path strings are checked against the workspace policy.
+
+    Inside ``run()``, ``call_tool_async(tool_name, **kwargs)`` dispatches
+    a real sub-call through this session's normal dispatch (approvals,
+    workspace policy, audit rows — exactly like the LLM's own calls) and
+    blocks until it ends; a failed sub-call raises ``AdhocToolCallError``
+    in the child. Nested adhoc flows recurse up to ``MAX_ADHOC_NESTING``
+    levels; the whole flow shares ``FLOW_TIMEOUT_SECONDS``.
     """
     from server.models.adhoc_tool import SessionAdhocTool
 
@@ -943,5 +1166,55 @@ def call_adhoc_tool(session: Any, name: str, params: Any = None) -> tuple[bool, 
     if path_block:
         return (False, {"status": "error", "message": path_block})
 
+    def _dispatch_subcall(tool_name: str, args: dict,
+                          deadline: float) -> tuple[bool, dict]:
+        """Serve one ``call_tool_async`` request as a real dispatched call.
+
+        Goes through ``session.get_tool`` + ``delay`` + ``get_result`` so
+        posture (allowlist, approvals, workspace policy, audit rows) is
+        identical to the LLM calling the tool itself. Returns the tool's
+        ``(ok, payload)`` faithfully; the child raises on ``ok=False``.
+        """
+        if tool_name == "adhoc_function_call" \
+                and _adhoc_nesting_depth() >= MAX_ADHOC_NESTING:
+            return (False, {
+                "status": "error",
+                "message": f"Ad-hoc nesting exceeds {MAX_ADHOC_NESTING} levels.",
+            })
+        try:
+            get_tool = getattr(session, "get_tool", None)
+            bound = get_tool(tool_name) if get_tool else None
+        except Exception:  # pylint: disable=broad-exception-caught
+            bound = None
+        if bound is None:
+            return (False, {
+                "status": "error",
+                "message": f"Tool '{tool_name}' is unknown or not allowed "
+                "for this session.",
+            })
+        try:
+            sub_call = bound.delay(**(args or {}))
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            return (False, {
+                "status": "error",
+                "message": f"Could not dispatch '{tool_name}': {exc}",
+            })
+        try:
+            resolved = _await_call(sub_call, deadline)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            return (False, {
+                "status": "error",
+                "message": f"Sub-call '{tool_name}' did not finish: {exc}",
+            })
+        if isinstance(resolved, list) and len(resolved) == 2 \
+                and isinstance(resolved[0], bool):
+            payload = resolved[1]
+            return (resolved[0],
+                    payload if isinstance(payload, dict)
+                    else {"result": payload})
+        return (True,
+                resolved if isinstance(resolved, dict)
+                else {"result": resolved})
+
     cwd = _workspace_cwd(session)
-    return _execute_isolated_source(source, params, cwd)
+    return _execute_isolated_source(source, params, cwd, _dispatch_subcall)

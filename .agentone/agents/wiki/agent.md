@@ -5,11 +5,11 @@ extends: AgentOne
 inheritSystemPrompt: true
 reasoningEffort: high
 precision: FOCUSED
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*, wiki.wiki_check,  workitems.*]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*,  workitems.*, update_timeline, update_timeline_daily, update_timeline_monthly]
 # browser.* is deliberately AgentOne-only for now (see docs/browser.md).
 disallowedTools: [browser.*]
-commands: [+, ingest_next, wiki_lint]
-tasks: [+, wiki.find_unlinked_raw, ]
+commands: [+, ingest_next, sync_applemail, wiki_lint]
+tasks: [+, find_unlinked_raw, process_summary, double_check_summary, write_day_index, write_month_index]
 autoCompactMaxTokens: 100000
 autoCompactKeepPercent: 10
 subagents:

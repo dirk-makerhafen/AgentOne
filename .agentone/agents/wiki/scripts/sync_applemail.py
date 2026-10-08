@@ -426,9 +426,6 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                 elif ctype == "text/html":
                     message_html += content
 
-            if message_text:
-                message_text = re.sub(r'\n{3,}', '\n\n', message_text.strip())
-
             if message_html and not message_text:
                 message_text = clean_html_email_to_markdown(message_html) # Using your cleaning pipeline
 
@@ -440,6 +437,11 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                 if is_placeholder or len(message_text) < 150 and len(message_html) > 2000:
                     message_text = clean_html_email_to_markdown(message_html)
 
+            if message_text:
+                message_text = re.sub(r'\n{3,}', '\n\n', message_text)
+                message_text = re.sub(r'\r{2,}', '\r', message_text)
+                message_text = re.sub(r'\t{4,}', '\t\t', message_text)
+                message_text = message_text.strip()
             shutil.move(eml_file, target_file) # Move the entire temporary email folder to its permanent structured location
             yaml_string = yaml.dump(metadata, default_flow_style=False, allow_unicode=True)
             markdown_file_content = f"---\n{yaml_string}---\n\n{message_text}"
