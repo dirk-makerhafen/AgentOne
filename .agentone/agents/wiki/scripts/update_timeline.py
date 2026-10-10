@@ -8,17 +8,16 @@ from pathlib import Path
 
 from runtime.session.session import Session
 from server.models.settings import ReasoningEffort
+from pathlib import Path
+from server.models.enums.message_enums import MessageContentType, MessagePartType
+from server.models.enums.session_enums import SessionType
 
 
-SUMMARY_PROMPT = '''## Task
 
-Create a concise, factual summary of the provided source material:
-
-Use the **receive date of the event or subject being summarized** for the date, not the current date unless they are the same.
-
+SUMMARY_FORMAT_REFERENCE = '''
 ## Output Format
 
-The file **must** use this exact structure: (not including the ```yaml .. ``` part)
+The summary **must** use this exact structure: (not including the ```yaml .. ``` part)
 
 ```yaml
 ---
@@ -29,6 +28,7 @@ updated: <today's date>
 tags: [<relevant tags>]
 persons: [<all persons mentioned>]
 companies: [<all companies mentioned>]
+groups: [<all clubs, associations, crews, teams, initiatives mentioned>]
 products: [<all products mentioned>]
 uids: [<all relevant order IDs, reference numbers, tracking numbers, xref IDs, etc.>]
 sources: ["[[raw/path/to/source.md]]"]
@@ -42,13 +42,13 @@ author: <sender / originator, if available>
 ## Metadata Rules
 
 * `type` MUST be exactly `summary`.
-* `title` MUST be a descriptive title.
+* `title` MUST be a descriptive title in "<What> - <Who>" format. 
 * `date` MUST be the date AND time the source material was received, format
   `YYYY-MM-DD HH:MM` (take it from the mail's Date header or equivalent).
   The time matters — many mails arrive per day, and the summary file is
   stored as `timeline/YYYY/MM/DD/YYYYMMDD-HHMM_<Title>.md`, with the prefix
   derived from this field. If the source truly carries no time, date alone
-  is accepted (the file time then falls back to the raw archive timestamp).
+  is accepted.
 * `updated` MUST contain today's date (`YYYY-MM-DD`, no time needed).
 * `tags` MUST contain relevant, consistent topic tags.
   * Derive tags from the actual subject matter.
@@ -56,6 +56,14 @@ author: <sender / originator, if available>
   * Examples: `buchhaltung`, `mitglieder`, `workshop`, `lieferung`, `rechnung`, `veranstaltung`.
 * `persons` MUST contain all relevant persons explicitly mentioned in the source.
 * `companies` MUST contain all relevant companies or organizations explicitly mentioned.
+* `groups` MUST contain all relevant collectives explicitly mentioned that are
+  neither a single person nor a commercial company: clubs, associations
+  (Vereine), crews, teams, initiatives, communities, working groups, scenes
+  (e.g. Chaos Computer Club, Freifunk, CodeWeek crew, Makerhafen e.V.).
+  Rule of thumb: if it sells you something, bills you, or governs you, it
+  belongs in `companies` (vendors, platforms, shops, authorities, commercial
+  entities of any legal form). If you could become a member or it is a crew
+  of people, it belongs in `groups`.
 * `products` MUST contain all relevant products, services, or named product lines explicitly mentioned.
   * Exception: for purely promotional mail (see below), leave `products` empty.
 * `uids` MUST contain relevant identifiers such as:
@@ -123,7 +131,7 @@ sale announcements). They still get a timeline entry, but keep it brief:
 
 * Body: 2–4 bullets max — who sent it, what is being promoted in one line.
 * `tags`: include `werbung` (plus the sender topic if useful).
-* Leave `persons`, `companies`, `products`, and `uids` as empty lists (`[]`)
+* Leave `persons`, `companies`, `groups`, `products`, and `uids` as empty lists (`[]`)
   unless the mail documents a real interaction (an order, a reply, a support
   case). In particular, do NOT catalog advertised items into `products` —
   that field is for products relevant to our own operations, not for things
@@ -135,18 +143,31 @@ sale announcements). They still get a timeline entry, but keep it brief:
 Choose a short, descriptive `<Title>` that identifies the event or topic clearly.
 Make the title filesystem-safe and avoid characters that are problematic in filenames, like non acii chars, umlaute, smileys, icons, quotes, pipes, &, <> and so on.
 
-Two rules keep same-day summaries distinguishable:
-
 * **No date or time in the title.** The file already lives under
   `timeline/<year>/<month>/<day>/` with a `YYYYMMDD-HHMM` filename prefix,
   so any date or time in the title is redundant and makes same-day
-  summaries look identical. Bad: `Anmeldung Familienbasteltag am 21.10.2022`.
-  Good: `Anmeldung Familienbasteltag - Svenja Fibier`.
-* **Name who it is about.** Include the sender, registrant, or subject name
-  — that is usually what tells same-day summaries apart. Format:
-  `<What> - <Who>`. Examples: `Anmeldung Familienbasteltag - Svenja Fibier`,
-  `Rechnungsklaerung - Acme Corp`, `Werbung Somfy - Sonderangebote Oktober`.
-  For marketing mail the sender/offer is the disambiguator.
+  summaries look identical. Bad: `Anmeldung Familienbasteltag vom 21.10.2022`.
+  Good: `Anmeldung Familienbasteltag - Anja Fabier`.
+
+* **Name the person or entity that distinguishes the correspondence.**
+  Use the relevant external person, organization, customer, registrant, recipient,
+  sender, or other subject — whoever makes this item distinct from other items
+  about the same topic.
+  Format: `<What> - <Who>`.
+  Examples:
+  * Received email: `Anmeldung Familienbasteltag - Anja Fabier`
+  * Reply to Anja: `Anmeldung Familienbasteltag - Anja Fabier`
+  * Invoice clarification: `Rechnungsklaerung - Acme Corp`
+  * Marketing mail: `Werbung Somfy - Sonderangebote Oktober`
+  * Reply to a company: `Rechnungsklaerung - Acme Corp`
+  For a reply, follow-up, or forwarded message, preserve the identity of the
+  **other party or original subject** rather than using our own name. The title
+  should normally remain consistent across the correspondence thread unless the
+  subject or purpose has genuinely changed.
+  Only use your our name when it is genuinely the subject of the item.
+  For example, `Bewerbung - Peter Miller` is appropriate if we are Peter Miller and the document is specifically
+  about our own application. It is not appropriate merely because we sent the email.
+
 
 ## Quality Requirements
 
@@ -155,14 +176,16 @@ Two rules keep same-day summaries distinguishable:
 * all required fields are present
 * `sources` is plural and contains the original source(s)
 * no `source:` field exists
-* persons, companies, products, and UIDs are extracted rather than guessed
+* persons, companies, groups, products, and UIDs are extracted rather than guessed
 * tags are relevant and consistent
 * the summary is factual and concise
 * the title is descriptive and filesystem-safe
 * the body explains why the information matters where appropriate
+* the file is never renamed (the `YYYYMMDD-HHMM` filename prefix is derived from `date` at creation time)
 
 
 '''
+
 
 # ---------------------------------------------------------------------------
 # Pure helpers (no session needed — unit-testable)
@@ -201,11 +224,22 @@ def _extract_summary_text(summary_result) -> str | None:
     """
     seen = 0
     current = summary_result
+    def remove_fence(text):
+        text = text.strip()
+        if text.startswith("```yaml"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        return text.strip()
+    
     while seen < 5:
         seen += 1
         if current is None:
             return None
         if isinstance(current, str):
+            current = remove_fence(current)
             return current if current.strip() else None
         if isinstance(current, (list, tuple)) and len(current) == 2 and isinstance(current[0], bool):
             current = current[1]
@@ -213,7 +247,7 @@ def _extract_summary_text(summary_result) -> str | None:
         if isinstance(current, dict):
             content = current.get("content")
             if isinstance(content, str) and content.strip():
-                return content
+               return remove_fence(content)
             nested = current.get("result", current.get("data"))
             if nested is not None and nested is not current:
                 current = nested
@@ -357,13 +391,6 @@ def _check_title_content(fm: dict, date_part: str | None, time_part: str | None 
             if re.search(pat, title_lower):
                 hints.append(f"title contains the event time ('{label}'), which already lives in the filename — drop it from the title")
                 break
-    author = fm.get("author")
-    if isinstance(author, str) and author.strip():
-        companies = [c.lower() for c in fm.get("companies", []) if isinstance(c, str)]
-        if author.strip().lower() not in companies:
-            surname = re.sub(r'^[^A-Za-zäöüÄÖÜß]+|[^A-Za-zäöüÄÖÜß]+$', '', author.strip().split()[-1])
-            if len(surname) >= 3 and surname.lower() not in title_lower:
-                hints.append(f"title does not name the sender/author ('{author.strip()}') — use `<What> - <Who>` so same-day summaries stay distinguishable")
     return hints
 
 
@@ -458,7 +485,10 @@ def _check_sources(fm: dict, raw_path: str) -> list[str]:
             continue
         target = _normalize_source_target(e)
         target_nodot = target[:-3] if target.endswith(".md") else target
-        if target == rawnorm or target_nodot == rawnorm[:-3] if rawnorm.endswith(".md") else target == rawnorm:
+        # Compare path and extension-less path; the explicit parens avoid the
+        # `A or B if cond else C` precedence trap (which happened to be right
+        # here but reads as something else entirely).
+        if target == rawnorm or (rawnorm.endswith(".md") and target_nodot == rawnorm[:-3]):
             found_raw = True
         elif target.split("/")[-1] in (rawbase, rawbase_noext):
             found_raw = True
@@ -475,7 +505,7 @@ def _check_grounding_list(values: list, raw_lower: str, field: str, strict: bool
     """Check that extracted metadata actually occurs in the raw source.
 
     UIDs are matched verbatim (an identifier missing from the source is
-    almost certainly invented). Names (persons, companies, products) are
+    almost certainly invented). Names (persons, companies, groups, products) are
     matched case-insensitively; a partial token-only match is reported as
     a softer hint so the reviewer can verify spelling instead of deleting.
     """
@@ -495,7 +525,7 @@ def _check_grounding_list(values: list, raw_lower: str, field: str, strict: bool
             if tokens and any(_contains(raw_lower, t) for t in tokens):
                 hints.append(f"`{field}` entry '{needle}' not found verbatim in raw (only partial token match) — verify spelling")
             else:
-                hints.append(f"`{field}` entry '{needle}' not found in the raw file — only list names explicitly mentioned")
+                hints.append(f"`{field}` entry '{needle}' not found in the raw file — double check")
     return hints
 
 
@@ -560,6 +590,10 @@ def validate_summary(summary_text: str, raw_text: str, raw_path: str, today_str:
     for field in LIST_FIELDS:
         hints.extend(_check_list_field(fm, field))
 
+    # groups: optional (legacy summaries lack it) — type-check only when present
+    if "groups" in fm:
+        hints.extend(_check_list_field(fm, "groups"))
+
     # sources (needs raw_path)
     hints.extend(_check_sources(fm, raw_path))
 
@@ -582,7 +616,7 @@ def validate_summary(summary_text: str, raw_text: str, raw_path: str, today_str:
     # grounding against the raw source
     raw_lower = (raw_text or "").lower()
     if raw_text and raw_text.strip():
-        for field, strict in (("uids", True), ("persons", False), ("companies", False), ("products", False)):
+        for field, strict in (("uids", True), ("persons", False), ("companies", False), ("groups", False), ("products", False)):
             values = fm.get(field)
             if isinstance(values, list) and values:
                 hints.extend(_check_grounding_list(values, raw_lower, field, strict))
@@ -689,16 +723,28 @@ def _fallback_receive_hhmm(raw_path: str, raw_abs: str | None) -> str:
     return "0000"
 
 
-def _embed_for_prompt(label: str, path: str, content: str | None) -> str:
+def _embed_for_prompt(_session, label: str, path: str) -> list:
+    # `path` is vault-relative: resolve it against the workspace root the same
+    # way every other file access in this module does. A plain cwd-relative
+    # open would miss the file and embed "<unreadable>".
+    content, _ = _read_raw_text(_session, path)
     if content is None:
-        return f"# {label} ({path}): <unreadable>\n"
-    if len(content) > _MAX_EMBED_CHARS:
-        return (
-            f"# {label} ({path}, truncated to {_MAX_EMBED_CHARS} chars):\n"
-            f"{content[:_MAX_EMBED_CHARS]}\n[... truncated ...]\n"
-        )
-    return f"# {label} ({path}):\n{content}\n"
+        return [
+            {"type": MessagePartType.MESSAGE,  "content_type": MessageContentType.TEXT, "content": f"# {label} ({path}): <unreadable>\n"},
+        ]
 
+    if len(content) > _MAX_EMBED_CHARS:
+        return [
+            {"type": MessagePartType.MESSAGE,  "content_type": MessageContentType.TEXT, "content": f"# {label} ({path}) truncated to {_MAX_EMBED_CHARS} chars:\n"},
+            {"type": MessagePartType.MESSAGE,  "content_type": MessageContentType.TEXT, "content": content[:_MAX_EMBED_CHARS]},
+            {"type": MessagePartType.MESSAGE,  "content_type": MessageContentType.TEXT, "content": "\n[... truncated ...]\n"},
+        ]
+    return [
+        {"type": MessagePartType.MESSAGE,  "content_type": MessageContentType.TEXT, "content": f"# CONTENT OF {label} ({path}):\n"},
+        {"type": MessagePartType.MESSAGE,  "content_type": MessageContentType.TEXT, "content": content},
+    ]
+
+ 
 
 
 def update_timeline(_session: Session, limit: int = 1):
@@ -722,12 +768,11 @@ def update_timeline(_session: Session, limit: int = 1):
             continue
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         summary_result = llm_query_tool.delay(messages=[
-            {"role": "user", "content": SUMMARY_PROMPT},
-            {"role": "user", "content": f"It is now {now}"},
-            {"role": "user", "content": f"# PATH: {path}\n# CONTENT:"},
+            {"role": "user", "content": SUMMARY_FORMAT_REFERENCE},
+            {"role": "user", "content": f"It is now {now}.\nYOUR TASK: Create a concise, factual summary of the provided source material.\n"},
+            {"role": "user", "content": f"# SOURCE PATH: {path}\n# CONTENT:\n"},
             {"role": "user", "content": raw_text},
-        ])
-
+        ], reasoning_effort=ReasoningEffort.NONE.value)
         r = process_task.delay(raw_path=path, summary_result=summary_result)
 
         results.append(r)
@@ -740,7 +785,7 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
     ``lint_results`` hint strings: frontmatter presence/validity, required
     fields, ``type == summary``, filesystem-safe title, real event
     ``date`` + receive time (``YYYY-MM-DD HH:MM``) and today's ``updated``,
-    list-typed tags/persons/companies/products/uids, plural ``sources``
+    list-typed tags/persons/companies/groups/products/uids, plural ``sources``
     referencing *raw_path*, body substance, and grounding — every ``uid``
     verbatim in the raw file, every person/company/product at least mentioned.
 
@@ -892,8 +937,7 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
     from time import time
 
     from server.models.agents.agent import AgentModel
-    from server.models.enums.message_enums import MessageContentType, MessagePartType
-    from server.models.enums.session_enums import SessionType
+
     from server.models.sessions.session_version import SessionVersionModel
 
     lint_results = list(lint_results or [])
@@ -950,7 +994,8 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
             disallowedTaskNames=[],
             disallowedCommandNames=[],
             tool_call_allowlist=None,
-            reasoning_effort=ReasoningEffort.NONE, 
+            reasoning_effort=ReasoningEffort.MEDIUM,
+            max_turns=10,
         )
         child_sv.session_settings = child_settings
         SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=child_settings)
@@ -958,37 +1003,42 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
 
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     working_dir = child_session.workspace.path if child_session.workspace else "unknown"
-    if lint_results:
-        hints_block = "\n".join(f"- {hint}" for hint in lint_results)
-    else:
-        hints_block = "- (no lint hints — the code checks found nothing; still verify facts, numbers, and cross-references)"
+
     parts = [
         {
             "type": MessagePartType.MESSAGE,
             "content_type": MessageContentType.TEXT,
-            "content": "You are running as a subtask for another agent. "
-                "When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. "
-                "Do not return your result as plain text only. Your task:\n",
+            "content": SUMMARY_FORMAT_REFERENCE,
         },
         {
             "type": MessagePartType.MESSAGE,
             "content_type": MessageContentType.TEXT,
             "content": (
-                f"Double-check the wiki summary file '{summary_path}' against its raw source '{raw_path}'.\n"
-                f"Your working dir is the vault root; paths below are vault-relative.\n\n"
-                f"## Lint hints from deterministic code checks\n{hints_block}\n\n"
-                f"Work through every hint and fix the summary file in place wherever a hint is valid. "
-                f"Also fix anything else you spot (wrong dates, invented facts, missing key claims, "
-                f"broken wikilinks, invalid frontmatter)."
-                f"Never modify anything under `raw/`"
+                f"You are running as a subtask for another agent. "
+                f"When your work is complete, finish by invoking the final_result tool with a one sentence summary of your work as its content argument. "
+                f"Do not return your result as plain text. Do not output explanation or results as normal text for users, you are run as a subagent, nobody will read that.\n" 
+                f"Your working dir is the vault root; paths below are vault-relative. Never modify anything under `raw/`.\n"
+                f"It is now {now}, your working dir is '{working_dir}'.\n"
+                f"Your task: Double-check summary against its raw source.\n"
+                f"Fix the summary file in place if you spot wrong dates, invented facts, missing key claims, "
+                f"broken wikilinks, invalid or missing frontmatter, or other quality problems in the summary. Use multiedit to do multiple edits at once to save on roundtrips. Rename the file if necessary.\n"
             ),
         },
-        {
-            "type": MessagePartType.MESSAGE,
-            "content_type": MessageContentType.TEXT,
-            "content": f"It is now {now}, your working dir is '{working_dir}'. Read both files.\n",
-        },
     ]
+    if lint_results:
+        parts.append(        {
+            "type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
+            "content": "A linter did run static checks on the summary, here are the results:\n",
+        })
+        parts.append(        {
+            "type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
+            "content": "\n".join(f"- {hint}" for hint in lint_results),
+        })
+
+   
+    parts.extend(_embed_for_prompt(_session, "RAW SOURCE FILE", raw_path))
+    parts.extend(_embed_for_prompt(_session, "SUMMARY FILE", summary_path))
+        
     summary_check_result = child_session.add_user_message(parts=parts)
 
     return True, {

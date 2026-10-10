@@ -26,18 +26,26 @@ tasks:
     file: wiki_checks.py
     function: wiki_find_unlinked_raw
     bound: True
+    max_retries: 3
+    retry_delay: 30
   - name: update_timeline
     file: update_timeline.py
     function: update_timeline
     bound: True
+    max_retries: 3
+    retry_delay: 30
   - name: process_summary
     file: update_timeline.py
     function: process_summary
     bound: True
+    max_retries: 3
+    retry_delay: 30
   - name: double_check_summary
     file: update_timeline.py
     function: double_check_summary
     bound: True
+    max_retries: 3
+    retry_delay: 30
   - name: write_day_index
     file: update_timeline_daily.py
     function: write_day_index

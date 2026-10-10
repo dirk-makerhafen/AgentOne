@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fnmatch
 import os
 import re
 from pathlib import Path
@@ -136,6 +137,9 @@ def _resolve_wikilink_target(link: str, source_dir: Path, root: Path) -> Path | 
 
 def _parse_frontmatter(content: str) -> dict | None:
     m = FRONTMATTER_RE.match(content)
+    if not m and content != content.lstrip():
+        # Tolerate blank lines/spaces inserted before the opening ``---``.
+        m = FRONTMATTER_RE.match(content.lstrip())
     if not m:
         return None
     fm: dict = {}
@@ -151,25 +155,53 @@ def _fix_source_to_sources(text: str) -> str:
     if not m:
         return text
     fm_text = m.group(1)
+    lines = fm_text.split("\n")
     new_fm_lines = []
     changed = False
-    for line in fm_text.split("\n"):
+    i = 0
+    while i < len(lines):
+        line = lines[i]
         stripped = line.strip()
-        if stripped.startswith("source:") or stripped == "source:":
+        if stripped.startswith("source:"):
             _, _, val = stripped.partition(":")
             val = val.strip().strip('"').strip("'")
-            if val:
+            items: list[str] = [val] if val else []
+            # Consume the indented sequence items that belong to the old
+            # `source:` key (e.g. `  - "[[raw/...]]"`), otherwise they would
+            # be emitted as orphans after `sources: []` -> invalid YAML.
+            j = i + 1
+            while j < len(lines) and re.match(r'^\s+-\s', lines[j]):
+                cont = lines[j].strip()[1:].strip().strip('"').strip("'")
+                if cont:
+                    items.append(cont)
+                j += 1
+            if items:
                 new_fm_lines.append("sources:")
-                new_fm_lines.append(f"  - \"{val}\"")
+                new_fm_lines.extend(f'  - "{item}"' for item in items)
             else:
                 new_fm_lines.append("sources: []")
             changed = True
-        else:
-            new_fm_lines.append(line)
+            i = j
+            continue
+        new_fm_lines.append(line)
+        i += 1
     if not changed:
         return text
     new_fm = "\n".join(new_fm_lines)
     return text[:m.start(1)] + new_fm + text[m.end(1):]
+
+
+def _strip_leading_frontmatter_whitespace(text: str) -> str:
+    """Remove blank lines/spaces before a leading frontmatter block.
+
+    Frontmatter must open on the very first line; a block that only appears
+    after leading whitespace is treated as missing by strict parsers. Returns
+    *text* unchanged when it does not start (after trimming) with ``---``.
+    """
+    stripped = text.lstrip()
+    if stripped != text and stripped.startswith("---"):
+        return stripped
+    return text
 
 
 def _autofix_link(fp: Path, old_link: str, new_link: str) -> bool:
@@ -194,8 +226,57 @@ def _autofix_link(fp: Path, old_link: str, new_link: str) -> bool:
     return True
 
 
+def _update_wikilinks_for_renames(md_files: list[Path], renamed: list[tuple[str, str]]) -> None:
+    """Rewrite wikilinks in *md_files* after files were renamed on disk.
+
+    ``renamed`` is a list of ``(old_vault_rel, new_vault_rel)`` pairs. Handles
+    bare ``[[name]]`` as well as vault-relative ``[[dir/name|alias]]`` links,
+    with or without the ``.md`` extension. A qualified link is only rewritten
+    when its directory matches the renamed file's directory, so an unrelated
+    same-named file elsewhere is left alone.
+    """
+    if not renamed:
+        return
+    for fp in md_files:
+        try:
+            text = fp.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        new_text = text
+        for old_rel, new_rel in renamed:
+            old_name = Path(old_rel).name
+            old_stem = old_name[:-3] if old_name.endswith(".md") else old_name
+            new_name = Path(new_rel).name
+            new_stem = new_name[:-3] if new_name.endswith(".md") else new_name
+            old_parent = Path(old_rel).parent.as_posix()
+            old_dir = "" if old_parent == "." else old_parent + "/"
+            pattern = rf'\[\[([^\[\]|]*/)?({re.escape(old_name)}|{re.escape(old_stem)})(\|[^\[\]]*)?\]\]'
+
+            def _repl(m, _new_name=new_name, _new_stem=new_stem, _old_dir=old_dir):
+                prefix = m.group(1) or ""
+                if prefix and prefix != _old_dir:
+                    return m.group(0)  # points at a different same-named file
+                matched = m.group(2)
+                alias = m.group(3) or ""
+                target = _new_name if matched.endswith(".md") else _new_stem
+                return f"[[{prefix}{target}{alias}]]"
+
+            new_text = re.sub(pattern, _repl, new_text)
+        if new_text != text:
+            try:
+                fp.write_text(new_text, encoding="utf-8")
+            except Exception:
+                pass
+
+
 def _fix_utf8(fp: Path) -> tuple[bool, str | None]:
     """Attempt to fix broken UTF-8 in a file.
+
+    Valid UTF-8 is left untouched. A file that is UTF-8 except for a few stray
+    invalid bytes keeps its valid characters; only the bad spans become U+FFFD.
+    A whole-file legacy re-decode (cp1252 / latin-1) is attempted only when the
+    file is clearly not UTF-8 (many invalid bytes), so a single bad byte can
+    never mojibake the valid multibyte characters around it.
 
     Returns (modified, error_message). On success with modifications,
     error_message is None. On failure, returns (False, error).
@@ -212,34 +293,25 @@ def _fix_utf8(fp: Path) -> tuple[bool, str | None]:
     except UnicodeDecodeError:
         pass
 
-    # Try common fixes
-    fixed = None
+    # Decode as much as possible; invalid bytes become U+FFFD.
+    replaced = raw.decode("utf-8", errors="replace")
+    bad = replaced.count("\ufffd")
 
-    # 1. Replace invalid bytes with replacement character
-    try:
-        fixed = raw.decode("utf-8", errors="replace")
-    except Exception:
-        pass
-
-    # 2. If that didn't produce clean text, try latin-1 -> utf-8 (common mojibake)
-    if fixed is None or "�" in fixed:
-        try:
-            # latin-1 never fails, maps bytes 0-255 directly to unicode
-            as_latin1 = raw.decode("latin-1")
-            # Re-encode to UTF-8
-            fixed = as_latin1
-        except Exception:
-            pass
-
-    # 3. Try cp1252 (Windows) -> utf-8
-    if fixed is None or "�" in fixed:
-        try:
-            fixed = raw.decode("cp1252")
-        except Exception:
-            pass
-
-    if fixed is None:
-        return (False, "could not decode with any strategy")
+    if bad <= max(1, len(replaced) // 100):
+        # Mostly-valid UTF-8 with a few stray bad bytes -> keep the valid text.
+        fixed = replaced
+    else:
+        # Looks like a legacy single-byte encoding -> try cp1252 (a superset
+        # of latin-1 for real-world text) before falling back to latin-1.
+        fixed = None
+        for encoding in ("cp1252", "latin-1"):
+            try:
+                fixed = raw.decode(encoding)
+                break
+            except Exception:
+                continue
+        if fixed is None:
+            fixed = replaced
 
     # Check if the fixed version is actually different and valid
     try:
@@ -371,6 +443,11 @@ def _valid_filename_suggestion(name: str) -> str:
 
 _TIMELINE_NEW_RE = re.compile(r'^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})_(.+)\.md$')
 _TIMELINE_LEGACY_RE = re.compile(r'^(\d{4})(\d{2})(\d{2})[_-](.+)\.md$')
+# A ``date:`` frontmatter value, with optional receive time.
+_FM_DATE_RE = re.compile(r'^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?$')
+# Raw mail/imessage archive folders embed the receive time, e.g.
+# ``.../20221021-1348__sender__subject/message.md``.
+_RAW_TS_RE = re.compile(r'(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})')
 
 
 def _timeline_filename_issues(rel: str) -> list[str]:
@@ -417,6 +494,63 @@ def _timeline_filename_issues(rel: str) -> list[str]:
     return issues
 
 
+def _timeline_title_from_name(name: str) -> str:
+    """Return the title part of a timeline filename, date prefix stripped."""
+    stem = name[:-3] if name.endswith(".md") else name
+    # Drop any leading date(-time) prefix in the forms the checks recognize.
+    stem = re.sub(r'^\d{4}[-_.]?\d{2}[-_.]?\d{2}(?:[-_ ]?\d{4})?[-_ ]*', '', stem)
+    return stem.strip("._- ")
+
+
+def _raw_source_hhmm(fm: dict) -> str | None:
+    """Extract ``HHMM`` from the raw-source archive folder in the ``sources`` field."""
+    m = _RAW_TS_RE.search(str(fm.get("sources", "")))
+    if not m:
+        return None
+    hh, mi = int(m.group(4)), int(m.group(5))
+    if 0 <= hh <= 23 and 0 <= mi <= 59:
+        return f"{hh:02d}{mi:02d}"
+    return None
+
+
+def _timeline_target_name(rel: str, content: str) -> str | None:
+    """Suggest the canonical ``YYYYMMDD-HHMM_<Title>.md`` name for a mis-named
+    timeline summary, or None when it cannot be resolved safely.
+
+    The date comes from frontmatter ``date`` and MUST equal the day folder — if
+    it does not, the file's *location* is wrong and renaming alone would not fix
+    it, so we leave that to the reviewer. The time comes from that field, else
+    the raw source archive timestamp, else ``0000``. The title is the current
+    filename stem with any existing date prefix stripped.
+    """
+    parts = rel.split("/")
+    if len(parts) != 5 or parts[0] != "timeline" or parts[-1] == "index.md":
+        return None
+    _, y, mo, d, name = parts
+    try:
+        dir_ymd = (int(y), int(mo), int(d))
+    except ValueError:
+        return None
+    fm = _parse_frontmatter(content)
+    if not fm:
+        return None
+    date_val = str(fm.get("date", "")).strip().strip('"').strip("'")
+    m = _FM_DATE_RE.match(date_val)
+    if not m:
+        return None
+    fy, fmo, fd = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    if (fy, fmo, fd) != dir_ymd:
+        return None
+    if m.group(4) is not None:
+        hhmm = f"{int(m.group(4)):02d}{int(m.group(5)):02d}"
+    else:
+        hhmm = _raw_source_hhmm(fm) or "0000"
+    title = _valid_filename_suggestion(_timeline_title_from_name(name)).strip("._- ")
+    if not title:
+        return None
+    return f"{fy:04d}{fmo:02d}{fd:02d}-{hhmm}_{title}.md"
+
+
 def wiki_check(
     _session: Any,
     folder: str | None = None,
@@ -449,8 +583,13 @@ def wiki_check(
     Results are capped to *limit* entries per check category to prevent excessive token usage.
 
     Fix suggestions (``suggestion`` / ``can_autofix`` keys) are included on every
-    dead wikilink whose filename matches exactly one file in the vault.
-    Pass *autofix=True* to also apply them (files are modified on disk).
+    dead wikilink whose filename matches exactly one file in the vault, and on
+    timeline summaries whose canonical filename can be derived from their
+    frontmatter ``date`` (receive time from ``date`` or the raw-source archive
+    timestamp). Pass *autofix=True* to also apply them — dead links and
+    ``source``→``sources`` are rewritten, leading blank lines before the
+    frontmatter are stripped, and mis-named timeline files are renamed with
+    inbound wikilinks updated (files are modified on disk).
 
     Args:
         _session: The calling agent's session (bound automatically).
@@ -468,8 +607,9 @@ def wiki_check(
             root) to scope the check to. Supports ``*``, ``?``, ``**``
             wildcards. When non-empty, only matching files are scanned.
             Default: ``""`` (scan all non-raw files).
-        autofix: Auto-fix unambiguous dead wikilinks and source→sources.
-            Default: False.
+        autofix: Auto-fix unambiguous dead wikilinks, source→sources, leading
+            frontmatter whitespace, and timeline filenames derivable from their
+            frontmatter ``date`` (renaming with wikilink rewrites). Default: False.
 
     Returns:
         A tuple of (success, result).
@@ -484,8 +624,8 @@ def wiki_check(
                 - correct: int (total - wrong)
                 - returned: int (items returned after cap)
                 - items: list of findings (capped to *limit*)
-                When *autofix* is True, dead-wikilink items include
-                ``can_autofix`` and ``suggestion`` keys.
+                When *autofix* is True, dead-wikilink and timeline_naming
+                items include ``can_autofix`` and ``suggestion`` keys.
             - total_issues: int
             - total_ok: int
             - returned: int
@@ -597,12 +737,15 @@ def wiki_check(
             return None
 
         md_files = [fp for fp in all_md_files if not fp.relative_to(root).as_posix().startswith("raw/")]
+        # link_files is the unscoped non-raw set: renames must rewrite links
+        # everywhere, not only in the `files`-scoped subset.
+        link_files = list(md_files)
 
         if files:
-            patterns = [f.strip() for f in files.split(",")]
+            patterns = [f.strip() for f in files.split(",") if f.strip()]
             md_files = [
                 fp for fp in md_files
-                if any(fp.relative_to(root).as_posix() == p or fp.relative_to(root).match(p) for p in patterns)
+                if any(fnmatch.fnmatchcase(fp.relative_to(root).as_posix(), p) for p in patterns)
             ]
 
         findings: list[dict] = []
@@ -864,6 +1007,12 @@ def wiki_check(
                 except Exception:
                     continue
                 fm = _parse_frontmatter(text)
+                if text != text.lstrip() and text.lstrip().startswith("---"):
+                    fm_issues.append({
+                        "file": rel,
+                        "issue": "frontmatter must start at the first line (leading blank lines/spaces)",
+                        "can_autofix": True,
+                    })
                 if fm is None:
                     fm_issues.append({
                         "file": rel,
@@ -895,7 +1044,8 @@ def wiki_check(
                     except Exception:
                         item["autofixed"] = False
                         continue
-                    new_text = _fix_source_to_sources(text)
+                    new_text = _strip_leading_frontmatter_whitespace(text)
+                    new_text = _fix_source_to_sources(new_text)
                     if new_text != text:
                         fp.write_text(new_text, encoding="utf-8")
                         item["autofixed"] = True
@@ -961,9 +1111,11 @@ def wiki_check(
             # Every timeline summary must live at timeline/YYYY/MM/DD/ and
             # be named YYYYMMDD-HHMM_<Title>.md with the prefix matching
             # the directory date (legacy day-only YYYYMMDD-<Title>.md
-            # accepted). Report-only: renaming would break wikilinks, so
-            # fixing is left to the reviewer agent.
+            # accepted). When the frontmatter `date` supplies the receive
+            # date (and, optionally, time), the correct filename can be
+            # derived and renamed in place, rewriting inbound wikilinks.
             naming: list[dict] = []
+            timeline_renames: list[tuple[str, str]] = []
             timeline_total = 0
             for fp in md_files:
                 rel = fp.relative_to(root).as_posix()
@@ -971,8 +1123,34 @@ def wiki_check(
                     continue
                 timeline_total += 1
                 problems = _timeline_filename_issues(rel)
-                if problems:
-                    naming.append({"file": rel, "issues": problems})
+                if not problems:
+                    continue
+                item: dict[str, Any] = {"file": rel, "issues": problems}
+                try:
+                    content = fp.read_text(encoding="utf-8")
+                except Exception:
+                    content = ""
+                suggestion = _timeline_target_name(rel, content) if content else None
+                if suggestion and suggestion != fp.name:
+                    item["suggestion"] = suggestion
+                    item["can_autofix"] = True
+                    if autofix:
+                        new_fp = fp.parent / suggestion
+                        new_rel = new_fp.relative_to(root).as_posix()
+                        if new_fp.exists():
+                            item["autofixed"] = False
+                            item["autofix_error"] = f"target already exists: {new_rel}"
+                        else:
+                            try:
+                                fp.rename(new_fp)
+                                item["autofixed"] = True
+                                timeline_renames.append((rel, new_rel))
+                            except Exception as e:
+                                item["autofixed"] = False
+                                item["autofix_error"] = str(e)
+                naming.append(item)
+            if autofix and timeline_renames:
+                _update_wikilinks_for_renames(link_files, timeline_renames)
             capped = _cap(naming, effective_limit)
             omitted_total += len(naming) - len(capped)
             findings.append({
@@ -1091,37 +1269,7 @@ def wiki_check(
                     renamed.append((old_rel, new_rel))
                 except Exception:
                     pass
-            # Now update wikilinks in all markdown files pointing to renamed files.
-            if renamed:
-                for fp in md_files:
-                    try:
-                        text = fp.read_text(encoding="utf-8")
-                    except Exception:
-                        continue
-                    new_text = text
-                    for old_rel, new_rel in renamed:
-                        old_name = Path(old_rel).name
-                        new_name = Path(new_rel).name
-                        # Pattern 1: bare filename link [[old_name]]
-                        old_bare = f"[[{old_name}]]"
-                        new_bare = f"[[{new_name}]]"
-                        if old_bare in new_text:
-                            new_text = new_text.replace(old_bare, new_bare)
-                        # Pattern 2: vault-relative with path [[path/old_name]]
-                        # Also handle [[path/old_name|alias]]
-                        import re
-                        old_escaped = re.escape(old_name)
-                        pattern = rf"\[\[([^\[\]]*/)?{old_escaped}(\|[^\[\]]*)?\]\]"
-                        def _repl(m):
-                            prefix = m.group(1) or ""
-                            alias = m.group(2) or ""
-                            return f"[[{prefix}{new_name}{alias}]]"
-                        new_text = re.sub(pattern, _repl, new_text)
-                    if new_text != text:
-                        try:
-                            fp.write_text(new_text, encoding="utf-8")
-                        except Exception:
-                            pass
+            _update_wikilinks_for_renames(link_files, renamed)
 
         total_wrong = sum(f["wrong"] for f in findings)
         returned = sum(len(f["items"]) for f in findings)
@@ -1129,7 +1277,7 @@ def wiki_check(
         autofix_count = 0
         if autofix:
             for f in findings:
-                if f["check"] in ("dead_wikilinks", "link_format", "frontmatter", "filenames"):
+                if f["check"] in ("dead_wikilinks", "link_format", "frontmatter", "filenames", "timeline_naming"):
                     autofix_count += sum(1 for item in f["items"] if item.get("autofixed"))
 
         summary_parts = []
@@ -1295,7 +1443,7 @@ if __name__ == "__main__":
     import django
     import os
 
-    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..",".."))
     if _repo_root not in sys.path:
         sys.path.insert(0, _repo_root)
 
@@ -1313,7 +1461,7 @@ if __name__ == "__main__":
                              f"Valid: {', '.join(CHECK_NAMES)}")
     parser.add_argument("--files", "-f", type=str, default="",
                         help="Comma-separated file paths/globs to scope checks to")
-    parser.add_argument("--autofix", action="store_true", help="Auto-fix dead wikilinks, source→sources, and UTF-8 encoding issues")
+    parser.add_argument("--autofix", action="store_true", help="Auto-fix dead wikilinks, source→sources, timeline filenames, and UTF-8 encoding issues")
     args = parser.parse_args()
 
     # Try current session; if none exists, pass None and skip resolve

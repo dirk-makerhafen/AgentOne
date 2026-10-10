@@ -190,6 +190,30 @@ def _close_stream(stream: Any | None) -> None:
         except Exception:  # pylint: disable=broad-exception-caught
             pass
 
+# Thinking control for local OpenAI-compatible servers (OMLX, Ollama,
+# vLLM, SGLang) serving Qwen3-style checkpoints.
+#
+# Researched against the actually-served checkpoint: this model's
+# chat_template.jinja honours ONLY the ``enable_thinking`` bool
+# (off → empty think block, anything else → open <think>) plus
+# ``preserve_thinking``.  It reads NO ``reasoning_effort`` variable, so
+# graded effort strings are a confirmed no-op here and are deliberately
+# NOT mapped onto thinking_budget caps (a budget is a ceiling, not
+# effort influence — silently substituting it would fake a feature the
+# model doesn't have).  The single honest bridge is ``none`` → thinking
+# off, which is exactly what that tier advertises.
+def _local_thinking_extra_body(effort: Any) -> dict:
+    """Map an AgentOne reasoning effort onto OMLX-style body params.
+
+    Returns an ``extra_body`` fragment: ``{"enable_thinking": False}``
+    for ``none``, empty for every other tier (the checkpoint has no
+    graded effort mechanism; LiteLLM drops the top-level
+    ``reasoning_effort`` for these providers with ``drop_params=True``).
+    """
+    if str(effort or "none").lower() == "none":
+        return {"enable_thinking": False}
+    return {}
+
 def detect_repeat(content):
     for blocksize in [255, 512, 1024]:
         windowsize = blocksize * 5
@@ -239,6 +263,15 @@ def run_streaming_query(
         args["reasoning_effort"] = session.reasoning_effort
     if api_provider is not None and not (api_provider.litellm_prefix or "").strip():
         args["api_base"] = api_provider.url
+        # Local OpenAI-compatible servers never see the top-level
+        # reasoning_effort (LiteLLM drops it as unsupported).  The only
+        # bridge is the thinking off-switch for effort "none"; graded
+        # tiers are intentionally left alone (no budget substitution).
+        # extra_body is merged into the request body by the handler.
+        if aimodel and aimodel.supports_reasoning:
+            extra = _local_thinking_extra_body(session.reasoning_effort)
+            if extra:
+                args["extra_body"] = {**(args.get("extra_body") or {}), **extra}
     if tools:
         args["tools"] = tools
         args["tool_choice"] = "auto"

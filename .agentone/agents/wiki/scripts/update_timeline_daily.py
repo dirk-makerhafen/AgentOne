@@ -17,7 +17,7 @@ from runtime.session.session import Session
 #   in update_timeline.py) that reads the folder itself — frontmatter lists
 #   are cheap, marketing bodies can be skipped — and returns ONLY the body
 #   markdown via final_result. It writes nothing.
-# - one tiny llm_query per metadata field (tags/persons/companies/products)
+# - one tiny llm_query per metadata field (tags/persons/companies/groups/products)
 #   whose input is ONLY that field's code-collected item list.
 # write_day_index validates the body, applies the dedup pairs to the day's
 # summary files in code, assembles frontmatter + body + code-built catalog
@@ -34,7 +34,7 @@ from runtime.session.session import Session
 # self-terminating by construction (the old commit-time comparison looped:
 # every rebuild recorded a hash that the subsequent index commit postdated).
 
-DAY_FIELDS = ("tags", "persons", "companies", "products")
+DAY_FIELDS = ("tags", "persons", "companies", "groups", "products")
 FRONTMATTER_RE = re.compile(r"\A\s*(?:\ufeff)?---\s*\n(.*?)\n---\s*\n?", re.DOTALL)
 
 DEDUP_FIELD_PROMPT = '''Deduplicate a list of {field} if needed, otherwise output exactly `none`. The items in the list below were created
@@ -64,8 +64,8 @@ no duplicates — output it (and nothing else) instead of an empty response.
 Lines are parsed by code (first comma separates), so be precise.
 '''
 
-_FIELD_SINGULAR = {"tags": "tag", "persons": "person", "companies": "company", "products": "product"}
-_FIELD_PLURAL = {"tags": "tags", "persons": "persons", "companies": "companies", "products": "products"}
+_FIELD_SINGULAR = {"tags": "tag", "persons": "person", "companies": "company", "groups": "group", "products": "product"}
+_FIELD_PLURAL = {"tags": "tags", "persons": "persons", "companies": "companies", "groups": "groups", "products": "products"}
 
 
 def _build_day_session_brief(day_rel: str, day_str: str, summary_files: list[str]) -> str:
@@ -174,17 +174,47 @@ The day folder holds:
 
 {listing}
 
+## Expected file format (authoritative — do NOT read other index files for reference)
+
+`{day_rel}/index.md` MUST have exactly this shape:
+
+```markdown
+---
+type: daily_summary
+updated: YYYY-MM-DD                # today's date
+last_checked_at: <40-hex git hash> # provenance only — never hand-edit
+sources_fingerprint: <40-hex sha>  # provenance only — never hand-edit
+tags: [tag1, tag2]                 # flow-style YAML lists, canonical spellings
+persons: [Name One, Name Two]
+companies: [Company]
+groups: [Club, Crew]               # clubs/associations/crews/teams — neither person nor commercial company
+products: []
+---
+
+# Summary for {day_str}            # exact heading, then bullet synthesis
+
+<key events, important numbers, decisions, quotes>
+
+## Einträge                        # one bullet per summary file in the folder
+
+- [[{day_rel}/<summary-file>.md|<summary-file>.md]]
+```
+
+Catalog entries are exactly `[[vault-rel-path|filename]]`, one per `*.md`
+file in the folder (except `index.md` itself), label is the bare filename.
+The lists cover the day's files; the body distills them with bullets.
+
 ## Hints from deterministic code checks
 {hints_block}
 
-Read `index.md` and the day's summaries. Verify: the body faithfully
-synthesizes the day (events, numbers, decisions, quotes — no invented
-facts); the `## Einträge` catalog lists every summary file present;
-frontmatter is valid with `type: daily_summary`, today's `updated`, a
-`last_checked_at` hash, and tags/persons/companies/products covering the
-day's files. Fix the index file in place wherever a hint (or anything else
-you spot) is valid. Never modify anything under `raw/` or the day's
-summary files — only `index.md` is yours to fix.
+Read `index.md` and the day's summaries. Verify against the format above:
+the body faithfully synthesizes the day (events, numbers, decisions,
+quotes — no invented facts); the `## Einträge` catalog is complete and
+correctly linked; frontmatter is valid with `type: daily_summary`, today's
+`updated`, a `last_checked_at` hash, and tags/persons/companies/groups/products
+covering the day's files. Fix the index file in place wherever a hint (or
+anything else you spot) is valid. Never modify anything under `raw/` or
+the day's summary files — only `index.md` is yours to fix.
 """
 
 
@@ -248,7 +278,7 @@ def _collect_day_summaries(day_dir: Path) -> tuple[list[dict], list[str]]:
 
 
 def _aggregate_day_lists(summaries: list[dict]) -> dict[str, list[str]]:
-    """Union of tags/persons/companies/products over the day (ordered, deduped)."""
+    """Union of tags/persons/companies/groups/products over the day (ordered, deduped)."""
     aggregate: dict[str, list[str]] = {f: [] for f in DAY_FIELDS}
     for s in summaries:
         for field in DAY_FIELDS:
@@ -515,11 +545,13 @@ def _day_changed_files(day_dir: Path, root: Path, stored_hash: str | None) -> tu
     except Exception:
         return None, []
     names: set[str] = set()
-    status = _git_names(["status", "--porcelain=v1", "-z", "--no-renames", "--", rel], root)
+    status = _git_names(["status", "--porcelain=v1", "-z", "--no-renames", "-uall", "--", rel], root)
     if status is None:
         return None, []
     for entry in status:
-        _xy, _, path = entry.partition(" ")
+        # -z entries are exactly `XY PATH` (2 status chars + space); -uall makes
+        # git list individual untracked files instead of the bare directory.
+        path = entry[3:] if len(entry) > 3 and entry[2] == " " else entry
         name = Path(path.strip()).name
         if name and name != "index.md":
             names.add(name)
@@ -692,7 +724,8 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str):
             disallowedTaskNames=[],
             disallowedCommandNames=[],
             tool_call_allowlist=None,
-            reasoning_effort=ReasoningEffort.NONE,
+            reasoning_effort=ReasoningEffort.MINIMAL,
+            max_turns=10,
         )
         child_sv.session_settings = child_settings
         SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=child_settings)
@@ -1030,7 +1063,7 @@ def _pick_body(candidates: list[tuple[str, str | None]], min_len: int = 50) -> t
 
 
 def write_day_index(_session, day_path, day_str=None, body_result=None, session_pk=None, aggregate=None, collect_hints=None, head_hash=None,
-                    tags_result=None, persons_result=None, companies_result=None, products_result=None):
+                    tags_result=None, persons_result=None, companies_result=None, groups_result=None, products_result=None):
     """Merge a prose body with code-owned metadata into a day's ``index.md``.
 
     ``body_result`` is the prose session's message ref and ``session_pk``
@@ -1084,7 +1117,7 @@ def write_day_index(_session, day_path, day_str=None, body_result=None, session_
     lint_results.extend(_validate_body(day_str, body))
 
     fresh = _aggregate_day_lists(_collect_day_summaries(day_dir)[0])
-    field_results = {"tags": tags_result, "persons": persons_result, "companies": companies_result, "products": products_result}
+    field_results = {"tags": tags_result, "persons": persons_result, "companies": companies_result, "groups": groups_result, "products": products_result}
     pairs: list[tuple[str, str, str]] = []
     for field in DAY_FIELDS:
         result = field_results[field]

@@ -43,7 +43,7 @@ from update_timeline_daily import (  # noqa: E402
 #   that reads the month's DAY indices — already distilled syntheses, cheap
 #   to read — and returns ONLY the body markdown as its last message. It
 #   writes nothing.
-# - one tiny llm_query per metadata field (tags/persons/companies/products)
+# - one tiny llm_query per metadata field (tags/persons/companies/groups/products)
 #   whose input is ONLY that field's code-collected item list (union of the
 #   day indices' frontmatter lists).
 # write_month_index validates the body, applies the dedup pairs back into the
@@ -130,18 +130,50 @@ The month folder holds these day indices:
 
 {listing}
 
+## Expected file format (authoritative — do NOT read other index files for reference)
+
+`{month_rel}/index.md` MUST have exactly this shape:
+
+```markdown
+---
+type: monthly_summary
+month: {month_str}                 # YYYY-MM of this folder
+updated: YYYY-MM-DD                # today's date
+last_checked_at: <40-hex git hash> # provenance only — never hand-edit
+sources_fingerprint: <40-hex sha>  # provenance only — never hand-edit
+tags: [tag1, tag2]                 # flow-style YAML lists, canonical spellings
+persons: [Name One, Name Two]
+companies: [Company]
+groups: [Club, Crew]               # clubs/associations/crews/teams — neither person nor commercial company
+products: []
+---
+
+# Summary for {month_str}          # exact heading, then bullet synthesis
+
+<key events, important numbers, decisions, quotes>
+
+## Tage                            # one bullet per DD day folder
+
+- [[{month_rel}/DD/index.md|{month_str}-DD]]
+```
+
+Catalog entries for indexed days are exactly
+`[[vault-rel-path|YYYY-MM-DD]]`; day folders without a usable index render
+as a plain `YYYY-MM-DD (no daily index yet)` line instead. The lists cover
+the month's days; the body distills them with bullets.
+
 ## Hints from deterministic code checks
 {hints_block}
 
-Read `index.md` and the month's day indices. Verify: the body faithfully
-synthesizes the month (events, numbers, decisions, quotes — no invented
-facts); the `## Tage` catalog lists every day folder present;
-frontmatter is valid with `type: monthly_summary`, a `month: {month_str}`
-scalar, today's `updated`, a `last_checked_at` hash, and
-tags/persons/companies/products covering the month's days. Fix the index
-file in place wherever a hint (or anything else you spot) is valid. Never
-modify anything under `raw/`, the day folders, or per-mail summaries —
-only `index.md` is yours to fix.
+Read `index.md` and the month's day indices. Verify against the format
+above: the body faithfully synthesizes the month (events, numbers,
+decisions, quotes — no invented facts); the `## Tage` catalog lists every
+day folder present; frontmatter is valid with `type: monthly_summary`, a
+`month: {month_str}` scalar, today's `updated`, a `last_checked_at` hash,
+and tags/persons/companies/groups/products covering the month's days. Fix the
+index file in place wherever a hint (or anything else you spot) is valid.
+Never modify anything under `raw/`, the day folders, or per-mail
+summaries — only `index.md` is yours to fix.
 """
 
 
@@ -166,8 +198,6 @@ Start by reading the current `{month_rel}/index.md` body and keep whatever
 still holds. Then read the changed day indices below in full. The unchanged
 day indices are already reflected in the current body — do NOT re-read them
 unless a changed day references them. Changes may be frontmatter-only
-spelling normalizations (unified tags/persons) — where the substance is
-unchanged, keep the existing text as is. Changes may be frontmatter-only
 spelling normalizations (unified tags/persons) — where the substance is
 unchanged, keep the existing text as is.
 
@@ -677,7 +707,7 @@ def update_timeline_monthly(_session: Session, limit: int = 2, month: str | None
 
 
 def write_month_index(_session, month_path, month_str=None, body_result=None, session_pk=None, aggregate=None, collect_hints=None, head_hash=None,
-                      tags_result=None, persons_result=None, companies_result=None, products_result=None):
+                      tags_result=None, persons_result=None, companies_result=None, groups_result=None, products_result=None):
     """Merge a prose body with code-owned metadata into a month's ``index.md``.
 
     ``body_result`` is the prose session's message ref and ``session_pk``
@@ -744,7 +774,7 @@ def write_month_index(_session, month_path, month_str=None, body_result=None, se
             "message": "write_month_index: no usable daily_summary day indices at write time — nothing was written",
         }
     fresh = _aggregate_day_lists(days)
-    field_results = {"tags": tags_result, "persons": persons_result, "companies": companies_result, "products": products_result}
+    field_results = {"tags": tags_result, "persons": persons_result, "companies": companies_result, "groups": groups_result, "products": products_result}
     pairs: list[tuple[str, str, str]] = []
     for field in DAY_FIELDS:
         result = field_results[field]

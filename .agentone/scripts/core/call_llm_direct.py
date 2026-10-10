@@ -22,6 +22,8 @@ Args (task):
         No system prompt is injected — the caller must include one if needed.
     model_name: Canonical model name (e.g. "gpt-4o").
                 None → caller's model → user's Default Model setting.
+    reasoning_effort: One of none/minimal/low/medium/high/xhigh.
+                None → caller session's setting → MINIMAL fallback.
 
 Returns (task):
     Dict with keys:
@@ -54,7 +56,7 @@ from server.models.enums.message_enums import MessageContentType, MessageRole
 from server.models.enums.session_enums import SessionType
 from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
-from server.models.settings import AgentToolCallSyntax, ReasoningEffort, SettingsModel
+from server.models.settings import AgentToolCallSyntax, ReasoningEffort, ResponseTemperature, SettingsModel
 
 if TYPE_CHECKING:
     from server.models.providers.ai_model import AiModel
@@ -104,8 +106,41 @@ def _resolve_aimodel(
         return None
 
 
+#: Valid reasoning_effort values (mirrors SettingsModel.ReasoningEffort).
+_VALID_EFFORTS = frozenset(
+    {e.value for e in ReasoningEffort}
+)
+
+
+def _resolve_effort(
+    reasoning_effort: str | None,
+    caller_session: "Session | None" = None,
+) -> str:
+    """Resolve the effort for the ephemeral session.
+
+    Precedence: explicit argument → caller session's setting → MINIMAL.
+    Unknown strings fall back to the caller/default instead of writing
+    garbage into SettingsModel (which would fail the CharField choices
+    validation on some paths).
+    """
+    if reasoning_effort is not None:
+        effort = str(reasoning_effort).lower()
+        if effort in _VALID_EFFORTS:
+            return effort
+    if caller_session is not None:
+        try:
+            caller_effort = str(caller_session.reasoning_effort or "").lower()
+        except Exception:
+            caller_effort = ""
+        if caller_effort in _VALID_EFFORTS:
+            return caller_effort
+    return ReasoningEffort.MINIMAL.value
+
+
 def _build_ephemeral_session(
-    aimodel: "AiModel", caller_session: "Session | None" = None
+    aimodel: "AiModel",
+    caller_session: "Session | None" = None,
+    reasoning_effort: str | None = None,
 ) -> tuple:
     """Create a minimal ephemeral session for the LLM call.
 
@@ -118,6 +153,11 @@ def _build_ephemeral_session(
     The caller's agent is reused for the version's agent FK so no
     throwaway AgentModel rows accumulate and task allow-lists resolve;
     when no caller session is available its agent is used as fallback.
+
+    Reasoning effort resolution: explicit ``reasoning_effort`` argument
+    wins, then the caller session's setting, then MINIMAL.  (Previously
+    this was hardcoded to MINIMAL, so the caller's dropdown selection
+    never had any effect on direct calls.)
     """
     from server.models.sessions.session import SessionModel
     from server.models.sessions.session_version import SessionVersionModel
@@ -158,7 +198,9 @@ def _build_ephemeral_session(
     settings = SettingsModel.objects.create(
         aimodel=aimodel,
         tool_call_syntax=AgentToolCallSyntax.CUSTOM,
-        reasoning_effort =ReasoningEffort.NONE,
+        reasoning_effort=_resolve_effort(reasoning_effort, caller_session),
+        precision=ResponseTemperature.PRECISE.value,
+
     )
 
     # 3. SessionVersionModel (links session to agent + settings) and pin
@@ -180,6 +222,7 @@ def call_llm_direct(
     _session: "Session",
     messages: list[dict],
     model_name: str | None = None,
+    reasoning_effort: str | None = None,
 ) -> dict:
     """Execute a raw LLM query via the existing call_llm pipeline.
 
@@ -189,9 +232,12 @@ def call_llm_direct(
 
     Args:
         _session: The active agent session (bound task). Supplies the
-            default model when ``model_name`` is None.
+            default model when ``model_name`` is None, and the default
+            reasoning effort when ``reasoning_effort`` is None.
         messages: List of OpenAI-format message dicts.
         model_name: Canonical model name (e.g. "gpt-4o").
+        reasoning_effort: One of none/minimal/low/medium/high/xhigh.
+            None → inherit the caller session's setting.
 
     Returns:
         Response dict with content, tokens, timing, and status.
@@ -207,7 +253,7 @@ def call_llm_direct(
     # ── 2. Create ephemeral session ────────────────────────────────────
     try:
         session_model, session_version, settings = _build_ephemeral_session(
-            aimodel, caller_session=_session
+            aimodel, caller_session=_session, reasoning_effort=reasoning_effort
         )
     except Exception as exc:
         return {
@@ -318,6 +364,7 @@ def llm_query(
     _session: Any | None = None,
     messages: str | list[str] | list[dict] | None = None,
     model: str | None = None,
+    reasoning_effort: str | None = None,
 ) -> tuple[bool, dict]:
     """Tool: call LLM directly without session context.
 
@@ -334,6 +381,8 @@ def llm_query(
             Required — omitting it is a schema error before this runs.
         model: Model name (e.g. "gpt-4o"). None = caller's model, then
             Default Model.
+        reasoning_effort: One of none/minimal/low/medium/high/xhigh.
+            None = inherit the caller session's setting.
 
     Returns:
         The dispatched AgentTaskCall on success (resolves to the task
@@ -344,6 +393,8 @@ def llm_query(
         return (False, {"error": "messages is required. Pass a string, list of strings, or list of message dicts."})
     if _session is None:
         return (False, {"error": "No session available for dispatch."})
+    if reasoning_effort is not None and str(reasoning_effort).lower() not in _VALID_EFFORTS:
+        return (False, {"error": f"Invalid reasoning_effort {reasoning_effort!r}. Use one of: {sorted(_VALID_EFFORTS)}."})
 
     # Normalize input to OpenAI-format list[dict]
     try:
@@ -357,7 +408,10 @@ def llm_query(
         task = _session.get_task("call_llm_direct")
         if task is None:
             return (False, {"error": "Task 'call_llm_direct' is not available for this session."})
-        return task.delay(messages=parsed, model_name=model)
+        kwargs: dict[str, Any] = {"messages": parsed, "model_name": model}
+        if reasoning_effort is not None:
+            kwargs["reasoning_effort"] = str(reasoning_effort).lower()
+        return task.delay(**kwargs)
     except Exception as exc:
         return (False, {"error": f"Failed to dispatch direct LLM call: {exc}"})
 

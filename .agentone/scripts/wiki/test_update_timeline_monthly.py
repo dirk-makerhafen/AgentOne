@@ -57,6 +57,7 @@ sources_fingerprint: fp-day-b
 tags: [spende]
 persons: [Luna Jeschke]
 companies: [PayPal]
+groups: [Freifunk]
 products: []
 ---
 
@@ -186,6 +187,7 @@ def test_collect_month_days_aggregate_union(tmp_path):
     assert agg["tags"] == ["siebdruck", "workshop", "spende"]
     assert agg["persons"] == ["Henning Delius", "Luna Jeschke"]
     assert agg["companies"] == ["PayPal"]
+    assert agg["groups"] == ["Freifunk"]
 
 
 def test_read_month_index_facts(tmp_path):
@@ -228,6 +230,18 @@ def test_month_check_brief_targets_index_only():
     assert "some hint" in brief
     assert "only `index.md` is yours to fix" in brief
     assert "day folders" in brief  # never modify days
+
+
+def test_month_check_brief_embeds_index_format():
+    brief = _build_month_check_brief("timeline/2022/10", "2022-10", ["04/index.md"], [])
+    assert "authoritative" in brief  # no need to infer from other files
+    assert "type: monthly_summary" in brief
+    assert "month: 2022-10" in brief
+    assert "# Summary for 2022-10" in brief
+    assert "## Tage" in brief
+    assert "- [[timeline/2022/10/DD/index.md|2022-10-DD]]" in brief
+    assert "(no daily index yet)" in brief
+    assert "sources_fingerprint" in brief and "never hand-edit" in brief
 
 
 def test_validate_month_body():

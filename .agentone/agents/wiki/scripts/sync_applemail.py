@@ -221,20 +221,23 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
         stdout, stderr = p.communicate(textwrap.dedent(script))
         print("APPLESCRIPT RESULTS")
         print(stdout, stderr)
-        eml_files = WORKING_PATH.rglob('*.eml')
+        eml_files = list(WORKING_PATH.rglob('*.eml'))
         if not eml_files and stderr.strip() != "":
             return f"{account}: ERROR running applescript\n{stderr.strip()}"
         
         result_files: list[tuple[datetime.datetime, Path]] = []
         timestamps = []
         try:
-            to_ignore = [l.strip() for l in (OUTPUT_PATH  / "ignore.txt").read_text().splitlines()]
+            to_ignore = [l.strip() for l in (OUTPUT_PATH / "ignore.txt").read_text().splitlines() if l.strip()]
         except:
             to_ignore = []
         for eml_file in eml_files:
-            if True in [ bad in eml_file.as_posix() for bad in to_ignore]:
+            if any(bad in eml_file.as_posix() for bad in to_ignore):
                 os.remove(eml_file)
-                os.rmdir(eml_file.parent)
+                try:
+                    os.rmdir(eml_file.parent)
+                except OSError:
+                    pass
                 continue
 
                 
@@ -340,15 +343,23 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                 metadata["direction"] = "unknown"
                 print(f"Warning: Could not determine message direction for {eml_file}. From: {sender_addr}, To: {to_addrs}, Account: {account}")
 
-            # Get received/send date
+            # Get received/send date. Prefer the first header that parses
+            # (Date first); normalize to UTC so all entries are tz-aware and
+            # the final sorted() cannot mix naive and aware datetimes.
             email_date = None
             for key in "Date", "Delivery-date", "Resent-Date":
-                if received_date := msg.get(key, None):
-                    try:
-                        email_date:datetime.datetime = parsedate_to_datetime(received_date)
-                        timestamps.append(int(email_date.timestamp()))
-                    except:
-                        print("failed to parse date")
+                received_date = msg.get(key, None)
+                if not received_date:
+                    continue
+                try:
+                    parsed = parsedate_to_datetime(received_date)
+                    if parsed.tzinfo is None:
+                        parsed = parsed.replace(tzinfo=datetime.timezone.utc)
+                    email_date = parsed
+                    timestamps.append(int(email_date.timestamp()))
+                    break
+                except Exception:
+                    print("failed to parse date")
 
             # Create target dir. The AppleScript folder name (sender/subject
             # derived) may contain emoji/unicode — clean it so every path

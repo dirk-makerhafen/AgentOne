@@ -1104,6 +1104,11 @@ class CallScheduler:
 
         - On ``FAILURE``: attempt retry via :meth:`TaskCallStateMachine.schedule_retry`;
           if the retry budget is exhausted, transition to failure.
+          A run that failed while waiting on result references is only
+          retried when none of its refs is still live — re-executing the
+          function re-dispatches its sub-calls, so retrying with a live
+          child would fork duplicates.  (A run that failed while ACTIVE
+          has no result refs yet, so the check is a no-op there.)
         - On ``SUCCESS``: dispatch after-run hooks if any are registered,
           otherwise finalise immediately.
         """
@@ -1116,7 +1121,10 @@ class CallScheduler:
         print("on_taskrun_ended", taskrun_status, run, call)
 
         if taskrun_status == TaskRunStatus.FAILURE:  # Handle retries
-            if TaskCallStateMachine.schedule_retry(call.pk, call.retry_delay, call.max_retries):
+            refs_pending = AgentTaskCall.objects.filter(
+                rev_taskrun_result_references=taskrun_id,
+            ).exclude(status=TaskCallStatus.ENDED).exists()
+            if not refs_pending and TaskCallStateMachine.schedule_retry(call.pk, call.retry_delay, call.max_retries):
                 return
             if TaskCallStateMachine.fail(call.pk):
                 CallScheduler._on_taskcall_ended(

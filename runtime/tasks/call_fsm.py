@@ -41,8 +41,13 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskCallStatusDetail, TaskCallStatusDetail]]
     (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.ENDED_SUCCESS),
     (TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,    TaskCallStatusDetail.ENDED_SUCCESS),
 
-    # Retry — only if retry_count < max_retries (enforced inside schedule_retry())
+    # Retry — only if retry_count < max_retries (enforced inside schedule_retry()).
+    # From ACTIVE_RUNNING (the run itself raised) or WAITING_SUBTASKS_OR_HOOKS
+    # (the run failed while waiting on result refs — see on_taskrun_ended,
+    # which only retries when no ref is still live, so re-execution cannot
+    # fork duplicates of running children).
     (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.WAITING_RETRY),
+    (TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS, TaskCallStatusDetail.WAITING_RETRY),
 
     # Hard failure — no retries left
     (TaskCallStatusDetail.ACTIVE_RUNNING,     TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION),
@@ -355,22 +360,37 @@ class TaskCallStateMachine:
     @staticmethod
     def schedule_retry(call_id: int, retry_delay_seconds: int, max_retries: int) -> bool:
         """
-        ``ACTIVE_RUNNING`` → ``WAITING_RETRY``, only if
-        ``retry_count < max_retries``.
+        ``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASKS_OR_HOOKS`` → ``WAITING_RETRY``,
+        only if ``retry_count < max_retries``.
+
+        Accepts both from-states via ``__in`` (same pattern as :meth:`fail`).
+        The WAITING_SUBTASKS_OR_HOOKS source covers runs that failed while
+        waiting on result references.  Callers must only retry when no result
+        reference is still live — re-executing the function re-dispatches its
+        sub-calls — see ``CallScheduler.on_taskrun_ended``.
 
         The retry-budget check is atomic in the WHERE clause — if it returns
         ``False`` the caller must immediately call :meth:`fail`.
         """
-        return TaskCallStateMachine.transition(
-            call_id,
-            TaskCallStatusDetail.ACTIVE_RUNNING,
-            TaskCallStatusDetail.WAITING_RETRY,
-            extra_filter=Q(retry_count__lt=max_retries),
-            extra={
-                "retry_count": F("retry_count") + 1,
-                "dont_start_before": timezone.now() + timedelta(seconds=retry_delay_seconds),
-            },
-        )
+        from server.models.tasks.agent_task_call import AgentTaskCall
+
+        updated = AgentTaskCall.objects.filter(
+            pk=call_id,
+            status_detail__in=[
+                TaskCallStatusDetail.ACTIVE_RUNNING,
+                TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
+            ],
+            retry_count__lt=max_retries,
+        ).update(
+            status=TaskCallStatus.WAITING,
+            status_detail=TaskCallStatusDetail.WAITING_RETRY,
+            retry_count=F("retry_count") + 1,
+            dont_start_before=timezone.now() + timedelta(seconds=retry_delay_seconds),
+            updated_at=timezone.now(),
+        ) > 0
+        if updated:
+            _publish_call_event(call_id)
+        return updated
 
     @staticmethod
     def fail(call_id: int) -> bool:

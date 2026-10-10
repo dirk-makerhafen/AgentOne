@@ -155,7 +155,13 @@ def build_llm_compact_context(
     fork_msg.add_part(
         type=MessagePartType.MESSAGE,
         content_type=MessageContentType.TEXT,
-        content="<SYSTEM NOTICE> IMPORTANT: Context window is running low, you have been switched to a session compaction agent. </SYSTEM NOTICE>",
+        content="<SYSTEM NOTICE> IMPORTANT: Context window is running low, the conversation or actions above have been STOPPED and switched to a session compaction agent.  </SYSTEM NOTICE>",
+    )
+    fork_msg1 = Message.objects.create(role=MessageRole.ASSISTANT, session=child_version.session, session_version=child_version, prev_message=fork_msg)
+    fork_msg1.add_part(
+        type=MessagePartType.MESSAGE,
+        content_type=MessageContentType.TEXT,
+        content="Confirmed, awaiting compaction instructions.",
     )
     prompt_parts = [
         {

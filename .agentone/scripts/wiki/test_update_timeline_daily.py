@@ -70,6 +70,8 @@ persons:
   - Luna Jeschke
 companies:
   - paypal
+groups:
+  - Freifunk
 products: []
 uids: []
 sources: ["[[raw/emails/y/message.md]]"]
@@ -284,6 +286,60 @@ def test_check_brief_targets_index_only():
     assert "raw/" in brief  # never modify raw
 
 
+def test_check_brief_embeds_index_format():
+    brief = _build_day_check_brief("timeline/2022/10/04", "2022-10-04", ["a.md"], [])
+    assert "authoritative" in brief  # no need to infer from other files
+    assert "type: daily_summary" in brief
+    assert "# Summary for 2022-10-04" in brief
+    assert "## Einträge" in brief
+    assert "- [[timeline/2022/10/04/<summary-file>.md|<summary-file>.md]]" in brief
+    assert "sources_fingerprint" in brief and "never hand-edit" in brief
+    assert "last_checked_at" in brief
+
+
+def test_per_mail_format_reference():
+    from update_timeline import SUMMARY_FORMAT_REFERENCE
+    assert "type: summary" in SUMMARY_FORMAT_REFERENCE
+    assert "always plural" in SUMMARY_FORMAT_REFERENCE
+    assert "Never use `source:`" in SUMMARY_FORMAT_REFERENCE
+    assert "`werbung`" in SUMMARY_FORMAT_REFERENCE
+    assert "No date or time in the title" in SUMMARY_FORMAT_REFERENCE
+    assert "never renamed" in SUMMARY_FORMAT_REFERENCE
+    assert "groups:" in SUMMARY_FORMAT_REFERENCE
+
+
+SUMMARY_NO_GROUPS = """---
+type: summary
+title: Spende erhalten - Paypal
+date: 2022-10-04 16:27
+updated: 2022-11-01
+tags: [spende]
+persons: [Luna Jeschke]
+companies: [PayPal]
+products: []
+uids: []
+sources: ["[[raw/emails/y/message.md]]"]
+---
+
+# Spende erhalten - Paypal
+
+- Spende über 50 Euro von Luna Jeschke über PayPal eingegangen
+"""
+
+
+def test_per_mail_groups_optional_for_legacy():
+    from update_timeline import validate_summary
+    raw = "Spende über 50 Euro von Luna Jeschke über PayPal eingegangen"
+    hints, _fm, _body = validate_summary(SUMMARY_NO_GROUPS, raw, "raw/emails/y/message.md", "2022-11-01")
+    assert not [h for h in hints if "groups" in h]  # legacy files without groups are fine
+    bad = SUMMARY_NO_GROUPS.replace("products: []", "products: []\ngroups: somestring")
+    hints, _fm, _body = validate_summary(bad, raw, "raw/emails/y/message.md", "2022-11-01")
+    assert any("groups" in h and "YAML list" in h for h in hints)
+    good = SUMMARY_NO_GROUPS.replace("products: []", "products: []\ngroups: [Freifunk]")
+    hints, _fm, _body = validate_summary(good, raw + " für Freifunk", "raw/emails/y/message.md", "2022-11-01")
+    assert not [h for h in hints if "groups" in h]
+
+
 def test_validate_body():
     assert _validate_body("2022-10-04", "# Summary for 2022-10-04\n\n- event with substance here") == []
     assert any("too short" in h for h in _validate_body("2022-10-04", "too short"))
@@ -292,9 +348,10 @@ def test_validate_body():
 
 def test_build_daily_index():
     from update_timeline_daily import _build_daily_index
-    text = _build_daily_index("2022-10-04", {"tags": ["a"], "persons": [], "companies": [], "products": []},
+    text = _build_daily_index("2022-10-04", {"tags": ["a"], "persons": [], "companies": [], "groups": ["Freifunk"], "products": []},
                               "# Summary for 2022-10-04\n\n- x\n", ["[[timeline/2022/10/04/a.md|a.md]]"], "2026-10-08", "abc", "fp1")
     assert text.startswith("---\ntype: daily_summary\nupdated: 2026-10-08\nlast_checked_at: abc\nsources_fingerprint: fp1\n")
+    assert "\ngroups: [Freifunk]\n" in text
     assert "## Einträge" in text and "[[timeline/2022/10/04/a.md|a.md]]" in text
 
 
@@ -313,6 +370,7 @@ def test_collect_and_aggregate(tmp_path):
     assert agg["tags"] == ["siebdruck", "spende", "paypal"]
     assert agg["persons"] == ["Henning Delius", "Luna Jeschke"]
     assert agg["companies"] == ["paypal"]
+    assert agg["groups"] == ["Freifunk"]
 
 
 def test_parse_pair_lines():
@@ -320,6 +378,14 @@ def test_parse_pair_lines():
     pairs, hints = _parse_pair_lines("Luna Jeschke, L. Jeschke\nbogus\nGhost, Nobody", "persons", items)
     assert pairs == [("persons", "Luna Jeschke", "L. Jeschke")]
     assert len(hints) == 1  # invented variant (bare lines are silently skipped)
+
+
+def test_dedup_prompt_renders_groups():
+    from update_timeline_daily import DEDUP_FIELD_PROMPT, _FIELD_PLURAL, _FIELD_SINGULAR
+    assert _FIELD_SINGULAR["groups"] == "group" and _FIELD_PLURAL["groups"] == "groups"
+    text = DEDUP_FIELD_PROMPT.format(field="groups", field_singular="group", field_plural="groups",
+                                     day_str="2022-10", count=2, items="- Freifunk\n- freifunk e.V.")
+    assert "list of groups" in text and "SAME group" in text and "output exactly `none`" in text
 
 
 def test_is_explicit_none():

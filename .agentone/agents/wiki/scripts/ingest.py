@@ -29,7 +29,7 @@ def ingest_next(_session: Session, limit:int=1):
 
     subagent_version = _session.get_subagent("wiki")
     if not subagent_version:
-        return {"error": f"Agent 'wiki' not found"}
+        return False, {"status": "error", "message": "Agent 'wiki' not found"}
 
     now = datetime.now().strftime("%Y%m%d.%H%M")
     ingest_session_version = subagent_version.get_or_create_session(
@@ -49,11 +49,16 @@ def ingest_next(_session: Session, limit:int=1):
     ingest_session = Session(session_model=ingest_session_version.session, pinned_session_version=ingest_session_version)
     ingest_session.set_is_active(True)
 
-    success, data = ingest_session.get_task("find_unlinked_raw").call(limit=limit)
+    find_task = ingest_session.get_task("find_unlinked_raw")
+    if find_task is None:
+        return False, {"status": "error", "message": "task 'find_unlinked_raw' is not available"}
+    success, data = find_task.call(limit=limit)
+    if not success:
+        return False, data if isinstance(data, dict) else {"status": "error", "message": str(data)}
     prev_res =  ingest_session.get_tool("todo_clear").delay()
     cnt = 0
     last_y,last_m,last_d = None,None,None
-    if data.get("items", None):
+    if isinstance(data, dict) and data.get("items", None):
         for item in data["items"]:
             p = item["file"]
             y,m,d = _extract_date_from_path(p)
@@ -69,4 +74,4 @@ def ingest_next(_session: Session, limit:int=1):
             last_d = d if d else last_d
             cnt += 1
             prev_res = ingest_session.get_tool("todo_append").delay(text=f'ingest: {item["file"]}', prev_res=prev_res)
-    return True, f"{cnt} todo items created"
+    return True, {"status": "success", "message": f"{cnt} todo items created"}
