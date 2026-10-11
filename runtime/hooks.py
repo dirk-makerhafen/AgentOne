@@ -137,16 +137,9 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
     from django.utils import timezone as tz
 
     from server.models.agents.agent import AgentModel
-    from server.models.enums.message_enums import (
-        MessageContentType,
-        MessagePartType,
-        MessageRole,
-    )
+    from server.models.enums.message_enums import MessageRole
     from server.models.hooks.hook_run import SessionHookRun
     from server.models.message import Message
-    from server.models.sessions.session_version import SessionVersionModel
-    from runtime.events import publish_model_event
-    from runtime.session.session import Session
 
     hook_name = hook.get("name") or hook.get("task")
     if _in_flight(session, hook_name):
@@ -169,75 +162,47 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
     if anchor is not None and not isinstance(anchor, Message):
         anchor = Message.objects.filter(pk=anchor).first()
 
-    parent_sv = session.get_version_model()
-    child_sv = agent_version.get_or_create_session(
-        name=f"p{session.model.pk}:hook:{hook_name}:{int(time.time())}",
-        description=f"Session hook {hook_name!r} ({hook.get('on')}) for {session.name}",
-        workspace=session.workspace,
-        parent_session_version=parent_sv,
-        session_type=SessionType.SUBTASK_HOOK,
-    )
-
     # Fork pins: no auto-compaction (the fork must never compact itself
     # mid-reflection) and no idle compaction. Hooks need no pin — the
     # SUBTASK_HOOK type gate in maybe_fire_hooks covers recursion.
     # (Auto-compact pins are-off here means *reactive/idle* triggers only;
     # direct compact_turn dispatch for the budget prefix still works.)
-    from server.models.settings import SettingsModel
-
-    if child_sv.session_settings:
-        fork_settings = agent_version.clone_settings(
-            child_sv.session_settings,
-            auto_compact_max_tokens=0,
-            auto_compact_idle_seconds=0,
-        )
+    fork_kwargs = {
+        "name": f"p{session.model.pk}:hook:{hook_name}:{int(time.time())}",
+        "description": f"Session hook {hook_name!r} ({hook.get('on')}) for {session.name}",
+        "session_type": SessionType.SUBTASK_HOOK,
+        "auto_compact_max_tokens": 0,
+        "auto_compact_idle_seconds": 0,
+        "anchor": anchor,
+    }
+    # Same agent → full fork (inherit settings + links); a different hook
+    # agent → clean subagent session (its own settings, explicit pins only).
+    if agent_name == session.agent.name:
+        fork = session.fork(**fork_kwargs)
     else:
-        fork_settings = SettingsModel(
-            auto_compact_max_tokens=0, auto_compact_idle_seconds=0
-        )
-        fork_settings.save()
-    SessionVersionModel.objects.filter(pk=child_sv.pk).update(
-        session_settings=fork_settings
+        fork = session.spawn_subagent(agent_version, **fork_kwargs)
+    fork_msgs = fork.add_messages(
+        [
+            {
+                "role": MessageRole.USER,
+                "content": (
+                    f"You are a session-hook worker ({hook_name!r}, event "
+                    f"{hook.get('on')!r}) forked from parent session "
+                    f"#{session.model.pk} of agent '{session.agent.name}'. "
+                    f"Do the hook task below, then call final_result with a short "
+                    f"report of what you did."
+                ),
+            },
+            {
+                "role": MessageRole.USER,
+                "content": (
+                    f"Hook job: run task {hook['task']!r} for event {hook.get('on')!r} "
+                    f"(parent session #{session.model.pk})."
+                ),
+            },
+        ]
     )
-    child_sv.session_settings = fork_settings
-    fork = Session(session_model=child_sv.session, pinned_session_version=child_sv)
-    fork_version = fork.get_version_model()
-
-    fork_msg = Message.objects.create(
-        role=MessageRole.USER,
-        session=fork_version.session,
-        session_version=fork_version,
-        prev_message=anchor,
-    )
-    fork_msg.add_part(
-        type=MessagePartType.MESSAGE,
-        content_type=MessageContentType.TEXT,
-        content=(
-            f"You are a session-hook worker ({hook_name!r}, event "
-            f"{hook.get('on')!r}) forked from parent session "
-            f"#{session.model.pk} of agent '{session.agent.name}'. "
-            f"Do the hook task below, then call final_result with a short "
-            f"report of what you did."
-        ),
-    )
-    hook_msg = Message.objects.create(
-        role=MessageRole.USER,
-        session=fork_version.session,
-        session_version=fork_version,
-        prev_message=fork_msg,
-    )
-    hook_msg.add_part(
-        type=MessagePartType.MESSAGE,
-        content_type=MessageContentType.TEXT,
-        content=(
-            f"Hook job: run task {hook['task']!r} for event {hook.get('on')!r} "
-            f"(parent session #{session.model.pk})."
-        ),
-    )
-    try:
-        publish_model_event(hook_msg, "create")
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
+    hook_msg = fork_msgs[-1]
 
     # Token budget: estimate the fork's inherited context from the anchor on
     # the parent. Over budget with a compactable boundary → prefix-compact

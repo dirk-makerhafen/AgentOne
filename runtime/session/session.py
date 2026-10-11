@@ -1,6 +1,7 @@
 from __future__ import annotations
 import ast
 import json
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List
 
 from django.db import transaction
@@ -21,6 +22,15 @@ from server.models.tasks.task_definition_version import TaskDefinitionVersion
 if TYPE_CHECKING:
     from server.models.sessions.session_version import SessionVersionModel
     from server.models.agents.agent_version import AgentVersionModel
+
+
+#: Default instruction prepended to a delegated/forked subtask prompt.
+SUBTASK_INTRO = (
+    "You are running as a subtask for another agent. "
+    "When your work is complete, finish by invoking the final_result tool directly "
+    "with your result as its content argument. "
+    "Do not return your result as plain text only. Your task:\n"
+)
 
 
 class Session:
@@ -658,6 +668,166 @@ class Session:
         return self.agent.subagent_config(name)
 
     # ------------------------------------------------------------------
+    # Child-session creation
+    # ------------------------------------------------------------------
+
+    def resolve_agent_version(self, name: str | None = None) -> AgentVersionModel | None:
+        """Resolve an agent version by name.
+
+        Prefers an allowed subagent of this session; falls back to a top-level
+        agent looked up by name — so framework/internal agents that are
+        deliberately excluded from the subagent allowlist (e.g. ``baseagent``,
+        ``approval_decider``) can still be spawned by name. Returns ``None``
+        when neither exists.
+        """
+        name = name or self.agent.name
+        if (av := self.get_subagent(name)):
+            return av
+        from server.models.agents.agent import AgentModel
+
+        model = AgentModel.objects.filter(name=name).first()
+        return model.get_runtime().get_version_model() if model else None
+
+    def fork(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        description: str = "",
+        display_name: str | None = None,
+        session_type: str = "",
+        workspace: Any = None,
+        preserve_history: bool = False,
+        anchor: Message | None = None,
+        settings: SettingsModel | None = None,
+        **settings_overrides: Any,
+    ) -> "Session":
+        """Create a child session running the *same* agent as this one.
+
+        The child inherits this session's settings (with ``settings_overrides``
+        applied on top) and query-template/adhoc-tool links. Use
+        :meth:`spawn_subagent` to run a *different* agent's session.
+
+        ``preserve_history`` (or an explicit ``anchor`` message) grafts the
+        child's message chain onto this session's, so the child sees the
+        conversation up to that point.
+        """
+        agent_version = self.agent.get_version_model()
+        child_sv = agent_version.get_or_create_session(
+            name=name,
+            description=description,
+            display_name=display_name,
+            workspace=workspace if workspace is not None else self.workspace,
+            parent_session_version=self.get_version_model(),
+            session_type=session_type,
+            settings_inherit=True,
+            settings=settings,
+            settings_overrides=settings_overrides or None,
+            inherit_links=True,
+        )
+        child = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+        if anchor is None and preserve_history:
+            anchor = self.get_last_message()
+        if anchor is not None:
+            child.link_history_to(self, anchor=anchor)
+        return child
+
+    def spawn_subagent(  # pylint: disable=too-many-arguments
+        self,
+        agent: str | AgentVersionModel,
+        *,
+        name: str,
+        description: str = "",
+        display_name: str | None = None,
+        session_type: str = "",
+        workspace: Any = None,
+        settings: SettingsModel | None = None,
+        allow_internal: bool = False,
+        anchor: Message | None = None,
+        preserve_history: bool = False,
+        **settings_overrides: Any,
+    ) -> "Session | None":
+        """Create a child session for another agent (possibly a different one).
+
+        *agent* may be an agent **name** or an already-resolved
+        ``AgentVersionModel``. A name is resolved through this session's
+        subagent allowlist (:meth:`get_subagent`); pass ``allow_internal=True``
+        to additionally resolve framework/internal agents (e.g. ``baseagent``,
+        ``approval_decider``) that are deliberately excluded from the allowlist
+        (:meth:`resolve_agent_version`). Returns ``None`` when a name cannot be
+        resolved — callers decide how to report that.
+
+        Unlike :meth:`fork`, the child inherits **none** of this session's
+        settings or links — the parent's agent-config overrides must never
+        shadow the child agent's own settings. Pass ``settings`` or
+        ``settings_overrides`` for anything the child explicitly needs.
+        ``preserve_history`` (or an explicit ``anchor`` message) grafts the
+        child's message chain onto this session's, mirroring :meth:`fork`.
+        """
+        if isinstance(agent, str):
+            agent_version = (
+                self.resolve_agent_version(agent) if allow_internal
+                else self.get_subagent(agent)
+            )
+        else:
+            agent_version = agent
+        if agent_version is None:
+            return None
+        child_sv = agent_version.get_or_create_session(
+            name=name,
+            description=description,
+            display_name=display_name,
+            workspace=workspace if workspace is not None else self.workspace,
+            parent_session_version=self.get_version_model(),
+            session_type=session_type,
+            settings_inherit=False,
+            settings=settings,
+            settings_overrides=settings_overrides or None,
+            inherit_links=False,
+        )
+        child = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+        if anchor is None and preserve_history:
+            anchor = self.get_last_message()
+        if anchor is not None:
+            child.link_history_to(self, anchor=anchor)
+        return child
+
+    def link_history_to(self, parent: "Session", anchor: Message | None = None) -> Message:
+        """Create a hidden anchor message so this session's chain continues
+        from *parent*'s conversation at *anchor* (defaults to its last message).
+
+        Messages added afterwards chain off this anchor automatically.
+        """
+        if anchor is None:
+            anchor = parent.get_last_message()
+        return self.add_message(
+            role="info",
+            content=f"Forked from session #{parent.model.pk}.",
+            hide_from_context=True,
+            prev_message=anchor,
+        )
+
+    def add_subtask_message(self, prompt: str, *, intro: str = SUBTASK_INTRO, force: bool = False) -> Any:
+        """Post the standard subtask preamble followed by *prompt*.
+
+        Builds the ``It is now …`` / working-dir header, the subtask
+        instruction (*intro*), and the task, then dispatches via
+        :meth:`add_user_message`.
+        """
+        from server.models.enums.message_enums import MessageContentType, MessagePartType
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        working_dir = self.workspace.path if self.workspace else "unknown"
+        parts = [
+            {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
+             "content": f"It is now {now}, your working dir is '{working_dir}'.\n"},
+            {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
+             "content": intro},
+            {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
+             "content": prompt},
+        ]
+        return self.add_user_message(parts=parts, force=force)
+
+    # ------------------------------------------------------------------
     # Setting resolution  (agent → session override chain)
     # ------------------------------------------------------------------
 
@@ -755,6 +925,129 @@ class Session:
     # ------------------------------------------------------------------
     # Message handling
     # ------------------------------------------------------------------
+
+    def add_message(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        role: str = "user",
+        parts: List[Dict] | None = None,
+        content: str | None = None,
+        response: Response | None = None,
+        hide_from_context: bool = False,
+        pin_to_context: bool = False,
+        prev_message: Message | None = None,
+    ) -> Message:
+        """Persist a single message on this session's current version.
+
+        The low-level, synchronous counterpart to :meth:`add_user_message`:
+        it records the message (with parts), auto-links ``prev_message`` to
+        the conversation tail when not given, and publishes the model event so
+        the UI chain updates without a reload.  It never dispatches a turn —
+        use :meth:`kick_off_process_turn` (or :meth:`add_user_message`) for
+        that.
+
+        Parameters
+        ----------
+        role : str
+            :class:`~server.models.enums.message_enums.MessageRole` value
+            (``"user"``, ``"assistant"``, ``"info"``, ``"tool"``, …).
+        parts : list[dict] | None
+            Parts in the same shape as :meth:`add_user_message`
+            (``type``/``content_type``/``content`` + optional ``template_data``
+            / ``tool_call``).
+        content : str | None
+            Shorthand for a single leading TEXT part (prepended to *parts*).
+        response : Response | None
+            Set on LLM-authored (assistant) messages.
+        prev_message : Message | None
+            Explicit predecessor; defaults to the session's current tail.
+        """
+        from server.models.enums.message_enums import MessageContentType, MessagePartType
+        from runtime.events import publish_model_event
+
+        resolved_parts: List[Dict] = []
+        if content is not None:
+            resolved_parts.append(
+                {
+                    "type": MessagePartType.MESSAGE,
+                    "content_type": MessageContentType.TEXT,
+                    "content": content,
+                }
+            )
+        if parts:
+            resolved_parts.extend(parts)
+        if not resolved_parts:
+            raise ValueError("add_message requires 'content' or 'parts'")
+
+        session_version = self.get_version_model()
+        if prev_message is None:
+            prev_message = self.get_last_message()
+
+        message = Message.objects.create(
+            role=role,
+            session=session_version.session,
+            session_version=session_version,
+            response=response,
+            prev_message=prev_message,
+            hide_from_context=hide_from_context,
+            pin_to_context=pin_to_context,
+        )
+        for part in resolved_parts:
+            message.add_part(
+                type=part["type"],
+                content_type=part["content_type"],
+                content=part["content"],
+                template_data=part.get("template_data", None),
+                tool_call=part.get("tool_call", None),
+            )
+
+        publish_model_event(message, "create")
+        return message
+
+    def add_messages(self, messages: List[Dict | str]) -> List[Message]:
+        """Persist a batch of messages, chaining each off the previous one.
+
+        Each entry is either a plain string (shorthand for a USER message with
+        that text) or a dict of :meth:`add_message` keyword arguments
+        (``role``, ``parts``, ``content``, ``response``, ``hide_from_context``,
+        ``pin_to_context``, ``prev_message``).  When an entry has no explicit
+        ``prev_message`` it continues the batch (the previous entry, or the
+        session tail for the first one).
+
+        Returns the created messages in order.  Dispatch is left to the caller
+        (:meth:`kick_off_process_turn`).
+        """
+        created: List[Message] = []
+        for entry in messages:
+            spec = {"content": entry} if isinstance(entry, str) else entry
+            prev_message = spec.get("prev_message")
+            if prev_message is None and created:
+                prev_message = created[-1]
+            created.append(
+                self.add_message(
+                    role=spec.get("role", "user"),
+                    parts=spec.get("parts"),
+                    content=spec.get("content"),
+                    response=spec.get("response"),
+                    hide_from_context=spec.get("hide_from_context", False),
+                    pin_to_context=spec.get("pin_to_context", False),
+                    prev_message=prev_message,
+                )
+            )
+        return created
+
+    def kick_off_process_turn(self, message: Message, **kwargs: Any) -> Any:
+        """Dispatch ``process_turn`` for *message*.
+
+        The single dispatch point for "record message(s), then run a turn".
+        Extra *kwargs* are forwarded to the task (e.g.
+        ``todolist_task_result_to_ignore``).  Returns the created
+        ``AgentTaskCall`` so callers can chain on it.
+        """
+        process_turn = self.get_task("process_turn")
+        if process_turn is None:
+            raise Exception("process_turn task is not available for this session")
+        return process_turn.delay(message=message, **kwargs)
 
     def add_user_message(self, parts: List[Dict] | None = None, force: bool = False) -> Any:
         """
