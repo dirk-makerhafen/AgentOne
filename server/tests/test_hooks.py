@@ -262,18 +262,20 @@ class HookDispatchTest(TestCase):
         self.assertEqual(fork_sv.session_settings.auto_compact_max_tokens, 0)
         self.assertEqual(fork_sv.session_settings.auto_compact_idle_seconds, 0)
 
-        # Fork chain anchored at the snapshot message.
+        # Fork chain anchored at the snapshot message: the hidden fork anchor
+        # (from link_history_to) followed by the two hook instruction messages.
         hook_msgs = list(
             Message.objects.filter(session_version=fork_sv).order_by("pk")
         )
-        self.assertEqual(len(hook_msgs), 2)
+        self.assertEqual(len(hook_msgs), 3)
         self.assertEqual(hook_msgs[0].prev_message_id, msgs[-1].pk)
+        self.assertTrue(hook_msgs[0].hide_from_context)
 
         # Hook task dispatched with JSON-safe context, no compact prefix.
         fake = self.fakes["probe_task"]
         self.assertEqual(len(fake.calls), 1)
         kwargs = fake.calls[0][1]
-        self.assertEqual(kwargs["message"].pk, hook_msgs[1].pk)
+        self.assertEqual(kwargs["message"].pk, hook_msgs[2].pk)
         self.assertNotIn("hook_after", kwargs)
         self.assertEqual(
             kwargs["hook_ctx"],

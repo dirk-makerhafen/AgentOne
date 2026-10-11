@@ -31,18 +31,14 @@ def start_subsession(_session: Session, agentname: str, sessionname: str, prompt
         On success: ``{"session_pk": int, "session_name": str}``.
         On error: ``{"error": "Agent '<name>' not found"}``.
     """
-    subagent_version = _session.get_subagent(agentname)
-    if not subagent_version:
-        return {"error": f"Agent '{agentname}' not found"}
-
-    child_sv = subagent_version.get_or_create_session(
+    child_session = _session.spawn_subagent(
+        agentname,
         name=sessionname,
         description=prompt,
-        workspace=_session.workspace,
-        parent_session_version=_session.get_version_model(),
         session_type=SessionType.SUBSESSION,
     )
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+    if child_session is None:
+        return {"error": f"Agent '{agentname}' not found"}
 
     return {
         "session_pk": child_session.model.pk,

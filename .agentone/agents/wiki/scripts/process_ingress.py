@@ -314,36 +314,19 @@ def _spawn_wiki_item_session(_session, name: str, brief: str):
     is the add_user_message taskcall, resolvable by the scheduler exactly
     like an llm_query result ref.
     """
-    from server.models.agents.agent import AgentModel
     from server.models.enums.message_enums import MessageContentType, MessagePartType
     from server.models.enums.session_enums import SessionType
-    from server.models.sessions.session_version import SessionVersionModel
 
-    subagent_version = None
-    try:
-        subagent_version = _session.get_subagent("wiki")
-    except Exception:
-        subagent_version = None
-    if subagent_version is None:
-        model = AgentModel.objects.filter(name="wiki").first()
-        if model is None:
-            return False, None, "agent 'wiki' not found"
-        subagent_version = model.get_runtime().get_version_model()
-
-    parent_sv = _session.get_version_model()
-    child_sv = subagent_version.get_or_create_session(
+    child_session = _session.spawn_subagent(
+        "wiki",
         name=name,
         description="ingress item: " + " ".join(brief.split())[:80],
-        workspace=_session.workspace,
-        parent_session_version=parent_sv,
         session_type=SessionType.SUBTASK_DELEGATE,
+        allow_internal=True,
+        max_turns=MAX_TURNS,
     )
-    if parent_sv is not None and parent_sv.session_settings is not None:
-        child_settings = subagent_version.clone_settings(
-            parent_sv.session_settings, max_turns=MAX_TURNS)
-        child_sv.session_settings = child_settings
-        SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=child_settings)
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+    if child_session is None:
+        return False, None, "agent 'wiki' not found"
 
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     working_dir = child_session.workspace.path if child_session.workspace else "unknown"
@@ -360,7 +343,7 @@ def _spawn_wiki_item_session(_session, name: str, brief: str):
         ref = child_session.add_user_message(parts=parts)
     except Exception as e:
         return False, None, f"spawn failed: {e}"
-    return True, child_sv.session.pk, ref
+    return True, child_session.model.pk, ref
 
 
 def finalize_ingress_item(_session, ingress, item, session_pk=None, child_result=None):

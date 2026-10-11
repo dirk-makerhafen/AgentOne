@@ -146,13 +146,17 @@ class RightPanelSessionSubagents(ModelView):
     def open(self, name: str):
         if self.session is None:
             return
-        av = self.session.get_subagent(name)
-        if av is None:
-            return
         ts = timezone.now().strftime("%Y%m%d%H%M%S")
-        sv = av.get_or_create_session(name=f"user-launch:{name}:{ts}", description="User created subagent", parent_session_version=self.session.get_version_model(), session_type=SessionType.SUBSESSION)
+        child_session = self.session.spawn_subagent(
+            name,
+            name=f"user-launch:{name}:{ts}",
+            description="User created subagent",
+            session_type=SessionType.SUBSESSION,
+        )
+        if child_session is None:
+            return
         from ui.main.chat.chat import Chat
-        self.parent.main_panel.create_and_open_tab(Chat, sv.session)
+        self.parent.main_panel.create_and_open_tab(Chat, child_session.model)
 
     def refresh(self):
         self._rebuild_active()

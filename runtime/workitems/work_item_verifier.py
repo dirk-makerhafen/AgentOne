@@ -264,8 +264,6 @@ class WorkItemVerifier:
         from server.models.enums.message_enums import MessageContentType, MessagePartType
         from server.models.enums.session_enums import SessionType
         from server.models.settings import SettingsModel
-        from server.models.sessions.session_version import SessionVersionModel
-        from runtime.session.session import Session
 
         verifier = AgentModel.objects.filter(name=WorkItemVerifier.REVIEWER_AGENT_NAME).first()
         if verifier is None:
@@ -279,24 +277,25 @@ class WorkItemVerifier:
                 f"item #{item.pk}; refusing self-review"
             )
 
-        verifier_av = verifier.get_runtime().get_version_model()
-        child_sv = verifier_av.get_or_create_session(
+        # Declare the review target on the child session settings.
+        settings = SettingsModel(extra_settings={"verify_work_item_id": item.pk})
+        settings.save()
+
+        child_session = executor_session.spawn_subagent(
+            WorkItemVerifier.REVIEWER_AGENT_NAME,
             name=f"workitem-review:{item.pk}:{time_ns()}",
             display_name=f"Verification of work item #{item.pk}",
             description=brief[:100],
             workspace=executor_session.workspace,
-            parent_session_version=executor_session.get_version_model(),
-            session_type=SessionType.SUBTASK_FORK,
+            session_type=SessionType.SUBTASK_HOOK,
+            allow_internal=True,
+            settings=settings,
         )
+        if child_session is None:
+            raise RuntimeError(
+                f"{WorkItemVerifier.REVIEWER_AGENT_NAME} agent has no version"
+            )
 
-        # Declare the review target on the child session settings.
-        settings = SettingsModel(extra_settings={"verify_work_item_id": item.pk})
-        settings.save()
-        SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=settings)
-
-        child_session = Session(
-            session_model=child_sv.session, pinned_session_version=child_sv
-        )
         now = timezone.localtime().strftime("%Y-%m-%d %H:%M")
         working_dir = (
             child_session.workspace.path if child_session.workspace else "unknown"

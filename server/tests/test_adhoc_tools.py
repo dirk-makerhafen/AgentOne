@@ -628,7 +628,8 @@ class ForkHookTest(TestCase):
 
     def test_new_fork_inherits_links(self):
         child_sv = self.av.get_or_create_session(
-            name="adhoc-hook-child", parent_session_version=self.parent_sv
+            name="adhoc-hook-child", parent_session_version=self.parent_sv,
+            inherit_links=True,
         )
         ok, res = adhoc.list_adhoc_tools(
             _Stub(child_sv.session, tempfile.gettempdir()))
@@ -637,7 +638,8 @@ class ForkHookTest(TestCase):
 
     def test_fork_edit_does_not_move_parent_link(self):
         child_sv = self.av.get_or_create_session(
-            name="adhoc-hook-child2", parent_session_version=self.parent_sv
+            name="adhoc-hook-child2", parent_session_version=self.parent_sv,
+            inherit_links=True,
         )
         child_stub = _Stub(child_sv.session, tempfile.gettempdir())
         adhoc.update_adhoc_tool(child_stub, "hooked", description="child edit")
@@ -650,12 +652,14 @@ class ForkHookTest(TestCase):
 
     def test_existing_session_keeps_own_links(self):
         child_sv = self.av.get_or_create_session(
-            name="adhoc-hook-child3", parent_session_version=self.parent_sv
+            name="adhoc-hook-child3", parent_session_version=self.parent_sv,
+            inherit_links=True,
         )
         child_stub = _Stub(child_sv.session, tempfile.gettempdir())
         adhoc.delete_adhoc_tool(child_stub, "hooked")
         same_sv = self.av.get_or_create_session(
-            name="adhoc-hook-child3", parent_session_version=self.parent_sv
+            name="adhoc-hook-child3", parent_session_version=self.parent_sv,
+            inherit_links=True,
         )
         ok, res = adhoc.list_adhoc_tools(
             _Stub(same_sv.session, tempfile.gettempdir()))

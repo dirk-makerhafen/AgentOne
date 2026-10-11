@@ -45,13 +45,11 @@ def call_projectmanager(_session: Session, project_path: str, task: str) -> dict
     except AgentModel.DoesNotExist:
         return {"error": "projectmanager agent not found"}
 
-    agent_version = agent_model.latest_agent_version
-    if not agent_version:
+    if not agent_model.latest_agent_version:
         return {"error": "projectmanager agent has no version"}
 
     session_name = f"projectmanager:{project_path}"
 
-    session_version_model = _session.get_version_model()
     workspace, ws_created = WorkspaceModel.objects.get_or_create(
         name=f"{project_path} project root",
         path=project_path,
@@ -62,17 +60,16 @@ def call_projectmanager(_session: Session, project_path: str, task: str) -> dict
 
         publish_model_event(workspace, "create")
 
-    child_sv = agent_version.get_or_create_session(
+    child_session = _session.spawn_subagent(
+        "projectmanager",
         name=session_name,
         description=f"Project manager for {project_path}",
         workspace=workspace,
-        parent_session_version = session_version_model,
         session_type=SessionType.SUBSESSION,
+        allow_internal=True,
     )
-    child_session = Session(
-        session_model=child_sv.session,
-        pinned_session_version=child_sv,
-    )
+    if child_session is None:
+        return {"error": "projectmanager agent not found"}
 
     parts = [{"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": task}]
     taskcall = child_session.add_user_message(parts=parts)

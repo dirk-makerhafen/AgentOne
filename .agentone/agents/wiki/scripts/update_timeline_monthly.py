@@ -547,7 +547,7 @@ def _spawn_month_check(_session, month_rel: str, month_str: str, brief: str):
 
 def update_timeline_monthly(_session: Session, limit: int = 2, month: str | None = None):
     """Rebuild stale month indexes (``timeline/YYYY/MM/index.md``).
-
+    
     Sources are the month's day indices (``type: daily_summary``) — never
     raw mail or per-mail summaries. Staleness comes from a content
     fingerprint: a month needs work when its ``index.md`` is missing, is a

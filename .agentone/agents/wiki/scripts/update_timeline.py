@@ -976,10 +976,6 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
     """
     from time import time
 
-    from server.models.agents.agent import AgentModel
-
-    from server.models.sessions.session_version import SessionVersionModel
-
     lint_results = list(lint_results or [])
 
     raw_text, _ = _read_raw_text(_session, raw_path)
@@ -999,47 +995,24 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
             "message": f"double_check_summary: summary file unreadable: {summary_path}",
         }
 
-    subagent_version = None
-    try:
-        subagent_version = _session.get_subagent("baseagent")
-    except Exception:
-        subagent_version = None
-    if subagent_version is None:
-        # baseagent is visibility: internal → excluded from the subagent
-        # allowlist by design; resolve directly like approval_decider.
-        model = AgentModel.objects.filter(name="baseagent").first()
-        if model is None:
-            return False, {
-                "status": "error",
-                "raw_path": raw_path,
-                "summary_path": summary_path,
-                "message": "double_check_summary: agent 'baseagent' not found",
-            }
-        subagent_version = model.get_runtime().get_version_model()
-
-    parent_sv = _session.get_version_model()
-    child_sv = subagent_version.get_or_create_session(
+    # baseagent is visibility: internal → excluded from the subagent allowlist
+    # by design; allow_internal falls back to resolving it by name.
+    child_session = _session.spawn_subagent(
+        "baseagent",
         name=f"p{_session.model.pk}:baseagent:{int(time())}",
         description=f"Double-check {summary_path} against {raw_path}",
-        workspace=_session.workspace,
-        parent_session_version=parent_sv,
         session_type=SessionType.SUBTASK_DELEGATE,
+        allow_internal=True,
+        reasoning_effort=ReasoningEffort.NONE,
+        max_turns=10,
     )
-    # Reset narrowing overlays inherited from the parent session so the
-    # child gets the full baseagent envelope (model/key prefs are kept).
-    if parent_sv is not None and parent_sv.session_settings is not None:
-        child_settings = subagent_version.clone_settings(
-            parent_sv.session_settings,
-            disallowedToolNames=[],
-            disallowedTaskNames=[],
-            disallowedCommandNames=[],
-            tool_call_allowlist=None,
-            reasoning_effort=ReasoningEffort.NONE,
-            max_turns=10,
-        )
-        child_sv.session_settings = child_settings
-        SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=child_settings)
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+    if child_session is None:
+        return False, {
+            "status": "error",
+            "raw_path": raw_path,
+            "summary_path": summary_path,
+            "message": "double_check_summary: agent 'baseagent' not found",
+        }
 
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     working_dir = child_session.workspace.path if child_session.workspace else "unknown"

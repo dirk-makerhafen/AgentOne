@@ -717,31 +717,27 @@ class CallScheduler:
         from server.models.enums.message_enums import MessageContentType, MessagePartType
         from server.models.enums.session_enums import SessionType
         from server.models.settings import SettingsModel
-        from server.models.sessions.session_version import SessionVersionModel
-        from runtime.session.session import Session
 
         decider = AgentModel.objects.filter(name="approval_decider").first()
         if decider is None:
             raise RuntimeError("approval_decider agent not loaded")
 
-        decider_av = decider.get_runtime().get_version_model()
-        child_sv = decider_av.get_or_create_session(
+        # Declare the review target on the child session settings.
+        settings = SettingsModel(extra_settings={"review_task_call_id": call.pk})
+        settings.save()
+
+        child_session = parent_session.spawn_subagent(
+            "approval_decider",
             name=f"approval-review:{call.pk}:{time_ns()}",
             display_name=f"Approval review of {call.task_definition.name} call #{call.pk}",
             description=brief[:100],
             workspace=parent_session.workspace,
-            parent_session_version=call.session_version,
-            session_type=SessionType.SUBTASK_FORK,
+            session_type=SessionType.SUBTASK_HOOK,
+            allow_internal=True,
+            settings=settings,
         )
-
-        # Declare the review target on the child session settings.
-        settings = SettingsModel(extra_settings={"review_task_call_id": call.pk})
-        settings.save()
-        SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=settings)
-
-        child_session = Session(
-            session_model=child_sv.session, pinned_session_version=child_sv
-        )
+        if child_session is None:
+            raise RuntimeError("approval_decider agent has no version")
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
         working_dir = (
             child_session.workspace.path if child_session.workspace else "unknown"

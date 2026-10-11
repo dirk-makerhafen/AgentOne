@@ -105,7 +105,9 @@ File: `server/models/agents/agent_version.py`
 **Immutable** — `save()` raises `ValidationError` if `pk` is set.
 
 **Key methods**:
-- `get_or_create_session(name, ...)` — Creates `SessionModel` + `SessionVersionModel`
+- `get_or_create_session(name, ..., settings_inherit=False, settings=None, settings_overrides=None, inherit_links=False)` — Creates `SessionModel` + `SessionVersionModel`. Settings for the child are resolved *before* create and stored in `defaults` (the version is immutable once it has a pk). Inheritance (`settings_inherit`, `inherit_links`) is opt-in and same-agent-only: a different-agent child must not shadow its own agent settings with the parent's. Prefer the runtime intent methods below over calling this directly.
+- `Session.fork(...)` (runtime) — same-agent child: inherits the parent's settings (plus `settings_overrides`) and query-template/adhoc-tool links; optional history anchor.
+- `Session.spawn_subagent(agent, ...)` (runtime) — different-agent child: inherits **nothing** by default. `agent` is a name (resolved via the subagent allowlist, or any top-level agent with `allow_internal=True`) or an `AgentVersionModel`; returns `None` when unresolvable.
 - `resolve_setting(name)` — Walks inheritance chain to resolve settings (supports `+` merge for list fields)
 - `tasks()` / `tools()` / `commands()` — Filter `task_versions` by `TaskType`
 - `skills()` — Returns `skill_versions`

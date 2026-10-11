@@ -5,7 +5,6 @@ from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.enums.session_enums import SessionType
 from server.models.message import Message
-from server.models.sessions.session_version import SessionVersionModel
 
 def _extract_date_from_path(rel_path: str) -> list:
     parts = rel_path.split("/")
@@ -27,26 +26,16 @@ def _extract_date_from_path(rel_path: str) -> list:
 
 def ingest_next(_session: Session, limit:int=1):
 
-    subagent_version = _session.get_subagent("wiki")
-    if not subagent_version:
-        return False, {"status": "error", "message": "Agent 'wiki' not found"}
-
     now = datetime.now().strftime("%Y%m%d.%H%M")
-    ingest_session_version = subagent_version.get_or_create_session(
+    ingest_session = _session.spawn_subagent(
+        "wiki",
         name=f"{_session.name}:INGEST",
         description=f"Ingest session for parent session {_session.name}, pk:{_session.model.pk}",
-        workspace=_session.workspace,
-        parent_session_version=_session.get_version_model(),
         session_type=SessionType.SUBSESSION,
+        disallowedToolNames=["+", "find_unlinked_raw"],
     )
-    # Fork inherits parent's session settings (auto_compact_max_tokens, api key, disallowed lists, etc.)
-    parent_sv = _session.get_version_model()
-    if parent_sv and parent_sv.session_settings:
-        fork_settings = subagent_version.clone_settings(parent_sv.session_settings, disallowedToolNames=["+", "find_unlinked_raw"])
-        ingest_session_version.session_settings = fork_settings
-        SessionVersionModel.objects.filter(pk=ingest_session_version.pk).update(session_settings=fork_settings)
-       
-    ingest_session = Session(session_model=ingest_session_version.session, pinned_session_version=ingest_session_version)
+    if ingest_session is None:
+        return False, {"status": "error", "message": "Agent 'wiki' not found"}
     ingest_session.set_is_active(True)
 
     find_task = ingest_session.get_task("find_unlinked_raw")

@@ -500,6 +500,8 @@ class ForkSessionSettingsTest(TestCase):
             name=f"fork-{self.sv.pk}",
             parent_session_version=self.sv,
             session_type="subtask_fork",
+            settings_inherit=True,
+            inherit_links=True,
         )
         self.assertIsNotNone(child_sv.session_settings)
         self.assertNotEqual(child_sv.session_settings.pk, parent_settings.pk)
@@ -517,8 +519,53 @@ class ForkSessionSettingsTest(TestCase):
             name=f"fork-none-{self.sv.pk}",
             parent_session_version=self.sv,
             session_type="subtask_delegate",
+            settings_inherit=True,
         )
         self.assertIsNone(child_sv.session_settings)
+
+    def test_child_without_inherit_gets_no_parent_settings(self):
+        """A different-agent child must NOT shadow its own agent settings with
+        the parent's — no inheritance unless explicitly requested."""
+        parent_settings = SettingsModel.objects.create(
+            disallowedToolNames=["secret"], system_prompt=None, max_turns=99,
+        )
+        SessionVersionModel.objects.filter(pk=self.sv.pk).update(
+            session_settings=parent_settings
+        )
+        child_sv = self.av.get_or_create_session(
+            name=f"spawn-{self.sv.pk}",
+            parent_session_version=self.sv,
+            session_type="subtask_delegate",
+        )
+        self.assertIsNone(child_sv.session_settings)
+
+    def test_settings_overrides_without_inherit_start_blank(self):
+        """Overrides on a non-inheriting child yield a blank row carrying only
+        those fields (no parent config leaks in)."""
+        parent_settings = SettingsModel.objects.create(disallowedToolNames=["secret"])
+        SessionVersionModel.objects.filter(pk=self.sv.pk).update(
+            session_settings=parent_settings
+        )
+        child_sv = self.av.get_or_create_session(
+            name=f"spawn-ovr-{self.sv.pk}",
+            parent_session_version=self.sv,
+            session_type="subtask_delegate",
+            settings_overrides={"max_turns": 5},
+        )
+        self.assertIsNotNone(child_sv.session_settings)
+        self.assertEqual(child_sv.session_settings.max_turns, 5)
+        self.assertIsNone(child_sv.session_settings.disallowedToolNames)
+
+    def test_explicit_settings_row_wins(self):
+        """An explicit settings row is attached verbatim."""
+        explicit = SettingsModel.objects.create(extra_settings={"verify_work_item_id": 7})
+        child_sv = self.av.get_or_create_session(
+            name=f"spawn-explicit-{self.sv.pk}",
+            parent_session_version=self.sv,
+            session_type="subtask_fork",
+            settings=explicit,
+        )
+        self.assertEqual(child_sv.session_settings_id, explicit.pk)
 
     def test_compaction_fork_pins_auto_compact_max_tokens_zero(self):
         """The stable knob the compaction fork uses to stop re-forking."""
@@ -585,3 +632,74 @@ class ForkSessionSettingsTest(TestCase):
         )
         next_turn = decide.decide_next_step(session, None, [], marker)
         self.assertIsNotNone(next_turn)
+
+
+class SessionForkSpawnTest(TestCase):
+    """``Session.fork`` inherits; ``Session.spawn_subagent`` does not."""
+
+    def setUp(self):
+        from runtime.session.session import Session as RuntimeSession
+
+        self.agent = AgentModel.objects.create(name="fs-agent")
+        self.av = AgentVersionModel.objects.create(
+            agent=self.agent, agent_settings=SettingsModel.objects.create()
+        )
+        self.session = SessionModel.objects.create(name="fs-parent")
+        self.sv = SessionVersionModel.objects.create(
+            session=self.session, agent=self.agent, pinned_agent_version=self.av
+        )
+        SessionModel.objects.filter(pk=self.session.pk).update(latest_session_version=self.sv)
+        AgentModel.objects.filter(pk=self.agent.pk).update(latest_agent_version=self.av)
+        self.session.refresh_from_db()
+        self.agent.refresh_from_db()
+        self.rt = RuntimeSession(session_model=self.session, pinned_session_version=self.sv)
+
+    def _parent_settings(self, **kwargs):
+        row = SettingsModel.objects.create(**kwargs)
+        SessionVersionModel.objects.filter(pk=self.sv.pk).update(session_settings=row)
+        self.sv.refresh_from_db()
+        return row
+
+    def test_fork_inherits_parent_settings(self):
+        self._parent_settings(max_turns=42, disallowedToolNames=["x"])
+        child = self.rt.fork(name="fs-fork", session_type="subtask_fork")
+        settings = child.get_version_model().session_settings
+        self.assertIsNotNone(settings)
+        self.assertEqual(settings.max_turns, 42)
+        self.assertEqual(settings.disallowedToolNames, ["x"])
+
+    def test_fork_applies_settings_overrides(self):
+        self._parent_settings(max_turns=42)
+        child = self.rt.fork(
+            name="fs-fork-ovr", session_type="subtask_fork", max_turns=10
+        )
+        settings = child.get_version_model().session_settings
+        self.assertEqual(settings.max_turns, 10)
+
+    def test_spawn_subagent_does_not_inherit(self):
+        self._parent_settings(max_turns=42, disallowedToolNames=["x"])
+        other = AgentModel.objects.create(name="fs-other")
+        other_av = AgentVersionModel.objects.create(agent=other)
+        AgentModel.objects.filter(pk=other.pk).update(latest_agent_version=other_av)
+        child = self.rt.spawn_subagent(
+            other_av, name="fs-spawn", session_type="subtask_delegate"
+        )
+        self.assertIsNone(child.get_version_model().session_settings)
+
+    def test_spawn_subagent_resolves_name_with_allow_internal(self):
+        self._parent_settings(max_turns=42)
+        other = AgentModel.objects.create(name="fs-internal")
+        other_av = AgentVersionModel.objects.create(agent=other)
+        AgentModel.objects.filter(pk=other.pk).update(latest_agent_version=other_av)
+        child = self.rt.spawn_subagent(
+            "fs-internal", name="fs-spawn-name",
+            session_type="subtask_delegate", allow_internal=True,
+        )
+        self.assertIsNotNone(child)
+        self.assertEqual(child.get_version_model().agent.name, "fs-internal")
+        self.assertIsNone(child.get_version_model().session_settings)
+
+    def test_spawn_subagent_name_not_resolvable_returns_none(self):
+        self.assertIsNone(
+            self.rt.spawn_subagent("no-such-agent", name="fs-spawn-missing")
+        )

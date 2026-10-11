@@ -50,8 +50,6 @@ class MessageView(ModelView):
         because the user keeps chatting there instead of a subagent.
         """
         from time import time
-        from runtime.session.session import Session as RuntimeSession
-        from server.models.enums.message_enums import MessageContentType, MessagePartType
         from server.models.enums.session_enums import SessionType
 
         try:
@@ -60,44 +58,19 @@ class MessageView(ModelView):
             return
 
         parent_session = fork_point.session.get_runtime()
-
-        agent_version = parent_session.agent.get_version_model()
-        if agent_version is None:
-            from server.models.agents.agent_version import AgentVersionModel
-            agent_version = (
-                AgentVersionModel.objects.filter(agent=parent_session.agent.model)
-                .order_by("-version_number")
-                .first()
-            )
-        if agent_version is None:
+        if parent_session.agent.get_version_model() is None:
             return
 
-        session_name = f"p{parent_session.model.pk}:fork:{int(time())}"
-        child_sv = agent_version.get_or_create_session(
-            name=session_name,
+        # Same-agent fork of our session; the fork point doubles as the history
+        # anchor (hidden from LLM context, but keeps the UI chain and later
+        # prev_message links walking back into the parent conversation).
+        child_session = parent_session.fork(
+            name=f"p{parent_session.model.pk}:fork:{int(time())}",
             description=f"Forked from message #{message_id}",
-            workspace=parent_session.workspace,
-            parent_session_version=parent_session.get_version_model(),
             session_type=SessionType.SESSION,
+            anchor=fork_point,
         )
-        child_session = RuntimeSession(session_model=child_sv.session, pinned_session_version=child_sv)
         child_version = child_session.get_version_model()
-
-        # Anchor the branch's message chain to the fork point.  Hidden from
-        # LLM context, but keeps the UI chain (and later prev_message links)
-        # walking back into the parent conversation.
-        anchor = Message.objects.create(
-            role=MessageRole.USER,
-            session=child_version.session,
-            session_version=child_version,
-            prev_message=fork_point,
-            hide_from_context=True,
-        )
-        anchor.add_part(
-            type=MessagePartType.MESSAGE,
-            content_type=MessageContentType.TEXT,
-            content=f"Forked here from session #{parent_session.model.pk}.",
-        )
 
         main_panel = self._main_panel()
         if main_panel is not None:

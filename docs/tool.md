@@ -49,8 +49,10 @@ Storage is database rows, same pattern as query templates
 rows point at content-addressed `GenericContent` (identical code dedupes
 across sessions); a session's current tool is a `SessionAdhocTool` link row,
 unique per session + name. Every save mints a version and moves only the
-writer's link; forks inherit the parent's links copy-on-write (hook in
-`AgentVersionModel.get_or_create_session`); deletes remove the link only,
+writer's link; same-agent forks inherit the parent's links copy-on-write
+(`inherit_adhoc_tools`, gated on `inherit_links=True` in
+`AgentVersionModel.get_or_create_session` — reached via `Session.fork`, not
+`Session.spawn_subagent`); deletes remove the link only,
 leaving versions as the audit trail (never GC'd in v1). Sources are scanned
 once at write time — reads never re-scan. Archive is a visibility state,
 not a freeze: tools keep working on archived sessions.

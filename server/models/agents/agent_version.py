@@ -97,6 +97,10 @@ class AgentVersionModel(BaseModel):
         workspace: Optional[WorkspaceModel] = None,
         parent_session_version: SessionVersionModel | None = None,
         session_type: str = "",
+        settings_inherit: bool = False,
+        settings: Optional["SettingsModel"] = None,
+        settings_overrides: Optional[dict] = None,
+        inherit_links: bool = False,
     ) -> SessionVersionModel:
         """Get or create a session for this agent version.
 
@@ -108,6 +112,16 @@ class AgentVersionModel(BaseModel):
             session_type: SessionType value describing the session's purpose
                 (e.g. "session", "subsession", "subtask_delegate"). Empty
                 keeps the SessionModel default.
+            settings_inherit: When ``True`` and the parent has session settings,
+                clone them onto the child (with ``settings_overrides`` applied
+                on top). Same-agent forks only — a different-agent child must
+                not shadow its own agent settings with the parent's.
+            settings: An explicit, fully-formed settings row to attach. Takes
+                precedence over inheritance/overrides.
+            settings_overrides: Field overrides applied on top of the inherited
+                parent settings, or on top of a blank row when not inheriting.
+            inherit_links: When ``True``, copy the parent's query-template and
+                adhoc-tool links (copy-on-write). Same-agent forks only.
 
         Returns:
             The existing or newly created SessionVersionModel.
@@ -123,6 +137,13 @@ class AgentVersionModel(BaseModel):
 
         if not display_name:
             display_name = f"{self.agent.name}"
+
+        # Resolve the child's settings *before* creating the version so they can
+        # ride along in ``defaults`` — SessionVersionModel is immutable once it
+        # has a pk, so a post-create ``.update()`` would be the only alternative.
+        child_settings = self._resolve_child_settings(
+            parent_session_version, settings_inherit, settings, settings_overrides
+        )
 
         session_defaults = dict(
             parent_session=parent_instance,
@@ -155,31 +176,21 @@ class AgentVersionModel(BaseModel):
                 defaults=dict(
                     parent_session = parent_session_version.session if parent_session_version else None,
                     parent_session_version=parent_session_version,
+                    session_settings=child_settings,
                 ),
             )
         if  aiv_created and session_version:
             session.latest_session_version = session_version
             session.save()
 
-        # Forks/children inherit the parent's session-level settings instead of
-        # silently falling back to the raw agent defaults.  Without this a fork
-        # loses user-configured overrides (auto_compact_max_tokens, preferred api
-        # key, disallowed lists, repeated session settings, ...).
-        if aiv_created and parent_session_version and parent_session_version.session_settings:
-            inherited = self.clone_settings(parent_session_version.session_settings)
-            SessionVersionModel.objects.filter(pk=session_version.pk).update(
-                session_settings=inherited
-            )
-            session_version.session_settings = inherited
-
         if parent_session_version:
             parent_session_version.child_session_versions.add(session_version)
 
-        # Forks/children inherit the parent's query-template links
+        # Forks inherit the parent's query-template and adhoc-tool links
         # (copy-on-write: no version rows minted, history shared until the
-        # child first saves).  Only for newly created sessions — a
+        # child first saves).  Only for newly created, same-agent forks — a
         # pre-existing session already has its own links.
-        if aiv_created and parent_session_version:
+        if aiv_created and inherit_links and parent_session_version:
             from runtime.query_templates import inherit_templates
 
             inherit_templates(parent_session_version.session_id, session.pk)
@@ -188,6 +199,31 @@ class AgentVersionModel(BaseModel):
             inherit_adhoc_tools(parent_session_version.session_id, session.pk)
 
         return session_version
+
+    def _resolve_child_settings(
+        self,
+        parent_session_version: SessionVersionModel | None,
+        settings_inherit: bool,
+        settings: Optional["SettingsModel"],
+        settings_overrides: Optional[dict],
+    ) -> Optional["SettingsModel"]:
+        """Build the settings row for a newly created child session.
+
+        Precedence: an explicit ``settings`` row wins; otherwise the parent's
+        settings are cloned (only when ``settings_inherit``) with overrides on
+        top; otherwise a blank row carrying just the overrides.
+        """
+        if settings is not None:
+            return settings
+        if settings_inherit and parent_session_version and parent_session_version.session_settings:
+            return self.clone_settings(
+                parent_session_version.session_settings, **(settings_overrides or {})
+            )
+        if settings_overrides:
+            row = SettingsModel(**settings_overrides)
+            row.save()
+            return row
+        return None
 
     def get_runtime(self) -> Agent:
         """Return a runtime Agent pinned to this version."""

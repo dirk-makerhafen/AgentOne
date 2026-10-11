@@ -694,44 +694,21 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
     (timeline-style label/content evidence parts) are delivered after the
     brief and before the timestamp part.
     """
-    from server.models.agents.agent import AgentModel
     from server.models.enums.message_enums import MessageContentType, MessagePartType
     from server.models.enums.session_enums import SessionType
-    from server.models.sessions.session_version import SessionVersionModel
     from server.models.settings import ReasoningEffort
 
-    subagent_version = None
-    try:
-        subagent_version = _session.get_subagent("baseagent")
-    except Exception:
-        subagent_version = None
-    if subagent_version is None:
-        model = AgentModel.objects.filter(name="baseagent").first()
-        if model is None:
-            return False, None, None, "agent 'baseagent' not found"
-        subagent_version = model.get_runtime().get_version_model()
-
-    parent_sv = _session.get_version_model()
-    child_sv = subagent_version.get_or_create_session(
+    child_session = _session.spawn_subagent(
+        "baseagent",
         name=name,
         description=description,
-        workspace=_session.workspace,
-        parent_session_version=parent_sv,
         session_type=SessionType.SUBTASK_DELEGATE,
+        allow_internal=True,
+        reasoning_effort=ReasoningEffort.MINIMAL,
+        max_turns=10,
     )
-    if parent_sv is not None and parent_sv.session_settings is not None:
-        child_settings = subagent_version.clone_settings(
-            parent_sv.session_settings,
-            disallowedToolNames=[],
-            disallowedTaskNames=[],
-            disallowedCommandNames=[],
-            tool_call_allowlist=None,
-            reasoning_effort=ReasoningEffort.MINIMAL,
-            max_turns=10,
-        )
-        child_sv.session_settings = child_settings
-        SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=child_settings)
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+    if child_session is None:
+        return False, None, None, "agent 'baseagent' not found"
 
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     working_dir = child_session.workspace.path if child_session.workspace else "unknown"
@@ -756,7 +733,7 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
         },
     ]
     ref = child_session.add_user_message(parts=parts)
-    return True, child_session, child_sv.session.pk, ref
+    return True, child_session, child_session.model.pk, ref
 
 
 def _spawn_day_session(_session, day_rel: str, day_str: str, brief: str):

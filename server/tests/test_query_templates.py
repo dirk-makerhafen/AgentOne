@@ -414,7 +414,8 @@ class ForkHookTest(TestCase):
 
     def test_new_fork_inherits_links(self):
         child_sv = self.av.get_or_create_session(
-            name="tpl-hook-child", parent_session_version=self.parent_sv
+            name="tpl-hook-child", parent_session_version=self.parent_sv,
+            inherit_links=True,
         )
         self.assertEqual(
             [t["name"] for t in list_templates(child_sv.session.pk)], ["qa"]
@@ -422,7 +423,8 @@ class ForkHookTest(TestCase):
 
     def test_fork_edit_does_not_move_parent_link(self):
         child_sv = self.av.get_or_create_session(
-            name="tpl-hook-child2", parent_session_version=self.parent_sv
+            name="tpl-hook-child2", parent_session_version=self.parent_sv,
+            inherit_links=True,
         )
         save_template(child_sv.session.pk, "qa", "CHANGED {{ q }}", variables=["q"])
         self.assertEqual(
@@ -434,12 +436,14 @@ class ForkHookTest(TestCase):
 
     def test_existing_session_keeps_own_links(self):
         child_sv = self.av.get_or_create_session(
-            name="tpl-hook-child3", parent_session_version=self.parent_sv
+            name="tpl-hook-child3", parent_session_version=self.parent_sv,
+            inherit_links=True,
         )
         save_template(child_sv.session.pk, "qa", "CHANGED {{ q }}", variables=["q"])
         # Resolving the same session again must not clobber the child's edit.
         same_sv = self.av.get_or_create_session(
-            name="tpl-hook-child3", parent_session_version=self.parent_sv
+            name="tpl-hook-child3", parent_session_version=self.parent_sv,
+            inherit_links=True,
         )
         self.assertEqual(
             get_template(same_sv.session.pk, "qa").body, "CHANGED {{ q }}"

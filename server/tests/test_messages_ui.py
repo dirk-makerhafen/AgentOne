@@ -36,6 +36,10 @@ class MessagesTest(TestCase):
         self.agent_version = AgentVersionModel.objects.create(
             agent=self.agent, version_number=1
         )
+        AgentModel.objects.filter(pk=self.agent.pk).update(
+            latest_agent_version=self.agent_version,
+        )
+        self.agent.refresh_from_db()
         self.session_model = SessionModel.objects.create(name="test_session")
         self.session_version = SessionVersionModel.objects.create(
             session=self.session_model,

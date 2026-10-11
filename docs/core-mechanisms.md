@@ -221,9 +221,11 @@ Each version is an immutable row pointing at content-addressed
 `GenericContent` (frontmatter head with `name`, `description`, typed
 `variables` + Jinja body, rendered with `StrictUndefined`); a session's
 current template is a link row `(session, name, version)`. Saves mint a new
-version and move only the writer's link, forks copy the parent's links
-(`inherit_templates`, hooked into
-`AgentVersionModel.get_or_create_session`), and deletes remove the link
+version and move only the writer's link, same-agent forks copy the parent's
+links (`inherit_templates`, hooked into
+`AgentVersionModel.get_or_create_session` and enabled only when
+`inherit_links=True` — i.e. via `Session.fork`, never for a different-agent
+`Session.spawn_subagent`), and deletes remove the link
 only — version rows stay as the audit trail. The `template_*` tools
 (`.agentone/scripts/core/query_template.py`) list/get/save/delete/render
 them, and `template_execute` dispatches the rendered prompt through the
