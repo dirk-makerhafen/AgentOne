@@ -23,7 +23,7 @@ Focus on:
 
 Format as a clear, structured summary. Be specific — avoid generic statements.
 
-When you are done, call the final_result tool with the summary as its content argument.
+Call final_result tool with your summary as its content argument, don't output raw text.
 <SYSTEM NOTICE>"""
 
 

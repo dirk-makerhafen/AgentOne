@@ -306,6 +306,11 @@ def test_per_mail_format_reference():
     assert "No date or time in the title" in SUMMARY_FORMAT_REFERENCE
     assert "never renamed" in SUMMARY_FORMAT_REFERENCE
     assert "groups:" in SUMMARY_FORMAT_REFERENCE
+    # Entity feed: contact/relation capture must not regress.
+    assert "## Entity-relevant facts" in SUMMARY_FORMAT_REFERENCE
+    assert "VERBATIM" in SUMMARY_FORMAT_REFERENCE
+    assert "IBAN" in SUMMARY_FORMAT_REFERENCE
+    assert "distinguishing context" in SUMMARY_FORMAT_REFERENCE
 
 
 SUMMARY_NO_GROUPS = """---

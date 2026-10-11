@@ -20,6 +20,18 @@ tools:
     file: update_timeline_monthly.py
     function: update_timeline_monthly
     bound: True
+  - name: update_entities
+    file: update_entities.py
+    function: update_entities
+    bound: True
+  - name: update_ingress
+    file: update_ingress.py
+    function: update_ingress
+    bound: True
+  - name: process_ingress
+    file: process_ingress.py
+    function: process_ingress
+    bound: True
 
 tasks:
   - name: find_unlinked_raw
@@ -54,6 +66,16 @@ tasks:
     file: update_timeline_monthly.py
     function: write_month_index
     bound: True
+  - name: write_entity
+    file: update_entities.py
+    function: write_entity
+    bound: True
+  - name: finalize_ingress_item
+    file: process_ingress.py
+    function: finalize_ingress_item
+    bound: True
+    max_retries: 3
+    retry_delay: 30
     
 commands:
   - name: ingest_next

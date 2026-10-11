@@ -5,11 +5,11 @@ extends: AgentOne
 inheritSystemPrompt: true
 reasoningEffort: high
 precision: FOCUSED
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*,  workitems.*, update_timeline, update_timeline_daily, update_timeline_monthly]
+tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*,  workitems.*, update_timeline, update_timeline_daily, update_timeline_monthly, update_entities, update_ingress, process_ingress]
 # browser.* is deliberately AgentOne-only for now (see docs/browser.md).
 disallowedTools: [browser.*]
 commands: [+, ingest_next, sync_applemail, wiki_lint]
-tasks: [+, find_unlinked_raw, process_summary, double_check_summary, write_day_index, write_month_index]
+tasks: [+, find_unlinked_raw, process_summary, double_check_summary, write_day_index, write_month_index, write_entity, finalize_ingress_item]
 autoCompactMaxTokens: 100000
 autoCompactKeepPercent: 10
 subagents:
@@ -32,11 +32,11 @@ This vault follows Karpathy's LLM Wiki pattern: I curate sources and ask questio
 
 - `.` — The main wiki folder working dir, you own this layer. While you can read outside of your working dir, Never edit outside of your working dir.
 - `index.md` — Root catalog of every page. Read it first on any query.
-- `rules.md` - User given and other important instructions not covered by the system prompt. Read it at the start of every session and whenever a topic touches a section it governs.
+
 - `raw/` — Immutable raw sources. Never edit. Never add files here yourself.
 - `concepts/` — Ideas, frameworks, categories, recurring themes.
 - `concepts/archive/<year>/` — Archived concept pages, no longer actively referenced.
-- `entities/` — People, companies, products, organizations.
+- `entities/<Kind>/<Letter>/` — People, companies, groups, products, topics (`Persons/`, `Companies/`, `Groups/`, `Products/`, `Topics/`; Persons bucketed by surname initial, the rest by first letter). Each page is `<Slug>.md` (structured frontmatter record: contact data + typed relations, no `sources:` — provenance lives in the log) plus `<Slug>.log.md` (append-only update log, the entity's sources). Per-letter, per-kind, and root `index.md` files are code-generated. Maintained by the `update_entities` sweep;
 - `entities/archive/<year>/` — Archived entity pages, no longer actively referenced.
 - `timeline/<year>/<month>/<day>/` — Date-based source summary archive.
 - `queries/` — A place to store queries and responses.
@@ -47,11 +47,15 @@ Additional per-vault sections (e.g. buchhaltung, calendar, events) are defined i
 ## Conventions
 
 - Use wikilinks everywhere. Use this link syntax with double quotes to link files inside the vault: Example: [[raw/some/file.md]]
-- Every company, person, product, organization, or concept with a page gets a wikilink on first mention.
-- Every note starts with YAML frontmatter: type, date, updated, tags, and sources. Source references are wikilinks
+- Entity pages live at `entities/<Kind>/<Letter>/<Slug>.md` (never flat) and get a wikilink on first mention.
+- Every note starts with YAML frontmatter: type, date, updated, tags, and sources. Source references are wikilinks. Per-mail summaries use plural `sources:`, title `<What> - <Who>`, and `date: YYYY-MM-DD HH:MM`.
+- Marketing mails get 2–4 bullets max, `werbung` in tags, and empty persons/companies/groups/products — never catalog ads as products.
+- Ambiguous names must be disambiguated in the summary (who exactly, how you can tell); never merge two genuinely different people/companies.
+- Contact data, IBANs, order numbers, dates, and signatures are transcribed verbatim — never invent or round them. If a summary smells incomplete (business mail, no email), read the cited `raw/` source read-only and fill only the gap.
+- Never hand-edit `last_checked_at:` hashes or `sources_fingerprint:` values (see Pipeline metadata).
 - Use absolute dates, like 2026-07-13. Never write "yesterday" or "last week" without the date.
 - Claims in wiki pages cite the relevant summary page.
-- Entity and concept pages use plain names, like OpenAI.md.
+- Concept pages use plain names (`concepts/Idea.md`); entity pages use `entities/<Kind>/<Letter>/<Slug>.md` (see vault structure).
 - Never invent facts. If something is not supported by a source, mark it unverified.
 - Use your wiki_check tool regularly to check for dead/halucinated wikilinks, orphan pages, missing or stale `index.md` entries, and invalid frontmatter
 - Unless a user explicitly instructs to bulk ingest multiple raw files, finish after ingesting the oldest unlinked raw file. Don't automatically bulk ingest new files from raw/.
@@ -77,35 +81,19 @@ Create new folders whenever a logical grouping emerges that isn't covered. Guide
 - Each new folder MUST get an `index.md` immediately and update its parent.
 - Ask before creating unexpected top-level sections.
 
-## Archiving
+## Pipeline metadata
 
-When `entities/`, `concepts/` or other sections grows and age, archive stale pages to keep the active folders navigable
+Code owns structure and metadata; you own prose judgment. Every generated index carries `last_checked_at:` (the git HEAD it was built against — provenance only) and `sources_fingerprint:` (hash of its source set). A page is stale only when its live sources differ from the recorded fingerprint — re-rendering without source changes is wasted work. Change detection everywhere is the git changed-set (`status` plus `diff <last_checked_at>..HEAD`, no renames) with a full scan as fallback. Derived pages cite summary pages in `sources:`, never `raw/` files.
 
-**What qualifies for archiving:**
-- Page not updated in >12 months.
-- No inbound wikilinks from active (non-archive) pages.
-- Entity/concept is no longer relevant (e.g. one-time customer from years ago, discontinued product).
-- For entities: the person/company is no longer connected to current operations.
+## Operation: sweep
 
-**What stays:**
-- Pages referenced by recent summaries (last 12 months).
-- Active members, current vendors, regularly used concepts.
-- Pages that are linked from other active pages.
+Keep the derived layers in sync with `timeline/` (oldest stale first; pass `limit` to throttle days/entities per run, `day: YYYY-MM-DD` to force one):
 
-**Archive procedure:**
-1. Move the file to `entities/archive/<year>/<Name>.md` or `concepts/archive/<year>/<Name>.md`.
-2. Create `archive/<year>/index.md` if missing; add an entry for the archived page with a one-sentence summary.
-3. Remove the entry from the parent `entities/index.md` (or `concepts/index.md`).
-4. Update `index.md` if it directly referenced the page.
-5. Optionally leave a stub in the original folder with a wikilink to the archive location.
-6. Git commit your work with date, operation, source title, and pages touched as the commit message.
-
-
-Archive year corresponds to the year of archiving, not the page's creation date.
-
-## Todo list handling
-
-When processing the TODO list, do not blindly process items strictly in order, or all at once. Before choosing the next items, peek at the first ~10 unprocessed items and identify groups of related items. Prefer processing related items together while their context is still active. In particular, prioritize items that share the same sender, topic, project, person, order, files, entities, or other contextual information. If processing one item requires reading related files or reconstructing context, prefer processing other TODO items that can reuse that same context before moving on. The goal is to minimize repeatedly reading the same related information and reconstructing context, not simply to process the TODO list sequentially. The todo list may be very large, make sure to only peek/pop a small number at once and process them in batches. Todo lists are there to help you keep the context window small, to make use of that by processing many tasks step by step, without reading them all at once. 
+- `update_timeline` — ingest the oldest unlinked `raw/` files into per-mail timeline summaries (finds them via `find_unlinked_raw`, writes each summary, then a second session double-checks format and facts). This is the automated form of Operation: ingest below — prefer it over hand-writing summaries.
+- `update_timeline_daily` / `update_timeline_monthly` — rebuild stale day/month `index.md` files (synthesis briefs, per-field dedup, fix-back of spelling variants into the summaries).
+- `update_entities` — sweep name fields into entity pages (new pages, log appends, kind-twin relocations, index rebuild). First touch of a low-confidence kind is normal; merge candidates land as `.merge-pending.md` for human judgment, never auto-merged.
+- `update_ingress` — refresh any folder's `ingress.md` work queue (takes the vault-relative path). An `ingress.md` lets a subpart of the wiki declare which upstream file changes it wants to receive: `sources:` globs say where to watch (e.g. `calendar/` watches `timeline/**/*.md`), and the optional `exclude:` / `include_tags:` / `exclude_tags:` narrows it to what that folder actually cares about (e.g. only summaries tagged workshop or booking). Each refresh appends matching changes since the stored hash to the body queue — a personal subscription feed, so the folder never needs a full vault scan. To subscribe a new folder, create its `ingress.md` once and leave `last_checked_at:` empty.
+- `process_ingress` — work an `ingress.md` queue down (takes the path plus `limit`, default 2). Dispatches up to *limit* pending items at once, each in a fresh wiki subsession that receives the folder's `AGENTS.md` (when present) plus the one item, and returns immediately — a finalize task per item checks its line off in code (`- [x]` with date, compacted after `history_days:`) once that subsession ends. Consumers never edit the queue. Never run two passes on the same file concurrently.
 
 ## Operation: ingest <url or file>
 

@@ -36,7 +36,7 @@ author: <sender / originator, if available>
 ---
 # <Title>
 
-<Key claims, important numbers, decisions, quotes, and why this matters.>
+<Summary Content>
 ```
 
 ## Metadata Rules
@@ -53,8 +53,11 @@ author: <sender / originator, if available>
 * `tags` MUST contain relevant, consistent topic tags.
   * Derive tags from the actual subject matter.
   * Prefer existing/common vocabulary where possible.
-  * Examples: `buchhaltung`, `mitglieder`, `workshop`, `lieferung`, `rechnung`, `veranstaltung`.
+  * Examples: `buchhaltung`, `mitglieder`, `workshop`, `lieferung`, `rechnung`, `veranstaltung`, `termin`, `einkauf`, `verkauf`, `kalender`.
 * `persons` MUST contain all relevant persons explicitly mentioned in the source.
+  * Use the full name as written. If only a first name, handle, or email
+    local-part is given, record it as-is — and add the distinguishing
+    context (company, email, or role) in the body (see below).
 * `companies` MUST contain all relevant companies or organizations explicitly mentioned.
 * `groups` MUST contain all relevant collectives explicitly mentioned that are
   neither a single person nor a commercial company: clubs, associations
@@ -65,8 +68,7 @@ author: <sender / originator, if available>
   entities of any legal form). If you could become a member or it is a crew
   of people, it belongs in `groups`.
 * `products` MUST contain all relevant products, services, or named product lines explicitly mentioned.
-  * Exception: for purely promotional mail (see below), leave `products` empty.
-* `uids` MUST contain relevant identifiers such as:
+  * Exception: for purely promotional mail (see below), leave `products` empty.* `uids` MUST contain relevant identifiers such as:
   * order IDs
   * invoice numbers
   * reference numbers
@@ -117,12 +119,43 @@ Prioritize:
 * commitments and responsibilities
 * important changes or status updates
 * identifiers and references that matter for future lookup
+* contact and identity details (see "Entity-relevant facts" below)
+* relationships between the mentioned people, companies, and groups
+* roles, titles, and functions of mentioned persons
 * short quotes when the exact wording is important
 * context explaining **why the information matters**
 
 Use bullet points by default for easy scanning.
 
 Do not add speculation, assumptions, or information that cannot be supported by the source.
+
+## Entity-relevant facts
+
+Timeline summaries are the basis for many downstream tasks. Whatever you
+do NOT transcribe here can never reach a later task — so capture it:
+
+* Transcribe VERBATIM, never paraphrase or normalize: email addresses,
+  phone numbers, postal addresses, IBANs/BICs/account numbers, websites
+  and URLs, customer/supplier/membership numbers.
+* Always include the sender's email address (from the mail headers) and
+  any signature-block contact data.
+* Amounts always with currency. IBANs exactly as written (spacing kept).
+* Record relationships explicitly, one bullet each, both sides when the
+  source states them: employment ("X arbeitet bei Y"), family, membership
+  ("Mitglied bei …"), supplier/customer ("liefert an …", "bezieht von …"),
+  succession ("Nachfolger von …"), representation ("X schreibt im Auftrag
+  von Y" — then Y, not X, is the subject), ownership.
+* Record roles and titles (Geschäftsführer, Ansprechpartner, Kassenwart,
+  Admin, …) next to the person's name.
+* Record life-event dates when mentioned (birthdays, founding dates,
+  anniversaries) — not just deadlines.
+* When a name could be ambiguous (common name, first name only, shared
+  surname), the distinguishing context (company, email, or role) is
+  mandatory — entity merging depends on it.
+* Payment data (IBAN, BIC, Verwendungszweck) belongs in the body
+  verbatim — never wall it away in `uids` alone.
+* If the source contains none of this, do nothing — no empty sections,
+  no placeholders.
 
 ## Promotional / marketing mail
 
@@ -177,6 +210,9 @@ Make the title filesystem-safe and avoid characters that are problematic in file
 * `sources` is plural and contains the original source(s)
 * no `source:` field exists
 * persons, companies, groups, products, and UIDs are extracted rather than guessed
+* entity-relevant facts present in the source (contacts, relations, roles,
+  payment data) are transcribed verbatim in the body
+* ambiguous names carry distinguishing context (company, email, or role)
 * tags are relevant and consistent
 * the summary is factual and concise
 * the title is descriptive and filesystem-safe
@@ -744,22 +780,26 @@ def _embed_for_prompt(_session, label: str, path: str) -> list:
         {"type": MessagePartType.MESSAGE,  "content_type": MessageContentType.TEXT, "content": content},
     ]
 
- 
 
 
 def update_timeline(_session: Session, limit: int = 1):
-    task = _session.get_task("find_unlinked_raw")
-    if task is None:
+    find_unlinked_raw_task = _session.get_task("find_unlinked_raw")
+    if find_unlinked_raw_task is None:
         return False, {"status": "error", "message": "task 'find_unlinked_raw' is not available"}
-    success, data = task.call(limit=limit)
-    if not success:
-        return False, data
+
     llm_query_tool = _session.get_tool("llm_query")
     if llm_query_tool is None:
         return False, {"status": "error", "message": "tool 'llm_query' is not available"}
-    process_task = _session.get_task("process_summary")
-    if process_task is None:
+    
+    process_summary_task = _session.get_task("process_summary")
+    if process_summary_task is None:
         return False, {"status": "error", "message": "task 'process_summary' is not available"}
+    
+    
+    success, data = find_unlinked_raw_task.call(limit=limit)
+    if not success:
+        return False, data
+    
     results = []
     for item in (data or {}).get("items", []):
         path = item["file"]
@@ -773,7 +813,7 @@ def update_timeline(_session: Session, limit: int = 1):
             {"role": "user", "content": f"# SOURCE PATH: {path}\n# CONTENT:\n"},
             {"role": "user", "content": raw_text},
         ], reasoning_effort=ReasoningEffort.NONE.value)
-        r = process_task.delay(raw_path=path, summary_result=summary_result)
+        r = process_summary_task.delay(raw_path=path, summary_result=summary_result)
 
         results.append(r)
     return True, {"status": "success", "results": results}
@@ -994,7 +1034,7 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
             disallowedTaskNames=[],
             disallowedCommandNames=[],
             tool_call_allowlist=None,
-            reasoning_effort=ReasoningEffort.MEDIUM,
+            reasoning_effort=ReasoningEffort.NONE,
             max_turns=10,
         )
         child_sv.session_settings = child_settings
@@ -1035,7 +1075,10 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
             "content": "\n".join(f"- {hint}" for hint in lint_results),
         })
 
-   
+    parts.append(        {
+        "type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
+        "content": "The current content of both files is attached below so you don't have to read them again.",
+    })
     parts.extend(_embed_for_prompt(_session, "RAW SOURCE FILE", raw_path))
     parts.extend(_embed_for_prompt(_session, "SUMMARY FILE", summary_path))
         

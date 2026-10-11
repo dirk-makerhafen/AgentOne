@@ -683,14 +683,16 @@ def _read_index_facts(day_dir: Path) -> tuple[bool, object, str | None, str | No
     )
 
 
-def _spawn_baseagent(_session, name: str, description: str, brief: str):
+def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_parts: list | None = None):
     """Spawn a baseagent SUBTASK_DELEGATE session with *brief* and return (ok, child_session, session_pk, ref_or_error).
 
     Mirrors double_check_summary: baseagent is visibility: internal, so it
     is resolved directly by name, and narrowing overlays inherited from the
     parent session are reset so the child gets the full baseagent envelope.
     The returned ref is the add_user_message taskcall — resolvable by the
-    scheduler exactly like an llm_query result ref.
+    scheduler exactly like an llm_query result ref. Optional *extra_parts*
+    (timeline-style label/content evidence parts) are delivered after the
+    brief and before the timestamp part.
     """
     from server.models.agents.agent import AgentModel
     from server.models.enums.message_enums import MessageContentType, MessagePartType
@@ -746,6 +748,7 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str):
             "content_type": MessageContentType.TEXT,
             "content": brief,
         },
+        *(extra_parts or []),
         {
             "type": MessagePartType.MESSAGE,
             "content_type": MessageContentType.TEXT,
