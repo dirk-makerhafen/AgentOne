@@ -68,7 +68,9 @@ event  →  matcher  →  handler  →  detached fork run (with budget + deadlin
 ```
 
 - **Event** (§5): a lifecycle point with a single choke-point dispatcher.
-  V1: `stop`, `pre_compact`, `post_compact`, `session_end`.
+  V1: `stop`, `pre_compact`, `post_compact`, `session_end` — plus per-call
+  intercept entries (§5.4), which have no `on:` (`before` *is* pre,
+  `after` *is* post).
 - **Matcher** (§6): a cheap string/regex filter evaluated at dispatch
   (session type, compaction trigger, end reason). Turns hardcoded gates into
   user configuration. Every event supports matchers, as in all three
@@ -168,6 +170,48 @@ hooks, evaluates matchers, checks guards (§8), snapshots kwargs, and
   compaction forks deactivate after every compaction, so the stock config
   excludes them.
 - **Context keys:** `reason`, `session_type`, `last_message_pk`.
+
+### 5.4 Intercept hooks — pre/post on any tool/task/command
+
+An entry with `before:` (pre) or `after:` (post) instead of `on:` fires on
+**every matching call** dispatched in the agent's sessions, regardless of
+`TaskType` — tools, tasks, commands, webapi/webview share the
+`TaskInstance`/`AgentTaskCall` substrate, so one hook point covers all.
+`before` *is* pre, `after` *is* post; the two keys are mutually exclusive
+with each other and with `on:`.
+
+```yaml
+hooks:
+  - name: guard-write
+    match:
+      name: "filesystem-write.*"   # definition-name glob (`|`-alternation; or shorthand `match: "write*"`)
+      type: tool                   # tool | task | command | webapi | webview (optional)
+      session: "foobar23*"         # session-name glob (optional)
+    before: validate_path          # task of the SAME agent (no cross-agent executor)
+    mode: inline                   # inline | detached — both positions support both
+    on_error: fail_closed          # fail_closed | fail_open (inline `before` is always fail_closed)
+```
+
+- **Filter:** `match:` dimensions are AND-combined; omitted dimensions
+  (or an omitted `match:`) are wildcards. Name/agent/session are globs
+  (`*`, `prefix-*`, `a1 | a2`); `type` compares case-insensitively.
+- **Contract:** `before` receives the **original kwargs** and must return
+  kwargs (pass-through to allow unmodified); `after` receives the
+  **original result** and must return a compatible result. Inline entries
+  chain in declaration order through the existing before/after-run
+  machinery (`AgentTaskCall.create`, `CallScheduler.on_taskrun_ended`),
+  so blocking/failure semantics are the scheduler's: a failed inline
+  `before` blocks the call, a failed inline `after` cancels the parent
+  unless its `on_error` is `fail_open`. Detached entries get a snapshot
+  copy, are dispatched fire-and-forget, and never touch the parent.
+- **Scope:** hook tasks run as the same agent in the same session (the
+  declaring agent's task by name) — never in another agent's session, and
+  never shared across sessions: `TaskInstance`s are per
+  `(task, session, session_version)`, so concurrent sessions of one agent
+  each get their own hook executions. Hook-task calls never refire
+  intercepts (recursion guard), `SUBTASK_HOOK`/`SUBTASK_COMPACT` worker
+  forks never fire intercepts at all, and entries merge through `extends`
+  by `(name)` like lifecycle entries by `(on, name)`.
 
 ## 6. Matchers
 
@@ -293,7 +337,12 @@ run is the natural cursor.
 
 - `hooks:` is a list of dicts on `agent.md`, inherited via `extends` like
   every other agent setting (child entries append; same `on`+`name`
-  re-declared in a child replaces the parent entry).
+  re-declared in a child replaces the parent entry; intercept entries key
+  on `(none, name)`). Lifecycle entries (`on:`) and intercept entries
+  (`before:`/`after:`) are mutually exclusive per entry; `before`/`after`
+  must name a same-agent task, `mode` defaults to `inline` for `before`
+  and `detached` for `after`, and inline `before` rejects
+  `on_error: fail_open`.
 - Loader validation (`registry/loader/load_agent_manifest.py`, next to the
   compaction `_validate_*` family): `on` ∈ the four events, `agent` resolves
   (default self), `task` names a task/chain visible to that agent,

@@ -1123,6 +1123,30 @@ class CallScheduler:
             after_hooks = list(
                 run.task_instance.taskinstances_after_run_hooks.all().order_by('pk')
             )
+            # Dynamic intercept hooks (``hooks: - after:`` entries on the
+            # session agent). Inline entries join the after chain below
+            # (blocking: the parent waits via WAITING_SUBTASKS_OR_HOOKS);
+            # detached entries are dispatched fire-and-forget.
+            try:
+                from runtime import hooks as _hookmod
+
+                entries = _hookmod.get_session_agent_hooks(call.session_version)
+                ctx = _hookmod.call_match_context(run.task_instance)
+                for intercept in _hookmod.matching_intercepts(entries, "after", ctx):
+                    hook_ti = _hookmod.build_hook_task_instance(
+                        call.session_version, intercept["after"]
+                    )
+                    if hook_ti is None:
+                        continue
+                    if intercept.get("mode") == "detached":
+                        try:
+                            hook_ti.create_call(kwargs=run).apply_async()
+                        except Exception as e:  # pylint: disable=broad-exception-caught
+                            print(f"[hooks] error dispatching detached after hook: {e}")
+                    else:
+                        after_hooks.append(hook_ti)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"[hooks] error resolving intercept after hooks: {e}")
             if not after_hooks:
                 CallScheduler.on_all_on_posthook_ended(call.pk, taskrun_id)
                 return
@@ -1179,6 +1203,21 @@ class CallScheduler:
                 "required_task_call NOT ENDED_SUCCESS, TaskCallStatusDetail.ENDED_CANCELLED",
                 related_call_status,
             )
+            # Intercept hooks with ``on_error: fail_open`` must not cancel
+            # the parent: keep waiting for the rest, succeeding once only
+            # fail-open failures remain.
+            try:
+                from runtime import hooks as _hookmod
+
+                if _hookmod.after_hook_failed_open(task_call_id, last_taskrun_id):
+                    tc = AgentTaskCall.objects.get(pk=task_call_id)
+                    if tc.taskcall_after_run_hooks.exclude(status=TaskCallStatus.ENDED).exists():
+                        print("fail_open hook failed, waiting for the rest")
+                        return  # Still waiting for other hooks
+                    CallScheduler.on_all_on_posthook_ended(task_call_id, last_taskrun_id)
+                    return
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"[hooks] error checking fail_open policy: {e}")
             if TaskCallStateMachine.cancel(task_call_id, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS):
                 CallScheduler._on_taskcall_ended(
                     task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED

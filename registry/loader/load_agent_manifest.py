@@ -46,20 +46,84 @@ HOOK_EVENTS = ("stop", "pre_compact", "post_compact", "session_end")
 DEFAULT_HOOK_MAX_TOKENS = 40000
 DEFAULT_HOOK_TIMEOUT_SECONDS = 300
 
+#: Execution modes for intercept hooks: ``inline`` blocks the intercepted
+#: call (transform contract), ``detached`` fires and forgets.
+INTERCEPT_MODES = ("inline", "detached")
+
+#: Failure policies for intercept hooks: ``fail_closed`` blocks/cancels the
+#: parent on hook failure, ``fail_open`` lets the parent proceed.
+INTERCEPT_ON_ERRORS = ("fail_open", "fail_closed")
+
+#: Allowed ``match.type`` values (``TaskType`` names).
+MATCH_TYPES = ("TOOL", "TASK", "COMMAND", "WEBAPI", "WEBVIEW")
+
 _HOOK_KEYS = frozenset(
     {"name", "on", "matcher", "agent", "task", "ingest", "max_tokens",
-     "timeout_seconds", "blocking"}
+     "timeout_seconds", "blocking",
+     "match", "before", "after", "mode", "on_error"}
 )
+
+_MATCH_KEYS = frozenset({"name", "type", "session"})
+
+
+def _normalize_match(raw: Any, where: str) -> dict:
+    """Normalize an intercept ``match:`` filter into a JSON-safe dict.
+
+    Accepts a shorthand string (a definition-name glob) or a mapping with
+    optional ``name``/``type``/``session`` keys. Missing dimensions match
+    everything. Lists are joined with ``" | "`` alternation.
+    """
+    if raw is None:
+        return {}
+    if isinstance(raw, str):
+        if not raw.strip():
+            raise ValueError(f"{where} match must be a non-empty string, got {raw!r}")
+        return {"name": raw.strip()}
+    if not isinstance(raw, dict):
+        raise ValueError(f"{where} match must be a string or mapping, got {raw!r}")
+    unknown = set(raw) - _MATCH_KEYS
+    if unknown:
+        raise ValueError(f"{where} match has unknown keys: {sorted(unknown)}")
+    normalized: dict[str, str] = {}
+    for key in ("name", "session"):
+        value = raw.get(key)
+        if value is None:
+            continue
+        if isinstance(value, (list, tuple)):
+            value = " | ".join(str(v) for v in value)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{where} match.{key} must be a non-empty string, got {raw.get(key)!r}")
+        normalized[key] = value.strip()
+    type_value = raw.get("type")
+    if type_value is not None:
+        if not isinstance(type_value, str) or type_value.strip().upper() not in MATCH_TYPES:
+            raise ValueError(
+                f"{where} match.type must be one of {list(MATCH_TYPES)}, got {type_value!r}"
+            )
+        normalized["type"] = type_value.strip().upper()
+    return normalized
 
 
 def _validate_hooks(raw: Any, agent_name: str) -> list[dict]:
     """Validate an agent.md ``hooks:`` block into normalized entry dicts.
 
-    Each entry names a lifecycle event (``on``), the task to run detached in
-    a fork (``task``, optionally on another ``agent``), an optional
-    parent-side ``ingest`` task, and budgets. Returns a JSON-safe list (own
-    entries only — extends-chain merging happens at runtime in
-    ``Agent.hooks``).
+    Two entry flavors (mutually exclusive):
+
+    - Lifecycle entries name an event (``on``) and the task to run detached
+      in a fork (``task``, optionally on another ``agent``), with an optional
+      parent-side ``ingest`` task and budgets.
+    - Intercept entries declare ``before`` (pre, receives original kwargs)
+      or ``after`` (post, receives original result) naming a task of the
+      *same* agent, an optional ``match:`` filter (definition name glob,
+      ``type``, session-name glob), a ``mode`` (``inline`` = blocking
+      transform, ``detached`` = fire-and-forget) and an ``on_error``
+      policy. No ``on:`` key — ``before`` *is* pre, ``after`` *is* post.
+      (There is deliberately no agent dimension: entries resolve from the
+      session agent and execute in the intercepted call's own session, so
+      an agent filter could only ever match yourself.)
+
+    Returns a JSON-safe list (own entries only — extends-chain merging
+    happens at runtime in ``Agent.hooks``).
     """
     if raw is None:
         return []
@@ -79,62 +143,140 @@ def _validate_hooks(raw: Any, agent_name: str) -> list[dict]:
         unknown = set(entry) - _HOOK_KEYS
         if unknown:
             raise ValueError(f"{where} has unknown keys: {sorted(unknown)}")
-        on = entry.get("on")
-        if on not in HOOK_EVENTS:
-            raise ValueError(
-                f"{where} on must be one of {list(HOOK_EVENTS)}, got {on!r}"
-            )
-        task = entry.get("task")
-        if not task or not isinstance(task, str):
-            raise ValueError(f"{where} task must be a non-empty string, got {task!r}")
         if entry.get("blocking"):
             raise ValueError(
                 f"{where} blocking hooks are the deferred sync tier "
                 f"(docs/session-hooks.md §11) — omit blocking for now"
             )
-        matcher = entry.get("matcher")
-        if matcher is not None and not isinstance(matcher, str):
-            raise ValueError(f"{where} matcher must be a string, got {matcher!r}")
-        hook_agent = entry.get("agent")
-        if hook_agent is not None and (
-            not isinstance(hook_agent, str) or not hook_agent.strip()
-        ):
+        has_before = entry.get("before") is not None
+        has_after = entry.get("after") is not None
+        has_on = entry.get("on") is not None
+        if has_before and has_after:
+            raise ValueError(f"{where} must declare exactly one of before/after, got both")
+        if has_on and (has_before or has_after):
             raise ValueError(
-                f"{where} agent must be a non-empty string, got {hook_agent!r}"
+                f"{where} lifecycle entries (on:) and intercept entries "
+                f"(before:/after:) are mutually exclusive"
             )
-        ingest = entry.get("ingest")
-        if ingest is not None and (not isinstance(ingest, str) or not ingest.strip()):
+        if has_before or has_after:
+            entries.append(_validate_intercept_hook(entry, where, agent_name, i))
+            continue
+        if not has_on:
             raise ValueError(
-                f"{where} ingest must be a non-empty string, got {ingest!r}"
+                f"{where} must declare on: (lifecycle) or before:/after: (intercept)"
             )
-        max_tokens = _validate_non_negative_int(
-            entry.get("max_tokens"), f"hooks[{i}].max_tokens", agent_name
-        )
-        timeout_seconds = _validate_non_negative_int(
-            entry.get("timeout_seconds"), f"hooks[{i}].timeout_seconds", agent_name
-        )
-        name = entry.get("name") or task
-        if not isinstance(name, str) or not name.strip():
-            raise ValueError(f"{where} name must be a non-empty string, got {name!r}")
-        normalized = {
-            "name": name.strip(),
-            "on": on,
-            "task": task.strip(),
-            "max_tokens": (
-                DEFAULT_HOOK_MAX_TOKENS if max_tokens is None else max_tokens
-            ),
-            "timeout_seconds": (
-                DEFAULT_HOOK_TIMEOUT_SECONDS if timeout_seconds is None else timeout_seconds
-            ),
-        }
-        if matcher is not None:
-            normalized["matcher"] = matcher
-        if hook_agent is not None:
-            normalized["agent"] = hook_agent.strip()
-        if ingest is not None:
-            normalized["ingest"] = ingest.strip()
-        entries.append(normalized)
+        entries.append(_validate_lifecycle_hook(entry, where, agent_name, i))
     return entries
+
+
+def _validate_lifecycle_hook(entry: dict, where: str, agent_name: str, i: int) -> dict:
+    """Validate one lifecycle hook entry (``on:`` + ``task:``)."""
+    on = entry.get("on")
+    if on not in HOOK_EVENTS:
+        raise ValueError(
+            f"{where} on must be one of {list(HOOK_EVENTS)}, got {on!r}"
+        )
+    for key in ("match", "before", "after", "mode", "on_error"):
+        if entry.get(key) is not None:
+            raise ValueError(f"{where} {key} is only valid on intercept (before:/after:) entries")
+    task = entry.get("task")
+    if not task or not isinstance(task, str):
+        raise ValueError(f"{where} task must be a non-empty string, got {task!r}")
+    matcher = entry.get("matcher")
+    if matcher is not None and not isinstance(matcher, str):
+        raise ValueError(f"{where} matcher must be a string, got {matcher!r}")
+    hook_agent = entry.get("agent")
+    if hook_agent is not None and (
+        not isinstance(hook_agent, str) or not hook_agent.strip()
+    ):
+        raise ValueError(
+            f"{where} agent must be a non-empty string, got {hook_agent!r}"
+        )
+    ingest = entry.get("ingest")
+    if ingest is not None and (not isinstance(ingest, str) or not ingest.strip()):
+        raise ValueError(
+            f"{where} ingest must be a non-empty string, got {ingest!r}"
+        )
+    max_tokens = _validate_non_negative_int(
+        entry.get("max_tokens"), f"hooks[{i}].max_tokens", agent_name
+    )
+    timeout_seconds = _validate_non_negative_int(
+        entry.get("timeout_seconds"), f"hooks[{i}].timeout_seconds", agent_name
+    )
+    name = entry.get("name") or task
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError(f"{where} name must be a non-empty string, got {name!r}")
+    normalized = {
+        "name": name.strip(),
+        "on": on,
+        "task": task.strip(),
+        "max_tokens": (
+            DEFAULT_HOOK_MAX_TOKENS if max_tokens is None else max_tokens
+        ),
+        "timeout_seconds": (
+            DEFAULT_HOOK_TIMEOUT_SECONDS if timeout_seconds is None else timeout_seconds
+        ),
+    }
+    if matcher is not None:
+        normalized["matcher"] = matcher
+    if hook_agent is not None:
+        normalized["agent"] = hook_agent.strip()
+    if ingest is not None:
+        normalized["ingest"] = ingest.strip()
+    return normalized
+
+
+def _validate_intercept_hook(entry: dict, where: str, agent_name: str, i: int) -> dict:
+    """Validate one intercept hook entry (``before:`` or ``after:``)."""
+    for key in ("on", "matcher", "agent", "task", "ingest", "max_tokens"):
+        if entry.get(key) is not None:
+            raise ValueError(
+                f"{where} {key} is only valid on lifecycle (on:) entries, "
+                f"not intercept (before:/after:) entries"
+            )
+    hook_task = entry.get("before") if entry.get("before") is not None else entry.get("after")
+    if not isinstance(hook_task, str) or not hook_task.strip():
+        raise ValueError(
+            f"{where} before/after must name a task of the same agent, got {hook_task!r}"
+        )
+    if entry.get("timeout_seconds") is not None:
+        raise ValueError(
+            f"{where} timeout_seconds is not supported on intercept "
+            f"(before:/after:) entries"
+        )
+    position = "before" if entry.get("before") is not None else "after"
+    match = _normalize_match(entry.get("match"), where)
+    mode = entry.get("mode")
+    if mode is None:
+        mode = "inline" if position == "before" else "detached"
+    if mode not in INTERCEPT_MODES:
+        raise ValueError(
+            f"{where} mode must be one of {list(INTERCEPT_MODES)}, got {mode!r}"
+        )
+    on_error = entry.get("on_error")
+    if on_error is None:
+        on_error = "fail_closed" if mode == "inline" else "fail_open"
+    if on_error not in INTERCEPT_ON_ERRORS:
+        raise ValueError(
+            f"{where} on_error must be one of {list(INTERCEPT_ON_ERRORS)}, got {on_error!r}"
+        )
+    if position == "before" and mode == "inline" and on_error != "fail_closed":
+        raise ValueError(
+            f"{where} inline before hooks cannot fail open (a failed input "
+            f"transform has no sound fallback) — use on_error: fail_closed "
+            f"or mode: detached"
+        )
+    name = entry.get("name") or hook_task
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError(f"{where} name must be a non-empty string, got {name!r}")
+    normalized: dict[str, Any] = {
+        "name": name.strip(),
+        position: hook_task.strip(),
+        "match": match,
+        "mode": mode,
+        "on_error": on_error,
+    }
+    return normalized
 
 
 def load_agent_manifest(

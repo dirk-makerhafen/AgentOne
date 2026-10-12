@@ -164,6 +164,32 @@ class AgentTaskCall(BaseModel):
                 next_input = hook_instance.create_call(kwargs=next_input)
                 before_hook_calls.append(next_input)
 
+        # Dynamic intercept hooks (``hooks: - before:`` entries on the
+        # session agent). Inline entries join the input-transform chain
+        # above (blocking: the call waits on them via arg references);
+        # detached entries get a snapshot of the *original* arguments and
+        # are dispatched fire-and-forget in ``apply_async``.
+        detached_before_calls: list[AgentTaskCall] = []
+        try:
+            from runtime import hooks as _hookmod
+
+            entries = _hookmod.get_session_agent_hooks(task_instance.session_version)
+            ctx = _hookmod.call_match_context(task_instance)
+            for intercept in _hookmod.matching_intercepts(entries, "before", ctx):
+                hook_ti = _hookmod.build_hook_task_instance(
+                    task_instance.session_version, intercept["before"]
+                )
+                if hook_ti is None:
+                    continue
+                if intercept.get("mode") == "detached":
+                    snapshot = dict(arguments) if isinstance(arguments, dict) else arguments
+                    detached_before_calls.append(hook_ti.create_call(kwargs=snapshot))
+                else:
+                    next_input = hook_ti.create_call(kwargs=next_input)
+                    before_hook_calls.append(next_input)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"[hooks] error resolving intercept before hooks: {e}")
+
         arguments_json, ref_pks = AgentTaskCall.create_call_arguments_json(
             arguments=next_input
         )
@@ -198,6 +224,9 @@ class AgentTaskCall(BaseModel):
             session_root_task=root,
         )
         taskcall.taskcall_before_run_hooks.set(before_hook_calls)
+        # Transient (non-DB) carry-over for detached intercept calls —
+        # dispatched fire-and-forget in ``apply_async`` below.
+        taskcall._detached_intercept_calls = detached_before_calls
 
         if not root:
             AgentTaskCall.objects.filter(pk=taskcall.pk).update(session_root_task=taskcall)
@@ -215,6 +244,11 @@ class AgentTaskCall(BaseModel):
             raise Exception("Must save first")
         for before_hook_call in self.taskcall_before_run_hooks.all():
             before_hook_call.apply_async()
+        for detached_call in getattr(self, "_detached_intercept_calls", []) or []:
+            try:
+                detached_call.apply_async()
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                print(f"[hooks] error dispatching detached before hook: {e}")
         from runtime.tasks.call_scheduler import CallScheduler
 
         CallScheduler._apply_async(self.pk)
