@@ -1,6 +1,7 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 
 
 class ScriptsGeneration(BaseModel):
@@ -12,6 +13,12 @@ class ScriptsGeneration(BaseModel):
     agent resolution.
     """
 
+    class ScriptsGenerationObservables(Observables):
+        """Explicit observable keys for a ScriptsGeneration (IDE autocomplete)."""
+        @property
+        def task_definitions(self):
+            return f"TaskDefinition.parent_generation:{self.model.pk}"
+
     commit = models.CharField(max_length=1024, default="")
 
     class Meta:
@@ -21,3 +28,9 @@ class ScriptsGeneration(BaseModel):
 
     def __str__(self) -> str:
         return f"ScriptsGeneration[commit={self.commit[:12]} pk:{self.pk}]"
+
+    def save(self, *args, **kwargs) -> None:
+        """Prevent updates to existing ScriptsGeneration instances."""
+        if self.pk:
+            raise ValidationError(f"You may not edit an existing {self._meta.model_name}")
+        super().save(*args, **kwargs)

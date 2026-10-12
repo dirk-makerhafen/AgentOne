@@ -41,6 +41,9 @@ class Query(BaseModel):
         @property
         def messages(self):
             return f"QueryMessage.query:{self.model.pk}"
+        @property
+        def response(self):
+            return f"Response.query:{self.model.pk}"
 
     @property
     def response(self):

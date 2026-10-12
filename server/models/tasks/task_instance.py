@@ -29,6 +29,12 @@ class TaskInstance(BaseModel):
 
     class TaskInstanceObservables(Observables):
         """Explicit observable keys for an TaskInstance (IDE autocomplete)."""
+        @property
+        def calls(self):
+            return f"AgentTaskCall.task_instance:{self.model.pk}"
+        @property
+        def runs(self):
+            return f"AgentTaskRun.task_instance:{self.model.pk}"
         
     task_definition_version = models.ForeignKey("TaskDefinitionVersion",default=None,null=True,on_delete=models.CASCADE,related_name="related_task_instances")
     session = models.ForeignKey("SessionModel",on_delete=models.CASCADE,related_name="related_task_instances")

@@ -19,6 +19,12 @@ class SkillModel(ObservableMixin, models.Model):
         @property
         def child_skills(self):
             return f"SkillModel.parent_skill:{self.model.pk}"
+        @property
+        def versions(self):
+            return f"SkillModelVersion.skill:{self.model.pk}"
+        @property
+        def task_definitions(self):
+            return f"TaskDefinition.parent_skill:{self.model.pk}"
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

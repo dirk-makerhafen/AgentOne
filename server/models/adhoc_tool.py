@@ -36,7 +36,9 @@ class AdhocToolVersion(BaseModel):
 
     class AdhocToolVersionObservables(Observables):
         """Explicit observable keys for an AdhocToolVersion (IDE autocomplete)."""
-        pass
+        @property
+        def links(self):
+            return f"SessionAdhocTool.version:{self.model.pk}"
 
     content = models.ForeignKey(
         "server.GenericContent",
@@ -100,7 +102,7 @@ class SessionAdhocTool(BaseModel):
         """Explicit observable keys for a SessionAdhocTool (IDE autocomplete)."""
         @property
         def session_adhoc_tools(self):  # type: ignore[no-untyped-def]
-            return f"SessionAdhocTool.session:{self.model.pk}"
+            return f"SessionAdhocTool.session:{self.model.session_id}"
 
     session = models.ForeignKey(
         "server.SessionModel",

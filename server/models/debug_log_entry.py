@@ -6,7 +6,7 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 
 
 class DebugLogEntry(BaseModel):
@@ -15,6 +15,9 @@ class DebugLogEntry(BaseModel):
     Once created, existing entries cannot be modified (the ``save`` method
     raises :class:`ValidationError` if ``self.pk`` is already set).
     """
+
+    class DebugLogEntryObservables(Observables):
+        """Explicit observable keys for a DebugLogEntry (IDE autocomplete)."""
 
     session: models.ForeignKey | None = models.ForeignKey("server.SessionModel",on_delete=models.CASCADE,related_name="debug_log_entries")
     event: str = models.CharField(max_length=64)

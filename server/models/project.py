@@ -22,6 +22,12 @@ class Project(ObservableMixin, models.Model):
         @property
         def cron_jobs(self):
             return f"Cronjob.parent_project:{self.model.pk}"
+        @property
+        def task_definitions(self):
+            return f"TaskDefinition.parent_project:{self.model.pk}"
+        @property
+        def work_items(self):
+            return f"WorkItem.project:{self.model.pk}"
 
     created_at: datetime = models.DateTimeField(auto_now_add=True)
     updated_at: datetime = models.DateTimeField(auto_now=True)

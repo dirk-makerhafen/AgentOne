@@ -24,6 +24,18 @@ class AgentModel(BaseModel):
         @property
         def cron_jobs(self):
             return f"Cronjob.agent:{self.model.pk}"
+        @property
+        def versions(self):
+            return f"AgentVersionModel.agent:{self.model.pk}"
+        @property
+        def session_versions(self):
+            return f"SessionVersionModel.agent:{self.model.pk}"
+        @property
+        def task_definitions(self):
+            return f"TaskDefinition.parent_agent:{self.model.pk}"
+        @property
+        def work_items(self):
+            return f"WorkItem.assigned_agent:{self.model.pk}"
 
     name = models.CharField(max_length=255, unique=True)
     latest_agent_version = models.ForeignKey("server.AgentVersionModel",default=None,null=True,on_delete=models.SET_NULL,related_name="related_newest_version")

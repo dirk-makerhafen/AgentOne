@@ -7,11 +7,20 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 
 
 class AiModel(BaseModel):
     """Represents an AI model offered by a provider, with usage tracking and limits."""
+
+    class AiModelObservables(Observables):
+        """Explicit observable keys for an AiModel (IDE autocomplete)."""
+        @property
+        def responses(self):
+            return f"Response.aimodel:{self.model.pk}"
+        @property
+        def settings(self):
+            return f"SettingsModel.aimodel:{self.model.pk}"
 
     api_provider = models.ForeignKey("server.ApiProvider", on_delete=models.CASCADE, related_name="aimodels")
     name = models.CharField(max_length=512)

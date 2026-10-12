@@ -30,7 +30,9 @@ class QueryTemplateVersion(BaseModel):
 
     class QueryTemplateVersionObservables(Observables):
         """Explicit observable keys for a QueryTemplateVersion (IDE autocomplete)."""
-        pass
+        @property
+        def links(self):
+            return f"SessionQueryTemplate.version:{self.model.pk}"
 
     content = models.ForeignKey(
         "server.GenericContent",
@@ -77,7 +79,7 @@ class SessionQueryTemplate(BaseModel):
         """Explicit observable keys for a SessionQueryTemplate (IDE autocomplete)."""
         @property
         def session_templates(self):
-            return f"SessionQueryTemplate.session:{self.model.pk}"
+            return f"SessionQueryTemplate.session:{self.model.session_id}"
 
     session = models.ForeignKey(
         "server.SessionModel",

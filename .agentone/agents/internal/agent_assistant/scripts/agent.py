@@ -14,7 +14,7 @@ from runtime.session.session import Session
 
 #: Description chars returned by describe_agent; agent bodies can be very
 #: long, so the remainder is cut with a marker rather than flooding context.
-DESCRIPTION_LIMIT = 1000
+DESCRIPTION_LIMIT = 3000
 
 
 def _resolve_agent(agent_name: str):

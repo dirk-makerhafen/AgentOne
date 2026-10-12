@@ -28,6 +28,36 @@ class SessionModel(BaseModel):
         @property
         def queries(self):
             return f"Query.session:{self.model.pk}"
+        @property
+        def responses(self):
+            return f"Response.session:{self.model.pk}"
+        @property
+        def session_versions(self):
+            return f"SessionVersionModel.session:{self.model.pk}"
+        @property
+        def task_calls(self):
+            return f"AgentTaskCall.session:{self.model.pk}"
+        @property
+        def task_runs(self):
+            return f"AgentTaskRun.session:{self.model.pk}"
+        @property
+        def task_instances(self):
+            return f"TaskInstance.session:{self.model.pk}"
+        @property
+        def templates(self):
+            return f"SessionQueryTemplate.session:{self.model.pk}"
+        @property
+        def adhoc_tools(self):
+            return f"SessionAdhocTool.session:{self.model.pk}"
+        @property
+        def terminals(self):
+            return f"TerminalSession.session:{self.model.pk}"
+        @property
+        def hook_runs(self):
+            return f"SessionHookRun.session:{self.model.pk}"
+        @property
+        def debug_entries(self):
+            return f"DebugLogEntry.session:{self.model.pk}"
 
     name = models.CharField(max_length=255)
     turn_count = models.IntegerField(default=0)

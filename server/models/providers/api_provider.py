@@ -8,13 +8,22 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 from server.models.queries.query import Query
 from server.models.queries.response import Response
 
 
 class ApiProvider(BaseModel):
     """An API provider (e.g. OpenAI, Ollama) hosting one or more AI models."""
+
+    class ApiProviderObservables(Observables):
+        """Explicit observable keys for an ApiProvider (IDE autocomplete)."""
+        @property
+        def models(self):
+            return f"AiModel.api_provider:{self.model.pk}"
+        @property
+        def keys(self):
+            return f"ApiKey.api_provider:{self.model.pk}"
 
     name = models.CharField(max_length=512)
     url = models.CharField(max_length=512, default="")

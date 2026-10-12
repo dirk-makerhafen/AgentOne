@@ -13,7 +13,9 @@ class Cronjob(BaseModel):
     """A scheduled job that runs an agent on a recurring schedule."""
     class CronjobObservables(Observables):
         """Explicit observable keys for an Cronjob (IDE autocomplete)."""
-        pass
+        @property
+        def calls(self):
+            return f"AgentTaskCall.cronjob:{self.model.pk}"
     
     SESSION_MODE_CHOICES = [ ("new", "New session each run"), ("existing", "Reuse existing session"),]
 

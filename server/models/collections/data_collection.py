@@ -17,6 +17,9 @@ class DataCollection(BaseModel):
 
     class DataCollectionObservables(Observables):
         """Explicit observable keys for an DataCollection (IDE autocomplete)."""
+        @property
+        def items(self):
+            return f"CollectionItem.collection:{self.model.pk}"
         
     COLLECTION_TYPES = [("stream", "Stream"), ("set", "Ordered Set")]
 

@@ -61,6 +61,15 @@ class AgentTaskCall(BaseModel):
 
     class AgentTaskCallObservables(Observables):
         """Explicit observable keys for an AgentTaskCall (IDE autocomplete)."""
+        @property
+        def runs(self):
+            return f"AgentTaskRun.agent_task_call:{self.model.pk}"
+        @property
+        def collection_items(self):
+            return f"CollectionItem.source_call:{self.model.pk}"
+        @property
+        def message_parts(self):
+            return f"MessagePart.tool_call:{self.model.pk}"
         
 
 

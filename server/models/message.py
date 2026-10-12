@@ -27,6 +27,12 @@ class Message(BaseModel):
         @property
         def parts(self):
             return f"MessagePart.message:{self.model.pk}"
+        @property
+        def triggered_queries(self):
+            return f"Query.trigger_message:{self.model.pk}"
+        @property
+        def query_messages(self):
+            return f"QueryMessage.source_message:{self.model.pk}"
 
 
     session = models.ForeignKey( "server.SessionModel", on_delete=models.CASCADE, related_name="related_messages")
@@ -106,6 +112,12 @@ class Message(BaseModel):
 class MessagePart(BaseModel):
     """A single part within a :class:`Message`, representing e.g. text content,
     an image, a tool call, or a reasoning block."""
+
+    class MessagePartObservables(Observables):
+        """Explicit observable keys for a MessagePart (IDE autocomplete)."""
+        @property
+        def query_parts(self):
+            return f"QueryMessagePart.source_message_part:{self.model.pk}"
 
     message: models.ForeignKey | None = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="parts" )
 

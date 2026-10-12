@@ -14,11 +14,14 @@ from __future__ import annotations
 
 from django.db import models
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 
 
 class SessionHookRun(BaseModel):
     """One session-hook firing and its detached execution."""
+
+    class SessionHookRunObservables(Observables):
+        """Explicit observable keys for a SessionHookRun (IDE autocomplete)."""
 
     #: The parent session the hook fired in.
     session = models.ForeignKey(

@@ -6,12 +6,24 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from sortedm2m.fields import SortedManyToManyField
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
 
 
 class TaskDefinitionVersion(BaseModel):
     """A versioned snapshot of a task definition's configuration."""
+
+    class TaskDefinitionVersionObservables(Observables):
+        """Explicit observable keys for a TaskDefinitionVersion (IDE autocomplete)."""
+        @property
+        def instances(self):
+            return f"TaskInstance.task_definition_version:{self.model.pk}"
+        @property
+        def calls(self):
+            return f"AgentTaskCall.task_definition_version:{self.model.pk}"
+        @property
+        def runs(self):
+            return f"AgentTaskRun.task_definition_version:{self.model.pk}"
 
     task_definition = models.ForeignKey("server.TaskDefinition", default=None, null=True, on_delete=models.CASCADE, related_name="versions")
 

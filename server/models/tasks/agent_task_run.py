@@ -38,6 +38,9 @@ class AgentTaskRun(BaseModel):
     """
     class AgentTaskRunObservables(Observables):
         """Explicit observable keys for an AgentTaskRun (IDE autocomplete)."""
+        @property
+        def child_calls(self):
+            return f"AgentTaskCall.parent_taskrun:{self.model.pk}"
         
 
     agent_task_call = models.ForeignKey("AgentTaskCall",on_delete=models.CASCADE,related_name="related_agent_task_runs",)

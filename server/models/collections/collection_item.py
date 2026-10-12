@@ -31,6 +31,9 @@ class CollectionItem(BaseModel):
 
     class CollectionItemObservables(Observables):
         """Explicit observable keys for an CollectionItem (IDE autocomplete)."""
+        @property
+        def derived_items(self):
+            return f"CollectionItem.source_item:{self.model.pk}"
         
     collection = models.ForeignKey("DataCollection",on_delete=models.CASCADE,related_name="items")
     source_call = models.ForeignKey("server.AgentTaskCall",on_delete=models.SET_NULL,null=True,blank=True,default=None,related_name="collection_items")

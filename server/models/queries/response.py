@@ -21,6 +21,9 @@ class Response(BaseModel):
     """Stores the result of a single LLM query including token usage and timing."""
     class ResponseObservables(Observables):
         """Explicit observable keys for an Response (IDE autocomplete)."""
+        @property
+        def messages(self):
+            return f"Message.response:{self.model.pk}"
 
     query = models.ForeignKey("Query", null=True, on_delete=models.CASCADE, related_name="related_response")
 

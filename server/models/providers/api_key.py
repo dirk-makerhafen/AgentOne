@@ -7,7 +7,7 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 
-from server.models.base_model import BaseModel
+from server.models.base_model import BaseModel, Observables
 from server.models.queries.response import Response
 
 
@@ -29,6 +29,12 @@ QUOTA_REASON_PATTERNS = ("quota", "insufficient", "resource exhausted", "daily l
 
 class ApiKey(BaseModel):
     """An API key for a provider, with independent rate-limit tracking."""
+
+    class ApiKeyObservables(Observables):
+        """Explicit observable keys for an ApiKey (IDE autocomplete)."""
+        @property
+        def queries(self):
+            return f"Query.apikey:{self.model.pk}"
 
     api_provider = models.ForeignKey("server.ApiProvider", on_delete=models.CASCADE, related_name="api_keys")
     comment = models.CharField(max_length=512, default="", null=True)

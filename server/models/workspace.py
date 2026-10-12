@@ -47,6 +47,12 @@ class WorkspaceModel(ObservableMixin, models.Model):
         @property
         def cron_jobs(self):
             return f"Cronjob.workspace:{self.model.pk}"
+        @property
+        def session_versions(self):
+            return f"SessionVersionModel.workspace:{self.model.pk}"
+        @property
+        def terminals(self):
+            return f"TerminalSession.workspace:{self.model.pk}"
 
     created_at: datetime = models.DateTimeField(auto_now_add=True)
     updated_at: datetime = models.DateTimeField(auto_now=True)
