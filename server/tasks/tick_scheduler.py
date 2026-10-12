@@ -766,7 +766,6 @@ def _dispatch_work_items() -> None:
     from server.models.message import Message
     from server.models.workitems.enums import WorkItemStatus
     from server.models.workitems.work_item import WorkItem
-    from runtime.events import publish_model_event
     from runtime.session.session import Session
     from runtime.workitems.workitem_fsm import WorkItemStateMachine
 
@@ -829,7 +828,8 @@ def _dispatch_work_items() -> None:
                 content_type=MessageContentType.TEXT,
                 content=prompt,
             )
-            publish_model_event(message, "create")
+            # Two-phase write (see Message.save): publish only now parts exist.
+            message.publish("create")
 
             # Dispatch process_turn directly rather than going through
             # ingest_user_message, for two reasons:

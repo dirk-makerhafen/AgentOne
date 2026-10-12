@@ -51,8 +51,8 @@ def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) ->
         content=f"/{command_name} {json.dumps(kwargs) if kwargs else ''}",
     )
 
-    from runtime.events import publish_model_event
-    publish_model_event(message, "create")
+    # Two-phase write (see Message.save): publish only now parts exist.
+    message.publish("create")
 
     return dict(message=message, tool_reponse=result)
 
@@ -108,7 +108,7 @@ def handle_slashcommand_response(
         content_type=MessageContentType.JSON,
     )
 
-    from runtime.events import publish_model_event
-    publish_model_event(conv_msg, "create")
+    # Two-phase write (see Message.save): publish only now parts exist.
+    conv_msg.publish("create")
 
     return tool_reponse

@@ -374,14 +374,10 @@ class RightPanelSessionSettings(ModelView):
 
     def setSessionName(self, value: str) -> None:
         """Update the session name."""
-        from server.models.sessions.session import SessionModel
-        from runtime.events import publish_model_event
         if self.session is None:
             return
         name = value.strip()
         if not name:
             return
-        SessionModel.objects.filter(pk=self.session.model.pk).update(name=name)
-        session_model = SessionModel.objects.get(pk=self.session.model.pk)
-        publish_model_event(session_model, "update")
+        self.session.model.atomic_update(name=name)
         self.update()

@@ -24,13 +24,19 @@ class InvalidTransition(Exception):
     pass
 
 
-def _publish_run_event(run_id: int) -> None:
-    """Publish a model event for an AgentTaskRun after a transition."""
+def _publish_run_event(
+    run_id: int,
+    action: str = "update",
+    data: dict | None = None,
+) -> None:
+    """Publish a model event for an AgentTaskRun after a transition.
+
+    ``data`` carries the fields written by the transition (for updates) or
+    the full row (for creates) so subscribers can react without re-reading.
+    """
     try:
-        from runtime.events import publish_model_event
         from server.models.tasks.agent_task_run import AgentTaskRun
-        run = AgentTaskRun.objects.get(pk=run_id)
-        publish_model_event(run, "update")
+        AgentTaskRun.publish_by_pk(run_id, action, data=data)
     except Exception:
         pass
 
@@ -100,7 +106,7 @@ class TaskRunStateMachine:
 
         updated = AgentTaskRun.objects.filter(pk=run_id, status=from_status).update(**fields) > 0
         if updated:
-            _publish_run_event(run_id)
+            _publish_run_event(run_id, "update", data=fields)
         return updated
 
     # ------------------------------------------------------------------
@@ -135,11 +141,12 @@ class TaskRunStateMachine:
         """
         from server.models.tasks.agent_task_run import AgentTaskRun
 
+        fields = {"status": TaskRunStatus.QUEUED, "updated_at": timezone.now()}
         updated = AgentTaskRun.objects.filter(
             pk=run_id, status=TaskRunStatus.ACTIVE
-        ).update(status=TaskRunStatus.QUEUED, updated_at=timezone.now()) > 0
+        ).update(**fields) > 0
         if updated:
-            _publish_run_event(run_id)
+            _publish_run_event(run_id, "update", data=fields)
         return updated
 
     @staticmethod

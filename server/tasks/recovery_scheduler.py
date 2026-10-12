@@ -844,15 +844,15 @@ def _cancel_query_and_call_llm(sv_id: int, query_pk: int) -> None:
     from server.models.queries.query import Query, QueryStatus
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.enums.task_enums import TaskCallStatus
-    from runtime.events import publish_model_event
+    from runtime.tasks.call_fsm import TaskCallStateMachine
 
-    Query.objects.filter(pk=query_pk, status__in=[QueryStatus.WAITING, QueryStatus.ACTIVE]).update(
+    n = Query.atomic_update_by_pk(
+        query_pk,
+        expect={"status__in": [QueryStatus.WAITING, QueryStatus.ACTIVE]},
         status=QueryStatus.SUCCESS,
     )
-    q = Query.objects.filter(pk=query_pk).first()
-    if q:
-        publish_model_event(q, "update")
-    print(f"  [recovery] cancelled duplicate query {query_pk}")
+    if n:
+        print(f"  [recovery] cancelled duplicate query {query_pk}")
 
     # Find and cancel non-ended call_llm calls for this query.
     candidates = AgentTaskCall.objects.filter(
@@ -884,7 +884,6 @@ def _recover_stale_queries() -> None:
     from runtime.tasks.run_fsm import TaskRunStateMachine
     from runtime.tasks.call_fsm import TaskCallStateMachine
     from runtime.tasks.call_scheduler import CallScheduler
-    from runtime.events import publish_model_event
     from server.models.tasks.task_definition import TaskDefinition
     from server.models.tasks.task_instance import TaskInstance
 
@@ -911,8 +910,7 @@ def _recover_stale_queries() -> None:
             if has_live_call_llm:
                 continue  # This query is still being worked on
             print(f"[recovery] cancelling stale WAITING query {query.pk} (WAITING since {query.updated_at})")
-            Query.objects.filter(pk=query.pk, status=QueryStatus.WAITING).update(status=QueryStatus.SUCCESS,)
-            publish_model_event(query, "update")
+            query.atomic_update(expect={"status": QueryStatus.WAITING}, status=QueryStatus.SUCCESS)
         except Exception as e:
             print(f"[recovery] error cancelling stale WAITING query {query.pk}: {e}")
 
@@ -939,11 +937,7 @@ def _recover_stale_queries() -> None:
                 Response.objects.filter(
                     query=query, status=ResponseStatus.ACTIVE
                 ).update(status=ResponseStatus.FAILURE)
-                Query.objects.filter(
-                    pk=query.pk, status=QueryStatus.ACTIVE
-                ).update(status=QueryStatus.FAILURE)
-                query.refresh_from_db()
-                publish_model_event(query, "update")
+                query.atomic_update(expect={"status": QueryStatus.ACTIVE}, status=QueryStatus.FAILURE)
                 print(
                     f"[recovery] failed ancient query {query.pk} "
                     f"(ACTIVE since {query.updated_at}) — no re-dispatch"
@@ -990,23 +984,16 @@ def _recover_stale_queries() -> None:
                 TaskCallStateMachine.fail(call.pk)
 
             # 4. Reset the Query back to WAITING so call_llm can pick it up
-            updated = Query.objects.filter(pk=query.pk, status=QueryStatus.ACTIVE).update(
-                status=QueryStatus.WAITING,
-            )
+            updated = query.atomic_update(expect={"status": QueryStatus.ACTIVE}, status=QueryStatus.WAITING)
             if not updated:
                 continue
-            query.refresh_from_db()
-            publish_model_event(query, "update")
 
             # 5. Re-dispatch call_llm for this query, preserving guardrail state
             session_model = query.session_version.session
             call_llm_tdv = TaskDefinition.objects.filter(name="call_llm").first()
             if not call_llm_tdv or not call_llm_tdv.latest_task_version:
                 print(f"  [recovery] call_llm task definition not found for query {query.pk}")
-                Query.objects.filter(pk=query.pk, status=QueryStatus.WAITING).update(
-                    status=QueryStatus.FAILURE,
-                )
-                publish_model_event(query, "update")
+                query.atomic_update(expect={"status": QueryStatus.WAITING}, status=QueryStatus.FAILURE)
                 continue
 
             # NOTE: the query goes in CALL args only — instance args

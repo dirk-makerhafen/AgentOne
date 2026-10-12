@@ -29,8 +29,7 @@ def stop_subsession(_session: Session, sessionname: str) -> dict[str, Any]:
     ).update(is_active=False, last_active_at=timezone.now())
 
     if updated:
-        from runtime.events import publish_model_event
         child = SessionModel.objects.get(parent_session=_session.model, name=sessionname)
-        publish_model_event(child, "update")
+        child.publish("update")
         return {"result": f"Subsession '{sessionname}' ended"}
     return {"error": f"No active subsession '{sessionname}' found"}

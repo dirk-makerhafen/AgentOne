@@ -131,5 +131,5 @@ def notify(
         return
     with r.pipeline() as p:
         for instance_key, msg in messages.items():
-            p.rpush(QUEUE_PREFIX + instance_key, json.dumps(msg))
+            p.rpush(QUEUE_PREFIX + instance_key, json.dumps(msg, default=str))
         p.execute()

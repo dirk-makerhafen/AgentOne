@@ -38,8 +38,6 @@ def ingest_user_message(_session: Session, message: Any = None, execute_turn: bo
     prev_message = _session.get_last_message()
     created: Message | None = None
 
-    from runtime.events import publish_model_event
-
     for spec in messages:
         created = Message.objects.create(
             role=spec["role"],
@@ -55,7 +53,8 @@ def ingest_user_message(_session: Session, message: Any = None, execute_turn: bo
                 template_data=part.get("template_data", None),
                 tool_call=part.get("tool_call", None),
             )
-        publish_model_event(created, "create")
+        # Two-phase write (see Message.save): publish only now parts exist.
+        created.publish("create")
         prev_message = created
 
     if not execute_turn:

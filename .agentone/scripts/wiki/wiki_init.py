@@ -20,10 +20,6 @@ def _workspace_and_name(_session: Session, folder: str | None = None) -> tuple[W
         path=folder,
         description=f"wiki '{folder}' root directory",
     )
-    if ws_created:
-        from runtime.events import publish_model_event
-
-        publish_model_event(workspace, "create")
     return workspace, f"wiki:{folder}:main"
 
 

@@ -492,7 +492,6 @@ class CallScheduler:
         """
         from server.models.enums.task_enums import TaskCallStatusDetail
         from server.models.tasks.agent_task_call import AgentTaskCall
-        from runtime.events import publish_model_event
         from runtime.user_questions import (
             ASK_USER_TOOL_NAME,
             all_answered,
@@ -525,13 +524,7 @@ class CallScheduler:
         merged.update(normalized)
 
         args["answers"] = merged
-        AgentTaskCall.objects.filter(pk=call.pk).update(carguments_json=args)
-        try:
-            publish_model_event(
-                AgentTaskCall.objects.get(pk=call.pk), "update"
-            )
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
+        call.atomic_update(carguments_json=args)
 
         if all_answered(questions, merged):
             CallScheduler.approve_taskcall(call.pk)

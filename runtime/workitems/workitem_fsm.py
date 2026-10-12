@@ -70,13 +70,18 @@ class InvalidTransition(Exception):
     """Raised when a transition pair is not in ``_VALID_TRANSITIONS``."""
 
 
-def _publish_item_event(item_id: int) -> None:
-    """Publish a model event for a WorkItem after a transition."""
-    try:
-        from runtime.events import publish_model_event
+def _publish_item_event(
+    item_id: int,
+    action: str = "update",
+    data: dict | None = None,
+) -> None:
+    """Publish a model event for a WorkItem after a transition.
 
-        item = WorkItem.objects.get(pk=item_id)
-        publish_model_event(item, "update")
+    ``data`` carries the fields written by the transition (for updates) or
+    the full row (for creates) so subscribers can react without re-reading.
+    """
+    try:
+        WorkItem.publish_by_pk(item_id, action, data=data)
     except Exception as e:  # pylint: disable=broad-exception-caught
         # A failed UI push must never fail the state transition itself.
         print(f"[workitems] model event publish failed for item {item_id}: {e}")
@@ -149,7 +154,7 @@ class WorkItemStateMachine:
 
         updated = query.update(**fields) > 0
         if updated:
-            _publish_item_event(item_id)
+            _publish_item_event(item_id, "update", data=fields)
         return updated
 
     # ------------------------------------------------------------------
@@ -176,6 +181,14 @@ class WorkItemStateMachine:
         conversation rather than starting over.
         """
         # Multi-from handled in one atomic update, like enter_dependency_wait().
+        fields = {
+            "status": WorkItemStatus.READY,
+            "root_task": None,
+            "verify_status": None,
+            "verify_reason": "",
+            "completed_at": None,
+            "updated_at": timezone.now(),
+        }
         updated = WorkItem.objects.filter(
             pk=item_id,
             status__in=[
@@ -183,16 +196,9 @@ class WorkItemStateMachine:
                 WorkItemStatus.BLOCKED,
                 WorkItemStatus.CANCELLED,
             ],
-        ).update(
-            status=WorkItemStatus.READY,
-            root_task=None,
-            verify_status=None,
-            verify_reason="",
-            completed_at=None,
-            updated_at=timezone.now(),
-        ) > 0
+        ).update(**fields) > 0
         if updated:
-            _publish_item_event(item_id)
+            _publish_item_event(item_id, "update", data=fields)
         return updated
 
     @staticmethod
@@ -207,16 +213,17 @@ class WorkItemStateMachine:
     @staticmethod
     def _block_from_ready_or_active(item_id: int, reason: str) -> bool:
         """``ready``/``in_progress`` → ``blocked`` (atomic multi-from)."""
+        fields = {
+            "status": WorkItemStatus.BLOCKED,
+            "last_outcome": reason or "",
+            "updated_at": timezone.now(),
+        }
         updated = WorkItem.objects.filter(
             pk=item_id,
             status__in=[WorkItemStatus.READY, WorkItemStatus.IN_PROGRESS],
-        ).update(
-            status=WorkItemStatus.BLOCKED,
-            last_outcome=reason or "",
-            updated_at=timezone.now(),
-        ) > 0
+        ).update(**fields) > 0
         if updated:
-            _publish_item_event(item_id)
+            _publish_item_event(item_id, "update", data=fields)
         return updated
 
     # ------------------------------------------------------------------
@@ -245,13 +252,14 @@ class WorkItemStateMachine:
         when the tick first moves the item to ``in_progress``.  Writes without
         a status change, so it is safe to retry on the next tick.
         """
+        fields = {"root_task_id": root_task_id, "updated_at": timezone.now()}
         updated = (
             WorkItem.objects.filter(pk=item_id, root_task__isnull=True)
-            .update(root_task_id=root_task_id, updated_at=timezone.now())
+            .update(**fields)
             > 0
         )
         if updated:
-            _publish_item_event(item_id)
+            _publish_item_event(item_id, "update", data=fields)
         return updated
 
     @staticmethod
@@ -383,6 +391,12 @@ class WorkItemStateMachine:
     @staticmethod
     def cancel(item_id: int, reason: str = "") -> bool:
         """Cancel an item from any non-terminal state."""
+        fields = {
+            "status": WorkItemStatus.CANCELLED,
+            "last_outcome": reason or "",
+            "completed_at": timezone.now(),
+            "updated_at": timezone.now(),
+        }
         updated = (
             WorkItem.objects.filter(
                 pk=item_id,
@@ -394,16 +408,11 @@ class WorkItemStateMachine:
                     WorkItemStatus.BLOCKED,
                 ],
             )
-            .update(
-                status=WorkItemStatus.CANCELLED,
-                last_outcome=reason or "",
-                completed_at=timezone.now(),
-                updated_at=timezone.now(),
-            )
+            .update(**fields)
             > 0
         )
         if updated:
-            _publish_item_event(item_id)
+            _publish_item_event(item_id, "update", data=fields)
         return updated
 
     @staticmethod

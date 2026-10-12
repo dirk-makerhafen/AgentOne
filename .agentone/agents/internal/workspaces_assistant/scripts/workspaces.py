@@ -93,7 +93,6 @@ def create_workspace(
         existed), or ``(False, {"status": "error", "message": ...})``.
     """
     from server.models.workspace import WorkspaceModel, validate_workspace_color
-    from runtime.events import publish_model_event
 
     name = (name or "").strip()
     if not name:
@@ -124,10 +123,6 @@ def create_workspace(
                 ws.save(update_fields=["color", "updated_at"])
             except Exception:
                 pass
-        try:
-            publish_model_event(ws, "create")
-        except Exception:
-            pass
     info = {
         "workspace_pk": ws.pk,
         "name": ws.name or ws.path,

@@ -254,7 +254,6 @@ def add_child_workitem(
         return False, {"status": "error", "message": f"No work item with id {parent_id} in this project scope."}
     from server.models.workitems.enums import WorkItemStatus
     from server.models.workitems.work_item import WorkItem
-    from runtime.events import publish_model_event
     from runtime.workitems.workitem_fsm import WorkItemStateMachine
 
     if status not in ("backlog", "ready"):
@@ -275,7 +274,6 @@ def add_child_workitem(
         requires_verification=requires_verification,
         status=WorkItemStatus.BACKLOG,
     )
-    publish_model_event(child, "create")
     if status == "ready":
         if not WorkItemStateMachine.mark_ready(child.pk):
             return False, {

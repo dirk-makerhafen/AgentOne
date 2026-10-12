@@ -6,11 +6,19 @@ subscribed browser views goes through the Redis observable registry
 (``runtime/observables.py``), drained per UI instance by the consumer loop
 in ``ui/consumer.py``.
 
-Usage (Celery worker)
---------------------
+Usage (preferred — models auto-publish, no import needed)
+----------------------------------------------------------
+    msg = Message.objects.create(...)   # "create" published from save()
+    msg.atomic_update(status="...")     # atomic UPDATE + "update" on success
+    msg.publish("update")               # manual publish (bulk ops, FSMs)
+    msg.delete()                        # "delete" published from delete()
+
+Direct calls (bulk paths that bypass the model — ``QuerySet.update()``,
+``bulk_create()``, cascade helpers) still use this function:
+
     from runtime.events import publish_model_event
-    msg = Message.objects.create(...)
-    publish_model_event(msg, "create")
+    msg = Message.objects.create(...)   # already auto-published; do NOT repeat
+    publish_model_event(msg, "create")  # only when save()/delete() was bypassed
 """
 
 from __future__ import annotations
@@ -44,12 +52,13 @@ def _log(msg: str) -> None:
     except Exception:
         pass
 
-def publish_model_event(instance: Any, action: str) -> None:
+def publish_model_event(instance: Any, action: str, data: dict[str, Any] | None = None) -> None:
     """Publish an ORM model event.
 
     Args:
         instance: The Django model instance that was just written.
         action:   ``"create"``, ``"update"``, or ``"delete"``.
+        data:     Optional payload forwarded to observers.
 
     Delivers to subscribed UI instances through the Redis observable
     registry (see ``runtime/observables.py``).  The old channel-layer
@@ -65,6 +74,6 @@ def publish_model_event(instance: Any, action: str) -> None:
     notify = getattr(instance, "notify_observers", None)
     if callable(notify):
         try:
-            notify(action)
+            notify(action, data)
         except Exception:
             pass

@@ -161,7 +161,6 @@ def create_workitem(
     """
     from server.models.workitems.enums import WorkItemStatus
     from server.models.workitems.work_item import WorkItem
-    from runtime.events import publish_model_event
     from runtime.workitems.workitem_fsm import WorkItemStateMachine
 
     if status not in ("backlog", "ready"):
@@ -181,7 +180,6 @@ def create_workitem(
         requires_verification=requires_verification,
         status=WorkItemStatus.BACKLOG,
     )
-    publish_model_event(item, "create")
 
     if status == "ready":
         if not WorkItemStateMachine.mark_ready(item.pk):

@@ -132,9 +132,8 @@ def _build_compaction_message(
             successor.prev_message = compaction_message
             successor.save()
 
-    from runtime.events import publish_model_event
-
-    publish_model_event(compaction_message, "create")
+    # Two-phase write (see Message.save): publish only now parts exist.
+    compaction_message.publish("create")
     return compaction_message
 
 
@@ -190,12 +189,8 @@ def ingest_compaction(
             content_type=MessageContentType.TEXT,
             content=f"Compaction failed, {compact_attempt+1} of {MAX_COMPACT_ATTEMPTS} attempts",
         )
-        try:
-            from runtime.events import publish_model_event
-
-            publish_model_event(info_message, "create")
-        except Exception:
-            pass
+        # Two-phase write (see Message.save): publish only now parts exist.
+        info_message.publish("create")
 
         # Never insert an empty marker: it would hide the compacted range
         # behind no summary (silent context loss).  The usual cause is a
@@ -266,13 +261,8 @@ def ingest_compaction(
         content_type=MessageContentType.TEXT,
         content="Compaction successful",
     )
-
-    try:
-        from runtime.events import publish_model_event
-
-        publish_model_event(info_message, "create")
-    except Exception:
-        pass
+    # Two-phase write (see Message.save): publish only now parts exist.
+    info_message.publish("create")
 
     # Session hooks (``post_compact`` event): fired once, after the marker is
     # the chain tip. The fork anchors at the marker, so it sees the summary

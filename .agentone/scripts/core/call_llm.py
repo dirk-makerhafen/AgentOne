@@ -559,17 +559,11 @@ def call_llm(_session: Session, query: Query) -> Response:
         )
 
     except RateLimitError:
-        Query.objects.filter(pk=query.pk).update(status=QueryStatus.FAILURE)
-        query.refresh_from_db()
-        from runtime.events import publish_model_event
-        publish_model_event(query, "update")
+        query.atomic_update(status=QueryStatus.FAILURE)
         raise
 
     except Exception:
-        Query.objects.filter(pk=query.pk).update(status=QueryStatus.FAILURE)
-        query.refresh_from_db()
-        from runtime.events import publish_model_event
-        publish_model_event(query, "update")
+        query.atomic_update(status=QueryStatus.FAILURE)
         from server.models.debug_log_entry import DebugLogEntry
 
         DebugLogEntry.objects.create(

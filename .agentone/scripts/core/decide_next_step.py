@@ -140,8 +140,8 @@ def _pop_next_todo_message(_session: Session, message: Message) -> tuple[Message
             f"and the next task will be fed automatically from the todo list</SYSTEM NOTICE>"
         ),
     )
-    from runtime.events import publish_model_event
-    publish_model_event(next_message, "create")
+    # Two-phase write (see Message.save): publish only now parts exist.
+    next_message.publish("create")
     return next_message, todolist_task_result
 
 

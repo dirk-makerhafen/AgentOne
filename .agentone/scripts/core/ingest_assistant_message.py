@@ -136,8 +136,8 @@ def ingest_assistant_message(
             tool_call=part.get("tool_call", None),
         )
 
-    from runtime.events import publish_model_event
-    publish_model_event(message, "create")
+    # Two-phase write (see Message.save): publish only now parts exist.
+    message.publish("create")
 
     result = dict(
         response=response,

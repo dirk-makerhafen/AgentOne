@@ -106,6 +106,14 @@ class Message(BaseModel):
             self.pin_to_context = False
         if self.hide_from_context is True and self.pin_to_context is True:
             self.pin_to_context = False
+        if self._state.adding:
+            # Two-phase write: the row is created first, parts are attached
+            # right after via add_part().  The chat view renders parts
+            # synchronously on "create", so an auto-published create could
+            # render a part-less message.  Producers publish explicitly once
+            # parts are attached (``message.publish("create")``) — updates
+            # still auto-publish.  Pass publish=True to opt back in.
+            kwargs.setdefault("publish", False)
         return super().save(*args, **kwargs)
 
 

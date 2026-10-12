@@ -337,11 +337,7 @@ class Session:
 
     def count_turn(self) -> None:
         """Increment the turn counter on the session model."""
-        from runtime.events import publish_model_event
-
-        self.model.turn_count = self.model.turn_count + 1
-        SessionModel.objects.filter(pk=self.model.pk).update(turn_count=self.model.turn_count)
-        publish_model_event(self.model, "update")
+        self.model.atomic_update(turn_count=self.model.turn_count + 1)
 
     def reset_turn_count(self) -> None:
         """Reset the turn counter to zero."""
@@ -365,11 +361,7 @@ class Session:
 
     def count_unattended_turn(self) -> None:
         """Increment the unattended turn counter."""
-        from runtime.events import publish_model_event
-
-        self.model.unattended_turn_count = self.model.unattended_turn_count + 1
-        SessionModel.objects.filter(pk=self.model.pk).update(unattended_turn_count=self.model.unattended_turn_count)
-        publish_model_event(self.model, "update")
+        self.model.atomic_update(unattended_turn_count=self.model.unattended_turn_count + 1)
 
     def reset_unattended_turn_count(self) -> None:
         """Reset the unattended turn counter to zero."""
@@ -917,7 +909,6 @@ class Session:
         :meth:`add_user_message` so the scheduler and task pipeline apply.
         """
         from server.models.enums.message_enums import MessageContentType, MessagePartType
-        from runtime.events import publish_model_event
 
         resolved_parts: List[Dict] = []
         if content is not None:
@@ -955,7 +946,8 @@ class Session:
                 tool_call=part.get("tool_call", None),
             )
 
-        publish_model_event(message, "create")
+        # Two-phase write (see Message.save): publish only now parts exist.
+        message.publish("create")
         return message
 
     def add_user_message(self, message: Any = None, force: bool = False, execute_turn: bool = True) -> Any:
@@ -1118,7 +1110,6 @@ class Session:
             return bound_task.delay(**call_kwargs)
 
         from server.models.message import Message as _Msg
-        from runtime.events import publish_model_event
 
         session_version = self.get_version_model()
         prev_message = self.get_last_message()
@@ -1138,7 +1129,8 @@ class Session:
                     template_data=part.get("template_data", None),
                     tool_call=part.get("tool_call", None),
                 )
-            publish_model_event(created, "create")
+            # Two-phase write (see Message.save): publish only now parts exist.
+            created.publish("create")
             prev_message = created
 
         if execute_turn and not self._has_active_call():
@@ -1236,17 +1228,12 @@ class Session:
             CallScheduler.cancel_root_tasktree(root_id)
 
         from server.models.queries.query import Query, QueryStatus
-        from runtime.events import publish_model_event
 
         for query in Query.objects.filter(
             session=self.model,
             status__in=[QueryStatus.WAITING, QueryStatus.ACTIVE],
         ):
-            Query.objects.filter(pk=query.pk).update(status=QueryStatus.FAILURE)
-            try:
-                publish_model_event(Query.objects.get(pk=query.pk), "update")
-            except Exception:  # pylint: disable=broad-exception-caught
-                pass
+            query.atomic_update(status=QueryStatus.FAILURE)
         return len(active)
 
     def _guard_image_parts_against_non_vision_model(self, parts: list[Dict]) -> None:
@@ -1293,26 +1280,16 @@ class Session:
         (no event); reactivation fires nothing.
         """
         from django.utils import timezone
-        from runtime.events import publish_model_event
         now = timezone.now()
         if new_value == self.model.is_active:
             if new_value:
                 # Idempotent activation still signals activity: every inbound
                 # message path calls this, so the stamp tracks real use.
-                SessionModel.objects.filter(pk=self.model.pk).update(
-                    last_active_at=now
-                )
-                self.model.last_active_at = now
+                self.model.atomic_update(last_active_at=now)
             return
 
         was_inactive = not self.model.is_active
-        SessionModel.objects.filter(pk=self.model.pk).update(
-            is_active=new_value,
-            last_active_at=now,
-        )
-        self.model.is_active = new_value
-        self.model.last_active_at = now
-        publish_model_event(self.model, "update")
+        self.model.atomic_update(is_active=new_value, last_active_at=now)
 
         if not new_value and not was_inactive:
             try:

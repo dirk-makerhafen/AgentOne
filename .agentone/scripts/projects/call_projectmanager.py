@@ -55,10 +55,6 @@ def call_projectmanager(_session: Session, project_path: str, task: str) -> dict
         path=project_path,
         description="project root directory"
     )
-    if ws_created:
-        from runtime.events import publish_model_event
-
-        publish_model_event(workspace, "create")
 
     child_session = _session.spawn_subagent(
         "project_assistant",

@@ -97,6 +97,17 @@ class RegistryTest(SimpleTestCase):
         observables.notify([], "Message", 9, "create")
         self.assertEqual(self.redis.keys("agentone:uiq:*"), [])
 
+    def test_notify_serializes_non_json_data(self):
+        from datetime import datetime, timezone as tz
+
+        observables.subscribe("inst-1", "Message", 1)
+        observables.notify(
+            ["Message"], "Message", 9, "update",
+            {"updated_at": datetime.now(tz.utc)},
+        )
+        msg = json.loads(self.redis.lrange("agentone:uiq:inst-1", 0, -1)[0])
+        self.assertIn("updated_at", msg["data"])
+
     def test_unsubscribe_removes_function_id(self):
         observables.subscribe("inst-1", "Message.session:5", 42)
         observables.subscribe("inst-1", "Message.session:5", 43)
@@ -228,6 +239,89 @@ class PublishDualPublishTest(TestCase):
         instance.pk = 1
         del instance.notify_observers  # instances without notify support
         publish_model_event(instance, "create")  # must not raise
+
+
+class PublishByPkTest(TestCase):
+    """publish_by_pk builds FK observable keys without materializing the row."""
+
+    def _message(self, name):
+        agent, av = create_agent(name)
+        session, sv = create_session(agent, av)
+        from server.models.message import Message
+
+        return Message.objects.create(
+            role=MessageRole.USER, session=session, session_version=sv,
+        )
+
+    def test_keys_match_materialized_instance(self):
+        msg = self._message("obs-pk-agent")
+        with patch.object(observables, "notify") as mock_notify:
+            type(msg).publish_by_pk(msg.pk, "update")
+        mock_notify.assert_called_once()
+        keys, model, pk, action = mock_notify.call_args[0][:4]
+        self.assertEqual(set(keys), set(msg.observable_keys()))
+        self.assertEqual(model, "Message")
+        self.assertEqual(pk, msg.pk)
+        self.assertEqual(action, "update")
+
+    def test_missing_row_is_noop(self):
+        from server.models.message import Message
+
+        with patch.object(observables, "notify") as mock_notify:
+            Message.publish_by_pk(999999)
+        mock_notify.assert_not_called()
+
+    def test_data_reaches_subscribers(self):
+        msg = self._message("obs-pk-agent3")
+        fake = make_fake_redis()
+        with patch.object(observables, "get_redis", return_value=fake):
+            observables.subscribe("inst-pk", f"Message.pk:{msg.pk}", 5)
+            type(msg).publish_by_pk(msg.pk, "update", data={"role": MessageRole.ASSISTANT})
+        queued = fake.lrange("agentone:uiq:inst-pk", 0, -1)
+        self.assertEqual(len(queued), 1)
+        self.assertEqual(json.loads(queued[0])["data"], {"role": "assistant"})
+
+    def test_atomic_update_by_pk_updates_and_publishes(self):
+        msg = self._message("obs-pk-agent2")
+        from server.models.message import Message
+
+        with patch.object(Message, "publish_by_pk") as mock_pub:
+            n = Message.atomic_update_by_pk(msg.pk, role=MessageRole.ASSISTANT)
+        self.assertEqual(n, 1)
+        mock_pub.assert_called_once_with(msg.pk, "update")
+        msg.refresh_from_db()
+        self.assertEqual(msg.role, MessageRole.ASSISTANT)
+
+
+class FsmPublishActionTest(SimpleTestCase):
+    """FSM publish helpers forward action + updated fields (no row load)."""
+
+    def test_call_event_forwards_action_and_data(self):
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.tasks import call_fsm
+
+        fields = {"status": "waiting", "updated_at": object()}
+        with patch.object(AgentTaskCall, "publish_by_pk") as mock_pub:
+            call_fsm._publish_call_event(42, "update", data=fields)
+        mock_pub.assert_called_once_with(42, "update", data=fields)
+
+    def test_run_event_forwards_action_and_data(self):
+        from server.models.tasks.agent_task_run import AgentTaskRun
+        from runtime.tasks import run_fsm
+
+        fields = {"status": "active", "updated_at": object()}
+        with patch.object(AgentTaskRun, "publish_by_pk") as mock_pub:
+            run_fsm._publish_run_event(7, "update", data=fields)
+        mock_pub.assert_called_once_with(7, "update", data=fields)
+
+    def test_item_event_forwards_action_and_data(self):
+        from server.models.workitems.work_item import WorkItem
+        from runtime.workitems import workitem_fsm
+
+        fields = {"status": "ready", "updated_at": object()}
+        with patch.object(WorkItem, "publish_by_pk") as mock_pub:
+            workitem_fsm._publish_item_event(3, "update", data=fields)
+        mock_pub.assert_called_once_with(3, "update", data=fields)
 
 
 class OrmSubscribeTest(SimpleTestCase):

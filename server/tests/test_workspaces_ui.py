@@ -799,7 +799,6 @@ class TestWorkspacePublish(TestCase):
         import fakeredis
 
         from runtime import observables
-        from runtime.events import publish_model_event
         from server.models.workspace import WorkspaceModel
         from ui.app import UiApp
         from ui.consumer import process_queue_messages
@@ -814,7 +813,6 @@ class TestWorkspacePublish(TestCase):
             UiApp._instance = None
             panel.update = MagicMock()
             ws = WorkspaceModel.objects.create(name="live-ws", path="/tmp/live")
-            publish_model_event(ws, "create")
             queued = fake.lrange("agentone:uiq:test-instance", 0, -1)
             assert len(queued) == 1, "workspace create reached the UI queue"
             process_queue_messages(parent._instance, [json.loads(queued[0])])

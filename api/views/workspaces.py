@@ -23,19 +23,10 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         return WorkspaceDetailSerializer
 
     def perform_create(self, serializer):
-        from runtime.events import publish_model_event
-
-        instance = serializer.save()
-        publish_model_event(instance, "create")
+        serializer.save()
 
     def perform_update(self, serializer):
-        from runtime.events import publish_model_event
-
-        instance = serializer.save()
-        publish_model_event(instance, "update")
+        serializer.save()
 
     def perform_destroy(self, instance):
-        from runtime.events import publish_model_event
-
         super().perform_destroy(instance)
-        publish_model_event(instance, "delete")

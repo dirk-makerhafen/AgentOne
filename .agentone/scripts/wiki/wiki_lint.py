@@ -14,10 +14,6 @@ def _session_name(folder: str) -> str:
         path=folder,
         description=f"wiki '{folder}' root directory",
     )
-    if ws_created:
-        from runtime.events import publish_model_event
-
-        publish_model_event(workspace, "create")
     return f"wiki:{folder}:Main"
 
 

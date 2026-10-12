@@ -158,7 +158,6 @@ def workitem_create(
     """
     from server.models.workitems.enums import WorkItemStatus
     from server.models.workitems.work_item import WorkItem
-    from runtime.events import publish_model_event
 
     if status not in ("backlog", "ready"):
         return False, {"error": "status must be 'backlog' or 'ready' on create."}
@@ -194,7 +193,6 @@ def workitem_create(
         requires_verification=requires_verification,
         status=WorkItemStatus.BACKLOG,
     )
-    publish_model_event(item, "create")
 
     if status == "ready":
         from runtime.workitems.workitem_fsm import WorkItemStateMachine

@@ -202,10 +202,9 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         messages = cmessages
         
         for index, message in enumerate(messages):
-            message.save()
-            
-        from runtime.events import publish_model_event
-        publish_model_event(query, "create")
+            # Internal re-save during context build — no view needs an event.
+            message.save(publish=False)
+
         return query
 
     except Exception:

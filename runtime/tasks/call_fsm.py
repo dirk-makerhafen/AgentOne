@@ -101,13 +101,19 @@ def _detail_to_status(detail: TaskCallStatusDetail) -> TaskCallStatus:
     return TaskCallStatus[prefix]
 
 
-def _publish_call_event(call_id: int) -> None:
-    """Publish a model event for an AgentTaskCall after a transition."""
+def _publish_call_event(
+    call_id: int,
+    action: str = "update",
+    data: dict | None = None,
+) -> None:
+    """Publish a model event for an AgentTaskCall after a transition.
+
+    ``data`` carries the fields written by the transition (for updates) or
+    the full row (for creates) so subscribers can react without re-reading.
+    """
     try:
-        from runtime.events import publish_model_event
         from server.models.tasks.agent_task_call import AgentTaskCall
-        call = AgentTaskCall.objects.get(pk=call_id)
-        publish_model_event(call, "update")
+        AgentTaskCall.publish_by_pk(call_id, action, data=data)
     except Exception:
         pass
 
@@ -181,7 +187,7 @@ class TaskCallStateMachine:
 
         updated = query.update(**fields) > 0
         if updated:
-            _publish_call_event(call_id)
+            _publish_call_event(call_id, "update", data=fields)
         return updated
 
     # ------------------------------------------------------------------
@@ -198,19 +204,20 @@ class TaskCallStateMachine:
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
 
+        fields = {
+            "status": TaskCallStatus.WAITING,
+            "status_detail": TaskCallStatusDetail.WAITING_DEPENDENCY,
+            "updated_at": timezone.now(),
+        }
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.NEW,
                 TaskCallStatusDetail.WAITING_RETRY,
             ],
-        ).update(
-            status=TaskCallStatus.WAITING,
-            status_detail=TaskCallStatusDetail.WAITING_DEPENDENCY,
-            updated_at=timezone.now(),
-        ) > 0
+        ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id)
+            _publish_call_event(call_id, "update", data=fields)
         return updated
 
     @staticmethod
@@ -314,20 +321,21 @@ class TaskCallStateMachine:
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
 
+        fields = {
+            "status": TaskCallStatus.WAITING,
+            "status_detail": TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
+            "taskcall_result_run_id": result_run_id,
+            "updated_at": timezone.now(),
+        }
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.ACTIVE_RUNNING,
                 TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             ],
-        ).update(
-            status=TaskCallStatus.WAITING,
-            status_detail=TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
-            taskcall_result_run_id=result_run_id,
-            updated_at=timezone.now(),
-        ) > 0
+        ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id)
+            _publish_call_event(call_id, "update", data=fields)
         return updated
 
     @staticmethod
@@ -340,21 +348,22 @@ class TaskCallStateMachine:
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
 
+        fields = {
+            "status": TaskCallStatus.ENDED,
+            "status_detail": TaskCallStatusDetail.ENDED_SUCCESS,
+            "taskcall_result_run_id": result_run_id,
+            "ended_at": timezone.now(),
+            "updated_at": timezone.now(),
+        }
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.ACTIVE_RUNNING,
                 TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             ],
-        ).update(
-            status=TaskCallStatus.ENDED,
-            status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
-            taskcall_result_run_id=result_run_id,
-            ended_at=timezone.now(),
-            updated_at=timezone.now(),
-        ) > 0
+        ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id)
+            _publish_call_event(call_id, "update", data=fields)
         return updated
 
     @staticmethod
@@ -374,6 +383,13 @@ class TaskCallStateMachine:
         """
         from server.models.tasks.agent_task_call import AgentTaskCall
 
+        fields = {
+            "status": TaskCallStatus.WAITING,
+            "status_detail": TaskCallStatusDetail.WAITING_RETRY,
+            "retry_count": F("retry_count") + 1,
+            "dont_start_before": timezone.now() + timedelta(seconds=retry_delay_seconds),
+            "updated_at": timezone.now(),
+        }
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
@@ -381,15 +397,17 @@ class TaskCallStateMachine:
                 TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             ],
             retry_count__lt=max_retries,
-        ).update(
-            status=TaskCallStatus.WAITING,
-            status_detail=TaskCallStatusDetail.WAITING_RETRY,
-            retry_count=F("retry_count") + 1,
-            dont_start_before=timezone.now() + timedelta(seconds=retry_delay_seconds),
-            updated_at=timezone.now(),
-        ) > 0
+        ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id)
+            # ``retry_count`` was written as an F() expression; re-read just
+            # that column so the published data carries the real value.
+            data = dict(fields)
+            data["retry_count"] = (
+                AgentTaskCall.objects.filter(pk=call_id)
+                .values_list("retry_count", flat=True)
+                .first()
+            )
+            _publish_call_event(call_id, "update", data=data)
         return updated
 
     @staticmethod
@@ -397,20 +415,21 @@ class TaskCallStateMachine:
         """``ACTIVE_RUNNING`` **or** ``WAITING_SUBTASKS_OR_HOOKS`` → ``ENDED_FAILURE_EXCEPTION`` (retries exhausted)."""
         from server.models.tasks.agent_task_call import AgentTaskCall
 
+        fields = {
+            "status": TaskCallStatus.ENDED,
+            "status_detail": TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            "ended_at": timezone.now(),
+            "updated_at": timezone.now(),
+        }
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
                 TaskCallStatusDetail.ACTIVE_RUNNING,
                 TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
             ],
-        ).update(
-            status=TaskCallStatus.ENDED,
-            status_detail=TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
-            ended_at=timezone.now(),
-            updated_at=timezone.now(),
-        ) > 0
+        ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id)
+            _publish_call_event(call_id, "update", data=fields)
         return updated
 
     @staticmethod

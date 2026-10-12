@@ -105,6 +105,154 @@ class ObservableMixin:
             data,
         )
 
+    def publish(self, action: str = "update", data: dict[str, Any] | None = None) -> None:
+        """Publish a model event for this instance (``create``/``update``/``delete``).
+
+        Thin wrapper around :func:`runtime.events.publish_model_event` so
+        call sites read ``msg.publish("create")`` instead of a lazy import
+        plus a free function call.  The import stays lazy (inside the call)
+        so tests patching ``runtime.events.publish_model_event`` keep
+        intercepting these.
+        """
+        from runtime.events import publish_model_event
+        if data is None:
+            publish_model_event(self, action)
+        else:
+            publish_model_event(self, action, data=data)
+
+    def save(self, *args: Any, publish: bool = True, **kwargs: Any) -> Any:
+        """Save the row, then auto-publish ``create`` (new row) or ``update``.
+
+        Pass ``publish=False`` for internal bookkeeping writes that no view
+        should react to.  ``QuerySet.update()`` / ``bulk_create()`` bypass
+        ``save()`` — use :meth:`atomic_update` for those so the event still
+        fires on success.
+        """
+        is_new = self._state.adding or self.pk is None
+        r = super().save(*args, **kwargs)
+        if publish:
+            try:
+                self.publish("create" if is_new else "update")
+            except Exception:
+                pass
+        return r
+
+    def delete(self, *args: Any, publish: bool = True, **kwargs: Any) -> Any:
+        """Delete the row, then auto-publish ``delete``.
+
+        The pk is restored temporarily for key computation (Django clears it
+        on delete).  Pass ``publish=False`` to skip.
+        """
+        pk = self.pk
+        r = super().delete(*args, **kwargs)
+        if publish:
+            self.pk = pk
+            try:
+                self.publish("delete")
+            except Exception:
+                pass
+            finally:
+                self.pk = None
+        return r
+
+    def atomic_update(
+        self,
+        action: str = "update",
+        expect: dict[str, Any] | None = None,
+        publish: bool = True,
+        **fields: Any,
+    ) -> int:
+        """Atomic single-row ``UPDATE`` bypassing :meth:`save`, publishing on success.
+
+        For race-safe transitions (FSMs, admission checks) where a
+        ``QuerySet.update()`` must win-or-lose atomically — ``save()`` would
+        read-modify-write and clobber a concurrent transition.  ``expect``
+        holds extra compare-and-set lookups (e.g. ``status="NEW"``); a
+        return of ``0`` means the row was already in a different state.
+        ``updated_at`` is bumped automatically when the model has that field.
+
+        The written values are applied to ``self`` in-process (no wide
+        ``refresh_from_db`` re-SELECT) — publishing only needs the pk and FK
+        ids, which are already loaded — so a transition costs exactly one
+        UPDATE.
+
+        Returns the number of rows updated (0 or 1).
+        """
+        from django.utils import timezone
+        if (
+            "updated_at" not in fields
+            and any(f.name == "updated_at" for f in self._meta.fields)
+        ):
+            fields["updated_at"] = timezone.now()
+        n = type(self).objects.filter(pk=self.pk, **(expect or {})).update(**fields)
+        if n:
+            for k, v in fields.items():
+                try:
+                    setattr(self, k, v)
+                except Exception:
+                    pass
+            if publish:
+                try:
+                    self.publish(action)
+                except Exception:
+                    pass
+        return n
+
+    @classmethod
+    def atomic_update_by_pk(
+        cls,
+        pk: Any,
+        action: str = "update",
+        expect: dict[str, Any] | None = None,
+        publish: bool = True,
+        **fields: Any,
+    ) -> int:
+        """Class-level :meth:`atomic_update` when only the pk is at hand (FSM pattern).
+
+        Runs a direct ``QuerySet.update()`` — the row is never fetched or
+        materialized — then, on success, publishes via :meth:`publish_by_pk`.
+        ``updated_at`` is bumped automatically when the model has that field.
+        Returns the number of rows updated (0 = missing row or lost race).
+        """
+        from django.utils import timezone
+        if (
+            "updated_at" not in fields
+            and any(f.name == "updated_at" for f in cls._meta.fields)
+        ):
+            fields["updated_at"] = timezone.now()
+        n = cls.objects.filter(pk=pk, **(expect or {})).update(**fields)
+        if n and publish:
+            cls.publish_by_pk(pk, action)
+        return n
+
+    @classmethod
+    def publish_by_pk(
+        cls,
+        pk: Any,
+        action: str = "update",
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Publish a model event for a row identified only by its pk.
+
+        Observable keys (``Model``, ``Model.pk:<pk>`` and one per set FK) are
+        built from a single narrow ``values()`` lookup, so the full row —
+        including heavy payload columns (``raw_data``, ``carguments_json``, …)
+        — is never materialized.  Safe no-op when the row is gone.
+        """
+        if pk is None:
+            return
+        from runtime.events import publish_model_event
+        fk_attnames = [
+            f.attname for f in cls._meta.fields if isinstance(f, models.ForeignKey)
+        ]
+        row = cls.objects.filter(pk=pk).values("pk", *fk_attnames).first()
+        if row is None:
+            return
+        try:
+            publish_model_event(cls(**row), action, data=data)
+        except Exception:
+            pass
+
 
 class BaseModel(ObservableMixin, DirtyFieldsMixin, models.Model):
     """Abstract base model providing created/updated timestamps, raw JSON data

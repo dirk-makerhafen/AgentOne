@@ -792,10 +792,6 @@ class AgentView(ModelView):
 
         self.agent.save()
 
-        # Publish update event
-        from runtime.events import publish_model_event
-        publish_model_event(self.agent, "update")
-
         self._editing = False
         self._edit_error = ""
         self.update()
@@ -805,8 +801,6 @@ class AgentView(ModelView):
         try:
             agent = AgentModel.objects.get(pk=int(pk))
             agent.delete()
-            from runtime.events import publish_model_event
-            publish_model_event(agent, "delete")
             # Close this tab
             main_view = self._find_main_view()
             if main_view is not None and hasattr(main_view, "close_tab"):

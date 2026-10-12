@@ -863,7 +863,6 @@ class QueueCardOrmTest(_CardOrmTestBase):
             retry_delay=0,
             retry_requires_approval=False,
         )
-        call.notify_observers("create")
         self._drain_to(parent._instance, "agentone:uiq:card-test")
         self.assertTrue(rendered, "no re-render on queued-call create")
 
