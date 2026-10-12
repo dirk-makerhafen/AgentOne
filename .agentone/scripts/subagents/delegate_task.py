@@ -6,8 +6,8 @@ from time import time
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.enums.session_enums import SessionType
+
 
 def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "", blocking: bool = True) -> dict[str, Any]:
     """Send a one-off task to another agent.
@@ -50,43 +50,40 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
         return {"error": f"You must provide a prompt to delegate a task"}
     if not agentname:
         agentname = _session.agent.name
-        
-    subagent_version = _session.get_subagent(agentname)
-    if not subagent_version:
-        return {"error": f"Agent '{agentname}' not found"}
 
-    session_name = f"p{_session.model.pk}:{agentname}:{int(time())}"
-    child_sv = subagent_version.get_or_create_session(
-        name=session_name,
-        description=prompt[:100] + "..." if len(prompt) > 100 else "",
-        workspace=_session.workspace,
-        parent_session_version=_session.get_version_model(),
-        session_type=SessionType.SUBTASK_DELEGATE,
-    )
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+    name = f"p{_session.model.pk}:{agentname}:{int(time())}"
+    description = prompt[:100] + "..." if len(prompt) > 100 else ""
+
+    if agentname == _session.agent.name:
+        # Delegating to ourselves is a settings-only fork: inherit our session
+        # config, but start a fresh message chain (no history link).
+        child_session = _session.fork(
+            name=name,
+            description=description,
+            session_type=SessionType.SUBTASK_DELEGATE,
+        )
+    else:
+        child_session = _session.spawn_subagent(
+            agentname,
+            name=name,
+            description=description,
+            session_type=SessionType.SUBTASK_DELEGATE,
+        )
+        if child_session is None:
+            return {"error": f"Agent '{agentname}' not found"}
+
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     working_dir = child_session.workspace.path if child_session.workspace else "unknown"
     parts = [
-        {
-            "type": MessagePartType.MESSAGE, 
-            "content_type": MessageContentType.TEXT, 
-            "content": f"It is now {now}, your working dir is '{working_dir}'.\n"
-        },
-        {
-            "type": MessagePartType.MESSAGE, 
-            "content_type": MessageContentType.TEXT,
-            "content": "You are running as a subtask for another agent. \
-                When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. \
-                Do not return your result as plain text only. Your task:\n"
-        },
-        {
-            "type": MessagePartType.MESSAGE, 
-            "content_type": MessageContentType.TEXT, 
-            "content": prompt
-        },
-    ]  
-    taskcall = child_session.add_user_message(parts=parts)
+        f"It is now {now}, your working dir is '{working_dir}'.\n",
+        "You are running as a subtask for another agent. "
+        "When your work is complete, finish by invoking the final_result tool directly "
+        "with your result as its content argument. "
+        "Do not return your result as plain text only. Your task:\n",
+        prompt,
+    ]
+    taskcall = child_session.add_user_message(parts)
 
     if blocking:
         return taskcall

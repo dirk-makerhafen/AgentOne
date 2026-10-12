@@ -245,15 +245,15 @@ A `contextvars.ContextVar` that holds the current `AgentTaskRun` during executio
 This is the core agent loop. It demonstrates all the mechanisms working together:
 
 ```
-Session.add_user_message(parts)
+Session.add_user_message(message, execute_turn=True)
   │
   ▼
-BoundTask("ingest_user_message").delay(parts=parts)
+BoundTask("ingest_user_message").delay(messages=..., execute_turn=...)
   │
   ▼
 AgentTaskCall("ingest_user_message") ──→ AgentTaskRun
   │                                           │
-  │                                     ingest_user_message(session, parts)
+  │                                     ingest_user_message(session, messages, execute_turn)
   │                                           │ create Message, return ...
   │                                           ▼
   │                                     BoundTask("process_turn").delay(message=message)
@@ -328,7 +328,7 @@ When you return an `AgentTaskCall` from a tool/task function (e.g., `session.get
 ```python
 def delegate_task(session, subagent_name, query):
     # ...
-    taskcall = child_session.add_user_message(parts=parts)
+    taskcall = child_session.add_user_message(prompt)
     return {"result": taskcall, "session_pk": child_session.model.pk}
 ```
 
@@ -736,7 +736,7 @@ No page reloads. No full re-renders. Only the specific view that called `update(
 | `runtime/tasks/call_scheduler.py` | 222–264 | `_guardrail_filesystem_check()` |
 | `runtime/session/session.py` | 84–99 | `private_dir` / `ensure_private_dir()` |
 | | 545–585 | `get_task()` / `get_tool()` |
-| | 759–800 | `add_user_message()` |
+| | 990–1040 | `add_user_message()` / `_prepare_inbound()` / `_resolve_inbound_task()` |
 | `.agentone/agents/baseagent/scripts/ingest_user_message.py` | 14–50 | `ingest_user_message()` |
 | `.agentone/agents/baseagent/scripts/decide_next_step.py` | 19–62 | `decide_next_step()` |
 | `.agentone/agents/baseagent/scripts/scripts.md` | 35–42 | `process_turn` CHAIN definition |

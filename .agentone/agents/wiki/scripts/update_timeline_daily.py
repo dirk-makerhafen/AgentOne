@@ -732,7 +732,7 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
             "content": f"It is now {now}, your working dir is '{working_dir}'.\n",
         },
     ]
-    ref = child_session.add_user_message(parts=parts)
+    ref = child_session.add_user_message(parts)
     return True, child_session, child_session.model.pk, ref
 
 

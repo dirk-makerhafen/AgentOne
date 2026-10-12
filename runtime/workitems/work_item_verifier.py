@@ -261,7 +261,6 @@ class WorkItemVerifier:
         from time import time_ns
 
         from server.models.agents.agent import AgentModel
-        from server.models.enums.message_enums import MessageContentType, MessagePartType
         from server.models.enums.session_enums import SessionType
         from server.models.settings import SettingsModel
 
@@ -301,21 +300,12 @@ class WorkItemVerifier:
             child_session.workspace.path if child_session.workspace else "unknown"
         )
         parts = [
-            {
-                "type": MessagePartType.MESSAGE,
-                "content_type": MessageContentType.TEXT,
-                "content": f"It is now {now}, your working dir is '{working_dir}'.\n",
-            },
-            {
-                "type": MessagePartType.MESSAGE,
-                "content_type": MessageContentType.TEXT,
-                "content": (
-                    "You are the Work Verifier checking whether a piece of work "
-                    "actually meets its requirement. Analyse the brief, then call "
-                    "workitem_verdict once with your decision. The verdict ends "
-                    "this review session — no final_result needed.\n\n" + brief
-                ),
-            },
+            f"It is now {now}, your working dir is '{working_dir}'.\n",
+            "You are the Work Verifier checking whether a piece of work "
+            "actually meets its requirement. Analyse the brief, then call "
+            "workitem_verdict once with your decision. The verdict ends "
+            "this review session — no final_result needed.\n\n" ,
+            brief,
         ]
         child_session.add_user_message(parts=parts)
         return child_session

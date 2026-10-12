@@ -6,13 +6,25 @@ from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
 from server.models.sessions.session import SessionModel
-from server.models.tasks.agent_task_call import AgentTaskCall
+
+
+def _message_text(message: Any) -> str:
+    """Render a result Message's MESSAGE parts to plain text (JSON-safe)."""
+    if message is None or isinstance(message, str):
+        return message or ""
+    if isinstance(message, Message):
+        return "".join(
+            str(part.to_string())
+            for part in message.parts.filter(type=MessagePartType.MESSAGE).order_by("pk")
+        )
+    return str(message)
 
 
 def ingest_subagent_result(_session: Session, child_session_pk: int, summary: str, result: Message) -> Any:
     """
     Wait for a subagent's TaskCall to complete, then inject the child's last
-    assistant message into *_session* (the parent) and trigger process_turn.
+    assistant message into *_session* (the parent) and optionally trigger
+    process_turn.
 
     Args:
         _session: The parent session (bound automatically).
@@ -21,31 +33,33 @@ def ingest_subagent_result(_session: Session, child_session_pk: int, summary: st
         result: The resolved result Message from the child's task call.
 
     Returns:
-        The result of ``_session.add_user_message(...)`` — an AgentTaskCall
-        that chains to ``ingest_user_message`` → ``process_turn`` on the
-        parent.  The framework auto-awaits this recursively.
+        The AgentTaskCall from :meth:`Session.add_user_message` — the
+        ``process_turn`` chain when delivery is immediate (framework
+        auto-awaits recursively), otherwise the persist-only call.
     """
     child_session_model = SessionModel.objects.get(pk=child_session_pk)
     child_session = Session(session_model=child_session_model)
 
-    session_version = _session.get_version_model()
-    prev_message = _session.get_last_message()
-    message = Message.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
-    message.add_part(
-        type=MessagePartType.MESSAGE,
-        content_type=MessageContentType.TEMPLATE,
-        content="A task was finished by subagent '{{child_agent.name}}' session #{{child_session_pk}}\nTask: {{task_summary}}\nResult: {{result}}",
-        template_data=dict(
-            child_agent=child_session.agent,
-            child_session_pk=child_session_pk,
-            task_summary=summary,
-            result=result
-        )
+    # template_data must be JSON-safe: a runtime Agent / Message cannot be
+    # serialised into GenericContent (nor Celery kwargs), so pass plain values.
+    message_spec = {
+        "role": MessageRole.USER,
+        "parts": [
+            {
+                "type": MessagePartType.MESSAGE,
+                "content_type": MessageContentType.TEMPLATE,
+                "content": "A task was finished by subagent '{{child_agent.name}}' session #{{child_session_pk}}\nTask: {{task_summary}}\nResult: {{result}}",
+                "template_data": dict(
+                    child_agent={"name": child_session.agent.name},
+                    child_session_pk=child_session_pk,
+                    task_summary=summary,
+                    result=_message_text(result),
+                ),
+            }
+        ],
+    }
+
+    return _session.add_user_message(
+        message_spec,
+        execute_turn=_session.subagentResultDelivery == "immediate",
     )
-
-    from runtime.events import publish_model_event
-    publish_model_event(message, "create")
-
-    if _session.subagentResultDelivery == "immediate":
-        return _session.get_task("process_turn").delay(message=message)
-    

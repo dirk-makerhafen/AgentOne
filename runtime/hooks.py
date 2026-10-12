@@ -181,28 +181,21 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
         fork = session.fork(**fork_kwargs)
     else:
         fork = session.spawn_subagent(agent_version, **fork_kwargs)
-    fork_msgs = fork.add_messages(
-        [
-            {
-                "role": MessageRole.USER,
-                "content": (
-                    f"You are a session-hook worker ({hook_name!r}, event "
-                    f"{hook.get('on')!r}) forked from parent session "
-                    f"#{session.model.pk} of agent '{session.agent.name}'. "
-                    f"Do the hook task below, then call final_result with a short "
-                    f"report of what you did."
-                ),
-            },
-            {
-                "role": MessageRole.USER,
-                "content": (
-                    f"Hook job: run task {hook['task']!r} for event {hook.get('on')!r} "
-                    f"(parent session #{session.model.pk})."
-                ),
-            },
-        ]
+    # Persist the two hook-framing messages without running a turn; the call
+    # is a promise for the last of them, which the hook/compact tasks consume
+    # via auto-await (``message=persist_call``).
+    persist_call = fork.add_user_message(
+
+        f"You are a session-hook worker ({hook_name!r}, event "
+        f"{hook.get('on')!r}) forked from parent session "
+        f"#{session.model.pk} of agent '{session.agent.name}'. "
+        f"Do the hook task below, then call final_result with a short "
+        f"report of what you did.",
+    
+        f"Hook job: run task {hook['task']!r} for event {hook.get('on')!r} "
+        f"(parent session #{session.model.pk}).",
+        execute_turn=False,
     )
-    hook_msg = fork_msgs[-1]
 
     # Token budget: estimate the fork's inherited context from the anchor on
     # the parent. Over budget with a compactable boundary → prefix-compact
@@ -224,7 +217,7 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
         ):
             compact_task = fork.get_task("compact_turn")
             if compact_task is not None:
-                compact_call = compact_task.delay(message=hook_msg)
+                compact_call = compact_task.delay(message=persist_call)
 
     hook_task = fork.get_task(hook["task"])
     if hook_task is None:
@@ -234,7 +227,7 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
         )
         return None
     hook_kwargs: dict[str, Any] = {
-        "message": hook_msg,
+        "message": persist_call,
         "hook_ctx": _json_ctx(session, hook, ctx, anchor),
     }
     if compact_call is not None:

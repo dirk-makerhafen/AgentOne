@@ -22,38 +22,8 @@ tools:
     function: llm_query
     bound: True
 
-  - name: template_list
-    file: query_template.py
-    function: template_list
-    bound: True
-  - name: template_get
-    file: query_template.py
-    function: template_get
-    bound: True
-  - name: template_save
-    file: query_template.py
-    function: template_save
-    bound: True
-  - name: template_delete
-    file: query_template.py
-    function: template_delete
-    bound: True
-  - name: template_render
-    file: query_template.py
-    function: template_render
-    bound: True
-  - name: template_execute
-    file: query_template.py
-    function: template_execute
-    bound: True
-
 tasks:
-  - name: call_llm_direct
-    file: call_llm_direct.py
-    function: call_llm_direct
-    bound: True
-    max_retries: 3
-    retry_delay: 60
+
   - name: ingest_user_message
     file: ingest_user_message.py
     function: ingest_user_message

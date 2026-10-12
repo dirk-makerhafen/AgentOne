@@ -6,10 +6,7 @@ from time import time
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.enums.session_enums import SessionType
-from server.models.message import Message
-from server.models.sessions.session_version import SessionVersionModel
 
 
 def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dict[str, Any]:
@@ -46,60 +43,28 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
         On error:
             ``{"error": str}``
     """
-    agent_version = _session.agent.get_version_model()
-    if not agent_version:
+    if not _session.agent.get_version_model():
         return {"error": "Current agent version not found"}
 
     session_name = f"p{_session.model.pk}:task:{int(time())}"
-    child_sv = agent_version.get_or_create_session(
+    child_session = _session.fork(
         name=session_name,
         description=prompt,
-        workspace=_session.workspace,
-        parent_session_version=_session.get_version_model(),
         session_type=SessionType.SUBTASK_FORK,
+        preserve_history=True,
     )
-    # Fork inherits parent's session settings (auto_compact_max_tokens, api key, disallowed lists, etc.)
-    parent_sv = _session.get_version_model()
-    if parent_sv and parent_sv.session_settings:
-        fork_settings = agent_version.clone_settings(parent_sv.session_settings)
-        child_sv.session_settings = fork_settings
-        SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=fork_settings)
-       
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
 
-    # Prepend a system message explaining the fork context.
-    # Link prev_message to the parent's last message so the child sees the
-    # conversation history at the point of the fork.
-    parent_last = _session.get_last_message()
-    child_version = child_session.get_version_model()
-    fork_msg = Message.objects.create(role=MessageRole.USER, session=child_version.session, session_version=child_version, prev_message=parent_last)
-    fork_msg.add_part(
-        type=MessagePartType.MESSAGE,
-        content_type=MessageContentType.TEXT,
-        content=(f"You have been forked from parent session #{_session.model.pk} of agent '{_session.agent.name}'."),
-    )
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    working_dir = child_session.workspace.path if child_session.workspace else "unknown"
+    working_dir = self.workspace.path if self.workspace else "unknown"
     parts = [
-        {
-            "type": MessagePartType.MESSAGE, 
-            "content_type": MessageContentType.TEXT, 
-            "content": f"It is now {now}, your working dir is '{working_dir}'.\n"
-        },
-        {
-            "type": MessagePartType.MESSAGE, 
-            "content_type": MessageContentType.TEXT,
-            "content": "You are running as a subtask for another agent. \
-                When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. \
-                Do not return your result as plain text only. Your task:\n"
-        },
-        {
-            "type": MessagePartType.MESSAGE, 
-            "content_type": MessageContentType.TEXT, 
-            "content": prompt
-        },
+        f"It is now {now}, your working dir is '{working_dir}'.\n",
+        "You are running as a subtask for another agent. "
+        "When your work is complete, finish by invoking the final_result tool directly "
+        "with your result as its content argument. "
+        "Do not return your result as plain text only. Your task:\n",
+        prompt,
     ]
-    taskcall = child_session.add_user_message(parts=parts)
+    taskcall = child_session.add_user_message(parts)
 
     if blocking:
         return {"result": taskcall, "session_pk": child_session.model.pk}

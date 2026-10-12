@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessageRole, MessagePartType
+from server.models.enums.message_enums import MessageRole
 from server.models.message import Message
 from server.models.queries.query import Query
 from server.models.queries.query_message import QueryMessage
@@ -68,7 +68,6 @@ def build_llm_compact_context(
 
     
     
-    parent_sv = _session.get_version_model()
     # Session hooks (``pre_compact`` event): fired once per compaction —
     # retries (compact_attempt > 0) do not refire. The fork anchors at the
     # current tail, so it sees the doomed range with no boundary surgery.
@@ -88,27 +87,13 @@ def build_llm_compact_context(
             )
         except Exception as e:  # pylint: disable=broad-exception-caught
             print(f"[hooks] error firing pre_compact hooks: {e}")
-    info_message = Message.objects.create(
-        role=MessageRole.INFO,
-        session=parent_sv.session,
-        session_version=parent_sv,
-        prev_message=_session.get_last_message(),
-    )
     extra = f" Attempt {compact_attempt+1}" if compact_attempt else ""
-    info_message.add_part(
-        type=MessagePartType.MESSAGE,
-        content_type=MessageContentType.TEXT,
-        content="Compaction started — summarizing older messages to save context." + extra ,
+    _session.add_user_message(
+        {"role": MessageRole.INFO, "content": "Compaction started — summarizing older messages to save context." + extra},
+        execute_turn=False,
     )
-    try:
-        from runtime.events import publish_model_event
 
-        publish_model_event(info_message, "create")
-    except Exception:
-        pass
-
-    agent_version = _session.agent.get_version_model()
-    if not agent_version:
+    if not _session.agent.get_version_model():
         return {"error": "Current agent version not found"}
 
     # Attempt suffix: SessionModel is get_or_create'd by name, so a retry
@@ -116,13 +101,6 @@ def build_llm_compact_context(
     session_name = f"p{_session.model.pk}:compaction:{int(time.time())}"
     if compact_attempt:
         session_name += f":a{compact_attempt}"
-    child_sv = agent_version.get_or_create_session(
-        name=session_name,
-        description=f"Session compaction for {_session.name} at {int(time.time())}",
-        workspace=_session.workspace,
-        parent_session_version=_session.get_version_model(),
-        session_type=SessionType.SUBTASK_COMPACT,
-    )
 
     # The compaction fork carries the same (oversized) context that triggered
     # *this* compaction — so it would immediately exceed the auto-compact
@@ -134,46 +112,30 @@ def build_llm_compact_context(
     # stay identical (KV/prompt cache preserved), but any other attempted
     # call aborts the fork instead of letting it wander the old task — the
     # parent then reforks cache-hot.
-    from server.models.settings import SettingsModel
-    from server.models.sessions.session_version import SessionVersionModel
-
-    if child_sv.session_settings:
-        fork_settings = agent_version.clone_settings(
-            child_sv.session_settings,
-            auto_compact_max_tokens=0,
-            auto_compact_idle_seconds=0,
-            tool_call_allowlist=["final_result"],
-        )
-    else:
-        fork_settings = SettingsModel(auto_compact_max_tokens=0, auto_compact_idle_seconds=0, tool_call_allowlist=["final_result"])
-        fork_settings.save()
-    SessionVersionModel.objects.filter(pk=child_sv.pk).update(session_settings=fork_settings)
-    child_sv.session_settings = fork_settings
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
-    child_version = child_session.get_version_model()
-    fork_msg = Message.objects.create(role=MessageRole.USER, session=child_version.session, session_version=child_version, prev_message=boundary)
-    fork_msg.add_part(
-        type=MessagePartType.MESSAGE,
-        content_type=MessageContentType.TEXT,
-        content="<SYSTEM NOTICE> IMPORTANT: Context window is running low, the conversation or actions above have been STOPPED and switched to a session compaction agent.  </SYSTEM NOTICE>",
+    child_session = _session.fork(
+        name=session_name,
+        description=f"Session compaction for {_session.name} at {int(time.time())}",
+        session_type=SessionType.SUBTASK_COMPACT,
+        anchor=boundary,
+        auto_compact_max_tokens=0,
+        auto_compact_idle_seconds=0,
+        tool_call_allowlist=["final_result"],
     )
-    fork_msg1 = Message.objects.create(role=MessageRole.ASSISTANT, session=child_version.session, session_version=child_version, prev_message=fork_msg)
-    fork_msg1.add_part(
-        type=MessagePartType.MESSAGE,
-        content_type=MessageContentType.TEXT,
-        content="Confirmed, awaiting compaction instructions.",
+    compact_result = child_session.add_user_message(
+        [
+            {
+                "role": MessageRole.USER,
+                "content": "<SYSTEM NOTICE> IMPORTANT: Context window is running low, the conversation or actions above have been STOPPED and switched to a session compaction agent.  </SYSTEM NOTICE>",
+            },
+            {
+                "role": MessageRole.ASSISTANT,
+                "content": "Confirmed, awaiting compaction instructions.",
+            },
+            _COMPACTION_SYSTEM_PROMPT,
+        ]
     )
-    prompt_parts = [
-        {
-            "type": MessagePartType.MESSAGE,
-            "content_type": MessageContentType.TEXT,
-            "content": _COMPACTION_SYSTEM_PROMPT
-        },
-    ]
-
-    compact_result = child_session.add_user_message(parts=prompt_parts)
     return dict(
-        child_session_pk=child_sv.session.pk,
+        child_session_pk=child_session.model.pk,
         boundary_pk=boundary.pk,
         compact_attempt=compact_attempt,
         result=compact_result,

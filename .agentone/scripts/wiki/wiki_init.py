@@ -5,7 +5,6 @@ from typing import Any
 
 from runtime.session.session import Session
 from server.models.enums.session_enums import SessionType
-from server.models.sessions.session_version import SessionVersionModel
 from server.models.workspace import WorkspaceModel
 
 
@@ -48,18 +47,14 @@ def wiki_init(_session: Session, folder: str | None = None) -> dict[str, Any]:
     """
     workspace, session_name = _workspace_and_name(_session, folder)
 
-    subagent_version = _session.get_subagent("wiki")
-    if not subagent_version:
-        return {"error": f"Agent 'wiki' not found"}
-
-    child_sv = subagent_version.get_or_create_session(
+    child_session = _session.fork(
         name=session_name,
         description=f"Wiki '{folder or _session.workspace.path}' main _session.",
         workspace=workspace,
-        parent_session_version=_session.get_version_model(),
         session_type=SessionType.SUBSESSION,
     )
-    child_session = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+    if child_session is None:
+        return {"error": "Agent 'wiki' not found"}
 
     # Send the init command.
     message_subsession = _session.get_tool("message_subsession")

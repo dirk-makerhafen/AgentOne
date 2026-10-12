@@ -72,6 +72,6 @@ def call_projectmanager(_session: Session, project_path: str, task: str) -> dict
         return {"error": "projectmanager agent not found"}
 
     parts = [{"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": task}]
-    taskcall = child_session.add_user_message(parts=parts)
+    taskcall = child_session.add_user_message(parts)
 
     return {"result": taskcall, "session_pk": child_session.model.pk}

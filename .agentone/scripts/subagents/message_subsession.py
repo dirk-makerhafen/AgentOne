@@ -50,8 +50,8 @@ def message_subsession(
 
     child_session = Session(session_model=child_model)
 
-    parts = [{"type":  MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": prompt}]
-    taskcall = child_session.add_user_message(parts=parts)
+    parts = [ prompt,]
+    taskcall = child_session.add_user_message(parts)
 
     if blocking:
         return {"result": taskcall, "session_name": sessionname}

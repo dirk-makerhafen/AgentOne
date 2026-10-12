@@ -48,7 +48,13 @@ tools:
     file: get_available_agents.py
     function: get_available_agents
     bound: True
-
+    
+#  - name: call_llm_direct
+    file: call_llm_direct.py
+    function: call_llm_direct
+    bound: True
+    max_retries: 3
+    retry_delay: 60
 tasks:
   # Internal — delivers subagent result in "immediate" mode
   - name: ingest_subagent_result

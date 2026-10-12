@@ -31,7 +31,7 @@ track. It makes no priority recommendation; §7 lists the decision factors.
   messages to subscribed views (see `docs/observables-migration.md`).
   The old channel-group + `ModelObserver` fan-out is removed.
 - **Sessions:** `SessionModel` (identity) + `SessionVersion` (copy-on-write state);
-  runtime facade `runtime/session/session.py` (`Session.add_user_message()`,
+  runtime facade `runtime/session/session.py` (`Session.add_user_message(message, ...)`,
   `get_task/get_tool/get_command`, allowlists, `set_is_active`).
 - **LLM turn pipeline** (`.agentone/scripts/core/`): `ingest_user_message` →
   `build_llm_context` → `call_llm` (LiteLLM `stream=True`) →
@@ -65,7 +65,7 @@ is still maturing upstream.
 | ACP concept | AgentOne counterpart |
 |---|---|
 | Session | `SessionModel` + `SessionVersion`; resume ≈ pin existing session/version (`session/load`) |
-| `session/prompt` | `Session.add_user_message(parts)` (`runtime/session/session.py:703`) → existing `process_turn` chain |
+| `session/prompt` | `Session.add_user_message(message)` (`runtime/session/session.py:990`) → existing `process_turn` chain |
 | `session/cancel` | Query cancel path (`api/views/queries.py`) / `interrupt` strategy (`runtime/session/session.py:815-842`) |
 | `session/request_permission` | Approval cards + allowlist gate (`tool_allowlist_violated`, session abort); `AUTO_REVIEW_TOOL_NAMES` in `runtime/tasks/call_scheduler.py:25` |
 | Tool calls in `session/update` | `AgentTaskCall`/`AgentTaskRun` lifecycle (`task-calls/`, `task-runs/` API already read-only) |
@@ -97,7 +97,7 @@ is still maturing upstream.
 - **A1 — stdio adapter (new package, e.g. `acp/`):** process entrypoint using the
   Python SDK; method handlers: `initialize` → caps from agent version;
   `session/new` → create `SessionModel` (+ version); `session/prompt` →
-  `add_user_message()` and stream back `session/update` from the event bus;
+  `add_user_message(message, execute_turn=...)` and stream back `session/update` from the event bus;
   `session/cancel` → cancel path; `session/load` → rebind existing session.
 - **A2 — permissions:** park-and-resume in the call FSM wiring
   `session/request_permission` to the existing approval data (title, subject,

@@ -31,6 +31,34 @@ tools:
     function: adhoc_function_call
     bound: True
     access: write
+
+
+  - name: template_list
+    file: query_template.py
+    function: template_list
+    bound: True
+  - name: template_get
+    file: query_template.py
+    function: template_get
+    bound: True
+  - name: template_save
+    file: query_template.py
+    function: template_save
+    bound: True
+  - name: template_delete
+    file: query_template.py
+    function: template_delete
+    bound: True
+  - name: template_render
+    file: query_template.py
+    function: template_render
+    bound: True
+  - name: template_execute
+    file: query_template.py
+    function: template_execute
+    bound: True
+
+
 ---
 Session-private throwaway helpers. Ad-hoc tools are single Python functions
 that live only for this session (auto-inert on archive, gone with the

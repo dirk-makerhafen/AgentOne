@@ -330,17 +330,15 @@ def _spawn_wiki_item_session(_session, name: str, brief: str):
 
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     working_dir = child_session.workspace.path if child_session.workspace else "unknown"
-    parts = [
-        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
-         "content": "You are running as a subtask for another agent. "
-            "When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. "
-            "Do not return your result as plain text only. Your task:\n"},
-        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": brief},
-        {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
-         "content": f"It is now {now}, your working dir is '{working_dir}'.\n"},
-    ]
+    
     try:
-        ref = child_session.add_user_message(parts=parts)
+        ref = child_session.add_user_message(parts=[
+            "You are running as a subtask for another agent. "
+            "When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. "
+            "Do not return your result as plain text only. Your task:\n",
+            brief,
+            f"It is now {now}, your working dir is '{working_dir}'.\n"     
+    ])
     except Exception as e:
         return False, None, f"spawn failed: {e}"
     return True, child_session.model.pk, ref

@@ -262,20 +262,34 @@ class HookDispatchTest(TestCase):
         self.assertEqual(fork_sv.session_settings.auto_compact_max_tokens, 0)
         self.assertEqual(fork_sv.session_settings.auto_compact_idle_seconds, 0)
 
-        # Fork chain anchored at the snapshot message: the hidden fork anchor
-        # (from link_history_to) followed by the two hook instruction messages.
+        # Fork chain anchored at the snapshot message: only the hidden fork
+        # anchor is persisted synchronously; the two hook instruction messages
+        # are persisted asynchronously by the ingest_user_message call the
+        # hook task depends on.
         hook_msgs = list(
             Message.objects.filter(session_version=fork_sv).order_by("pk")
         )
-        self.assertEqual(len(hook_msgs), 3)
+        self.assertEqual(len(hook_msgs), 1)
         self.assertEqual(hook_msgs[0].prev_message_id, msgs[-1].pk)
         self.assertTrue(hook_msgs[0].hide_from_context)
 
-        # Hook task dispatched with JSON-safe context, no compact prefix.
+        ingest_fake = self.fakes["ingest_user_message"]
+        self.assertEqual(len(ingest_fake.calls), 1)
+        ingest_kwargs = ingest_fake.calls[0][1]
+        self.assertFalse(ingest_kwargs["execute_turn"])
+        self.assertEqual(len(ingest_kwargs["messages"]), 2)
+        self.assertEqual(ingest_kwargs["messages"][0]["role"], MessageRole.USER)
+        self.assertIn(
+            "session-hook worker",
+            ingest_kwargs["messages"][0]["parts"][0]["content"],
+        )
+
+        # Hook task dispatched with JSON-safe context, depending on the
+        # ingest call (auto-await resolves ``message`` to the last hook msg).
         fake = self.fakes["probe_task"]
         self.assertEqual(len(fake.calls), 1)
         kwargs = fake.calls[0][1]
-        self.assertEqual(kwargs["message"].pk, hook_msgs[2].pk)
+        self.assertEqual(kwargs["message"].pk, ingest_fake.returned.pk)
         self.assertNotIn("hook_after", kwargs)
         self.assertEqual(
             kwargs["hook_ctx"],

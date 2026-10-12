@@ -8,6 +8,7 @@ from django.db import transaction
 from django.db.models import Sum
 
 from runtime.agents.agent import Agent, is_name_disallowed
+from runtime.session.messages import normalize_messages
 from runtime.tasks.bound_task import BoundTask
 from server.models.content import GenericContent
 from server.models.message import Message
@@ -23,14 +24,6 @@ if TYPE_CHECKING:
     from server.models.sessions.session_version import SessionVersionModel
     from server.models.agents.agent_version import AgentVersionModel
 
-
-#: Default instruction prepended to a delegated/forked subtask prompt.
-SUBTASK_INTRO = (
-    "You are running as a subtask for another agent. "
-    "When your work is complete, finish by invoking the final_result tool directly "
-    "with your result as its content argument. "
-    "Do not return your result as plain text only. Your task:\n"
-)
 
 
 class Session:
@@ -799,33 +792,12 @@ class Session:
         """
         if anchor is None:
             anchor = parent.get_last_message()
-        return self.add_message(
+        return self._persist_message(
             role="info",
             content=f"Forked from session #{parent.model.pk}.",
             hide_from_context=True,
             prev_message=anchor,
         )
-
-    def add_subtask_message(self, prompt: str, *, intro: str = SUBTASK_INTRO, force: bool = False) -> Any:
-        """Post the standard subtask preamble followed by *prompt*.
-
-        Builds the ``It is now …`` / working-dir header, the subtask
-        instruction (*intro*), and the task, then dispatches via
-        :meth:`add_user_message`.
-        """
-        from server.models.enums.message_enums import MessageContentType, MessagePartType
-
-        now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        working_dir = self.workspace.path if self.workspace else "unknown"
-        parts = [
-            {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
-             "content": f"It is now {now}, your working dir is '{working_dir}'.\n"},
-            {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
-             "content": intro},
-            {"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
-             "content": prompt},
-        ]
-        return self.add_user_message(parts=parts, force=force)
 
     # ------------------------------------------------------------------
     # Setting resolution  (agent → session override chain)
@@ -926,7 +898,7 @@ class Session:
     # Message handling
     # ------------------------------------------------------------------
 
-    def add_message(  # pylint: disable=too-many-arguments
+    def _persist_message(  # pylint: disable=too-many-arguments
         self,
         *,
         role: str = "user",
@@ -937,30 +909,12 @@ class Session:
         pin_to_context: bool = False,
         prev_message: Message | None = None,
     ) -> Message:
-        """Persist a single message on this session's current version.
+        """Low-level, synchronous message creation for framework internals.
 
-        The low-level, synchronous counterpart to :meth:`add_user_message`:
-        it records the message (with parts), auto-links ``prev_message`` to
-        the conversation tail when not given, and publishes the model event so
-        the UI chain updates without a reload.  It never dispatches a turn —
-        use :meth:`kick_off_process_turn` (or :meth:`add_user_message`) for
-        that.
-
-        Parameters
-        ----------
-        role : str
-            :class:`~server.models.enums.message_enums.MessageRole` value
-            (``"user"``, ``"assistant"``, ``"info"``, ``"tool"``, …).
-        parts : list[dict] | None
-            Parts in the same shape as :meth:`add_user_message`
-            (``type``/``content_type``/``content`` + optional ``template_data``
-            / ``tool_call``).
-        content : str | None
-            Shorthand for a single leading TEXT part (prepended to *parts*).
-        response : Response | None
-            Set on LLM-authored (assistant) messages.
-        prev_message : Message | None
-            Explicit predecessor; defaults to the session's current tail.
+        Used only for messages that must exist *before* the caller continues
+        (the hidden fork anchor in :meth:`link_history_to` and the compaction
+        marker).  Everything user-facing goes through
+        :meth:`add_user_message` so the scheduler and task pipeline apply.
         """
         from server.models.enums.message_enums import MessageContentType, MessagePartType
         from runtime.events import publish_model_event
@@ -977,7 +931,7 @@ class Session:
         if parts:
             resolved_parts.extend(parts)
         if not resolved_parts:
-            raise ValueError("add_message requires 'content' or 'parts'")
+            raise ValueError("_persist_message requires 'content' or 'parts'")
 
         session_version = self.get_version_model()
         if prev_message is None:
@@ -1004,76 +958,34 @@ class Session:
         publish_model_event(message, "create")
         return message
 
-    def add_messages(self, messages: List[Dict | str]) -> List[Message]:
-        """Persist a batch of messages, chaining each off the previous one.
-
-        Each entry is either a plain string (shorthand for a USER message with
-        that text) or a dict of :meth:`add_message` keyword arguments
-        (``role``, ``parts``, ``content``, ``response``, ``hide_from_context``,
-        ``pin_to_context``, ``prev_message``).  When an entry has no explicit
-        ``prev_message`` it continues the batch (the previous entry, or the
-        session tail for the first one).
-
-        Returns the created messages in order.  Dispatch is left to the caller
-        (:meth:`kick_off_process_turn`).
+    def add_user_message(self, message: Any = None, force: bool = False, execute_turn: bool = True) -> Any:
         """
-        created: List[Message] = []
-        for entry in messages:
-            spec = {"content": entry} if isinstance(entry, str) else entry
-            prev_message = spec.get("prev_message")
-            if prev_message is None and created:
-                prev_message = created[-1]
-            created.append(
-                self.add_message(
-                    role=spec.get("role", "user"),
-                    parts=spec.get("parts"),
-                    content=spec.get("content"),
-                    response=spec.get("response"),
-                    hide_from_context=spec.get("hide_from_context", False),
-                    pin_to_context=spec.get("pin_to_context", False),
-                    prev_message=prev_message,
-                )
-            )
-        return created
+        Ingest a user message into this session.
 
-    def kick_off_process_turn(self, message: Message, **kwargs: Any) -> Any:
-        """Dispatch ``process_turn`` for *message*.
+        *message* accepts the flexible spec documented in
+        :func:`runtime.session.messages.normalize_messages`: a bare string, a
+        list of strings / part dicts (one message, many parts) or a list of
+        message dicts (mixed roles).  A single user message whose first part
+        starts with ``/`` is routed as a slash command.
 
-        The single dispatch point for "record message(s), then run a turn".
-        Extra *kwargs* are forwarded to the task (e.g.
-        ``todolist_task_result_to_ignore``).  Returns the created
-        ``AgentTaskCall`` so callers can chain on it.
-        """
-        process_turn = self.get_task("process_turn")
-        if process_turn is None:
-            raise Exception("process_turn task is not available for this session")
-        return process_turn.delay(message=message, **kwargs)
-
-    def add_user_message(self, parts: List[Dict] | None = None, force: bool = False) -> Any:
-        """
-        Ingest a user message (list of parts from parse_llm_response).
-
-        If the first part's content starts with ``/`` it is treated as a slash
-        command; otherwise it is dispatched as a regular user message.
+        The session scheduler strategy (queue / interrupt / merge) is honoured
+        unless *force* is True.  When *execute_turn* is False the message(s)
+        are only persisted and no ``process_turn`` is started.
 
         Parameters
         ----------
-        parts : list[dict] | None
-            Each part is a dict with at minimum:
-            - ``type`` : ``"message"`` | ``"reasoning"`` | ``"toolcall"``
-            - ``content_type`` : ``"text"`` | ``"image"`` | ``"template"`` | ``"json"``
-            - ``content`` : str | dict
+        message : Any
+            The message spec (string, part dict(s) or message dict(s)).
         force : bool
             If True, bypass the scheduler strategy and dispatch immediately.
+        execute_turn : bool
+            Whether to start a ``process_turn`` for the message(s).
         """
-        if not parts:
-            raise Exception("No message or message parts provided")
-
-        self._guard_image_parts_against_non_vision_model(parts)
+        messages = self._prepare_inbound(message)
 
         self.set_is_active(True)
 
-        bound_task, call_kwargs, _ = self._resolve_inbound_task(parts)
+        bound_task, call_kwargs, _ = self._resolve_inbound_task(messages, execute_turn)
 
         if not force:
             strategy = self.scheduler_strategy
@@ -1087,28 +999,48 @@ class Session:
                 return bound_task.delay(**call_kwargs)
             if strategy == "merge":
                 if self._has_active_call():
-                    return self.steer_message(parts)
+                    return self.steer_message(message, execute_turn=execute_turn)
 
         return bound_task.delay(**call_kwargs)
 
-    def _resolve_inbound_task(self, parts: List[Dict]) -> tuple:
-        """Parse inbound *parts* into ``(bound_task, call_kwargs, is_command)``.
+    def _prepare_inbound(self, message: Any) -> List[Dict]:
+        """Normalize *message* and guard image parts against a non-vision model."""
+        messages = normalize_messages(message)
+        parts = [part for msg in messages for part in msg["parts"]]
+        self._guard_image_parts_against_non_vision_model(parts)
+        return messages
 
-        A leading ``/`` in the first part routes to ``ingest_slash_command``;
-        everything else routes to ``ingest_user_message``.
+    def _resolve_inbound_task(self, messages: List[Dict], execute_turn: bool = True) -> tuple:
+        """Resolve normalized *messages* into ``(bound_task, call_kwargs, is_command)``.
+
+        Exactly one user message whose first part starts with ``/`` routes to
+        ``ingest_slash_command``; everything else routes to
+        ``ingest_user_message`` with *execute_turn* threaded through.
         """
         is_command = False
         cmd = ""
         parsed_kwargs: dict = {}
 
-        if parts[0] and parts[0].get("content", [None, ])[0] == "/":
-            cmd = parts[0].get("content", [None, ]).split(None, 1)[0][1:].strip()
+        first = messages[0]
+        first_parts = first["parts"]
+        is_slash = (
+            len(messages) == 1
+            and first["role"] == "user"
+            and bool(first_parts)
+            and isinstance(first_parts[0]["content"], str)
+            and first_parts[0]["content"].startswith("/")
+        )
+
+        if is_slash:
+            full_cmd_str = "".join(
+                part["content"] for part in first_parts if isinstance(part["content"], str)
+            ).strip()
+            cmd = full_cmd_str.split(None, 1)[0][1:].strip()
             bound_cmd = self.get_command(cmd)
             if not bound_cmd:
                 bound_cmd = self.get_tool(cmd)
             if bound_cmd:
                 is_command = True
-                full_cmd_str = "".join([part["content"] for part in parts]).strip() if parts else ""
                 cmd_payload = full_cmd_str[1 + len(cmd):].strip()
                 try:
                     parsed_kwargs = json.loads(cmd_payload)
@@ -1128,7 +1060,7 @@ class Session:
             call_kwargs: dict = dict(command_name=cmd, **parsed_kwargs)
         else:
             bound_task = self.get_task("ingest_user_message")
-            call_kwargs = dict(parts=parts)
+            call_kwargs = dict(messages=messages, execute_turn=execute_turn)
         return bound_task, call_kwargs, is_command
 
     def _park_call(self, bound_task, call_kwargs):
@@ -1149,26 +1081,23 @@ class Session:
             )
             return taskcall
 
-    def queue_message(self, parts: List[Dict] | None = None) -> Any:
-        """Park *parts* to run after the live turn finishes ("Queue message").
+    def queue_message(self, message: Any = None) -> Any:
+        """Park *message* to run after the live turn finishes ("Queue message").
 
         Parks whenever a turn is active, regardless of scheduler strategy;
         dispatches immediately when idle.
         """
-        if not parts:
-            raise Exception("No message or message parts provided")
-
-        self._guard_image_parts_against_non_vision_model(parts)
+        messages = self._prepare_inbound(message)
 
         self.set_is_active(True)
 
-        bound_task, call_kwargs, _ = self._resolve_inbound_task(parts)
+        bound_task, call_kwargs, _ = self._resolve_inbound_task(messages, execute_turn=True)
         if self._has_active_call():
             return self._park_call(bound_task, call_kwargs)
         return bound_task.delay(**call_kwargs)
 
-    def steer_message(self, parts: List[Dict] | None = None) -> Any:
-        """Insert *parts* into the running turn ("Steer current response").
+    def steer_message(self, message: Any = None, execute_turn: bool = True) -> Any:
+        """Insert *message* into the running turn ("Steer current response").
 
         Persists the user message immediately so the next ``process_turn``
         of the live chain picks it up via history.  Slash commands bypass
@@ -1176,14 +1105,11 @@ class Session:
         When the turn ended in the meantime, a fresh ``process_turn`` is
         dispatched for the message instead of leaving it unprocessed.
         """
-        if not parts:
-            raise Exception("No message or message parts provided")
-
-        self._guard_image_parts_against_non_vision_model(parts)
+        messages = self._prepare_inbound(message)
 
         self.set_is_active(True)
 
-        bound_task, call_kwargs, is_command = self._resolve_inbound_task(parts)
+        bound_task, call_kwargs, is_command = self._resolve_inbound_task(messages, execute_turn=execute_turn)
         if is_command:
             return bound_task.delay(**call_kwargs)
 
@@ -1191,33 +1117,35 @@ class Session:
         if process_turn is None:
             return bound_task.delay(**call_kwargs)
 
-        from server.models.enums.message_enums import MessageRole as _MsgRole
         from server.models.message import Message as _Msg
         from runtime.events import publish_model_event
 
         session_version = self.get_version_model()
         prev_message = self.get_last_message()
-        message = _Msg.objects.create(
-            role=_MsgRole.USER,
-            session=session_version.session,
-            session_version=session_version,
-            prev_message=prev_message,
-        )
-        for part in parts:
-            message.add_part(
-                type=part["type"],
-                content_type=part["content_type"],
-                content=part["content"],
-                template_data=part.get("template_data", None),
-                tool_call=part.get("tool_call", None),
+        created = None
+        for spec in messages:
+            created = _Msg.objects.create(
+                role=spec["role"],
+                session=session_version.session,
+                session_version=session_version,
+                prev_message=prev_message,
             )
-        publish_model_event(message, "create")
+            for part in spec["parts"]:
+                created.add_part(
+                    type=part["part_type"],
+                    content_type=part["content_type"],
+                    content=part["content"],
+                    template_data=part.get("template_data", None),
+                    tool_call=part.get("tool_call", None),
+                )
+            publish_model_event(created, "create")
+            prev_message = created
 
-        if not self._has_active_call():
+        if execute_turn and not self._has_active_call():
             # Turn ended between the check and the insert — start a fresh
             # turn for the message instead of leaving it unprocessed.
-            return self._dispatch_steer_continuation(process_turn, message)
-        return message
+            return self._dispatch_steer_continuation(process_turn, created)
+        return created
 
     def _dispatch_steer_continuation(self, process_turn, message) -> Any:
         """Dispatch exactly one continuation turn for a steered message.

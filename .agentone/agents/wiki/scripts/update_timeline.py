@@ -1018,44 +1018,25 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
     working_dir = child_session.workspace.path if child_session.workspace else "unknown"
 
     parts = [
-        {
-            "type": MessagePartType.MESSAGE,
-            "content_type": MessageContentType.TEXT,
-            "content": SUMMARY_FORMAT_REFERENCE,
-        },
-        {
-            "type": MessagePartType.MESSAGE,
-            "content_type": MessageContentType.TEXT,
-            "content": (
-                f"You are running as a subtask for another agent. "
-                f"When your work is complete, finish by invoking the final_result tool with a one sentence summary of your work as its content argument. "
-                f"Do not return your result as plain text. Do not output explanation or results as normal text for users, you are run as a subagent, nobody will read that.\n" 
-                f"Your working dir is the vault root; paths below are vault-relative. Never modify anything under `raw/`.\n"
-                f"It is now {now}, your working dir is '{working_dir}'.\n"
-                f"Your task: Double-check summary against its raw source.\n"
-                f"Fix the summary file in place if you spot wrong dates, invented facts, missing key claims, "
-                f"broken wikilinks, invalid or missing frontmatter, or other quality problems in the summary. Use multiedit to do multiple edits at once to save on roundtrips. Rename the file if necessary.\n"
-            ),
-        },
+        SUMMARY_FORMAT_REFERENCE,
+        f"You are running as a subtask for another agent. "
+        f"When your work is complete, finish by invoking the final_result tool with a one sentence summary of your work as its content argument. "
+        f"Do not return your result as plain text. Do not output explanation or results as normal text for users, you are run as a subagent, nobody will read that.\n" 
+        f"Your working dir is the vault root; paths below are vault-relative. Never modify anything under `raw/`.\n"
+        f"It is now {now}, your working dir is '{working_dir}'.\n"
+        f"Your task: Double-check summary against its raw source.\n"
+        f"Fix the summary file in place if you spot wrong dates, invented facts, missing key claims, "
+        f"broken wikilinks, invalid or missing frontmatter, or other quality problems in the summary. Use multiedit to do multiple edits at once to save on roundtrips. Rename the file if necessary.\n",
     ]
     if lint_results:
-        parts.append(        {
-            "type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
-            "content": "A linter did run static checks on the summary, here are the results:\n",
-        })
-        parts.append(        {
-            "type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
-            "content": "\n".join(f"- {hint}" for hint in lint_results),
-        })
+        parts.append("A linter did run static checks on the summary, here are the results:\n")
+        parts.append("\n".join(f"- {hint}" for hint in lint_results))
 
-    parts.append(        {
-        "type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT,
-        "content": "The current content of both files is attached below so you don't have to read them again.",
-    })
+    parts.append("The current content of both files is attached below so you don't have to read them again.")
     parts.extend(_embed_for_prompt(_session, "RAW SOURCE FILE", raw_path))
     parts.extend(_embed_for_prompt(_session, "SUMMARY FILE", summary_path))
         
-    summary_check_result = child_session.add_user_message(parts=parts)
+    summary_check_result = child_session.add_user_message(parts)
 
     return True, {
         "status": "success",

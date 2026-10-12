@@ -1,64 +1,66 @@
 """
 Entry point for user messages into the agent loop.
-Normalizes raw input into a Message model, then chains into process_turn.
+Normalizes the flexible message spec into Message models, then (optionally)
+chains into process_turn.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
+from runtime.session.messages import normalize_messages
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageRole
 from server.models.message import Message
 
 
-def ingest_user_message(_session: Session, parts: list[dict[str, Any]]) -> Message:
+def ingest_user_message(_session: Session, message: Any = None, execute_turn: bool = True) -> Any:
     """
-    Normalize user input, persist as a Message, and start the agent loop.
+    Normalize *message*, persist the resulting Message(s), and start the agent loop.
 
-    Called via _session.ingest_user_message.delay(message=..., parts=...)
-    from the framework when the user sends a chat message.
+    The spec supports a bare string, a list of strings / part dicts (one user
+    message with many parts) or a list of message dicts (mixed roles) -- see
+    :func:`runtime.session.messages.normalize_messages`.
+
+    When ``execute_turn`` is True the last message starts a ``process_turn``
+    chain (the framework resolves that call through the chain until
+    ``decide_next_step`` returns the final Message).  When False the messages
+    are only persisted -- the caller may chain a turn itself -- and the last
+    created Message is returned.
 
     Args:
         _session: The active agent session.
-        parts:  List of dicts with 
-                type:
-                    Part type key (``"message"``, ``"reasoning"``, ``"toolcall"``).
-                content_type:
-                    Content type enum value (text, image, template, json).
-                content:
-                    Raw content value or a :class:`GenericContent` instance.  When
-                    ``content_type`` is ``IMAGE``, TEXT or JSON and ``content`` is not
-                    already a :class:`GenericContent`, one is created automatically.
-                template_data:
-                    Optional template data (string or :class:`GenericContent`).  Used when ``content_type`` is ``TEMPLATE``.
-    Returns:
-        An AgentTaskCall for process_turn -- the framework resolves this
-        through the chain until decide_next_step returns the final Message.
+        message: The message spec (string, part dict(s) or message dict(s)).
+        execute_turn: Whether to start a turn for the last message.
     """
+    messages = normalize_messages(message)
+
+    session_version = _session.get_version_model()
+    prev_message = _session.get_last_message()
+    created: Message | None = None
+
+    from runtime.events import publish_model_event
+
+    for spec in messages:
+        created = Message.objects.create(
+            role=spec["role"],
+            session=session_version.session,
+            session_version=session_version,
+            prev_message=prev_message,
+        )
+        for part in spec["parts"]:
+            created.add_part(
+                type=part["part_type"],
+                content_type=part["content_type"],
+                content=part["content"],
+                template_data=part.get("template_data", None),
+                tool_call=part.get("tool_call", None),
+            )
+        publish_model_event(created, "create")
+        prev_message = created
+
+    if not execute_turn:
+        return created
 
     _session.reset_unattended_turn_count()
     _session.reset_turn_count()
-    session_version = _session.get_version_model()
-    prev_message = _session.get_last_message()
-
-    message = Message.objects.create(
-        role=MessageRole.USER,
-        session=session_version.session,
-        session_version=session_version,
-        prev_message=prev_message,
-    )
-
-    for part in parts:
-        message.add_part(
-            type=part["type"],
-            content_type=part["content_type"],
-            content=part["content"],
-            template_data=part.get("template_data", None),
-            tool_call=part.get("tool_call", None),
-        )
-
-    from runtime.events import publish_model_event
-    publish_model_event(message, "create")
-
-    return _session.get_task("process_turn").delay(message=message)
+    return _session.get_task("process_turn").delay(message=created)
