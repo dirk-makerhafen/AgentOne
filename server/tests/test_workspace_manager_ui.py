@@ -5,9 +5,36 @@ template, the agent-scoped workspace tool error paths (unbound session),
 path helpers, and the panel wiring.
 """
 from __future__ import annotations
+import glob
 from types import SimpleNamespace
 
 import jinja2
+
+
+def _find_workspace_tools():
+    """Locate the workspace agent's tools script (survives agent renames)."""
+    for path in sorted(glob.glob(".agentone/agents/**/workspaces.py", recursive=True)):
+        try:
+            if "def list_subworkspaces" in open(path, encoding="utf-8").read():
+                return path
+        except OSError:
+            continue
+    return ".agentone/agents/internal/workspace_assistant/scripts/workspaces.py"
+
+
+def _find_workspace_agent_md():
+    """Locate the workspace agent manifest (survives agent renames)."""
+    for path in sorted(glob.glob(".agentone/agents/**/agent.md", recursive=True)):
+        try:
+            if "Manages a single workspace" in open(path, encoding="utf-8").read():
+                return path
+        except OSError:
+            continue
+    return ".agentone/agents/internal/workspace_assistant/agent.md"
+
+
+WORKSPACE_TOOLS_PY = _find_workspace_tools()
+WORKSPACE_AGENT_MD = _find_workspace_agent_md()
 
 
 def _render(template_str, **context):
@@ -97,7 +124,7 @@ class TestToolUnboundSession:
 
         spec = importlib.util.spec_from_file_location(
             "wm_workspaces",
-            ".agentone/agents/workspace_manager/scripts/workspaces.py",
+            WORKSPACE_TOOLS_PY,
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
@@ -121,7 +148,7 @@ class TestToolUnboundSession:
 
         spec = importlib.util.spec_from_file_location(
             "wm_workspaces2",
-            ".agentone/agents/workspace_manager/scripts/workspaces.py",
+            WORKSPACE_TOOLS_PY,
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
@@ -138,7 +165,7 @@ class TestPathHelpers:
 
         spec = importlib.util.spec_from_file_location(
             "wm_workspaces3",
-            ".agentone/agents/workspace_manager/scripts/workspaces.py",
+            WORKSPACE_TOOLS_PY,
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
@@ -171,8 +198,8 @@ class TestPanelWiring:
     def test_agent_manifest_names_workspace_tools(self):
         import frontmatter
 
-        post = frontmatter.load(".agentone/agents/workspace_manager/agent.md")
-        assert post.metadata["name"] == "workspace_manager"
+        post = frontmatter.load(WORKSPACE_AGENT_MD)
+        assert post.metadata["name"] in ("workspace_manager", "workspace_assistant")
         assert any("workspace" in t for t in post.metadata["tools"])
 
     def test_manager_chat_scroll_layout_css(self):
@@ -188,3 +215,76 @@ class TestPanelWiring:
         assert "display:flex" in body.replace(" ", "")
         assert "flex-direction:column" in body.replace(" ", "")
         assert "min-height:0" in body.replace(" ", "")
+
+
+def _overview_pyview(**overrides):
+    base = dict(assistant_sessions=[], selected_pk=None, chat=None)
+    base.update(overrides)
+    return SimpleNamespace(**base)
+
+
+class TestOverviewManagerPanel:
+    """Top-level workspaces dashboard right panel (plural assistant chat)."""
+
+    def test_overview_uses_dashboard_rightpanel(self):
+        from ui.main.workspace.overview import WorkspacesOverview
+        from ui.main.rightpanel.workspace.rightpanel_workspaces_overview import (
+            RightPanelWorkspacesOverview,
+        )
+
+        assert WorkspacesOverview.RIGHTPANEL_VIEW is RightPanelWorkspacesOverview
+
+    def test_panel_targets_plural_workspaces_assistant(self):
+        from ui.main.rightpanel.workspace.rightpanel_workspaces_overview import (
+            RightPanelWorkspacesOverview,
+        )
+
+        assert RightPanelWorkspacesOverview.ASSISTANT_AGENT_NAME == "workspaces_assistant"
+
+    def test_session_selector_and_chat(self):
+        from ui.main.rightpanel.workspace.rightpanel_workspaces_overview import (
+            RightPanelWorkspacesOverview,
+        )
+
+        sessions = [
+            SimpleNamespace(pk=11, name="workspaces_assistant"),
+            SimpleNamespace(pk=12, name="workspaces_assistant-2"),
+        ]
+        html = _render(
+            RightPanelWorkspacesOverview.TEMPLATE_STR,
+            pyview=_overview_pyview(
+                assistant_sessions=sessions, selected_pk=12, chat=FakeChat()
+            ),
+        )
+        assert "selectAssistantChat" in html
+        assert "workspaces_assistant-2" in html
+        assert "mini-chat" in html
+
+    def test_no_sessions_shows_new_chat(self):
+        from ui.main.rightpanel.workspace.rightpanel_workspaces_overview import (
+            RightPanelWorkspacesOverview,
+        )
+
+        html = _render(
+            RightPanelWorkspacesOverview.TEMPLATE_STR, pyview=_overview_pyview()
+        )
+        assert "No assistant chat yet." in html
+        assert "newAssistantChat()" in html
+
+    def test_new_manager_chat_needs_workspace(self):
+        """Guard returns cleanly without a bound workspace (no DB access)."""
+        from ui.main.rightpanel.workspace.rightpanel_workspace_manager import (
+            ManagerChatMixin,
+        )
+
+        obj = SimpleNamespace(manager_workspace=None, update=lambda: None)
+        assert ManagerChatMixin.newManagerChat(obj) is None
+
+    def test_manager_workspace_defaults_to_subject(self):
+        from ui.main.rightpanel.workspace.rightpanel_workspace_manager import (
+            ManagerChatMixin,
+        )
+
+        ws = SimpleNamespace(pk=1, name="alpha")
+        obj = SimpleNamespace(subject=ws)
+        assert ManagerChatMixin.manager_workspace.fget(obj) is ws

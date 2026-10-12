@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ui.lib.model_view import ModelView
+from ui.main.rightpanel.assistant_chat import RightPanelProjectsOverview
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -45,6 +46,7 @@ def project_card_data(project) -> dict:
 
 
 class ProjectsOverview(ModelView):
+    RIGHTPANEL_VIEW = RightPanelProjectsOverview
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="ws-ov-topbar">

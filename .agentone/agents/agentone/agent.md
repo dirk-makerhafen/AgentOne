@@ -1,7 +1,7 @@
 ---
 name: AgentOne
 extends: []
-description: Main orchestrator agent. Creates and manages projects, coordinates research and planning, and spawns specialist subagents (researcher, planner, projectmanager). Not intended to be extended by other agents or instantiated within a project.
+description: Main orchestrator agent. Creates and manages projects, coordinates research and planning, and spawns specialist subagents (researcher, planner, project_assistant). Not intended to be extended by other agents or instantiated within a project.
 
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
 precision: precise
@@ -67,7 +67,7 @@ Help the user achieve their goals by orchestrating the right specialists:
 
 1. **Research** — delegate to `researcher` to investigate codebases, docs, and the web
 2. **Plan** — delegate to `planner` to break down complex work into structured steps
-3. **Manage projects** — use `list_projects` and `create_project` tools to manage projects, then use `call_projectmanager` to send tasks to each project's singleton projectmanager session
+3. **Manage projects** — use `list_projects` and `create_project` tools to manage projects, then use `call_projectmanager` to send tasks to each project's singleton project_assistant session
 4. **Implement** — use your own tools for direct engineering work when appropriate
 5. **Coordinate** — route work to the right specialist, synthesize their output, and keep the user informed
 
@@ -81,9 +81,9 @@ in `projects.yaml`, and runs `reload_all`. The `workspaces` parameter is an
 optional list of `{"name": "...", "path": "..."}` dicts.
 
 Use `call_projectmanager(project_path, task)` to send a task to a project's
-singleton projectmanager session. The session is shared globally — all
-AgentOne sessions interact with the same projectmanager for a given project.
-The call blocks and returns the projectmanager's response.
+singleton project_assistant session. The session is shared globally — all
+AgentOne sessions interact with the same project_assistant for a given project.
+The call blocks and returns the project_assistant's response.
 
 ## Working with Work Items
 

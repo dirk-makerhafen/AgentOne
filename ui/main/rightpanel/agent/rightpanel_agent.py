@@ -8,6 +8,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.rightpanel.agent.rightpanel_agent_capabilities import RightPanelAgentCapabilities
 from ui.main.rightpanel.agent.rightpanel_agent_info import RightPanelAgentInfo
 from ui.main.rightpanel.agent.rightpanel_agent_sessions import RightPanelAgentSessions
+from ui.main.rightpanel.assistant_chat import RightPanelAgentAssistant
 
 if TYPE_CHECKING:
     from ui.main.rightpanel.rightpanel import RightPanel
@@ -28,6 +29,9 @@ class RightPanelAgent(ModelView):
             <button class="nav-tab{% if pyview.current_tab_name == "capabilities" %} active{% endif %}" data-panel="capabilities" data-label="Capabilities" onclick="pyview.switchTab('capabilities')" title="Capabilities">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </button>
+            <button class="nav-tab{% if pyview.current_tab_name == "assistant" %} active{% endif %}" data-panel="assistant" data-label="Assistant" onclick="pyview.switchTab('assistant')" title="Agent Assistant">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
         </div>
         {% if pyview.current_tab %}
             {{ pyview.current_tab.render() }}
@@ -47,7 +51,7 @@ class RightPanelAgent(ModelView):
     def switchTab(self, name: str) -> None:
         if name == self.current_tab_name:
             return 
-        if name not in ["info", "sessions", "capabilities"]:
+        if name not in ["info", "sessions", "capabilities", "assistant"]:
             return
         self.current_tab_name = name
         if self.current_tab:
@@ -58,4 +62,6 @@ class RightPanelAgent(ModelView):
             self.current_tab = RightPanelAgentSessions(self.subject, self)
         elif name == "capabilities":
             self.current_tab = RightPanelAgentCapabilities(self.subject, self)
+        elif name == "assistant":
+            self.current_tab = RightPanelAgentAssistant(self.subject, self)
         self.update()

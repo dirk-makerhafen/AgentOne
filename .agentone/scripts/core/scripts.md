@@ -17,11 +17,6 @@ tools:
     function: ask_user
     bound: True
 
-  - name: llm_query
-    file: call_llm_direct.py
-    function: llm_query
-    bound: True
-
 tasks:
 
   - name: ingest_user_message

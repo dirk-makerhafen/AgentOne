@@ -16,7 +16,7 @@ def create_project(
     register it in ``.agentone/projects.yaml``.
 
     Does NOT create an ``.agentone/`` directory — that is created lazily
-    by the projectmanager when project-specific agents or configs are added.
+    by the project_assistant when project-specific agents or configs are added.
 
     After creating the files, runs ``reload_all`` to sync into the database.
 

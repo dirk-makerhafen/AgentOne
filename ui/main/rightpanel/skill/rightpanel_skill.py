@@ -4,6 +4,7 @@ from server.models.skills.skill import SkillModel
 from ui.lib.model_view import ModelView
 from ui.main.rightpanel.skill.rightpanel_skill_agents import RightPanelSkillAgents
 from ui.main.rightpanel.skill.rightpanel_skill_info import RightPanelSkillInfo
+from ui.main.rightpanel.assistant_chat import RightPanelSkillAssistant
 
 if TYPE_CHECKING:
     from ui.main.rightpanel.rightpanel import RightPanel
@@ -21,6 +22,9 @@ class RightPanelSkill(ModelView):
             </button>
             <button class="nav-tab{% if pyview.current_tab_name == "agents" %} active{% endif %}" data-panel="agents" data-label="Agents" onclick="pyview.switchTab('agents')" title="Agents">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </button>
+            <button class="nav-tab{% if pyview.current_tab_name == "assistant" %} active{% endif %}" data-panel="assistant" data-label="Assistant" onclick="pyview.switchTab('assistant')" title="Skill Assistant">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </button>
 
         </div>
@@ -42,7 +46,7 @@ class RightPanelSkill(ModelView):
     def switchTab(self, name: str) -> None:
         if name == self.current_tab_name:
             return 
-        if name not in ["info", "agents"]:
+        if name not in ["info", "agents", "assistant"]:
             return
         self.current_tab_name = name
         if self.current_tab:
@@ -51,4 +55,6 @@ class RightPanelSkill(ModelView):
             self.current_tab = RightPanelSkillInfo(self.subject, self)
         elif name == "agents":
             self.current_tab = RightPanelSkillAgents(self.subject, self)
+        elif name == "assistant":
+            self.current_tab = RightPanelSkillAssistant(self.subject, self)
         self.update()

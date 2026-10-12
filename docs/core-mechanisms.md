@@ -248,12 +248,12 @@ This is the core agent loop. It demonstrates all the mechanisms working together
 Session.add_user_message(message, execute_turn=True)
   │
   ▼
-BoundTask("ingest_user_message").delay(messages=..., execute_turn=...)
+BoundTask("ingest_user_message").delay(message=..., execute_turn=...)
   │
   ▼
 AgentTaskCall("ingest_user_message") ──→ AgentTaskRun
   │                                           │
-  │                                     ingest_user_message(session, messages, execute_turn)
+  │                                     ingest_user_message(session, message, execute_turn)
   │                                           │ create Message, return ...
   │                                           ▼
   │                                     BoundTask("process_turn").delay(message=message)

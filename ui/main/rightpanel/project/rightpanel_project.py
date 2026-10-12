@@ -4,6 +4,7 @@ from server.models.project import Project
 from ui.lib.model_view import ModelView
 from ui.main.rightpanel.project.rightpanel_project_overview import RightPanelProjectOverview
 from ui.main.rightpanel.project.rightpanel_project_workspaces import RightPanelProjectWorkspaces
+from ui.main.rightpanel.assistant_chat import RightPanelProjectAssistant
 
 if TYPE_CHECKING:
     from ui.main.rightpanel.rightpanel import RightPanel
@@ -20,6 +21,9 @@ class RightPanelProject(ModelView):
             </button>
             <button class="nav-tab{% if pyview.current_tab_name == "workspaces" %} active{% endif %}" data-panel="workspaces" data-label="Workspaces" onclick="pyview.switchTab('workspaces')" title="Workspaces">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </button>
+            <button class="nav-tab{% if pyview.current_tab_name == "assistant" %} active{% endif %}" data-panel="assistant" data-label="Assistant" onclick="pyview.switchTab('assistant')" title="Project Assistant">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </button>
 
         </div>
@@ -41,7 +45,7 @@ class RightPanelProject(ModelView):
     def switchTab(self, name: str) -> None:
         if name == self.current_tab_name:
             return 
-        if name not in ["overview", "workspaces"]:
+        if name not in ["overview", "workspaces", "assistant"]:
             return
         self.current_tab_name = name
         if self.current_tab:
@@ -50,4 +54,6 @@ class RightPanelProject(ModelView):
             self.current_tab = RightPanelProjectOverview(self.subject, self)
         elif name == "workspaces":
             self.current_tab = RightPanelProjectWorkspaces(self.subject, self)
+        elif name == "assistant":
+            self.current_tab = RightPanelProjectAssistant(self.subject, self)
         self.update()

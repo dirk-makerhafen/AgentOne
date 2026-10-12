@@ -175,8 +175,12 @@ def load_agent_manifest(
             parent_agent=parent_agent,
             parent_skill=parent_skill,
         )
+        # AgentModel.save() forbids updates on existing rows (immutability
+        # guard), so renames must go through a queryset update — a pure
+        # name change that keeps the row (and all FK references from
+        # sessions/versions) intact.
+        AgentModel.objects.filter(pk=agent.pk).update(name=name)
         agent.name = name
-        agent.save()
     else:
         agent, _ = AgentModel.objects.get_or_create(
             name=name,

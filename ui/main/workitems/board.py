@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ui.lib.model_view import ModelView
+from ui.main.rightpanel.assistant_chat import RightPanelWorkItemsAssistant
 from ui.main.workitems.board_data import (
     STATUS_COLUMNS,
     TERMINAL_STATUSES,
@@ -32,6 +33,7 @@ if TYPE_CHECKING:
 
 
 class WorkItemsBoard(ModelView):
+    RIGHTPANEL_VIEW = RightPanelWorkItemsAssistant
     DOM_ELEMENT_CLASS = "main-view kanban-pane"
 
     TEMPLATE_STR = '''

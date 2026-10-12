@@ -1,4 +1,4 @@
-"""Workspace management tools for the workspace_manager agent.
+"""Workspace management tools for the workspace_assistant agent.
 
 All tools are bound: the managed workspace is the workspace of the calling
 session. Sub-workspace paths must stay inside the managed workspace

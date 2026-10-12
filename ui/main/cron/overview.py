@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ui.lib.model_view import ModelView
+from ui.main.rightpanel.assistant_chat import RightPanelCronjobsOverview
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -49,6 +50,7 @@ def cron_row_data(job) -> dict:
 
 
 class CronOverview(ModelView):
+    RIGHTPANEL_VIEW = RightPanelCronjobsOverview
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="ws-ov-topbar">

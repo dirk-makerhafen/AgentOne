@@ -1060,7 +1060,7 @@ class Session:
             call_kwargs: dict = dict(command_name=cmd, **parsed_kwargs)
         else:
             bound_task = self.get_task("ingest_user_message")
-            call_kwargs = dict(messages=messages, execute_turn=execute_turn)
+            call_kwargs = dict(message=messages, execute_turn=execute_turn)
         return bound_task, call_kwargs, is_command
 
     def _park_call(self, bound_task, call_kwargs):

@@ -1,13 +1,13 @@
 """
-Send a task message to a project's singleton projectmanager session (blocking).
+Send a task message to a project's singleton project_assistant session (blocking).
 
 Uses the framework's TaskCall auto-await: returns the AgentTaskCall from
 add_user_message, which the framework resolves recursively through the
-entire process_turn chain until the projectmanager produces a final
+entire process_turn chain until the project_assistant produces a final
 assistant Message.
 
 The session is identified by the project path, so all callers share one
-projectmanager session per project.
+project_assistant session per project.
 """
 
 from __future__ import annotations
@@ -23,32 +23,32 @@ from server.models.workspace import WorkspaceModel
 
 def call_projectmanager(_session: Session, project_path: str, task: str) -> dict[str, Any]:
     """
-    Send a task to a project's singleton projectmanager session (blocking).
+    Send a task to a project's singleton project_assistant session (blocking).
 
     Creates or reuses a globally-shared session named
-    ``projectmanager:<project_path>``. The projectmanager agent processes
+    ``project_assistant:<project_path>``. The project_assistant agent processes
     the message and its response is returned via the auto-awaited TaskCall.
 
     Args:
         _session: The calling agent's session (bound automatically).
         project_path: Absolute path of the target project.
-        task: The task description or message to send to the projectmanager.
+        task: The task description or message to send to the project_assistant.
 
     Returns:
         A dict with keys:
             - result: the resolved TaskCall (auto-awaited by framework)
-            - session_pk: the projectmanager session pk for follow-up
+            - session_pk: the project_assistant session pk for follow-up
             - error: if something went wrong
     """
     try:
-        agent_model = AgentModel.objects.get(name="projectmanager")
+        agent_model = AgentModel.objects.get(name="project_assistant")
     except AgentModel.DoesNotExist:
-        return {"error": "projectmanager agent not found"}
+        return {"error": "project_assistant agent not found"}
 
     if not agent_model.latest_agent_version:
-        return {"error": "projectmanager agent has no version"}
+        return {"error": "project_assistant agent has no version"}
 
-    session_name = f"projectmanager:{project_path}"
+    session_name = f"project_assistant:{project_path}"
 
     workspace, ws_created = WorkspaceModel.objects.get_or_create(
         name=f"{project_path} project root",
@@ -61,15 +61,15 @@ def call_projectmanager(_session: Session, project_path: str, task: str) -> dict
         publish_model_event(workspace, "create")
 
     child_session = _session.spawn_subagent(
-        "projectmanager",
+        "project_assistant",
         name=session_name,
-        description=f"Project manager for {project_path}",
+        description=f"Project assistant for {project_path}",
         workspace=workspace,
         session_type=SessionType.SUBSESSION,
         allow_internal=True,
     )
     if child_session is None:
-        return {"error": "projectmanager agent not found"}
+        return {"error": "project_assistant agent not found"}
 
     parts = [{"type": MessagePartType.MESSAGE, "content_type": MessageContentType.TEXT, "content": task}]
     taskcall = child_session.add_user_message(parts)

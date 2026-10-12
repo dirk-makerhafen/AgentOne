@@ -20,6 +20,7 @@ from django.db.models.functions import Extract, Coalesce
 from django.utils import timezone
 
 from ui.lib.model_view import ModelView
+from ui.main.rightpanel.assistant_chat import RightPanelAgentsOverview
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -495,6 +496,7 @@ def format_time(seconds: float) -> str:
 
 
 class AgentsOverview(ModelView):
+    RIGHTPANEL_VIEW = RightPanelAgentsOverview
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="ws-ov-topbar">

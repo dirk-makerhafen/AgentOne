@@ -7,6 +7,9 @@ are client-side (no server roundtrip); creation reuses CreateWorkspace.
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from ui.lib.model_view import ModelView
+from ui.main.rightpanel.workspace.rightpanel_workspaces_overview import (
+    RightPanelWorkspacesOverview,
+)
 from ui.main.workspace.create import CreateWorkspace
 from ui.main.workspace.workspace import (
     WS_FILTER_SCRIPT,
@@ -21,6 +24,7 @@ if TYPE_CHECKING:
 
 
 class WorkspacesOverview(ModelView):
+    RIGHTPANEL_VIEW = RightPanelWorkspacesOverview
     DOM_ELEMENT_CLASS = "main-view"
     TEMPLATE_STR = '''
         <div class="ws-ov-topbar">

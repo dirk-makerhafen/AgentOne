@@ -1,5 +1,5 @@
 ---
-name: project_manager
+name: project_assistant
 visibility: internal
 description: >
   Project management specialist. Manages a specific project's .agentone/

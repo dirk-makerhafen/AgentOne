@@ -1,7 +1,7 @@
 """Workspace Manager chat tab for the workspace right panel.
 
 Embeds a compact session chat (messages + queue/approval/question cards +
-composer) for a ``workspace_manager`` agent session bound to the workspace,
+composer) for a ``workspace_assistant`` agent session bound to the workspace,
 so the user can ask the manager to organize the workspace without leaving
 the workspace page. A "+ New Chat" button on top creates a fresh manager
 chat bound to the same workspace.
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from server.models.sessions.session import SessionModel
     from server.models.workspace import WorkspaceModel
 
-MANAGER_AGENT_NAME = "workspace_manager"
+MANAGER_AGENT_NAME = "workspace_assistant"
 
 
 def manager_sessions(workspace) -> list:
@@ -55,6 +55,29 @@ def new_manager_session_name(workspace, agent_name: str = MANAGER_AGENT_NAME) ->
     return name
 
 
+MANAGER_CHAT_BODY_TEMPLATE = '''
+        {% if pyview.sessions %}
+        <div class="manager-session-row">
+            <select onchange="pyview.selectManagerChat(this.value)" title="Manager chat">
+                {% for s in pyview.sessions %}
+                <option value="{{ s.pk }}"{% if s.pk == pyview.selected_pk %} selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="manager-chat-wrap">
+            {% if pyview.chat %}
+            {{ pyview.chat.render() }}
+            {% else %}
+            <div class="manager-empty">
+                <div>No manager chat yet.</div>
+                <button class="ws-ov-primary" onclick="pyview.newManagerChat()">＋ New Chat</button>
+            </div>
+            {% endif %}
+        </div>
+    '''
+
+
 class ManagerChat(ModelView):
     """Compact embedded chat: messages + cards + composer for one session."""
 
@@ -84,53 +107,25 @@ class ManagerChat(ModelView):
         self.composer_box = ComposerBox(self.session, self)
 
 
-class RightPanelWorkspaceManager(ModelView):
-    DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "rightpanel-tab"
-    TEMPLATE_STR = '''
-        <div class="panel-header">
-            <span>Workspace Manager</span>
-            <div class="panel-actions">
-                <button class="panel-icon-btn" onclick="pyview.newManagerChat()" title="New manager chat">＋</button>
-                <button class="panel-icon-btn" onclick="pyview.update()" title="Refresh">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                </button>
-            </div>
-        </div>
-        {% if pyview.sessions %}
-        <div class="manager-session-row">
-            <select onchange="pyview.selectManagerChat(this.value)" title="Manager chat">
-                {% for s in pyview.sessions %}
-                <option value="{{ s.pk }}"{% if s.pk == pyview.selected_pk %} selected{% endif %}>{{ s.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        {% endif %}
-        <div class="manager-chat-wrap">
-            {% if pyview.chat %}
-            {{ pyview.chat.render() }}
-            {% else %}
-            <div class="manager-empty">
-                <div>No manager chat yet.</div>
-                <button class="ws-ov-primary" onclick="pyview.newManagerChat()">＋ New Chat</button>
-            </div>
-            {% endif %}
-        </div>
-    '''
+class ManagerChatMixin:
+    """Session select/create shared by every embedded workspace-manager chat.
 
-    def __init__(self, subject: WorkspaceModel, parent: RightPanelWorkspace, **kwargs):
-        super().__init__(subject, parent, **kwargs)
-        self._selected_pk: int | None = None
-        self.chat: ManagerChat | None = None
-        self._reselect()
+    The bound workspace is ``manager_workspace`` — the subject itself for
+    the workspace right panel, or a picked workspace on the dashboard.
+    Concrete views set ``self.chat``/``self._selected_pk`` and call
+    :meth:`_reselect` from ``__init__``.
+    """
 
-    # ------------------------------------------------------------------
-    # Display helpers
-    # ------------------------------------------------------------------
+    _selected_pk: int | None = None
+    chat: ManagerChat | None = None
+
+    @property
+    def manager_workspace(self) -> WorkspaceModel | None:
+        return self.subject
 
     @property
     def sessions(self) -> list:
-        return manager_sessions(self.subject)
+        return manager_sessions(self.manager_workspace)
 
     @property
     def selected_pk(self) -> int | None:
@@ -138,7 +133,7 @@ class RightPanelWorkspaceManager(ModelView):
 
     def _reselect(self) -> None:
         """Point at the newest session (keeping the selection when valid)."""
-        sessions = manager_sessions(self.subject)
+        sessions = manager_sessions(self.manager_workspace)
         pks = {s.pk for s in sessions}
         if self._selected_pk not in pks:
             self._selected_pk = sessions[0].pk if sessions else None
@@ -153,28 +148,27 @@ class RightPanelWorkspaceManager(ModelView):
             self.chat = None
         if self._selected_pk is None:
             return
-        for s in manager_sessions(self.subject):
+        for s in manager_sessions(self.manager_workspace):
             if s.pk == self._selected_pk:
                 self.chat = ManagerChat(s, self)
                 return
         self._selected_pk = None
-
-    # ------------------------------------------------------------------
-    # Actions
-    # ------------------------------------------------------------------
 
     def selectManagerChat(self, pk) -> None:
         try:
             pk = int(pk)
         except (TypeError, ValueError):
             return
-        if any(s.pk == pk for s in manager_sessions(self.subject)):
+        if any(s.pk == pk for s in manager_sessions(self.manager_workspace)):
             self._selected_pk = pk
             self._rebuild_chat()
             self.update()
 
     def newManagerChat(self) -> None:
-        """Create a fresh workspace_manager chat bound to this workspace."""
+        """Create a fresh workspace_assistant chat bound to the managed workspace."""
+        workspace = self.manager_workspace
+        if workspace is None:
+            return
         from server.models.agents.agent import AgentModel
 
         try:
@@ -183,16 +177,38 @@ class RightPanelWorkspaceManager(ModelView):
             return
         if agent.latest_agent_version is None:
             return
-        name = new_manager_session_name(self.subject)
+        name = new_manager_session_name(workspace)
         try:
             session_version = agent.latest_agent_version.get_or_create_session(
                 name=name,
                 display_name=name,
                 description="",
-                workspace=self.subject,
+                workspace=workspace,
             )
         except Exception:
             return
         self._selected_pk = session_version.session.pk
         self._rebuild_chat()
         self.update()
+
+
+class RightPanelWorkspaceManager(ManagerChatMixin, ModelView):
+    DOM_ELEMENT = "div"
+    DOM_ELEMENT_CLASS = "rightpanel-tab"
+    TEMPLATE_STR = '''
+        <div class="panel-header">
+            <span>Workspace Manager</span>
+            <div class="panel-actions">
+                <button class="panel-icon-btn" onclick="pyview.newManagerChat()" title="New manager chat">＋</button>
+                <button class="panel-icon-btn" onclick="pyview.update()" title="Refresh">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </button>
+            </div>
+        </div>
+    ''' + MANAGER_CHAT_BODY_TEMPLATE
+
+    def __init__(self, subject: WorkspaceModel, parent: RightPanelWorkspace, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self._selected_pk: int | None = None
+        self.chat: ManagerChat | None = None
+        self._reselect()
