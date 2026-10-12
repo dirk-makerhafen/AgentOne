@@ -17,7 +17,7 @@ from django.utils import timezone
 from runtime.context_manager import ContextTracker
 from runtime.rate_limiter import RateLimitError
 from server.models.base_model import BaseModel, Observables
-from server.models.content import GenericContent
+from server.models.content import GenericContent, pack_large_string
 from server.models.enums.task_enums import TaskExecutionMode, TaskRunStatus, TaskType
 from server.models.message import Message
 from server.models.queries.query import Query
@@ -346,8 +346,10 @@ class AgentTaskRun(BaseModel):
         """Serialise run arguments, resolving AgentTaskCall references to their result runs."""
 
         def _create_recursive(obj: Any, ref_pks: list[int]) -> Any:
-            if isinstance(obj, (str, int, float, bool)) or obj is None:
+            if isinstance(obj, (int, float, bool)) or obj is None:
                 return obj
+            if isinstance(obj, str):
+                return pack_large_string(obj)
             if isinstance(obj, (list, set, tuple)):
                 return obj.__class__(_create_recursive(item, ref_pks) for item in obj)
             if isinstance(obj, (AgentTaskRun, Message, GenericContent, Query, Response)):
@@ -357,7 +359,7 @@ class AgentTaskRun(BaseModel):
                     if obj["_type"] == "AgentTaskRun":
                         ref_pks.append(obj["pk"])
                         return obj
-                    if obj["_type"] in ("Message", "Query", "Response"):
+                    if obj["_type"] in ("Message", "Query", "Response", "GenericContent"):
                         return obj
                     if obj["_type"] == "AgentTaskCall":
                         a = AgentTaskCall.objects.get(pk=obj["pk"])
@@ -399,7 +401,11 @@ class AgentTaskRun(BaseModel):
         recursive: bool = True,
         allow_partial_results: bool = False,
     ) -> tuple[list[Any], dict[str, Any]]:
-        """Resolve stored run arguments, splitting into positional args and kwargs."""
+        """Resolve stored run arguments, splitting into positional args and kwargs.
+
+        GenericContent refs are unwrapped to plain strings/dicts so tool
+        code sees the same types as if no dedup had happened.
+        """
 
         def _get_recursive(
             data: Any,
@@ -415,6 +421,11 @@ class AgentTaskRun(BaseModel):
                         )
                     except:
                         return None
+                    if isinstance(model_instance, GenericContent):
+                        try:
+                            return model_instance.get()
+                        except Exception:
+                            return None
                     if recursive and (
                         isinstance(model_instance, AgentTaskRun)
                         or isinstance(model_instance, AgentTaskCall)
@@ -470,16 +481,24 @@ class AgentTaskRun(BaseModel):
 
     @staticmethod
     def _create_result_json(result: Any) -> tuple[Any, list[int]]:
-        """Serialise a result into JSON-safe form, extracting model references."""
+        """Serialise a result into JSON-safe form, extracting model references.
+
+        Long strings (>= GENERIC_CONTENT_DEDUP_THRESHOLD) are stored
+        content-addressed as GenericContent refs so result_json stays small
+        for all tools/tasks/commands.  Resolvers unwrap them back to plain
+        strings (see _resolve_run_arguments / get_result).
+        """
 
         def _create_recursive(obj: Any, ref_pks: list[int]) -> Any:
-            if isinstance(obj, (str, int, float, bool)) or obj is None:
+            if isinstance(obj, (int, float, bool)) or obj is None:
                 return obj
+            if isinstance(obj, str):
+                return pack_large_string(obj)
             if isinstance(obj, dict):
                 return {k: _create_recursive(v, ref_pks) for k, v in obj.items()}
             if isinstance(obj, (list, set, tuple)):
                 return obj.__class__(_create_recursive(item, ref_pks) for item in obj)
-            if isinstance(obj, (AgentTaskCall, Message, Query, Response)):
+            if isinstance(obj, (AgentTaskCall, Message, Query, Response, GenericContent)):
                 if isinstance(obj, AgentTaskCall):
                     ref_pks.append(obj.pk)
                 return {"_type": obj.__class__.__qualname__, "pk": obj.pk}
@@ -521,6 +540,11 @@ class AgentTaskRun(BaseModel):
                         )
                     except:
                         return None
+                    if isinstance(model_instance, GenericContent):
+                        try:
+                            return model_instance.get()
+                        except Exception:
+                            return None
                     if recursive and (
                         isinstance(model_instance, AgentTaskRun)
                         or isinstance(model_instance, AgentTaskCall)

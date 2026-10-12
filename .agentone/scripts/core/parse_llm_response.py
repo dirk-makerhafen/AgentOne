@@ -29,19 +29,10 @@ class Part(TypedDict):
     template_data: NotRequired[dict[str, Any]]
 
 
-def _deduplicate(data: Any) -> Any:
-    """Recursively convert long strings to GenericContent wrappers."""
-    if isinstance(data, dict):
-        return {k: _deduplicate(data=v) for k, v in data.items()}
-    elif isinstance(data, (list, set)):
-        return [_deduplicate(data=item) for item in data]
-    elif isinstance(data, str):
-        if len(data) < 128:
-            return data
-        from server.models.content import GenericContent
-
-        return GenericContent.from_text(data)
-    return data
+# NOTE: large strings in returned parts are deduplicated transparently by the
+# framework (AgentTaskRun/AgentTaskCall serializers store strings >=
+# GENERIC_CONTENT_DEDUP_THRESHOLD as GenericContent refs and unwrap them on
+# resolve).  No per-script deduplication is needed here.
 
 
 CATCH_TOOL_NAME = "catch_tool_argument_error"

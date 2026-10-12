@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from runtime.context_manager import ContextTracker
 from server.models.base_model import BaseModel, Observables
-from server.models.content import GenericContent
+from server.models.content import GenericContent, pack_large_string
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
 from server.models.message import Message
 from server.models.queries.query import Query
@@ -240,14 +240,20 @@ class AgentTaskCall(BaseModel):
         }
 
         def _create_recursive(obj: Any, ref_pks: list[int]) -> Any:
-            if isinstance(obj, (str, int, float, bool)) or obj is None:
+            if isinstance(obj, (int, float, bool)) or obj is None:
                 return obj
+            if isinstance(obj, str):
+                return pack_large_string(obj)
             if isinstance(obj, (list, set, tuple)):
                 return [_create_recursive(item, ref_pks) for item in obj]
             if isinstance(obj, dict):
                 if "_type" in obj and "pk" in obj and len(obj) == 2:
                     if obj["_type"] in allowed_objects:
-                        ref_pks.append(obj["pk"])
+                        # Only AgentTaskCall refs create arg dependencies;
+                        # other model refs (incl. GenericContent, whose pk is
+                        # a sha string) are passed through without tracking.
+                        if obj["_type"] == "AgentTaskCall":
+                            ref_pks.append(obj["pk"])
                         return obj
                     raise Exception(
                         f"This should not be here in AgentTaskCall.arguments_to_json {obj}"
@@ -276,7 +282,11 @@ class AgentTaskCall(BaseModel):
         recursive: bool = True,
         allow_partial_results: bool = False,
     ) -> Any:
-        """Resolve the stored call arguments, recursively fetching referenced objects."""
+        """Resolve the stored call arguments, recursively fetching referenced objects.
+
+        GenericContent refs are unwrapped to plain strings so callers see
+        the same types as if no dedup had happened.
+        """
         from server.models.tasks.agent_task_run import AgentTaskRun
 
         def _get_recursive(
@@ -293,6 +303,11 @@ class AgentTaskCall(BaseModel):
                         )
                     except:
                         return None
+                    if isinstance(model_instance, GenericContent):
+                        try:
+                            return model_instance.get()
+                        except Exception:
+                            return None
                     if recursive and (
                         isinstance(model_instance, AgentTaskRun)
                         or isinstance(model_instance, AgentTaskCall)

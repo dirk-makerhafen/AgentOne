@@ -21,6 +21,15 @@ from server.models.base_model import ObservableMixin
 IMAGE_TOKEN_ESTIMATE = 1500
 
 
+# Strings at or above this length are stored content-addressed (one
+# GenericContent row, referenced as {"_type": "GenericContent", "pk": ...})
+# instead of inline in AgentTaskCall/AgentTaskRun JSON columns.  Keeps
+# result_json / carguments_json / arguments_json small when LLM outputs or
+# tool payloads carry KBs/MBs of text.  Below the threshold the inline form
+# is cheaper than an extra row + fetch.
+GENERIC_CONTENT_DEDUP_THRESHOLD = 512
+
+
 class ContentType(models.TextChoices):
     """Supported content types for :class:`GenericContent`."""
 
@@ -168,3 +177,28 @@ class GenericContent(ObservableMixin, models.Model):
         GenericContent.objects.filter(pk=self.pk, expires_at__lt=new_expiry).update(
             expires_at=new_expiry
         )
+
+
+def pack_large_string(text: str) -> Any:
+    """Return *text* inline or as a GenericContent ref dict.
+
+    Fail-open: if the DB write fails (migrations, no DB), the raw string
+    is returned so serialization never breaks.
+    """
+    if len(text) < GENERIC_CONTENT_DEDUP_THRESHOLD:
+        return text
+    try:
+        item = GenericContent.from_text(text)
+        return {"_type": "GenericContent", "pk": item.pk}
+    except Exception:
+        return text
+
+
+def unpack_generic_content(instance: Any) -> Any:
+    """Return the plain value for a GenericContent instance, else passthrough."""
+    if isinstance(instance, GenericContent):
+        try:
+            return instance.get()
+        except Exception:
+            return None
+    return instance
