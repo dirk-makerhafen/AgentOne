@@ -96,6 +96,10 @@ def _fail_ancient_parked_calls() -> None:
         ],
     ).exclude(status=TaskCallStatus.ENDED):
         try:
+            from runtime.tasks.call_scheduler import CallScheduler as _CS
+
+            if _CS._session_is_paused(call.session_id):
+                continue  # soft-paused: hands off, however old
             if not _is_ancient(call.updated_at):
                 continue
             if _force_end_call(call):
@@ -122,6 +126,10 @@ def _release_queued_calls() -> None:
         status_detail=TaskCallStatusDetail.WAITING_QUEUE,
     ).order_by("pk"):
         try:
+            from runtime.tasks.call_scheduler import CallScheduler as _CS2
+
+            if _CS2._session_is_paused(call.session_id):
+                continue  # soft-paused: keep parked until resume
             # A call whose serialized arguments reference a deleted AgentTaskCall
             # can never create a run (AgentTaskRun.create raises DoesNotExist).
             # Cancel it instead of erroring on every recovery pass.
@@ -204,10 +212,31 @@ def _resolve_stuck_waiting_runs() -> None:
 
     for run in stuck:
         try:
+            from runtime.tasks.call_scheduler import CallScheduler as _CS3
+
             pending_calls = AgentTaskCall.objects.filter(
                 ~Q(status=TaskCallStatus.ENDED),
                 rev_taskrun_result_references=run.pk,
             )
+            # Soft-paused sessions park WAITING_QUEUE refs on purpose — a
+            # parent run waiting on them is healthy-but-paused, never a
+            # deadlock.  Skip when the run's own session or any pending
+            # ref's session is paused.
+            try:
+                _run_call = run.agent_task_call
+                _paused_session_ids = set(
+                    pending_calls.values_list("session_id", flat=True)
+                )
+                if _run_call is not None and _run_call.session_id:
+                    _paused_session_ids.add(_run_call.session_id)
+                if any(
+                    _CS3._session_is_paused(_sid)
+                    for _sid in _paused_session_ids
+                    if _sid
+                ):
+                    continue
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
             pending = pending_calls.values_list('status_detail', flat=True)
 
             # Case 1: all refs ended — resolve immediately (no cascade risk)
@@ -650,6 +679,10 @@ def _recover_stuck_calls() -> None:
         status_detail=TaskCallStatusDetail.WAITING_QUEUE,
     ).values_list('session_id', flat=True).distinct():
         try:
+            from runtime.tasks.call_scheduler import CallScheduler as _CS4
+
+            if _CS4._session_is_paused(session_id):
+                continue  # soft-paused: keep parked until resume
             # Find the newest root task in this session that still has
             # WAITING_QUEUE children.  (Root calls have session_root_task
             # pointing to themselves.)

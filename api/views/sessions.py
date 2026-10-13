@@ -19,7 +19,7 @@ class SessionViewSet(viewsets.ModelViewSet):
     queryset = SessionModel.objects.all().order_by('-created_at')
     permission_classes = [IsAuthenticated]
     ordering = ['-created_at']
-    filterset_fields = ['name', 'is_active', 'is_archived']
+    filterset_fields = ['name', 'is_active', 'is_paused', 'is_archived']
     search_fields = ['name']
 
     def get_serializer_class(self):
@@ -180,6 +180,26 @@ class SessionViewSet(viewsets.ModelViewSet):
             'call_id': call_id,
             'url': request.build_absolute_uri(f'/api/v1/task-calls/{call_id}/') if call_id else None,
         }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def pause(self, request, pk=None):
+        session_model = self.get_object()
+        try:
+            session_model.get_runtime().pause()
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        session_model.refresh_from_db()
+        return Response(SessionDetailSerializer(session_model).data)
+
+    @action(detail=True, methods=['post'])
+    def resume(self, request, pk=None):
+        session_model = self.get_object()
+        try:
+            session_model.get_runtime().resume()
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        session_model.refresh_from_db()
+        return Response(SessionDetailSerializer(session_model).data)
 
     @action(detail=True, methods=['post'])
     def reset(self, request, pk=None):

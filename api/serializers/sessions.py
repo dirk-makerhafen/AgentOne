@@ -12,7 +12,7 @@ class SessionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionModel
         fields = ['id', 'name', 'agent_name', 'version_number', 'is_active',
-                  'is_archived', 'turn_count', 'created_at', 'updated_at']
+                  'is_paused', 'is_archived', 'turn_count', 'created_at', 'updated_at']
 
     def get_agent_name(self, obj) -> str | None:
         sv = obj.latest_session_version
@@ -31,7 +31,7 @@ class SessionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionModel
         fields = ['id', 'name', 'agent', 'settings', 'workspace',
-                  'is_active', 'is_archived', 'is_pinned',
+                  'is_active', 'is_paused', 'is_archived', 'is_pinned',
                   'turn_count', 'unattended_turn_count',
                   'parent_project', 'created_at', 'updated_at']
 

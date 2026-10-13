@@ -94,6 +94,10 @@ def _release_queued_calls() -> None:
         status_detail=TaskCallStatusDetail.WAITING_QUEUE,
     ).order_by("priority", "created_at"):
         try:
+            # Soft-paused sessions keep their queue parked until resume —
+            # start_new_taskrun would refuse anyway; skip early.
+            if CallScheduler._session_is_paused(call.session_id):
+                continue
             # A call whose serialized arguments reference a deleted AgentTaskCall
             # can never create a run (AgentTaskRun.create raises DoesNotExist).
             # Cancel it instead of erroring on every tick.
@@ -179,6 +183,9 @@ def _release_rate_limited_calls() -> None:
 
     for call in waiting:
         try:
+            # Soft-paused sessions keep rate-limited calls parked until resume.
+            if CallScheduler._session_is_paused(call.session_id):
+                continue
             # Ancient parked turns are left to the recovery pass, which fails
             # them instead of resuming day-old context (see TURN_DEATH_AGE).
             if _is_ancient(call.updated_at):
@@ -223,6 +230,9 @@ def _release_retry_calls() -> None:
 
     for call in due:
         try:
+            # Soft-paused sessions keep retries parked until resume.
+            if CallScheduler._session_is_paused(call.session_id):
+                continue
             # Ancient retries are left to the recovery pass, which fails them
             # instead of replaying day-old context (see TURN_DEATH_AGE).
             if _is_ancient(call.updated_at):
@@ -250,6 +260,9 @@ def _release_scheduled_calls() -> None:
 
     for call in due:
         try:
+            # Soft-paused sessions keep scheduled calls parked until resume.
+            if CallScheduler._session_is_paused(call.session_id):
+                continue
             # Ancient scheduled calls are left to the recovery pass, which
             # cancels them instead of dispatching day-old work.
             if _is_ancient(call.updated_at):
@@ -1014,7 +1027,7 @@ def _compact_idle_sessions() -> None:
 
     floor = timezone.now() - timedelta(seconds=_IDLE_PRECHECK_FLOOR_SECONDS)
     candidates = (
-        SessionModel.objects.filter(is_active=True)
+        SessionModel.objects.filter(is_active=True, is_paused=False)
         .annotate(last_msg_at=Max("related_messages__created_at"))
         .filter(last_msg_at__lt=floor)
         .order_by("last_msg_at")
@@ -1033,6 +1046,8 @@ def _compact_idle_sessions() -> None:
                 status_detail=TaskCallStatusDetail.HALTED_PAUSED
             ).exists():
                 continue  # paused by user: hands off
+            if getattr(session_model, "is_paused", False):
+                continue  # soft-paused session: hands off
 
             session = Session(session_model=session_model)
             min_tokens = session.auto_compact_min_tokens or 0

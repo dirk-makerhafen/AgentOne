@@ -63,6 +63,7 @@ class SessionModel(BaseModel):
     turn_count = models.IntegerField(default=0)
     unattended_turn_count = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    is_paused = models.BooleanField(default=False)
     last_active_at = models.DateTimeField(null=True, blank=True)
     is_pinned = models.BooleanField(default=False)
     is_archived = models.BooleanField(default=False)

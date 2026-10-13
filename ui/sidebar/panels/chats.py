@@ -91,7 +91,7 @@ class SidebarPanelChat(ModelView):
                 </span>
                 <span class="session-time">1w</span>
             </div>
-            <div class="session-meta">{{pyview.subject.messages.count()}} msgs · {% if  pyview.session.aimodel %} {{ pyview.session.aimodel.name }}{% else %}No Model{% endif %}</div>
+            <div class="session-meta">{{pyview.subject.messages.count()}} msgs · {% if  pyview.session.aimodel %} {{ pyview.session.aimodel.name }}{% else %}No Model{% endif %}{% if pyview.subject.is_paused %} · ⏸ paused{% endif %}</div>
         </div>
         {% if children and pyview._show_children and pyview.child_list %}
             {{ pyview.child_list.render() }}

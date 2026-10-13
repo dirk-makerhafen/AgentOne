@@ -90,6 +90,15 @@ class ComposerFooter(PyHtmlView):
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>
             </button>
             {% endif %}
+            {% if pyview.is_paused %}
+            <button class="send-btn visible queue" id="btnResume_{{pyview.parent.uid}}" onclick="pyview.toggle_pause()" title="Resume session" aria-label="Resume session">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            </button>
+            {% else %}
+            <button class="send-btn visible queue" id="btnPause_{{pyview.parent.uid}}" onclick="pyview.toggle_pause()" title="Pause session — finish active runs, park the rest" aria-label="Pause session" style="{% if not pyview.is_busy %}opacity:.45{% endif %}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/></svg>
+            </button>
+            {% endif %}
         </div>
 
         {{ pyview.mobileconfig_panel.render() }}
@@ -290,8 +299,18 @@ class ComposerFooter(PyHtmlView):
         return "queue"
 
     @property
+    def is_paused(self) -> bool:
+        """True while the session is soft-paused (fresh DB read)."""
+        try:
+            return bool(self.subject.is_paused)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return False
+
+    @property
     def status_text(self) -> str:
-        """Short composer status line (working / queued count)."""
+        """Short composer status line (paused / working / queued count)."""
+        if self.is_paused:
+            return "Paused — queued work waits"
         if not self.is_busy:
             return ""
         try:
@@ -326,6 +345,7 @@ class ComposerFooter(PyHtmlView):
                 f"Message.session:{session_id}",
                 f"Query.session:{session_id}",
                 f"AgentTaskCall.session:{session_id}",
+                f"SessionModel.pk:{session_id}",
             ):
                 orm_subscribe(self, key, self._on_orm_event)
         except Exception:  # pylint: disable=broad-exception-caught
@@ -340,7 +360,7 @@ class ComposerFooter(PyHtmlView):
         (task-call events fire on every FSM transition — re-rendering each
         time would collapse open composer dropdowns for no reason)."""
         try:
-            key = (self.is_busy, self.send_mode)
+            key = (self.is_busy, self.is_paused, self.send_mode)
         except Exception:  # pylint: disable=broad-exception-caught
             return
         if key != self._last_activity_key:
@@ -389,6 +409,27 @@ class ComposerFooter(PyHtmlView):
                 self.subject.steer_message(parts)
             else:
                 self.subject.add_user_message(parts)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            from server.models.message import Message as Msg
+            session_version = self.subject.get_version_model()
+            prev_message = self.subject.get_last_message()
+            msg = Msg.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
+            msg.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=str(e))
+            # Two-phase write (see Message.save): publish only now parts exist.
+            msg.publish("create")
+        self._last_activity_key = None
+        try:
+            self.update()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    def toggle_pause(self):
+        """Pause/resume the session (soft pause: active runs finish, rest parks)."""
+        try:
+            if self.is_paused:
+                self.subject.resume()
+            else:
+                self.subject.pause()
         except Exception as e:  # pylint: disable=broad-exception-caught
             from server.models.message import Message as Msg
             session_version = self.subject.get_version_model()

@@ -618,6 +618,71 @@ class Session:
         """Return whether the session is active."""
         return self.model.is_active
 
+    @property
+    def is_paused(self) -> bool:
+        """Return whether the session is soft-paused (fresh read).
+
+        Reads straight from the DB so workers with a stale cached model
+        still observe a pause set from the UI/API.
+        """
+        from server.models.sessions.session import SessionModel as _SM
+
+        try:
+            return bool(
+                _SM.objects.filter(pk=self.model.pk)
+                .values_list("is_paused", flat=True)
+                .first()
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            return bool(getattr(self.model, "is_paused", False))
+
+    def pause(self) -> None:
+        """Soft-pause this session: finish active runs, park everything else.
+
+        Active ``ACTIVE_RUNNING`` taskruns are never aborted — they run to
+        completion.  Every *new* run creation funnels through
+        ``CallScheduler.start_new_taskrun``, which refuses to pick up calls
+        while paused, so continuations (next ``process_turn`` link,
+        cron/data-flow/subagent deliveries, retries, rate-limit releases)
+        park in ``WAITING_QUEUE``/``WAITING_RETRY``/``WAITING_RATELIMIT``
+        until :meth:`resume`.  No hooks fire; ``is_active`` is untouched.
+        """
+        try:
+            self.model.atomic_update(is_paused=True)
+        except Exception:  # pylint: disable=broad-exception-caught
+            from server.models.sessions.session import SessionModel as _SM
+
+            _SM.objects.filter(pk=self.model.pk).update(is_paused=True)
+            try:
+                self.model.is_paused = True
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+
+    def resume(self) -> None:
+        """Clear a soft-pause and immediately release parked work.
+
+        Unsets the flag first, then releases the head of the session's
+        ``WAITING_QUEUE`` (FIFO gate honoured).  Rate-limited/retry/scheduled
+        calls are picked up by the regular 10s tick; the queue head is
+        released here so the UI feels instant.
+        """
+        try:
+            self.model.atomic_update(is_paused=False)
+        except Exception:  # pylint: disable=broad-exception-caught
+            from server.models.sessions.session import SessionModel as _SM
+
+            _SM.objects.filter(pk=self.model.pk).update(is_paused=False)
+            try:
+                self.model.is_paused = False
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+        try:
+            from runtime.tasks.call_scheduler import CallScheduler
+
+            CallScheduler._release_next_queued_call(self.model)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
     # ------------------------------------------------------------------
     # Subagents
     # ------------------------------------------------------------------

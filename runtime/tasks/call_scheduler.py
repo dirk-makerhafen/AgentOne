@@ -866,16 +866,44 @@ class CallScheduler:
         return ancestor_ids
 
     @staticmethod
+    def _session_is_paused(session_id: int | None) -> bool:
+        """Fresh-DB check whether *session_id* is soft-paused.
+
+        Uses a narrow ``values_list`` read (no cached runtime model) so
+        workers with stale ``Session`` objects still honour a pause set
+        from the UI/API mid-turn.
+        """
+        if not session_id:
+            return False
+        try:
+            from server.models.sessions.session import SessionModel as _SM
+
+            return bool(
+                _SM.objects.filter(pk=session_id)
+                .values_list("is_paused", flat=True)
+                .first()
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            return False
+
+    @staticmethod
     def start_new_taskrun(task_call_id: int) -> None:
         """
         Transition the call to ``ACTIVE_QUEUED`` and create a new
         :class:`AgentTaskRun` for it.
+
+        Soft-pause gate: when the owning session is paused, new runs are
+        never created — the call stays parked in ``WAITING_QUEUE`` until
+        resume.  Already-running taskruns are untouched (they finish).
         """
         from server.models.tasks.agent_task_run import AgentTaskRun as _ATR
         from server.models.enums.task_enums import TaskRunStatus as _TRS
         from django.db import transaction
 
         taskcall = AgentTaskCall.objects.get(pk=task_call_id)
+
+        if CallScheduler._session_is_paused(taskcall.session_id):
+            return  # Stay in WAITING_QUEUE — resume releases later
 
         # Enforce per-TaskInstance parallel run limit.
         limit = taskcall.limit_per_instance_parallel_runs
@@ -974,7 +1002,13 @@ class CallScheduler:
         ``server.tasks.tick_scheduler``).
 
         Returns the number of calls released.
+
+        Paused sessions release nothing — the calls stay parked until resume.
         """
+        if CallScheduler._session_is_paused(
+            getattr(session_model, "pk", None) or getattr(session_model, "id", None)
+        ):
+            return 0
         from server.models.enums.task_enums import TaskCallStatusDetail
         from server.models.tasks.agent_task_call import AgentTaskCall
         from runtime.power import battery_gate_blocked
