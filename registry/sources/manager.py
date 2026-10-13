@@ -17,9 +17,11 @@ from typing import Dict, List, Optional
 import yaml
 
 from registry.sources.types import SourceConfig, SourceResult
+from runtime.paths import staging_base as _staging_base
+from runtime.paths import upstream_base as _upstream_base
 
-UPSTREAM_BASE = Path(os.path.expanduser("~/.agentone/upstream"))
-STAGING_BASE = Path(os.path.expanduser("~/.agentone/staging"))
+UPSTREAM_BASE = _upstream_base()
+STAGING_BASE = _staging_base()
 
 
 # ---------------------------------------------------------------------------
@@ -43,15 +45,20 @@ def sync_upstream_sources(
     if not sources:
         return agentone_root
 
-    staging_dir = STAGING_BASE / scope
+    staging_dir = _staging_base() / scope
     staging_dir.mkdir(parents=True, exist_ok=True)
 
     # Phase 1: rsync upstream repos into staging (base layer)
     for source in sources:
         _sync_one_source(source, staging_dir, details)
 
-    # Phase 2: overlay local files on top (local wins)
-    _rsync_into(agentone_root, staging_dir, exclude=[".git", "sources.yaml"])
+    # Phase 2: overlay local files on top (local wins).
+    # sources.yaml + skills.yaml are config-only, never content.
+    # --delete semantics: drop staged files that no longer exist upstream
+    # or locally, so deleted upstream files don't linger.
+    _rsync_into(agentone_root, staging_dir,
+                exclude=[".git", "sources.yaml", "skills.yaml"],
+                delete_extras=True)
 
     return staging_dir
 
@@ -109,7 +116,7 @@ def _sync_one_source(
 ) -> None:
     """Clone/fetch a single upstream repo and rsync its content into staging."""
     dir_name = _clone_url_to_dirname(source.repo)
-    clone_dir = UPSTREAM_BASE / dir_name
+    clone_dir = _upstream_base() / dir_name
 
     # Clone or fetch
     if not (clone_dir / ".git").exists():
@@ -171,25 +178,56 @@ def _sync_one_source(
 
 def _rsync_into(
     src: Path, dest: Path, exclude: Optional[List[str]] = None,
+    delete_extras: bool = False,
 ) -> None:
-    """Rsync *src* contents into *dest*, skipping files in *exclude*."""
+    """Rsync *src* contents into *dest*, skipping files in *exclude*.
+
+    When *delete_extras* is true, files in *dest* with no counterpart in
+    *src* are removed (mirrors ``rsync --delete`` for the staging overlay).
+    """
     cmd = ["rsync", "-a", "--checksum"]
+    if delete_extras:
+        cmd.append("--delete")
     for pattern in (exclude or []):
         cmd.extend(["--exclude", pattern])
     cmd.extend([f"{src}/", f"{dest}/"])
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
+        return
     except subprocess.CalledProcessError:
-        # Fallback: copytree with dirs_exist_ok
-        for item in src.iterdir():
-            if item.name in (exclude or []):
-                continue
-            dest_item = dest / item.name
+        pass
+    except FileNotFoundError:
+        pass
+    # Fallback: copytree with dirs_exist_ok (+ optional delete pass)
+    try:
+        src_names = {item.name for item in src.iterdir()}
+    except OSError:
+        return
+    if delete_extras:
+        try:
+            for item in dest.iterdir():
+                if item.name not in src_names and item.name not in (exclude or []):
+                    if item.is_dir() and not item.is_symlink():
+                        shutil.rmtree(item, ignore_errors=True)
+                    else:
+                        try:
+                            item.unlink()
+                        except OSError:
+                            pass
+        except OSError:
+            pass
+    for item in src.iterdir():
+        if item.name in (exclude or []):
+            continue
+        dest_item = dest / item.name
+        try:
             if item.is_dir():
                 shutil.copytree(item, dest_item, dirs_exist_ok=True)
             elif item.is_file():
                 dest_item.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(item, dest_item)
+        except OSError:
+            continue
 
 
 def _record_error(

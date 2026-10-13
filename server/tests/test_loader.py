@@ -312,11 +312,13 @@ class LoadToolAccessTest(TestCase):
 
 
 class LoadWorkspaceAccessTest(TestCase):
-    """project.md ``access:`` blocks are validated and persisted."""
+    """Workspace ``access:`` policy is DB-canonical; project.md is deprecated."""
 
     def setUp(self):
         import shutil
         import tempfile
+
+        from server.models.project import Project
 
         self._tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
@@ -324,61 +326,53 @@ class LoadWorkspaceAccessTest(TestCase):
         (self.project_root / ".agentone").mkdir(parents=True)
         self.md_path = self.project_root / ".agentone" / "project.md"
         self.md_path.write_text("---\nname: acc-proj\n---\n")
-
-    def _reload(self) -> None:
-        from registry.loader.load_project_folder import _project_to_database
-
-        _project_to_database(self.md_path, project_root=self.project_root)
-
-    def test_workspace_access_persisted(self):
-        self.md_path.write_text(
-            "---\nname: acc-proj\nworkspaces:\n"
-            "  - name: ws\n    path: ws\n"
-            "    access:\n"
-            "      read:\n"
-            "        default: allow\n"
-            "        deny: ['**/*.env']\n"
-            "      write:\n"
-            "        default: deny\n"
-            "---\n"
+        self.project = Project.objects.create(
+            name="acc-proj",
+            path=self.project_root.as_posix(),
+            manifest_dir=(self.project_root / ".agentone").as_posix(),
+            storage="inline_project",
         )
-        self._reload()
-        ws = WorkspaceModel.objects.get(name="ws")
-        self.assertEqual(ws.access["read"]["default"], "allow")
-        self.assertEqual(ws.access["write"]["default"], "deny")
-        self.assertEqual(ws.access["read"]["deny"], ["**/*.env"])
+        self.ws = WorkspaceModel.objects.create(
+            name="ws",
+            path=(self.project_root / "ws").as_posix(),
+            parent_project=self.project,
+            access={"read": {"default": "ask", "allow": [], "ask": [], "deny": []},
+                    "write": {"default": "deny", "allow": [], "ask": [], "deny": []}},
+        )
 
-    def test_reload_without_access_preserves_db_policy(self):
-        # Regression: the loader used to reset access to {} on every
-        # reload, silently wiping policy configured via the workspace UI.
-        # An entry without an `access` key must leave the DB value alone.
+    def _reload(self) -> list:
+        from registry.loader.load_project_folder import load_project_folder
+
+        details: list = []
+        load_project_folder(str(self.project_root), details=details)
+        return details
+
+    def test_project_md_deprecated_and_db_policy_preserved(self):
+        # A project.md workspaces[] entry must NOT touch the DB row:
+        # loader warns and leaves the UI-configured policy alone.
         self.md_path.write_text(
             "---\nname: acc-proj\nworkspaces:\n"
             "  - name: ws\n    path: ws\n---\n"
         )
-        self._reload()
-        ws = WorkspaceModel.objects.get(name="ws")
-        ws.access = {"read": {"default": "ask", "allow": [], "ask": [], "deny": []},
-                     "write": {"default": "deny", "allow": [], "ask": [], "deny": []}}
-        ws.save()
-        self._reload()
-        ws.refresh_from_db()
-        self.assertEqual(ws.access["read"]["default"], "ask")
-        self.assertEqual(ws.access["write"]["default"], "deny")
+        details = self._reload()
+        self.ws.refresh_from_db()
+        self.assertEqual(self.ws.access["read"]["default"], "ask")
+        self.assertEqual(self.ws.access["write"]["default"], "deny")
+        self.assertTrue(
+            any(d.get("name") == "project.md" and d.get("action") == "warning"
+                for d in details)
+        )
 
     def test_invalid_workspace_access_raises(self):
-        self.md_path.write_text(
-            "---\nname: acc-proj\nworkspaces:\n"
-            "  - name: ws\n    path: ws\n"
-            "    access:\n"
-            "      read:\n"
-            "        default: allow\n"
-            "        deny: ['/etc/**']\n"
-            "---\n"
-        )
+        from runtime.workspace_access import validate_workspace_access
+
         with self.assertRaises(ValueError):
-            self._reload()
-        self.assertFalse(WorkspaceModel.objects.filter(name="ws").exists())
+            validate_workspace_access(
+                {"read": {"default": "allow", "deny": ["/etc/**"]}},
+                source="test",
+            )
+        self.ws.refresh_from_db()
+        self.assertEqual(self.ws.access["read"]["default"], "ask")
 
 
 class LoadAgentAccessTest(AgentMdTestMixin, TestCase):
@@ -612,7 +606,7 @@ class SchemaUnionTest(SimpleTestCase):
 
         path = (
             Path(__file__).resolve().parent.parent.parent
-            / ".agentone" / "scripts" / "core" / "query_template.py"
+            / ".agentone" / "scripts" / "adhoc" / "query_template.py"
         )
         spec = importlib.util.spec_from_file_location(
             "_query_template_schema_test", path

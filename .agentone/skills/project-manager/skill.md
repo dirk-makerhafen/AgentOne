@@ -16,8 +16,7 @@ the caller can run `reload_all` to sync to the database.
 
 ```
 <project-root>/
-└── .agentone/
-    ├── project.md              # Project declaration
+└── .agentone/                  # manifests only (project metadata is DB-canonical)
     ├── agents/
     │   └── <name>/
     │       ├── agent.md
@@ -38,6 +37,8 @@ the caller can run `reload_all` to sync to the database.
     └── sets/
         └── <name>.md
 ```
+
+(Never create `project.md` — deprecated. Project metadata lives in the DB.)
 
 Your project root path was given to you at creation. All file paths below are
 relative to the project root.

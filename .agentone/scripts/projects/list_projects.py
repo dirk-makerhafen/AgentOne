@@ -1,18 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
-
-import frontmatter
-import yaml
-from django.conf import settings
-
 
 def list_projects() -> tuple[bool, dict]:
     '''
-    List all registered projects.
-
-    Reads `.agentone/projects.yaml` and returns each project's path,
-    name, and description.
+    List all registered projects (DB-canonical).
 
     Returns:
         A tuple of (success, result).
@@ -26,29 +17,14 @@ def list_projects() -> tuple[bool, dict]:
             - status: "error"
             - message: str
     '''
-    projects_yaml = Path(settings.BASE_DIR) / ".agentone" / "projects.yaml"
-    if not projects_yaml.exists():
-        return (True, {"projects": []})
-
     try:
-        with open(projects_yaml) as f:
-            raw = f.read()
-        paths: list[str] = yaml.safe_load(raw) or []
-    except Exception as e:
-        return (False, {"status": "error", "message": f"Failed to read projects.yaml: {e}"})
+        from server.models.project import Project
 
-    projects = []
-    for p in paths:
-        project_md = Path(p) / ".agentone" / "project.md"
-        name = Path(p).name
-        description = ""
-        if project_md.exists():
-            try:
-                post = frontmatter.loads(project_md.read_text(encoding="utf-8"))
-                name = post.get("name") or name
-                description = (post.content or "").strip()
-            except Exception:
-                pass
-        projects.append({"path": p, "name": name, "description": description})
+        projects = [
+            {"path": p.path, "name": p.name, "description": p.description or ""}
+            for p in Project.objects.all().order_by("name")
+        ]
+    except Exception as e:
+        return (False, {"status": "error", "message": f"Failed to list projects: {e}"})
 
     return (True, {"status": "success", "projects": projects})

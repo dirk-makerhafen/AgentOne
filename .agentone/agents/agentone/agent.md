@@ -75,10 +75,10 @@ Help the user achieve their goals by orchestrating the right specialists:
 
 Use `list_projects` to see all registered projects and their metadata.
 
-Use `create_project(project_path, name, description, workspaces)` to create
-a new project. This creates the directory, writes `project.md`, registers it
-in `projects.yaml`, and runs `reload_all`. The `workspaces` parameter is an
-optional list of `{"name": "...", "path": "..."}` dicts.
+Use `create_project(project_path, name, description)` to create
+a new project. This creates the directory and `.agentone/` manifest dir,
+a DB-canonical `Project` row (no `project.md` / `projects.yaml`) with its
+default workspace, and loads the scope.
 
 Use `call_projectmanager(project_path, task)` to send a task to a project's
 singleton project_assistant session. The session is shared globally — all

@@ -1,9 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-import yaml
-from django.conf import settings
+from typing import TYPE_CHECKING
 
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
@@ -84,9 +81,12 @@ class ProjectCreateView(PyHtmlView):
             self.update()
             return
 
+        # DB-canonical projects: no project.md, no projects.yaml.
+        # The manifest tree lives at <path>/.agentone (inline_project).
+        from runtime.paths import ensure_private_dir  # noqa: F401 (kept for symmetry)
+
         root = Path(project_path)
         agentone_dir = root / ".agentone"
-        project_md_path = agentone_dir / "project.md"
 
         if not root.is_dir():
             try:
@@ -103,51 +103,53 @@ class ProjectCreateView(PyHtmlView):
             self.update()
             return
 
-        frontmatter: dict[str, Any] = {"name": name}
-        frontmatter["workspaces"] = [
-            dict(name=f"{name} project root", path=project_path, description="project root directory"),
-        ]
-
-        lines = ["---", yaml.dump(frontmatter, default_flow_style=False).strip(), "---"]
         description = fd.get("description", "").strip()
-        if description:
-            lines.append("")
-            lines.append(description)
-
         try:
-            project_md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        except OSError as e:
-            self._form_error = f"Failed to write project.md: {e}"
-            self.update()
-            return
+            from server.models.project import Project
+            from server.models.workspace import WorkspaceModel
 
-        projects_yaml = Path(settings.BASE_DIR) / ".agentone" / "projects.yaml"
-        try:
-            if projects_yaml.exists():
-                existing = yaml.safe_load(projects_yaml.read_text(encoding="utf-8")) or []
-            else:
-                existing = []
-        except Exception as e:
-            self._form_error = f"Failed to read projects.yaml: {e}"
-            self.update()
-            return
-
-        if project_path not in existing:
-            existing.append(project_path)
-
-        try:
-            projects_yaml.write_text(
-                yaml.dump(existing, default_flow_style=False),
-                encoding="utf-8",
+            proj, _ = Project.objects.get_or_create(
+                name=name,
+                defaults={
+                    "path": project_path,
+                    "description": description,
+                    "manifest_dir": agentone_dir.as_posix(),
+                    "storage": "inline_project",
+                },
             )
-        except OSError as e:
-            self._form_error = f"Failed to write projects.yaml: {e}"
+            # Keep the row canonical when re-saving an existing name.
+            updates = {}
+            if not getattr(proj, "manifest_dir", ""):
+                updates["manifest_dir"] = agentone_dir.as_posix()
+            if not getattr(proj, "storage", ""):
+                updates["storage"] = "inline_project"
+            if description and not proj.description:
+                updates["description"] = description
+            if updates:
+                Project.objects.filter(pk=proj.pk).update(**updates)
+
+            # Default workspace (previously via project.md workspaces[]).
+            ws, ws_created = WorkspaceModel.objects.get_or_create(
+                name=f"{name} project root",
+                defaults={
+                    "path": project_path,
+                    "description": "project root directory",
+                    "parent_project": proj,
+                },
+            )
+            if ws.parent_project_id is None and ws_created is False:
+                WorkspaceModel.objects.filter(pk=ws.pk).update(parent_project=proj)
+            if proj.main_workspace_id is None:
+                Project.objects.filter(pk=proj.pk).update(main_workspace=ws)
+        except Exception as e:
+            self._form_error = f"Failed to create project: {e}"
             self.update()
             return
 
         try:
-            from django.core.management import call_command
-            call_command("reload_all", project_path)
+            from registry.loader.load_project_folder import load_project_folder
+
+            load_project_folder(project_path)
         except Exception as e:
             self._form_error = f"Project created but sync failed: {e}"
             self.update()

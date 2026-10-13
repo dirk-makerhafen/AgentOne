@@ -115,7 +115,8 @@ The `access:` block defines a filesystem access policy for filesystem, shell,
 and Python tools. It has two scopes:
 
 - **`workspace`** — overrides the rules *inside* the workspace (see
-  [project.md workspace entry](#workspace-entry) for the base rules). Patterns
+  [Workspace Entry](#workspace-entry) for the base rules, stored on the
+  DB-canonical `WorkspaceModel.access`). Patterns
   must be workspace-relative (no leading `/`, no `..`, no `~`).
 - **`external`** — rules for paths *outside* the workspace. Patterns must be
   absolute or `~`-anchored. When unset, external `default` falls back to `deny`.
@@ -550,11 +551,16 @@ on_removed:
 ---
 ```
 
-## `project.md` — Project Declaration
+## `project.md` — Project Declaration (DEPRECATED)
 
-Declares a project with optional workspace definitions. Lives at `.agentone/project.md` at the root of a project folder.
+> DB-canonical: projects and workspaces live in the DB (`Project` /
+> `WorkspaceModel`), edited via UI/API. `project.md` and `projects.yaml`
+> are warn-and-ignore leftovers (see `docs/folders.md`). Safe to delete.
+> The format below documents legacy files only.
 
-Each project folder is referenced in `.agentone/projects.yaml` (a YAML list of directory paths).
+Declares a project with optional workspace definitions. Lived at `.agentone/project.md` at the root of a project folder (legacy file layout — see below).
+
+Each project folder was referenced in `.agentone/projects.yaml` (a YAML list of directory paths; removed — projects are DB rows now).
 
 ```yaml
 ---
@@ -618,7 +624,13 @@ access:
     deny: []
 ```
 
-When the project is loaded (via `reload_all`), each workspace is created or updated as a `WorkspaceModel` record. Relative paths are resolved relative to the project folder containing `.agentone/`. Workspaces are available for selection in cron jobs, session workspaces, and the workspace sidebar.
+Legacy loader behavior (before DB-canonical projects): when the project was
+loaded (via `reload_all`), each workspace was created or updated as a
+`WorkspaceModel` record. Relative paths were resolved relative to the project
+folder containing `.agentone/`. Workspaces are available for selection in cron
+jobs, session workspaces, and the workspace sidebar. Today workspaces are
+created/edited via the UI and linked with `WorkspaceModel.parent_project` /
+`Project.main_workspace` (see `docs/folders.md`).
 
 ---
 
@@ -652,15 +664,19 @@ When the project is loaded (via `reload_all`), each workspace is created or upda
 │       ├── agent.md
 │       └── scripts/
 │           └── scripts.md
-└── projects.yaml               # Project references
 ```
+
+Project and workspace manifest trees use the same layout (`agents/`,
+`skills/`, `scripts/`, `cronjobs/`, `streams/`, `sets/`); user scope mirrors
+it under `~/.agentone/`. (`projects.yaml` was removed — projects are
+DB-canonical, see `docs/folders.md`.)
 
 ### Key Rules
 
 1. **`scripts.md`** is the single source of truth — no `@tool()`/`@task()` decorators
 2. Manifests use `---` both to open **and** close the frontmatter block
 3. Python files are loaded via `importlib`, never `exec()`
-4. Version identifiers are **git tree SHAs** from install repos at ``~/.agentone/install/`` (one per scope: global + per-project). Tree SHAs are deterministic — same content always produces the same hash.
+4. Version identifiers are **git tree SHAs** from install repos at ``~/.agentone/install/`` (one per scope: global, user, per-project, per-workspace). Tree SHAs are deterministic — same content always produces the same hash.
 5. Versioned models (`AgentVersionModel`, `TaskDefinitionVersion`, etc.) are immutable — `save()` raises `ValidationError` if `pk` exists
 
 ---
@@ -671,7 +687,9 @@ When the project is loaded (via `reload_all`), each workspace is created or upda
 
 1. **Sync — copy sources into install repos:**
    - Global: ``rsync .agentone/ → ~/.agentone/install/global/``
-   - Per-project: ``rsync project/.agentone/ → ~/.agentone/install/project_<name>/``
+   - User: ``rsync ~/.agentone/ → ~/.agentone/install/user/``
+   - Per-project: ``rsync <manifest_dir>/ → ~/.agentone/install/project_<name>/``
+   - Per-workspace: ``rsync <manifest_dir>/ → ~/.agentone/install/workspace_<name>/``
    - ``git add -A && git commit`` (only if dirty) in each install repo
 
 2. **Pass 1 — Create models:**
@@ -679,7 +697,8 @@ When the project is loaded (via `reload_all`), each workspace is created or upda
     - Load global ``skills/`` → create ``SkillModel`` + ``SkillModelVersion``
     - Load global ``agents/`` → recursively create ``AgentModel`` + ``AgentVersionModel`` (with ``defined_*versions`` for scripts, skills, subagents)
     - Load global ``cronjobs/`` → upsert ``Cronjob`` by ``name``
-    - For each project in ``projects.yaml``, repeat (same steps + cronjobs/ per project)
+    - Load user scope (same steps, global namespace — user versions win)
+    - For each `Project` row in the DB, repeat from its manifest dir (same steps + cronjobs/ per project); then each managed workspace scope under its parent project
    - Version identifiers are **git tree SHAs** computed via ``git rev-parse HEAD:{relative_path}`` for each manifest folder
 
 3. **During Pass 1 (per-agent):**

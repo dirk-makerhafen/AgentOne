@@ -132,9 +132,9 @@ A `BoundTask` ties a `TaskDefinitionVersion` to a specific session. It is create
 
 **File:** `runtime/workspace_access.py`
 
-An optional `access:` block on a workspace (`project.md`) and/or agent
-(`agent.md`) restricts which paths filesystem, shell, and Python tools may read
-or write. See [docs/manifest-format.md](manifest-format.md) for the config
+An optional `access:` block on a workspace (`WorkspaceModel.access`, DB-canonical)
+and/or agent (`agent.md`) restricts which paths filesystem, shell, and Python
+tools may read or write. See [docs/manifest-format.md](manifest-format.md) for the config
 schema.
 
 **Policy resolution** — `resolve_policy(session)` (line 175) merges the

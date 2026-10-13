@@ -132,11 +132,10 @@ ui/                 Web UI (pyHtmlGui)
   static/js3party/  Vendored JS (jQuery, Bootstrap, D3, Split.js, etc.)
   templates/        Jinja2 base templates
 
-.agentone/          Active configuration
+.agentone/          Active configuration (global scope; see docs/folders.md)
   agents/           Agent definitions (agent.md files with YAML frontmatter)
   scripts/          Tool/task scripts organized by group
   skills/           Skill installation configuration
-  projects.yaml     Project path references
 ```
 
 ## How to add a new model

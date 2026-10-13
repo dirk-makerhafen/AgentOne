@@ -1,18 +1,28 @@
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-import yaml
 from django.core.management.base import BaseCommand, CommandError
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_data_collection import load_data_collection_manifest
-from registry.loader.load_project_folder import load_project_folder
+from registry.loader.load_project_folder import load_project_folder, load_scope_dir
 from registry.loader.load_providers import load_providers_dir
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.utils import find_agent_md_files
 from registry.sources.manager import sync_upstream_sources
+from runtime.paths import (
+    central_projects_base,
+    central_workspaces_base,
+    project_manifest_dir,
+    user_agents_dir,
+    user_cronjobs_dir,
+    user_scope_dir,
+    user_scripts_dir,
+    user_skills_dir,
+    workspace_manifest_dir,
+)
 from server.models.cron import Cronjob
 
 
@@ -115,6 +125,10 @@ def run_reload_all(folder: str) -> ReloadResult:
         Cronjob.objects.filter(parent_project__isnull=True, is_archived=False).exclude(name__in=seen).update(is_archived=True)
         counts["cron_jobs"] = cron_count
 
+    # User scope (~/.agentone/{agents,skills,scripts,cronjobs}/).
+    # Loads into the global namespace (same rows, new versions win).
+    _load_user_scope(details=details, errors=errors, counts=counts)
+
     # Global streams (no parent)
     streams_dir = effective_root / "streams"
     if streams_dir.is_dir():
@@ -141,22 +155,21 @@ def run_reload_all(folder: str) -> ReloadResult:
                 errors.append(f"Set {set_md.stem}: {e}")
         counts["sets"] = set_count
 
-    # Projects
+    # Deprecated projects.yaml — warn-and-ignore, never read as registry.
     projects_file = agentone_path / "projects.yaml"
     if projects_file.exists():
-        try:
-            with projects_file.open(encoding="utf-8") as f:
-                project_paths: List[str] = yaml.safe_load(f) or []
-        except Exception as e:
-            errors.append(f"projects.yaml: {e}")
-            project_paths = []
+        details.append({
+            "name": "projects.yaml", "type": "project", "action": "warning",
+            "warning": f"deprecated, ignored (projects are DB-canonical): {projects_file}",
+        })
 
-        for project_path in project_paths:
-            try:
-                load_project_folder(project_path, details=details)
-                counts["projects"] += 1
-            except Exception as e:
-                errors.append(f"Project {project_path}: {e}")
+    # Projects — DB-driven. Existing rows are untouched; each row's
+    # manifest dir (or legacy <path>/.agentone fallback) is loaded.
+    # Workspace-scoped manifest dirs load under their parent project.
+    _load_db_projects(details=details, errors=errors, counts=counts)
+
+    # Orphan warnings: central dirs with no DB row (no autoscan/import).
+    _warn_orphan_scope_dirs(details=details)
 
     # Providers + models from research frontmatter dirs.  Missing files
     # disable (not delete) their rows so call history stays intact.
@@ -179,6 +192,147 @@ def run_reload_all(folder: str) -> ReloadResult:
     return {"status": status, "summary": summary, "counts": counts, "details": details, "errors": errors}
 
 
+def _load_user_scope(details: list, errors: list, counts: Dict[str, int]) -> None:
+    """Load ``~/.agentone/{scripts,skills,agents,cronjobs}/`` as user scope.
+
+    Loads into the global namespace (same DB rows, user versions win by
+    loading after global). Missing dirs are skipped silently.
+    """
+    root = user_scope_dir()
+    if not root.is_dir():
+        return
+    user_install = InstallRepo.for_user(source_root=root)
+    try:
+        user_install.sync()
+    except Exception as e:
+        errors.append(f"User scope sync: {e}")
+        return
+
+    scripts_dir = user_scripts_dir()
+    if scripts_dir.is_dir():
+        try:
+            results = load_scripts_manifest(scripts_dir, install_repo=user_install, details=details)
+            counts["scripts"] = counts.get("scripts", 0) + (len(results) if results else 0)
+        except Exception as e:
+            errors.append(f"User scripts: {e}")
+
+    skills_dir = user_skills_dir()
+    if skills_dir.is_dir():
+        for skill_md in sorted(skills_dir.glob("**/skill.md")):
+            try:
+                load_skill_manifest(skill_md, install_repo=user_install, details=details)
+            except Exception as e:
+                errors.append(f"User skill {skill_md.stem}: {e}")
+
+    agents_dir = user_agents_dir()
+    if agents_dir.is_dir():
+        for agent_md in find_agent_md_files(agents_dir):
+            try:
+                load_agent_manifest(agent_md, install_repo=user_install, details=details)
+            except Exception as e:
+                errors.append(f"User agent {agent_md.parent.name}: {e}")
+
+    crons_dir = user_cronjobs_dir()
+    if crons_dir.is_dir():
+        seen = set()
+        for cron_md in sorted(crons_dir.glob("*.md")):
+            try:
+                load_cron_manifest(cron_md, install_repo=user_install, seen_names=seen, details=details)
+            except Exception as e:
+                errors.append(f"User cron {cron_md.stem}: {e}")
+
+
+def _load_db_projects(details: list, errors: list, counts: Dict[str, int]) -> None:
+    """Load manifest dirs for every Project row + managed Workspace rows."""
+    from server.models.project import Project
+    from server.models.workspace import WorkspaceModel
+
+    try:
+        projects = list(Project.objects.all().order_by("name"))
+    except Exception as e:
+        errors.append(f"Projects DB: {e}")
+        return
+    for project in projects:
+        try:
+            manifest = Path(project_manifest_dir(project))
+            if not manifest.is_dir():
+                details.append({
+                    "name": project.name, "type": "project",
+                    "action": "warning",
+                    "warning": f"manifest dir missing, skipped: {manifest}",
+                })
+                continue
+            load_scope_dir(manifest, project, details=details)
+            counts["projects"] = counts.get("projects", 0) + 1
+        except Exception as e:
+            errors.append(f"Project {project.name}: {e}")
+
+    try:
+        workspaces = list(WorkspaceModel.objects.exclude(manifest_dir="").order_by("name"))
+    except Exception as e:
+        errors.append(f"Workspaces DB: {e}")
+        return
+    for ws in workspaces:
+        try:
+            manifest = workspace_manifest_dir(ws)
+            if manifest is None:
+                continue
+            manifest = Path(manifest)
+            if not manifest.is_dir():
+                details.append({
+                    "name": ws.name, "type": "project",
+                    "action": "warning",
+                    "warning": f"workspace manifest dir missing, skipped: {manifest}",
+                })
+                continue
+            project = ws.parent_project
+            if project is None:
+                from server.models.project import Project as _P
+                # Workspace without a project loads into the global namespace
+                # under a lightweight synthetic scope is not supported yet;
+                # skip with a warning instead of guessing ownership.
+                details.append({
+                    "name": ws.name, "type": "project",
+                    "action": "warning",
+                    "warning": "workspace has manifest dir but no parent_project — link it first",
+                })
+                continue
+            load_scope_dir(manifest, project, details=details)
+        except Exception as e:
+            errors.append(f"Workspace {ws.name}: {e}")
+
+
+def _warn_orphan_scope_dirs(details: list) -> None:
+    """Warn for central dirs with no DB row (no autoscan/import by design)."""
+    from server.models.project import Project
+    from server.models.workspace import WorkspaceModel
+
+    for base, model, field in (
+        (central_projects_base(), Project, "manifest_dir"),
+        (central_workspaces_base(), WorkspaceModel, "manifest_dir"),
+    ):
+        try:
+            if not base.is_dir():
+                continue
+            for entry in sorted(base.iterdir()):
+                if not entry.is_dir():
+                    continue
+                try:
+                    exists = model.objects.filter(manifest_dir=entry.as_posix()).exists()
+                except Exception:
+                    continue
+                if not exists:
+                    # Also match by central name convention for rows that
+                    # store a different but equivalent path.
+                    details.append({
+                        "name": entry.name, "type": "orphan",
+                        "action": "warning",
+                        "warning": f"{entry} has no database entry — create it in the UI or delete the dir",
+                    })
+        except Exception:
+            continue
+
+
 TYPE_LABELS: Dict[str, str] = {
     "agent": "agents",
     "script": "scripts/tools",
@@ -189,6 +343,8 @@ TYPE_LABELS: Dict[str, str] = {
     "project": "projects",
     "provider": "providers",
     "model": "models",
+    "orphan": "orphans",
+    "source": "sources",
 }
 
 _SINGULAR_LABELS: Dict[str, str] = {

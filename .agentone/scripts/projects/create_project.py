@@ -2,9 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import yaml
-from django.conf import settings
-
 
 def create_project(
     project_path: str,
@@ -12,22 +9,16 @@ def create_project(
     description: str = "",
 ) -> tuple[bool, dict]:
     '''
-    Create a new project directory with ``.agentone/project.md`` and
-    register it in ``.agentone/projects.yaml``.
+    Create a new project (DB-canonical; no ``project.md`` / ``projects.yaml``).
 
-    Does NOT create an ``.agentone/`` directory — that is created lazily
-    by the project_assistant when project-specific agents or configs are added.
-
-    After creating the files, runs ``reload_all`` to sync into the database.
+    Creates the ``.agentone/`` manifest dir, a ``Project`` row
+    (``storage=inline_project``) with its default workspace row, then loads
+    the scope into the database.
 
     Args:
         project_path: Absolute path for the new project root directory.
         name: Short unique name for the project.
         description: Optional project description.
-        workspaces: Optional list of workspace dicts, each with:
-            - name: str (required)
-            - path: str (required, absolute or relative to project root)
-            - description: str (optional)
 
     Returns:
         A tuple of (success, result).
@@ -47,48 +38,40 @@ def create_project(
     except OSError as e:
         return (False, {"status": "error", "message": f"Cannot create directory {project_path}: {e}"})
 
-    frontmatter_data: dict = {"name": name}
-    frontmatter_data["workspaces"] = [
-        dict(name=f"{name} project root", path=project_path, description="project root directory")
-    ]
-
-    project_md_lines = [
-        "---",
-        yaml.dump(frontmatter_data, default_flow_style=False).strip(),
-        "---",
-    ]
-    if description:
-        project_md_lines.append("")
-        project_md_lines.append(description.strip())
-
-    project_md_path = agentone_dir / "project.md"
-    project_md_path.write_text("\n".join(project_md_lines) + "\n", encoding="utf-8")
-
-    projects_yaml = Path(settings.BASE_DIR) / ".agentone" / "projects.yaml"
     try:
-        if projects_yaml.exists():
-            existing = yaml.safe_load(projects_yaml.read_text(encoding="utf-8")) or []
-        else:
-            existing = []
-    except Exception as e:
-        return (False, {"status": "error", "message": f"Failed to read projects.yaml: {e}"})
+        from server.models.project import Project
+        from server.models.workspace import WorkspaceModel
 
-    if project_path not in existing:
-        existing.append(project_path)
-
-    try:
-        projects_yaml.write_text(
-            yaml.dump(existing, default_flow_style=False),
-            encoding="utf-8",
+        proj, _ = Project.objects.get_or_create(
+            name=name,
+            defaults={
+                "path": project_path,
+                "description": description.strip(),
+                "manifest_dir": agentone_dir.as_posix(),
+                "storage": "inline_project",
+            },
         )
-    except OSError as e:
-        return (False, {"status": "error", "message": f"Failed to write projects.yaml: {e}"})
+        ws, ws_created = WorkspaceModel.objects.get_or_create(
+            name=f"{name} project root",
+            defaults={
+                "path": project_path,
+                "description": "project root directory",
+                "parent_project": proj,
+            },
+        )
+        if ws.parent_project_id is None and ws_created is False:
+            WorkspaceModel.objects.filter(pk=ws.pk).update(parent_project=proj)
+        if proj.main_workspace_id is None:
+            Project.objects.filter(pk=proj.pk).update(main_workspace=ws)
+    except Exception as e:
+        return (False, {"status": "error", "message": f"Failed to create project row: {e}"})
 
     try:
-        from django.core.management import call_command
-        call_command("reload_all", project_path)
+        from registry.loader.load_project_folder import load_project_folder
+
+        load_project_folder(project_path)
     except Exception as e:
         return (True, {"status": "created_not_synced", "path": project_path, "name": name,
-                       "message": f"Project files created but reload_all failed: {e}"})
+                       "message": f"Project created but sync failed: {e}"})
 
     return (True, {"status": "success", "path": project_path, "name": name})

@@ -36,3 +36,16 @@ class Project(ObservableMixin, models.Model):
     description: str = models.TextField(default="", max_length=10000, help_text="")
     path: str = models.CharField(max_length=255, help_text="")
 
+    # Folder handling (DB-canonical; project.md / projects.yaml deprecated).
+    # manifest_dir: the .agentone manifest tree for this project. Blank =
+    # legacy fallback <path>/.agentone (see runtime.paths.project_manifest_dir).
+    manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
+    # storage: inline_project | inline_workspace | central | git
+    storage: str = models.CharField(max_length=32, default="", blank=True)
+    git_url: str = models.CharField(max_length=1024, default="", blank=True)
+    git_ref: str = models.CharField(max_length=255, default="", blank=True)
+    main_workspace = models.ForeignKey(
+        "server.WorkspaceModel", default=None, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="primary_for_projects",
+    )
+

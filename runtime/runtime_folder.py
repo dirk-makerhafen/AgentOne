@@ -16,9 +16,14 @@ from pathlib import Path
 from typing import Optional
 
 from registry.install_repo import InstallRepo
+from runtime.paths import runtime_base as _runtime_base
 
 
-RUNTIME_BASE = Path(os.path.expanduser("~/.agentone/runtime"))
+def _base() -> Path:
+    return _runtime_base()
+
+
+RUNTIME_BASE = _runtime_base()
 STALE_SECONDS = 3600  # 1 hour — folders older than this are eligible for cleanup
 
 
@@ -34,7 +39,7 @@ class RuntimeFolder:
 
     def __init__(self, task_definition_version: object) -> None:
         self.tdv = task_definition_version
-        self.folder = RUNTIME_BASE / str(task_definition_version.pk)
+        self.folder = _base() / str(task_definition_version.pk)
 
     # ------------------------------------------------------------------
     # Public API
@@ -101,11 +106,12 @@ class RuntimeFolder:
 
         Returns the number of folders removed.
         """
-        if not RUNTIME_BASE.exists():
+        base = _base()
+        if not base.exists():
             return 0
         now = int(time.time())
         removed = 0
-        for entry in sorted(RUNTIME_BASE.iterdir()):
+        for entry in sorted(base.iterdir()):
             if not entry.is_dir():
                 continue
             lu = cls.last_used_time(entry)

@@ -77,3 +77,14 @@ class WorkspaceModel(ObservableMixin, models.Model):
             "workspace-relative globs."
         ),
     )
+
+    # Folder handling (DB-canonical; workspace.md never existed as a file).
+    parent_project = models.ForeignKey(
+        "server.Project", default=None, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="workspaces",
+    )
+    # storage: inline | central
+    storage: str = models.CharField(max_length=32, default="", blank=True)
+    # manifest_dir: workspace-scoped .agentone tree. Blank = unmanaged
+    # (workspace is a bare cwd with no manifests of its own).
+    manifest_dir: str = models.CharField(max_length=4096, default="", blank=True)

@@ -23,7 +23,14 @@ import time
 from pathlib import Path
 from typing import Optional
 
-INSTALL_BASE = Path(os.path.expanduser("~/.agentone/install"))
+from runtime.paths import install_base as _install_base
+
+
+def _base() -> Path:
+    return _install_base()
+
+
+INSTALL_BASE = _install_base()
 
 
 class InstallRepo:
@@ -54,7 +61,29 @@ class InstallRepo:
     @classmethod
     def for_global(cls, source_root: Optional[Path] = None) -> "InstallRepo":
         """Create the global install repo at ``INSTALL_BASE / "global"``."""
-        repo = cls(repo_path=INSTALL_BASE / "global")
+        repo = cls(repo_path=_base() / "global")
+        if source_root is not None:
+            repo.source_root = source_root.resolve()
+        return repo
+
+    @classmethod
+    def for_user(cls, source_root: Optional[Path] = None) -> "InstallRepo":
+        """Create the user-scope install repo at ``INSTALL_BASE / "user"``.
+
+        User manifests (``~/.agentone/{agents,skills,scripts,cronjobs}/``)
+        load into the global namespace (same DB rows, new versions win).
+        """
+        repo = cls(repo_path=_base() / "user")
+        if source_root is not None:
+            repo.source_root = source_root.resolve()
+        return repo
+
+    @classmethod
+    def for_workspace(cls, workspace_name: str,
+                      source_root: Optional[Path] = None) -> "InstallRepo":
+        """Create a per-workspace install repo at ``INSTALL_BASE / "workspace_{name}"``."""
+        safe = workspace_name.replace(" ", "_").replace("/", "_")
+        repo = cls(repo_path=_base() / f"workspace_{safe}")
         if source_root is not None:
             repo.source_root = source_root.resolve()
         return repo
@@ -64,7 +93,7 @@ class InstallRepo:
                     source_root: Optional[Path] = None) -> "InstallRepo":
         """Create a per-project install repo at ``INSTALL_BASE / "project_{name}"``."""
         safe = project_name.replace(" ", "_").replace("/", "_")
-        repo = cls(repo_path=INSTALL_BASE / f"project_{safe}")
+        repo = cls(repo_path=_base() / f"project_{safe}")
         if source_root is not None:
             repo.source_root = source_root.resolve()
         return repo

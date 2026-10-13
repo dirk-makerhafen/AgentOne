@@ -286,9 +286,13 @@ Removing a file and reloading archives the record (preserves tracking data).
 
 ---
 
-## project.md — Project Declaration
+## project.md — Project Declaration (DEPRECATED)
 
-Location: `.agentone/project.md` at project root
+> Projects/workspaces are DB-canonical (`Project` / `WorkspaceModel` rows,
+> see `docs/folders.md`). `project.md` and `projects.yaml` leftovers are
+> warn-and-ignore. Do not create them.
+
+Location: `.agentone/project.md` at project root (legacy only)
 
 ```yaml
 ---
@@ -301,8 +305,8 @@ workspaces:
 <Project description body>
 ```
 
-Projects are referenced in `.agentone/projects.yaml` (YAML list of directory
-paths).
+Projects were referenced in `.agentone/projects.yaml` (removed — projects are
+DB-canonical; leftover files warn-and-ignore).
 
 ---
 
@@ -337,5 +341,7 @@ paths).
 │           └── *.py
 ├── streams/                    # Append-only stream data flows
 │   └── <name>.md
-└── projects.yaml               # Project references
 ```
+
+User scope mirrors this layout under `~/.agentone/` (`agents/ skills/
+scripts/ cronjobs/`). Full layout incl. derived state: `docs/folders.md`.

@@ -1,32 +1,34 @@
+"""Project/workspace scope loader (DB-canonical).
+
+Metadata (name, description, workspaces, storage) lives in the DB.
+``project.md`` and ``projects.yaml`` are deprecated: when found on disk the
+loader emits a warn-and-ignore entry and never creates/updates rows from
+them. Existing rows are left untouched.
+
+``load_project_folder(folder)`` is kept as a compatibility entry point:
+it resolves the owning Project row (by path or manifest dir) and loads the
+manifest tree underneath it. ``load_scope_dir(manifest_dir, project)`` is
+the preferred direct entry point.
+"""
+
 from pathlib import Path
 
-import frontmatter
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
-from runtime.workspace_access import validate_workspace_access
+from runtime.paths import project_manifest_dir
 from server.models.cron import Cronjob
 from server.models.project import Project
-from server.models.workspace import WorkspaceModel
 
 
-def load_project_folder(folder: str, details: list | None = None) -> None:
-    """Load scripts, skills, agents, cron jobs, and workspaces for a project.
-
-    Expects a ``.agentone/`` directory at the root of *folder* with the
-    standard subdirectory layout (``scripts/``, ``skills/``, ``agents/``, ``crons/``).
-
-    Files are first synced into a per-project install repo, then version
-    identifiers are derived from git tree SHAs for each manifest folder.
-    """
-    project_root = Path(folder)
-    project_folder = project_root / ".agentone"
-    project, project_created = _project_to_database(project_folder / "project.md", project_root=project_root)
-    if details is not None:
-        details.append({"name": project.name, "type": "project", "action": "created" if project_created else "up to date"})
+def load_scope_dir(manifest_dir: str | Path, project,
+                   details: list | None = None) -> None:
+    """Load scripts/skills/agents/cronjobs from *manifest_dir* for *project*."""
+    project_folder = Path(manifest_dir)
+    _warn_if_project_md(project_folder, details)
 
     install_repo = InstallRepo.for_project(
         project_name=project.name,
@@ -68,55 +70,117 @@ def load_project_folder(folder: str, details: list | None = None) -> None:
         Cronjob.objects.filter(parent_project=project, is_archived=False).exclude(name__in=seen).update(is_archived=True)
 
 
-def _project_to_database(project_md_path: Path, project_root: Path | None = None) -> tuple[Project, bool]:
-    """Create or return a ``Project`` from a ``project.md`` file.
+def load_project_folder(folder: str, details: list | None = None) -> None:
+    """Compatibility entry: load the manifest tree rooted at *folder*.
 
-    Reads the YAML frontmatter for ``name`` and uses the body as the
-    project description.
-
-    If the frontmatter contains a ``workspaces`` list, each entry is
-    created or updated as a ``WorkspaceModel``. Relative paths are
-    resolved against *project_root*.
-
-    Returns ``(project, created)`` where *created* indicates whether
-    the ``Project`` row was newly created.
+    *folder* may be a project root (containing ``.agentone/``) or the
+    ``.agentone`` manifest dir itself. The owning Project row is resolved
+    by path — never created from ``project.md`` except as a legacy
+    one-time import with a deprecation warning.
     """
-    project_md = frontmatter.load(project_md_path)
-    project, created = Project.objects.get_or_create(
-        name=project_md.get("name"),
-        
-        defaults={
-            "path": project_md_path.parent.as_posix(),
-            "description": project_md.content,
-        },
-    )
+    project_root = Path(folder)
+    if project_root.name == ".agentone":
+        project_folder = project_root
+        project_root = project_root.parent
+    else:
+        project_folder = project_root / ".agentone"
 
-    for entry in project_md.get("workspaces") or []:
-        name = (entry or {}).get("name", "").strip()
-        desc = (entry or {}).get("description", "")
-        raw_path = (entry or {}).get("path", "")
-        access = (entry or {}).get("access")
-        if not name or not raw_path:
-            continue
+    project = _resolve_project(project_root, project_folder, details)
+    if project is None:
+        if details is not None:
+            details.append({
+                "name": project_root.as_posix(), "type": "project",
+                "action": "warning",
+                "warning": "no Project row for this folder — create it in the UI first",
+            })
+        return
 
-        validate_workspace_access(access, source=f"project.md workspace {name!r}")
+    manifest = Path(project_manifest_dir(project))
+    if not manifest.is_dir():
+        # Fall back to the folder the caller pointed at.
+        manifest = project_folder if project_folder.is_dir() else project_root
+    if details is not None:
+        details.append({"name": project.name, "type": "project", "action": "up to date"})
+    load_scope_dir(manifest, project, details=details)
 
-        p = Path(raw_path)
-        if not p.is_absolute() and project_root is not None:
-            p = project_root / raw_path
-        resolved = p.resolve().as_posix() if p.exists() else p.as_posix()
 
-        WorkspaceModel.objects.update_or_create(
-            name=name,
-            defaults={
-                "description": desc or "",
-                "path": resolved,
-                # Only touch access when the manifest declares it: the
-                # workspace UI edits the same field, and an unconditional
-                # write here would silently wipe UI-made policy on every
-                # reload.  Absent key = leave the DB value alone.
-                **({"access": access or {}} if "access" in (entry or {}) else {}),
-            },
+def load_workspace_scope(manifest_dir: str | Path, project,
+                         details: list | None = None) -> None:
+    """Load a workspace-scoped manifest tree under *project*'s namespace."""
+    load_scope_dir(manifest_dir, project, details=details)
+
+
+def _warn_if_project_md(project_folder: Path, details: list | None) -> None:
+    md = project_folder / "project.md"
+    if md.is_file() and details is not None:
+        details.append({
+            "name": "project.md", "type": "project", "action": "warning",
+            "warning": f"deprecated, ignored (DB-canonical): {md}",
+        })
+
+
+def _resolve_project(project_root: Path, project_folder: Path,
+                     details: list | None):
+    """Find the Project row for *project_root*, legacy-importing if needed."""
+    qs = Project.objects.filter(path=project_root.as_posix())
+    project = qs.first()
+    if project is None:
+        # Also match rows whose path already points at the .agentone dir.
+        project = Project.objects.filter(path=project_folder.as_posix()).first()
+    if project is not None:
+        _warn_if_project_md(project_folder, details)
+        return project
+    # Legacy one-time import: a project.md exists but no row yet.
+    md = project_folder / "project.md"
+    if md.is_file():
+        try:
+            import frontmatter
+
+            data = frontmatter.load(md)
+            name = (data.get("name") or project_root.name).strip()
+            project = Project.objects.create(
+                name=name or project_root.name,
+                path=project_root.as_posix(),
+                description=data.content or "",
+                manifest_dir=project_folder.as_posix(),
+                storage="inline_project",
+            )
+            if details is not None:
+                details.append({
+                    "name": project.name, "type": "project",
+                    "action": "created",
+                    "warning": f"legacy import from deprecated {md}",
+                })
+            return project
+        except Exception as exc:  # never break reload on a bad file
+            if details is not None:
+                details.append({
+                    "name": project_root.as_posix(), "type": "project",
+                    "action": "error", "error": f"legacy project.md unreadable: {exc}",
+                })
+            return None
+    # DB-only fallback: create a minimal row so a bare manifest dir is
+    # loadable without any deprecated files.
+    try:
+        project = Project.objects.create(
+            name=project_root.name,
+            path=project_root.as_posix(),
+            description="",
+            manifest_dir=project_folder.as_posix() if project_folder.is_dir() else "",
+            storage="inline_project",
         )
+        if details is not None:
+            details.append({
+                "name": project.name, "type": "project", "action": "created",
+            })
+        return project
+    except Exception:
+        return None
 
-    return project, created
+
+def _project_to_database(*args, **kwargs):
+    """Deprecated: metadata is DB-canonical, project.md is warn-and-ignore."""
+    raise RuntimeError(
+        "_project_to_database is removed: projects are DB-canonical, "
+        "project.md is deprecated (warn-and-ignore)."
+    )

@@ -2,8 +2,9 @@
 Load a skill's markdown content by name.
 
 Uses the session's allowed skills to look up a SkillModelVersion, reads
-the versioned ``skill.md`` from ``~/.agentone/runtime/<pk>/``, parses
-YAML frontmatter, and returns the metadata + body to the agent.
+the versioned ``skill.md`` from its versioned runtime path
+(``SkillModelVersion.path``, extracted under ``~/.agentone/runtime/``),
+parses YAML frontmatter, and returns the metadata + body to the agent.
 """
 
 from __future__ import annotations

@@ -23,9 +23,11 @@ by :func:`cleanup_orphaned_session_folders`.
 
 from __future__ import annotations
 
-import os
 import shutil
 from pathlib import Path
+
+
+from runtime.paths import ensure_private_dir, sessions_base as _sessions_base
 
 
 def get_sessions_base() -> Path:
@@ -35,16 +37,7 @@ def get_sessions_base() -> Path:
     so operators can point it elsewhere via ``config/settings_local.py``
     and tests can redirect it.  Pure path computation, no I/O.
     """
-    try:
-        from django.conf import settings as _settings
-
-        configured = getattr(_settings, "AGENTONE_SESSIONS_DIR", None)
-        if configured:
-            return Path(os.path.expanduser(str(configured)))
-    except Exception:  # pylint: disable=broad-exception-caught
-        # Settings not configured (e.g. bare import) — fall through.
-        pass
-    return Path(os.path.expanduser("~/.agentone/sessions"))
+    return _sessions_base()
 
 
 def session_dir(session_pk: int | str) -> Path:
@@ -59,12 +52,7 @@ def ensure_session_dir(session_pk: int | str) -> Path:
     mode ``0o700`` so other OS users cannot list them.
     """
     folder = session_dir(session_pk)
-    folder.mkdir(parents=True, exist_ok=True)
-    try:
-        folder.chmod(0o700)
-    except OSError:
-        pass
-    return folder
+    return ensure_private_dir(folder, 0o700)
 
 
 def parse_session_pk(target: Path | str) -> str | None:

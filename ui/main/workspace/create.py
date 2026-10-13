@@ -41,6 +41,29 @@ class CreateWorkspace(ModelView):
                         <textarea id="workspaceFormDescription" rows="3" placeholder="What is this workspace for?" onchange="pyview.setWsField('description', this.value)">{{ pyview.form.description }}</textarea>
                     </div>
                     <div class="detail-form-row">
+                        <label for="workspaceFormProject">Project</label>
+                        <select id="workspaceFormProject" onchange="pyview.setWsField('parent_project_id', this.value)">
+                            <option value="">(no project)</option>
+                            {% for p in pyview.project_options %}
+                            <option value="{{ p.pk }}"{% if pyview.form.parent_project_id == p.pk %} selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="detail-form-hint">Optional owner project (DB-canonical; no project.md involved).</div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="workspaceFormStorage">Scoped data</label>
+                        <select id="workspaceFormStorage" onchange="pyview.setWsField('storage', this.value)">
+                            <option value="none"{% if pyview.form.storage == "none" %} selected{% endif %}>No workspace manifests (bare path)</option>
+                            <option value="inline"{% if pyview.form.storage == "inline" %} selected{% endif %}>In workspace dir (&lt;workspace&gt;/.agentone)</option>
+                            <option value="central"{% if pyview.form.storage == "central" %} selected{% endif %}>Centralized (~/.agentone/workspaces/&lt;name&gt;)</option>
+                        </select>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="workspaceFormGitignore">Git</label>
+                        <input type="checkbox" id="workspaceFormGitignore" {% if pyview.form.manifest_gitignore %}checked{% endif %} onchange="pyview.setWsField('manifest_gitignore', this.checked ? '1' : '')">
+                        <span>Add <code>.agentone/</code> to <code>.gitignore</code> (inline storage only)</span>
+                    </div>
+                    <div class="detail-form-row">
                         <label for="workspaceFormColor">Color</label>
                         <div class="ws-form-color-row">
                             <input type="color" id="workspaceFormColor" value="{{ pyview.form.color }}" onchange="pyview.setWsField('color', this.value)">
@@ -64,7 +87,12 @@ class CreateWorkspace(ModelView):
         super().__init__(subject, parent, **kwargs)
         from server.models.workspace import random_workspace_color
 
-        self._form = {"name": "", "path": "", "description": "", "color": random_workspace_color()}
+        self._form = {
+            "name": "", "path": "", "description": "",
+            "color": random_workspace_color(),
+            "parent_project_id": "", "storage": "none",
+            "manifest_gitignore": True,
+        }
         self._form_error = ""
         self.access_editor = AccessEditor(subject=subject, parent=self)
 
@@ -80,13 +108,25 @@ class CreateWorkspace(ModelView):
     def form_error(self) -> str:
         return self._form_error
 
+    @property
+    def project_options(self):  # list[dict[str, str]]
+        from server.models.project import Project
+
+        try:
+            return [{"pk": str(p.pk), "name": p.name}
+                    for p in Project.objects.all().order_by("name")]
+        except Exception:
+            return []
+
     # ------------------------------------------------------------------
     # Actions
     # ------------------------------------------------------------------
 
     def setWsField(self, field: str, value: str) -> None:
-        if field in ("name", "path", "description", "color"):
+        if field in ("name", "path", "description", "color", "parent_project_id", "storage"):
             self._form[field] = value
+        elif field == "manifest_gitignore":
+            self._form[field] = bool(value and value != "0")
 
     def saveWorkspaceForm(self) -> None:
         from server.models.workspace import random_workspace_color, validate_workspace_color
@@ -105,13 +145,33 @@ class CreateWorkspace(ModelView):
             self.update()
             return
         try:
+            from server.models.project import Project
+
+            parent_project = None
+            ppid = (self._form.get("parent_project_id") or "").strip()
+            if ppid:
+                try:
+                    parent_project = Project.objects.filter(pk=int(ppid)).first()
+                except (ValueError, TypeError):
+                    parent_project = None
+            storage = (self._form.get("storage") or "none").strip() or "none"
+            if storage not in ("none", "inline", "central"):
+                storage = "none"
             created = WorkspaceModel.objects.create(
                 name=name or path,
                 path=path,
                 description=self._form.get("description", ""),
                 color=color,
                 access=self.access_editor.access_data,
+                parent_project=parent_project,
+                storage="" if storage == "none" else storage,
             )
+            manifest_dir = self._setup_manifest_dir(
+                created, storage, path,
+                gitignore=bool(self._form.get("manifest_gitignore")),
+            )
+            if manifest_dir:
+                WorkspaceModel.objects.filter(pk=created.pk).update(manifest_dir=manifest_dir)
         except Exception as e:
             self._form_error = f"Error: {e}"
             self.update()
@@ -126,6 +186,41 @@ class CreateWorkspace(ModelView):
 
     def cancelWorkspaceForm(self) -> None:
         self.close_tab()
+
+    @staticmethod
+    def _setup_manifest_dir(workspace, storage: str, ws_path: str, gitignore: bool = False) -> str:
+        """Create the workspace manifest dir for *storage*; return its path or ""."""
+        from pathlib import Path as _Path
+
+        from runtime.paths import central_workspace_dir
+
+        if storage == "inline":
+            manifest = _Path(ws_path) / ".agentone"
+            try:
+                manifest.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                return ""
+            if gitignore:
+                gi = _Path(ws_path) / ".gitignore"
+                try:
+                    existing = gi.read_text(encoding="utf-8") if gi.exists() else ""
+                    if ".agentone/" not in existing.splitlines():
+                        with gi.open("a", encoding="utf-8") as f:
+                            if existing and not existing.endswith("\n"):
+                                f.write("\n")
+                            f.write(".agentone/\n")
+                except OSError:
+                    pass
+            return manifest.as_posix()
+        if storage == "central":
+            key = workspace.name or _Path(ws_path).name
+            manifest = central_workspace_dir(key)
+            try:
+                manifest.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                return ""
+            return manifest.as_posix()
+        return ""
 
     # ------------------------------------------------------------------
     # Navigation helpers

@@ -55,24 +55,13 @@ def _project_counts(project) -> dict[str, int]:
 
 
 def _project_workspaces(project) -> list[dict[str, str]]:
-    """Workspace entries declared in the project's ``project.md``."""
+    """Workspaces linked to the project (DB-canonical via parent_project FK)."""
     try:
-        import frontmatter
+        from server.models.workspace import WorkspaceModel
 
-        md_path = Path(project.path) / ".agentone" / "project.md"
-        if not md_path.exists():
-            return []
-        post = frontmatter.load(str(md_path))
-        entries = post.get("workspaces", "") or []
-        if not isinstance(entries, list):
-            return []
         return [
-            {
-                "name": (e.get("name", "") or "") if isinstance(e, dict) else "",
-                "path": (e.get("path", "") or "") if isinstance(e, dict) else "",
-            }
-            for e in entries
-            if isinstance(e, dict)
+            {"name": w.name or "", "path": w.path or ""}
+            for w in WorkspaceModel.objects.filter(parent_project=project).order_by("name")
         ]
     except Exception:
         return []

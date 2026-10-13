@@ -204,7 +204,7 @@ Projects group agents, skills, and sessions together.
 
 1. Click **+ New** at the top of the projects sidebar
 2. A create form opens: enter a name, description, and optional filesystem path
-3. On save, the project directory is created with a `.agentone/project.md` manifest, the project is registered in `.agentone/projects.yaml`, the manifest loader reloads, and the project detail view opens
+3. On save, the project row is created in the DB (no `project.md` / `projects.yaml` — see `docs/folders.md`), its `.agentone/` manifest dir and default workspace are set up, the scope loader syncs, and the project detail view opens
 4. The project immediately appears in the project selector dropdown
 
 ### Project filtering

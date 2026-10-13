@@ -2,18 +2,22 @@
 # Skill loader (skill.md)
 # ---------------------------------------------------------------------------
 
-import os
+import frontmatter
 from pathlib import Path
 from typing import Any, Tuple
 
-import frontmatter
 from registry.install_repo import InstallRepo
 from registry.loader.load_scripts_manifest import load_scripts_manifest
+from runtime.paths import runtime_base as _runtime_base
 from server.models.skills.skill import SkillModel
 from server.models.skills.skill_version import SkillModelVersion
 
 
-RUNTIME_BASE = Path(os.path.expanduser("~/.agentone/runtime"))
+def _runtime_for_pk(pk: object) -> Path:
+    return _runtime_base() / str(pk)
+
+
+RUNTIME_BASE = _runtime_base()
 
 
 def load_skill_manifest(
@@ -54,7 +58,7 @@ def load_skill_manifest(
             latest_skill_version=skill_version
         )
         # Extract versioned files to runtime folder
-        dest = RUNTIME_BASE / str(skill_version.pk)
+        dest = _runtime_for_pk(skill_version.pk)
         install_repo.checkout_tree(tree_sha=commit, dest=dest)
         extracted_md = dest / skill_md_path.name
         SkillModelVersion.objects.filter(pk=skill_version.pk).update(

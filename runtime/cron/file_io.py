@@ -9,15 +9,27 @@ from server.models.cron import Cronjob
 
 
 def cron_file_path(name: str, project=None) -> Path:
-    """Return the expected ``.agentone/cronjobs/<name>.md`` path."""
-    if project is not None and project.path:
-        return Path(project.path) / "cronjobs" / f"{name}.md"
+    """Return the expected ``cronjobs/<name>.md`` path.
+
+    Project-scoped crons live under the project's manifest dir
+    (``<manifest_dir>/cronjobs/<name>.md`` — ``manifest_dir`` is
+    DB-canonical with legacy ``<path>/.agentone`` fallback). Global crons
+    live under ``settings.AGENTONE_ROOT/cronjobs/``.
+    """
+    if project is not None and getattr(project, "path", None):
+        try:
+            from runtime.paths import project_manifest_dir
+
+            return Path(project_manifest_dir(project)) / "cronjobs" / f"{name}.md"
+        except Exception:
+            pass
+        return Path(project.path) / ".agentone" / "cronjobs" / f"{name}.md"
     from django.conf import settings
     return Path(settings.AGENTONE_ROOT) / "cronjobs" / f"{name}.md"
 
 
 def write_cron_file(cronjob: Cronjob) -> None:
-    """Write a cron job's settings to ``.agentone/cronjobs/<name>.md``."""
+    """Write a cron job's settings to ``cronjobs/<name>.md`` (scope-aware)."""
     path = cron_file_path(cronjob.name, cronjob.parent_project)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -42,7 +54,7 @@ def write_cron_file(cronjob: Cronjob) -> None:
 
 
 def delete_cron_file(name: str, project=None) -> None:
-    """Remove ``.agentone/cronjobs/<name>.md`` if it exists."""
+    """Remove ``cronjobs/<name>.md`` if it exists."""
     path = cron_file_path(name, project)
     if path.exists():
         path.unlink()

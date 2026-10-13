@@ -37,9 +37,14 @@ _KEY_RE = re.compile(r"^(?:s(?P<session>[0-9]{1,18})|named-[a-z0-9][a-z0-9_-]{0,
 
 def browser_base() -> Path:
     """Return the browser base directory (pure, no I/O)."""
-    configured = os.environ.get(BROWSER_DIR_ENV, "").strip()
-    base = Path(os.path.expanduser(configured)) if configured else Path.home() / ".agentone" / "browser"
-    return base
+    try:
+        from runtime.paths import browser_base as _central_browser_base
+
+        return _central_browser_base()
+    except Exception:
+        configured = os.environ.get(BROWSER_DIR_ENV, "").strip()
+        base = Path(os.path.expanduser(configured)) if configured else Path.home() / ".agentone" / "browser"
+        return base
 
 
 def profiles_base() -> Path:
@@ -79,12 +84,17 @@ def audit_log_path() -> Path:
 
 def ensure_private_dir(path: Path) -> Path:
     """Create *path* (and parents) with mode ``0700``; return it."""
-    path.mkdir(parents=True, exist_ok=True)
     try:
-        path.chmod(stat.S_IRWXU)  # 0o700
-    except OSError:
-        pass
-    return path
+        from runtime.paths import ensure_private_dir as _ensure_private
+
+        return _ensure_private(path, 0o700)
+    except Exception:
+        path.mkdir(parents=True, exist_ok=True)
+        try:
+            path.chmod(stat.S_IRWXU)  # 0o700
+        except OSError:
+            pass
+        return path
 
 
 def read_token() -> str | None:
