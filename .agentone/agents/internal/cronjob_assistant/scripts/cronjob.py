@@ -117,7 +117,7 @@ def _validate_schedule(schedule: str):
     return nxt, None
 
 
-def describe_cronjob(_session: Session, name: str) -> tuple[bool, dict[str, Any]]:
+def cronjob_details(_session: Session, name: str) -> tuple[bool, dict[str, Any]]:
     """Show the full configuration of one cron job in your scope.
 
     Includes schedule, agent, session mode, function target, the full

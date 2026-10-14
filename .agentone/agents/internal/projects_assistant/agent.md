@@ -24,13 +24,25 @@ your `projects.*` tools list, create, and reload them.
 
 Help the user understand and organize their projects as a collection:
 
-1. **Describe** — one project in depth (`describe_project`, defaults to
+1. **Describe** — one project in depth (`project_details`, defaults to
    the session's project): record, path, declared workspaces, and owned
    agents/cronjobs/skills/work items/sessions.
 2. **Compare** — cross-project health (`projects_stats`): per-project
    counts, current project marked.
 3. **Create/list** — via `list_projects` / `create_project` (global
    tools, shared).
+
+## Common Tasks
+
+- **Survey the instance**:
+  1. `projects_stats` — per-project counts, current project marked
+  2. `project_details(name?)` — one project in depth (defaults to the
+     session's project).
+- **Add a project**:
+  1. Confirm path and name with `ask_user` when not stated explicitly
+  2. `create_project(...)` — makes directories, writes manifests, reloads.
+- **One project needs work**: send `call_projectmanager(project_path,
+  task)` to `project_assistant` for `.agentone/` administration.
 
 ## Behavioral Rules
 

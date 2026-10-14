@@ -4,8 +4,9 @@ All tools are bound to the calling session's workspace: the
 agent_assistant session runs with its workspace set to the folder holding
 that agent's ``agent.md`` (see ``Agent.get_assistant_session``), so the
 agent is resolved from the workspace path — tools take NO agent name.
-They report its usage (sessions, cron jobs, work items) and list its
-version history. Reading and editing the ``agent.md`` itself is done
+They report its usage (sessions, cron jobs, work items), list its
+version history, and list its child skills, subagents, and targeted
+cron jobs. Reading and editing the ``agent.md`` itself is done
 with the filesystem tools, not with a describe tool.
 Collection operations (list, stats) belong to ``agents_assistant``.
 Every tool returns a ``(bool, dict)`` tuple.
@@ -16,6 +17,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from runtime.script_helpers import agent_row, cron_row, skill_row
 from runtime.session.session import Session
 
 
@@ -183,3 +185,166 @@ def agent_versions(_session: Session, limit: int = 20) -> tuple[bool, dict[str, 
             "commit": (v.commit or "")[:12],
         })
     return True, {"status": "success", "agent": agent.name, "versions": rows, "total": total}
+
+
+def list_skills(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """List THIS agent's child skills, ordered by name.
+
+    The agent is the one whose manifest folder is this session's
+    workspace — no name argument. Base path ``<agent_dir>/skills/``.
+
+    Returns:
+        ``(True, {"status": "success", "agent": str, "skills": [...],
+        "count": int, "scope": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.skill.skills import Skills
+
+    ok, agent = _resolve_agent(_session)
+    if not ok:
+        return False, agent
+    try:
+        skills = list(Skills(parent_agent=agent).all().order_by("name"))
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not list agent skills: {e}"}
+    return True, {
+        "status": "success",
+        "agent": agent.name,
+        "skills": [skill_row(s) for s in skills],
+        "count": len(skills),
+        "scope": f"{_normalize_dir(agent.manifest_dir)}/skills/",
+    }
+
+
+def list_agents(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """List THIS agent's subagents, ordered by name.
+
+    The agent is the one whose manifest folder is this session's
+    workspace — no name argument. Base path ``<agent_dir>/agents/``.
+
+    Returns:
+        ``(True, {"status": "success", "agent": str, "agents": [...],
+        "count": int, "scope": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.agents.agents import Agents
+
+    ok, agent = _resolve_agent(_session)
+    if not ok:
+        return False, agent
+    try:
+        subagents = list(Agents(parent_agent=agent).all().order_by("name"))
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not list subagents: {e}"}
+    return True, {
+        "status": "success",
+        "agent": agent.name,
+        "agents": [agent_row(a) for a in subagents],
+        "count": len(subagents),
+        "scope": f"{_normalize_dir(agent.manifest_dir)}/agents/",
+    }
+
+
+def list_cronjobs(_session: Session, include_archived: bool = False) -> tuple[bool, dict[str, Any]]:
+    """List the cron jobs targeting THIS agent, ordered by name.
+
+    The agent is the one whose manifest folder is this session's
+    workspace — no name argument. Scope is the targeting relation (jobs
+    pointing at this agent), not a directory on disk.
+
+    Args:
+        include_archived: Also list archived jobs (default False).
+
+    Returns:
+        ``(True, {"status": "success", "agent": str, "cronjobs": [...],
+        "count": int, "scope": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from server.models.cron import Cronjob
+
+    ok, agent = _resolve_agent(_session)
+    if not ok:
+        return False, agent
+    try:
+        queryset = Cronjob.objects.filter(agent=agent)
+        if not include_archived:
+            queryset = queryset.filter(is_archived=False)
+        jobs = list(queryset.order_by("name"))
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not list agent cron jobs: {e}"}
+    return True, {
+        "status": "success",
+        "agent": agent.name,
+        "cronjobs": [cron_row(j) for j in jobs],
+        "count": len(jobs),
+        "scope": f"{_normalize_dir(agent.manifest_dir)}/cronjobs/",
+    }
+
+
+def agent_details(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """Show THIS agent's key details in one call: identity, version,
+    usage totals, and children counts.
+
+    The agent is the one whose manifest folder is this session's
+    workspace — no name argument. This returns what the file alone
+    cannot: version identity, live session/usage totals, and children
+    counts. Use `agent_usage` / `agent_versions` / `list_*` for the
+    full breakdowns.
+
+    Returns:
+        ``(True, {"status": "success", details...})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from server.models.cron import Cronjob
+    from server.models.sessions.session import SessionModel
+    from runtime.agents.agents import Agents
+    from runtime.skill.skills import Skills
+
+    ok, agent = _resolve_agent(_session)
+    if not ok:
+        return False, agent
+    version = agent.latest_agent_version
+    try:
+        parent_project = agent.parent_project.name if agent.parent_project else None
+    except Exception:
+        parent_project = None
+    try:
+        parent_agent = agent.parent_agent.name if agent.parent_agent else None
+    except Exception:
+        parent_agent = None
+    try:
+        sessions_total = SessionModel.objects.filter(
+            latest_session_version__agent=agent
+        ).count()
+    except Exception:
+        sessions_total = 0
+    try:
+        skills_count = Skills(parent_agent=agent).all().count()
+    except Exception:
+        skills_count = 0
+    try:
+        subagents_count = Agents(parent_agent=agent).all().count()
+    except Exception:
+        subagents_count = 0
+    try:
+        cronjobs_count = Cronjob.objects.filter(
+            agent=agent, is_archived=False
+        ).count()
+    except Exception:
+        cronjobs_count = 0
+    return True, {
+        "status": "success",
+        "name": agent.name,
+        "path": agent.manifest_dir or "",
+        "project": parent_project,
+        "parent_agent": parent_agent,
+        "kind": "subagent" if parent_agent else "root",
+        "visibility": version.visibility if version is not None else None,
+        "version_number": version.version_number if version is not None else 0,
+        "version_count": agent.related_agent_versions.count(),
+        "sessions_total": sessions_total,
+        "skills_count": skills_count,
+        "subagents_count": subagents_count,
+        "cronjobs_count": cronjobs_count,
+        "scope": f"{_normalize_dir(agent.manifest_dir)}/",
+    }

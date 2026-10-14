@@ -2,9 +2,9 @@
 group: cronjob
 tools:
   # Show the full configuration of one cron job
-  - name: describe_cronjob
+  - name: cronjob_details
     file: cronjob.py
-    function: describe_cronjob
+    function: cronjob_details
     bound: True
 
   # Edit schedule, agent, message, etc. of one cron job

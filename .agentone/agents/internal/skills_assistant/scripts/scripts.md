@@ -18,4 +18,10 @@ tools:
     file: skills.py
     function: unassign_skill
     bound: True
+
+  # Create a new skill manifest in the managed scope
+  - name: create_skill
+    file: skills.py
+    function: create_skill
+    bound: True
 ---

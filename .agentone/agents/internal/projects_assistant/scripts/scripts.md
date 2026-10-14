@@ -2,9 +2,9 @@
 group: projects_mgmt
 tools:
   # Show ONE project in depth (defaults to the session's project)
-  - name: describe_project
+  - name: project_details
     file: projects.py
-    function: describe_project
+    function: project_details
     bound: True
 
   # Cross-project health overview with owned-record counts

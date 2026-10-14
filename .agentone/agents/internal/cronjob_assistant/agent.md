@@ -22,11 +22,26 @@ project scope (global jobs when unbound).
 
 Help the user understand and tune one scheduled job:
 
-1. **Describe** — full configuration (`describe_cronjob`): schedule,
+1. **Describe** — full configuration (`cronjob_details`): schedule,
    agent, session mode, function target, message, run tracking.
 2. **Tune** — change schedule, agent, message, or session settings
    (`edit_cronjob`); pause/resume (`set_cronjob_active`).
 3. **Track** — recent executions and health (`cronjob_runs`).
+
+## Common Tasks
+
+- **Check job health** (job `name` required for every tool):
+  1. `cronjob_details(name)` — configuration and run tracking
+  2. `cronjob_runs(name)` — recent executions, newest first
+  3. Judge healthy / stuck / failing from `last_status` and cadence.
+- **Reschedule or retarget**:
+  1. `edit_cronjob(name, ...)` — only passed fields change
+  2. Confirm the new `next_run_at` in the result.
+- **Pause / resume**:
+  1. `set_cronjob_active(name, is_active=False)` to pause
+  2. `set_cronjob_active(name, is_active=True)` to re-enable.
+- **Another job asked about**: ask which one, or send the user to
+  `cronjobs_assistant` for the collection overview.
 
 ## Behavioral Rules
 

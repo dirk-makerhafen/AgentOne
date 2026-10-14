@@ -52,6 +52,7 @@ def _skill_info(skill) -> dict[str, Any]:
         "project": project_name,
         "description": (version.description if version else "") or "",
         "path": (version.path if version else "") or "",
+        "manifest_dir": getattr(skill, "manifest_dir", "") or "",
         "version_number": version.version_number if version else 0,
     }
 
@@ -97,14 +98,22 @@ def list_skills(_session: Session) -> tuple[bool, dict[str, Any]]:
     own project scope.
 
     Returns:
-        ``(True, {"status": "success", "skills": [...], "count": int})`` or
+        ``(True, {"status": "success", "skills": [...], "count": int,
+        "scope": str})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
     try:
         skills = list(_scoped_skills(_session))
     except Exception as e:
         return False, {"status": "error", "message": f"Could not list skills: {e}"}
-    return True, {"status": "success", "skills": [_skill_info(s) for s in skills], "count": len(skills)}
+    project = _session_project(_session)
+    scope = f"global + project {project.name}" if project is not None else "global"
+    return True, {
+        "status": "success",
+        "skills": [_skill_info(s) for s in skills],
+        "count": len(skills),
+        "scope": scope,
+    }
 
 
 def assign_skill(_session: Session, agent_name: str, skill_name: str) -> tuple[bool, dict[str, Any]]:
@@ -186,4 +195,84 @@ def unassign_skill(_session: Session, agent_name: str, skill_name: str) -> tuple
         "agent": agent.name,
         "skill": skill.name,
         "note": "Live until the next manifest reload — edit the agent's skills: list for a permanent change.",
+    }
+
+
+def _validate_item_name(name: str, kind: str):
+    """Validate a new skill name. Returns ``(True, name)`` or ``(False, error)``."""
+    import re
+
+    clean = (name or "").strip()
+    if not clean:
+        return False, {"status": "error", "message": f"A {kind} name is required."}
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", clean):
+        return False, {
+            "status": "error",
+            "message": f"Invalid {kind} name '{clean}'. Use letters, digits, '-' or '_' (start with a letter or digit).",
+        }
+    return True, clean
+
+
+def create_skill(
+    _session: Session,
+    name: str,
+    description: str = "",
+) -> tuple[bool, dict[str, Any]]:
+    """Create a new skill manifest in your managed scope.
+
+    Writes ``<scope>/skills/<name>/skill.md`` (YAML frontmatter + body).
+    Project scope writes into the project's ``.agentone/`` tree, global
+    scope into ``~/.agentone/skills/``. The skill appears after the next
+    manifest reload.
+
+    Args:
+        name: New skill name (required, unique in this scope).
+        description: Short description (also used as the initial body).
+
+    Returns:
+        ``(True, {"status": "success", "name": str, "path": str,
+        "scope": str, "note": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.paths import project_manifest_dir, user_skills_dir
+    from runtime.skill.skills import Skills
+
+    ok, clean = _validate_item_name(name, "skill")
+    if not ok:
+        return False, clean
+    project = _session_project(_session)
+    if Skills(parent_project=project).all().filter(name=clean).exists():
+        where = f"in project {project.name}" if project is not None else "globally"
+        return False, {
+            "status": "error",
+            "message": f"A skill named '{clean}' already exists {where}. Pick another name.",
+        }
+    if project is not None:
+        base = project_manifest_dir(project) / "skills" / clean
+        scope = f"project {project.name}"
+    else:
+        base = user_skills_dir() / clean
+        scope = "global"
+    manifest = base / "skill.md"
+    if manifest.exists():
+        return False, {
+            "status": "error",
+            "message": f"'{manifest}' already exists. Pick another name.",
+        }
+    body = (description or "").strip() or f"Skill {clean}."
+    lines = ["---", f"name: {clean}"]
+    if (description or "").strip():
+        lines.append(f"description: {(description or '').strip()}")
+    lines += ["---", body, ""]
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+        manifest.write_text("\n".join(lines), encoding="utf-8")
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not write skill manifest: {e}"}
+    return True, {
+        "status": "success",
+        "name": clean,
+        "path": manifest.as_posix(),
+        "scope": scope,
+        "note": "Applies on the next manifest reload — tell the user to reload.",
     }

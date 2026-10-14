@@ -12,4 +12,10 @@ tools:
     file: agents.py
     function: agents_stats
     bound: True
+
+  # Create a new agent manifest in the managed scope
+  - name: create_agent
+    file: agents.py
+    function: create_agent
+    bound: True
 ---

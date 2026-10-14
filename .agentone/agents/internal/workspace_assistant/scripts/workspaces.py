@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from runtime.script_helpers import agent_row, cron_row, skill_row
 from runtime.session.session import Session
 
 
@@ -387,3 +388,165 @@ def create_chat(
         "name": name,
         "agent": agent.name,
     }
+
+
+def list_skills(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """List the skills in your managed workspace's scope, ordered by name.
+
+    The workspace unwraps to its project: global skills plus the
+    project's own. Base path ``<workspace agentonedir>/skills/``.
+
+    Returns:
+        ``(True, {"status": "success", "workspace": {...}, "skills": [...],
+        "count": int, "scope": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.skill.skills import Skills
+
+    managed = _managed_workspace(_session)
+    if managed is None:
+        return False, {"status": "error", "message": "Your session is not bound to a workspace."}
+    try:
+        skills = list(Skills(parent_workspace=managed).all().order_by("name"))
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not list workspace skills: {e}"}
+    return True, {
+        "status": "success",
+        "workspace": _workspace_info(managed),
+        "skills": [skill_row(s) for s in skills],
+        "count": len(skills),
+        "scope": f"{managed.path}/.agentone/skills/",
+    }
+
+
+def list_agents(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """List the agents in your managed workspace's scope, ordered by name.
+
+    The workspace unwraps to its project: global agents plus the
+    project's own. Base path ``<workspace agentonedir>/agents/``.
+
+    Returns:
+        ``(True, {"status": "success", "workspace": {...}, "agents": [...],
+        "count": int, "scope": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.agents.agents import Agents
+
+    managed = _managed_workspace(_session)
+    if managed is None:
+        return False, {"status": "error", "message": "Your session is not bound to a workspace."}
+    try:
+        agents = list(Agents(parent_workspace=managed).all().order_by("name"))
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not list workspace agents: {e}"}
+    return True, {
+        "status": "success",
+        "workspace": _workspace_info(managed),
+        "agents": [agent_row(a) for a in agents],
+        "count": len(agents),
+        "scope": f"{managed.path}/.agentone/agents/",
+    }
+
+
+def list_cronjobs(_session: Session, include_archived: bool = False) -> tuple[bool, dict[str, Any]]:
+    """List the cron jobs in your managed workspace's scope, ordered by name.
+
+    Same rule as the cron assistant binding: the project's jobs when the
+    workspace belongs to a project, else the global jobs. Base path
+    ``<workspace agentonedir>/cronjobs/``.
+
+    Args:
+        include_archived: Also list archived jobs (default False).
+
+    Returns:
+        ``(True, {"status": "success", "workspace": {...}, "cronjobs": [...],
+        "count": int, "scope": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.cron.crons import Cronjobs
+    from runtime.session.sessions import Sessions
+
+    managed = _managed_workspace(_session)
+    if managed is None:
+        return False, {"status": "error", "message": "Your session is not bound to a workspace."}
+    try:
+        queryset = Cronjobs(parent_project=Sessions.project_of(_session)).all()
+        if not include_archived:
+            queryset = queryset.filter(is_archived=False)
+        jobs = list(queryset.order_by("name"))
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not list workspace cron jobs: {e}"}
+    return True, {
+        "status": "success",
+        "workspace": _workspace_info(managed),
+        "cronjobs": [cron_row(j) for j in jobs],
+        "count": len(jobs),
+        "scope": f"{managed.path}/.agentone/cronjobs/",
+    }
+
+
+def workspace_details(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """Show the managed workspace's key details in one call: identity,
+    session totals, and scope counts.
+
+    Use `list_subworkspaces` / `list_sessions` / `list_*` for the full
+    breakdowns.
+
+    Returns:
+        ``(True, {"status": "success", details...})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from server.models.sessions.session import SessionModel
+    from server.models.workspace import WorkspaceModel
+    from runtime.agents.agents import Agents
+    from runtime.cron.crons import Cronjobs
+    from runtime.session.sessions import Sessions
+    from runtime.skill.skills import Skills
+
+    managed = _managed_workspace(_session)
+    if managed is None:
+        return False, {"status": "error", "message": "Your session is not bound to a workspace."}
+    try:
+        mine = _norm(managed.path)
+        subworkspaces_count = sum(
+            1
+            for ws in WorkspaceModel.objects.all()
+            if ws.pk != managed.pk
+            and _norm(ws.path).startswith(mine + os.sep)
+        )
+    except Exception:
+        subworkspaces_count = 0
+    try:
+        sessions_total = SessionModel.objects.filter(
+            latest_session_version__workspace=managed
+        ).count()
+    except Exception:
+        sessions_total = 0
+    try:
+        skills_count = Skills(parent_workspace=managed).all().count()
+    except Exception:
+        skills_count = 0
+    try:
+        agents_count = Agents(parent_workspace=managed).all().count()
+    except Exception:
+        agents_count = 0
+    try:
+        cronjobs_count = (
+            Cronjobs(parent_project=Sessions.project_of(_session))
+            .all()
+            .filter(is_archived=False)
+            .count()
+        )
+    except Exception:
+        cronjobs_count = 0
+    info = _workspace_info(managed)
+    info.update({
+        "status": "success",
+        "sessions_total": sessions_total,
+        "subworkspaces_count": subworkspaces_count,
+        "skills_count": skills_count,
+        "agents_count": agents_count,
+        "cronjobs_count": cronjobs_count,
+        "scope": f"{managed.path}/",
+    })
+    return True, info

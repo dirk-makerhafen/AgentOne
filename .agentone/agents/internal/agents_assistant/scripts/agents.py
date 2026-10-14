@@ -42,6 +42,7 @@ def _agent_info(agent) -> dict[str, Any]:
         parent_name = None
     return {
         "name": agent.name,
+        "path": getattr(agent, "manifest_dir", "") or "",
         "project": project_name,
         "parent_agent": parent_name,
         "kind": "subagent" if parent_name else "root",
@@ -57,14 +58,22 @@ def list_agents(_session: Session) -> tuple[bool, dict[str, Any]]:
     own project scope. Each entry flags root vs subagent and visibility.
 
     Returns:
-        ``(True, {"status": "success", "agents": [...], "count": int})`` or
+        ``(True, {"status": "success", "agents": [...], "count": int,
+        "scope": str})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
     try:
         agents = list(_scoped_agents(_session))
     except Exception as e:
         return False, {"status": "error", "message": f"Could not list agents: {e}"}
-    return True, {"status": "success", "agents": [_agent_info(a) for a in agents], "count": len(agents)}
+    project = _session_project(_session)
+    scope = f"global + project {project.name}" if project is not None else "global"
+    return True, {
+        "status": "success",
+        "agents": [_agent_info(a) for a in agents],
+        "count": len(agents),
+        "scope": scope,
+    }
 
 
 def agents_stats(_session: Session) -> tuple[bool, dict[str, Any]]:
@@ -93,4 +102,87 @@ def agents_stats(_session: Session) -> tuple[bool, dict[str, Any]]:
         "by_visibility": by_visibility,
         "roots": roots,
         "subagents": len(agents) - roots,
+    }
+
+
+def _validate_item_name(name: str, kind: str):
+    """Validate a new agent/skill name. Returns ``(True, name)`` or ``(False, error)``."""
+    import re
+
+    clean = (name or "").strip()
+    if not clean:
+        return False, {"status": "error", "message": f"A {kind} name is required."}
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", clean):
+        return False, {
+            "status": "error",
+            "message": f"Invalid {kind} name '{clean}'. Use letters, digits, '-' or '_' (start with a letter or digit).",
+        }
+    return True, clean
+
+
+def create_agent(
+    _session: Session,
+    name: str,
+    description: str = "",
+    model: str = "",
+) -> tuple[bool, dict[str, Any]]:
+    """Create a new agent manifest in your managed scope.
+
+    Writes ``<scope>/agents/<name>/agent.md`` (YAML frontmatter + body).
+    Project scope writes into the project's ``.agentone/`` tree, global
+    scope into ``~/.agentone/agents/``. The agent appears after the next
+    manifest reload.
+
+    Args:
+        name: New agent name (required, globally unique).
+        description: Short description (also used as the initial body).
+        model: AI model identifier (optional, e.g. 'gemma4:26b').
+
+    Returns:
+        ``(True, {"status": "success", "name": str, "path": str,
+        "scope": str, "note": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from server.models.agents.agent import AgentModel
+    from runtime.paths import project_manifest_dir, user_agents_dir
+
+    ok, clean = _validate_item_name(name, "agent")
+    if not ok:
+        return False, clean
+    if AgentModel.objects.filter(name=clean).exists():
+        return False, {
+            "status": "error",
+            "message": f"An agent named '{clean}' already exists. Pick another name.",
+        }
+    project = _session_project(_session)
+    if project is not None:
+        base = project_manifest_dir(project) / "agents" / clean
+        scope = f"project {project.name}"
+    else:
+        base = user_agents_dir() / clean
+        scope = "global"
+    manifest = base / "agent.md"
+    if manifest.exists():
+        return False, {
+            "status": "error",
+            "message": f"'{manifest}' already exists. Pick another name.",
+        }
+    body = (description or "").strip() or f"Agent {clean}."
+    lines = ["---", f"name: {clean}"]
+    if (description or "").strip():
+        lines.append(f"description: {(description or '').strip()}")
+    if (model or "").strip():
+        lines.append(f"model: {(model or '').strip()}")
+    lines += ["---", body, ""]
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+        manifest.write_text("\n".join(lines), encoding="utf-8")
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not write agent manifest: {e}"}
+    return True, {
+        "status": "success",
+        "name": clean,
+        "path": manifest.as_posix(),
+        "scope": scope,
+        "note": "Applies on the next manifest reload — tell the user to reload.",
     }

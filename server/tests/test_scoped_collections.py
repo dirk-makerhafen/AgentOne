@@ -594,3 +594,434 @@ class ManifestDirLoaderTest(AgentMdTestMixin, TestCase):
             Path(job.manifest_dir).as_posix(),
             (TESTPROJECT / "cronjobs").as_posix(),
         )
+
+
+def _make_ws_session(agent, av, workspace, name="ws-sess", project=None):
+    session = SessionModel.objects.create(
+        name=name, parent_project=project
+    )
+    sv = SessionVersionModel.objects.create(
+        session=session, agent=agent, pinned_agent_version=av, workspace=workspace
+    )
+    SessionModel.objects.filter(pk=session.pk).update(latest_session_version=sv)
+    session.refresh_from_db()
+    from runtime.session.session import Session as RuntimeSession
+
+    return RuntimeSession(session_model=session, pinned_session_version=sv)
+
+
+class ScriptHelpersTest(TestCase):
+    """Shared row builders, markdown renderers, and matchers."""
+
+    def test_normalize_dir(self):
+        from runtime.script_helpers import normalize_dir
+
+        self.assertEqual(normalize_dir(""), "")
+        self.assertEqual(normalize_dir(None), "")
+        self.assertEqual(normalize_dir("/tmp/x/"), "/tmp/x")
+        self.assertEqual(normalize_dir("~/x"), str(Path("~/x").expanduser().as_posix()))
+
+    def test_rows_carry_plan_fields(self):
+        from runtime.script_helpers import agent_row, skill_row
+
+        agent, _av = _make_agent("row-a", manifest_dir="/tmp/row-a")
+        row = agent_row(agent)
+        self.assertEqual(row["path"], "/tmp/row-a")
+        self.assertEqual(row["version_number"], 0)
+        self.assertEqual(row["kind"], "root")
+        skill = _make_skill("row-s", manifest_dir="/tmp/row-s")
+        srow = skill_row(skill)
+        self.assertEqual(srow["manifest_dir"], "/tmp/row-s")
+        self.assertEqual(srow["version_number"], 0)
+
+    def test_markdown_shapes(self):
+        from runtime.script_helpers import (
+            agent_list_item,
+            as_markdown_list,
+            skill_list_item,
+            workitem_list_item,
+        )
+
+        agent, _av = _make_agent("md-a", manifest_dir="/tmp/md-a")
+        text = agent_list_item(agent)
+        self.assertIn("**md-a**", text)
+        self.assertIn("/tmp/md-a", text)
+        self.assertEqual(as_markdown_list([], agent_list_item), "(none)")
+        self.assertEqual(
+            as_markdown_list([agent], agent_list_item), agent_list_item(agent)
+        )
+        skill = _make_skill("md-s", manifest_dir="/tmp/md-s")
+        self.assertIn("**md-s**", skill_list_item(skill))
+        item = WorkItem.objects.create(title="md-item", priority=10)
+        self.assertIn(f"#{item.pk}", workitem_list_item(item))
+        self.assertIn("backlog", workitem_list_item(item))
+
+    def test_match_manifest_dir(self):
+        from runtime.script_helpers import match_manifest_dir, unbound_error
+
+        _make_agent("mm-a", manifest_dir="/tmp/mm-a")
+        found = match_manifest_dir(AgentModel.objects.all(), "/tmp/mm-a")
+        self.assertEqual([a.name for a in found], ["mm-a"])
+        self.assertEqual(match_manifest_dir(AgentModel.objects.all(), "/tmp/nope"), [])
+        err = unbound_error("a project scope")
+        self.assertEqual(err["status"], "error")
+        self.assertIn("not bound", err["message"])
+
+
+class SubListToolsTest(TestCase):
+    """New bound list_* tools resolve children via the session scope."""
+
+    def test_agent_lists(self):
+        project = _make_project()
+        agent, av = _make_agent("sub-a", project=project, manifest_dir="/tmp/sub-a")
+        SkillModel.objects.create(
+            name="kid-skill", parent_project=project, parent_agent=agent,
+            manifest_dir="/tmp/kid-skill",
+        )
+        AgentModel.objects.create(
+            name="kid-agent", parent_project=project, parent_agent=agent,
+            manifest_dir="/tmp/kid-agent",
+        )
+        Cronjob.objects.create(
+            name="kid-job", schedule="* * * * *", agent=agent,
+            parent_project=project,
+        )
+        ws = WorkspaceModel.objects.create(name="sub-ws", path="/tmp/sub-a")
+        rt = _make_ws_session(agent, av, ws, project=project)
+        mod = _load_script(
+            "agents/internal/agent_assistant/scripts/agent.py", "sub_agent"
+        )
+        ok, skills = mod.list_skills(rt)
+        self.assertTrue(ok, skills)
+        self.assertEqual([s["name"] for s in skills["skills"]], ["kid-skill"])
+        self.assertEqual(skills["count"], 1)
+        self.assertTrue(skills["scope"].endswith("/skills/"))
+        ok, agents = mod.list_agents(rt)
+        self.assertTrue(ok, agents)
+        self.assertEqual([a["name"] for a in agents["agents"]], ["kid-agent"])
+        ok, jobs = mod.list_cronjobs(rt)
+        self.assertTrue(ok, jobs)
+        self.assertEqual([j["name"] for j in jobs["cronjobs"]], ["kid-job"])
+
+    def test_skill_lists(self):
+        skill = _make_skill("sub-s", manifest_dir="/tmp/sub-s")
+        SkillModel.objects.create(
+            name="grand-skill", parent_skill=skill, manifest_dir="/tmp/grand-skill"
+        )
+        AgentModel.objects.create(
+            name="owned-agent", parent_skill=skill, manifest_dir="/tmp/owned-agent"
+        )
+        agent, av = _make_agent("sub-s-host")
+        ws = WorkspaceModel.objects.create(name="sub-s-ws", path="/tmp/sub-s")
+        rt = _make_ws_session(agent, av, ws)
+        mod = _load_script(
+            "agents/internal/skill_assistant/scripts/skill.py", "sub_skill"
+        )
+        ok, skills = mod.list_skills(rt)
+        self.assertTrue(ok, skills)
+        self.assertEqual([s["name"] for s in skills["skills"]], ["grand-skill"])
+        ok, agents = mod.list_agents(rt)
+        self.assertTrue(ok, agents)
+        self.assertEqual([a["name"] for a in agents["agents"]], ["owned-agent"])
+
+    def test_project_lists(self):
+        project = _make_project(path="/tmp/proj-lists")
+        _make_agent("proj-agent", project=project)
+        _make_skill("proj-skill", project=project)
+        agent, av = _make_agent("proj-host")
+        Cronjob.objects.create(
+            name="proj-job", schedule="* * * * *",
+            parent_project=project,
+        )
+        rt = _make_session(agent, av, name="proj-rt", project=project)
+        mod = _load_script(
+            "agents/internal/project_assistant/scripts/project.py", "sub_project"
+        )
+        ok, agents = mod.list_agents(rt)
+        self.assertTrue(ok, agents)
+        self.assertEqual(
+            {a["name"] for a in agents["agents"]}, {"proj-agent", "proj-host"}
+        )
+        self.assertTrue(agents["scope"].endswith("/.agentone/agents/"))
+        ok, skills = mod.list_skills(rt)
+        self.assertTrue(ok, skills)
+        self.assertEqual([s["name"] for s in skills["skills"]], ["proj-skill"])
+        ok, jobs = mod.list_cronjobs(rt)
+        self.assertTrue(ok, jobs)
+        self.assertEqual([j["name"] for j in jobs["cronjobs"]], ["proj-job"])
+        rt_global = _make_session(agent, av, name="proj-g")
+        ok, err = mod.list_agents(rt_global)
+        self.assertFalse(ok)
+        self.assertIn("not bound", err["message"])
+
+    def test_workspace_lists(self):
+        project = _make_project(path="/tmp/ws-lists")
+        _make_agent("ws-agent", project=project)
+        _make_skill("ws-skill", project=project)
+        agent, av = _make_agent("ws-host")
+        ws = WorkspaceModel.objects.create(
+            name="ws-scope", path="/tmp/ws-lists", parent_project=project
+        )
+        rt = _make_ws_session(agent, av, ws, project=project)
+        mod = _load_script(
+            "agents/internal/workspace_assistant/scripts/workspaces.py", "sub_ws"
+        )
+        ok, skills = mod.list_skills(rt)
+        self.assertTrue(ok, skills)
+        self.assertIn("ws-skill", [s["name"] for s in skills["skills"]])
+        ok, agents = mod.list_agents(rt)
+        self.assertTrue(ok, agents)
+        self.assertIn("ws-agent", [a["name"] for a in agents["agents"]])
+
+    def test_existing_lists_extended(self):
+        project = _make_project()
+        _make_agent("ext-a", project=project, manifest_dir="/tmp/ext-a")
+        _make_skill("ext-s", project=project, manifest_dir="/tmp/ext-s")
+        agent, av = _make_agent("ext-host")
+        rt = _make_session(agent, av, name="ext-rt", project=project)
+        agents_mod = _load_script(
+            "agents/internal/agents_assistant/scripts/agents.py", "ext_agents"
+        )
+        ok, result = agents_mod.list_agents(rt)
+        self.assertTrue(ok, result)
+        self.assertIn("scope", result)
+        row = next(a for a in result["agents"] if a["name"] == "ext-a")
+        self.assertEqual(row["path"], "/tmp/ext-a")
+        skills_mod = _load_script(
+            "agents/internal/skills_assistant/scripts/skills.py", "ext_skills"
+        )
+        ok, sresult = skills_mod.list_skills(rt)
+        self.assertTrue(ok, sresult)
+        self.assertIn("scope", sresult)
+        srow = next(s for s in sresult["skills"] if s["name"] == "ext-s")
+        self.assertEqual(srow["manifest_dir"], "/tmp/ext-s")
+        ws_mod = _load_script(
+            "agents/internal/workspaces_assistant/scripts/workspaces.py", "ext_ws"
+        )
+        ws = WorkspaceModel.objects.create(name="ext-ws", path="/tmp/ext-ws")
+        _make_ws_session(agent, av, ws, name="ext-bound")
+        ok, wresult = ws_mod.list_workspaces(rt)
+        self.assertTrue(ok, wresult)
+        self.assertIn("scope", wresult)
+        wrow = next(w for w in wresult["workspaces"] if w["name"] == "ext-ws")
+        self.assertEqual(wrow["session_count"], 1)
+
+
+class DetailsToolsTest(TestCase):
+    """*_details tools return beyond-file summaries with a status envelope."""
+
+    def test_agent_details(self):
+        project = _make_project(path="/tmp/det-proj")
+        agent, av = _make_agent("det-a", project=project, manifest_dir="/tmp/det-a")
+        SkillModel.objects.create(
+            name="det-skill", parent_project=project, parent_agent=agent,
+            manifest_dir="/tmp/det-skill",
+        )
+        AgentModel.objects.create(
+            name="det-sub", parent_project=project, parent_agent=agent,
+            manifest_dir="/tmp/det-sub",
+        )
+        Cronjob.objects.create(
+            name="det-job", schedule="* * * * *", agent=agent,
+            parent_project=project,
+        )
+        ws = WorkspaceModel.objects.create(name="det-ws", path="/tmp/det-a")
+        rt = _make_ws_session(agent, av, ws, project=project)
+        mod = _load_script(
+            "agents/internal/agent_assistant/scripts/agent.py", "det_agent"
+        )
+        ok, info = mod.agent_details(rt)
+        self.assertTrue(ok, info)
+        self.assertEqual(info["status"], "success")
+        self.assertEqual(info["name"], "det-a")
+        self.assertEqual(info["path"], "/tmp/det-a")
+        self.assertEqual(info["kind"], "root")
+        self.assertEqual(info["skills_count"], 1)
+        self.assertEqual(info["subagents_count"], 1)
+        self.assertEqual(info["cronjobs_count"], 1)
+        self.assertEqual(info["sessions_total"], 1)
+        self.assertEqual(info["version_count"], 1)
+
+    def test_skill_details(self):
+        skill = _make_skill("det-s", manifest_dir="/tmp/det-s")
+        SkillModel.objects.create(
+            name="det-kid", parent_skill=skill, manifest_dir="/tmp/det-kid"
+        )
+        AgentModel.objects.create(
+            name="det-owned", parent_skill=skill, manifest_dir="/tmp/det-owned"
+        )
+        agent, av = _make_agent("det-s-host")
+        ws = WorkspaceModel.objects.create(name="det-s-ws", path="/tmp/det-s")
+        rt = _make_ws_session(agent, av, ws)
+        mod = _load_script(
+            "agents/internal/skill_assistant/scripts/skill.py", "det_skill"
+        )
+        ok, info = mod.skill_details(rt)
+        self.assertTrue(ok, info)
+        self.assertEqual(info["status"], "success")
+        self.assertEqual(info["name"], "det-s")
+        self.assertEqual(info["child_skills_count"], 1)
+        self.assertEqual(info["agents_count"], 1)
+        self.assertEqual(info["total_loads"], 0)
+
+    def test_cronjob_details(self):
+        project = _make_project(path="/tmp/det-cron")
+        agent, av = _make_agent("det-c-agent")
+        Cronjob.objects.create(
+            name="det-c-job", schedule="0 9 * * *", agent=agent,
+            parent_project=project,
+        )
+        rt = _make_session(agent, av, name="det-c-rt", project=project)
+        mod = _load_script(
+            "agents/internal/cronjob_assistant/scripts/cronjob.py", "det_cron"
+        )
+        ok, info = mod.cronjob_details(rt, "det-c-job")
+        self.assertTrue(ok, info)
+        self.assertEqual(info["status"], "success")
+        self.assertEqual(info["schedule"], "0 9 * * *")
+        ok, err = mod.cronjob_details(rt, "missing-job")
+        self.assertFalse(ok)
+        self.assertEqual(err["status"], "error")
+
+    def test_workitem_details_envelope(self):
+        project = _make_project(path="/tmp/det-wi")
+        item = WorkItem.objects.create(title="det-item", priority=10, project=project)
+        agent, av = _make_agent("det-wi-host")
+        rt = _make_session(agent, av, name="det-wi-rt", project=project)
+        mod = _load_script(
+            "agents/internal/workitem_assistant/scripts/workitem.py", "det_wi"
+        )
+        ok, info = mod.workitem_details(rt, item.pk)
+        self.assertTrue(ok, info)
+        self.assertEqual(info["status"], "success")
+        self.assertEqual(info["item_status"], "backlog")
+        ok, missing = mod.workitem_details(rt, 999999)
+        self.assertFalse(ok)
+        self.assertEqual(missing["status"], "error")
+
+    def test_workspace_details(self):
+        project = _make_project(path="/tmp/det-ws2")
+        _make_agent("det-ws-agent", project=project)
+        agent, av = _make_agent("det-ws-host")
+        ws = WorkspaceModel.objects.create(
+            name="det-ws2", path="/tmp/det-ws2", parent_project=project
+        )
+        WorkspaceModel.objects.create(
+            name="det-ws-kid", path="/tmp/det-ws2/kid", parent_project=project
+        )
+        rt = _make_ws_session(agent, av, ws, project=project)
+        mod = _load_script(
+            "agents/internal/workspace_assistant/scripts/workspaces.py", "det_ws"
+        )
+        ok, info = mod.workspace_details(rt)
+        self.assertTrue(ok, info)
+        self.assertEqual(info["status"], "success")
+        self.assertEqual(info["subworkspaces_count"], 1)
+        self.assertEqual(info["sessions_total"], 1)
+        self.assertEqual(info["agents_count"], 2)
+
+
+class CreateToolsTest(TestCase):
+    """create_agent / create_skill write valid manifests into scope dirs."""
+
+    @staticmethod
+    def _frontmatter(manifest: Path) -> dict:
+        import yaml
+
+        text = manifest.read_text()
+        parts = text.split("---")
+        return yaml.safe_load(parts[1])
+
+    def test_create_agent_in_project(self):
+        import shutil
+
+        project = _make_project(name="create-proj", path="/tmp/create-proj")
+        agent, av = _make_agent("create-host")
+        rt = _make_session(agent, av, name="create-rt", project=project)
+        mod = _load_script(
+            "agents/internal/agents_assistant/scripts/agents.py", "create_agents"
+        )
+        ok, result = mod.create_agent(rt, "brand-new-agent", description="A test agent.")
+        self.assertTrue(ok, result)
+        manifest = Path(result["path"])
+        self.assertTrue(manifest.name == "agent.md")
+        self.assertTrue(str(manifest).startswith("/tmp/create-proj/"))
+        self.assertEqual(self._frontmatter(manifest)["name"], "brand-new-agent")
+        ok, dup = mod.create_agent(rt, "brand-new-agent")
+        self.assertFalse(ok)
+        self.assertIn("already exists", dup["message"])
+        ok, bad = mod.create_agent(rt, "bad name!")
+        self.assertFalse(ok)
+        shutil.rmtree("/tmp/create-proj", ignore_errors=True)
+
+    def test_create_skill_in_project(self):
+        import shutil
+
+        project = _make_project(name="create-sproj", path="/tmp/create-sproj")
+        agent, av = _make_agent("create-s-host")
+        rt = _make_session(agent, av, name="create-s-rt", project=project)
+        mod = _load_script(
+            "agents/internal/skills_assistant/scripts/skills.py", "create_skills"
+        )
+        ok, result = mod.create_skill(rt, "brand-new-skill", description="A test skill.")
+        self.assertTrue(ok, result)
+        manifest = Path(result["path"])
+        self.assertTrue(str(manifest).startswith("/tmp/create-sproj/"))
+        self.assertEqual(self._frontmatter(manifest)["name"], "brand-new-skill")
+        ok, dup = mod.create_skill(rt, "brand-new-skill")
+        self.assertFalse(ok)
+        self.assertIn("already exists", dup["message"])
+        ok, bad = mod.create_skill(rt, "")
+        self.assertFalse(ok)
+        shutil.rmtree("/tmp/create-sproj", ignore_errors=True)
+
+
+class RenameToolsTest(TestCase):
+    """Renamed tools keep their behavior under the new names."""
+
+    def test_project_details(self):
+        project = _make_project(name="ren-proj", path="/tmp/ren-proj")
+        agent, av = _make_agent("ren-host")
+        rt = _make_session(agent, av, name="ren-rt", project=project)
+        mod = _load_script(
+            "agents/internal/projects_assistant/scripts/projects.py", "ren_projects"
+        )
+        self.assertTrue(hasattr(mod, "project_details"))
+        self.assertFalse(hasattr(mod, "describe_project"))
+        ok, info = mod.project_details(rt, "ren-proj")
+        self.assertTrue(ok, info)
+        self.assertEqual(info["status"], "success")
+
+    def test_edit_and_split_workitem(self):
+        project = _make_project(path="/tmp/ren-wi")
+        item = WorkItem.objects.create(title="ren-item", priority=10, project=project)
+        agent, av = _make_agent("ren-wi-host")
+        rt = _make_session(agent, av, name="ren-wi-rt", project=project)
+        mod = _load_script(
+            "agents/internal/workitem_assistant/scripts/workitem.py", "ren_wi"
+        )
+        self.assertTrue(hasattr(mod, "edit_workitem"))
+        self.assertTrue(hasattr(mod, "create_child_workitem"))
+        self.assertFalse(hasattr(mod, "update_workitem"))
+        self.assertFalse(hasattr(mod, "add_child_workitem"))
+        ok, info = mod.edit_workitem(rt, item.pk, title="renamed", status="ready")
+        self.assertTrue(ok, info)
+        self.assertEqual(info["status"], "success")
+        self.assertEqual(info["item_status"], "ready")
+        self.assertEqual(info["title"], "renamed")
+        ok, child = mod.create_child_workitem(rt, item.pk, title="piece one")
+        self.assertTrue(ok, child)
+        self.assertEqual(child["status"], "success")
+        self.assertEqual(child["item_status"], "ready")
+
+    def test_create_workitem_envelope(self):
+        project = _make_project(path="/tmp/ren-wc")
+        agent, av = _make_agent("ren-wc-host")
+        rt = _make_session(agent, av, name="ren-wc-rt", project=project)
+        mod = _load_script(
+            "agents/internal/workitems_assistant/scripts/workitems.py", "ren_wc"
+        )
+        ok, info = mod.create_workitem(rt, title="fresh item")
+        self.assertTrue(ok, info)
+        self.assertEqual(info["status"], "success")
+        self.assertEqual(info["item_status"], "backlog")

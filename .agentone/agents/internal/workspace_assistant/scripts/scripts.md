@@ -1,6 +1,12 @@
 ---
 group: workspace
 tools:
+  # Key details of the managed workspace in one call (totals, counts)
+  - name: workspace_details
+    file: workspaces.py
+    function: workspace_details
+    bound: True
+
   # List direct sub-workspaces of the managed workspace
   - name: list_subworkspaces
     file: workspaces.py
@@ -35,5 +41,23 @@ tools:
   - name: create_chat
     file: workspaces.py
     function: create_chat
+    bound: True
+
+  # List skills in the managed workspace's scope
+  - name: list_skills
+    file: workspaces.py
+    function: list_skills
+    bound: True
+
+  # List agents in the managed workspace's scope
+  - name: list_agents
+    file: workspaces.py
+    function: list_agents
+    bound: True
+
+  # List cron jobs in the managed workspace's scope
+  - name: list_cronjobs
+    file: workspaces.py
+    function: list_cronjobs
     bound: True
 ---

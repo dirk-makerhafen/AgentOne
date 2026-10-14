@@ -154,8 +154,9 @@ def create_workitem(
         status: "backlog" (default) or "ready" (queue now).
 
     Returns:
-        ``(True, {"result": "success", item...})`` with the created item's
-        fields including ``id`` and ``body``, or
+        ``(True, {"status": "success", item...})`` with the created item's
+        fields including ``id`` and ``body`` (``item_status`` is the
+        item's lifecycle status), or
         ``(False, {"status": "error", ...})``.
     """
     from server.models.workitems.enums import WorkItemStatus
@@ -189,5 +190,6 @@ def create_workitem(
         item.refresh_from_db()
 
     info = item.summarise_with_body()
-    info["result"] = "success"
+    info["item_status"] = info.pop("status", "")
+    info["status"] = "success"
     return True, info

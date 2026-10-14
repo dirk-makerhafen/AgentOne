@@ -62,7 +62,7 @@ def _resolve_project(_session: Session, name: str):
     return True, project
 
 
-def describe_project(_session: Session, name: str = "") -> tuple[bool, dict[str, Any]]:
+def project_details(_session: Session, name: str = "") -> tuple[bool, dict[str, Any]]:
     """Show ONE project in depth: record, path, declared workspaces, and owned-record counts.
 
     Defaults to the calling session's project when no name is given —

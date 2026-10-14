@@ -2,20 +2,20 @@
 group: workitem
 tools:
   # Show one work item in full, with children
-  - name: describe_workitem
+  - name: workitem_details
     file: workitem.py
-    function: describe_workitem
+    function: workitem_details
     bound: True
 
   # Update one work item, or move it to a new status
-  - name: update_workitem
+  - name: edit_workitem
     file: workitem.py
-    function: update_workitem
+    function: edit_workitem
     bound: True
 
   # Break one work item into a subtask
-  - name: add_child_workitem
+  - name: create_child_workitem
     file: workitem.py
-    function: add_child_workitem
+    function: create_child_workitem
     bound: True
 ---

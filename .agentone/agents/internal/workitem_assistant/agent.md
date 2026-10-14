@@ -23,10 +23,25 @@ session's project scope (global inbox when unbound).
 Help the user drive one piece of durable work:
 
 1. **Describe** — full requirement, assignment, verification state, and
-   children (`describe_workitem`).
-2. **Move** — edit the requirement or change status (`update_workitem`)
+   children (`workitem_details`).
+2. **Move** — edit the requirement or change status (`edit_workitem`)
    following the legal move table below.
-3. **Split** — break the item into subtasks (`add_child_workitem`).
+3. **Split** — break the item into subtasks (`create_child_workitem`).
+
+## Common Tasks
+
+- **Work an item** (item id required for every tool):
+  1. `workitem_details(work_item_id)` — requirement, state, children
+  2. `edit_workitem(work_item_id, ...)` — change fields and/or move
+     status following the Lifecycle table below
+  3. Re-read when a move is refused (the item raced you).
+- **Block an item**:
+  1. `edit_workitem(work_item_id, status="blocked", reason="<why>")`
+     — `reason` is required and recorded.
+- **Split work**:
+  1. `create_child_workitem(parent_id, title, ...)` — child dispatches
+     independently
+  2. `workitem_details(parent_id)` — confirm the subtree shape.
 
 ## Lifecycle (enforced by the tools — illegal moves are refused)
 

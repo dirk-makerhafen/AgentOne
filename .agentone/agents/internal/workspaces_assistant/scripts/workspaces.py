@@ -23,7 +23,27 @@ def _norm(path: str) -> str:
         return os.path.normpath(path or "").rstrip(os.sep)
 
 
-def _workspace_info(ws, all_paths: dict[int, str]) -> dict[str, Any]:
+def _session_counts() -> dict[int, int]:
+    """Map workspace pk to bound session count (single grouped query)."""
+    from django.db.models import Count
+
+    from server.models.sessions.session import SessionModel
+
+    counts: dict[int, int] = {}
+    try:
+        rows = (
+            SessionModel.objects.filter(latest_session_version__workspace__isnull=False)
+            .values("latest_session_version__workspace")
+            .annotate(n=Count("pk"))
+        )
+        for row in rows:
+            counts[row["latest_session_version__workspace"]] = row["n"]
+    except Exception:
+        pass
+    return counts
+
+
+def _workspace_info(ws, all_paths: dict[int, str], session_counts: dict[int, int] | None = None) -> dict[str, Any]:
     mine = all_paths.get(ws.pk, "")
     nested = any(
         other != ws.pk and all_paths.get(other, "") and mine.startswith(all_paths[other] + os.sep)
@@ -36,6 +56,7 @@ def _workspace_info(ws, all_paths: dict[int, str]) -> dict[str, Any]:
         "description": ws.description or "",
         "color": getattr(ws, "color", "") or "",
         "top_level": not nested,
+        "session_count": (session_counts or {}).get(ws.pk, 0),
     }
 
 
@@ -52,7 +73,8 @@ def list_workspaces(_session: Session) -> tuple[bool, dict[str, Any]]:
     workspace's directory.
 
     Returns:
-        ``(True, {"status": "success", "workspaces": [...], "count": int})``
+        ``(True, {"status": "success", "workspaces": [...], "count": int,
+        "scope": str})``
         or ``(False, {"status": "error", "message": ...})``.
     """
     try:
@@ -60,10 +82,12 @@ def list_workspaces(_session: Session) -> tuple[bool, dict[str, Any]]:
     except Exception as e:
         return False, {"status": "error", "message": f"Could not list workspaces: {e}"}
     paths = {ws.pk: _norm(ws.path) for ws in all_ws}
+    counts = _session_counts()
     return True, {
         "status": "success",
-        "workspaces": [_workspace_info(ws, paths) for ws in all_ws],
+        "workspaces": [_workspace_info(ws, paths, counts) for ws in all_ws],
         "count": len(all_ws),
+        "scope": "instance",
     }
 
 

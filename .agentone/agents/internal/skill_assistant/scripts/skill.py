@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from runtime.script_helpers import agent_row, skill_row
 from runtime.session.session import Session
 
 #: How many recent load_skill calls to scan for usage attribution. The
@@ -264,3 +265,130 @@ def skills_for_agent(_session: Session, agent_name: str) -> tuple[bool, dict[str
         return False, {"status": "error", "message": f"Could not read agent skills: {e}"}
     skills.sort(key=lambda s: s["name"].lower())
     return True, {"status": "success", "agent": agent.name, "skills": skills, "count": len(skills)}
+
+
+def list_skills(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """List THIS skill's child skills, ordered by name.
+
+    The skill is the one whose manifest folder is this session's
+    workspace — no name argument. Base path ``<skill_dir>/skills/``.
+
+    Returns:
+        ``(True, {"status": "success", "skill": str, "skills": [...],
+        "count": int, "scope": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.skill.skills import Skills
+
+    ok, skill = _resolve_skill(_session)
+    if not ok:
+        return False, skill
+    try:
+        children = list(Skills(parent_skill=skill).all().order_by("name"))
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not list child skills: {e}"}
+    return True, {
+        "status": "success",
+        "skill": skill.name,
+        "skills": [skill_row(s) for s in children],
+        "count": len(children),
+        "scope": f"{_normalize_dir(skill.manifest_dir)}/skills/",
+    }
+
+
+def list_agents(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """List the agents owned by THIS skill, ordered by name.
+
+    The skill is the one whose manifest folder is this session's
+    workspace — no name argument. Base path ``<skill_dir>/agents/``.
+
+    Returns:
+        ``(True, {"status": "success", "skill": str, "agents": [...],
+        "count": int, "scope": str})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.agents.agents import Agents
+
+    ok, skill = _resolve_skill(_session)
+    if not ok:
+        return False, skill
+    try:
+        agents = list(Agents(parent_skill=skill).all().order_by("name"))
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not list skill agents: {e}"}
+    return True, {
+        "status": "success",
+        "skill": skill.name,
+        "agents": [agent_row(a) for a in agents],
+        "count": len(agents),
+        "scope": f"{_normalize_dir(skill.manifest_dir)}/agents/",
+    }
+
+
+def skill_details(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """Show THIS skill's key details in one call: identity, version,
+    load totals, and children counts.
+
+    The skill is the one whose manifest folder is this session's
+    workspace — no name argument. This returns what the file alone
+    cannot: version identity, live load totals, and assignment counts.
+    Use `skill_usage` / `list_*` for the full breakdowns.
+
+    Returns:
+        ``(True, {"status": "success", details...})`` or
+        ``(False, {"status": "error", "message": ...})``.
+    """
+    from runtime.agents.agents import Agents
+    from runtime.skill.skills import Skills
+
+    ok, skill = _resolve_skill(_session)
+    if not ok:
+        return False, skill
+    try:
+        version = skill.latest_skill_version
+    except Exception:
+        version = None
+    try:
+        project_name = skill.parent_project.name if skill.parent_project else None
+    except Exception:
+        project_name = None
+    try:
+        calls = _load_skill_calls()
+        total_loads = sum(1 for c in calls if _call_skill_name(c) == skill.name)
+    except Exception:
+        total_loads = 0
+    try:
+        agents_count = Agents(parent_skill=skill).all().count()
+    except Exception:
+        agents_count = 0
+    try:
+        child_skills_count = Skills(parent_skill=skill).all().count()
+    except Exception:
+        child_skills_count = 0
+    users: list[str] = []
+    try:
+        if version is not None:
+            seen = set()
+            for av in version.used_by_agent_versions.all().select_related("agent"):
+                try:
+                    agent_name = av.agent.name
+                except Exception:
+                    continue
+                if agent_name not in seen:
+                    seen.add(agent_name)
+                    users.append(agent_name)
+            users.sort()
+    except Exception:
+        pass
+    return True, {
+        "status": "success",
+        "name": skill.name,
+        "path": skill.manifest_dir or "",
+        "project": project_name,
+        "version_number": version.version_number if version is not None else 0,
+        "total_loads": total_loads,
+        "agents_count": agents_count,
+        "child_skills_count": child_skills_count,
+        "used_by_agents": users,
+        "scope": f"{_normalize_dir(skill.manifest_dir)}/",
+    }

@@ -58,7 +58,7 @@ def _resolve_agent(agent_name: str):
     return agent, None
 
 
-def describe_workitem(_session: Session, work_item_id: int) -> tuple[bool, dict]:
+def workitem_details(_session: Session, work_item_id: int) -> tuple[bool, dict]:
     """Show one work item in full: requirement, status, assignment, verification, and children.
 
     Args:
@@ -66,8 +66,8 @@ def describe_workitem(_session: Session, work_item_id: int) -> tuple[bool, dict]
 
     Returns:
         ``(True, {item summary..., "verify_reason": str, "children": [...],
-        "result": "success"})`` (``status`` is the item's status) or
-        ``(False, {"status": "error", "message": ...})``.
+        "status": "success"})`` (``item_status`` is the item's lifecycle
+        status) or ``(False, {"status": "error", "message": ...})``.
     """
     item = _visible_items(_session, work_item_id).first()
     if item is None:
@@ -76,15 +76,16 @@ def describe_workitem(_session: Session, work_item_id: int) -> tuple[bool, dict]
         _visible_items(_session).filter(parent_id=item.pk).order_by("-priority", "created_at")
     )
     info = item.summarise_with_body()
+    info["item_status"] = info.pop("status", "")
     info.update({
         "verify_reason": item.verify_reason or "",
         "children": [c.summarise() for c in children],
-        "result": "success",
+        "status": "success",
     })
     return True, info
 
 
-def update_workitem(
+def edit_workitem(
     _session: Session,
     work_item_id: int,
     title: str = "",
@@ -125,8 +126,9 @@ def update_workitem(
         reason: Note recorded with the change — required when blocking.
 
     Returns:
-        ``(True, {"result": "success", item...})`` with the fields after
-        the change, or ``(False, {"status": "error", "message": ...})``.
+        ``(True, {"status": "success", item...})`` with the fields after
+        the change (``item_status`` is the item's lifecycle status),
+        or ``(False, {"status": "error", "message": ...})``.
     """
     item = _visible_items(_session, work_item_id).first()
     if item is None:
@@ -171,7 +173,8 @@ def update_workitem(
             item.refresh_from_db()
 
     info = item.summarise_with_body()
-    info["result"] = "success"
+    info["item_status"] = info.pop("status", "")
+    info["status"] = "success"
     return True, info
 
 
@@ -219,7 +222,7 @@ def _apply_status(item: Any, status: str, reason: str) -> str:
     return ""
 
 
-def add_child_workitem(
+def create_child_workitem(
     _session: Session,
     parent_id: int,
     title: str,
@@ -246,7 +249,7 @@ def add_child_workitem(
         status: "ready" (default, queue it) or "backlog" (hold it).
 
     Returns:
-        ``(True, {"result": "success", child...})`` or
+        ``(True, {"status": "success", child...})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
     parent = _visible_items(_session, parent_id).first()
@@ -278,9 +281,10 @@ def add_child_workitem(
         if not WorkItemStateMachine.mark_ready(child.pk):
             return False, {
                 "status": "error",
-                "message": f"Created child work item {child.pk} but could not queue it. It is in 'backlog'; use update_workitem to retry.",
+                "message": f"Created child work item {child.pk} but could not queue it. It is in 'backlog'; use edit_workitem to retry.",
             }
         child.refresh_from_db()
     info = child.summarise_with_body()
-    info["result"] = "success"
+    info["item_status"] = info.pop("status", "")
+    info["status"] = "success"
     return True, info

@@ -29,6 +29,21 @@ Help the user organize their scheduled jobs as a collection:
 3. **Archive** — hide jobs without losing tracking data, or restore them
    (`set_cronjob_archived`).
 
+## Common Tasks
+
+- **Survey the schedule**:
+  1. `list_cronjobs` — what's configured
+  2. `cronjobs_stats` — active/paused/archived, total runs, next run.
+- **Add a job**:
+  1. `create_cronjob(name, schedule, agent_name, ...)` — schedule is
+     validated, next run computed
+  2. Confirm `next_run_at` in the result.
+- **Retire a job**:
+  1. `set_cronjob_archived(name, archived=True)` — keeps tracking data
+  2. `set_cronjob_archived(name, archived=False)` to restore.
+- **One job needs work**: send the user to its `cronjob_assistant`
+  (describe, tune, pause, run history by name).
+
 ## Behavioral Rules
 
 - **Stay in scope** — you only see jobs in your session's project scope
