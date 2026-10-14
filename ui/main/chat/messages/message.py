@@ -33,6 +33,13 @@ class MessageView(ModelView):
 
     @property
     def DOM_ELEMENT_EXTRAS(self):
+        try:
+            if getattr(self.view, "turn_collapsed", False) and isinstance(
+                self.view, (QueryView, AssistantMessageView)
+            ):
+                return f"style='display:none;' data-pk='{self.subject.pk}' data-role='{self.role}'  "
+        except Exception:
+            pass
         return  f"style='display:flex;' data-pk='{self.subject.pk}' data-role='{self.role}'  "
 
     def fork(self, message_id):

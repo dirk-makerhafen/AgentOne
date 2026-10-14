@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from server.models.tasks.agent_task_call import AgentTaskCall
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
+from ui.main.chat.messages.response import ResponseView
 from ui.main.chat.messages.toolcard import ToolCard
 
 if TYPE_CHECKING:
@@ -14,37 +15,19 @@ class AssistantMessageView(ModelView):
     DOM_ELEMENT_CLASS = 'msg-row'
 
     TEMPLATE_STR = '''
-        <div class="msg-role assistant" title="Message:{{pyview.subject.pk}}">
-            <div class="role-icon assistant">A</div>
-            <span style="font-size:12px">{{ pyview.subject.session_version.agent.name}} v{{ pyview.subject.session_version.pinned_agent_version if pyview.subject.session_version.pinned_agent_version else "-1"}}</span>
-
-            {% if pyview.subject.response.completion_tokens %}
-                <span class="msg-tps-inline" title="Response Tokens ">{{pyview.subject.response.completion_tokens}}tkn</span>
-            {% endif %}
-
-
-            {% if pyview.subject.response.time_to_first_token %}
-                <span class="msg-tps-inline" title="Time to first token">first {{pyview.subject.response.time_to_first_token |round(2) }}s</span>
-            {% endif %}
-
-            {% if pyview.subject.response.reasoning_time %}
-                <span class="msg-tps-inline" title="Reasoning Time">think {{pyview.subject.response.reasoning_time |round(2) }}s</span>
-            {% endif %}
-            
-            {% if pyview.subject.response.token_generation_time and pyview.subject.response.reasoning_time %}
-                <span class="msg-tps-inline" title="Message Time">msg {{(pyview.subject.response.token_generation_time - pyview.subject.response.reasoning_time ) |round(2) }}s</span>
-            {% endif %}
-            
-            {% if pyview.subject.response.total_time %}
-                <span class="msg-tps-inline" title="Total Time">total {{pyview.subject.response.total_time |round(2) }}s</span>
-            {% endif %}
-
-            {% if pyview.subject.response.completion_tokens and pyview.subject.response.token_generation_time and pyview.subject.response.total_time %}
-                <span class="msg-tps-inline" title="Token/second while generating(Token/second overall)">{{(pyview.subject.response.completion_tokens / pyview.subject.response.token_generation_time) |round(2)}}({{(pyview.subject.response.completion_tokens / pyview.subject.response.total_time) |round(2)}})tkn/s</span>
-            {% endif %} 
-            
-        </div>
         <div class="assistant-turn-blocks">
+            {% if pyview.hidden_count %}
+                <div class="hidden-turns-bar" onclick="pyview.toggle_block()" title="Show the hidden assistant turns">
+                    <span class="card-meta">{{ pyview.hidden_count }} assistant messages hidden (show)</span>
+                </div>
+            {% elif pyview.block_pinned %}
+                <div class="hidden-turns-bar" onclick="pyview.toggle_block()" title="Collapse back to the latest turns">
+                    <span class="card-meta">(hide)</span>
+                </div>
+            {% endif %}
+            {% if pyview.response_view %}
+                {{ pyview.response_view.render() }}
+            {% endif %}
             {% if pyview.subject.response.reasoning %}
                 <div class="thinking-card {% if pyview.is_reasoning_open %} open {% endif %}">
                     <div class="thinking-card-header" onclick="pyview.toggle_reasoning()">
@@ -66,10 +49,7 @@ class AssistantMessageView(ModelView):
                 <div class="msg-body" id="message_body_{{pyview.subject.pk}}">{% for message_part in  pyview.subject.parts.filter(type__in=["MESSAGE"]) %}{{ message_part.content.get()}}{% endfor %}   
                 </div>
                 <div class="msg-foot">
-                    {% if pyview.subject.response.total_time %}
-                        <span class="msg-duration-inline">Done in {{pyview.subject.response.total_time |round(2) }}s</span>
-                    {% endif %}
-                    <span class="msg-time" title="{{pyview.subject.create_at}}">{{pyview.subject.create_at}}</span>
+                    <span class="msg-time" title="{{pyview.subject.created_at}}">{{pyview.subject.created_at}}</span>
                     <span class="msg-actions">
                         <button class="msg-action-btn msg-tts-btn" title="Listen" onclick="speakMessage(this)">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
@@ -91,14 +71,28 @@ class AssistantMessageView(ModelView):
             <div class="tool-card-row">
                 {{ pyview.tool_list.render() }}
             </div>
-        
 
         </div>
-        
+
     '''
     def __init__(self, subject: Message, parent: MessageView, **kwargs):
-        super().__init__(subject, parent, **kwargs) 
+        super().__init__(subject, parent, **kwargs)
         self.is_reasoning_open = False
+        # Turn collapsing (managed by Messages._refresh_turns). Collapsed
+        # turns hide their whole row; the first visible turn of the block
+        # renders the "N assistant messages hidden (show)" line instead.
+        # All default to expanded.
+        self.turn_collapsed = False
+        self.hidden_count = 0
+        self.block_pinned = False
+        self._init_turn_state_from_messages()
+        self.response_view = None
+        try:
+            resp = getattr(subject, "response", None)
+            if resp is not None and getattr(resp, "pk", None) is not None:
+                self.response_view = ResponseView(subject=resp, parent=self)
+        except Exception:
+            self.response_view = None
         self.message_parts = subject.parts.filter(tool_call__isnull=False)
         self.tool_calls = AgentTaskCall.objects.filter(pk__in=[message_part.tool_call.pk for message_part in self.message_parts])
         self.tool_list = QuerySetView(
@@ -111,6 +105,44 @@ class AssistantMessageView(ModelView):
     def toggle_reasoning(self):
         self.is_reasoning_open = not self.is_reasoning_open
         self.update()
+
+    def _init_turn_state_from_messages(self):
+        """Pick up collapse state computed before this wrapper existed."""
+        try:
+            node = getattr(self, "parent", None)
+            seen = 0
+            while node is not None and seen < 8:
+                if type(node).__name__ == "Messages":
+                    pk = getattr(self.subject, "pk", None)
+                    if pk is None:
+                        return
+                    self.turn_collapsed = bool(node._turn_effective(pk))
+                    self.hidden_count = int(node._turn_hidden.get(pk, 0) or 0)
+                    bkey = node._turn_block.get(pk)
+                    self.block_pinned = bool(node._block_pin.get(bkey, False))
+                    return
+                node = getattr(node, "parent", None)
+                seen += 1
+        except Exception:
+            pass
+
+    def toggle_block(self):
+        """Expand/collapse the hidden turns of this block."""
+        node = getattr(self, "parent", None)
+        messages = None
+        seen = 0
+        while node is not None and seen < 8:
+            if type(node).__name__ == "Messages":
+                messages = node
+                break
+            node = getattr(node, "parent", None)
+            seen += 1
+        if messages is None:
+            return
+        try:
+            messages.toggle_block(getattr(self.subject, "pk", None))
+        except Exception:
+            pass
 
     def fork(self, message_id):
         self.parent.fork(message_id)
