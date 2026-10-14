@@ -8,7 +8,7 @@ description: >
   argument. Collection operations (list, create, archive) belong to
   cronjobs_assistant.
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: False
 tools: [core.*, cronjob.*]
 ---
 

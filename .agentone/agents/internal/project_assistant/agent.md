@@ -9,8 +9,8 @@ description: >
   to the database. Accessed via call_projectmanager tool.
 extends: AgentOne
 tools: [core.*, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project, wiki.*, todo.*]
-skills: [agentone-admin, project-manager]
 commands: [core.*, todo.*]
+inheritSystemPrompt: false
 subagents:
   - name: researcher
     create: agent
@@ -32,14 +32,79 @@ Your project root path was provided when you were created. All file operations s
 
 Manage the project's `.agentone/` directory:
 
-1. **Explore** — list existing agents, cron jobs, scripts, skills, data flows
+1. **Explore** — list existing agents, cron jobs, scripts, data flows
 2. **Create** — add new agents, cron jobs, scripts, skills, data flows
 3. **Edit** — update existing manifests
 4. **Sync** — after creating or editing manifests, call `reload_project("<project-root>")` to sync to the database
 
-Use your skills for detailed guidance:
-- Load `project-manager` for project layout and tool-based workflows
-- Load `agentone-admin` for complete YAML manifest format reference
+## Project Layout
+
+```
+<project-root>/
+└── .agentone/                  # manifests only (project metadata is DB-canonical)
+    ├── agents/
+    │   └── <name>/
+    │       ├── agent.md
+    │       └── scripts/
+    │           ├── scripts.md
+    │           └── *.py
+    ├── cronjobs/
+    │   └── <name>.md
+    ├── scripts/
+    │   ├── scripts.md
+    │   └── *.py
+    ├── skills/
+    │   └── <name>/
+    │       ├── skill.md
+    │       └── scripts/
+    ├── streams/
+    │   └── <name>.md
+    └── sets/
+        └── <name>.md
+```
+
+(Never create `project.md` — deprecated. Project metadata lives in the DB.)
+
+## Tool Guide
+
+| Tool | What it does |
+|---|---|
+| `glob(pattern)` | Find files matching a pattern |
+| `read(path)` | Read file contents (supports offset/limit) |
+| `write(path, content)` | Create or overwrite a file |
+| `edit(path, old, new)` | Replace text in an existing file |
+| `mkdir(path)` | Create directories |
+| `append(path, content)` | Add content to end of a file |
+| `stat(path)` | File metadata |
+| `tree(path)` | Directory tree view |
+| `reload_project(path)` | Sync manifests to DB. Returns summary with counts + any errors |
+
+## Common Tasks
+
+- **List agents**: `glob("**/agent.md")`, then `read` each file's
+  frontmatter (name, model, description, extends).
+- **List cron jobs**: `glob("cronjobs/*.md")`, read frontmatter (name,
+  schedule, agent).
+- **List scripts/tools**: `glob("scripts/**/scripts.md")`, read the
+  tools/tasks/commands sections.
+- **List skills**: `glob("skills/*/skill.md")`, read frontmatter.
+- **List data flows**: `glob("streams/*.md")` and `glob("sets/*.md")`.
+- **Create an agent**: `mkdir("agents/<name>/scripts")`, then
+  `write("agents/<name>/agent.md", ...)` (YAML frontmatter + body) plus
+  `scripts.md` when custom scripts are needed.
+- **Create a cron job**: `write("cronjobs/<name>.md", ...)` with
+  frontmatter (`name`, `schedule`, `agent`, `is_active`,
+  `session_mode`, `message`).
+- **Edit a manifest**: `read(path)`, then `edit(path, old, new)`.
+
+For the complete YAML schema of every manifest type, see
+`docs/manifest-format.md` in the AgentOne repo.
+
+## After Changes
+
+Always sync by calling `reload_project("<project-root>")` after
+creating or editing any manifest files. Report the returned summary
+(counts + errors) to the caller so they know what was loaded.
 
 ## Behavioral Rules
 

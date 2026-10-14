@@ -237,6 +237,73 @@ class TurnCollapseTest(TestCase):
         self.assertFalse(tail_head.turn_collapsed)
         self.assertEqual(tail_head.hidden_count, 1)
 
+    def test_streaming_response_row_appears_then_embeds(self):
+        from ui.main.chat.messages.message import MessageView
+        from ui.main.chat.messages.response import ResponseView
+
+        user = self._msg(role=MessageRole.USER)
+        self._feed_message(user)
+        query = self._query(user, status=QueryStatus.ACTIVE)
+        self._feed_query(query)
+        resp = self._resp(query, status=ResponseStatus.ACTIVE, total=0)
+        # Live event inserts the streaming response right after its query,
+        # auto-expanded so the tokens are visible while generating.
+        self.messages._on_response_created(resp.pk, "create", {})
+        items = list(self.messages.message_list)
+        ridx = next(i for i, x in enumerate(items)
+                    if isinstance(x, Response) and x.pk == resp.pk)
+        qidx = next(i for i, x in enumerate(items)
+                    if isinstance(x, Query) and x.pk == query.pk)
+        self.assertEqual(ridx, qidx + 1)
+        wrapper = self._wrapper(resp.pk, Response)
+        self.assertIsNotNone(wrapper)
+        self.assertIsInstance(wrapper.view, ResponseView)
+        self.assertTrue(wrapper.view.is_open)
+        self.assertEqual(wrapper.role, "response")
+        # Duplicate creates are ignored.
+        before = len(self.messages.message_list)
+        self.messages._on_response_created(resp.pk, "create", {})
+        self.assertEqual(len(self.messages.message_list), before)
+        # The finished assistant message embeds the response → row removed.
+        assistant = self._msg(role=MessageRole.ASSISTANT, response=resp)
+        self._feed_message(assistant)
+        self.assertFalse(any(
+            isinstance(x, Response) and x.pk == resp.pk
+            for x in self.messages.message_list
+        ))
+        self.assertIsNotNone(self._assistant_view(assistant.pk))
+
+    def test_embedded_responses_never_duplicate_on_sync(self):
+        user = self._msg(role=MessageRole.USER)
+        self._feed_message(user)
+        query = self._query(user)
+        self._feed_query(query)
+        resp = self._resp(query)
+        assistant = self._msg(role=MessageRole.ASSISTANT, response=resp)
+        self._feed_message(assistant)
+        self.messages._sync_standalone_responses()
+        self.assertFalse(any(
+            isinstance(x, Response) for x in self.messages.message_list
+        ))
+
+    def test_orphan_terminal_response_stays_visible(self):
+        user = self._msg(role=MessageRole.USER)
+        self._feed_message(user)
+        query = self._query(user)
+        self._feed_query(query)
+        resp = self._resp(query, status=ResponseStatus.FAILURE)
+        # No assistant message references it → sync + terminal update keep it.
+        self.messages._sync_standalone_responses()
+        self.assertTrue(any(
+            isinstance(x, Response) and x.pk == resp.pk
+            for x in self.messages.message_list
+        ))
+        self.messages._on_response_updated(resp.pk, "update", {})
+        self.assertTrue(any(
+            isinstance(x, Response) and x.pk == resp.pk
+            for x in self.messages.message_list
+        ))
+
     def test_info_message_does_not_break_grouping(self):
         user = self._msg(role=MessageRole.USER)
         self._feed_message(user)

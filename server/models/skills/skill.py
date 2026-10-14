@@ -35,4 +35,7 @@ class SkillModel(ObservableMixin, models.Model):
     parent_agent = models.ForeignKey("server.AgentModel",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_skills")
     parent_project = models.ForeignKey("server.Project",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_skills")
     parent_skill = models.ForeignKey("self",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_skills")
+    # manifest_dir: directory holding this skill's skill.md (set by the
+    # loader; blank for rows predating the field or created ad hoc).
+    manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
 

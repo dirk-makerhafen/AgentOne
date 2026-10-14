@@ -45,6 +45,12 @@ def load_skill_manifest(
         parent_agent=parent_agent,
         parent_project=parent_project,
     )
+    # Record where this skill's manifest lives (drift-tolerant: reloads
+    # from a moved tree update the row instead of orphaning it).
+    manifest_dir = skill_dir.as_posix()
+    if (skill.manifest_dir or "") != manifest_dir:
+        SkillModel.objects.filter(pk=skill.pk).update(manifest_dir=manifest_dir)
+        skill.manifest_dir = manifest_dir
     skill_version, created = SkillModelVersion.objects.get_or_create(
         skill=skill,
         commit=commit,

@@ -37,6 +37,9 @@ class Cronjob(BaseModel):
     agent: models.ForeignKey | None = models.ForeignKey( "server.AgentModel", on_delete=models.CASCADE, related_name="related_cron", blank=True, null=True)
     parent_project = models.ForeignKey("server.Project",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="child_crons")
     workspace = models.ForeignKey("server.WorkspaceModel",default=None,null=True,blank=True,on_delete=models.SET_NULL,related_name="cron_jobs")
+    # manifest_dir: directory holding this cron's .md manifest (set by the
+    # loader; blank for rows predating the field or created ad hoc / in-DB).
+    manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
 
     # Session
     session_mode: str = models.CharField(max_length=20, choices=SESSION_MODE_CHOICES, default="new")

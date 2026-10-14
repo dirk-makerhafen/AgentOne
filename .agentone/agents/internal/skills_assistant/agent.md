@@ -7,7 +7,7 @@ description: >
   Global skills are visible in every scope; project skills only in their
   own. Working on ONE skill (describe, usage) belongs to skill_assistant.
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 tools: [core.*, skills_mgmt.*]
 ---
 

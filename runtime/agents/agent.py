@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from django.db.models import QuerySet
@@ -521,3 +522,58 @@ class Agent:
         if self._pinned_agent_version:
             return self._pinned_agent_version
         return self.model.latest_agent_version
+
+    # ------------------------------------------------------------------
+    # Assistant wiring + navigation
+    # ------------------------------------------------------------------
+
+    #: Singular internal assistant working on ONE agent.
+    ASSISTANT = "agent_assistant"
+
+    @property
+    def pk(self) -> Any:
+        """Return the agent primary key."""
+        return self.model.pk
+
+    @property
+    def project(self) -> Any:
+        """Return the owning project, or *None* (global agent)."""
+        try:
+            return self.model.parent_project
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
+    def get_source_dir(self) -> Path:
+        """Return the agent's source directory (stored, else conventional)."""
+        from runtime.paths import model_manifest_dir
+
+        return model_manifest_dir(self.model, "agent", self.name, self.project)
+
+    def get_skills_runtime(self) -> Any:
+        """Return this agent's child skills."""
+        from runtime.skill.skills import Skills
+
+        return Skills(parent_agent=self.model)
+
+    def get_agents_runtime(self) -> Any:
+        """Return this agent's subagents (children)."""
+        from runtime.agents.agents import Agents
+
+        return Agents(parent_agent=self.model)
+
+    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
+        """Return the singleton ``agent_assistant`` session in this scope."""
+        from runtime.session.sessions import Sessions
+        from runtime.workspace.workspaces import Workspaces
+
+        source = self.get_source_dir()
+        return Sessions().assistant_session(
+            name or self.ASSISTANT,
+            project=self.project,
+            workspace=Workspaces.ensure_named(
+                f"{source.as_posix()} assistant scope",
+                source,
+                f"source scope for agent {self.name}",
+            ),
+            caller=caller,
+        )

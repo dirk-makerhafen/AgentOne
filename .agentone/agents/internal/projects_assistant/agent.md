@@ -9,7 +9,7 @@ description: >
   Administering ONE project's .agentone/ directory belongs to
   project_assistant (via call_projectmanager).
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 tools: [core.*, projects.*, projects_mgmt.*]
 ---
 

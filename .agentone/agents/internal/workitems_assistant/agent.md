@@ -8,7 +8,7 @@ description: >
   (global inbox when unbound). Driving ONE item (describe, move, split)
   belongs to workitem_assistant.
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 tools: [core.*, workitems_mgmt.*]
 ---
 

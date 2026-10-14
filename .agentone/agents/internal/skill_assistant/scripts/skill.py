@@ -1,17 +1,21 @@
 """Single-skill tools for the skill_assistant agent.
 
-All tools are bound and take the skill's ``name``: they describe ONE
-skill, report its usage, and show one agent's effective skills — all
-within the skills visible in the calling session's scope (global skills
-plus the session project's own). Collection operations (list, assign,
-unassign) belong to ``skills_assistant``. Every tool returns a
-``(bool, dict)`` tuple.
+All tools are bound to the calling session's workspace: the
+skill_assistant session runs with its workspace set to the folder holding
+that skill's ``skill.md`` (see ``Skill.get_assistant_session``), so the
+skill is resolved from the workspace path — ``skill_usage`` takes NO
+skill name. ``skills_for_agent`` looks up a *different* agent's effective
+skills, so it keeps its agent argument. Reading and editing the
+``skill.md`` itself is done with the filesystem tools, not with a
+describe tool.
+Collection operations (list, assign, unassign) belong to
+``skills_assistant``. Every tool returns a ``(bool, dict)`` tuple.
 """
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import Any
-
-from django.db.models import Q
 
 from runtime.session.session import Session
 
@@ -21,68 +25,89 @@ from runtime.session.session import Session
 USAGE_SCAN_CAP = 500
 
 
+def _normalize_dir(value: Any) -> str:
+    """Normalize a directory path for comparison (no I/O)."""
+    try:
+        text = str(value or "").strip()
+        if not text:
+            return ""
+        return Path(text).expanduser().as_posix().rstrip("/") or ""
+    except Exception:
+        return ""
+
+
 def _session_project(_session: Session) -> Any:
     """Return the project this session belongs to, or ``None`` for global."""
-    model = getattr(_session, "model", None)
-    return getattr(model, "parent_project", None) if model else None
+    from runtime.session.sessions import Sessions
+
+    return Sessions.project_of(_session)
 
 
 def _scoped_skills(_session: Session):
     """Global skills plus the session project's own skills, ordered by name."""
+    from runtime.session.sessions import Sessions
+    from runtime.skill.skills import Skills
+
+    return Skills(parent_project=Sessions.project_of(_session)).all()
+
+
+def _resolve_skill(_session: Session):
+    """Find the skill whose manifest folder is this session's workspace.
+
+    Returns ``(True, skill)`` or ``(False, error_dict)``. When several
+    rows share the folder (reloaded into multiple scopes), the session
+    project's own row wins over the global one.
+    """
     from server.models.skills.skill import SkillModel
 
-    project = _session_project(_session)
-    qs = SkillModel.objects.all()
-    if project is not None:
-        qs = qs.filter(Q(parent_project=project) | Q(parent_project__isnull=True))
-    else:
-        qs = qs.filter(parent_project__isnull=True)
-    return qs.select_related("latest_skill_version", "parent_project").order_by("name")
-
-
-def _latest_version(skill):
+    workspace = None
     try:
-        return skill.latest_skill_version
+        workspace = _session.workspace
     except Exception:
-        return None
-
-
-def _skill_info(skill) -> dict[str, Any]:
-    version = _latest_version(skill)
-    try:
-        project_name = skill.parent_project.name if skill.parent_project else None
-    except Exception:
-        project_name = None
-    return {
-        "id": skill.pk,
-        "name": skill.name,
-        "project": project_name,
-        "description": (version.description if version else "") or "",
-        "path": (version.path if version else "") or "",
-        "version_number": version.version_number if version else 0,
-    }
-
-
-def _resolve_skill(_session: Session, name: str):
-    """Find one skill by name in scope (project-local wins over global)."""
-    name = (name or "").strip()
-    if not name:
-        return False, {"status": "error", "message": "A skill name is required."}
-    matches = list(_scoped_skills(_session).filter(name=name))
-    if not matches:
-        return False, {"status": "error", "message": f"No skill named '{name}' in this scope."}
-    project = _session_project(_session)
-    if len(matches) > 1 and project is not None:
-        local = [s for s in matches if s.parent_project_id == project.pk]
-        if local:
-            return True, local[0]
-    if len(matches) > 1:
+        workspace = None
+    ws_path = _normalize_dir(getattr(workspace, "path", None))
+    if not ws_path:
         return False, {
             "status": "error",
-            "message": f"Multiple skills named '{name}'. Tell the user to pick one by project.",
-            "projects": [getattr(s.parent_project, "name", None) for s in matches],
+            "message": (
+                "This assistant session is not bound to a skill folder "
+                "(no workspace). Open the assistant from a skill instead."
+            ),
         }
-    return True, matches[0]
+    candidates = list(SkillModel.objects.filter(manifest_dir=ws_path))
+    if not candidates:
+        # Fall back to realpath comparison (symlinked home dirs, etc.).
+        try:
+            real = os.path.realpath(ws_path)
+        except Exception:
+            real = ""
+        if real:
+            for cand in SkillModel.objects.exclude(manifest_dir=""):
+                try:
+                    if os.path.realpath(cand.manifest_dir or "") == real:
+                        candidates.append(cand)
+                except Exception:
+                    continue
+    if not candidates:
+        return False, {
+            "status": "error",
+            "message": (
+                f"No skill found for this session's workspace '{ws_path}'. "
+                "Open the assistant from a skill instead."
+            ),
+        }
+    if len(candidates) == 1:
+        return True, candidates[0]
+    project = _session_project(_session)
+    if project is not None:
+        local = [s for s in candidates if s.parent_project_id == project.pk]
+        if local:
+            return True, local[0]
+    else:
+        shared = [s for s in candidates if s.parent_project_id is None]
+        if shared:
+            return True, shared[0]
+    return True, candidates[0]
 
 
 def _resolve_agent(agent_name: str):
@@ -95,41 +120,6 @@ def _resolve_agent(agent_name: str):
     if agent is None:
         return None, f"No agent named '{agent_name}'. Use get_available_agents to list them."
     return agent, None
-
-
-def describe_skill(_session: Session, name: str) -> tuple[bool, dict[str, Any]]:
-    """Show ONE skill in full: description, version, path, and which agents use it.
-
-    Args:
-        name: Name of the skill (required).
-
-    Returns:
-        ``(True, {"status": "success", skill..., "used_by_agents": [...]})`` or
-        ``(False, {"status": "error", "message": ...})``.
-    """
-    ok, skill = _resolve_skill(_session, name)
-    if not ok:
-        return False, skill
-    version = _latest_version(skill)
-    users: list[str] = []
-    try:
-        if version is not None:
-            agent_versions = version.used_by_agent_versions.all().select_related("agent")
-            seen = set()
-            for av in agent_versions:
-                try:
-                    agent_name = av.agent.name
-                except Exception:
-                    continue
-                if agent_name not in seen:
-                    seen.add(agent_name)
-                    users.append(agent_name)
-            users.sort()
-    except Exception:
-        pass
-    info = _skill_info(skill)
-    info.update({"status": "success", "used_by_agents": users})
-    return True, info
 
 
 def _load_skill_calls() -> list:
@@ -167,16 +157,19 @@ def _call_skill_name(call) -> str:
     return ""
 
 
-def skill_usage(_session: Session, name: str, limit: int = 10) -> tuple[bool, dict[str, Any]]:
-    """Report how ONE skill is used: load counts by agent and recent loads.
+def skill_usage(_session: Session, limit: int = 10) -> tuple[bool, dict[str, Any]]:
+    """Report how THIS skill is used: load counts by agent and recent loads.
+
+    The skill is the one whose manifest folder is this session's
+    workspace — no name argument.
 
     Scans recent ``load_skill`` calls (newest-first, capped) and
     attributes the ones naming this skill — use it to judge whether a
     skill is actually adopted, by whom, and where. Assignment (who CAN
-    load it) is ``describe_skill``; this is who DOES.
+    load it) lives in the agents' manifests — read them with the
+    filesystem tools; this is who DOES.
 
     Args:
-        name: Name of the skill (required).
         limit: Max recent loads to detail (1-50, default 10).
 
     Returns:
@@ -184,7 +177,7 @@ def skill_usage(_session: Session, name: str, limit: int = 10) -> tuple[bool, di
         "scanned": int, "by_agent": {...}, "recent": [...]})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
-    ok, skill = _resolve_skill(_session, name)
+    ok, skill = _resolve_skill(_session)
     if not ok:
         return False, skill
     try:
@@ -235,7 +228,9 @@ def skills_for_agent(_session: Session, agent_name: str) -> tuple[bool, dict[str
     """List the skills effectively available to one agent.
 
     Shows the skills on the agent's latest version (what the agent can
-    actually load), restricted to skills visible in your scope.
+    actually load), restricted to skills visible in your scope. This
+    inspects a *different* agent than your own skill, so it keeps its
+    agent argument.
 
     Args:
         agent_name: Name of the agent (required).

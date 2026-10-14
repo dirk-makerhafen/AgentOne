@@ -99,6 +99,7 @@ def load_cron_manifest(
             "function_name": function_name,
             "message": message,
             "next_run_at": next_run_at,
+            "manifest_dir": cron_md_path.parent.as_posix(),
         },
     )
     changed = False
@@ -115,6 +116,7 @@ def load_cron_manifest(
             ("function_name", function_name),
             ("message", message),
             ("next_run_at", next_run_at),
+            ("manifest_dir", cron_md_path.parent.as_posix()),
         ]
         for field_name, new_val in _fields_to_check:
             if getattr(cronjob, field_name) != new_val:

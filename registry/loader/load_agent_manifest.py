@@ -331,6 +331,13 @@ def load_agent_manifest(
             parent_skill=parent_skill,
         )
 
+    # Record where this agent's manifest lives. AgentModel.save() forbids
+    # updates on existing rows, so drift goes through a queryset update.
+    manifest_dir = agent_dir.as_posix()
+    if (agent.manifest_dir or "") != manifest_dir:
+        AgentModel.objects.filter(pk=agent.pk).update(manifest_dir=manifest_dir)
+        agent.manifest_dir = manifest_dir
+
     # Load child scripts
     defined_tasks: List[Tuple[TaskDefinition, TaskDefinitionVersion]] = []
     scripts_dir = agent_dir / "scripts"

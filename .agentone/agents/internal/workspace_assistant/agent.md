@@ -8,7 +8,7 @@ description: >
   The managed workspace is the workspace your chat session is bound to.
   Accessed via the Workspace Assistant chat in the workspace right panel.
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 tools: [core.*, workspace.*]
 ---
 

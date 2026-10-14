@@ -9,7 +9,7 @@ description: >
   versions) belongs to agent_assistant; creating or editing manifests
   belongs to project_assistant.
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 tools: [core.*, agents.*]
 ---
 

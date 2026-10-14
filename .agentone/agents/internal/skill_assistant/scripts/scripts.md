@@ -1,12 +1,6 @@
 ---
 group: skill
 tools:
-  # Show ONE skill in full, with the agents using it
-  - name: describe_skill
-    file: skill.py
-    function: describe_skill
-    bound: True
-
   # Report how ONE skill is used (loads by agent, recent loads)
   - name: skill_usage
     file: skill.py

@@ -5,7 +5,6 @@ from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
     from server.models.queries.response import Response
-    from ui.main.chat.messages.assistant_message import AssistantMessageView
 
 
 def _fmt_num(value, digits: int = 2) -> str:
@@ -106,9 +105,14 @@ class ResponseView(ModelView):
         </div>
     '''
 
-    def __init__(self, subject: Response, parent: AssistantMessageView, **kwargs):
+    def __init__(self, subject: Response, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.is_open = False
+        # A still-streaming response starts expanded so the tokens are
+        # visible while generating; finished ones start collapsed.
+        try:
+            self.is_open = (getattr(subject, "status", "") or "").upper() == "ACTIVE"
+        except Exception:
+            self.is_open = False
 
     def toggle(self):
         self.is_open = not self.is_open

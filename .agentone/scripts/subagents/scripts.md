@@ -48,6 +48,18 @@ tools:
     file: get_available_agents.py
     function: get_available_agents
     bound: True
+
+  # List framework-internal assistants (hidden from get_available_agents)
+  - name: list_assistants
+    file: list_assistants.py
+    function: list_assistants
+    bound: True
+
+  # Send a task to a framework-internal assistant (blocking)
+  - name: call_assistant
+    file: call_assistant.py
+    function: call_assistant
+    bound: True
     
   - name: llm_query
     file: call_llm_direct.py

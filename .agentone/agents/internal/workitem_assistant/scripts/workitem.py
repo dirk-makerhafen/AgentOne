@@ -30,20 +30,20 @@ UPDATABLE_STATUSES = ("backlog", "ready", "blocked", "done", "cancelled")
 
 def _session_project(_session: Session) -> Any:
     """Return the project this session belongs to, or ``None`` for the inbox."""
-    model = getattr(_session, "model", None)
-    return getattr(model, "parent_project", None) if model else None
+    from runtime.session.sessions import Sessions
+
+    return Sessions.project_of(_session)
 
 
 def _visible_items(_session: Session, item_id: Optional[int] = None):
     """Work items in the session's project scope, highest priority first."""
-    from server.models.workitems.work_item import WorkItem
+    from runtime.session.sessions import Sessions
+    from runtime.workitems.workitems import Workitems
 
-    project = _session_project(_session)
-    queryset = WorkItem.objects.all()
-    queryset = queryset.filter(project=project) if project is not None else queryset.filter(project__isnull=True)
+    queryset = Workitems(parent_project=Sessions.project_of(_session)).all()
     if item_id is not None:
         queryset = queryset.filter(pk=item_id)
-    return queryset.select_related("assigned_agent", "project").order_by("-priority", "created_at")
+    return queryset
 
 
 def _resolve_agent(agent_name: str):

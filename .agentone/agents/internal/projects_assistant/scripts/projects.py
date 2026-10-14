@@ -18,50 +18,29 @@ from runtime.session.session import Session
 
 def _session_project(_session: Session) -> Any:
     """Return the project this session belongs to, or ``None``."""
-    model = getattr(_session, "model", None)
-    return getattr(model, "parent_project", None) if model else None
+    from runtime.session.sessions import Sessions
+
+    return Sessions.project_of(_session)
 
 
 def _project_counts(project) -> dict[str, int]:
     """Count the records owned by one project (best effort per model)."""
-    from server.models.agents.agent import AgentModel
-    from server.models.cron import Cronjob
-    from server.models.sessions.session import SessionModel
-    from server.models.skills.skill import SkillModel
-    from server.models.workitems.work_item import WorkItem
+    from runtime.project.project import Project as ProjectScope
 
-    counts: dict[str, int] = {}
     try:
-        counts["agents"] = AgentModel.objects.filter(parent_project=project).count()
+        return ProjectScope(project).counts()
     except Exception:
-        counts["agents"] = 0
-    try:
-        counts["cronjobs"] = Cronjob.objects.filter(parent_project=project).count()
-    except Exception:
-        counts["cronjobs"] = 0
-    try:
-        counts["skills"] = SkillModel.objects.filter(parent_project=project).count()
-    except Exception:
-        counts["skills"] = 0
-    try:
-        counts["workitems"] = WorkItem.objects.filter(project=project).count()
-    except Exception:
-        counts["workitems"] = 0
-    try:
-        counts["sessions"] = SessionModel.objects.filter(parent_project=project).count()
-    except Exception:
-        counts["sessions"] = 0
-    return counts
+        return {}
 
 
 def _project_workspaces(project) -> list[dict[str, str]]:
     """Workspaces linked to the project (DB-canonical via parent_project FK)."""
     try:
-        from server.models.workspace import WorkspaceModel
+        from runtime.workspace.workspaces import Workspaces
 
         return [
             {"name": w.name or "", "path": w.path or ""}
-            for w in WorkspaceModel.objects.filter(parent_project=project).order_by("name")
+            for w in Workspaces(parent_project=project).all()
         ]
     except Exception:
         return []

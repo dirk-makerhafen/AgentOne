@@ -8,7 +8,7 @@ description: >
   inside ONE workspace (sub-workspaces, rename, chats) belongs to the
   bound workspace_assistant.
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 tools: [core.*, workspaces.*]
 ---
 

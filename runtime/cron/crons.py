@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from croniter import croniter
@@ -12,23 +13,81 @@ from server.models.cron import Cronjob
 
 
 class Cronjobs:
-    """Query interface for Cronjob instances."""
+    """Query interface for Cronjob instances.
 
-    def __init__(self) -> None:
-        pass
+    Scoping is explicit and strict: ``parent_project`` selects that
+    project's jobs; ``parent_workspace`` selects jobs bound to that
+    workspace; both *None* selects global jobs only. (Deliberately no
+    global union and no agent scoping.)
+    """
 
-    def root(self) -> QuerySet[Cronjob]:
-        """Return all cron jobs."""
+    #: Collection domain label (used for the global system workspace name).
+    DOMAIN = "cronjobs"
+    #: Internal assistant pair managing cronjobs (singular, plural).
+    ASSISTANT_NAMES = ("cronjob_assistant", "cronjobs_assistant")
+
+    def __init__(
+        self,
+        parent_project: Any = None,
+        parent_workspace: Any = None,
+    ) -> None:
+        self.parent_project = parent_project
+        self.parent_workspace = parent_workspace
+
+    @property
+    def project(self) -> Any | None:
+        """Return the scope project (explicit or workspace-unwrapped)."""
+        if self.parent_project is not None:
+            return self.parent_project
+        try:
+            return getattr(self.parent_workspace, "parent_project", None)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
+    def _base(self) -> QuerySet[Cronjob]:
+        """Unscoped base when bare (scheduler-safe), scoped otherwise."""
+        if self.parent_workspace is not None:
+            return Cronjob.objects.filter(workspace=self.parent_workspace)
+        if self.parent_project is not None:
+            return Cronjob.objects.filter(parent_project=self.parent_project)
         return Cronjob.objects.all()
 
+    def all(self) -> QuerySet[Cronjob]:
+        """Return cron jobs in scope, ordered by name.
+
+        Bare (no parent) means global jobs only — the assistant scope.
+        Schedulers needing every job use :meth:`due` (unscoped when bare).
+        """
+        if self.parent_workspace is not None:
+            qs = Cronjob.objects.filter(workspace=self.parent_workspace)
+        elif self.parent_project is not None:
+            qs = Cronjob.objects.filter(parent_project=self.parent_project)
+        else:
+            qs = Cronjob.objects.filter(parent_project__isnull=True)
+        return qs.select_related("agent", "workspace", "message").order_by("name")
+
+    def root(self) -> QuerySet[Cronjob]:
+        """Return all cron jobs (unscoped; UI + legacy callers)."""
+        return Cronjob.objects.all()
+
+    def list_cronjobs(self) -> list:
+        """Return cron jobs in scope as wrapped :class:`Cron` objects."""
+        from runtime.cron.cron import Cron
+
+        return [Cron(model) for model in self.all()]
+
     def active(self) -> QuerySet[Cronjob]:
-        """Return only active cron jobs."""
-        return Cronjob.objects.filter(is_active=True)
+        """Return only active cron jobs (scoped when a parent is set)."""
+        return self._base().filter(is_active=True)
 
     def due(self) -> QuerySet[Cronjob]:
-        """Return active cron jobs that are due to run now."""
+        """Return active cron jobs that are due to run now.
+
+        Unscoped when bare (the scheduler sees every job); scoped to the
+        parent otherwise.
+        """
         now = timezone.now()
-        return Cronjob.objects.filter(
+        return self._base().filter(
             is_active=True,
             next_run_at__lte=now,
         )
@@ -83,3 +142,51 @@ class Cronjobs:
     def delete(self, cronjob: Cronjob) -> None:
         """Delete a cron job."""
         cronjob.delete()
+
+    # ------------------------------------------------------------------
+    # Assistant wiring
+    # ------------------------------------------------------------------
+
+    @property
+    def assistant_name(self) -> str:
+        """Return the collection assistant managing this scope."""
+        return self.ASSISTANT_NAMES[1]
+
+    def get_source_dir(self) -> Path:
+        """Return the source directory anchoring this scope (no I/O).
+
+        Canonical cron file location via ``runtime.cron.file_io`` (project
+        manifest ``cronjobs/`` or the global tree); a parent workspace
+        resolves to its own manifest (or path).
+        """
+        if self.parent_workspace is not None:
+            from runtime.paths import model_manifest_dir
+
+            return model_manifest_dir(self.parent_workspace, "workspace")
+        from runtime.cron.file_io import cron_file_path
+
+        return cron_file_path(".scope", self.parent_project).parent
+
+    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
+        """Return the singleton cronjobs-assistant session for this scope.
+
+        *name* defaults to the collection assistant; pass the singular
+        name to talk about ONE job (named inside the task text).
+        """
+        from runtime.session.sessions import Sessions
+        from runtime.workspace.workspaces import Workspaces
+
+        source = self.get_source_dir()
+        project = self.project
+        if project is not None:
+            workspace = Workspaces.for_project(project)
+        else:
+            workspace = Workspaces.ensure_named(
+                "System cronjobs", source, "User-scope cronjob manifests"
+            )
+        return Sessions().assistant_session(
+            name or self.assistant_name,
+            project=project,
+            workspace=workspace,
+            caller=caller,
+        )

@@ -10,6 +10,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from ui.main.chat.messages.assistant_message import AssistantMessageView
 from ui.main.chat.messages.info_message import InfoMessageView
 from ui.main.chat.messages.query import QueryView
+from ui.main.chat.messages.response import ResponseView
 from ui.main.chat.messages.user_message import UserMessageView
 
 class MessageView(ModelView):
@@ -17,7 +18,7 @@ class MessageView(ModelView):
     DOM_ELEMENT_CLASS = "MessageView msg-row"
     TEMPLATE_STR = '''{{ pyview.view.render() }}'''
 
-    def __init__(self, subject: Message|Query, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
+    def __init__(self, subject: Message|Query|Response, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         super().__init__(subject, parent, **kwargs)
         if isinstance(subject, Message):
             if subject.role == MessageRole.ASSISTANT:
@@ -27,9 +28,14 @@ class MessageView(ModelView):
             else:
                 self.view = UserMessageView(subject=subject, parent=self)
             self.role = self.subject.role
-        else:
+        elif isinstance(subject, Query):
             self.view = QueryView(subject=subject, parent=self)
             self.role = "query"
+        else:
+            # A still-streaming (or orphaned) Response shown as its own row
+            # until its assistant message arrives and embeds it.
+            self.view = ResponseView(subject=subject, parent=self)
+            self.role = "response"
 
     @property
     def DOM_ELEMENT_EXTRAS(self):

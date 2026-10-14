@@ -12,30 +12,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.db.models import Q
-
 from runtime.session.session import Session
 
 
 def _session_project(_session: Session) -> Any:
     """Return the project this session belongs to, or ``None`` for global."""
-    model = getattr(_session, "model", None)
-    return getattr(model, "parent_project", None) if model else None
+    from runtime.session.sessions import Sessions
+
+    return Sessions.project_of(_session)
 
 
 def _scoped_agents(_session: Session):
     """Global agents plus the session project's own agents, ordered by name."""
-    from server.models.agents.agent import AgentModel
+    from runtime.agents.agents import Agents
+    from runtime.session.sessions import Sessions
 
-    project = _session_project(_session)
-    qs = AgentModel.objects.all()
-    if project is not None:
-        qs = qs.filter(Q(parent_project=project) | Q(parent_project__isnull=True))
-    else:
-        qs = qs.filter(parent_project__isnull=True)
-    return qs.select_related(
-        "latest_agent_version", "parent_project", "parent_agent"
-    ).order_by("name")
+    return Agents(parent_project=Sessions.project_of(_session)).all()
 
 
 def _agent_info(agent) -> dict[str, Any]:

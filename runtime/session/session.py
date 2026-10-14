@@ -790,6 +790,7 @@ class Session:
         display_name: str | None = None,
         session_type: str = "",
         workspace: Any = None,
+        project: Any = None,
         settings: SettingsModel | None = None,
         allow_internal: bool = False,
         anchor: Message | None = None,
@@ -812,6 +813,12 @@ class Session:
         ``settings_overrides`` for anything the child explicitly needs.
         ``preserve_history`` (or an explicit ``anchor`` message) grafts the
         child's message chain onto this session's, mirroring :meth:`fork`.
+
+        ``project`` (a ``Project`` row, optional) binds the child session to
+        that project scope (``SessionModel.parent_project``) so project-scoped
+        tools — e.g. the internal ``*_assistant`` collection tools — resolve
+        the right collection. The runtime collection classes pass this
+        automatically (e.g. via ``get_assistant_session()``).
         """
         if isinstance(agent, str):
             agent_version = (
@@ -835,6 +842,14 @@ class Session:
             inherit_links=False,
         )
         child = Session(session_model=child_sv.session, pinned_session_version=child_sv)
+        if project is not None:
+            try:
+                project_pk = project.pk
+            except AttributeError:
+                project_pk = None
+            if project_pk is not None and child.model.parent_project_id != project_pk:
+                child.model.parent_project = project
+                child.model.save(update_fields=["parent_project_id"])
         if anchor is None and preserve_history:
             anchor = self.get_last_message()
         if anchor is not None:

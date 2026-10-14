@@ -8,7 +8,7 @@ description: >
   subtasks. Takes the item id as an argument. Collection operations
   (list, file new work, queue health) belong to workitems_assistant.
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 tools: [core.*, workitem.*]
 ---
 

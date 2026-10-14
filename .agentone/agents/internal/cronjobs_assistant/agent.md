@@ -8,7 +8,7 @@ description: >
   session belongs to (global jobs when unbound). Working on ONE job
   (tune, pause, run history) belongs to cronjob_assistant.
 extends: AgentOne
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 tools: [core.*, cronjobs.*]
 ---
 

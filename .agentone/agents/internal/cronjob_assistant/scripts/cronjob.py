@@ -15,20 +15,20 @@ from runtime.session.session import Session
 
 def _session_project(_session: Session) -> Any:
     """Return the project this session belongs to, or ``None`` for global."""
-    model = getattr(_session, "model", None)
-    return getattr(model, "parent_project", None) if model else None
+    from runtime.session.sessions import Sessions
+
+    return Sessions.project_of(_session)
 
 
 def _scoped_jobs(_session: Session, include_archived: bool = False):
     """Cronjobs in the session's project scope, ordered by name."""
-    from server.models.cron import Cronjob
+    from runtime.cron.crons import Cronjobs
+    from runtime.session.sessions import Sessions
 
-    project = _session_project(_session)
-    qs = Cronjob.objects.all()
-    qs = qs.filter(parent_project=project) if project is not None else qs.filter(parent_project__isnull=True)
+    qs = Cronjobs(parent_project=Sessions.project_of(_session)).all()
     if not include_archived:
         qs = qs.filter(is_archived=False)
-    return qs.select_related("agent", "workspace", "message").order_by("name")
+    return qs
 
 
 def _resolve(_session: Session, name: str, include_archived: bool = True):

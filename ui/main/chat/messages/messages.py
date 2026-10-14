@@ -159,6 +159,7 @@ class Messages(PyHtmlView):
                 self.message_list.append(message)
                 for query in message.related_queries.filter(session_version__session=self.subject.model).order_by("-pk"):
                     self.message_list.append(query)
+        self._sync_standalone_responses()
         self._refresh_turns()
         self._scroll_to_row(message_pk)
 
@@ -190,6 +191,7 @@ class Messages(PyHtmlView):
                     self.message_list.append(query)
         # Warm the turn maps so wrappers created on first render pick up
         # their collapse state in __init__.
+        self._sync_standalone_responses()
         self._refresh_turns()
 
 
@@ -233,7 +235,9 @@ class Messages(PyHtmlView):
                 self._on_query_created(pk, action, {})
             elif model == "Query" and action == "update":
                 self._on_query_updated(pk, action, {})
-            elif model == "Response" and action in ("create", "update"):
+            elif model == "Response" and action == "create":
+                self._on_response_created(pk, action, {})
+            elif model == "Response" and action == "update":
                 self._on_response_updated(pk, action, {})
             elif model == "AgentTaskCall" and action == "update":
                 self._on_taskcall_updated(pk, action, {})
@@ -275,6 +279,11 @@ class Messages(PyHtmlView):
                 for query in msg.related_queries.all().order_by("-pk"):
                     if not any(isinstance(item, Query) and item.pk == query.pk for item in self.message_list):
                         self.message_list.append(query)
+            # Its response (if shown standalone while streaming) is embedded
+            # in the message from now on — drop the extra row.
+            rid = getattr(msg, "response_id", None)
+            if rid is not None:
+                self._remove_standalone_response(rid)
             self._auto_scroll_if_needed()
             self._refresh_turns()
 
@@ -595,6 +604,86 @@ class Messages(PyHtmlView):
             except Exception:
                 continue
 
+    def _remove_standalone_response(self, response_pk: int | None) -> None:
+        """Drop a standalone Response row (now embedded in its message)."""
+        if response_pk is None:
+            return
+        try:
+            for idx, item in enumerate(self.message_list):
+                if isinstance(item, Response) and item.pk == response_pk:
+                    del self.message_list[idx]
+                    return
+        except Exception:
+            pass
+
+    def _sync_standalone_responses(self) -> None:
+        """Insert rows for responses that have no assistant message yet.
+
+        Covers still-streaming (ACTIVE) responses and orphaned terminal
+        ones after window (re)loads; embedded responses are skipped so they
+        never render twice. Call after (re)building ``message_list``.
+        """
+        try:
+            queries = [item for item in self.message_list if isinstance(item, Query)]
+            if not queries:
+                return
+            resps = list(
+                Response.objects.filter(
+                    query_id__in=[q.pk for q in queries]
+                ).order_by("pk")
+            )
+            if not resps:
+                return
+            anchored = set(
+                Message.objects.filter(
+                    response_id__in=[r.pk for r in resps]
+                ).values_list("response_id", flat=True)
+            )
+            present = {
+                item.pk for item in self.message_list if isinstance(item, Response)
+            }
+            by_query: dict[int, list[Response]] = {}
+            for resp in resps:
+                if resp.pk in anchored or resp.pk in present:
+                    continue
+                by_query.setdefault(resp.query_id, []).append(resp)
+            if not by_query:
+                return
+            shift = 0
+            for idx, item in enumerate(list(self.message_list)):
+                if isinstance(item, Query) and item.pk in by_query:
+                    for offset, resp in enumerate(by_query.pop(item.pk)):
+                        self.message_list.insert(idx + shift + 1 + offset, resp)
+                    shift += offset + 1
+            # Queries somehow missing from the list: append leftovers at end.
+            for leftover in [r for rs in by_query.values() for r in rs]:
+                self.message_list.append(leftover)
+        except Exception:
+            pass
+
+    def _on_response_created(self, pk: int, action: str, filter_context: dict) -> None:
+        """Show a fresh (streaming) response as its own row after its query."""
+        with self._callback_lock:
+            try:
+                resp = Response.objects.get(pk=pk)
+            except Response.DoesNotExist:
+                return
+            except Exception:
+                return
+            try:
+                if Message.objects.filter(response_id=pk).exists():
+                    return  # already embedded in its assistant message
+                if any(isinstance(item, Response) and item.pk == pk for item in self.message_list):
+                    return
+                qid = getattr(resp, "query_id", None)
+                for idx, item in enumerate(self.message_list):
+                    if isinstance(item, Query) and item.pk == qid:
+                        self.message_list.insert(idx + 1, resp)
+                        self._auto_scroll_if_needed()
+                        return
+            except Exception:
+                pass
+
     def _on_response_updated(self, pk: int, action: str, filter_context: dict) -> None:
         """Refresh the query + assistant views owning a Response.
 
@@ -643,6 +732,16 @@ class Messages(PyHtmlView):
                         pass
             except Exception:
                 continue
+        # Terminal + embedded in a listed message → drop the standalone row
+        # (orphans without a message stay visible as the only trace).
+        try:
+            if any(
+                isinstance(item, Message) and getattr(item, "response_id", None) == pk
+                for item in self.message_list
+            ):
+                self._remove_standalone_response(pk)
+        except Exception:
+            pass
         self._refresh_turns()
 
     def _first_message(self):
@@ -678,6 +777,7 @@ class Messages(PyHtmlView):
         if delcnt > 0:
             for _ in range(delcnt):
                 del self.message_list[-1]
+        self._sync_standalone_responses()
         self._refresh_turns()
 
     def down(self):
@@ -704,5 +804,6 @@ class Messages(PyHtmlView):
         if delcnt > 0:
             for _ in range(delcnt):
                 del self.message_list[0]
+        self._sync_standalone_responses()
         self._refresh_turns()
         

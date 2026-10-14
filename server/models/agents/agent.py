@@ -42,6 +42,9 @@ class AgentModel(BaseModel):
     parent_skill = models.ForeignKey("server.SkillModel",default=None,null=True, blank=True, on_delete=models.CASCADE,related_name="child_agents")
     parent_agent = models.ForeignKey("server.AgentModel",default=None,null=True, blank=True, on_delete=models.CASCADE,related_name="child_agents")
     parent_project = models.ForeignKey("server.Project",default=None,null=True, blank=True, on_delete=models.CASCADE,related_name="child_agents")
+    # manifest_dir: directory holding this agent's agent.md (set by the
+    # loader; blank for rows predating the field or created ad hoc).
+    manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
 
     @property
     def agent_sessions(self) -> QuerySet:

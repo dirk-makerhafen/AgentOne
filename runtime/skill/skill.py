@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pathlib import Path
 from typing import Any
 
 from server.models.skills.skill import SkillModel
@@ -56,3 +57,58 @@ class Skill:
     def all_versions(self) -> None:
         """Placeholder — not yet implemented."""
         pass
+
+    # ------------------------------------------------------------------
+    # Assistant wiring + navigation
+    # ------------------------------------------------------------------
+
+    #: Singular internal assistant working on ONE skill.
+    ASSISTANT = "skill_assistant"
+
+    @property
+    def pk(self) -> Any:
+        """Return the skill primary key."""
+        return self.model.pk
+
+    @property
+    def project(self) -> Any:
+        """Return the owning project, or *None* (global skill)."""
+        try:
+            return self.model.parent_project
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
+    def get_source_dir(self) -> Path:
+        """Return the skill's source directory (stored, else conventional)."""
+        from runtime.paths import model_manifest_dir
+
+        return model_manifest_dir(self.model, "skill", self.name, self.project)
+
+    def get_skills_runtime(self) -> Any:
+        """Return this skill's child skills."""
+        from runtime.skill.skills import Skills
+
+        return Skills(parent_skill=self.model)
+
+    def get_agents_runtime(self) -> Any:
+        """Return the agents owned by this skill."""
+        from runtime.agents.agents import Agents
+
+        return Agents(parent_skill=self.model)
+
+    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
+        """Return the singleton ``skill_assistant`` session in this scope."""
+        from runtime.session.sessions import Sessions
+        from runtime.workspace.workspaces import Workspaces
+
+        source = self.get_source_dir()
+        return Sessions().assistant_session(
+            name or self.ASSISTANT,
+            project=self.project,
+            workspace=Workspaces.ensure_named(
+                f"{source.as_posix()} assistant scope",
+                source,
+                f"source scope for skill {self.name}",
+            ),
+            caller=caller,
+        )

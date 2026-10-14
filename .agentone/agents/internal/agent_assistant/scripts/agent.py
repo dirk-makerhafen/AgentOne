@@ -1,141 +1,90 @@
 """Single-agent tools for the agent_assistant agent.
 
-All tools are bound and take the agent's ``name`` (globally unique):
-they describe ONE agent's effective configuration, report its usage
-(sessions, cron jobs, work items), and list its version history.
+All tools are bound to the calling session's workspace: the
+agent_assistant session runs with its workspace set to the folder holding
+that agent's ``agent.md`` (see ``Agent.get_assistant_session``), so the
+agent is resolved from the workspace path — tools take NO agent name.
+They report its usage (sessions, cron jobs, work items) and list its
+version history. Reading and editing the ``agent.md`` itself is done
+with the filesystem tools, not with a describe tool.
 Collection operations (list, stats) belong to ``agents_assistant``.
 Every tool returns a ``(bool, dict)`` tuple.
 """
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import Any
 
 from runtime.session.session import Session
 
-#: Description chars returned by describe_agent; agent bodies can be very
-#: long, so the remainder is cut with a marker rather than flooding context.
-DESCRIPTION_LIMIT = 3000
+
+def _normalize_dir(value: Any) -> str:
+    """Normalize a directory path for comparison (no I/O)."""
+    try:
+        text = str(value or "").strip()
+        if not text:
+            return ""
+        return Path(text).expanduser().as_posix().rstrip("/") or ""
+    except Exception:
+        return ""
 
 
-def _resolve_agent(agent_name: str):
-    """Find an AgentModel by name (globally unique)."""
+def _resolve_agent(_session: Session):
+    """Find the agent whose manifest folder is this session's workspace.
+
+    Returns ``(True, agent)`` or ``(False, error_dict)``.
+    """
     from server.models.agents.agent import AgentModel
 
-    name = (agent_name or "").strip()
-    if not name:
-        return False, {"status": "error", "message": "An agent name is required."}
-    agent = AgentModel.objects.filter(name=name).first()
+    workspace = None
+    try:
+        workspace = _session.workspace
+    except Exception:
+        workspace = None
+    ws_path = _normalize_dir(getattr(workspace, "path", None))
+    if not ws_path:
+        return False, {
+            "status": "error",
+            "message": (
+                "This assistant session is not bound to an agent folder "
+                "(no workspace). Open the assistant from an agent instead."
+            ),
+        }
+    agent = AgentModel.objects.filter(manifest_dir=ws_path).first()
     if agent is None:
-        return False, {"status": "error", "message": f"No agent named '{name}'. Use agents_assistant to list them."}
+        # Fall back to realpath comparison (symlinked home dirs, etc.).
+        try:
+            real = os.path.realpath(ws_path)
+        except Exception:
+            real = ""
+        if real:
+            for cand in AgentModel.objects.exclude(manifest_dir=""):
+                try:
+                    if os.path.realpath(cand.manifest_dir or "") == real:
+                        agent = cand
+                        break
+                except Exception:
+                    continue
+    if agent is None:
+        return False, {
+            "status": "error",
+            "message": (
+                f"No agent found for this session's workspace '{ws_path}'. "
+                "Open the assistant from an agent instead."
+            ),
+        }
     return True, agent
 
 
-def _version_info(version) -> dict[str, Any]:
-    tools: list[str] = []
-    tasks: list[str] = []
-    commands: list[str] = []
-    try:
-        for tdv in version.task_versions.all().select_related("task_definition"):
-            try:
-                tname = tdv.task_definition.name
-            except Exception:
-                continue
-            if tdv.task_type == "TOOL":
-                tools.append(tname)
-            elif tdv.task_type == "COMMAND":
-                commands.append(tname)
-            else:
-                tasks.append(tname)
-    except Exception:
-        pass
-    skills: list[str] = []
-    try:
-        for sv in version.skill_versions.all().select_related("skill"):
-            try:
-                skills.append(sv.skill.name)
-            except Exception:
-                continue
-    except Exception:
-        pass
-    subagents: list[str] = []
-    try:
-        for sub in version.subagent_versions.all().select_related("agent"):
-            try:
-                subagents.append(sub.agent.name)
-            except Exception:
-                continue
-    except Exception:
-        pass
-    try:
-        extends = list(version.extends_agent_names or [])
-    except Exception:
-        extends = []
-    try:
-        hooks = len(version.hooks or [])
-    except Exception:
-        hooks = 0
-    return {
-        "version_number": version.version_number,
-        "visibility": version.visibility,
-        "extends": extends,
-        "tools": sorted(set(tools)),
-        "tasks": sorted(set(tasks)),
-        "commands": sorted(set(commands)),
-        "skills": sorted(set(skills)),
-        "subagents": sorted(set(subagents)),
-        "hooks": hooks,
-        "commit": version.commit or "",
-        "hash": version.hash or "",
-    }
-
-
-def describe_agent(_session: Session, name: str) -> tuple[bool, dict[str, Any]]:
-    """Show ONE agent's effective configuration: the resolved tool/task/
-    command/skill/subagent sets on its latest version, plus visibility,
-    extends chain, and version identity.
-
-    Args:
-        name: Name of the agent (required, globally unique).
-
-    Returns:
-        ``(True, {"status": "success", agent...})`` or
-        ``(False, {"status": "error", "message": ...})``.
-    """
-    ok, agent = _resolve_agent(name)
-    if not ok:
-        return False, agent
-    version = agent.latest_agent_version
-    if version is None:
-        return False, {"status": "error", "message": f"Agent '{agent.name}' has no version yet."}
-    try:
-        parent_project = agent.parent_project.name if agent.parent_project else None
-    except Exception:
-        parent_project = None
-    try:
-        parent_agent = agent.parent_agent.name if agent.parent_agent else None
-    except Exception:
-        parent_agent = None
-    description = version.description or ""
-    truncated = len(description) > DESCRIPTION_LIMIT
-    info = _version_info(version)
-    info.update({
-        "status": "success",
-        "name": agent.name,
-        "project": parent_project,
-        "parent_agent": parent_agent,
-        "description": description[:DESCRIPTION_LIMIT] + ("…[truncated]" if truncated else ""),
-        "description_truncated": truncated,
-        "version_count": agent.related_agent_versions.count(),
-    })
-    return True, info
-
-
-def agent_usage(_session: Session, name: str, limit: int = 10) -> tuple[bool, dict[str, Any]]:
-    """Report how ONE agent is used: session count plus recent sessions,
+def agent_usage(_session: Session, limit: int = 10) -> tuple[bool, dict[str, Any]]:
+    """Report how THIS agent is used: session count plus recent sessions,
     cron jobs targeting it, and assigned work items by status.
 
+    The agent is the one whose manifest folder is this session's
+    workspace — no name argument.
+
     Args:
-        name: Name of the agent (required).
         limit: Max recent sessions to detail (1-50, default 10).
 
     Returns:
@@ -147,7 +96,7 @@ def agent_usage(_session: Session, name: str, limit: int = 10) -> tuple[bool, di
     from server.models.sessions.session import SessionModel
     from server.models.workitems.work_item import WorkItem
 
-    ok, agent = _resolve_agent(name)
+    ok, agent = _resolve_agent(_session)
     if not ok:
         return False, agent
     try:
@@ -196,18 +145,20 @@ def agent_usage(_session: Session, name: str, limit: int = 10) -> tuple[bool, di
     }
 
 
-def agent_versions(_session: Session, name: str, limit: int = 20) -> tuple[bool, dict[str, Any]]:
-    """List ONE agent's version history, newest first.
+def agent_versions(_session: Session, limit: int = 20) -> tuple[bool, dict[str, Any]]:
+    """List THIS agent's version history, newest first.
+
+    The agent is the one whose manifest folder is this session's
+    workspace — no name argument.
 
     Args:
-        name: Name of the agent (required).
         limit: Max versions to return (1-100, default 20).
 
     Returns:
         ``(True, {"status": "success", "agent": str, "versions": [...]})``
         or ``(False, {"status": "error", "message": ...})``.
     """
-    ok, agent = _resolve_agent(name)
+    ok, agent = _resolve_agent(_session)
     if not ok:
         return False, agent
     try:

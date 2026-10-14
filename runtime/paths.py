@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 
 def _expand(value: str | os.PathLike | None, default: str) -> Path:
@@ -118,6 +119,66 @@ def user_scripts_dir() -> Path:
 
 def user_cronjobs_dir() -> Path:
     return agentone_home() / "cronjobs"
+
+
+def _safe_segment(name: str) -> str:
+    """Return *name* trimmed for use as a single path segment."""
+    return str(name or "").strip().strip("/") or "unnamed"
+
+
+def agent_source_dir(name: str, project: Any = None) -> Path:
+    """Return the conventional source dir for an agent manifest (no I/O).
+
+    Project-owned agents live under the project manifest's ``agents/``
+    tree; global ones under ``~/.agentone/agents/``. Pure computation —
+    the directory may not exist (e.g. repo-scoped agents).
+    """
+    safe = _safe_segment(name)
+    if project is not None:
+        try:
+            return project_manifest_dir(project) / "agents" / safe
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    return user_agents_dir() / safe
+
+
+def skill_source_dir(name: str, project: Any = None) -> Path:
+    """Return the conventional source dir for a skill manifest (no I/O).
+
+    Same layout rules as :func:`agent_source_dir` with ``skills/``.
+    """
+    safe = _safe_segment(name)
+    if project is not None:
+        try:
+            return project_manifest_dir(project) / "skills" / safe
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    return user_skills_dir() / safe
+
+
+def model_manifest_dir(model: Any, kind: str, name: str = "", project: Any = None) -> Path:
+    """Return the source directory for a manifest-backed model (no I/O).
+
+    Prefers the stored ``manifest_dir`` field (set by the loader); falls
+    back to the conventional layout for the *kind* (``agent`` | ``skill`` |
+    ``project`` | ``workspace``). Cronjobs resolve through
+    ``runtime.cron.file_io`` instead (import cycle if done here).
+    """
+    try:
+        stored = str(getattr(model, "manifest_dir", "") or "").strip()
+        if stored:
+            return Path(os.path.expanduser(stored))
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+    if kind == "project":
+        return project_manifest_dir(model)
+    if kind == "workspace":
+        return workspace_manifest_dir(model) or Path(
+            os.path.expanduser(str(getattr(model, "path", "") or "."))
+        )
+    if kind == "skill":
+        return skill_source_dir(name or getattr(model, "name", ""), project)
+    return agent_source_dir(name or getattr(model, "name", ""), project)
 
 
 def central_projects_base() -> Path:
