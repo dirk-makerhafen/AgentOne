@@ -2,8 +2,8 @@
 
 All tools are bound to the calling session's project: they list the
 manifest-owned children of that project — its agents, skills, and cron
-jobs — ordered by name. The project is resolved from the session (see
-``Sessions.project_of``); an unbound session has no manifest-owned
+jobs — ordered by name. The project is the calling session's project
+(``_session.get_project()``); an unbound session has no manifest-owned
 children and gets an error. Every tool returns a ``(bool, dict)`` tuple.
 """
 from __future__ import annotations
@@ -13,7 +13,6 @@ from typing import Any
 from runtime.script_helpers import (
     agent_row,
     cron_row,
-    session_project,
     skill_row,
     unbound_error,
 )
@@ -22,7 +21,7 @@ from runtime.session.session import Session
 
 def _resolve_project(_session: Session):
     """Find the session's project. Returns ``(True, project)`` or ``(False, error)``."""
-    project = session_project(_session)
+    project = _session.get_project()
     if project is None:
         return False, unbound_error("a project scope")
     return True, project

@@ -72,68 +72,26 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                     template_data={},
                 )
 
-        # GUIDANCE-FILE AUTOLOAD (e.g. AGENTS.md / CLAUDE.md — pinned
-        # first-turn USER messages, deliberately outside the
-        # `system_prompt_chain` guard above so agents without a prompt chain
-        # still get workspace guidance; spec docs/agents-md.md §4.3)
+        # ONE-TIME SESSION BOOTSTRAP (replaces per-turn prefix injection).
+        # Guidance-file autoload + index, start time, workspace path and the
+        # private-folder announcement used to be re-injected here as fresh
+        # QueryMessages on every turn, ahead of history — any byte change
+        # invalidated the whole prompt-cache (KV-cache) prefix.  They are now
+        # persisted once as normal history Messages at the start of the
+        # current compaction segment (runtime/session_bootstrap.py), so later
+        # turns load frozen bytes via the history walk below and the prefix
+        # stays cache-hot.  After a compaction the marker itself carries the
+        # repinned content, so this is a no-op there.
         try:
-            from runtime import guidance_files as _guidance
+            from runtime.session_bootstrap import ensure_session_bootstrap
 
-            _autoload_text, _index_text = _guidance.ensure_pinned(_session)
-            if _autoload_text:
-                query.add_message(
-                    role=MessageRole.USER,
-                    content_type=MessageContentType.TEXT,
-                    content=_autoload_text,
-                )
-            if _index_text:
-                query.add_message(
-                    role=MessageRole.USER,
-                    content_type=MessageContentType.TEXT,
-                    content=_index_text,
-                )
+            ensure_session_bootstrap(_session, message)
         except Exception:
             from server.models.debug_log_entry import DebugLogEntry
 
             DebugLogEntry.objects.create(
                 session=_session.model,
-                event="guidance_skip",
-                data={"exception": traceback.format_exc()},
-            )
-
-        # SESSION-PRIVATE STORAGE (e.g. scratch files, temp memory,
-        # intermediate results).  Each session — including
-        # subsessions — has its own isolated folder.  Announced here so the
-        # LLM can use the normal filesystem tools with it; the guardrail
-        # (runtime/workspace_access.py) allows own-folder read/write and
-        # denies other sessions' folders.  Creation is lazy and must never
-        # break context assembly.
-        # NOTE: reusable helpers live in the database, not here — ad-hoc
-        # tools via the adhoc_* tools, prompt templates via template_*.
-        # Do not write tool/template files into this folder by hand.
-        try:
-            from runtime.session_folder import ensure_session_dir
-
-            _private_dir = ensure_session_dir(_session.model.pk)
-            query.add_message(
-                role=MessageRole.SYSTEM,
-                content_type=MessageContentType.TEXT,
-                content=(
-                    f"Your private session folder is {_private_dir.as_posix()}. "
-                    "Use the normal filesystem tools for scratch files, temporary "
-                    "memory, intermediate results, generated "
-                    "scripts and other session-specific artifacts. Reusable "
-                    "helpers belong in the database (adhoc_* tools, template_* "
-                    "tools), not as files here. It is private "
-                    "to this session — other sessions cannot access it."
-                ),
-            )
-        except Exception:
-            from server.models.debug_log_entry import DebugLogEntry
-
-            DebugLogEntry.objects.create(
-                session=_session.model,
-                event="private_dir_skip",
+                event="bootstrap_skip",
                 data={"exception": traceback.format_exc()},
             )
 
@@ -158,14 +116,47 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         # Walk the prev_message linked list from the trigger message backwards.
         # Stop at the first message with a COMPACTION part (boundary marker).
         # This handles injected compaction messages and forks naturally.
+        # Extended phase: when same-session pin_to_context messages exist, keep
+        # walking past max_history_messages to collect them (the one-time
+        # bootstrap lives at the start of the segment and slides outside the
+        # window in long pre-compaction histories).  Pinned bytes are frozen,
+        # so the prefix stays cache-hot while guidance is never silently
+        # dropped.  Chain order (not pk order) decides positions: bootstraps
+        # are spliced at the front after creation, so their pks are newer
+        # than their position.  Without pins the walk stays window-bounded as
+        # before.  Must never break context assembly.
         messages: list[Message] = []
+        pinned_beyond_window: list[Message] = []
         current = message
-        while current and len(messages) < _session.max_history_messages + 1:
+        try:
+            _window = _session.max_history_messages + 1
+        except Exception:
+            _window = 1
+        try:
+            _has_pins = Message.objects.filter(
+                session_id=sv.session.pk, pin_to_context=True
+            ).exists()
+        except Exception:
+            _has_pins = False
+        while current:
             if not current.hide_from_context and current.role != MessageRole.INFO:
-                messages.append(current)
+                if len(messages) < _window:
+                    messages.append(current)
+                elif (
+                    _has_pins
+                    and current.pin_to_context
+                    and getattr(current, "session_id", None) == sv.session.pk
+                ):
+                    pinned_beyond_window.append(current)
                 if current.parts.filter(type=MessagePartType.COMPACTION).exists():
                     break
+            if len(messages) >= _window and not _has_pins:
+                break
             current = current.prev_message
+        # `messages` is newest-first; beyond-window pins were met going back,
+        # i.e. already newest-first — append at the end (the reversal below
+        # restores oldest-first order).
+        messages.extend(pinned_beyond_window)
         
         cmessages: list[Any] = []
         fmessages = []

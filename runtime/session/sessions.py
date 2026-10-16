@@ -71,23 +71,6 @@ class Sessions:
             for model in self.all().select_related("latest_session_version")
         ]
 
-    @staticmethod
-    def project_of(session: Any) -> Any | None:
-        """Return the project a session belongs to, or *None* for global.
-
-        Shared replacement for the ``_session_project`` helpers previously
-        copy-pasted across the internal assistant scripts.
-        """
-        from runtime.project.projects import project_of
-
-        try:
-            model = getattr(session, "model", None)
-            if model is None:
-                return project_of(session)
-            return project_of(model)
-        except Exception:  # pylint: disable=broad-exception-caught
-            return None
-
     # ------------------------------------------------------------------
     # Assistant sessions (choke point for the *_assistant/*s_assistant pairs)
     # ------------------------------------------------------------------
@@ -175,4 +158,3 @@ def _assistant_session_naming(assistant: str, project: Any) -> tuple[str, str]:
         except Exception:  # pylint: disable=broad-exception-caught
             key = f"project-{getattr(project, 'pk', '?')}"
     return f"{assistant}:{key}", f"{assistant} session ({key})"
-

@@ -554,6 +554,20 @@ class GuidanceFileSessionTest(TestCase):
             MessageRole,
         )
         from server.models.message import Message, MessagePart
+        from server.models.queries.query import Query, QueryStatus
+
+        def _query_text(query):
+            bodies = []
+            for qm in query.related_query_messages.all():
+                for part in qm.query_message_parts.all():
+                    if part.content:
+                        bodies.append(part.content.get())
+                    elif (
+                        part.source_message_part
+                        and part.source_message_part.content
+                    ):
+                        bodies.append(part.source_message_part.content.get())
+            return "\n".join(str(body) for body in bodies)
 
         trigger = Message.objects.create(
             session=self.sv.session,
@@ -567,14 +581,48 @@ class GuidanceFileSessionTest(TestCase):
             content_type=MessageContentType.TEXT,
         )
         query = build_llm_context(self.runtime, trigger)
-        bodies = [
-            part.content.get() if part.content else ""
-            for qm in query.related_query_messages.all()
-            for part in qm.query_message_parts.all()
-        ]
-        text = "\n".join(str(body) for body in bodies)
+        text = _query_text(query)
         self.assertIn("Auto-loaded workspace files", text)
         self.assertIn("## AGENTS.md\nroot rules", text)
         self.assertIn("Workspace guidance files", text)
         self.assertIn("sub/AGENTS.md", text)
+        # One-time bootstrap: guidance now lives in session history (pinned),
+        # not as per-turn QueryMessage injections.
+        bootstraps = Message.objects.filter(
+            session=self.sv.session, pin_to_context=True
+        )
+        self.assertEqual(bootstraps.count(), 2)
+        self.assertTrue(
+            all(
+                qm.source_message is not None
+                for qm in query.related_query_messages.filter(
+                    source_message__pin_to_context=True
+                )
+            )
+        )
+
+        # Second turn: no duplicate bootstrap, byte-stable prefix.
+        Query.objects.filter(pk=query.pk).update(status=QueryStatus.SUCCESS)
+        trigger2 = Message.objects.create(
+            session=self.sv.session,
+            session_version=self.sv,
+            role=MessageRole.USER,
+            prev_message=trigger,
+        )
+        MessagePart.objects.create(
+            message=trigger2,
+            type=MessagePartType.MESSAGE,
+            content=GenericContent.from_text("do the next thing"),
+            content_type=MessageContentType.TEXT,
+        )
+        query2 = build_llm_context(self.runtime, trigger2)
+        self.assertEqual(
+            Message.objects.filter(
+                session=self.sv.session, pin_to_context=True
+            ).count(),
+            2,
+        )
+        text2 = _query_text(query2)
+        self.assertIn("## AGENTS.md\nroot rules", text2)
+        self.assertIn("private session folder", text2)
 

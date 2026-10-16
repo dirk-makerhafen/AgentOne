@@ -13,19 +13,11 @@ from typing import Any, Optional
 from runtime.session.session import Session
 
 
-def _session_project(_session: Session) -> Any:
-    """Return the project this session belongs to, or ``None`` for global."""
-    from runtime.session.sessions import Sessions
-
-    return Sessions.project_of(_session)
-
-
 def _scoped_jobs(_session: Session, include_archived: bool = False):
     """Cronjobs in the session's project scope, ordered by name."""
     from runtime.cron.crons import Cronjobs
-    from runtime.session.sessions import Sessions
 
-    qs = Cronjobs(parent_project=Sessions.project_of(_session)).all()
+    qs = Cronjobs(parent_project=_session.get_project()).all()
     if not include_archived:
         qs = qs.filter(is_archived=False)
     return qs

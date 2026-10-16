@@ -198,16 +198,19 @@ guarantee even if a call bypasses the scheduler path (e.g. direct `BoundTask.cal
 ### Session-Private Storage
 
 **Files:** `runtime/session_folder.py`, `runtime/session/session.py`
-(`private_dir` / `ensure_private_dir`), `.agentone/scripts/core/build_llm_context.py`
+(`private_dir` / `ensure_private_dir`), `runtime/session_bootstrap.py`
 
 Every session owns an isolated private folder at
 `<AGENTONE_SESSIONS_DIR>/<session_pk>/` (`~/.agentone/sessions` by default,
 overridable via `config/settings_local.py`). It holds scratch files,
 temporary memory, ad-hoc prompts/tools, intermediate results, generated
 scripts and other session-specific artifacts; subsessions get their own
-folder. The LLM is told its folder via a `SYSTEM` message injected by
-`build_llm_context` and uses the normal `filesystem-read`/`filesystem-write`
-tools — no special tools. Creation is lazy (`ensure_session_dir`, also
+folder. The LLM is told its folder via the one-time session bootstrap (a
+frozen `SYSTEM` history message at the start of each compaction segment,
+re-embedded in the compaction marker after compaction) and uses the normal
+`filesystem-read`/`filesystem-write` tools — no special tools. Freezing the
+announcement in history (instead of re-injecting it every turn) keeps the
+prompt-cache prefix stable. Creation is lazy (`ensure_session_dir`, also
 triggered by `BoundTask._ensure_private_dir_on_access` on first use; never
 inside `evaluate()`, which stays a pure policy check). Archived sessions are
 kept forever; folders whose session row is hard-deleted are removed by the

@@ -37,19 +37,11 @@ def _normalize_dir(value: Any) -> str:
         return ""
 
 
-def _session_project(_session: Session) -> Any:
-    """Return the project this session belongs to, or ``None`` for global."""
-    from runtime.session.sessions import Sessions
-
-    return Sessions.project_of(_session)
-
-
 def _scoped_skills(_session: Session):
     """Global skills plus the session project's own skills, ordered by name."""
-    from runtime.session.sessions import Sessions
     from runtime.skill.skills import Skills
 
-    return Skills(parent_project=Sessions.project_of(_session)).all()
+    return Skills(parent_project=_session.get_project()).all()
 
 
 def _resolve_skill(_session: Session):
@@ -99,7 +91,7 @@ def _resolve_skill(_session: Session):
         }
     if len(candidates) == 1:
         return True, candidates[0]
-    project = _session_project(_session)
+    project = _session.get_project()
     if project is not None:
         local = [s for s in candidates if s.parent_project_id == project.pk]
         if local:

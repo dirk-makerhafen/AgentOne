@@ -17,19 +17,11 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def _session_project(_session: Session) -> Any:
-    """Return the project this session belongs to, or ``None`` for global."""
-    from runtime.session.sessions import Sessions
-
-    return Sessions.project_of(_session)
-
-
 def _scoped_jobs(_session: Session, include_archived: bool = False):
     """Cronjobs in the session's project scope, ordered by name."""
     from runtime.cron.crons import Cronjobs
-    from runtime.session.sessions import Sessions
 
-    qs = Cronjobs(parent_project=Sessions.project_of(_session)).all()
+    qs = Cronjobs(parent_project=_session.get_project()).all()
     if not include_archived:
         qs = qs.filter(is_archived=False)
     return qs
@@ -189,7 +181,7 @@ def create_cronjob(
         if workspace is None:
             return False, {"status": "error", "message": f"No workspace named '{workspace_name}'."}
 
-    project = _session_project(_session)
+    project = _session.get_project()
     qs = Cronjob.objects.filter(name=name)
     qs = qs.filter(parent_project=project) if project is not None else qs.filter(parent_project__isnull=True)
     if qs.exists():

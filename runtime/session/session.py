@@ -83,6 +83,13 @@ class Session:
         """Return the workspace from the active session version."""
         return self.get_version_model().workspace
 
+    def get_project(self) -> Any | None:
+        """Return the project this session belongs to, or *None* for global."""
+        try:
+            return self.model.parent_project
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
     @property
     def private_dir(self) -> Any:
         """Return this session's private folder path (pure, no I/O).

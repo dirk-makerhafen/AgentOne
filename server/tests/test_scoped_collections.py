@@ -15,7 +15,7 @@ from django.test import TestCase
 
 from runtime.agents.agents import Agents
 from runtime.cron.crons import Cronjobs
-from runtime.project.projects import Projects, project_of
+from runtime.project.projects import Projects
 from runtime.session.sessions import Sessions
 from runtime.skill.skills import Skills
 from runtime.workitems.workitems import Workitems
@@ -75,30 +75,18 @@ def _make_session(agent, av, name="s-parent", project=None):
 
 
 class ProjectOfTest(TestCase):
-    """project_of unwraps sessions, passes projects, tolerates the rest."""
+    """Session.get_project returns the session project, None when global."""
 
-    def test_none_stays_none(self):
-        self.assertIsNone(project_of(None))
-
-    def test_project_passes_through(self):
-        project = _make_project()
-        self.assertEqual(project_of(project).pk, project.pk)
-
-    def test_session_model_unwraps(self):
-        project = _make_project()
-        agent, av = _make_agent("po-a")
-        rt = _make_session(agent, av, project=project)
-        self.assertEqual(project_of(rt.model).pk, project.pk)
-
-    def test_runtime_session_unwraps(self):
+    def test_project_session(self):
         project = _make_project()
         agent, av = _make_agent("po-b")
         rt = _make_session(agent, av, project=project)
-        self.assertEqual(project_of(rt).pk, project.pk)
+        self.assertEqual(rt.get_project().pk, project.pk)
 
-    def test_unknown_parent_yields_none(self):
-        self.assertIsNone(project_of(object()))
-        self.assertIsNone(project_of(SimpleNamespace()))
+    def test_global_session_yields_none(self):
+        agent, av = _make_agent("po-g")
+        rt = _make_session(agent, av, name="po-global")
+        self.assertIsNone(rt.get_project())
 
 
 class SkillsScopeTest(TestCase):
@@ -264,13 +252,6 @@ class SessionsScopeTest(TestCase):
         self.assertEqual(
             [s.name for s in Sessions(parent_session=parent).all()], ["kid"]
         )
-
-    def test_project_of_helper(self):
-        project = _make_project()
-        agent, av = _make_agent("sess-c")
-        rt = _make_session(agent, av, project=project)
-        self.assertEqual(Sessions.project_of(rt).pk, project.pk)
-        self.assertIsNone(Sessions.project_of(SimpleNamespace()))
 
 
 class WorkspacesScopeTest(TestCase):
@@ -477,13 +458,13 @@ class ScriptParityTest(TestCase):
         agent, av = _make_agent("par-a")
         rt = _make_session(agent, av, project=project)
         mod = _load_script("agents/internal/skills_assistant/scripts/skills.py", "par_skills")
-        self.assertEqual(mod._session_project(rt).pk, project.pk)
+        self.assertEqual(rt.get_project().pk, project.pk)
         self.assertEqual(
             [s.pk for s in mod._scoped_skills(rt)],
             [s.pk for s in Skills(parent_project=project).all()],
         )
         rt_global = _make_session(agent, av, name="par-g")
-        self.assertIsNone(mod._session_project(rt_global))
+        self.assertIsNone(rt_global.get_project())
         self.assertEqual(
             [s.pk for s in mod._scoped_skills(rt_global)],
             [s.pk for s in Skills().all()],

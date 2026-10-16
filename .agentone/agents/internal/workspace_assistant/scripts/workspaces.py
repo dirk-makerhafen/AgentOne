@@ -464,13 +464,12 @@ def list_cronjobs(_session: Session, include_archived: bool = False) -> tuple[bo
         ``(False, {"status": "error", "message": ...})``.
     """
     from runtime.cron.crons import Cronjobs
-    from runtime.session.sessions import Sessions
 
     managed = _managed_workspace(_session)
     if managed is None:
         return False, {"status": "error", "message": "Your session is not bound to a workspace."}
     try:
-        queryset = Cronjobs(parent_project=Sessions.project_of(_session)).all()
+        queryset = Cronjobs(parent_project=_session.get_project()).all()
         if not include_archived:
             queryset = queryset.filter(is_archived=False)
         jobs = list(queryset.order_by("name"))
@@ -500,7 +499,6 @@ def workspace_details(_session: Session) -> tuple[bool, dict[str, Any]]:
     from server.models.workspace import WorkspaceModel
     from runtime.agents.agents import Agents
     from runtime.cron.crons import Cronjobs
-    from runtime.session.sessions import Sessions
     from runtime.skill.skills import Skills
 
     managed = _managed_workspace(_session)
@@ -532,7 +530,7 @@ def workspace_details(_session: Session) -> tuple[bool, dict[str, Any]]:
         agents_count = 0
     try:
         cronjobs_count = (
-            Cronjobs(parent_project=Sessions.project_of(_session))
+            Cronjobs(parent_project=_session.get_project())
             .all()
             .filter(is_archived=False)
             .count()

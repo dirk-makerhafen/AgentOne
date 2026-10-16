@@ -82,7 +82,7 @@ def call_assistant(
             # Legacy fallback: global scope bound to a workspace at the path.
             override = project_path
     else:
-        project = Sessions.project_of(_session)
+        project = _session.get_project()
     if context_path:
         override = context_path
 

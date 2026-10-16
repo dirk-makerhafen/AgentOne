@@ -16,13 +16,6 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def _session_project(_session: Session) -> Any:
-    """Return the project this session belongs to, or ``None``."""
-    from runtime.session.sessions import Sessions
-
-    return Sessions.project_of(_session)
-
-
 def _project_counts(project) -> dict[str, int]:
     """Count the records owned by one project (best effort per model)."""
     from runtime.project.project import Project as ProjectScope
@@ -52,7 +45,7 @@ def _resolve_project(_session: Session, name: str):
 
     name = (name or "").strip()
     if not name:
-        project = _session_project(_session)
+        project = _session.get_project()
         if project is None:
             return False, {"status": "error", "message": "No project name given and this session belongs to no project."}
         return True, project
@@ -110,7 +103,7 @@ def projects_stats(_session: Session) -> tuple[bool, dict[str, Any]]:
         all_projects = list(Project.objects.all().order_by("name"))
     except Exception as e:
         return False, {"status": "error", "message": f"Could not list projects: {e}"}
-    current = _session_project(_session)
+    current = _session.get_project()
     current_pk = current.pk if current is not None else None
     rows = []
     for project in all_projects:

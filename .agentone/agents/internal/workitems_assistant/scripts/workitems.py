@@ -17,19 +17,11 @@ ALL_STATUSES = ("backlog", "ready", "blocked", "done", "cancelled",
 PAGE_SIZE = 100
 
 
-def _session_project(_session: Session):
-    """Return the project this session belongs to, or ``None`` for the inbox."""
-    from runtime.session.sessions import Sessions
-
-    return Sessions.project_of(_session)
-
-
 def _visible_items(_session: Session):
     """Work items in the session's project scope, highest priority first."""
-    from runtime.session.sessions import Sessions
     from runtime.workitems.workitems import Workitems
 
-    return Workitems(parent_project=Sessions.project_of(_session)).all()
+    return Workitems(parent_project=_session.get_project()).all()
 
 
 def _resolve_agent(agent_name: str):
@@ -172,7 +164,7 @@ def create_workitem(
         return False, {"status": "error", "message": error}
 
     item = WorkItem.objects.create(
-        project=_session_project(_session),
+        project=_session.get_project(),
         title=title.strip(),
         body=body or "",
         assigned_agent=agent_obj,

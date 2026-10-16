@@ -67,16 +67,6 @@ def _resolve_agent(_session: Session, agent_name: str) -> tuple[Any, Optional[st
     return agent, None
 
 
-def _session_project(_session: Session) -> Any:
-    """Return the project this session belongs to, or ``None``.
-
-    ``Session`` exposes the model as ``.model``; the project FK on
-    ``SessionModel`` is ``parent_project``.
-    """
-    model = getattr(_session, "model", None)
-    return getattr(model, "parent_project", None) if model else None
-
-
 def _visible_items(_session: Session, item_id: Optional[int] = None) -> Any:
     """Work items this session's project may see, highest priority first.
 
@@ -92,7 +82,7 @@ def _visible_items(_session: Session, item_id: Optional[int] = None) -> Any:
     from server.models.workitems.work_item import WorkItem
 
     queryset = WorkItem.objects.all()
-    project = _session_project(_session)
+    project = _session.get_project()
     queryset = queryset.filter(project=project) if project is not None else queryset.filter(project__isnull=True)
     if item_id is not None:
         queryset = queryset.filter(pk=item_id)
@@ -169,7 +159,7 @@ def workitem_create(
     if error:
         return False, {"error": error}
     if project_obj is None:
-        project_obj = _session_project(_session)
+        project_obj = _session.get_project()
 
     agent_obj, error = _resolve_agent(_session, assigned_agent)
     if error:

@@ -553,7 +553,7 @@ def _check_grounding_list(values: list, raw_lower: str, field: str, strict: bool
         if strict:
             if needle in raw_lower or needle.lower() in raw_lower:
                 continue
-            hints.append(f"`{field}` entry '{needle}' not found verbatim in the raw file — likely invented, remove or verify")
+            hints.append(f"`{field}` entry '{needle}' not found in the raw file via string matching — may be invented, double check")
         else:
             if _contains(raw_lower, needle):
                 continue
@@ -561,7 +561,7 @@ def _check_grounding_list(values: list, raw_lower: str, field: str, strict: bool
             if tokens and any(_contains(raw_lower, t) for t in tokens):
                 hints.append(f"`{field}` entry '{needle}' not found verbatim in raw (only partial token match) — verify spelling")
             else:
-                hints.append(f"`{field}` entry '{needle}' not found in the raw file — double check")
+                hints.append(f"`{field}` entry '{needle}' not found in the raw file via string matching — double check")
     return hints
 
 
@@ -1004,7 +1004,7 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
         session_type=SessionType.SUBTASK_DELEGATE,
         allow_internal=True,
         reasoning_effort=ReasoningEffort.NONE,
-        max_turns=10,
+        max_turns=20,
     )
     if child_session is None:
         return False, {

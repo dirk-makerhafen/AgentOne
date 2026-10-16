@@ -77,29 +77,3 @@ class Projects:
             ),
             caller=caller,
         )
-
-
-def project_of(parent: Any) -> Any | None:
-    """Unwrap *parent* to a ``Project`` model or *None*.
-
-    Accepts a ``Project`` (itself), a session (runtime ``Session`` wrapper
-    or ``SessionModel`` — unwraps to its ``parent_project``), or *None*.
-    Anything else yields *None* rather than raising, so plural collections
-    degrade to global scope for unknown parents.
-    """
-    if parent is None:
-        return None
-    try:
-        from server.models.sessions.session import SessionModel
-
-        if isinstance(parent, Project):
-            return parent
-        if isinstance(parent, SessionModel):
-            return parent.parent_project
-        # Runtime Session wrapper (duck-typed to avoid an import cycle).
-        model = getattr(parent, "model", None)
-        if isinstance(model, SessionModel):
-            return model.parent_project
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
-    return None

@@ -18,19 +18,11 @@ from typing import Any
 from runtime.session.session import Session
 
 
-def _session_project(_session: Session) -> Any:
-    """Return the project this session belongs to, or ``None`` for global."""
-    from runtime.session.sessions import Sessions
-
-    return Sessions.project_of(_session)
-
-
 def _scoped_skills(_session: Session):
     """Global skills plus the session project's own skills, ordered by name."""
-    from runtime.session.sessions import Sessions
     from runtime.skill.skills import Skills
 
-    return Skills(parent_project=Sessions.project_of(_session)).all()
+    return Skills(parent_project=_session.get_project()).all()
 
 
 def _latest_version(skill):
@@ -65,7 +57,8 @@ def _resolve_skill(_session: Session, name: str):
     matches = list(_scoped_skills(_session).filter(name=name))
     if not matches:
         return False, {"status": "error", "message": f"No skill named '{name}' in this scope."}
-    project = _session_project(_session)
+
+    project = _session.get_project()
     if len(matches) > 1 and project is not None:
         local = [s for s in matches if s.parent_project_id == project.pk]
         if local:
@@ -106,7 +99,8 @@ def list_skills(_session: Session) -> tuple[bool, dict[str, Any]]:
         skills = list(_scoped_skills(_session))
     except Exception as e:
         return False, {"status": "error", "message": f"Could not list skills: {e}"}
-    project = _session_project(_session)
+
+    project = _session.get_project()
     scope = f"global + project {project.name}" if project is not None else "global"
     return True, {
         "status": "success",
@@ -240,7 +234,7 @@ def create_skill(
     ok, clean = _validate_item_name(name, "skill")
     if not ok:
         return False, clean
-    project = _session_project(_session)
+    project = _session.get_project()
     if Skills(parent_project=project).all().filter(name=clean).exists():
         where = f"in project {project.name}" if project is not None else "globally"
         return False, {

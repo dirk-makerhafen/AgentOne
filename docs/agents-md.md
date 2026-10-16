@@ -6,11 +6,11 @@
 |---|---|
 | Core logic | `runtime/guidance_files.py` (no DB writes, no Celery) |
 | Manifest keys | `registry/loader/load_agent_manifest.py` → `SettingsModel.autoload`, `SettingsModel.load_guidance_file_index`, `SettingsModel.guidance_file_index_limit` (migration `0133`) |
-| Context injection | `.agentone/scripts/core/build_llm_context.py` (guidance-file autoload block after the system prompt) |
+| Context injection | `runtime/session_bootstrap.py` (`ensure_session_bootstrap`, called from `.agentone/scripts/core/build_llm_context.py`; post-compaction repin embedded by `.agentone/scripts/compact/ingest_compaction.py`) |
 | Touch-hint hook | `runtime/tasks/bound_task.py` (`_maybe_append_guidance_hint`) |
 | Compaction rules | `.agentone/scripts/compact/build_llm_compact_context.py` (compaction prompt) |
 | Schema docs | `docs/manifest-format.md` ("Autoload" section), `docs/models.md` (SettingsModel fields) |
-| Tests | `server/tests/test_guidance_files.py` (40 tests) |
+| Tests | `server/tests/test_guidance_files.py` (42 tests) + `server/tests/test_session_bootstrap.py` (3 tests) |
 
 **Scope:** read-only consumption of workspace guidance files into the LLM
 context. No editing tooling, no `GEMINI.md` aliases, no global
@@ -112,17 +112,28 @@ by `validate_autoload_block` at load time.
 
 ### 4.1 Turn layout
 
-`build_llm_context` inserts, immediately after the system-prompt block and
-**outside** the `system_prompt_chain` guard (so prompt-less agents are
-covered), before CUSTOM TOOLS:
+The one-time session bootstrap (`runtime/session_bootstrap.py`,
+`ensure_session_bootstrap`, called from `build_llm_context`) persists, once
+per compaction segment as normal history messages (`pin_to_context=True`)
+at the start of the segment — **outside** the `system_prompt_chain` guard
+(so prompt-less agents are covered):
 
 1. agent `system_prompt_chain` (identity, SYSTEM),
-2. autoloaded files — one `USER`/`TEXT` message, provenance headers per
-   file (`## <workspace-relative path>`), omitted when empty,
-3. guidance-file index — one `USER`/`TEXT` message, omitted when empty,
-4. CUSTOM tools message (existing, when applicable),
-5. conversation history — including touch-hints, the agent's own
-   guidance-file reads, and the triggering user message.
+2. CUSTOM tools message (existing, when applicable),
+3. conversation history — oldest-first, starting with the bootstrap:
+   - bootstrap guidance — one `USER`/`TEXT` message (autoloaded files with
+     provenance headers per file, `## <workspace-relative path>`, plus the
+     guidance-file index), omitted when both are empty,
+   - bootstrap environment — one `SYSTEM`/`TEXT` message (frozen session
+     start time, workspace path, private session folder announcement),
+   - …then the regular turns, up to the triggering user message.
+
+Freezing the bytes in history keeps the prompt-cache (KV-cache) prefix
+stable: per-turn re-injection would invalidate the whole prefix on any byte
+change. After a compaction the marker itself carries freshly re-resolved
+content (see 4.2), so no standalone bootstrap is created there. Bootstrap
+messages that slide outside `max_history_messages` are re-included from
+their chain position via `pin_to_context`.
 
 Autoload / hint / index text is `TEXT`, never `TEMPLATE` — file bodies may
 contain `{...}`/`{{...}}`.
@@ -143,10 +154,12 @@ combination.
 - Re-resolves when the latest `COMPACTION` message id changes
   (`guidance:marker:{pk}`) or the workspace path changes
   (`guidance:workspace:{pk}`) — i.e. repin on compaction, reset, or
-  workspace switch. Post-compaction order is fixed: `system → freshly
-  re-read files → rebuilt index → compaction summary → new turns`; where
-  the summary and the fresh files disagree about workspace facts, the
-  files win.
+  workspace switch. Post-compaction order is fixed: `system → CUSTOM tools
+  → compaction summary (with freshly re-read files + rebuilt index + frozen
+  environment embedded as trailing marker parts) → new turns`; where the
+  summary and the fresh files disagree about workspace facts, the
+  files win. A mid-segment workspace switch (no compaction) is announced
+  with a short tail notice instead, leaving the cached prefix untouched.
 - The index `exclude` set covers exactly what is pinned — resolved but
   capped or unloadable files are *not* in context, so the index may still
   advertise them.
@@ -230,12 +243,13 @@ risk). Mitigations in place:
 
 ## 6. Observability
 
-- The autoload and index sections are regular `QueryMessage`s, visible in
-  the API `queries/` endpoint and as query cards in the UI
+- The bootstrap guidance/environment sections are regular history-backed
+  `QueryMessage`s (via `source_message`), visible in the API `queries/`
+  endpoint and as query cards in the UI
   (`publish_model_event(query, "create")`).
 - Hints ride in the tool call's stored result (`guidance_hint` key),
   visible in history and `role="tool"` messages.
-- Injection failures log one `DebugLogEntry(event="guidance_skip", …)`
+- Bootstrap failures log one `DebugLogEntry(event="bootstrap_skip", …)`
   with the traceback; per-file skips (deny-policy, symlink-escape,
   unreadable) go to the service log. Nothing is surfaced to the user in
   chat.
@@ -290,7 +304,7 @@ retained them.
 
 ## 10. Tests
 
-`server/tests/test_guidance_files.py` (40 tests):
+`server/tests/test_guidance_files.py` (42 tests) + `server/tests/test_session_bootstrap.py` (3 tests):
 
 - Manifest validation: defaults, `str`→list, unknown keys, `/`/`~`/`..`
   rejection, bad budgets, legacy `index` sub-key rejection.
@@ -307,7 +321,9 @@ retained them.
 - Session behaviour: pin stability across turns, index disabled
   independently of autoload, index without autoload content, hint-once
   then silent, explicit-read suppression, full `build_llm_context`
-  injection order and roles.
+  bootstrap content/roles/pinning plus second-turn idempotency and
+  byte-stability, compaction-marker bootstrap embedding with
+  post-compaction no-op.
 
 ---
 

@@ -23,13 +23,6 @@ def normalize_dir(value: Any) -> str:
         return ""
 
 
-def session_project(_session: Any) -> Any:
-    """Return the project a session belongs to, or *None* for global."""
-    from runtime.session.sessions import Sessions
-
-    return Sessions.project_of(_session)
-
-
 def session_workspace(_session: Any) -> Any:
     """Return the workspace a session is bound to, or *None* when unbound."""
     try:

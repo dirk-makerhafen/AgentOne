@@ -70,6 +70,56 @@ def _build_compaction_message(
     sv = _session.get_version_model()
     current_tail = _session.get_last_message()
 
+    # BOOTSTRAP REPIN: the new segment starts at this marker, so any
+    # pre-compaction bootstrap messages fall behind the boundary.  Re-resolve
+    # guidance + environment content fresh (repin on compaction) and embed it
+    # below — the marker doubles as the new segment's bootstrap (frozen
+    # bytes, cache-hot).  ensure_session_bootstrap recognises the sentinel
+    # and stays a no-op afterwards.  Must never break marker creation.
+    _bootstrap_autoload: str | None = None
+    _bootstrap_index: str | None = None
+    _bootstrap_env: str | None = None
+    try:
+        from runtime.session_bootstrap import bootstrap_compaction_parts
+
+        _bootstrap_autoload, _bootstrap_index, _bootstrap_env = bootstrap_compaction_parts(_session)
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
+    def _add_bootstrap_parts(compaction_message: Message) -> None:
+        from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
+
+        if not _bootstrap_env and not _bootstrap_autoload and not _bootstrap_index:
+            return
+        compaction_message.add_part(
+            type=MessagePartType.COMPACTION,
+            content_type=MessageContentType.TEXT,
+            content=(
+                COMPACTION_BOOTSTRAP_SENTINEL
+                + " Workspace guidance + environment re-resolved at compaction; "
+                "frozen for cache stability — re-read files directly if you "
+                "suspect staleness.]"
+            ),
+        )
+        if _bootstrap_autoload:
+            compaction_message.add_part(
+                type=MessagePartType.COMPACTION,
+                content_type=MessageContentType.TEXT,
+                content=_bootstrap_autoload,
+            )
+        if _bootstrap_index:
+            compaction_message.add_part(
+                type=MessagePartType.COMPACTION,
+                content_type=MessageContentType.TEXT,
+                content=_bootstrap_index,
+            )
+        if _bootstrap_env:
+            compaction_message.add_part(
+                type=MessagePartType.COMPACTION,
+                content_type=MessageContentType.TEXT,
+                content=_bootstrap_env,
+            )
+
     if newest_compacted is None:
         # Nothing to compact — create a trivial summary appended to the
         # current tail so the linked list stays a single chain.
@@ -90,6 +140,7 @@ def _build_compaction_message(
             content_type=MessageContentType.TEXT,
             content=summary_text,
         )
+        _add_bootstrap_parts(compaction_message)
     else:
         # The first message that followed the compacted range (if any).
         # Captured *before* creating the compaction message so
@@ -123,6 +174,7 @@ def _build_compaction_message(
             content_type=MessageContentType.TEXT,
             content=summary_text,
         )
+        _add_bootstrap_parts(compaction_message)
 
         # Relink the first message that followed the compacted range (if any) so
         # it now points back at the compaction message.  Without this the
