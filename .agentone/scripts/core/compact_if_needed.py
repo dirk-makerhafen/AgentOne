@@ -32,5 +32,9 @@ def compact_if_needed(
         tool_allowlist_violated=kwargs.get("tool_allowlist_violated"),
         has_tool_calls=kwargs.get("has_tool_calls"),
         has_message=kwargs.get("has_message"),
+        trigger="auto",
+        idle_trigger=False,
+        prompt_tokens=response.prompt_tokens,
+        auto_limit=auto_limit,
     )
     return dict(response=response, parts=parts, message=message, compact_call=compact_call, **kwargs)

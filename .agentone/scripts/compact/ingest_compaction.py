@@ -46,9 +46,20 @@ def _extract_summary_text(message: Message | None) -> str:
         ):
             try:
                 args = part.tool_call.carguments_json or {}
+                # Large final_result bodies are stored content-addressed as
+                # {"_type": "GenericContent", "pk": ...} — resolve to plain text.
+                content_arg = args.get("content", "")
+                if isinstance(content_arg, dict) and content_arg.get("_type") == "GenericContent" and "pk" in content_arg:
+                    try:
+                        from server.models.content import GenericContent as _GC
+
+                        content_arg = _GC.objects.get(pk=content_arg["pk"]).get()
+                    except Exception:
+                        pass
             except Exception:
                 args = {}
-            summary_text += str(args.get("content", ""))
+                content_arg = ""
+            summary_text += str(content_arg if "content_arg" in locals() else args.get("content", ""))
     return summary_text
 
 
@@ -272,6 +283,10 @@ def ingest_compaction(
                 response=response,
                 parts=parts,
                 compact_attempt=nxt,
+                trigger=kwargs.get("trigger"),
+                idle_trigger=kwargs.get("idle_trigger", False),
+                prompt_tokens=kwargs.get("prompt_tokens"),
+                auto_limit=kwargs.get("auto_limit"),
             )
             return _session.get_task("ingest_compaction_response").delay(
                 compaction_result=retry_call,
@@ -289,6 +304,8 @@ def ingest_compaction(
                 has_tool_calls=kwargs.get("has_tool_calls"),
                 has_message=kwargs.get("has_message"),
                 compact_attempt=nxt,
+                trigger=kwargs.get("trigger"),
+                idle_trigger=kwargs.get("idle_trigger", False),
             )
         raise ValueError(
             "Compaction fork produced no summary "
@@ -316,17 +333,36 @@ def ingest_compaction(
     # Two-phase write (see Message.save): publish only now parts exist.
     info_message.publish("create")
 
+    # A compaction boundary starts a fresh KV-cache segment (build_llm_context
+    # stops the history walk at the marker), so it is the safe point to adopt
+    # newer agent/tool versions accumulated via reload_all.  Runs after the
+    # marker + toast so those stay in the old segment; later turns use the new
+    # pinned version.  Best-effort: must never break the compact flow.
+    try:
+        # Refresh the session row first: the marker/toast writes above may
+        # have left our cached latest_session_version stale.
+        try:
+            _session.model.refresh_from_db(fields=["latest_session_version"])
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        _session.upgrade_to_latest_agent()
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
     # Session hooks (``post_compact`` event): fired once, after the marker is
     # the chain tip. The fork anchors at the marker, so it sees the summary
     # and reaches the compacted range via the boundary link.
     try:
         from runtime.hooks import maybe_fire_hooks
 
+        post_trigger = (kwargs.get("trigger") or "").strip().lower() or None
+        if post_trigger not in ("idle", "auto", "manual"):
+            post_trigger = "idle" if kwargs.get("idle_trigger") else "auto"
         maybe_fire_hooks(
             _session,
             "post_compact",
             {
-                "trigger": "idle" if kwargs.get("idle_trigger") else "auto",
+                "trigger": post_trigger,
                 "anchor_message": marker.pk,
                 "boundary_pk": boundary_pk,
             },
