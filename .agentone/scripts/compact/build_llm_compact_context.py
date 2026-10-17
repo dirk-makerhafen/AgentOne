@@ -27,6 +27,91 @@ Call final_result tool with your summary as its content argument, don't output r
 <SYSTEM NOTICE>"""
 
 
+def _format_seconds(seconds: float | int | None) -> str:
+    """Format a duration compactly (e.g. 90 -> '90s', 150 -> '2m30s', 8100 -> '2h15m')."""
+    if seconds is None:
+        return "?"
+    try:
+        total = int(seconds)
+    except (TypeError, ValueError):
+        return "?"
+    if total < 60:
+        return f"{total}s"
+    minutes, secs = divmod(total, 60)
+    if minutes < 60:
+        return f"{minutes}m{secs:02d}s" if secs else f"{minutes}m"
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours}h{minutes:02d}m"
+
+
+def _describe_trigger(
+    _session: Session,
+    *,
+    trigger: str | None,
+    idle_trigger: bool,
+    response=None,
+    prompt_tokens_hint: int | None = None,
+    auto_limit_hint: int | None = None,
+) -> str:
+    """Build a short human-readable hint why this compaction was started.
+
+    Never raises: reason computation must not break the compaction itself.
+    """
+    try:
+        resolved = (trigger or "").strip().lower() or None
+        if resolved not in ("idle", "auto", "manual", None):
+            resolved = None
+        if resolved is None:
+            if idle_trigger:
+                resolved = "idle"
+            elif response is not None and getattr(response, "prompt_tokens", None):
+                resolved = "auto"
+            elif prompt_tokens_hint:
+                resolved = "auto"
+            else:
+                # No response context and no idle flag: only the manual
+                # /compact path dispatches this way.
+                resolved = "manual"
+        if resolved == "idle":
+            from runtime.history_limiter import (
+                estimate_entries_tokens,
+                idle_seconds,
+                walk_compaction_entries,
+            )
+
+            idle_s = _session.auto_compact_idle_seconds or 0
+            min_tokens = _session.auto_compact_min_tokens or 0
+            last_message = _session.get_last_message()
+            idle_s_actual = idle_seconds(_session)
+            tokens = estimate_entries_tokens(
+                walk_compaction_entries(_session, last_message)
+            )
+            return (
+                f"Trigger: idle timeout — no new messages for "
+                f"{_format_seconds(idle_s_actual)} (threshold {_format_seconds(idle_s)}), "
+                f"~{tokens} context tokens (floor {min_tokens})."
+            )
+        if resolved == "auto":
+            prompt_tokens = prompt_tokens_hint
+            if prompt_tokens is None and response is not None:
+                prompt_tokens = getattr(response, "prompt_tokens", None)
+            auto_limit = auto_limit_hint
+            if auto_limit is None:
+                try:
+                    auto_limit = _session.auto_compact_max_tokens
+                except Exception:  # pylint: disable=broad-exception-caught
+                    auto_limit = None
+            if prompt_tokens is not None and auto_limit:
+                return (
+                    f"Trigger: context limit — last response used "
+                    f"{prompt_tokens} prompt tokens (limit {auto_limit})."
+                )
+            return "Trigger: context limit — response exceeded auto-compact threshold."
+        return "Trigger: manual — via /compact command."
+    except Exception:  # pylint: disable=broad-exception-caught
+        return "Trigger: compaction requested."
+
+
 def build_llm_compact_context(
     _session: Session,
     message: Message,
@@ -34,6 +119,9 @@ def build_llm_compact_context(
     parts=None,
     compact_attempt: int = 0,
     idle_trigger: bool = False,
+    trigger: str | None = None,
+    prompt_tokens: int | None = None,
+    auto_limit: int | None = None,
     **kwargs,
 ) -> dict:
 
@@ -76,11 +164,14 @@ def build_llm_compact_context(
             from runtime.hooks import maybe_fire_hooks
 
             tail = _session.get_last_message()
+            hook_trigger = (trigger or "").strip().lower() or None
+            if hook_trigger not in ("idle", "auto", "manual"):
+                hook_trigger = "idle" if idle_trigger else "auto"
             maybe_fire_hooks(
                 _session,
                 "pre_compact",
                 {
-                    "trigger": "idle" if idle_trigger else "auto",
+                    "trigger": hook_trigger,
                     "anchor_message": tail.pk if tail is not None else None,
                     "compact_attempt": compact_attempt,
                 },
@@ -88,8 +179,16 @@ def build_llm_compact_context(
         except Exception as e:  # pylint: disable=broad-exception-caught
             print(f"[hooks] error firing pre_compact hooks: {e}")
     extra = f" Attempt {compact_attempt+1}" if compact_attempt else ""
+    reason = _describe_trigger(
+        _session,
+        trigger=trigger,
+        idle_trigger=idle_trigger,
+        response=response,
+        prompt_tokens_hint=prompt_tokens,
+        auto_limit_hint=auto_limit,
+    )
     _session.add_user_message(
-        {"role": MessageRole.INFO, "content": "Compaction started — summarizing older messages to save context." + extra},
+        {"role": MessageRole.INFO, "content": "Compaction started — summarizing older messages to save context. " + reason + extra},
         execute_turn=False,
     )
 
@@ -141,6 +240,8 @@ def build_llm_compact_context(
         result=compact_result,
         response=response,
         parts=parts,
+        trigger=trigger,
+        idle_trigger=idle_trigger,
         **kwargs,
     )
      

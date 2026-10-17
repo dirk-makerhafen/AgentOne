@@ -13,6 +13,11 @@ class RailView(ModelView):
     DOM_ELEMENT_CLASS = "rail"
     DOM_ELEMENT_EXTRAS = 'aria-label="Primary navigation"'
     TEMPLATE_STR = '''
+        <button class="rail-btn nav-tab{% if pyview.parent.sidebar.selected_panel_name == 'dashboard' %} active{% endif %}" data-panel="dashboard" onclick="pyview.parent.sidebar.switchPanel('dashboard')" title="Dashboard" data-i18n-title="tab_dashboard" aria-label="Dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <div class="rail-button-text">Dashboard</div>
+        </button>
+
         <button class="rail-btn nav-tab{% if pyview.parent.sidebar.selected_panel_name == 'chat' %} active{% endif %}" data-panel="chat" onclick="pyview.parent.sidebar.switchPanel('chat')" title="Chat" data-i18n-title="tab_chat" aria-label="Chat">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <div class="rail-button-text">Chats</div>

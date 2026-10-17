@@ -75,6 +75,14 @@ class Workspace:
     # Assistant wiring
     # ------------------------------------------------------------------
 
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding this workspace's assistant sessions.
+
+        The workspace itself. Shared by ``get_assistant_session`` and UI
+        panels so both bind the same row.
+        """
+        return self.model
+
     def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
         """Return the singleton ``workspace_assistant`` session.
 
@@ -86,6 +94,6 @@ class Workspace:
         return Sessions().assistant_session(
             name or self.ASSISTANT,
             project=self.project,
-            workspace=self.model,
+            workspace=self.get_assistant_workspace(),
             caller=caller,
         )

@@ -128,6 +128,29 @@ class Agents:
             return model_manifest_dir(self.parent_workspace, "workspace")
         return self.global_home()
 
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding this scope's assistant sessions.
+
+        Nested scope: per-directory row; project scope: project workspace;
+        global: system row. Shared by ``get_assistant_session`` and UI
+        panels so both bind the same row.
+        """
+        from runtime.workspace.workspaces import Workspaces
+
+        source = self.get_source_dir()
+        project = self.project
+        nested = self.parent_agent is not None or self.parent_skill is not None
+        if nested:
+            return Workspaces.ensure_named(
+                f"{source.as_posix()} assistant scope", source,
+                "assistant scope for nested agents",
+            )
+        if project is not None:
+            return Workspaces.for_project(project)
+        return Workspaces.ensure_named(
+            "System agents", source, "User-scope agents manifests"
+        )
+
     def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
         """Return the singleton agents-assistant session for this scope.
 
@@ -135,25 +158,10 @@ class Agents:
         name to talk about ONE agent (named inside the task text).
         """
         from runtime.session.sessions import Sessions
-        from runtime.workspace.workspaces import Workspaces
 
-        source = self.get_source_dir()
-        project = self.project
-        nested = self.parent_agent is not None or self.parent_skill is not None
-        if nested:
-            workspace = Workspaces.ensure_named(
-                f"{source.as_posix()} assistant scope", source,
-                "assistant scope for nested agents",
-            )
-        elif project is not None:
-            workspace = Workspaces.for_project(project)
-        else:
-            workspace = Workspaces.ensure_named(
-                "System agents", source, "User-scope agents manifests"
-            )
         return Sessions().assistant_session(
             name or self.assistant_name,
-            project=project,
-            workspace=workspace,
+            project=self.project,
+            workspace=self.get_assistant_workspace(),
             caller=caller,
         )

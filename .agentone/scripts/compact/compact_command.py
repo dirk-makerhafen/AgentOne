@@ -11,5 +11,7 @@ def compact(_session: Session, message: Message | None = None) -> dict:
             return {"status": "ok", "message": "No messages to compact."}
         message = messages.first()
 
-    call = _session.get_task("compact_turn").delay(message=message)
+    call = _session.get_task("compact_turn").delay(
+        message=message, trigger="manual", idle_trigger=False
+    )
     return {"status": "ok", "message": "Session compacted.", "result": call}

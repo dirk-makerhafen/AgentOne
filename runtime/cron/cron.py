@@ -66,23 +66,31 @@ class Cron:
     # Assistant wiring
     # ------------------------------------------------------------------
 
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton ``cronjob_assistant`` session in this scope."""
-        from runtime.session.sessions import Sessions
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding this job's assistant sessions.
+
+        The owning project's workspace, else the global cronjobs row.
+        Shared by ``get_assistant_session`` and UI panels so both bind
+        the same row.
+        """
         from runtime.workspace.workspaces import Workspaces
 
         project = self.project
         if project is not None:
-            workspace = Workspaces.for_project(project)
-        else:
-            workspace = Workspaces.ensure_named(
-                "System cronjobs",
-                self.get_source_dir(),
-                "User-scope cronjob manifests",
-            )
+            return Workspaces.for_project(project)
+        return Workspaces.ensure_named(
+            "System cronjobs",
+            self.get_source_dir(),
+            "User-scope cronjob manifests",
+        )
+
+    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
+        """Return the singleton ``cronjob_assistant`` session in this scope."""
+        from runtime.session.sessions import Sessions
+
         return Sessions().assistant_session(
             name or self.ASSISTANT,
-            project=project,
-            workspace=workspace,
+            project=self.project,
+            workspace=self.get_assistant_workspace(),
             caller=caller,
         )

@@ -10,7 +10,7 @@ from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
 from server.models.base_model import BaseModel, Observables
-from server.models.content import GenericContent, IMAGE_TOKEN_ESTIMATE
+from server.models.content import GenericContent, IMAGE_TOKEN_ESTIMATE, resolve_generic_content_refs
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 
 _JINJA_ENV = Environment(loader=BaseLoader())
@@ -124,12 +124,19 @@ class QueryMessagePart(BaseModel):
         if self.source_message_part and part_type == MessagePartType.TOOLCALL:
             tc = self.source_message_part.tool_call
             if tc:
+                # carguments_json stores large strings content-addressed as
+                # {"_type": "GenericContent", "pk": ...} (see pack_large_string).
+                # The LLM must see the plain values, never the ref dicts.
+                try:
+                    arguments = resolve_generic_content_refs(tc.carguments_json)
+                except Exception:
+                    arguments = tc.carguments_json
                 return [{
                     "id": f"tc-{tc.pk}",
                     "type": "function",
                     "function": {
                         "name": tc.task_definition.name,
-                        "arguments": json.dumps(tc.carguments_json),
+                        "arguments": json.dumps(arguments, default=str),
                     },
                 }]
 

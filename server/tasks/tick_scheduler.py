@@ -1067,7 +1067,7 @@ def _compact_idle_sessions() -> None:
             compact_task = session.get_task("compact_turn")
             if compact_task is None:
                 continue
-            compact_task.delay(message=last_message, idle_trigger=True)
+            compact_task.delay(message=last_message, idle_trigger=True, trigger="idle")
             dispatched += 1
         except Exception as e:  # pylint: disable=broad-exception-caught
             print(

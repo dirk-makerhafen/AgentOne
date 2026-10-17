@@ -103,6 +103,16 @@ class Project:
     # Assistant wiring
     # ------------------------------------------------------------------
 
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding this project's assistant sessions.
+
+        The project root workspace. Shared by ``get_assistant_session``
+        and UI panels so both bind the same row.
+        """
+        from runtime.workspace.workspaces import Workspaces
+
+        return Workspaces.for_project(self.model)
+
     def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
         """Return the singleton ``project_assistant`` session for this project.
 
@@ -110,11 +120,10 @@ class Project:
         dir, so file operations work across the whole project).
         """
         from runtime.session.sessions import Sessions
-        from runtime.workspace.workspaces import Workspaces
 
         return Sessions().assistant_session(
             name or self.ASSISTANT,
             project=self.model,
-            workspace=Workspaces.for_project(self.model),
+            workspace=self.get_assistant_workspace(),
             caller=caller,
         )

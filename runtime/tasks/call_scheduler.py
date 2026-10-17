@@ -1514,8 +1514,8 @@ class CallScheduler:
     def _release_next_queued_call(session) -> None:
         """Dispatch the oldest WAITING_QUEUE call for *session*, if any.
 
-        Honors the session FIFO gate: a parked ingest still waits when a
-        live turn or an older parked message is ahead of it.
+        Honors the session FIFO gate: a parked ingest still waits when live
+        work (turn or tool call) or an older parked message is ahead of it.
         """
         from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
         from server.models.enums.task_enums import TaskCallStatusDetail
@@ -1527,13 +1527,15 @@ class CallScheduler:
         if next_call and not CallScheduler._session_queue_blocked(next_call):
             CallScheduler.start_new_taskrun(next_call.pk)
 
-    # Calls parked by the session "queue" strategy (or piled up while a turn
-    # runs) must start strictly FIFO: one live turn per session.  Releasing
-    # every parked ingest at once lets the turns collide on the single
-    # per-session-version Query (``build_llm_context`` refuses a second
-    # WAITING/ACTIVE query and the losing turn dies).  Non-ingest
-    # WAITING_QUEUE calls (parallel-limit overflow, retries) are unaffected —
-    # only ingest-family ordering is gated here.
+    # Calls parked by the session "queue" strategy (or piled up while work
+    # runs) must start strictly FIFO: one live unit of work per session —
+    # a turn call or a still-running tool/subagent call from a previous
+    # turn.  Releasing a parked ingest while anything is live lets the new
+    # turn fire a second LLM query on top of running tool work (and turns
+    # collide on the single per-session-version Query, which
+    # ``build_llm_context`` refuses twice — the losing turn dies).
+    # Non-ingest WAITING_QUEUE calls (parallel-limit overflow, retries) are
+    # unaffected — only ingest-family admission is gated here.
     INGEST_TURN_TASK_NAMES = (
         "ingest_user_message",
         "ingest_slash_command",
@@ -1545,12 +1547,17 @@ class CallScheduler:
     def _session_queue_blocked(call: AgentTaskCall) -> bool:
         """True when a parked ingest-family call must keep waiting.
 
-        Blocked when the session has (a) any other live turn call
-        (non-ended ingest-family call that is not itself parked), or (b) an
-        older parked ingest-family call (a previous message still waiting for
-        its turn — FIFO).  The session drain in ``_on_taskcall_ended``
-        releases the head of the line when a turn ends; the tick only retries
-        admission for the head.
+        Blocked when the session has (a) any other live work — a turn call
+        or a still-running tool/subagent call from a previous turn (whose
+        ``process_turn`` may already have ended), excluding calls parked at
+        ``WAITING_QUEUE`` themselves — or (b) an older parked ingest-family
+        call (a previous message still waiting for its turn — FIFO).  The
+        session drain in ``_on_taskcall_ended`` releases the head of the
+        line when work ends; the tick retries admission for the head.
+
+        Non-ingest calls (parallel-limit-parked tool calls, retries) are
+        never turn-ordered — tool execution order is governed by parallel
+        limits and dependencies, so they always return False here.
         """
         from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
         from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
@@ -1561,7 +1568,6 @@ class CallScheduler:
         others = (
             _ATC.objects.filter(
                 session_id=call.session_id,
-                task_definition__name__in=CallScheduler.INGEST_TURN_TASK_NAMES,
             )
             .exclude(status=TaskCallStatus.ENDED)
             .exclude(pk=call.pk)
@@ -1572,10 +1578,12 @@ class CallScheduler:
             return True
         return (
             others.filter(
+                task_definition__name__in=CallScheduler.INGEST_TURN_TASK_NAMES,
                 status_detail=TaskCallStatusDetail.WAITING_QUEUE,
                 created_at__lt=call.created_at,
             ).exists()
             or others.filter(
+                task_definition__name__in=CallScheduler.INGEST_TURN_TASK_NAMES,
                 status_detail=TaskCallStatusDetail.WAITING_QUEUE,
                 created_at=call.created_at,
                 pk__lt=call.pk,

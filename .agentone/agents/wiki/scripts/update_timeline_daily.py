@@ -705,7 +705,7 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
         session_type=SessionType.SUBTASK_DELEGATE,
         allow_internal=True,
         reasoning_effort=ReasoningEffort.MINIMAL,
-        max_turns=10,
+        max_turns=20,
     )
     if child_session is None:
         return False, None, None, "agent 'baseagent' not found"

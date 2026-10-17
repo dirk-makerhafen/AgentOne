@@ -5,6 +5,7 @@ from ui.sidebar.panels.agents import SidebarPanelAgents
 from ui.sidebar.panels.chats import SidebarPanelChats
 from ui.sidebar.panels.collections import SidebarPanelCollections
 from ui.sidebar.panels.cron import SidebarPanelCronjobs
+from ui.sidebar.panels.dashboard import SidebarPanelDashboard
 from ui.sidebar.panels.insights import SidebarPanelInsights
 
 from ui.sidebar.panels.logs import SidebarPanelLogs
@@ -31,6 +32,10 @@ class SidebarView(ModelView):
         {{ pyview.project_selector.render() }}
         <div class="sidebar-body">
         <div class="sidebar-nav" style="display:None">
+            <button class="nav-tab active" data-panel="dashboard" data-label="Dashboard" onclick="pyview.switchPanel('dashboard')" title="Dashboard" data-i18n-title="tab_dashboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <div class="rail-button-text" style="display:none">Dashboard</div>
+            </button>
             <button class="nav-tab active" data-panel="chat" data-label="Chat" onclick="pyview.switchPanel('chat')" title="Chat" data-i18n-title="tab_chat">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <div class="rail-button-text" style="display:none">Chats</div>
@@ -107,6 +112,7 @@ class SidebarView(ModelView):
         self._active_project_filter: int | None = None
         self.project_selector = ProjectSelector(subject=self.subject, parent=self)
         self.panels = dict(
+            dashboard = SidebarPanelDashboard(subject=self.subject, parent=self),
             profiles = SidebarPanelAgents(subject=self.subject, parent=self),
             chat = SidebarPanelChats(subject=self.subject, parent=self),
             cron = SidebarPanelCronjobs(subject=self.subject, parent=self),
@@ -120,7 +126,7 @@ class SidebarView(ModelView):
             settings = SidebarPanelSettings(subject=self.subject, parent=self),
             skills = SidebarPanelSkills(subject=self.subject, parent=self),
         )
-        default_panel = self._instance.url_params.get("SidebarView", "chat")
+        default_panel = self._instance.url_params.get("SidebarView", "dashboard")
         self.switchPanel(default_panel)
 
     def switchPanel(self, panel_name):

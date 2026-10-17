@@ -90,6 +90,20 @@ class TestScopeHooks:
             assert "assistant_project" not in cls.__dict__
             assert "assistant_workspace" not in cls.__dict__
 
+    def test_item_panels_tolerate_unknown_subjects(self):
+        for class_name in ITEM_PANELS.values():
+            cls = _panel(class_name)
+            obj = SimpleNamespace(subject=SimpleNamespace())
+            assert cls.assistant_workspace(obj) is None
+
+    def test_dashboard_unknown_assistant_yields_none(self):
+        cls = _panel("RightPanelProjectsOverview")
+        obj = SimpleNamespace(
+            ASSISTANT_AGENT_NAME="nope",
+            assistant_project=lambda: None,
+        )
+        assert cls.assistant_workspace(obj) is None
+
 
 class TestTemplate:
     def test_empty_state_offers_new_chat(self):

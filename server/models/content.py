@@ -205,3 +205,23 @@ def unpack_generic_content(instance: Any) -> Any:
         except Exception:
             return None
     return instance
+
+
+def resolve_generic_content_refs(obj: Any) -> Any:
+    """Recursively unwrap ``{"_type": "GenericContent", "pk": ...}`` refs.
+
+    Used when rendering stored JSON (e.g. ``AgentTaskCall.carguments_json``)
+    back to plain values for the LLM.  Fail-open: on any DB error the
+    original ref dict is returned so rendering never breaks.
+    """
+    if isinstance(obj, dict):
+        if set(obj.keys()) == {"_type", "pk"} and obj.get("_type") == "GenericContent":
+            try:
+                return GenericContent.objects.get(pk=obj["pk"]).get()
+            except Exception:
+                return obj
+        return {k: resolve_generic_content_refs(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        resolved = [resolve_generic_content_refs(v) for v in obj]
+        return type(obj)(resolved) if isinstance(obj, tuple) else resolved
+    return obj

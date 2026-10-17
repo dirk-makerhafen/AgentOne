@@ -239,7 +239,7 @@ class Messages(PyHtmlView):
                 self._on_response_created(pk, action, {})
             elif model == "Response" and action == "update":
                 self._on_response_updated(pk, action, {})
-            elif model == "AgentTaskCall" and action == "update":
+            elif model == "AgentTaskCall" and action in ("create", "update"):
                 self._on_taskcall_updated(pk, action, {})
         except Exception:
             pass
@@ -328,8 +328,8 @@ class Messages(PyHtmlView):
                 return
         self._log(f"_on_query_updated: no wrapper found for Query {pk} in _wrapped_data (len={len(self.messages_view._wrapped_data)})")
 
-    def _on_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:
-        self._log(f"_on_taskcall_updated: pk={pk} action={action} fc={filter_context}")
+    def _refresh_toolcard_by_pk(self, pk: int) -> bool:
+        """Refresh the ToolCard for call *pk*; return True when found."""
         for wrapper in self.messages_view._wrapped_data:
             if wrapper.subject is None:
                 continue
@@ -348,9 +348,38 @@ class Messages(PyHtmlView):
                         tool_card.subject.refresh_from_db()
                     except Exception:
                         pass
-                    tool_card.update()
-                    return
-        self._log(f"_on_taskcall_updated: no ToolCard found for call {pk}")
+                    try:
+                        tool_card.update()
+                    except Exception:
+                        try:
+                            tool_card.view.update()
+                        except Exception:
+                            pass
+                    return True
+        return False
+
+    def _on_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:
+        self._log(f"_on_taskcall_updated: pk={pk} action={action} fc={filter_context}")
+        # Direct card first (the call itself is a top-level tool call).
+        direct = self._refresh_toolcard_by_pk(pk)
+        # Then ancestors: a new/changed sub-call must refresh every parent
+        # ToolCard whose subtree contains it (GROUP fan-out, CHAIN steps,
+        # delegate_task children, …). Walk parent_taskrun links upwards.
+        try:
+            from server.models.tasks.agent_task_call import AgentTaskCall
+            call = AgentTaskCall.objects.select_related("parent_taskrun").filter(pk=pk).first()
+            ancestors = call.get_ancestor_call_pks() if call is not None else []
+        except Exception:
+            ancestors = []
+        refreshed_ancestors = 0
+        for ancestor_pk in ancestors or []:
+            try:
+                if self._refresh_toolcard_by_pk(ancestor_pk):
+                    refreshed_ancestors += 1
+            except Exception:
+                continue
+        if not direct and not refreshed_ancestors:
+            self._log(f"_on_taskcall_updated: no ToolCard found for call {pk}")
 
     def _turn_effective(self, assistant_pk: int | None) -> bool:
         """Effective collapse state: a pinned block stays fully expanded."""

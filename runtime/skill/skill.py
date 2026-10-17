@@ -96,19 +96,28 @@ class Skill:
 
         return Agents(parent_skill=self.model)
 
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton ``skill_assistant`` session in this scope."""
-        from runtime.session.sessions import Sessions
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding this skill's assistant sessions.
+
+        The skill's source directory (stored ``manifest_dir`` first). Shared
+        by ``get_assistant_session`` and UI panels so both bind the same row.
+        """
         from runtime.workspace.workspaces import Workspaces
 
         source = self.get_source_dir()
+        return Workspaces.ensure_named(
+            f"{source.as_posix()} assistant scope",
+            source,
+            f"source scope for skill {self.name}",
+        )
+
+    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
+        """Return the singleton ``skill_assistant`` session in this scope."""
+        from runtime.session.sessions import Sessions
+
         return Sessions().assistant_session(
             name or self.ASSISTANT,
             project=self.project,
-            workspace=Workspaces.ensure_named(
-                f"{source.as_posix()} assistant scope",
-                source,
-                f"source scope for skill {self.name}",
-            ),
+            workspace=self.get_assistant_workspace(),
             caller=caller,
         )

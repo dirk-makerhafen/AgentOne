@@ -242,6 +242,42 @@ class AssistantChatMixin:
 class _ItemAssistantPanel(AssistantChatMixin, ModelView):
     """Assistant chat tab embedded inside an entity's right panel."""
 
+    def assistant_workspace(self):
+        """Item folder workspace, mirroring the runtime assistant binding.
+
+        Resolves through the matching runtime singular's
+        ``get_assistant_workspace()`` so UI sessions bind the exact same
+        workspace row as ``get_assistant_session()`` (shared, not
+        duplicated). ``None`` when unresolvable — the session is then
+        created unbound, as before.
+        """
+        try:
+            from server.models.agents.agent import AgentModel
+            from server.models.cron import Cronjob
+            from server.models.project import Project
+            from server.models.skills.skill import SkillModel
+
+            subject = self.subject
+            if isinstance(subject, AgentModel):
+                from runtime.agents.agent import Agent as AgentRt
+
+                return AgentRt(agent_model=subject).get_assistant_workspace()
+            if isinstance(subject, SkillModel):
+                from runtime.skill.skill import Skill as SkillRt
+
+                return SkillRt(skill_model=subject).get_assistant_workspace()
+            if isinstance(subject, Cronjob):
+                from runtime.cron.cron import Cron as CronRt
+
+                return CronRt(cronjob_model=subject).get_assistant_workspace()
+            if isinstance(subject, Project):
+                from runtime.project.project import Project as ProjectRt
+
+                return ProjectRt(project_model=subject).get_assistant_workspace()
+        except Exception:
+            pass
+        return None
+
     DOM_ELEMENT = "div"
     DOM_ELEMENT_CLASS = "rightpanel-tab"
     TEMPLATE_STR = (
@@ -268,6 +304,43 @@ class _ItemAssistantPanel(AssistantChatMixin, ModelView):
 
 class _DashboardAssistantPanel(AssistantChatMixin, ModelView):
     """Assistant chat shown in a dashboard/collection right panel."""
+
+    def assistant_workspace(self):
+        """Scope workspace for collection assistants.
+
+        Resolves through the matching plural collection's
+        ``get_assistant_workspace()`` — the exact row
+        ``get_assistant_session()`` binds (project workspace, else the
+        domain's system row). Guarded: ``None`` when unresolvable, as
+        before.
+        """
+        try:
+            from runtime.agents.agents import Agents
+            from runtime.cron.crons import Cronjobs
+            from runtime.project.projects import Projects
+            from runtime.skill.skills import Skills
+            from runtime.workitems.workitems import Workitems
+            from runtime.workspace.workspaces import Workspaces
+
+            by_assistant = {
+                "agents_assistant": Agents,
+                "skills_assistant": Skills,
+                "cronjobs_assistant": Cronjobs,
+                "projects_assistant": Projects,
+                "workitems_assistant": Workitems,
+                "workspaces_assistant": Workspaces,
+            }
+            cls = by_assistant.get(self.ASSISTANT_AGENT_NAME)
+            if cls is None:
+                return None
+            try:
+                collection = cls(parent_project=self.assistant_project())
+            except TypeError:
+                collection = cls()
+            return collection.get_assistant_workspace()
+        except Exception:
+            pass
+        return None
 
     DOM_ELEMENT = "aside"
     DOM_ELEMENT_CLASS = "rightpanel-inner"
@@ -396,3 +469,18 @@ class RightPanelWorkItemsAssistant(_DashboardAssistantPanel):
 class RightPanelWorkspacesOverview(_DashboardAssistantPanel):
     ASSISTANT_AGENT_NAME = "workspaces_assistant"
     ASSISTANT_TITLE = "Workspaces Assistant"
+
+
+# ----------------------------------------------------------------------
+# Global dashboard — the AgentOne main agent (global scope)
+# ----------------------------------------------------------------------
+
+class RightPanelGlobalDashboard(_DashboardAssistantPanel):
+    """Right panel for the global dashboard: ``AgentOne`` sessions.
+
+    Global scope (no project/workspace binding), newest AgentOne session
+    first, with "+ New Chat" creating a fresh global AgentOne session.
+    """
+
+    ASSISTANT_AGENT_NAME = "AgentOne"
+    ASSISTANT_TITLE = "AgentOne"

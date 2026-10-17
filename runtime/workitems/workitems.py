@@ -92,6 +92,23 @@ class Workitems:
 
         return agentone_home()
 
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding this scope's assistant sessions.
+
+        Project scope: project workspace; global inbox: system row. Shared
+        by ``get_assistant_session`` and UI panels so both bind the same row.
+        """
+        from runtime.workspace.workspaces import Workspaces
+
+        project = self.project
+        if project is not None:
+            return Workspaces.for_project(project)
+        return Workspaces.ensure_named(
+            "AgentOne system",
+            self.get_source_dir(),
+            "Master workspace: whole framework home",
+        )
+
     def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
         """Return the singleton workitems-assistant session for this scope.
 
@@ -99,17 +116,13 @@ class Workitems:
         name to talk about ONE item (named inside the task text).
         """
         from runtime.session.sessions import Sessions
-        from runtime.workspace.workspaces import Workspaces
 
-        project = self.project
-        if project is not None:
-            workspace = Workspaces.for_project(project)
-        else:
-            workspace = Workspaces.ensure_named(
-                "AgentOne system",
-                self.get_source_dir(),
-                "Master workspace: whole framework home",
-            )
+        return Sessions().assistant_session(
+            name or self.assistant_name,
+            project=self.project,
+            workspace=self.get_assistant_workspace(),
+            caller=caller,
+        )
         return Sessions().assistant_session(
             name or self.assistant_name,
             project=project,

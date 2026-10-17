@@ -89,6 +89,80 @@ class ProjectOfTest(TestCase):
         self.assertIsNone(rt.get_project())
 
 
+class AssistantWorkspaceTest(TestCase):
+    """Singular get_assistant_workspace shares the session binding row."""
+
+    def test_agent_workspace_is_source_dir(self):
+        from runtime.agents.agent import Agent as AgentRt
+
+        agent, _av = _make_agent("aw-a", manifest_dir="/tmp/aw-a")
+        ws = AgentRt(agent_model=agent).get_assistant_workspace()
+        self.assertEqual(ws.path, "/tmp/aw-a")
+
+    def test_skill_workspace_is_source_dir(self):
+        from runtime.skill.skill import Skill as SkillRt
+
+        skill = _make_skill("aw-s", manifest_dir="/tmp/aw-s")
+        ws = SkillRt(skill_model=skill).get_assistant_workspace()
+        self.assertEqual(ws.path, "/tmp/aw-s")
+
+    def test_cron_workspace_matches_binding(self):
+        from runtime.cron.cron import Cron as CronRt
+        from runtime.workspace.workspaces import Workspaces
+
+        project = _make_project(path="/tmp/aw-cron")
+        job = Cronjob.objects.create(
+            name="aw-job", schedule="* * * * *", parent_project=project
+        )
+        ws = CronRt(cronjob_model=job).get_assistant_workspace()
+        self.assertEqual(ws.pk, Workspaces.for_project(project).pk)
+
+    def test_project_workspace_is_project_root(self):
+        from runtime.project.project import Project as ProjectRt
+        from runtime.workspace.workspaces import Workspaces
+
+        project = _make_project(path="/tmp/aw-proj")
+        ws = ProjectRt(project_model=project).get_assistant_workspace()
+        self.assertEqual(ws.pk, Workspaces.for_project(project).pk)
+
+
+class PluralAssistantWorkspaceTest(TestCase):
+    """Plural get_assistant_workspace mirrors the session bindings."""
+
+    def test_global_system_rows(self):
+        from runtime.agents.agents import Agents
+        from runtime.cron.crons import Cronjobs
+        from runtime.project.projects import Projects
+        from runtime.skill.skills import Skills
+        from runtime.workitems.workitems import Workitems
+        from runtime.workspace.workspaces import Workspaces
+
+        self.assertEqual(Agents().get_assistant_workspace().pk, Agents().get_assistant_workspace().pk)
+        self.assertTrue(Skills().get_assistant_workspace().path.endswith("skills"))
+        self.assertTrue(Cronjobs().get_assistant_workspace().path.endswith("cronjobs"))
+        self.assertTrue(Workspaces().get_assistant_workspace() is not None)
+        self.assertEqual(
+            Projects().get_assistant_workspace().name, "AgentOne system"
+        )
+        self.assertEqual(
+            Workitems().get_assistant_workspace().name, "AgentOne system"
+        )
+
+    def test_project_scope_rows(self):
+        from runtime.agents.agents import Agents
+        from runtime.cron.crons import Cronjobs
+        from runtime.skill.skills import Skills
+        from runtime.workitems.workitems import Workitems
+        from runtime.workspace.workspaces import Workspaces
+
+        project = _make_project(path="/tmp/aw-plural")
+        expected = Workspaces.for_project(project).pk
+        self.assertEqual(Agents(parent_project=project).get_assistant_workspace().pk, expected)
+        self.assertEqual(Skills(parent_project=project).get_assistant_workspace().pk, expected)
+        self.assertEqual(Cronjobs(parent_project=project).get_assistant_workspace().pk, expected)
+        self.assertEqual(Workitems(parent_project=project).get_assistant_workspace().pk, expected)
+
+
 class SkillsScopeTest(TestCase):
     """Union scoping for projects, children for agent/skill parents."""
 

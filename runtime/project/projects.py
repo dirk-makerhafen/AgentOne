@@ -62,18 +62,28 @@ class Projects:
         """Return the collection assistant managing projects."""
         return self.ASSISTANT_NAMES[1]
 
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding the projects-assistant sessions.
+
+        Always the global system row (projects are global entities).
+        Shared by ``get_assistant_session`` and UI panels so both bind
+        the same row.
+        """
+        from runtime.workspace.workspaces import Workspaces
+
+        return Workspaces.ensure_named(
+            "AgentOne system",
+            self.get_source_dir(),
+            "Master workspace: whole framework home",
+        )
+
     def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
         """Return the singleton projects-assistant session (global scope)."""
         from runtime.session.sessions import Sessions
-        from runtime.workspace.workspaces import Workspaces
 
         return Sessions().assistant_session(
             name or self.assistant_name,
             project=None,
-            workspace=Workspaces.ensure_named(
-                "AgentOne system",
-                self.get_source_dir(),
-                "Master workspace: whole framework home",
-            ),
+            workspace=self.get_assistant_workspace(),
             caller=caller,
         )

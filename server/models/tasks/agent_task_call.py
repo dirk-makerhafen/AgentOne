@@ -429,6 +429,255 @@ class AgentTaskCall(BaseModel):
                     subtimeout -= 1
             time.sleep(1)
 
+    def get_direct_subcalls(self) -> models.QuerySet:
+        """Return the task calls directly launched by this call's runs.
+
+        A tool/task running inside :meth:`AgentTaskRun.apply` creates new
+        calls via ``.delay()`` while ``ContextTracker`` points at its run,
+        so those children carry ``parent_taskrun__agent_task_call_id`` equal
+        to this call's pk — including cross-session children (e.g.
+        ``delegate_task``), which share the parent run but live in another
+        session.
+        """
+        return AgentTaskCall.objects.filter(
+            parent_taskrun__agent_task_call_id=self.pk
+        ).select_related("task_definition").order_by("pk")
+
+    def get_subcall_tree(
+        self, max_depth: int = 6, max_nodes: int = 200, active_only: bool = False
+    ) -> list[dict[str, Any]]:
+        """Return this call's descendant sub-calls as a flat depth-tagged list.
+
+        Each entry is ``{"call": AgentTaskCall, "depth": int}`` in BFS
+        order (direct children first), capped at *max_depth* levels below
+        this call and *max_nodes* total entries. Never raises — returns ``[]``
+        when the call is unsaved or the DB is unreachable (templates).
+
+        With *active_only* finished (``ENDED``) branches are pruned at the
+        DB level, so a long-finished tool costs a single cheap query instead
+        of a full subtree walk — this is what the chat renders by default.
+        """
+        if not getattr(self, "pk", None):
+            return []
+        try:
+            max_depth = max(0, int(max_depth))
+            max_nodes = max(0, int(max_nodes))
+        except (TypeError, ValueError):
+            return []
+        if max_nodes == 0:
+            return []
+        tree: list[dict[str, Any]] = []
+        visited: set[int] = {self.pk}
+        queue: list[tuple[int, int]] = [(self.pk, 0)]
+        while queue and len(tree) < max_nodes:
+            parent_pk, parent_depth = queue.pop(0)
+            if parent_depth >= max_depth:
+                continue
+            try:
+                qs = AgentTaskCall.objects.filter(
+                    parent_taskrun__agent_task_call_id=parent_pk
+                )
+                if active_only:
+                    qs = qs.exclude(status=TaskCallStatus.ENDED)
+                children = list(
+                    qs.select_related("task_definition").order_by("pk")[
+                        : max_nodes - len(tree)
+                    ]
+                )
+            except Exception:
+                return tree
+            for child in children:
+                if child.pk in visited:
+                    continue
+                visited.add(child.pk)
+                entry = {"call": child, "depth": parent_depth + 1}
+                tree.append(entry)
+                if len(tree) >= max_nodes:
+                    break
+                queue.append((child.pk, parent_depth + 1))
+        return tree
+
+    def count_subcalls(
+        self, max_depth: int = 6, max_nodes: int = 200
+    ) -> dict[str, Any]:
+        """Return cheap descendant stats without loading full objects.
+
+        Same BFS as :meth:`get_subcall_tree` but fetching only ``(pk,
+        status)`` pairs, so no heavy payload columns (``carguments_json``,
+        ``raw_data``) are loaded.         Returns ``{"active": int, "finished":
+        int, "executing": [(pk, depth), ...], "truncated": bool}`` where
+        ``active`` means not ``ENDED`` and ``executing`` lists the
+        currently-executing (``ACTIVE`` status) descendants — capped at 10
+        — so the UI can pin the actually-running calls to the top
+        regardless of display caps. ``truncated`` is True when the walk hit
+        its caps (counts understate the real tree). Never raises — returns
+        zeros when unreachable.
+        """
+        counts: dict[str, Any] = {"active": 0, "finished": 0, "executing": []}
+        if not getattr(self, "pk", None):
+            return counts
+        try:
+            max_depth = max(0, int(max_depth))
+            max_nodes = max(0, int(max_nodes))
+        except (TypeError, ValueError):
+            return counts
+        if max_nodes == 0:
+            return counts
+        try:
+            ended = TaskCallStatus.ENDED
+        except Exception:
+            ended = "ENDED"
+        try:
+            active_status = TaskCallStatus.ACTIVE
+        except Exception:
+            active_status = "ACTIVE"
+        visited: set[int] = {self.pk}
+        queue: list[tuple[int, int]] = [(self.pk, 0)]
+        seen_total = 0
+        while queue and seen_total < max_nodes:
+            parent_pk, parent_depth = queue.pop(0)
+            if parent_depth >= max_depth:
+                continue
+            try:
+                rows = list(
+                    AgentTaskCall.objects.filter(
+                        parent_taskrun__agent_task_call_id=parent_pk
+                    )
+                    .order_by("pk")
+                    .values_list("pk", "status")[: max_nodes - seen_total]
+                )
+            except Exception:
+                return counts
+            for child_pk, status in rows:
+                if child_pk in visited:
+                    continue
+                visited.add(child_pk)
+                seen_total += 1
+                if status == ended:
+                    counts["finished"] += 1
+                else:
+                    counts["active"] += 1
+                    if status == active_status and len(counts["executing"]) < 10:
+                        counts["executing"].append((child_pk, parent_depth + 1))
+                if seen_total >= max_nodes:
+                    break
+                queue.append((child_pk, parent_depth + 1))
+        if queue and seen_total >= max_nodes:
+            counts["truncated"] = True
+        return counts
+
+    def get_executing_subcalls(
+        self,
+        max_active_scan: int = 100,
+        max_depth: int = 20,
+        max_pins: int = 10,
+    ) -> list[dict[str, Any]]:
+        """Find currently-executing (``ACTIVE``) descendants by reverse lookup.
+
+        The forward BFS (:meth:`get_subcall_tree` / :meth:`count_subcalls`)
+        is oldest-first and capped, so on huge trees (thousands of finished
+        calls) a lone executing call beyond the cap is never reached. The
+        globally ``ACTIVE`` set, however, is tiny (bounded by worker
+        concurrency), so walk *up* from each ACTIVE call via
+        ``parent_taskrun`` and keep the ones descending from this call —
+        crossing sessions (delegated subtasks) transparently.
+
+        Returns ``[{"call": AgentTaskCall, "depth": int}]``. Never raises.
+        """
+        result: list[dict[str, Any]] = []
+        if not getattr(self, "pk", None):
+            return result
+        try:
+            max_active_scan = max(0, int(max_active_scan))
+            max_depth = max(0, int(max_depth))
+            max_pins = max(0, int(max_pins))
+        except (TypeError, ValueError):
+            return result
+        if max_active_scan == 0 or max_pins == 0:
+            return result
+        try:
+            active_pks = list(
+                AgentTaskCall.objects.filter(status=TaskCallStatus.ACTIVE)
+                .order_by("pk")
+                .values_list("pk", flat=True)[:max_active_scan]
+            )
+        except Exception:
+            return result
+        for apk in active_pks:
+            if apk == self.pk or len(result) >= max_pins:
+                continue
+            try:
+                call = AgentTaskCall.objects.select_related(
+                    "task_definition", "parent_taskrun"
+                ).get(pk=apk)
+            except Exception:
+                continue
+            depth = 0
+            seen: set[int] = set()
+            current = call.parent_taskrun
+            while current is not None and depth < max_depth:
+                try:
+                    parent_pk = current.agent_task_call_id
+                except Exception:
+                    break
+                if not parent_pk or parent_pk in seen:
+                    break
+                seen.add(parent_pk)
+                depth += 1
+                if parent_pk == self.pk:
+                    result.append({"call": call, "depth": depth})
+                    break
+                try:
+                    parent_call = AgentTaskCall.objects.select_related(
+                        "parent_taskrun"
+                    ).get(pk=parent_pk)
+                except Exception:
+                    break
+                current = parent_call.parent_taskrun
+        return result
+
+    def get_ancestor_call_pks(self, max_depth: int = 20) -> list[int]:
+        """Return ancestor call pks via the ``parent_taskrun`` chain.
+
+        Walks ``parent_taskrun -> agent_task_call`` upwards (crossing
+        sessions for delegated subtasks). Never raises — returns whatever
+        prefix was resolvable.
+        """
+        ancestors: list[int] = []
+        try:
+            from server.models.tasks.agent_task_run import AgentTaskRun as _Run
+
+            current = self.parent_taskrun
+            if current is not None and getattr(current, "agent_task_call_id", None) is None:
+                try:
+                    current = _Run.objects.select_related(
+                        "agent_task_call"
+                    ).get(pk=current.pk)
+                except Exception:
+                    return ancestors
+        except Exception:
+            return ancestors
+        seen: set[int] = set()
+        depth = 0
+        while current is not None and depth < max_depth:
+            try:
+                parent_pk = getattr(current, "agent_task_call_id", None)
+            except Exception:
+                break
+            if not parent_pk or parent_pk in seen:
+                break
+            seen.add(parent_pk)
+            ancestors.append(parent_pk)
+            depth += 1
+            try:
+                parent_call = AgentTaskCall.objects.select_related(
+                    "parent_taskrun"
+                ).get(pk=parent_pk)
+            except Exception:
+                break
+            current = parent_call.parent_taskrun
+        return ancestors
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Prevent updates to existing AgentTaskCall instances."""
         if self.pk:

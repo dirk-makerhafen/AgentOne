@@ -446,6 +446,49 @@ class SessionFifoTest(RecoveryFixture):
         self.assertFalse(CallScheduler._session_queue_blocked(tool_call))
         live.refresh_from_db()
 
+    def test_blocked_while_tool_call_live(self):
+        # A previous turn's still-running tool call blocks a parked message:
+        # its process_turn may already have ended, leaving the tool child
+        # live (e.g. update_timeline WAITING_SUBTASKS_OR_HOOKS).  Admitting
+        # a new turn on top would fire a second LLM query mid-tool-call.
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        self._call(
+            TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
+            status=TaskCallStatus.WAITING,
+        )
+        parked = self._ingest_call(
+            TaskCallStatusDetail.WAITING_QUEUE,
+            status=TaskCallStatus.WAITING,
+        )
+        self.assertTrue(CallScheduler._session_queue_blocked(parked))
+
+    def test_unblocked_when_only_ended_calls(self):
+        from runtime.tasks.call_scheduler import CallScheduler
+
+        self._call(
+            TaskCallStatusDetail.ENDED_SUCCESS, status=TaskCallStatus.ENDED
+        )
+        parked = self._ingest_call(
+            TaskCallStatusDetail.WAITING_QUEUE,
+            status=TaskCallStatus.WAITING,
+        )
+        self.assertFalse(CallScheduler._session_queue_blocked(parked))
+
+    def test_has_active_call_sees_tool_work(self):
+        # The queue-strategy admission gate must see live tool calls, not
+        # just ingest/turn calls — otherwise a new message dispatches a
+        # second query while the previous turn's tool call still runs.
+        from runtime.session.session import Session
+
+        runtime = Session(session_model=self.session)
+        self.assertFalse(runtime._has_active_call())
+        self._call(
+            TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS,
+            status=TaskCallStatus.WAITING,
+        )
+        self.assertTrue(runtime._has_active_call())
+
     def test_tick_leaves_parked_ingest_alone_while_turn_live(self):
         from server.tasks.tick_scheduler import _release_queued_calls
 

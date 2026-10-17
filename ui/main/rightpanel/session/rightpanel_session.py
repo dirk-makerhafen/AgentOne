@@ -25,6 +25,13 @@ class RightPanelSession(ModelView):
     DOM_ELEMENT = "aside"
     DOM_ELEMENT_CLASS = "rightpanel-inner"
     TEMPLATE_STR = '''
+        {% if pyview.has_agent_update %}
+        <div style="margin:8px;padding:8px;border:1px solid var(--warning, #b7791f);border-radius:6px;background:var(--warning-bg, rgba(183,121,31,0.12));font-size:12px">
+            <div style="font-weight:600;margin-bottom:4px">New agent version available (v{{ pyview.pinned_agent_version_number }} → v{{ pyview.latest_agent_version_number }})</div>
+            <div style="color:var(--muted);margin-bottom:6px">This chat stays pinned to v{{ pyview.pinned_agent_version_number }} to keep the prompt cache hot. New chats and compactions use the latest tools/prompts.</div>
+            <button type="button" onclick="pyview.upgradeAgentVersion()" style="font-size:12px;padding:4px 10px;cursor:pointer">Use latest now</button>
+        </div>
+        {% endif %}
         <div class="sidebar-nav">
             <button class="nav-tab{% if pyview.current_tab_name == "workspace" %} active{% endif %}" data-panel="workspace" data-label="Workspace" onclick="pyview.switchTab('workspace')" title="Workspace">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>            </button>
@@ -66,6 +73,55 @@ class RightPanelSession(ModelView):
         self.current_tab_name = None
         self.current_tab = None
         self.session = Session(session_model=subject)
+
+    @property
+    def has_agent_update(self) -> bool:
+        try:
+            self.subject.refresh_from_db(fields=["latest_session_version"])
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        try:
+            return Session(session_model=self.subject).has_agent_update()
+        except Exception:  # pylint: disable=broad-exception-caught
+            return False
+
+    @property
+    def pinned_agent_version_number(self) -> str:
+        try:
+            pinned = Session(session_model=self.subject).pinned_agent_version
+            return str(pinned.version_number) if pinned is not None else "?"
+        except Exception:  # pylint: disable=broad-exception-caught
+            return "?"
+
+    @property
+    def latest_agent_version_number(self) -> str:
+        try:
+            latest = Session(session_model=self.subject).latest_agent_version
+            return str(latest.version_number) if latest is not None else "?"
+        except Exception:  # pylint: disable=broad-exception-caught
+            return "?"
+
+    def upgradeAgentVersion(self) -> None:
+        """Pin this session to the latest agent/tools version now.
+
+        Takes effect on the next turn (fresh KV-cache prefix); the current
+        history is preserved.
+        """
+        try:
+            sess = Session(session_model=self.subject)
+            if sess.upgrade_to_latest_agent():
+                self.subject.refresh_from_db(fields=["latest_session_version"])
+                self.session = Session(session_model=self.subject)
+                # Rebuild the active tab so capability lists reflect the new
+                # tool set immediately.
+                if self.current_tab_name:
+                    name = self.current_tab_name
+                    self.current_tab_name = None
+                    self.switchTab(name)
+                    return
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        self.update()
 
 
     def switchTab(self, name: str) -> None:

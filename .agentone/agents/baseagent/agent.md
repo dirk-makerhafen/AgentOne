@@ -7,7 +7,7 @@ extends: []
 inheritSystemPrompt: false
 maxRetries: 0
 maxTurns: 3
-maxUnattendedTurns: 10
+maxUnattendedTurns: 20
 maxHistoryMessages: 200
 autoCompactMaxTokens: 100000
 autoCompactKeepPercent: 10

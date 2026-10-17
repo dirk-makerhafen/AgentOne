@@ -52,12 +52,123 @@ class Session:
 
     @property
     def agent(self) -> Agent:
-        """Return the runtime Agent associated with this session."""
-        return self.get_version_model().agent.get_runtime()
+        """Return the runtime Agent associated with this session.
+
+        Respects ``pinned_agent_version`` so a ``reload_all`` (new
+        AgentVersion + tool versions) does not change the system prompt or
+        tool schemas mid-conversation — which would invalidate the provider
+        KV/prompt cache prefix.  New sessions and post-compaction upgrades
+        pin to the latest version explicitly.
+        """
+        sv = self.get_version_model()
+        try:
+            pinned = sv.pinned_agent_version
+        except Exception:  # pylint: disable=broad-exception-caught
+            pinned = None
+        if pinned is not None:
+            try:
+                # Guard against a stale pin from before a set_agent switch
+                # (pinned belongs to a different AgentModel than the session).
+                if getattr(pinned, "agent_id", None) == getattr(sv, "agent_id", None):
+                    return pinned.get_runtime()
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+        return sv.agent.get_runtime()
 
     def set_agent(self, agent: Any) -> None:
-        """Set the agent for this session (creates a new version)."""
+        """Set the agent for this session (creates a new version).
+
+        Also re-pins to the new agent's latest version so the session does
+        not keep serving the previous agent's tools/prompts via a stale
+        ``pinned_agent_version``.
+        """
         self._set_session_property("agent", agent)
+        try:
+            sv = self.get_version_model()
+            latest = sv.agent.latest_agent_version
+            pinned = sv.pinned_agent_version
+            if latest is not None and (pinned is None or pinned.pk != latest.pk or pinned.agent_id != sv.agent_id):
+                sv.pk = None
+                sv.created_at = None
+                sv.version_number += 1
+                sv.pinned_agent_version = latest
+                sv.save()
+                self.model.latest_session_version = sv
+                self.model.save()
+                if self._pinned_session_version is not None:
+                    self._pinned_session_version = sv
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    @property
+    def pinned_agent_version(self) -> Any | None:
+        """The AgentVersion this session is pinned to, or *None* (follow latest)."""
+        try:
+            return self.get_version_model().pinned_agent_version
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
+    @property
+    def latest_agent_version(self) -> Any | None:
+        """The current latest AgentVersion for this session's agent, or *None*."""
+        try:
+            return self.get_version_model().agent.latest_agent_version
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+
+    def has_agent_update(self) -> bool:
+        """True when a newer AgentVersion exists than the pinned one.
+
+        ``pinned=None`` means follow-latest (legacy sessions) — no banner.
+        """
+        try:
+            sv = self.get_version_model()
+            pinned = sv.pinned_agent_version
+            if pinned is None:
+                return False
+            latest = sv.agent.latest_agent_version
+            if latest is None:
+                return False
+            return pinned.pk != latest.pk
+        except Exception:  # pylint: disable=broad-exception-caught
+            return False
+
+    def upgrade_to_latest_agent(self) -> bool:
+        """Re-pin this session to the latest AgentVersion (copy-on-write).
+
+        Creates a new SessionVersion preserving everything except
+        ``pinned_agent_version``, which is set to the agent's current
+        latest.  Safe to call after a compaction boundary (new KV-cache
+        segment) or from the UI upgrade button.  Returns True when a new
+        version was created, False when already current.
+        """
+        sv = self.get_version_model()
+        try:
+            latest = sv.agent.latest_agent_version
+        except Exception:  # pylint: disable=broad-exception-caught
+            return False
+        if latest is None:
+            return False
+        try:
+            pinned = sv.pinned_agent_version
+        except Exception:  # pylint: disable=broad-exception-caught
+            pinned = None
+        if pinned is not None and pinned.pk == latest.pk:
+            return False
+        # Copy-on-write: SessionVersion rows are immutable (save() forbids
+        # updates), so clone via pk=None like _set_session_property.
+        sv.pk = None
+        sv.created_at = None
+        sv.version_number += 1
+        sv.pinned_agent_version = latest
+        sv.save()
+        self.model.latest_session_version = sv
+        self.model.save()
+        # Keep this wrapper's pinned pointer coherent when it wraps a
+        # specific version object.
+        if self._pinned_session_version is not None:
+            self._pinned_session_version = sv
+        return True
 
     # ------------------------------------------------------------------
     # Session-level properties
@@ -1064,19 +1175,25 @@ class Session:
 
         self.set_is_active(True)
 
-        bound_task, call_kwargs, _ = self._resolve_inbound_task(messages, execute_turn)
+        bound_task, call_kwargs, is_command = self._resolve_inbound_task(messages, execute_turn)
 
         if not force:
             strategy = self.scheduler_strategy
-            if strategy == "queue":
+            # Pure persists (compaction INFO notices, hook anchors) start no
+            # turn and fire no query, so there is nothing to serialize — they
+            # must land immediately even while tool work is live.  Without
+            # this carve-out the widened liveness check below would park
+            # them and they would surface late and out of chain order.
+            persist_only = (execute_turn is False) and not is_command
+            if not persist_only and strategy == "queue":
                 if self._has_active_call():
                     return self._park_call(bound_task, call_kwargs)
                 return bound_task.delay(**call_kwargs)
-            if strategy == "interrupt":
+            if not persist_only and strategy == "interrupt":
                 if self._has_active_call():
                     self.stop_generation()
                 return bound_task.delay(**call_kwargs)
-            if strategy == "merge":
+            if not persist_only and strategy == "merge":
                 if self._has_active_call():
                     return self.steer_message(message, execute_turn=execute_turn)
 
@@ -1247,15 +1364,11 @@ class Session:
         from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
 
         new_call = process_turn.delay(message=message)
+        # Any other live session work (turn, tool call, subagent wait) —
+        # not just sibling ingest calls — means a turn is really running.
         sibling_live = (
             _ATC.objects.filter(
                 session=self.model,
-                task_definition__name__in=[
-                    "ingest_user_message",
-                    "ingest_slash_command",
-                    "process_turn",
-                    "compact_turn",
-                ],
             )
             .exclude(status=TaskCallStatus.ENDED)
             .exclude(pk=new_call.pk)
@@ -1286,14 +1399,16 @@ class Session:
         return self._has_active_call()
 
     def stop_generation(self) -> int:
-        """Cancel the currently running/pending turn, if any ("Stop generation").
+        """Cancel the currently running/pending work, if any ("Stop generation").
 
-        Cancels the whole root trees (ingest + ``process_turn`` children, so
-        in-flight LLM streaming cannot continue the turn) and fails open
-        queries so query cards refresh.  Parked queue entries are pending
-        turn calls too, so they are cancelled as well (full stop — use the
-        queue card to drop individual messages).  Safe no-op when idle.
-        Returns the number of active calls stopped.
+        Cancels all non-ended root trees in the session — ingest +
+        ``process_turn`` chains (so in-flight LLM streaming cannot continue
+        the turn) as well as live tool/subagent work from previous turns (a
+        still-running tool call would otherwise keep working under the new
+        turn).  Fails open queries so query cards refresh.  Parked queue
+        entries are pending turn calls too, so they are cancelled as well
+        (full stop — use the queue card to drop individual messages).  Safe
+        no-op when idle.  Returns the number of active calls stopped.
         """
         from server.models.enums.task_enums import TaskCallStatus
         from server.models.tasks.agent_task_call import AgentTaskCall
@@ -1302,12 +1417,6 @@ class Session:
         active = list(
             AgentTaskCall.objects.filter(
                 session=self.model,
-                task_definition__name__in=[
-                    "ingest_user_message",
-                    "ingest_slash_command",
-                    "process_turn",
-                    "compact_turn",
-                ],
             ).exclude(status=TaskCallStatus.ENDED).values_list("pk", "session_root_task_id")
         )
         roots = {root_id or pk for pk, root_id in active}
@@ -1395,18 +1504,20 @@ class Session:
                 print(f"[hooks] error firing session_end hooks: {e}")
 
     def _has_active_call(self) -> bool:
-        """Return True if there is a non-ended ingest or process_turn call
-        for this session — covers both user-initiated and agent-continuation flows."""
+        """Return True if there is any non-ended call for this session.
+
+        Queue/merge admission ("one live turn per session") must account for
+        tool and subagent work too, not just ingest/turn calls: a previous
+        turn's tool calls (e.g. a still-running ``update_timeline``) keep the
+        session busy after their ``process_turn`` already ended, and a new
+        message dispatched on top would fire a second LLM query mid-tool-call.
+        Parked ``WAITING_QUEUE`` entries count as pending work as well, so a
+        new message cannot jump ahead of an older parked one (FIFO).
+        """
         from server.models.tasks.agent_task_call import AgentTaskCall
         from server.models.enums.task_enums import TaskCallStatus
         return AgentTaskCall.objects.filter(
             session=self.model,
-            task_definition__name__in=[
-                "ingest_user_message",
-                "ingest_slash_command",
-                "process_turn",
-                "compact_turn",
-            ],
         ).exclude(status=TaskCallStatus.ENDED).exists()
 
     def get_messages(self) -> Any:

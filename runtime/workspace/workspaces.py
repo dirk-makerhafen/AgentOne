@@ -133,23 +133,30 @@ class Workspaces:
 
         return agentone_home()
 
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding this scope's assistant sessions.
+
+        Parent scope's own row when nested, else the project workspace,
+        else the global system row. Shared by ``get_assistant_session``
+        and UI panels so both bind the same row.
+        """
+        source = self.get_source_dir()
+        project = self.project
+        if self.parent_workspace is not None:
+            return self.parent_workspace
+        if project is not None:
+            return self.for_project(project)
+        return self.ensure_named(
+            "AgentOne system", source, "Master workspace: whole framework home"
+        )
+
     def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
         """Return the singleton workspaces-assistant session for this scope."""
         from runtime.session.sessions import Sessions
 
-        source = self.get_source_dir()
-        project = self.project
-        if self.parent_workspace is not None:
-            workspace = self.parent_workspace
-        elif project is not None:
-            workspace = self.for_project(project)
-        else:
-            workspace = self.ensure_named(
-                "AgentOne system", source, "Master workspace: whole framework home"
-            )
         return Sessions().assistant_session(
             name or self.assistant_name,
-            project=project,
-            workspace=workspace,
+            project=self.project,
+            workspace=self.get_assistant_workspace(),
             caller=caller,
         )

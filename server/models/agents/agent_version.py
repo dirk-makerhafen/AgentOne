@@ -179,10 +179,15 @@ class AgentVersionModel(BaseModel):
                 session=session,
                 workspace=workspace,
                 display_name=display_name,
+                pinned_agent_version=self,
                 defaults=dict(
                     parent_session = parent_session_version.session if parent_session_version else None,
                     parent_session_version=parent_session_version,
                     session_settings=child_settings,
+                    # Pin new sessions to the creating AgentVersion so later
+                    # reload_all runs don't shift system prompt / tool schemas
+                    # mid-conversation (KV-cache prefix stability).  Upgrades
+                    # happen explicitly after compaction or via the UI banner.
                 ),
             )
         if  aiv_created and session_version:

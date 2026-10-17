@@ -457,7 +457,9 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
         ):
             compact_task = fork.get_task("compact_turn")
             if compact_task is not None:
-                compact_call = compact_task.delay(message=persist_call)
+                compact_call = compact_task.delay(
+                    message=persist_call, trigger="auto", idle_trigger=False
+                )
 
     hook_task = fork.get_task(hook["task"])
     if hook_task is None:

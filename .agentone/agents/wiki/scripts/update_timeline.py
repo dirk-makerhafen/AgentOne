@@ -559,7 +559,7 @@ def _check_grounding_list(values: list, raw_lower: str, field: str, strict: bool
                 continue
             tokens = [t for t in re.split(r'[^A-Za-z0-9äöüÄÖÜß]+', needle) if len(t) >= 3]
             if tokens and any(_contains(raw_lower, t) for t in tokens):
-                hints.append(f"`{field}` entry '{needle}' not found verbatim in raw (only partial token match) — verify spelling")
+                hints.append(f"`{field}` entry '{needle}' not found in raw (only partial token match) — verify spelling")
             else:
                 hints.append(f"`{field}` entry '{needle}' not found in the raw file via string matching — double check")
     return hints

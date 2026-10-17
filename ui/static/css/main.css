@@ -4329,7 +4329,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .insights-nav-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
 
 /* ── Workspaces: sidebar tree ── */
-.ws-tree{flex:1;overflow-y:auto;padding:8px;}
+.ws-tree{flex:1;overflow-y:auto;padding:8px;height: calc(100% - 50px);}
 .ws-tree-folder{display:inline-flex;flex-shrink:0;color:var(--gold);line-height:1;}
 .ws-tree-folder--toggle{cursor:pointer;border-radius:5px;padding:1px;}
 .ws-tree-folder--toggle:hover{background:var(--hover-bg);color:var(--accent-text);}
