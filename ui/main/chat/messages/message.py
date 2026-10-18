@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from server.models.enums.message_enums import MessageRole
+from server.models.enums.message_enums import MessagePartType, MessageRole
 from server.models.message import Message
 from server.models.queries.query import Query
 from ui.lib.model_view import ModelView
@@ -20,6 +20,7 @@ class MessageView(ModelView):
 
     def __init__(self, subject: Message|Query|Response, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         super().__init__(subject, parent, **kwargs)
+        self.is_compaction = False
         if isinstance(subject, Message):
             if subject.role == MessageRole.ASSISTANT:
                 self.view = AssistantMessageView(subject, self)
@@ -27,6 +28,11 @@ class MessageView(ModelView):
                 self.view = InfoMessageView(subject, self)
             else:
                 self.view = UserMessageView(subject=subject, parent=self)
+                # A compaction boundary renders as a USER message but carries
+                # COMPACTION parts; flag it so the CSS can tint it differently.
+                self.is_compaction = subject.parts.filter(
+                    type=MessagePartType.COMPACTION
+                ).exists()
             self.role = self.subject.role
         elif isinstance(subject, Query):
             self.view = QueryView(subject=subject, parent=self)
@@ -39,14 +45,15 @@ class MessageView(ModelView):
 
     @property
     def DOM_ELEMENT_EXTRAS(self):
+        compaction_attr = " data-compaction='1'" if getattr(self, "is_compaction", False) else ""
         try:
             if getattr(self.view, "turn_collapsed", False) and isinstance(
                 self.view, (QueryView, AssistantMessageView)
             ):
-                return f"style='display:none;' data-pk='{self.subject.pk}' data-role='{self.role}'  "
+                return f"style='display:none;' data-pk='{self.subject.pk}' data-role='{self.role}'{compaction_attr}  "
         except Exception:
             pass
-        return  f"style='display:flex;' data-pk='{self.subject.pk}' data-role='{self.role}'  "
+        return  f"style='display:flex;' data-pk='{self.subject.pk}' data-role='{self.role}'{compaction_attr}  "
 
     def fork(self, message_id):
         """Fork the conversation starting at *message_id*.
