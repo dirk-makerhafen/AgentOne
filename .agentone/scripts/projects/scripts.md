@@ -11,11 +11,6 @@ tools:
     function: create_project
     bound: False
 
-  - name: call_projectmanager
-    file: call_projectmanager.py
-    function: call_projectmanager
-    bound: True
-
   - name: reload_project
     file: reload_project.py
     function: reload_project

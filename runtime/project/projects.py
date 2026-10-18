@@ -5,10 +5,11 @@ from typing import Any
 
 from django.db.models import QuerySet
 
+from runtime.assistant_scope import AssistantScopeMixin
 from server.models.project import Project
 
 
-class Projects:
+class Projects(AssistantScopeMixin):
     """Query interface for Project instances.
 
     Projects are top-level entities: any parent kwarg raises ``TypeError``
@@ -32,11 +33,6 @@ class Projects:
         """Return all projects, ordered by name."""
         return Project.objects.all().order_by("name")
 
-    @property
-    def project(self) -> None:
-        """Return the scope project — always *None* (projects are global)."""
-        return None
-
     def root(self) -> QuerySet[Project]:
         """Return all projects (unscoped; UI + legacy callers)."""
         return Project.objects.all()
@@ -57,11 +53,6 @@ class Projects:
     # Assistant wiring
     # ------------------------------------------------------------------
 
-    @property
-    def assistant_name(self) -> str:
-        """Return the collection assistant managing projects."""
-        return self.ASSISTANT_NAMES[1]
-
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding the projects-assistant sessions.
 
@@ -75,15 +66,4 @@ class Projects:
             "AgentOne system",
             self.get_source_dir(),
             "Master workspace: whole framework home",
-        )
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton projects-assistant session (global scope)."""
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.assistant_name,
-            project=None,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
         )

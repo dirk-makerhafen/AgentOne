@@ -84,7 +84,7 @@ class SidebarPanelAgents(ModelView):
             </button>
             </div>
         </div>
-        <div style="flex:1;overflow-y:auto;padding:8px" id="profilesPanel">
+        <div style="flex:1;overflow-y:auto;padding:8px;height:calc(100% - 50px)" id="profilesPanel">
             {{ pyview.agent_list.render() }}
         </div>
     '''    

@@ -3,19 +3,27 @@ from server.models.project import Project
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
+    path = serializers.CharField(source="main_workspace.path", read_only=True, default="")
+
     class Meta:
         model = Project
         fields = ['id', 'name', 'description', 'path', 'created_at', 'updated_at']
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
+    path = serializers.CharField(source="main_workspace.path", read_only=True, default="")
+    main_workspace_path = serializers.CharField(
+        source="main_workspace.path", read_only=True, default=""
+    )
+    manifest_dir = serializers.CharField(read_only=True)
     agent_count = serializers.SerializerMethodField()
     session_count = serializers.SerializerMethodField()
     cron_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'path',
+        fields = ['id', 'name', 'description', 'path', 'main_workspace_path',
+                  'manifest_dir',
                   'agent_count', 'session_count', 'cron_count',
                   'created_at', 'updated_at']
 
@@ -32,4 +40,4 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 class ProjectWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['name', 'description', 'path']
+        fields = ['name', 'description']

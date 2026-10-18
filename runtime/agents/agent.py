@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from django.db.models import QuerySet
 
+from runtime.assistant_scope import AssistantScopeMixin
 from server.models.content import GenericContent
 from server.models.enums.task_enums import TaskType
 from server.models.skills.skill_version import SkillModelVersion
@@ -49,7 +50,7 @@ def is_name_disallowed(name: str, group_name: str, patterns: list[str]) -> bool:
     return False
 
 
-class Agent:
+class Agent(AssistantScopeMixin):
     """
     Runtime wrapper around an AgentModel.
 
@@ -561,6 +562,10 @@ class Agent:
 
         return Agents(parent_agent=self.model)
 
+    def assistant_scope_label(self) -> str:
+        """Return this agent's name for the assistant session title."""
+        return self.name or "global"
+
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this agent's assistant sessions.
 
@@ -574,15 +579,4 @@ class Agent:
             f"{source.as_posix()} assistant scope",
             source,
             f"source scope for agent {self.name}",
-        )
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton ``agent_assistant`` session in this scope."""
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.ASSISTANT,
-            project=self.project,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
         )

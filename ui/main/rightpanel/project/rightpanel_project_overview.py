@@ -24,6 +24,14 @@ class RightPanelProjectOverview(ModelView):
                     <div class="detail-row-value"><code style="font-size:11px">{{ pyview.project.path }}</code></div>
                 </div>
                 <div class="detail-row">
+                    <div class="detail-row-label">Primary workspace</div>
+                    <div class="detail-row-value">{% if pyview.main_workspace_path %}<code style="font-size:11px">{{ pyview.main_workspace_path }}</code>{% else %}<span style="color:var(--muted)">not set</span>{% endif %}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-row-label">Manifests</div>
+                    <div class="detail-row-value"><code style="font-size:11px">{{ pyview.manifest_dir }}</code></div>
+                </div>
+                <div class="detail-row">
                     <div class="detail-row-label">Description</div>
                     <div class="detail-row-value" style="white-space:pre-line;max-height:80px;overflow:auto;font-size:12px">{{ pyview.project.description }}</div>
                 </div>
@@ -52,6 +60,22 @@ class RightPanelProjectOverview(ModelView):
 
     def __init__(self, subject: Project, parent: RightPanelProject, **kwargs):
         super().__init__(subject, parent, **kwargs)
+
+    @property
+    def main_workspace_path(self) -> str:
+        ws = getattr(self.subject, "main_workspace", None) if self.subject else None
+        return getattr(ws, "path", "") or ""
+
+    @property
+    def manifest_dir(self) -> str:
+        if not self.subject:
+            return ""
+        try:
+            from runtime.paths import project_manifest_dir
+
+            return project_manifest_dir(self.subject).as_posix()
+        except Exception:
+            return getattr(self.subject, "manifest_dir", "") or ""
 
     @property
     def agent_count(self) -> int:

@@ -5,10 +5,11 @@ from typing import Any
 
 from django.db.models import QuerySet, Q
 
+from runtime.assistant_scope import AssistantScopeMixin
 from server.models.skills.skill import SkillModel
 
 
-class Skills:
+class Skills(AssistantScopeMixin):
     """Query interface for SkillModel instances.
 
     Scoping is explicit: ``parent_project`` selects the global skills plus
@@ -33,20 +34,6 @@ class Skills:
         self.parent_project = parent_project
         self.parent_skill = parent_skill
         self.parent_workspace = parent_workspace
-
-    @property
-    def project(self) -> Any | None:
-        """Return the scope project (explicit, workspace/owner-unwrapped)."""
-        if self.parent_project is not None:
-            return self.parent_project
-        for owner in (self.parent_workspace, self.parent_agent, self.parent_skill):
-            try:
-                project = getattr(owner, "parent_project", None)
-                if project is not None:
-                    return project
-            except Exception:  # pylint: disable=broad-exception-caught
-                continue
-        return None
 
     def all(self) -> QuerySet[SkillModel]:
         """Return skills in scope, ordered by name (union for projects)."""
@@ -85,11 +72,6 @@ class Skills:
     # ------------------------------------------------------------------
     # Assistant wiring
     # ------------------------------------------------------------------
-
-    @property
-    def assistant_name(self) -> str:
-        """Return the collection assistant managing this scope."""
-        return self.ASSISTANT_NAMES[1]
 
     def get_source_dir(self) -> Path:
         """Return the source directory anchoring this scope (no I/O).
@@ -140,19 +122,4 @@ class Skills:
             return Workspaces.for_project(project)
         return Workspaces.ensure_named(
             "System skills", source, "User-scope skills manifests"
-        )
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton skills-assistant session for this scope.
-
-        *name* defaults to the collection assistant; pass the singular
-        name to talk about ONE skill (named inside the task text).
-        """
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.assistant_name,
-            project=self.project,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
         )

@@ -14,27 +14,15 @@ Collection operations (list, assign, unassign) belong to
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import Any
 
-from runtime.script_helpers import agent_row, skill_row
+from runtime.script_helpers import agent_row, normalize_dir, skill_row
 from runtime.session.session import Session
 
 #: How many recent load_skill calls to scan for usage attribution. The
 #: scan is newest-first and stops at this cap, so usage counts are
 #: "within recent history", not lifetime totals.
 USAGE_SCAN_CAP = 500
-
-
-def _normalize_dir(value: Any) -> str:
-    """Normalize a directory path for comparison (no I/O)."""
-    try:
-        text = str(value or "").strip()
-        if not text:
-            return ""
-        return Path(text).expanduser().as_posix().rstrip("/") or ""
-    except Exception:
-        return ""
 
 
 def _scoped_skills(_session: Session):
@@ -58,7 +46,7 @@ def _resolve_skill(_session: Session):
         workspace = _session.workspace
     except Exception:
         workspace = None
-    ws_path = _normalize_dir(getattr(workspace, "path", None))
+    ws_path = normalize_dir(getattr(workspace, "path", None))
     if not ws_path:
         return False, {
             "status": "error",
@@ -284,7 +272,7 @@ def list_skills(_session: Session) -> tuple[bool, dict[str, Any]]:
         "skill": skill.name,
         "skills": [skill_row(s) for s in children],
         "count": len(children),
-        "scope": f"{_normalize_dir(skill.manifest_dir)}/skills/",
+        "scope": f"{normalize_dir(skill.manifest_dir)}/skills/",
     }
 
 
@@ -313,7 +301,7 @@ def list_agents(_session: Session) -> tuple[bool, dict[str, Any]]:
         "skill": skill.name,
         "agents": [agent_row(a) for a in agents],
         "count": len(agents),
-        "scope": f"{_normalize_dir(skill.manifest_dir)}/agents/",
+        "scope": f"{normalize_dir(skill.manifest_dir)}/agents/",
     }
 
 
@@ -382,5 +370,5 @@ def skill_details(_session: Session) -> tuple[bool, dict[str, Any]]:
         "agents_count": agents_count,
         "child_skills_count": child_skills_count,
         "used_by_agents": users,
-        "scope": f"{_normalize_dir(skill.manifest_dir)}/",
+        "scope": f"{normalize_dir(skill.manifest_dir)}/",
     }

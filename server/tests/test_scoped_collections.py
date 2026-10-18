@@ -38,7 +38,14 @@ from server.tests.helpers import AgentMdTestMixin, TESTPROJECT
 
 
 def _make_project(name="p", path="/tmp/p"):
-    return Project.objects.create(name=name, path=path)
+    project = Project.objects.create(name=name)
+    if path:
+        ws = WorkspaceModel.objects.create(
+            name=f"{name} project root", path=path, parent_project=project,
+        )
+        Project.objects.filter(pk=project.pk).update(main_workspace=ws)
+        project.refresh_from_db()
+    return project
 
 
 def _make_skill(name, project=None, manifest_dir=""):
@@ -332,7 +339,7 @@ class WorkspacesScopeTest(TestCase):
     """Project workspaces, path-nested sub-workspaces, and helpers."""
 
     def test_project_scope(self):
-        project = _make_project()
+        project = _make_project(path="")
         WorkspaceModel.objects.create(name="w1", path="/tmp/w1", parent_project=project)
         WorkspaceModel.objects.create(name="w2", path="/tmp/w2")
         self.assertEqual(
@@ -360,7 +367,7 @@ class WorkspacesScopeTest(TestCase):
         tmp = Path(tempfile.mkdtemp()).as_posix()
         main_ws = WorkspaceModel.objects.create(name="main", path=tmp)
         project = Project.objects.create(
-            name="p-main", path=f"{tmp}/proj", main_workspace=main_ws
+            name="p-main", main_workspace=main_ws
         )
         self.assertEqual(Workspaces.for_project(project).pk, main_ws.pk)
 
@@ -484,15 +491,15 @@ class AssistantSessionTest(TestCase):
         second = Skills().get_assistant_session(caller=self.rt)
         self.assertIsNotNone(first)
         self.assertEqual(first.model.pk, second.model.pk)
-        self.assertEqual(first.model.name, "skills_assistant:global")
+        self.assertEqual(first.model.name, "skills_assistant - global")
         self.assertIsNone(first.model.parent_project)
 
     def test_project_scope_binds_project(self):
-        project = _make_project(path="/tmp/as-proj")
+        project = _make_project(name="as-proj", path="/tmp/as-proj")
         child = Skills(parent_project=project).get_assistant_session(caller=self.rt)
         self.assertIsNotNone(child)
         self.assertEqual(child.model.parent_project_id, project.pk)
-        self.assertTrue(child.model.name.startswith("skills_assistant:/tmp/as-proj"))
+        self.assertEqual(child.model.name, "skills_assistant - as-proj")
 
     def test_singular_name_override(self):
         _make_agent("skill_assistant")
@@ -500,12 +507,27 @@ class AssistantSessionTest(TestCase):
             caller=self.rt, name="skill_assistant"
         )
         self.assertIsNotNone(child)
-        self.assertEqual(child.model.name, "skill_assistant:global")
+        self.assertEqual(child.model.name, "skill_assistant - global")
+
+    def test_singular_item_label(self):
+        _make_agent("agent_assistant")
+        agent, _av = _make_agent("labelled-agent")
+        from runtime.agents.agent import Agent
+
+        child = Agent(agent).get_assistant_session(caller=self.rt)
+        self.assertIsNotNone(child)
+        self.assertEqual(child.model.name, "agent_assistant - labelled-agent")
+
+    def test_owner_scoped_label(self):
+        agent, _av = _make_agent("owner-agent")
+        child = Skills(parent_agent=agent).get_assistant_session(caller=self.rt)
+        self.assertIsNotNone(child)
+        self.assertEqual(child.model.name, "skills_assistant - agent owner-agent")
 
     def test_callerless_creation(self):
         child = Skills().get_assistant_session()
         self.assertIsNotNone(child)
-        self.assertEqual(child.model.name, "skills_assistant:global")
+        self.assertEqual(child.model.name, "skills_assistant - global")
 
     def test_spawn_project_binding_preserved(self):
         project = _make_project(path="/tmp/sp-proj")
@@ -689,39 +711,6 @@ class ScriptHelpersTest(TestCase):
         self.assertEqual(srow["manifest_dir"], "/tmp/row-s")
         self.assertEqual(srow["version_number"], 0)
 
-    def test_markdown_shapes(self):
-        from runtime.script_helpers import (
-            agent_list_item,
-            as_markdown_list,
-            skill_list_item,
-            workitem_list_item,
-        )
-
-        agent, _av = _make_agent("md-a", manifest_dir="/tmp/md-a")
-        text = agent_list_item(agent)
-        self.assertIn("**md-a**", text)
-        self.assertIn("/tmp/md-a", text)
-        self.assertEqual(as_markdown_list([], agent_list_item), "(none)")
-        self.assertEqual(
-            as_markdown_list([agent], agent_list_item), agent_list_item(agent)
-        )
-        skill = _make_skill("md-s", manifest_dir="/tmp/md-s")
-        self.assertIn("**md-s**", skill_list_item(skill))
-        item = WorkItem.objects.create(title="md-item", priority=10)
-        self.assertIn(f"#{item.pk}", workitem_list_item(item))
-        self.assertIn("backlog", workitem_list_item(item))
-
-    def test_match_manifest_dir(self):
-        from runtime.script_helpers import match_manifest_dir, unbound_error
-
-        _make_agent("mm-a", manifest_dir="/tmp/mm-a")
-        found = match_manifest_dir(AgentModel.objects.all(), "/tmp/mm-a")
-        self.assertEqual([a.name for a in found], ["mm-a"])
-        self.assertEqual(match_manifest_dir(AgentModel.objects.all(), "/tmp/nope"), [])
-        err = unbound_error("a project scope")
-        self.assertEqual(err["status"], "error")
-        self.assertIn("not bound", err["message"])
-
 
 class SubListToolsTest(TestCase):
     """New bound list_* tools resolve children via the session scope."""
@@ -778,36 +767,6 @@ class SubListToolsTest(TestCase):
         ok, agents = mod.list_agents(rt)
         self.assertTrue(ok, agents)
         self.assertEqual([a["name"] for a in agents["agents"]], ["owned-agent"])
-
-    def test_project_lists(self):
-        project = _make_project(path="/tmp/proj-lists")
-        _make_agent("proj-agent", project=project)
-        _make_skill("proj-skill", project=project)
-        agent, av = _make_agent("proj-host")
-        Cronjob.objects.create(
-            name="proj-job", schedule="* * * * *",
-            parent_project=project,
-        )
-        rt = _make_session(agent, av, name="proj-rt", project=project)
-        mod = _load_script(
-            "agents/internal/project_assistant/scripts/project.py", "sub_project"
-        )
-        ok, agents = mod.list_agents(rt)
-        self.assertTrue(ok, agents)
-        self.assertEqual(
-            {a["name"] for a in agents["agents"]}, {"proj-agent", "proj-host"}
-        )
-        self.assertTrue(agents["scope"].endswith("/.agentone/agents/"))
-        ok, skills = mod.list_skills(rt)
-        self.assertTrue(ok, skills)
-        self.assertEqual([s["name"] for s in skills["skills"]], ["proj-skill"])
-        ok, jobs = mod.list_cronjobs(rt)
-        self.assertTrue(ok, jobs)
-        self.assertEqual([j["name"] for j in jobs["cronjobs"]], ["proj-job"])
-        rt_global = _make_session(agent, av, name="proj-g")
-        ok, err = mod.list_agents(rt_global)
-        self.assertFalse(ok)
-        self.assertIn("not bound", err["message"])
 
     def test_workspace_lists(self):
         project = _make_project(path="/tmp/ws-lists")

@@ -1287,9 +1287,9 @@
   /* container-type/name lets descendants run @container queries against the
      panel's width so the header can collapse less-essential elements as the
      user resizes the panel narrower. */
-  .rightpanel{         padding-bottom: 8px;height:100%; padding-bottom: 30px;width:25%;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
+  .rightpanel{         padding-bottom: 8px;height:100%; padding-bottom: 0px;width:25%;background:var(--sidebar);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;min-width:0;opacity:1;transform:translateX(0);transform-origin:right center;transition:width .24s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .24s cubic-bezier(.22,1,.36,1),border-color .24s ease;container-type:inline-size;container-name:rightpanel;}
   .rightpanel-inner {
-    height: calc(100% - 50px);
+    height: calc(100% - 42px);
     width: -webkit-fill-available;
     display: flex;
     flex-direction: column;
@@ -3162,7 +3162,7 @@ main.main.showing-logs > #mainLogs{display:flex;}
 /* ── Classic conversation layout: user right, half-width; assistant left ── */
 .msg-row[data-role="user"] { align-self: flex-end; max-width: 60%; }
 @media (max-width: 900px) { .msg-row[data-role="user"] { max-width: 78%; } }
-@media (max-width: 600px) { .msg-row[data-role="user"] { max-width: 90%; } }
+@media (max-width: 900px) { .msg-row[data-role="user"] { max-width: 90%; } }
 /* Hide the entire "empty tool-anchor" assistant row (content='' with
    tool_calls). renderMessages keeps it in the DOM so tool cards can anchor
    to it, but visually it adds a ghost "AgentOne" header above the tool cards.

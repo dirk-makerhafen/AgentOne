@@ -51,12 +51,13 @@ class CreateWorkspace(ModelView):
                         <div class="detail-form-hint">Optional owner project (DB-canonical; no project.md involved).</div>
                     </div>
                     <div class="detail-form-row">
-                        <label for="workspaceFormStorage">Scoped data</label>
+                        <label for="workspaceFormStorage">Manifests</label>
                         <select id="workspaceFormStorage" onchange="pyview.setWsField('storage', this.value)">
-                            <option value="none"{% if pyview.form.storage == "none" %} selected{% endif %}>No workspace manifests (bare path)</option>
-                            <option value="inline"{% if pyview.form.storage == "inline" %} selected{% endif %}>In workspace dir (&lt;workspace&gt;/.agentone)</option>
-                            <option value="central"{% if pyview.form.storage == "central" %} selected{% endif %}>Centralized (~/.agentone/workspaces/&lt;name&gt;)</option>
+                            {% for o in pyview.storage_options %}
+                            <option value="{{ o.value }}"{% if pyview.form.storage == o.value %} selected{% endif %}>{{ o.label }}</option>
+                            {% endfor %}
                         </select>
+                        <div class="detail-form-hint">Where this workspace's <code>.agentone</code> manifests live.</div>
                     </div>
                     <div class="detail-form-row">
                         <label for="workspaceFormGitignore">Git</label>
@@ -95,6 +96,14 @@ class CreateWorkspace(ModelView):
         }
         self._form_error = ""
         self.access_editor = AccessEditor(subject=subject, parent=self)
+        # Opened from a project page: pre-own the new workspace to that project.
+        try:
+            from server.models.project import Project
+
+            if isinstance(subject, Project):
+                self._form["parent_project_id"] = str(subject.pk)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
     # ------------------------------------------------------------------
     # Display helpers
@@ -107,6 +116,12 @@ class CreateWorkspace(ModelView):
     @property
     def form_error(self) -> str:
         return self._form_error
+
+    @property
+    def storage_options(self) -> list[dict]:
+        from ui.main.workspace.manifest_location import storage_options
+
+        return storage_options()
 
     @property
     def project_options(self):  # list[dict[str, str]]
@@ -154,8 +169,10 @@ class CreateWorkspace(ModelView):
                     parent_project = Project.objects.filter(pk=int(ppid)).first()
                 except (ValueError, TypeError):
                     parent_project = None
+            from ui.main.workspace.manifest_location import STORAGES
+
             storage = (self._form.get("storage") or "none").strip() or "none"
-            if storage not in ("none", "inline", "central"):
+            if storage not in STORAGES:
                 storage = "none"
             created = WorkspaceModel.objects.create(
                 name=name or path,
@@ -166,7 +183,9 @@ class CreateWorkspace(ModelView):
                 parent_project=parent_project,
                 storage="" if storage == "none" else storage,
             )
-            manifest_dir = self._setup_manifest_dir(
+            from ui.main.workspace.manifest_location import ensure_manifest_dir
+
+            manifest_dir = ensure_manifest_dir(
                 created, storage, path,
                 gitignore=bool(self._form.get("manifest_gitignore")),
             )
@@ -186,41 +205,6 @@ class CreateWorkspace(ModelView):
 
     def cancelWorkspaceForm(self) -> None:
         self.close_tab()
-
-    @staticmethod
-    def _setup_manifest_dir(workspace, storage: str, ws_path: str, gitignore: bool = False) -> str:
-        """Create the workspace manifest dir for *storage*; return its path or ""."""
-        from pathlib import Path as _Path
-
-        from runtime.paths import central_workspace_dir
-
-        if storage == "inline":
-            manifest = _Path(ws_path) / ".agentone"
-            try:
-                manifest.mkdir(parents=True, exist_ok=True)
-            except OSError:
-                return ""
-            if gitignore:
-                gi = _Path(ws_path) / ".gitignore"
-                try:
-                    existing = gi.read_text(encoding="utf-8") if gi.exists() else ""
-                    if ".agentone/" not in existing.splitlines():
-                        with gi.open("a", encoding="utf-8") as f:
-                            if existing and not existing.endswith("\n"):
-                                f.write("\n")
-                            f.write(".agentone/\n")
-                except OSError:
-                    pass
-            return manifest.as_posix()
-        if storage == "central":
-            key = workspace.name or _Path(ws_path).name
-            manifest = central_workspace_dir(key)
-            try:
-                manifest.mkdir(parents=True, exist_ok=True)
-            except OSError:
-                return ""
-            return manifest.as_posix()
-        return ""
 
     # ------------------------------------------------------------------
     # Navigation helpers

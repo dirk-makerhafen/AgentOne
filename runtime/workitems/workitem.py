@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from server.models.workitems.work_item import WorkItem as WorkItemModel
+from runtime.assistant_scope import AssistantScopeMixin
 
 
-class WorkItem:
+class WorkItem(AssistantScopeMixin):
     """Runtime wrapper around a WorkItem model instance.
 
     Work items have no manifest file; the source directory is the scope
@@ -71,23 +72,22 @@ class WorkItem:
     # Assistant wiring
     # ------------------------------------------------------------------
 
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton ``workitem_assistant`` session in this scope."""
-        from runtime.session.sessions import Sessions
+    def assistant_scope_label(self) -> str:
+        """Return a ``#<id> <title>`` label for the assistant session title."""
+        return f"#{self.pk} {self.title}".strip()
+
+    def get_assistant_workspace(self) -> Any:
+        """Return the workspace row binding this item's assistant sessions.
+
+        Project scope: project workspace; global inbox: system row.
+        """
         from runtime.workspace.workspaces import Workspaces
 
         project = self.project
         if project is not None:
-            workspace = Workspaces.for_project(project)
-        else:
-            workspace = Workspaces.ensure_named(
-                "AgentOne system",
-                self.get_source_dir(),
-                "Master workspace: whole framework home",
-            )
-        return Sessions().assistant_session(
-            name or self.ASSISTANT,
-            project=project,
-            workspace=workspace,
-            caller=caller,
+            return Workspaces.for_project(project)
+        return Workspaces.ensure_named(
+            "AgentOne system",
+            self.get_source_dir(),
+            "Master workspace: whole framework home",
         )

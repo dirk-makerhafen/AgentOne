@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from server.models.workspace import WorkspaceModel
+from runtime.assistant_scope import AssistantScopeMixin
 
 
-class Workspace:
+class Workspace(AssistantScopeMixin):
     """Runtime wrapper around a WorkspaceModel instance."""
 
     #: Singular internal assistant managing ONE workspace.
@@ -75,6 +76,13 @@ class Workspace:
     # Assistant wiring
     # ------------------------------------------------------------------
 
+    def assistant_scope_label(self) -> str:
+        """Return this workspace's name (or path basename) for the title."""
+        if self.name:
+            return self.name
+        path = self.path.rstrip("/")
+        return path.rsplit("/", 1)[-1] if path else "global"
+
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this workspace's assistant sessions.
 
@@ -82,18 +90,3 @@ class Workspace:
         panels so both bind the same row.
         """
         return self.model
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton ``workspace_assistant`` session.
-
-        Bound to the workspace itself: the assistant manages the session
-        workspace it is bound to.
-        """
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.ASSISTANT,
-            project=self.project,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
-        )

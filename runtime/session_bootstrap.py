@@ -11,7 +11,7 @@ Instead :func:`ensure_session_bootstrap` persists the same content **once**
 as normal session-history ``Message`` rows (``pin_to_context=True``) at the
 start of the current compaction segment:
 
-* first turn — a USER guidance message (autoload + index) and a SYSTEM
+* first turn — a USER guidance message (autoload + index) and a 
   environment message (start time, workspace path, private folder) are
   inserted ahead of the oldest message, so the normal history walk picks
   them up on every later turn;
@@ -79,7 +79,7 @@ def build_bootstrap_contents(session: Any) -> tuple[str | None, str | None, str]
 
 
 def _build_env_text(session: Any) -> str:
-    """Build the SYSTEM environment text (time + workspace + private dir)."""
+    """Build the environment text (time + workspace + private dir)."""
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     try:
         working_dir = session.workspace.path if session.workspace else "unknown"
@@ -93,7 +93,7 @@ def _build_env_text(session: Any) -> str:
         logger.warning("bootstrap: private dir unavailable", exc_info=True)
         private_dir = "(unavailable)"
     return (
-        f"{ENV_BOOTSTRAP_SENTINEL} Session started at {now}; "
+        f"<SYSTEM NOTICE>{ENV_BOOTSTRAP_SENTINEL} Session started at {now}; "
         "this header and the paths below are frozen for cache stability — "
         "ask for the current time if you need it.]"
         f"\nYour working directory is '{working_dir}'."
@@ -103,7 +103,7 @@ def _build_env_text(session: Any) -> str:
         "scripts and other session-specific artifacts. Reusable "
         "helpers belong in the database (adhoc_* tools, template_* "
         "tools), not as files here. It is private "
-        "to this session — other sessions cannot access it."
+        "to this session — other sessions cannot access it.</SYSTEM NOTICE>"
     )
 
 
@@ -153,7 +153,7 @@ def _is_bootstrap_message(message: Any) -> bool:
         if first is None or first.content is None:
             return False
         text = str(first.content.get() or "")
-        return text.startswith((USER_BOOTSTRAP_SENTINEL, ENV_BOOTSTRAP_SENTINEL))
+        return text.startswith((USER_BOOTSTRAP_SENTINEL, ENV_BOOTSTRAP_SENTINEL, "<SYSTEM NOTICE>"+USER_BOOTSTRAP_SENTINEL,"<SYSTEM NOTICE>"+ENV_BOOTSTRAP_SENTINEL))
     except Exception:  # pylint: disable=broad-exception-caught
         return False
 
@@ -177,7 +177,7 @@ def ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
     Scans the current compaction segment (same-session ancestry of *trigger*,
     stopping at the first COMPACTION marker).  If neither a standalone
     bootstrap message nor a bootstrap-carrying marker is found, inserts the
-    USER guidance message (when guidance texts exist) and the SYSTEM
+    USER guidance message (when guidance texts exist) and the 
     environment message at the start of the segment and returns them.
     Returns the existing bootstrap messages when already bootstrapped, or
     ``[]`` when there is nothing to do.
@@ -258,9 +258,6 @@ def _ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
             session_version=sv,
             role=role,
             prev_message=anchor_prev if not created else created[-1],
-            # Pinned: build_llm_context re-includes these even when they
-            # slide outside max_history_messages (frozen bytes, cache-hot).
-            pin_to_context=True,
         )
         for text in parts:
             message.add_part(
@@ -282,9 +279,9 @@ def _ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
         guidance_parts.append(autoload_text)
     if index_text:
         guidance_parts.append(index_text)
+    _create(MessageRole.USER, [env_text])
     if autoload_text or index_text:
         _create(MessageRole.USER, guidance_parts)
-    _create(MessageRole.SYSTEM, [env_text])
 
     # Splice the new head into the chain: the first created message takes
     # the anchor position, the last one feeds the previous successor.
@@ -338,17 +335,17 @@ def maybe_announce_workspace_switch(session: Any) -> Any | None:
         notice = Message.objects.create(
             session=sv.session,
             session_version=sv,
-            role=MessageRole.SYSTEM,
+            role=MessageRole.USER,
             prev_message=session.get_last_message(),
         )
         notice.add_part(
             type=MessagePartType.MESSAGE,
             content_type=MessageContentType.TEXT,
             content=(
-                f"[Workspace switched mid-session: '{remembered}' → "
+                f"<SYSTEM NOTICE>Workspace switched mid-session: '{remembered}' → "
                 f"'{root_posix}'. The bootstrap message above still shows "
                 "the old path — use the new path going forward and re-read "
-                "any workspace guidance files relevant to your task.]"
+                "any workspace guidance files relevant to your task.</SYSTEM NOTICE>"
             ),
         )
         notice.publish("create")

@@ -40,5 +40,5 @@ class RightPanelProjectWorkspaces(ModelView):
         p = self.subject
         if not p:
             return []
-        return list(WorkspaceModel.objects.all().order_by("name"))
+        return list(WorkspaceModel.objects.filter(parent_project=p).order_by("name"))
 

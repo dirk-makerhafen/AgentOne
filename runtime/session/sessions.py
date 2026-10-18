@@ -59,7 +59,6 @@ class Sessions:
 
     def root(self) -> QuerySet[SessionModel]:
         """Return all sessions (unscoped; UI + legacy callers)."""
-        #return SessionModel.objects.filter(parent_session__isnull=True)
         return SessionModel.objects.filter()
 
     def list_sessions(self) -> list:
@@ -83,14 +82,18 @@ class Sessions:
         workspace: Any = None,
         caller: Any = None,
         session_type: str = "",
+        scope_label: str | None = None,
     ) -> Any | None:
         """Get-or-create the singleton assistant session, bound to its scope.
 
-        The session is named ``<assistant>:global`` (project-less) or
-        ``<assistant>:<project-path>`` so every caller shares one
-        conversation per scope. The scope's project is stamped on
-        ``SessionModel.parent_project`` so the assistant's own scoped tools
-        resolve the right collection.
+        The session is named ``<assistant> - <scope-label>`` so every caller
+        shares one conversation per scope and the name reads (and sorts)
+        well — e.g. ``skills_assistant - global``, ``agent_assistant - Alpha``
+        or ``skills_assistant - MyProject``. ``scope_label`` names the subject
+        explicitly (item name, ``agent X``, project name); without it the
+        label falls back to the scope project's name (``global`` when none).
+        The scope's project is stamped on ``SessionModel.parent_project`` so
+        the assistant's own scoped tools resolve the right collection.
 
         Args:
             name: Internal assistant agent name (e.g. ``skills_assistant``).
@@ -100,6 +103,7 @@ class Sessions:
                 for auto-await delivery and resolves internal agents.
                 Without a caller the agent version is resolved globally.
             session_type: SessionType value (defaults to ``subsession``).
+            scope_label: Human label for the subject this session works on.
 
         Returns:
             The runtime ``Session``, or *None* when unresolvable.
@@ -110,7 +114,9 @@ class Sessions:
         assistant = (name or "").strip()
         if not assistant:
             return None
-        session_name, description = _assistant_session_naming(assistant, project)
+        session_name, description = _assistant_session_naming(
+            assistant, project, scope_label
+        )
         wanted_type = session_type or SessionType.SUBSESSION
 
         if caller is not None:
@@ -149,12 +155,25 @@ class Sessions:
             return None
 
 
-def _assistant_session_naming(assistant: str, project: Any) -> tuple[str, str]:
+def _assistant_session_naming(
+    assistant: str, project: Any, scope_label: str | None = None
+) -> tuple[str, str]:
     """Return the singleton (session name, description) for a scope."""
-    key = "global"
-    if project is not None:
-        try:
-            key = (project.path or "").strip() or f"project-{project.pk}"
-        except Exception:  # pylint: disable=broad-exception-caught
-            key = f"project-{getattr(project, 'pk', '?')}"
-    return f"{assistant}:{key}", f"{assistant} session ({key})"
+    label = (scope_label or "").strip() or _project_scope_label(project)
+    return f"{assistant} - {label}", f"{assistant} session ({label})"
+
+
+def _project_scope_label(project: Any) -> str:
+    """Return a readable, sortable scope label for *project* (or ``global``)."""
+    if project is None:
+        return "global"
+    try:
+        name = (getattr(project, "name", "") or "").strip()
+        if name:
+            return name
+        path = (getattr(project, "path", "") or "").strip()
+        if path:
+            return path.rstrip("/").rsplit("/", 1)[-1]
+        return f"project-{project.pk}"
+    except Exception:  # pylint: disable=broad-exception-caught
+        return "global"

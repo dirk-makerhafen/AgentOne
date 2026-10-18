@@ -24,12 +24,12 @@ def call_assistant(
     """
     Send a task to a framework-internal assistant session (blocking).
 
-    Creates or reuses a shared session per (assistant, scope):
-    ``<assistant>:global`` (e.g. ``skills_assistant`` working in
-    ``~/.agentone/skills/``) or ``<assistant>:<project-path>`` (the same
-    assistant seeing the global collection plus that project's own items).
-    The assistant processes the message and its response is returned via
-    the auto-awaited TaskCall.
+    Creates or reuses a shared session per (assistant, scope), named
+    ``<assistant> - <scope-label>`` — e.g. ``skills_assistant - global``
+    (working in ``~/.agentone/skills/``) or ``skills_assistant - MyProject``
+    (the same assistant seeing the global collection plus that project's own
+    items). The assistant processes the message and its response is returned
+    via the auto-awaited TaskCall.
 
     Scope resolution (first match wins):
 
@@ -93,12 +93,14 @@ def call_assistant(
     project = collection.project
 
     if override:
+        target = override.strip().rstrip("/")
         workspace = Workspaces.ensure_named(
-            f"{override.strip()} assistant scope", override.strip(),
+            f"{target} assistant scope", target,
             "assistant scope override",
         )
         child = Sessions().assistant_session(
-            assistant, project=project, workspace=workspace, caller=_session
+            assistant, project=project, workspace=workspace, caller=_session,
+            scope_label=target.rsplit("/", 1)[-1] or "global",
         )
     else:
         child = collection.get_assistant_session(caller=_session, name=assistant)
@@ -163,8 +165,8 @@ def _resolve_project(project_path: str) -> Any | None:
     if not wanted:
         return None
     project = (
-        Project.objects.filter(path=wanted).first()
-        or Project.objects.filter(manifest_dir=wanted).first()
+        Project.objects.filter(manifest_dir=wanted).first()
+        or Project.objects.filter(main_workspace__path=wanted).first()
     )
     if project is None:
         # Legacy fallback: match the resolved manifest dir (covers rows

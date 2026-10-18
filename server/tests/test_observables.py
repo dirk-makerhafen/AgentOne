@@ -179,7 +179,7 @@ class ObservablesKeysTest(TestCase):
     def test_reverse_side_keys_match(self):
         from server.models.project import Project
 
-        project = Project.objects.create(name="obs-proj", path="/tmp")
+        project = Project.objects.create(name="obs-proj")
         self.assertEqual(
             project.observables.child_agents,
             f"AgentModel.parent_project:{project.pk}",
@@ -484,7 +484,7 @@ class PlainModelsObservableTest(TestCase):
         from server.models.project import Project
         from server.models.skills.skill import SkillModel
 
-        project = Project.objects.create(name="obs-proj2", path="/tmp")
+        project = Project.objects.create(name="obs-proj2")
         with patch.object(observables, "notify") as mock_notify:
             project.notify_observers("update")
             mock_notify.assert_called_once()

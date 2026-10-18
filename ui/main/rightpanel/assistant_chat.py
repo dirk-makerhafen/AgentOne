@@ -234,9 +234,18 @@ class AssistantChatMixin:
         self.update()
 
     def _assistant_session_base_name(self) -> str:
+        """Return the sortable ``<assistant> - <label>`` base name.
+
+        Item panels label by the item name; dashboard/collection panels
+        label by the scoped project (``global`` when unscoped) so started
+        chats read and sort consistently with the runtime sessions.
+        """
         label = self.assistant_item_label()
+        if not label:
+            project = self.assistant_project()
+            label = (getattr(project, "name", "") or "").strip() or "global"
         agent = self.ASSISTANT_AGENT_NAME or "assistant"
-        return f"{label}-{agent}" if label else agent
+        return f"{agent} - {label}"
 
 
 class _ItemAssistantPanel(AssistantChatMixin, ModelView):

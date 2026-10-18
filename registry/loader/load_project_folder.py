@@ -110,6 +110,29 @@ def load_workspace_scope(manifest_dir: str | Path, project,
     load_scope_dir(manifest_dir, project, details=details)
 
 
+def _ensure_root_workspace(project, folder: Path) -> None:
+    """Link *folder* as *project*'s primary workspace (best effort)."""
+    from server.models.workspace import WorkspaceModel
+
+    try:
+        ws, created = WorkspaceModel.objects.get_or_create(
+            name=f"{project.name} project root",
+            defaults={
+                "path": folder.as_posix(),
+                "description": "project root directory",
+                "parent_project": project,
+            },
+        )
+        if not created and ws.parent_project_id is None:
+            ws.parent_project = project
+            ws.save(update_fields=["parent_project"])
+        if project.main_workspace_id is None:
+            project.main_workspace = ws
+            project.save(update_fields=["main_workspace"])
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
+
 def _warn_if_project_md(project_folder: Path, details: list | None) -> None:
     md = project_folder / "project.md"
     if md.is_file() and details is not None:
@@ -122,11 +145,11 @@ def _warn_if_project_md(project_folder: Path, details: list | None) -> None:
 def _resolve_project(project_root: Path, project_folder: Path,
                      details: list | None):
     """Find the Project row for *project_root*, legacy-importing if needed."""
-    qs = Project.objects.filter(path=project_root.as_posix())
-    project = qs.first()
-    if project is None:
-        # Also match rows whose path already points at the .agentone dir.
-        project = Project.objects.filter(path=project_folder.as_posix()).first()
+    project = (
+        Project.objects.filter(manifest_dir=project_folder.as_posix()).first()
+        or Project.objects.filter(main_workspace__path=project_root.as_posix()).first()
+        or Project.objects.filter(main_workspace__path=project_folder.as_posix()).first()
+    )
     if project is not None:
         _warn_if_project_md(project_folder, details)
         return project
@@ -140,11 +163,11 @@ def _resolve_project(project_root: Path, project_folder: Path,
             name = (data.get("name") or project_root.name).strip()
             project = Project.objects.create(
                 name=name or project_root.name,
-                path=project_root.as_posix(),
                 description=data.content or "",
                 manifest_dir=project_folder.as_posix(),
                 storage="inline_project",
             )
+            _ensure_root_workspace(project, project_root)
             if details is not None:
                 details.append({
                     "name": project.name, "type": "project",
@@ -164,11 +187,11 @@ def _resolve_project(project_root: Path, project_folder: Path,
     try:
         project = Project.objects.create(
             name=project_root.name,
-            path=project_root.as_posix(),
             description="",
             manifest_dir=project_folder.as_posix() if project_folder.is_dir() else "",
             storage="inline_project",
         )
+        _ensure_root_workspace(project, project_root)
         if details is not None:
             details.append({
                 "name": project.name, "type": "project", "action": "created",

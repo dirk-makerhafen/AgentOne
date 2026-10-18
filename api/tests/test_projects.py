@@ -11,7 +11,6 @@ class TestProjects:
     def test_create_project(self, auth_client):
         resp = auth_client.post('/api/v1/projects/', {
             'name': 'test-project',
-            'path': '/tmp/test-project',
         })
         assert resp.status_code == 201
         assert Project.objects.filter(name='test-project').exists()

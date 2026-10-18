@@ -1,13 +1,11 @@
 """Shared helpers for internal-assistant script tools.
 
-Single source for session-scope resolution, row builders, and markdown
-renderers used by the singular/plural assistant scripts (see plan.md:
-list-item shapes + list conventions). All Django imports are deferred
-(script modules load via importlib; this module stays side-effect free).
+Single source for the row builders used by the singular/plural assistant
+scripts. All Django imports are deferred (script modules load via
+importlib; this module stays side-effect free).
 """
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -21,36 +19,6 @@ def normalize_dir(value: Any) -> str:
         return Path(text).expanduser().as_posix().rstrip("/") or ""
     except Exception:
         return ""
-
-
-def session_workspace(_session: Any) -> Any:
-    """Return the workspace a session is bound to, or *None* when unbound."""
-    try:
-        return _session.workspace
-    except Exception:
-        return None
-
-
-def unbound_error(kind: str) -> dict:
-    """Standard error when an assistant session is not bound to its item."""
-    return {
-        "status": "error",
-        "message": (
-            f"This assistant session is not bound to {kind} "
-            "(no workspace). Open the assistant from its item instead."
-        ),
-    }
-
-
-def not_found_error(kind: str, path: str) -> dict:
-    """Standard error when no item matches the session workspace."""
-    return {
-        "status": "error",
-        "message": (
-            f"No {kind} found for this session's workspace '{path}'. "
-            "Open the assistant from its item instead."
-        ),
-    }
 
 
 def _version_of(model: Any, attr: str) -> Any:
@@ -134,124 +102,3 @@ def cron_row(job: Any) -> dict[str, Any]:
         "last_status": job.last_status or "",
         "total_runs": job.total_runs or 0,
     }
-
-
-def workspace_row(workspace: Any, session_count: int = 0) -> dict[str, Any]:
-    """Row dict for one workspace (workspace_list_item fields)."""
-    return {
-        "workspace_pk": workspace.pk,
-        "name": workspace.name or workspace.path,
-        "path": workspace.path,
-        "description": workspace.description or "",
-        "color": getattr(workspace, "color", "") or "",
-        "session_count": session_count,
-    }
-
-
-def workitem_row(item: Any) -> dict[str, Any]:
-    """Row dict for one work item (workitem_list_item fields)."""
-    try:
-        assignee = item.assigned_agent.name if item.assigned_agent else None
-    except Exception:
-        assignee = None
-    return {
-        "id": item.pk,
-        "title": item.title,
-        "status": item.status,
-        "priority": item.priority,
-        "assigned_agent": assignee,
-    }
-
-
-def project_row(project: Any) -> dict[str, Any]:
-    """Row dict for one project (project_list_item fields)."""
-    return {
-        "name": project.name,
-        "path": getattr(project, "path", "") or "",
-    }
-
-
-def agent_list_item(agent_model: Any) -> str:
-    """One markdown row for an agent (agent_list_item shape)."""
-    row = agent_row(agent_model)
-    return f"- **{row['name']}** (v{row['version_number']}, {row['visibility'] or 'unset'}) — {row['path'] or '?'}"
-
-
-def skill_list_item(skill_model: Any) -> str:
-    """One markdown row for a skill (skill_list_item shape)."""
-    row = skill_row(skill_model)
-    return f"- **{row['name']}** (v{row['version_number']}) — {row['description']} [{row['manifest_dir'] or '?'}]"
-
-
-def project_list_item(project: Any) -> str:
-    """One markdown row for a project (project_list_item shape)."""
-    from server.models.sessions.session import SessionModel
-    from server.models.workspace import WorkspaceModel
-
-    session_count = SessionModel.objects.filter(parent_project=project).count()
-    workspace_names = ", ".join(
-        WorkspaceModel.objects.filter(parent_project=project)
-        .order_by("name")
-        .values_list("name", flat=True)
-    ) or "(none)"
-    row = project_row(project)
-    return f"- **{row['name']}** — {row['path']} ({session_count} sessions; workspaces: {workspace_names})"
-
-
-def cronjob_list_item(job: Any) -> str:
-    """One markdown row for a cron job (cronjob_list_item shape)."""
-    row = cron_row(job)
-    state = "active" if row["is_active"] else "paused"
-    return f"- **{row['name']}** ({row['schedule']}, {state}) — {row['description']} [{row['path'] or '?'}]"
-
-
-def workspace_list_item(workspace_model: Any) -> str:
-    """One markdown row for a workspace (workspace_list_item shape)."""
-    from server.models.sessions.session import SessionModel
-
-    session_count = SessionModel.objects.filter(
-        latest_session_version__workspace=workspace_model
-    ).count()
-    row = workspace_row(workspace_model, session_count)
-    return f"- **{row['name']}** — {row['path']} ({row['session_count']} sessions)"
-
-
-def workitem_list_item(item: Any) -> str:
-    """One markdown row for a work item (workitem_list_item shape)."""
-    row = workitem_row(item)
-    text = f"- #{row['id']} **{row['title']}** ({row['status']}, priority {row['priority']})"
-    if row["assigned_agent"]:
-        text += f" — assigned: {row['assigned_agent']}"
-    return text
-
-
-def as_markdown_list(models: Any, item_fn: Any) -> str:
-    """Render every model with item_fn, one markdown row per line."""
-    rows = [item_fn(model) for model in models]
-    return "\n".join(rows) if rows else "(none)"
-
-
-def _realpath(value: str) -> str:
-    try:
-        return os.path.realpath(value or "")
-    except Exception:
-        return ""
-
-
-def match_manifest_dir(queryset: Any, ws_path: str) -> list:
-    """Return rows whose manifest_dir matches *ws_path*.
-
-    Exact match first; realpath comparison as fallback (symlinked home
-    dirs). *queryset* is the model manager's queryset (unfiltered).
-    """
-    matches = list(queryset.filter(manifest_dir=ws_path))
-    if not matches and ws_path:
-        real = _realpath(ws_path)
-        if real:
-            for cand in queryset.exclude(manifest_dir=""):
-                try:
-                    if _realpath(cand.manifest_dir or "") == real:
-                        matches.append(cand)
-                except Exception:
-                    continue
-    return matches

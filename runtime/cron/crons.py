@@ -8,11 +8,12 @@ from croniter import croniter
 from django.db.models import QuerySet
 from django.utils import timezone
 
+from runtime.assistant_scope import AssistantScopeMixin
 from server.models.content import GenericContent
 from server.models.cron import Cronjob
 
 
-class Cronjobs:
+class Cronjobs(AssistantScopeMixin):
     """Query interface for Cronjob instances.
 
     Scoping is explicit and strict: ``parent_project`` selects that
@@ -33,16 +34,6 @@ class Cronjobs:
     ) -> None:
         self.parent_project = parent_project
         self.parent_workspace = parent_workspace
-
-    @property
-    def project(self) -> Any | None:
-        """Return the scope project (explicit or workspace-unwrapped)."""
-        if self.parent_project is not None:
-            return self.parent_project
-        try:
-            return getattr(self.parent_workspace, "parent_project", None)
-        except Exception:  # pylint: disable=broad-exception-caught
-            return None
 
     def _base(self) -> QuerySet[Cronjob]:
         """Unscoped base when bare (scheduler-safe), scoped otherwise."""
@@ -147,11 +138,6 @@ class Cronjobs:
     # Assistant wiring
     # ------------------------------------------------------------------
 
-    @property
-    def assistant_name(self) -> str:
-        """Return the collection assistant managing this scope."""
-        return self.ASSISTANT_NAMES[1]
-
     def get_source_dir(self) -> Path:
         """Return the source directory anchoring this scope (no I/O).
 
@@ -180,19 +166,4 @@ class Cronjobs:
             return Workspaces.for_project(project)
         return Workspaces.ensure_named(
             "System cronjobs", self.get_source_dir(), "User-scope cronjob manifests"
-        )
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton cronjobs-assistant session for this scope.
-
-        *name* defaults to the collection assistant; pass the singular
-        name to talk about ONE job (named inside the task text).
-        """
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.assistant_name,
-            project=self.project,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
         )

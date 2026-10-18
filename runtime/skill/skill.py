@@ -4,9 +4,10 @@ from typing import Any
 
 from server.models.skills.skill import SkillModel
 from server.models.skills.skill_version import SkillModelVersion
+from runtime.assistant_scope import AssistantScopeMixin
 
 
-class Skill:
+class Skill(AssistantScopeMixin):
     """Runtime wrapper around a SkillModel, delegating most reads to the
     pinned (or latest) SkillModelVersion."""
 
@@ -54,10 +55,6 @@ class Skill:
             return self._pinned_skill_version
         return self.model.latest_skill_version
 
-    def all_versions(self) -> None:
-        """Placeholder — not yet implemented."""
-        pass
-
     # ------------------------------------------------------------------
     # Assistant wiring + navigation
     # ------------------------------------------------------------------
@@ -96,6 +93,10 @@ class Skill:
 
         return Agents(parent_skill=self.model)
 
+    def assistant_scope_label(self) -> str:
+        """Return this skill's name for the assistant session title."""
+        return self.name or "global"
+
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this skill's assistant sessions.
 
@@ -109,15 +110,4 @@ class Skill:
             f"{source.as_posix()} assistant scope",
             source,
             f"source scope for skill {self.name}",
-        )
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton ``skill_assistant`` session in this scope."""
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.ASSISTANT,
-            project=self.project,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
         )

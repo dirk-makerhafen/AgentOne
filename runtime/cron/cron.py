@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from server.models.cron import Cronjob
+from runtime.assistant_scope import AssistantScopeMixin
 
 
-class Cron:
+class Cron(AssistantScopeMixin):
     """Runtime wrapper around a Cronjob model instance."""
 
     #: Singular internal assistant working on ONE cron job.
@@ -66,6 +67,10 @@ class Cron:
     # Assistant wiring
     # ------------------------------------------------------------------
 
+    def assistant_scope_label(self) -> str:
+        """Return this cron job's name for the assistant session title."""
+        return self.name or "global"
+
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this job's assistant sessions.
 
@@ -82,15 +87,4 @@ class Cron:
             "System cronjobs",
             self.get_source_dir(),
             "User-scope cronjob manifests",
-        )
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton ``cronjob_assistant`` session in this scope."""
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.ASSISTANT,
-            project=self.project,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
         )

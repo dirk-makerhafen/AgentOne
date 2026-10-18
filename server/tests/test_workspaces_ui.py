@@ -617,6 +617,43 @@ class TestWorkspaceDetailActions(TestCase):
         view.saveEdit()
         assert view.editing is True and "directory" in view.edit_error
 
+    def test_start_edit_prefills_project(self):
+        from server.models.project import Project
+
+        proj = Project.objects.create(name="proj")
+        self.ws.parent_project = proj
+        self.ws.save(update_fields=["parent_project"])
+        view, _ = self._detail()
+        view.update = MagicMock()
+        view.startEdit()
+        assert view.edit_data["parent_project_id"] == str(proj.pk)
+
+    def test_save_edit_assigns_project(self):
+        from server.models.project import Project
+
+        proj = Project.objects.create(name="proj")
+        view, _ = self._detail()
+        view.update = MagicMock()
+        view.startEdit()
+        view.setEditField("parent_project_id", str(proj.pk))
+        view.saveEdit()
+        self.ws.refresh_from_db()
+        assert self.ws.parent_project_id == proj.pk
+
+    def test_save_edit_clears_project(self):
+        from server.models.project import Project
+
+        proj = Project.objects.create(name="proj")
+        self.ws.parent_project = proj
+        self.ws.save(update_fields=["parent_project"])
+        view, _ = self._detail()
+        view.update = MagicMock()
+        view.startEdit()
+        view.setEditField("parent_project_id", "")
+        view.saveEdit()
+        self.ws.refresh_from_db()
+        assert self.ws.parent_project_id is None
+
     def _bind_session(self, name, session_type, ws=None):
         from server.models.agents.agent import AgentModel
         from server.models.agents.agent_version import AgentVersionModel

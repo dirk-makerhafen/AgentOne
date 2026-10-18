@@ -204,10 +204,34 @@ class Workspace(ModelView):
                         <input class="ws-current-input ws-current-input--path" value="{{ pyview.edit_data.path }}" onchange="pyview.setEditField('path', this.value)" autocomplete="off" placeholder="Path">
                         <textarea class="ws-current-input" rows="2" onchange="pyview.setEditField('description', this.value)" placeholder="What is this workspace for?">{{ pyview.edit_data.description }}</textarea>
                         <div class="ws-current-color-row">
+                            <label for="wsEditProject">Project</label>
+                            <select id="wsEditProject" onchange="pyview.setEditField('parent_project_id', this.value)">
+                                <option value="">(no project)</option>
+                                {% for p in pyview.project_options %}
+                                <option value="{{ p.pk }}"{% if pyview.edit_data.parent_project_id == p.pk %} selected{% endif %}>{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="ws-current-color-row">
                             <label for="wsEditColor">Color</label>
                             <input type="color" id="wsEditColor" value="{{ pyview.edit_data.color }}" onchange="pyview.setEditField('color', this.value)">
                             <span class="ws-current-color-value">{{ pyview.edit_data.color }}</span>
                         </div>
+                        <div class="ws-current-color-row">
+                            <label for="wsEditStorage">Manifests</label>
+                            <select id="wsEditStorage" onchange="pyview.setEditField('storage', this.value)">
+                                {% for o in pyview.storage_options %}
+                                <option value="{{ o.value }}"{% if pyview.edit_data.storage == o.value %} selected{% endif %}>{{ o.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if pyview.edit_data.storage == "inline" %}
+                        <div class="ws-current-color-row">
+                            <label for="wsEditGitignore">Git</label>
+                            <input type="checkbox" id="wsEditGitignore"{% if pyview.edit_data.manifest_gitignore %} checked{% endif %} onchange="pyview.setEditField('manifest_gitignore', this.checked)">
+                            <span>Add <code>.agentone/</code> to <code>.gitignore</code> (inline storage only)</span>
+                        </div>
+                        {% endif %}
                         {{ pyview.access_editor.render() }}
                         {% if pyview.edit_error %}
                         <div class="detail-form-error">{{ pyview.edit_error }}</div>
@@ -227,6 +251,7 @@ class Workspace(ModelView):
                             {% endif %}
                         </div>
                         <div class="ws-ov-path" title="{{ pyview.subject.path }}">{{ pyview.subject.path }}</div>
+                        <div class="ws-ov-path">manifests: {% if pyview.manifest_dir %}<code title="{{ pyview.manifest_dir }}">{{ pyview.manifest_dir }}</code>{% else %}<span style="color:var(--muted)">not managed</span>{% endif %}</div>
                         {% if pyview.subject.description %}
                         <div class="ws-ov-desc">{{ pyview.subject.description }}</div>
                         {% endif %}
@@ -340,6 +365,33 @@ class Workspace(ModelView):
     @property
     def edit_error(self) -> str:
         return self._edit_error
+
+    @property
+    def manifest_dir(self) -> str:
+        """Filesystem manifest dir for this workspace ("" when unmanaged)."""
+        try:
+            from runtime.paths import workspace_manifest_dir
+
+            p = workspace_manifest_dir(self.subject)
+            return p.as_posix() if p else ""
+        except Exception:  # pylint: disable=broad-exception-caught
+            return getattr(self.subject, "manifest_dir", "") or ""
+
+    @property
+    def storage_options(self) -> list[dict]:
+        from ui.main.workspace.manifest_location import storage_options
+
+        return storage_options()
+
+    @property
+    def project_options(self):  # list[dict[str, str]]
+        from server.models.project import Project
+
+        try:
+            return [{"pk": str(p.pk), "name": p.name}
+                    for p in Project.objects.all().order_by("name")]
+        except Exception:
+            return []
 
     @property
     def ancestors(self) -> list:
@@ -495,6 +547,11 @@ class Workspace(ModelView):
         self.update()
 
     def startEdit(self) -> None:
+        from ui.main.workspace.manifest_location import (
+            detect_storage,
+            gitignore_has_agentone,
+        )
+
         self._editing = True
         self._edit_error = ""
         self._edit_data = {
@@ -502,6 +559,12 @@ class Workspace(ModelView):
             "description": self.subject.description or "",
             "path": self.subject.path,
             "color": getattr(self.subject, "color", "") or "#6366f1",
+            "storage": detect_storage(self.subject),
+            "manifest_gitignore": gitignore_has_agentone(self.subject.path),
+            "parent_project_id": (
+                str(self.subject.parent_project_id)
+                if self.subject.parent_project_id else ""
+            ),
         }
         self.update()
 
@@ -510,12 +573,19 @@ class Workspace(ModelView):
         self._edit_error = ""
         self.update()
 
-    def setEditField(self, field: str, value: str) -> None:
-        if field in ("name", "description", "path", "color"):
+    def setEditField(self, field: str, value) -> None:
+        if field == "manifest_gitignore":
+            self._edit_data[field] = bool(value)
+        elif field in ("name", "description", "path", "color", "storage", "parent_project_id"):
             self._edit_data[field] = value
 
     def saveEdit(self) -> None:
         from server.models.workspace import validate_workspace_color
+        from ui.main.workspace.manifest_location import (
+            STORAGES,
+            detect_storage,
+            ensure_manifest_dir,
+        )
 
         name = (self._edit_data.get("name") or "").strip()
         path = (self._edit_data.get("path") or "").strip()
@@ -534,11 +604,34 @@ class Workspace(ModelView):
             self._edit_error = "Color must be a #rrggbb hex string."
             self.update()
             return
+
+        storage = (self._edit_data.get("storage") or "").strip()
+        if storage not in STORAGES:
+            storage = detect_storage(self.subject)
+
+        parent_project = None
+        ppid = (self._edit_data.get("parent_project_id") or "").strip()
+        if ppid:
+            try:
+                from server.models.project import Project
+
+                parent_project = Project.objects.filter(pk=int(ppid)).first()
+            except (ValueError, TypeError):
+                parent_project = None
+
         self.subject.name = name
         self.subject.description = self._edit_data.get("description", "")
         self.subject.path = path
         self.subject.color = color
         self.subject.access = self.access_editor.access_data
+        self.subject.parent_project = parent_project
+
+        manifest_dir = ensure_manifest_dir(
+            self.subject, storage, path,
+            gitignore=bool(self._edit_data.get("manifest_gitignore")),
+        )
+        self.subject.storage = "" if storage == "none" else storage
+        self.subject.manifest_dir = manifest_dir
         self.subject.save()
         self._editing = False
         self._edit_error = ""

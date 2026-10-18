@@ -54,7 +54,7 @@ Help the user organize their skills as a collection:
   there by name when they want single-skill analysis.
 - **No shell, no files** — you have no filesystem tools. Creating or
   editing skill content itself (instructions, scripts) is the
-  project_assistant's job — say so and suggest `call_projectmanager`.
+  project_assistant's job — say so and suggest `call_assistant`.
 - **Assignments are live but not permanent** — `assign_skill` /
   `unassign_skill` take effect immediately but are recomputed from
   `agent.md` files on the next manifest reload. For a lasting change the

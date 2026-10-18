@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from server.models.project import Project as ProjectModel
+from runtime.assistant_scope import AssistantScopeMixin
 
 
-class Project:
+class Project(AssistantScopeMixin):
     """Runtime wrapper around a Project model instance."""
 
     #: Singular internal assistant managing ONE project.
@@ -14,6 +15,11 @@ class Project:
 
     def __init__(self, project_model: ProjectModel) -> None:
         self.model = project_model
+
+    @property
+    def project(self) -> Any:
+        """Return the scope project (this project)."""
+        return self.model
 
     @property
     def pk(self) -> Any:
@@ -103,6 +109,10 @@ class Project:
     # Assistant wiring
     # ------------------------------------------------------------------
 
+    def assistant_scope_label(self) -> str:
+        """Return this project's name for the assistant session title."""
+        return self.name or "global"
+
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this project's assistant sessions.
 
@@ -112,18 +122,3 @@ class Project:
         from runtime.workspace.workspaces import Workspaces
 
         return Workspaces.for_project(self.model)
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton ``project_assistant`` session for this project.
-
-        Bound to the project root workspace (a superset of the manifest
-        dir, so file operations work across the whole project).
-        """
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.ASSISTANT,
-            project=self.model,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
-        )

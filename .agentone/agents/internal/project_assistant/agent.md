@@ -6,9 +6,9 @@ description: >
   directory using filesystem tools (glob, read, write, edit). Can list,
   create, and update agents, cron jobs, scripts, skills, streams, sets,
   and the project manifest itself. Can run reload_project to sync changes
-  to the database. Accessed via call_projectmanager tool.
+  to the database. Accessed via call_assistant tool.
 extends: AgentOne
-tools: [core.*, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project, wiki.*, todo.*, project.*]
+tools: [core.*, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project, wiki.*, todo.*]
 commands: [core.*, todo.*]
 inheritSystemPrompt: false
 subagents:

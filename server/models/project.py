@@ -6,7 +6,7 @@ from server.models.base_model import ObservableMixin, Observables
 
 
 class Project(ObservableMixin, models.Model):
-    """A named project with an optional filesystem path."""
+    """A named project with an optional primary workspace folder."""
 
     class ProjectObservables(Observables):
         """Explicit observable keys for an Project (IDE autocomplete)."""
@@ -34,11 +34,13 @@ class Project(ObservableMixin, models.Model):
 
     name: str = models.CharField(default="", max_length=255, help_text="")
     description: str = models.TextField(default="", max_length=10000, help_text="")
-    path: str = models.CharField(max_length=255, help_text="")
 
     # Folder handling (DB-canonical; project.md / projects.yaml deprecated).
+    # The project's filesystem folder is its primary workspace
+    # (``main_workspace``); the old ``path`` column was folded into it.
     # manifest_dir: the .agentone manifest tree for this project. Blank =
-    # legacy fallback <path>/.agentone (see runtime.paths.project_manifest_dir).
+    # central default ~/.agentone/projects/<name> (see
+    # runtime.paths.project_manifest_dir). Never git-tracked.
     manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
     # storage: inline_project | inline_workspace | central | git
     storage: str = models.CharField(max_length=32, default="", blank=True)
@@ -48,4 +50,15 @@ class Project(ObservableMixin, models.Model):
         "server.WorkspaceModel", default=None, null=True, blank=True,
         on_delete=models.SET_NULL, related_name="primary_for_projects",
     )
+
+    @property
+    def path(self) -> str:
+        """Return the primary workspace folder (read-only ``path`` alias).
+
+        The DB ``path`` column is gone — a project's folder is its
+        ``main_workspace``. Kept as a convenience for templates and runtime
+        callers that still read ``project.path``.
+        """
+        ws = getattr(self, "main_workspace", None)
+        return getattr(ws, "path", "") or ""
 

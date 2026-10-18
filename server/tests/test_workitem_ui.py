@@ -511,8 +511,8 @@ class TestBoardViewFiltering(TestCase):
     def setUp(self):
         from server.models.project import Project
 
-        self.project = Project.objects.create(name="Site", path="/tmp/site")
-        self.other = Project.objects.create(name="Other", path="/tmp/other")
+        self.project = Project.objects.create(name="Site")
+        self.other = Project.objects.create(name="Other")
         self._make("Backlog one", WorkItemStatus.BACKLOG, project=self.project)
         self._make("Ready one", WorkItemStatus.READY, project=self.project)
         self._make("Done one", WorkItemStatus.DONE, project=self.project)
@@ -640,7 +640,7 @@ class TestSidebarPanelFiltering(TestCase):
     def setUp(self):
         from server.models.project import Project
 
-        self.project = Project.objects.create(name="Site", path="/tmp/site")
+        self.project = Project.objects.create(name="Site")
         WorkItem.objects.create(title="Alpha task", status=WorkItemStatus.BACKLOG,
                                 project=self.project)
         WorkItem.objects.create(title="Beta task", status=WorkItemStatus.READY,

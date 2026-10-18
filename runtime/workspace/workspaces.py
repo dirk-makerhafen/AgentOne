@@ -5,10 +5,11 @@ from typing import Any
 
 from django.db.models import QuerySet
 
+from runtime.assistant_scope import AssistantScopeMixin
 from server.models.workspace import WorkspaceModel
 
 
-class Workspaces:
+class Workspaces(AssistantScopeMixin):
     """Query interface for WorkspaceModel instances.
 
     Scoping is explicit: ``parent_project`` limits rows to that project's
@@ -29,16 +30,6 @@ class Workspaces:
     ) -> None:
         self.parent_project = parent_project
         self.parent_workspace = parent_workspace
-
-    @property
-    def project(self) -> Any | None:
-        """Return the scope project (unwrapping a parent workspace)."""
-        if self.parent_project is not None:
-            return self.parent_project
-        try:
-            return getattr(self.parent_workspace, "parent_project", None)
-        except Exception:  # pylint: disable=broad-exception-caught
-            return None
 
     def all(self) -> QuerySet[WorkspaceModel]:
         """Return workspaces in scope, ordered by name."""
@@ -104,11 +95,6 @@ class Workspaces:
     # Assistant wiring
     # ------------------------------------------------------------------
 
-    @property
-    def assistant_name(self) -> str:
-        """Return the collection assistant managing this scope."""
-        return self.ASSISTANT_NAMES[1]
-
     def get_source_dir(self) -> Path:
         """Return the source directory anchoring this scope (no I/O).
 
@@ -148,15 +134,4 @@ class Workspaces:
             return self.for_project(project)
         return self.ensure_named(
             "AgentOne system", source, "Master workspace: whole framework home"
-        )
-
-    def get_assistant_session(self, caller: Any = None, name: str | None = None) -> Any | None:
-        """Return the singleton workspaces-assistant session for this scope."""
-        from runtime.session.sessions import Sessions
-
-        return Sessions().assistant_session(
-            name or self.assistant_name,
-            project=self.project,
-            workspace=self.get_assistant_workspace(),
-            caller=caller,
         )

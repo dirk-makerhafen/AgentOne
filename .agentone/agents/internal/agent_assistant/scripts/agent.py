@@ -14,22 +14,10 @@ Every tool returns a ``(bool, dict)`` tuple.
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import Any
 
-from runtime.script_helpers import agent_row, cron_row, skill_row
+from runtime.script_helpers import agent_row, cron_row, normalize_dir, skill_row
 from runtime.session.session import Session
-
-
-def _normalize_dir(value: Any) -> str:
-    """Normalize a directory path for comparison (no I/O)."""
-    try:
-        text = str(value or "").strip()
-        if not text:
-            return ""
-        return Path(text).expanduser().as_posix().rstrip("/") or ""
-    except Exception:
-        return ""
 
 
 def _resolve_agent(_session: Session):
@@ -44,7 +32,7 @@ def _resolve_agent(_session: Session):
         workspace = _session.workspace
     except Exception:
         workspace = None
-    ws_path = _normalize_dir(getattr(workspace, "path", None))
+    ws_path = normalize_dir(getattr(workspace, "path", None))
     if not ws_path:
         return False, {
             "status": "error",
@@ -212,7 +200,7 @@ def list_skills(_session: Session) -> tuple[bool, dict[str, Any]]:
         "agent": agent.name,
         "skills": [skill_row(s) for s in skills],
         "count": len(skills),
-        "scope": f"{_normalize_dir(agent.manifest_dir)}/skills/",
+        "scope": f"{normalize_dir(agent.manifest_dir)}/skills/",
     }
 
 
@@ -241,7 +229,7 @@ def list_agents(_session: Session) -> tuple[bool, dict[str, Any]]:
         "agent": agent.name,
         "agents": [agent_row(a) for a in subagents],
         "count": len(subagents),
-        "scope": f"{_normalize_dir(agent.manifest_dir)}/agents/",
+        "scope": f"{normalize_dir(agent.manifest_dir)}/agents/",
     }
 
 
@@ -277,7 +265,7 @@ def list_cronjobs(_session: Session, include_archived: bool = False) -> tuple[bo
         "agent": agent.name,
         "cronjobs": [cron_row(j) for j in jobs],
         "count": len(jobs),
-        "scope": f"{_normalize_dir(agent.manifest_dir)}/cronjobs/",
+        "scope": f"{normalize_dir(agent.manifest_dir)}/cronjobs/",
     }
 
 
@@ -346,5 +334,5 @@ def agent_details(_session: Session) -> tuple[bool, dict[str, Any]]:
         "skills_count": skills_count,
         "subagents_count": subagents_count,
         "cronjobs_count": cronjobs_count,
-        "scope": f"{_normalize_dir(agent.manifest_dir)}/",
+        "scope": f"{normalize_dir(agent.manifest_dir)}/",
     }

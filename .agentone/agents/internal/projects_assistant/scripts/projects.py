@@ -5,7 +5,7 @@ they see every registered project. Describing one project in depth and
 collection health belong here; creating/listing/reloading projects reuses
 the global ``projects.*`` tools (composed in the agent's tool list);
 administering ONE project's ``.agentone/`` directory belongs to
-``project_assistant`` (via ``call_projectmanager``). Every tool returns a
+``project_assistant`` (via ``call_assistant``). Every tool returns a
 ``(bool, dict)`` tuple.
 """
 from __future__ import annotations
