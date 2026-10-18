@@ -7,8 +7,36 @@ description: >
   design an architecture, sequence work into steps, or evaluate tradeoffs before
   implementing. Has read + web access to research, and can run Python analysis,
   but never writes files or executes modifying commands.
-extends: AgentOne
+model: Qwen3.6-35B-A3B-UD-MLX-4bit
+precision: precise
+reasoningEffort: high
+inheritSystemPrompt: true
+toolCallSyntax: default
+schedulerStrategy: queue
+subagentResultDelivery: immediate
+priority: 0
+autoCompactMaxTokens: 120000
+autoCompactMinTokens: 50000
+autoCompactIdleSeconds: 240
+autoCompactKeepPercent: 10
+maxRetries: 0
+maxTurns: 200
+maxUnattendedTurns: 200
+maxHistoryMessages: 1000
+autoload:
+  files: [AGENTS.md, CLAUDE.md]
+  maxFiles: 10
+  maxChars: 32768
+  maxCharsPerFile: 8192
+loadGuidanceFileIndex: true
+guidanceFileIndexLimit: 10
 tools: [core.*, filesystem-read.*, web.*, subagents.*, execution.python]
+tasks: [ core.*, compact.*,  ]
+subagents:
+    - name: researcher
+      create: agent
+    - name: planner
+      create: agent
 ---
 
 ## Role

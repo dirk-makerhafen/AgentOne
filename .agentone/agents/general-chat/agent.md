@@ -1,7 +1,7 @@
 ---
 name: general-chat
 description: General-purpose conversational assistant. Handles open questions, explanations, triage, and everyday assistance. Delegates implementation to coding and research to researcher.
-extends: AgentOne
+extends: []
 inheritSystemPrompt: False
 precision: balanced
 reasoningEffort: medium

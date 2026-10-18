@@ -1,7 +1,7 @@
 ---
 name: coding
 description: Implementation specialist. Writes and edits code, runs commands, debugs, and does project work inside the bound workspace. Delegated to by AgentOne and general-chat.
-extends: AgentOne
+extends: []
 inheritSystemPrompt: False
 precision: precise
 reasoningEffort: high
