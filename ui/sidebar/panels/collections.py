@@ -81,6 +81,7 @@ class SidebarPanelCollections(ModelView):
             parent=self,
             item_class=SidebarPanelCollectionItem,
             dom_element_class="cron-list",
+            observable_keys="DataCollection",
         )
 
     def openCreate(self):
@@ -89,4 +90,5 @@ class SidebarPanelCollections(ModelView):
         )
 
     def refreshList(self):
+        self.collection_list._recreate()
         self.collection_list.update()

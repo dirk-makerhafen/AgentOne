@@ -248,34 +248,38 @@ class SidebarPanelCronjobs(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.root_view
         self._show_archived = False
+        self.project_id: int | None = None
         self.cronjob_list = QuerySetView(
             subject=self._base_query(),
             parent=self,
             item_class=SidebarPanelCronjob,
             dom_element_class="cron-list",
+            observable_keys=self._scope_key(),
         )
+
+    def _scope_key(self) -> str:
+        if self.project_id is None:
+            return "Cronjob"
+        return f"Cronjob.parent_project:{self.project_id}"
 
     def _base_query(self):
         qs = self.subject.cronjobs.root()
+        if self.project_id is not None:
+            qs = Cronjob.objects.filter(parent_project_id=self.project_id)
         if self._show_archived:
             return qs.filter(is_archived=True)
         return qs.filter(is_archived=False)
 
     def refresh_list(self):
         self.cronjob_list.query = self._base_query()
+        self.cronjob_list.set_observable_keys(self._scope_key())
         self.cronjob_list._recreate()
         self.update()
 
     def set_project_filter(self, project_id: int | None) -> None:
-        if project_id is None:
-            base = self.subject.cronjobs.root()
-        else:
-            base = Cronjob.objects.filter(parent_project_id=project_id)
-        if self._show_archived:
-            base = base.filter(is_archived=True)
-        else:
-            base = base.filter(is_archived=False)
-        self.cronjob_list.query = base
+        self.project_id = project_id
+        self.cronjob_list.query = self._base_query()
+        self.cronjob_list.set_observable_keys(self._scope_key())
         self.cronjob_list._recreate()
         self.update()
 
@@ -303,5 +307,6 @@ class SidebarPanelCronjobs(ModelView):
 
     def refreshList(self):
         self.cronjob_list.query = self._base_query()
+        self.cronjob_list.set_observable_keys(self._scope_key())
         self.cronjob_list._recreate()
         self.update()

@@ -74,11 +74,11 @@ class SidebarPanelSkills(ModelView):
         self.root_view: UiAppView = parent.root_view
         self.search_string = ""
         self.skill_list = QuerySetView(
-            subject = subject.skills.root(),
-            parent = self,
-            item_class = SidebarPanelSkill,
-            dom_element_class = "skills-category",
-            filter_function=self._filter_function
+            subject=subject.skills.root(),
+            parent=self,
+            item_class=SidebarPanelSkill,
+            dom_element_class="skill-list",
+            observable_keys="SkillModel",
         )
 
     def set_project_filter(self, project_id: int | None) -> None:

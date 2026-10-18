@@ -80,6 +80,7 @@ class SidebarPanelProjects(ModelView):
             subject=subject.projects.root(),
             parent=self,
             item_class=SidebarPanelProject,
+            observable_keys="Project",
         )
 
     def openProjectCreate(self):

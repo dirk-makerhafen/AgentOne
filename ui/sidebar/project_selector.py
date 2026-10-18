@@ -78,6 +78,7 @@ class ProjectSelector(ModelView):
             item_class=ProjectOption,
             filter_function=self._filter_function,
             dom_element_class="project-list-container",
+            observable_keys="Project",
         )
 
     @property

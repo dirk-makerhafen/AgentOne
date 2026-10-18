@@ -151,7 +151,7 @@ def _default_cwd(session_model: Any) -> str:
     try:
         from runtime.session_folder import ensure_session_dir
 
-        return str(ensure_session_dir(session_model.pk))
+        return str(ensure_session_dir(session_model))
     except Exception:  # pylint: disable=broad-exception-caught
         return str(Path.home())
 

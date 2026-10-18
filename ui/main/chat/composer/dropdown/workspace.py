@@ -79,6 +79,7 @@ class WorkspaceDropdown(ModelView):
             item_class=WorkspaceDropdownOption,
             filter_function=self._filter_function,
             dom_element_class = "ws-list-container",
+            observable_keys="WorkspaceModel",
         )
 
     def _refresh_selection(self) -> None:

@@ -185,6 +185,28 @@ class ObservablesKeysTest(TestCase):
             f"AgentModel.parent_project:{project.pk}",
         )
 
+    def test_noparents_key_for_root_rows(self):
+        from server.models.cron import Cronjob
+        from server.models.project import Project
+
+        cron = Cronjob.objects.create(name="obs-root-cron", schedule="* * * * *")
+        self.assertEqual(cron.observables.noparents, "Cronjob.noparents")
+        self.assertIn("Cronjob.noparents", cron.observable_keys())
+
+        # Parenting the row drops the noparents key and adds the FK key.
+        project = Project.objects.create(name="obs-root-proj")
+        cron.parent_project = project
+        cron.save()
+        keys = cron.observable_keys()
+        self.assertNotIn("Cronjob.noparents", keys)
+        self.assertIn(f"Cronjob.parent_project:{project.pk}", keys)
+
+    def test_flat_model_never_has_noparents(self):
+        from server.models.project import Project
+
+        project = Project.objects.create(name="obs-flat-proj")
+        self.assertNotIn("Project.noparents", project.observable_keys())
+
     def test_notify_observers_end_to_end(self):
         agent, av = create_agent("obs-agent3")
         session, sv = create_session(agent, av)

@@ -103,9 +103,11 @@ class SidebarPanelWorkItems(ModelView):
         self.status_filter = ""
         self.search = ""
         self.workitem_list = QuerySetView(
-            subject=scoped_queryset(self.project_id),
+            subject=subject.workitems.root(),
             parent=self,
             item_class=SidebarPanelWorkItem,
+            dom_element_class="workitem-list",
+            observable_keys="WorkItem",
         )
 
     @property

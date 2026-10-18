@@ -210,13 +210,13 @@ class Session:
         """
         from runtime.session_folder import session_dir
 
-        return session_dir(self.model.pk)
+        return session_dir(self)
 
     def ensure_private_dir(self) -> Any:
         """Create this session's private folder if missing and return it."""
         from runtime.session_folder import ensure_session_dir
 
-        return ensure_session_dir(self.model.pk)
+        return ensure_session_dir(self)
 
     def set_workspace(self, value: Any) -> None:
         """Set the workspace for this session (creates a new version)."""

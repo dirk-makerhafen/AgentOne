@@ -260,16 +260,27 @@ class BoundTask:
         Never raises — failures are ignored so tool execution is unaffected.
         """
         try:
-            from runtime.session_folder import ensure_session_dir, parse_session_pk
+            from runtime.session_folder import ensure_session_dir
 
             model = getattr(self.session, "model", None)
             pk = getattr(model, "pk", None)
             if not isinstance(pk, int):
                 return
+            try:
+                own_dir = self.session.private_dir
+            except Exception:  # pylint: disable=broad-exception-caught
+                own_dir = None
+            if own_dir is None:
+                return
+            own_resolved = str(Path(own_dir).expanduser().resolve())
             call_args: dict[str, Any] = self._normalized_call_kwargs(args, kwargs)
             for candidate in self._filesystem_target_paths(call_args):
-                if parse_session_pk(candidate) == str(pk):
-                    ensure_session_dir(pk)
+                try:
+                    cand_resolved = str(Path(candidate).expanduser().resolve())
+                except OSError:
+                    cand_resolved = str(Path(candidate).expanduser())
+                if cand_resolved == own_resolved or cand_resolved.startswith(own_resolved.rstrip("/") + "/"):
+                    ensure_session_dir(self.session)
                     return
         except Exception:  # pylint: disable=broad-exception-caught
             pass
@@ -356,7 +367,7 @@ class BoundTask:
                 if pk is None:
                     pk = getattr(self.session, "id", "")
                 env["AGENTONE_SESSION_ID"] = str(pk)
-                env["AGENTONE_SESSION_DIR"] = str(session_dir(pk))
+                env["AGENTONE_SESSION_DIR"] = str(session_dir(self.session))
             except Exception:  # pylint: disable=broad-exception-caught
                 env["AGENTONE_SESSION_ID"] = str(getattr(self.session, "id", ""))
 

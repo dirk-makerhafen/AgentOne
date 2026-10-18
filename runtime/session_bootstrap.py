@@ -88,7 +88,7 @@ def _build_env_text(session: Any) -> str:
     try:
         from runtime.session_folder import ensure_session_dir
 
-        private_dir = ensure_session_dir(session.model.pk).as_posix()
+        private_dir = ensure_session_dir(session).as_posix()
     except Exception:  # pylint: disable=broad-exception-caught
         logger.warning("bootstrap: private dir unavailable", exc_info=True)
         private_dir = "(unavailable)"

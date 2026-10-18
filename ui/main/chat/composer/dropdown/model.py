@@ -134,7 +134,8 @@ class ModelDropdown(ModelView):
             subject=model_groups(),
             parent=self,
             item_class=ModelDropdownOption,
-            filter_function=self._filter_function
+            filter_function=self._filter_function,
+            observable_keys="AiModel",
         )
 
     @property

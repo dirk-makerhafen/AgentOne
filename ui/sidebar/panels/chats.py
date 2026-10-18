@@ -218,6 +218,7 @@ class SidebarPanelChat(ModelView):
                 item_class=SidebarPanelChat,
                 dom_element_class="session-tree-children",
                 depth=self.depth + 1,
+                observable_keys=subject.observables.child_sessions,
             )
 
     def _archived_visible(self) -> bool:
@@ -435,7 +436,8 @@ class SidebarPanelChats(ModelView):
             subject=self._base_query(),
             parent=self,
             item_class=SidebarPanelChat,
-            dom_element_class="session-date-body"
+            dom_element_class="session-date-body",
+            observable_keys="SessionModel",
         )
         app = subject
       
@@ -470,6 +472,7 @@ class SidebarPanelChats(ModelView):
 
     def refresh_list(self):
         self.agent_list.query = self._base_query()
+        self.agent_list.set_observable_keys("SessionModel")
         self.agent_list._recreate()
         self.update()
 
@@ -485,6 +488,7 @@ class SidebarPanelChats(ModelView):
         else:
             base = base.filter(is_archived=False)
         self.agent_list.query = base.order_by('-is_pinned', '-created_at')
+        self.agent_list.set_observable_keys("SessionModel")
         self.agent_list._recreate()
         self.update()
 

@@ -124,6 +124,7 @@ class RightPanelSessionSubagents(ModelView):
             item_class=ChildSessionItem,
             dom_element="div",
             dom_element_class="active-child-sessions",
+            observable_keys=subject.observables.child_sessions,
         )
         self._rebuild_active()
 

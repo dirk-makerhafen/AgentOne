@@ -43,23 +43,23 @@ class SessionFolderHelperTest(SimpleTestCase):
     def test_session_dir_is_pk_keyed(self):
         with tempfile.TemporaryDirectory() as td:
             with override_settings(AGENTONE_SESSIONS_DIR=td):
-                self.assertEqual(session_dir(123), Path(td) / "123")
-                self.assertEqual(session_dir("456"), Path(td) / "456")
+                self.assertEqual(session_dir(123), Path(td) / "agent" / "123")
+                self.assertEqual(session_dir("456"), Path(td) / "agent" / "456")
 
     def test_ensure_creates_with_restricted_mode(self):
         with tempfile.TemporaryDirectory() as td:
             with override_settings(AGENTONE_SESSIONS_DIR=td):
                 folder = ensure_session_dir(42)
                 self.assertTrue(folder.is_dir())
-                self.assertEqual(folder, Path(td) / "42")
+                self.assertEqual(folder, Path(td) / "agent" / "42")
                 # Second call is idempotent.
                 self.assertEqual(ensure_session_dir(42), folder)
 
     def test_ensure_is_idempotent_when_exists(self):
         with tempfile.TemporaryDirectory() as td:
             with override_settings(AGENTONE_SESSIONS_DIR=td):
-                (Path(td) / "7").mkdir()
-                (Path(td) / "7" / "note.md").write_text("hi")
+                (Path(td) / "agent" / "7").mkdir(parents=True)
+                (Path(td) / "agent" / "7" / "note.md").write_text("hi")
                 folder = ensure_session_dir(7)
                 self.assertEqual((folder / "note.md").read_text(), "hi")
 
@@ -87,7 +87,7 @@ class SessionFolderGuardrailTest(SimpleTestCase):
 
     def test_own_folder_allowed_despite_external_deny(self):
         policy = resolve_policy(self._session(11))
-        own = str(Path(self.root / "sessions" / "11" / "scratch.md"))
+        own = str(Path(self.root / "sessions" / "agent" / "11" / "scratch.md"))
         self.assertEqual(evaluate(policy, own, "read").action, "allow")
         self.assertEqual(evaluate(policy, own, "write").action, "allow")
 
@@ -95,13 +95,13 @@ class SessionFolderGuardrailTest(SimpleTestCase):
         policy = resolve_policy(
             self._session(11, access={"write": {"default": "deny"}, "read": {"default": "deny"}})
         )
-        own = str(Path(self.root / "sessions" / "11" / "a.md"))
+        own = str(Path(self.root / "sessions" / "agent" / "11" / "a.md"))
         self.assertEqual(evaluate(policy, own, "write").action, "allow")
         self.assertEqual(evaluate(policy, own, "read").action, "allow")
 
     def test_other_session_denied(self):
         policy = resolve_policy(self._session(11))
-        other = str(Path(self.root / "sessions" / "22" / "a.md"))
+        other = str(Path(self.root / "sessions" / "agent" / "22" / "a.md"))
         self.assertEqual(evaluate(policy, other, "read").action, "deny")
         self.assertEqual(evaluate(policy, other, "write").action, "deny")
 
@@ -115,7 +115,7 @@ class SessionFolderGuardrailTest(SimpleTestCase):
         policy = resolve_policy(
             self._session(11, access={"read": {"default": "allow", "deny": [f"{base}/**"]}})
         )
-        own = str(Path(base) / "11" / "a.md")
+        own = str(Path(base) / "agent" / "11" / "a.md")
         self.assertEqual(evaluate(policy, own, "read").action, "deny")
 
     def test_no_workspace_still_isolates_other_sessions(self):
@@ -126,11 +126,11 @@ class SessionFolderGuardrailTest(SimpleTestCase):
 
         policy = resolve_policy(NoWS())
         self.assertEqual(
-            evaluate(policy, str(Path(self.root / "sessions" / "11" / "a.md")), "write").action,
+            evaluate(policy, str(Path(self.root / "sessions" / "agent" / "11" / "a.md")), "write").action,
             "allow",
         )
         self.assertEqual(
-            evaluate(policy, str(Path(self.root / "sessions" / "99" / "a.md")), "read").action,
+            evaluate(policy, str(Path(self.root / "sessions" / "agent" / "99" / "a.md")), "read").action,
             "deny",
         )
         # Unrelated paths keep the legacy allow-all behaviour.
@@ -138,7 +138,7 @@ class SessionFolderGuardrailTest(SimpleTestCase):
 
     def test_unknown_pk_no_carveout(self):
         policy = resolve_policy(self._session(None))
-        other = str(Path(self.root / "sessions" / "22" / "a.md"))
+        other = str(Path(self.root / "sessions" / "agent" / "22" / "a.md"))
         # No carve-out without a known pk — falls through to the normal
         # inside-workspace default (allow here, since the temp sessions base
         # sits inside the temp workspace root).
@@ -178,6 +178,6 @@ class RuntimeSessionPrivateDirTest(TestCase):
             with override_settings(AGENTONE_SESSIONS_DIR=td):
                 session = SessionModel.objects.create(name="privdir")
                 runtime = session.get_runtime()
-                self.assertEqual(runtime.private_dir, session_dir(session.pk))
+                self.assertEqual(runtime.private_dir, session_dir(session))
                 folder = runtime.ensure_private_dir()
                 self.assertTrue(folder.is_dir())

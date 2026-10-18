@@ -26,6 +26,7 @@ class Observables:
         <ModelName>            # "any" — the whole model
         <ModelName>.pk:<pk>
         <ModelName>.<field>:<value>
+        <ModelName>.noparents  # root-level rows (no ``parent_*`` FK set)
     """
 
     def __init__(self, model) -> None:
@@ -38,6 +39,16 @@ class Observables:
     @property
     def pk(self) -> str:
         return f"{self.any}.pk:{self.model.pk}"
+
+    @property
+    def noparents(self) -> str:
+        """Key for root-level rows — no ``parent_*`` FK is set.
+
+        Only models that actually declare a ``parent_*`` FK ever publish
+        this (see :meth:`ObservableMixin.observable_keys`), so subscribing
+        to it is a no-op for flat models like ``Project``.
+        """
+        return f"{self.any}.noparents"
 
     def __getattr__(self, name: str) -> str:
         if name.startswith("_"):
@@ -78,16 +89,29 @@ class ObservableMixin:
         Always includes the ``any`` and ``pk`` keys, plus one key per set FK
         (e.g. ``AgentModel.parent_project:12``) so observers registered on the
         other side of the relation (``project.observables.child_agents``) are
-        notified too.
+        notified too.  Models that declare a ``parent_*`` FK additionally
+        publish ``<Model>.noparents`` while every such FK is ``None``, so a
+        root-level list can observe its own scope (``Project`` has no
+        ``parent_*`` FK and therefore never emits it).
         """
         keys = [self.observables.any]
         if self.pk is not None:
             keys.append(self.observables.pk)
+        has_parent_field = False
+        has_parent = False
         for field in self._meta.fields:
-            if isinstance(field, models.ForeignKey):
-                fk_id = getattr(self, field.attname, None)
-                if fk_id is not None:
-                    keys.append(f"{self.observables.any}.{field.name}:{fk_id}")
+            if not isinstance(field, models.ForeignKey):
+                continue
+            is_parent_field = field.name.startswith("parent_")
+            fk_id = getattr(self, field.attname, None)
+            if fk_id is not None:
+                keys.append(f"{self.observables.any}.{field.name}:{fk_id}")
+                if is_parent_field:
+                    has_parent = True
+            elif is_parent_field:
+                has_parent_field = True
+        if has_parent_field and not has_parent:
+            keys.append(self.observables.noparents)
         return keys
 
     def notify_observers(self, action: str = "update", data: dict[str, Any] | None = None) -> None:

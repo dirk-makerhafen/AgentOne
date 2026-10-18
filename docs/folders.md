@@ -38,7 +38,7 @@ reload warns and skips.
 
 | Dir | Lifecycle |
 |---|---|
-| `sessions/<pk>/` | Per-session scratch, lazy, `0700`. Own=allow, other/base=deny (guardrail follows `AGENTONE_SESSIONS_DIR`). Archived kept forever; int-named orphans swept at startup only (`startup_cleanup`; recovery beat is disabled). |
+| `sessions/<agent>/<pk>/` | Per-session scratch, lazy, `0700`. Location depends on scope (workspace/project/global agentone dir). Own=allow, other/base=deny. Archived kept forever; int-named orphans swept at startup only (`startup_cleanup`; recovery beat is disabled). |
 | `runtime/<ver_pk>/` | Full tree extract per version + `.last_used`. GC after 1h idle, re-extracted on demand. |
 | `install/global\|user\|project_<n>\|workspace_<n>/` | Git repos synced from scope source (`rsync --delete`), versioned by tree SHA. Re-syncable. |
 | `upstream/*`, `staging/*` | Upstream clones + merged staging (upstream first, local overlays; `sources.yaml` + `skills.yaml` are config-only, excluded; staging uses `--delete`). Re-syncable. |

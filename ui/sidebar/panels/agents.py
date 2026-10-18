@@ -93,17 +93,27 @@ class SidebarPanelAgents(ModelView):
         super().__init__(subject, parent, **kwargs)
         self.uid = "panelProfiles"
         self.root_view: UiAppView = parent.root_view
+        self.project_id: int | None = None
 
         self.agent_list = QuerySetView(
             subject = subject.agents.root(),
             parent = self,
             item_class = SidebarPanelAgent,
+            observable_keys = self._scope_key(),
         )
+
+    def _scope_key(self) -> str:
+        if self.project_id is None:
+            return "AgentModel"
+        return f"AgentModel.parent_project:{self.project_id}"
+
     def set_project_filter(self, project_id: int | None) -> None:
+        self.project_id = project_id
         if project_id is None:
             self.agent_list.query = self.subject.agents.root()
         else:
             self.agent_list.query = AgentModel.objects.filter(parent_project=project_id)
+        self.agent_list.set_observable_keys(self._scope_key())
         self.agent_list._recreate()
         self.update()
 

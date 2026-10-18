@@ -247,39 +247,90 @@ def _session_pk(session: Any) -> int | None:
 
 
 def _session_dir_verdict(session_pk: int | None, target_abs: str, target_abs_raw: str) -> GuardrailVerdict | None:  # pylint: disable=too-many-return-statements
-    """Session-private storage carve-out (``~/.agentone/sessions/<pk>/``).
+    """Session-private storage carve-out.
 
-    Own folder → ``allow`` (read and write); another session's folder (or
-    the base dir itself) → ``deny``.  Returns *None* when the target is
-    outside the sessions base or the owning pk is unknown.
+    Own folder -> ``allow`` (read and write); another session's folder (or
+    a sessions base / intermediate agent directory for the global base) ->
+    ``deny``.  Returns *None* when the target is outside any session-private
+    storage tree or the owning pk is unknown.  Handles both the legacy
+    (``<base>/<pk>/``) and new (``<base>/<agent>/<pk>/``) layouts, as well
+    as session folders nested under workspace/project agentone dirs.
     """
     if session_pk is None:
         return None
+    # Global sessions base (honours AGENTONE_SESSIONS_DIR).
     try:
         from runtime.session_folder import get_sessions_base
-    except Exception:  # pylint: disable=broad-exception-caught
-        return None
-    try:
+
         base_resolved = get_sessions_base().expanduser().resolve().as_posix()
     except OSError:
-        return None
-    for candidate in (target_abs, target_abs_raw):
-        rel: str | None = None
-        if candidate == base_resolved:
-            rel = ""
-        elif candidate.startswith(base_resolved.rstrip("/") + "/"):
-            rel = candidate[len(base_resolved.rstrip("/") + "/"):]
-        if rel is None:
-            continue
-        if not rel:
+        base_resolved = None
+    except Exception:  # pylint: disable=broad-exception-caught
+        base_resolved = None
+    if base_resolved is not None:
+        for candidate in (target_abs, target_abs_raw):
+            if candidate == base_resolved:
+                rel = ""
+            elif candidate.startswith(base_resolved.rstrip("/") + "/"):
+                rel = candidate[len(base_resolved.rstrip("/") + "/"):]
+            else:
+                continue
+            if rel == "":
+                return GuardrailVerdict(
+                    action="deny",
+                    score=100,
+                    level="critical",
+                    reason="Session-private storage base directory is not listable",
+                    risk_factors=["session_private_storage"],
+                )
+            segments = rel.split("/")
+            owner: str | None = None
+            if segments and segments[0].isdigit():
+                owner = segments[0]
+            elif len(segments) >= 2 and segments[1].isdigit():
+                owner = segments[1]
+            else:
+                # Intermediate agent directory (not listable).
+                return GuardrailVerdict(
+                    action="deny",
+                    score=100,
+                    level="critical",
+                    reason="Session-private storage agent directory is not listable",
+                    risk_factors=["session_private_storage"],
+                )
+            if owner == str(session_pk):
+                return GuardrailVerdict(action="allow", score=0, level="safe", reason="")
             return GuardrailVerdict(
                 action="deny",
                 score=100,
                 level="critical",
-                reason="Session-private storage base directory is not listable",
+                reason=f"Path belongs to another session's private storage: {target_abs}",
                 risk_factors=["session_private_storage"],
             )
-        owner = rel.split("/")[0]
+
+    # Structural detection for session folders nested under any other base
+    # (workspace/project agentone dirs).  Only triggers when an integer
+    # session pk segment is present, so unrelated ``.../sessions/...``
+    # paths are left to the normal policy.
+    for candidate in (target_abs, target_abs_raw):
+        parts = candidate.rstrip("/").split("/")
+        idx = None
+        for i in range(len(parts) - 1, -1, -1):
+            if parts[i] == "sessions":
+                idx = i
+                break
+        if idx is None:
+            continue
+        rest = parts[idx + 1:]
+        if not rest:
+            continue
+        owner = None
+        if rest[0].isdigit():
+            owner = rest[0]
+        elif len(rest) >= 2 and rest[1].isdigit():
+            owner = rest[1]
+        if owner is None:
+            continue
         if owner == str(session_pk):
             return GuardrailVerdict(action="allow", score=0, level="safe", reason="")
         return GuardrailVerdict(
@@ -290,7 +341,6 @@ def _session_dir_verdict(session_pk: int | None, target_abs: str, target_abs_raw
             risk_factors=["session_private_storage"],
         )
     return None
-
 
 def _inside_workspace(policy: _WorkspaceAccessPolicy, target: Path) -> bool:
     if policy.workspace_root is None:

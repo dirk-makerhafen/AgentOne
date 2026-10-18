@@ -70,7 +70,8 @@ class ProfileDropdown(PyHtmlView):
             subject=models,
             parent=self,
             item_class=ProfileDropdownOption,
-            filter_function=self._filter_function
+            filter_function=self._filter_function,
+            observable_keys="AgentModel",
         )
 
     def _refresh_selection(self) -> None:
