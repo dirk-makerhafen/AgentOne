@@ -24,4 +24,10 @@ tools:
     file: cronjob.py
     function: cronjob_runs
     bound: True
+
+  # Reload ONE cron job from disk after manifest edits
+  - name: refresh_from_disk
+    file: cronjob.py
+    function: refresh_from_disk
+    bound: True
 ---

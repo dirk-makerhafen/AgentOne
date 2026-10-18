@@ -115,3 +115,32 @@ def projects_stats(_session: Session) -> tuple[bool, dict[str, Any]]:
             "counts": _project_counts(project),
         })
     return True, {"status": "success", "projects": rows, "count": len(rows)}
+
+
+def refresh_from_disk(_session: Session, name: str = "") -> tuple[bool, dict[str, Any]]:
+    """Reload ONE project's manifest tree (agents/skills/scripts/crons) from disk.
+
+    Defaults to the calling session's project when no name is given.
+
+    Args:
+        name: Project name (optional).
+
+    Returns:
+        ``(True, {"status": "success", "project": str, "details": [...]})``
+        or ``(False, {"status": "error", "message": ...})``.
+    """
+    ok, project = _resolve_project(_session, name)
+    if not ok:
+        return False, project
+    details: list[dict[str, Any]] = []
+    try:
+        from runtime.project.project import Project as ProjectScope
+
+        ProjectScope(project).refresh_from_disk(details=details)
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not refresh project from disk: {e}"}
+    return True, {
+        "status": "success",
+        "project": project.name,
+        "details": details,
+    }

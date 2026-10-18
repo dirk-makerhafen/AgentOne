@@ -299,3 +299,45 @@ def set_cronjob_archived(_session: Session, name: str, archived: bool = True) ->
     info = _cron_info(job)
     info.update({"status": "success"})
     return True, info
+
+
+def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """Reload all cron jobs visible in the managed scope from disk."""
+    from pathlib import Path
+
+    from runtime.paths import agentone_root, agentone_home, project_manifest_dir
+    from registry.loader.load_cron_manifest import load_cron_manifest
+    from registry.install_repo import InstallRepo
+
+    project = _session.get_project()
+    details: list[dict[str, Any]] = []
+    errors: list[str] = []
+    roots: list[tuple[Path, Any, InstallRepo]] = []
+    if project is not None:
+        md = project_manifest_dir(project)
+        roots.append((md, project, InstallRepo.for_project(project.name, source_root=md)))
+    else:
+        roots.append((agentone_root(), None, InstallRepo.for_global(source_root=agentone_root())))
+        roots.append((agentone_home(), None, InstallRepo.for_user(source_root=agentone_home())))
+
+    for root, proj, repo in roots:
+        crons_dir = root / "cronjobs"
+        if not crons_dir.is_dir():
+            continue
+        try:
+            repo.sync()
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            errors.append(f"sync {root}: {e}")
+            continue
+        seen: set[str] = set()
+        for cron_md in sorted(crons_dir.glob("*.md")):
+            try:
+                load_cron_manifest(cron_md, install_repo=repo, parent_project=proj, seen_names=seen, details=details)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                errors.append(f"{cron_md}: {e}")
+
+    return (len(errors) == 0, {
+        "status": "success" if not errors else "partial",
+        "details": details,
+        "errors": errors,
+    })

@@ -12,4 +12,10 @@ tools:
     file: projects.py
     function: projects_stats
     bound: True
+
+  # Reload ONE project's manifest tree from disk
+  - name: refresh_from_disk
+    file: projects.py
+    function: refresh_from_disk
+    bound: True
 ---

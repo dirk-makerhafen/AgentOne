@@ -548,3 +548,25 @@ def workspace_details(_session: Session) -> tuple[bool, dict[str, Any]]:
         "scope": f"{managed.path}/",
     })
     return True, info
+
+
+def refresh_from_disk(_session: Session, workspace_name: str = "") -> tuple[bool, dict[str, Any]]:
+    """Reload ONE workspace's scoped manifest tree from disk.
+
+    Defaults to the managed workspace when no name is given.
+    """
+    ok, ws = _resolve_target(_session, workspace_name)
+    if not ok:
+        return False, ws
+    details: list[dict[str, Any]] = []
+    try:
+        from runtime.workspace.workspace import Workspace as WorkspaceScope
+
+        WorkspaceScope(ws).refresh_from_disk(details=details)
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not refresh workspace from disk: {e}"}
+    return True, {
+        "status": "success",
+        "workspace": ws.name or ws.path,
+        "details": details,
+    }

@@ -372,3 +372,23 @@ def skill_details(_session: Session) -> tuple[bool, dict[str, Any]]:
         "used_by_agents": users,
         "scope": f"{normalize_dir(skill.manifest_dir)}/",
     }
+
+
+def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """Reload THIS skill (and child scripts) from disk.
+
+    Use after editing the skill's ``skill.md`` or sibling files on disk.
+    """
+    ok, skill = _resolve_skill(_session)
+    if not ok:
+        return False, skill
+    details: list[dict[str, Any]] = []
+    try:
+        skill.refresh_from_disk(details=details)
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not refresh skill from disk: {e}"}
+    return True, {
+        "status": "success",
+        "skill": skill.name,
+        "details": details,
+    }

@@ -179,3 +179,45 @@ def create_agent(
         "scope": scope,
         "note": "Applies on the next manifest reload — tell the user to reload.",
     }
+
+
+def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """Reload all agents visible in the managed scope from disk."""
+    from pathlib import Path
+
+    from runtime.paths import agentone_root, agentone_home, project_manifest_dir
+    from registry.loader.load_agent_manifest import load_agent_manifest
+    from registry.loader.utils import find_agent_md_files
+    from registry.install_repo import InstallRepo
+
+    project = _session.get_project()
+    details: list[dict[str, Any]] = []
+    errors: list[str] = []
+    roots: list[tuple[Path, Any, InstallRepo]] = []
+    if project is not None:
+        md = project_manifest_dir(project)
+        roots.append((md, project, InstallRepo.for_project(project.name, source_root=md)))
+    else:
+        roots.append((agentone_root(), None, InstallRepo.for_global(source_root=agentone_root())))
+        roots.append((agentone_home(), None, InstallRepo.for_user(source_root=agentone_home())))
+
+    for root, proj, repo in roots:
+        agents_dir = root / "agents"
+        if not agents_dir.is_dir():
+            continue
+        try:
+            repo.sync()
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            errors.append(f"sync {root}: {e}")
+            continue
+        for agent_md in find_agent_md_files(agents_dir):
+            try:
+                load_agent_manifest(agent_md, install_repo=repo, parent_project=proj, details=details)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                errors.append(f"{agent_md}: {e}")
+
+    return (len(errors) == 0, {
+        "status": "success" if not errors else "partial",
+        "details": details,
+        "errors": errors,
+    })

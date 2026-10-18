@@ -30,4 +30,10 @@ tools:
     file: skill.py
     function: list_agents
     bound: True
+
+  # Reload THIS skill (and children) from disk after manifest edits
+  - name: refresh_from_disk
+    file: skill.py
+    function: refresh_from_disk
+    bound: True
 ---

@@ -63,6 +63,12 @@ class Cron(AssistantScopeMixin):
 
         return cron_file_path(self.name or ".scope", self.project).parent
 
+    def refresh_from_disk(self, details=None):
+        """Reload this cron job from disk."""
+        self.model.refresh_from_disk(details=details)
+        self.model.refresh_from_db()
+        return details
+
     # ------------------------------------------------------------------
     # Assistant wiring
     # ------------------------------------------------------------------

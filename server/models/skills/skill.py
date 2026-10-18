@@ -39,3 +39,32 @@ class SkillModel(ObservableMixin, models.Model):
     # loader; blank for rows predating the field or created ad hoc).
     manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
 
+
+    def refresh_from_disk(self, details=None) -> None:
+        """Reload this skill (and child scripts) from disk."""
+        from pathlib import Path
+
+        from runtime.paths import model_manifest_dir
+        from registry.loader.load_skill_manifest import load_skill_manifest
+        from runtime.refresh import install_repo_for_path
+
+        skill_dir = model_manifest_dir(self, "skill", self.name, self.parent_project)
+        md = skill_dir / "skill.md"
+        if not md.is_file() and (self.manifest_dir or "").strip():
+            md = Path(self.manifest_dir) / "skill.md"
+            skill_dir = md.parent
+        if details is None:
+            details = []
+        _source_root, install_repo = install_repo_for_path(skill_dir)
+        try:
+            install_repo.sync()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        load_skill_manifest(
+            md,
+            install_repo=install_repo,
+            parent_project=self.parent_project,
+            parent_agent=self.parent_agent,
+            details=details,
+        )
+        self.refresh_from_db()

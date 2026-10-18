@@ -86,6 +86,7 @@ class SidebarPanelSkills(ModelView):
             self.skill_list.query = self.subject.skills.root()
         else:
             self.skill_list.query = SkillModel.objects.filter(parent_project=project_id)
+        self.skill_list.set_observable_keys("SkillModel" if project_id is None else f"SkillModel.parent_project:{project_id}")
         self.skill_list._recreate()
         self.update()
 

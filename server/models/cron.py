@@ -57,3 +57,45 @@ class Cronjob(BaseModel):
     next_run_at: datetime | None = models.DateTimeField(null=True, blank=True, default=None)
     last_status: str = models.CharField(max_length=50, blank=True, default="")
     total_runs: int = models.IntegerField(default=0)
+
+    def refresh_from_disk(self, details=None) -> None:
+        """Reload this cron job from disk."""
+        from pathlib import Path
+
+        import frontmatter
+
+        from registry.loader.load_cron_manifest import load_cron_manifest
+        from runtime.refresh import install_repo_for_path
+
+        cron_dir = None
+        if (self.manifest_dir or "").strip():
+            cron_dir = Path(self.manifest_dir)
+        if cron_dir is None or not cron_dir.is_dir():
+            return
+        # Find the manifest file for this job.
+        md = cron_dir / f"{self.name}.md"
+        if not md.is_file():
+            for candidate in sorted(cron_dir.glob("*.md")):
+                try:
+                    manifest = frontmatter.load(candidate)
+                    if (manifest.get("name") or "").strip() == (self.name or "").strip():
+                        md = candidate
+                        break
+                except Exception:  # pylint: disable=broad-exception-caught
+                    continue
+        if not md.is_file():
+            return
+        if details is None:
+            details = []
+        _source_root, install_repo = install_repo_for_path(cron_dir)
+        try:
+            install_repo.sync()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        load_cron_manifest(
+            md,
+            install_repo=install_repo,
+            parent_project=self.parent_project,
+            details=details,
+        )
+        self.refresh_from_db()

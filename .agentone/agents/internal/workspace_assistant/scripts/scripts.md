@@ -60,4 +60,10 @@ tools:
     file: workspaces.py
     function: list_cronjobs
     bound: True
+
+  # Reload ONE workspace's scoped manifest tree from disk
+  - name: refresh_from_disk
+    file: workspaces.py
+    function: refresh_from_disk
+    bound: True
 ---

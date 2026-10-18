@@ -336,3 +336,29 @@ def agent_details(_session: Session) -> tuple[bool, dict[str, Any]]:
         "cronjobs_count": cronjobs_count,
         "scope": f"{normalize_dir(agent.manifest_dir)}/",
     }
+
+
+def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
+    """Reload THIS agent (and its child scripts/skills/subagents) from disk.
+
+    Use after editing the agent's ``agent.md`` or sibling files on disk.
+    The agent is the one whose manifest folder is this session's
+    workspace.
+
+    Returns:
+        ``(True, {"status": "success", "agent": str, "details": [...]})``
+        or ``(False, {"status": "error", "message": ...})``.
+    """
+    ok, agent = _resolve_agent(_session)
+    if not ok:
+        return False, agent
+    details: list[dict[str, Any]] = []
+    try:
+        agent.refresh_from_disk(details=details)
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not refresh agent from disk: {e}"}
+    return True, {
+        "status": "success",
+        "agent": agent.name,
+        "details": details,
+    }

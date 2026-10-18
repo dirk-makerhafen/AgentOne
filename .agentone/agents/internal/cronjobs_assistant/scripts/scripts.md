@@ -24,4 +24,10 @@ tools:
     file: cronjobs.py
     function: set_cronjob_archived
     bound: True
+
+  # Reload all cron jobs in the managed scope from disk
+  - name: refresh_from_disk
+    file: cronjobs.py
+    function: refresh_from_disk
+    bound: True
 ---

@@ -88,3 +88,21 @@ class WorkspaceModel(ObservableMixin, models.Model):
     # manifest_dir: workspace-scoped .agentone tree. Blank = unmanaged
     # (workspace is a bare cwd with no manifests of its own).
     manifest_dir: str = models.CharField(max_length=4096, default="", blank=True)
+
+    def refresh_from_disk(self, details=None) -> None:
+        """Reload this workspace's scoped manifest tree from disk."""
+        from pathlib import Path
+
+        from runtime.paths import workspace_manifest_dir
+        from registry.loader.load_project_folder import load_scope_dir
+
+        manifest = workspace_manifest_dir(self)
+        if manifest is None or not manifest.is_dir():
+            return
+        project = self.parent_project
+        if project is None:
+            return
+        if details is None:
+            details = []
+        load_scope_dir(manifest, project, details=details)
+        self.refresh_from_db()

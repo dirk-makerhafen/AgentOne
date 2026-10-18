@@ -321,3 +321,30 @@ def cronjob_runs(_session: Session, name: str, limit: int = 20) -> tuple[bool, d
         "last_run_at": job.last_run_at.isoformat() if job.last_run_at else None,
         "next_run_at": job.next_run_at.isoformat() if job.next_run_at else None,
     }
+
+
+def refresh_from_disk(_session: Session, name: str) -> tuple[bool, dict[str, Any]]:
+    """Reload ONE cron job from disk.
+
+    Use after editing the job's manifest file on disk.
+
+    Args:
+        name: Name of the cron job (required).
+
+    Returns:
+        ``(True, {"status": "success", "job": str, "details": [...]})``
+        or ``(False, {"status": "error", "message": ...})``.
+    """
+    ok, job = _resolve(_session, name)
+    if not ok:
+        return False, job
+    details: list[dict[str, Any]] = []
+    try:
+        job.refresh_from_disk(details=details)
+    except Exception as e:
+        return False, {"status": "error", "message": f"Could not refresh cron job from disk: {e}"}
+    return True, {
+        "status": "success",
+        "job": job.name,
+        "details": details,
+    }

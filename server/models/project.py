@@ -62,3 +62,14 @@ class Project(ObservableMixin, models.Model):
         ws = getattr(self, "main_workspace", None)
         return getattr(ws, "path", "") or ""
 
+
+    def refresh_from_disk(self, details=None) -> None:
+        """Reload this project's manifest tree (agents/skills/scripts/crons) from disk."""
+        from runtime.paths import project_manifest_dir
+        from registry.loader.load_project_folder import load_scope_dir
+
+        manifest = project_manifest_dir(self)
+        if details is None:
+            details = []
+        load_scope_dir(manifest, self, details=details)
+        self.refresh_from_db()

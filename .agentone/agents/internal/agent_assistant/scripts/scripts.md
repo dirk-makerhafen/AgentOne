@@ -36,4 +36,10 @@ tools:
     file: agent.py
     function: list_cronjobs
     bound: True
+
+  # Reload THIS agent (and children) from disk after manifest edits
+  - name: refresh_from_disk
+    file: agent.py
+    function: refresh_from_disk
+    bound: True
 ---

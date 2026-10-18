@@ -24,4 +24,10 @@ tools:
     file: skills.py
     function: create_skill
     bound: True
+
+  # Reload all skills in the managed scope from disk
+  - name: refresh_from_disk
+    file: skills.py
+    function: refresh_from_disk
+    bound: True
 ---

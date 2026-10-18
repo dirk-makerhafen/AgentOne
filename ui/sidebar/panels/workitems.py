@@ -103,7 +103,7 @@ class SidebarPanelWorkItems(ModelView):
         self.status_filter = ""
         self.search = ""
         self.workitem_list = QuerySetView(
-            subject=subject.workitems.root(),
+            subject=scoped_queryset(self.project_id),
             parent=self,
             item_class=SidebarPanelWorkItem,
             dom_element_class="workitem-list",
@@ -137,6 +137,7 @@ class SidebarPanelWorkItems(ModelView):
         # Python pass over every row on every render, and the two could
         # silently disagree about what "filtered" means.
         self.workitem_list.query = self._scoped
+        self.workitem_list.set_observable_keys("WorkItem")
         self.workitem_list._recreate()
 
     def set_status_filter(self, value: str) -> None:

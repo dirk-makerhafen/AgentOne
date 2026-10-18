@@ -70,6 +70,36 @@ class AgentModel(BaseModel):
         except Exception:
             return True
 
+    def refresh_from_disk(self, details=None) -> None:
+        """Reload this agent (and its child scripts/skills/subagents) from disk."""
+        from pathlib import Path
+
+        from runtime.paths import model_manifest_dir
+        from registry.loader.load_agent_manifest import load_agent_manifest
+        from runtime.refresh import install_repo_for_path
+
+        agent_dir = model_manifest_dir(self, "agent", self.name, self.parent_project)
+        md = agent_dir / "agent.md"
+        if not md.is_file() and (self.manifest_dir or "").strip():
+            md = Path(self.manifest_dir) / "agent.md"
+            agent_dir = md.parent
+        if details is None:
+            details = []
+        _source_root, install_repo = install_repo_for_path(agent_dir)
+        try:
+            install_repo.sync()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        load_agent_manifest(
+            md,
+            install_repo=install_repo,
+            parent_project=self.parent_project,
+            parent_agent=self.parent_agent,
+            parent_skill=self.parent_skill,
+            details=details,
+        )
+        self.refresh_from_db()
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Prevent updates to existing AgentModel instances."""
         if self.pk:

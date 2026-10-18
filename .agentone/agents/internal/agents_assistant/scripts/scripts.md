@@ -18,4 +18,16 @@ tools:
     file: agents.py
     function: create_agent
     bound: True
+
+  # Reload all agents in the managed scope from disk
+  - name: refresh_from_disk
+    file: agents.py
+    function: refresh_from_disk
+    bound: True
+
+  # Reload all agents in the managed scope from disk
+  - name: refresh_from_disk
+    file: agents.py
+    function: refresh_from_disk
+    bound: True
 ---

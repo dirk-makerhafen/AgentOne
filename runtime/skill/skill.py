@@ -81,6 +81,12 @@ class Skill(AssistantScopeMixin):
 
         return model_manifest_dir(self.model, "skill", self.name, self.project)
 
+    def refresh_from_disk(self, details=None):
+        """Reload this skill (and child scripts) from disk."""
+        self.model.refresh_from_disk(details=details)
+        self.model.refresh_from_db()
+        return details
+
     def get_skills_runtime(self) -> Any:
         """Return this skill's child skills."""
         from runtime.skill.skills import Skills

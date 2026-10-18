@@ -550,6 +550,12 @@ class Agent(AssistantScopeMixin):
 
         return model_manifest_dir(self.model, "agent", self.name, self.project)
 
+    def refresh_from_disk(self, details=None):
+        """Reload this agent (and child scripts/skills/subagents) from disk."""
+        self.model.refresh_from_disk(details=details)
+        self.model.refresh_from_db()
+        return details
+
     def get_skills_runtime(self) -> Any:
         """Return this agent's child skills."""
         from runtime.skill.skills import Skills

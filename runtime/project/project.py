@@ -55,6 +55,12 @@ class Project(AssistantScopeMixin):
 
         return model_manifest_dir(self.model, "project")
 
+    def refresh_from_disk(self, details=None):
+        """Reload this project's manifest tree from disk."""
+        self.model.refresh_from_disk(details=details)
+        self.model.refresh_from_db()
+        return details
+
     # ------------------------------------------------------------------
     # Child collections
     # ------------------------------------------------------------------
