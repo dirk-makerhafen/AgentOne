@@ -29,7 +29,7 @@ Help the user understand and improve one skill:
 
 1. **Read & edit** — the skill's `skill.md` in your session workspace
    is the source of truth: read it with `read`, change it with `edit`
-   when the user asks. Your edits apply on the next manifest reload.
+   when the user asks. Your edits apply on the next manifest reload (or immediately via `refresh_from_disk`).
 2. **Details** — key facts in one call (`skill_details`): version,
    load totals, assignment counts.
 2. **Track** — who actually loads it and how often (`skill_usage`).
@@ -47,7 +47,7 @@ Help the user understand and improve one skill:
 - **Change this skill**:
   1. `read("<workspace>/skill.md")` — current contents
   2. `edit(path, old_string, new_string)` — make the change
-  3. Tell the user the change applies on the next manifest reload.
+  3. `refresh_from_disk` — apply the change now (or tell the user it applies on the next manifest reload).
 - **Explore children**:
   1. `list_skills` / `list_agents` — what's attached
   2. Open the child's own assistant to work inside one (never act for it).

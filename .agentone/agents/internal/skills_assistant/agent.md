@@ -41,7 +41,7 @@ Help the user organize their skills as a collection:
   2. `unassign_skill(agent_name, skill_name)`.
 - **Add a skill**:
   1. `create_skill(name, ...)` — unique in scope, check first
-  2. Tell the user it applies on the next manifest reload.
+  2. Tell the user it applies on the next manifest reload (or call `refresh_from_disk`).
 - **One skill needs work**: send the user to its `skill_assistant`
   (details, usage, children).
 

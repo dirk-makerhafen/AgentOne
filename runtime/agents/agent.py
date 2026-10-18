@@ -491,9 +491,9 @@ class Agent(AssistantScopeMixin):
         """Return the subagent *name* as an AgentVersionModel, or *None*."""
         if name in self.allowedSubagentNames:
             av = self.get_version_model().subagent_versions.filter(agent__name=name).first()
-            if av is not None and av.get_runtime().visibility == "internal":
-                # Internal agents (approval_decider, …) are framework-only:
-                # instantiated by name in runtime code, never as subagents.
+            if av is not None and av.get_runtime().visibility in ("internal", "mixin"):
+                # Internal/mixin agents are never spawnable as subagents:
+                # internal = framework-only by name; mixin = partial bundle.
                 return None
             return av
         return None

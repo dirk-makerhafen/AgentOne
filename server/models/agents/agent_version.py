@@ -34,11 +34,15 @@ class AgentVisibility(models.TextChoices):
       (planner, researcher, …).
     - ``INTERNAL``: hidden from user pickers *and* from subagent spawning;
       only framework code may instantiate it by name (approval_decider, …).
+    - ``MIXIN``: a partial bundle whose params/tasks/tools are inherited by
+      extending agents; its visibility never propagates (a mixin is not a
+      real agent identity). Hidden from pickers and never spawnable.
     """
 
     USER = "user", "user"
     SUBAGENT = "subagent", "subagent"
     INTERNAL = "internal", "internal"
+    MIXIN = "mixin", "mixin"
 
 
 DEFAULT_AGENT_VISIBILITY = AgentVisibility.USER.value
@@ -369,6 +373,12 @@ class AgentVersionModel(BaseModel):
                     f"resolve_property does not yet support type of '{name}': {type(value)}"
                 )
         for extends_agent_version in self.extends_agent_versions.all():
+            # Mixin agents are partial bundles: their visibility must not
+            # propagate to inheritors (a mixin is not a real agent identity).
+            if name == "visibility" and getattr(
+                extends_agent_version, "visibility", None
+            ) == "mixin":
+                continue
             if (ext_value := extends_agent_version.resolve_property(name)) is not None:
                 if isinstance(value, (list,)) and extend_at_index is not None:
                     value[extend_at_index : extend_at_index + 1] = ext_value

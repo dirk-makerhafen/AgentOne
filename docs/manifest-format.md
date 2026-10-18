@@ -64,7 +64,7 @@ autoCompactKeepPercent: 10     # percentage of newest tokens to keep in full on 
 reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel
 toolCallSyntax: default        # default | custom
-visibility: user               # user | subagent | internal (who the agent is for)
+visibility: user               # user | subagent | internal | mixin (who the agent is for)
 hooks:                          # optional — session + intercept hooks (see docs/session-hooks.md)
   - name: reflect
     on: stop                    # stop | pre_compact | post_compact | session_end
@@ -105,7 +105,7 @@ Agent body content goes here — used as the system prompt.
 | `autoload` | dict | AGENTS.md autoload (see [Autoload](#autoload)) |
 | `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default false — opt-in) |
 | `guidanceFileIndexLimit` | int | Max nested guidance files listed in the index (default 10, 0 = omit) |
-| `visibility` | enum | Who the agent is for: `user` (default, shown in pickers), `subagent` (hidden from pickers, spawnable), `internal` (framework-only, spawned by name) |
+| `visibility` | enum | Who the agent is for: `user` (default, shown in pickers), `subagent` (hidden from pickers, spawnable), `internal` (framework-only, spawned by name), `mixin` (partial bundle — params/tasks/tools inherit, visibility does not propagate; never spawnable) |
 | `hooks` | list | Hook entries — two flavors, mutually exclusive per entry (see [Session hooks](session-hooks.md)). Lifecycle: (`on`/`matcher`/`agent`/`task`/`ingest`/`max_tokens`/`timeout_seconds`) — detached agent work at lifecycle points; `on:` works unquoted (loader normalizes the YAML-1.1 bool). Intercept: (`match`/`before`∣`after`/`mode`/`on_error`) — per-call pre/post hooks on arbitrary tool/task/command names; `before`/`after` name a task of the same agent, `mode` is `inline` (blocking transform, defaults for `before`) or `detached` (fire-and-forget, default for `after`). `blocking: true` is rejected (deferred sync tier). |
 | Priority/scheduling | various | Execution control knobs |
 

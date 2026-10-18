@@ -452,7 +452,7 @@ def load_agent_manifest(
         validate_agent_access(access_block, source=f"agent.md {agent.name!r}")
         settings_kwargs["access"] = access_block
 
-    # Agent visibility (``visibility: user | subagent | internal``) — who the
+    # Agent visibility (``visibility: user | subagent | internal | mixin``) — who the
     # agent is meant for. Undeclared stays NULL (inherit through extends,
     # else user) so existing rows keep matching and no version bumps.
     visibility = manifest.get("visibility")

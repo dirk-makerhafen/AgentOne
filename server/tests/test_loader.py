@@ -450,8 +450,10 @@ class LoadVisibilityTest(AgentMdTestMixin, TestCase):
         cls.setup_install_repo()
         cls.base_agent, cls.base_av = cls.load_agent("base")
         cls.internal_agent, cls.internal_av = cls.load_agent("vis_internal")
+        cls.mixin_agent, cls.mixin_av = cls.load_agent("vis_mixin")
         cls.sub_agent, cls.sub_av = cls.load_agent("vis_subagent")
         cls.child_agent, cls.child_av = cls.load_agent("vis_child")
+        cls.mixin_child_agent, cls.mixin_child_av = cls.load_agent("vis_mixin_child")
 
     @classmethod
     def tearDownClass(cls):
@@ -507,6 +509,37 @@ class LoadVisibilityTest(AgentMdTestMixin, TestCase):
         agent = Agent(agent_model=self.child_agent)
         self.assertEqual(agent.visibility, "subagent")
         self.assertFalse(agent.is_user_visible)
+
+    def test_mixin_stored_and_hidden(self):
+        from runtime.agents.agent import Agent
+
+        self.assertEqual(self.mixin_av.visibility, "mixin")
+        agent = Agent(agent_model=self.mixin_agent)
+        self.assertEqual(agent.visibility, "mixin")
+        self.assertFalse(agent.is_user_visible)
+        self.mixin_agent.refresh_from_db()
+        self.assertFalse(self.mixin_agent.is_user_visible)
+
+    def test_mixin_visibility_does_not_propagate(self):
+        from runtime.agents.agent import Agent
+
+        # vis_mixin_child declares nothing — must NOT inherit "mixin";
+        # reads as "user".
+        self.assertIsNone(self.mixin_child_av.visibility)
+        agent = Agent(agent_model=self.mixin_child_agent)
+        self.assertEqual(agent.visibility, "user")
+        self.assertTrue(agent.is_user_visible)
+
+    def test_mixin_not_spawnable_as_subagent(self):
+        from runtime.agents.agent import Agent
+
+        parent = Agent(agent_model=self.sub_agent)
+        self.assertIn("vis_mixin", parent.subagentNames)
+        self.assertIsNone(parent.get_subagent("vis_mixin"))
+        self.assertNotIn(
+            "vis_mixin",
+            [av.agent.name for av in parent.allowedSubagents],
+        )
 
     def test_invalid_visibility_raises(self):
         with self.assertRaises(ValueError):

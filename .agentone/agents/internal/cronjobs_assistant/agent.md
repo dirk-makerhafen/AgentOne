@@ -28,6 +28,7 @@ Help the user organize their scheduled jobs as a collection:
    schedule, a target agent, and the message or function args to run.
 3. **Archive** — hide jobs without losing tracking data, or restore them
    (`set_cronjob_archived`).
+4. **Refresh** — reload all jobs from disk (`refresh_from_disk`).
 
 ## Common Tasks
 

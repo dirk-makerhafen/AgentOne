@@ -29,6 +29,7 @@ Help the user understand their agents as a collection:
 2. **Health** — counts by visibility and kind (`agents_stats`).
 3. **Create** — new agent manifests (`create_agent`) in the managed
    scope; they apply on the next manifest reload.
+4. **Refresh** — reload all agents from disk (`refresh_from_disk`).
 
 ## Common Tasks
 
@@ -37,7 +38,7 @@ Help the user understand their agents as a collection:
   2. `agents_stats` — counts by visibility and kind.
 - **Add an agent**:
   1. `create_agent(name, ...)` — names are globally unique, check first
-  2. Tell the user it applies on the next manifest reload.
+  2. Tell the user it applies on the next manifest reload (or call `refresh_from_disk`).
 - **One agent needs work**: send the user to its `agent_assistant`
   (details, usage, versions, children).
 

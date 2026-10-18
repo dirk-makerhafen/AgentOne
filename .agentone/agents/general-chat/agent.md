@@ -4,6 +4,11 @@ description: General-purpose conversational assistant. Handles open questions, e
 extends: []
 inheritSystemPrompt: False
 precision: balanced
+autoload:
+  files: [AGENTS.md, CLAUDE.md]
+  maxFiles: 10
+  maxChars: 32768
+  maxCharsPerFile: 8192
 reasoningEffort: medium
 schedulerStrategy: queue
 subagentResultDelivery: immediate

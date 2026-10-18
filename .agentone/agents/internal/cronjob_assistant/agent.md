@@ -33,6 +33,7 @@ Help the user understand and tune one scheduled job:
 - **Check job health** (job `name` required for every tool):
   1. `cronjob_details(name)` — configuration and run tracking
   2. `cronjob_runs(name)` — recent executions, newest first
+  3. `refresh_from_disk(name)` — reload a job from its manifest file on disk.
   3. Judge healthy / stuck / failing from `last_status` and cadence.
 - **Reschedule or retarget**:
   1. `edit_cronjob(name, ...)` — only passed fields change

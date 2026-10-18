@@ -8,5 +8,7 @@ visibility: subagent
 subagents:
   - name: vis_internal
     create: both
+  - name: vis_mixin
+    create: both
 ---
 Subagent fixture agent
