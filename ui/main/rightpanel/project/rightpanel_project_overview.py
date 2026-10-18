@@ -21,7 +21,7 @@ class RightPanelProjectOverview(ModelView):
             <div class="settings-card" style="margin-bottom:8px">
                 <div class="detail-row">
                     <div class="detail-row-label">Path</div>
-                    <div class="detail-row-value"><code style="font-size:11px">{{ pyview.project.path }}</code></div>
+                    <div class="detail-row-value"><code style="font-size:11px">{{ pyview.subject.path }}</code></div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Primary workspace</div>
@@ -33,7 +33,7 @@ class RightPanelProjectOverview(ModelView):
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Description</div>
-                    <div class="detail-row-value" style="white-space:pre-line;max-height:80px;overflow:auto;font-size:12px">{{ pyview.project.description }}</div>
+                    <div class="detail-row-value" style="white-space:pre-line;max-height:80px;overflow:auto;font-size:12px">{{ pyview.subject.description }}</div>
                 </div>
             </div>
             <div class="settings-card">

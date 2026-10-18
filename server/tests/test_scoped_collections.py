@@ -535,6 +535,60 @@ class AssistantSessionTest(TestCase):
         self.assertEqual(child.model.parent_project_id, project.pk)
 
 
+class AssistantScopeLabelTest(TestCase):
+    """``assistant_scope_label`` names every scope for sortable sessions."""
+
+    def test_singular_labels_use_item_name(self):
+        from runtime.agents.agent import Agent
+        from runtime.cron.cron import Cron
+        from runtime.project.project import Project as ProjectRt
+        from runtime.skill.skill import Skill
+        from runtime.workspace.workspace import Workspace as WorkspaceRt
+        from runtime.workitems.workitem import WorkItem as WorkItemRt
+
+        agent, _av = _make_agent("labelled-agent")
+        self.assertEqual(Agent(agent).assistant_scope_label(), "labelled-agent")
+
+        skill = _make_skill("labelled-skill")
+        self.assertEqual(Skill(skill).assistant_scope_label(), "labelled-skill")
+
+        project = _make_project(name="labelled-proj", path="/tmp/labelled-proj")
+        self.assertEqual(ProjectRt(project).assistant_scope_label(), "labelled-proj")
+
+        job = Cronjob.objects.create(name="labelled-job", schedule="* * * * *")
+        self.assertEqual(Cron(job).assistant_scope_label(), "labelled-job")
+
+        ws = WorkspaceModel.objects.create(name="labelled-ws", path="/tmp/labelled-ws")
+        self.assertEqual(WorkspaceRt(ws).assistant_scope_label(), "labelled-ws")
+
+        item = WorkItem.objects.create(title="fix the thing", priority=10)
+        self.assertEqual(WorkItemRt(item).assistant_scope_label(), f"#{item.pk} fix the thing")
+
+    def test_workspace_label_falls_back_to_path_basename(self):
+        from runtime.workspace.workspace import Workspace as WorkspaceRt
+
+        ws = WorkspaceModel.objects.create(name="", path="/tmp/basename-ws")
+        self.assertEqual(WorkspaceRt(ws).assistant_scope_label(), "basename-ws")
+
+    def test_plural_labels_use_project_name_or_global(self):
+        project = _make_project(name="plural-proj", path="/tmp/plural-proj")
+        self.assertEqual(Skills().assistant_scope_label(), "global")
+        self.assertEqual(
+            Skills(parent_project=project).assistant_scope_label(), "plural-proj"
+        )
+        self.assertEqual(Projects().assistant_scope_label(), "global")
+
+    def test_plural_labels_use_owner_kind_and_name(self):
+        agent, _av = _make_agent("owner-agent")
+        self.assertEqual(
+            Skills(parent_agent=agent).assistant_scope_label(), "agent owner-agent"
+        )
+        ws = WorkspaceModel.objects.create(name="owner-ws", path="/tmp/owner-ws")
+        self.assertEqual(
+            Agents(parent_workspace=ws).assistant_scope_label(), "workspace owner-ws"
+        )
+
+
 def _load_script(relative_path, module_name):
     """Load an assistant script file by repo-relative path (no package)."""
     full = Path(".agentone") / relative_path

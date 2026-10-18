@@ -41,10 +41,19 @@ def manager_sessions(workspace) -> list:
 
 
 def new_manager_session_name(workspace, agent_name: str = MANAGER_AGENT_NAME) -> str:
-    """Unique display name for a fresh manager chat (no raise)."""
+    """Unique display name for a fresh manager chat (no raise).
+
+    Uses the shared ``<assistant> - <label>`` shape (label = workspace name,
+    else path basename, else ``global``) so manager chats read and sort like
+    every other assistant session.
+    """
     from server.models.sessions.session import SessionModel
 
-    base = f"{getattr(workspace, 'name', None) or 'workspace'}-{agent_name}"
+    label = (getattr(workspace, "name", None) or "").strip()
+    if not label:
+        path = (getattr(workspace, "path", None) or "").strip().rstrip("/")
+        label = path.rsplit("/", 1)[-1] if path else "global"
+    base = f"{agent_name} - {label}"
     name, i = base, 1
     try:
         while SessionModel.objects.filter(name=name).exists():
