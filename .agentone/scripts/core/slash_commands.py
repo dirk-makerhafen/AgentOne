@@ -11,7 +11,7 @@ from typing import Any
 from runtime.session.session import Session
 from server.models.content import GenericContent
 from server.models.message import Message, MessagePart
-from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
 
 
 def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) -> dict[str, Any]:
@@ -38,7 +38,7 @@ def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) ->
 
     session_version = _session.get_version_model()
     prev_message = _session.get_last_message()
-    message = Message.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
+    message = Message.objects.create(role=MessageRole.USER, message_type=MessageType.USER_CHAT, session=session_version.session, session_version=session_version, prev_message=prev_message)
 
     try:
         result = bound_task.call(**kwargs)
@@ -78,7 +78,7 @@ def handle_slashcommand_response(
     # this response is recorded).  Pointing at the command message would fork
     # the chain and strand the notice as an invisible side branch on reload.
     tail = _session.get_last_message()
-    conv_msg = Message.objects.create(role="tool", session=sv.session, session_version=sv, prev_message=tail if tail is not None else message)
+    conv_msg = Message.objects.create(role="tool", message_type=MessageType.TOOL_RESPONSE, session=sv.session, session_version=sv, prev_message=tail if tail is not None else message)
 
     def _serialize_result(obj: Any) -> Any:
         """JSON-serialise a tool result, handling Message / Path model references."""

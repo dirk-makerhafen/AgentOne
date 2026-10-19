@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessagePartType, MessageRole
+from server.models.enums.message_enums import MessagePartType, MessageRole, MessageType
 from server.models.message import Message
 
 PREVIEW_CHARS = 500
@@ -46,7 +46,7 @@ def _compaction_cutoffs(session_pks: set[int]) -> dict[int, Any]:
     cutoffs: dict[int, Any] = {}
     for pk in session_pks:
         cutoffs[pk] = (
-            Message.objects.filter(session_id=pk, parts__type=MessagePartType.COMPACTION)
+            Message.objects.filter(session_id=pk, message_type=MessageType.COMPACTION)
             .order_by("-created_at")
             .values_list("created_at", flat=True)
             .first()
@@ -218,7 +218,7 @@ def search_own_history(
                     "preview": text_preview,
                     "preview_truncated": truncated,
                     "hidden_from_llm": bool(msg.hide_from_context or _str(msg.role) == "info"),
-                    "is_compaction_boundary": part.type == MessagePartType.COMPACTION,
+                    "is_compaction_boundary": msg.message_type == MessageType.COMPACTION,
                     "beyond_compaction": beyond,
                 }
                 if include_subsessions:

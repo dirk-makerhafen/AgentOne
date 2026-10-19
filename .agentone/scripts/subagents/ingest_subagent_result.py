@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
 from server.models.message import Message
 from server.models.sessions.session import SessionModel
 
@@ -44,6 +44,7 @@ def ingest_subagent_result(_session: Session, child_session_pk: int, summary: st
     # serialised into GenericContent (nor Celery kwargs), so pass plain values.
     message_spec = {
         "role": MessageRole.USER,
+        "message_type": MessageType.TOOL_RESPONSE,
         "parts": [
             {
                 "type": MessagePartType.MESSAGE,

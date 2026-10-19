@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from runtime.session.messages import normalize_messages
+from runtime.session.messages import default_type_for_role, normalize_messages
 from runtime.session.session import Session
 from server.models.message import Message
 
@@ -41,6 +41,7 @@ def ingest_user_message(_session: Session, message: Any = None, execute_turn: bo
     for spec in messages:
         created = Message.objects.create(
             role=spec["role"],
+            message_type=spec.get("message_type") or default_type_for_role(spec["role"]),
             session=session_version.session,
             session_version=session_version,
             prev_message=prev_message,

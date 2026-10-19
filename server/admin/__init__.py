@@ -3,9 +3,9 @@
 Registers all Django models with their corresponding admin classes
 and imports admin modules for side effects.
 """
-from typing import Any
-
 from django.contrib import admin
+from django.db.models import QuerySet
+from django.db.models.functions import Length
 from django.http import HttpRequest
 
 from server.models.content import GenericContent
@@ -13,9 +13,45 @@ from server.models.content import GenericContent
 
 @admin.register(GenericContent)
 class GenericContentAdmin(admin.ModelAdmin):
-    """Admin for polymorphic GenericContent storage."""
+    """Admin for deduplicated, content-addressed GenericContent storage.
 
-    search_fields: tuple[str, ...] = ("id", "content", "content_type")
+    ``content`` is deliberately kept out of the list view — it can hold
+    megabytes of base64 image data or JSON — so the size column is computed
+    DB-side via ``Length()`` rather than materializing the column.
+    """
+
+    list_display: tuple[str, ...] = (
+        "sha256_short", "content_type", "content_size", "expires_at",
+    )
+    list_filter: tuple[str, ...] = ("content_type",)
+    search_fields: tuple[str, ...] = ("sha256",)
+    readonly_fields: tuple[str, ...] = (
+        "sha256", "content_type", "content", "content_size",
+    )
+    fieldsets = (
+        (None, {"fields": ("sha256", "content_type", "content_size", "expires_at")}),
+        ("Content", {"fields": ("content",)}),
+    )
+    show_full_result_count: bool = False
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet:
+        return (
+            super().get_queryset(request)
+            .defer("content")
+            .annotate(_content_size=Length("content"))
+        )
+
+    @admin.display(description="SHA-256", ordering="sha256")
+    def sha256_short(self, obj: GenericContent) -> str:
+        return obj.sha256[:12]
+
+    @admin.display(description="Size", ordering="_content_size")
+    def content_size(self, obj: GenericContent) -> int:
+        return getattr(obj, "_content_size", 0) or 0
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        """Rows are content-addressed and created by the runtime."""
+        return False
 
 
 # Provider admins (wildcard re-export)

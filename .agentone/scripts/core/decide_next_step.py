@@ -17,7 +17,7 @@ import re
 from typing import Any
 import json
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
 from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.queries.response import Response
@@ -122,6 +122,7 @@ def _pop_next_todo_message(_session: Session, message: Message) -> tuple[Message
     sv = _session.get_version_model()
     next_message = Message.objects.create(
         role=MessageRole.USER,
+        message_type=MessageType.SYSTEM_NOTICE,
         session=sv.session,
         session_version=sv,
         # Chain after the current tail, not the just-finished message: an
@@ -283,6 +284,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         sv = _session.get_version_model()
         message = Message.objects.create(
             role=MessageRole.USER,
+            message_type=MessageType.SYSTEM_NOTICE,
             session=sv.session,
             session_version=sv,
             prev_message=prev_message,

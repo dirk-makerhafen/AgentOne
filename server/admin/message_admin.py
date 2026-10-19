@@ -21,12 +21,12 @@ class MessageAdmin(admin.ModelAdmin):
     """Admin for conversation messages."""
 
     list_display: tuple[str, ...] = (
-        "id", "session_version", "role", "source",
+        "id", "session_version", "role", "message_type",
         "hide_from_context", "pin_to_context", "created_at", "prev_message",
     )
     list_display_links: tuple[str, ...] = ("id",)
     list_filter: tuple[str, ...] = (
-        "role", "source", "hide_from_context", "pin_to_context", "created_at",
+        "role", "message_type", "hide_from_context", "pin_to_context", "created_at",
     )
     search_fields: tuple[str, ...] = ("id",)
     inlines: list[type[admin.TabularInline]] = [MessagePartInline]
@@ -35,7 +35,7 @@ class MessageAdmin(admin.ModelAdmin):
 
     fieldsets: tuple[tuple[str, dict[str, Any]], ...] = (
         ("Conversation Context", {
-            "fields": ("role", "source"),
+            "fields": ("role", "message_type"),
         }),
         ("Visibility Settings", {
             "fields": ("hide_from_context", "pin_to_context"),

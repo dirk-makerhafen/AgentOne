@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageRole
+from server.models.enums.message_enums import MessageRole, MessageType
 from server.models.sessions.session import SessionModel
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
@@ -413,7 +413,7 @@ class ComposerFooter(PyHtmlView):
             from server.models.message import Message as Msg
             session_version = self.subject.get_version_model()
             prev_message = self.subject.get_last_message()
-            msg = Msg.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
+            msg = Msg.objects.create(role=MessageRole.USER, message_type=MessageType.SYSTEM_NOTICE, session=session_version.session, session_version=session_version, prev_message=prev_message)
             msg.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=str(e))
             # Two-phase write (see Message.save): publish only now parts exist.
             msg.publish("create")
@@ -434,7 +434,7 @@ class ComposerFooter(PyHtmlView):
             from server.models.message import Message as Msg
             session_version = self.subject.get_version_model()
             prev_message = self.subject.get_last_message()
-            msg = Msg.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
+            msg = Msg.objects.create(role=MessageRole.USER, message_type=MessageType.SYSTEM_NOTICE, session=session_version.session, session_version=session_version, prev_message=prev_message)
             msg.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=str(e))
             # Two-phase write (see Message.save): publish only now parts exist.
             msg.publish("create")
@@ -452,7 +452,7 @@ class ComposerFooter(PyHtmlView):
             from server.models.message import Message as Msg
             session_version = self.subject.get_version_model()
             prev_message = self.subject.get_last_message()
-            msg = Msg.objects.create(role=MessageRole.USER, session=session_version.session, session_version=session_version, prev_message=prev_message)
+            msg = Msg.objects.create(role=MessageRole.USER, message_type=MessageType.SYSTEM_NOTICE, session=session_version.session, session_version=session_version, prev_message=prev_message)
             msg.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=str(e))
             # Two-phase write (see Message.save): publish only now parts exist.
             msg.publish("create")

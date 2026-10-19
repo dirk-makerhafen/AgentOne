@@ -9,7 +9,7 @@ class NormalizeMessagesTest(SimpleTestCase):
     def test_string_single_part(self):
         self.assertEqual(
             normalize_messages("hello"),
-            [{"role": "user", "parts": [
+            [{"role": "user", "message_type": None, "parts": [
                 {"part_type": "message", "content_type": "text", "content": "hello"},
             ]}],
         )
@@ -32,13 +32,13 @@ class NormalizeMessagesTest(SimpleTestCase):
 
     def test_single_part_dict(self):
         result = normalize_messages({"content": "hi"})
-        self.assertEqual(result, [{"role": "user", "parts": [
+        self.assertEqual(result, [{"role": "user", "message_type": None, "parts": [
             {"part_type": "message", "content_type": "text", "content": "hi"},
         ]}])
 
     def test_message_dict_with_role(self):
         result = normalize_messages({"role": "assistant", "message": "hi"})
-        self.assertEqual(result, [{"role": "assistant", "parts": [
+        self.assertEqual(result, [{"role": "assistant", "message_type": None, "parts": [
             {"part_type": "message", "content_type": "text", "content": "hi"},
         ]}])
 
@@ -101,4 +101,4 @@ class NormalizeMessagesTest(SimpleTestCase):
 
     def test_none_body_yields_no_parts(self):
         result = normalize_messages([{"role": "info"}])
-        self.assertEqual(result[0], {"role": "info", "parts": []})
+        self.assertEqual(result[0], {"role": "info", "message_type": None, "parts": []})

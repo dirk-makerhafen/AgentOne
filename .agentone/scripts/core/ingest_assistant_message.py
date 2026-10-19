@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
 from server.models.message import Message
 from server.models.queries.response import Response
 from runtime.session.session import Session
@@ -94,6 +94,7 @@ def ingest_assistant_message(
         session_version=sv,
         response=response,
         role=MessageRole.ASSISTANT,
+        message_type=MessageType.ASSISTANT_MESSAGE,
         prev_message=prev_message,
     )
 

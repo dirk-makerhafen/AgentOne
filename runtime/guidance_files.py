@@ -524,11 +524,11 @@ def clear_guidance_cache(session_pk: Any) -> None:
 
 
 def _latest_compaction_marker_pk(session_pk: Any) -> int | None:
-    from server.models.enums.message_enums import MessagePartType
+    from server.models.enums.message_enums import MessageType
     from server.models.message import Message
 
     marker = (
-        Message.objects.filter(session_id=session_pk, parts__type=MessagePartType.COMPACTION)
+        Message.objects.filter(session_id=session_pk, message_type=MessageType.COMPACTION)
         .order_by("-id")
         .values_list("id", flat=True)
         .first()

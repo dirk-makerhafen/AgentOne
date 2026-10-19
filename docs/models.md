@@ -322,7 +322,7 @@ File: `server/models/message.py`
 | `response` | `FK(Response, CASCADE, nullable)` | Source LLM response |
 | `prev_message` | `FK(self, CASCADE, nullable)` | Previous message in chain |
 | `role` | `CharField(choices=MessageRole)` | user / assistant / system / tool |
-| `source` | `CharField(choices=MessageSource)` | Origin type |
+| `message_type` | `CharField(choices=MessageType)` | Whole-message semantic type: default / user_chat / assistant_message / tool_response / system_notice / compaction / reflection / info / bootstrap |
 | `hide_from_context` | `BooleanField(default=False)` | Exclude from LLM context |
 | `pin_to_context` | `BooleanField(default=False)` | Always include |
 
@@ -334,7 +334,7 @@ File: `server/models/message.py`
 |---|---|---|
 | `message` | `FK(Message, CASCADE)` | Parent message |
 | `tokens` | `IntegerField(default=0)` | Token count |
-| `type` | `EnumField(MessagePartType)` | REASONING / MESSAGE / TOOLCALL |
+| `type` | `EnumField(MessagePartType)` | REASONING / MESSAGE / TOOLCALL / COMPACTION |
 | `content` | `FK(GenericContent, SET_DEFAULT)` | Content data |
 | `content_type` | `EnumField(MessageContentType)` | TEXT / IMAGE / JSON / TEMPLATE |
 | `template_data` | `FK(GenericContent, SET_DEFAULT)` | Template data |

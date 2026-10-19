@@ -1019,11 +1019,14 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
 
     parts = [
         SUMMARY_FORMAT_REFERENCE,
+        
         f"You are running as a subtask for another agent. "
         f"When your work is complete, finish by invoking the final_result tool with a one sentence summary of your work as its content argument. "
         f"Do not return your result as plain text. Do not output explanation or results as normal text for users, you are run as a subagent, nobody will read that.\n" 
-        f"Your working dir is the vault root; paths below are vault-relative. Never modify anything under `raw/`.\n"
-        f"It is now {now}, your working dir is '{working_dir}'.\n"
+        f"Your working dir is the vault root; paths below are vault-relative. Never modify anything under `raw/`.\n",
+        
+        f"It is now {now}, your working dir is '{working_dir}'.\n",
+        
         f"Your task: Double-check summary against its raw source.\n"
         f"Fix the summary file in place if you spot wrong dates, invented facts, missing key claims, "
         f"broken wikilinks, invalid or missing frontmatter, or other quality problems in the summary. Use multiedit to do multiple edits at once to save on roundtrips. Rename the file if necessary.\n",

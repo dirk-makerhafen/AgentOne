@@ -13,7 +13,7 @@ import json
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessagePartType
+from server.models.enums.message_enums import MessageType
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.message import Message
 from server.models.tasks.agent_task_call import AgentTaskCall
@@ -74,7 +74,7 @@ def _message_dict(msg: Message, max_chars: int) -> dict[str, Any]:
             "tokens": part.tokens,
             "body": body,
             "truncated": truncated,
-            "is_compaction_boundary": part.type == MessagePartType.COMPACTION,
+            "is_compaction_boundary": msg.message_type == MessageType.COMPACTION,
         }
         if part.tool_call_id:
             tc = part.tool_call
@@ -90,7 +90,7 @@ def _message_dict(msg: Message, max_chars: int) -> dict[str, Any]:
         "message_pk": msg.pk,
         "session_pk": msg.session_id,
         "role": _str(msg.role),
-        "source": _str(msg.source),
+        "message_type": _str(msg.message_type),
         "created_at": msg.created_at.isoformat() if msg.created_at else "",
         "hidden_from_llm": bool(msg.hide_from_context or _str(msg.role) == "info"),
         "parts": parts,

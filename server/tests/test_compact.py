@@ -6,7 +6,7 @@ from django.test import TestCase
 from runtime.session.session import Session
 from server.models.message import Message, MessagePart
 from server.models.content import GenericContent
-from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
 from server.models.settings import SettingsModel
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
@@ -74,6 +74,7 @@ class FindCompactionBoundaryTest(TestCase):
             session=self.sv.session,
             session_version=self.sv,
             role="system",
+            message_type=MessageType.COMPACTION,
         )
         content = GenericContent.from_text(text)
         MessagePart.objects.create(

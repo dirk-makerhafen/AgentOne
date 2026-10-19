@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.models import Sum
 
 from runtime.agents.agent import Agent, is_name_disallowed
-from runtime.session.messages import normalize_messages
+from runtime.session.messages import default_type_for_role, normalize_messages
 from runtime.tasks.bound_task import BoundTask
 from server.models.content import GenericContent
 from server.models.message import Message
@@ -984,6 +984,7 @@ class Session:
             anchor = parent.get_last_message()
         return self._persist_message(
             role="info",
+            message_type="info",
             content=f"Forked from session #{parent.model.pk}.",
             hide_from_context=True,
             prev_message=anchor,
@@ -1092,6 +1093,7 @@ class Session:
         self,
         *,
         role: str = "user",
+        message_type: str | None = None,
         parts: List[Dict] | None = None,
         content: str | None = None,
         response: Response | None = None,
@@ -1128,6 +1130,7 @@ class Session:
 
         message = Message.objects.create(
             role=role,
+            message_type=message_type or default_type_for_role(role),
             session=session_version.session,
             session_version=session_version,
             response=response,
@@ -1321,6 +1324,7 @@ class Session:
         for spec in messages:
             created = _Msg.objects.create(
                 role=spec["role"],
+                message_type=spec.get("message_type") or default_type_for_role(spec["role"]),
                 session=session_version.session,
                 session_version=session_version,
                 prev_message=prev_message,

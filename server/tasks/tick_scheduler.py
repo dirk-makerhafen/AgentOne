@@ -774,7 +774,7 @@ def _dispatch_work_items() -> None:
     is atomic, so two concurrent ticks cannot both claim it.  Running this
     every 10s is safe.
     """
-    from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+    from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
     from server.models.enums.session_enums import SessionType
     from server.models.message import Message
     from server.models.workitems.enums import WorkItemStatus
@@ -832,6 +832,7 @@ def _dispatch_work_items() -> None:
             version = executor.get_version_model()
             message = Message.objects.create(
                 role=MessageRole.USER,
+                message_type=MessageType.USER_CHAT,
                 session=version.session,
                 session_version=version,
                 prev_message=executor.get_last_message(),

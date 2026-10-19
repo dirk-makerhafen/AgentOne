@@ -76,14 +76,18 @@ class MessagePartSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     parts = MessagePartSerializer(many=True, read_only=True)
     role_display = serializers.SerializerMethodField()
+    message_type_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['id', 'role', 'role_display', 'source', 'parts',
-                  'hide_from_context', 'created_at']
+        fields = ['id', 'role', 'role_display', 'message_type', 'message_type_display',
+                  'parts', 'hide_from_context', 'created_at']
 
     def get_role_display(self, obj):
         return obj.get_role_display() if hasattr(obj, 'get_role_display') else obj.role
+
+    def get_message_type_display(self, obj):
+        return obj.get_message_type_display() if hasattr(obj, 'get_message_type_display') else obj.message_type
 
 
 class SessionVersionSerializer(serializers.ModelSerializer):

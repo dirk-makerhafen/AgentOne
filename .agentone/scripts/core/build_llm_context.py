@@ -10,7 +10,7 @@ import traceback
 from typing import Any
 import datetime
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
 from server.models.enums.task_enums import TaskCallStatus
 from server.models.settings import AgentToolCallSyntax
 from server.models.message import Message, MessagePart
@@ -148,7 +148,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                     and getattr(current, "session_id", None) == sv.session.pk
                 ):
                     pinned_beyond_window.append(current)
-                if current.parts.filter(type=MessagePartType.COMPACTION).exists():
+                if current.message_type == MessageType.COMPACTION:
                     break
             if len(messages) >= _window and not _has_pins:
                 break

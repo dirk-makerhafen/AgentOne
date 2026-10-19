@@ -9,6 +9,11 @@ shapes into a canonical list of messages::
 where every part is a dict with ``part_type``, ``content_type`` and
 ``content`` (plus optional ``template_data`` / ``tool_call``).
 
+Each normalized message also carries a ``message_type`` key (optional, may be
+``None``).  Message dicts may set it explicitly (e.g. ``"reflection"``); when
+absent the caller resolves it from the role via
+:func:`default_type_for_role`.
+
 Accepted shapes
 ---------------
 * ``"text"``                      -> one user message with one text part
@@ -35,7 +40,12 @@ DEFAULT_CONTENT_TYPE = "text"
 DEFAULT_ROLE = "user"
 
 # Keys that mark a dict as a *message* rather than a *part*.
-_MESSAGE_KEYS = ("role", "message", "parts")
+_MESSAGE_KEYS = ("role", "message", "parts", "message_type")
+
+
+def default_type_for_role(role: Any) -> str:
+    """Return the default ``MessageType`` value for a wire *role*."""
+    return "assistant_message" if role == "assistant" else "user_chat"
 
 
 def normalize_messages(spec: Any) -> List[Dict[str, Any]]:
@@ -75,8 +85,8 @@ def _is_part_dict(item: Any) -> bool:
     return isinstance(item, dict) and not _is_message_dict(item)
 
 
-def _message(role: Any, parts: List[Dict[str, Any]]) -> Dict[str, Any]:
-    return {"role": role, "parts": parts}
+def _message(role: Any, parts: List[Dict[str, Any]], message_type: Any = None) -> Dict[str, Any]:
+    return {"role": role, "parts": parts, "message_type": message_type}
 
 
 def _normalize_message(item: Any) -> Dict[str, Any]:
@@ -85,7 +95,7 @@ def _normalize_message(item: Any) -> Dict[str, Any]:
     if isinstance(item, dict):
         role = item.get("role", DEFAULT_ROLE)
         body = item.get("message", item.get("parts", item.get("content", None)))
-        return _message(role, _normalize_body(body))
+        return _message(role, _normalize_body(body), item.get("message_type"))
     raise ValueError(f"Unsupported message of type {type(item).__name__}")
 
 

@@ -55,7 +55,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
     )
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    working_dir = self.workspace.path if self.workspace else "unknown"
+    working_dir = _session.workspace.path if _session.workspace else "unknown"
     parts = [
         f"It is now {now}, your working dir is '{working_dir}'.\n",
         "You are running as a subtask for another agent. "

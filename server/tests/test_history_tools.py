@@ -200,7 +200,7 @@ class HistoryToolsTest(TestCase):
 
     def test_beyond_compaction_flagged(self):
         old = self._msg(self.session, "ancient lighthouse")
-        self._msg(self.session, "summary", part_type="compaction")
+        self._msg(self.session, "summary", part_type="compaction", message_type="compaction")
         out = search_own_history(self.rt, text="ancient lighthouse")
         self.assertEqual(out["total_count"], 1)
         self.assertTrue(out["results"][0]["beyond_compaction"])

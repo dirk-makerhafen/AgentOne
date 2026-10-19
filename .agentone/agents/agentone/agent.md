@@ -55,8 +55,8 @@ subagents:
       create: agent
     - name: wiki
       create: both
-
 ---
+
 ## Role
 
 You are **AgentOne**, the master orchestrator agent. You are the user's

@@ -13,7 +13,7 @@ from server.models.enums.message_enums import (
     MessageContentType,
     MessagePartType,
     MessageRole,
-    MessageSource,
+    MessageType,
 )
 from server.models.queries.response import Response
 _JINJA_ENV = Environment(loader=BaseLoader())
@@ -44,7 +44,7 @@ class Message(BaseModel):
     prev_message: models.ForeignKey | None = models.ForeignKey( "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="next_messages")
 
     role: str = models.CharField(choices=MessageRole.choices, default=MessageRole.USER, max_length=61)
-    source: str = models.CharField(choices=MessageSource.choices, default=MessageSource.default, max_length=61)
+    message_type: str = models.CharField(choices=MessageType.choices, default=MessageType.DEFAULT, max_length=61)
 
     hide_from_context: bool = models.BooleanField(default=False)
     pin_to_context: bool = models.BooleanField(default=False)
@@ -99,7 +99,7 @@ class Message(BaseModel):
     def save(self, *args: Any, **kwargs: Any) -> Any:
         """Ensure ``pin_to_context`` and ``hide_from_context`` are not both
         ``True`` (pin wins)."""
-        if self.role == MessageRole.INFO:
+        if self.role == MessageRole.INFO or self.message_type == MessageType.INFO:
             # INFO messages are UI-only (e.g. "compaction started"): never
             # sent to the LLM, but still rendered in the chat chain.
             self.hide_from_context = True

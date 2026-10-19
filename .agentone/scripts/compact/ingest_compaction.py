@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
 from server.models.message import Message
 from server.models.queries.response import Response
 
@@ -139,6 +139,7 @@ def _build_compaction_message(
             session_version=sv,
             response=response,
             role=MessageRole.USER,
+            message_type=MessageType.COMPACTION,
             prev_message=current_tail,
         )
         compaction_message.add_part(
@@ -165,6 +166,7 @@ def _build_compaction_message(
             session_version=sv,
             response=response,
             role=MessageRole.USER,
+            message_type=MessageType.COMPACTION,
             prev_message=newest_compacted,
         )
 
@@ -242,6 +244,7 @@ def ingest_compaction(
         # Failure toast anchored at the current tail; the chain is untouched.
         info_message = Message.objects.create(
             role=MessageRole.INFO,
+            message_type=MessageType.INFO,
             session=parent_sv.session,
             session_version=parent_sv,
             prev_message=_session.get_last_message(),
@@ -321,6 +324,7 @@ def ingest_compaction(
     # everything was compacted — so the chain keeps exactly one tip.
     info_message = Message.objects.create(
         role=MessageRole.INFO,
+        message_type=MessageType.INFO,
         session=parent_sv.session,
         session_version=parent_sv,
         prev_message=_session.get_last_message(),

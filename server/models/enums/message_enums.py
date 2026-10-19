@@ -14,14 +14,23 @@ class MessageRole(models.TextChoices):
     INFO = "info"
 
 
-class MessageSource(models.TextChoices):
-    """Origin of a message within the system."""
+class MessageType(models.TextChoices):
+    """Semantic classification of a whole message (independent of its role).
 
-    default = "default"
-    human_chat_message = "human_chat_message"
-    tool_response = "tool_response"
-    assistant_llm_response = "llm_response"
-    assistant_code_response = "assistant_code_response"
+    ``role`` is the LLM-facing wire role (user / assistant / system / tool);
+    ``message_type`` describes what the message *is* in the conversation.  The
+    two coexist: a compaction marker is ``role=user, message_type=compaction``.
+    """
+
+    DEFAULT = "default"
+    USER_CHAT = "user_chat"
+    ASSISTANT_MESSAGE = "assistant_message"
+    TOOL_RESPONSE = "tool_response"
+    SYSTEM_NOTICE = "system_notice"
+    COMPACTION = "compaction"
+    REFLECTION = "reflection"
+    INFO = "info"
+    BOOTSTRAP = "bootstrap"
 
 
 class MessageContentType(models.TextChoices):

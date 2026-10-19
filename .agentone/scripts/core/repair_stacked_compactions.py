@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.models.enums.message_enums import MessagePartType
+from server.models.enums.message_enums import MessageType
 
 
 def _walk_from_tail(messages: list) -> list:
@@ -62,12 +62,12 @@ def _walk_from_tail(messages: list) -> list:
 
 def _markers_in(messages: list) -> set[int]:
     ids = [m.pk for m in messages]
-    from server.models.message import MessagePart
+    from server.models.message import Message
 
     comp = set(
-        MessagePart.objects.filter(
-            message_id__in=ids, type=MessagePartType.COMPACTION
-        ).values_list("message_id", flat=True)
+        Message.objects.filter(
+            pk__in=ids, message_type=MessageType.COMPACTION
+        ).values_list("pk", flat=True)
     )
     return comp
 

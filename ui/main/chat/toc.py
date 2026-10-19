@@ -3,8 +3,8 @@ import json
 import threading
 from typing import TYPE_CHECKING
 from runtime.session.session import Session
-from server.models.message import Message, MessagePart
-from server.models.enums.message_enums import MessagePartType
+from server.models.message import Message
+from server.models.enums.message_enums import MessageType
 from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
@@ -95,10 +95,10 @@ class ChatTocView(ModelView):
         so within one session ``pk`` (creation) order equals chain order.
         """
         pks = set(
-            MessagePart.objects.filter(
-                message__session_id=self._session_id,
-                type=MessagePartType.COMPACTION,
-            ).values_list("message_id", flat=True)
+            Message.objects.filter(
+                session_id=self._session_id,
+                message_type=MessageType.COMPACTION,
+            ).values_list("pk", flat=True)
         )
         self._segments = [
             {
@@ -122,9 +122,9 @@ class ChatTocView(ModelView):
             self._on_message_created(pk)
 
     def _on_message_created(self, pk: int) -> None:
-        is_compaction = MessagePart.objects.filter(
-            message_id=pk,
-            type=MessagePartType.COMPACTION,
+        is_compaction = Message.objects.filter(
+            pk=pk,
+            message_type=MessageType.COMPACTION,
         ).exists()
         if is_compaction:
             with self._segments_lock:

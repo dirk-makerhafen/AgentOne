@@ -204,7 +204,7 @@ def ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
 
 
 def _ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
-    from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+    from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
     from server.models.message import Message
 
     session_pk = session.model.pk
@@ -223,7 +223,7 @@ def _ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
     while current is not None:
         if getattr(current, "session_id", None) != session_pk:
             break
-        if current.parts.filter(type=MessagePartType.COMPACTION).exists():
+        if current.message_type == MessageType.COMPACTION:
             marker = current
             break
         segment_oldest = current
@@ -257,6 +257,7 @@ def _ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
             session=sv.session,
             session_version=sv,
             role=role,
+            message_type=MessageType.BOOTSTRAP,
             prev_message=anchor_prev if not created else created[-1],
         )
         for text in parts:
@@ -318,6 +319,7 @@ def maybe_announce_workspace_switch(session: Any) -> Any | None:
             MessageContentType,
             MessagePartType,
             MessageRole,
+            MessageType,
         )
         from server.models.message import Message
 
@@ -336,6 +338,7 @@ def maybe_announce_workspace_switch(session: Any) -> Any | None:
             session=sv.session,
             session_version=sv,
             role=MessageRole.USER,
+            message_type=MessageType.SYSTEM_NOTICE,
             prev_message=session.get_last_message(),
         )
         notice.add_part(

@@ -266,6 +266,27 @@ auto-await resolves it before the ingest runs. This is the delivery axis
 (§4): absent = fire-and-forget; present = fork + parent write. It covers
 every "write back" case without insession execution.
 
+### 7.1.1 Hook task arguments (v1)
+
+Every lifecycle hook task is dispatched with these kwargs (all hook tasks must
+accept ``**kwargs``):
+
+- `message` — the persisted framing user message in the fork (anchor).
+- `hook_ctx` — a dict with `hook` (entry name), `event`, `parent_session_pk`,
+  `parent_agent`, `anchor_message_pk` (the dispatch-time anchor — use this, not
+  the session tail, when forking, so async siblings cannot mutate the range),
+  `trigger`, `reason`.
+- `hook_after` — present only when a token-budget prefix compaction ran; a
+  call reference the task must wait on (auto-await) before reading context.
+
+Event-specific `ctx` keys (passed to `maybe_fire_hooks` and mirrored into
+`hook_ctx` where applicable):
+
+- `stop`: `message_pk`, `session_type`, `has_todo_continuation`.
+- `pre_compact` / `post_compact`: `trigger` (`auto`|`idle`|`manual`),
+  `boundary_pk` (post only), `compact_attempt`.
+- `session_end`: `reason`, `session_type`, `last_message_pk`.
+
 ### 7.2 Command handler (phase 2, not v1)
 
 `command: path/to/script.sh` (or inline `shell:`) executed via the existing

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from server.models.enums.message_enums import MessagePartType, MessageRole
+from server.models.enums.message_enums import MessageRole, MessageType
 from server.models.message import Message
 from server.models.queries.query import Query
 from ui.lib.model_view import ModelView
@@ -29,10 +29,8 @@ class MessageView(ModelView):
             else:
                 self.view = UserMessageView(subject=subject, parent=self)
                 # A compaction boundary renders as a USER message but carries
-                # COMPACTION parts; flag it so the CSS can tint it differently.
-                self.is_compaction = subject.parts.filter(
-                    type=MessagePartType.COMPACTION
-                ).exists()
+                # message_type=compaction; flag it so the CSS can tint it.
+                self.is_compaction = subject.message_type == MessageType.COMPACTION
             self.role = self.subject.role
         elif isinstance(subject, Query):
             self.view = QueryView(subject=subject, parent=self)
