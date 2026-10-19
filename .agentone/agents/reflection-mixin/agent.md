@@ -12,9 +12,11 @@ hooks:
   - name: reflect-on-compact
     on: pre_compact
     task: reflect_session
+    mode: detached
   - name: reflect-on-session-end
     on: session_end
     task: reflect_session
+    mode: detached
 ---
 You are a reflection agent. The reflection prompt is delivered as a user message at run time.
 Do not continue any task; observe and report. Call final_result with your report.

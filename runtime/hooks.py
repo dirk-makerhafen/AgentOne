@@ -377,7 +377,7 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
     from django.utils import timezone as tz
 
     from server.models.agents.agent import AgentModel
-    from server.models.enums.message_enums import MessageRole
+    from server.models.enums.message_enums import MessageRole, MessageType
     from server.models.hooks.hook_run import SessionHookRun
     from server.models.message import Message
 
@@ -425,15 +425,27 @@ def _fire_one(session: Any, hook: dict, ctx: dict[str, Any]) -> Any | None:
     # is a promise for the last of them, which the hook/compact tasks consume
     # via auto-await (``message=persist_call``).
     persist_call = fork.add_user_message(
-
-        f"You are a session-hook worker ({hook_name!r}, event "
-        f"{hook.get('on')!r}) forked from parent session "
-        f"#{session.model.pk} of agent '{session.agent.name}'. "
-        f"Do the hook task below, then call final_result with a short "
-        f"report of what you did.",
-    
-        f"Hook job: run task {hook['task']!r} for event {hook.get('on')!r} "
-        f"(parent session #{session.model.pk}).",
+        [
+            {
+                "role": MessageRole.USER,
+                "message_type": MessageType.SYSTEM_NOTICE,
+                "message": (
+                    f"You are a session-hook worker ({hook_name!r}, event "
+                    f"{hook.get('on')!r}) forked from parent session "
+                    f"#{session.model.pk} of agent '{session.agent.name}'. "
+                    f"Do the hook task below, then call final_result with a short "
+                    f"report of what you did."
+                ),
+            },
+            {
+                "role": MessageRole.USER,
+                "message_type": MessageType.SYSTEM_NOTICE,
+                "message": (
+                    f"Hook job: run task {hook['task']!r} for event {hook.get('on')!r} "
+                    f"(parent session #{session.model.pk})."
+                ),
+            },
+        ],
         execute_turn=False,
     )
 

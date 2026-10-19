@@ -277,11 +277,11 @@ class HookDispatchTest(TestCase):
         self.assertEqual(len(ingest_fake.calls), 1)
         ingest_kwargs = ingest_fake.calls[0][1]
         self.assertFalse(ingest_kwargs["execute_turn"])
-        self.assertEqual(len(ingest_kwargs["messages"]), 2)
-        self.assertEqual(ingest_kwargs["messages"][0]["role"], MessageRole.USER)
+        self.assertEqual(len(ingest_kwargs["message"]), 2)
+        self.assertEqual(ingest_kwargs["message"][0]["role"], MessageRole.USER)
         self.assertIn(
             "session-hook worker",
-            ingest_kwargs["messages"][0]["parts"][0]["content"],
+            ingest_kwargs["message"][0]["parts"][0]["content"],
         )
 
         # Hook task dispatched with JSON-safe context, depending on the

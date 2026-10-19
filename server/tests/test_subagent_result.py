@@ -71,7 +71,7 @@ class IngestSubagentResultTest(AgentMdTestMixin, TestCase):
         self.assertEqual(
             kwargs["execute_turn"], parent.subagentResultDelivery == "immediate"
         )
-        part = kwargs["messages"][0]["parts"][0]
+        part = kwargs["message"][0]["parts"][0]
         self.assertEqual(part["content_type"], MessageContentType.TEMPLATE)
 
         # JSON-safe: no objects, only primitives.

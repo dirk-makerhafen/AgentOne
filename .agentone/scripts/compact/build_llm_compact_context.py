@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List
 
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageRole
+from server.models.enums.message_enums import MessageRole, MessageType
 from server.models.message import Message
 from server.models.queries.query import Query
 from server.models.queries.query_message import QueryMessage
@@ -24,7 +24,7 @@ Focus on:
 Format as a clear, structured summary. Be specific — avoid generic statements.
 
 Call final_result tool with your summary as its content argument, don't output raw text.
-<SYSTEM NOTICE>"""
+</SYSTEM NOTICE>"""
 
 
 def _format_seconds(seconds: float | int | None) -> str:
@@ -188,7 +188,7 @@ def build_llm_compact_context(
         auto_limit_hint=auto_limit,
     )
     _session.add_user_message(
-        {"role": MessageRole.INFO, "content": "Compaction started — summarizing older messages to save context. " + reason + extra},
+        {"role": MessageRole.INFO, "message_type": MessageType.INFO, "content": "Compaction started — summarizing older messages to save context. " + reason + extra},
         execute_turn=False,
     )
 
@@ -224,13 +224,19 @@ def build_llm_compact_context(
         [
             {
                 "role": MessageRole.USER,
+                "message_type": MessageType.SYSTEM_NOTICE,
                 "content": "<SYSTEM NOTICE> IMPORTANT: Context window is running low, the conversation or actions above have been STOPPED and switched to a session compaction agent.  </SYSTEM NOTICE>",
             },
             {
                 "role": MessageRole.ASSISTANT,
+                "message_type": MessageType.ASSISTANT_MESSAGE,
                 "content": "Confirmed, awaiting compaction instructions.",
             },
-            _COMPACTION_SYSTEM_PROMPT,
+            {
+                "role": MessageRole.USER,
+                "message_type": MessageType.SYSTEM_NOTICE,
+                "message": _COMPACTION_SYSTEM_PROMPT,
+            },
         ]
     )
     return dict(

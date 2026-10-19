@@ -1,6 +1,6 @@
 from django.test import SimpleTestCase
 
-from runtime.session.messages import normalize_messages
+from runtime.session.messages import default_type_for_role, normalize_messages
 
 
 class NormalizeMessagesTest(SimpleTestCase):
@@ -102,3 +102,24 @@ class NormalizeMessagesTest(SimpleTestCase):
     def test_none_body_yields_no_parts(self):
         result = normalize_messages([{"role": "info"}])
         self.assertEqual(result[0], {"role": "info", "message_type": None, "parts": []})
+
+    def test_message_dict_message_type_preserved(self):
+        result = normalize_messages(
+            {"role": "user", "message_type": "system_notice", "message": "hi"}
+        )
+        self.assertEqual(result[0]["role"], "user")
+        self.assertEqual(result[0]["message_type"], "system_notice")
+
+
+class DefaultTypeForRoleTest(SimpleTestCase):
+    """The role→type fallback must mirror the 0151 backfill mapping."""
+
+    def test_role_map(self):
+        self.assertEqual(default_type_for_role("assistant"), "assistant_message")
+        self.assertEqual(default_type_for_role("tool"), "tool_response")
+        self.assertEqual(default_type_for_role("info"), "info")
+        self.assertEqual(default_type_for_role("system"), "system_notice")
+
+    def test_unknown_roles_fall_back_to_user_chat(self):
+        for role in ("user", "developer", None, ""):
+            self.assertEqual(default_type_for_role(role), "user_chat")

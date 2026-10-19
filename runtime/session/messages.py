@@ -10,8 +10,8 @@ where every part is a dict with ``part_type``, ``content_type`` and
 ``content`` (plus optional ``template_data`` / ``tool_call``).
 
 Each normalized message also carries a ``message_type`` key (optional, may be
-``None``).  Message dicts may set it explicitly (e.g. ``"reflection"``); when
-absent the caller resolves it from the role via
+``None``).  Message dicts may set it explicitly (e.g. ``"system_notice"``);
+when absent the caller resolves it from the role via
 :func:`default_type_for_role`.
 
 Accepted shapes
@@ -43,9 +43,23 @@ DEFAULT_ROLE = "user"
 _MESSAGE_KEYS = ("role", "message", "parts", "message_type")
 
 
+_TYPE_BY_ROLE = {
+    "assistant": "assistant_message",
+    "tool": "tool_response",
+    "info": "info",
+    "system": "system_notice",
+}
+
+
 def default_type_for_role(role: Any) -> str:
-    """Return the default ``MessageType`` value for a wire *role*."""
-    return "assistant_message" if role == "assistant" else "user_chat"
+    """Return the default ``MessageType`` value for a wire *role*.
+
+    Mirrors the role→type mapping used to backfill existing rows (see
+    ``server/migrations/0151_message_type.py``): assistant replies, tool
+    results, info toasts and system notices get their matching type; every
+    other role (notably ``user``) is treated as user chat.
+    """
+    return _TYPE_BY_ROLE.get(role, "user_chat")
 
 
 def normalize_messages(spec: Any) -> List[Dict[str, Any]]:

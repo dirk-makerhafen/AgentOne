@@ -20,6 +20,11 @@ class MessageType(models.TextChoices):
     ``role`` is the LLM-facing wire role (user / assistant / system / tool);
     ``message_type`` describes what the message *is* in the conversation.  The
     two coexist: a compaction marker is ``role=user, message_type=compaction``.
+
+    Agent-authored instructions and framing (e.g. the compaction prompt, the
+    reflection prompt, hook framing) are ``SYSTEM_NOTICE`` — not prompts the
+    human sent.  ``REFLECTION`` is reserved for the *report produced by* a
+    reflection pass, not for the instructions that drive it.
     """
 
     DEFAULT = "default"
