@@ -1,6 +1,6 @@
 ---
 name: AgentOne
-extends: []
+extends: [reflection-mixin]
 description: Master orchestrator agent. Owns the whole-system overview (projects, workspaces, skills, agents, cronjobs, work items) and delegates all real work to specialist subagents. Delegate-only — never does direct file, shell, or browser work itself. Workspace is ~/.agentone.
 
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
@@ -32,16 +32,16 @@ autoload:
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
 
-commands: [ ping, todo.* ]
+commands: [+, ping, todo.* ]
 disallowedCommands: []
 
-tools: [core.*, subagents.*, history.*, todo.*, workitems.*]
+tools: [+, core.*, subagents.*, history.*, todo.*, workitems.*]
 disallowedTools: []
 
 skills: []
 disallowedSkills: []
 
-tasks: [ core.*, compact.*,  ]
+tasks: [ +, core.*, compact.*,  ]
 disallowedTasks: []
 
 subagents:

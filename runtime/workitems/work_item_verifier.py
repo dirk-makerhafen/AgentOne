@@ -258,7 +258,7 @@ class WorkItemVerifier:
         validate the id it echoes back — a hallucinated id can never approve the
         wrong work item.
         """
-        from time import time_ns
+        from datetime import datetime
 
         from server.models.agents.agent import AgentModel
         from server.models.enums.session_enums import SessionType
@@ -282,7 +282,7 @@ class WorkItemVerifier:
 
         child_session = executor_session.spawn_subagent(
             WorkItemVerifier.REVIEWER_AGENT_NAME,
-            name=f"workitem-review:{item.pk}:{time_ns()}",
+            name=f"workitem-review:{item.pk}:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
             display_name=f"Verification of work item #{item.pk}",
             description=brief[:100],
             workspace=executor_session.workspace,

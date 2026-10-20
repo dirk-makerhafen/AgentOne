@@ -8,7 +8,7 @@ description: >
   only in their own scope. Working on ONE agent (describe, usage,
   versions) belongs to agent_assistant; creating or editing manifests
   belongs to project_assistant.
-extends: AgentOne
+extends: [ AgentOne]
 inheritSystemPrompt: false
 tools: [core.*, agents.*]
 ---

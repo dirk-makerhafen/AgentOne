@@ -49,6 +49,10 @@ tasks:
     file: decide_next_step.py
     function: decide_next_step
     bound: True
+  - name: session_end
+    file: session_end.py
+    function: session_end
+    bound: True
   - name: process_slashcommand  
     file: slash_commands.py
     function: process_slashcommand

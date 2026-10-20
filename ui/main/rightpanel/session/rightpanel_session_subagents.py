@@ -147,7 +147,7 @@ class RightPanelSessionSubagents(ModelView):
     def open(self, name: str):
         if self.session is None:
             return
-        ts = timezone.now().strftime("%Y%m%d%H%M%S")
+        ts = timezone.now().strftime("%Y.%m.%d-%H:%M:%S")
         child_session = self.session.spawn_subagent(
             name,
             name=f"user-launch:{name}:{ts}",

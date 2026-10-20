@@ -65,7 +65,6 @@ def tick_scheduler() -> None:
         _report_work_item_outcomes,
         _verify_work_items,
         _compact_idle_sessions,
-        _reap_hook_timeouts,
         _reap_idle_terminals,
     ):
         try:
@@ -1075,25 +1074,6 @@ def _compact_idle_sessions() -> None:
                 f"[scheduler] error in _compact_idle_sessions "
                 f"for session {session_model.pk}: {e}"
             )
-
-
-#: Max hook runs reaped per tick: bounds one tick's work when many hooks
-#: expire at once (same rationale as _MAX_IDLE_COMPACTIONS_PER_TICK).
-_MAX_HOOK_REAPS_PER_TICK = 20
-
-
-def _reap_hook_timeouts() -> None:
-    """Cancel expired session-hook runs and delete finished ones.
-
-    Thin launcher over ``runtime.hooks.reap_hook_timeouts`` (which owns the
-    FSM transitions) plus ``delete_expired_hook_runs`` audit hygiene. Never
-    applies the 24h ``_is_ancient`` turn-death guard — the hook deadline *is*
-    the lifetime (see ``docs/session-hooks.md`` §8.3).
-    """
-    from runtime.hooks import delete_expired_hook_runs, reap_hook_timeouts
-
-    reap_hook_timeouts(limit=_MAX_HOOK_REAPS_PER_TICK)
-    delete_expired_hook_runs()
 
 
 def _reap_idle_terminals() -> None:

@@ -23,6 +23,6 @@ class SessionType(models.TextChoices):
     SUBSESSION = "subsession", "Subsession"
     SUBTASK_DELEGATE = "subtask_delegate", "Subtask (delegate)"
     SUBTASK_FORK = "subtask_fork", "Subtask (fork)"
-    SUBTASK_COMPACT = "subtask_compaczt", "Subtask (session compaction)"
+    SUBTASK_COMPACT = "subtask_compaction", "Subtask (session compaction)"
     SUBTASK_HOOK = "subtask_hook", "Subtask (hook)"
 

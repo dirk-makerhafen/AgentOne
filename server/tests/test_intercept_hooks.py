@@ -54,10 +54,12 @@ class InterceptLoaderTest(AgentMdTestMixin, TestCase):
             ],
         )
 
-    def test_lifecycle_entries_still_validate(self):
-        entries = _validate_hooks([{"on": "stop", "task": "distill_turn"}], "a")
-        self.assertEqual(entries[0]["on"], "stop")
-        self.assertEqual(entries[0]["task"], "distill_turn")
+    def test_lifecycle_keys_rejected(self):
+        # Lifecycle events were removed: on:/task:/matcher: are unknown keys.
+        with self.assertRaises(ValueError):
+            _validate_hooks([{"on": "stop", "task": "distill_turn"}], "a")
+        with self.assertRaises(ValueError):
+            _validate_hooks([{"task": "distill_turn"}], "a")
 
     def test_mode_defaults(self):
         before = _validate_hooks([{"before": "t"}], "a")[0]
@@ -76,6 +78,12 @@ class InterceptLoaderTest(AgentMdTestMixin, TestCase):
         self.assertEqual(
             entries[0]["match"], {"session": "main-* | scratch", "type": "TOOL"}
         )
+
+    def test_session_type_normalization(self):
+        entries = _validate_hooks(
+            [{"after": "t", "match": {"session_type": ["SESSION", "Subtask_Fork"]}}], "a"
+        )
+        self.assertEqual(entries[0]["match"], {"session_type": "session | subtask_fork"})
 
     def test_rejects_agent_dimension(self):
         with self.assertRaises(ValueError):
@@ -162,6 +170,24 @@ class InterceptMatcherTest(SimpleTestCase):
                 entry, def_name="read", session_name="other"
             )
         )
+
+    def test_session_type_match(self):
+        entry = {
+            "after": "t",
+            "match": {"name": "session_end", "session_type": "session | subsession"},
+        }
+        self.assertTrue(
+            hookmod.matches_call_hook(entry, def_name="session_end", session_type="session")
+        )
+        self.assertTrue(
+            hookmod.matches_call_hook(entry, def_name="session_end", session_type="SUBSESSION")
+        )
+        for excluded in ("subtask_fork", "subtask_delegate", "subtask_compaction", "subtask_hook"):
+            self.assertFalse(
+                hookmod.matches_call_hook(
+                    entry, def_name="session_end", session_type=excluded
+                )
+            )
 
     def test_lifecycle_entry_never_matches(self):
         self.assertFalse(

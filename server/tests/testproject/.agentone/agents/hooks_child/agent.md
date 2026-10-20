@@ -1,15 +1,16 @@
 ---
 name: hooks_child
 description: >
-  Fixture agent extending hooks_ok: overrides the reflect hook entry,
-  inherits the rest. Used by LoadHooksTest.
+  Fixture agent extending hooks_ok: overrides one intercept entry, adds
+  another. Kept as an inheritance fixture.
 extends: [hooks_ok]
 hooks:
-  - name: reflect
-    on: stop
-    task: distill_turn_v2
+  - name: guard-read
+    match: {name: read, type: tool}
+    before: core_task
+    mode: detached
   - name: idle-watch
-    on: session_end
-    task: write_journal
+    match: {name: write}
+    after: core_task
 ---
 Hooks inheritance fixture agent

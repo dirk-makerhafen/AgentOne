@@ -95,8 +95,8 @@ class TestDecideAbortOnViolation:
     def _stub_session(self):
         calls: list = []
 
-        def set_is_active(value):
-            calls.append(("set_is_active", value))
+        def request_end(reason=None):
+            calls.append(("request_end", reason))
 
         def count_turn():
             raise AssertionError("violating turn must not consume turn budget")
@@ -105,7 +105,7 @@ class TestDecideAbortOnViolation:
             raise AssertionError("violating turn must not consume turn budget")
 
         session = SimpleNamespace(
-            set_is_active=set_is_active,
+            request_end=request_end,
             count_turn=count_turn,
             count_unattended_turn=count_unattended_turn,
         )
@@ -119,7 +119,7 @@ class TestDecideAbortOnViolation:
             tool_allowlist_violated=["read"],
         )
         assert out is sentinel
-        assert calls == [("set_is_active", False)]
+        assert calls == [("request_end", "allowlist_violation")]
 
 
 class TestSettingsField:

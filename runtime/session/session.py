@@ -1467,17 +1467,32 @@ class Session:
             f"Switch to a vision-capable model in the composer (e.g. {suggestions}) to send images."
         )
 
-    def set_is_active(self, new_value: bool, reason: str | None = None) -> None:
+    def request_end(self, reason: str = "deactivated") -> None:
+        """End this session via the ``session_end`` task.
+
+        The single deactivation path: ``set_is_active(False)`` is no longer
+        called directly, so the ``session_end`` task is the anchor for
+        ``after:`` intercept hooks (``docs/session-hooks.md``). Falls back to
+        a direct write only if the task is not registered for this agent, so
+        a missing script can never leave a session active.
+        """
+        task = self.get_task("session_end")
+        if task is None:
+            self.set_is_active(False)
+            return
+        task.delay(reason=reason)
+
+    def set_is_active(self, new_value: bool) -> None:
         """Mark the session active and stamp the last-activity timestamp.
 
         Any incoming message (user or subagent) reactivates an inactive
         session and refreshes ``last_active_at``, which the sidebar and
         ``list_subsessions`` use to decide which inactive sessions to show.
 
-        A True→False transition additionally fires ``session_end`` hooks
-        (see ``docs/session-hooks.md`` §5.3) — detached and fail-open, so
-        deactivation never waits on reflection. Pausing is not deactivation
-        (no event); reactivation fires nothing.
+        Low-level setter only — it fires no hooks. Deactivation goes through
+        :meth:`request_end` (the ``session_end`` task), which is where
+        ``session_end`` hooks attach. Pausing is not deactivation; activation
+        fires nothing.
         """
         from django.utils import timezone
         now = timezone.now()
@@ -1488,24 +1503,7 @@ class Session:
                 self.model.atomic_update(last_active_at=now)
             return
 
-        was_inactive = not self.model.is_active
         self.model.atomic_update(is_active=new_value, last_active_at=now)
-
-        if not new_value and not was_inactive:
-            try:
-                from runtime.hooks import maybe_fire_hooks
-
-                tail = self.get_last_message()
-                maybe_fire_hooks(
-                    self,
-                    "session_end",
-                    {
-                        "reason": reason or "deactivated",
-                        "anchor_message": tail.pk if tail is not None else None,
-                    },
-                )
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                print(f"[hooks] error firing session_end hooks: {e}")
 
     def _has_active_call(self) -> bool:
         """Return True if there is any non-ended call for this session.

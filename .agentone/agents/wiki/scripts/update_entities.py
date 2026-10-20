@@ -989,7 +989,7 @@ def _spawn_entity_session(_session, tag: str, brief: str, extra_parts: list | No
     from time import time
     ok, _, session_pk, ref = _spawn_baseagent(
         _session,
-        name=f"p{_session.model.pk}:entity:{re.sub(r'[^a-zA-Z0-9]+', '_', tag)[:40]}:{int(time())}",
+        name=f"p{_session.model.pk}:entity:{re.sub(r'[^a-zA-Z0-9]+', '_', tag)[:40]}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Entity {tag}",
         brief=brief,
         extra_parts=extra_parts,

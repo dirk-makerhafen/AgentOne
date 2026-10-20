@@ -231,7 +231,7 @@ def ingest_compaction(
     child_session_model = SessionModel.objects.get(pk=child_session_pk)
     child_session = Session(session_model=child_session_model)
 
-    child_session.set_is_active(False)
+    child_session.request_end(reason="compaction_done")
 
     if result is None:            
         result = child_session.get_last_message()
@@ -350,27 +350,6 @@ def ingest_compaction(
         except Exception:  # pylint: disable=broad-exception-caught
             pass
         _session.upgrade_to_latest_agent()
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
-
-    # Session hooks (``post_compact`` event): fired once, after the marker is
-    # the chain tip. The fork anchors at the marker, so it sees the summary
-    # and reaches the compacted range via the boundary link.
-    try:
-        from runtime.hooks import maybe_fire_hooks
-
-        post_trigger = (kwargs.get("trigger") or "").strip().lower() or None
-        if post_trigger not in ("idle", "auto", "manual"):
-            post_trigger = "idle" if kwargs.get("idle_trigger") else "auto"
-        maybe_fire_hooks(
-            _session,
-            "post_compact",
-            {
-                "trigger": post_trigger,
-                "anchor_message": marker.pk,
-                "boundary_pk": boundary_pk,
-            },
-        )
     except Exception:  # pylint: disable=broad-exception-caught
         pass
 

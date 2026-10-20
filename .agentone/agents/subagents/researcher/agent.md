@@ -1,6 +1,7 @@
 ---
 name: researcher
 visibility: subagent
+extends: [reflection-mixin]
 description: >
   Read-only research specialist. Investigates codebases, documentation, and the web
   on behalf of other agents. Use this subagent when you need to gather information
@@ -36,8 +37,8 @@ autoload:
 
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
-tools: [core.*, filesystem-read.*, web.*, subagents.*]
-tasks: [ core.*, compact.*,  ]
+tools: [+, core.*, filesystem-read.*, web.*, subagents.*]
+tasks: [+, core.*, compact.*,  ]
 disallowedTasks: []
 
 subagents:

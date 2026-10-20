@@ -63,14 +63,25 @@ _REFRESH_SVG = (
 
 
 def unique_session_name(base: str) -> str:
-    """Return *base* made unique among SessionModel names (best effort)."""
+    """Return *base* made unique among SessionModel names (best effort).
+
+    A colliding base name is suffixed with the current (human-readable)
+    timestamp instead of a bare counter so the resulting session name stays
+    meaningful.
+    """
+    from datetime import datetime
+
     from server.models.sessions.session import SessionModel
 
-    name, i = base, 1
+    name = base
     try:
-        while SessionModel.objects.filter(name=name).exists():
-            i += 1
-            name = f"{base}-{i}"
+        if SessionModel.objects.filter(name=name).exists():
+            stamp = datetime.now().strftime("%Y.%m.%d-%H:%M:%S")
+            name = f"{base} {stamp}"
+            i = 2
+            while SessionModel.objects.filter(name=name).exists():
+                name = f"{base} {stamp}-{i}"
+                i += 1
     except Exception:
         pass
     return name
@@ -487,9 +498,19 @@ class RightPanelWorkspacesOverview(_DashboardAssistantPanel):
 class RightPanelGlobalDashboard(_DashboardAssistantPanel):
     """Right panel for the global dashboard: ``AgentOne`` sessions.
 
-    Global scope (no project/workspace binding), newest AgentOne session
-    first, with "+ New Chat" creating a fresh global AgentOne session.
+    Global scope (no project binding); sessions are bound to the
+    ``AgentOne system`` workspace (``~/.agentone``) so the master agent's
+    filesystem access resolves to its home. Newest AgentOne session first,
+    with "+ New Chat" creating a fresh global AgentOne session.
     """
 
     ASSISTANT_AGENT_NAME = "AgentOne"
     ASSISTANT_TITLE = "AgentOne"
+
+    def assistant_workspace(self):
+        try:
+            from runtime.workspace.workspaces import Workspaces
+
+            return Workspaces().get_assistant_workspace()
+        except Exception:
+            return None

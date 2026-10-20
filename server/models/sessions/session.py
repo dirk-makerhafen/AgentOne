@@ -53,9 +53,6 @@ class SessionModel(BaseModel):
         def terminals(self):
             return f"TerminalSession.session:{self.model.pk}"
         @property
-        def hook_runs(self):
-            return f"SessionHookRun.session:{self.model.pk}"
-        @property
         def debug_entries(self):
             return f"DebugLogEntry.session:{self.model.pk}"
 

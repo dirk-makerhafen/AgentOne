@@ -65,20 +65,17 @@ reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel
 toolCallSyntax: default        # default | custom
 visibility: user               # user | subagent | internal | mixin (who the agent is for)
-hooks:                          # optional — session + intercept hooks (see docs/session-hooks.md)
-  - name: reflect
-    on: stop                    # stop | pre_compact | post_compact | session_end
-    matcher: session            # optional event-field filter (default per event)
-    agent: memory               # optional — hook agent (default: self)
-    task: distill_turn          # task/chain to run detached in a fork
-    ingest: record_memory       # optional parent-side task on the fork result
-    max_tokens: 40000           # fork context budget (0 = unbounded)
-    timeout_seconds: 300        # wall-clock deadline (0 = none)
-  - name: guard-write           # optional — per-call intercept (no `on:`; `before` is pre, `after` is post)
+hooks:                          # optional — per-call intercept hooks (see docs/session-hooks.md)
+  - name: reflect-on-end        # label (matches on the intercepted call, not this name)
+    match: {name: session_end}  # optional filter: name / type / session (omitted = wildcard)
+    after: reflect_session      # task of the SAME agent: post receives the call result
+    # mode defaults to detached for after: (inline makes the parent wait)
+  - name: guard-write           # another intercept, on a tool
     match:                      # optional filter (omitted dimensions are wildcards)
       name: "filesystem-write.*" # definition-name glob (`|`-alternation, or shorthand `match: "write*"`)
       type: tool                # tool | task | command | webapi | webview
       session: "foobar23*"      # session-name glob
+      session_type: "session | subsession"   # session-type glob (case-insensitive)
     before: validate_path       # task of the SAME agent: pre receives original kwargs, returns kwargs
     mode: inline                # inline (blocking transform) | detached (fire-and-forget)
     on_error: fail_closed       # fail_closed | fail_open (inline `before` is always fail_closed)
@@ -106,7 +103,7 @@ Agent body content goes here — used as the system prompt.
 | `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default false — opt-in) |
 | `guidanceFileIndexLimit` | int | Max nested guidance files listed in the index (default 10, 0 = omit) |
 | `visibility` | enum | Who the agent is for: `user` (default, shown in pickers), `subagent` (hidden from pickers, spawnable), `internal` (framework-only, spawned by name), `mixin` (partial bundle — params/tasks/tools inherit, visibility does not propagate; never spawnable) |
-| `hooks` | list | Hook entries — two flavors, mutually exclusive per entry (see [Session hooks](session-hooks.md)). Lifecycle: (`on`/`matcher`/`agent`/`task`/`ingest`/`max_tokens`/`timeout_seconds`) — detached agent work at lifecycle points; `on:` works unquoted (loader normalizes the YAML-1.1 bool). Intercept: (`match`/`before`∣`after`/`mode`/`on_error`) — per-call pre/post hooks on arbitrary tool/task/command names; `before`/`after` name a task of the same agent, `mode` is `inline` (blocking transform, defaults for `before`) or `detached` (fire-and-forget, default for `after`). `blocking: true` is rejected (deferred sync tier). |
+| `hooks` | list | Per-call intercept entries (`match`/`before`∣`after`/`mode`/`on_error`) — pre/post hooks on arbitrary tool/task/command names; `before`/`after` name a task of the same agent, `mode` is `inline` (blocking transform, default for `before`) or `detached` (fire-and-forget, default for `after`). `blocking: true` is rejected (deferred sync tier). Session end is the `session_end` task; compaction is `compact_turn` — both hooked with `match:` (see [Session hooks](session-hooks.md)). |
 | Priority/scheduling | various | Execution control knobs |
 
 ### Access Policy

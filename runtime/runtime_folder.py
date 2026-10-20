@@ -10,7 +10,6 @@ A ``.last_used`` file stores the Unix timestamp of the last access, enabling
 periodic cleanup of stale folders.
 """
 
-import os
 import time
 from pathlib import Path
 from typing import Optional
@@ -66,19 +65,131 @@ class RuntimeFolder:
     # ------------------------------------------------------------------
 
     def _extract_tree(self) -> None:
-        """Extract all files from the install repo at this version's tree SHA."""
-        commit = getattr(self.tdv, "commit", "")
-        if not commit:
-            raise RuntimeError(
-                f"TaskDefinitionVersion {self.tdv.pk} has no commit hash"
-            )
+        """Extract all files from the install repo at this version's tree SHA.
 
+        Falls back to copying the task's source folder from disk when the
+        pinned commit is no longer available in the install repo (e.g. after
+        a rebuild that orphaned older ``TaskDefinitionVersion`` rows).  This
+        keeps pinned sessions runnable instead of hard-failing.
+        """
+        commit = getattr(self.tdv, "commit", "")
         repo = InstallRepo.for_task_definition_version(self.tdv)
         # Remove any partial leftovers before extracting
         if self.folder.exists():
             _rmtree(self.folder)
-        repo.checkout_tree(tree_sha=commit, dest=self.folder)
+        if commit:
+            try:
+                repo.checkout_tree(tree_sha=commit, dest=self.folder)
+                return
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+        self._extract_from_source()
 
+    def _extract_from_source(self) -> None:
+        """Copy the task's source folder from disk (fallback path)."""
+        import shutil
+
+        source_dir = self._resolve_source_dir()
+        if source_dir is None or not source_dir.is_dir():
+            raise RuntimeError(
+                f"TaskDefinitionVersion {self.tdv.pk} has no resolvable source folder"
+            )
+        self.folder.mkdir(parents=True, exist_ok=True)
+        for item in source_dir.iterdir():
+            dest = self.folder / item.name
+            if item.is_dir():
+                if dest.exists():
+                    _rmtree(dest)
+                shutil.copytree(item, dest, symlinks=True)
+            elif item.is_file():
+                shutil.copy2(item, dest)
+
+    def _resolve_source_dir(self) -> "Path | None":
+        from pathlib import Path
+
+        td = getattr(self.tdv, "task_definition", None)
+
+        # Prefer the stored source file path: it points at the exact manifest
+        # folder the version was loaded from, regardless of how the (possibly
+        # hyphenated) group label maps to the on-disk directory layout.
+        path = getattr(self.tdv, "path", None)
+        if not path and td is not None:
+            path = getattr(td, "path", None)
+        if path:
+            candidate = Path(str(path)).expanduser()
+            source = candidate.parent if candidate.suffix or candidate.is_file() else candidate
+            if source.is_dir():
+                return source
+            # Fall through to the group-based heuristics below when the
+            # stored path no longer exists on disk.
+
+        if td is None:
+            return None
+        group = (getattr(td, "group_name", "") or "").strip()
+        parent_agent = getattr(td, "parent_agent", None)
+        parent_project = getattr(td, "parent_project", None)
+        parent_skill = getattr(td, "parent_skill", None)
+        if parent_agent is not None:
+            manifest_dir = getattr(parent_agent, "manifest_dir", "") or ""
+            if not manifest_dir:
+                try:
+                    from runtime.paths import agentone_root
+
+                    manifest_dir = (agentone_root() / "agents" / parent_agent.name).as_posix()
+                except Exception:  # pylint: disable=broad-exception-caught
+                    manifest_dir = ""
+            if manifest_dir:
+                base = Path(manifest_dir).expanduser() / "scripts"
+                # Try the group as a direct subdir first, then a nested path
+                # derived from a hyphenated group label (e.g. "filesystem-write"
+                # -> "filesystem/write").
+                for candidate_group in (group, group.replace("-", "/") if group else group):
+                    if not candidate_group:
+                        return base
+                    candidate = base / candidate_group
+                    if candidate.is_dir():
+                        return candidate
+                return base / group if group else base
+        if parent_project is not None:
+            try:
+                from runtime.paths import project_manifest_dir
+
+                manifest_dir = getattr(parent_project, "manifest_dir", "") or project_manifest_dir(parent_project).as_posix()
+            except Exception:  # pylint: disable=broad-exception-caught
+                manifest_dir = getattr(parent_project, "manifest_dir", "") or ""
+            if manifest_dir:
+                base = Path(manifest_dir).expanduser() / "scripts"
+                for candidate_group in (group, group.replace("-", "/") if group else group):
+                    if not candidate_group:
+                        return base
+                    candidate = base / candidate_group
+                    if candidate.is_dir():
+                        return candidate
+                return base / group if group else base
+        if parent_skill is not None:
+            manifest_dir = getattr(parent_skill, "manifest_dir", "") or ""
+            if manifest_dir:
+                base = Path(manifest_dir).expanduser() / "scripts"
+                for candidate_group in (group, group.replace("-", "/") if group else group):
+                    if not candidate_group:
+                        return base
+                    candidate = base / candidate_group
+                    if candidate.is_dir():
+                        return candidate
+                return base / group if group else base
+        try:
+            from runtime.paths import agentone_root
+
+            base = agentone_root() / "scripts"
+            for candidate_group in (group, group.replace("-", "/") if group else group):
+                if not candidate_group:
+                    return base
+                candidate = base / candidate_group
+                if candidate.is_dir():
+                    return candidate
+            return base / group if group else base
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
     def _touch_last_used(self) -> None:
         self.folder.mkdir(parents=True, exist_ok=True)
         stamp = self.folder / ".last_used"

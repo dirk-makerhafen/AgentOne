@@ -1,19 +1,14 @@
 ---
 name: hooks_ok
 description: >
-  Fixture agent declaring session hooks. Used by LoadHooksTest.
+  Fixture agent declaring intercept hooks. Used by hook loader tests.
 hooks:
-  - name: reflect
-    on: stop
-    matcher: session
-    task: distill_turn
-    ingest: record_memory
-    max_tokens: 10000
-    timeout_seconds: 60
-  - on: post_compact
-    task: archive_transcript
-  - on: session_end
-    task: write_journal
-    timeout_seconds: 120
+  - name: guard-read
+    match: {name: read, type: tool}
+    before: core_task
+  - name: audit-write
+    match: {name: "write*"}
+    after: core_task
+    mode: detached
 ---
 Hooks fixture agent

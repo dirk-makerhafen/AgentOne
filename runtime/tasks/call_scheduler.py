@@ -721,7 +721,7 @@ class CallScheduler:
 
         child_session = parent_session.spawn_subagent(
             "approval_decider",
-            name=f"approval-review:{call.pk}:{time_ns()}",
+            name=f"approval-review:{call.pk}:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
             display_name=f"Approval review of {call.task_definition.name} call #{call.pk}",
             description=brief[:100],
             workspace=parent_session.workspace,
@@ -948,6 +948,30 @@ class CallScheduler:
 
         if taskrun:
             taskrun.apply_async()
+            return
+
+        # ``_pick_up_and_create_run`` returns ``None`` either because the
+        # pick_up() race was lost (call no longer WAITING_QUEUE — nothing to
+        # do) or because ``AgentTaskRun.create`` could not resolve the task in
+        # the owning session (e.g. a version-pinned session that no longer
+        # exposes it).  In the latter case the call is already ACTIVE_QUEUED
+        # with no run and would hang forever (recovery only re-queues it,
+        # which fails the same way).  Cancel it so dependents/parents unblock.
+        try:
+            from server.models.enums.task_enums import TaskCallStatusDetail as _TCD
+            from runtime.tasks.call_fsm import TaskCallStateMachine as _TCSM
+            tc = AgentTaskCall.objects.get(pk=task_call_id)
+            if (
+                tc.status_detail == _TCD.ACTIVE_QUEUED
+                and not _ATR.objects.filter(agent_task_call=tc).exists()
+            ):
+                if _TCSM.cancel(tc.pk, _TCD.ACTIVE_QUEUED):
+                    CallScheduler._on_taskcall_ended(
+                        tc.pk, 0, _TCD.ENDED_CANCELLED,
+                    )
+                    print(f"[scheduler] cancelled ACTIVE_QUEUED call {tc.pk} — run could not be created")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"[scheduler] error handling uncreated run for call {task_call_id}: {e}")
 
     @staticmethod
     def _pick_up_and_create_run(task_call_id: int) -> AgentTaskRun | None:

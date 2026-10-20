@@ -1,6 +1,7 @@
 ---
 name: planner
 visibility: subagent
+extends: [reflection-mixin]
 description: >
   Planning specialist. Creates and refines structured, actionable plans on behalf
   of other agents. Use this subagent when you need to break down a complex goal,
@@ -30,8 +31,8 @@ autoload:
   maxCharsPerFile: 8192
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
-tools: [core.*, filesystem-read.*, web.*, subagents.*, execution.python]
-tasks: [ core.*, compact.*,  ]
+tools: [+, core.*, filesystem-read.*, web.*, subagents.*, execution.python]
+tasks: [ +,core.*, compact.*,  ]
 subagents:
     - name: researcher
       create: agent

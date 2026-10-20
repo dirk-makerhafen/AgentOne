@@ -16,7 +16,6 @@ the exact versioned copy, not whatever is on disk in the source tree.
 """
 
 import hashlib
-import os
 import shutil
 import subprocess
 import time
@@ -217,19 +216,24 @@ class InstallRepo:
 
         if shutil.which("rsync"):
             subprocess.run(
-                ["rsync", "-a", "--delete", "--checksum",
-                 "--exclude=.git",
-                 f"{self.source_root}/",
-                 f"{self.repo_path}/"],
+                 ["rsync", "-a", "--delete", "--checksum",
+                  "--exclude=.git",
+                  "--exclude=__pycache__",
+                  "--exclude=*.pyc",
+                  "--exclude=*.pyo",
+                  f"{self.source_root}/",
+                  f"{self.repo_path}/"],
                 capture_output=True,
             )
         else:
             for item in self.source_root.iterdir():
+                if item.name in ("__pycache__",) or item.name.endswith((".pyc", ".pyo")):
+                    continue
                 dest = self.repo_path / item.name
                 if item.is_dir():
                     if dest.exists():
                         shutil.rmtree(dest)
-                    shutil.copytree(item, dest, symlinks=True)
+                    shutil.copytree(item, dest, symlinks=True, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"))
                 elif item.is_file():
                     shutil.copy2(item, dest)
 
@@ -289,9 +293,10 @@ class InstallRepo:
 
     def _fallback_hash(self, source_dir: Path) -> str:
         """SHA-256 of all file contents in *source_dir* when git is unavailable."""
+
         content_hash = hashlib.sha256()
         for f in sorted(source_dir.rglob("*")):
-            if f.is_file():
+            if f.is_file() and "__pycache__" not in f.parts and not f.name.endswith((".pyc", ".pyo")):
                 content_hash.update(f.read_bytes())
-        content_hash.update(str(time.time()).encode())
+                content_hash.update(str(f.relative_to(source_dir)).encode())
         return content_hash.hexdigest()[:40]

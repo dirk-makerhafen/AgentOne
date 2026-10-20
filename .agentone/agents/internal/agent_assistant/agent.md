@@ -8,7 +8,7 @@ description: >
   and work items, and list its version history. Tools take no agent name;
   the workspace already identifies the agent. Collection operations
   (list, stats) belong to agents_assistant.
-extends: AgentOne
+extends: [ AgentOne]
 inheritSystemPrompt: false
 tools: [core.*, agent.*, filesystem-read.*, filesystem-write.*]
 ---

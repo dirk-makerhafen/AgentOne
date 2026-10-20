@@ -1,7 +1,7 @@
 ---
 name: general-chat
 description: General-purpose conversational assistant. Handles open questions, explanations, triage, and everyday assistance. Delegates implementation to coding and research to researcher.
-extends: []
+extends: [reflection-mixin]
 inheritSystemPrompt: False
 precision: balanced
 autoload:
@@ -18,13 +18,13 @@ maxUnattendedTurns: 100
 maxHistoryMessages: 500
 autoCompactMaxTokens: 100000
 autoCompactKeepPercent: 10
-commands: [ ping, todo.* ]
+commands: [+, ping, todo.* ]
 disallowedCommands: []
-tools: [core.*, subagents.*, history.*, web.*, skills.*, todo.*]
+tools: [+, core.*, subagents.*, history.*, web.*, skills.*, todo.*]
 disallowedTools: []
 skills: []
 disallowedSkills: []
-tasks: [ core.*, compact.*, ]
+tasks: [ +, core.*, compact.*, ]
 disallowedTasks: []
 subagents:
   - name: researcher

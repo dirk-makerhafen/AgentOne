@@ -7,6 +7,7 @@ from server.models.message import Message
 from server.models.queries.query import Query
 from server.models.queries.query_message import QueryMessage
 import time
+from datetime import datetime
 from server.models.enums.session_enums import SessionType
 
 _COMPACTION_SYSTEM_PROMPT = """<SYSTEM NOTICE>
@@ -155,29 +156,6 @@ def build_llm_compact_context(
             return dict(response=response, parts=parts, message=message, **kwargs)
 
     
-    
-    # Session hooks (``pre_compact`` event): fired once per compaction —
-    # retries (compact_attempt > 0) do not refire. The fork anchors at the
-    # current tail, so it sees the doomed range with no boundary surgery.
-    if not compact_attempt:
-        try:
-            from runtime.hooks import maybe_fire_hooks
-
-            tail = _session.get_last_message()
-            hook_trigger = (trigger or "").strip().lower() or None
-            if hook_trigger not in ("idle", "auto", "manual"):
-                hook_trigger = "idle" if idle_trigger else "auto"
-            maybe_fire_hooks(
-                _session,
-                "pre_compact",
-                {
-                    "trigger": hook_trigger,
-                    "anchor_message": tail.pk if tail is not None else None,
-                    "compact_attempt": compact_attempt,
-                },
-            )
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print(f"[hooks] error firing pre_compact hooks: {e}")
     extra = f" Attempt {compact_attempt+1}" if compact_attempt else ""
     reason = _describe_trigger(
         _session,
@@ -197,7 +175,7 @@ def build_llm_compact_context(
 
     # Attempt suffix: SessionModel is get_or_create'd by name, so a retry
     # within the same second must not reuse the dead fork's session.
-    session_name = f"p{_session.model.pk}:compaction:{int(time.time())}"
+    session_name = f"p{_session.model.pk}:compaction:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}"
     if compact_attempt:
         session_name += f":a{compact_attempt}"
 
@@ -213,7 +191,7 @@ def build_llm_compact_context(
     # parent then reforks cache-hot.
     child_session = _session.fork(
         name=session_name,
-        description=f"Session compaction for {_session.name} at {int(time.time())}",
+        description=f"Session compaction for {_session.name} at {datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         session_type=SessionType.SUBTASK_COMPACT,
         anchor=boundary,
         auto_compact_max_tokens=0,

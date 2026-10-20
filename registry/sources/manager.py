@@ -8,7 +8,6 @@ The staging directory is then used as the install repo's source root.
 from __future__ import annotations
 
 import hashlib
-import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -16,7 +15,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from registry.sources.types import SourceConfig, SourceResult
+from registry.sources.types import SourceConfig
 from runtime.paths import staging_base as _staging_base
 from runtime.paths import upstream_base as _upstream_base
 
@@ -185,10 +184,15 @@ def _rsync_into(
     When *delete_extras* is true, files in *dest* with no counterpart in
     *src* are removed (mirrors ``rsync --delete`` for the staging overlay).
     """
+    effective_exclude = list(exclude or [])
+    for pattern in ("__pycache__", "*.pyc", "*.pyo"):
+        if pattern not in effective_exclude:
+            effective_exclude.append(pattern)
     cmd = ["rsync", "-a", "--checksum"]
     if delete_extras:
         cmd.append("--delete")
-    for pattern in (exclude or []):
+        cmd.append("--delete-excluded")
+    for pattern in effective_exclude:
         cmd.extend(["--exclude", pattern])
     cmd.extend([f"{src}/", f"{dest}/"])
     try:
@@ -217,12 +221,12 @@ def _rsync_into(
         except OSError:
             pass
     for item in src.iterdir():
-        if item.name in (exclude or []):
+        if item.name in (exclude or []) or item.name == "__pycache__" or item.name.endswith((".pyc", ".pyo")):
             continue
         dest_item = dest / item.name
         try:
             if item.is_dir():
-                shutil.copytree(item, dest_item, dirs_exist_ok=True)
+                shutil.copytree(item, dest_item, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"))
             elif item.is_file():
                 dest_item.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(item, dest_item)

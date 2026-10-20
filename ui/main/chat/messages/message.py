@@ -67,7 +67,7 @@ class MessageView(ModelView):
         the branch is a normal user-facing SESSION (not a ``SUBTASK_FORK``),
         because the user keeps chatting there instead of a subagent.
         """
-        from time import time
+        from datetime import datetime
         from server.models.enums.session_enums import SessionType
 
         try:
@@ -83,7 +83,7 @@ class MessageView(ModelView):
         # anchor (hidden from LLM context, but keeps the UI chain and later
         # prev_message links walking back into the parent conversation).
         child_session = parent_session.fork(
-            name=f"p{parent_session.model.pk}:fork:{int(time())}",
+            name=f"p{parent_session.model.pk}:fork:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
             description=f"Forked from message #{message_id}",
             session_type=SessionType.SESSION,
             anchor=fork_point,

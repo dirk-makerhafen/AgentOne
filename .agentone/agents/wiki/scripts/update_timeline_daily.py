@@ -743,7 +743,7 @@ def _spawn_day_session(_session, day_rel: str, day_str: str, brief: str):
     stamp = day_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
         _session,
-        name=f"p{_session.model.pk}:daily:{stamp}:{int(time())}",
+        name=f"p{_session.model.pk}:daily:{stamp}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Daily summary {day_rel}",
         brief=brief,
     )
@@ -759,7 +759,7 @@ def _spawn_day_check(_session, day_rel: str, day_str: str, brief: str):
     stamp = day_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
         _session,
-        name=f"p{_session.model.pk}:dailycheck:{stamp}:{int(time())}",
+        name=f"p{_session.model.pk}:dailycheck:{stamp}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Double-check {day_rel}/index.md",
         brief=brief,
     )

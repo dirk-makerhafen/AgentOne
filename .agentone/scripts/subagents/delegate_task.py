@@ -51,7 +51,7 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
     if not agentname:
         agentname = _session.agent.name
 
-    name = f"p{_session.model.pk}:{agentname}:{int(time())}"
+    name = f"p{_session.model.pk}:{agentname}:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}"
     description = prompt[:100] + "..." if len(prompt) > 100 else ""
 
     if agentname == _session.agent.name:

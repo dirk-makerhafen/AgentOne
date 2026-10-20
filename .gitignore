@@ -30,13 +30,12 @@ celerybeat-schedule
 config/settings_local.py
 
 # Project specific test/dev files
-testfile.txt
-testfile1.txt
-getdir.py
-parse.py
-test.py
-td.py
-td1.py
+/q.py
+/q1.py
+/q2.py
+/p
+logs/
+
 
 .shadowgit
 cert.pem

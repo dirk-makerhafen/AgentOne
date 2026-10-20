@@ -520,7 +520,7 @@ def _spawn_month_session(_session, month_rel: str, month_str: str, brief: str):
     stamp = month_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
         _session,
-        name=f"p{_session.model.pk}:monthly:{stamp}:{int(time())}",
+        name=f"p{_session.model.pk}:monthly:{stamp}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Monthly summary {month_rel}",
         brief=brief,
     )
@@ -536,7 +536,7 @@ def _spawn_month_check(_session, month_rel: str, month_str: str, brief: str):
     stamp = month_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
         _session,
-        name=f"p{_session.model.pk}:monthlycheck:{stamp}:{int(time())}",
+        name=f"p{_session.model.pk}:monthlycheck:{stamp}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Double-check {month_rel}/index.md",
         brief=brief,
     )

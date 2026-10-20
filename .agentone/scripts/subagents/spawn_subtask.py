@@ -46,7 +46,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
     if not _session.agent.get_version_model():
         return {"error": "Current agent version not found"}
 
-    session_name = f"p{_session.model.pk}:task:{int(time())}"
+    session_name = f"p{_session.model.pk}:task:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}"
     child_session = _session.fork(
         name=session_name,
         description=prompt,

@@ -1,7 +1,7 @@
 ---
 name: coding
 description: Implementation specialist. Writes and edits code, runs commands, debugs, and does project work inside the bound workspace. Delegated to by AgentOne and general-chat.
-extends: []
+extends: [reflection-mixin]
 inheritSystemPrompt: False
 precision: precise
 reasoningEffort: high
@@ -18,12 +18,12 @@ autoload:
   maxFiles: 10
   maxChars: 32768
   maxCharsPerFile: 8192
-commands: [ ping, todo.* ]
+commands: [+, ping, todo.* ]
 disallowedCommands: []
-tools: [core.*, subagents.*, history.*, filesystem-read.*, filesystem-write.*, execution.*, web.*, skills.*, todo.*]
+tools: [+, core.*, subagents.*, history.*, filesystem-read.*, filesystem-write.*, execution.*, web.*, skills.*, todo.*]
 disallowedTools: []
 disallowedSkills: []
-tasks: [ core.*, compact.*, ]
+tasks: [+, core.*, compact.*, ]
 disallowedTasks: []
 subagents:
   - name: researcher
