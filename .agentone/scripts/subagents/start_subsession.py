@@ -36,6 +36,7 @@ def start_subsession(_session: Session, agentname: str, sessionname: str, prompt
         name=sessionname,
         description=prompt,
         session_type=SessionType.SUBSESSION,
+        group_key="subagent:subsession",
     )
     if child_session is None:
         return {"error": f"Agent '{agentname}' not found"}

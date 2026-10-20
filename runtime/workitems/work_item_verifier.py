@@ -287,6 +287,7 @@ class WorkItemVerifier:
             description=brief[:100],
             workspace=executor_session.workspace,
             session_type=SessionType.SUBTASK_HOOK,
+            group_key="workitem:review",
             allow_internal=True,
             settings=settings,
         )

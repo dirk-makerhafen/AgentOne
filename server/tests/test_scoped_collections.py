@@ -492,6 +492,7 @@ class AssistantSessionTest(TestCase):
         self.assertIsNotNone(first)
         self.assertEqual(first.model.pk, second.model.pk)
         self.assertEqual(first.model.name, "skills_assistant - global")
+        self.assertEqual(first.model.group_key, "assistant:skills_assistant")
         self.assertIsNone(first.model.parent_project)
 
     def test_project_scope_binds_project(self):
@@ -528,6 +529,7 @@ class AssistantSessionTest(TestCase):
         child = Skills().get_assistant_session()
         self.assertIsNotNone(child)
         self.assertEqual(child.model.name, "skills_assistant - global")
+        self.assertEqual(child.model.group_key, "assistant:skills_assistant")
 
     def test_spawn_project_binding_preserved(self):
         project = _make_project(path="/tmp/sp-proj")

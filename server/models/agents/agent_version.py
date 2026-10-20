@@ -107,6 +107,7 @@ class AgentVersionModel(BaseModel):
         workspace: Optional[WorkspaceModel] = None,
         parent_session_version: SessionVersionModel | None = None,
         session_type: str = "",
+        group_key: str = "",
         settings_inherit: bool = False,
         settings: Optional["SettingsModel"] = None,
         settings_overrides: Optional[dict] = None,
@@ -117,6 +118,9 @@ class AgentVersionModel(BaseModel):
         Args:
             name: Unique session name. Auto-generated if omitted.
             display_name: Human-readable display name.
+            group_key: Non-unique grouping key (``domain:task``) for sessions
+                doing the same kind of work. Stored on ``SessionModel``,
+                never part of the uniqueness lookup.
             workspace: Workspace directory for the session.
             parent_session_version: Optional parent session version to inherit from.
             session_type: SessionType value describing the session's purpose
@@ -157,6 +161,7 @@ class AgentVersionModel(BaseModel):
 
         session_defaults = dict(
             parent_session=parent_instance,
+            group_key=group_key or "",
         )
         if session_type:
             session_defaults["session_type"] = session_type
@@ -167,11 +172,16 @@ class AgentVersionModel(BaseModel):
         # naming a session "research" shared one row, one turn_count and one
         # message chain.  ``None`` is translated to IS NULL, which also scopes
         # top-level sessions correctly.
-        session, _ = SessionModel.objects.get_or_create(
+        session, created = SessionModel.objects.get_or_create(
             name=name,
             parent_session=parent_instance,
             defaults=session_defaults,
         )
+        # Backfill a pre-existing singleton (e.g. an assistant session created
+        # before group keys existed) once, without overwriting a deliberate
+        # different grouping.
+        if not created and group_key and not session.group_key:
+            session.atomic_update(group_key=group_key)
 
         session_version:SessionVersionModel = session.latest_session_version
         aiv_created = False

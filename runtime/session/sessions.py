@@ -83,6 +83,7 @@ class Sessions:
         caller: Any = None,
         session_type: str = "",
         scope_label: str | None = None,
+        group_key: str | None = None,
     ) -> Any | None:
         """Get-or-create the singleton assistant session, bound to its scope.
 
@@ -104,6 +105,7 @@ class Sessions:
                 Without a caller the agent version is resolved globally.
             session_type: SessionType value (defaults to ``subsession``).
             scope_label: Human label for the subject this session works on.
+            group_key: Grouping key (defaults to ``assistant:<name>``).
 
         Returns:
             The runtime ``Session``, or *None* when unresolvable.
@@ -118,6 +120,8 @@ class Sessions:
             assistant, project, scope_label
         )
         wanted_type = session_type or SessionType.SUBSESSION
+        if group_key is None:
+            group_key = f"assistant:{assistant}"
 
         if caller is not None:
             try:
@@ -128,6 +132,7 @@ class Sessions:
                     workspace=workspace,
                     project=project,
                     session_type=wanted_type,
+                    group_key=group_key,
                     allow_internal=True,
                 )
             except Exception:  # pylint: disable=broad-exception-caught
@@ -142,6 +147,7 @@ class Sessions:
                 description=description,
                 workspace=workspace,
                 session_type=wanted_type,
+                group_key=group_key,
             )
             session = session_version.session
             project_pk = getattr(project, "pk", None)

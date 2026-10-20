@@ -51,6 +51,7 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
         name=session_name,
         description=prompt,
         session_type=SessionType.SUBTASK_FORK,
+        group_key="subagent:subtask",
         preserve_history=True,
     )
 

@@ -726,6 +726,7 @@ class CallScheduler:
             description=brief[:100],
             workspace=parent_session.workspace,
             session_type=SessionType.SUBTASK_HOOK,
+            group_key="internal:approval-review",
             allow_internal=True,
             settings=settings,
         )

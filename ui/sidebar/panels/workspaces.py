@@ -153,8 +153,23 @@ class SidebarPanelWorkspaces(ModelView):
     # ------------------------------------------------------------------
 
     @property
+    def _parent_pks(self) -> set[int]:
+        try:
+            rows = build_workspace_tree(list(WorkspaceModel.objects.all()))
+            return {r["pk"] for r in rows if r.get("has_children")}
+        except Exception:  # pylint: disable=broad-exception-caught
+            return set()
+
+    def _effective_collapsed(self) -> set[int]:
+        collapsed = set(self._collapsed)
+        for pk in self._parent_pks:
+            if pk not in self._touched:
+                collapsed.add(pk)
+        return collapsed
+
+    @property
     def collapsed(self) -> set[int]:
-        return self._collapsed
+        return self._effective_collapsed()
 
     @property
     def tree_rows(self) -> list[dict]:
@@ -173,7 +188,7 @@ class SidebarPanelWorkspaces(ModelView):
             if any(collapsed_at_depth.get(d, False) for d in range(depth)):
                 continue
             visible.append(row)
-            if row["has_children"] and row["pk"] in self._collapsed:
+            if row["has_children"] and row["pk"] in self._effective_collapsed():
                 collapsed_at_depth[depth] = True
         return visible
 
@@ -206,8 +221,9 @@ class SidebarPanelWorkspaces(ModelView):
 
     def toggle_collapse(self, pk: int) -> None:
         pk = int(pk)
+        was_collapsed = pk in self._effective_collapsed()
         self._touched.add(pk)
-        if pk in self._collapsed:
+        if was_collapsed:
             self._collapsed.discard(pk)
         else:
             self._collapsed.add(pk)

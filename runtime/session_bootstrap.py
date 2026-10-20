@@ -78,6 +78,44 @@ def build_bootstrap_contents(session: Any) -> tuple[str | None, str | None, str]
     return autoload_text, index_text, env_text
 
 
+
+def _manifest_dirs(session: Any) -> list[tuple[str, str]]:
+    """Return labeled manifest directories available to *session* (deduped)."""
+    out: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    try:
+        project = session.get_project()
+    except Exception:  # pylint: disable=broad-exception-caught
+        project = None
+    if project is not None:
+        try:
+            from runtime.paths import project_manifest_dir
+
+            posix = project_manifest_dir(project).as_posix()
+            if posix and posix not in seen:
+                seen.add(posix)
+                out.append(("project manifest", posix))
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    try:
+        workspace = session.workspace
+    except Exception:  # pylint: disable=broad-exception-caught
+        workspace = None
+    if workspace is not None:
+        try:
+            from runtime.paths import workspace_manifest_dir
+
+            p = workspace_manifest_dir(workspace)
+            if p is not None:
+                posix = p.as_posix()
+                if posix and posix not in seen:
+                    seen.add(posix)
+                    out.append(("workspace manifest", posix))
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    return out
+
+
 def _build_env_text(session: Any) -> str:
     """Build the environment text (time + workspace + private dir)."""
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -92,11 +130,28 @@ def _build_env_text(session: Any) -> str:
     except Exception:  # pylint: disable=broad-exception-caught
         logger.warning("bootstrap: private dir unavailable", exc_info=True)
         private_dir = "(unavailable)"
+
+    manifest_lines = ""
+    for label, posix in _manifest_dirs(session):
+        if posix == working_dir:
+            continue
+        manifest_lines += f"\nYour {label} directory is '{posix}'."
+    dashboard_note = ""
+    dirs = [p for _, p in _manifest_dirs(session)]
+    if dirs:
+        dashboard_note = (
+            "\nDashboards (markdown) live at "
+            + ", ".join(f"'{p}/dashboard/index.md'" for p in dirs)
+            + "."
+        )
+
     return (
         f"<SYSTEM NOTICE>{ENV_BOOTSTRAP_SENTINEL} Session started at {now}; "
         "this header and the paths below are frozen for cache stability — "
         "ask for the current time if you need it.]"
         f"\nYour working directory is '{working_dir}'."
+        f"{manifest_lines}"
+        f"{dashboard_note}"
         f"\nYour private session folder is {private_dir}. "
         "Use the normal filesystem tools for scratch files, temporary "
         "memory, intermediate results, generated "
@@ -341,6 +396,18 @@ def maybe_announce_workspace_switch(session: Any) -> Any | None:
             message_type=MessageType.SYSTEM_NOTICE,
             prev_message=session.get_last_message(),
         )
+        manifest_note = ""
+        try:
+            ws = session.workspace
+            if ws is not None:
+                from runtime.paths import workspace_manifest_dir
+
+                manifest_note = (
+                    f" Your manifest directory is now "
+                    f"'{workspace_manifest_dir(ws).as_posix()}'."
+                )
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
         notice.add_part(
             type=MessagePartType.MESSAGE,
             content_type=MessageContentType.TEXT,
@@ -348,7 +415,8 @@ def maybe_announce_workspace_switch(session: Any) -> Any | None:
                 f"<SYSTEM NOTICE>Workspace switched mid-session: '{remembered}' → "
                 f"'{root_posix}'. The bootstrap message above still shows "
                 "the old path — use the new path going forward and re-read "
-                "any workspace guidance files relevant to your task.</SYSTEM NOTICE>"
+                "any workspace guidance files relevant to your task."
+                f"{manifest_note}</SYSTEM NOTICE>"
             ),
         )
         notice.publish("create")

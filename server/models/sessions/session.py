@@ -57,6 +57,11 @@ class SessionModel(BaseModel):
             return f"DebugLogEntry.session:{self.model.pk}"
 
     name = models.CharField(max_length=255)
+    #: Non-unique grouping key for sessions that do the same kind of work.
+    #: Unlike ``name`` it is not part of any uniqueness constraint, so many
+    #: baseagent/wiki/etc. sessions can share e.g. ``wiki:timeline-daily``.
+    #: Convention: lowercase ``domain:task``.
+    group_key = models.CharField(max_length=255, default="", blank=True, db_index=True)
     turn_count = models.IntegerField(default=0)
     unattended_turn_count = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)

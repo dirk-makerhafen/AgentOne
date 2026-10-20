@@ -180,6 +180,15 @@ class Session:
         return self.model.name
 
     @property
+    def group_key(self) -> str:
+        """Return the non-unique grouping key (``""`` when unset)."""
+        return self.model.group_key
+
+    def set_group_key(self, value: str) -> None:
+        """Set the grouping key without minting a new session version."""
+        self.model.atomic_update(group_key=value or "")
+
+    @property
     def session_type(self) -> str:
         """Return the session type (SessionType value)."""
         return self.model.session_type
@@ -863,6 +872,7 @@ class Session:
         description: str = "",
         display_name: str | None = None,
         session_type: str = "",
+        group_key: str = "",
         workspace: Any = None,
         preserve_history: bool = False,
         anchor: Message | None = None,
@@ -874,6 +884,9 @@ class Session:
         The child inherits this session's settings (with ``settings_overrides``
         applied on top) and query-template/adhoc-tool links. Use
         :meth:`spawn_subagent` to run a *different* agent's session.
+
+        ``group_key`` is a non-unique grouping key (``domain:task``) stored on
+        the child session; unlike settings it is never inherited implicitly.
 
         ``preserve_history`` (or an explicit ``anchor`` message) grafts the
         child's message chain onto this session's, so the child sees the
@@ -887,6 +900,7 @@ class Session:
             workspace=workspace if workspace is not None else self.workspace,
             parent_session_version=self.get_version_model(),
             session_type=session_type,
+            group_key=group_key,
             settings_inherit=True,
             settings=settings,
             settings_overrides=settings_overrides or None,
@@ -907,6 +921,7 @@ class Session:
         description: str = "",
         display_name: str | None = None,
         session_type: str = "",
+        group_key: str = "",
         workspace: Any = None,
         project: Any = None,
         settings: SettingsModel | None = None,
@@ -937,6 +952,9 @@ class Session:
         tools — e.g. the internal ``*_assistant`` collection tools — resolve
         the right collection. The runtime collection classes pass this
         automatically (e.g. via ``get_assistant_session()``).
+
+        ``group_key`` is a non-unique grouping key (``domain:task``) stored on
+        the child session, so callers can later group same-agent sessions.
         """
         if isinstance(agent, str):
             agent_version = (
@@ -954,6 +972,7 @@ class Session:
             workspace=workspace if workspace is not None else self.workspace,
             parent_session_version=self.get_version_model(),
             session_type=session_type,
+            group_key=group_key,
             settings_inherit=False,
             settings=settings,
             settings_overrides=settings_overrides or None,

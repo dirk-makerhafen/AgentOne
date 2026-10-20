@@ -244,10 +244,17 @@ def load_agent_manifest(
 
     # Record where this agent's manifest lives. AgentModel.save() forbids
     # updates on existing rows, so drift goes through a queryset update.
+    # An agent that reappears on disk is unarchived.
     manifest_dir = agent_dir.as_posix()
+    updates = {}
     if (agent.manifest_dir or "") != manifest_dir:
-        AgentModel.objects.filter(pk=agent.pk).update(manifest_dir=manifest_dir)
-        agent.manifest_dir = manifest_dir
+        updates["manifest_dir"] = manifest_dir
+    if getattr(agent, "is_archived", False):
+        updates["is_archived"] = False
+    if updates:
+        AgentModel.objects.filter(pk=agent.pk).update(**updates)
+        for field, value in updates.items():
+            setattr(agent, field, value)
 
     # Load child scripts
     defined_tasks: List[Tuple[TaskDefinition, TaskDefinitionVersion]] = []

@@ -523,6 +523,7 @@ def _spawn_month_session(_session, month_rel: str, month_str: str, brief: str):
         name=f"p{_session.model.pk}:monthly:{stamp}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Monthly summary {month_rel}",
         brief=brief,
+        group_key="wiki:timeline-monthly",
     )
     if not ok:
         return False, None, ref
@@ -539,6 +540,7 @@ def _spawn_month_check(_session, month_rel: str, month_str: str, brief: str):
         name=f"p{_session.model.pk}:monthlycheck:{stamp}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Double-check {month_rel}/index.md",
         brief=brief,
+        group_key="wiki:timeline-monthly-check",
     )
     if not ok:
         return False, {"status": "error", "month": month_rel, "message": f"double-check not spawned: {ref}"}

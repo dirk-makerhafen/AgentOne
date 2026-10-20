@@ -153,6 +153,7 @@ class RightPanelSessionSubagents(ModelView):
             name=f"user-launch:{name}:{ts}",
             description="User created subagent",
             session_type=SessionType.SUBSESSION,
+            group_key="subagent:manual",
         )
         if child_session is None:
             return

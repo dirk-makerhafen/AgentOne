@@ -99,6 +99,10 @@ class _WorkspaceAccessPolicy:
     # Owning session pk for the session-private storage carve-out
     # (``~/.agentone/sessions/<pk>/``).  *None* when unknown.
     session_pk: int | None = None
+    # Additional roots treated as "inside" for policy purposes: the
+    # session's manifest directories (project/workspace ``.agentone``),
+    # including central storage locations outside the workspace path.
+    manifest_roots: list[Path] = field(default_factory=list)
 
     @property
     def global_deny(self) -> list[str]:
@@ -216,6 +220,50 @@ def resolve_policy(session: Any) -> _WorkspaceAccessPolicy:
     base_read.default = base_read.default if base_read.default is not None else "allow"
     base_write.default = base_write.default if base_write.default is not None else "allow"
 
+    manifest_roots: list[Path] = []
+    seen_roots: set[str] = set()
+    def _add_root(candidate: Any) -> None:
+        if candidate is None:
+            return
+        try:
+            p = Path(candidate).expanduser()
+            try:
+                p = p.resolve()
+            except OSError:
+                pass
+            key = p.as_posix()
+            if key and key not in seen_roots:
+                seen_roots.add(key)
+                manifest_roots.append(p)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    if workspace is not None:
+        try:
+            from runtime.paths import workspace_manifest_dir
+
+            _add_root(workspace_manifest_dir(workspace))
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    try:
+        project = session.get_project() if hasattr(session, "get_project") else None
+    except Exception:  # pylint: disable=broad-exception-caught
+        project = None
+    if project is not None:
+        try:
+            from runtime.paths import project_manifest_dir
+
+            _add_root(project_manifest_dir(project))
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    if not manifest_roots:
+        try:
+            from runtime.paths import agentone_home
+
+            _add_root(agentone_home())
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
     return _WorkspaceAccessPolicy(
         workspace_root=root,
         inside_read=_merge_action(base_read, override_read),
@@ -223,6 +271,7 @@ def resolve_policy(session: Any) -> _WorkspaceAccessPolicy:
         external_read=ext_read,
         external_write=ext_write,
         session_pk=_session_pk(session),
+        manifest_roots=manifest_roots,
     )
 
 
@@ -351,6 +400,15 @@ def _inside_workspace(policy: _WorkspaceAccessPolicy, target: Path) -> bool:
     except ValueError:
         return False
 
+def _inside_manifest_root(policy: _WorkspaceAccessPolicy, target: Path) -> bool:
+    for root in (policy.manifest_roots or []):
+        try:
+            target.relative_to(root)
+            return True
+        except (ValueError, Exception):
+            continue
+    return False
+
 
 # pylint: disable=too-many-return-statements,too-many-branches
 def evaluate(policy: _WorkspaceAccessPolicy, target: str, action: str) -> GuardrailVerdict:
@@ -401,6 +459,9 @@ def evaluate(policy: _WorkspaceAccessPolicy, target: str, action: str) -> Guardr
         return GuardrailVerdict(action="allow", score=0, level="safe", reason="")
 
     inside = _inside_workspace(policy, target_resolved)
+    if not inside and _inside_manifest_root(policy, target_resolved):
+        inside = True
+
     # pylint: disable=protected-access
     scope = policy._inside_policy(action) if inside else policy._external_policy(action)
     write_scope = policy._inside_policy("write") if inside else policy._external_policy("write")

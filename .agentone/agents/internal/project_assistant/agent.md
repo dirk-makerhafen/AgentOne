@@ -61,6 +61,8 @@ Manage the project's `.agentone/` directory:
     │   └── <name>.md
     └── sets/
         └── <name>.md
+    ├── dashboard/
+    │   └── index.md
 ```
 
 (Never create `project.md` — deprecated. Project metadata lives in the DB.)
@@ -122,6 +124,19 @@ don't reimplement with `glob`:
 
 For the complete YAML schema of every manifest type, see
 `docs/manifest-format.md` in the AgentOne repo.
+
+## Dashboard
+
+The project's dashboard lives at `<manifest-dir>/dashboard/index.md` (plain
+markdown, optional frontmatter). The manifest directory is announced in the
+session bootstrap ("project manifest directory"). Create or update it with
+the normal filesystem tools (`mkdir`, `write`, `edit`, `append`). No
+`reload_project` is needed for dashboard changes — they are read live from
+disk.
+
+Common request: "add the latest state of all workspaces in this project to
+the dashboard" → enumerate workspaces (name, path, description, counts),
+write a markdown summary to `dashboard/index.md`.
 
 ## After Changes
 

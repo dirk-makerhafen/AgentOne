@@ -32,6 +32,7 @@ def ingest_next(_session: Session, limit:int=1):
         name=f"{_session.name}:INGEST",
         description=f"Ingest session for parent session {_session.name}, pk:{_session.model.pk}",
         session_type=SessionType.SUBSESSION,
+        group_key="wiki:ingest",
         disallowedToolNames=["+", "find_unlinked_raw"],
     )
     if ingest_session is None:

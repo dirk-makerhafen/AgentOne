@@ -45,6 +45,9 @@ class AgentModel(BaseModel):
     # manifest_dir: directory holding this agent's agent.md (set by the
     # loader; blank for rows predating the field or created ad hoc).
     manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
+    # Set by the loader when no manifest supplies this agent anymore. The
+    # row (and all its versions/sessions) is kept so history stays intact.
+    is_archived: bool = models.BooleanField(default=False)
 
     @property
     def agent_sessions(self) -> QuerySet:
@@ -63,6 +66,8 @@ class AgentModel(BaseModel):
     @property
     def is_user_visible(self) -> bool:
         """Return whether a human user may pick this agent (visibility ``user``)."""
+        if self.is_archived:
+            return False
         if self.latest_agent_version is None:
             return True
         try:

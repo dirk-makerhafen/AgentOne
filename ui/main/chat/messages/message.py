@@ -86,6 +86,7 @@ class MessageView(ModelView):
             name=f"p{parent_session.model.pk}:fork:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
             description=f"Forked from message #{message_id}",
             session_type=SessionType.SESSION,
+            group_key="chat:fork",
             anchor=fork_point,
         )
         child_version = child_session.get_version_model()

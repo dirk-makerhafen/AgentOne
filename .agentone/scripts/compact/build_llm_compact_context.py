@@ -193,6 +193,7 @@ def build_llm_compact_context(
         name=session_name,
         description=f"Session compaction for {_session.name} at {datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         session_type=SessionType.SUBTASK_COMPACT,
+        group_key="internal:compaction",
         anchor=boundary,
         auto_compact_max_tokens=0,
         auto_compact_idle_seconds=0,

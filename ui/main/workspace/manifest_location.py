@@ -22,7 +22,7 @@ def storage_options() -> list[dict]:
         {"value": STORAGE_INLINE,
          "label": "In workspace dir (<workspace>/.agentone)"},
         {"value": STORAGE_CENTRAL,
-         "label": "Centralized (~/.agentone/workspaces/<name>)"},
+         "label": "Centralized (project or ~/.agentone/workspaces/<name>)"},
     ]
 
 

@@ -48,6 +48,7 @@ def wiki_init(_session: Session, folder: str | None = None) -> dict[str, Any]:
         description=f"Wiki '{folder or _session.workspace.path}' main _session.",
         workspace=workspace,
         session_type=SessionType.SUBSESSION,
+        group_key="wiki:bootstrap",
     )
     if child_session is None:
         return {"error": "Agent 'wiki' not found"}

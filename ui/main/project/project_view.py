@@ -1,5 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
+
+import frontmatter
 from typing import Any, TYPE_CHECKING
 from ui.lib.model_view import ModelView
 from ui.main.rightpanel.project.rightpanel_project import RightPanelProject
@@ -19,7 +21,10 @@ class ProjectView(ModelView):
     LATEST_CHAT_LIMIT = 10
 
     DOM_ELEMENT_CLASS = "main-view"
-    TEMPLATE_STR = '''  
+
+    CSS_STR = None
+
+    TEMPLATE_STR = '''
         <div class="main-view-header">
             <div class="main-view-title" id="projectTitle">{{ pyview.subject.name }}</div>
             <div class="main-view-actions">
@@ -90,6 +95,24 @@ class ProjectView(ModelView):
                     <div class="detail-row"><div class="detail-row-label">Status</div><div class="detail-row-value"><span class="detail-badge">Inactive</span></div></div>
                 </div>
                 {% endif %}
+
+                <div class="detail-card">
+                    <div class="detail-card-title">Dashboard</div>
+                    {% if pyview.has_dashboard|default(false) %}
+                    <div class="msg-body" id="dashboard_body_{{ pyview.uid }}">{{ pyview.dashboard_html }}</div>
+                    <script>
+                        (function(){var el=document.getElementById('dashboard_body_{{ pyview.uid }}');if(el)el.innerHTML=marked.parse(el.textContent);})();
+                    </script>
+                    {% else %}
+                    <div class="ws-ov-empty">
+                        <h2>No dashboard yet</h2>
+                        <div>Ask the project assistant to create <code>dashboard/index.md</code>.</div>
+                    </div>
+                    {% endif %}
+                    <div style="padding:8px 12px;">
+                        <button class="ws-ov-view-btn" onclick="pyview.refreshDashboard()">Refresh</button>
+                    </div>
+                </div>
 
                 <div class="ws-sub-head ws-chat-head">
                     <h2 class="ws-sub-title">Chats <span class="ws-sub-count">{{ pyview.chat_count }}</span></h2>
@@ -195,6 +218,43 @@ class ProjectView(ModelView):
             return "~" + p[len(home):] if p.startswith(home) else p
         except Exception:
             return f"~/.agentone/projects/{name}"
+
+    # ------------------------------------------------------------------
+    # Dashboard
+    # ------------------------------------------------------------------
+
+    @property
+    def dashboard_path(self) -> str:
+        try:
+            from runtime.paths import project_dashboard_index
+
+            p = project_dashboard_index(self.subject)
+            return p.as_posix() if p.is_file() else ""
+        except Exception:
+            return ""
+
+    @property
+    def has_dashboard(self) -> bool:
+        return bool(self.dashboard_path)
+
+    @property
+    def dashboard_html(self) -> str:
+        path = self.dashboard_path
+        if not path:
+            return ""
+        try:
+            raw = Path(path).read_text(encoding="utf-8")
+            post = frontmatter.loads(raw)
+            content = (post.content or "").strip()
+            return content if content else raw.strip()
+        except Exception:
+            try:
+                return Path(path).read_text(encoding="utf-8").strip()
+            except Exception:
+                return ""
+
+    def refreshDashboard(self) -> None:
+        self.update()
 
     # ------------------------------------------------------------------
     # Chats / workspaces lists

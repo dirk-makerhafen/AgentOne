@@ -12,7 +12,7 @@ from api.serializers.agents import (
 
 
 class AgentViewSet(viewsets.ModelViewSet):
-    queryset = AgentModel.objects.all().order_by('-created_at')
+    queryset = AgentModel.objects.filter(is_archived=False).order_by('-created_at')
     permission_classes = [IsAuthenticated]
     ordering = ['-created_at']
     filterset_fields = ['name']

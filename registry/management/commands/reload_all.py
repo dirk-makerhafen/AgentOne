@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+import frontmatter
 from django.core.management.base import BaseCommand, CommandError
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
@@ -23,7 +24,9 @@ from runtime.paths import (
     user_skills_dir,
     workspace_manifest_dir,
 )
+from server.models.agents.agent import AgentModel
 from server.models.cron import Cronjob
+from server.models.skills.skill import SkillModel
 
 
 ReloadResult = Dict[str, Any]
@@ -82,11 +85,15 @@ def run_reload_all(folder: str) -> ReloadResult:
         except Exception as e:
             errors.append(f"Scripts: {e}")
 
+    global_skill_names: set[str] = set()
+    global_agent_names: set[str] = set()
+
     # Global skills (no parent)
     skills_dir = effective_root / "skills"
     if skills_dir.is_dir():
         skill_count = 0
         for skill_md in sorted(skills_dir.glob("**/skill.md")):
+            global_skill_names.add(_manifest_name(skill_md, skill_md.parent.name))
             try:
                 load_skill_manifest(skill_md, install_repo=global_install, details=details)
                 skill_count += 1
@@ -99,6 +106,7 @@ def run_reload_all(folder: str) -> ReloadResult:
     if agents_dir.is_dir():
         agent_count = 0
         for agent_md in find_agent_md_files(agents_dir):
+            global_agent_names.add(_manifest_name(agent_md, agent_md.parent.name))
             try:
                 load_agent_manifest(
                     agent_md,
@@ -127,7 +135,24 @@ def run_reload_all(folder: str) -> ReloadResult:
 
     # User scope (~/.agentone/{agents,skills,scripts,cronjobs}/).
     # Loads into the global namespace (same rows, new versions win).
-    _load_user_scope(details=details, errors=errors, counts=counts)
+    _load_user_scope(
+        details=details,
+        errors=errors,
+        counts=counts,
+        seen_skill_names=global_skill_names,
+        seen_agent_names=global_agent_names,
+    )
+
+    # Global rows whose manifests disappeared are archived, never deleted,
+    # so versions and history referencing them stay intact. Only prune a
+    # domain when one of its global source dirs is present in this reload;
+    # otherwise archiving every row would be a guess.
+    _archive_missing_globals(
+        global_agent_names,
+        global_skill_names,
+        agents_present=agents_dir.is_dir() or user_agents_dir().is_dir(),
+        skills_present=skills_dir.is_dir() or user_skills_dir().is_dir(),
+    )
 
     # Global streams (no parent)
     streams_dir = effective_root / "streams"
@@ -192,11 +217,24 @@ def run_reload_all(folder: str) -> ReloadResult:
     return {"status": status, "summary": summary, "counts": counts, "details": details, "errors": errors}
 
 
-def _load_user_scope(details: list, errors: list, counts: Dict[str, int]) -> None:
+def _manifest_name(manifest_path: Path, default: str) -> str:
+    """Return a manifest's declared ``name`` (folder name as fallback)."""
+    try:
+        name = frontmatter.load(manifest_path).get("name")
+    except Exception:  # pylint: disable=broad-exception-caught
+        name = None
+    return (name or default or "").strip()
+
+
+def _load_user_scope(details: list, errors: list, counts: Dict[str, int],
+                     seen_skill_names: set[str] | None = None,
+                     seen_agent_names: set[str] | None = None) -> None:
     """Load ``~/.agentone/{scripts,skills,agents,cronjobs}/`` as user scope.
 
     Loads into the global namespace (same DB rows, user versions win by
-    loading after global). Missing dirs are skipped silently.
+    loading after global). Missing dirs are skipped silently. Names are
+    added to *seen_skill_names* / *seen_agent_names* so the caller can
+    archive globals that no longer have a manifest.
     """
     root = user_scope_dir()
     if not root.is_dir():
@@ -219,6 +257,8 @@ def _load_user_scope(details: list, errors: list, counts: Dict[str, int]) -> Non
     skills_dir = user_skills_dir()
     if skills_dir.is_dir():
         for skill_md in sorted(skills_dir.glob("**/skill.md")):
+            if seen_skill_names is not None:
+                seen_skill_names.add(_manifest_name(skill_md, skill_md.parent.name))
             try:
                 load_skill_manifest(skill_md, install_repo=user_install, details=details)
             except Exception as e:
@@ -227,6 +267,8 @@ def _load_user_scope(details: list, errors: list, counts: Dict[str, int]) -> Non
     agents_dir = user_agents_dir()
     if agents_dir.is_dir():
         for agent_md in find_agent_md_files(agents_dir):
+            if seen_agent_names is not None:
+                seen_agent_names.add(_manifest_name(agent_md, agent_md.parent.name))
             try:
                 load_agent_manifest(agent_md, install_repo=user_install, details=details)
             except Exception as e:
@@ -240,6 +282,45 @@ def _load_user_scope(details: list, errors: list, counts: Dict[str, int]) -> Non
                 load_cron_manifest(cron_md, install_repo=user_install, seen_names=seen, details=details)
             except Exception as e:
                 errors.append(f"User cron {cron_md.stem}: {e}")
+
+
+def _archive_missing_globals(
+    seen_agent_names: set[str],
+    seen_skill_names: set[str],
+    *,
+    agents_present: bool = True,
+    skills_present: bool = True,
+) -> None:
+    """Archive global agents/skills with no manifest in this reload.
+
+    Rows are kept (not deleted) so versions, sessions and call history
+    stay intact. A manifest that reappears unarchives the row in its
+    loader. ``*_present`` gates a domain whose global source dir did not
+    exist at all in this reload, to avoid archiving everything by accident.
+    """
+    if agents_present:
+        stale_agents = list(
+            AgentModel.objects.filter(
+                parent_agent__isnull=True,
+                parent_project__isnull=True,
+                parent_skill__isnull=True,
+                is_archived=False,
+            ).exclude(name__in=seen_agent_names).values_list("pk", flat=True)
+        )
+        if stale_agents:
+            AgentModel.objects.filter(pk__in=stale_agents).update(is_archived=True)
+
+    if skills_present:
+        stale_skills = list(
+            SkillModel.objects.filter(
+                parent_agent__isnull=True,
+                parent_project__isnull=True,
+                parent_skill__isnull=True,
+                is_archived=False,
+            ).exclude(name__in=seen_skill_names).values_list("pk", flat=True)
+        )
+        if stale_skills:
+            SkillModel.objects.filter(pk__in=stale_skills).update(is_archived=True)
 
 
 def _load_db_projects(details: list, errors: list, counts: Dict[str, int]) -> None:

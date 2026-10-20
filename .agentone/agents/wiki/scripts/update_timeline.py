@@ -1005,6 +1005,7 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
         name=f"p{_session.model.pk}:baseagent:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Double-check {summary_path} against {raw_path}",
         session_type=SessionType.SUBTASK_DELEGATE,
+        group_key="wiki:timeline-review",
         allow_internal=True,
         reasoning_effort=ReasoningEffort.NONE,
         max_turns=20,

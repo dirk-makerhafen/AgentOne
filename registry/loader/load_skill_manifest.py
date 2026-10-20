@@ -46,11 +46,18 @@ def load_skill_manifest(
         parent_project=parent_project,
     )
     # Record where this skill's manifest lives (drift-tolerant: reloads
-    # from a moved tree update the row instead of orphaning it).
+    # from a moved tree update the row instead of orphaning it). A skill
+    # that reappears on disk is unarchived.
     manifest_dir = skill_dir.as_posix()
+    updates = {}
     if (skill.manifest_dir or "") != manifest_dir:
-        SkillModel.objects.filter(pk=skill.pk).update(manifest_dir=manifest_dir)
-        skill.manifest_dir = manifest_dir
+        updates["manifest_dir"] = manifest_dir
+    if getattr(skill, "is_archived", False):
+        updates["is_archived"] = False
+    if updates:
+        SkillModel.objects.filter(pk=skill.pk).update(**updates)
+        for field, value in updates.items():
+            setattr(skill, field, value)
     skill_version, created = SkillModelVersion.objects.get_or_create(
         skill=skill,
         commit=commit,

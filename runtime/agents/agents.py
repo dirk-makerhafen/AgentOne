@@ -37,8 +37,8 @@ class Agents(AssistantScopeMixin):
         self.parent_workspace = parent_workspace
 
     def all(self) -> QuerySet[AgentModel]:
-        """Return agents in scope, ordered by name (union for projects)."""
-        qs = AgentModel.objects.all()
+        """Return active agents in scope, ordered by name (union for projects)."""
+        qs = AgentModel.objects.filter(is_archived=False)
         if self.parent_agent is not None:
             qs = qs.filter(parent_agent=self.parent_agent)
         elif self.parent_skill is not None:
@@ -54,11 +54,12 @@ class Agents(AssistantScopeMixin):
         ).order_by("name")
 
     def root(self) -> QuerySet[AgentModel]:
-        """Return top-level agents (those without a parent)."""
+        """Return active top-level agents (those without a parent)."""
         return AgentModel.objects.filter(
             parent_skill=None,
             parent_agent=None,
             parent_project=None,
+            is_archived=False,
         )
 
     def list_agents(self) -> list[Agent]:

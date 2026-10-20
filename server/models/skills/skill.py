@@ -38,6 +38,9 @@ class SkillModel(ObservableMixin, models.Model):
     # manifest_dir: directory holding this skill's skill.md (set by the
     # loader; blank for rows predating the field or created ad hoc).
     manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
+    # Set by the loader when no manifest supplies this skill anymore. The
+    # row (and all its versions) is kept so history stays intact.
+    is_archived: bool = models.BooleanField(default=False)
 
 
     def refresh_from_disk(self, details=None) -> None:

@@ -30,6 +30,7 @@ def execute_cron_job(cronjob_id: int) -> None:
         session_version = agent_version.get_or_create_session(
             name=session_name,
             workspace=cronjob.workspace,
+            group_key=f"cron:{cronjob.name or f'job-{cronjob.pk}'}",
         )
         session = Session(session_model=session_version.session, pinned_session_version=session_version)
 

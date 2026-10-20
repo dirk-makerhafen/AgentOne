@@ -193,6 +193,7 @@ class ManagerChatMixin:
                 display_name=name,
                 description="",
                 workspace=workspace,
+                group_key=f"assistant:{MANAGER_AGENT_NAME}",
             )
         except Exception:
             return

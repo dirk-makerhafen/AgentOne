@@ -224,7 +224,11 @@ class AssistantChatMixin:
         project = self.assistant_project()
         try:
             session_version = agent.latest_agent_version.get_or_create_session(
-                name=name, display_name=name, description="", workspace=workspace,
+                name=name,
+                display_name=name,
+                description="",
+                workspace=workspace,
+                group_key=f"assistant:{self.ASSISTANT_AGENT_NAME}",
             )
         except Exception:
             return

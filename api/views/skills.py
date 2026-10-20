@@ -10,7 +10,7 @@ from api.serializers.skills import (
 
 
 class SkillViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = SkillModel.objects.all().order_by('-created_at')
+    queryset = SkillModel.objects.filter(is_archived=False).order_by('-created_at')
     permission_classes = [IsAuthenticated]
     ordering = ['-created_at']
     filterset_fields = ['name']

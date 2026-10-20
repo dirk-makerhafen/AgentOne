@@ -2,6 +2,9 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 from server.models.workspace import WorkspaceModel
+
+import frontmatter
+from pathlib import Path
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
@@ -174,6 +177,9 @@ class Workspace(ModelView):
     RIGHTPANEL_VIEW = RightPanelWorkspace
     DOM_ELEMENT_CLASS = "main-view"
     CHAT_PAGE_SIZE = 10
+
+    CSS_STR = None
+
     TEMPLATE_STR = '''
         <div class="ws-ov-topbar">
             <div class="ws-ov-breadcrumb">
@@ -251,7 +257,7 @@ class Workspace(ModelView):
                             {% endif %}
                         </div>
                         <div class="ws-ov-path" title="{{ pyview.subject.path }}">{{ pyview.subject.path }}</div>
-                        <div class="ws-ov-path">manifests: {% if pyview.agentone_dir %}<code title="{{ pyview.agentone_dir }}">{{ pyview.agentone_dir }}</code>{% else %}<span style="color:var(--muted)">not managed</span>{% endif %}</div>
+                        <div class="ws-ov-path">agentone dir: {% if pyview.agentone_dir %}<code title="{{ pyview.agentone_dir }}">{{ pyview.agentone_dir }}</code>{% else %}<span style="color:var(--muted)">not managed</span>{% endif %}</div>
                         {% if pyview.subject.description %}
                         <div class="ws-ov-desc">{{ pyview.subject.description }}</div>
                         {% endif %}
@@ -263,6 +269,24 @@ class Workspace(ModelView):
                         <button class="danger" onclick="event.stopPropagation();wsCloseMenus();if(confirm('Remove workspace {{ pyview.subject.name }}?')) { ; pyview.deleteWorkspace({{ pyview.subject.pk }}); }">Remove</button>
                     </div>
                     {% endif %}
+                </div>
+
+                <div class="detail-card" style="margin-top:12px;">
+                    <div class="detail-card-title">Dashboard</div>
+                    {% if pyview.has_dashboard|default(false) %}
+                    <div class="msg-body" id="dashboard_body_{{ pyview.uid }}">{{ pyview.dashboard_html }}</div>
+                    <script>
+                        (function(){var el=document.getElementById('dashboard_body_{{ pyview.uid }}');if(el)el.innerHTML=marked.parse(el.textContent);})();
+                    </script>
+                    {% else %}
+                    <div class="ws-ov-empty">
+                        <h2>No dashboard yet</h2>
+                        <div>Ask the workspace assistant to create <code>dashboard/index.md</code>.</div>
+                    </div>
+                    {% endif %}
+                    <div style="padding:8px 12px;">
+                        <button class="ws-ov-view-btn" onclick="pyview.refreshDashboard()">Refresh</button>
+                    </div>
                 </div>
 
                 <div class="ws-sub-head ws-chat-head">
@@ -376,6 +400,43 @@ class Workspace(ModelView):
             return p.as_posix() if p else ""
         except Exception:  # pylint: disable=broad-exception-caught
             return getattr(self.subject, "agentone_dir", "") or ""
+
+    # ------------------------------------------------------------------
+    # Dashboard
+    # ------------------------------------------------------------------
+
+    @property
+    def dashboard_path(self) -> str:
+        try:
+            from runtime.paths import workspace_dashboard_index
+
+            p = workspace_dashboard_index(self.subject)
+            return p.as_posix() if (p is not None and p.is_file()) else ""
+        except Exception:
+            return ""
+
+    @property
+    def has_dashboard(self) -> bool:
+        return bool(self.dashboard_path)
+
+    @property
+    def dashboard_html(self) -> str:
+        path = self.dashboard_path
+        if not path:
+            return ""
+        try:
+            raw = Path(path).read_text(encoding="utf-8")
+            post = frontmatter.loads(raw)
+            content = (post.content or "").strip()
+            return content if content else raw.strip()
+        except Exception:
+            try:
+                return Path(path).read_text(encoding="utf-8").strip()
+            except Exception:
+                return ""
+
+    def refreshDashboard(self) -> None:
+        self.update()
 
     @property
     def storage_options(self) -> list[dict]:

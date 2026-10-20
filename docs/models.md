@@ -105,9 +105,10 @@ File: `server/models/agents/agent_version.py`
 **Immutable** — `save()` raises `ValidationError` if `pk` is set.
 
 **Key methods**:
-- `get_or_create_session(name, ..., settings_inherit=False, settings=None, settings_overrides=None, inherit_links=False)` — Creates `SessionModel` + `SessionVersionModel`. Settings for the child are resolved *before* create and stored in `defaults` (the version is immutable once it has a pk). Inheritance (`settings_inherit`, `inherit_links`) is opt-in and same-agent-only: a different-agent child must not shadow its own agent settings with the parent's. Prefer the runtime intent methods below over calling this directly.
+- `get_or_create_session(name, ..., group_key="", settings_inherit=False, settings=None, settings_overrides=None, inherit_links=False)` — Creates `SessionModel` + `SessionVersionModel`. Settings for the child are resolved *before* create and stored in `defaults` (the version is immutable once it has a pk). Inheritance (`settings_inherit`, `inherit_links`) is opt-in and same-agent-only: a different-agent child must not shadow its own agent settings with the parent's. Prefer the runtime intent methods below over calling this directly.
 - `Session.fork(...)` (runtime) — same-agent child: inherits the parent's settings (plus `settings_overrides`) and query-template/adhoc-tool links; optional history anchor.
 - `Session.spawn_subagent(agent, ...)` (runtime) — different-agent child: inherits **nothing** by default. `agent` is a name (resolved via the subagent allowlist, or any top-level agent with `allow_internal=True`) or an `AgentVersionModel`; returns `None` when unresolvable.
+- `group_key` — non-unique `SessionModel` label passed explicitly to `fork`, `spawn_subagent`, or `get_or_create_session`; it is never inherited implicitly. `Session.set_group_key(value)` relabels without creating a new session version.
 - `resolve_setting(name)` — Walks inheritance chain to resolve settings (supports `+` merge for list fields)
 - `tasks()` / `tools()` / `commands()` — Filter `task_versions` by `TaskType`
 - `skills()` — Returns `skill_versions`
@@ -123,6 +124,7 @@ File: `server/models/sessions/session.py`
 | Field | Type | Notes |
 |---|---|---|
 | `name` | `CharField(255)` | Session name |
+| `group_key` | `CharField(255, indexed)` | Non-unique grouping key; convention `domain:task`, e.g. `wiki:timeline-daily`. Not part of session identity and not inherited by forks/spawns unless passed explicitly |
 | `turn_count` | `IntegerField(default=0)` | User message count |
 | `unattended_turn_count` | `IntegerField(default=0)` | Auto-turn count |
 | `is_active` | `BooleanField(default=True)` | Set False when a subsession calls `final_result` or is stopped; any new user message reactivates it |

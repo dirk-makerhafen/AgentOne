@@ -36,8 +36,8 @@ class Skills(AssistantScopeMixin):
         self.parent_workspace = parent_workspace
 
     def all(self) -> QuerySet[SkillModel]:
-        """Return skills in scope, ordered by name (union for projects)."""
-        qs = SkillModel.objects.all()
+        """Return active skills in scope, ordered by name (union for projects)."""
+        qs = SkillModel.objects.filter(is_archived=False)
         if self.parent_agent is not None:
             qs = qs.filter(parent_agent=self.parent_agent)
         elif self.parent_skill is not None:
@@ -51,8 +51,8 @@ class Skills(AssistantScopeMixin):
         return qs.select_related("latest_skill_version", "parent_project").order_by("name")
 
     def root(self) -> QuerySet[SkillModel]:
-        """Return all skills (unscoped; UI + legacy callers)."""
-        return SkillModel.objects.filter()
+        """Return all active skills (unscoped; UI + legacy callers)."""
+        return SkillModel.objects.filter(is_archived=False)
 
     def list_skills(self) -> list:
         """Return skills in scope as wrapped :class:`Skill` objects."""

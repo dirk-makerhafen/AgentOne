@@ -61,6 +61,7 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
             name=name,
             description=description,
             session_type=SessionType.SUBTASK_DELEGATE,
+            group_key="subagent:delegate",
         )
     else:
         child_session = _session.spawn_subagent(
@@ -68,6 +69,7 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
             name=name,
             description=description,
             session_type=SessionType.SUBTASK_DELEGATE,
+            group_key="subagent:delegate",
         )
         if child_session is None:
             return {"error": f"Agent '{agentname}' not found"}

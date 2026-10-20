@@ -25,4 +25,5 @@ class AgentAdmin(admin.ModelAdmin):
 
     list_display: tuple[str, ...] = (
         "id", "created_at", "name", "parent_project", "parent_agent", "parent_skill",
+        "is_archived",
     )

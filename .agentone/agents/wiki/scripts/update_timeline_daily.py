@@ -683,7 +683,7 @@ def _read_index_facts(day_dir: Path) -> tuple[bool, object, str | None, str | No
     )
 
 
-def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_parts: list | None = None):
+def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_parts: list | None = None, group_key: str = ""):
     """Spawn a baseagent SUBTASK_DELEGATE session with *brief* and return (ok, child_session, session_pk, ref_or_error).
 
     Mirrors double_check_summary: baseagent is visibility: internal, so it
@@ -692,7 +692,8 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
     The returned ref is the add_user_message taskcall — resolvable by the
     scheduler exactly like an llm_query result ref. Optional *extra_parts*
     (timeline-style label/content evidence parts) are delivered after the
-    brief and before the timestamp part.
+    brief and before the timestamp part. *group_key* labels the child for
+    later grouping (e.g. ``wiki:timeline-daily``).
     """
     from server.models.enums.message_enums import MessageContentType, MessagePartType
     from server.models.enums.session_enums import SessionType
@@ -703,6 +704,7 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
         name=name,
         description=description,
         session_type=SessionType.SUBTASK_DELEGATE,
+        group_key=group_key,
         allow_internal=True,
         reasoning_effort=ReasoningEffort.MINIMAL,
         max_turns=20,
@@ -746,6 +748,7 @@ def _spawn_day_session(_session, day_rel: str, day_str: str, brief: str):
         name=f"p{_session.model.pk}:daily:{stamp}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Daily summary {day_rel}",
         brief=brief,
+        group_key="wiki:timeline-daily",
     )
     if not ok:
         return False, None, ref
@@ -762,6 +765,7 @@ def _spawn_day_check(_session, day_rel: str, day_str: str, brief: str):
         name=f"p{_session.model.pk}:dailycheck:{stamp}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Double-check {day_rel}/index.md",
         brief=brief,
+        group_key="wiki:timeline-daily-check",
     )
     if not ok:
         return False, {"status": "error", "day": day_rel, "message": f"double-check not spawned: {ref}"}

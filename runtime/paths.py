@@ -265,3 +265,18 @@ def workspace_manifest_dir(workspace) -> Path:
         except Exception:  # pylint: disable=broad-exception-caught
             pass
     return central_workspaces_base() / safe
+
+
+def dashboard_dir(manifest_dir: Any) -> Path:
+    """Return the ``dashboard/`` subfolder inside a manifest directory."""
+    return Path(os.path.expanduser(str(manifest_dir))) / "dashboard"
+
+
+def project_dashboard_index(project: Any) -> Path:
+    """Return the dashboard ``index.md`` path for a project."""
+    return project_manifest_dir(project) / "dashboard" / "index.md"
+
+
+def workspace_dashboard_index(workspace: Any) -> Path:
+    """Return the dashboard ``index.md`` path for a workspace."""
+    return workspace_manifest_dir(workspace) / "dashboard" / "index.md"

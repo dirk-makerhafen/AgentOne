@@ -811,6 +811,7 @@ def _dispatch_work_items() -> None:
                 display_name=f"Work item #{item.pk}: {item.title}"[:255],
                 description=(item.body or "")[:255],
                 session_type=SessionType.SUBSESSION,
+                group_key="workitem:execute",
             )
             executor = Session(
                 session_model=child_sv.session, pinned_session_version=child_sv

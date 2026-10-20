@@ -322,6 +322,7 @@ def _spawn_wiki_item_session(_session, name: str, brief: str):
         name=name,
         description="ingress item: " + " ".join(brief.split())[:80],
         session_type=SessionType.SUBTASK_DELEGATE,
+        group_key="wiki:ingress",
         allow_internal=True,
         max_turns=MAX_TURNS,
     )

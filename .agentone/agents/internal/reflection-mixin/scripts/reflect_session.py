@@ -108,6 +108,7 @@ def reflect_session(
         name=f"p{_session.model.pk}:reflection:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
         description=f"Reflection fork for {_session.name}",
         session_type=SessionType.SUBTASK_HOOK,
+        group_key="internal:reflection",
         anchor=anchor,
         auto_compact_max_tokens=0,
         auto_compact_idle_seconds=0,
