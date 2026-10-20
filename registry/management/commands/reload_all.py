@@ -268,7 +268,7 @@ def _load_db_projects(details: list, errors: list, counts: Dict[str, int]) -> No
             errors.append(f"Project {project.name}: {e}")
 
     try:
-        workspaces = list(WorkspaceModel.objects.exclude(manifest_dir="").order_by("name"))
+        workspaces = list(WorkspaceModel.objects.all().order_by("name"))
     except Exception as e:
         errors.append(f"Workspaces DB: {e}")
         return
@@ -308,8 +308,8 @@ def _warn_orphan_scope_dirs(details: list) -> None:
     from server.models.workspace import WorkspaceModel
 
     for base, model, field in (
-        (central_projects_base(), Project, "manifest_dir"),
-        (central_workspaces_base(), WorkspaceModel, "manifest_dir"),
+        (central_projects_base(), Project, "agentone_dir"),
+        (central_workspaces_base(), WorkspaceModel, "agentone_dir"),
     ):
         try:
             if not base.is_dir():
@@ -318,7 +318,7 @@ def _warn_orphan_scope_dirs(details: list) -> None:
                 if not entry.is_dir():
                     continue
                 try:
-                    exists = model.objects.filter(manifest_dir=entry.as_posix()).exists()
+                    exists = model.objects.filter(agentone_dir=entry.as_posix()).exists()
                 except Exception:
                     continue
                 if not exists:

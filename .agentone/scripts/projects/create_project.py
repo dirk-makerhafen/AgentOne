@@ -89,7 +89,7 @@ def create_project(
 
     try:
         ensure_private_dir(manifest)
-        updates["manifest_dir"] = manifest.as_posix()
+        updates["agentone_dir"] = manifest.as_posix()
         Project.objects.filter(pk=proj.pk).update(**updates)
         proj.refresh_from_db()
     except Exception as e:
@@ -102,9 +102,9 @@ def create_project(
     except Exception as e:
         return (True, {"status": "created_not_synced", "name": name,
                        "path": proj.path,
-                       "manifest_dir": updates["manifest_dir"],
+                        "manifest_dir": updates["agentone_dir"],
                        "message": f"Project created but sync failed: {e}"})
 
     return (True, {"status": "success", "name": name,
                    "path": proj.path,
-                   "manifest_dir": updates["manifest_dir"]})
+                    "manifest_dir": updates["agentone_dir"]})

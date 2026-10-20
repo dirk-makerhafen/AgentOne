@@ -196,9 +196,18 @@ def _parse_entity_fields(text: str | None, kind: str, root=None) -> tuple[dict |
                     hints.append(f"fields: relation without a `[[wikilink]]` target ({item!r}) — dropped")
                     continue
                 target_rel = link_m.group(1).strip()
-                if root is not None and not (root / target_rel).is_file():
-                    hints.append(f"fields: relation target `{target_rel}` does not exist — dropped")
-                    continue
+                sanitized_target = target_rel
+                for src, dst in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"),
+                                 ("Ä", "Ae"), ("Ö", "Oe"), ("Ü", "Ue"), ("ß", "ss")):
+                    sanitized_target = sanitized_target.replace(src, dst)
+                if root is not None:
+                    if not (root / target_rel).is_file() and (root / sanitized_target).is_file():
+                        target_rel = sanitized_target
+                    if not (root / target_rel).is_file():
+                        hints.append(f"fields: relation target `{target_rel}` does not exist — dropped")
+                        continue
+                else:
+                    target_rel = sanitized_target
                 kept.append({"type": item["type"].strip(), "target": f"[[{target_rel}]]"})
             fields["relations"] = kept
             continue
@@ -230,11 +239,15 @@ _UNSAFE_FILENAME_CHARS = re.compile(r'[\\/:*?"<>|]')
 def _slugify_name(name: str) -> str:
     """Canonical entity slug: whitespace runs become one underscore, unsafe chars dropped.
 
-    Umlauts and case are preserved (Peter_Miller, Léon_Göttsche) — only
-    separators normalize, so `Gwendolyn Gimpel` and `Gwendolyn_Gimpel`
-    collapse to one file. Returns "" for unusable names.
+    German umlauts are transliterated (ä->ae, ö->oe, ü->ue) so filenames stay
+    ASCII-ish and match the rest of the vault; case and other characters are
+    preserved. Returns "" for unusable names.
     """
-    slug = re.sub(r"\s+", "_", (name or "").strip())
+    name = (name or "").strip()
+    for src, dst in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"),
+                     ("Ä", "Ae"), ("Ö", "Oe"), ("Ü", "Ue"), ("ß", "ss")):
+        name = name.replace(src, dst)
+    slug = re.sub(r"\s+", "_", name)
     slug = _UNSAFE_FILENAME_CHARS.sub("", slug)
     slug = re.sub(r"_+", "_", slug).strip("._")
     return slug

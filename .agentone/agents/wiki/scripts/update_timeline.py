@@ -670,6 +670,9 @@ def validate_summary(summary_text: str, raw_text: str, raw_path: str, today_str:
 def sanitize_title_filename(title: str, max_len: int = 120) -> str:
     """Map a summary title to a filesystem-safe ``.md`` stem."""
     name = (title or "").strip()
+    for src, dst in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"),
+                     ("Ä", "Ae"), ("Ö", "Oe"), ("Ü", "Ue"), ("ß", "ss")):
+        name = name.replace(src, dst)
     name = re.sub(r'[\s_]+', '_', name)
     name = "".join("_" if (ch in _FS_RESERVED or ord(ch) < 32) else ch for ch in name)
     name = re.sub(r'__+', '_', name).strip("._- ")

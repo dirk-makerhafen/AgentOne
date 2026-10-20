@@ -23,18 +23,18 @@ from ui.main.workspace.manifest_location import (
 class TestStorageOptions(TestCase):
     def test_has_three_modes(self):
         values = [o["value"] for o in storage_options()]
-        assert values == [STORAGE_NONE, STORAGE_INLINE, STORAGE_CENTRAL]
+        assert values == [STORAGE_INLINE, STORAGE_CENTRAL]
 
 
 class TestDetectStorage(TestCase):
-    def test_blank_manifest_dir_is_none(self):
+    def test_blank_manifest_dir_defaults_to_central(self):
         ws = WorkspaceModel.objects.create(name="w", path="/tmp/w")
-        assert detect_storage(ws) == STORAGE_NONE
+        assert detect_storage(ws) == STORAGE_CENTRAL
 
     def test_inline_when_manifest_in_workspace(self):
         with tempfile.TemporaryDirectory() as d:
             ws = WorkspaceModel.objects.create(
-                name="w", path=d, manifest_dir=str(Path(d) / ".agentone"),
+                name="w", path=d, agentone_dir=str(Path(d) / ".agentone"),
             )
             assert detect_storage(ws) == STORAGE_INLINE
 
@@ -42,7 +42,7 @@ class TestDetectStorage(TestCase):
         with tempfile.TemporaryDirectory() as home:
             with mock.patch.dict("os.environ", {"AGENTONE_HOME": home}):
                 ws = WorkspaceModel.objects.create(name="w", path="/tmp/w")
-                ws.manifest_dir = str(central_manifest_dir(ws))
+                ws.agentone_dir = str(central_manifest_dir(ws))
                 assert detect_storage(ws) == STORAGE_CENTRAL
 
 

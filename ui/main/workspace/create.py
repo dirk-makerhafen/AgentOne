@@ -91,7 +91,7 @@ class CreateWorkspace(ModelView):
         self._form = {
             "name": "", "path": "", "description": "",
             "color": random_workspace_color(),
-            "parent_project_id": "", "storage": "none",
+            "parent_project_id": "", "storage": "central",
             "manifest_gitignore": True,
         }
         self._form_error = ""
@@ -171,9 +171,9 @@ class CreateWorkspace(ModelView):
                     parent_project = None
             from ui.main.workspace.manifest_location import STORAGES
 
-            storage = (self._form.get("storage") or "none").strip() or "none"
+            storage = (self._form.get("storage") or "central").strip() or "central"
             if storage not in STORAGES:
-                storage = "none"
+                storage = "central"
             created = WorkspaceModel.objects.create(
                 name=name or path,
                 path=path,
@@ -181,7 +181,7 @@ class CreateWorkspace(ModelView):
                 color=color,
                 access=self.access_editor.access_data,
                 parent_project=parent_project,
-                storage="" if storage == "none" else storage,
+                storage=storage,
             )
             from ui.main.workspace.manifest_location import ensure_manifest_dir
 
@@ -190,7 +190,7 @@ class CreateWorkspace(ModelView):
                 gitignore=bool(self._form.get("manifest_gitignore")),
             )
             if manifest_dir:
-                WorkspaceModel.objects.filter(pk=created.pk).update(manifest_dir=manifest_dir)
+                WorkspaceModel.objects.filter(pk=created.pk).update(agentone_dir=manifest_dir)
         except Exception as e:
             self._form_error = f"Error: {e}"
             self.update()

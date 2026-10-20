@@ -189,7 +189,7 @@ class ProjectCreateView(PyHtmlView):
             ensure_private_dir(manifest)
         except OSError as e:
             raise _FormError(f"Cannot create manifest directory {manifest}: {e}") from e
-        updates["manifest_dir"] = manifest.as_posix()
+        updates["agentone_dir"] = manifest.as_posix()
 
         try:
             Project.objects.filter(pk=proj.pk).update(**updates)

@@ -85,9 +85,33 @@ class WorkspaceModel(ObservableMixin, models.Model):
     )
     # storage: inline | central
     storage: str = models.CharField(max_length=32, default="", blank=True)
-    # manifest_dir: workspace-scoped .agentone tree. Blank = unmanaged
-    # (workspace is a bare cwd with no manifests of its own).
-    manifest_dir: str = models.CharField(max_length=4096, default="", blank=True)
+    # agentone_dir: workspace-scoped .agentone tree. Never blank — defaults
+    # to inline/central location (see save()).
+    agentone_dir: str = models.CharField(max_length=4096, default="", blank=False)
+
+    def save(self, *args, **kwargs) -> None:
+        if not (self.agentone_dir or "").strip():
+            from pathlib import Path
+
+            from runtime.paths import central_workspace_dir, project_manifest_dir
+
+            name = (self.name or "").strip()
+            safe = name.replace(" ", "_").replace("/", "_") or (
+                Path(self.path).name if (self.path or "").strip() else "unnamed"
+            )
+            storage = (self.storage or "").strip()
+            if storage == "inline" and (self.path or "").strip():
+                self.agentone_dir = str(Path(self.path).expanduser() / ".agentone")
+            elif self.parent_project is not None:
+                try:
+                    self.agentone_dir = (
+                        project_manifest_dir(self.parent_project) / "workspaces" / safe
+                    ).as_posix()
+                except Exception:  # pylint: disable=broad-exception-caught
+                    self.agentone_dir = central_workspace_dir(safe).as_posix()
+            else:
+                self.agentone_dir = central_workspace_dir(safe).as_posix()
+        super().save(*args, **kwargs)
 
     def refresh_from_disk(self, details=None) -> None:
         """Reload this workspace's scoped manifest tree from disk."""
@@ -97,7 +121,7 @@ class WorkspaceModel(ObservableMixin, models.Model):
         from registry.loader.load_project_folder import load_scope_dir
 
         manifest = workspace_manifest_dir(self)
-        if manifest is None or not manifest.is_dir():
+        if not manifest.is_dir():
             return
         project = self.parent_project
         if project is None:

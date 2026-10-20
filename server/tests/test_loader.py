@@ -328,7 +328,7 @@ class LoadWorkspaceAccessTest(TestCase):
         self.md_path.write_text("---\nname: acc-proj\n---\n")
         self.project = Project.objects.create(
             name="acc-proj",
-            manifest_dir=(self.project_root / ".agentone").as_posix(),
+            agentone_dir=(self.project_root / ".agentone").as_posix(),
             storage="inline_project",
         )
         self.ws = WorkspaceModel.objects.create(

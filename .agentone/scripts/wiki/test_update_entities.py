@@ -100,7 +100,7 @@ def _vault(tmp_path: Path) -> Path:
 def test_slug_and_bucket():
     assert _slugify_name("Max Mustermann") == "Max_Mustermann"
     assert _slugify_name("Fiona  Falkenhorst ") == "Fiona_Falkenhorst"
-    assert _slugify_name("Jonas Bäcker") == "Jonas_Bäcker"
+    assert _slugify_name("Jonas Bäcker") == "Jonas_Baecker"
     assert _slugify_name("a/b:c*d?e\"f<g>h|i") == "abcdefghi"
     assert _slugify_name("  ") == ""
     assert _bucket_for_slug("Max_Mustermann", "Persons") == "M"

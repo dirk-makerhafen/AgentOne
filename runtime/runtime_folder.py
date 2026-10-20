@@ -154,9 +154,9 @@ class RuntimeFolder:
             try:
                 from runtime.paths import project_manifest_dir
 
-                manifest_dir = getattr(parent_project, "manifest_dir", "") or project_manifest_dir(parent_project).as_posix()
+                manifest_dir = getattr(parent_project, "agentone_dir", "") or project_manifest_dir(parent_project).as_posix()
             except Exception:  # pylint: disable=broad-exception-caught
-                manifest_dir = getattr(parent_project, "manifest_dir", "") or ""
+                manifest_dir = getattr(parent_project, "agentone_dir", "") or ""
             if manifest_dir:
                 base = Path(manifest_dir).expanduser() / "scripts"
                 for candidate_group in (group, group.replace("-", "/") if group else group):

@@ -84,7 +84,7 @@ class ProjectView(ModelView):
                         <div class="detail-row-label">Primary workspace</div>
                         <div class="detail-row-value">{% if pyview.main_workspace_path %}<code>{{ pyview.main_workspace_path }}</code>{% else %}<span style="color:var(--muted)">not set</span>{% endif %}</div>
                     </div>
-                    <div class="detail-row"><div class="detail-row-label">Manifests</div><div class="detail-row-value"><code>{{ pyview.manifest_dir }}</code></div></div>
+                    <div class="detail-row"><div class="detail-row-label">Manifests</div><div class="detail-row-value"><code>{{ pyview.agentone_dir }}</code></div></div>
                     <div class="detail-row"><div class="detail-row-label">Description</div><div class="detail-row-value">{{ pyview.subject.description }}</div></div>
                     <div class="detail-row"><div class="detail-row-label">Created</div><div class="detail-row-value">{{ pyview.subject.created_at }}</div></div>
                     <div class="detail-row"><div class="detail-row-label">Status</div><div class="detail-row-value"><span class="detail-badge">Inactive</span></div></div>
@@ -176,13 +176,13 @@ class ProjectView(ModelView):
         return getattr(ws, "path", "") or ""
 
     @property
-    def manifest_dir(self) -> str:
+    def agentone_dir(self) -> str:
         try:
             from runtime.paths import project_manifest_dir
 
             return project_manifest_dir(self.subject).as_posix()
         except Exception:
-            return getattr(self.subject, "manifest_dir", "") or ""
+            return getattr(self.subject, "agentone_dir", "") or ""
 
     @property
     def central_manifest_dir(self) -> str:
@@ -252,7 +252,7 @@ class ProjectView(ModelView):
         if ws_path:
             try:
                 manifest_in_workspace = (
-                    Path(self.manifest_dir).as_posix().rstrip("/")
+                    Path(self.agentone_dir).as_posix().rstrip("/")
                     == (Path(ws_path) / ".agentone").as_posix().rstrip("/")
                 )
             except Exception:  # pylint: disable=broad-exception-caught
@@ -343,7 +343,7 @@ class ProjectView(ModelView):
             ensure_private_dir(manifest)
         except OSError as e:
             raise _FormError(f"Cannot create manifest directory {manifest}: {e}") from e
-        updates["manifest_dir"] = manifest.as_posix()
+        updates["agentone_dir"] = manifest.as_posix()
 
         try:
             Project.objects.filter(pk=proj.pk).update(**updates)

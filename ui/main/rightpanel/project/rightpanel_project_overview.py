@@ -29,7 +29,7 @@ class RightPanelProjectOverview(ModelView):
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Manifests</div>
-                    <div class="detail-row-value"><code style="font-size:11px">{{ pyview.manifest_dir }}</code></div>
+                    <div class="detail-row-value"><code style="font-size:11px">{{ pyview.agentone_dir }}</code></div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-row-label">Description</div>
@@ -67,7 +67,7 @@ class RightPanelProjectOverview(ModelView):
         return getattr(ws, "path", "") or ""
 
     @property
-    def manifest_dir(self) -> str:
+    def agentone_dir(self) -> str:
         if not self.subject:
             return ""
         try:
@@ -75,7 +75,7 @@ class RightPanelProjectOverview(ModelView):
 
             return project_manifest_dir(self.subject).as_posix()
         except Exception:
-            return getattr(self.subject, "manifest_dir", "") or ""
+            return getattr(self.subject, "agentone_dir", "") or ""
 
     @property
     def agent_count(self) -> int:

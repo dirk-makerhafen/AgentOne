@@ -146,7 +146,7 @@ def _resolve_project(project_root: Path, project_folder: Path,
                      details: list | None):
     """Find the Project row for *project_root*, legacy-importing if needed."""
     project = (
-        Project.objects.filter(manifest_dir=project_folder.as_posix()).first()
+        Project.objects.filter(agentone_dir=project_folder.as_posix()).first()
         or Project.objects.filter(main_workspace__path=project_root.as_posix()).first()
         or Project.objects.filter(main_workspace__path=project_folder.as_posix()).first()
     )
@@ -164,7 +164,7 @@ def _resolve_project(project_root: Path, project_folder: Path,
             project = Project.objects.create(
                 name=name or project_root.name,
                 description=data.content or "",
-                manifest_dir=project_folder.as_posix(),
+                agentone_dir=project_folder.as_posix(),
                 storage="inline_project",
             )
             _ensure_root_workspace(project, project_root)
@@ -188,7 +188,7 @@ def _resolve_project(project_root: Path, project_folder: Path,
         project = Project.objects.create(
             name=project_root.name,
             description="",
-            manifest_dir=project_folder.as_posix() if project_folder.is_dir() else "",
+            agentone_dir=project_folder.as_posix() if project_folder.is_dir() else "",
             storage="inline_project",
         )
         _ensure_root_workspace(project, project_root)

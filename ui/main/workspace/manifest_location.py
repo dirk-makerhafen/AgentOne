@@ -13,14 +13,12 @@ from pathlib import Path
 STORAGE_NONE = "none"
 STORAGE_INLINE = "inline"
 STORAGE_CENTRAL = "central"
-STORAGES = (STORAGE_NONE, STORAGE_INLINE, STORAGE_CENTRAL)
+STORAGES = (STORAGE_INLINE, STORAGE_CENTRAL)
 
 
 def storage_options() -> list[dict]:
     """Return the ``<select>`` options for the manifest-location picker."""
     return [
-        {"value": STORAGE_NONE,
-         "label": "No workspace manifests (bare path)"},
         {"value": STORAGE_INLINE,
          "label": "In workspace dir (<workspace>/.agentone)"},
         {"value": STORAGE_CENTRAL,
@@ -33,19 +31,26 @@ def inline_manifest_dir(ws_path: str) -> Path:
 
 
 def central_manifest_dir(workspace) -> Path:
-    from runtime.paths import central_workspace_dir
+    from runtime.paths import central_workspace_dir, project_manifest_dir
 
     key = (getattr(workspace, "name", "") or "").strip() or Path(
         getattr(workspace, "path", "") or ""
     ).name
-    return central_workspace_dir(key)
+    project = getattr(workspace, "parent_project", None)
+    try:
+        model = getattr(workspace, "model", None)
+        if project is None and model is not None:
+            project = getattr(model, "parent_project", None)
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+    return central_workspace_dir(key, project=project)
 
 
 def detect_storage(workspace) -> str:
     """Return the storage mode implied by a workspace's stored ``manifest_dir``."""
-    stored = str(getattr(workspace, "manifest_dir", "") or "").strip()
+    stored = str(getattr(workspace, "agentone_dir", "") or getattr(workspace, "manifest_dir", "") or "").strip()
     if not stored:
-        return STORAGE_NONE
+        return STORAGE_CENTRAL
     try:
         stored_p = Path(stored)
         if stored_p == central_manifest_dir(workspace):
@@ -81,6 +86,8 @@ def ensure_manifest_dir(workspace, storage: str, ws_path: str,
     workspace's ``.gitignore``. Never raises on filesystem errors — returns
     ``""`` so the caller can leave the workspace unmanaged.
     """
+    if storage == STORAGE_NONE:
+        return ""
     if storage == STORAGE_INLINE:
         manifest = inline_manifest_dir(ws_path)
         try:
@@ -90,14 +97,12 @@ def ensure_manifest_dir(workspace, storage: str, ws_path: str,
         if gitignore:
             _add_gitignore_entry(Path(ws_path))
         return manifest.as_posix()
-    if storage == STORAGE_CENTRAL:
-        manifest = central_manifest_dir(workspace)
-        try:
-            manifest.mkdir(parents=True, exist_ok=True)
-        except OSError:
-            return ""
-        return manifest.as_posix()
-    return ""
+    manifest = central_manifest_dir(workspace)
+    try:
+        manifest.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return ""
+    return manifest.as_posix()
 
 
 def _add_gitignore_entry(ws_path: Path) -> None:

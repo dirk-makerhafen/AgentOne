@@ -9,8 +9,8 @@ Single source of truth for where AgentOne keeps things. Path logic lives in
 |---|---|---|
 | `global` | `<repo>/.agentone/` (`settings.AGENTONE_ROOT`) | `parent_project=None` |
 | `user` | `~/.agentone/{agents,skills,scripts,cronjobs}/` | `parent_project=None` (loads after global, user versions win) |
-| `project` | `Project.manifest_dir` (legacy fallback `<path>/.agentone`) | `parent_project=<row>` |
-| `workspace` | `Workspace.manifest_dir` (blank = bare path, no manifests) | parent project's namespace (`parent_project=workspace.parent_project`) |
+| `project` | `Project.agentone_dir` (legacy fallback `<path>/.agentone`) | `parent_project=<row>` |
+| `workspace` | `Workspace.agentone_dir` (blank = bare path, no manifests) | parent project's namespace (`parent_project=workspace.parent_project`) |
 
 User manifests use the same layout as global (`agents/<n>/agent.md`,
 `skills/<s>/skill.md`, `scripts/`, `cronjobs/<n>.md`). Missing dirs are
@@ -20,8 +20,8 @@ reload warns and skips.
 ## DB-canonical metadata (deprecated files)
 
 - **No `project.md`, no `projects.yaml`, no `workspace.md`.**
-  `Project` (`manifest_dir`, `storage`, `git_url/ref`, `main_workspace FK`)
-  and `WorkspaceModel` (`parent_project FK`, `storage`, `manifest_dir`,
+  `Project` (`agentone_dir`, `storage`, `git_url/ref`, `main_workspace FK`)
+  and `WorkspaceModel` (`parent_project FK`, `storage`, `agentone_dir`,
   `access`) are the source of truth, edited via UI/API. Existing rows were
   kept as-is; the new fields are nullable with legacy fallbacks.
 - Leftover `project.md` / `projects.yaml` files on disk are
@@ -49,12 +49,12 @@ reload warns and skips.
 
 1. Global scope from staging-or-local root → install repo.
 2. User scope (`~/.agentone/...`) into the global namespace.
-3. DB loop: every `Project` row → `load_scope_dir(manifest_dir)`; every
-   `WorkspaceModel` with `manifest_dir` → load under its `parent_project`.
+3. DB loop: every `Project` row → `load_scope_dir(agentone_dir)`; every
+    `WorkspaceModel` with `agentone_dir` → load under its `parent_project`.
    Missing dirs warn-and-skip; rows are never deleted (crons archive).
 4. Orphan warnings (no autoscan/import by design):
    `~/.agentone/projects/*/` or `~/.agentone/workspaces/*/` with no matching
-   `manifest_dir` row → `warning` entry ("create it in the UI or delete").
+    `agentone_dir` row → `warning` entry ("create it in the UI or delete").
 5. `projects.yaml` present → deprecation warning. `project.md` present →
    deprecation warning per file.
 

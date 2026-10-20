@@ -15,7 +15,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
     main_workspace_path = serializers.CharField(
         source="main_workspace.path", read_only=True, default=""
     )
-    manifest_dir = serializers.CharField(read_only=True)
+    agentone_dir = serializers.CharField(read_only=True)
     agent_count = serializers.SerializerMethodField()
     session_count = serializers.SerializerMethodField()
     cron_count = serializers.SerializerMethodField()
@@ -23,7 +23,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'name', 'description', 'path', 'main_workspace_path',
-                  'manifest_dir',
+                   'agentone_dir',
                   'agent_count', 'session_count', 'cron_count',
                   'created_at', 'updated_at']
 

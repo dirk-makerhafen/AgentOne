@@ -151,7 +151,14 @@ def _agent_name_of(obj: Any) -> str:
 
 def _agentone_dir(ws: Any | None, proj: Any | None) -> Path:
     if ws is not None:
-        md = getattr(ws, "manifest_dir", None)
+        target = getattr(ws, "model", ws)
+        md = getattr(target, "agentone_dir", None)
+        if md is None:
+            md = getattr(target, "manifest_dir", None)
+        if md is None:
+            md = getattr(ws, "agentone_dir", None)
+        if md is None:
+            md = getattr(ws, "manifest_dir", None)
         if callable(md):
             try:
                 md = md()

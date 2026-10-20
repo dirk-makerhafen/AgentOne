@@ -38,10 +38,10 @@ class Project(ObservableMixin, models.Model):
     # Folder handling (DB-canonical; project.md / projects.yaml deprecated).
     # The project's filesystem folder is its primary workspace
     # (``main_workspace``); the old ``path`` column was folded into it.
-    # manifest_dir: the .agentone manifest tree for this project. Blank =
+    # agentone_dir: the .agentone manifest tree for this project. Blank =
     # central default ~/.agentone/projects/<name> (see
     # runtime.paths.project_manifest_dir). Never git-tracked.
-    manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
+    agentone_dir: str = models.CharField(max_length=1024, default="", blank=True)
     # storage: inline_project | inline_workspace | central | git
     storage: str = models.CharField(max_length=32, default="", blank=True)
     git_url: str = models.CharField(max_length=1024, default="", blank=True)

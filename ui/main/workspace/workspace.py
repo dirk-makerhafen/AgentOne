@@ -251,7 +251,7 @@ class Workspace(ModelView):
                             {% endif %}
                         </div>
                         <div class="ws-ov-path" title="{{ pyview.subject.path }}">{{ pyview.subject.path }}</div>
-                        <div class="ws-ov-path">manifests: {% if pyview.manifest_dir %}<code title="{{ pyview.manifest_dir }}">{{ pyview.manifest_dir }}</code>{% else %}<span style="color:var(--muted)">not managed</span>{% endif %}</div>
+                        <div class="ws-ov-path">manifests: {% if pyview.agentone_dir %}<code title="{{ pyview.agentone_dir }}">{{ pyview.agentone_dir }}</code>{% else %}<span style="color:var(--muted)">not managed</span>{% endif %}</div>
                         {% if pyview.subject.description %}
                         <div class="ws-ov-desc">{{ pyview.subject.description }}</div>
                         {% endif %}
@@ -365,17 +365,17 @@ class Workspace(ModelView):
     @property
     def edit_error(self) -> str:
         return self._edit_error
-
     @property
-    def manifest_dir(self) -> str:
+    def agentone_dir(self) -> str:
         """Filesystem manifest dir for this workspace ("" when unmanaged)."""
         try:
             from runtime.paths import workspace_manifest_dir
 
+
             p = workspace_manifest_dir(self.subject)
             return p.as_posix() if p else ""
         except Exception:  # pylint: disable=broad-exception-caught
-            return getattr(self.subject, "manifest_dir", "") or ""
+            return getattr(self.subject, "agentone_dir", "") or ""
 
     @property
     def storage_options(self) -> list[dict]:
@@ -608,6 +608,8 @@ class Workspace(ModelView):
         storage = (self._edit_data.get("storage") or "").strip()
         if storage not in STORAGES:
             storage = detect_storage(self.subject)
+        if storage not in STORAGES:
+            storage = "central"
 
         parent_project = None
         ppid = (self._edit_data.get("parent_project_id") or "").strip()
@@ -630,8 +632,10 @@ class Workspace(ModelView):
             self.subject, storage, path,
             gitignore=bool(self._edit_data.get("manifest_gitignore")),
         )
-        self.subject.storage = "" if storage == "none" else storage
-        self.subject.manifest_dir = manifest_dir
+        self.subject.storage = storage
+        if not manifest_dir:
+            manifest_dir = workspace_manifest_dir(self.subject).as_posix()
+        self.subject.agentone_dir = manifest_dir
         self.subject.save()
         self._editing = False
         self._edit_error = ""

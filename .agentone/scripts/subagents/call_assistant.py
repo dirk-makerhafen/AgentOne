@@ -165,7 +165,7 @@ def _resolve_project(project_path: str) -> Any | None:
     if not wanted:
         return None
     project = (
-        Project.objects.filter(manifest_dir=wanted).first()
+        Project.objects.filter(agentone_dir=wanted).first()
         or Project.objects.filter(main_workspace__path=wanted).first()
     )
     if project is None:
