@@ -58,13 +58,34 @@ class Workspaces(AssistantScopeMixin):
         return [Workspace(model) for model in self.all()]
 
     @staticmethod
-    def ensure_named(name: str, path: str | Path, description: str = "") -> WorkspaceModel:
-        """Get-or-create a workspace row for an absolute *path* (idempotent)."""
+    def ensure_named(
+        name: str,
+        path: str | Path,
+        description: str = "",
+        parent_project: Any = None,
+    ) -> WorkspaceModel:
+        """Get-or-create a workspace row for an absolute *path* (idempotent).
+
+        When *parent_project* is given, a newly created row is owned by it
+        and an existing unowned row is adopted. Rows already owned by
+        another project are left untouched.
+        """
         wanted = Path(path).expanduser().as_posix()
+        defaults = {"path": wanted, "description": description}
+        if parent_project is not None:
+            defaults["parent_project"] = parent_project
         workspace, _ = WorkspaceModel.objects.update_or_create(
             name=name,
-            defaults={"path": wanted, "description": description},
+            defaults=defaults,
         )
+        if parent_project is not None and workspace.parent_project_id is None:
+            try:
+                WorkspaceModel.objects.filter(pk=workspace.pk).update(
+                    parent_project=parent_project
+                )
+                workspace.parent_project = parent_project
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
         return workspace
 
     @staticmethod
@@ -89,6 +110,7 @@ class Workspaces(AssistantScopeMixin):
             f"{root.as_posix()} project root",
             root,
             "project root directory",
+            parent_project=project,
         )
 
     # ------------------------------------------------------------------

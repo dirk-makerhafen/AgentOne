@@ -8,8 +8,11 @@ resolution (stored ``manifest_dir`` first, conventional layout fallback);
 """
 
 import importlib.util
+import os
+import tempfile
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from django.test import TestCase
 
@@ -360,6 +363,16 @@ class WorkspacesScopeTest(TestCase):
         self.assertEqual(first.pk, second.pk)
         second.refresh_from_db()
         self.assertEqual(second.description, "d-changed")
+
+    def test_ensure_named_adopts_project(self):
+        project = _make_project(path="")
+        existing = WorkspaceModel.objects.create(name="adopt-me", path="/tmp/adopt-me")
+        adopted = Workspaces.ensure_named(
+            "adopt-me", "/tmp/adopt-me", parent_project=project
+        )
+        self.assertEqual(adopted.pk, existing.pk)
+        adopted.refresh_from_db()
+        self.assertEqual(adopted.parent_project_id, project.pk)
 
     def test_for_project_prefers_main_workspace(self):
         import tempfile
@@ -834,7 +847,7 @@ class SubListToolsTest(TestCase):
         )
         rt = _make_ws_session(agent, av, ws, project=project)
         mod = _load_script(
-            "agents/internal/workspace_assistant/scripts/workspaces.py", "sub_ws"
+            "agents/internal/workspace_assistant/scripts/workspace.py", "sub_ws"
         )
         ok, skills = mod.list_skills(rt)
         self.assertTrue(ok, skills)
@@ -868,13 +881,197 @@ class SubListToolsTest(TestCase):
         ws_mod = _load_script(
             "agents/internal/workspaces_assistant/scripts/workspaces.py", "ext_ws"
         )
-        ws = WorkspaceModel.objects.create(name="ext-ws", path="/tmp/ext-ws")
-        _make_ws_session(agent, av, ws, name="ext-bound")
+        ws = WorkspaceModel.objects.create(
+            name="ext-ws", path="/tmp/ext-ws", parent_project=project
+        )
+        _make_ws_session(agent, av, ws, name="ext-bound", project=project)
         ok, wresult = ws_mod.list_workspaces(rt)
         self.assertTrue(ok, wresult)
         self.assertIn("scope", wresult)
         wrow = next(w for w in wresult["workspaces"] if w["name"] == "ext-ws")
         self.assertEqual(wrow["session_count"], 1)
+
+
+class WorkspaceAssistantScopeTest(TestCase):
+    """Workspace collection tools follow the session scope."""
+
+    def _module(self):
+        return _load_script(
+            "agents/internal/workspaces_assistant/scripts/workspaces.py",
+            "scope_workspaces",
+        )
+
+    def test_list_workspaces_project_scope(self):
+        project = _make_project(path="")
+        WorkspaceModel.objects.create(name="owned", path="/tmp/owned", parent_project=project)
+        WorkspaceModel.objects.create(name="global", path="/tmp/global")
+        agent, av = _make_agent("scope-list-host")
+        rt = _make_session(agent, av, name="scope-list", project=project)
+
+        ok, result = self._module().list_workspaces(rt)
+        self.assertTrue(ok, result)
+        self.assertEqual([w["name"] for w in result["workspaces"]], ["owned"])
+        self.assertEqual(result["scope"], "project p")
+        self.assertTrue(result["workspaces"][0]["top_level"])
+
+    def test_list_workspaces_global_scope(self):
+        project = _make_project(path="")
+        WorkspaceModel.objects.create(name="owned", path="/tmp/owned", parent_project=project)
+        WorkspaceModel.objects.create(name="global", path="/tmp/global")
+        agent, av = _make_agent("scope-list-global-host")
+        rt = _make_session(agent, av, name="scope-list-global")
+
+        ok, result = self._module().list_workspaces(rt)
+        self.assertTrue(ok, result)
+        self.assertEqual(result["scope"], "global")
+        self.assertEqual(
+            sorted(w["name"] for w in result["workspaces"]), ["global", "owned"]
+        )
+
+    def test_create_workspace_stamps_project(self):
+        project = _make_project(path="")
+        agent, av = _make_agent("scope-create-host")
+        rt = _make_session(agent, av, name="scope-create", project=project)
+        tmp = tempfile.mkdtemp()
+
+        ok, result = self._module().create_workspace(rt, "created", tmp)
+        self.assertTrue(ok, result)
+        self.assertTrue(result["created"])
+        self.assertEqual(result["project_pk"], project.pk)
+        self.assertEqual(
+            WorkspaceModel.objects.get(name="created").parent_project_id, project.pk
+        )
+
+        global_rt = _make_session(agent, av, name="scope-create-global")
+        other = tempfile.mkdtemp()
+        ok, result = self._module().create_workspace(global_rt, "global-created", other)
+        self.assertTrue(ok, result)
+        self.assertIsNone(result["project_pk"])
+
+    def test_create_workspace_adopts_unowned_row(self):
+        project = _make_project(path="")
+        tmp = tempfile.mkdtemp()
+        ws = WorkspaceModel.objects.create(
+            name="preexisting", path=os.path.realpath(tmp)
+        )
+        agent, av = _make_agent("scope-adopt-host")
+        rt = _make_session(agent, av, name="scope-adopt", project=project)
+
+        ok, result = self._module().create_workspace(rt, "preexisting", tmp)
+        self.assertTrue(ok, result)
+        self.assertFalse(result["created"])
+        self.assertTrue(result["adopted"])
+        ws.refresh_from_db()
+        self.assertEqual(ws.parent_project_id, project.pk)
+
+    def test_workspaces_stats_project_scope(self):
+        project = _make_project(path="")
+        root = tempfile.mkdtemp()
+        child = str(Path(root) / "child")
+        WorkspaceModel.objects.create(name="root", path=root, parent_project=project)
+        WorkspaceModel.objects.create(name="child", path=child, parent_project=project)
+        WorkspaceModel.objects.create(name="global", path="/tmp/global-stats")
+        agent, av = _make_agent("scope-stats-host")
+        rt = _make_session(agent, av, name="scope-stats", project=project)
+
+        ok, result = self._module().workspaces_stats(rt)
+        self.assertTrue(ok, result)
+        self.assertEqual(result["total"], 2)
+        self.assertEqual(result["top_level"], 1)
+        self.assertEqual(result["nested"], 1)
+        self.assertEqual(result["scope"], "project p")
+
+    def test_create_subworkspace_inherits_project(self):
+        project = _make_project(path="")
+        root = tempfile.mkdtemp()
+        managed = WorkspaceModel.objects.create(name="managed", path=root, parent_project=project)
+        agent, av = _make_agent("scope-subws-host")
+        rt = _make_ws_session(agent, av, managed, name="scope-subws")
+        child = str(Path(root) / "child")
+
+        mod = _load_script(
+            "agents/internal/workspace_assistant/scripts/workspace.py",
+            "scope_sub_workspaces",
+        )
+        ok, result = mod.create_subworkspace(rt, "child", child)
+        self.assertTrue(ok, result)
+        self.assertTrue(result["created"])
+        self.assertEqual(result["project_pk"], project.pk)
+        self.assertEqual(
+            WorkspaceModel.objects.get(name="child").parent_project_id,
+            project.pk,
+        )
+
+    def test_workspace_assistant_cronjobs_use_workspace_project(self):
+        project = _make_project(path="")
+        root = tempfile.mkdtemp()
+        managed = WorkspaceModel.objects.create(name="managed", path=root, parent_project=project)
+        agent, av = _make_agent("scope-cron-host")
+        Cronjob.objects.create(
+            name="project-job", schedule="* * * * *", agent=agent,
+            parent_project=project,
+        )
+        Cronjob.objects.create(
+            name="global-job", schedule="* * * * *", agent=agent,
+        )
+        rt = _make_ws_session(agent, av, managed, name="scope-cron")
+
+        mod = _load_script(
+            "agents/internal/workspace_assistant/scripts/workspace.py",
+            "scope_cron_workspaces",
+        )
+        ok, result = mod.list_cronjobs(rt)
+        self.assertTrue(ok, result)
+        self.assertEqual([j["name"] for j in result["cronjobs"]], ["project-job"])
+        ok, details = mod.workspace_details(rt)
+        self.assertTrue(ok, details)
+        self.assertEqual(details["cronjobs_count"], 1)
+
+    def test_assistant_session_derives_project_from_workspace(self):
+        project = _make_project()
+        _make_agent("workspaces_assistant")
+        workspace = WorkspaceModel.objects.create(
+            name="derived-ws", path="/tmp/derived-ws", parent_project=project
+        )
+
+        runtime_session = Sessions().assistant_session(
+            "workspaces_assistant", workspace=workspace, project=None
+        )
+        self.assertIsNotNone(runtime_session)
+        self.assertEqual(runtime_session.model.parent_project_id, project.pk)
+        self.assertEqual(
+            runtime_session.model.name, "workspaces_assistant - p"
+        )
+
+    def test_call_assistant_binds_callers_workspace(self):
+        project = _make_project(path="")
+        root = tempfile.mkdtemp()
+        _make_agent("workspaces_assistant")
+        caller_ws = WorkspaceModel.objects.create(
+            name="caller-ws", path=root, parent_project=project
+        )
+        agent, av = _make_agent("call-assistant-host")
+        rt = _make_ws_session(
+            agent, av, caller_ws, name="call-assistant-source", project=project
+        )
+        captured = {}
+
+        def _fake_assistant_session(_self, name, **kwargs):
+            captured.update({"name": name, **kwargs})
+            return SimpleNamespace()
+
+        mod = _load_script(
+            "scripts/subagents/call_assistant.py", "scope_call_assistant"
+        )
+        with patch(
+            "runtime.session.sessions.Sessions.assistant_session",
+            _fake_assistant_session,
+        ), patch.object(mod, "_send", lambda *args: {"ok": True}):
+            result = mod.call_assistant(rt, "workspace_assistant", "do it")
+
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(captured["workspace"].pk, caller_ws.pk)
+        self.assertEqual(captured["project"].pk, project.pk)
 
 
 class DetailsToolsTest(TestCase):
@@ -981,7 +1178,7 @@ class DetailsToolsTest(TestCase):
         )
         rt = _make_ws_session(agent, av, ws, project=project)
         mod = _load_script(
-            "agents/internal/workspace_assistant/scripts/workspaces.py", "det_ws"
+            "agents/internal/workspace_assistant/scripts/workspace.py", "det_ws"
         )
         ok, info = mod.workspace_details(rt)
         self.assertTrue(ok, info)

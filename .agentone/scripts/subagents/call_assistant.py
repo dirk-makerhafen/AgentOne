@@ -74,6 +74,7 @@ def call_assistant(
 
     project: Any = None
     override: str | None = None
+    explicit_scope = bool(project_path or context_path)
     if project_path:
         found = _resolve_project(project_path)
         if found is not None:
@@ -92,6 +93,8 @@ def call_assistant(
         collection = cls()  # top-level collections (Projects) take no parent
     project = collection.project
 
+    child = None
+    workspace = None
     if override:
         target = override.strip().rstrip("/")
         workspace = Workspaces.ensure_named(
@@ -103,11 +106,55 @@ def call_assistant(
             scope_label=target.rsplit("/", 1)[-1] or "global",
         )
     else:
-        child = collection.get_assistant_session(caller=_session, name=assistant)
-        workspace = child.get_version_model().workspace if child is not None else None
+        if assistant == "workspace_assistant" and not explicit_scope:
+            # The singular workspace assistant manages the workspace its
+            # caller is working in, not the project root.
+            caller_workspace = _caller_workspace(_session)
+            if caller_workspace is not None and _workspace_in_project(
+                caller_workspace, project
+            ):
+                workspace = caller_workspace
+                child = Sessions().assistant_session(
+                    assistant,
+                    project=project,
+                    workspace=workspace,
+                    caller=_session,
+                    scope_label=_workspace_label(workspace),
+                )
+        if child is None:
+            child = collection.get_assistant_session(caller=_session, name=assistant)
+            workspace = child.get_version_model().workspace if child is not None else None
     if child is None:
         return {"error": f"Assistant '{assistant}' could not be resolved or spawned"}
     return _send(child, assistant, task, project, workspace)
+
+
+def _caller_workspace(_session: Any) -> Any | None:
+    """Return the calling session's bound workspace, or *None*."""
+    try:
+        return _session.workspace
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+
+
+def _workspace_in_project(workspace: Any, project: Any) -> bool:
+    """True when *workspace* belongs to *project* (or has no owner yet)."""
+    if project is None:
+        return True
+    try:
+        owner_pk = getattr(workspace, "parent_project_id", None)
+    except Exception:  # pylint: disable=broad-exception-caught
+        owner_pk = None
+    return owner_pk in (None, getattr(project, "pk", None))
+
+
+def _workspace_label(workspace: Any) -> str:
+    """Return a readable scope label for *workspace*."""
+    name = (getattr(workspace, "name", "") or "").strip()
+    if name:
+        return name
+    path = (getattr(workspace, "path", "") or "").strip().rstrip("/")
+    return path.rsplit("/", 1)[-1] if path else "global"
 
 
 def _send(child: Any, assistant: str, task: str, project: Any, workspace: Any) -> dict[str, Any]:

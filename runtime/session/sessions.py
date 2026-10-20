@@ -116,6 +116,8 @@ class Sessions:
         assistant = (name or "").strip()
         if not assistant:
             return None
+        if project is None:
+            project = _project_of_workspace(workspace)
         session_name, description = _assistant_session_naming(
             assistant, project, scope_label
         )
@@ -159,6 +161,22 @@ class Sessions:
             return Session(session_model=session, pinned_session_version=session_version)
         except Exception:  # pylint: disable=broad-exception-caught
             return None
+
+
+def _project_of_workspace(workspace: Any) -> Any | None:
+    """Return the project owning *workspace* (model or runtime wrapper)."""
+    if workspace is None:
+        return None
+    for candidate in (workspace, getattr(workspace, "model", None)):
+        if candidate is None:
+            continue
+        try:
+            project = getattr(candidate, "parent_project", None)
+        except Exception:  # pylint: disable=broad-exception-caught
+            project = None
+        if project is not None:
+            return project
+    return None
 
 
 def _assistant_session_naming(

@@ -45,23 +45,16 @@ def new_manager_session_name(workspace, agent_name: str = MANAGER_AGENT_NAME) ->
 
     Uses the shared ``<assistant> - <label>`` shape (label = workspace name,
     else path basename, else ``global``) so manager chats read and sort like
-    every other assistant session.
+    every other assistant session. Collisions get the shared timestamp
+    suffix rather than a bare counter.
     """
-    from server.models.sessions.session import SessionModel
+    from ui.main.rightpanel.assistant_chat import unique_session_name
 
     label = (getattr(workspace, "name", None) or "").strip()
     if not label:
         path = (getattr(workspace, "path", None) or "").strip().rstrip("/")
         label = path.rsplit("/", 1)[-1] if path else "global"
-    base = f"{agent_name} - {label}"
-    name, i = base, 1
-    try:
-        while SessionModel.objects.filter(name=name).exists():
-            i += 1
-            name = f"{base}-{i}"
-    except Exception:
-        pass
-    return name
+    return unique_session_name(f"{agent_name} - {label}")
 
 
 MANAGER_CHAT_BODY_TEMPLATE = '''
@@ -197,7 +190,16 @@ class ManagerChatMixin:
             )
         except Exception:
             return
-        self._selected_pk = session_version.session.pk
+        session = session_version.session
+        project = getattr(workspace, "parent_project", None)
+        project_pk = getattr(project, "pk", None)
+        if project_pk is not None and session.parent_project_id != project_pk:
+            try:
+                session.parent_project = project
+                session.save(update_fields=["parent_project_id"])
+            except Exception:
+                pass
+        self._selected_pk = session.pk
         self._rebuild_chat()
         self.update()
 

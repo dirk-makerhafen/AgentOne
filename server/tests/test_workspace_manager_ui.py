@@ -13,13 +13,13 @@ import jinja2
 
 def _find_workspace_tools():
     """Locate the workspace agent's tools script (survives agent renames)."""
-    for path in sorted(glob.glob(".agentone/agents/**/workspaces.py", recursive=True)):
+    for path in sorted(glob.glob(".agentone/agents/**/workspace*.py", recursive=True)):
         try:
             if "def list_subworkspaces" in open(path, encoding="utf-8").read():
                 return path
         except OSError:
             continue
-    return ".agentone/agents/internal/workspace_assistant/scripts/workspaces.py"
+    return ".agentone/agents/internal/workspace_assistant/scripts/workspace.py"
 
 
 def _find_workspace_agent_md():
@@ -157,6 +157,50 @@ class TestToolUnboundSession:
         )
         assert ok is False
         assert "agent name" in payload["message"].lower()
+
+
+class TestManagerSessionNaming:
+    """Manager chats share the assistant timestamp-on-collision naming."""
+
+    @staticmethod
+    def _patch_session_model(monkeypatch, taken):
+        from server.models.sessions import session as session_mod
+
+        class FakeQuerySet:
+            def __init__(self, exists):
+                self._exists = exists
+
+            def exists(self):
+                return self._exists
+
+        class FakeObjects:
+            def filter(self, name=None, **_kwargs):
+                return FakeQuerySet(name in taken)
+
+        class FakeSessionModel:
+            objects = FakeObjects()
+
+        monkeypatch.setattr(session_mod, "SessionModel", FakeSessionModel)
+
+    def test_first_chat_uses_plain_base_name(self, monkeypatch):
+        from ui.main.rightpanel.workspace import rightpanel_workspace_manager as mod
+
+        self._patch_session_model(monkeypatch, set())
+        assert mod.new_manager_session_name(SimpleNamespace(name="alpha")) == (
+            "workspace_assistant - alpha"
+        )
+
+    def test_collision_uses_timestamp_not_counter(self, monkeypatch):
+        import re
+
+        from ui.main.rightpanel.workspace import rightpanel_workspace_manager as mod
+
+        self._patch_session_model(monkeypatch, {"workspace_assistant - alpha"})
+        name = mod.new_manager_session_name(SimpleNamespace(name="alpha"))
+        assert re.fullmatch(
+            r"workspace_assistant - alpha \d{4}\.\d{2}\.\d{2}-\d{2}:\d{2}:\d{2}",
+            name,
+        )
 
 
 class TestPathHelpers:

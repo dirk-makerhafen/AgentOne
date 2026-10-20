@@ -95,6 +95,10 @@ don't reimplement with `glob`:
 - **List cron jobs**:
   1. `call_assistant("cronjobs_assistant", "list all cron jobs with schedule and state", project_path="<project-root>")`
   2. Report their answer.
+- **List workspaces**:
+  1. `call_assistant("workspaces_assistant", "list all workspaces with paths and nesting", project_path="<project-root>")`
+  2. Report their answer. The session is project-scoped, so the assistant
+     lists only this project's workspaces.
 - **List data flows** (no assistant owns these — direct files):
   1. `glob("streams/*.md")` and `glob("sets/*.md")`
   2. `read` each file's frontmatter (name, sources, processor).

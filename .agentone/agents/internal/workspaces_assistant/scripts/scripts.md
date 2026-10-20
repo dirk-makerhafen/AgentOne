@@ -1,13 +1,13 @@
 ---
 group: workspaces
 tools:
-  # List ALL workspaces on the instance
+  # List the workspaces in your scope (project, else global)
   - name: list_workspaces
     file: workspaces.py
     function: list_workspaces
     bound: True
 
-  # Create a new top-level workspace
+  # Create a new top-level workspace in your scope
   - name: create_workspace
     file: workspaces.py
     function: create_workspace

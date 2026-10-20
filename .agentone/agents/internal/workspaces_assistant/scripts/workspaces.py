@@ -1,11 +1,11 @@
 """Workspace collection tools for the workspaces_assistant agent.
 
-Workspaces are global entities (no project FK), so these tools are NOT
-project-scoped: they see every workspace on the instance. Listing the
-collection, creating top-level workspaces, and collection health belong
-here; working inside ONE workspace (sub-workspaces, rename, chats)
-belongs to the bound ``workspace_assistant``. Every tool returns a
-``(bool, dict)`` tuple.
+The collection is scoped exactly like every other plural assistant: a
+project-bound session sees that project's workspaces, an unbound session
+sees the global collection. Listing, creating project/global workspaces,
+and collection health belong here; working inside ONE workspace
+(sub-workspaces, rename, chats) belongs to the bound
+``workspace_assistant``. Every tool returns a ``(bool, dict)`` tuple.
 """
 from __future__ import annotations
 
@@ -43,42 +43,81 @@ def _session_counts() -> dict[int, int]:
     return counts
 
 
+def _scope_project(_session: Session):
+    """Return the project that scopes the collection (None means global).
+
+    Sessions bound to a project-owned workspace inherit that project even
+    when ``parent_project`` was not stamped on the session.
+    """
+    try:
+        project = _session.get_project()
+    except Exception:  # pylint: disable=broad-exception-caught
+        project = None
+    if project is not None:
+        return project
+    try:
+        workspace = _session.workspace
+        return getattr(workspace, "parent_project", None)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+
+
+def _scoped_workspaces(_session: Session) -> list:
+    """Return workspaces in the session's scope, ordered by name."""
+    from runtime.workspace.workspaces import Workspaces
+
+    return list(Workspaces(parent_project=_scope_project(_session)).all())
+
+
 def _workspace_info(ws, all_paths: dict[int, str], session_counts: dict[int, int] | None = None) -> dict[str, Any]:
     mine = all_paths.get(ws.pk, "")
     nested = any(
         other != ws.pk and all_paths.get(other, "") and mine.startswith(all_paths[other] + os.sep)
         for other in all_paths
     )
+    try:
+        project = ws.parent_project
+    except Exception:  # pylint: disable=broad-exception-caught
+        project = None
     return {
         "workspace_pk": ws.pk,
         "name": ws.name or ws.path,
         "path": ws.path,
         "description": ws.description or "",
         "color": getattr(ws, "color", "") or "",
+        "project": (project.name if project is not None else ""),
+        "project_pk": (project.pk if project is not None else None),
         "top_level": not nested,
         "session_count": (session_counts or {}).get(ws.pk, 0),
     }
 
 
-def _all_workspaces():
-    from server.models.workspace import WorkspaceModel
-
-    return list(WorkspaceModel.objects.all().order_by("name"))
+def _scope_label(project) -> str:
+    """Return a short human scope label for tool results."""
+    if project is None:
+        return "global"
+    try:
+        name = (getattr(project, "name", "") or "").strip()
+    except Exception:  # pylint: disable=broad-exception-caught
+        name = ""
+    return f"project {name}" if name else f"project #{getattr(project, 'pk', '?')}"
 
 
 def list_workspaces(_session: Session) -> tuple[bool, dict[str, Any]]:
-    """List ALL workspaces on the instance, ordered by name.
+    """List the workspaces in your scope, ordered by name.
 
-    Each entry flags whether it is top-level or nested inside another
-    workspace's directory.
+    A project-bound session lists that project's workspaces; an unbound
+    session lists the global collection. Each entry flags whether it is
+    top-level or nested inside another workspace *within this scope*.
 
     Returns:
         ``(True, {"status": "success", "workspaces": [...], "count": int,
         "scope": str})``
         or ``(False, {"status": "error", "message": ...})``.
     """
+    project = _scope_project(_session)
     try:
-        all_ws = _all_workspaces()
+        all_ws = _scoped_workspaces(_session)
     except Exception as e:
         return False, {"status": "error", "message": f"Could not list workspaces: {e}"}
     paths = {ws.pk: _norm(ws.path) for ws in all_ws}
@@ -87,7 +126,7 @@ def list_workspaces(_session: Session) -> tuple[bool, dict[str, Any]]:
         "status": "success",
         "workspaces": [_workspace_info(ws, paths, counts) for ws in all_ws],
         "count": len(all_ws),
-        "scope": "instance",
+        "scope": _scope_label(project),
     }
 
 
@@ -98,12 +137,15 @@ def create_workspace(
     description: str = "",
     color: Optional[str] = None,
 ) -> tuple[bool, dict[str, Any]]:
-    """Create a new top-level workspace for an existing directory tree.
+    """Create a new workspace in your scope for an existing directory tree.
 
-    The directory is created when missing. Unlike the bound
-    ``workspace_assistant`` (which only creates sub-workspaces inside its
-    managed workspace), this creates a workspace anywhere. Organizing
-    inside ONE workspace afterwards belongs to ``workspace_assistant``.
+    The directory is created when missing. In a project-bound session the
+    new workspace is owned by that project (and appears in the project's
+    workspace list); an unbound session creates a global workspace. Unlike
+    the bound ``workspace_assistant`` (which only creates sub-workspaces
+    inside its managed workspace), this creates a top-level workspace.
+    Organizing inside ONE workspace afterwards belongs to
+    ``workspace_assistant``.
 
     Args:
         name: Display name for the new workspace (required).
@@ -128,45 +170,65 @@ def create_workspace(
             validate_workspace_color(color)
         except Exception:
             return False, {"status": "error", "message": "Color must be a #rrggbb hex string."}
+    project = _scope_project(_session)
     full = _norm(path)
     try:
         os.makedirs(full, exist_ok=True)
     except Exception as e:
         return False, {"status": "error", "message": f"Could not create directory '{full}': {e}"}
     try:
-        ws, created = WorkspaceModel.objects.get_or_create(
-            path=full,
-            defaults={"name": name, "description": description or ""},
-        )
+        ws = WorkspaceModel.objects.filter(path=full).order_by("pk").first()
+        created = ws is None
+        if created:
+            ws = WorkspaceModel.objects.create(
+                path=full,
+                name=name,
+                description=description or "",
+                parent_project=project,
+            )
     except Exception as e:
         return False, {"status": "error", "message": f"Could not create workspace: {e}"}
-    if created:
-        if color is not None:
-            ws.color = color
-            try:
-                ws.save(update_fields=["color", "updated_at"])
-            except Exception:
-                pass
-    info = {
-        "workspace_pk": ws.pk,
-        "name": ws.name or ws.path,
-        "path": ws.path,
-        "description": ws.description or "",
-        "color": getattr(ws, "color", "") or "",
-    }
-    info.update({"status": "success", "created": created})
+    adopted = False
+    if not created and project is not None and ws.parent_project_id is None:
+        ws.parent_project = project
+        try:
+            ws.save(update_fields=["parent_project"])
+            adopted = True
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    if created and color is not None:
+        ws.color = color
+        try:
+            ws.save(update_fields=["color", "updated_at"])
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+    try:
+        scoped = _scoped_workspaces(_session)
+    except Exception:  # pylint: disable=broad-exception-caught
+        scoped = []
+    if ws.pk not in {item.pk for item in scoped}:
+        scoped.append(ws)
+    paths = {item.pk: _norm(item.path) for item in scoped}
+    info = _workspace_info(ws, paths, _session_counts())
+    info.update({
+        "status": "success",
+        "created": created,
+        "adopted": adopted,
+        "scope": _scope_label(project),
+    })
     return True, info
 
 
 def workspaces_stats(_session: Session) -> tuple[bool, dict[str, Any]]:
-    """Count workspaces on the instance: total, top-level, and nested.
+    """Count workspaces in your scope: total, top-level, and nested.
 
     Returns:
         ``(True, {"status": "success", "total": int, "top_level": int,
-        "nested": int})`` or ``(False, {"status": "error", ...})``.
+        "nested": int, "scope": str})`` or ``(False, {"status": "error", ...})``.
     """
+    project = _scope_project(_session)
     try:
-        all_ws = _all_workspaces()
+        all_ws = _scoped_workspaces(_session)
     except Exception as e:
         return False, {"status": "error", "message": f"Could not list workspaces: {e}"}
     paths = {ws.pk: _norm(ws.path) for ws in all_ws}
@@ -182,4 +244,5 @@ def workspaces_stats(_session: Session) -> tuple[bool, dict[str, Any]]:
         "total": len(all_ws),
         "top_level": len(all_ws) - nested,
         "nested": nested,
+        "scope": _scope_label(project),
     }

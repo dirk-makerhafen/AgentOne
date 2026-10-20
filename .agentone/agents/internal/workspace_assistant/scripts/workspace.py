@@ -35,13 +35,33 @@ def _managed_workspace(_session: Session):
         return None
 
 
+def _project_for(_session: Session, managed) -> Any | None:
+    """Return the project owning the managed workspace (session project first)."""
+    try:
+        project = _session.get_project()
+    except Exception:  # pylint: disable=broad-exception-caught
+        project = None
+    if project is not None:
+        return project
+    try:
+        return getattr(managed, "parent_project", None)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+
+
 def _workspace_info(ws) -> dict[str, Any]:
+    try:
+        project = ws.parent_project
+    except Exception:  # pylint: disable=broad-exception-caught
+        project = None
     return {
         "workspace_pk": ws.pk,
         "name": ws.name or ws.path,
         "path": ws.path,
         "description": ws.description or "",
         "color": getattr(ws, "color", "") or "",
+        "project": (project.name if project is not None else ""),
+        "project_pk": (project.pk if project is not None else None),
     }
 
 
@@ -166,15 +186,29 @@ def create_subworkspace(
         os.makedirs(full, exist_ok=True)
     except Exception as e:
         return False, {"status": "error", "message": f"Could not create directory '{full}': {e}"}
+    project = _project_for(_session, managed)
     try:
-        ws, created = WorkspaceModel.objects.get_or_create(
-            path=full,
-            defaults={"name": name, "description": description or ""},
-        )
+        ws = WorkspaceModel.objects.filter(path=full).order_by("pk").first()
+        created = ws is None
+        if created:
+            ws = WorkspaceModel.objects.create(
+                path=full,
+                name=name,
+                description=description or "",
+                parent_project=project,
+            )
     except Exception as e:
         return False, {"status": "error", "message": f"Could not create workspace: {e}"}
+    adopted = False
+    if not created and project is not None and ws.parent_project_id is None:
+        ws.parent_project = project
+        try:
+            ws.save(update_fields=["parent_project"])
+            adopted = True
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
     info = _workspace_info(ws)
-    info.update({"status": "success", "created": created})
+    info.update({"status": "success", "created": created, "adopted": adopted})
     return True, info
 
 
@@ -469,7 +503,8 @@ def list_cronjobs(_session: Session, include_archived: bool = False) -> tuple[bo
     if managed is None:
         return False, {"status": "error", "message": "Your session is not bound to a workspace."}
     try:
-        queryset = Cronjobs(parent_project=_session.get_project()).all()
+        project = _project_for(_session, managed)
+        queryset = Cronjobs(parent_project=project).all()
         if not include_archived:
             queryset = queryset.filter(is_archived=False)
         jobs = list(queryset.order_by("name"))
@@ -530,7 +565,7 @@ def workspace_details(_session: Session) -> tuple[bool, dict[str, Any]]:
         agents_count = 0
     try:
         cronjobs_count = (
-            Cronjobs(parent_project=_session.get_project())
+            Cronjobs(parent_project=_project_for(_session, managed))
             .all()
             .filter(is_archived=False)
             .count()

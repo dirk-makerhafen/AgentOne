@@ -99,7 +99,7 @@ Framework-internal assistants (never user-facing — reach them via
 | Assistant | Scope |
 |---|---|
 | `project_assistant` / `projects_assistant` | One project vs. the project collection |
-| `workspace_assistant` / `workspaces_assistant` | One workspace vs. the workspace collection |
+| `workspace_assistant` / `workspaces_assistant` | One workspace (and its sub-workspaces) vs. the workspaces in a project/global scope |
 | `skill_assistant` / `skills_assistant` | One skill vs. the skill collection |
 | `agent_assistant` / `agents_assistant` | One agent vs. the agent collection |
 | `cronjob_assistant` / `cronjobs_assistant` | One cronjob vs. the cronjob collection |
@@ -110,6 +110,11 @@ research-before-acting → `researcher`; complex breakdown → `planner`;
 anything about administering the framework itself (agents, skills, projects,
 workspaces, cronjobs, work items) → the matching internal assistant via
 `call_assistant`.
+
+Scope invariant: a plural assistant always sees the caller's session scope
+(project, else global) — it never silently lists the whole instance from a
+project-scoped session. The workspace singular is the exception in shape,
+not scope: it sees the bound workspace and its path sub-workspaces.
 
 ## Working with Work Items
 

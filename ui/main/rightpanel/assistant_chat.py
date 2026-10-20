@@ -222,6 +222,8 @@ class AssistantChatMixin:
         name = unique_session_name(self._assistant_session_base_name())
         workspace = self.assistant_workspace()
         project = self.assistant_project()
+        if project is None and workspace is not None:
+            project = getattr(workspace, "parent_project", None)
         try:
             session_version = agent.latest_agent_version.get_or_create_session(
                 name=name,
