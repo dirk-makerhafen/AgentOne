@@ -103,10 +103,8 @@ def detect_storage(workspace: Any) -> str:
             return STORAGE_INLINE
         if project_dir is not None:
             try:
-                from runtime.paths import project_manifest_dir
-
                 project = _workspace_project(workspace)
-                project_root = project_manifest_dir(project)
+                project_root = project.get_agentone_dir()
                 if str(stored_p).startswith(str(project_root)):
                     return STORAGE_PROJECT
             except Exception:  # pylint: disable=broad-exception-caught

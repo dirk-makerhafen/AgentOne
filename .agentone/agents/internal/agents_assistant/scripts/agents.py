@@ -137,7 +137,7 @@ def create_agent(
         ``(False, {"status": "error", "message": ...})``.
     """
     from server.models.agents.agent import AgentModel
-    from runtime.paths import project_manifest_dir, user_agents_dir
+    from runtime.paths import user_agents_dir
 
     ok, clean = _validate_item_name(name, "agent")
     if not ok:
@@ -149,7 +149,7 @@ def create_agent(
         }
     project = _session.get_project()
     if project is not None:
-        base = project_manifest_dir(project) / "agents" / clean
+        base = project.get_agentone_dir() / "agents" / clean
         scope = f"project {project.name}"
     else:
         base = user_agents_dir() / clean
@@ -185,7 +185,7 @@ def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
     """Reload all agents visible in the managed scope from disk."""
     from pathlib import Path
 
-    from runtime.paths import agentone_root, agentone_home, project_manifest_dir
+    from runtime.paths import agentone_home, agentone_root
     from registry.loader.load_agent_manifest import load_agent_manifest
     from registry.loader.utils import find_agent_md_files
     from registry.install_repo import InstallRepo
@@ -195,7 +195,7 @@ def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
     errors: list[str] = []
     roots: list[tuple[Path, Any, InstallRepo]] = []
     if project is not None:
-        md = project_manifest_dir(project)
+        md = project.get_agentone_dir()
         roots.append((md, project, InstallRepo.for_project(project.name, source_root=md)))
     else:
         roots.append((agentone_root(), None, InstallRepo.for_global(source_root=agentone_root())))

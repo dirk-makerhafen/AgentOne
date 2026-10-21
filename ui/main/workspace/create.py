@@ -187,7 +187,6 @@ class CreateWorkspace(ModelView):
                 color=color,
                 access=self.access_editor.access_data,
                 parent_project=parent_project,
-                storage=storage,
             )
             from ui.main.workspace.manifest_location import ensure_manifest_dir
 

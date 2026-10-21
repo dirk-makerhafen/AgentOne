@@ -177,13 +177,10 @@ class ProjectCreateView(PyHtmlView):
             updates["main_workspace"] = ws
             if manifest_in_workspace:
                 manifest = Path(ws.path) / ".agentone"
-                updates["storage"] = "inline_project"
             else:
                 manifest = central_project_dir(name)
-                updates["storage"] = "central"
         else:
             manifest = central_project_dir(name)
-            updates["storage"] = "central"
 
         try:
             ensure_private_dir(manifest)

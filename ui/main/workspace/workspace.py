@@ -395,11 +395,7 @@ class Workspace(ModelView):
     def agentone_dir(self) -> str:
         """Filesystem manifest dir for this workspace ("" when unmanaged)."""
         try:
-            from runtime.paths import workspace_manifest_dir
-
-
-            p = workspace_manifest_dir(self.subject)
-            return p.as_posix() if p else ""
+            return self.subject.get_agentone_dir().as_posix()
         except Exception:  # pylint: disable=broad-exception-caught
             return getattr(self.subject, "agentone_dir", "") or ""
 
@@ -410,10 +406,8 @@ class Workspace(ModelView):
     @property
     def dashboard_path(self) -> str:
         try:
-            from runtime.paths import workspace_dashboard_index
-
-            p = workspace_dashboard_index(self.subject)
-            return p.as_posix() if (p is not None and p.is_file()) else ""
+            p = self.subject.dashboard_index
+            return p.as_posix() if p.is_file() else ""
         except Exception:
             return ""
 
@@ -700,9 +694,8 @@ class Workspace(ModelView):
             self.subject, storage, path,
             gitignore=bool(self._edit_data.get("manifest_gitignore")),
         )
-        self.subject.storage = storage
         if not manifest_dir:
-            manifest_dir = workspace_manifest_dir(self.subject).as_posix()
+            manifest_dir = self.subject.get_agentone_dir().as_posix()
         self.subject.agentone_dir = manifest_dir
         self.subject.save()
         self._editing = False

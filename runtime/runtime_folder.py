@@ -152,9 +152,7 @@ class RuntimeFolder:
                 return base / group if group else base
         if parent_project is not None:
             try:
-                from runtime.paths import project_manifest_dir
-
-                manifest_dir = getattr(parent_project, "agentone_dir", "") or project_manifest_dir(parent_project).as_posix()
+                manifest_dir = parent_project.get_agentone_dir().as_posix()
             except Exception:  # pylint: disable=broad-exception-caught
                 manifest_dir = getattr(parent_project, "agentone_dir", "") or ""
             if manifest_dir:

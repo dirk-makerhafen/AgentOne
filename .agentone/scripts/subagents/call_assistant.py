@@ -218,11 +218,9 @@ def _resolve_project(project_path: str) -> Any | None:
     if project is None:
         # Legacy fallback: match the resolved manifest dir (covers rows
         # created before manifest_dir existed).
-        from runtime.paths import project_manifest_dir
-
         for candidate in Project.objects.all():
             try:
-                if project_manifest_dir(candidate).as_posix().rstrip("/") == wanted:
+                if candidate.get_agentone_dir().as_posix().rstrip("/") == wanted:
                     project = candidate
                     break
             except Exception:  # pylint: disable=broad-exception-caught

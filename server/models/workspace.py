@@ -4,6 +4,7 @@ from __future__ import annotations
 import random
 import re
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from django.core.exceptions import ValidationError
@@ -83,56 +84,45 @@ class WorkspaceModel(ObservableMixin, models.Model):
         "server.Project", default=None, null=True, blank=True,
         on_delete=models.SET_NULL, related_name="workspaces",
     )
-    # storage: inline | project | user | central (legacy) | "" (auto)
-    storage: str = models.CharField(max_length=32, default="", blank=True)
-    # agentone_dir: workspace-scoped .agentone tree. Never blank — defaults
-    # to the location implied by storage (see save()).
+    # agentone_dir: workspace-scoped .agentone tree; may be any directory the
+    # user chose. Never blank — when not set explicitly it defaults to the
+    # owning project's tree, else the user home (see save()). The chosen
+    # location *type* is not stored; only the resulting directory.
     agentone_dir: str = models.CharField(max_length=4096, default="", blank=False)
 
     def save(self, *args, **kwargs) -> None:
         if not (self.agentone_dir or "").strip():
-            from pathlib import Path
-
-            from runtime.paths import central_workspace_dir, project_manifest_dir
-
-            name = (self.name or "").strip()
-            safe = name.replace(" ", "_").replace("/", "_") or (
-                Path(self.path).name if (self.path or "").strip() else "unnamed"
-            )
-            storage = (self.storage or "").strip()
-            user_dir = central_workspace_dir(safe)
-            if storage == "inline" and (self.path or "").strip():
-                self.agentone_dir = str(Path(self.path).expanduser() / ".agentone")
-            elif storage == "user":
-                self.agentone_dir = user_dir.as_posix()
-            elif storage in ("project", "central") and self.parent_project is not None:
-                try:
-                    self.agentone_dir = (
-                        project_manifest_dir(self.parent_project) / "workspaces" / safe
-                    ).as_posix()
-                except Exception:  # pylint: disable=broad-exception-caught
-                    self.agentone_dir = user_dir.as_posix()
-            elif storage == "central" and self.parent_project is None:
-                self.agentone_dir = user_dir.as_posix()
-            elif self.parent_project is not None:
-                try:
-                    self.agentone_dir = (
-                        project_manifest_dir(self.parent_project) / "workspaces" / safe
-                    ).as_posix()
-                except Exception:  # pylint: disable=broad-exception-caught
-                    self.agentone_dir = user_dir.as_posix()
-            else:
-                self.agentone_dir = user_dir.as_posix()
+            self.agentone_dir = self.get_agentone_dir().as_posix()
         super().save(*args, **kwargs)
+
+    def get_agentone_dir(self) -> Path:
+        """Return this workspace's manifest directory (no writes).
+
+        Prefers the stored ``agentone_dir``; otherwise derives the default
+        location: ``<project agentone dir>/workspaces/<name>`` when the
+        workspace is project-owned, else ``~/.agentone/workspaces/<name>``.
+        """
+        from runtime.paths import central_workspace_dir
+
+        stored = str(self.agentone_dir or "").strip()
+        if stored:
+            return Path(stored).expanduser()
+        name = (self.name or "").strip()
+        safe = name.replace(" ", "_").replace("/", "_") or (
+            Path(self.path).name if (self.path or "").strip() else "unnamed"
+        )
+        return central_workspace_dir(safe, project=self.parent_project)
+
+    @property
+    def dashboard_index(self) -> Path:
+        """Return the dashboard ``index.md`` path for this workspace."""
+        return self.get_agentone_dir() / "dashboard" / "index.md"
 
     def refresh_from_disk(self, details=None) -> None:
         """Reload this workspace's scoped manifest tree from disk."""
-        from pathlib import Path
-
-        from runtime.paths import workspace_manifest_dir
         from registry.loader.load_project_folder import load_scope_dir
 
-        manifest = workspace_manifest_dir(self)
+        manifest = self.get_agentone_dir()
         if not manifest.is_dir():
             return
         project = self.parent_project

@@ -146,9 +146,7 @@ class Cronjobs(AssistantScopeMixin):
         resolves to its own manifest (or path).
         """
         if self.parent_workspace is not None:
-            from runtime.paths import model_manifest_dir
-
-            return model_manifest_dir(self.parent_workspace, "workspace")
+            return self.parent_workspace.get_agentone_dir()
         from runtime.cron.file_io import cron_file_path
 
         return cron_file_path(".scope", self.parent_project).parent

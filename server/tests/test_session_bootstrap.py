@@ -8,7 +8,6 @@ import tempfile
 from django.test import TestCase
 
 from runtime import guidance_files
-from runtime.paths import workspace_manifest_dir
 from runtime.session_bootstrap import (
     COMPACTION_BOOTSTRAP_SENTINEL,
     bootstrap_context,
@@ -135,7 +134,7 @@ class SessionBootstrapTest(TestCase):
         self.assertEqual(context["workspace_dir"], self.tmp.name)
         self.assertEqual(
             context["workspace_agentone_dir"],
-            workspace_manifest_dir(self.workspace).as_posix(),
+            self.workspace.get_agentone_dir().as_posix(),
         )
         self.assertEqual(context["project_dir"], None)
         self.assertEqual(context["project_agentone_dir"], None)

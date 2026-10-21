@@ -44,11 +44,13 @@ class Workspace(AssistantScopeMixin):
         except Exception:  # pylint: disable=broad-exception-caught
             return None
 
-    def get_source_dir(self) -> Path:
-        """Return the workspace's manifest directory (stored, else path)."""
-        from runtime.paths import model_manifest_dir
+    def get_agentone_dir(self) -> Path:
+        """Return the workspace's manifest directory (stored, else derived)."""
+        return self.model.get_agentone_dir()
 
-        return model_manifest_dir(self.model, "workspace")
+    def get_source_dir(self) -> Path:
+        """Return this scope's manifest directory (assistant-scope contract)."""
+        return self.get_agentone_dir()
 
     def refresh_from_disk(self, details=None):
         """Reload this workspace's scoped manifest tree from disk."""

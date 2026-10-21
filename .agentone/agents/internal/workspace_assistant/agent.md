@@ -13,7 +13,6 @@ extends: AgentOne
 inheritSystemPrompt: false
 tools: [core.*, workspace.*, filesystem-read.*, filesystem-write.*]
 sessionBootstrap: |
-  Workspace directory: {{workspace_dir}}
   Workspace agentone directory: {{workspace_agentone_dir}}
 ---
 

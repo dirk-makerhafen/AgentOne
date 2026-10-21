@@ -1,6 +1,7 @@
 """Project model representing a code / workspace project."""
 from __future__ import annotations
 from datetime import datetime
+from pathlib import Path
 from django.db import models
 from server.models.base_model import ObservableMixin, Observables
 
@@ -39,11 +40,10 @@ class Project(ObservableMixin, models.Model):
     # The project's filesystem folder is its primary workspace
     # (``main_workspace``); the old ``path`` column was folded into it.
     # agentone_dir: the .agentone manifest tree for this project. Blank =
-    # central default ~/.agentone/projects/<name> (see
-    # runtime.paths.project_manifest_dir). Never git-tracked.
+    # central default ~/.agentone/projects/<name> (see get_agentone_dir()).
+    # May be any directory; the chosen location type is not stored. Never
+    # git-tracked.
     agentone_dir: str = models.CharField(max_length=1024, default="", blank=True)
-    # storage: inline_project | inline_workspace | central | git
-    storage: str = models.CharField(max_length=32, default="", blank=True)
     git_url: str = models.CharField(max_length=1024, default="", blank=True)
     git_ref: str = models.CharField(max_length=255, default="", blank=True)
     main_workspace = models.ForeignKey(
@@ -62,13 +62,37 @@ class Project(ObservableMixin, models.Model):
         ws = getattr(self, "main_workspace", None)
         return getattr(ws, "path", "") or ""
 
+    def get_agentone_dir(self) -> Path:
+        """Return this project's manifest (``.agentone``) directory (no writes).
+
+        Prefers the stored ``agentone_dir``; otherwise derives the legacy
+        location from the project folder (``<path>/.agentone``, or ``<path>``
+        itself when it already is a manifest dir), else the central default
+        ``~/.agentone/projects/<name>``.
+        """
+        from runtime.paths import central_project_dir
+
+        stored = str(self.agentone_dir or "").strip()
+        if stored:
+            return Path(stored).expanduser()
+        base = str(self.path or "").strip()
+        if not base:
+            return central_project_dir(self.name or "unnamed")
+        path = Path(base).expanduser()
+        if path.name == ".agentone" and path.is_dir():
+            return path
+        return path / ".agentone"
+
+    @property
+    def dashboard_index(self) -> Path:
+        """Return the dashboard ``index.md`` path for this project."""
+        return self.get_agentone_dir() / "dashboard" / "index.md"
 
     def refresh_from_disk(self, details=None) -> None:
         """Reload this project's manifest tree (agents/skills/scripts/crons) from disk."""
-        from runtime.paths import project_manifest_dir
         from registry.loader.load_project_folder import load_scope_dir
 
-        manifest = project_manifest_dir(self)
+        manifest = self.get_agentone_dir()
         if details is None:
             details = []
         load_scope_dir(manifest, self, details=details)

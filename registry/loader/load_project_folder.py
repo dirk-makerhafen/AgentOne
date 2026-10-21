@@ -1,6 +1,6 @@
 """Project/workspace scope loader (DB-canonical).
 
-Metadata (name, description, workspaces, storage) lives in the DB.
+Metadata (name, description, workspaces, agentone_dir) lives in the DB.
 ``project.md`` and ``projects.yaml`` are deprecated: when found on disk the
 loader emits a warn-and-ignore entry and never creates/updates rows from
 them. Existing rows are left untouched.
@@ -19,7 +19,6 @@ from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
-from runtime.paths import project_manifest_dir
 from server.models.cron import Cronjob
 from server.models.project import Project
 
@@ -95,7 +94,7 @@ def load_project_folder(folder: str, details: list | None = None) -> None:
             })
         return
 
-    manifest = Path(project_manifest_dir(project))
+    manifest = project.get_agentone_dir()
     if not manifest.is_dir():
         # Fall back to the folder the caller pointed at.
         manifest = project_folder if project_folder.is_dir() else project_root
@@ -165,7 +164,6 @@ def _resolve_project(project_root: Path, project_folder: Path,
                 name=name or project_root.name,
                 description=data.content or "",
                 agentone_dir=project_folder.as_posix(),
-                storage="inline_project",
             )
             _ensure_root_workspace(project, project_root)
             if details is not None:
@@ -189,7 +187,6 @@ def _resolve_project(project_root: Path, project_folder: Path,
             name=project_root.name,
             description="",
             agentone_dir=project_folder.as_posix() if project_folder.is_dir() else "",
-            storage="inline_project",
         )
         _ensure_root_workspace(project, project_root)
         if details is not None:

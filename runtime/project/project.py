@@ -49,11 +49,13 @@ class Project(AssistantScopeMixin):
         except OSError:
             return False
 
-    def get_source_dir(self) -> Path:
+    def get_agentone_dir(self) -> Path:
         """Return the project's manifest directory (stored, else legacy)."""
-        from runtime.paths import model_manifest_dir
+        return self.model.get_agentone_dir()
 
-        return model_manifest_dir(self.model, "project")
+    def get_source_dir(self) -> Path:
+        """Return this scope's manifest directory (assistant-scope contract)."""
+        return self.get_agentone_dir()
 
     def refresh_from_disk(self, details=None):
         """Reload this project's manifest tree from disk."""

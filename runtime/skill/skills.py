@@ -94,11 +94,9 @@ class Skills(AssistantScopeMixin):
                 self.project,
             )
         if self.parent_project is not None:
-            from runtime.paths import project_manifest_dir
-
-            return project_manifest_dir(self.parent_project)
+            return self.parent_project.get_agentone_dir()
         if self.parent_workspace is not None:
-            return model_manifest_dir(self.parent_workspace, "workspace")
+            return self.parent_workspace.get_agentone_dir()
         return self.global_home()
 
     def get_assistant_workspace(self) -> Any:

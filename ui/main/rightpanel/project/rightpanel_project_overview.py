@@ -71,9 +71,7 @@ class RightPanelProjectOverview(ModelView):
         if not self.subject:
             return ""
         try:
-            from runtime.paths import project_manifest_dir
-
-            return project_manifest_dir(self.subject).as_posix()
+            return self.subject.get_agentone_dir().as_posix()
         except Exception:
             return getattr(self.subject, "agentone_dir", "") or ""
 

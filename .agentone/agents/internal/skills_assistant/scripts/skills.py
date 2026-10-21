@@ -228,7 +228,7 @@ def create_skill(
         "scope": str, "note": str})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
-    from runtime.paths import project_manifest_dir, user_skills_dir
+    from runtime.paths import user_skills_dir
     from runtime.skill.skills import Skills
 
     ok, clean = _validate_item_name(name, "skill")
@@ -242,7 +242,7 @@ def create_skill(
             "message": f"A skill named '{clean}' already exists {where}. Pick another name.",
         }
     if project is not None:
-        base = project_manifest_dir(project) / "skills" / clean
+        base = project.get_agentone_dir() / "skills" / clean
         scope = f"project {project.name}"
     else:
         base = user_skills_dir() / clean
@@ -276,7 +276,7 @@ def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
     """Reload all skills visible in the managed scope from disk."""
     from pathlib import Path
 
-    from runtime.paths import agentone_root, agentone_home, project_manifest_dir
+    from runtime.paths import agentone_home, agentone_root
     from registry.loader.load_skill_manifest import load_skill_manifest
     from registry.install_repo import InstallRepo
 
@@ -285,7 +285,7 @@ def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
     errors: list[str] = []
     roots: list[tuple[Path, Any, InstallRepo]] = []
     if project is not None:
-        md = project_manifest_dir(project)
+        md = project.get_agentone_dir()
         roots.append((md, project, InstallRepo.for_project(project.name, source_root=md)))
     else:
         roots.append((agentone_root(), None, InstallRepo.for_global(source_root=agentone_root())))

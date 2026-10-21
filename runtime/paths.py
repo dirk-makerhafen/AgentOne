@@ -4,10 +4,10 @@ Manifest scopes (DB-canonical, most-specific wins)::
 
     global    <AGENTONE_ROOT>/                       (repo checkout .agentone/)
     user      ~/.agentone/{agents,skills,scripts,cronjobs}/
-    project   <manifest_dir>/                        (DB Project.agentone_dir,
-                                                     legacy fallback <path>/.agentone)
-    workspace <manifest_dir>/                        (DB Workspace.agentone_dir,
-                                                     loaded under parent_project)
+    project   <manifest_dir>/                        (Project.get_agentone_dir(),
+                                                      legacy fallback <path>/.agentone)
+    workspace <manifest_dir>/                        (WorkspaceModel.get_agentone_dir(),
+                                                      loaded under parent_project)
 
 Derived state under ``~/.agentone/`` (never manifests, re-creatable except
 where noted)::
@@ -100,11 +100,6 @@ def browser_base() -> Path:
     return agentone_home() / "browser"
 
 
-def user_scope_dir() -> Path:
-    """Return ``~/.agentone`` (root of the user manifest scope)."""
-    return agentone_home()
-
-
 def user_agents_dir() -> Path:
     return agentone_home() / "agents"
 
@@ -136,7 +131,7 @@ def agent_source_dir(name: str, project: Any = None) -> Path:
     safe = _safe_segment(name)
     if project is not None:
         try:
-            return project_manifest_dir(project) / "agents" / safe
+            return project.get_agentone_dir() / "agents" / safe
         except Exception:  # pylint: disable=broad-exception-caught
             pass
     return user_agents_dir() / safe
@@ -150,32 +145,24 @@ def skill_source_dir(name: str, project: Any = None) -> Path:
     safe = _safe_segment(name)
     if project is not None:
         try:
-            return project_manifest_dir(project) / "skills" / safe
+            return project.get_agentone_dir() / "skills" / safe
         except Exception:  # pylint: disable=broad-exception-caught
             pass
     return user_skills_dir() / safe
 
 
 def model_manifest_dir(model: Any, kind: str, name: str = "", project: Any = None) -> Path:
-    """Return the source directory for a manifest-backed model (no I/O).
+    """Return the source directory for an agent/skill manifest (no I/O).
 
     Prefers the stored ``manifest_dir`` field (set by the loader); falls
-    back to the conventional layout for the *kind* (``agent`` | ``skill`` |
-    ``project`` | ``workspace``). Cronjobs resolve through
-    ``runtime.cron.file_io`` instead (import cycle if done here).
+    back to the conventional layout for the *kind* (``agent`` | ``skill``).
+    Projects and workspaces resolve through ``get_agentone_dir()``;
+    cronjobs resolve through ``runtime.cron.file_io`` (import cycle if
+    done here).
     """
-    try:
-        stored = str(getattr(model, "agentone_dir", "") or getattr(model, "manifest_dir", "") or "").strip()
-        if stored:
-            return Path(os.path.expanduser(stored))
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
-    if kind == "project":
-        return project_manifest_dir(model)
-    if kind == "workspace":
-        return workspace_manifest_dir(model) or Path(
-            os.path.expanduser(str(getattr(model, "path", "") or "."))
-        )
+    stored = str(getattr(model, "manifest_dir", "") or "").strip()
+    if stored:
+        return Path(os.path.expanduser(stored))
     if kind == "skill":
         return skill_source_dir(name or getattr(model, "name", ""), project)
     return agent_source_dir(name or getattr(model, "name", ""), project)
@@ -198,7 +185,7 @@ def central_workspace_dir(name: str, project: Any = None) -> Path:
     safe = str(name).strip().replace(" ", "_").replace("/", "_") or "unnamed"
     if project is not None:
         try:
-            return project_manifest_dir(project) / "workspaces" / safe
+            return project.get_agentone_dir() / "workspaces" / safe
         except Exception:  # pylint: disable=broad-exception-caught
             pass
     return central_workspaces_base() / safe
@@ -212,74 +199,3 @@ def ensure_private_dir(path: Path, mode: int = 0o700) -> Path:
     except OSError:
         pass
     return path
-
-
-def project_manifest_dir(project) -> Path:
-    """Return the manifest (``.agentone``) dir for a Project row.
-
-    Prefers ``project.agentone_dir`` when set, else legacy fallbacks:
-    ``<path>/.agentone`` if that exists, else ``<path>`` itself when the
-    path already looks like a manifest dir, else ``<path>/.agentone``.
-    """
-    explicit = str(getattr(project, "agentone_dir", "") or getattr(project, "manifest_dir", "") or "").strip()
-    if explicit:
-        return Path(os.path.expanduser(explicit))
-    base = str(getattr(project, "path", "") or "").strip()
-    if not base:
-        return central_project_dir(getattr(project, "name", "unnamed"))
-    p = Path(os.path.expanduser(base))
-    if p.name == ".agentone" and p.is_dir():
-        return p
-    legacy = p / ".agentone"
-    if legacy.is_dir():
-        return legacy
-    # Default for rows created before manifest_dir existed.
-    return legacy
-
-
-def workspace_manifest_dir(workspace) -> Path:
-    """Return the manifest dir for a Workspace row.
-
-    Workspaces are never unmanaged: when no explicit dir is stored the
-    default location is derived from the workspace's storage mode and owner
-    project (inline -> ``<path>/.agentone``; project-owned ->
-    ``<project agentone dir>/workspaces/<name>``; otherwise
-    ``~/.agentone/workspaces/<name>``).
-    """
-    explicit = str(getattr(workspace, "agentone_dir", "") or getattr(workspace, "manifest_dir", "") or "").strip()
-    if explicit:
-        return Path(os.path.expanduser(explicit))
-    target = getattr(workspace, "model", workspace)
-    storage = str(getattr(target, "storage", "") or getattr(workspace, "storage", "") or "").strip()
-    path = str(getattr(target, "path", "") or getattr(workspace, "path", "") or "").strip()
-    if storage == "inline" and path:
-        return Path(os.path.expanduser(path)) / ".agentone"
-    project = getattr(target, "parent_project", None)
-    if project is None:
-        project = getattr(workspace, "parent_project", None)
-    name = str(getattr(target, "name", "") or getattr(workspace, "name", "") or "").strip()
-    safe = name.replace(" ", "_").replace("/", "_") or (Path(path).name if path else "unnamed")
-    # "user" explicitly opts out of the owning project's tree. "project"
-    # (and the legacy "central") uses it when a project exists; the blank
-    # default keeps the historical project-first behavior.
-    if storage != "user" and project is not None:
-        try:
-            return project_manifest_dir(project) / "workspaces" / safe
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
-    return central_workspaces_base() / safe
-
-
-def dashboard_dir(manifest_dir: Any) -> Path:
-    """Return the ``dashboard/`` subfolder inside a manifest directory."""
-    return Path(os.path.expanduser(str(manifest_dir))) / "dashboard"
-
-
-def project_dashboard_index(project: Any) -> Path:
-    """Return the dashboard ``index.md`` path for a project."""
-    return project_manifest_dir(project) / "dashboard" / "index.md"
-
-
-def workspace_dashboard_index(workspace: Any) -> Path:
-    """Return the dashboard ``index.md`` path for a workspace."""
-    return workspace_manifest_dir(workspace) / "dashboard" / "index.md"

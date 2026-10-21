@@ -44,18 +44,14 @@ def bootstrap_context(session: Any) -> dict[str, Any]:
     workspace_agentone_dir = None
     if workspace is not None:
         try:
-            from runtime.paths import workspace_manifest_dir
-
-            workspace_agentone_dir = workspace_manifest_dir(workspace).as_posix()
+            workspace_agentone_dir = workspace.get_agentone_dir().as_posix()
         except Exception:  # pylint: disable=broad-exception-caught
             logger.warning("bootstrap: workspace dir unavailable", exc_info=True)
 
     project_agentone_dir = None
     if project is not None:
         try:
-            from runtime.paths import project_manifest_dir
-
-            project_agentone_dir = project_manifest_dir(project).as_posix()
+            project_agentone_dir = project.get_agentone_dir().as_posix()
         except Exception:  # pylint: disable=broad-exception-caught
             logger.warning("bootstrap: project dir unavailable", exc_info=True)
 
@@ -96,7 +92,7 @@ def build_bootstrap_messages(session: Any) -> list[tuple[str, str]]:
             logger.warning("bootstrap: template render failed", exc_info=True)
             continue
         if text:
-            messages.append((MessageRole.SYSTEM, text))
+            messages.append((MessageRole.USER, text))
 
     try:
         from runtime import guidance_files
@@ -139,29 +135,6 @@ def _marker_has_bootstrap(marker: Any) -> bool:
 
 
 def ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
-    """Idempotently persist this segment's bootstrap messages.
-
-    Returns the existing messages when already bootstrapped, otherwise the
-    newly created ones.  Never raises.
-    """
-    try:
-        return _ensure_session_bootstrap(session, trigger)
-    except Exception:  # pylint: disable=broad-exception-caught
-        logger.warning("bootstrap: ensure failed, skipping", exc_info=True)
-        try:
-            from server.models.debug_log_entry import DebugLogEntry
-
-            DebugLogEntry.objects.create(
-                session=session.model,
-                event="bootstrap_skip",
-                data={"exception": traceback.format_exc()},
-            )
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
-        return []
-
-
-def _ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
     from server.models.enums.message_enums import (
         MessageContentType,
         MessagePartType,

@@ -52,9 +52,7 @@ class WorkItem(AssistantScopeMixin):
         """Return the scope root for this item (no I/O)."""
         project = self.project
         if project is not None:
-            from runtime.paths import project_manifest_dir
-
-            return project_manifest_dir(project)
+            return project.get_agentone_dir()
         from runtime.paths import agentone_home
 
         return agentone_home()

@@ -14,15 +14,13 @@ from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.utils import find_agent_md_files
 from registry.sources.manager import sync_upstream_sources
 from runtime.paths import (
+    agentone_home,
     central_projects_base,
     central_workspaces_base,
-    project_manifest_dir,
     user_agents_dir,
     user_cronjobs_dir,
-    user_scope_dir,
     user_scripts_dir,
     user_skills_dir,
-    workspace_manifest_dir,
 )
 from server.models.agents.agent import AgentModel
 from server.models.cron import Cronjob
@@ -236,7 +234,7 @@ def _load_user_scope(details: list, errors: list, counts: Dict[str, int],
     added to *seen_skill_names* / *seen_agent_names* so the caller can
     archive globals that no longer have a manifest.
     """
-    root = user_scope_dir()
+    root = agentone_home()
     if not root.is_dir():
         return
     user_install = InstallRepo.for_user(source_root=root)
@@ -335,7 +333,7 @@ def _load_db_projects(details: list, errors: list, counts: Dict[str, int]) -> No
         return
     for project in projects:
         try:
-            manifest = Path(project_manifest_dir(project))
+            manifest = project.get_agentone_dir()
             if not manifest.is_dir():
                 details.append({
                     "name": project.name, "type": "project",
@@ -355,10 +353,7 @@ def _load_db_projects(details: list, errors: list, counts: Dict[str, int]) -> No
         return
     for ws in workspaces:
         try:
-            manifest = workspace_manifest_dir(ws)
-            if manifest is None:
-                continue
-            manifest = Path(manifest)
+            manifest = ws.get_agentone_dir()
             if not manifest.is_dir():
                 details.append({
                     "name": ws.name, "type": "project",

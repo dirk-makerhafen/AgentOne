@@ -78,7 +78,6 @@ class TestDetectStorage(TestCase):
                     name="w", path="/tmp/w", parent_project=project
                 )
                 ws.agentone_dir = str(central_manifest_dir(ws))
-                ws.storage = STORAGE_CENTRAL
                 assert detect_storage(ws) == STORAGE_PROJECT
 
 

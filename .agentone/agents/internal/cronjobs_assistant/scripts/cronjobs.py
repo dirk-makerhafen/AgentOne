@@ -305,7 +305,7 @@ def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
     """Reload all cron jobs visible in the managed scope from disk."""
     from pathlib import Path
 
-    from runtime.paths import agentone_root, agentone_home, project_manifest_dir
+    from runtime.paths import agentone_home, agentone_root
     from registry.loader.load_cron_manifest import load_cron_manifest
     from registry.install_repo import InstallRepo
 
@@ -314,7 +314,7 @@ def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
     errors: list[str] = []
     roots: list[tuple[Path, Any, InstallRepo]] = []
     if project is not None:
-        md = project_manifest_dir(project)
+        md = project.get_agentone_dir()
         roots.append((md, project, InstallRepo.for_project(project.name, source_root=md)))
     else:
         roots.append((agentone_root(), None, InstallRepo.for_global(source_root=agentone_root())))

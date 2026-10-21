@@ -240,9 +240,7 @@ def resolve_policy(session: Any) -> _WorkspaceAccessPolicy:
 
     if workspace is not None:
         try:
-            from runtime.paths import workspace_manifest_dir
-
-            _add_root(workspace_manifest_dir(workspace))
+            _add_root(workspace.get_agentone_dir())
         except Exception:  # pylint: disable=broad-exception-caught
             pass
     try:
@@ -251,9 +249,7 @@ def resolve_policy(session: Any) -> _WorkspaceAccessPolicy:
         project = None
     if project is not None:
         try:
-            from runtime.paths import project_manifest_dir
-
-            _add_root(project_manifest_dir(project))
+            _add_root(project.get_agentone_dir())
         except Exception:  # pylint: disable=broad-exception-caught
             pass
     if not manifest_roots:

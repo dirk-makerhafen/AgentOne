@@ -18,9 +18,7 @@ def cron_file_path(name: str, project=None) -> Path:
     """
     if project is not None and getattr(project, "path", None):
         try:
-            from runtime.paths import project_manifest_dir
-
-            return Path(project_manifest_dir(project)) / "cronjobs" / f"{name}.md"
+            return project.get_agentone_dir() / "cronjobs" / f"{name}.md"
         except Exception:
             pass
         return Path(project.path) / ".agentone" / "cronjobs" / f"{name}.md"

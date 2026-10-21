@@ -201,9 +201,7 @@ class ProjectView(ModelView):
     @property
     def agentone_dir(self) -> str:
         try:
-            from runtime.paths import project_manifest_dir
-
-            return project_manifest_dir(self.subject).as_posix()
+            return self.subject.get_agentone_dir().as_posix()
         except Exception:
             return getattr(self.subject, "agentone_dir", "") or ""
 
@@ -226,9 +224,7 @@ class ProjectView(ModelView):
     @property
     def dashboard_path(self) -> str:
         try:
-            from runtime.paths import project_dashboard_index
-
-            p = project_dashboard_index(self.subject)
+            p = self.subject.dashboard_index
             return p.as_posix() if p.is_file() else ""
         except Exception:
             return ""
@@ -390,14 +386,11 @@ class ProjectView(ModelView):
             updates["main_workspace"] = ws
             if manifest_in_workspace:
                 manifest = Path(ws.path) / ".agentone"
-                updates["storage"] = "inline_project"
             else:
                 manifest = central_project_dir(name)
-                updates["storage"] = "central"
         else:
             updates["main_workspace"] = None
             manifest = central_project_dir(name)
-            updates["storage"] = "central"
 
         try:
             ensure_private_dir(manifest)

@@ -102,9 +102,7 @@ class Workspaces(AssistantScopeMixin):
                 return main_ws
         except Exception:  # pylint: disable=broad-exception-caught
             pass
-        from runtime.paths import project_manifest_dir
-
-        root = project_manifest_dir(project)
+        root = project.get_agentone_dir()
         root.mkdir(parents=True, exist_ok=True)
         return Workspaces.ensure_named(
             f"{root.as_posix()} project root",
@@ -125,18 +123,12 @@ class Workspaces(AssistantScopeMixin):
         """
         if self.parent_workspace is not None:
             try:
-                from runtime.paths import model_manifest_dir
-
-                return model_manifest_dir(
-                    self.parent_workspace, "workspace"
-                )
+                return self.parent_workspace.get_agentone_dir()
             except Exception:  # pylint: disable=broad-exception-caught
                 pass
         project = self.project
         if project is not None:
-            from runtime.paths import project_manifest_dir
-
-            return project_manifest_dir(project)
+            return project.get_agentone_dir()
         from runtime.paths import agentone_home
 
         return agentone_home()

@@ -169,13 +169,9 @@ def _agentone_dir(ws: Any | None, proj: Any | None) -> Path:
             return Path(md).expanduser()
         wproj = getattr(ws, "parent_project", None)
         if wproj is not None:
-            from runtime.paths import project_manifest_dir
-
-            return project_manifest_dir(wproj)
+            return wproj.get_agentone_dir()
     if proj is not None:
-        from runtime.paths import project_manifest_dir
-
-        return project_manifest_dir(proj)
+        return proj.get_agentone_dir()
     from runtime.paths import agentone_home
 
     return agentone_home()

@@ -335,7 +335,6 @@ class LoadWorkspaceAccessTest(TestCase):
         self.project = Project.objects.create(
             name="acc-proj",
             agentone_dir=(self.project_root / ".agentone").as_posix(),
-            storage="inline_project",
         )
         self.ws = WorkspaceModel.objects.create(
             name="ws",

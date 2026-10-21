@@ -10,7 +10,7 @@ Single source of truth for where AgentOne keeps things. Path logic lives in
 | `global` | `<repo>/.agentone/` (`settings.AGENTONE_ROOT`) | `parent_project=None` |
 | `user` | `~/.agentone/{agents,skills,scripts,cronjobs}/` | `parent_project=None` (loads after global, user versions win) |
 | `project` | `Project.agentone_dir` (legacy fallback `<path>/.agentone`) | `parent_project=<row>` |
-| `workspace` | `Workspace.agentone_dir` (blank = bare path, no manifests) | parent project's namespace (`parent_project=workspace.parent_project`) |
+| `workspace` | `Workspace.agentone_dir` | parent project's namespace (`parent_project=workspace.parent_project`) |
 
 User manifests use the same layout as global (`agents/<n>/agent.md`,
 `skills/<s>/skill.md`, `scripts/`, `cronjobs/<n>.md`). Missing dirs are
@@ -20,16 +20,15 @@ reload warns and skips.
 ## DB-canonical metadata (deprecated files)
 
 - **No `project.md`, no `projects.yaml`, no `workspace.md`.**
-  `Project` (`agentone_dir`, `storage`, `git_url/ref`, `main_workspace FK`)
-  and `WorkspaceModel` (`parent_project FK`, `storage`, `agentone_dir`,
+  `Project` (`agentone_dir`, `git_url/ref`, `main_workspace FK`)
+  and `WorkspaceModel` (`parent_project FK`, `agentone_dir`,
   `access`) are the source of truth, edited via UI/API. Existing rows were
   kept as-is; the new fields are nullable with legacy fallbacks.
 - Leftover `project.md` / `projects.yaml` files on disk are
   **warn-and-ignore**: reload emits a `warning` details entry and never
   creates/updates rows from them. Safe to delete.
-- Storage modes: project `inline_project | inline_workspace | central | git`,
-  workspace `inline | project | user` (blank/legacy `central` resolves to
-  project when owned, user otherwise).
+- Only the resulting `agentone_dir` is stored — not the location type that
+  produced it. The UI offers the usual defaults:
   - inline workspace: `<workspace>/.agentone/` (creation offers `.gitignore`).
   - project workspace: `<project agentone>/workspaces/<name>/`.
   - user workspace: `~/.agentone/workspaces/<name>/`.

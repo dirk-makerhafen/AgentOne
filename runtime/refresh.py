@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from registry.install_repo import InstallRepo
-from runtime.paths import agentone_home, agentone_root, project_manifest_dir
+from runtime.paths import agentone_home, agentone_root
 
 
 def install_repo_for_path(path: Path):
@@ -21,7 +21,7 @@ def install_repo_for_path(path: Path):
     # Project-owned manifest tree.
     for project in Project.objects.all():
         try:
-            md = project_manifest_dir(project)
+            md = project.get_agentone_dir()
             p.relative_to(md)
             return md, InstallRepo.for_project(project.name, source_root=md)
         except ValueError:
