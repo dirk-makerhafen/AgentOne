@@ -100,6 +100,7 @@ def call_assistant(
         workspace = Workspaces.ensure_named(
             f"{target} assistant scope", target,
             "assistant scope override",
+            parent_project=project,
         )
         child = Sessions().assistant_session(
             assistant, project=project, workspace=workspace, caller=_session,
@@ -141,8 +142,15 @@ def _workspace_in_project(workspace: Any, project: Any) -> bool:
     """True when *workspace* belongs to *project* (or has no owner yet)."""
     if project is None:
         return True
+    candidate = workspace
+    model = getattr(workspace, "model", None)
+    if model is not None:
+        candidate = model
     try:
-        owner_pk = getattr(workspace, "parent_project_id", None)
+        owner = getattr(candidate, "parent_project", None)
+        owner_pk = getattr(owner, "pk", None)
+        if owner_pk is None:
+            owner_pk = getattr(candidate, "parent_project_id", None)
     except Exception:  # pylint: disable=broad-exception-caught
         owner_pk = None
     return owner_pk in (None, getattr(project, "pk", None))

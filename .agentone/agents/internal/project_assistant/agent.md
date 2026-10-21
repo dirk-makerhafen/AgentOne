@@ -12,6 +12,7 @@ tools: [core.*, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skill
 sessionBootstrap: |
   Project root: {{project_dir}}
   Project agentone directory: {{project_agentone_dir}}
+  Project dashboard:  {{project_agentone_dir}}/dashboard/
 commands: [core.*, todo.*]
 inheritSystemPrompt: false
 subagents:

@@ -14,6 +14,7 @@ inheritSystemPrompt: false
 tools: [core.*, workspace.*, filesystem-read.*, filesystem-write.*]
 sessionBootstrap: |
   Workspace agentone directory: {{workspace_agentone_dir}}
+  Workspace dashboard:  {{workspace_agentone_dir}}/dashboard/
 ---
 
 ## Role
