@@ -12,6 +12,9 @@ description: >
 extends: AgentOne
 inheritSystemPrompt: false
 tools: [core.*, workspace.*, filesystem-read.*, filesystem-write.*]
+sessionBootstrap: |
+  Workspace directory: {{workspace_dir}}
+  Workspace agentone directory: {{workspace_agentone_dir}}
 ---
 
 ## Role
@@ -59,8 +62,8 @@ Help the user organize their workspace:
 ## Dashboard
 
 The managed workspace's dashboard lives at `<manifest-dir>/dashboard/index.md`
-(plain markdown, optional frontmatter). The manifest directory is announced
-in the session bootstrap ("workspace manifest directory"). Create or update
+(plain markdown, optional frontmatter). The agentone directory is announced
+in the session bootstrap ("workspace agentone directory"). Create or update
 it with the filesystem tools (`mkdir`, `write`, `edit`, `append`). No
 reload is needed; dashboards are read live from disk.
 

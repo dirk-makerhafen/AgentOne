@@ -1,10 +1,4 @@
-"""Tests for the one-time session bootstrap (``runtime/session_bootstrap.py``).
-
-The bootstrap persists guidance autoload + index, start time, workspace path
-and the private-folder announcement once as normal history messages instead
-of re-injecting them as fresh QueryMessages on every turn (which invalidated
-the prompt-cache prefix on any byte change).
-"""
+"""Tests for the one-time session bootstrap (``runtime/session_bootstrap.py``)."""
 from __future__ import annotations
 
 import os
@@ -14,8 +8,10 @@ import tempfile
 from django.test import TestCase
 
 from runtime import guidance_files
+from runtime.paths import workspace_manifest_dir
 from runtime.session_bootstrap import (
     COMPACTION_BOOTSTRAP_SENTINEL,
+    bootstrap_context,
     ensure_session_bootstrap,
 )
 from server.models.content import GenericContent
@@ -26,10 +22,6 @@ from server.models.enums.message_enums import (
 )
 from server.models.message import Message, MessagePart
 
-CORE_SCRIPTS = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "..", "..", ".agentone", "scripts", "core",
-)
 COMPACT_SCRIPTS = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "..", "..", ".agentone", "scripts", "compact",
@@ -64,6 +56,11 @@ class SessionBootstrapTest(TestCase):
                 "maxChars": 32768,
                 "maxCharsPerFile": 8192,
             },
+            session_bootstrap=GenericContent.from_text(
+                "Workspace: {{workspace_dir}}\n"
+                "Session: {{session_dir}}\n"
+                "Project: {{project_dir}}"
+            ),
         )
         self.agent = AgentModel.objects.create(name="bootstrap-agent")
         self.av = AgentVersionModel.objects.create(
@@ -110,15 +107,15 @@ class SessionBootstrapTest(TestCase):
         )
         return msg
 
-    def test_first_call_creates_two_pinned_messages_at_front(self):
+    def test_first_call_creates_agent_and_guidance_messages(self):
         trigger = self._user_message("hello")
         created = ensure_session_bootstrap(self.runtime, trigger)
         self.assertEqual(len(created), 2)
-        self.assertEqual(created[0].role, MessageRole.USER)
-        self.assertEqual(created[1].role, MessageRole.SYSTEM)
+        self.assertEqual(created[0].role, MessageRole.SYSTEM)
+        self.assertEqual(created[1].role, MessageRole.USER)
         for message in created:
             self.assertTrue(message.pin_to_context)
-        # Chain order: guidance, env, trigger.
+        # Chain order: agent bootstrap, guidance, trigger.
         trigger.refresh_from_db()
         self.assertEqual(trigger.prev_message.pk, created[1].pk)
         created[1].refresh_from_db()
@@ -129,8 +126,45 @@ class SessionBootstrapTest(TestCase):
             for part in message.parts.order_by("pk")
         )
         self.assertIn("## AGENTS.md\nroot rules", bodies)
-        self.assertIn("private session folder", bodies)
-        self.assertIn(self.tmp.name, bodies)
+        self.assertIn(f"Workspace: {self.tmp.name}", bodies)
+        self.assertIn("Session: ", bodies)
+        self.assertIn("Project: null", bodies)
+
+    def test_bootstrap_context_contains_session_values(self):
+        context = bootstrap_context(self.runtime)
+        self.assertEqual(context["workspace_dir"], self.tmp.name)
+        self.assertEqual(
+            context["workspace_agentone_dir"],
+            workspace_manifest_dir(self.workspace).as_posix(),
+        )
+        self.assertEqual(context["project_dir"], None)
+        self.assertEqual(context["project_agentone_dir"], None)
+        self.assertTrue(str(context["session_dir"]).endswith(str(self.session_model.pk)))
+        self.assertIsInstance(context["unix_timestamp"], int)
+        self.assertEqual(len(context["date"]), 10)
+        self.assertEqual(len(context["datetime"]), 19)
+
+    def test_session_bootstrap_chain_is_parent_first(self):
+        from server.models.agents.agent import AgentModel
+        from server.models.agents.agent_version import AgentVersionModel
+        from server.models.settings import SettingsModel
+
+        parent = AgentModel.objects.create(name="bootstrap-parent")
+        parent_av = AgentVersionModel.objects.create(
+            agent=parent,
+            agent_settings=SettingsModel.objects.create(
+                session_bootstrap=GenericContent.from_text("parent")
+            ),
+        )
+        child = AgentModel.objects.create(name="bootstrap-child")
+        child_av = AgentVersionModel.objects.create(
+            agent=child,
+            agent_settings=SettingsModel.objects.create(
+                session_bootstrap=GenericContent.from_text("child")
+            ),
+        )
+        child_av.extends_agent_versions.set([parent_av])
+        self.assertEqual(child_av.collect_session_bootstraps(), ["parent", "child"])
 
     def test_second_call_is_noop(self):
         trigger = self._user_message("hello")
@@ -160,7 +194,7 @@ class SessionBootstrapTest(TestCase):
         )
         self.assertIn(COMPACTION_BOOTSTRAP_SENTINEL, marker_bodies)
         self.assertIn("## AGENTS.md\nroot rules", marker_bodies)
-        self.assertIn("private session folder", marker_bodies)
+        self.assertIn(f"Workspace: {self.tmp.name}", marker_bodies)
 
         # A post-compaction turn finds the marker-embedded bootstrap and
         # creates nothing standalone.

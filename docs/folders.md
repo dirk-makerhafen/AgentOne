@@ -28,10 +28,12 @@ reload warns and skips.
   **warn-and-ignore**: reload emits a `warning` details entry and never
   creates/updates rows from them. Safe to delete.
 - Storage modes: project `inline_project | inline_workspace | central | git`,
-  workspace `inline | central` (blank = unmanaged bare path).
+  workspace `inline | project | user` (blank/legacy `central` resolves to
+  project when owned, user otherwise).
   - inline workspace: `<workspace>/.agentone/` (creation offers `.gitignore`).
-  - central: `~/.agentone/workspaces/<name>/` resp.
-    `~/.agentone/projects/<name>/`.
+  - project workspace: `<project agentone>/workspaces/<name>/`.
+  - user workspace: `~/.agentone/workspaces/<name>/`.
+  - project manifests live at `~/.agentone/projects/<name>/` when central.
   - git projects (future): row with `git_url/ref`, temp workspace on demand.
 
 ## Derived state under `~/.agentone/`

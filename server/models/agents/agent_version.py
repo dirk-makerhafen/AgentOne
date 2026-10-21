@@ -368,6 +368,26 @@ class AgentVersionModel(BaseModel):
 
         return prompts
 
+    def collect_session_bootstraps(self) -> list[str]:
+        """Collect non-empty ``sessionBootstrap`` templates, parents first."""
+        out: list[str] = []
+        seen: set[int] = set()
+
+        def walk(version: "AgentVersionModel") -> None:
+            if version.pk in seen:
+                return
+            seen.add(version.pk)
+            for parent in version.extends_agent_versions.all():
+                walk(parent)
+            content = getattr(version.agent_settings, "session_bootstrap", None)
+            if content is not None:
+                text = content.get() if isinstance(content, GenericContent) else str(content)
+                if text.strip():
+                    out.append(text.strip())
+
+        walk(self)
+        return out
+
     def resolve_property(self, name: str) -> Any:
         """Resolve a property value, walking the agent inheritance chain."""
         extend_at_index = None

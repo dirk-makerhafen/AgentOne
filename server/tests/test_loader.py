@@ -80,6 +80,11 @@ class LoaderTest(AgentMdTestMixin, TestCase):
             )
         self.assertIn("No Task Definition found", str(ctx.exception))
 
+    def test_session_bootstrap_must_be_a_string(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.load_agent("bootstrap_bad")
+        self.assertIn("sessionBootstrap must be a string", str(ctx.exception))
+
     def test_does_not_contain_tools_from_wrong_group(self):
         names = self._names(self.base_av)
         self.assertNotIn("build", names)
@@ -96,6 +101,7 @@ class LoaderTest(AgentMdTestMixin, TestCase):
         self.assertEqual(s.priority, 5)
         self.assertTrue(s.thinking)
         self.assertEqual(s.subagentResultDelivery, "immediate")
+        self.assertEqual(s.session_bootstrap.get(), "Workspace: {{workspace_dir}}")
 
     def test_script_loading_adds_defined_tasks(self):
         names = [

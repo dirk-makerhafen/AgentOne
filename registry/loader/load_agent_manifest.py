@@ -362,6 +362,19 @@ def load_agent_manifest(
         "commit": commit,
     }
 
+    session_bootstrap = manifest.get("sessionBootstrap")
+    if session_bootstrap is not None:
+        if not isinstance(session_bootstrap, str):
+            raise ValueError(
+                f"[agent.md {agent.name!r}] sessionBootstrap must be a string, "
+                f"got {type(session_bootstrap).__name__}"
+            )
+        session_bootstrap = session_bootstrap.strip()
+        if session_bootstrap:
+            settings_kwargs["session_bootstrap"] = GenericContent.from_text(
+                session_bootstrap
+            )
+
     settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}
 
     # Filesystem access policy (agent.md ``access:`` block)

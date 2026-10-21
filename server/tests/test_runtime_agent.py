@@ -76,6 +76,10 @@ class RuntimeAgentTest(AgentMdTestMixin, TestCase):
         agent = self._agent(self.full_agent)
         self.assertEqual(agent.subagentResultDelivery, "immediate")
 
+    def test_session_bootstrap_chain(self):
+        agent = self._agent(self.full_agent)
+        self.assertEqual(agent.session_bootstrap_chain, ["Workspace: {{workspace_dir}}"])
+
     def test_system_prompt(self):
         agent = self._agent(self.full_agent)
         self.assertIn("scalar settings", agent.system_prompt)

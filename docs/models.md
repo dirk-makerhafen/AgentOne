@@ -553,6 +553,7 @@ Comprehensive agent/session settings. All nullable — values inherit through th
 | `commandNames` / `taskNames` / `toolNames` / `skillNames` / `subagentNames` | `JSONField(list)` | Allow lists (wildcards) |
 | `disallowed*Names` | `JSONField(list)` | Deny lists (wildcards) |
 | `subagentResultDelivery` | `CharField(choices)` | passive / immediate |
+| `session_bootstrap` | `FK(GenericContent)` | Rendered once per compaction segment; inherited parent-first |
 | `autoload` | `JSONField` | AGENTS.md autoload config (files, maxFiles, maxChars, maxCharsPerFile) |
 | `load_guidance_file_index` | `BooleanField(nullable)` | Nested guidance-file index toggle (default false — opt-in) |
 | `guidance_file_index_limit` | `IntegerField(nullable)` | Max nested guidance files in the index (default 10, 0 = omit) |

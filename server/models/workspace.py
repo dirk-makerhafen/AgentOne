@@ -83,10 +83,10 @@ class WorkspaceModel(ObservableMixin, models.Model):
         "server.Project", default=None, null=True, blank=True,
         on_delete=models.SET_NULL, related_name="workspaces",
     )
-    # storage: inline | central
+    # storage: inline | project | user | central (legacy) | "" (auto)
     storage: str = models.CharField(max_length=32, default="", blank=True)
     # agentone_dir: workspace-scoped .agentone tree. Never blank — defaults
-    # to inline/central location (see save()).
+    # to the location implied by storage (see save()).
     agentone_dir: str = models.CharField(max_length=4096, default="", blank=False)
 
     def save(self, *args, **kwargs) -> None:
@@ -100,17 +100,29 @@ class WorkspaceModel(ObservableMixin, models.Model):
                 Path(self.path).name if (self.path or "").strip() else "unnamed"
             )
             storage = (self.storage or "").strip()
+            user_dir = central_workspace_dir(safe)
             if storage == "inline" and (self.path or "").strip():
                 self.agentone_dir = str(Path(self.path).expanduser() / ".agentone")
+            elif storage == "user":
+                self.agentone_dir = user_dir.as_posix()
+            elif storage in ("project", "central") and self.parent_project is not None:
+                try:
+                    self.agentone_dir = (
+                        project_manifest_dir(self.parent_project) / "workspaces" / safe
+                    ).as_posix()
+                except Exception:  # pylint: disable=broad-exception-caught
+                    self.agentone_dir = user_dir.as_posix()
+            elif storage == "central" and self.parent_project is None:
+                self.agentone_dir = user_dir.as_posix()
             elif self.parent_project is not None:
                 try:
                     self.agentone_dir = (
                         project_manifest_dir(self.parent_project) / "workspaces" / safe
                     ).as_posix()
                 except Exception:  # pylint: disable=broad-exception-caught
-                    self.agentone_dir = central_workspace_dir(safe).as_posix()
+                    self.agentone_dir = user_dir.as_posix()
             else:
-                self.agentone_dir = central_workspace_dir(safe).as_posix()
+                self.agentone_dir = user_dir.as_posix()
         super().save(*args, **kwargs)
 
     def refresh_from_disk(self, details=None) -> None:

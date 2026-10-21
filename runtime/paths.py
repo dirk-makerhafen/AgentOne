@@ -259,7 +259,10 @@ def workspace_manifest_dir(workspace) -> Path:
         project = getattr(workspace, "parent_project", None)
     name = str(getattr(target, "name", "") or getattr(workspace, "name", "") or "").strip()
     safe = name.replace(" ", "_").replace("/", "_") or (Path(path).name if path else "unnamed")
-    if project is not None:
+    # "user" explicitly opts out of the owning project's tree. "project"
+    # (and the legacy "central") uses it when a project exists; the blank
+    # default keeps the historical project-first behavior.
+    if storage != "user" and project is not None:
         try:
             return project_manifest_dir(project) / "workspaces" / safe
         except Exception:  # pylint: disable=broad-exception-caught

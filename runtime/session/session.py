@@ -590,6 +590,11 @@ class Session:
         return self.agent.system_prompt_chain
 
     @property
+    def session_bootstrap_chain(self) -> list[str]:
+        """Return inherited ``sessionBootstrap`` templates, parents first."""
+        return self.agent.session_bootstrap_chain
+
+    @property
     def scheduler_strategy(self) -> str | None:
         """Return the resolved scheduler strategy."""
         return self._get_session_setting("scheduler_strategy")

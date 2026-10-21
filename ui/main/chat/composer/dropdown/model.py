@@ -16,18 +16,18 @@ class ModelDropdownOption(ModelView):
             {% endif %}
         </div>
         {% if pyview.providers_open %}
-        <ul class="model-opt-provider-list">
-            {% for p in pyview.provider_rows %}
-            <li class="model-opt-provider-row{% if p.active %} active{% endif %}"
-                onclick="event.stopPropagation();set_specific_provider('{{ pyview.name_escaped }}', {{ p.pk }})">
-                <span class="model-opt-provider-name">{{ p.name }}</span>
-                {% if p.active %}<span class="model-opt-provider-check">✓</span>{% endif %}
-            </li>
-            {% endfor %}
-            {% if pyview.missing_count %}
-            <li class="model-opt-provider-note">{{ pyview.missing_note }}</li>
-            {% endif %}
-        </ul>
+            <ul class="model-opt-provider-list">
+                {% for p in pyview.provider_rows %}
+                    <li class="model-opt-provider-row{% if p.active %} active{% endif %}"
+                        onclick="event.stopPropagation();set_specific_provider('{{ pyview.name_escaped }}', {{ p.pk }})">
+                        <span class="model-opt-provider-name">{{ p.name }}</span>
+                        {% if p.active %}<span class="model-opt-provider-check">✓</span>{% endif %}
+                    </li>
+                {% endfor %}
+                {% if pyview.missing_count %}
+                    <li class="model-opt-provider-note">{{ pyview.missing_note }}</li>
+                {% endif %}
+            </ul>
         {% endif %}
     '''
     _providers_open = False

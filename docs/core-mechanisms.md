@@ -205,9 +205,10 @@ Every session owns an isolated private folder at
 overridable via `config/settings_local.py`). It holds scratch files,
 temporary memory, ad-hoc prompts/tools, intermediate results, generated
 scripts and other session-specific artifacts; subsessions get their own
-folder. The LLM is told its folder via the one-time session bootstrap (a
-frozen `SYSTEM` history message at the start of each compaction segment,
-re-embedded in the compaction marker after compaction) and uses the normal
+folder. Agents can announce it with `{{session_dir}}` in their
+`sessionBootstrap` template (the built-in chat agents do). Bootstrap
+messages are frozen history at the start of each compaction segment and are
+re-embedded in the compaction marker after compaction. Agents use the normal
 `filesystem-read`/`filesystem-write` tools — no special tools. Freezing the
 announcement in history (instead of re-injecting it every turn) keeps the
 prompt-cache prefix stable. Creation is lazy (`ensure_session_dir`, also

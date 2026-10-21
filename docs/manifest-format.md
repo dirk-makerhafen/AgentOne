@@ -57,6 +57,9 @@ autoload:                      # optional — AGENTS.md autoload (see below)
   maxFiles: 10                 # max files pinned into context
   maxChars: 32768              # total char budget (0 = disable contents)
   maxCharsPerFile: 8192        # per-file char cap (remainder truncated with marker)
+sessionBootstrap: |             # optional — one template per agent; inherited parent-first
+  Workspace: {{workspace_dir}}
+  Session folder: {{session_dir}}
 autoCompactMaxTokens: 120000      # hard token threshold for reactive auto-compaction (0 = disabled)
 autoCompactMinTokens: 50000       # context floor for idle-triggered compaction (0 = idle compaction disabled)
 autoCompactIdleSeconds: 240       # idle seconds after which an oversized session is compacted (0 = disabled)
@@ -100,6 +103,7 @@ Agent body content goes here — used as the system prompt.
 | `disallowed*` | list | Denied item names |
 | `access` | dict | Filesystem access policy (see [Access Policy](#access-policy)) |
 | `autoload` | dict | AGENTS.md autoload (see [Autoload](#autoload)) |
+| `sessionBootstrap` | string | Optional bootstrap template, rendered once per compaction segment; inherited through `extends`, parent-first (see [Session bootstrap](#session-bootstrap)) |
 | `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default false — opt-in) |
 | `guidanceFileIndexLimit` | int | Max nested guidance files listed in the index (default 10, 0 = omit) |
 | `visibility` | enum | Who the agent is for: `user` (default, shown in pickers), `subagent` (hidden from pickers, spawnable), `internal` (framework-only, spawned by name), `mixin` (partial bundle — params/tasks/tools inherit, visibility does not propagate; never spawnable) |
@@ -180,6 +184,28 @@ nested `AGENTS.md`/`CLAUDE.md` files *not* already pinned by `autoload:`
 produces a one-line read hint. Either feature works without the other:
 with contents disabled (`maxChars: 0`) the index lists everything,
 including the root file.
+
+### Session bootstrap
+
+`sessionBootstrap` is a Jinja2 text template rendered once at the start of
+each compaction segment, as a `SYSTEM` message. Inherited templates run
+parent-first, so a child adds its message after its ancestors.
+
+Available variables (missing paths render as `null`):
+
+| Variable | Value |
+|---|---|
+| `workspace_dir` | Session workspace path |
+| `workspace_agentone_dir` | Workspace `.agentone` directory |
+| `project_dir` | Project root/main workspace path |
+| `project_agentone_dir` | Project `.agentone` directory |
+| `session_dir` | Session-private folder |
+| `unix_timestamp` | Unix seconds |
+| `date` | Local `YYYY-MM-DD` |
+| `datetime` | Local `YYYY-MM-DD HH:MM:SS` |
+
+Rendering is strict: unknown variables fail that template and are logged;
+empty or failed templates are skipped.
 
 ### Subagent Entry
 

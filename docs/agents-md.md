@@ -5,12 +5,12 @@
 | Piece | Location |
 |---|---|
 | Core logic | `runtime/guidance_files.py` (no DB writes, no Celery) |
-| Manifest keys | `registry/loader/load_agent_manifest.py` → `SettingsModel.autoload`, `SettingsModel.load_guidance_file_index`, `SettingsModel.guidance_file_index_limit` (migration `0133`) |
+| Manifest keys | `registry/loader/load_agent_manifest.py` → `SettingsModel.autoload`, `SettingsModel.load_guidance_file_index`, `SettingsModel.guidance_file_index_limit` (migration `0133`); `sessionBootstrap` → `SettingsModel.session_bootstrap` |
 | Context injection | `runtime/session_bootstrap.py` (`ensure_session_bootstrap`, called from `.agentone/scripts/core/build_llm_context.py`; post-compaction repin embedded by `.agentone/scripts/compact/ingest_compaction.py`) |
 | Touch-hint hook | `runtime/tasks/bound_task.py` (`_maybe_append_guidance_hint`) |
 | Compaction rules | `.agentone/scripts/compact/build_llm_compact_context.py` (compaction prompt) |
 | Schema docs | `docs/manifest-format.md` ("Autoload" section), `docs/models.md` (SettingsModel fields) |
-| Tests | `server/tests/test_guidance_files.py` (42 tests) + `server/tests/test_session_bootstrap.py` (3 tests) |
+| Tests | `server/tests/test_guidance_files.py` (42 tests) + `server/tests/test_session_bootstrap.py` (5 tests) |
 
 **Scope:** read-only consumption of workspace guidance files into the LLM
 context. No editing tooling, no `GEMINI.md` aliases, no global
@@ -121,12 +121,18 @@ at the start of the segment — **outside** the `system_prompt_chain` guard
 1. agent `system_prompt_chain` (identity, SYSTEM),
 2. CUSTOM tools message (existing, when applicable),
 3. conversation history — oldest-first, starting with the bootstrap:
+   - agent bootstrap — one `SYSTEM`/`TEXT` message per inherited
+     `sessionBootstrap` template, parent first then child, omitted when the
+     chain is empty,
    - bootstrap guidance — one `USER`/`TEXT` message (autoloaded files with
      provenance headers per file, `## <workspace-relative path>`, plus the
      guidance-file index), omitted when both are empty,
-   - bootstrap environment — one `SYSTEM`/`TEXT` message (frozen session
-     start time, workspace path, private session folder announcement),
    - …then the regular turns, up to the triggering user message.
+
+`sessionBootstrap` templates are rendered with `workspace_dir`,
+`workspace_agentone_dir`, `project_dir`, `project_agentone_dir`,
+`session_dir`, `unix_timestamp`, `date`, and `datetime`. Missing paths render
+as `null`. See `docs/manifest-format.md` ("Session bootstrap").
 
 Freezing the bytes in history keeps the prompt-cache (KV-cache) prefix
 stable: per-turn re-injection would invalidate the whole prefix on any byte
@@ -243,7 +249,7 @@ risk). Mitigations in place:
 
 ## 6. Observability
 
-- The bootstrap guidance/environment sections are regular history-backed
+- The bootstrap guidance and agent-template sections are regular history-backed
   `QueryMessage`s (via `source_message`), visible in the API `queries/`
   endpoint and as query cards in the UI
   (`publish_model_event(query, "create")`).
@@ -304,7 +310,7 @@ retained them.
 
 ## 10. Tests
 
-`server/tests/test_guidance_files.py` (42 tests) + `server/tests/test_session_bootstrap.py` (3 tests):
+`server/tests/test_guidance_files.py` (42 tests) + `server/tests/test_session_bootstrap.py` (5 tests):
 
 - Manifest validation: defaults, `str`→list, unknown keys, `/`/`~`/`..`
   rejection, bad budgets, legacy `index` sub-key rejection.
@@ -322,8 +328,8 @@ retained them.
   independently of autoload, index without autoload content, hint-once
   then silent, explicit-read suppression, full `build_llm_context`
   bootstrap content/roles/pinning plus second-turn idempotency and
-  byte-stability, compaction-marker bootstrap embedding with
-  post-compaction no-op.
+  byte-stability, inherited `sessionBootstrap` render order, template
+  variables, compaction-marker bootstrap embedding with post-compaction no-op.
 
 ---
 

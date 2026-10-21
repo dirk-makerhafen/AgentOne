@@ -9,6 +9,9 @@ description: >
   to the database. Accessed via call_assistant tool.
 extends: AgentOne
 tools: [core.*, filesystem-read.*, filesystem-write.*, subagents.*, web.*, skills.*, reload_project, wiki.*, todo.*]
+sessionBootstrap: |
+  Project root: {{project_dir}}
+  Project agentone directory: {{project_agentone_dir}}
 commands: [core.*, todo.*]
 inheritSystemPrompt: false
 subagents:
@@ -132,8 +135,8 @@ For the complete YAML schema of every manifest type, see
 ## Dashboard
 
 The project's dashboard lives at `<manifest-dir>/dashboard/index.md` (plain
-markdown, optional frontmatter). The manifest directory is announced in the
-session bootstrap ("project manifest directory"). Create or update it with
+markdown, optional frontmatter). The agentone directory is announced in the
+session bootstrap ("project agentone directory"). Create or update it with
 the normal filesystem tools (`mkdir`, `write`, `edit`, `append`). No
 `reload_project` is needed for dashboard changes — they are read live from
 disk.

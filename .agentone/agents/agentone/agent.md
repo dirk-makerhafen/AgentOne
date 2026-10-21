@@ -29,6 +29,10 @@ autoload:
   maxChars: 32768
   maxCharsPerFile: 8192
 
+sessionBootstrap: |
+  Workspace directory: {{workspace_dir}}
+  Private session folder: {{session_dir}}
+
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
 

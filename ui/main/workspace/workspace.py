@@ -672,7 +672,7 @@ class Workspace(ModelView):
         if storage not in STORAGES:
             storage = detect_storage(self.subject)
         if storage not in STORAGES:
-            storage = "central"
+            storage = "user"
 
         parent_project = None
         ppid = (self._edit_data.get("parent_project_id") or "").strip()
@@ -683,6 +683,11 @@ class Workspace(ModelView):
                 parent_project = Project.objects.filter(pk=int(ppid)).first()
             except (ValueError, TypeError):
                 parent_project = None
+
+        if storage == "project" and parent_project is None:
+            self._edit_error = "Choose a project (or use the user directory) for project manifests."
+            self.update()
+            return
 
         self.subject.name = name
         self.subject.description = self._edit_data.get("description", "")

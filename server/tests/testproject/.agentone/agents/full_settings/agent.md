@@ -14,5 +14,7 @@ reasoningEffort: high
 priority: 5
 thinking: true
 subagentResultDelivery: immediate
+sessionBootstrap: |
+  Workspace: {{workspace_dir}}
 ---
 Agent with all scalar settings

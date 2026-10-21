@@ -591,7 +591,7 @@ class GuidanceFileSessionTest(TestCase):
         bootstraps = Message.objects.filter(
             session=self.sv.session, pin_to_context=True
         )
-        self.assertEqual(bootstraps.count(), 2)
+        self.assertEqual(bootstraps.count(), 1)
         self.assertTrue(
             all(
                 qm.source_message is not None
@@ -620,9 +620,9 @@ class GuidanceFileSessionTest(TestCase):
             Message.objects.filter(
                 session=self.sv.session, pin_to_context=True
             ).count(),
-            2,
+            1,
         )
         text2 = _query_text(query2)
         self.assertIn("## AGENTS.md\nroot rules", text2)
-        self.assertIn("private session folder", text2)
+        self.assertNotIn("private session folder", text2)
 

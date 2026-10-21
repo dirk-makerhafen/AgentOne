@@ -254,6 +254,11 @@ class Agent(AssistantScopeMixin):
         # Return full chain from parent to child
         return self.get_version_model().collect_system_prompts()
 
+    @property
+    def session_bootstrap_chain(self) -> list[str]:
+        """Return inherited ``sessionBootstrap`` templates, parents first."""
+        return self.get_version_model().collect_session_bootstraps()
+
     # ------------------------------------------------------------------
     # Commands
     # ------------------------------------------------------------------

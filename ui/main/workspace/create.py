@@ -57,7 +57,7 @@ class CreateWorkspace(ModelView):
                                 <option value="{{ o.value }}"{% if pyview.form.storage == o.value %} selected{% endif %}>{{ o.label }}</option>
                             {% endfor %}
                         </select>
-                        <div class="detail-form-hint">Where this workspace's <code>.agentone</code> manifests live.</div>
+                        <div class="detail-form-hint">Where this workspace's <code>.agentone</code> manifests live: inline, in the owning project, or in your user home.</div>
                     </div>
                     <div class="detail-form-row">
                         <label for="workspaceFormGitignore">Git</label>
@@ -91,17 +91,19 @@ class CreateWorkspace(ModelView):
         self._form = {
             "name": "", "path": "", "description": "",
             "color": random_workspace_color(),
-            "parent_project_id": "", "storage": "central",
+            "parent_project_id": "", "storage": "user",
             "manifest_gitignore": True,
         }
         self._form_error = ""
         self.access_editor = AccessEditor(subject=subject, parent=self)
-        # Opened from a project page: pre-own the new workspace to that project.
+        # Opened from a project page: pre-own the new workspace to that project
+        # and default to that project's agentone tree.
         try:
             from server.models.project import Project
 
             if isinstance(subject, Project):
                 self._form["parent_project_id"] = str(subject.pk)
+                self._form["storage"] = "project"
         except Exception:  # pylint: disable=broad-exception-caught
             pass
 
@@ -169,11 +171,15 @@ class CreateWorkspace(ModelView):
                     parent_project = Project.objects.filter(pk=int(ppid)).first()
                 except (ValueError, TypeError):
                     parent_project = None
-            from ui.main.workspace.manifest_location import STORAGES
+            from ui.main.workspace.manifest_location import STORAGE_PROJECT, STORAGES
 
-            storage = (self._form.get("storage") or "central").strip() or "central"
+            storage = (self._form.get("storage") or "user").strip() or "user"
             if storage not in STORAGES:
-                storage = "central"
+                storage = "user"
+            if storage == STORAGE_PROJECT and parent_project is None:
+                self._form_error = "Choose a project (or use the user directory) for project manifests."
+                self.update()
+                return
             created = WorkspaceModel.objects.create(
                 name=name or path,
                 path=path,
