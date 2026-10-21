@@ -205,84 +205,86 @@ class Workspace(ModelView):
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                     </div>
                     {% if pyview.editing %}
-                    <div class="ws-current-info">
-                        <input class="ws-current-input" value="{{ pyview.edit_data.name }}" onchange="pyview.setEditField('name', this.value)" autocomplete="off" placeholder="Name">
-                        <input class="ws-current-input ws-current-input--path" value="{{ pyview.edit_data.path }}" onchange="pyview.setEditField('path', this.value)" autocomplete="off" placeholder="Path">
-                        <textarea class="ws-current-input" rows="2" onchange="pyview.setEditField('description', this.value)" placeholder="What is this workspace for?">{{ pyview.edit_data.description }}</textarea>
-                        <div class="ws-current-color-row">
-                            <label for="wsEditProject">Project</label>
-                            <select id="wsEditProject" onchange="pyview.setEditField('parent_project_id', this.value)">
-                                <option value="">(no project)</option>
-                                {% for p in pyview.project_options %}
-                                <option value="{{ p.pk }}"{% if pyview.edit_data.parent_project_id == p.pk %} selected{% endif %}>{{ p.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="ws-current-color-row">
-                            <label for="wsEditColor">Color</label>
-                            <input type="color" id="wsEditColor" value="{{ pyview.edit_data.color }}" onchange="pyview.setEditField('color', this.value)">
-                            <span class="ws-current-color-value">{{ pyview.edit_data.color }}</span>
-                        </div>
-                        <div class="ws-current-color-row">
-                            <label for="wsEditStorage">Manifests</label>
-                            <select id="wsEditStorage" onchange="pyview.setEditField('storage', this.value)">
-                                {% for o in pyview.storage_options %}
-                                <option value="{{ o.value }}"{% if pyview.edit_data.storage == o.value %} selected{% endif %}>{{ o.label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        {% if pyview.edit_data.storage == "inline" %}
-                        <div class="ws-current-color-row">
-                            <label for="wsEditGitignore">Git</label>
-                            <input type="checkbox" id="wsEditGitignore"{% if pyview.edit_data.manifest_gitignore %} checked{% endif %} onchange="pyview.setEditField('manifest_gitignore', this.checked)">
-                            <span>Add <code>.agentone/</code> to <code>.gitignore</code> (inline storage only)</span>
-                        </div>
-                        {% endif %}
-                        {{ pyview.access_editor.render() }}
-                        {% if pyview.edit_error %}
-                        <div class="detail-form-error">{{ pyview.edit_error }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="ws-current-edit-actions">
-                        <button class="panel-head-btn" title="Cancel" onclick="pyview.cancelEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-                        <button class="panel-head-btn primary" title="Save" onclick="pyview.saveEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></button>
-                    </div>
-                    {% else %}
-                    <div class="ws-current-info">
-                        <div class="ws-current-name">
-                            {% if pyview.subject.color %}<span class="ws-color-dot" style="background:{{ pyview.subject.color }}"></span>{% endif %}
-                            <span id="workspaceDetailTitle">{{ pyview.subject.name }}</span>
-                            {% if pyview.subject.pk == pyview.active_workspace_pk %}
-                            <span class="detail-badge active">ACTIVE</span>
+                        <div class="ws-current-info">
+                            <input class="ws-current-input" value="{{ pyview.edit_data.name }}" onchange="pyview.setEditField('name', this.value)" autocomplete="off" placeholder="Name">
+                            <input class="ws-current-input ws-current-input--path" value="{{ pyview.edit_data.path }}" onchange="pyview.setEditField('path', this.value)" autocomplete="off" placeholder="Path">
+                            <textarea class="ws-current-input" rows="2" onchange="pyview.setEditField('description', this.value)" placeholder="What is this workspace for?">{{ pyview.edit_data.description }}</textarea>
+                            <div class="ws-current-color-row">
+                                <label for="wsEditProject">Project</label>
+                                <select id="wsEditProject" onchange="pyview.setEditField('parent_project_id', this.value)">
+                                    <option value="">(no project)</option>
+                                    {% for p in pyview.project_options %}
+                                    <option value="{{ p.pk }}"{% if pyview.edit_data.parent_project_id == p.pk %} selected{% endif %}>{{ p.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="ws-current-color-row">
+                                <label for="wsEditColor">Color</label>
+                                <input type="color" id="wsEditColor" value="{{ pyview.edit_data.color }}" onchange="pyview.setEditField('color', this.value)">
+                                <span class="ws-current-color-value">{{ pyview.edit_data.color }}</span>
+                            </div>
+                            <div class="ws-current-color-row">
+                                <label for="wsEditStorage">Manifests</label>
+                                <select id="wsEditStorage" onchange="pyview.setEditField('storage', this.value)">
+                                    {% for o in pyview.storage_options %}
+                                        <option value="{{ o.value }}"{% if pyview.edit_data.storage == o.value %} selected{% endif %}>{{ o.label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% if pyview.edit_data.storage == "inline" %}
+                                <div class="ws-current-color-row">
+                                    <label for="wsEditGitignore">Git</label>
+                                    <input type="checkbox" id="wsEditGitignore"{% if pyview.edit_data.manifest_gitignore %} checked{% endif %} onchange="pyview.setEditField('manifest_gitignore', this.checked)">
+                                    <span>Add <code>.agentone/</code> to <code>.gitignore</code> (inline storage only)</span>
+                                </div>
+                            {% endif %}
+                            {{ pyview.access_editor.render() }}
+                            {% if pyview.edit_error %}
+                                <div class="detail-form-error">{{ pyview.edit_error }}</div>
                             {% endif %}
                         </div>
-                        <div class="ws-ov-path" title="{{ pyview.subject.path }}">{{ pyview.subject.path }}</div>
-                        <div class="ws-ov-path">agentone dir: {% if pyview.agentone_dir %}<code title="{{ pyview.agentone_dir }}">{{ pyview.agentone_dir }}</code>{% else %}<span style="color:var(--muted)">not managed</span>{% endif %}</div>
-                        {% if pyview.subject.description %}
-                        <div class="ws-ov-desc">{{ pyview.subject.description }}</div>
-                        {% endif %}
-                    </div>
-                    <button class="panel-head-btn ws-current-edit-btn" onclick="pyview.startEdit()" title="Edit workspace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
-                    <button class="ws-card-menu-btn" onclick="event.stopPropagation();wsCardMenu(event, {{ pyview.subject.pk }})" title="Workspace actions">⋯</button>
-                    <div class="ws-card-menu" id="wsmenu_{{ pyview.subject.pk }}" style="display:none">
-                        <button data-name="{{ pyview.subject.name }}" onclick="event.stopPropagation();wsRename({{ pyview.subject.pk }}, this)">Rename</button>
-                        <button class="danger" onclick="event.stopPropagation();wsCloseMenus();if(confirm('Remove workspace {{ pyview.subject.name }}?')) { ; pyview.deleteWorkspace({{ pyview.subject.pk }}); }">Remove</button>
-                    </div>
+                        <div class="ws-current-edit-actions">
+                            <button class="panel-head-btn" title="Cancel" onclick="pyview.cancelEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                            <button class="panel-head-btn primary" title="Save" onclick="pyview.saveEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></button>
+                        </div>
+                    {% else %}
+                        <div class="ws-current-info">
+                            <div class="ws-current-name">
+                                {% if pyview.subject.color %}
+                                    <span class="ws-color-dot" style="background:{{ pyview.subject.color }}"></span>
+                                {% endif %}
+                                    <span id="workspaceDetailTitle">{{ pyview.subject.name }}</span>
+                                {% if pyview.subject.pk == pyview.active_workspace_pk %}
+                                    <span class="detail-badge active">ACTIVE</span>
+                                {% endif %}
+                            </div>
+                            <div class="ws-ov-path" title="{{ pyview.subject.path }}">{{ pyview.subject.path }}</div>
+                            <div class="ws-ov-path">agentone dir: {% if pyview.agentone_dir %}<code title="{{ pyview.agentone_dir }}">{{ pyview.agentone_dir }}</code>{% else %}<span style="color:var(--muted)">not managed</span>{% endif %}</div>
+                            {% if pyview.subject.description %}
+                                <div class="ws-ov-desc">{{ pyview.subject.description }}</div>
+                            {% endif %}
+                        </div>
+                        <button class="panel-head-btn ws-current-edit-btn" onclick="pyview.startEdit()" title="Edit workspace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+                        <button class="ws-card-menu-btn" onclick="event.stopPropagation();wsCardMenu(event, {{ pyview.subject.pk }})" title="Workspace actions">⋯</button>
+                        <div class="ws-card-menu" id="wsmenu_{{ pyview.subject.pk }}" style="display:none">
+                            <button data-name="{{ pyview.subject.name }}" onclick="event.stopPropagation();wsRename({{ pyview.subject.pk }}, this)">Rename</button>
+                            <button class="danger" onclick="event.stopPropagation();wsCloseMenus();if(confirm('Remove workspace {{ pyview.subject.name }}?')) { ; pyview.deleteWorkspace({{ pyview.subject.pk }}); }">Remove</button>
+                        </div>
                     {% endif %}
                 </div>
 
                 <div class="detail-card" style="margin-top:12px;">
                     <div class="detail-card-title">Dashboard</div>
                     {% if pyview.has_dashboard|default(false) %}
-                    <div class="msg-body" id="dashboard_body_{{ pyview.uid }}">{{ pyview.dashboard_html }}</div>
-                    <script>
-                        (function(){var el=document.getElementById('dashboard_body_{{ pyview.uid }}');if(el)el.innerHTML=marked.parse(el.textContent);})();
-                    </script>
+                        <div class="msg-body" id="dashboard_body_{{ pyview.uid }}">{{ pyview.dashboard_html }}</div>
+                        <script>
+                            (function(){var el=document.getElementById('dashboard_body_{{ pyview.uid }}');if(el)el.innerHTML=marked.parse(el.textContent);})();
+                        </script>
                     {% else %}
-                    <div class="ws-ov-empty">
-                        <h2>No dashboard yet</h2>
-                        <div>Ask the workspace assistant to create <code>dashboard/index.md</code>.</div>
-                    </div>
+                        <div class="ws-ov-empty">
+                            <h2>No dashboard yet</h2>
+                            <div>Ask the workspace assistant to create <code>dashboard/index.md</code>.</div>
+                        </div>
                     {% endif %}
                     <div style="padding:8px 12px;">
                         <button class="ws-ov-view-btn" onclick="pyview.refreshDashboard()">Refresh</button>
@@ -294,23 +296,23 @@ class Workspace(ModelView):
                     <div class="ws-chat-actions">
                         <button class="ws-ov-primary" onclick="pyview.newChat()">＋ New chat</button>
                         {% if pyview.chat_page_count > 1 %}
-                        <div class="ws-chat-pager">
-                        <button class="ws-ov-view-btn" onclick="pyview.setChatPage({{ pyview.chat_page - 1 }})"{% if pyview.chat_page == 0 %} disabled{% endif %} title="Previous page">‹</button>
-                        <span class="ws-chat-page-label">{{ pyview.chat_page + 1 }} / {{ pyview.chat_page_count }}</span>
-                        <button class="ws-ov-view-btn" onclick="pyview.setChatPage({{ pyview.chat_page + 1 }})"{% if pyview.chat_page + 1 >= pyview.chat_page_count %} disabled{% endif %} title="Next page">›</button>
-                        </div>
+                            <div class="ws-chat-pager">
+                            <button class="ws-ov-view-btn" onclick="pyview.setChatPage({{ pyview.chat_page - 1 }})"{% if pyview.chat_page == 0 %} disabled{% endif %} title="Previous page">‹</button>
+                            <span class="ws-chat-page-label">{{ pyview.chat_page + 1 }} / {{ pyview.chat_page_count }}</span>
+                            <button class="ws-ov-view-btn" onclick="pyview.setChatPage({{ pyview.chat_page + 1 }})"{% if pyview.chat_page + 1 >= pyview.chat_page_count %} disabled{% endif %} title="Next page">›</button>
+                            </div>
                         {% endif %}
                     </div>
                 </div>
 
                 <div class="ws-chat-list">
                     {% for c in pyview.related_chats %}
-                    <div class="ws-chat-row" onclick="pyview.openChat({{ c.pk }})">
-                        <span class="ws-ov-dot{% if not c.is_active %} ws-ov-dot--idle{% endif %}"></span>
-                        <span class="ws-chat-name">{{ c.name }}</span>
-                        <span class="ws-chat-type">{{ c.type_label }}</span>
-                        <span class="ws-chat-meta">{{ c.turn_count }} turn(s)</span>
-                    </div>
+                        <div class="ws-chat-row" onclick="pyview.openChat({{ c.pk }})">
+                            <span class="ws-ov-dot{% if not c.is_active %} ws-ov-dot--idle{% endif %}"></span>
+                            <span class="ws-chat-name">{{ c.name }}</span>
+                            <span class="ws-chat-type">{{ c.type_label }}</span>
+                            <span class="ws-chat-meta">{{ c.turn_count }} turn(s)</span>
+                        </div>
                     {% endfor %}
                 </div>
                 <div class="ws-ov-empty" style="display:{% if pyview.related_chats %}none{% else %}block{% endif %}">
@@ -328,28 +330,28 @@ class Workspace(ModelView):
 
                 <div class="ws-ov-grid{% if pyview.view_mode == "list" %} ws-ov-list{% endif %}" id="wsOvGrid">
                     {% for ws in pyview.children_cards %}
-                    <div class="ws-ov-card" data-name="{{ ws.name|lower }} {{ ws.path|lower }}" onclick="pyview.openWorkspace({{ ws.pk }})">
-                        <div class="ws-ov-card-top">
-                            <div class="ws-ov-icon"{% if ws.color %} style="background:{{ ws.color }}"{% endif %}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        <div class="ws-ov-card" data-name="{{ ws.name|lower }} {{ ws.path|lower }}" onclick="pyview.openWorkspace({{ ws.pk }})">
+                            <div class="ws-ov-card-top">
+                                <div class="ws-ov-icon"{% if ws.color %} style="background:{{ ws.color }}"{% endif %}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                </div>
+                                <h3>{{ ws.name }}</h3>
                             </div>
-                            <h3>{{ ws.name }}</h3>
-                        </div>
-                        <div class="ws-ov-card-info">
-                            <div class="ws-ov-path" title="{{ ws.path }}">{{ ws.path }}</div>
-                            <div class="ws-ov-desc">{{ ws.description if ws.description else "No description yet." }}</div>
-                        </div>
-                        <div class="ws-ov-card-bottom">
-                            <div class="ws-ov-status">
-                                {% if ws.pk == pyview.active_workspace_pk %}
-                                <span class="ws-ov-dot"></span> Active
-                                {% else %}
-                                <span class="ws-ov-dot ws-ov-dot--idle"></span> Idle
-                                {% endif %}
+                            <div class="ws-ov-card-info">
+                                <div class="ws-ov-path" title="{{ ws.path }}">{{ ws.path }}</div>
+                                <div class="ws-ov-desc">{{ ws.description if ws.description else "No description yet." }}</div>
                             </div>
-                            <span>{{ ws.session_count }} session(s) · {{ ws.agent_count }} agent(s)</span>
+                            <div class="ws-ov-card-bottom">
+                                <div class="ws-ov-status">
+                                    {% if ws.pk == pyview.active_workspace_pk %}
+                                        <span class="ws-ov-dot"></span> Active
+                                    {% else %}
+                                        <span class="ws-ov-dot ws-ov-dot--idle"></span> Idle
+                                    {% endif %}
+                                </div>
+                                <span>{{ ws.session_count }} session(s) · {{ ws.agent_count }} agent(s)</span>
+                            </div>
                         </div>
-                    </div>
                     {% endfor %}
                 </div>
                 <div class="ws-ov-empty" id="wsOvEmpty" style="display:{% if pyview.children_cards %}none{% else %}block{% endif %}">

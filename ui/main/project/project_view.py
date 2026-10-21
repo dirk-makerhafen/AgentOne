@@ -39,61 +39,61 @@ class ProjectView(ModelView):
         <div class="main-view-body" id="projectDetailBody">
             <div class="main-view-content">
                 {% if pyview.editing %}
-                <div class="detail-card">
-                    <div class="detail-card-title">Edit project</div>
-                    <form class="detail-form" onsubmit="event.preventDefault(); pyview.saveEdit();">
-                        <div class="detail-form-row">
-                            <label for="pvName">Name</label>
-                            <input type="text" id="pvName" value="{{ pyview.edit_data.name }}" placeholder="my-project" required="" autocomplete="off" onchange="pyview.setEditField('name', this.value)">
-                        </div>
-                        <div class="detail-form-row">
-                            <label for="pvDescription">Description</label>
-                            <textarea id="pvDescription" rows="4" placeholder="Optional project description" onchange="pyview.setEditField('description', this.value)">{{ pyview.edit_data.description }}</textarea>
-                        </div>
-                        <div class="detail-form-row">
-                            <label for="pvWorkspace">Primary workspace</label>
-                            <select id="pvWorkspace" onchange="pyview.setWorkspaceRef(this.value)">
-                                <option value=""{% if not pyview.edit_data.workspace_ref %} selected{% endif %}>None — store manifests centrally</option>
-                                {% for o in pyview.workspace_options %}
-                                <option value="{{ o.value }}"{% if pyview.edit_data.workspace_ref == o.value %} selected{% endif %}>{{ o.label }}</option>
-                                {% endfor %}
-                                <option value="new"{% if pyview.edit_data.workspace_ref == "new" %} selected{% endif %}>Create new from path…</option>
-                            </select>
-                            <div class="detail-form-hint">Attach an existing workspace or create a new one from a folder path — it becomes the project's main workspace.</div>
-                        </div>
-                        {% if pyview.edit_data.workspace_ref == "new" %}
-                        <div class="detail-form-row">
-                            <label for="pvWorkspacePath">New workspace folder</label>
-                            <input type="text" id="pvWorkspacePath" value="{{ pyview.edit_data.workspace_new_path }}" placeholder="/absolute/path" autocomplete="off" onchange="pyview.setEditField('workspace_new_path', this.value)">
-                        </div>
-                        {% endif %}
-                        <div class="detail-form-row">
-                            <label for="pvManifestInWorkspace">Manifest location</label>
-                            <input type="checkbox" id="pvManifestInWorkspace"{% if not pyview.has_workspace %} disabled{% endif %}{% if pyview.edit_data.manifest_in_workspace and pyview.has_workspace %} checked{% endif %} onchange="pyview.setEditField('manifest_in_workspace', this.checked)">
-                            <span>Save manifests inside the primary workspace (<code>&lt;workspace&gt;/.agentone</code>)</span>
-                            <div class="detail-form-hint">
-                                {% if pyview.has_workspace %}Unchecked stores manifests centrally.{% else %}No primary workspace given — manifests are stored centrally.{% endif %}
-                                Central location: <code>{{ pyview.central_manifest_dir }}</code>
+                    <div class="detail-card">
+                        <div class="detail-card-title">Edit project</div>
+                        <form class="detail-form" onsubmit="event.preventDefault(); pyview.saveEdit();">
+                            <div class="detail-form-row">
+                                <label for="pvName">Name</label>
+                                <input type="text" id="pvName" value="{{ pyview.edit_data.name }}" placeholder="my-project" required="" autocomplete="off" onchange="pyview.setEditField('name', this.value)">
                             </div>
-                        </div>
-                        {% if pyview.edit_error %}
-                        <div class="detail-form-error">{{ pyview.edit_error }}</div>
-                        {% endif %}
-                    </form>
-                </div>
-                {% else %}
-                <div class="detail-card">
-                    <div class="detail-card-title">Project</div>
-                    <div class="detail-row"><div class="detail-row-label">Name</div><div class="detail-row-value">{{ pyview.subject.name }}</div></div>
-                    <div class="detail-row">
-                        <div class="detail-row-label">Primary workspace</div>
-                        <div class="detail-row-value">{% if pyview.main_workspace_path %}<code>{{ pyview.main_workspace_path }}</code>{% else %}<span style="color:var(--muted)">not set</span>{% endif %}</div>
+                            <div class="detail-form-row">
+                                <label for="pvDescription">Description</label>
+                                <textarea id="pvDescription" rows="4" placeholder="Optional project description" onchange="pyview.setEditField('description', this.value)">{{ pyview.edit_data.description }}</textarea>
+                            </div>
+                            <div class="detail-form-row">
+                                <label for="pvWorkspace">Primary workspace</label>
+                                <select id="pvWorkspace" onchange="pyview.setWorkspaceRef(this.value)">
+                                    <option value=""{% if not pyview.edit_data.workspace_ref %} selected{% endif %}>None — store manifests centrally</option>
+                                    {% for o in pyview.workspace_options %}
+                                    <option value="{{ o.value }}"{% if pyview.edit_data.workspace_ref == o.value %} selected{% endif %}>{{ o.label }}</option>
+                                    {% endfor %}
+                                    <option value="new"{% if pyview.edit_data.workspace_ref == "new" %} selected{% endif %}>Create new from path…</option>
+                                </select>
+                                <div class="detail-form-hint">Attach an existing workspace or create a new one from a folder path — it becomes the project's main workspace.</div>
+                            </div>
+                            {% if pyview.edit_data.workspace_ref == "new" %}
+                            <div class="detail-form-row">
+                                <label for="pvWorkspacePath">New workspace folder</label>
+                                <input type="text" id="pvWorkspacePath" value="{{ pyview.edit_data.workspace_new_path }}" placeholder="/absolute/path" autocomplete="off" onchange="pyview.setEditField('workspace_new_path', this.value)">
+                            </div>
+                            {% endif %}
+                            <div class="detail-form-row">
+                                <label for="pvManifestInWorkspace">Manifest location</label>
+                                <input type="checkbox" id="pvManifestInWorkspace"{% if not pyview.has_workspace %} disabled{% endif %}{% if pyview.edit_data.manifest_in_workspace and pyview.has_workspace %} checked{% endif %} onchange="pyview.setEditField('manifest_in_workspace', this.checked)">
+                                <span>Save manifests inside the primary workspace (<code>&lt;workspace&gt;/.agentone</code>)</span>
+                                <div class="detail-form-hint">
+                                    {% if pyview.has_workspace %}Unchecked stores manifests centrally.{% else %}No primary workspace given — manifests are stored centrally.{% endif %}
+                                    Central location: <code>{{ pyview.central_manifest_dir }}</code>
+                                </div>
+                            </div>
+                            {% if pyview.edit_error %}
+                            <div class="detail-form-error">{{ pyview.edit_error }}</div>
+                            {% endif %}
+                        </form>
                     </div>
-                    <div class="detail-row"><div class="detail-row-label">Manifests</div><div class="detail-row-value"><code>{{ pyview.agentone_dir }}</code></div></div>
-                    <div class="detail-row"><div class="detail-row-label">Description</div><div class="detail-row-value">{{ pyview.subject.description }}</div></div>
-                    <div class="detail-row"><div class="detail-row-label">Created</div><div class="detail-row-value">{{ pyview.subject.created_at }}</div></div>
-                    <div class="detail-row"><div class="detail-row-label">Status</div><div class="detail-row-value"><span class="detail-badge">Inactive</span></div></div>
-                </div>
+                {% else %}
+                    <div class="detail-card">
+                        <div class="detail-card-title">Project</div>
+                        <div class="detail-row"><div class="detail-row-label">Name</div><div class="detail-row-value">{{ pyview.subject.name }}</div></div>
+                        <div class="detail-row">
+                            <div class="detail-row-label">Primary workspace</div>
+                            <div class="detail-row-value">{% if pyview.main_workspace_path %}<code>{{ pyview.main_workspace_path }}</code>{% else %}<span style="color:var(--muted)">not set</span>{% endif %}</div>
+                        </div>
+                        <div class="detail-row"><div class="detail-row-label">Manifests</div><div class="detail-row-value"><code>{{ pyview.agentone_dir }}</code></div></div>
+                        <div class="detail-row"><div class="detail-row-label">Description</div><div class="detail-row-value">{{ pyview.subject.description }}</div></div>
+                        <div class="detail-row"><div class="detail-row-label">Created</div><div class="detail-row-value">{{ pyview.subject.created_at }}</div></div>
+                        <div class="detail-row"><div class="detail-row-label">Status</div><div class="detail-row-value"><span class="detail-badge">Inactive</span></div></div>
+                    </div>
                 {% endif %}
 
                 <div class="detail-card">

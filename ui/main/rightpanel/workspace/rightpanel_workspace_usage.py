@@ -21,9 +21,9 @@ class RightPanelWorkspaceUsage(ModelView):
             <div class="panel-header" style="margin-left:-8px">Related cron jobs</div>
             {% if pyview.cron_jobs %}
                 {% for c in pyview.cron_jobs %}
-                <div style="display:flex;align-items:center;padding:6px 2px;font-size:12px;border-bottom:1px solid var(--border,.05)">
-                    <span style="font-weight:500">{{ c.name }}</span>
-                </div>
+                    <div style="display:flex;align-items:center;padding:6px 2px;font-size:12px;border-bottom:1px solid var(--border,.05)">
+                        <span style="font-weight:500">{{ c.name }}</span>
+                    </div>
                 {% endfor %}
             {% else %}
                 <div style="font-size:12px;color:var(--muted);padding:4px 2px 12px">None</div>
@@ -31,9 +31,9 @@ class RightPanelWorkspaceUsage(ModelView):
             <div class="panel-header" style="margin-left:-8px">Related sessions</div>
             {% if pyview.sessions %}
                 {% for s in pyview.sessions %}
-                <div style="display:flex;align-items:center;padding:6px 2px;font-size:12px;border-bottom:1px solid var(--border,.05)">
-                    <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</span>
-                </div>
+                    <div style="display:flex;align-items:center;padding:6px 2px;font-size:12px;border-bottom:1px solid var(--border,.05)">
+                        <span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</span>
+                    </div>
                 {% endfor %}
             {% else %}
                 <div style="font-size:12px;color:var(--muted);padding:4px 2px">None</div>

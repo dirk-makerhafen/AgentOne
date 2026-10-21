@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 #: Body shared by every assistant panel: an optional session selector and
 #: the chat (or a "+ New Chat" empty state).
 ASSISTANT_CHAT_BODY_TEMPLATE = '''
-        {% if pyview.assistant_sessions %}
+    {% if pyview.assistant_sessions %}
         <div class="manager-session-row">
             <select onchange="pyview.selectAssistantChat(this.value)" title="Assistant chat">
                 {% for s in pyview.assistant_sessions %}
@@ -41,17 +41,17 @@ ASSISTANT_CHAT_BODY_TEMPLATE = '''
                 {% endfor %}
             </select>
         </div>
-        {% endif %}
-        <div class="manager-chat-wrap">
-            {% if pyview.chat %}
+    {% endif %}
+    <div class="manager-chat-wrap">
+        {% if pyview.chat %}
             {{ pyview.chat.render() }}
-            {% else %}
+        {% else %}
             <div class="manager-empty">
                 <div>No assistant chat yet.</div>
                 <button class="ws-ov-primary" onclick="pyview.newAssistantChat()">＋ New Chat</button>
             </div>
-            {% endif %}
-        </div>
+        {% endif %}
+    </div>
     '''
 
 _REFRESH_SVG = (

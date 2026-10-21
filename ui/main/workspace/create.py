@@ -54,7 +54,7 @@ class CreateWorkspace(ModelView):
                         <label for="workspaceFormStorage">Manifests</label>
                         <select id="workspaceFormStorage" onchange="pyview.setWsField('storage', this.value)">
                             {% for o in pyview.storage_options %}
-                            <option value="{{ o.value }}"{% if pyview.form.storage == o.value %} selected{% endif %}>{{ o.label }}</option>
+                                <option value="{{ o.value }}"{% if pyview.form.storage == o.value %} selected{% endif %}>{{ o.label }}</option>
                             {% endfor %}
                         </select>
                         <div class="detail-form-hint">Where this workspace's <code>.agentone</code> manifests live.</div>
@@ -77,7 +77,7 @@ class CreateWorkspace(ModelView):
                         {{ pyview.access_editor.render() }}
                     </div>
                     {% if pyview.form_error %}
-                    <div class="detail-form-error">{{ pyview.form_error }}</div>
+                        <div class="detail-form-error">{{ pyview.form_error }}</div>
                     {% endif %}
                 </div>
             </div>

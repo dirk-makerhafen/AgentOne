@@ -51,29 +51,29 @@ class WorkspacesOverview(ModelView):
                 </div>
                 <div class="ws-ov-grid{% if pyview.view_mode == "list" %} ws-ov-list{% endif %}" id="wsOvGrid">
                     {% for ws in pyview.workspaces %}
-                    <div class="ws-ov-card" data-name="{{ ws.name|lower }} {{ ws.path|lower }}" onclick="pyview.openWorkspace({{ ws.pk }})">
-                        <div class="ws-ov-card-top">
-                            <div class="ws-ov-icon"{% if ws.color %} style="background:{{ ws.color }}"{% endif %}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        <div class="ws-ov-card" data-name="{{ ws.name|lower }} {{ ws.path|lower }}" onclick="pyview.openWorkspace({{ ws.pk }})">
+                            <div class="ws-ov-card-top">
+                                <div class="ws-ov-icon"{% if ws.color %} style="background:{{ ws.color }}"{% endif %}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                </div>
+                                <h3>{{ ws.name }}</h3>
                             </div>
-                             <h3>{{ ws.name }}</h3>
-                        </div>
-                        <div class="ws-ov-card-info">
-                           
-                            <div class="ws-ov-path" title="{{ ws.path }}">{{ ws.path }}</div>
-                            <div class="ws-ov-desc">{{ ws.description if ws.description else "No description yet." }}</div>
-                        </div>
-                        <div class="ws-ov-card-bottom">
-                            <div class="ws-ov-status">
-                                {% if ws.pk == pyview.active_workspace_pk %}
-                                <span class="ws-ov-dot"></span> Active
-                                {% else %}
-                                <span class="ws-ov-dot ws-ov-dot--idle"></span> Idle
-                                {% endif %}
+                            <div class="ws-ov-card-info">
+                            
+                                <div class="ws-ov-path" title="{{ ws.path }}">{{ ws.path }}</div>
+                                <div class="ws-ov-desc">{{ ws.description if ws.description else "No description yet." }}</div>
                             </div>
-                            <span>{{ ws.session_count }} session(s) · {{ ws.agent_count }} agent(s)</span>
+                            <div class="ws-ov-card-bottom">
+                                <div class="ws-ov-status">
+                                    {% if ws.pk == pyview.active_workspace_pk %}
+                                        <span class="ws-ov-dot"></span> Active
+                                    {% else %}
+                                        <span class="ws-ov-dot ws-ov-dot--idle"></span> Idle
+                                    {% endif %}
+                                </div>
+                                <span>{{ ws.session_count }} session(s) · {{ ws.agent_count }} agent(s)</span>
+                            </div>
                         </div>
-                    </div>
                     {% endfor %}
                 </div>
                 <div class="ws-ov-empty" id="wsOvEmpty" style="display:none">

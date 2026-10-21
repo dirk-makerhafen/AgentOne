@@ -146,26 +146,26 @@ class ProviderListItemView(ModelView):
                 </ul>
 
                 {% if pyview.show_add_key_form %}
-                <div class="inline-form" style="margin-top: 8px;">
-                    <div class="form-group">
-                        <label>API Key</label>
-                        <input type="text" id="add_key_{{ pyview.subject.id }}" class="form-control">
+                    <div class="inline-form" style="margin-top: 8px;">
+                        <div class="form-group">
+                            <label>API Key</label>
+                            <input type="text" id="add_key_{{ pyview.subject.id }}" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Comment (optional)</label>
+                            <input type="text" id="add_key_comment_{{ pyview.subject.id }}" class="form-control"
+                                placeholder="e.g. Personal key">
+                        </div>
+                        <div style="display:flex; gap:8px; justify-content:flex-end;">
+                            <button class="btn btn-default btn-xs" onclick="pyview.toggle_add_key()">Cancel</button>
+                            <button class="btn btn-primary btn-xs"
+                                    onclick="pyview.save_key(
+                                        document.getElementById('add_key_{{ pyview.subject.id }}').value,
+                                        document.getElementById('add_key_comment_{{ pyview.subject.id }}').value)">
+                                Save key
+                            </button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Comment (optional)</label>
-                        <input type="text" id="add_key_comment_{{ pyview.subject.id }}" class="form-control"
-                               placeholder="e.g. Personal key">
-                    </div>
-                    <div style="display:flex; gap:8px; justify-content:flex-end;">
-                        <button class="btn btn-default btn-xs" onclick="pyview.toggle_add_key()">Cancel</button>
-                        <button class="btn btn-primary btn-xs"
-                                onclick="pyview.save_key(
-                                    document.getElementById('add_key_{{ pyview.subject.id }}').value,
-                                    document.getElementById('add_key_comment_{{ pyview.subject.id }}').value)">
-                            Save key
-                        </button>
-                    </div>
-                </div>
                 {% else %}
                     <div class="detail-add-row">
                         <button class="btn btn-xs btn-default" onclick="pyview.toggle_add_key()">
