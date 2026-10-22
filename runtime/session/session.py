@@ -19,6 +19,7 @@ from server.models.settings import ReasoningEffort, SettingsModel
 from server.models.skills.skill_version import SkillModelVersion
 from server.models.sessions.session import SessionModel
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
+from server.models.workspace import WorkspaceModel
 
 if TYPE_CHECKING:
     from server.models.sessions.session_version import SessionVersionModel
@@ -199,7 +200,7 @@ class Session:
         return self.get_version_model().description
 
     @property
-    def workspace(self) -> Any:
+    def workspace(self) -> WorkspaceModel | None:
         """Return the workspace from the active session version."""
         return self.get_version_model().workspace
 
@@ -1212,8 +1213,10 @@ class Session:
             # this carve-out the widened liveness check below would park
             # them and they would surface late and out of chain order.
             persist_only = (execute_turn is False) and not is_command
-            if not persist_only and strategy == "queue":
+            if not persist_only and strategy in ("queue", "batch"):
                 if self._has_active_call():
+                    # TODO(batch): coalesce parked messages into a single turn
+                    # (persist all, run one turn on the last) instead of FIFO.
                     return self._park_call(bound_task, call_kwargs)
                 return bound_task.delay(**call_kwargs)
             if not persist_only and strategy == "interrupt":

@@ -11,7 +11,7 @@ description: >
   Accessed via the Workspace Assistant chat in the workspace right panel.
 extends: AgentOne
 inheritSystemPrompt: false
-tools: [core.*, workspace.*, filesystem-read.*, filesystem-write.*]
+tools: [core.*, workspace.*, filesystem-read.*, filesystem-write.*, subagents.*]
 sessionBootstrap: |
   Workspace agentone directory: {{workspace_agentone_dir}}
   Workspace dashboard:  {{workspace_agentone_dir}}/dashboard/

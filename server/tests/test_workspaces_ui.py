@@ -576,12 +576,18 @@ class TestWorkspaceDetailActions(TestCase):
         view.createChat()
         view.createChat()
 
+        import re
+
         names = sorted(
             SessionModel.objects.filter(name__startswith="Demo-chatbot").values_list(
                 "name", flat=True
             )
         )
-        assert names == ["Demo-chatbot", "Demo-chatbot-2"]
+        assert names[0] == "Demo-chatbot"
+        assert re.fullmatch(
+            r"Demo-chatbot \d{4}\.\d{2}\.\d{2}-\d{2}:\d{2}:\d{2}",
+            names[1],
+        )
 
     def test_create_chat_without_agent_is_noop(self):
         from server.models.sessions.session import SessionModel

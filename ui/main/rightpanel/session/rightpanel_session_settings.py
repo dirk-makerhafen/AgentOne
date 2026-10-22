@@ -263,7 +263,7 @@ class RightPanelSessionSettings(ModelView):
             return ""
         ws = self.session.workspace
         if ws:
-            return str(ws)
+            return str(ws.name)
         return "\u2014"
 
     @property

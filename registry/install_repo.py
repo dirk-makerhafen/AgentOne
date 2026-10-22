@@ -20,7 +20,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from runtime.paths import install_base as _install_base
 
@@ -114,10 +114,11 @@ class InstallRepo:
     # Public API
     # ------------------------------------------------------------------
 
-    def sync(self) -> None:
+    def sync(self, excludes: Optional[List[str]] = None) -> None:
         """Copy source files into the install repo and auto-commit."""
         if self.source_root is None:
             raise RuntimeError("source_root is required for sync()")
+        self._excludes = list(excludes or [])
         self._ensure_repo()
         self._copy_files()
         self._auto_commit()
@@ -213,21 +214,35 @@ class InstallRepo:
         """
         assert self.source_root is not None
         self.repo_path.mkdir(parents=True, exist_ok=True)
-
+        excludes = getattr(self, "_excludes", []) or []
+ 
+        # Remove previously-synced excluded trees so stale nested copies
+        # (e.g. install/runtime) do not linger in the repo working tree.
+        for name in excludes:
+            target = self.repo_path / name
+            if target.is_dir() and not target.is_symlink():
+                shutil.rmtree(target, ignore_errors=True)
+            elif target.exists():
+                try:
+                    target.unlink()
+                except OSError:
+                    pass
+ 
         if shutil.which("rsync"):
-            subprocess.run(
-                 ["rsync", "-a", "--delete", "--checksum",
-                  "--exclude=.git",
-                  "--exclude=__pycache__",
-                  "--exclude=*.pyc",
-                  "--exclude=*.pyo",
-                  f"{self.source_root}/",
-                  f"{self.repo_path}/"],
-                capture_output=True,
-            )
+            cmd = ["rsync", "-a", "--delete", "--checksum",
+                   "--exclude=.git",
+                   "--exclude=__pycache__",
+                   "--exclude=*.pyc",
+                   "--exclude=*.pyo"]
+            for pattern in excludes:
+                cmd.extend(["--exclude", pattern])
+            cmd.extend([f"{self.source_root}/", f"{self.repo_path}/"])
+            subprocess.run(cmd, capture_output=True)
         else:
             for item in self.source_root.iterdir():
                 if item.name in ("__pycache__",) or item.name.endswith((".pyc", ".pyo")):
+                    continue
+                if item.name in excludes:
                     continue
                 dest = self.repo_path / item.name
                 if item.is_dir():

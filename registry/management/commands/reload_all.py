@@ -239,7 +239,11 @@ def _load_user_scope(details: list, errors: list, counts: Dict[str, int],
         return
     user_install = InstallRepo.for_user(source_root=root)
     try:
-        user_install.sync()
+        user_install.sync(excludes=[
+            "install", "runtime", "sessions", "browser", "upstream",
+            "staging", "projects", "workspaces", "memory", "terminals",
+            ".DS_Store",
+        ])
     except Exception as e:
         errors.append(f"User scope sync: {e}")
         return

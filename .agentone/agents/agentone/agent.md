@@ -31,7 +31,8 @@ autoload:
 
 sessionBootstrap: |
   Workspace directory: {{workspace_dir}}
-  Private session folder: {{session_dir}}
+  Workspace agentone dir:  {{workspace_agentone_dir}}
+  Private session dir: {{session_dir}}
 
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10

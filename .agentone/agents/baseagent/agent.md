@@ -6,11 +6,11 @@ description: Basic Agent without any tools
 extends: []
 inheritSystemPrompt: false
 maxRetries: 0
-maxTurns: 3
-maxUnattendedTurns: 20
-maxHistoryMessages: 200
+maxTurns: 50
+maxUnattendedTurns: 60
+maxHistoryMessages: 100
 autoCompactMaxTokens: 100000
-autoCompactKeepPercent: 10
+autoCompactKeepPercent: 0
 reasoningEffort: high
 schedulerStrategy: queue
 precision: precise
@@ -20,9 +20,9 @@ skills: []
 disallowedSkills: []
 tools: [filesystem-read.*, filesystem-write.*,]
 disallowedTools: []
-tasks: [core.*]
+tasks: [core.*, compact.*]
 disallowedTasks: []
 commands: []
 disallowedCommands: []
-priority: 0
+priority: 99
 ---

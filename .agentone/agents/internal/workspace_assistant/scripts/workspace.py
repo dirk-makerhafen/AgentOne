@@ -5,8 +5,9 @@ session. Sub-workspace paths must stay inside the managed workspace
 directory. Every tool returns a ``(bool, dict)`` tuple.
 """
 from __future__ import annotations
-
 import os
+from datetime import datetime
+
 from typing import Any
 
 from runtime.script_helpers import agent_row, cron_row, skill_row
@@ -402,10 +403,17 @@ def create_chat(
     try:
         if not name:
             base = f"{managed.name or 'workspace'}-{agent.name}"
-            name, i = base, 1
-            while SessionModel.objects.filter(name=name).exists():
-                i += 1
-                name = f"{base}-{i}"
+            name = base
+            try:
+                if SessionModel.objects.filter(name=name).exists():
+                    stamp = datetime.now().strftime("%Y.%m.%d-%H:%M:%S")
+                    name = f"{base} {stamp}"
+                    i = 2
+                    while SessionModel.objects.filter(name=name).exists():
+                        name = f"{base} {stamp}-{i}"
+                        i += 1
+            except Exception:
+                pass
         elif SessionModel.objects.filter(name=name).exists():
             return False, {"status": "error", "message": f"A chat named '{name}' already exists."}
         session_version = agent.latest_agent_version.get_or_create_session(

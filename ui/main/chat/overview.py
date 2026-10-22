@@ -263,10 +263,9 @@ class ChatsOverview(ModelView):
                 base = f"{workspace.name or 'workspace'}-{agent.name}"
             else:
                 base = f"{agent.name}-chat"
-            name, i = base, 1
-            while SessionModel.objects.filter(name=name).exists():
-                i += 1
-                name = f"{base}-{i}"
+            from ui.main.rightpanel.assistant_chat import unique_session_name
+
+            name = unique_session_name(base)
         elif SessionModel.objects.filter(name=name).exists():
             self._form_error = f"A chat named '{name}' already exists."
             self.update()
