@@ -211,11 +211,60 @@ class MemoryWalkTest(TestCase):
         self.assertEqual(self._source_paths(self.nested_mem), {"agents/"})
         self.assertEqual(self._source_paths(self.global_ws_mem), {"agents/"})
 
+        global_sources = {
+            source["path"]: source
+            for source in self._manifest(self.global_mem)["sources"]
+        }
+        project_source = global_sources[self._abs(self.project_mem)]
+        self.assertEqual(project_source["kind"], "project")
+        self.assertEqual(project_source["pk"], self.project.pk)
+        self.assertNotIn("pk", global_sources["agents/"])
+
+        project_sources = {
+            source["path"]: source
+            for source in self._manifest(self.project_mem)["sources"]
+        }
+        top_source = project_sources[self._abs(self.top_mem)]
+        self.assertEqual(top_source["kind"], "workspace")
+        self.assertEqual(top_source["pk"], self.top_ws.pk)
+
         agent_dir = self.global_mem / "agents" / str(self.global_agent.pk)
         self.assertEqual(self._source_paths(agent_dir), {"tasks/"})
 
         task_dir = agent_dir / "tasks" / "task_default"
         self.assertEqual(self._source_paths(task_dir), {"sessions/"})
+
+    def test_child_identity_preserves_last_hash_after_path_change(self):
+        walk_memory(write=True)
+
+        manifest_path = self.global_mem / memsources.SOURCES_FILENAME
+        manifest = self._manifest(self.global_mem)
+        old_sources = {source["path"]: source for source in manifest["sources"]}
+        project_source = old_sources[self._abs(self.project_mem)]
+        last = project_source["current_hash"]
+        self.assertTrue(memgit.is_git_hash(last))
+        project_source["last_processed_hash"] = last
+        manifest.pop("generated_at", None)
+        memsources.write_sources(manifest_path, manifest)
+
+        moved = self.tmp / "moved" / "project" / "memory"
+        moved.parent.mkdir(parents=True)
+        shutil.move(self.project_mem.as_posix(), moved.as_posix())
+        self.roots[("project", self.project.pk)] = moved
+
+        walk_memory(write=True)
+
+        new_sources = {
+            source["path"]: source
+            for source in self._manifest(self.global_mem)["sources"]
+        }
+        moved_source = new_sources[self._abs(moved)]
+        self.assertEqual(moved_source["kind"], "project")
+        self.assertEqual(moved_source["pk"], self.project.pk)
+        self.assertEqual(moved_source["last_processed_hash"], last)
+        self.assertEqual(moved_source["current_hash"], last)
+        self.assertEqual(moved_source["hours_since_processed"], 0.0)
+        self.assertEqual(moved_source["changed_chars"], 0)
 
     def test_missing_child_outputs_stay_listed(self):
         for name in ("memory.md", "reflection.md"):

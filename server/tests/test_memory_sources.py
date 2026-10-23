@@ -96,3 +96,22 @@ def test_report_filename_uses_reflection_type_and_message_pk():
 
     message.message_type = MessageType.COMPACTION
     assert mempaths.report_filename(message) == "compaction_20261023-140506_9.md"
+
+
+def test_previous_by_identity_tracks_child_scopes():
+    manifest = {
+        "sources": [
+            {"path": "/old/project", "kind": "project", "pk": 7,
+             "last_processed_hash": "a" * 40},
+            {"path": "/old/workspace", "kind": "workspace", "pk": 9,
+             "last_processed_hash": "b" * 40},
+            {"path": "agents/", "last_processed_hash": "c" * 40},
+        ]
+    }
+    by_identity = memsources.previous_by_identity(manifest)
+    assert by_identity[("project", 7)] == "a" * 40
+    assert by_identity[("workspace", 9)] == "b" * 40
+    assert memsources.source_identity({"kind": "project", "pk": "7"}) == (
+        "project", 7,
+    )
+    assert memsources.source_identity({"path": "agents/"}) is None

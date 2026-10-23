@@ -346,6 +346,9 @@ def _source_entry(
     previous: dict[str, Any],
     files: Optional[list[Path]] = None,
     fallback: Optional[str] = None,
+    previous_by_identity: Optional[dict[tuple[str, int], Any]] = None,
+    kind: Optional[str] = None,
+    pk: Optional[int] = None,
 ) -> dict[str, Any]:
     if files is None:
         has_content = _has_content(source)
@@ -355,7 +358,11 @@ def _source_entry(
             for entry in files
         )
     current = memgit.path_commit(source, files=files) if has_content else None
-    last = previous.get(label)
+    last = None
+    if kind is not None and pk is not None and previous_by_identity:
+        last = previous_by_identity.get((kind, pk))
+    if last is None:
+        last = previous.get(label)
     if last is None and fallback:
         last = memgit.path_commit(source, files=files, before=fallback)
     if last is not None and not memgit.is_git_hash(last):
@@ -370,18 +377,24 @@ def _source_entry(
         else:
             hours, changed = stats
 
-    return {
-        "path": label,
+    entry: dict[str, Any] = {"path": label}
+    if kind is not None and pk is not None:
+        entry["kind"] = kind
+        entry["pk"] = pk
+    entry.update({
         "last_processed_hash": last,
         "current_hash": current,
         "hours_since_processed": hours,
         "changed_chars": changed,
-    }
+    })
+    return entry
 
 
 def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
     manifest_path = node.path / memsources.SOURCES_FILENAME
-    previous = memsources.previous_hashes(memsources.read_sources(manifest_path))
+    previous_manifest = memsources.read_sources(manifest_path)
+    previous = memsources.previous_hashes(previous_manifest)
+    previous_identity = memsources.previous_by_identity(previous_manifest)
 
     source_dir = _SOURCE_DIR[node.kind]
     sources = [
@@ -390,9 +403,11 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
             node.path / source_dir,
             previous,
             fallback=memgit.load_processed(node.path),
+            previous_by_identity=previous_identity,
         )
     ]
     for child in tree.scope_children.get(id(node), []):
+        child_pk = int(child.key) if str(child.key).isdigit() else None
         sources.append(
             _source_entry(
                 _source_path(child.path, node.path),
@@ -400,6 +415,9 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
                 previous,
                 files=_layer_files(child.path),
                 fallback=memgit.load_processed(child.path),
+                previous_by_identity=previous_identity,
+                kind=child.kind,
+                pk=child_pk,
             )
         )
 

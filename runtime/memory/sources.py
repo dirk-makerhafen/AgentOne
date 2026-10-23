@@ -149,8 +149,20 @@ def write_sources(path: Path, payload: dict[str, Any]) -> bool:
 
 
 def source_key(source: dict[str, Any]) -> str:
-    """Return the identity used to preserve last-processed hashes."""
+    """Return the path identity used to preserve last-processed hashes."""
     return str(source.get("path", ""))
+
+
+def source_identity(source: dict[str, Any]) -> tuple[str, int] | None:
+    """Return ``(kind, pk)`` for a project/workspace source, if present."""
+    kind = str(source.get("kind") or "").strip()
+    pk = source.get("pk")
+    if not kind or pk is None:
+        return None
+    try:
+        return kind, int(pk)
+    except (TypeError, ValueError):
+        return None
 
 
 def previous_hashes(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -159,4 +171,16 @@ def previous_hashes(manifest: dict[str, Any]) -> dict[str, Any]:
     for source in manifest.get("sources") or []:
         if isinstance(source, dict):
             out[source_key(source)] = source.get("last_processed_hash")
+    return out
+
+
+def previous_by_identity(manifest: dict[str, Any]) -> dict[tuple[str, int], Any]:
+    """Map child-scope ``(kind, pk)`` to ``last_processed_hash``."""
+    out: dict[tuple[str, int], Any] = {}
+    for source in manifest.get("sources") or []:
+        if not isinstance(source, dict):
+            continue
+        identity = source_identity(source)
+        if identity is not None:
+            out[identity] = source.get("last_processed_hash")
     return out

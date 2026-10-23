@@ -167,6 +167,12 @@ def _agentone_dir(ws: Any | None, proj: Any | None) -> Path:
         md = str(md or "").strip()
         if md:
             return Path(md).expanduser()
+        getter = getattr(target, "get_agentone_dir", None)
+        if callable(getter):
+            try:
+                return getter()
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
         wproj = getattr(ws, "parent_project", None)
         if wproj is not None:
             return wproj.get_agentone_dir()
