@@ -84,7 +84,6 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         # repinned content, so this is a no-op there.
         try:
             from runtime.session_bootstrap import ensure_session_bootstrap
-
             ensure_session_bootstrap(_session, message)
         except Exception:
             from server.models.debug_log_entry import DebugLogEntry

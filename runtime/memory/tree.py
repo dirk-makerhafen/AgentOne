@@ -36,6 +36,39 @@ _SOURCE_DIR = {
 _AGENT_QUERY_CHUNK = 500
 
 
+def _compute_memory_type(kind: str, scope: str, path: Path) -> str:
+    """Return the memory type string for a node.
+
+    The type encodes the scope kind plus the entity layer:
+      global, project, workspace              – scope roots
+      <scope>-agent                           – agent layer
+      <scope>-agent-task                      – task layer
+    """
+    if kind in _SCOPE_KINDS:
+        return kind
+    if kind == "agent":
+        return f"{scope}-agent"
+    if kind == "task":
+        return f"{scope}-agent-task"
+    return kind
+
+
+def _source_type(node_scope: str, source_dir: str) -> str:
+    """Return the type for a directory-level source entry.
+
+    Maps the child layer directory name to a pluralised type string:
+      agents  → <scope>-agents
+      tasks   → <scope>-agent-tasks
+      sessions→ <scope>-agent-task-sessions
+    """
+    prefix = node_scope
+    if source_dir == "tasks":
+        prefix += "-agent"
+    elif source_dir == "sessions":
+        prefix += "-agent-task"
+    return f"{prefix}-{source_dir}"
+
+
 @dataclass
 class MemoryNode:
     """A memory layer that owns a ``.memory_sources.md`` manifest."""
@@ -44,6 +77,7 @@ class MemoryNode:
     key: str
     name: str
     path: Path
+    scope: str = ""  # parent scope kind (global/project/workspace); defaults to kind for roots
 
 
 @dataclass
@@ -117,7 +151,7 @@ def _discover_scopes(tree: MemoryTree) -> ScopeIndex:
     global_root = mempaths.memory_root()
     global_node: Optional[MemoryNode] = None
     if global_root.is_dir():
-        global_node = MemoryNode("global", "global", "global", global_root)
+        global_node = MemoryNode("global", "global", "global", global_root, "global")
         tree.nodes.append(global_node)
         seen[_norm_path(global_root)] = global_node
 
@@ -138,6 +172,7 @@ def _discover_scopes(tree: MemoryTree) -> ScopeIndex:
             str(project.pk),
             project.name or f"project {project.pk}",
             root,
+            "project",
         )
         tree.nodes.append(node)
         seen[norm] = node
@@ -161,6 +196,7 @@ def _discover_scopes(tree: MemoryTree) -> ScopeIndex:
             str(workspace.pk),
             workspace.name or workspace.path or f"workspace {workspace.pk}",
             root,
+            "workspace",
         )
         tree.nodes.append(node)
         seen[norm] = node
@@ -230,7 +266,7 @@ def _discover_entities(tree: MemoryTree, scopes: ScopeIndex) -> None:
 
         agent = agents.get((id(scope), agent_id))
         if agent is None:
-            agent = MemoryNode("agent", str(agent_id), agent_dir.name, agent_dir)
+            agent = MemoryNode("agent", str(agent_id), agent_dir.name, agent_dir, scope.kind)
             tree.nodes.append(agent)
             agents[(id(scope), agent_id)] = agent
 
@@ -245,7 +281,7 @@ def _discover_entities(tree: MemoryTree, scopes: ScopeIndex) -> None:
 
         task_key = _strip_prefix(task_dir.name, "task_")
         if (id(agent), task_key) not in tasks:
-            task = MemoryNode("task", task_key, task_dir.name, task_dir)
+            task = MemoryNode("task", task_key, task_dir.name, task_dir, agent.scope)
             tree.nodes.append(task)
             tasks[(id(agent), task_key)] = task
 
@@ -349,6 +385,7 @@ def _source_entry(
     previous_by_identity: Optional[dict[tuple[str, int], Any]] = None,
     kind: Optional[str] = None,
     pk: Optional[int] = None,
+    source_type: Optional[str] = None,
 ) -> dict[str, Any]:
     if files is None:
         has_content = _has_content(source)
@@ -381,6 +418,8 @@ def _source_entry(
     if kind is not None and pk is not None:
         entry["kind"] = kind
         entry["pk"] = pk
+    if source_type is not None:
+        entry["type"] = source_type
     entry.update({
         "last_processed_hash": last,
         "current_hash": current,
@@ -397,6 +436,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
     previous_identity = memsources.previous_by_identity(previous_manifest)
 
     source_dir = _SOURCE_DIR[node.kind]
+    dir_type = _source_type(node.scope, source_dir)
     sources = [
         _source_entry(
             f"{source_dir}/",
@@ -404,10 +444,12 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
             previous,
             fallback=memgit.load_processed(node.path),
             previous_by_identity=previous_identity,
+            source_type=dir_type,
         )
     ]
     for child in tree.scope_children.get(id(node), []):
         child_pk = int(child.key) if str(child.key).isdigit() else None
+        child_type = _compute_memory_type(child.kind, node.scope, child.path)
         sources.append(
             _source_entry(
                 _source_path(child.path, node.path),
@@ -418,11 +460,13 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
                 previous_by_identity=previous_identity,
                 kind=child.kind,
                 pk=child_pk,
+                source_type=child_type,
             )
         )
 
     return {
         "kind": node.kind,
+        "type": _compute_memory_type(node.kind, node.scope, node.path),
         "key": node.key,
         "name": node.name,
         "sources": sources,

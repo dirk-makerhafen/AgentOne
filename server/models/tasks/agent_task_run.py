@@ -69,7 +69,7 @@ class AgentTaskRun(BaseModel):
     taskrun_arg_references = models.ManyToManyField("server.AgentTaskRun",help_text="AgentTaskRuns used in args/kwargs",symmetrical=False,blank=True,related_name="rev_taskrun_arg_references",)
     taskrun_result_references = models.ManyToManyField("server.AgentTaskCall",help_text="AgentTaskCalls returned in results",symmetrical=False,blank=True,related_name="rev_taskrun_result_references",)
 
-    status = models.CharField(choices=TaskRunStatus.choices, default=TaskRunStatus.NEW, max_length=61)
+    status = models.CharField(choices=TaskRunStatus.choices, default=TaskRunStatus.NEW, max_length=61,db_index=True)
     result_json = models.JSONField(default=None, null=True)
 
     observable_fields = set([

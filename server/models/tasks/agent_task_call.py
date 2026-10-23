@@ -114,8 +114,8 @@ class AgentTaskCall(BaseModel):
     taskcall_before_run_hooks = models.ManyToManyField( "self", help_text="", symmetrical=False, blank=True, related_name="rev_taskcall_before_run_hooks")
     taskcall_after_run_hooks = models.ManyToManyField( "self", help_text="", symmetrical=False, blank=True, related_name="rev_taskcall_after_run_hooks")
 
-    status = models.CharField( choices=TaskCallStatus.choices, default=TaskCallStatus.NEW, max_length=61)
-    status_detail = models.CharField( choices=TaskCallStatusDetail.choices, default=TaskCallStatusDetail.NEW, max_length=61)
+    status = models.CharField( choices=TaskCallStatus.choices, default=TaskCallStatus.NEW, max_length=61,db_index=True)
+    status_detail = models.CharField( choices=TaskCallStatusDetail.choices, default=TaskCallStatusDetail.NEW, max_length=61,db_index=True)
 
     taskcall_result_run = models.ForeignKey( "server.AgentTaskRun", null=True, blank=True, default=None, on_delete=models.SET_DEFAULT, related_name="rev_taskcall_result_run")
 

@@ -503,14 +503,12 @@ class SidebarPanelChats(ModelView):
     def new_conversation(self):
         """Open the new-chat page so the user picks agent/workspace/name first."""
         from ui.main.chat.overview import ChatsOverview
-
         self.root_view.main_panel.create_and_open_tab(ChatsOverview, self.subject)
 
     def panel_activated(self) -> None:
         """Show the chat overview when the chat sidebar icon is clicked."""
         try:
             from ui.main.chat.overview import ChatsOverview
-
             self.root_view.main_panel.create_and_open_tab(ChatsOverview, self.subject)
         except Exception:
             pass

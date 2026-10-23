@@ -11,7 +11,7 @@ from django.test import TestCase
 
 from runtime.memory import git as memgit
 from runtime.memory import sources as memsources
-from runtime.memory.tree import walk_memory
+from runtime.memory.tree import walk_memory, _compute_memory_type, _source_type
 from server.models.agents.agent import AgentModel
 from server.models.project import Project
 from server.models.sessions.session import SessionModel
@@ -395,3 +395,199 @@ class MemoryWalkTest(TestCase):
             self.skipTest("git not available")
         gitignore = (self.global_mem / ".gitignore").read_text(encoding="utf-8")
         self.assertIn(".memory_sources.md", gitignore)
+
+
+class MemoryTypeTest(TestCase):
+    """Unit tests for the ``_compute_memory_type`` helper."""
+
+    def test_global_scope_root(self):
+        self.assertEqual(
+            _compute_memory_type("global", "global", Path("/Users/Dirk/.agentone/memory")),
+            "global",
+        )
+
+    def test_project_scope_root(self):
+        self.assertEqual(
+            _compute_memory_type(
+                "project", "project", Path("/Users/Dirk/.agentone/projects/astrotracker/memory")
+            ),
+            "project",
+        )
+
+    def test_workspace_scope_root(self):
+        self.assertEqual(
+            _compute_memory_type(
+                "workspace", "workspace",
+                Path("/Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory"),
+            ),
+            "workspace",
+        )
+
+    def test_global_agent(self):
+        self.assertEqual(
+            _compute_memory_type(
+                "agent", "global", Path("/Users/Dirk/.agentone/memory/agents/34")
+            ),
+            "global-agent",
+        )
+
+    def test_project_agent(self):
+        self.assertEqual(
+            _compute_memory_type(
+                "agent", "project",
+                Path("/Users/Dirk/.agentone/projects/astrotracker/memory/agents/100"),
+            ),
+            "project-agent",
+        )
+
+    def test_workspace_agent(self):
+        self.assertEqual(
+            _compute_memory_type(
+                "agent", "workspace",
+                Path(
+                    "/Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory/agents/100"
+                ),
+            ),
+            "workspace-agent",
+        )
+
+    def test_global_agent_task(self):
+        self.assertEqual(
+            _compute_memory_type(
+                "task", "global",
+                Path("/Users/Dirk/.agentone/memory/agents/34/tasks/task_default"),
+            ),
+            "global-agent-task",
+        )
+
+    def test_project_agent_task(self):
+        self.assertEqual(
+            _compute_memory_type(
+                "task", "project",
+                Path(
+                    "/Users/Dirk/.agentone/projects/astrotracker/memory/agents/100/tasks/task_whatever"
+                ),
+            ),
+            "project-agent-task",
+        )
+
+    def test_workspace_agent_task(self):
+        self.assertEqual(
+            _compute_memory_type(
+                "task", "workspace",
+                Path(
+                    "/Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory/agents/100/tasks/task_assistant:workspace_assistant"
+                ),
+            ),
+            "workspace-agent-task",
+        )
+
+    def test_fallback_returns_kind_for_unknown_kinds(self):
+        self.assertEqual(
+            _compute_memory_type("session", "global", Path("/some/path")), "session"
+        )
+
+    def test_source_type_agents(self):
+        self.assertEqual(_source_type("global", "agents"), "global-agents")
+        self.assertEqual(_source_type("project", "agents"), "project-agents")
+        self.assertEqual(_source_type("workspace", "agents"), "workspace-agents")
+
+    def test_source_type_tasks(self):
+        self.assertEqual(_source_type("global", "tasks"), "global-agent-tasks")
+        self.assertEqual(_source_type("project", "tasks"), "project-agent-tasks")
+        self.assertEqual(_source_type("workspace", "tasks"), "workspace-agent-tasks")
+
+    def test_source_type_sessions(self):
+        self.assertEqual(_source_type("global", "sessions"), "global-agent-task-sessions")
+        self.assertEqual(_source_type("project", "sessions"), "project-agent-task-sessions")
+        self.assertEqual(_source_type("workspace", "sessions"), "workspace-agent-task-sessions")
+
+
+class MemorySourceTypeTest(TestCase):
+    """Verify that source entries carry the ``type`` field in manifests."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+
+        self.global_mem = self.tmp / "global" / "memory"
+        self.global_mem.mkdir(parents=True)
+
+        self.project = Project.objects.create(
+            name="src-type-project", agentone_dir=(self.tmp / "project").as_posix()
+        )
+        self.project_mem = self.tmp / "project" / "memory"
+        self.project_mem.mkdir(parents=True)
+
+        self.agent = AgentModel.objects.create(name="src-type-agent")
+        self.session = self._make_session("src-type-session", self.agent)
+        self._make_agent(self.global_mem, self.agent.pk, self.session.pk)
+
+        self.roots = {("project", self.project.pk): self.project_mem}
+        missing = self.tmp / "missing"
+        fake_root = self._fake_memory_root(missing)
+        self.patch = patch("runtime.memory.tree.mempaths.memory_root", side_effect=fake_root)
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+
+    def _make_session(self, name, agent, *, project=None, workspace=None):
+        session = SessionModel.objects.create(
+            name=name, group_key="default", parent_project=project
+        )
+        SessionVersionModel.objects.create(
+            session=session, agent=agent, workspace=workspace
+        )
+        return session
+
+    def _fake_memory_root(self, missing: Path):
+        def fake(session_or_pk=None, *, workspace=None, project=None):
+            if workspace is not None:
+                return self.roots.get(
+                    ("workspace", workspace.pk), missing / f"ws{workspace.pk}"
+                )
+            if project is not None:
+                return self.roots.get(
+                    ("project", project.pk), missing / f"project{project.pk}"
+                )
+            return self.global_mem
+        return fake
+
+    def _make_agent(self, root: Path, agent_pk: int, session_pk: int) -> None:
+        agent = root / "agents" / str(agent_pk)
+        agent.mkdir(parents=True)
+        (agent / "memory.md").write_text(f"agent {agent_pk}", encoding="utf-8")
+        task = agent / "tasks" / "task_default"
+        task.mkdir(parents=True)
+        (task / "memory.md").write_text(f"task {agent_pk}", encoding="utf-8")
+        session = task / "sessions" / str(session_pk)
+        session.mkdir(parents=True)
+        (session / "reflections_20261023-120000_1.md").write_text("r", encoding="utf-8")
+
+    def _manifest(self, root: Path) -> dict:
+        return memsources.read_sources(root / memsources.SOURCES_FILENAME)
+
+    def test_directory_source_has_type(self):
+        walk_memory(write=True)
+        manifest = self._manifest(self.global_mem)
+        agent_source = next(
+            s for s in manifest["sources"] if s["path"] == "agents/"
+        )
+        self.assertEqual(agent_source["type"], "global-agents")
+
+    def test_agent_directory_source_has_type(self):
+        walk_memory(write=True)
+        agent_dir = self.global_mem / "agents" / str(self.agent.pk)
+        manifest = self._manifest(agent_dir)
+        task_source = next(
+            s for s in manifest["sources"] if s["path"] == "tasks/"
+        )
+        self.assertEqual(task_source["type"], "global-agent-tasks")
+
+    def test_child_scope_source_has_type(self):
+        walk_memory(write=True)
+        manifest = self._manifest(self.global_mem)
+        project_source = next(
+            s for s in manifest["sources"]
+            if s.get("kind") == "project" and s.get("pk") == self.project.pk
+        )
+        self.assertEqual(project_source["type"], "project")
