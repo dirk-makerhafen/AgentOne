@@ -60,14 +60,23 @@ def memory_collect_results(_session: Session, item_id: str = "", memory_root: st
     queue = _load_queue(root)
     items = queue.get("items", [])
     found = False
+    target_dir = ""
     for it in items:
         if it.get("id") == item_id:
             it["status"] = "done"
             it["result"] = str(result)[:500] if result is not None else ""
+            target_dir = str(it.get("target_dir") or "")
             found = True
     # drop done items older than retry? keep simple: remove done
     queue["items"] = [i for i in items if i.get("status") != "done"]
     _save_queue(root, queue)
+
+    if found and target_dir:
+        try:
+            from runtime.memory.tree import mark_processed
+            mark_processed(Path(target_dir))
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
     # retry handling: if a running item had attempts >=3, drop it
     # (handled in process step; here just log)

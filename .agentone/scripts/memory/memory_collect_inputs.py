@@ -141,8 +141,7 @@ def memory_collect_inputs(_session: Session, lookback_minutes: int = 5, **kwargs
                         text += str(content)
             except Exception:  # pylint: disable=broad-exception-caught
                 text = str(getattr(msg, "content", "") or "")
-            filename = "reflections.md" if msg.message_type == MessageType.REFLECTION else "compaction.md"
-            mempaths.write_text(sess_dir / filename, text)
+            mempaths.write_text(sess_dir / mempaths.report_filename(msg), text)
 
     _scope_set = set(scope_roots.keys())
     for scope, root in _roots():

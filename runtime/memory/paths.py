@@ -62,6 +62,43 @@ def timestamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
+def report_filename(message: Any) -> str:
+    """Return the timestamped report filename for a reflection/compaction message.
+
+    Uses the message's creation time (local time) and primary key, so the
+    name is stable when the same message is ingested again.
+    """
+    kind = "compaction"
+    try:
+        from server.models.enums.message_enums import MessageType
+
+        if getattr(message, "message_type", None) == MessageType.REFLECTION:
+            kind = "reflections"
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
+    created_at = getattr(message, "created_at", None)
+    if created_at is None:
+        created_at = datetime.now()
+    else:
+        try:
+            from django.utils import timezone
+
+            if timezone.is_aware(created_at):
+                created_at = timezone.localtime(created_at)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    try:
+        stamp = created_at.strftime("%Y%m%d-%H%M%S")
+    except (AttributeError, ValueError):
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    pk = getattr(message, "pk", None)
+    suffix = f"_{pk}" if pk is not None else ""
+    return f"{kind}_{stamp}{suffix}.md"
+
+
 def write_text(path: Any, content: str) -> Path:
     path = Path(path)
     ensure_dir(path.parent)

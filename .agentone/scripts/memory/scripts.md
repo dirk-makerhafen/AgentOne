@@ -13,6 +13,10 @@ tools:
     file: memory_collect_results.py
     function: memory_collect_results
     bound: True
+  - name: memory_walk
+    file: memory_walk.py
+    function: memory_walk
+    bound: False
 tasks:
   - name: memory_synthesize_task
     file: memory_synthesize_task.py

@@ -73,6 +73,39 @@ def test_changed_paths_prefix_filter(tmp_path):
     assert "other.md" not in changed
 
 
+def test_path_commit_and_diff_stats(tmp_path):
+    root = tmp_path / "memory"
+    memgit.ensure_repo(root)
+    (root / "a.md").write_text("one", encoding="utf-8")
+    h1 = memgit.commit_all(root, message="one")
+    (root / "a.md").write_text("three", encoding="utf-8")
+    h2 = memgit.commit_all(root, message="two")
+
+    assert memgit.path_commit(root / "a.md") == h2
+    hours, chars = memgit.diff_stats(root / "a.md", h1, h2)
+    assert hours == 0.0
+    assert chars == len("three")
+    assert memgit.diff_stats(root, "sha256:old", h2) is None
+
+
+def test_diff_stats_can_limit_to_files(tmp_path):
+    root = tmp_path / "memory"
+    memgit.ensure_repo(root)
+    layer = root / "child"
+    (layer / "agents").mkdir(parents=True)
+    (layer / "memory.md").write_text("old", encoding="utf-8")
+    (layer / "agents" / "a.md").write_text("old", encoding="utf-8")
+    h1 = memgit.commit_all(root, message="old")
+    (layer / "memory.md").write_text("new memory", encoding="utf-8")
+    (layer / "agents" / "a.md").write_text("new agent", encoding="utf-8")
+    h2 = memgit.commit_all(root, message="new")
+
+    _hours, chars = memgit.diff_stats(
+        layer, h1, h2, files=[layer / "memory.md"]
+    )
+    assert chars == len("new memory")
+
+
 def test_processed_sidecar(tmp_path):
     layer = tmp_path / "layer"
     layer.mkdir()

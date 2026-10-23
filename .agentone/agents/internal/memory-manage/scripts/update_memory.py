@@ -122,8 +122,7 @@ def update_memory(_session: Session, lookback_minutes: int = 5, **kwargs: Any):
                             text += str(content)
                 except Exception:  # pylint: disable=broad-exception-caught
                     text = str(getattr(msg, "content", "") or "")
-                filename = f"reflections_{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}.md" if msg.message_type == MessageType.REFLECTION else f"compaction_{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}.md"
-                mempaths.write_text(sess_dir / filename, text)
+                mempaths.write_text(sess_dir / mempaths.report_filename(msg), text)
             updated_tasks.add((scope, agent_pk, group_key, root))
             updated_agents.add((scope, agent_pk, root))
 

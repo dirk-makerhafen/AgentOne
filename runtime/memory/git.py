@@ -8,6 +8,7 @@ rolled back independently of the rest of the instance. Repos are local-only.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -29,6 +30,143 @@ def _run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(args, cwd=str(cwd), capture_output=True, text=True, check=False)
 
 
+_SHA_RE = re.compile(r"^[0-9a-f]{40}(?:[0-9a-f]{24})?$")
+
+
+def is_git_hash(value: object) -> bool:
+    """Return whether *value* looks like a git commit SHA (SHA-1 or SHA-256)."""
+    return isinstance(value, str) and bool(_SHA_RE.fullmatch(value.strip()))
+
+
+def repo_for(path: Path) -> Optional[Path]:
+    """Return the nearest enclosing git work tree for *path*, if any."""
+    probe = Path(path).resolve()
+    if not probe.is_dir():
+        probe = probe.parent
+    while True:
+        if (probe / ".git").exists():
+            return probe
+        if probe.parent == probe:
+            return None
+        probe = probe.parent
+
+
+def _repo_rel(path: Path) -> tuple[Optional[Path], str]:
+    repo = repo_for(path)
+    if repo is None:
+        return None, ""
+    try:
+        rel = Path(path).resolve().relative_to(repo).as_posix()
+    except (OSError, ValueError):
+        return repo, ""
+    return repo, "" if rel == "." else rel
+
+
+def path_commit(
+    path: Path,
+    files: Optional[list[Path]] = None,
+    before: Optional[str] = None,
+) -> Optional[str]:
+    """Return the last commit SHA touching *path* or *files*.
+
+    When *files* is given, only those paths are considered.  When *before*
+    is given, history is cut at that commit.  ``HEAD`` is used when *path*
+    is the repository root and *files* is not given.
+    """
+    repo, rel = _repo_rel(path)
+    if repo is None:
+        return None
+    args = ["git", "log", "-1", "--format=%H"]
+    if before:
+        if not is_git_hash(before):
+            return None
+        args.append(before)
+    if files is not None:
+        rels = []
+        for item in files:
+            try:
+                rels.append(Path(item).resolve().relative_to(repo).as_posix())
+            except (OSError, ValueError):
+                continue
+        if not rels:
+            return None
+        args.extend(["--", *rels])
+    elif rel:
+        args.extend(["--", rel])
+    result = _run(args, cwd=repo)
+    sha = result.stdout.strip()
+    return sha if result.returncode == 0 and sha else None
+
+
+def commit_time(repo: Path, sha: str) -> Optional[int]:
+    """Return the Unix timestamp of commit *sha*, or ``None``."""
+    if not is_git_hash(sha):
+        return None
+    result = _run(["git", "show", "-s", "--format=%ct", sha], cwd=Path(repo))
+    if result.returncode != 0:
+        return None
+    try:
+        return int(result.stdout.strip())
+    except ValueError:
+        return None
+
+
+def diff_stats(
+    path: Path,
+    old_sha: Optional[str],
+    new_sha: Optional[str],
+    files: Optional[list[Path]] = None,
+):
+    """Return ``(hours, chars)`` between two commits for *path* or *files*.
+
+    ``hours`` is the distance between the commit timestamps.  ``chars`` is
+    the sum of the current character counts of the changed files.
+    Returns ``None`` when the SHAs are not valid commits in the path's repo.
+    """
+    if not old_sha or not new_sha:
+        return None
+    repo, rel = _repo_rel(path)
+    if repo is None:
+        return None
+    old_ts = commit_time(repo, old_sha)
+    new_ts = commit_time(repo, new_sha)
+    if old_ts is None or new_ts is None:
+        return None
+
+    rel_files = None
+    if files is not None:
+        rel_files = []
+        for item in files:
+            try:
+                rel_files.append(Path(item).resolve().relative_to(repo).as_posix())
+            except (OSError, ValueError):
+                continue
+        if not rel_files:
+            return None
+
+    hours = round(max(0.0, (new_ts - old_ts) / 3600.0), 2)
+    chars = 0
+    for rel_file in changed_paths(
+        repo, old_sha, new_sha, rel_prefix=rel, rel_files=rel_files
+    ):
+        file_path = repo / rel_file
+        if not file_path.is_file():
+            continue
+        if file_path.name in {
+            ".memory_sources.md", ".memory_state.json", ".memory_queue.json",
+            ".gitignore", ".DS_Store",
+        }:
+            continue
+        try:
+            chars += len(file_path.read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            try:
+                chars += file_path.stat().st_size
+            except OSError:
+                pass
+    return hours, chars
+
+
 def ensure_repo(memory_root: Path) -> Path:
     """Ensure *memory_root* is a git repository (local-only).
 
@@ -47,7 +185,15 @@ def ensure_repo(memory_root: Path) -> Path:
             _run(["git", "config", key, val], cwd=root)
 
     gitignore = root / ".gitignore"
-    desired = ".memory_state.json\n.memory_queue.json\n.DS_Store\n__pycache__/\n*.pyc\n*.pyo\n"
+    desired = (
+        ".memory_sources.md\n"
+        ".memory_state.json\n"
+        ".memory_queue.json\n"
+        ".DS_Store\n"
+        "__pycache__/\n"
+        "*.pyc\n"
+        "*.pyo\n"
+    )
     if not gitignore.exists() or gitignore.read_text(encoding="utf-8") != desired:
         gitignore.write_text(desired, encoding="utf-8")
 
@@ -109,11 +255,13 @@ def changed_paths(
     old_sha: Optional[str],
     new_sha: Optional[str],
     rel_prefix: str = "",
+    rel_files: Optional[list[str]] = None,
 ) -> list[str]:
     """Return file paths changed between *old_sha* and *new_sha*.
 
     Paths are relative to *memory_root*. When *rel_prefix* is given, only
-    paths starting with that prefix are returned. Returns ``[]`` when git is
+    paths starting with that prefix are returned. When *rel_files* is given,
+    only those exact paths are returned. Returns ``[]`` when git is
     unavailable or the SHAs are equal/empty.
     """
     root = Path(memory_root)
@@ -121,7 +269,15 @@ def changed_paths(
         return []
     if not (root / ".git").exists():
         return []
-    result = _run(["git", "diff", "--name-only", f"{old_sha}..{new_sha}"], cwd=root)
+    allowed = {
+        item.strip().strip("/")
+        for item in (rel_files or [])
+        if item and item.strip().strip("/")
+    }
+    args = ["git", "diff", "--name-only", f"{old_sha}..{new_sha}"]
+    if allowed:
+        args.extend(["--", *sorted(allowed)])
+    result = _run(args, cwd=root)
     if result.returncode != 0:
         return []
     out: list[str] = []
@@ -129,6 +285,8 @@ def changed_paths(
     for line in result.stdout.splitlines():
         path = line.strip()
         if not path:
+            continue
+        if allowed and path not in allowed:
             continue
         if prefix and not (path == prefix or path.startswith(prefix + "/")):
             continue
