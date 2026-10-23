@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -122,7 +122,7 @@ def update_memory(_session: Session, lookback_minutes: int = 5, **kwargs: Any):
                             text += str(content)
                 except Exception:  # pylint: disable=broad-exception-caught
                     text = str(getattr(msg, "content", "") or "")
-                filename = "reflections.md" if msg.message_type == MessageType.REFLECTION else "compaction.md"
+                filename = f"reflections_{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}.md" if msg.message_type == MessageType.REFLECTION else f"compaction_{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}.md"
                 mempaths.write_text(sess_dir / filename, text)
             updated_tasks.add((scope, agent_pk, group_key, root))
             updated_agents.add((scope, agent_pk, root))
@@ -135,7 +135,7 @@ def update_memory(_session: Session, lookback_minutes: int = 5, **kwargs: Any):
                 _spawn(
                     av,
                     _session,
-                    f"memory:task:{agent_pk}:{group_key}:{int(time.time())}",
+                    f"memory:task:{agent_pk}:{group_key}:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
                     "Synthesize the following session report files into consolidated memory.\n"
                     f"Target directory: {task_dir}\n"
                     f"Source files:\n" + "\n".join(sources) + "\n\n"
@@ -152,7 +152,7 @@ def update_memory(_session: Session, lookback_minutes: int = 5, **kwargs: Any):
                 _spawn(
                     av,
                     _session,
-                    f"memory:agent:{agent_pk}:{int(time.time())}",
+                    f"memory:agent:{agent_pk}:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
                     "Synthesize the following task-level report files into agent-level memory.\n"
                     f"Target directory: {agent_dir}\n"
                     f"Source files:\n" + "\n".join(sources) + "\n\n"
@@ -167,7 +167,7 @@ def update_memory(_session: Session, lookback_minutes: int = 5, **kwargs: Any):
                 _spawn(
                     av,
                     _session,
-                    f"memory:scope:{scope}:{int(time.time())}",
+                    f"memory:scope:{scope}:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
                     "Synthesize the following agent-level report files into scope-level memory.\n"
                     f"Target directory: {root}\n"
                     f"Source files:\n" + "\n".join(sources) + "\n\n"

@@ -41,7 +41,7 @@ def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) ->
     message = Message.objects.create(role=MessageRole.USER, message_type=MessageType.USER_CHAT, session=session_version.session, session_version=session_version, prev_message=prev_message)
 
     try:
-        result = bound_task.call(**kwargs)
+        result = bound_task.delay(**kwargs)
     except Exception as e:
         result = {"exception": str(e), "traceback": traceback.format_exc()}
 
@@ -58,8 +58,7 @@ def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) ->
 
 
 def handle_slashcommand_response(
-    _session: Session, message: Message, tool_reponse: Any
-) -> Any:
+    _session: Session, message: Message, tool_reponse: Any, **kwarsg) -> Any:
     """
     Create an assistant Message wrapping the slash command result.
 

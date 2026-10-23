@@ -25,7 +25,6 @@ tasks: [core.*]
 disallowedTasks: []
 commands: []
 disallowedCommands: []
-priority: 0
 ---
 
 ## Role

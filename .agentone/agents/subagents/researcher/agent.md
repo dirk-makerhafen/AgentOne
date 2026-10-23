@@ -17,7 +17,6 @@ inheritSystemPrompt: true
 toolCallSyntax: default
 schedulerStrategy: queue
 subagentResultDelivery: immediate
-priority: 0
 
 autoCompactMaxTokens: 120000
 autoCompactMinTokens: 50000
