@@ -81,5 +81,5 @@ def newest_mtime(directory: Any) -> float:
     directory = Path(directory)
     if not directory.is_dir():
         return 0.0
-    mtimes = [p.stat().st_mtime for p in directory.rglob("*") if p.is_file()]
+    mtimes = [p.stat().st_mtime for p in directory.rglob("*") if p.is_file() and ".git" not in p.parts]
     return max(mtimes) if mtimes else 0.0

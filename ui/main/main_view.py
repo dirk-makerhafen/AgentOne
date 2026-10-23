@@ -17,8 +17,7 @@ class MainView(PyHtmlView):
             Open something
         {% endif %}
     """
-   
-    
+
     def __init__(self, subject: "UiApp", parent:UiAppView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.open_tabs = {}

@@ -2,7 +2,7 @@
 name: baseagent
 visibility: internal
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
-description: Basic Agent without any tools
+description: Basic Agent with only filesystem read/write
 extends: []
 inheritSystemPrompt: false
 maxRetries: 0

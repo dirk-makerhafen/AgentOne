@@ -1,26 +1,51 @@
 ---
 name: wiki
 description: Vault brain agent — markdown wiki maintainer and knowledge curator.
-extends: AgentOne
-inheritSystemPrompt: true
+extends: [reflection-mixin]
+inheritSystemPrompt: false
+model: Qwen3.6-35B-A3B-UD-MLX-4bit
+precision: precise
 reasoningEffort: high
-precision: FOCUSED
-tools: [+, filesystem-read.*, filesystem-write.*, subagents.*, web.*, execution.*, skills.*,  workitems.*, update_timeline, update_timeline_daily, update_timeline_monthly, update_entities, update_ingress, process_ingress]
-# browser.* is deliberately AgentOne-only for now (see docs/browser.md).
-disallowedTools: [browser.*]
-commands: [+, ingest_next, sync_applemail, wiki_lint]
-tasks: [+, find_unlinked_raw, process_summary, double_check_summary, write_day_index, write_month_index, write_entity, finalize_ingress_item]
-autoCompactMaxTokens: 100000
-autoCompactKeepPercent: 10
+toolCallSyntax: default
+schedulerStrategy: queue
+subagentResultDelivery: immediate
+priority: 99
+tools: [+, core.*, filesystem-read.*, filesystem-write.*, todo.*, subagents.*, web.*, execution.*, skills.*,  workitems.*, update_timeline, update_timeline_daily, update_timeline_monthly, update_entities, update_ingress, process_ingress]
+commands: [+, ping, todo.*, ingest_next, sync_applemail, wiki_lint]
+tasks: [+, core.*, compact.*, memory.*, find_unlinked_raw, process_summary, double_check_summary, write_day_index, write_month_index, write_entity, finalize_ingress_item]
+
+maxRetries: 2
+maxTurns: 2000
+maxUnattendedTurns: 2000
+maxHistoryMessages: 1000
+autoCompactMaxTokens: 120000
+autoCompactMinTokens: 50000
+autoCompactKeepPercent: 5
+autoCompactIdleSeconds: 240
+
 subagents:
     - name: researcher
       create: both
     - name: wiki
       create: both
+
 access: 
   workspace:
     write:
       deny: ["raw/"]
+
+autoload:
+  files: [AGENTS.md, CLAUDE.md]
+  maxFiles: 10
+  maxChars: 32768
+  maxCharsPerFile: 8192
+
+sessionBootstrap: |
+  Workspace directory: {{workspace_dir}}
+  Private session dir: {{session_dir}}
+
+loadGuidanceFileIndex: true
+guidanceFileIndexLimit: 10
 ---
 
 # My Second Brain - Wiki Maintainer Rules

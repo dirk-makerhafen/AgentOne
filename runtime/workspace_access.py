@@ -366,6 +366,10 @@ def _session_dir_verdict(session_pk: int | None, target_abs: str, target_abs_raw
                 break
         if idx is None:
             continue
+        # Memory storage also uses .../sessions/<pk> segments; do not
+        # treat those as session-private storage.
+        if "memory" in parts[:idx]:
+            continue
         rest = parts[idx + 1:]
         if not rest:
             continue

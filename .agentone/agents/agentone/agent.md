@@ -11,7 +11,7 @@ inheritSystemPrompt: true
 toolCallSyntax: default
 schedulerStrategy: queue
 subagentResultDelivery: immediate
-priority: 0
+priority: 10
 
 autoCompactMaxTokens: 120000
 autoCompactMinTokens: 50000
@@ -46,7 +46,7 @@ disallowedTools: []
 skills: []
 disallowedSkills: []
 
-tasks: [ +, core.*, compact.*,  ]
+tasks: [ +, core.*, compact.*, memory.*,  ]
 disallowedTasks: []
 
 subagents:

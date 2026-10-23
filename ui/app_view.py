@@ -139,14 +139,14 @@ class UiAppView(PyHtmlView):
         self._subject = subject
         super().__init__(subject, parent, **kwargs)
 
-        self.titlebar = AppTitlebar(subject=subject, parent=self)
+        self.titlebar  = AppTitlebar(subject=subject, parent=self)
 
-        self.rail     = RailView(subject=subject, parent=self) # Subject will be the main UiApp
-        self.sidebar = SidebarView(subject=subject,parent= self) # Subject will be the main UiApp
+        self.rail       = RailView(subject=subject, parent=self) # Subject will be the main UiApp
+        self.sidebar    = SidebarView(subject=subject,parent= self) # Subject will be the main UiApp
         self.main_panel = MainView(subject, self)
 
         self.rightpanel = RightPanel(subject, self)
 
         self.onboarding_overlay = OnboardingOverlay(subject, self)
-        self.mobile_overlay = MobileOverlay(subject, self)
+        self.mobile_overlay     = MobileOverlay(subject, self)
         self.app_dialog_overlay = AppDialogOverlay(subject, self)

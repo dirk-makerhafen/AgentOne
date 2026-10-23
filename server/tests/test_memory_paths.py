@@ -19,11 +19,11 @@ def test_memory_root_global():
 def test_agent_task_session_dirs():
     root = Path("/tmp/x/memory")
     a = mempaths.agent_memory_dir(root, 42)
-    assert a == root / "agents" / "agent_42"
+    assert a == root / "agents" / "42"
     t = mempaths.task_memory_dir(a, "wiki:timeline")
     assert t == a / "tasks" / "task_wiki:timeline"
     s = mempaths.session_memory_dir(t, 7)
-    assert s == t / "sessions" / "session_7"
+    assert s == t / "sessions" / "7"
 
 
 def test_write_read_text():
