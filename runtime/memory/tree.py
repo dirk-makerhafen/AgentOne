@@ -35,7 +35,7 @@ _SOURCE_DIR = {
 _AGENT_QUERY_CHUNK = 500
 
 
-def _compute_memory_type(kind: str, scope: str, path: Path) -> str:
+def _compute_memory_type(kind: str, scope: str) -> str:
     """Return the memory type string for a node.
 
     The type encodes the scope kind plus the entity layer:
@@ -86,6 +86,40 @@ class MemoryTree:
     nodes: list[MemoryNode] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     scope_children: dict[int, list[MemoryNode]] = field(default_factory=dict)
+    node_depth: dict[int, int] = field(default_factory=dict)
+
+
+def _compute_depths(tree: MemoryTree) -> dict[int, int]:
+    """Compute depth for each node (distance from global root)."""
+    if not tree.nodes:
+        return {}
+    # Find global root (scope is empty or same as kind)
+    global_root = next(
+        (n for n in tree.nodes if not n.scope or n.scope == n.kind), None
+    )
+    if global_root is None:
+        return {}
+
+    depths: dict[int, int] = {id(global_root): 0}
+    queue = [global_root]
+    visited = {id(global_root)}
+
+    while queue:
+        parent = queue.pop(0)
+        parent_depth = depths[id(parent)]
+        for child in tree.scope_children.get(id(parent), []):
+            if id(child) not in visited:
+                depths[id(child)] = parent_depth + 1
+                visited.add(id(child))
+                queue.append(child)
+
+    # Assign depth 0 to any unvisited roots (shouldn't happen, but be safe)
+    for node in tree.nodes:
+        if id(node) not in depths:
+            depths[id(node)] = 0
+
+    tree.node_depth = depths
+    return depths
 
 
 @dataclass
@@ -410,7 +444,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
     ]
     for child in tree.scope_children.get(id(node), []):
         child_pk = int(child.key) if str(child.key).isdigit() else None
-        child_type = _compute_memory_type(child.kind, node.scope, child.path)
+        child_type = _compute_memory_type(child.kind, node.scope)
         sources.append(
             _source_entry(
                 _source_path(child.path, node.path),
@@ -424,7 +458,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
 
     return {
         "kind": node.kind,
-        "type": _compute_memory_type(node.kind, node.scope, node.path),
+        "type": _compute_memory_type(node.kind, node.scope),
         "key": node.key,
         "name": node.name,
         "sources": sources,
@@ -480,17 +514,22 @@ def walk_memory(write: bool = True) -> dict[str, Any]:
     """Walk every existing memory root and update ``.memory_sources.md``.
 
     With ``write=False`` only reports what would be written.  Returns a
-    summary with node/manifest counts, pending sources and warnings.
+    summary with node/manifest counts, pending sources and warnings, plus
+    a depth-first flat list of items that need updates (sorted by depth
+    first, then by ``changed_chars`` descending within the same depth).
     """
     tree = discover_tree()
+    _compute_depths(tree)
     if write:
         _prepare_write_repos(tree)
     manifests_written = 0
     pending = 0
     missing = 0
+    needs_update: list[dict[str, Any]] = []
 
     for node in tree.nodes:
         payload = _build_manifest(node, tree)
+        node_depth = tree.node_depth.get(id(node), 0)
         for source in payload["sources"]:
             last = source.get("last_processed_hash")
             current = source.get("current_hash")
@@ -498,6 +537,16 @@ def walk_memory(write: bool = True) -> dict[str, Any]:
                 missing += 1
             elif last != current:
                 pending += 1
+                needs_update.append({
+                    "path": source["path"],
+                    "type": source.get("type"),
+                    "pk": source.get("pk"),
+                    "depth": node_depth,
+                    "changed_chars": source.get("changed_chars"),
+                    "hours_since_processed": source.get("hours_since_processed"),
+                    "last_processed_hash": last,
+                    "current_hash": current,
+                })
 
         manifest_path = node.path / memsources.SOURCES_FILENAME
         if not write:
@@ -508,6 +557,9 @@ def walk_memory(write: bool = True) -> dict[str, Any]:
         except OSError as exc:
             tree.warnings.append(f"write failed for {manifest_path}: {exc}")
 
+    # Sort: depth-first (ascending), then by changed_chars descending
+    needs_update.sort(key=lambda s: (s["depth"], -(s["changed_chars"] or 0)))
+
     return {
         "nodes": len(tree.nodes),
         "manifests_written": manifests_written,
@@ -515,4 +567,5 @@ def walk_memory(write: bool = True) -> dict[str, Any]:
         "missing": missing,
         "warnings": tree.warnings,
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "needs_update": needs_update,
     }

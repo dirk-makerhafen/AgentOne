@@ -402,89 +402,61 @@ class MemoryTypeTest(TestCase):
 
     def test_global_scope_root(self):
         self.assertEqual(
-            _compute_memory_type("global", "global", Path("/Users/Dirk/.agentone/memory")),
+            _compute_memory_type("global", "global"),
             "global",
         )
 
     def test_project_scope_root(self):
         self.assertEqual(
-            _compute_memory_type(
-                "project", "project", Path("/Users/Dirk/.agentone/projects/astrotracker/memory")
-            ),
+            _compute_memory_type("project", "project"),
             "project",
         )
 
     def test_workspace_scope_root(self):
         self.assertEqual(
-            _compute_memory_type(
-                "workspace", "workspace",
-                Path("/Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory"),
-            ),
+            _compute_memory_type("workspace", "workspace"),
             "workspace",
         )
 
     def test_global_agent(self):
         self.assertEqual(
-            _compute_memory_type(
-                "agent", "global", Path("/Users/Dirk/.agentone/memory/agents/34")
-            ),
+            _compute_memory_type("agent", "global"),
             "global-agent",
         )
 
     def test_project_agent(self):
         self.assertEqual(
-            _compute_memory_type(
-                "agent", "project",
-                Path("/Users/Dirk/.agentone/projects/astrotracker/memory/agents/100"),
-            ),
+            _compute_memory_type("agent", "project"),
             "project-agent",
         )
 
     def test_workspace_agent(self):
         self.assertEqual(
-            _compute_memory_type(
-                "agent", "workspace",
-                Path(
-                    "/Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory/agents/100"
-                ),
-            ),
+            _compute_memory_type("agent", "workspace"),
             "workspace-agent",
         )
 
     def test_global_agent_task(self):
         self.assertEqual(
-            _compute_memory_type(
-                "task", "global",
-                Path("/Users/Dirk/.agentone/memory/agents/34/tasks/task_default"),
-            ),
+            _compute_memory_type("task", "global"),
             "global-agent-task",
         )
 
     def test_project_agent_task(self):
         self.assertEqual(
-            _compute_memory_type(
-                "task", "project",
-                Path(
-                    "/Users/Dirk/.agentone/projects/astrotracker/memory/agents/100/tasks/task_whatever"
-                ),
-            ),
+            _compute_memory_type("task", "project"),
             "project-agent-task",
         )
 
     def test_workspace_agent_task(self):
         self.assertEqual(
-            _compute_memory_type(
-                "task", "workspace",
-                Path(
-                    "/Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory/agents/100/tasks/task_assistant:workspace_assistant"
-                ),
-            ),
+            _compute_memory_type("task", "workspace"),
             "workspace-agent-task",
         )
 
     def test_fallback_returns_kind_for_unknown_kinds(self):
         self.assertEqual(
-            _compute_memory_type("session", "global", Path("/some/path")), "session"
+            _compute_memory_type("session", "global"), "session"
         )
 
     def test_source_type_agents(self):

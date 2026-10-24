@@ -191,7 +191,9 @@ class TaskInstance(BaseModel):
         from django.db import IntegrityError, transaction
 
         session = session_version.session
-
+        from runtime.session.session import Session
+        session_runtime = Session(session_model=session, pinned_session_version=session_version)
+        
         args = args if args else []
         arguments = kwargs if kwargs else {}
         if not isinstance(args, (list, set, tuple)):
@@ -208,7 +210,7 @@ class TaskInstance(BaseModel):
             "max_subtask_error_rate": task_definition.max_subtask_error_rate,
             "limit_subtask_parallel_runs": task_definition.limit_subtask_parallel_runs,
             "limit_per_instance_parallel_runs": task_definition.limit_per_instance_parallel_runs,
-            "priority": session_version.session_settings.priority if  session_version.session_settings else task_definition.priority,
+            "priority": session_runtime.priority,
             "max_retries": task_definition.max_retries,
             "retry_delay": task_definition.retry_delay,
             "retry_requires_approval": task_definition.retry_requires_approval,
