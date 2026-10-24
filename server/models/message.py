@@ -43,8 +43,8 @@ class Message(BaseModel):
 
     prev_message: models.ForeignKey | None = models.ForeignKey( "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="next_messages")
 
-    role: str = models.CharField(choices=MessageRole.choices, default=MessageRole.USER, max_length=61)
-    message_type: str = models.CharField(choices=MessageType.choices, default=MessageType.DEFAULT, max_length=61)
+    role: str = models.CharField(choices=MessageRole.choices, default=MessageRole.USER, max_length=61,db_index=True)
+    message_type: str = models.CharField(choices=MessageType.choices, default=MessageType.DEFAULT, max_length=61, db_index=True)
 
     hide_from_context: bool = models.BooleanField(default=False)
     pin_to_context: bool = models.BooleanField(default=False)

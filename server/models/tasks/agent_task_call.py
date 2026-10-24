@@ -185,9 +185,7 @@ class AgentTaskCall(BaseModel):
             entries = _hookmod.get_session_agent_hooks(task_instance.session_version)
             ctx = _hookmod.call_match_context(task_instance)
             for intercept in _hookmod.matching_intercepts(entries, "before", ctx):
-                hook_ti = _hookmod.build_hook_task_instance(
-                    task_instance.session_version, intercept["before"]
-                )
+                hook_ti = _hookmod.build_hook_task_instance(task_instance.session_version, intercept["before"])
                 if hook_ti is None:
                     continue
                 if intercept.get("mode") == "detached":

@@ -21,8 +21,6 @@ SOURCES_FILENAME = ".memory_sources.md"
 
 _METADATA_NAMES = {
     SOURCES_FILENAME,
-    ".memory_state.json",
-    ".memory_queue.json",
     ".gitignore",
     ".DS_Store",
 }
@@ -36,43 +34,6 @@ def is_metadata_path(path: Path) -> bool:
     if path.name in _METADATA_NAMES or path.name.endswith(_METADATA_SUFFIXES):
         return True
     return any(part in _METADATA_DIRS for part in path.parts)
-
-
-def hash_files(paths: Iterable[Path], base: Path | None = None) -> str | None:
-    """Return ``sha256:<hex>`` over *paths* (sorted, metadata excluded).
-
-    Only regular files are included.  Relative names (to *base*) are hashed
-    before each file's bytes so renames are visible.  Returns ``None`` when
-    the resulting set is empty.
-    """
-    base_path = Path(base) if base is not None else None
-    files = [
-        Path(p)
-        for p in paths
-        if Path(p).is_file() and not is_metadata_path(Path(p))
-    ]
-    if not files:
-        return None
-
-    def _sort_key(path: Path) -> str:
-        return _rel_name(path, base_path)
-
-    digest = hashlib.sha256()
-    for path in sorted(files, key=_sort_key):
-        digest.update(_rel_name(path, base_path).encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
-    return f"sha256:{digest.hexdigest()}"
-
-
-def _rel_name(path: Path, base: Path | None) -> str:
-    if base is None:
-        return path.as_posix()
-    try:
-        return path.resolve().relative_to(base.resolve()).as_posix()
-    except (OSError, ValueError):
-        return path.as_posix()
 
 
 def read_sources(path: Path) -> dict[str, Any]:
@@ -148,39 +109,25 @@ def write_sources(path: Path, payload: dict[str, Any]) -> bool:
     return True
 
 
-def source_key(source: dict[str, Any]) -> str:
-    """Return the path identity used to preserve last-processed hashes."""
-    return str(source.get("path", ""))
-
-
-def source_identity(source: dict[str, Any]) -> tuple[str, int] | None:
-    """Return ``(kind, pk)`` for a project/workspace source, if present."""
-    kind = str(source.get("kind") or "").strip()
-    pk = source.get("pk")
-    if not kind or pk is None:
-        return None
-    try:
-        return kind, int(pk)
-    except (TypeError, ValueError):
-        return None
-
-
 def previous_hashes(manifest: dict[str, Any]) -> dict[str, Any]:
     """Map source path to its ``last_processed_hash`` from *manifest*."""
     out: dict[str, Any] = {}
     for source in manifest.get("sources") or []:
         if isinstance(source, dict):
-            out[source_key(source)] = source.get("last_processed_hash")
+            out[str(source.get("path", ""))] = source.get("last_processed_hash")
     return out
 
 
-def previous_by_identity(manifest: dict[str, Any]) -> dict[tuple[str, int], Any]:
-    """Map child-scope ``(kind, pk)`` to ``last_processed_hash``."""
-    out: dict[tuple[str, int], Any] = {}
+def previous_by_identity(manifest: dict[str, Any]) -> dict[int, Any]:
+    """Map child-scope ``pk`` to ``last_processed_hash`` for path-change tracking."""
+    out: dict[int, Any] = {}
     for source in manifest.get("sources") or []:
         if not isinstance(source, dict):
             continue
-        identity = source_identity(source)
-        if identity is not None:
-            out[identity] = source.get("last_processed_hash")
+        pk = source.get("pk")
+        if pk is not None:
+            try:
+                out[int(pk)] = source.get("last_processed_hash")
+            except (TypeError, ValueError):
+                pass
     return out

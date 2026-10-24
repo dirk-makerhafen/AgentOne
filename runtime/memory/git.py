@@ -7,23 +7,11 @@ rolled back independently of the rest of the instance. Repos are local-only.
 
 from __future__ import annotations
 
-import json
 import re
 import subprocess
 import time
 from pathlib import Path
 from typing import Optional
-
-
-def _git_available() -> bool:
-    try:
-        subprocess.run(
-            ["git", "--version"],
-            capture_output=True, text=True, check=True,
-        )
-        return True
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        return False
 
 
 def _run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -153,8 +141,7 @@ def diff_stats(
         if not file_path.is_file():
             continue
         if file_path.name in {
-            ".memory_sources.md", ".memory_state.json", ".memory_queue.json",
-            ".gitignore", ".DS_Store",
+            ".memory_sources.md", ".gitignore", ".DS_Store",
         }:
             continue
         try:
@@ -176,8 +163,6 @@ def ensure_repo(memory_root: Path) -> Path:
     """
     root = Path(memory_root)
     root.mkdir(parents=True, exist_ok=True)
-    if not _git_available():
-        return root
 
     if not (root / ".git").exists():
         _run(["git", "init", "--quiet"], cwd=root)
@@ -187,8 +172,6 @@ def ensure_repo(memory_root: Path) -> Path:
     gitignore = root / ".gitignore"
     desired = (
         ".memory_sources.md\n"
-        ".memory_state.json\n"
-        ".memory_queue.json\n"
         ".DS_Store\n"
         "__pycache__/\n"
         "*.pyc\n"
@@ -203,15 +186,13 @@ def ensure_repo(memory_root: Path) -> Path:
 
 
 def _has_head(root: Path) -> bool:
-    if not _git_available():
-        return False
     return _run(["git", "rev-parse", "--verify", "HEAD"], cwd=root).returncode == 0
 
 
 def head(memory_root: Path) -> str:
     """Return the current HEAD commit SHA (or ``""`` if unavailable)."""
     root = Path(memory_root)
-    if not _git_available() or not (root / ".git").exists():
+    if not (root / ".git").exists():
         return ""
     result = _run(["git", "rev-parse", "HEAD"], cwd=root)
     if result.returncode != 0:
@@ -222,11 +203,11 @@ def head(memory_root: Path) -> str:
 def commit_all(memory_root: Path, message: str = "") -> str:
     """Stage all changes and commit if anything is dirty.
 
-    Returns the (possibly unchanged) HEAD SHA. Safe to call when git is
-    unavailable (returns ``""``).
+    Returns the (possibly unchanged) HEAD SHA. Safe to call when the repo
+    does not exist (returns ``""``).
     """
     root = Path(memory_root)
-    if not _git_available() or not root.is_dir():
+    if not root.is_dir():
         return ""
     if not (root / ".git").exists():
         # Not a repo yet — initialize first.
@@ -261,11 +242,11 @@ def changed_paths(
 
     Paths are relative to *memory_root*. When *rel_prefix* is given, only
     paths starting with that prefix are returned. When *rel_files* is given,
-    only those exact paths are returned. Returns ``[]`` when git is
-    unavailable or the SHAs are equal/empty.
+    only those exact paths are returned. Returns ``[]`` when the SHAs are
+    equal/empty or no repo exists.
     """
     root = Path(memory_root)
-    if not _git_available() or not old_sha or not new_sha or old_sha == new_sha:
+    if not old_sha or not new_sha or old_sha == new_sha:
         return []
     if not (root / ".git").exists():
         return []
@@ -292,26 +273,3 @@ def changed_paths(
             continue
         out.append(path)
     return out
-
-
-def load_processed(layer_dir: Path) -> Optional[str]:
-    """Return the last-processed commit SHA for *layer_dir*, or ``None``."""
-    path = Path(layer_dir) / ".memory_state.json"
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError, json.JSONDecodeError):
-        return None
-    if not isinstance(data, dict):
-        return None
-    sha = data.get("last_processed_commit")
-    return str(sha).strip() or None if sha is not None else None
-
-
-def save_processed(layer_dir: Path, sha: str) -> None:
-    """Persist *sha* as the last-processed commit for *layer_dir*."""
-    path = Path(layer_dir)
-    path.mkdir(parents=True, exist_ok=True)
-    (path / ".memory_state.json").write_text(
-        json.dumps({"last_processed_commit": str(sha or "").strip()}, indent=2) + "\n",
-        encoding="utf-8",
-    )

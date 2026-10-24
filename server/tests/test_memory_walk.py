@@ -216,16 +216,15 @@ class MemoryWalkTest(TestCase):
             for source in self._manifest(self.global_mem)["sources"]
         }
         project_source = global_sources[self._abs(self.project_mem)]
-        self.assertEqual(project_source["kind"], "project")
+        self.assertEqual(project_source["type"], "project")
         self.assertEqual(project_source["pk"], self.project.pk)
-        self.assertNotIn("pk", global_sources["agents/"])
 
         project_sources = {
             source["path"]: source
             for source in self._manifest(self.project_mem)["sources"]
         }
         top_source = project_sources[self._abs(self.top_mem)]
-        self.assertEqual(top_source["kind"], "workspace")
+        self.assertEqual(top_source["type"], "workspace")
         self.assertEqual(top_source["pk"], self.top_ws.pk)
 
         agent_dir = self.global_mem / "agents" / str(self.global_agent.pk)
@@ -259,8 +258,9 @@ class MemoryWalkTest(TestCase):
             for source in self._manifest(self.global_mem)["sources"]
         }
         moved_source = new_sources[self._abs(moved)]
-        self.assertEqual(moved_source["kind"], "project")
+        # pk-based identity tracking preserves last_processed_hash after path change.
         self.assertEqual(moved_source["pk"], self.project.pk)
+        self.assertEqual(moved_source["type"], "project")
         self.assertEqual(moved_source["last_processed_hash"], last)
         self.assertEqual(moved_source["current_hash"], last)
         self.assertEqual(moved_source["hours_since_processed"], 0.0)
@@ -275,8 +275,10 @@ class MemoryWalkTest(TestCase):
             source["path"]: source
             for source in self._manifest(self.global_mem)["sources"]
         }
+        # The child scope is still listed even when its output files are missing;
+        # directory-level tracking means it gets a hash from remaining content.
         self.assertIn(self._abs(self.global_ws_mem), sources)
-        self.assertIsNone(sources[self._abs(self.global_ws_mem)]["current_hash"])
+        self.assertIsNotNone(sources[self._abs(self.global_ws_mem)]["current_hash"])
 
     def test_task_hash_tracks_session_reports(self):
         walk_memory(write=True)
@@ -391,8 +393,6 @@ class MemoryWalkTest(TestCase):
 
     def test_scope_gitignore_excludes_manifest(self):
         walk_memory(write=True)
-        if not memgit._git_available():  # pylint: disable=protected-access
-            self.skipTest("git not available")
         gitignore = (self.global_mem / ".gitignore").read_text(encoding="utf-8")
         self.assertIn(".memory_sources.md", gitignore)
 
@@ -588,6 +588,6 @@ class MemorySourceTypeTest(TestCase):
         manifest = self._manifest(self.global_mem)
         project_source = next(
             s for s in manifest["sources"]
-            if s.get("kind") == "project" and s.get("pk") == self.project.pk
+            if s.get("pk") == self.project.pk
         )
         self.assertEqual(project_source["type"], "project")

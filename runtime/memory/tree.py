@@ -25,7 +25,6 @@ from runtime.memory import paths as mempaths
 from runtime.memory import sources as memsources
 
 _SCOPE_KINDS = {"global", "project", "workspace"}
-_SCOPE_OUTPUTS = ("memory.md", "reflection.md")
 _SOURCE_DIR = {
     "global": "agents",
     "project": "agents",
@@ -145,8 +144,7 @@ def _discover_scopes(tree: MemoryTree) -> ScopeIndex:
     seen: dict[str, MemoryNode] = {}
     project_nodes: dict[int, MemoryNode] = {}
     workspace_nodes: dict[int, MemoryNode] = {}
-    project_created: list[MemoryNode] = []
-    workspace_meta: list[tuple[MemoryNode, Any, Optional[Path]]] = []
+    workspace_meta: list[tuple[MemoryNode, Optional[Path], int]] = []
 
     global_root = mempaths.memory_root()
     global_node: Optional[MemoryNode] = None
@@ -177,7 +175,6 @@ def _discover_scopes(tree: MemoryTree) -> ScopeIndex:
         tree.nodes.append(node)
         seen[norm] = node
         project_nodes[project.pk] = node
-        project_created.append(node)
 
     for workspace in WorkspaceModel.objects.select_related("parent_project").order_by("pk"):
         root = mempaths.memory_root(workspace=workspace)
@@ -202,7 +199,7 @@ def _discover_scopes(tree: MemoryTree) -> ScopeIndex:
         seen[norm] = node
         workspace_nodes[workspace.pk] = node
         workspace_meta.append(
-            (node, workspace, Path(workspace.path) if workspace.path else None)
+            (node, Path(workspace.path) if workspace.path else None, workspace.parent_project_id)
         )
 
     children: dict[int, list[MemoryNode]] = {}
@@ -214,19 +211,19 @@ def _discover_scopes(tree: MemoryTree) -> ScopeIndex:
         if all(id(existing) != id(child) for existing in bucket):
             bucket.append(child)
 
-    for node in project_created:
+    for node in project_nodes.values():
         link(global_node, node)
 
-    for node, workspace, ws_path in workspace_meta:
+    for node, ws_path, parent_proj_id in workspace_meta:
         enclosing = [
-            (other, other_ws)
-            for other, other_ws, other_path in workspace_meta
+            (other, other_path)
+            for other, other_path, _ in workspace_meta
             if other is not node and ws_path and other_path and _is_within(ws_path, other_path)
         ]
         if enclosing:
-            parent = max(enclosing, key=lambda item: len(_norm_path(item[1].path)))[0]
+            parent = max(enclosing, key=lambda item: len(_norm_path(item[1])))[0]
         else:
-            parent = project_nodes.get(workspace.parent_project_id) or global_node
+            parent = project_nodes.get(parent_proj_id) or global_node
         link(parent, node)
 
     return ScopeIndex(global_node, project_nodes, workspace_nodes, children)
@@ -300,9 +297,7 @@ def _list_agent_dirs(scope_root: Path) -> dict[int, Path]:
         raw = _strip_prefix(entry.name, "agent_")
         if not raw.isdigit():
             continue
-        pk = int(raw)
-        if pk not in found or not entry.name.startswith("agent_"):
-            found[pk] = entry
+        found[int(raw)] = entry
     return found
 
 
@@ -355,68 +350,35 @@ def _has_content(path: Path) -> bool:
         for candidate in path.rglob("*")
     )
 
-
-def _immediate_files(path: Path) -> list[Path]:
-    try:
-        return [
-            entry for entry in path.iterdir()
-            if entry.is_file() and not memsources.is_metadata_path(entry)
-        ]
-    except OSError:
-        return []
-
-
-def _layer_files(path: Path) -> list[Path]:
-    """Return a child layer's immediate files, including missing outputs."""
-    files = _immediate_files(path)
-    known = {entry.name for entry in files}
-    for name in _SCOPE_OUTPUTS:
-        if name not in known:
-            files.append(path / name)
-    return files
-
-
 def _source_entry(
     label: str,
     source: Path,
     previous: dict[str, Any],
-    files: Optional[list[Path]] = None,
-    fallback: Optional[str] = None,
-    previous_by_identity: Optional[dict[tuple[str, int], Any]] = None,
-    kind: Optional[str] = None,
+    previous_by_identity: Optional[dict[int, Any]] = None,
     pk: Optional[int] = None,
     source_type: Optional[str] = None,
 ) -> dict[str, Any]:
-    if files is None:
-        has_content = _has_content(source)
-    else:
-        has_content = any(
-            entry.is_file() and not memsources.is_metadata_path(entry)
-            for entry in files
-        )
-    current = memgit.path_commit(source, files=files) if has_content else None
+    has_content = _has_content(source)
+    current = memgit.path_commit(source) if has_content else None
     last = None
-    if kind is not None and pk is not None and previous_by_identity:
-        last = previous_by_identity.get((kind, pk))
+    if pk is not None and previous_by_identity:
+        last = previous_by_identity.get(pk)
     if last is None:
         last = previous.get(label)
-    if last is None and fallback:
-        last = memgit.path_commit(source, files=files, before=fallback)
     if last is not None and not memgit.is_git_hash(last):
         last = None
 
     hours = None
     changed = None
     if last and current:
-        stats = memgit.diff_stats(source, last, current, files=files)
+        stats = memgit.diff_stats(source, last, current)
         if stats is None:
             last = None
         else:
             hours, changed = stats
 
     entry: dict[str, Any] = {"path": label}
-    if kind is not None and pk is not None:
-        entry["kind"] = kind
+    if pk is not None:
         entry["pk"] = pk
     if source_type is not None:
         entry["type"] = source_type
@@ -433,7 +395,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
     manifest_path = node.path / memsources.SOURCES_FILENAME
     previous_manifest = memsources.read_sources(manifest_path)
     previous = memsources.previous_hashes(previous_manifest)
-    previous_identity = memsources.previous_by_identity(previous_manifest)
+    previous_by_identity = memsources.previous_by_identity(previous_manifest)
 
     source_dir = _SOURCE_DIR[node.kind]
     dir_type = _source_type(node.scope, source_dir)
@@ -442,8 +404,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
             f"{source_dir}/",
             node.path / source_dir,
             previous,
-            fallback=memgit.load_processed(node.path),
-            previous_by_identity=previous_identity,
+            previous_by_identity=previous_by_identity,
             source_type=dir_type,
         )
     ]
@@ -455,10 +416,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
                 _source_path(child.path, node.path),
                 child.path,
                 previous,
-                files=_layer_files(child.path),
-                fallback=memgit.load_processed(child.path),
-                previous_by_identity=previous_identity,
-                kind=child.kind,
+                previous_by_identity=previous_by_identity,
                 pk=child_pk,
                 source_type=child_type,
             )

@@ -1,6 +1,5 @@
 """Tests for runtime.memory.git helpers (require git)."""
 
-import json
 import subprocess
 from pathlib import Path
 
@@ -104,24 +103,3 @@ def test_diff_stats_can_limit_to_files(tmp_path):
         layer, h1, h2, files=[layer / "memory.md"]
     )
     assert chars == len("new memory")
-
-
-def test_processed_sidecar(tmp_path):
-    layer = tmp_path / "layer"
-    layer.mkdir()
-    assert memgit.load_processed(layer) is None
-    memgit.save_processed(layer, "abc123")
-    assert memgit.load_processed(layer) == "abc123"
-    data = json.loads((layer / ".memory_state.json").read_text())
-    assert data["last_processed_commit"] == "abc123"
-
-
-def test_gitignore_ignores_sidecar(tmp_path):
-    root = tmp_path / "memory"
-    memgit.ensure_repo(root)
-    memgit.save_processed(root, "deadbeef")
-    # sidecar should not show as untracked/dirty
-    status = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True
-    )
-    assert ".memory_state.json" not in status.stdout

@@ -31,7 +31,7 @@ class Query(BaseModel):
     session = models.ForeignKey(  "server.SessionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
     session_version = models.ForeignKey(  "server.SessionVersionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
     trigger_message = models.ForeignKey(  "server.Message",  null=True,  blank=True,  on_delete=models.CASCADE,  related_name="related_queries")
-    status = EnumField(QueryStatus, default=QueryStatus.WAITING)
+    status = EnumField(QueryStatus, default=QueryStatus.WAITING, db_index=True)
     tokens = models.IntegerField(default=None, blank=True, null=True)
 
 

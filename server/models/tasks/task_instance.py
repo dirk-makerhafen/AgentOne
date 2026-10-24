@@ -17,7 +17,7 @@ from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
 if TYPE_CHECKING:
-    pass
+    from server.models.sessions.session_version import SessionVersionModel
 
 
 class TaskInstance(BaseModel):
@@ -167,7 +167,7 @@ class TaskInstance(BaseModel):
     def get_or_create(
         cls,
         task_definition: TaskDefinitionVersion,
-        session_version: Any,
+        session_version: SessionVersionModel,
         args: Any = None,
         kwargs: Any = None,
         **options: Any,
@@ -208,7 +208,7 @@ class TaskInstance(BaseModel):
             "max_subtask_error_rate": task_definition.max_subtask_error_rate,
             "limit_subtask_parallel_runs": task_definition.limit_subtask_parallel_runs,
             "limit_per_instance_parallel_runs": task_definition.limit_per_instance_parallel_runs,
-            "priority": task_definition.priority,
+            "priority": session_version.session_settings.priority if  session_version.session_settings else task_definition.priority,
             "max_retries": task_definition.max_retries,
             "retry_delay": task_definition.retry_delay,
             "retry_requires_approval": task_definition.retry_requires_approval,
