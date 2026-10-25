@@ -396,6 +396,143 @@ class MemoryWalkTest(TestCase):
         gitignore = (self.global_mem / ".gitignore").read_text(encoding="utf-8")
         self.assertIn(".memory_sources.md", gitignore)
 
+    def test_refresh_saves_newest_reflection_message(self):
+        """walk_memory(refresh=True) saves newest REFLECTION when file is missing."""
+        from server.models.message import Message
+        from server.models.enums.message_enums import MessageType, MessageContentType
+        from server.models.sessions.session_version import SessionVersionModel
+
+        # Get the session version for the global session
+        sv = SessionVersionModel.objects.filter(
+            session=self.global_session
+        ).first()
+        self.assertIsNotNone(sv, "Session version must exist for message creation")
+
+        # Create a reflection message for the global session
+        msg = Message.objects.create(
+            session=self.global_session,
+            session_version=sv,
+            message_type=MessageType.REFLECTION,
+        )
+        msg.add_part(
+            type="message",
+            content_type=MessageContentType.TEXT,
+            content="This is a new reflection",
+        )
+
+        # Remove any existing reflection file for this session
+        session_dir = (
+            self.global_mem
+            / "agents"
+            / str(self.global_agent.pk)
+            / "tasks"
+            / "task_default"
+            / "sessions"
+            / str(self.global_session.pk)
+        )
+        for f in session_dir.glob("reflections_*.md"):
+            f.unlink()
+
+        result = walk_memory(write=True, refresh=True)
+
+        # Check that a reflection file was created
+        reflection_files = list(session_dir.glob("reflections_*.md"))
+        self.assertGreater(len(reflection_files), 0)
+
+        # Verify the content matches
+        content = reflection_files[0].read_text(encoding="utf-8")
+        self.assertIn("This is a new reflection", content)
+
+    def test_refresh_saves_newest_compaction_message(self):
+        """walk_memory(refresh=True) saves newest COMPACTION when file is missing."""
+        from server.models.message import Message
+        from server.models.enums.message_enums import MessageType, MessageContentType
+        from server.models.sessions.session_version import SessionVersionModel
+
+        # Get the session version for the global session
+        sv = SessionVersionModel.objects.filter(
+            session=self.global_session
+        ).first()
+        self.assertIsNotNone(sv, "Session version must exist for message creation")
+
+        # Create a compaction message for the global session
+        msg = Message.objects.create(
+            session=self.global_session,
+            session_version=sv,
+            message_type=MessageType.COMPACTION,
+        )
+        msg.add_part(
+            type="message",
+            content_type=MessageContentType.TEXT,
+            content="This is a new compaction report",
+        )
+
+        # Remove any existing compaction file for this session
+        session_dir = (
+            self.global_mem
+            / "agents"
+            / str(self.global_agent.pk)
+            / "tasks"
+            / "task_default"
+            / "sessions"
+            / str(self.global_session.pk)
+        )
+        for f in session_dir.glob("compaction_*.md"):
+            f.unlink()
+
+        result = walk_memory(write=True, refresh=True)
+
+        # Check that a compaction file was created
+        compaction_files = list(session_dir.glob("compaction_*.md"))
+        self.assertGreater(len(compaction_files), 0)
+
+        # Verify the content matches
+        content = compaction_files[0].read_text(encoding="utf-8")
+        self.assertIn("This is a new compaction report", content)
+
+    def test_refresh_skips_existing_report_files(self):
+        """walk_memory(refresh=True) does not overwrite existing report files."""
+        from server.models.message import Message
+        from server.models.enums.message_enums import MessageType, MessageContentType
+        from server.models.sessions.session_version import SessionVersionModel
+
+        # Get the session version for the global session
+        sv = SessionVersionModel.objects.filter(
+            session=self.global_session
+        ).first()
+        self.assertIsNotNone(sv, "Session version must exist for message creation")
+
+        # Create a reflection message
+        msg = Message.objects.create(
+            session=self.global_session,
+            session_version=sv,
+            message_type=MessageType.REFLECTION,
+        )
+        msg.add_part(
+            type="message",
+            content_type=MessageContentType.TEXT,
+            content="New reflection content",
+        )
+
+        # Pre-existing reflection file with different content
+        session_dir = (
+            self.global_mem
+            / "agents"
+            / str(self.global_agent.pk)
+            / "tasks"
+            / "task_default"
+            / "sessions"
+            / str(self.global_session.pk)
+        )
+        existing_file = session_dir / "reflections_20261023-120000_1.md"
+        existing_file.write_text("existing content", encoding="utf-8")
+
+        walk_memory(write=True, refresh=True)
+
+        # The original file should be unchanged
+        content = existing_file.read_text(encoding="utf-8")
+        self.assertEqual(content, "existing content")
+
 
 class MemoryTypeTest(TestCase):
     """Unit tests for the ``_compute_memory_type`` helper."""

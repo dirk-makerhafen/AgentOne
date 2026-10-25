@@ -209,7 +209,7 @@ def build_llm_compact_context(
             {
                 "role": MessageRole.ASSISTANT,
                 "message_type": MessageType.ASSISTANT_MESSAGE,
-                "content": "Confirmed, awaiting compaction instructions.",
+                "content": "Confirmed, session stopped, compaction mode enabled, awaiting compaction instructions.",
             },
             {
                 "role": MessageRole.USER,

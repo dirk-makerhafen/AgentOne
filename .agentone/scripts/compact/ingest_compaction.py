@@ -12,7 +12,7 @@ from server.models.queries.response import Response
 #: Total compaction attempts per trigger (initial fork + retries).  Each
 #: retry is a fresh cache-hot fork; the budget caps cost when the model
 #: persistently fails to summarize.
-MAX_COMPACT_ATTEMPTS = 3
+MAX_COMPACT_ATTEMPTS = 4
 
 
 def _next_compact_attempt(compact_attempt: int) -> int | None:

@@ -131,7 +131,7 @@ def reflect_session(
             {
                 "role": MessageRole.ASSISTANT,
                 "message_type": MessageType.ASSISTANT_MESSAGE,
-                "content": "Confirmed, awaiting instructions for analysis.",
+                "content": "Confirmed, the session has stopped, i will only do a post morem analysis. awaiting instructions for analysis.",
             },
             {
                 "role": MessageRole.USER,
