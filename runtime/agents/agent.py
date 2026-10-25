@@ -180,8 +180,8 @@ class Agent(AssistantScopeMixin):
 
     @property
     def priority(self) -> int:
-        """Return the scheduling priority."""
-        return self.get_version_model().resolve_setting("priority")
+        """Return the scheduling priority (0 = most urgent, 99 = lowest)."""
+        return self.get_version_model().resolve_setting("priority") or 99
 
     @property
     def reasoning_effort(self) -> str | None:

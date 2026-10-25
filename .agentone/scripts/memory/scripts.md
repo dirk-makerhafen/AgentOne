@@ -17,19 +17,12 @@ tools:
     file: memory_walk.py
     function: memory_walk
     bound: False
+  - name: memory_merge
+    file: memory_merge.py
+    function: memory_merge
+    bound: False
 tasks:
-  - name: memory_synthesize_task
-    file: memory_synthesize_task.py
-    function: memory_synthesize_task
-    bound: True
-  - name: memory_synthesize_agent
-    file: memory_synthesize_agent.py
-    function: memory_synthesize_agent
-    bound: True
-  - name: memory_synthesize_scope
-    file: memory_synthesize_scope.py
-    function: memory_synthesize_scope
-    bound: True
+
   - name: memory_tick
     type: chain
     chain:

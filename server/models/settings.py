@@ -73,7 +73,7 @@ class SettingsModel(BaseModel):
 
     aimodel: models.ForeignKey | None = models.ForeignKey("server.AiModel",on_delete=models.CASCADE,related_name="related_agent_settings",blank=True,null=True)
     thinking: bool | None = models.BooleanField(default=None, null=True, blank=True)
-    inherit_system_prompt: bool | None = models.BooleanField(default=None, null=True, blank=True)
+    inherit_system_prompt: bool | None = models.BooleanField(default=False, null=True, blank=True)
 
     reasoning_effort: str | None = models.CharField(max_length=20,choices=ReasoningEffort,default=None,null=True,blank=True)
     precision:float | None = models.FloatField(choices=ResponseTemperature.choices, default=None, null=True, blank=True)
@@ -81,19 +81,19 @@ class SettingsModel(BaseModel):
     max_retries: int | None = models.IntegerField(default=None, null=True, blank=True)
     max_turns: int | None = models.IntegerField(default=None, null=True, blank=True)
     max_unattended_turns: int | None = models.IntegerField(default=None, null=True, blank=True)
-    max_history_messages: int | None = models.IntegerField(default=None, null=True, blank=True)
+    max_history_messages: int | None = models.IntegerField(default=999, null=True, blank=True)
     auto_compact_max_tokens: int | None = models.IntegerField(default=None, null=True, blank=True)
     auto_compact_min_tokens: int | None = models.IntegerField(default=None, null=True, blank=True)
     auto_compact_idle_seconds: int | None = models.IntegerField(default=None, null=True, blank=True)
-    auto_compact_keep_percent: int | None = models.IntegerField(default=None, null=True, blank=True)
-    priority: int | None = models.IntegerField(default=None, null=True, blank=True)  # 0 = most urgent, 99 = lowest
+    auto_compact_keep_percent: int | None = models.IntegerField(default=0, null=True, blank=True)
+    priority: int | None = models.IntegerField(default=99, null=True, blank=True)  # 0 = most urgent, 99 = lowest
 
     task_prompt: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_task_prompt")
     system_prompt: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_system_prompt")
     session_bootstrap: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_session_bootstrap")
 
-    scheduler_strategy: str | None = models.CharField(max_length=20,choices=TaskSchedulerStrategy,default=None,null=True,blank=True)
-    tool_call_syntax: str | None = models.CharField(max_length=20,choices=AgentToolCallSyntax.choices,default=None,null=True,blank=True)
+    scheduler_strategy: str | None = models.CharField(max_length=20,choices=TaskSchedulerStrategy,default=TaskSchedulerStrategy.QUEUE,null=True,blank=True)
+    tool_call_syntax: str | None = models.CharField(max_length=20,choices=AgentToolCallSyntax.choices,default=AgentToolCallSyntax.DEFAULT,null=True,blank=True)
 
     commandNames: Any = models.JSONField(default=None, null=True, blank=True)
     disallowedCommandNames: Any = models.JSONField(default=None, null=True, blank=True)

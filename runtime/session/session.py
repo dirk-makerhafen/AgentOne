@@ -530,8 +530,8 @@ class Session:
 
     @property
     def priority(self) -> int:
-        """Return the resolved scheduling priority."""
-        return self._get_session_setting("priority")
+        """Return the resolved scheduling priority (0 = most urgent, 99 = lowest)."""
+        return self._get_session_setting("priority") or 99
 
     def needs_approval(self) -> bool:
         """Return True if session has hit the unattended turn limit."""

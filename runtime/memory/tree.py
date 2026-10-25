@@ -600,11 +600,14 @@ def _refresh_reports(tree: MemoryTree) -> dict[str, int]:
             except Exception:
                 continue
 
-            # Resolve the memory root for this session
+            # Resolve the memory root for this session.
+            # Pass workspace=None so _resolve_scope extracts it from the
+            # session object automatically (passing the raw integer id would
+            # bypass that logic and fall back to the global memory root).
             try:
                 resolved_root = mempaths.memory_root(
                     session_or_pk=session,
-                    workspace=workspace_id,
+                    workspace=None,
                     project=session.parent_project,
                 )
                 agent_dir = mempaths.agent_memory_dir(resolved_root, agent_id)
@@ -803,6 +806,7 @@ def walk_memory(write: bool = True, refresh: bool = False) -> dict[str, Any]:
                 "manifest_path": manifest_path,
                 "node_kind": node.kind,
                 "node_key": node.key,
+                "type": _compute_memory_type(node.kind, node.scope),
                 "depth": node_depth,
                 "sources": node_needs_update,
             }

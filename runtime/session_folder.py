@@ -87,6 +87,13 @@ def _workspace_of(obj: Any) -> Any | None:
                     ws = getattr(version, "workspace", None)
             except Exception:  # pylint: disable=broad-exception-caught
                 pass
+    if ws is None:
+        try:
+            version = getattr(obj, "latest_session_version", None)
+            if version is not None:
+                ws = getattr(version, "workspace", None)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
     return ws
 
 

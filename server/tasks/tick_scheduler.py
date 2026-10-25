@@ -1029,6 +1029,7 @@ def _compact_idle_sessions() -> None:
     floor = timezone.now() - timedelta(seconds=_IDLE_PRECHECK_FLOOR_SECONDS)
     candidates = (
         SessionModel.objects.filter(is_active=True, is_paused=False)
+        .exclude(latest_session_version__isnull=True)
         .annotate(last_msg_at=Max("related_messages__created_at"))
         .filter(last_msg_at__lt=floor)
         .order_by("last_msg_at")

@@ -35,3 +35,4 @@ def memory_walk(write: bool = True, refresh: bool = False):
         return True, walk_memory(write=write, refresh=refresh)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return False, {"error": str(exc)}
+
