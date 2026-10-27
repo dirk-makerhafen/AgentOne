@@ -15,12 +15,13 @@ def memory_walk(write: bool = True, refresh: bool = False):
         write: When ``True`` (default), actually writes/updates manifest
             files on disk.  When ``False``, only computes what *would* be
             written — useful for dry-run inspection.
-        refresh: When ``True``, queries the database for the newest
-            REFLECTION and COMPACTION messages across all sessions and
-            saves any that are not already present as report files in the
-            corresponding task memory directories.  This is useful after
-            a session has produced new reflection/compaction output that
-            hasn't been persisted to the filesystem yet.
+        refresh: When ``True``, queries the database for every REFLECTION
+            and COMPACTION message and saves any report that is not already
+            present as a file in the corresponding task memory directory
+            (creating missing directories as needed).  Reports are scoped to
+            the workspace/project that the message's session version belongs
+            to.  This backfills output that hasn't been persisted to the
+            filesystem yet.
 
     Returns:
         ``(success, result)`` — on success, *result* is the summary dict
@@ -35,4 +36,3 @@ def memory_walk(write: bool = True, refresh: bool = False):
         return True, walk_memory(write=write, refresh=refresh)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return False, {"error": str(exc)}
-

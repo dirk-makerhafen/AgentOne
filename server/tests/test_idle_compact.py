@@ -183,6 +183,27 @@ class IdleCompactionTest(TestCase):
         _compact_idle_sessions()
         self.assertIsNone(self.fake_task.delay_kwargs)
 
+    def test_archived_session_is_skipped(self):
+        # Proactive compaction on a chat nobody is looking at is wasted spend.
+        self._big_session()
+        self._backdate()
+        SessionModel.objects.filter(pk=self.session.pk).update(is_archived=True)
+        _compact_idle_sessions()
+        self.assertIsNone(self.fake_task.delay_kwargs)
+
+    def test_session_without_version_pointer_is_skipped(self):
+        # Legacy rows can carry messages but a NULL latest_session_version
+        # pointer.  Resolving a setting on those raises; the scheduler must
+        # filter them out instead of logging an error every tick.
+        msgs = self._big_session()
+        self._link(msgs)
+        self._backdate()
+        SessionModel.objects.filter(pk=self.session.pk).update(
+            latest_session_version=None
+        )
+        _compact_idle_sessions()
+        self.assertIsNone(self.fake_task.delay_kwargs)
+
     def test_single_message_has_no_boundary(self):
         # One message always fits the keep budget — nothing to compact.
         self._big_session(n=1)

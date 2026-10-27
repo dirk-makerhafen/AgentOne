@@ -530,8 +530,8 @@ class Session:
 
     @property
     def priority(self) -> int:
-        """Return the resolved scheduling priority (0 = most urgent, 99 = lowest)."""
-        return self._get_session_setting("priority") or 99
+        """Return the resolved scheduling priority."""
+        return self._get_session_setting("priority")
 
     def needs_approval(self) -> bool:
         """Return True if session has hit the unattended turn limit."""
@@ -1099,10 +1099,24 @@ class Session:
         self.model.save()
 
     def get_version_model(self) -> SessionVersionModel:
-        """Return the pinned session version, or the session's latest version."""
+        """Return the pinned session version, or the session's latest version.
+
+        Raises ``RuntimeError`` when the session has no version at all
+        (``latest_session_version_id IS NULL``).  That state is inconsistent —
+        every setting resolves through a version — and shows up on legacy rows
+        created without pointing the session at its version.  Sweeping code
+        (e.g. the idle-compaction scan) should skip such sessions instead of
+        calling in here.
+        """
         if self._pinned_session_version:
             return self._pinned_session_version
-        return self.model.latest_session_version
+        version = self.model.latest_session_version
+        if version is None:
+            raise RuntimeError(
+                f"session {self.model.pk} has no session version "
+                "(latest_session_version is NULL)"
+            )
+        return version
 
     def is_newest_version(self):
         if self._pinned_session_version:

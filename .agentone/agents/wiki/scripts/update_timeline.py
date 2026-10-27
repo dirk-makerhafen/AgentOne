@@ -793,16 +793,15 @@ def update_timeline(_session: Session, limit: int = 1):
     llm_query_tool = _session.get_tool("llm_query")
     if llm_query_tool is None:
         return False, {"status": "error", "message": "tool 'llm_query' is not available"}
-    
+
     process_summary_task = _session.get_task("process_summary")
     if process_summary_task is None:
         return False, {"status": "error", "message": "task 'process_summary' is not available"}
-    
-    
+
     success, data = find_unlinked_raw_task.call(limit=limit)
     if not success:
         return False, data
-    
+
     results = []
     for item in (data or {}).get("items", []):
         path = item["file"]

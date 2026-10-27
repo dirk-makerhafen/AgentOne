@@ -12,6 +12,7 @@ from django.utils import timezone as dj_timezone
 
 from runtime.memory import git as memgit
 from runtime.memory import paths as mempaths
+from runtime.memory.tree import extract_report_text
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageType
 from server.models.message import Message
@@ -133,14 +134,9 @@ def memory_collect_inputs(_session: Session, lookback_minutes: int = 5, **kwargs
         sess_dir = data["dir"]
         mempaths.ensure_dir(sess_dir)
         for msg, _rt in data["items"]:
-            text = ""
-            try:
-                for part in msg.parts.order_by("pk"):
-                    content = part.content.get() if part.content else None
-                    if content:
-                        text += str(content)
-            except Exception:  # pylint: disable=broad-exception-caught
-                text = str(getattr(msg, "content", "") or "")
+            text = extract_report_text(msg)
+            if not text:
+                continue
             mempaths.write_text(sess_dir / mempaths.report_filename(msg), text)
 
     _scope_set = set(scope_roots.keys())

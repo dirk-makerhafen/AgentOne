@@ -999,7 +999,8 @@ def _compact_idle_sessions() -> None:
 
     A session is eligible only when all hold:
 
-    - active, with idle compaction configured (min tokens > 0 and
+    - active, not archived, and carrying a resolvable session version,
+      with idle compaction configured (min tokens > 0 and
       idle seconds > 0 — both unset mean disabled; ``baseagent`` declares
       the stock 50k/240s so the whole tree inherits it),
     - no live work: no non-ended call outside ``HALTED`` (approval/input
@@ -1028,8 +1029,20 @@ def _compact_idle_sessions() -> None:
 
     floor = timezone.now() - timedelta(seconds=_IDLE_PRECHECK_FLOOR_SECONDS)
     candidates = (
-        SessionModel.objects.filter(is_active=True, is_paused=False)
-        .exclude(latest_session_version__isnull=True)
+        SessionModel.objects.filter(
+            is_active=True,
+            is_paused=False,
+            # Archived chats are not being resumed right now, so proactively
+            # paying to compact them is wasted spend; they compact reactively
+            # if the user ever reopens them.
+            is_archived=False,
+            # Guard against legacy/inconsistent rows whose version pointer is
+            # NULL (scripts and hand-made sessions can create a SessionModel,
+            # or even a SessionVersionModel, without pointing the session at
+            # it).  ``Session`` cannot resolve any setting without a version,
+            # so those sessions are simply not candidates.
+            latest_session_version__isnull=False,
+        )
         .annotate(last_msg_at=Max("related_messages__created_at"))
         .filter(last_msg_at__lt=floor)
         .order_by("last_msg_at")

@@ -1,5 +1,6 @@
 from django.test import TestCase
 
+from server.models.sessions.session import SessionModel
 from server.models.settings import SettingsModel
 from server.tests.helpers import AgentMdTestMixin
 
@@ -102,6 +103,15 @@ class RuntimeSessionTest(AgentMdTestMixin, TestCase):
         )
         self.assertNotIn("core_task", session.allowedTaskNames)
         self.assertIsNone(session.get_task("core_task"))
+
+    def test_missing_session_version_raises_clear_error(self):
+        """A session with no version fails loudly, not with an AttributeError."""
+        session_model = SessionModel.objects.create(name="no-version-session")
+        session = session_model.get_runtime()
+        with self.assertRaisesMessage(RuntimeError, "has no session version"):
+            session.get_version_model()
+        with self.assertRaisesMessage(RuntimeError, "has no session version"):
+            session.auto_compact_min_tokens
 
     # ------------------------------------------------------------------
     # Tools-only agent (session_override) with session overrides

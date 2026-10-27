@@ -1405,7 +1405,7 @@ def wiki_find_unlinked_raw(_session: Any, folder: str | None = None, limit: int 
             for rp in raw_paths
             if rp not in linked
         )
-        unlinked.sort(key=lambda x: x[1] if x[1] else "9999")
+        unlinked.sort(key=lambda x: x[1] if x[1] else "9999",reverse=True)
 
         effective_limit = None if limit == 0 else limit
         capped = unlinked[:effective_limit]
@@ -1478,7 +1478,6 @@ if __name__ == "__main__":
     if args.tool == "find_unlinked_raw":
         success, result = wiki_find_unlinked_raw(**sess_kw, folder=args.folder, limit=args.limit)
     else:
-        success, result = wiki_check(**sess_kw, folder=args.folder, limit=args.limit,
-                                      checks=args.checks, files=args.files, autofix=args.autofix)
+        success, result = wiki_check(**sess_kw, folder=args.folder, limit=args.limit, checks=args.checks, files=args.files, autofix=args.autofix)
     print(json.dumps(result, indent=2, default=str))
     exit(0 if success else 1)

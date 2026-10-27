@@ -1,70 +1,20 @@
-"""Update memory manifests by delegating to the memory-manage agent.
+"""Update memory manifests for changed sources.
 
-When ``walk_memory`` reports items in ``needs_update``, this module creates
-a memory-manage agent session, sends it a layer-specific prompt describing
-the changed sources, waits for the LLM to process them, and returns the
-result.
+When ``walk_memory`` reports items in ``needs_update``, this module provides
+a way to selectively update a single manifest by re-computing git hashes for
+the changed source paths.
 
-The actual merge (content processing) requires LLM reasoning — we can't
-do it programmatically.  Each merge function constructs its own prompt
-that explains the directory structure and what changed.
+Different layers (workspace root, agent, task) get different prompts when
+delegating to the project assistant, because the semantic meaning of
+``agents/``, ``tasks/``, and ``sessions/`` directories differs across
+scope levels.
 """
 
 from __future__ import annotations
 
-import time
 from pathlib import Path
-from typing import Any
 
-from server.models.agents.agent import AgentModel
-from runtime.session.session import Session
-
-
-# ---------------------------------------------------------------------------
-# Session creation
-# ---------------------------------------------------------------------------
-
-
-def _create_memory_session(
-    level: str, folder: str, sources: list[dict], session: Any = None
-) -> Session | None:
-    """Create a memory-manage agent session for the given level.
-
-    Args:
-        level: Synthesis level – ``"task"``, ``"agent"``, or ``"scope"``.
-        folder: Path to the manifest directory.
-        sources: List of changed source dicts from ``needs_update``.
-        session: Optional caller session for workspace context.
-
-    Returns:
-        A Session object bound to the memory-manage agent, or None on failure.
-    """
-    try:
-        agent = AgentModel.objects.get(name="memory-manage")
-    except AgentModel.DoesNotExist:
-        return None
-
-    av = agent.latest_agent_version
-    if av is None:
-        return None
-
-    # Determine workspace from the caller session or from the folder path
-    workspace = None
-    if session and hasattr(session, "workspace"):
-        workspace = session.workspace
-
-    sv = av.get_or_create_session(
-        name=f"memory:{level}:{int(time.time())}",
-        workspace=workspace,
-        session_type="subsession",
-        group_key=f"memory:{level}",
-    )
-    return Session(session_model=sv.session, pinned_session_version=sv)
-
-
-# ---------------------------------------------------------------------------
-# Prompt construction
-# ---------------------------------------------------------------------------
+from runtime.memory.tree import mempaths
 
 
 def _format_sources(sources: list[dict]) -> str:
@@ -89,46 +39,45 @@ def _format_sources(sources: list[dict]) -> str:
     return "\n".join(lines) if lines else "(none)"
 
 
-def _build_task_prompt(folder: str, sources: list[dict]) -> str:
-    """Build a prompt for the task level (``task_*`` directories)."""
-    return (
-        "Update the memory manifest at ``{folder}``.\n"
-        "\n"
-        "This is a task directory (``task_*``) inside an agent.  The\n"
-        "``sessions/`` directory contains session report files\n"
-        "(``reflections_*.md``, ``compactions_*.md``).\n"
-        "\n"
-        "The following source paths have changed (their content hashes\n"
-        "differ from the last-processed snapshot):\n"
-        "{sources}\n"
-        "\n"
-        "Read the existing ``.memory_sources.md`` manifest at\n"
-        "``{folder}``, update the git commit hashes for the changed\n"
-        "sources listed above, and write the manifest back.  Preserve\n"
-        "all unchanged entries exactly as they are."
-    ).format(folder=folder, sources=_format_sources(sources))
+def _build_prompt(scope: str, kind: str, folder: str, sources: list[dict]) -> str:
+    """Build a layer-specific prompt for the project assistant."""
+    sources_text = _format_sources(sources)
 
+    if kind == "task":
+        return (
+            "Update the memory manifest at ``{folder}``.\n"
+            "\n"
+            "This is a task directory (``task_*``) inside an agent.  The\n"
+            "``sessions/`` directory contains session report files\n"
+            "(``reflections_*.md``, ``compactions_*.md``).\n"
+            "\n"
+            "The following source paths have changed (their content hashes\n"
+            "differ from the last-processed snapshot):\n"
+            "{sources}\n"
+            "\n"
+            "Read the existing ``.memory_sources.md`` manifest at\n"
+            "``{folder}``, update the git commit hashes for the changed\n"
+            "sources listed above, and write the manifest back.  Preserve\n"
+            "all unchanged entries exactly as they are."
+        )
 
-def _build_agent_prompt(folder: str, sources: list[dict]) -> str:
-    """Build a prompt for the agent level (``agents/`` directories)."""
-    return (
-        "Update the memory manifest at ``{folder}``.\n"
-        "\n"
-        "This is an agent directory.  The ``tasks/`` directory contains\n"
-        "task sub-directories, each with session reports.\n"
-        "\n"
-        "The following source paths have changed:\n"
-        "{sources}\n"
-        "\n"
-        "Read the existing ``.memory_sources.md`` manifest at\n"
-        "``{folder}``, update the git commit hashes for the changed\n"
-        "sources listed above, and write the manifest back.  Preserve\n"
-        "all unchanged entries exactly as they are."
-    ).format(folder=folder, sources=_format_sources(sources))
+    if kind == "agent":
+        return (
+            "Update the memory manifest at ``{folder}``.\n"
+            "\n"
+            "This is an agent directory inside a {scope} scope.  The ``tasks/``\n"
+            "directory contains task sub-directories, each with session reports.\n"
+            "\n"
+            "The following source paths have changed:\n"
+            "{sources}\n"
+            "\n"
+            "Read the existing ``.memory_sources.md`` manifest at\n"
+            "``{folder}``, update the git commit hashes for the changed\n"
+            "sources listed above, and write the manifest back.  Preserve\n"
+            "all unchanged entries exactly as they are."
+        )
 
-
-def _build_scope_prompt(folder: str, scope_kind: str, sources: list[dict]) -> str:
-    """Build a prompt for scope-level roots (global / project / workspace)."""
+    # workspace / project / global – similar structure
     return (
         "Update the {scope_kind} memory manifest at ``{folder}``.\n"
         "\n"
@@ -142,7 +91,7 @@ def _build_scope_prompt(folder: str, scope_kind: str, sources: list[dict]) -> st
         "``{folder}``, update the git commit hashes for the changed\n"
         "sources listed above, and write the manifest back.  Preserve\n"
         "all unchanged entries exactly as they are."
-    ).format(scope_kind=scope_kind, folder=folder, sources=_format_sources(sources))
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -154,51 +103,51 @@ def merge_workspace_agent_task(
     folder: str, sources: list[dict], *, session=None
 ) -> tuple[bool, dict]:
     """Merge changes into a workspace agent-task manifest."""
-    return _do_merge("task", folder, sources, session)
+    return _do_merge("workspace", "task", folder, sources)
 
 
 def merge_workspace_agent(folder: str, sources: list[dict], *, session=None):
     """Merge changes into a workspace agent manifest."""
-    return _do_merge("agent", folder, sources, session)
+    return _do_merge("workspace", "agent", folder, sources)
 
 
 def merge_workspace(folder: str, sources: list[dict], *, session=None):
     """Merge changes into a workspace root manifest."""
-    return _do_merge("scope", folder, sources, session)
+    return _do_merge("workspace", "workspace", folder, sources)
 
 
 def merge_project_agent_task(
     folder: str, sources: list[dict], *, session=None
 ) -> tuple[bool, dict]:
     """Merge changes into a project agent-task manifest."""
-    return _do_merge("task", folder, sources, session)
+    return _do_merge("project", "task", folder, sources)
 
 
 def merge_project_agent(folder: str, sources: list[dict], *, session=None):
     """Merge changes into a project agent manifest."""
-    return _do_merge("agent", folder, sources, session)
+    return _do_merge("project", "agent", folder, sources)
 
 
 def merge_project(folder: str, sources: list[dict], *, session=None):
     """Merge changes into a project root manifest."""
-    return _do_merge("scope", folder, sources, session)
+    return _do_merge("project", "project", folder, sources)
 
 
 def merge_global_agent_task(
     folder: str, sources: list[dict], *, session=None
 ) -> tuple[bool, dict]:
     """Merge changes into a global agent-task manifest."""
-    return _do_merge("task", folder, sources, session)
+    return _do_merge("global", "task", folder, sources)
 
 
 def merge_global_agent(folder: str, sources: list[dict], *, session=None):
     """Merge changes into a global agent manifest."""
-    return _do_merge("agent", folder, sources, session)
+    return _do_merge("global", "agent", folder, sources)
 
 
 def merge_global(folder: str, sources: list[dict], *, session=None):
     """Merge changes into a global root manifest."""
-    return _do_merge("scope", folder, sources, session)
+    return _do_merge("global", "global", folder, sources)
 
 
 # ---------------------------------------------------------------------------
@@ -207,42 +156,79 @@ def merge_global(folder: str, sources: list[dict], *, session=None):
 
 
 def _do_merge(
-    level: str, folder: str, sources: list[dict], session: Any = None
+    scope: str, kind: str, folder: str, sources: list[dict], *, session=None
 ) -> tuple[bool, dict]:
-    """Create a memory-manage session, send the prompt, and wait for result.
+    """Update the manifest at *folder* for the changed *sources*.
 
-    Args:
-        level: ``"task"``, ``"agent"``, or ``"scope"``.
-        folder: Path to the manifest directory.
-        sources: List of changed source dicts from ``needs_update``.
-        session: Optional caller session for workspace context.
-
-    Returns:
-        ``(success, result)`` – on success *result* contains the LLM output;
-        on failure a dict with ``"error"``.
+    Strategy:
+    1. Read the existing ``.memory_sources.md`` manifest.
+    2. For each changed source, re-read its directory and compute the new
+       git commit hash.
+    3. Update the manifest entries with the new hashes.
+    4. Write the updated manifest back.
     """
-    # Create the memory-manage session
-    mem_session = _create_memory_session(level, folder, sources, session)
-    if mem_session is None:
-        return False, {"error": "Could not create memory-manage session"}
+    from runtime.memory import memgit, memsources
 
-    # Build the layer-specific prompt
-    if level == "task":
-        prompt = _build_task_prompt(folder, sources)
-    elif level == "agent":
-        prompt = _build_agent_prompt(folder, sources)
-    else:
-        # scope – determine scope kind from folder path
-        scope_kind = _infer_scope(folder, "scope")
-        prompt = _build_scope_prompt(folder, scope_kind, sources)
+    manifest_path = Path(folder) / mempaths.SOURCES_FILENAME
+    if not manifest_path.exists():
+        return False, {"error": f"Manifest not found: {manifest_path}"}
 
-    # Send the prompt and wait for the LLM to process
-    call = mem_session.add_user_message(prompt)
+    # Read existing manifest
     try:
-        result = call.get_result(timeout=300)
-        return True, {"result": str(result)[:1000]}
+        manifest_data = memsources.read_sources(manifest_path)
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        return False, {"error": str(exc)}
+        return False, {"error": f"Failed to read manifest: {exc}"}
+
+    # Compute new hashes for changed sources
+    updated = 0
+    for src in sources:
+        src_path = src.get("path", "")
+        if not src_path:
+            continue
+
+        full_path = Path(folder) / src_path
+        if not full_path.is_dir():
+            # Source directory doesn't exist; keep the existing hash
+            continue
+
+        repo = memgit.repo_for(full_path)
+        if repo is None:
+            continue
+
+        new_hash = memgit.current_commit(repo, full_path)
+        if not new_hash:
+            continue
+
+        # Update the manifest entry
+        for entry in manifest_data.get("sources", []):
+            if entry.get("path") == src_path:
+                entry["last_processed_hash"] = new_hash
+                updated += 1
+                break
+
+    if updated == 0:
+        return True, {
+            "scope": scope,
+            "kind": kind,
+            "folder": folder,
+            "source_count": len(sources),
+            "message": "No hashes needed updating.",
+        }
+
+    # Write updated manifest
+    try:
+        memsources.write_sources(manifest_path, manifest_data)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        return False, {"error": f"Failed to write manifest: {exc}"}
+
+    return True, {
+        "scope": scope,
+        "kind": kind,
+        "folder": folder,
+        "source_count": len(sources),
+        "updated": updated,
+        "message": f"Updated {updated} source hash(es) in manifest.",
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -260,7 +246,7 @@ def memory_merge(
             :func:`runtime.memory.tree.walk_memory`.  Each entry has
             ``manifest_path``, ``node_kind``, ``node_key``, ``depth``,
             and ``sources``.
-        session: Optional session context for delegation.
+        session: Optional session context (unused, kept for API compat).
 
     Returns:
         ``(success, result)`` – on success *result* contains the merge
@@ -308,29 +294,10 @@ def _infer_scope(folder: str, node_kind: str) -> str:
     if node_kind in ("global", "project", "workspace"):
         return node_kind
 
+    # For agent/task nodes, inspect the path
     folder_lower = folder.lower()
-
-    # Project scope: path contains /projects/
     if "/projects/" in folder_lower or "\\projects\\" in folder_lower:
         return "project"
-
-    # Workspace scope: path contains /workspaces/ or .agentone is nested
-    # inside a workspace project directory (not directly under $HOME)
     if "/workspaces/" in folder_lower or "\\workspaces\\" in folder_lower:
         return "workspace"
-
-    if "/.agentone/memory" in folder_lower:
-        try:
-            p = Path(folder)
-            for parent in p.parents:
-                if parent.name == ".agentone":
-                    grandparent = parent.parent
-                    gp_str = str(grandparent)
-                    home = str(Path.home())
-                    if gp_str != home and gp_str.rstrip("/") != home.rstrip("/"):
-                        return "workspace"
-                    break
-        except Exception:
-            pass
-
     return "global"

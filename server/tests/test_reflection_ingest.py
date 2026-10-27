@@ -2,7 +2,7 @@
 
 ``ingest_reflection_result`` inserts the fork's report into the observed
 session as a ``role=INFO`` / ``message_type=REFLECTION`` message placed after
-the session-end anchor (see ``.agentone/agents/reflection-mixin/``).
+the session-end anchor (see ``.agentone/agents/internal/reflection-mixin/``).
 """
 import importlib.util
 from pathlib import Path
@@ -17,17 +17,15 @@ from server.models.message import Message
 from server.tests.helpers import AgentMdTestMixin
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_MIXIN_AGENT_MD = (
-    _REPO_ROOT / ".agentone" / "agents" / "reflection-mixin" / "agent.md"
+_MIXIN_DIR = (
+    _REPO_ROOT / ".agentone" / "agents" / "internal" / "reflection-mixin"
 )
+_MIXIN_AGENT_MD = _MIXIN_DIR / "agent.md"
 
 
 def _load_reflection_module():
     """Load the reflection-mixin ``reflect_session.py`` as a module."""
-    path = (
-        _REPO_ROOT / ".agentone" / "agents" / "reflection-mixin"
-        / "scripts" / "reflect_session.py"
-    )
+    path = _MIXIN_DIR / "scripts" / "reflect_session.py"
     spec = importlib.util.spec_from_file_location("_reflection_under_test", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

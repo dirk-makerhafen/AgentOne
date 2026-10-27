@@ -289,10 +289,7 @@ class AgentVersionModel(BaseModel):
         Uses ``*`` (wildcard) elements in list settings to merge parent values.
         """
         extend_at_index = None
-        value = None
-        if self.agent_settings is not None:
-            value = getattr(self.agent_settings, name)
-        if value is not None:
+        if (value := getattr(self.agent_settings, name)) is not None:
             if isinstance(value, (str, int, bool, float, GenericContent, BaseModel)):
                 return value
             if isinstance(value, dict):

@@ -148,6 +148,40 @@ class MemoryWalkTest(TestCase):
         (session / "reflections_20261023-120000_1.md").write_text("r", encoding="utf-8")
         (session / "compaction_20261023-120000_2.md").write_text("c", encoding="utf-8")
 
+    def _session_report_dir(
+        self, root: Path, agent_pk: int, session_pk: int, group_key: str = "default"
+    ) -> Path:
+        return (
+            root
+            / "agents"
+            / str(agent_pk)
+            / "tasks"
+            / f"task_{group_key}"
+            / "sessions"
+            / str(session_pk)
+        )
+
+    def _add_report(self, session, message_type, parts):
+        """Create a REFLECTION/COMPACTION message with the given parts."""
+        from server.models.enums.message_enums import MessageContentType
+        from server.models.message import Message
+
+        sv = SessionVersionModel.objects.filter(session=session).first()
+        msg = Message.objects.create(
+            session=session, session_version=sv, message_type=message_type
+        )
+        for part_type, text in parts:
+            msg.add_part(
+                type=part_type,
+                content_type=MessageContentType.TEXT,
+                content=text,
+            )
+        return msg
+
+    def _clear_reports(self, directory: Path, pattern: str) -> None:
+        for path in directory.glob(pattern):
+            path.unlink()
+
     def _write_output(self, root: Path, label: str) -> None:
         (root / "memory.md").write_text(f"{label} memory", encoding="utf-8")
         (root / "reflection.md").write_text(f"{label} reflection", encoding="utf-8")
@@ -532,6 +566,128 @@ class MemoryWalkTest(TestCase):
         # The original file should be unchanged
         content = existing_file.read_text(encoding="utf-8")
         self.assertEqual(content, "existing content")
+
+    def test_refresh_writes_compaction_reports_from_compaction_parts(self):
+        """COMPACTION parts are the report body (not just MESSAGE parts)."""
+        from server.models.enums.message_enums import MessagePartType, MessageType
+
+        session_dir = self._session_report_dir(
+            self.global_mem, self.global_agent.pk, self.global_session.pk
+        )
+        self._clear_reports(session_dir, "compaction_*.md")
+        self._add_report(
+            self.global_session,
+            MessageType.COMPACTION,
+            [
+                (MessagePartType.COMPACTION, "Old messages have been compacted."),
+                (MessagePartType.COMPACTION, "SUMMARY: refactored the widget"),
+            ],
+        )
+
+        result = walk_memory(write=True, refresh=True)
+
+        files = list(session_dir.glob("compaction_*.md"))
+        self.assertEqual(len(files), 1)
+        content = files[0].read_text(encoding="utf-8")
+        self.assertIn("refactored the widget", content)
+        self.assertEqual(result["compactions_written"], 1)
+
+    def test_refresh_writes_every_report_not_just_the_newest(self):
+        """Every reflection message gets a file, not only the latest one."""
+        from server.models.enums.message_enums import MessagePartType, MessageType
+
+        session_dir = self._session_report_dir(
+            self.global_mem, self.global_agent.pk, self.global_session.pk
+        )
+        self._clear_reports(session_dir, "reflections_*.md")
+        for index in range(3):
+            self._add_report(
+                self.global_session,
+                MessageType.REFLECTION,
+                [(MessagePartType.MESSAGE, f"reflection report {index}")],
+            )
+
+        result = walk_memory(write=True, refresh=True)
+
+        files = list(session_dir.glob("reflections_*.md"))
+        self.assertEqual(len(files), 3)
+        self.assertEqual(result["reflections_written"], 3)
+
+    def test_refresh_creates_missing_task_directory(self):
+        """Reports are written even when no memory dir exists for the agent."""
+        from server.models.enums.message_enums import MessagePartType, MessageType
+
+        agent = AgentModel.objects.create(name="walk-refresh-new-agent")
+        session = self._make_session(
+            "walk-refresh-new-session", agent, project=self.project
+        )
+        session_dir = self._session_report_dir(
+            self.project_mem, agent.pk, session.pk
+        )
+        self.assertFalse((session_dir.parents[3]).exists())
+        self._add_report(
+            session,
+            MessageType.REFLECTION,
+            [(MessagePartType.MESSAGE, "report without prior memory")],
+        )
+
+        walk_memory(write=True, refresh=True)
+
+        files = list(session_dir.glob("reflections_*.md"))
+        self.assertEqual(len(files), 1)
+        self.assertIn("report without prior memory", files[0].read_text(encoding="utf-8"))
+
+    def test_refresh_uses_workspace_memory_root(self):
+        """Workspace sessions are written under the workspace root, not the project's."""
+        from server.models.enums.message_enums import MessagePartType, MessageType
+
+        workspace_dir = self._session_report_dir(
+            self.top_mem, self.top_agent.pk, self.top_session.pk
+        )
+        project_dir = self._session_report_dir(
+            self.project_mem, self.top_agent.pk, self.top_session.pk
+        )
+        self._clear_reports(workspace_dir, "reflections_*.md")
+        self._add_report(
+            self.top_session,
+            MessageType.REFLECTION,
+            [(MessagePartType.MESSAGE, "workspace scoped report")],
+        )
+
+        walk_memory(write=True, refresh=True)
+
+        self.assertEqual(len(list(workspace_dir.glob("reflections_*.md"))), 1)
+        self.assertFalse(project_dir.exists())
+
+    def test_refresh_excludes_compaction_bootstrap_parts(self):
+        """Re-pinned bootstrap content is not part of the stored summary."""
+        from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
+        from server.models.enums.message_enums import MessagePartType, MessageType
+
+        session_dir = self._session_report_dir(
+            self.global_mem, self.global_agent.pk, self.global_session.pk
+        )
+        self._clear_reports(session_dir, "compaction_*.md")
+        self._add_report(
+            self.global_session,
+            MessageType.COMPACTION,
+            [
+                (MessagePartType.COMPACTION, "SUMMARY: kept"),
+                (
+                    MessagePartType.COMPACTION,
+                    COMPACTION_BOOTSTRAP_SENTINEL + " frozen for cache stability]",
+                ),
+                (MessagePartType.COMPACTION, "AGENT TEMPLATE dropped"),
+            ],
+        )
+
+        walk_memory(write=True, refresh=True)
+
+        content = list(session_dir.glob("compaction_*.md"))[0].read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("SUMMARY: kept", content)
+        self.assertNotIn("AGENT TEMPLATE", content)
 
 
 class MemoryTypeTest(TestCase):

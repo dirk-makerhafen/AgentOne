@@ -20,7 +20,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from django.db import models
+from django.db.models import Prefetch
 
 from runtime.memory import git as memgit
 from runtime.memory import paths as mempaths
@@ -35,6 +35,7 @@ _SOURCE_DIR = {
     "task": "sessions",
 }
 _AGENT_QUERY_CHUNK = 500
+_REPORT_BATCH_SIZE = 250
 
 
 def _compute_memory_type(kind: str, scope: str) -> str:
@@ -521,13 +522,38 @@ def mark_processed(target_dir: Path) -> bool:
     return True
 
 
-def _refresh_reports(tree: MemoryTree) -> dict[str, int]:
-    """Save newest REFLECTION/COMPACTION messages to task memory directories.
+def _report_dir(session: Any, version: Any) -> Optional[Path]:
+    """Return the task memory directory that owns *session*'s reports.
 
-    For every session in the database that has a REFLECTION or COMPACTION
-    message, checks whether the corresponding report file already exists
-    in the task's ``sessions/<session_pk>/`` directory.  If not, writes
-    the message content to the timestamped report filename.
+    The scope root is resolved from the session *version* that produced the
+    message: a workspace-bound session belongs to the workspace memory root,
+    not to its parent project's root.  Returns ``None`` when the scope cannot
+    be resolved.
+    """
+    try:
+        resolved_root = mempaths.memory_root(
+            session_or_pk=session,
+            workspace=version.workspace,
+            project=session.parent_project,
+        )
+        agent_dir = mempaths.agent_memory_dir(resolved_root, version.agent_id)
+        return mempaths.task_memory_dir(agent_dir, session.group_key)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+
+
+def _refresh_reports() -> dict[str, int]:
+    """Save every REFLECTION/COMPACTION message to task memory directories.
+
+    Iterates all report messages in the database, resolves the task memory
+    directory for the session version that produced each message, and writes
+    the message content to its timestamped report file if that file does not
+    exist yet.  Report filenames are derived from the message timestamp and
+    pk, so re-running is idempotent.
+
+    Missing ``agents/<pk>/tasks/<task>/sessions/<pk>/`` directories are
+    created as needed — a session does not have to have been synthesized
+    before its reports can be persisted.
 
     Returns:
         A dict with keys ``"reflections_written"`` and
@@ -535,184 +561,128 @@ def _refresh_reports(tree: MemoryTree) -> dict[str, int]:
         created during this call.
     """
     from server.models.enums.message_enums import MessageType
-    from server.models.message import Message
+    from server.models.message import Message, MessagePart
 
-    # Find the newest REFLECTION and COMPACTION message per session.
-    # Use a two-step approach compatible with MariaDB:
-    # 1. Get the max pk per (session_id, message_type)
-    # 2. Fetch the actual messages by those pk values
-    latest_per_session = (
-        Message.objects.values("session_id", "message_type")
+    counts = {"reflections_written": 0, "compactions_written": 0}
+
+    queryset = (
+        Message.objects
         .filter(
             message_type__in=[MessageType.REFLECTION, MessageType.COMPACTION]
         )
-        .annotate(max_pk=models.Max("pk"))
-        .values_list("session_id", "message_type", "max_pk")
+        .select_related("session", "session_version__workspace")
+        .prefetch_related(
+            Prefetch(
+                "parts",
+                queryset=MessagePart.objects
+                .select_related("content")
+                .order_by("pk"),
+                to_attr="report_parts",
+            )
+        )
+        .order_by("pk")
     )
 
-    if not latest_per_session:
-        return {"reflections_written": 0, "compactions_written": 0}
+    # Report directory per (session, version, task group); sessions can change
+    # agent/workspace over their lifetime, so each version is looked up once.
+    report_dirs: dict[tuple[int, int, str], Optional[Path]] = {}
 
-    # Fetch the actual messages by pk, prefetching parts for content extraction
-    latest_pks = [row[2] for row in latest_per_session]
-    messages = (
-        Message.objects.filter(pk__in=latest_pks)
-        .select_related("session")
-        .prefetch_related("parts")
-    )
+    # Walk in pk batches so a large history does not load everything at once.
+    last_pk = 0
+    while True:
+        batch = list(queryset.filter(pk__gt=last_pk)[:_REPORT_BATCH_SIZE])
+        if not batch:
+            break
+        last_pk = batch[-1].pk
 
-    # Group messages by session
-    sessions_to_process: dict[int, dict] = {}
-    for msg in messages:
-        session_id = msg.session_id
-        if session_id not in sessions_to_process:
-            sessions_to_process[session_id] = {
-                "reflections": [],
-                "compactions": [],
-            }
-        if msg.message_type == MessageType.REFLECTION:
-            sessions_to_process[session_id]["reflections"].append(msg)
-        elif msg.message_type == MessageType.COMPACTION:
-            sessions_to_process[session_id]["compactions"].append(msg)
+        for msg in batch:
+            session = msg.session
+            version = msg.session_version or getattr(
+                session, "latest_session_version", None
+            )
+            if session is None or version is None or version.agent_id is None:
+                continue
 
-    reflections_written = 0
-    compactions_written = 0
+            group_key = (session.group_key or "").strip() or "default"
+            cache_key = (session.pk, version.pk, group_key)
+            if cache_key not in report_dirs:
+                report_dirs[cache_key] = _report_dir(session, version)
+            task_dir = report_dirs[cache_key]
+            if task_dir is None:
+                continue
 
-    # For each session, resolve the memory root and task directory
-    for session_id, types in sessions_to_process.items():
-        try:
-            from server.models.sessions.session import SessionModel
-            from server.models.sessions.session_version import SessionVersionModel
+            report_path = (
+                mempaths.session_memory_dir(task_dir, session.pk)
+                / mempaths.report_filename(msg)
+            )
+            if report_path.exists():
+                continue
 
-            session = SessionModel.objects.select_related(
-                "parent_project"
-            ).get(pk=session_id)
-
-            # Find the session version to get agent/workspace info
             try:
-                sv = SessionVersionModel.objects.filter(
-                    session_id=session_id
-                ).first()
-                if sv is None:
+                content = extract_report_text(msg)
+                if not content:
                     continue
-                agent_id = sv.agent_id
-                workspace_id = sv.workspace_id
-            except Exception:
+                mempaths.write_text(report_path, content)
+            except OSError:
                 continue
 
-            # Resolve the memory root for this session.
-            # Pass workspace=None so _resolve_scope extracts it from the
-            # session object automatically (passing the raw integer id would
-            # bypass that logic and fall back to the global memory root).
-            try:
-                resolved_root = mempaths.memory_root(
-                    session_or_pk=session,
-                    workspace=None,
-                    project=session.parent_project,
-                )
-                agent_dir = mempaths.agent_memory_dir(resolved_root, agent_id)
-                task_dir = mempaths.task_memory_dir(agent_dir, session.group_key)
-            except Exception:
-                continue
+            if msg.message_type == MessageType.REFLECTION:
+                counts["reflections_written"] += 1
+            else:
+                counts["compactions_written"] += 1
 
-            if not task_dir.is_dir():
-                continue
-
-            session_dir = mempaths.session_memory_dir(task_dir, session_id)
-
-            for msg in types["reflections"]:
-                filename = mempaths.report_filename(msg)
-                report_path = session_dir / filename
-                if not report_path.exists():
-                    try:
-                        # Extract text content from the message
-                        content = _extract_message_content(msg)
-                        if content:
-                            mempaths.write_text(report_path, content)
-                            reflections_written += 1
-                    except Exception:  # pylint: disable=broad-exception-caught
-                        pass
-
-            for msg in types["compactions"]:
-                filename = mempaths.report_filename(msg)
-                report_path = session_dir / filename
-                if not report_path.exists():
-                    try:
-                        content = _extract_message_content(msg)
-                        if content:
-                            mempaths.write_text(report_path, content)
-                            compactions_written += 1
-                    except Exception:  # pylint: disable=broad-exception-caught
-                        pass
-
-        except Exception:  # pylint: disable=broad-exception-caught
-            continue
-
-    return {
-        "reflections_written": reflections_written,
-        "compactions_written": compactions_written,
-    }
+    return counts
 
 
-def _extract_message_content(message: Any) -> str:
-    """Extract plain-text content from a Message's parts.
+def extract_report_text(message: Any) -> str:
+    """Extract the plain-text body of a report message.
 
-    Returns the concatenated text content of all MESSAGE-type parts,
-    skipping toolcall and reasoning parts.
+    Reflection reports carry their text in ``MESSAGE`` parts; compaction
+    markers carry it in ``COMPACTION`` parts.  Both are included, while
+    ``REASONING``/``TOOLCALL`` parts are skipped.  For compaction markers the
+    trailing session-bootstrap parts (re-pinned agent templates and workspace
+    guidance) are dropped: they are re-sent to the LLM after every compaction
+    and are not part of the summary.
     """
     from server.models.enums.message_enums import MessageContentType
 
-    # Access the prefetched parts directly
-    parts = getattr(message, "parts", None)
+    parts = getattr(message, "report_parts", None)
     if parts is None:
-        return ""
+        manager = getattr(message, "parts", None)
+        if manager is None:
+            return ""
+        try:
+            parts = list(manager.order_by("pk"))
+        except Exception:  # pylint: disable=broad-exception-caught
+            return ""
+
+    sentinel = ""
+    try:
+        from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
+
+        sentinel = COMPACTION_BOOTSTRAP_SENTINEL
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
 
     texts: list[str] = []
     try:
-        for part in parts.all():
-            # part.type is stored as uppercase in the DB (e.g., "MESSAGE")
-            if part.type.upper() == "MESSAGE" and part.content_type == MessageContentType.TEXT:
-                content = getattr(part.content, "get", None)
-                if callable(content):
-                    texts.append(content())
+        for part in parts:
+            part_type = str(getattr(part, "type", "") or "").upper()
+            if part_type not in ("MESSAGE", "COMPACTION"):
+                continue
+            if part.content_type != MessageContentType.TEXT:
+                continue
+            content = part.content.get() if part.content else None
+            if not content:
+                continue
+            text = str(content)
+            if sentinel and sentinel in text:
+                break
+            texts.append(text)
     except Exception:  # pylint: disable=broad-exception-caught
         pass
 
     return "\n".join(texts) if texts else ""
-
-
-def mark_processed(target_dir: Path) -> bool:
-    """Snapshot current source commits as last-processed for *target_dir*.
-
-    Called after a successful synthesis.  The walker itself never advances
-    ``last_processed_hash``.
-    """
-    tree = discover_tree()
-    target = Path(target_dir).resolve()
-    node = next((n for n in tree.nodes if n.path.resolve() == target), None)
-    if node is None:
-        return False
-
-    children = tree.scope_children.get(id(node), [])
-    if node.kind in _SCOPE_KINDS:
-        memgit.ensure_repo(node.path)
-    for child in children:
-        memgit.ensure_repo(child.path)
-
-    repo = memgit.repo_for(node.path)
-    if repo is not None:
-        memgit.commit_all(repo, message="memory: synthesized")
-    for child in children:
-        memgit.commit_all(child.path, message="memory: synthesized")
-
-    payload = _build_manifest(node, tree)
-    for source in payload["sources"]:
-        current = source.get("current_hash")
-        source["last_processed_hash"] = current
-        source["hours_since_processed"] = 0.0 if current else None
-        source["changed_chars"] = 0 if current else None
-    memsources.write_sources(node.path / memsources.SOURCES_FILENAME, payload)
-    return True
 
 
 def walk_memory(write: bool = True, refresh: bool = False) -> dict[str, Any]:
@@ -727,12 +697,12 @@ def walk_memory(write: bool = True, refresh: bool = False) -> dict[str, Any]:
         write: When ``True`` (default), actually writes/updates manifest
             files on disk.  When ``False``, only computes what *would* be
             written — useful for dry-run inspection.
-        refresh: When ``True``, queries the database for the newest
-            REFLECTION and COMPACTION messages across all sessions and
-            saves any that are not already present as report files in the
-            corresponding task memory directories.  This is useful after
-            a session has produced new reflection/compaction output that
-            hasn't been persisted to the filesystem yet.
+        refresh: When ``True``, queries the database for every REFLECTION
+            and COMPACTION message and saves any that are not already
+            present as report files in the corresponding task memory
+            directory (scoped to the workspace/project the message's
+            session version belongs to).  This backfills reports that were
+            never persisted to the filesystem.
 
     Returns:
         A summary dict with:
@@ -761,14 +731,16 @@ def walk_memory(write: bool = True, refresh: bool = False) -> dict[str, Any]:
         - ``compactions_written`` – only present when ``refresh=True``;
           count of new compaction report files saved.
     """
+    # Backfill report files first so their git commits and directories are
+    # visible to discovery/commit/manifest generation in this same run.
+    refresh_counts: dict[str, int] = {}
+    if refresh:
+        refresh_counts = _refresh_reports()
+
     tree = discover_tree()
     _compute_depths(tree)
     if write:
         _prepare_write_repos(tree)
-
-    refresh_counts: dict[str, int] = {}
-    if refresh:
-        refresh_counts = _refresh_reports(tree)
 
     manifests_written = 0
     pending = 0
