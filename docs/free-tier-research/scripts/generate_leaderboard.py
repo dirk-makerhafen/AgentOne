@@ -13,7 +13,7 @@ model_id_to_org = {}
 model_scores = {}
 
 BASE = Path(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-DATA_URL = "https://raw.githubusercontent.com/anomalyco/opencode/refs/heads/dev/packages/opencode/test/tool/fixtures/models-api.json"
+DATA_URL = "https://raw.githubusercontent.com/anomalyco/opencode/2.0/packages/opencode/test/tool/fixtures/models-api.json"
 TARGET_DIR = Path(os.path.join(BASE, "raw", "rankings"))
 TARGET_DIR.mkdir(exist_ok=True)
 

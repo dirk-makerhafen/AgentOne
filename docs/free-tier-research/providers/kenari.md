@@ -3,55 +3,91 @@ name: Kenari
 url: "https://kenari.id"
 api_base: "https://kenari.id/v1"
 setup_instructions: |
-  1. Create an account at https://kenari.id/login (no foreign credit card needed; the free lane needs no top-up at all).
-  2. In the dashboard open API keys and create a key (KENARI_API_KEY, `kn-...` prefix, shown only once — store it securely).
-  3. Point an OpenAI-compatible client at https://kenari.id/v1 with `Authorization: Bearer kn-...` and call a `:free`-suffixed model ID (e.g. `step-3-7-flash:free`). Skip any balance top-up if you only use `:free` models.
-api_key_url: "https://kenari.id/login"
-limits: {}
+  1. Sign up at https://kenari.id (free, no credit card; Indonesian phone/email or Google/GitHub).
+  2. Create an API key in the dashboard (or use the free tier without top-up).
+  3. Call the OpenAI-compatible endpoint at https://kenari.id/v1 with the key as Bearer token.
+  4. Also supports Anthropic format at the same endpoint.
+api_key_url: "https://kenari.id"
+limits:
+  requests:
+    minute: 5
+    day: 50
 ---
 
-Kenari (Indonesian gateway, billing in Rupiah) bills `:free`-suffixed models Rp 0 with per-minute caps plus three-tier daily quotas (Solo = never topped up / Payer / Subscription-plan quota).
+Kenari is an Indonesian LLM gateway with a unified API (OpenAI + Anthropic formats), automatic fallback across providers, and billing in Indonesian Rupiah. 23 models are free with generous limits after a small top-up.
 
 **Free Tier:**
 
-- `:free` models billed Rp 0; best-effort lane, no availability guarantees.
-- No top-up needed for the free lane. Top-up via QRIS from Rp 1,000 — no foreign credit card needed (only relevant if you leave the free lane).
-- Empty responses (no output tokens) are never billed on any tier.
+- **No top-up (Solo Free):** 50 requests/day, 5 RPM. Free models included.
+- **After Rp 10,000 top-up (~$0.60):** 1,000 requests/day, 10 RPM. Free models included.
+- **Active monthly plan:** No daily limit, 25 RPM. Plans from Rp 49,000/mo (~$3).
+- Pay-as-you-go (PAYG) also available; per-model prices at `/v1/models`.
 
-**Free Models (live `GET /v1/models` catalog, verified 2026-09-05 — 13 `:free` IDs, all `"free": true`, none with `sunset_at` set):**
+**Free Models (verified 2026-10-27 from opencode fixtures):**
 
-- [`glm-4-7-flash:free`](../models/glm-4.7-flash.md) — 131K context, reasoning + tool call.
-- [`laguna-s-2-1:free`](../models/laguna-s-2.1.md) — 262K context, reasoning + tool call (Poolside Laguna S 2.1).
-- [`laguna-xs-2-1:free`](../models/laguna-xs-2.1.md) — 262K context, reasoning + tool call (Poolside Laguna XS 2.1).
-- [`step-3-7-flash:free`](../models/step-3-7-flash.md) — 262K context (official docs example), reasoning + tool call.
-- [`nemotron-3-super-120b-a12b:free`](../models/nemotron-3-super-120b-a12b.md) — 262K context, reasoning + tool call (note: Super, not the Nano card model).
-- [`nemotron-3-ultra-550b-a55b:free`](../models/nemotron-3-ultra-550b-a55b.md) — 1M context, reasoning + tool call.
-- [`mimo-v2-5:free`](../models/mimo-v2.5.md) — ~1.05M context, reasoning + tool call.
-- `mistral-medium-3-5:free` — 262K context, reasoning + tool call.
-- [`hy3:free`](../models/hy3.md) — 262K context, reasoning + tool call (Tencent Hunyuan Hy3).
-- [`agnes-2-5-flash:free`](../models/agnes-2.5-flash.md) — 512K context. (Deprecated `agnes-2-0-flash:free` legacy row still exists live but is deliberately not catalogued — superseded ≥1yr-old generation.)
-- [`muse-spark-1-2-contributor:free`](../models/muse-spark-1.2-contributor.md) — ~1M context, reasoning + tool call.
-- [`muse-spark-1-3-contributor:free`](../models/muse-spark-1.3-contributor.md) — ~1M context, reasoning + tool call.
-- Only `:free`-suffixed IDs are free; same-name non-suffixed models are metered.
+### Anthropic Claude
+- `claude-opus-4-8` — 1M context, reasoning, tool calls
+- `claude-opus-4-7` — 1M context, reasoning, tool calls
+- `claude-sonnet-4-6` — 1M context, reasoning, tool calls
+
+### OpenAI GPT
+- `gpt-5-5` — 1.05M context, reasoning, tool calls
+- `gpt-5-4-mini` — 400K context, reasoning, tool calls
+- `gpt-oss-120b` — 131K context, reasoning, tool calls, open weights
+- `gpt-oss-20b` — 131K context, reasoning, tool calls, open weights
+- `gpt-image-2` — 272K context, image generation
+
+### DeepSeek
+- `deepseek-v4-flash` — 1M context, reasoning, tool calls
+- `deepseek-v4-flash:free` — 1M context, reasoning, tool calls
+- `deepseek-v4-pro` — 1M context, reasoning, tool calls
+- `deepseek-v4-pro:free` — 1M context, reasoning, tool calls
+
+### GLM (Z.ai)
+- `glm-5-1` — 200K context, reasoning, tool calls
+- `glm-5-2` — 1M context, reasoning, tool calls
+
+### Kimi (Moonshot)
+- `kimi-k2-6` — 262K context, reasoning, tool calls
+- `kimi-k2-7-code` — 262K context, reasoning, tool calls
+
+### xAI Grok
+- `grok-4-3` — 1M context, reasoning, tool calls
+- `grok-build-0-1` — 256K context, reasoning, tool calls
+
+### Xiaomi MiMo
+- `mimo-v2-5` — 1M context, reasoning, tool calls
+- `mimo-v2-5-pro` — 1M context, reasoning, tool calls
+
+### Google Gemma
+- `gemma-4-31b-it` — 262K context, reasoning, tool calls
+
+### Qwen
+- `qwen3-7-plus` — 1M context, reasoning, tool calls
+
+### MiniMax
+- `minimax-m3` — 512K context, reasoning, tool calls
 
 **Limits:**
 
-- Per-minute request cap per `:free` model plus a daily request quota in three tiers by account status (Solo = never topped up / Payer / Subscription-plan quota).
-- Live numbers are operator-set on https://kenari.id/plan (also `GET /api/public/pricing`) — not hardcoded here.
-- Exhaustion returns HTTP 429 with `Retry-After` and reason `free_quota_daily`.
+- Free (no top-up): 50 RPD, 5 RPM
+- After Rp 10,000 top-up: 1,000 RPD, 10 RPM
+- Active plan: unlimited daily, 25 RPM
+- PAYG: per-token pricing in Rupiah per 1M tokens (see `/v1/models`)
 
 **Notes:**
 
-- Account required; API key required (`kn-...`, one key covers all models and both OpenAI- and Anthropic-style APIs); docs are Indonesian-first (English toggle available).
-- OpenAI-compatible plus Anthropic-messages and Responses wire formats; BYOK route is free (own key billed by provider).
-- Fixture leads (not authoritative, absent from the live catalog 2026-09-05): `deepseek-v4-flash:free` and `deepseek-v4-pro:free` appear at $0 in `raw/opencode-models-api/kenari/` but are not listed live — re-check `GET /v1/models` before use. Likewise `kimi-k2-7-code:free`, `kimi-k2-6:free`, and `mistral-large:free` (listed in the previous revision) are not in the live catalog today.
-- Non-suffixed fixture entries at $0 (e.g. `minimax-m3`, `gemma-4-31b-it`, `gpt-oss-120b` without `:free`) are not documented as free — per Kenari docs only `:free` IDs are Rp 0, so they are not claimed here.
-- Each catalog entry carries a `sunset_at` epoch; a model serves until that time passes, then disappears from the catalog — check it before pinning an ID.
+- Indonesian Rupiah billing; top-up via QRIS, bank transfer, e-wallet (no credit card required for free tier).
+- OpenAI-compatible: `https://kenari.id/v1`; Anthropic-compatible at same endpoint.
+- Automatic fallback across providers (if one slows down, switches within ms).
+- Model IDs use simple names (no provider prefix).
+- Also offers Studio (images/video/voice), Domains, MCP server, CLI.
+- "Start free" - sign up and use free models immediately.
 
 **Sources**
 
-- https://kenari.id/docs/billing (free-version + quota tiers, verified 2026-09-05)
-- https://kenari.id/docs/models (live-catalog rule, `:free` semantics, verified 2026-09-05)
-- https://kenari.id/docs/quickstart (signup, `kn-` key, `:free` without top-up, `https://kenari.id/v1` base URL, verified 2026-09-05)
-- https://kenari.id/docs/authentication (`kn-` key management, Bearer auth, verified 2026-09-05)
-- https://kenari.id/v1/models (live catalog queried 2026-09-05: 72 models, 13 `:free` IDs with `"free": true`)
+- https://kenari.id (official site)
+- https://kenari.id/en/docs (documentation)
+- https://kenari.id/v1/models (live model list & pricing)
+- https://kenari.id/openapi.json (OpenAPI spec)
+- docs/free-tier-research/raw/opencode-models-api/kenari/ (23 free model fixtures, verified 2026-10-27)

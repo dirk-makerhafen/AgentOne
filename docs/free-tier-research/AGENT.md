@@ -54,11 +54,12 @@ Run extraction scripts to download data into `raw/`, these files, especially the
 python3 scripts/generate_from_awesome_apis.py
 
 # Source 2: opencode test fixtures (120 providers, 2000+ models)
+#   - Fixture: https://raw.githubusercontent.com/anomalyco/opencode/2.0/packages/opencode/test/tool/fixtures/models-api.json (detailed metadata, stale ~April 2026)
+#   - Live API: https://opencode.ai/zen/v1/models (current model list, used for opencode provider model discovery)
 python3 scripts/generate_from_opencode_fixtures.py
 
 # Source 3: Leaderboard generation. do not edit. creates raw/leaderboard.csv
 python3 scripts/generate_leaderboard.py
-
 ```
 
 ## What counts as free
