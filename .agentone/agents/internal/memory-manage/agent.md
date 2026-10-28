@@ -15,7 +15,7 @@ schedulerStrategy: queue
 tools: [+, core.*, filesystem-read.*, filesystem-write.*, memory.*]
 disallowedTools: []
 
-tasks: [+, core.*, update_memory, memory_finalize]
+tasks: [+, core.*, memory_finalize]
 disallowedTasks: []
 
 commands: []

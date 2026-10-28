@@ -377,7 +377,11 @@ def test_memory_merge_spawns_synthesizers_and_leaves_manifests_alone(tmp_path):
     assert session.spawn_calls[0][0] == "memory-manage"
     assert session.spawn_calls[0][1]["allow_internal"] is True
     assert session.spawn_calls[0][1]["session_type"] == "subtask_delegate"
-    assert "settings_overrides" not in session.spawn_calls[0][1]
+    target = Path(task["manifest_path"]).parent.resolve().as_posix()
+    access = session.spawn_calls[0][1]["settings_overrides"]["access"]
+    assert target in access["external"]["write"]["allow"]
+    assert f"{target}/**" in access["external"]["write"]["allow"]
+    assert target in access["external"]["read"]["allow"]
     child = session.children[0]
     prompt = child.prompts[0]
     assert "Task memory synthesis" in prompt
@@ -464,6 +468,98 @@ def test_memory_merge_reports_unreadable_manifest(tmp_path):
 
     assert ok is False
     assert "manifest not found" in result["failed"][0]["error"]
+
+
+def test_access_overrides_grant_node_and_child_scopes(tmp_path):
+    child_scope = tmp_path / "child" / "memory" / "agents"
+    child_scope.mkdir(parents=True)
+    item = _node(
+        tmp_path,
+        kind="global",
+        memory_type="global",
+        key="global",
+        sources=[
+            {
+                "path": "agents/",
+                "type": "global-agents",
+                "last_processed_hash": None,
+                "current_hash": "a" * 40,
+            },
+            {
+                "path": child_scope.as_posix(),
+                "type": "workspace",
+                "last_processed_hash": None,
+                "current_hash": "b" * 40,
+            },
+        ],
+    )
+    target = Path(item["manifest_path"]).parent.resolve()
+    access = merge._access_overrides(SimpleNamespace(workspace=None), target)
+
+    read_allow = access["external"]["read"]["allow"]
+    write_allow = access["external"]["write"]["allow"]
+    assert target.as_posix() in read_allow
+    assert child_scope.resolve().as_posix() in read_allow
+    # Child scopes are readable context, never write targets.
+    assert child_scope.resolve().as_posix() not in write_allow
+    assert target.as_posix() in write_allow
+
+
+def test_access_overrides_add_workspace_relative_grants(tmp_path):
+    workspace = tmp_path / "ws"
+    item = _node(workspace, kind="task", memory_type="workspace-agent-task", key="t")
+    target = Path(item["manifest_path"]).parent.resolve()
+    session = SimpleNamespace(workspace=SimpleNamespace(path=workspace.as_posix()))
+
+    access = merge._access_overrides(session, target)
+
+    rel = target.relative_to(workspace.resolve()).as_posix()
+    assert rel in access["workspace"]["write"]["allow"]
+    assert f"{rel}/**" in access["workspace"]["write"]["allow"]
+
+
+def test_access_overrides_evaluate_as_allowed_for_external_node(tmp_path):
+    """The guardrail must really allow the node, not just carry the globs."""
+    from runtime.workspace_access import evaluate, resolve_policy
+
+    workspace = tmp_path / "ws"
+    workspace.mkdir()
+    item = _node(tmp_path / "out", kind="agent", memory_type="global-agent", key="7")
+    target = Path(item["manifest_path"]).parent.resolve()
+    ws = SimpleNamespace(path=workspace.as_posix())
+    session = SimpleNamespace(
+        workspace=ws, access=merge._access_overrides(SimpleNamespace(workspace=ws), target)
+    )
+
+    policy = resolve_policy(session)
+
+    assert evaluate(policy, (target / "memory.md").as_posix(), "write").action == "allow"
+    assert evaluate(policy, (target / "tasks").as_posix(), "read").action == "allow"
+    other = (tmp_path / "elsewhere" / "note.md").as_posix()
+    assert evaluate(policy, other, "write").action == "deny"
+
+
+def test_access_overrides_allow_node_inside_manifest_root(tmp_path):
+    """A workspace's central ``memory`` dir is "inside" but not under its path."""
+    from runtime.workspace_access import evaluate, resolve_policy
+
+    code = tmp_path / "code"
+    code.mkdir()
+    manifest_root = tmp_path / "central" / "ws"
+    target = manifest_root / "memory" / "agents" / "3"
+    target.mkdir(parents=True)
+    wsm = SimpleNamespace(
+        path=code.as_posix(),
+        access={"read": {"default": "allow"}, "write": {"default": "deny"}},
+        get_agentone_dir=lambda: manifest_root,
+    )
+    session = SimpleNamespace(
+        workspace=wsm, access=merge._access_overrides(SimpleNamespace(workspace=wsm), target)
+    )
+
+    policy = resolve_policy(session)
+
+    assert evaluate(policy, (target / "memory.md").as_posix(), "write").action == "allow"
 
 
 def _marker(folder: Path, started_at: float) -> None:

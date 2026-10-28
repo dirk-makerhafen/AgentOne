@@ -592,6 +592,94 @@ def _clear_inflight(target_dir: Path) -> None:
         pass
 
 
+def _scope_source_dirs(target_dir: Path) -> list[Path]:
+    """Return child scope directories listed in the node's manifest."""
+    manifest = memsources.read_sources(target_dir / memsources.SOURCES_FILENAME)
+    found: list[Path] = []
+    for source in manifest.get("sources") or []:
+        kind = str(source.get("type") or "").strip().lower()
+        if kind not in _SCOPE_KINDS:
+            continue
+        raw = str(source.get("path") or "").strip()
+        if not raw:
+            continue
+        path = Path(raw)
+        if not path.is_absolute():
+            path = target_dir / path
+        found.append(path.resolve())
+    return found
+
+
+def _allow_patterns(roots: list[Path]) -> list[str]:
+    """Return exact + recursive allow globs for *roots*."""
+    patterns: list[str] = []
+    for root in roots:
+        posix = root.as_posix()
+        for pattern in (posix, f"{posix}/**"):
+            if pattern not in patterns:
+                patterns.append(pattern)
+    return patterns
+
+
+def _relative_allow_patterns(
+    roots: list[Path], workspace_root: Path | None
+) -> list[str]:
+    """Return workspace-relative allow globs for the roots inside *workspace_root*."""
+    if workspace_root is None:
+        return []
+    patterns: list[str] = []
+    for root in roots:
+        try:
+            rel = root.relative_to(workspace_root).as_posix()
+        except ValueError:
+            continue
+        if rel in ("", "."):
+            continue
+        for pattern in (rel, f"{rel}/**"):
+            if pattern not in patterns:
+                patterns.append(pattern)
+    return patterns
+
+
+def _access_overrides(session: Any, target_dir: Path) -> dict[str, Any]:
+    """Return a session ``access`` block granting this synthesizer its node.
+
+    Memory nodes live in their own scope's ``.agentone/memory`` tree, which is
+    usually outside the spawning session's workspace.  The child gets write
+    access to the node and read access to the node plus its child scopes (a
+    scope synthesizer consumes them).  Absolute globs cover external nodes;
+    workspace-relative copies cover nodes inside a read-only workspace.
+    """
+    write_roots = [target_dir.resolve()]
+    read_roots = write_roots + _scope_source_dirs(target_dir)
+
+    workspace_path = getattr(getattr(session, "workspace", None), "path", None)
+    workspace_root = Path(workspace_path).resolve() if workspace_path else None
+
+    access: dict[str, Any] = {
+        "external": {
+            "read": {"default": "deny", "allow": _allow_patterns(read_roots)},
+            "write": {"default": "deny", "allow": _allow_patterns(write_roots)},
+        }
+    }
+    rel_read = _relative_allow_patterns(read_roots, workspace_root)
+    rel_write = _relative_allow_patterns(write_roots, workspace_root)
+    if read_roots or write_roots:
+        # Absolute copies matter too: a memory node under the workspace's
+        # manifest dir (e.g. ``~/.agentone/workspaces/x/memory``) counts as
+        # "inside" the policy but is not under the workspace *path*, so no
+        # workspace-relative pattern can reach it.
+        access["workspace"] = {
+            "read": {
+                "allow": list(dict.fromkeys(rel_read + _allow_patterns(read_roots)))
+            },
+            "write": {
+                "allow": list(dict.fromkeys(rel_write + _allow_patterns(write_roots)))
+            },
+        }
+    return access
+
+
 def _spawn_synthesizer(
     _session: Any, layer: str, target_dir: Path, prompt: str
 ) -> dict[str, Any]:
@@ -604,7 +692,10 @@ def _spawn_synthesizer(
     tool nor the LLM advances the manifest.
 
     The target directory and dispatch time are passed as explicit arguments,
-    never through the child's prompt, so completion stays harness-owned.
+    never through the child's prompt, so completion stays harness-owned.  The
+    child also carries a session-level ``access`` override: memory nodes live
+    outside the spawning workspace, so without it the filesystem guardrail
+    would silently redirect the synthesizer into its own tree.
     """
     from server.models.enums.session_enums import SessionType
 
@@ -623,6 +714,7 @@ def _spawn_synthesizer(
         session_type=SessionType.SUBTASK_DELEGATE,
         group_key=f"memory:{layer}",
         allow_internal=True,
+        settings_overrides={"access": _access_overrides(_session, target_dir)},
     )
     if child is None:
         return {"status": "error", "error": "agent 'memory-manage' not found"}

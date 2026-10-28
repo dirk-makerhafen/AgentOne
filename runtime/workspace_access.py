@@ -179,7 +179,20 @@ def _merge_action(base: _ActionPolicy, override: _ActionPolicy) -> _ActionPolicy
 
 
 def _agent_access(session: Any) -> dict[str, Any]:
-    """Return the agent's ``access`` block, if any."""
+    """Return the effective ``access`` block for *session*.
+
+    Session settings win over the agent profile: a spawned session may carry
+    a narrow extra grant (e.g. a memory synthesizer writing one node outside
+    its workspace) without changing the agent's own policy.  ``Session.access``
+    already falls back to the agent setting, so this is one lookup for real
+    sessions and a two-step fallback for lightweight stand-ins (tests).
+    """
+    try:
+        access = getattr(session, "access", None)
+    except Exception:  # pylint: disable=broad-exception-caught
+        access = None
+    if isinstance(access, dict):
+        return access
     try:
         access = session.agent.get_agent_setting("access")
     except Exception:  # pylint: disable=broad-exception-caught
@@ -190,9 +203,10 @@ def _agent_access(session: Any) -> dict[str, Any]:
 def resolve_policy(session: Any) -> _WorkspaceAccessPolicy:
     """Build the merged access policy for *session*.
 
-    Combines the workspace ``access`` block with the agent's ``access``
-    block (``workspace`` override + ``external`` scope).  Sessions without
-    a workspace get an all-allow policy (no enforcement).
+    Combines the workspace ``access`` block with the session's ``access``
+    block — the session value when set (``settings_overrides``), otherwise
+    the agent profile — for the ``workspace`` override and ``external`` rules.
+    Sessions without a workspace get an all-allow policy (no enforcement).
     """
     workspace = getattr(session, "workspace", None)
     root: Path | None = None

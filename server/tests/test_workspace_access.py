@@ -29,11 +29,13 @@ class _Agent:
 
 
 class _Session:
-    def __init__(self, root: Path, access: dict | None = None, agent_access: dict | None = None):
+    def __init__(self, root: Path, access: dict | None = None, agent_access: dict | None = None, session_access: dict | None = None):
         self.workspace = type(
             "WS", (), {"path": root.as_posix(), "access": access or {}}
         )()
         self.agent = _Agent(agent_access)
+        if session_access is not None:
+            self.access = session_access
 
 
 class WorkspaceAccessEvaluateTest(SimpleTestCase):
@@ -142,6 +144,32 @@ class WorkspaceAccessEvaluateTest(SimpleTestCase):
         )
         policy = resolve_policy(session)
         self.assertEqual(evaluate(policy, str(self.root / "a.md"), "write").action, "deny")
+
+    def test_session_access_override_replaces_agent_block(self):
+        # A spawned session can carry narrow grants (e.g. memory synthesizers
+        # writing a node outside their workspace) without editing the agent.
+        memory_root = self.root.parent / "memory"
+        session = _Session(
+            self.root,
+            access={"read": {"default": "allow"}, "write": {"default": "deny"}},
+            agent_access={
+                "external": {
+                    "read": {"default": "deny", "allow": ["/tmp/agent/**"]},
+                }
+            },
+            session_access={
+                "external": {
+                    "read": {"default": "deny", "allow": [f"{memory_root}/**"]},
+                    "write": {"default": "deny", "allow": [f"{memory_root}/**"]},
+                }
+            },
+        )
+        policy = resolve_policy(session)
+        target = str(memory_root / "agents" / "1" / "memory.md")
+        self.assertEqual(evaluate(policy, target, "read").action, "allow")
+        self.assertEqual(evaluate(policy, target, "write").action, "allow")
+        # The session block wins: the agent's own external grant is gone.
+        self.assertEqual(evaluate(policy, "/tmp/agent/x.md", "read").action, "deny")
 
     def test_agent_write_implies_read(self):
         # A path allowed for writes is also readable even when reads deny.

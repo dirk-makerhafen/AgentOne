@@ -72,7 +72,12 @@ def _extract_pk(obj: Any) -> Any:
 def _workspace_of(obj: Any) -> Any | None:
     if isinstance(obj, (int, str, Path)):
         return None
-    ws = getattr(obj, "workspace", None)
+    try:
+        ws = getattr(obj, "workspace", None)
+    except Exception:  # pylint: disable=broad-exception-caught
+        # A runtime session without a version raises from ``.workspace``;
+        # folder resolution is best-effort and falls back to global scope.
+        ws = None
     if callable(ws):
         try:
             ws = ws()
@@ -116,7 +121,11 @@ def _agent_name_of(obj: Any) -> str:
     name = getattr(obj, "agent_name", None)
     if name:
         return _safe_segment(name)
-    agent = getattr(obj, "agent", None)
+    try:
+        agent = getattr(obj, "agent", None)
+    except Exception:  # pylint: disable=broad-exception-caught
+        # Versionless runtime sessions raise from ``.agent`` too.
+        agent = None
     if callable(agent):
         try:
             agent = agent()
