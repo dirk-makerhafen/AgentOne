@@ -165,14 +165,15 @@ def edit_cronjob(
         ``(True, {"status": "success", "changed": [...], job...})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
-    from server.models.content import GenericContent
     from server.models.workspace import WorkspaceModel
+    from runtime.cron.content import build_cron_message
     from runtime.cron.file_io import write_cron_file
 
     ok, job = _resolve(_session, name)
     if not ok:
         return False, job
     changed: list[str] = []
+    message_changed = False
     if schedule is not None:
         nxt, error = _validate_schedule(schedule)
         if error:
@@ -187,7 +188,7 @@ def edit_cronjob(
         job.agent = agent
         changed.append("agent")
     if message is not None:
-        job.message = GenericContent.from_text(message) if message else None
+        message_changed = True
         changed.append("message")
     if description is not None:
         job.description = description or ""
@@ -205,11 +206,24 @@ def edit_cronjob(
         ftype = (function_type or "").strip()
         if ftype not in ("", "task", "tool", "command"):
             return False, {"status": "error", "message": "function_type must be '', 'task', 'tool' or 'command'."}
-        job.function_type = ftype
-        changed.append("function_type")
+        if ftype != (job.function_type or ""):
+            job.function_type = ftype
+            message_changed = True
+            changed.append("function_type")
     if function_name is not None:
         job.function_name = function_name or ""
         changed.append("function_name")
+    if job.function_type and not (job.function_name or "").strip():
+        return False, {"status": "error", "message": "function_name is required when function_type is set."}
+    if message_changed:
+        current = job.message.get() if job.message else ""
+        try:
+            job.message = build_cron_message(
+                message if message is not None else current,
+                job.function_type,
+            )
+        except ValueError as exc:
+            return False, {"status": "error", "message": str(exc)}
     if workspace_name is not None:
         if (workspace_name or "").strip():
             ws = WorkspaceModel.objects.filter(name=workspace_name.strip()).first()

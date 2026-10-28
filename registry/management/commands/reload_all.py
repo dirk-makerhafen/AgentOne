@@ -7,7 +7,11 @@ from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_data_collection import load_data_collection_manifest
-from registry.loader.load_project_folder import load_project_folder, load_scope_dir
+from registry.loader.load_project_folder import (
+    load_project_folder,
+    load_scope_dir,
+    load_workspace_scope,
+)
 from registry.loader.load_providers import load_providers_dir
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
@@ -367,7 +371,6 @@ def _load_db_projects(details: list, errors: list, counts: Dict[str, int]) -> No
                 continue
             project = ws.parent_project
             if project is None:
-                from server.models.project import Project as _P
                 # Workspace without a project loads into the global namespace
                 # under a lightweight synthetic scope is not supported yet;
                 # skip with a warning instead of guessing ownership.
@@ -377,7 +380,10 @@ def _load_db_projects(details: list, errors: list, counts: Dict[str, int]) -> No
                     "warning": "workspace has manifest dir but no parent_project — link it first",
                 })
                 continue
-            load_scope_dir(manifest, project, details=details)
+            # Crons are project-scoped: the project's canonical cronjobs/
+            # manifests win over workspace copies, and a workspace must not
+            # archive jobs it does not define.
+            load_workspace_scope(manifest, project, details=details)
         except Exception as e:
             errors.append(f"Workspace {ws.name}: {e}")
 

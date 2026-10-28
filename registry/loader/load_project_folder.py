@@ -13,6 +13,8 @@ the preferred direct entry point.
 
 from pathlib import Path
 
+import frontmatter
+
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_cron_manifest import load_cron_manifest
@@ -23,9 +25,36 @@ from server.models.cron import Cronjob
 from server.models.project import Project
 
 
-def load_scope_dir(manifest_dir: str | Path, project,
-                   details: list | None = None) -> None:
-    """Load scripts/skills/agents/cronjobs from *manifest_dir* for *project*."""
+def cron_names_in_scope(manifest_dir: str | Path) -> set[str]:
+    """Return the cron ``name`` values declared under ``<manifest_dir>/cronjobs``."""
+    crons_dir = Path(manifest_dir) / "cronjobs"
+    names: set[str] = set()
+    if not crons_dir.is_dir():
+        return names
+    for cron_md in sorted(crons_dir.glob("*.md")):
+        try:
+            name = (frontmatter.load(cron_md).get("name") or "").strip()
+        except Exception:  # pylint: disable=broad-exception-caught
+            continue
+        if name:
+            names.add(name)
+    return names
+
+
+def load_scope_dir(
+    manifest_dir: str | Path,
+    project,
+    details: list | None = None,
+    cron_precedence: set[str] | None = None,
+    archive_missing_crons: bool = True,
+) -> None:
+    """Load scripts/skills/agents/cronjobs from *manifest_dir* for *project*.
+
+    ``cron_precedence`` names are owned by a more canonical scope (the
+    project's own ``cronjobs/`` directory); they are left untouched when
+    loading a workspace scope.  ``archive_missing_crons=False`` keeps a
+    workspace scope from archiving project-level jobs it does not define.
+    """
     project_folder = Path(manifest_dir)
     _warn_if_project_md(project_folder, details)
 
@@ -62,11 +91,28 @@ def load_scope_dir(manifest_dir: str | Path, project,
     if crons_dir.is_dir():
         seen = set()
         for cron_md in sorted(crons_dir.glob("*.md")):
+            if cron_precedence:
+                try:
+                    name = (frontmatter.load(cron_md).get("name") or "").strip()
+                except Exception:  # pylint: disable=broad-exception-caught
+                    name = ""
+                if name and name in cron_precedence:
+                    seen.add(name)
+                    continue
             load_cron_manifest(
                 cron_md, parent_project=project,
                 install_repo=install_repo, seen_names=seen, details=details,
             )
-        Cronjob.objects.filter(parent_project=project, is_archived=False).exclude(name__in=seen).update(is_archived=True)
+        if archive_missing_crons:
+            # Only archive jobs that were loaded from this same scope.  A
+            # project's canonical load must not archive workspace-owned jobs
+            # (they share ``parent_project`` but live under another dir).
+            scope_dir = Path(manifest_dir).as_posix()
+            Cronjob.objects.filter(
+                parent_project=project,
+                is_archived=False,
+                manifest_dir__in=["", scope_dir],
+            ).exclude(name__in=seen).update(is_archived=True)
 
 
 def load_project_folder(folder: str, details: list | None = None) -> None:
@@ -105,8 +151,19 @@ def load_project_folder(folder: str, details: list | None = None) -> None:
 
 def load_workspace_scope(manifest_dir: str | Path, project,
                          details: list | None = None) -> None:
-    """Load a workspace-scoped manifest tree under *project*'s namespace."""
-    load_scope_dir(manifest_dir, project, details=details)
+    """Load a workspace-scoped manifest tree under *project*'s namespace.
+
+    Cron manifests already defined in the project's canonical scope win, and
+    a workspace never archives project-level jobs it does not define.
+    """
+    try:
+        precedence = cron_names_in_scope(project.get_agentone_dir())
+    except Exception:  # pylint: disable=broad-exception-caught
+        precedence = set()
+    load_scope_dir(
+        manifest_dir, project, details=details,
+        cron_precedence=precedence, archive_missing_crons=False,
+    )
 
 
 def _ensure_root_workspace(project, folder: Path) -> None:
@@ -156,8 +213,6 @@ def _resolve_project(project_root: Path, project_folder: Path,
     md = project_folder / "project.md"
     if md.is_file():
         try:
-            import frontmatter
-
             data = frontmatter.load(md)
             name = (data.get("name") or project_root.name).strip()
             project = Project.objects.create(

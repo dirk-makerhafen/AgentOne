@@ -59,31 +59,35 @@ class Cronjob(BaseModel):
     total_runs: int = models.IntegerField(default=0)
 
     def refresh_from_disk(self, details=None) -> None:
-        """Reload this cron job from disk."""
+        """Reload this cron job from disk.
+
+        Prefers the canonical project/global ``cronjobs/`` directory, then
+        the directory the job was loaded from (``manifest_dir``).  The
+        canonical file is authoritative, so a stale workspace copy cannot
+        shadow it; workspace-only jobs fall back to their own manifest dir.
+        """
         from pathlib import Path
 
-        import frontmatter
-
         from registry.loader.load_cron_manifest import load_cron_manifest
+        from runtime.cron.file_io import _find_cron_file, cron_file_path
         from runtime.refresh import install_repo_for_path
 
+        candidates: list[Path] = [cron_file_path(self.name, self.parent_project).parent]
+        stored = (self.manifest_dir or "").strip()
+        if stored:
+            candidates.append(Path(stored))
+
+        md = None
         cron_dir = None
-        if (self.manifest_dir or "").strip():
-            cron_dir = Path(self.manifest_dir)
-        if cron_dir is None or not cron_dir.is_dir():
-            return
-        # Find the manifest file for this job.
-        md = cron_dir / f"{self.name}.md"
-        if not md.is_file():
-            for candidate in sorted(cron_dir.glob("*.md")):
-                try:
-                    manifest = frontmatter.load(candidate)
-                    if (manifest.get("name") or "").strip() == (self.name or "").strip():
-                        md = candidate
-                        break
-                except Exception:  # pylint: disable=broad-exception-caught
-                    continue
-        if not md.is_file():
+        for directory in candidates:
+            if not directory.is_dir():
+                continue
+            found = _find_cron_file(directory, self.name)
+            if found is not None:
+                md = found
+                cron_dir = directory
+                break
+        if md is None or cron_dir is None:
             return
         if details is None:
             details = []

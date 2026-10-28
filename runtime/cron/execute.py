@@ -36,24 +36,38 @@ def execute_cron_job(cronjob_id: int) -> None:
 
         # 2. Dispatch
         message_data = cronjob.message.get() if cronjob.message else ""
-        print("foo", message_data)
 
-        dispatched_call = None
         task = None
-        if cronjob.function_type and cronjob.function_name:
+        if cronjob.function_type:
+            if not cronjob.function_name:
+                raise ValueError(
+                    "function_name is required when function_type is set"
+                )
             if cronjob.function_type == "task":
                 task = session.get_task( cronjob.function_name)
             elif cronjob.function_type == "tool":
                 task = session.get_tool( cronjob.function_name)
             elif cronjob.function_type == "command":
                 task = session.get_command( cronjob.function_name)
+            else:
+                raise ValueError(f"Unknown function type {cronjob.function_type}")
             if not task:
-                raise Exception(f"Unknow function type {cronjob.function_type}")
+                raise ValueError(f"Unknown {cronjob.function_type} : {cronjob.function_name}")
+            if isinstance(message_data, str):
+                # Legacy manifests stored the kwargs as a JSON string.
+                try:
+                    message_data = json.loads(message_data)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError("Message must be a JSON object for function dispatch") from exc
             if not isinstance(message_data, dict):
                 raise ValueError("Message must be a JSON object for function dispatch")
-            dispatched_call = task.apply_async(kwargs=message_data, cronjob=cronjob)
+            task.apply_async(kwargs=message_data, cronjob=cronjob)
         else:
-            dispatched_call = session.get_task("ingest_user_message").apply_async(kwargs=dict(message=message_data), cronjob=cronjob)
+            # Fallback target: ingest_user_message expects a message spec, so a
+            # structured payload (legacy JSON args) is sent as JSON text.
+            if not isinstance(message_data, str):
+                message_data = json.dumps(message_data)
+            session.get_task("ingest_user_message").apply_async(kwargs=dict(message=message_data), cronjob=cronjob)
         
         # 3. Update tracking
         next_run = croniter(cronjob.schedule, timezone.localtime()).get_next(datetime)

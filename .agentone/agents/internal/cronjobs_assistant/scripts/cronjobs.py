@@ -152,9 +152,9 @@ def create_cronjob(
         ``(True, {"status": "success", job...})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
-    from server.models.content import GenericContent
     from server.models.cron import Cronjob
     from server.models.workspace import WorkspaceModel
+    from runtime.cron.content import build_cron_message
     from runtime.cron.file_io import write_cron_file
 
     name = (name or "").strip()
@@ -174,6 +174,8 @@ def create_cronjob(
     function_type = (function_type or "").strip()
     if function_type not in ("", "task", "tool", "command"):
         return False, {"status": "error", "message": "function_type must be '', 'task', 'tool' or 'command'."}
+    if function_type and not (function_name or "").strip():
+        return False, {"status": "error", "message": "function_name is required when function_type is set."}
 
     workspace = None
     if (workspace_name or "").strip():
@@ -199,7 +201,7 @@ def create_cronjob(
             workspace=workspace,
             session_mode=session_mode,
             session_name=session_name or "",
-            message=GenericContent.from_text(message) if message else None,
+            message=build_cron_message(message, function_type),
             function_type=function_type,
             function_name=function_name or "",
             next_run_at=nxt,
@@ -291,7 +293,7 @@ def set_cronjob_archived(_session: Session, name: str, archived: bool = True) ->
     try:
         job.save(update_fields=["is_archived", "updated_at"])
         if archived:
-            delete_cron_file(job.name, job.parent_project)
+            delete_cron_file(job.name, job.parent_project, job.manifest_dir)
         else:
             write_cron_file(job)
     except Exception as e:

@@ -46,7 +46,7 @@ disallowedTools: []
 skills: []
 disallowedSkills: []
 
-tasks: [ +, core.*, compact.*, memory.*,  ]
+tasks: [ +, core.*, compact.*,  ]
 disallowedTasks: []
 
 subagents:

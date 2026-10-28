@@ -12,7 +12,7 @@ subagentResultDelivery: immediate
 priority: 99
 tools: [+, core.*, filesystem-read.*, filesystem-write.*, todo.*, subagents.*, web.*, execution.*, skills.*,  workitems.*, update_timeline, update_timeline_daily, update_timeline_monthly, update_entities, update_ingress, process_ingress]
 commands: [+, ping, todo.*, ingest_next, sync_applemail, wiki_lint]
-tasks: [+, core.*, compact.*, memory.*, find_unlinked_raw, process_summary, double_check_summary, write_day_index, write_month_index, write_entity, finalize_ingress_item]
+tasks: [+, core.*, compact.*, find_unlinked_raw, process_summary, double_check_summary, write_day_index, write_month_index, write_entity, finalize_ingress_item]
 
 maxRetries: 2
 maxTurns: 2000

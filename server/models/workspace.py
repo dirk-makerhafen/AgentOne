@@ -120,7 +120,7 @@ class WorkspaceModel(ObservableMixin, models.Model):
 
     def refresh_from_disk(self, details=None) -> None:
         """Reload this workspace's scoped manifest tree from disk."""
-        from registry.loader.load_project_folder import load_scope_dir
+        from registry.loader.load_project_folder import load_workspace_scope
 
         manifest = self.get_agentone_dir()
         if not manifest.is_dir():
@@ -130,5 +130,5 @@ class WorkspaceModel(ObservableMixin, models.Model):
             return
         if details is None:
             details = []
-        load_scope_dir(manifest, project, details=details)
+        load_workspace_scope(manifest, project, details=details)
         self.refresh_from_db()

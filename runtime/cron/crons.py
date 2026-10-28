@@ -9,7 +9,7 @@ from django.db.models import QuerySet
 from django.utils import timezone
 
 from runtime.assistant_scope import AssistantScopeMixin
-from server.models.content import GenericContent
+from runtime.cron.content import build_cron_message, normalize_function_type
 from server.models.cron import Cronjob
 
 
@@ -105,9 +105,11 @@ class Cronjobs(AssistantScopeMixin):
         workspace_id: int | None = None,
     ) -> Cronjob:
         """Create a new cron job with a GenericContent for the message."""
-        message = None
-        if message_content:
-            message = GenericContent.from_text(message_content)
+        function_type = normalize_function_type(function_type)
+        function_name = (function_name or "").strip()
+        if function_type and not function_name:
+            raise ValueError("function_name is required when function_type is set.")
+        message = build_cron_message(message_content, function_type)
         return Cronjob.objects.create(
             name=name,
             description=description,

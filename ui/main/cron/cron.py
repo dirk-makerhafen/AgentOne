@@ -115,6 +115,7 @@ class CronView(ModelView):
                     <div class="detail-form-row">
                         <label for="ceditMessage">{% if pyview._edit_data.function_type %}Message (JSON){% else %}Message{% endif %}</label>
                         <textarea id="ceditMessage" rows="4" onchange="pyview.setEditField('message', this.value)">{{ pyview._edit_data.message }}</textarea>
+                        {% if pyview._edit_error %}<div class="detail-form-error" style="display:block">{{ pyview._edit_error }}</div>{% endif %}
                     </div>
                 </div>
 
@@ -223,6 +224,7 @@ class CronView(ModelView):
         super().__init__(subject, parent, **kwargs)
         self._editing = False
         self._edit_data: dict[str, str] = {}
+        self._edit_error = ""
 
     # ------------------------------------------------------------------
     # Read-only display helpers
@@ -275,7 +277,11 @@ class CronView(ModelView):
         self.update()
 
     def deleteCron(self) -> None:
-        delete_cron_file(self.subject.name, self.subject.parent_project)
+        delete_cron_file(
+            self.subject.name,
+            self.subject.parent_project,
+            self.subject.manifest_dir,
+        )
         self.subject.delete()
         self._close_tab()
 
@@ -287,6 +293,7 @@ class CronView(ModelView):
 
     def startEdit(self) -> None:
         self._editing = True
+        self._edit_error = ""
         m = self.subject.message
         self._edit_data = {
             "name": self.subject.name,
@@ -304,6 +311,7 @@ class CronView(ModelView):
 
     def cancelEdit(self) -> None:
         self._editing = False
+        self._edit_error = ""
         self.update()
 
     def setEditField(self, field: str, value: str) -> None:
@@ -326,18 +334,20 @@ class CronView(ModelView):
         if d.get("agent"):
             agent = AgentModel.objects.filter(name=d["agent"]).first()
 
-        from server.models.content import GenericContent
-        message_content = d.get("message", "")
-        message = self.subject.message
-        if message_content:
-            if message:
-                message.content = message_content
-                message.save(update_fields=["content"])
-            else:
-                message = GenericContent.from_text(message_content)
-        elif message:
-            message.delete()
-            message = None
+        function_type = (d.get("function_type", "") or "").strip()
+        function_name = (d.get("function_name", "") or "").strip()
+        if function_type and not function_name:
+            self._edit_error = "Function name is required when a function type is selected."
+            self.update()
+            return
+        from runtime.cron.content import build_cron_message
+        try:
+            message = build_cron_message(d.get("message", ""), function_type)
+        except ValueError as exc:
+            self._edit_error = str(exc)
+            self.update()
+            return
+        self._edit_error = ""
 
         old_name = self.subject.name
         new_name = d.get("name", old_name)
@@ -360,13 +370,18 @@ class CronView(ModelView):
 
         self.subject.session_mode = d.get("session_mode", "new")
         self.subject.session_name = d.get("session_name", "")
-        self.subject.function_type = d.get("function_type", "")
-        self.subject.function_name = d.get("function_name", "")
+        self.subject.function_type = function_type
+        self.subject.function_name = function_name
         self.subject.message = message
         self.subject.save()
 
         if new_name != old_name:
-            rename_cron_file(old_name, new_name, self.subject.parent_project)
+            rename_cron_file(
+                old_name,
+                new_name,
+                self.subject.parent_project,
+                self.subject.manifest_dir,
+            )
         write_cron_file(self.subject)
 
         self._editing = False

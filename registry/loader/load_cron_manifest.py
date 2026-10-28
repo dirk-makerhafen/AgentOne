@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import json
 from pathlib import Path
 from typing import Any
 
@@ -12,10 +11,15 @@ from django.db import models
 from django.utils import timezone
 
 from registry.install_repo import InstallRepo
+from runtime.cron.content import build_cron_message
 from server.models.agents.agent import AgentModel
-from server.models.content import GenericContent, ContentType
 from server.models.cron import Cronjob
 from server.models.workspace import WorkspaceModel
+
+
+def _as_str(value: Any) -> str:
+    """Coerce YAML values to a string (``None`` → ``""``)."""
+    return "" if value is None else str(value)
 
 
 def load_cron_manifest(
@@ -34,21 +38,26 @@ def load_cron_manifest(
     """
     manifest = frontmatter.load(cron_md_path)
 
-    name = manifest.get("name", "")
+    name = _as_str(manifest.get("name", "")).strip()
     if not name:
         raise ValueError(f"cron.md at {cron_md_path} is missing 'name'")
     if seen_names is not None:
         seen_names.add(name)
 
-    description = manifest.get("description", "")
-    schedule = manifest.get("schedule", "")
-    agent_name = manifest.get("agent", "")
-    session_mode = manifest.get("session_mode", "new")
-    session_name = manifest.get("session_name", "")
-    function_type = manifest.get("function_type", "")
-    function_name = manifest.get("function_name", "")
-    is_active = manifest.get("is_active", True)
-    workspace_name = manifest.get("workspace", "")
+    description = _as_str(manifest.get("description", ""))
+    schedule = _as_str(manifest.get("schedule", ""))
+    agent_name = _as_str(manifest.get("agent", ""))
+    session_mode = _as_str(manifest.get("session_mode", "new")) or "new"
+    session_name = _as_str(manifest.get("session_name", ""))
+    function_type = _as_str(manifest.get("function_type", "")).strip()
+    function_name = _as_str(manifest.get("function_name", "")).strip()
+    if function_type and not function_name:
+        raise ValueError(
+            f"cron.md at {cron_md_path} sets 'function_type' without 'function_name'"
+        )
+    raw_active = manifest.get("is_active", True)
+    is_active = True if raw_active is None else bool(raw_active)
+    workspace_name = _as_str(manifest.get("workspace", ""))
     message_text = manifest.get("message", "")
 
     # Resolve agent
@@ -73,14 +82,11 @@ def load_cron_manifest(
     if workspace_name:
         workspace = WorkspaceModel.objects.filter(name=workspace_name).first()
 
-    # Build message content
-    message = None
-    if message_text:
-        if isinstance(message_text, str):
-            message = GenericContent.from_text(message_text)
-        else:
-            message = GenericContent.from_data( message_text)
-            
+    # Build message content (JSON kwargs for a function target, text otherwise)
+    try:
+        message = build_cron_message(message_text, function_type)
+    except ValueError as exc:
+        raise ValueError(f"{cron_md_path}: {exc}") from exc
 
     # Upsert by (parent_project, name)
     cronjob, created = Cronjob.objects.get_or_create(

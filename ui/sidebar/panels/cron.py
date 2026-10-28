@@ -158,7 +158,11 @@ class SidebarPanelCronjob(ModelView):
         self.root_view.main_panel.create_and_open_tab(CronCreateView, self.subject)
 
     def delete_cron(self) -> None:
-        delete_cron_file(self.subject.name, self.subject.parent_project)
+        delete_cron_file(
+            self.subject.name,
+            self.subject.parent_project,
+            self.subject.manifest_dir,
+        )
         self.subject.delete()
         self.parent.parent.refresh_list()
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-def memory_walk(write: bool = True, refresh: bool = False):
+def memory_walk(write: bool = True, refresh: bool = True):
     """Walk every existing memory root and update ``.memory_sources.md``.
 
     Scans all memory roots (global, per-workspace, per-project, per-agent)

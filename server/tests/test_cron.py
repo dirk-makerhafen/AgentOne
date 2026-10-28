@@ -166,7 +166,7 @@ class CronjobsQueryTest(TestCase):
         job = self.cronjobs.create(
             name="full", schedule="30 6 * * 1-5", agent_id=None,
             description="my desc", session_mode="existing",
-            session_name="my-session", message_content="hello",
+            session_name="my-session", message_content='{"cmd": "ls"}',
             function_type="tool", function_name="shell",
         )
         self.assertEqual(job.description, "my desc")
@@ -174,6 +174,24 @@ class CronjobsQueryTest(TestCase):
         self.assertEqual(job.session_name, "my-session")
         self.assertEqual(job.function_type, "tool")
         self.assertEqual(job.function_name, "shell")
+        self.assertEqual(job.message.content_type, "JSON")
+        self.assertEqual(job.message.get(), {"cmd": "ls"})
+
+    def test_create_function_requires_json_object(self):
+        with self.assertRaises(ValueError):
+            self.cronjobs.create(
+                name="bad-fn", schedule="0 0 * * *", agent_id=None,
+                message_content="not json", function_type="tool",
+                function_name="shell",
+            )
+
+    def test_create_function_requires_name(self):
+        with self.assertRaises(ValueError):
+            self.cronjobs.create(
+                name="no-fn-name", schedule="0 0 * * *", agent_id=None,
+                message_content="{}", function_type="tool",
+                function_name="",
+            )
 
 
 class CronExecuteTest(TestCase):

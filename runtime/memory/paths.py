@@ -15,6 +15,17 @@ from runtime.session_folder import (
 )
 
 
+#: Sidecar written while a memory node is being synthesized.  It is never
+#: committed (see ``runtime.memory.git.ensure_repo``) and only exists to stop
+#: two dispatch passes from synthesizing the same node in parallel.
+INFLIGHT_FILENAME = ".memory_inflight"
+
+
+def inflight_path(node_dir: Any) -> Path:
+    """Return the in-flight marker path for a memory node directory."""
+    return Path(node_dir) / INFLIGHT_FILENAME
+
+
 def _resolve_scope(session_or_pk: Any, *, workspace: Any = None, project: Any = None) -> tuple[Any, Any]:
     if isinstance(session_or_pk, (int, str)) and workspace is None and project is None:
         try:

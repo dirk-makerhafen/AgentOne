@@ -172,6 +172,7 @@ def ensure_repo(memory_root: Path) -> Path:
     gitignore = root / ".gitignore"
     desired = (
         ".memory_sources.md\n"
+        ".memory_inflight\n"
         ".DS_Store\n"
         "__pycache__/\n"
         "*.pyc\n"

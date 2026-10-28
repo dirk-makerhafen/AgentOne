@@ -7,14 +7,6 @@ End-to-end validation of the AgentOne data-flow framework.
     see the side-effects.  This mirrors real-world usage where state
     accumulates across ticks.
 
-**Total:** 1 &nbsp;|&nbsp; **PASS:** 1 &nbsp;|&nbsp; **FAIL:** 0
-
----
-
-### 1. `test_23_session_template_var_expansion` ✅
-
-**Status:** `PASS`
-
-The {source_session} template variable in processor session config expands to the source call's session name with '-copy' appended.
+**Total:** 0 &nbsp;|&nbsp; **PASS:** 0 &nbsp;|&nbsp; **FAIL:** 0
 
 ---
