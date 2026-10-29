@@ -14,8 +14,8 @@ subagentResultDelivery: immediate
 priority: 50
 
 autoCompactMaxTokens: 120000
-autoCompactMinTokens: 25000
-autoCompactIdleSeconds: 240
+autoCompactMinTokens: 30000
+autoCompactIdleSeconds: 300
 autoCompactKeepPercent: 10
 
 maxRetries: 0

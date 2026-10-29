@@ -23,8 +23,8 @@ maxHistoryMessages: 500
 priority: 30
 
 autoCompactMaxTokens: 120000
-autoCompactMinTokens: 20000
-autoCompactIdleSeconds: 240
+autoCompactMinTokens: 30000
+autoCompactIdleSeconds: 300
 autoCompactKeepPercent: 5
 
 commands: [+, ping, todo.* ]

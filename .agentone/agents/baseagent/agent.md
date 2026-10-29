@@ -10,8 +10,8 @@ maxTurns: 999
 maxUnattendedTurns: 999
 maxHistoryMessages: 999
 autoCompactMaxTokens: 120000
-autoCompactMinTokens: 25000
-autoCompactIdleSeconds: 240
+autoCompactMinTokens: 30000
+autoCompactIdleSeconds: 300
 autoCompactKeepPercent: 5
 
 reasoningEffort: high
