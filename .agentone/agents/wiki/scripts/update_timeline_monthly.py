@@ -671,8 +671,7 @@ def update_timeline_monthly(_session: Session, limit: int = 2, month: str | None
             collect_hints.extend(m_notes)
         else:
             brief = _build_month_session_brief(rel, month_str, day_files)
-        ok, session_pk, body_ref = _spawn_month_session(
-            _session, rel, month_str, brief)
+        ok, session_pk, body_ref = _spawn_month_session(_session, rel, month_str, brief)
         if not ok:
             results.append({"month": rel, "status": "error", "reason": reason, "message": f"prose session not spawned: {body_ref}"})
             continue
