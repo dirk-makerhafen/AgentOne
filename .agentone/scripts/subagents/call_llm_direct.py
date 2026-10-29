@@ -271,8 +271,9 @@ def call_llm_direct(
         for msg in messages:
             query.add_message(
                 role=msg["role"],
-                content_type=MessageContentType.TEXT,
+                content_type=MessageContentType.TEMPLATE if msg.get("template_data", None) else MessageContentType.TEXT,
                 content=msg["content"],
+                template_data=msg.get("template_data", None)
             )
         query.save()
     except Exception as exc:
@@ -444,7 +445,13 @@ def _normalize_input(messages: str | list[str] | list[dict]) -> list[dict]:
                         "Each message content must be a non-empty string. "
                         f"Got: {msg}"
                     )
-                normalized.append({"role": role, "content": content})
+                normalized_data = {"role": role, "content": content}
+                
+                template_data = msg.get("template_data", None)
+                if template_data:
+                    normalized_data["template_data"] = template_data
+
+                normalized.append(normalized_data)
             return normalized
         raise ValueError(
             "Mixed list: use either all strings or all message dicts. "

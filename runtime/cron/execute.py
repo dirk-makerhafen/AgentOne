@@ -9,6 +9,7 @@ from django.db import models
 from django.utils import timezone
 
 from server.models.cron import Cronjob
+from server.models.enums.session_enums import SessionType
 from server.models.sessions.session import SessionModel
 from runtime.session.session import Session
 
@@ -31,6 +32,7 @@ def execute_cron_job(cronjob_id: int) -> None:
             name=session_name,
             workspace=cronjob.workspace,
             group_key=f"cron:{cronjob.name or f'job-{cronjob.pk}'}",
+            session_type=SessionType.CRONJOB
         )
         session = Session(session_model=session_version.session, pinned_session_version=session_version)
 

@@ -687,7 +687,7 @@ def update_timeline_monthly(_session: Session, limit: int = 2, month: str | None
                 continue
             field_refs[field] = llm_query_tool.delay(messages=[
                 {"role": "system", "content": "You are a list deduplication expect, you immediately see if a list contains duplicates or not"},
-                {"role": "user", "content": DEDUP_FIELD_PROMPT.format(
+                {"role": "user", "content": DEDUP_FIELD_PROMPT, "template_data": dict(
                     field=field,
                     field_singular=_FIELD_SINGULAR[field],
                     field_plural=_FIELD_PLURAL[field],

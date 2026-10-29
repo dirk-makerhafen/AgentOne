@@ -21,6 +21,7 @@ class SessionType(models.TextChoices):
 
     SESSION = "session", "Session"
     SUBSESSION = "subsession", "Subsession"
+    CRONJOB = "cronjob", "Cronjob"
     SUBTASK_DELEGATE = "subtask_delegate", "Subtask (delegate)"
     SUBTASK_FORK = "subtask_fork", "Subtask (fork)"
     SUBTASK_COMPACT = "subtask_compaction", "Subtask (session compaction)"
