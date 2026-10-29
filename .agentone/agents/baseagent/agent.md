@@ -10,9 +10,10 @@ maxTurns: 999
 maxUnattendedTurns: 999
 maxHistoryMessages: 999
 autoCompactMaxTokens: 120000
-autoCompactMaxTokens: 25000
+autoCompactMinTokens: 25000
+autoCompactIdleSeconds: 240
 autoCompactKeepPercent: 5
-autoCompactTimeout: 240
+
 reasoningEffort: high
 schedulerStrategy: queue
 precision: precise

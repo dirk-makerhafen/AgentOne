@@ -117,7 +117,32 @@ class CallScheduler:
         call is dynamically marked as requiring approval so the user can
         decide.
         """
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatusDetail, TaskCallStatus
+
         print("all_required_task_calls_ended", task_call_id)
+
+        tc = AgentTaskCall.objects.get(pk=task_call_id)
+
+        # Verify ALL arg references ended successfully.  If any dependency
+        # failed, was cancelled, or stopped, this call must not proceed.
+        # (The per-dependency callback in on_arg_reference_task_ended handles
+        # the common case, but a race where a later dependency succeeds after
+        # an earlier one failed can reach here with mixed outcomes.)
+        failed_refs = tc.taskcall_arg_references.filter(
+            status=TaskCallStatus.ENDED
+        ).exclude(
+            status_detail=TaskCallStatusDetail.ENDED_SUCCESS
+        )
+        if failed_refs.exists():
+            print(
+                f"  # DEPENDENCY FAILED: call {task_call_id} has "
+                f"{failed_refs.count()} failed/cancelled arg refs, cancelling"
+            )
+            CallScheduler._cancel_safe(
+                task_call_id, 0, TaskCallStatusDetail.ENDED_CANCELLED
+            )
+            return
 
         # --- Guardrail checks ---
         CallScheduler._guardrail_shell_check(task_call_id)
