@@ -36,6 +36,7 @@ class RightPanelModel(ModelView):
             <div class="rp-kv"><span>Canonical ID</span><span>{{ pyview.subject.canonical_id }}</span></div>
             {% endif %}
             {% if pyview.subject.open_weights %}<div class="rp-kv"><span>Weights</span><span>open</span></div>{% endif %}
+            <div class="rp-kv"><span>Last used</span><span>{{ pyview.last_usage }}</span></div>
             {% if pyview.subject.description %}<div class="rp-desc">{{ pyview.subject.description }}</div>{% endif %}
 
             <div class="rp-section-title">Providers ({{ pyview.provider_rows|length }})</div>
@@ -44,6 +45,7 @@ class RightPanelModel(ModelView):
                 <strong>{{ row.provider }}</strong>
                 <span class="muted">{{ row.provider_model_id }}</span>
                 <span class="muted">{{ row.key_note }}</span>
+                <button class="provider-test-btn" onclick="event.stopPropagation(); pyview.test_model({{ row.provider_id }})" title="Test this provider's model">Test</button>
                 {% if row.conditions %}<span class="rp-conditions">{{ row.conditions }}</span>{% endif %}
             </div>
             {% endfor %}
@@ -113,6 +115,17 @@ class RightPanelModel(ModelView):
         return f"{ctx / 1_000:g}k"
 
     @property
+    def last_usage(self) -> str:
+        # Get the most recent last_usage from all members
+        last = None
+        for member in self._members:
+            if member.last_usage and (last is None or member.last_usage > last):
+                last = member.last_usage
+        if last:
+            return last.strftime("%Y-%m-%d %H:%M:%S")
+        return "—"
+
+    @property
     def provider_rows(self) -> list[dict]:
         rows = []
         for member in self._members:
@@ -129,3 +142,30 @@ class RightPanelModel(ModelView):
             })
         rows.sort(key=lambda r: r["provider"].lower())
         return rows
+
+    def test_model(self, provider_id: int) -> None:
+        """Test a specific provider's model."""
+        # Find the member for this provider
+        model = None
+        for member in self._members:
+            if member.api_provider_id == provider_id:
+                model = member
+                break
+        if model is None:
+            return
+
+        # Get the current session to dispatch from
+        session = getattr(self.parent.parent, "session", None)
+        if session is None:
+            return
+
+        try:
+            task = session.get_task("call_llm_direct")
+            if task is None:
+                return
+            task.delay(
+                messages=[{"role": "user", "content": "Hi, do you see this message?"}],
+                model_name=model.name,
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass

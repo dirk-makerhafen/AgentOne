@@ -19,8 +19,12 @@ maxRetries: 0
 maxTurns: 100
 maxUnattendedTurns: 100
 maxHistoryMessages: 500
-autoCompactMaxTokens: 100000
-autoCompactKeepPercent: 10
+
+autoCompactMaxTokens: 120000
+autoCompactMinTokens: 20000
+autoCompactIdleSeconds: 240
+autoCompactKeepPercent: 5
+
 commands: [+, ping, todo.* ]
 disallowedCommands: []
 tools: [+, core.*, subagents.*, history.*, web.*, skills.*, todo.*]

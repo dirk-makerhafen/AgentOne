@@ -34,7 +34,7 @@ def sort_provider_rows(rows: list[dict], col: str, desc: bool) -> list[dict]:
     return sorted(rows, key=sort_key, reverse=desc)
 
 
-def _provider_description(provider: ApiProvider) -> str:    
+def _provider_description(provider: ApiProvider) -> str:
     """Short human description for the settings table.
     Prefers the research-doc blurb stored by the provider loader
     (``data["description"]``), then the first line of the setup
@@ -80,6 +80,7 @@ class SettingPanelProviders(ModelView):
                 <th class="sortable" onclick="pyview.apply_sort('limits')">Limits{{ pyview.sort_arrow('limits') }}</th>
                 <th class="sortable" onclick="pyview.apply_sort('key')">API key{{ pyview.sort_arrow('key') }}</th>
                 <th>Description</th>
+                <th>Last used</th>
                 <th></th>
             </tr></thead>
             <tbody>
@@ -90,10 +91,12 @@ class SettingPanelProviders(ModelView):
                 <td class="muted">{{ row.limits }}</td>
                 <td>{% if row.key_state == "built-in" %}<span class="key-badge key-builtin">built-in</span>{% elif row.key_state == "keys" %}<span class="key-badge key-ok">✓ {{ row.key_count }}</span>{% else %}<span class="key-badge key-missing">—</span>{% endif %}</td>
                 <td class="muted settings-providers-desc" title="{{ row.description }}">{{ row.description }}</td>
+                <td class="muted">{{ row.last_usage }}</td>
                 <td class="num settings-providers-actions">
                     {% if row.api_key_url %}
                     <a href="{{ row.api_key_url }}" target="_blank" class="provider-card-btn provider-card-btn-ghost" onclick="event.stopPropagation()" style="text-decoration:none">Get key</a>
                     {% endif %}
+                    <button type="button" class="provider-card-btn provider-card-btn-primary" onclick="event.stopPropagation(); pyview.test_provider({{ row.id }})" title="Test provider">Test</button>
                     {% if row.key_state == "none" %}
                     <button type="button" class="provider-card-btn provider-card-btn-primary" onclick="event.stopPropagation(); pyview.open_add({{ row.id }})">Add API key</button>
                     {% else %}
@@ -102,7 +105,7 @@ class SettingPanelProviders(ModelView):
                 </td>
             </tr>
             {% if row.id == pyview._expanded_id %}
-            <tr class="settings-providers-editor-row"><td colspan="6">
+            <tr class="settings-providers-editor-row"><td colspan="7">
                 <div class="settings-providers-editor">
                     {% for ak in pyview.expanded_keys %}
                     <div class="provider-card-row" style="margin-bottom:4px">
@@ -169,6 +172,11 @@ class SettingPanelProviders(ModelView):
                 key_state, key_count = "keys", len(keys)
             else:
                 key_state, key_count = "none", 0
+
+            last_usage = "—"
+            if provider.last_usage:
+                last_usage = provider.last_usage.strftime("%Y-%m-%d %H:%M:%S")
+
             rows.append({
                 "id": provider.pk,
                 "name": provider.name,
@@ -180,6 +188,7 @@ class SettingPanelProviders(ModelView):
                 "description": _provider_description(provider),
                 "api_key_url": info.get("api_key_url", ""),
                 "setup_instructions": info.get("setup_instructions", ""),
+                "last_usage": last_usage,
             })
 
         return sort_provider_rows(rows, self._sort_col, self._sort_desc)
@@ -316,3 +325,37 @@ class SettingPanelProviders(ModelView):
             return
         ApiKey.objects.filter(pk=key_pk, api_provider=provider).delete()
         self.update()
+
+    def test_provider(self, provider_id: int) -> None:
+        """Test a provider with a simple call."""
+        provider = ApiProvider.objects.filter(pk=int(provider_id)).first()
+        if provider is None:
+            return
+
+        model = provider.aimodels.filter(enabled=True).first()
+        if model is None:
+            return
+
+        session = getattr(self.parent, "session", None)
+        if session is None:
+            # Try to find session via parent chain
+            parent = self.parent
+            while parent is not None:
+                if hasattr(parent, "session"):
+                    session = parent.session
+                    break
+                parent = getattr(parent, "parent", None)
+
+        if session is None:
+            return
+
+        try:
+            task = session.get_task("call_llm_direct")
+            if task is None:
+                return
+            task.delay(
+                messages=[{"role": "user", "content": "Hi, do you see this message?"}],
+                model_name=model.name,
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass

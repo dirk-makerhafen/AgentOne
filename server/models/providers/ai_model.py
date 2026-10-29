@@ -64,7 +64,7 @@ class AiModel(BaseModel):
     limit_request_per_day = models.IntegerField(default=0)
     limit_request_per_week = models.IntegerField(default=0)
     limit_request_per_month = models.IntegerField(default=0)
-            
+
     limit_tokens_per_minute = models.IntegerField(default=0)
     limit_tokens_per_hour = models.IntegerField(default=0)
     limit_tokens_per_day = models.IntegerField(default=0)
@@ -74,6 +74,9 @@ class AiModel(BaseModel):
     # Maximum number of simultaneously active runs across all keys for this model.
     # 0 = unlimited.
     limit_parallel_calls = models.IntegerField(default=0)
+
+    # Timestamp of the last successful LLM call through this model.
+    last_usage = models.DateTimeField(null=True, blank=True)
 
     @property
     def is_local_model(self) -> bool:

@@ -53,6 +53,7 @@ class RightPanelProvider(ModelView):
             {% if not pyview.limit_rows %}<div class="muted">Unlimited.</div>{% endif %}
 
             <div class="rp-section-title">Usage</div>
+            <div class="rp-kv"><span>Last used</span><span>{{ pyview.last_usage }}</span></div>
             {% for window, stats in pyview.usage_rows %}
             <div class="rp-kv"><span>{{ window }}</span><span>{{ stats }}</span></div>
             {% endfor %}
@@ -62,8 +63,13 @@ class RightPanelProvider(ModelView):
             <div class="rp-link" onclick="pyview.open_model({{ model.id }})">
                 <strong>{{ model.name }}</strong>
                 <span class="muted">{{ model.provider_model_id }}</span>
+                <button class="provider-test-btn" onclick="event.stopPropagation(); pyview.test_model({{ model.id }})" title="Test this model">Test</button>
             </div>
             {% endfor %}
+
+            <div class="rp-actions">
+                <button class="provider-card-btn provider-card-btn-primary" onclick="pyview.test_provider()">Test provider</button>
+            </div>
         </div>
         <div class="resize-handle" id="rightpanelResize"></div>
     '''
@@ -132,7 +138,48 @@ class RightPanelProvider(ModelView):
         return rows
 
     @property
+    def last_usage(self) -> str:
+        if self.subject.last_usage:
+            return self.subject.last_usage.strftime("%Y-%m-%d %H:%M:%S")
+        return "—"
+
+    @property
     def model_rows(self) -> list:
         return list(
             self.subject.aimodels.all().order_by("name").values("id", "name", "provider_model_id")
         )
+
+    def test_provider(self) -> None:
+        """Test the provider with a simple call using its first available model."""
+        from server.models.providers.ai_model import AiModel
+        model = self.subject.aimodels.filter(enabled=True).first()
+        if model is None:
+            # Could show a toast - for now just return
+            return
+        self._run_test(model)
+
+    def test_model(self, model_id: int) -> None:
+        """Test a specific model."""
+        from server.models.providers.ai_model import AiModel
+        model = AiModel.objects.filter(pk=model_id, enabled=True).first()
+        if model is None:
+            return
+        self._run_test(model)
+
+    def _run_test(self, model) -> None:
+        """Run a test call using call_llm_direct."""
+        # Get the current session to dispatch from
+        session = getattr(self.parent.parent, "session", None)
+        if session is None:
+            return
+
+        try:
+            task = session.get_task("call_llm_direct")
+            if task is None:
+                return
+            task.delay(
+                messages=[{"role": "user", "content": "Hi, do you see this message?"}],
+                model_name=model.name,
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass

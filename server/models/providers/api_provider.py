@@ -54,6 +54,8 @@ class ApiProvider(BaseModel):
     # 0 = unlimited.
     limit_parallel_calls = models.IntegerField(default=0)
 
+    # Timestamp of the last successful LLM call through this provider.
+    last_usage = models.DateTimeField(null=True, blank=True)
 
     limit_request_per_minute = models.IntegerField(default=0)
     limit_request_per_hour = models.IntegerField(default=0)

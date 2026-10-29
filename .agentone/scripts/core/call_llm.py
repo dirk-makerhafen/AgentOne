@@ -216,8 +216,8 @@ def _local_thinking_extra_body(effort: Any) -> dict:
     return {}
 
 def detect_repeat(content):
-    for blocksize in [255, 512, 1024]:
-        windowsize = blocksize * 5
+    for blocksize in [128, 256, 512, 1024]:
+        windowsize = blocksize * 6
         if len(content) < windowsize:
             break
         window = content[-windowsize:]

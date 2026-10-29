@@ -11,16 +11,22 @@ maxRetries: 0
 maxTurns: 200
 maxUnattendedTurns: 200
 maxHistoryMessages: 1000
+
 autoCompactMaxTokens: 120000
-autoCompactKeepPercent: 10
+autoCompactMinTokens: 20000
+autoCompactIdleSeconds: 240
+autoCompactKeepPercent: 5
+
 autoload:
   files: [AGENTS.md, CLAUDE.md]
   maxFiles: 10
   maxChars: 32768
   maxCharsPerFile: 8192
+
 sessionBootstrap: |
   Workspace directory: {{workspace_dir}}
   Private session folder: {{session_dir}}
+
 commands: [+, ping, todo.* ]
 disallowedCommands: []
 tools: [+, core.*, subagents.*, history.*, filesystem-read.*, filesystem-write.*, execution.*, web.*, skills.*, todo.*]
