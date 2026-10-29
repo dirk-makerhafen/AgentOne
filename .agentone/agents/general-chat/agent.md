@@ -15,6 +15,7 @@ sessionBootstrap: |
 reasoningEffort: medium
 schedulerStrategy: queue
 subagentResultDelivery: immediate
+toolCallSyntax: default
 maxRetries: 0
 maxTurns: 100
 maxUnattendedTurns: 100

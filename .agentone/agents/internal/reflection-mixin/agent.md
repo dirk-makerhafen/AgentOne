@@ -7,6 +7,7 @@ description: >
   `extends` to opt in.
 visibility: mixin
 tasks: [+, reflection.*]
+toolCallSyntax: default
 hooks:
   - name: reflect-on-session-end
     match:

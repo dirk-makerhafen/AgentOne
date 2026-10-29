@@ -5,17 +5,17 @@ description: >
   consolidates them into memory.md / reflection.md at session, task, agent and
   scope levels. Invoked by the memory cron job; never user-facing.
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
-extends: [baseagent]
+extends: [reflection-mixin, baseagent]
 visibility: user
 reasoningEffort: high
 
-inheritSystemPrompt: true
+inheritSystemPrompt: false
 schedulerStrategy: queue
 
 tools: [+, core.*, filesystem-read.*, filesystem-write.*, memory.*]
 disallowedTools: []
 
-tasks: [+, core.*, memory_finalize]
+tasks: [+, core.*, compact.*, memory_finalize]
 disallowedTasks: []
 
 commands: []

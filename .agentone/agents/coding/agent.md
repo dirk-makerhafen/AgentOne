@@ -7,6 +7,7 @@ precision: precise
 reasoningEffort: high
 schedulerStrategy: queue
 subagentResultDelivery: immediate
+toolCallSyntax: default
 maxRetries: 0
 maxTurns: 200
 maxUnattendedTurns: 200
