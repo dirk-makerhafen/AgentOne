@@ -82,6 +82,14 @@ Do **not** treat the following as free API access:
 * models advertised as free but requiring a paid subscription
 * services where payment is required to obtain the API access
 
+**Explicit examples of excluded one-time grants:**
+
+- **Volcengine ModelArk**: 500K tokens/model one-time on registration, no recurring quota
+- **Alibaba Cloud Model Studio**: 1M tokens/model one-time, 90-day expiry
+- **Tencent Hunyuan**: 1M tokens shared one-time, 1-year expiry
+- **DeepSeek Platform**: ~5M tokens one-time grant (unverified amount/expiry), no free-forever tier
+- **iFlytek Spark** (main models): 2M/5M token one-time packs with 1-year expiry — only `lite` model is permanently free
+
 Clearly distinguish free API access from free application/web access.
 
 ## Files

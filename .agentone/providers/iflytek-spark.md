@@ -4,26 +4,30 @@ url: "https://xinghuo.xfyun.cn/sparkapi"
 api_base: "https://spark-api-open.xf-yun.com/v1"
 setup_instructions: |
   1. Register at https://www.xfyun.cn (phone login; +86 default, international codes accepted on the form) and create an app in the console (https://console.xfyun.cn/app/myapp); complete personal or enterprise real-name verification.
-  2. Claim the free pack for 星火认知大模型 on the product/price page (https://xinghuo.xfyun.cn/sparkapi?scr=price) or via the console free-claim link (one claim per product per identity).
-  3. In the console (https://console.xfyun.cn/services/bmx1), copy the per-model-version APIPassword for the version you will call.
-  4. Call https://spark-api-open.xf-yun.com/v1/chat/completions with header `Authorization: Bearer <APIPassword>` using any OpenAI-compatible client (`base_url` https://spark-api-open.xf-yun.com/v1/), with a version ID as `model`.
+  2. For the permanently free Lite model: no pack claim needed, call directly with model `lite`.
+  3. For other models: claim the one-time free pack on the product/price page (https://xinghuo.xfyun.cn/sparkapi?scr=price) or via the console free-claim link (one claim per product per identity).
+  4. In the console (https://console.xfyun.cn/services/bmx1), copy the per-model-version APIPassword for the version you will call.
+  5. Call https://spark-api-open.xf-yun.com/v1/chat/completions with header `Authorization: Bearer <APIPassword>` using any OpenAI-compatible client (`base_url` https://spark-api-open.xf-yun.com/v1/), with a version ID as `model`.
 api_key_url: "https://console.xfyun.cn/services/bmx1"
 limits:
   requests:
     second: 2
 ---
 
-ONE-TIME free packs (not a permanent tier), plus a documented free Lite version: iFlytek's SparkDesk/星火 offers new real-name-verified users a one-time token free pack (personal 2M tokens / enterprise 5M tokens, 1-year validity, QPS 2), while Spark Lite is documented as free to use ("支持免费使用"). Re-verified 2026-09-05.
+iFlytek's SparkDesk/星火 offers **one permanently free model** (`lite`) plus one-time free packs for other models (personal 2M tokens / enterprise 5M tokens, 1-year validity). Re-verified 2026-09-05.
 
 **Free Tier:**
 
-- One-time free pack for 星火认知大模型V3.0: personal 2M tokens, QPS 2, 1-year validity, ¥0; enterprise 5M tokens, QPS 2, 1-year validity, ¥0 (official pricing page, console 免费领取 links; re-verified 2026-09-05). One claim per product per identity (personal vs enterprise fixed at claim time).
-- Spark Lite: official HTTP doc lists Lite as "轻量级大语言模型…支持免费使用" — the only version explicitly documented free; no Lite price is listed (re-verified 2026-09-05).
+- **Permanent free model:** `lite` — documented as "支持免费使用" (supports free use) in the official HTTP doc; no pack claim, no expiry, QPS 2.
+- **One-time free packs (NOT a permanent tier):** new real-name-verified users get a one-time token pack for 大模型V3.0: personal 2M tokens, QPS 2, 1-year validity; enterprise 5M tokens, QPS 2, 1-year validity (official pricing page, console 免费领取 links; re-verified 2026-09-05). One claim per product per identity (personal vs enterprise fixed at claim time).
 - New-user free packs require real-name verification (personal or enterprise); no payment/billing step documented for claiming the free pack.
 
-**Free Models:**
+**Free Models (permanently free, no pack required):**
 
 - `lite` — 8K max input, 4K max output (documented free use).
+
+**One-Time Pack Models (require claiming the one-time free pack; NOT permanently free):**
+
 - `generalv3` (Pro) — 8K max input, 8K max output.
 - `pro-128k` (Pro-128K) — 128K max input, 4K max output (official version table, re-verified 2026-09-05; max_tokens range [1,32768], default 4096).
 - `generalv3.5` (Max) — 8K max input, 8K max output.
@@ -34,7 +38,8 @@ ONE-TIME free packs (not a permanent tier), plus a documented free Lite version:
 
 **Limits:**
 
-- Free pack: QPS 2, recorded as 2 requests/second in frontmatter (official pricing page; no per-minute, per-day, or token-rate figures beyond the pack totals).
+- `lite` (permanent free): QPS 2, recorded as 2 requests/second in frontmatter.
+- One-time free pack: QPS 2, 1-year validity (no per-minute, per-day, or token-rate figures beyond the pack totals).
 - WebSocket error codes document daily (11201), per-second (11202), and concurrency (11203) throttles, but no numeric values are published.
 - 1 token ≈ 1.5 Chinese characters or 0.8 English words (documented conversion).
 - Third-party trackers report 5 RPM on the trial path — unverified against official docs, do not use.

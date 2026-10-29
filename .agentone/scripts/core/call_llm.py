@@ -10,6 +10,7 @@ import time
 import traceback
 from typing import Any
 
+from django.utils import timezone
 from runtime.session.session import Session
 from runtime.tool_argument_utils import normalize_tool_arguments
 from server.models.settings import AgentToolCallSyntax
@@ -415,6 +416,13 @@ def run_streaming_query(
 
     if first_token_timestamp and response.finish_reason:
         response.status = ResponseStatus.SUCCESS
+        # Update last_usage on provider and model
+        if aimodel and aimodel.api_provider:
+            aimodel.api_provider.last_usage = timezone.now()
+            aimodel.api_provider.save(update_fields=["last_usage"])
+        if aimodel:
+            aimodel.last_usage = timezone.now()
+            aimodel.save(update_fields=["last_usage"])
     else:
         response.status = ResponseStatus.FAILURE
     response.save()
