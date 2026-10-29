@@ -61,10 +61,14 @@ tasks:
     file: slash_commands.py
     function: handle_slashcommand_response
     bound: True
+  # Fan a task/tool/command out over a list of items (see map.py).
+  # A map call only ends when its whole batch has ended, so its own TI must
+  # not serialize independent batches behind each other.
   - name: map
     file: map.py
     function: map
     bound: True
+    limit_per_instance_parallel_runs: 0
   - name: compact_if_needed
     file: compact_if_needed.py
     function: compact_if_needed

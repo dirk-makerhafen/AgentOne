@@ -10,7 +10,7 @@ class TaskExecutionMode(models.TextChoices):
     SCRIPT = "SCRIPT"
     CHAIN = "CHAIN"  # sequential t1 -> t2 -> t3
     GROUP = "GROUP"  # parallel [a,b,c] -> join
-    MAP = "MAP"
+    MAP = "MAP"  # legacy: not dispatchable; use the core `map` task instead
 
 
 class TaskSchedulerStrategy(models.TextChoices):

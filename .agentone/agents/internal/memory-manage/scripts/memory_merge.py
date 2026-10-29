@@ -714,7 +714,10 @@ def _spawn_synthesizer(
         session_type=SessionType.SUBTASK_DELEGATE,
         group_key=f"memory:{layer}",
         allow_internal=True,
-        settings_overrides={"access": _access_overrides(_session, target_dir)},
+        # ``spawn_subagent``'s trailing ``**settings_overrides`` are settings
+        # fields: pass the block as ``access=``, not ``settings_overrides=``
+        # (that would nest it and blow up ``SettingsModel(**...)``).
+        access=_access_overrides(_session, target_dir),
     )
     if child is None:
         return {"status": "error", "error": "agent 'memory-manage' not found"}

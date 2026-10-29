@@ -26,6 +26,21 @@ if TYPE_CHECKING:
     from server.models.agents.agent_version import AgentVersionModel
 
 
+def _reject_nested_settings_overrides(overrides: dict[str, Any]) -> None:
+    """Fail early on ``settings_overrides={...}`` passed to a ``**kwargs`` API.
+
+    ``fork``/``spawn_subagent`` take setting *fields* as trailing keywords
+    (``access={...}``).  Passing a literal ``settings_overrides=`` dict nests
+    it, which would otherwise blow up later as ``SettingsModel() got
+    unexpected keyword arguments``.
+    """
+    if "settings_overrides" in overrides:
+        raise TypeError(
+            "pass settings as keyword fields (e.g. access={...}), not "
+            "settings_overrides={...}"
+        )
+
+
 
 class Session:
     """
@@ -887,9 +902,10 @@ class Session:
     ) -> "Session":
         """Create a child session running the *same* agent as this one.
 
-        The child inherits this session's settings (with ``settings_overrides``
-        applied on top) and query-template/adhoc-tool links. Use
-        :meth:`spawn_subagent` to run a *different* agent's session.
+        The child inherits this session's settings (with trailing keyword
+        arguments applied on top as field overrides — e.g. ``access={...}`` —
+        not a nested ``settings_overrides=`` dict) and query-template/adhoc-tool
+        links. Use :meth:`spawn_subagent` to run a *different* agent's session.
 
         ``group_key`` is a non-unique grouping key (``domain:task``) stored on
         the child session; unlike settings it is never inherited implicitly.
@@ -898,6 +914,7 @@ class Session:
         child's message chain onto this session's, so the child sees the
         conversation up to that point.
         """
+        _reject_nested_settings_overrides(settings_overrides)
         agent_version = self.agent.get_version_model()
         child_sv = agent_version.get_or_create_session(
             name=name,
@@ -948,8 +965,11 @@ class Session:
 
         Unlike :meth:`fork`, the child inherits **none** of this session's
         settings or links — the parent's agent-config overrides must never
-        shadow the child agent's own settings. Pass ``settings`` or
-        ``settings_overrides`` for anything the child explicitly needs.
+        shadow the child agent's own settings. Pass ``settings`` for an exact
+        row, or settings **fields** as trailing keyword arguments (for example
+        ``access={...}``) for anything the child explicitly needs. There is no
+        ``settings_overrides=`` keyword — trailing kwargs already are the
+        overrides.
         ``preserve_history`` (or an explicit ``anchor`` message) grafts the
         child's message chain onto this session's, mirroring :meth:`fork`.
 
@@ -962,6 +982,7 @@ class Session:
         ``group_key`` is a non-unique grouping key (``domain:task``) stored on
         the child session, so callers can later group same-agent sessions.
         """
+        _reject_nested_settings_overrides(settings_overrides)
         if isinstance(agent, str):
             agent_version = (
                 self.resolve_agent_version(agent) if allow_internal

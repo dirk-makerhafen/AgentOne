@@ -39,7 +39,7 @@ Key code locations with line numbers. All paths relative to the repository root.
 | `server/models/tasks/agent_task_call.py` | 1-187 | ATC model definition (fields, create, apply_async) |
 | `server/models/tasks/agent_task_call.py` | 188-337 | ATC create_call_arguments_json, _resolve_call_arguments, get_result |
 | `server/models/tasks/agent_task_run.py` | 1-146 | Run model definition (fields, create, apply_async) |
-| `server/models/tasks/agent_task_run.py` | 147-229 | `apply()` — execution logic (CHAIN, GROUP, MAP, FUNCTION) |
+| `server/models/tasks/agent_task_run.py` | 147-229 | `apply()` — execution logic (CHAIN, GROUP, FUNCTION) |
 | `server/models/tasks/agent_task_run.py` | 214-218 | `rate_limit()` FSM transition → `RATE_LIMITED` (no longer a raw update) |
 | `server/models/enums/task_enums.py` | 1-59 | All enum definitions (TaskCallStatus, TaskCallStatusDetail, TaskRunStatus) |
 | `server/models/tasks/task_instance.py` | 1-250 | TaskInstance model (get_or_create, apply_async, create_call) |

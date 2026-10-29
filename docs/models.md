@@ -196,7 +196,7 @@ File: `server/models/tasks/task_definition_version.py`
 | `description` | `TextField` | |
 | `function_schema` | `JSONField` | JSON schema for arguments |
 | `task_type` | `CharField(choices=TaskType)` | TASK / TOOL / COMMAND / WEBAPI / WEBVIEW |
-| `task_execution_mode` | `CharField(choices=TaskExecutionMode)` | FUNCTION / SCRIPT / CHAIN / GROUP / CHORD / MAP |
+| `task_execution_mode` | `CharField(choices=TaskExecutionMode)` | FUNCTION / SCRIPT / CHAIN / GROUP |
 | `requires_approval` | `BooleanField(default=False)` | Human-in-the-loop |
 | `bound` | `BooleanField(default=False)` | Session passed as first arg |
 | `function_name` | `CharField(255)` | Python function name |
@@ -666,7 +666,9 @@ tmux — see [docs/terminals.md](terminals.md)). Unique per `(session, name)`.
 `CHAIN` — sequential sub-tasks
 `GROUP` — parallel sub-tasks
 `CHORD` — barrier (all sub-tasks → callback)
-`MAP` — map over inputs
+
+`MAP` still exists as an enum value for historical rows only; the mode is no
+longer dispatchable. Use the core `map` task for batch fan-out.
 
 ### MessageRole
 

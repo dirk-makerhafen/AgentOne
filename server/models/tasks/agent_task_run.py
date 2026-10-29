@@ -150,10 +150,10 @@ class AgentTaskRun(BaseModel):
             if max_subtask_error_rate
             else task_definition_version.max_subtask_error_rate,
             limit_subtask_parallel_runs=limit_subtask_parallel_runs
-            if limit_subtask_parallel_runs
+            if limit_subtask_parallel_runs is not None
             else task_definition_version.limit_subtask_parallel_runs,
             limit_per_instance_parallel_runs=limit_per_instance_parallel_runs
-            if limit_per_instance_parallel_runs
+            if limit_per_instance_parallel_runs is not None
             else task_definition_version.limit_per_instance_parallel_runs,
         )
         if ref_pks:
@@ -197,17 +197,12 @@ class AgentTaskRun(BaseModel):
                         new_sub_task_calls.append(next_step_arguments)
                     result = new_sub_task_calls[-1]
 
-                elif self.task_definition_version.task_execution_mode ==  TaskExecutionMode.GROUP:
+                elif self.task_definition_version.task_execution_mode == TaskExecutionMode.GROUP:
                     for sub_task_instance in self.task_instance.child_instances.all():
                         call = sub_task_instance.apply_async(kwargs=self.arguments_json)
                         new_sub_task_calls.append(call)
                     result = new_sub_task_calls
 
-                elif self.task_definition_version.task_execution_mode ==  TaskExecutionMode.MAP:
-                    producer = self.task_instance.child_instances.first()
-                    consumer = self.task_instance.child_instances.last()
-                    items = producer.apply_async(kwargs=self.arguments_json)
-                    result = session.get_task("map").delay(items=items, target_pk=consumer.pk)
                 else:
                     is_function_step = True
                     bound_task = None

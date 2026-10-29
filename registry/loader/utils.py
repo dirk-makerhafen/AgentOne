@@ -130,6 +130,8 @@ def build_version_kwargs(
         "retry_requires_approval",
         "priority",
         "thinking",
+        "limit_per_instance_parallel_runs",
+        "limit_subtask_parallel_runs",
     ):
         val = entry.get(opt_field)
         if val is not None:

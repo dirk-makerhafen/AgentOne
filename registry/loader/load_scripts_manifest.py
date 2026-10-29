@@ -24,11 +24,11 @@ def load_scripts_manifest(
     """Load all entries from all ``scripts.md`` manifests found in *scripts_dir*.
 
     Recurses into subdirectories. Entries are loaded in two passes so chain /
-    group / map entries can reference standalone functions/scripts from *any*
+    group entries can reference standalone functions/scripts from *any*
     ``scripts.md`` under *scripts_dir*, independent of directory order:
 
     1. Standalone entries (``function`` / ``script``) are loaded first.
-    2. Chain / group / map entries are resolved afterwards, re-waved until
+    2. Chain / group entries are resolved afterwards, re-waved until
        all step references resolve (nested chains included). A wave that makes
        no progress raises with a list of the unresolved steps.
 
@@ -85,7 +85,7 @@ def load_scripts_manifest(
         else:
             deferred.append((entry, subdir, commit, manifest_path))
 
-    # Pass 2 — chain / group / map entries, re-waved until every step
+    # Pass 2 — chain / group entries, re-waved until every step
     # reference resolves (chains may reference other chains).
     while deferred:
         still_deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
@@ -116,7 +116,7 @@ def _build_unresolved_chain_error(
     defined = {td.name for td, _ in results}
     lines: List[str] = []
     for entry, _, _, manifest_path in deferred:
-        steps = entry.get("chain") or entry.get("group") or entry.get("map") or []
+        steps = entry.get("chain") or entry.get("group") or []
         missing = [s for s in steps if s not in defined]
         lines.append(f"  - '{entry['name']}' in {manifest_path}: missing step(s) {missing}")
     return LookupError(
@@ -143,6 +143,12 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
     ]:
         for item in manifest.get(key, []):
             item["task_type"] = ttype
+            if "map" in item or item.get("type") == "map":
+                raise ValueError(
+                    f"'{item.get('name')}' in {key}: the declarative `map:` "
+                    "execution mode was removed. Call the `map` task from a "
+                    "script instead (see .agentone/scripts/core/map.py)."
+                )
             for fkey, fenum in _ENTRY_TYPE_TO_EXECUTION_MODE.items():
                 if fkey in item:
                     item["task_execution_mode"] = fenum
@@ -166,7 +172,7 @@ def _load_script_entry(
 ) -> None:
     """Dispatch a single manifest entry to the appropriate loader.
 
-    Supports ``FUNCTION``, ``SCRIPT``, ``CHAIN``, ``GROUP``, and ``MAP``.
+    Supports ``FUNCTION``, ``SCRIPT``, ``CHAIN``, and ``GROUP``.
     """
     task_type: TaskType = entry["task_type"]
     task_execution_mode: TaskExecutionMode = entry["task_execution_mode"]
@@ -185,7 +191,7 @@ def _load_script_entry(
             name, group_name, parent_project, parent_agent, parent_skill, existing_results, details,
             parent_generation=parent_generation,
         )
-    elif task_execution_mode in (TaskExecutionMode.CHAIN, TaskExecutionMode.GROUP, TaskExecutionMode.MAP):
+    elif task_execution_mode in (TaskExecutionMode.CHAIN, TaskExecutionMode.GROUP):
         load_chain_entry(
             entry, commit, task_type, task_execution_mode, name, group_name,
             parent_project, parent_agent, parent_skill, existing_results, details,
@@ -203,5 +209,4 @@ _ENTRY_TYPE_TO_EXECUTION_MODE: Dict[str, TaskExecutionMode] = {
     "script": TaskExecutionMode.SCRIPT,
     "chain": TaskExecutionMode.CHAIN,
     "group": TaskExecutionMode.GROUP,
-    "map": TaskExecutionMode.MAP,
 }

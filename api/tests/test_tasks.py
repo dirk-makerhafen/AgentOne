@@ -647,6 +647,16 @@ class TestParallelRunLimit:
             status_detail=TaskCallStatusDetail.WAITING_QUEUE,
         )
 
+    def test_explicit_zero_limit_is_not_swallowed(self, db):
+        """``limit_per_instance_parallel_runs=0`` means unlimited and must not
+        fall back to the TaskInstance's value (the ``map`` task relies on it)."""
+        session, sv, td, tdv, ti = self._make_setup()
+        call = AgentTaskCall.create(
+            task_instance=ti, kwargs={}, limit_per_instance_parallel_runs=0,
+        )
+        assert call.limit_per_instance_parallel_runs == 0
+        assert ti.limit_per_instance_parallel_runs == 1
+
     def test_second_dispatch_blocked_when_limit_reached(self, db):
         """A second call on a full task_instance must not get a new run."""
         from runtime.tasks.call_scheduler import CallScheduler

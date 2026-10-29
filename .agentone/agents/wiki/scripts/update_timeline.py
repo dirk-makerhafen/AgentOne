@@ -785,11 +785,13 @@ def _embed_for_prompt(_session, label: str, path: str) -> list:
 
 
 
-def update_timeline(_session: Session, limit: int = 1):
-    find_unlinked_raw_task = _session.get_task("find_unlinked_raw")
-    if find_unlinked_raw_task is None:
-        return False, {"status": "error", "message": "task 'find_unlinked_raw' is not available"}
+def update_timeline_item(_session: Session, path: str):
+    """Summarise one unlinked raw file and write its timeline summary.
 
+    Returns the ``process_summary`` call in the result payload so the caller
+    (``map``) waits for the whole per-item chain, including the double-check
+    dispatched by ``process_summary``.
+    """
     llm_query_tool = _session.get_tool("llm_query")
     if llm_query_tool is None:
         return False, {"status": "error", "message": "tool 'llm_query' is not available"}
@@ -798,26 +800,52 @@ def update_timeline(_session: Session, limit: int = 1):
     if process_summary_task is None:
         return False, {"status": "error", "message": "task 'process_summary' is not available"}
 
+    raw_text, _ = _read_raw_text(_session, path)
+    if raw_text is None:
+        return False, {"status": "error", "path": path, "message": f"raw file not found or unreadable: {path}"}
+
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    summary_result = llm_query_tool.delay(messages=[
+        {"role": "user", "content": SUMMARY_FORMAT_REFERENCE},
+        {"role": "user", "content": f"It is now {now}.\nYOUR TASK: Create a concise, factual summary of the provided source material.\n"},
+        {"role": "user", "content": f"# SOURCE PATH: {path}\n# CONTENT:\n"},
+        {"role": "user", "content": raw_text},
+    ], reasoning_effort=ReasoningEffort.NONE.value)
+
+    return True, {
+        "status": "success",
+        "path": path,
+        "process_summary": process_summary_task.delay(raw_path=path, summary_result=summary_result),
+    }
+
+
+def update_timeline(_session: Session, limit: int = 1):
+    """Ingest the oldest unlinked raw files into timeline summaries.
+
+    Finds the files, then hands one path per item to ``map``, which processes
+    them one at a time (list order, each item's whole subtree before the next).
+    """
+    find_unlinked_raw_task = _session.get_task("find_unlinked_raw")
+    if find_unlinked_raw_task is None:
+        return False, {"status": "error", "message": "task 'find_unlinked_raw' is not available"}
+
+    map_task = _session.get_task("map")
+    if map_task is None:
+        return False, {"status": "error", "message": "task 'map' is not available"}
+
     success, data = find_unlinked_raw_task.call(limit=limit)
     if not success:
         return False, data
 
-    results = []
-    for item in (data or {}).get("items", []):
-        path = item["file"]
-        raw_text, _ = _read_raw_text(_session, path)
-        if raw_text is None:
-            continue
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        summary_result = llm_query_tool.delay(messages=[
-            {"role": "user", "content": SUMMARY_FORMAT_REFERENCE},
-            {"role": "user", "content": f"It is now {now}.\nYOUR TASK: Create a concise, factual summary of the provided source material.\n"},
-            {"role": "user", "content": f"# SOURCE PATH: {path}\n# CONTENT:\n"},
-            {"role": "user", "content": raw_text},
-        ], reasoning_effort=ReasoningEffort.NONE.value)
-        r = process_summary_task.delay(raw_path=path, summary_result=summary_result)
+    items = [{"path": item["file"]} for item in (data or {}).get("items", [])]
+    if not items:
+        return True, {"status": "success", "results": []}
 
-        results.append(r)
+    results = map_task.delay(
+        target="update_timeline_item",
+        list_of_kwargs=items,
+        concurrency=1,
+    )
     return True, {"status": "success", "results": results}
 
 

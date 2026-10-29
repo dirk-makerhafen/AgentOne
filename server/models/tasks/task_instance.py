@@ -257,7 +257,7 @@ class TaskInstance(BaseModel):
 
         task_instance.taskinstance_arg_references.set(ref_pks)
 
-        if task_definition.task_execution_mode in ("CHAIN", "GROUP", "MAP"):
+        if task_definition.task_execution_mode in ("CHAIN", "GROUP"):
             if len(args) == 1 and isinstance(args[0], (list, set, tuple, GeneratorType)):
                 args = args[0]
             else:

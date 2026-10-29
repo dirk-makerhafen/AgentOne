@@ -676,6 +676,26 @@ class SessionForkSpawnTest(TestCase):
         settings = child.get_version_model().session_settings
         self.assertEqual(settings.max_turns, 10)
 
+    def test_spawn_subagent_applies_access_field_override(self):
+        # Trailing kwargs are settings *fields* — this is how the memory
+        # synthesizer receives its filesystem grant.
+        grant = {"external": {"write": {"default": "deny", "allow": ["/m/**"]}}}
+        child = self.rt.spawn_subagent(
+            self.av, name="fs-spawn-access", session_type="subtask_delegate", access=grant
+        )
+        settings = child.get_version_model().session_settings
+        self.assertEqual(settings.access, grant)
+
+    def test_nested_settings_overrides_kwarg_is_rejected(self):
+        # ``settings_overrides={...}`` used to be nested and only blew up later
+        # as "SettingsModel() got unexpected keyword arguments".
+        with self.assertRaisesMessage(TypeError, "not settings_overrides"):
+            self.rt.fork(name="fs-bad-fork", settings_overrides={"max_turns": 5})
+        with self.assertRaisesMessage(TypeError, "not settings_overrides"):
+            self.rt.spawn_subagent(
+                self.av, name="fs-bad-spawn", settings_overrides={"max_turns": 5}
+            )
+
     def test_spawn_subagent_does_not_inherit(self):
         self._parent_settings(max_turns=42, disallowedToolNames=["x"])
         other = AgentModel.objects.create(name="fs-other")

@@ -46,6 +46,12 @@ tasks:
     bound: True
     max_retries: 3
     retry_delay: 30
+  - name: update_timeline_item
+    file: update_timeline.py
+    function: update_timeline_item
+    bound: True
+    max_retries: 3
+    retry_delay: 30
   - name: process_summary
     file: update_timeline.py
     function: process_summary

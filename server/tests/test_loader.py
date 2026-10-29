@@ -228,6 +228,54 @@ class LoadScriptsTwoPassTest(TestCase):
         self.assertIn("does_not_exist", msg)
 
 
+class LoadScriptsMapModeTest(TestCase):
+    """The declarative ``map:`` execution mode was removed in favour of the
+    core ``map`` task, and its concurrency knobs load from the manifest."""
+
+    def _load(self, body: str):
+        import shutil
+        import tempfile
+        from pathlib import Path
+        from registry.loader.load_scripts_manifest import load_scripts_manifest
+        from registry.install_repo import InstallRepo
+
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        scripts_dir = tmp / "scripts"
+        core = scripts_dir / "core"
+        core.mkdir(parents=True, exist_ok=True)
+        (core / "scripts.md").write_text(body)
+        (core / "dummy.py").write_text("def dummy(session=None):\n    return 1\n")
+
+        repo = InstallRepo(repo_path=tmp / "install")
+        repo.source_root = scripts_dir
+        repo.sync()
+        return load_scripts_manifest(scripts_dir, install_repo=repo)
+
+    def test_map_entry_is_rejected_with_pointer_to_map_task(self):
+        body = (
+            "---\ngroup: core\ntasks:\n  - name: process_new\n"
+            "    type: map\n    map: [sync, new_email]\n---\n"
+        )
+        with self.assertRaises(ValueError) as ctx:
+            self._load(body)
+        msg = str(ctx.exception)
+        self.assertIn("`map:`", msg)
+        self.assertIn("`map` task", msg)
+
+    def test_limit_overrides_are_persisted(self):
+        body = (
+            "---\ngroup: core\ntasks:\n  - name: batch\n"
+            "    file: dummy.py\n    function: dummy\n"
+            "    limit_per_instance_parallel_runs: 0\n"
+            "    limit_subtask_parallel_runs: 4\n---\n"
+        )
+        results = self._load(body)
+        tdv = next(tdv for td, tdv in results if td.name == "batch")
+        self.assertEqual(tdv.limit_per_instance_parallel_runs, 0)
+        self.assertEqual(tdv.limit_subtask_parallel_runs, 4)
+
+
 class LoadToolAccessTest(TestCase):
     """Tool-level ``access: read|write`` in scripts.md is persisted as
     ``TaskDefinition.access_posture``, with reload updating the value."""

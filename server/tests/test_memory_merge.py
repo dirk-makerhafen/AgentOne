@@ -378,7 +378,7 @@ def test_memory_merge_spawns_synthesizers_and_leaves_manifests_alone(tmp_path):
     assert session.spawn_calls[0][1]["allow_internal"] is True
     assert session.spawn_calls[0][1]["session_type"] == "subtask_delegate"
     target = Path(task["manifest_path"]).parent.resolve().as_posix()
-    access = session.spawn_calls[0][1]["settings_overrides"]["access"]
+    access = session.spawn_calls[0][1]["access"]
     assert target in access["external"]["write"]["allow"]
     assert f"{target}/**" in access["external"]["write"]["allow"]
     assert target in access["external"]["read"]["allow"]

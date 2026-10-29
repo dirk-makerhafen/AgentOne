@@ -219,8 +219,12 @@ class AgentTaskCall(BaseModel):
             time_limit=time_limit if time_limit else task_instance.time_limit,
             max_subtask_errors=max_subtask_errors if max_subtask_errors else task_instance.max_subtask_errors,
             max_subtask_error_rate=max_subtask_error_rate if max_subtask_error_rate else task_instance.max_subtask_error_rate,
-            limit_subtask_parallel_runs=limit_subtask_parallel_runs if limit_subtask_parallel_runs else task_instance.limit_subtask_parallel_runs,
-            limit_per_instance_parallel_runs=limit_per_instance_parallel_runs if limit_per_instance_parallel_runs else task_instance.limit_per_instance_parallel_runs,
+            limit_subtask_parallel_runs=limit_subtask_parallel_runs
+            if limit_subtask_parallel_runs is not None
+            else task_instance.limit_subtask_parallel_runs,
+            limit_per_instance_parallel_runs=limit_per_instance_parallel_runs
+            if limit_per_instance_parallel_runs is not None
+            else task_instance.limit_per_instance_parallel_runs,
             priority=priority if priority else task_instance.priority,
             max_retries=max_retries if max_retries else task_instance.max_retries,
             retry_delay=retry_delay if retry_delay else task_instance.retry_delay,
