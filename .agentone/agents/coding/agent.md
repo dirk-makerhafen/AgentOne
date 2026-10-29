@@ -17,7 +17,7 @@ autoCompactMaxTokens: 120000
 autoCompactMinTokens: 20000
 autoCompactIdleSeconds: 240
 autoCompactKeepPercent: 5
-
+priority: 30
 autoload:
   files: [AGENTS.md, CLAUDE.md]
   maxFiles: 10
