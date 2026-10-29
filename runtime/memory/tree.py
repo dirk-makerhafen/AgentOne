@@ -685,7 +685,7 @@ def extract_report_text(message: Any) -> str:
     return "\n".join(texts) if texts else ""
 
 
-def walk_memory(write: bool = True, refresh: bool = False) -> dict[str, Any]:
+def walk_memory(write: bool = True, refresh: bool = True) -> dict[str, Any]:
     """Walk every existing memory root and update ``.memory_sources.md``.
 
     Scans all memory roots (global, per-workspace, per-project, per-agent)

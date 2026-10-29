@@ -20,6 +20,7 @@ from server.models.enums.message_enums import (
 )
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
 from server.models.message import Message, MessagePart
+from server.models.queries.response import Response, ResponseStatus
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
 from server.models.settings import SettingsModel
@@ -129,6 +130,16 @@ class IdleCompactionTest(TestCase):
     def _big_session(self, n: int = 3) -> list[Message]:
         msgs = [self._msg("x" * 2000) for _ in range(n)]
         self._link(msgs)
+        # Create a SUCCESS response with prompt_tokens so context_usage() returns data
+        Response.objects.create(
+            session=self.session,
+            session_version=self.sv,
+            status=ResponseStatus.SUCCESS,
+            prompt_tokens=50000,
+            completion_tokens=1000,
+            cached_tokens=0,
+            reasoning_tokens=0,
+        )
         return msgs
 
     def test_idle_oversized_dispatches_with_idle_trigger(self):
@@ -242,6 +253,16 @@ class IdleCompactionTest(TestCase):
             prev = m
         Message.objects.filter(session_id=session.pk).update(
             created_at=timezone.now() - timedelta(minutes=10)
+        )
+        # Create a SUCCESS response
+        Response.objects.create(
+            session=session,
+            session_version=sv,
+            status=ResponseStatus.SUCCESS,
+            prompt_tokens=50000,
+            completion_tokens=1000,
+            cached_tokens=0,
+            reasoning_tokens=0,
         )
         _compact_idle_sessions()
         self.assertIsNone(self.fake_task.delay_kwargs)

@@ -865,5 +865,5 @@ def _walk_pending() -> list[dict[str, Any]]:
     """Re-walk the memory tree and return its ``needs_update`` list."""
     from runtime.memory.tree import walk_memory
 
-    summary = walk_memory(write=True)
+    summary = walk_memory(write=True, refresh=True)
     return list(summary.get("needs_update") or [])

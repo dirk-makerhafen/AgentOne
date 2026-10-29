@@ -225,7 +225,7 @@ class AgentTaskCall(BaseModel):
             limit_per_instance_parallel_runs=limit_per_instance_parallel_runs
             if limit_per_instance_parallel_runs is not None
             else task_instance.limit_per_instance_parallel_runs,
-            priority=priority if priority else task_instance.priority,
+            priority=priority if priority is not None else (task_instance.priority if task_instance.priority is not None else 99),
             max_retries=max_retries if max_retries else task_instance.max_retries,
             retry_delay=retry_delay if retry_delay else task_instance.retry_delay,
             retry_requires_approval=retry_requires_approval if retry_requires_approval else task_instance.retry_requires_approval,

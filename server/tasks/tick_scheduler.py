@@ -1018,10 +1018,8 @@ def _compact_idle_sessions() -> None:
 
     from runtime.session.session import Session
     from runtime.history_limiter import (
-        estimate_entries_tokens,
         find_compaction_boundary,
         idle_seconds,
-        walk_compaction_entries,
     )
     from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
     from server.models.sessions.session import SessionModel
@@ -1074,8 +1072,10 @@ def _compact_idle_sessions() -> None:
                 continue
             if (idle_seconds(session) or 0) < idle_s:
                 continue
-            entries = walk_compaction_entries(session, last_message)
-            if estimate_entries_tokens(entries) < min_tokens:
+            # Use actual token count from latest SUCCESS response (accurate, not estimated)
+            usage = session.context_usage()
+            used_tokens = usage.get("used_context_tokens", 0)
+            if used_tokens < min_tokens:
                 continue
             if find_compaction_boundary(session, last_message) is None:
                 continue
