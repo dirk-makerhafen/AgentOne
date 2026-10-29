@@ -42,7 +42,7 @@ from update_timeline_daily import (  # noqa: E402
 )
 
 ACTIVE_STALE_S = 1800
-MAX_TURNS = 30
+MAX_TURNS = 999
 MAX_ITEM_CHARS = 20000
 MAX_AGENTS_MD_CHARS = 12000
 MAX_LIMIT = 10

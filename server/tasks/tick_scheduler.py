@@ -981,7 +981,7 @@ def _verify_work_items() -> None:
 # Pre-filter floor for the idle-compaction candidate scan: sessions with
 # activity newer than this are never eligible. Only a floor — the precise
 # per-session ``auto_compact_idle_seconds`` threshold governs firing.
-_IDLE_PRECHECK_FLOOR_SECONDS = 60
+_IDLE_PRECHECK_FLOOR_SECONDS = 120
 
 # Max idle compactions dispatched per tick: drains a backlog of stale
 # sessions over several ticks instead of spiking LLM spend at once.
@@ -1026,6 +1026,8 @@ def _compact_idle_sessions() -> None:
     from server.models.tasks.agent_task_call import AgentTaskCall
 
     floor = timezone.now() - timedelta(seconds=_IDLE_PRECHECK_FLOOR_SECONDS)
+    floor_1 = timezone.now() - timedelta(seconds=_IDLE_PRECHECK_FLOOR_SECONDS*20)
+
     candidates = (
         SessionModel.objects.filter(
             is_active=True,
@@ -1043,6 +1045,7 @@ def _compact_idle_sessions() -> None:
         )
         .annotate(last_msg_at=Max("related_messages__created_at"))
         .filter(last_msg_at__lt=floor)
+        .filter(last_msg_at__gt=floor_1)
         .order_by("last_msg_at")
     )
     dispatched = 0
@@ -1063,6 +1066,7 @@ def _compact_idle_sessions() -> None:
                 continue  # soft-paused session: hands off
 
             session = Session(session_model=session_model)
+           
             min_tokens = session.auto_compact_min_tokens or 0
             idle_s = session.auto_compact_idle_seconds or 0
             if min_tokens <= 0 or idle_s <= 0:
@@ -1083,6 +1087,7 @@ def _compact_idle_sessions() -> None:
             if compact_task is None:
                 continue
             compact_task.delay(message=last_message, idle_trigger=True, trigger="idle")
+            session.set_is_active(False)
             dispatched += 1
         except Exception as e:  # pylint: disable=broad-exception-caught
             print(

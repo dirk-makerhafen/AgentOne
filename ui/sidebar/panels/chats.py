@@ -64,7 +64,7 @@ def visible_child_sessions(
     (i.e. the user has toggled the sidebar to show archived conversations).
     """
     cutoff = timezone.now() - window
-    qs = SessionModel.objects.filter(parent_session=session, session_type__in=[SessionType.SESSION, SessionType.SUBSESSION, SessionType.SUBTASK_COMPACT, SessionType.SUBTASK_DELEGATE])
+    qs = SessionModel.objects.filter(parent_session=session, session_type__in=[SessionType.CRONJOB, SessionType.SESSION, SessionType.SUBSESSION, SessionType.SUBTASK_COMPACT, SessionType.SUBTASK_DELEGATE])
     if not include_archived:
         qs = qs.filter(is_archived=False)
     children = list(
@@ -265,7 +265,8 @@ class SidebarPanelChat(ModelView):
 
     def archive_session(self):
         self.subject.is_archived = True
-        self.subject.save(update_fields=["is_archived"])
+        self.subject.is_active = False
+        self.subject.save(update_fields=["is_archived", "is_active"])
         self.refresh_list()
 
     def move_to_project(self, project_id: int | None):
@@ -455,7 +456,7 @@ class SidebarPanelChats(ModelView):
         return SessionModel.objects.filter(parent_session__isnull=False, is_active=True, session_type=SessionType.SESSION).count()
 
     def _base_query(self):
-        qs = self.subject.sessions.root().filter(parent_session__isnull=True, session_type=SessionType.SESSION)
+        qs = self.subject.sessions.root().filter(parent_session__isnull=True, session_type__in=[SessionType.SESSION, SessionType.CRONJOB])
         qs = qs.select_related("latest_session_version__workspace")
         qs = qs.prefetch_related(Prefetch('child_sessions', queryset=self._child_sessions_queryset()))
         if self._show_archived:

@@ -1565,7 +1565,11 @@ class Session:
                 self.model.atomic_update(last_active_at=now)
             return
 
-        self.model.atomic_update(is_active=new_value, last_active_at=now)
+        # Mutual exclusivity: reactivating a session also clears is_archived.
+        fields: dict[str, Any] = {"is_active": new_value, "last_active_at": now}
+        if new_value and getattr(self.model, "is_archived", False):
+            fields["is_archived"] = False
+        self.model.atomic_update(**fields)
 
     def _has_active_call(self) -> bool:
         """Return True if there is any non-ended call for this session.

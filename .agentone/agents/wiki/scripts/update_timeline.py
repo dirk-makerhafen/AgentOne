@@ -1035,7 +1035,7 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
         group_key="wiki:timeline-review",
         allow_internal=True,
         reasoning_effort=ReasoningEffort.NONE,
-        max_turns=20,
+        #max_turns=100,
     )
     if child_session is None:
         return False, {

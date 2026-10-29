@@ -69,7 +69,7 @@ class SessionModel(BaseModel):
     last_active_at = models.DateTimeField(null=True, blank=True)
     is_pinned = models.BooleanField(default=False, db_index=True)
     is_archived = models.BooleanField(default=False, db_index=True)
-    session_type = models.CharField(max_length=30, choices=SessionType.choices, default=SessionType.SESSION)
+    session_type = models.CharField(max_length=30, choices=SessionType.choices, default=SessionType.SESSION, db_index=True)
 
     parent_session = models.ForeignKey("self",on_delete=models.CASCADE,related_name="child_sessions",default=None,null=True,blank=True)
     parent_project = models.ForeignKey("server.Project",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="child_sessions")
@@ -111,4 +111,7 @@ class SessionModel(BaseModel):
         return Session(session_model=self)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        # Mutual exclusivity: is_archived and is_active must never both be True.
+        if getattr(self, "is_archived", False):
+            self.is_active = False
         super().save(*args, **kwargs)

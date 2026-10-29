@@ -198,7 +198,7 @@ class IdleCompactionTest(TestCase):
         # Proactive compaction on a chat nobody is looking at is wasted spend.
         self._big_session()
         self._backdate()
-        SessionModel.objects.filter(pk=self.session.pk).update(is_archived=True)
+        SessionModel.objects.filter(pk=self.session.pk).update(is_archived=True, is_active=False)
         _compact_idle_sessions()
         self.assertIsNone(self.fake_task.delay_kwargs)
 
