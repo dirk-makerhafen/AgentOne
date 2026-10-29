@@ -5,12 +5,14 @@ model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Basic Agent with only filesystem read/write
 extends: []
 inheritSystemPrompt: false
-maxRetries: 0
-maxTurns: 50
-maxUnattendedTurns: 60
-maxHistoryMessages: 100
-autoCompactMaxTokens: 100000
-autoCompactKeepPercent: 0
+maxRetries: 3
+maxTurns: 999
+maxUnattendedTurns: 999
+maxHistoryMessages: 999
+autoCompactMaxTokens: 120000
+autoCompactMaxTokens: 25000
+autoCompactKeepPercent: 5
+autoCompactTimeout: 240
 reasoningEffort: high
 schedulerStrategy: queue
 precision: precise
