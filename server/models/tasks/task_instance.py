@@ -315,7 +315,7 @@ class TaskInstance(BaseModel):
         max_retries: Any = None,
         retry_delay: Any = None,
         retry_requires_approval: Any = None,
-        priority: Any = None,
+        priority: Any = 99,
         cronjob: Any = None,
     ) -> AgentTaskCall:
         """Create an AgentTaskCall for this task instance.

@@ -815,7 +815,7 @@ def update_timeline_item(_session: Session, path: str):
     return True, {
         "status": "success",
         "path": path,
-        "process_summary": process_summary_task.delay(raw_path=path, summary_result=summary_result),
+        "summary": process_summary_task.delay(raw_path=path, summary_result=summary_result),
     }
 
 
@@ -874,18 +874,18 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
     """
     summary_text = _extract_summary_text(summary_result)
     if summary_text is None:
-        return False, {
+        return{
             "status": "error",
-            "raw_path": raw_path,
+            #"raw_path": raw_path,
             "lint_results": ["LLM result contains no usable `content` text — nothing was written"],
             "message": "process_summary: no summary content in llm result, file could not be written",
         }
 
     raw_text, raw_abs = _read_raw_text(_session, raw_path)
     if raw_text is None:
-        return False, {
+        return {
             "status": "error",
-            "raw_path": raw_path,
+            #"raw_path": raw_path,
             "lint_results": [f"raw file not found or unreadable: {raw_path}"],
             "message": "process_summary: raw file unreadable, file could not be written",
         }
@@ -903,18 +903,18 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
     if date_part is None:
         blockers.append(f"no usable event `date` in frontmatter (got {fm.get('date')!r})" if isinstance(fm, dict) else "no usable event `date` in frontmatter")
     if blockers:
-        return False, {
+        return {
             "status": "error",
-            "raw_path": raw_path,
+            #"raw_path": raw_path,
             "lint_results": lint_results,
             "message": "process_summary: file could not be written — " + "; ".join(blockers),
         }
 
     if not write:
-        return True, {
+        return {
             "status": "success",
-            "raw_path": raw_path,
-            "summary_path": None,
+            #"raw_path": raw_path,
+            #"summary_path": None,
             "lint_results": lint_results,
             "message": "process_summary: checks ran (write=False, file not written, no double-check dispatched)",
         }
@@ -924,9 +924,9 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
     # timeline/YYYY/MM/DD/YYYYMMDD-HHMM_<Title>.md
     root = _workspace_root(_session)
     if root is None:
-        return False, {
+        return {
             "status": "error",
-            "raw_path": raw_path,
+            #"raw_path": raw_path,
             "lint_results": lint_results,
             "message": "process_summary: cannot resolve workspace root, file could not be written",
         }
@@ -938,9 +938,9 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
     try:
         target_dir.mkdir(parents=True, exist_ok=True)
     except Exception as e:
-        return False, {
+        return {
             "status": "error",
-            "raw_path": raw_path,
+            #"raw_path": raw_path,
             "lint_results": lint_results,
             "message": f"process_summary: cannot create timeline dir {target_dir}: {e}",
         }
@@ -958,9 +958,9 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
         text_out = summary_text if summary_text.endswith("\n") else summary_text + "\n"
         target.write_text(text_out, encoding="utf-8")
     except Exception as e:
-        return False, {
+        return {
             "status": "error",
-            "raw_path": raw_path,
+            #"raw_path": raw_path,
             "lint_results": lint_results,
             "message": f"process_summary: cannot write summary file {target}: {e}",
         }
@@ -973,10 +973,10 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
         check_task_result = check_task.delay(raw_path=raw_path, summary_path=summary_path, lint_results=lint_results)
         double_check = "dispatched"
 
-    return True, {
+    return {
         "status": "success",
-        "raw_path": raw_path,
-        "summary_path": summary_path,
+        #"raw_path": raw_path,
+        #"summary_path": summary_path,
         "lint_results": lint_results,
         "double_check_result": check_task_result,
         "message": f"process_summary: wrote {summary_path} ({len(lint_results)} lint hints, double-check {double_check})",
@@ -1010,18 +1010,18 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
 
     raw_text, _ = _read_raw_text(_session, raw_path)
     if raw_text is None:
-        return False, {
+        return {
             "status": "error",
-            "raw_path": raw_path,
-            "summary_path": summary_path,
+            #"raw_path": raw_path,
+            #"summary_path": summary_path,
             "message": f"double_check_summary: raw file unreadable: {raw_path}",
         }
     summary_text, _ = _read_raw_text(_session, summary_path)
     if summary_text is None:
-        return False, {
+        return {
             "status": "error",
-            "raw_path": raw_path,
-            "summary_path": summary_path,
+            #"raw_path": raw_path,
+            #"summary_path": summary_path,
             "message": f"double_check_summary: summary file unreadable: {summary_path}",
         }
 
@@ -1038,10 +1038,10 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
         #max_turns=100,
     )
     if child_session is None:
-        return False, {
+        return {
             "status": "error",
-            "raw_path": raw_path,
-            "summary_path": summary_path,
+            #"raw_path": raw_path,
+            #"summary_path": summary_path,
             "message": "double_check_summary: agent 'baseagent' not found",
         }
 
@@ -1072,10 +1072,10 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
         
     summary_check_result = child_session.add_user_message(parts)
 
-    return True, {
+    return {
         "status": "success",
-        "raw_path": raw_path,
-        "summary_path": summary_path,
+        #"raw_path": raw_path,
+        #"summary_path": summary_path,
         "message": summary_check_result,
     }
 

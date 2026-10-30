@@ -22,6 +22,7 @@ class QueryStatus(models.TextChoices):
     WAITING = "WAITING", "Waiting (System Blocked)"
     SUCCESS = "SUCCESS", "Success (Terminal)"
     FAILURE = "FAILURE", "Failure (Terminal)"
+    RATE_LIMITED = "RATE_LIMITED", "Rate Limited (Terminal)"
 
 
 class Query(BaseModel):

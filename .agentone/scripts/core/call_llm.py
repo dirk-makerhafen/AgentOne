@@ -567,7 +567,7 @@ def call_llm(_session: Session, query: Query) -> Response:
         )
 
     except RateLimitError:
-        query.atomic_update(status=QueryStatus.FAILURE)
+        query.atomic_update(status=QueryStatus.RATE_LIMITED)
         raise
 
     except Exception:
