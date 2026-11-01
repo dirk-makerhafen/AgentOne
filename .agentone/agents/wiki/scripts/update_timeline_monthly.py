@@ -515,7 +515,6 @@ def _iter_month_dirs(root: Path):
 
 def _spawn_month_session(_session, month_rel: str, month_str: str, brief: str):
     """Spawn the prose session for one month; returns (ok, session_pk_or_None, body_ref_or_error)."""
-    from time import time
 
     stamp = month_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
@@ -532,7 +531,6 @@ def _spawn_month_session(_session, month_rel: str, month_str: str, brief: str):
 
 def _spawn_month_check(_session, month_rel: str, month_str: str, brief: str):
     """Spawn the fire-and-forget double-check session for a written index.md."""
-    from time import time
 
     stamp = month_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
@@ -805,7 +803,6 @@ def write_month_index(_session, month_path, month_str=None, body_result=None, se
     fingerprint = _month_sources_fingerprint(days, strays)
     catalog, missing = _tage_entries(_session, month_dir, days, day_dirnames)
     indexed = {d["day_str"] for d in days}
-    today_str = datetime.datetime.now().date().isoformat()
     try:
         (month_dir / "index.md").write_text(
             _build_monthly_index(month_str, canonical, body, catalog, today_str, head_hash, fingerprint), encoding="utf-8")

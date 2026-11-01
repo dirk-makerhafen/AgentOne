@@ -462,11 +462,23 @@ def _call_with_fallback(
             apikey = ratelimit_result.selected_key
             if not claimed:
                 # Claim the query exactly once per attempt: only an unowned
-                # (WAITING) or retry-reusable (FAILURE) row may flip to
-                # ACTIVE.  Never resurrect a terminal (SUCCESS) query or
+                # (WAITING), retry-reusable (FAILURE), or capacity-parked
+                # (RATE_LIMITED) row may flip to ACTIVE.  RATE_LIMITED is
+                # *not* terminal for the owning call: the scheduler releases
+                # WAITING_RATELIMIT -> WAITING_QUEUE and re-dispatches this
+                # same query when capacity returns, so the claim must accept
+                # it (otherwise every released call hard-fails here and burns
+                # a retry).  Never resurrect a terminal (SUCCESS) query or
                 # hijack a foreign ACTIVE one — a retry of an ancient call
                 # must fail here, not open a ghost stream on a sibling.
-                updated = Query.objects.filter(pk=query.pk, status__in=[QueryStatus.WAITING, QueryStatus.FAILURE]).update(
+                updated = Query.objects.filter(
+                    pk=query.pk,
+                    status__in=[
+                        QueryStatus.WAITING,
+                        QueryStatus.FAILURE,
+                        QueryStatus.RATE_LIMITED,
+                    ],
+                ).update(
                     apikey=apikey, status=QueryStatus.ACTIVE
                 )
                 if not updated:

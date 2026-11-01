@@ -10,7 +10,6 @@ from runtime.session.session import Session
 sys.path.insert(0, Path(__file__).resolve().parent.as_posix())
 from update_timeline_daily import (  # noqa: E402
     DAY_FIELDS,
-    FRONTMATTER_RE,
     _extract_result_text,
     _fm_list_values,
     _git_head,
@@ -452,7 +451,7 @@ def _collect_entity_mentions(timeline_dir: Path, root: Path) -> tuple[dict, list
         except Exception:
             rel = fp.as_posix()
         month = _month_of_summary(fm)
-        for field in DAY_FIELDS + ("tags",):
+        for field in DAY_FIELDS:
             kind = KIND_BY_FIELD.get(field)
             if kind is None:
                 continue
@@ -481,7 +480,7 @@ def _read_existing_entities(entities_dir: Path, root: Path) -> dict[str, dict]:
         return existing
     for kind in ENTITY_KINDS:
         for fp in sorted((entities_dir / kind).rglob("*.md")):
-            if fp.name.endswith(".log.md"):
+            if fp.name == "index.md" or fp.name.endswith(".log.md") or ".merge-pending." in fp.name:
                 continue
             try:
                 rel = fp.resolve().relative_to(root.resolve()).as_posix()
@@ -999,7 +998,6 @@ def _spawn_entity_session(_session, tag: str, brief: str, extra_parts: list | No
     *extra_parts* (label/content evidence parts) are delivered after the
     instruction brief, exactly like the timeline's multi-part messages.
     """
-    from time import time
     ok, _, session_pk, ref = _spawn_baseagent(
         _session,
         name=f"p{_session.model.pk}:entity:{re.sub(r'[^a-zA-Z0-9]+', '_', tag)[:40]}:{datetime.datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}",
@@ -1128,8 +1126,9 @@ def write_entity(_session, entity_rel, kind=None, name=None, body_result=None, s
         # Fingerprint covers the future-logged set: legacy sources (about to
         # be imported) plus whatever the new entry links. Recomputed from
         # disk so parallel runs can't desync it.
-        entry_links = _logged_sources(entry) if entry else []
-        fingerprint = _fingerprint_sources(root, sorted(set(legacy_here) | set(entry_links)))
+        # Fingerprint the same source set the staleness check (current_fp) hashes,
+        # so a rewrite can actually become "up to date" instead of staying stale.
+        fingerprint = _fingerprint_sources(root, sorted(set(sources)))
         file_text = _build_entity_file(kind, name, merged_aliases, merged_fields, body,
                                        created, today_str, head_hash, fingerprint)
         try:
@@ -1139,7 +1138,7 @@ def write_entity(_session, entity_rel, kind=None, name=None, body_result=None, s
         except Exception as e:
             return False, {"status": "error", "entity": entity_rel, "lint_results": lint_results,
                            "message": f"write_entity: cannot write {entity_rel}: {e}"}
-    if entry is not None or (wrote and legacy_here):
+    if wrote and (entry is not None or legacy_here):
         log_path = entity_path.parent / (entity_path.stem + ".log.md")
         try:
             if not log_path.exists():
@@ -1156,8 +1155,11 @@ def write_entity(_session, entity_rel, kind=None, name=None, body_result=None, s
                 appended = True
         except Exception as e:
             lint_results.append(f"log append failed: {e}")
-    return True, {
-        "status": "success",
+    if entry is not None and not wrote:
+        lint_results.append("log entry discarded: body block missing — nothing written")
+    status = "success" if wrote else "error"
+    return wrote, {
+        "status": status,
         "entity": entity_rel,
         "log": _vault_rel(_session, entity_path.parent / (entity_path.stem + ".log.md")),
         "wrote_md": wrote,
@@ -1259,6 +1261,7 @@ def update_entities(_session: Session, limit: int = 5, entity: str | None = None
     results = []
     spawned = 0
     for kind, name, rel, explicit in queue:
+        entity_hints: list[str] = []
         if spawned >= limit and not explicit:
             break
         info = resolved.get((kind, name), {"sources": [], "months": set()})
@@ -1270,14 +1273,14 @@ def update_entities(_session: Session, limit: int = 5, entity: str | None = None
             twin = _find_kind_twin(existing, kind, name)
             if twin is not None:
                 move_from = twin
-                collect_hints.append(
+                entity_hints.append(
                     f"kind correction: '{name}' is filed under {twin} — relocating to {rel}")
         elif not explicit and facts is not None:
             twin = _find_kind_twin(existing, kind, name)
             if twin is not None and twin != rel:
                 # Both kind folders hold the name: genuine cross-kind
                 # duplicate — update the filed copy in place, flag for humans.
-                collect_hints.append(
+                entity_hints.append(
                     f"kind conflict: {twin} and {rel} both exist — updating {twin} in place, human merge needed")
                 rel = twin
                 kind = existing[rel]["kind"]
@@ -1322,7 +1325,7 @@ def update_entities(_session: Session, limit: int = 5, entity: str | None = None
             raw_rels = _raw_rels_from_texts([text for _r, text in brief_sources])[:8]
             brief = _build_new_entity_brief(kind, name, rel, log_rel, info["sources"][:8], prefill, raw_rels)
             if len(info["sources"]) > 8:
-                collect_hints.append(f"{rel}: {len(info['sources'])} sources, first 8 attached as parts")
+                entity_hints.append(f"{rel}: {len(info['sources'])} sources, first 8 attached as parts")
         else:
             stored = set(facts["sources"])
             new_rels = [r for r in info["sources"] if r not in stored] or info["sources"]
@@ -1333,7 +1336,7 @@ def update_entities(_session: Session, limit: int = 5, entity: str | None = None
             raw_rels = _raw_rels_from_texts([text for _r, text in brief_sources])[:8]
             brief = _build_entity_session_brief(kind, name, rel, log_rel, new_rels[:8], prefill, raw_rels)
             if len(new_rels) > 8:
-                collect_hints.append(f"{rel}: {len(new_rels)} new sources, first 8 attached as parts")
+                entity_hints.append(f"{rel}: {len(new_rels)} new sources, first 8 attached as parts")
 
         ok, session_pk, body_ref = _spawn_entity_session(_session, f"{kind}/{name}", brief, extra_parts)
         if not ok:
@@ -1342,7 +1345,7 @@ def update_entities(_session: Session, limit: int = 5, entity: str | None = None
         write_ref = write_task.delay(
             entity_rel=rel, kind=kind, name=name, body_result=body_ref, session_pk=session_pk,
             sources=info["sources"], aliases=info.get("absorbed_aliases", []),
-            head_hash=head_hash, collect_hints=collect_hints, move_from_rel=move_from,
+            head_hash=head_hash, collect_hints=collect_hints + entity_hints, move_from_rel=move_from,
         )
         results.append({"entity": rel, "status": "dispatched", "session_pk": session_pk, "reason": reason, "write": write_ref})
         spawned += 1

@@ -64,6 +64,71 @@ def _allowlist_violations(parts: list[dict[str, Any]], allowlist: list[str]) -> 
     return violated
 
 
+def _persisted_parts(message: Message) -> list[dict[str, Any]]:
+    """Rebuild decide-readable part dicts from a persisted ``Message``.
+
+    Same shape as the live ``parts`` list (``type``/``content`` plus a
+    ``tool_call`` key exactly when a call is attached), in insertion order.
+    Used by the idempotent replay path so a retried run sees the original
+    turn shape without re-dispatching anything.  Never raises.
+    """
+    out: list[dict[str, Any]] = []
+    for part in message.parts.order_by("pk"):
+        try:
+            content = part.content.get() if part.content else ""
+        except Exception:  # pylint: disable=broad-exception-caught
+            content = ""
+        entry: dict[str, Any] = {
+            "type": part.type,
+            "content_type": part.content_type,
+            "content": content,
+        }
+        try:
+            tool_call = part.tool_call
+        except Exception:  # pylint: disable=broad-exception-caught
+            tool_call = None
+        if tool_call is not None:
+            entry["tool_call"] = tool_call
+        out.append(entry)
+    return out
+
+
+def _result_from_persisted(
+    response: Response,
+    message: Message,
+    persisted: list[dict[str, Any]],
+    violated: list[str],
+) -> dict[str, Any]:
+    """Build the ingest result for an already-ingested response.
+
+    ``final_result`` was rewritten from ``TOOLCALL`` to ``MESSAGE`` on the
+    first ingest, so it is detected from the original ``response.tool_calls``
+    (and the recomputed allowlist violations) rather than from the parts.
+    """
+    result: dict[str, Any] = dict(
+        response=response,
+        parts=persisted,
+        message=message,
+        has_tool_calls=any("tool_call" in part for part in persisted),
+        has_message=any(part["type"] == MessagePartType.MESSAGE for part in persisted),
+    )
+    # ``parse_llm_response`` stores the validated name flat on the toolcall
+    # (``name``) while raw provider calls nest it under ``function``.  Accept
+    # both; the flat name is the one the first ingest actually dispatched.
+    final_called = any(
+        (
+            toolcall.get("name")
+            or (toolcall.get("function") or {}).get("name")
+        ) == "final_result"
+        for toolcall in (getattr(response, "tool_calls", None) or [])
+    )
+    if final_called and "final_result" not in violated:
+        result["has_final_result"] = True
+    if violated:
+        result["tool_allowlist_violated"] = violated
+    return result
+
+
 def ingest_assistant_message(
     _session: Session, response: Response, parts: list[dict[str, Any]]
 ) -> dict[str, Any]:
@@ -72,6 +137,10 @@ def ingest_assistant_message(
 
     Skips tools not in the session's allowedToolNames. Each dispatched
     call is appended to parsed["task_calls"] as an AgentTaskCall.
+
+    Idempotent on ``response``: a retried run finds the ``Message`` the first
+    attempt already created and replays it, so tool calls are never dispatched
+    twice (a retry must not spawn duplicate sub-sessions).
 
     Args:
         _session:  The active agent session.
@@ -86,9 +155,36 @@ def ingest_assistant_message(
         AgentTaskCall objects that the framework will execute and resolve.
     """
 
-    prev_message = _session.get_last_message()
-
     sv = _session.get_version_model()
+
+    # Strict call-time allowlist (SettingsModel.tool_call_allowlist): the
+    # advertised tool set is intentionally left untouched so the LLM request —
+    # and with it the provider KV/prompt cache — stays identical.  Violating
+    # calls are never dispatched; they are recorded as parts (audit trail)
+    # and flagged so decide_next_step aborts the session instead of looping
+    # on soft catch-tool retries.  None (default) = no restriction.
+    allowlist = _session._get_session_setting("tool_call_allowlist")
+    violated: list[str] = _allowlist_violations(parts, allowlist) if allowlist is not None else []
+
+    # Idempotency guard: the first attempt persisted the Message *and* every
+    # tool-call link before its run started waiting on them.  A retry (e.g.
+    # after an awaited tool call failed) must reuse that message instead of
+    # creating a second one and re-dispatching the same calls.
+    existing = (
+        Message.objects.filter(
+            session=sv.session,
+            response=response,
+            role=MessageRole.ASSISTANT,
+        )
+        .order_by("pk")
+        .first()
+    )
+    if existing is not None:
+        return _result_from_persisted(
+            response, existing, _persisted_parts(existing), violated
+        )
+
+    prev_message = _session.get_last_message()
     message = Message.objects.create(
         session=sv.session,
         session_version=sv,
@@ -99,15 +195,6 @@ def ingest_assistant_message(
     )
 
     has_final_result = False
-
-    # Strict call-time allowlist (SettingsModel.tool_call_allowlist): the
-    # advertised tool set is intentionally left untouched so the LLM request —
-    # and with it the provider KV/prompt cache — stays identical.  Violating
-    # calls are never dispatched; they are recorded as parts (audit trail)
-    # and flagged so decide_next_step aborts the session instead of looping
-    # on soft catch-tool retries.  None (default) = no restriction.
-    allowlist = _session._get_session_setting("tool_call_allowlist")
-    violated: list[str] = _allowlist_violations(parts, allowlist) if allowlist is not None else []
 
     for part in parts:
         if part["type"] == MessagePartType.TOOLCALL:

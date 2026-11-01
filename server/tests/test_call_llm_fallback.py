@@ -24,7 +24,10 @@ from server.models.queries.response import ResponseStatus
 
 # pylint: disable=protected-access  # exercising internal helpers
 
-CALL_LLM_PATH = Path(__file__).resolve().parent.parent.parent / "runtime" / "call_llm.py"
+CALL_LLM_PATH = (
+    Path(__file__).resolve().parent.parent.parent
+    / ".agentone" / "scripts" / "core" / "call_llm.py"
+)
 
 
 def _load_call_llm():
@@ -276,6 +279,87 @@ class FallbackLoopTest(TestCase):
         self.assertEqual(session.repinned, [self.alpha_p2])
         # Query rows got the ACTIVE + ACTIVE(force) + SUCCESS transitions.
         self.assertEqual(query_model.objects.filter.return_value.update.call_count, 3)
+
+    def test_rate_limited_query_is_reclaimed_on_redispatch(self):
+        """A parked (RATE_LIMITED) query must be claimable by its owning call.
+
+        The scheduler releases ``WAITING_RATELIMIT`` back to the queue and
+        re-dispatches the *same* query.  If the claim filter rejects
+        RATE_LIMITED, every released call hard-fails with "Failed to update
+        query to active state" and burns a retry (the cron sub-session storm).
+        """
+        from server.models.agents.agent import AgentModel
+        from server.models.queries.query import Query
+        from server.models.sessions.session import SessionModel
+        from server.models.sessions.session_version import SessionVersionModel
+
+        agent = AgentModel.objects.create(name="claim-agent")
+        session_model = SessionModel.objects.create(name="claim-session")
+        sv = SessionVersionModel.objects.create(
+            session=session_model, agent=agent, version_number=1
+        )
+        query = Query.objects.create(
+            session=session_model,
+            session_version=sv,
+            status=QueryStatus.RATE_LIMITED,
+        )
+
+        response = self._ok()
+        observed = {}
+
+        def _stream(**_kwargs):
+            # The row must be ACTIVE while the request is in flight.
+            observed["status"] = Query.objects.get(pk=query.pk).status
+            return response
+
+        with mock.patch.object(self.call_llm, "RateLimitChecker") as checker, mock.patch.object(
+            self.call_llm, "run_streaming_query", side_effect=_stream
+        ):
+            checker.check.return_value = RateLimitResult(selected_key=None)
+            result = self.call_llm._call_with_fallback(
+                session=_StubSession(aimodel=self.alpha_p1),
+                query=query,
+                messages=[],
+                tools=[],
+            )
+
+        self.assertIs(result, response)
+        self.assertEqual(observed["status"], QueryStatus.ACTIVE)
+        query.refresh_from_db()
+        self.assertEqual(query.status, QueryStatus.SUCCESS)
+
+    def test_terminal_query_is_not_reclaimed(self):
+        """A SUCCESS query must never be resurrected by a stale retry."""
+        from server.models.agents.agent import AgentModel
+        from server.models.queries.query import Query
+        from server.models.sessions.session import SessionModel
+        from server.models.sessions.session_version import SessionVersionModel
+
+        agent = AgentModel.objects.create(name="claim-agent-2")
+        session_model = SessionModel.objects.create(name="claim-session-2")
+        sv = SessionVersionModel.objects.create(
+            session=session_model, agent=agent, version_number=1
+        )
+        query = Query.objects.create(
+            session=session_model,
+            session_version=sv,
+            status=QueryStatus.SUCCESS,
+        )
+
+        with mock.patch.object(self.call_llm, "RateLimitChecker") as checker, mock.patch.object(
+            self.call_llm, "run_streaming_query"
+        ) as stream:
+            checker.check.return_value = RateLimitResult(selected_key=None)
+            with self.assertRaises(Exception) as ctx:
+                self.call_llm._call_with_fallback(
+                    session=_StubSession(aimodel=self.alpha_p1),
+                    query=query,
+                    messages=[],
+                    tools=[],
+                )
+
+        self.assertIn("Failed to update query to active state", str(ctx.exception))
+        self.assertEqual(stream.call_count, 0)
 
     def test_mid_stream_failure_propagates_without_retry(self):
         partial = RuntimeError("connection reset after start")
@@ -558,7 +642,9 @@ class StreamCloseTest(TestCase):
 
     def test_looping_stream_closed_and_accepted(self):
         """Repetitive output: detected early, partial reasoning kept, SUCCESS."""
-        events = [_stream_event(delta={"reasoning_content": "L" * 300}) for _ in range(8)]
+        # The detector observes the threshold at the top of the *next*
+        # iteration, so one chunk beyond the 6th repeat trigger is needed.
+        events = [_stream_event(delta={"reasoning_content": "L" * 300}) for _ in range(9)]
         stream = _FakeStream(events)
         inner = stream.completion_stream
         resp = _StubResponse()

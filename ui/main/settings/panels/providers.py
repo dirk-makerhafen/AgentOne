@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from django.db.models import Q as _Q
 from server.models.providers.api_provider import ApiProvider
 from server.models.providers.api_key import ApiKey
 from ui.lib.model_view import ModelView
@@ -158,7 +159,12 @@ class SettingPanelProviders(ModelView):
     @property
     def provider_rows(self) -> list[dict]:
         providers = (
-            ApiProvider.objects.filter(enabled=True)
+            # Show enabled providers plus any disabled provider that still
+            # carries user-added API keys, so keys are never hidden by an
+            # auto-disable pass.
+            ApiProvider.objects.filter(
+                _Q(enabled=True) | _Q(api_keys__isnull=False)
+            ).distinct()
             .order_by("is_local", "name")
             .prefetch_related("api_keys")
         )

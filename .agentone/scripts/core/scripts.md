@@ -43,8 +43,9 @@ tasks:
     file: ingest_assistant_message.py
     function: ingest_assistant_message
     bound: True
-    max_retries: 3    
-    retry_delay: 60
+    # Dispatch is a side effect: replaying it would create a second Message
+    # and re-dispatch every tool call (duplicate sub-sessions).  Never retry.
+    max_retries: 0
   - name: decide_next_step  
     file: decide_next_step.py
     function: decide_next_step
@@ -69,6 +70,9 @@ tasks:
     function: map
     bound: True
     limit_per_instance_parallel_runs: 0
+    # A batch is best-effort: one failed item must not fail the whole map
+    # (or every item behind it).  Per-item errors stay in the result.
+    max_subtask_error_rate: 100
   - name: compact_if_needed
     file: compact_if_needed.py
     function: compact_if_needed

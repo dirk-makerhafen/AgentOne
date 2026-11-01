@@ -740,7 +740,6 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
 
 def _spawn_day_session(_session, day_rel: str, day_str: str, brief: str):
     """Spawn the prose session for one day; returns (ok, session_pk_or_None, body_ref_or_error)."""
-    from time import time
 
     stamp = day_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
@@ -757,7 +756,6 @@ def _spawn_day_session(_session, day_rel: str, day_str: str, brief: str):
 
 def _spawn_day_check(_session, day_rel: str, day_str: str, brief: str):
     """Spawn the fire-and-forget double-check session for a written index.md."""
-    from time import time
 
     stamp = day_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
@@ -1010,7 +1008,10 @@ def _read_child_session_texts(session_pk) -> tuple[str | None, str | None]:
             session_id=pk, task_definition__name="final_result"
         ).order_by("-created_at").first()
         if call is not None:
-            content = (call.carguments_json or {}).get("content")
+            from server.models.content import resolve_generic_content_refs
+            content = resolve_generic_content_refs(
+                (call.carguments_json or {}).get("content")
+            )
             if isinstance(content, str) and content.strip():
                 final_text = content.strip()
         msg = Message.objects.filter(session_id=pk, role=MessageRole.ASSISTANT).order_by("-created_at").first()

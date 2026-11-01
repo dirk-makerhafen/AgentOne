@@ -19,9 +19,9 @@ maxTurns: 2000
 maxUnattendedTurns: 2000
 maxHistoryMessages: 1000
 autoCompactMaxTokens: 120000
-autoCompactMinTokens: 50000
+autoCompactMinTokens: 30000
 autoCompactKeepPercent: 5
-autoCompactIdleSeconds: 240
+autoCompactIdleSeconds: 300
 
 subagents:
     - name: researcher

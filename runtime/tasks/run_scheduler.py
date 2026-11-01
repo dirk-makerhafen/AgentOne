@@ -76,6 +76,40 @@ class RunScheduler:
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _error_tolerance(run: AgentTaskRun | None) -> tuple[int, int]:
+        """Return ``(max_subtask_errors, max_subtask_error_rate)`` for *run*."""
+        if run is None:
+            return 0, 0
+        return (
+            int(getattr(run, "max_subtask_errors", 0) or 0),
+            int(getattr(run, "max_subtask_error_rate", 0) or 0),
+        )
+
+    @staticmethod
+    def _tolerance_configured(run: AgentTaskRun | None) -> bool:
+        """True when *run* allows at least one failed subtask."""
+        max_errors, max_rate = RunScheduler._error_tolerance(run)
+        return max_errors > 0 or max_rate > 0
+
+    @staticmethod
+    def _errors_tolerated(run: AgentTaskRun | None, total: int, failed: int) -> bool:
+        """True when *failed* of *total* subtask failures are within tolerance.
+
+        ``max_subtask_errors`` is an absolute count; ``max_subtask_error_rate``
+        is a percentage (0-100).  Either threshold grants tolerance (the more
+        permissive wins).  When both are 0 the legacy behaviour applies: any
+        failed reference fails the run.
+        """
+        if failed <= 0:
+            return True
+        max_errors, max_rate = RunScheduler._error_tolerance(run)
+        if max_errors > 0 and failed <= max_errors:
+            return True
+        if max_rate > 0 and total > 0 and failed * 100 <= max_rate * total:
+            return True
+        return False
+
+    @staticmethod
     def taskrun_result_reference_ended(
         taskrun_id: int,
         result_taskcall_id: int,
@@ -85,13 +119,19 @@ class RunScheduler:
         Called when a result-referenced task call ends.
 
         If the referenced call failed, the parent run transitions to
-        ``FAILURE``.  Otherwise, once **all** result references have ended,
+        ``FAILURE`` — unless the run carries a subtask-error tolerance
+        (``max_subtask_errors`` / ``max_subtask_error_rate``), in which case
+        the remaining references are allowed to settle first and the failure
+        budget is evaluated in :meth:`all_taskrun_result_references_ended`.
+        Otherwise, once **all** result references have ended,
         :meth:`all_taskrun_result_references_ended` is invoked.
         """
+        run = AgentTaskRun.objects.filter(pk=taskrun_id).first()
         if result_taskcall_status != TaskCallStatusDetail.ENDED_SUCCESS:
-            if TaskRunStateMachine.fail(taskrun_id):
-                CallScheduler.on_taskrun_ended(taskrun_id, TaskRunStatus.FAILURE)
-            return
+            if not RunScheduler._tolerance_configured(run):
+                if TaskRunStateMachine.fail(taskrun_id):
+                    CallScheduler.on_taskrun_ended(taskrun_id, TaskRunStatus.FAILURE)
+                return
         query = AgentTaskCall.objects.filter(
             ~Q(status=TaskCallStatus.ENDED),
             rev_taskrun_result_references=taskrun_id,
@@ -105,13 +145,19 @@ class RunScheduler:
         """
         All result references have resolved.
 
-        If any ended unsuccessfully the run fails; otherwise it succeeds.
+        Fails the run only when the failed-reference count exceeds the run's
+        ``max_subtask_errors`` / ``max_subtask_error_rate`` tolerance; a run
+        that tolerates them succeeds with partial results.
         """
-        unsuccessful = AgentTaskCall.objects.filter(
-            ~Q(status_detail=TaskCallStatusDetail.ENDED_SUCCESS),
+        refs = AgentTaskCall.objects.filter(
             rev_taskrun_result_references__id=taskrun_id,
         )
-        if unsuccessful.exists():
+        total = refs.count()
+        failed = refs.exclude(
+            status_detail=TaskCallStatusDetail.ENDED_SUCCESS,
+        ).count()
+        run = AgentTaskRun.objects.filter(pk=taskrun_id).first()
+        if failed and not RunScheduler._errors_tolerated(run, total, failed):
             if TaskRunStateMachine.fail(taskrun_id):
                 CallScheduler.on_taskrun_ended(taskrun_id, TaskRunStatus.FAILURE)
             return

@@ -51,10 +51,10 @@ from __future__ import annotations
 
 import datetime
 import fcntl
-import fnmatch
+import re
 import subprocess
 import sys
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 from runtime.session.session import Session
 
@@ -176,28 +176,57 @@ def _done_expired(done_date: str, today: str, days: int) -> bool:
     return (now - done).days > days
 
 
-def _pattern_variants(pattern: str) -> list[str]:
-    """Match variants covering ``**`` zero-or-more-dir quirks across matchers."""
-    variants = [pattern]
-    if "**/" in pattern:
-        variants.append(pattern.replace("**/", ""))
-    if "**" in pattern:
-        variants.append(pattern.replace("**", "*"))
-    return variants
+_GLOB_RE_CACHE: dict[str, re.Pattern] = {}
+
+
+def _glob_to_regex(pattern: str) -> str:
+    """Translate a POSIX glob to a regex with pathlib-like semantics.
+
+    ``**`` crosses directory separators (zero or more path components),
+    while ``*`` and ``?`` never cross ``/`` — matching ``Path.glob`` so
+    the diff-path filter agrees with the full-expansion scan.
+    """
+    out: list[str] = []
+    i, n = 0, len(pattern)
+    while i < n:
+        ch = pattern[i]
+        if ch == "*":
+            if i + 1 < n and pattern[i + 1] == "*":
+                i += 2
+                if i < n and pattern[i] == "/":
+                    i += 1
+                    out.append("(?:[^/]+/)*")
+                else:
+                    out.append(".*")
+                continue
+            out.append("[^/]*")
+            i += 1
+        elif ch == "?":
+            out.append("[^/]")
+            i += 1
+        elif ch == "[":
+            j = pattern.find("]", i + 1)
+            if j == -1:
+                out.append(re.escape(ch))
+                i += 1
+            else:
+                out.append(pattern[i:j + 1])
+                i = j + 1
+        else:
+            out.append(re.escape(ch))
+            i += 1
+    return "".join(out)
 
 
 def _matches_any(rel: str, patterns: list[str]) -> bool:
     """True when vault-relative *rel* matches any glob in *patterns*."""
-    posix = PurePosixPath(rel)
     for pat in patterns:
-        for variant in _pattern_variants(pat):
-            try:
-                if posix.match(variant):
-                    return True
-            except Exception:
-                pass
-            if fnmatch.fnmatchcase(rel, variant):
-                return True
+        rx = _GLOB_RE_CACHE.get(pat)
+        if rx is None:
+            rx = re.compile(_glob_to_regex(pat) + "$")
+            _GLOB_RE_CACHE[pat] = rx
+        if rx.match(rel):
+            return True
     return False
 
 
@@ -442,6 +471,10 @@ def refresh_ingress(root: Path, ingress_rel: str) -> tuple[bool, dict]:
     days = _history_days(fm)
     kept_done = 0
     for rel, _deleted, meta in sorted(done_entries):
+        # A re-reported done file is already queued as pending above; never
+        # emit it twice (once pending, once done).
+        if rel in merged:
+            continue
         if _done_expired(meta.get("done", ""), today, days):
             continue
         kept_done += 1
@@ -451,10 +484,12 @@ def refresh_ingress(root: Path, ingress_rel: str) -> tuple[bool, dict]:
     fm["updated"] = today
     try:
         # Exclusive lock: concurrent finalize tasks flip lines in this file.
-        with open(ingress_file, "w", encoding="utf-8") as fh:
+        with open(ingress_file, "r+", encoding="utf-8") as fh:
             fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            fh.seek(0)
             fh.write(_dump_frontmatter(fm) + "\n" + "\n".join(queue_lines)
                      + ("\n" if queue_lines else ""))
+            fh.truncate()
     except Exception as e:
         return False, {"status": "error", "message": f"cannot write {ingress_rel}: {e}"}
     return True, {"status": "success", "ingress": ingress_rel,

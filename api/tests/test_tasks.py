@@ -2118,3 +2118,173 @@ class TestChainContinuationFlattening:
         )
         waiter.refresh_from_db()
         assert waiter.status == TaskRunStatus.FAILURE
+
+
+@pytest.mark.django_db
+class TestSubtaskErrorTolerance:
+    """A run may tolerate failed result references.
+
+    ``max_subtask_errors`` is an absolute count, ``max_subtask_error_rate`` a
+    percentage (0-100); either grants tolerance.  Both 0 keeps the legacy
+    fail-on-any-error behaviour.  Sweep tools (``map``, ``update_entities``,
+    ``update_timeline*``) opt in so one failed item does not fail the batch
+    and trigger a re-dispatch of the whole sweep.
+    """
+
+    def _make_setup(self):
+        agent = AgentModel.objects.create(name='tolerance-agent')
+        session = SessionModel.objects.create(name='tolerance-session')
+        sv = SessionVersionModel.objects.create(session=session, agent=agent)
+        session.latest_session_version = sv
+        session.save()
+
+        td = TaskDefinition.objects.create(name='tolerance-task')
+        tdv = TaskDefinitionVersion.objects.create(
+            task_definition=td, task_type=TaskType.TOOL,
+            description='tolerance-task', function_schema={},
+        )
+        ti = TaskInstance.objects.create(
+            task_definition_version=tdv, session=session, session_version=sv,
+            requires_approval=False, priority=0, max_retries=0, retry_delay=0,
+            retry_requires_approval=False, max_subtask_errors=0,
+            max_subtask_error_rate=0, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, time_limit=None,
+        )
+        return session, sv, td, tdv, ti
+
+    def _make_call(
+        self, td, tdv, ti, session, sv, detail,
+        status=TaskCallStatus.ENDED,
+    ):
+        return AgentTaskCall.objects.create(
+            task_definition=td, task_definition_version=tdv,
+            task_instance=ti, session=session, session_version=sv,
+            carguments_json={}, requires_approval=False,
+            max_subtask_errors=0, max_subtask_error_rate=0,
+            limit_subtask_parallel_runs=0, limit_per_instance_parallel_runs=1,
+            max_retries=0, retry_delay=0, retry_requires_approval=False,
+            status=status, status_detail=detail,
+        )
+
+    def _make_run(self, call, ti, tdv, sv, *, max_errors=0, max_rate=0, refs=()):
+        run = AgentTaskRun.objects.create(
+            agent_task_call=call, task_instance=ti, task_definition_version=tdv,
+            session=ti.session, session_version=sv, arguments_json={},
+            requires_approval=False, max_subtask_errors=max_errors,
+            max_subtask_error_rate=max_rate, limit_subtask_parallel_runs=0,
+            limit_per_instance_parallel_runs=1, priority=0,
+            status=TaskRunStatus.WAITING_RESULTTASKS,
+        )
+        run.taskrun_result_references.set(list(refs))
+        return run
+
+    @staticmethod
+    def _resolve(run_pk):
+        with patch(
+            'runtime.tasks.run_scheduler.CallScheduler.on_taskrun_ended'
+        ) as ended:
+            RunScheduler.all_taskrun_result_references_ended(run_pk)
+        return ended
+
+    def test_error_rate_tolerates_partial_failure(self):
+        session, sv, td, tdv, ti = self._make_setup()
+        ok = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_SUCCESS)
+        bad = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        parent = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = self._make_run(parent, ti, tdv, sv, max_rate=100, refs=[ok, bad])
+
+        ended = self._resolve(run.pk)
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.SUCCESS
+        ended.assert_called_once_with(run.pk, TaskRunStatus.SUCCESS)
+
+    def test_error_rate_100_with_every_item_failed_still_succeeds(self):
+        session, sv, td, tdv, ti = self._make_setup()
+        bad1 = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        bad2 = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        parent = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = self._make_run(parent, ti, tdv, sv, max_rate=100, refs=[bad1, bad2])
+
+        self._resolve(run.pk)
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.SUCCESS
+
+    def test_absolute_budget_exceeded_fails_run(self):
+        session, sv, td, tdv, ti = self._make_setup()
+        bad1 = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        bad2 = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        parent = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = self._make_run(parent, ti, tdv, sv, max_errors=1, refs=[bad1, bad2])
+
+        ended = self._resolve(run.pk)
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.FAILURE
+        ended.assert_called_once_with(run.pk, TaskRunStatus.FAILURE)
+
+    def test_absolute_budget_tolerates_up_to_limit(self):
+        session, sv, td, tdv, ti = self._make_setup()
+        ok = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_SUCCESS)
+        bad = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        parent = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = self._make_run(parent, ti, tdv, sv, max_errors=1, refs=[ok, bad])
+
+        self._resolve(run.pk)
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.SUCCESS
+
+    def test_legacy_zero_tolerance_fails_on_any_error(self):
+        session, sv, td, tdv, ti = self._make_setup()
+        ok = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_SUCCESS)
+        bad = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        parent = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = self._make_run(parent, ti, tdv, sv, refs=[ok, bad])
+
+        self._resolve(run.pk)
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.FAILURE
+
+    def test_reference_ended_waits_for_pending_refs_when_tolerated(self):
+        """A tolerated failure must not fail the run while other refs are open."""
+        session, sv, td, tdv, ti = self._make_setup()
+        bad = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        pending = self._make_call(
+            td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_QUEUE,
+            status=TaskCallStatus.WAITING,
+        )
+        parent = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = self._make_run(parent, ti, tdv, sv, max_rate=100, refs=[bad, pending])
+
+        with patch(
+            'runtime.tasks.run_scheduler.CallScheduler.on_taskrun_ended'
+        ):
+            RunScheduler.taskrun_result_reference_ended(
+                run.pk, bad.pk, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION
+            )
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.WAITING_RESULTTASKS
+
+    def test_reference_ended_fails_immediately_without_tolerance(self):
+        session, sv, td, tdv, ti = self._make_setup()
+        bad = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION)
+        pending = self._make_call(
+            td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_QUEUE,
+            status=TaskCallStatus.WAITING,
+        )
+        parent = self._make_call(td, tdv, ti, session, sv, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS)
+        run = self._make_run(parent, ti, tdv, sv, refs=[bad, pending])
+
+        with patch(
+            'runtime.tasks.run_scheduler.CallScheduler.on_taskrun_ended'
+        ):
+            RunScheduler.taskrun_result_reference_ended(
+                run.pk, bad.pk, TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION
+            )
+
+        run.refresh_from_db()
+        assert run.status == TaskRunStatus.FAILURE

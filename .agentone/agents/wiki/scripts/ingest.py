@@ -1,10 +1,9 @@
 
 from __future__ import annotations
+import re
 from datetime import datetime
 from runtime.session.session import Session
-from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.enums.session_enums import SessionType
-from server.models.message import Message
 
 def _extract_date_from_path(rel_path: str) -> list:
     parts = rel_path.split("/")
@@ -13,10 +12,12 @@ def _extract_date_from_path(rel_path: str) -> list:
             mm = parts[i + 1] if i + 1 < len(parts) and parts[i + 1].isdigit() and 1 <= int(parts[i + 1]) <= 12 else None
             dd = parts[i + 2] if mm and i + 2 < len(parts) and parts[i + 2].isdigit() and 1 <= int(parts[i + 2]) <= 31 else None
 
-            if not dd:
-                dd_ = rel_path.split(f"/{p}{mm}",1)[-1].split("-")[0] 
-                if dd_.isdigit() and len(dd_) == 2 and 1 <= int(dd_) <= 31:
-                    dd = dd_
+            if not dd and mm and i + 2 < len(parts):
+                # Raw archive folders are named YYYYMMDD-HHMM__sender__subject;
+                # the day is the 7th-8th digit of the leading date stamp.
+                day_m = re.match(r"^\d{4}\d{2}(\d{2})", parts[i + 2])
+                if day_m and 1 <= int(day_m.group(1)) <= 31:
+                    dd = day_m.group(1)
             if dd:
                 return [p, mm, dd]
             if mm:
@@ -64,4 +65,12 @@ def ingest_next(_session: Session, limit:int=1):
             last_d = d if d else last_d
             cnt += 1
             prev_res = ingest_session.get_tool("todo_append").delay(text=f'ingest: {item["file"]}', prev_res=prev_res)
-    return True, {"status": "success", "message": f"{cnt} todo items created"}
+    if cnt == 0:
+        return True, {"status": "success", "message": "no unlinked raw files found"}
+    # The todo calls above only fill the queue; the child needs a turn to act
+    # on it. The queue strategy parks this message until they have run.
+    ingest_session.add_user_message(
+        f"It is now {now}. Work through your todo list (todo_list) and ingest "
+        f"each listed raw file, one at a time."
+    )
+    return True, {"status": "success", "message": f"{cnt} todo items created, ingest session started"}

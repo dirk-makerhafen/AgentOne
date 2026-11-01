@@ -17,7 +17,11 @@ def _resolve_folder(folder: str | None, session: Any | None) -> str | None:
     if folder is not None:
         p = Path(folder)
         if not p.is_absolute() and session is not None:
-            folder = (Path(session.workspace.path) / p).resolve().as_posix()
+            ws = getattr(session, "workspace", None)
+            ws_path = getattr(ws, "path", None)
+            if not ws_path:
+                return None
+            folder = (Path(ws_path) / p).resolve().as_posix()
         return folder
 
     if session is None:
@@ -42,8 +46,20 @@ def _resolve_folder(folder: str | None, session: Any | None) -> str | None:
     return None
 
 
+def _is_hidden_rel(rel: str) -> bool:
+    """True when any path component starts with '.'.
+
+    Those are framework/tooling data (``.agentone/``, ``.git/``,
+    ``.exporting/``) — never vault content, so the checks must not scan them.
+    """
+    return any(part.startswith(".") for part in rel.split("/"))
+
+
 def _iter_md_files(root: Path) -> list[Path]:
-    return sorted(root.rglob("*.md"))
+    return sorted(
+        fp for fp in root.rglob("*.md")
+        if not _is_hidden_rel(fp.relative_to(root).as_posix())
+    )
 
 
 def _strip_code_fences(text: str) -> str:
@@ -933,7 +949,7 @@ def wiki_check(
         if _run_check("orphan_pages"):
             eligible = sorted(
                 k for k in inlinks
-                if k != "index.md" and not k.startswith("archive/")
+                if Path(k).name != "index.md" and not k.startswith("archive/")
             )
             orphans = sorted(k for k in eligible if not inlinks[k])
             capped = _cap(orphans, effective_limit)
@@ -1006,6 +1022,9 @@ def wiki_check(
                     text = fp.read_text(encoding="utf-8")
                 except Exception:
                     continue
+                # Generated working files carry no frontmatter by design.
+                if fp.name.endswith(".log.md") or ".merge-pending." in fp.name:
+                    continue
                 fm = _parse_frontmatter(text)
                 if text != text.lstrip() and text.lstrip().startswith("---"):
                     fm_issues.append({
@@ -1020,7 +1039,14 @@ def wiki_check(
                     })
                 else:
                     is_index = fp.name.lower() == "index.md"
-                    required = ("type", "updated") if is_index else REQUIRED_FM_FIELDS
+                    if is_index:
+                        required = ("type", "updated")
+                    elif fm.get("type") == "entity":
+                        # Entity pages keep provenance in the .log.md, so the
+                        # code-built frontmatter has no tags/sources by design.
+                        required = ("type", "date", "updated")
+                    else:
+                        required = REQUIRED_FM_FIELDS
                     if not is_index and "source" in fm and "sources" not in fm:
                         fm_issues.append({
                             "file": rel,
@@ -1290,7 +1316,7 @@ def wiki_check(
         if autofix_count > 0:
             message += f" {autofix_count} auto-fixed."
         if omitted_total > 0:
-            message += f" ({omitted_total} more omitted"
+            message += f" ({omitted_total} more omitted)"
         message += f" [{summary}]"
 
         return (True, {
@@ -1319,6 +1345,12 @@ def _extract_date_from_path(rel_path: str) -> str:
         if p.isdigit() and len(p) == 4 and 2000 <= int(p) <= 2030:
             mm = parts[i + 1] if i + 1 < len(parts) and parts[i + 1].isdigit() and 1 <= int(parts[i + 1]) <= 12 else None
             dd = parts[i + 2] if mm and i + 2 < len(parts) and parts[i + 2].isdigit() and 1 <= int(parts[i + 2]) <= 31 else None
+            if not dd and mm and i + 2 < len(parts):
+                # Raw archive folders are named YYYYMMDD-HHMM__sender__subject;
+                # the day is the 7th-8th digit of the leading date stamp.
+                day_m = re.match(r"^\d{4}\d{2}(\d{2})", parts[i + 2])
+                if day_m and 1 <= int(day_m.group(1)) <= 31:
+                    dd = day_m.group(1)
             if dd:
                 return f"{p}-{mm}-{dd}"
             if mm:
@@ -1379,7 +1411,10 @@ def wiki_find_unlinked_raw(_session: Any, folder: str | None = None, limit: int 
         if not root.is_dir():
             return (False, {"status": "error", "message": f"folder not found: {resolved}"})
 
-        all_md = sorted(root.rglob("*.md"))
+        all_md = sorted(
+            fp for fp in root.rglob("*.md")
+            if not _is_hidden_rel(fp.relative_to(root).as_posix())
+        )
         raw_files = [fp for fp in all_md if fp.relative_to(root).as_posix().startswith("raw/")]
         raw_paths = {fp.relative_to(root).as_posix() for fp in raw_files}
         md_files = [fp for fp in all_md if fp not in raw_files]
@@ -1464,16 +1499,9 @@ if __name__ == "__main__":
     parser.add_argument("--autofix", action="store_true", help="Auto-fix dead wikilinks, source→sources, timeline filenames, and UTF-8 encoding issues")
     args = parser.parse_args()
 
-    # Try current session; if none exists, pass None and skip resolve
+    # The CLI has no runtime session; the folder argument is mandatory.
     session = None
-    try:
-        from django.contrib.sessions.models import Session as DjangoSession
-        from runtime.session.session import Session
-        session = Session.objects.get_current_or_new()
-    except Exception:
-        pass
-
-    sess_kw = dict(_session=None) if session is None else dict(_session=session)
+    sess_kw = dict(_session=None)
 
     if args.tool == "find_unlinked_raw":
         success, result = wiki_find_unlinked_raw(**sess_kw, folder=args.folder, limit=args.limit)

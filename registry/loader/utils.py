@@ -128,6 +128,8 @@ def build_version_kwargs(
         "max_retries",
         "retry_delay",
         "retry_requires_approval",
+        "max_subtask_errors",
+        "max_subtask_error_rate",
         "priority",
         "thinking",
         "limit_per_instance_parallel_runs",

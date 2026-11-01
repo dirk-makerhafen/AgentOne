@@ -37,6 +37,7 @@ from update_ingress import (  # noqa: E402
     refresh_ingress,
 )
 from update_timeline_daily import (  # noqa: E402
+    _extract_result_text,
     _read_child_session_texts,
     _workspace_root,
 )
@@ -294,8 +295,8 @@ def dispatch_items(root: Path, ingress_rel: str, limit: int,
             continue
         spawned.append({"item": rel, "session_pk": session_pk})
     remaining = 0
-    for rel, done, _deleted, _meta, _raw in _read_queue_entries(ingress_file):
-        if not done:
+    for rel, done, _deleted, meta, _raw in _read_queue_entries(ingress_file):
+        if not done and meta.get("active") is None:
             remaining += 1
     return True, {"status": "success", "ingress": ingress_rel,
                   "spawned": spawned, "spawn_failed": spawn_failed,
@@ -314,7 +315,6 @@ def _spawn_wiki_item_session(_session, name: str, brief: str):
     is the add_user_message taskcall, resolvable by the scheduler exactly
     like an llm_query result ref.
     """
-    from server.models.enums.message_enums import MessageContentType, MessagePartType
     from server.models.enums.session_enums import SessionType
 
     child_session = _session.spawn_subagent(
@@ -360,8 +360,9 @@ def finalize_ingress_item(_session, ingress, item, session_pk=None, child_result
     rel = (ingress or "").strip().strip("/")
     if not (root / rel).is_file():
         return False, {"status": "error", "item": item, "message": f"ingress file not found: {ingress}"}
+    result_text = _extract_result_text(child_result)
     final_text, hist_text = _read_child_session_texts(session_pk)
-    outcome = finalize_item(root, rel, item, final_text or hist_text)
+    outcome = finalize_item(root, rel, item, result_text or final_text or hist_text)
     outcome["status"] = "success" if outcome["ok"] else "retry"
     return True, outcome
 

@@ -12,18 +12,24 @@ tools:
     file: update_timeline.py
     function: update_timeline
     bound: True
+    # Sweep tools are best-effort: a failed item must not fail the tool call
+    # (which would make the dispatcher retry and re-spawn the whole batch).
+    max_subtask_error_rate: 100
   - name: update_timeline_daily
     file: update_timeline_daily.py
     function: update_timeline_daily
     bound: True
+    max_subtask_error_rate: 100
   - name: update_timeline_monthly
     file: update_timeline_monthly.py
     function: update_timeline_monthly
     bound: True
+    max_subtask_error_rate: 100
   - name: update_entities
     file: update_entities.py
     function: update_entities
     bound: True
+    max_subtask_error_rate: 100
   - name: update_ingress
     file: update_ingress.py
     function: update_ingress
@@ -46,6 +52,9 @@ tasks:
     bound: True
     max_retries: 3
     retry_delay: 30
+    # Same TaskDefinition as the tool entry above; the later version wins, so
+    # the sweep tolerance must be repeated here or it is lost on reload.
+    max_subtask_error_rate: 100
   - name: update_timeline_item
     file: update_timeline.py
     function: update_timeline_item

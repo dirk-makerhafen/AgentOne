@@ -393,54 +393,59 @@ def load_providers_manifest(
             },
         )
         if not created:
-            url = provider_data.get("url")
-            if url is not None and provider.url != url:
-                provider.url = url
-                provider.save()
-                action = "updated"
-            elif provider.is_local != is_local:
-                provider.is_local = is_local
-                provider.save()
-                action = "updated"
+            # Preserve user-managed providers that carry API keys.
+            if provider.api_keys.exists():
+                action = "up to date (user-managed)"
+                # skip field overwrites below
             else:
-                action = "up to date"
-            litellm_prefix = provider_data.get("litellm_prefix", "")
-            if provider.litellm_prefix != litellm_prefix:
-                provider.litellm_prefix = litellm_prefix
-                provider.save(update_fields=["litellm_prefix"])
-                action = "updated"
+                url = provider_data.get("url")
+                if url is not None and provider.url != url:
+                    provider.url = url
+                    provider.save()
+                    action = "updated"
+                elif provider.is_local != is_local:
+                    provider.is_local = is_local
+                    provider.save()
+                    action = "updated"
+                else:
+                    action = "up to date"
+            if not provider.api_keys.exists():
+                litellm_prefix = provider_data.get("litellm_prefix", "")
+                if provider.litellm_prefix != litellm_prefix:
+                    provider.litellm_prefix = litellm_prefix
+                    provider.save(update_fields=["litellm_prefix"])
+                    action = "updated"
         else:
             action = "created"
 
-        # Store free-tier / setup info in raw_data
-        free_info = provider_data.get("free_info")
-        if free_info or provider_data.get("api_key_url") or provider_data.get("setup_instructions") or provider_data.get("description"):
-            info = dict(free_info) if isinstance(free_info, dict) else {}
-            if provider_data.get("api_key_url"):
-                info["api_key_url"] = provider_data["api_key_url"]
-            if provider_data.get("setup_instructions"):
-                info["setup_instructions"] = provider_data["setup_instructions"]
-            if provider_data.get("description"):
-                info["description"] = provider_data["description"]
-            provider.data = info
-            provider.save(update_fields=["raw_data"])
+        # Store free-tier / setup info in raw_data (skip for user-managed).
+        if not (not created and provider.api_keys.exists()):
+            free_info = provider_data.get("free_info")
+            if free_info or provider_data.get("api_key_url") or provider_data.get("setup_instructions") or provider_data.get("description"):
+                info = dict(free_info) if isinstance(free_info, dict) else {}
+                if provider_data.get("api_key_url"):
+                    info["api_key_url"] = provider_data["api_key_url"]
+                if provider_data.get("setup_instructions"):
+                    info["setup_instructions"] = provider_data["setup_instructions"]
+                if provider_data.get("description"):
+                    info["description"] = provider_data["description"]
+                provider.data = info
+                provider.save(update_fields=["raw_data"])
 
-        # Persist free-tier rate limits onto the provider itself.  These are
-        # provider-wide caps (e.g. "Nvidia NIM 40 RPM"), not per-model caps, so
-        # they belong on ``ApiProvider`` only and are NOT inherited into models.
-        # A model gets a limit only through an explicit per-model key below.
-        rate_limits = _rate_limit_defaults(free_info or {})
-        provider_limit_changed = False
-        for field in LIMIT_FIELDS:
-            value = rate_limits.get(field)
-            if value is None:
-                continue
-            if getattr(provider, field) == value:
-                continue
-            setattr(provider, field, value)
-            provider_limit_changed = True
-        if provider_limit_changed:
-            provider.save(update_fields=list(rate_limits.keys()))
+        # Persist free-tier rate limits (skip for user-managed).
+        if created or not provider.api_keys.exists():
+            rate_limits = _rate_limit_defaults(free_info or {})
+            provider_limit_changed = False
+            for field in LIMIT_FIELDS:
+                value = rate_limits.get(field)
+                if value is None:
+                    continue
+                if getattr(provider, field) == value:
+                    continue
+                setattr(provider, field, value)
+                provider_limit_changed = True
+            if provider_limit_changed:
+                provider.save(update_fields=list(rate_limits.keys()))
 
         details.append({
             "type": "provider",
@@ -556,6 +561,19 @@ def _upsert_provider_from_frontmatter(
         details.append({"type": "provider", "name": name, "action": "skipped (no api_base)"})
         return None
     is_local = bool(meta.get("is_local", False)) or _is_loopback_url(str(api_base))
+
+    # Preserve user-managed providers: if a provider with this slug already
+    # exists and carries user-added API keys, do NOT overwrite its fields
+    # or metadata from the manifest — the user owns that row.  This prevents
+    # reloads from clobbering provider identity/URLs or hiding the keys.
+    existing = ApiProvider.objects.filter(slug=slug).first()
+    if existing is not None and existing.api_keys.exists():
+        details.append({
+            "type": "provider",
+            "name": existing.name,
+            "action": "up to date (user-managed)",
+        })
+        return existing
 
     # Build the defaults dict used by update_or_create so we can compare
     # against the existing row afterwards (update_or_create always fires an
@@ -805,7 +823,12 @@ def load_providers_dir(
                     seen_models.add(seen_key)
 
     if disable_missing:
-        stale_providers = ApiProvider.objects.exclude(slug__in=list(by_slug)).filter(enabled=True, is_local=False)
+        # Never auto-disable providers that carry user-added API keys, even
+        # when their manifest file is gone — disabling would hide the keys
+        # from the settings UI (which filters on enabled=True).
+        stale_providers = ApiProvider.objects.exclude(slug__in=list(by_slug)).filter(
+            enabled=True, is_local=False, api_keys__isnull=True,
+        )
         for provider in stale_providers:
             provider.enabled = False
             provider.save(update_fields=["enabled"])

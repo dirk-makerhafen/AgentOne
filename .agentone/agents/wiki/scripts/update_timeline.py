@@ -8,7 +8,6 @@ from pathlib import Path
 
 from runtime.session.session import Session
 from server.models.settings import ReasoningEffort
-from pathlib import Path
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.enums.session_enums import SessionType
 
@@ -273,6 +272,13 @@ def _extract_summary_text(summary_result) -> str | None:
     while seen < 5:
         seen += 1
         if current is None:
+            return None
+        if isinstance(current, dict) and current.get("_type") == "Message":
+            from update_timeline_daily import _resolve_message_ref
+            resolved = _resolve_message_ref(current)
+            if isinstance(resolved, str) and resolved.strip():
+                current = remove_fence(resolved)
+                return current if current.strip() else None
             return None
         if isinstance(current, str):
             current = remove_fence(current)
@@ -868,9 +874,9 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
     ``raw_path``, ``summary_path`` and ``lint_results`` so a reviewer
     session can fix the file in place when a hint is valid.
 
-    Returns (False, {status, raw_path, lint_results, message}) when the
-    file could not be written; (True, {status, raw_path, summary_path,
-    lint_results, message}) after the file is written.
+    Returns {status, raw_path, lint_results, message} when the file could
+    not be written, and {status, raw_path, summary_path, lint_results,
+    message} after the file is written.
     """
     summary_text = _extract_summary_text(summary_result)
     if summary_text is None:
@@ -1000,12 +1006,10 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
     narrowing session settings (disallowed lists, call allowlist) are reset
     so the child gets the full baseagent envelope.
 
-    Returns (True, {status, session_pk, summary_path, message}) once the
-    reviewer session is started. The reviewer works asynchronously; the
+    Returns {status, session_pk, summary_path, message} once the reviewer
+    session is started. The reviewer works asynchronously; the
     file fix itself is the delivery, no result is waited for here.
     """
-    from time import time
-
     lint_results = list(lint_results or [])
 
     raw_text, _ = _read_raw_text(_session, raw_path)

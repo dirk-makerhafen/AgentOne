@@ -289,11 +289,10 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                             cleaned_values_list.append(clean_trace)
                             
                         elif target_key_lower in ["to", "cc", "bcc"]:
-                            # Split comma-separated multiple recipients
-                            recipients = re.split(r',\s*', unfolded_value)
-                            for r in recipients:
-                                if r.strip():
-                                    name, email_str = parseaddr(r)
+                            # Use the stdlib parser so display names containing
+                            # commas ("Doe, John" <...>) survive intact.
+                            for name, email_str in email.utils.getaddresses([unfolded_value]):
+                                if email_str:
                                     cleaned_values_list.append(f"{name} ({email_str})" if name else email_str)
                                     
                         elif target_key_lower == "references":
@@ -320,10 +319,9 @@ def sync(account: str, target_folder, git_autocommit=True) -> list[str]|str:
                     list_fields = ["received", "x-received", "to", "cc", "bcc", "references"]
                     
                     if target_key_lower in list_fields:
-                        if len(cleaned_values_list) == 1:
-                            metadata[target_key_lower] = cleaned_values_list[0]
-                        else:
-                            metadata[target_key_lower] = " ; ".join(cleaned_values_list)
+                        # List fields stay lists in YAML (the docstring contract);
+                        # a single value is still a one-element list.
+                        metadata[target_key_lower] = list(cleaned_values_list)
                     else:
                         # For single-value headers, just take the first/most recent one
                         metadata[target_key_lower] = cleaned_values_list[0]

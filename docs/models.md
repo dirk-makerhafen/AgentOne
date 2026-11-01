@@ -204,7 +204,7 @@ File: `server/models/tasks/task_definition_version.py`
 | `commit` | `CharField(1024)` | Git commit hash |
 | `child_tasks` | `SortedManyToMany(self)` | Sub-tasks for CHAIN/GROUP |
 
-Plus execution constraints: `time_limit`, `max_subtask_errors`, `max_retries`, `retry_delay`, `priority`, etc.
+Plus execution constraints: `time_limit`, `max_subtask_errors` (absolute count of tolerated failed sub-tasks), `max_subtask_error_rate` (percentage 0-100 of tolerated failed sub-tasks; either threshold grants tolerance, both `0` = legacy fail-on-any-error), `max_retries`, `retry_delay`, `priority`, etc.
 
 **Immutable** — `save()` raises `ValidationError` if `pk` is set.
 

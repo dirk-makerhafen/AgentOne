@@ -311,6 +311,8 @@ commands:
 | `requires_approval` | no | bool | Whether human approval is required |
 | `max_retries` | no | int | Max retry attempts |
 | `retry_delay` | no | int | Delay between retries (seconds) |
+| `max_subtask_errors` | no | int | Absolute number of failed sub-task result references the run tolerates before failing (default `0` = any failure fails) |
+| `max_subtask_error_rate` | no | int | Percentage (0-100) of failed sub-task result references the run tolerates (default `0` = disabled). Either this or `max_subtask_errors` grants tolerance; the more permissive wins |
 | `priority` | no | int | Execution priority (0 = highest) |
 | `limit_per_instance_parallel_runs` | no | int | Max concurrent runs of this task per TaskInstance (default `1`; `0` = unlimited) |
 | `limit_subtask_parallel_runs` | no | int | Max concurrent child calls per run (default `0` = unlimited) |
