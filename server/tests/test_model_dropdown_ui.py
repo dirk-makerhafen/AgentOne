@@ -106,9 +106,9 @@ class ModelDropdownTest(TestCase):
         # The pinned provider row is flagged active.
         active = [r["name"] for r in option.provider_rows if r["active"]]
         self.assertEqual(active, [option.parent.parent.subject.aimodel.api_provider.name])
-        # …and the keyless provider is surfaced as a "needs key" note instead.
+        # …and the keyless provider is surfaced as an "unavailable" note instead.
         self.assertEqual(option.missing_count, 1)
-        self.assertIn("add an API key", option.missing_note)
+        self.assertIn("add a key or check health", option.missing_note)
 
     def test_option_toggle_providers_flips_state(self):
         dropdown = ModelDropdown(subject=Session(session_model=self.session), parent=MockFooter())

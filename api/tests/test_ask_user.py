@@ -83,6 +83,7 @@ def _make_setup(*, questions=None):
     session.save()
 
     td, tdv = _make_tool("ask_user")
+    av.task_versions.add(tdv)
     ti = TaskInstance.objects.create(
         task_definition_version=tdv, session=session, session_version=sv,
         requires_approval=False, priority=0, max_retries=0, retry_delay=0,

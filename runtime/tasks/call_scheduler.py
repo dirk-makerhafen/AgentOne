@@ -1061,6 +1061,7 @@ class CallScheduler:
             return 0
         from server.models.enums.task_enums import TaskCallStatusDetail
         from server.models.tasks.agent_task_call import AgentTaskCall
+        from runtime.llm_errors import ModelUnavailableError
         from runtime.power import battery_gate_blocked
         from runtime.rate_limiter import RateLimitChecker, RateLimitError
         from runtime.session.session import Session
@@ -1088,6 +1089,11 @@ class CallScheduler:
                     break
                 try:
                     RateLimitChecker.check(aimodel, session=session)
+                except ModelUnavailableError:
+                    # The model is known-bad (404/revoked key).  Releasing lets
+                    # the run fail with the recorded reason instead of staying
+                    # parked forever.
+                    pass
                 except RateLimitError:
                     break
                 if repoint and latest is not None and call.session_version_id != latest.pk:

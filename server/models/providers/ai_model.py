@@ -8,10 +8,16 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from server.models.base_model import BaseModel, Observables
+from server.models.providers.health import HealthTrackedModel
 
 
-class AiModel(BaseModel):
-    """Represents an AI model offered by a provider, with usage tracking and limits."""
+class AiModel(HealthTrackedModel, BaseModel):
+    """Represents an AI model offered by a provider, with usage tracking and limits.
+
+    ``enabled`` is the admin/manifest intent; the inherited ``status*`` fields
+    record observed health (a provider that dropped the model, repeated 5xx,
+    ...).  Selection prefers healthy rows and skips sticky failures.
+    """
 
     class AiModelObservables(Observables):
         """Explicit observable keys for an AiModel (IDE autocomplete)."""

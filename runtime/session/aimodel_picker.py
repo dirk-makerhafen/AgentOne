@@ -63,16 +63,27 @@ def available_aimodels() -> List[AiModel]:
     return result
 
 
+def selectable_aimodels() -> List[AiModel]:
+    """Return usable rows that are not currently health-blocked.
+
+    ``available_aimodels`` answers "is this row configured?"; this adds the
+    observed-health filter used by the picker and fallback path.  Sticky
+    failures (``UNAVAILABLE`` / ``AUTH_ERROR``) stay out until a probe or a
+    successful call clears them; ``DEGRADED`` rows return after their backoff.
+    """
+    return [model for model in available_aimodels() if not model.health_blocks_calls()]
+
+
 def model_groups() -> ModelGroupList:
     """Return model groups ordered by name.
 
     A group carries every ENABLED provider row serving the canonical name —
-    including providers without an API key yet (the dropdown renders those
-    dimmed with an "add an API key" note).  Only names with at least one
-    usable member are offered, so clicking a group always resolves to a
+    including providers without an API key yet or with an observed health
+    problem (the dropdown renders those dimmed).  Only names with at least one
+    selectable member are offered, so clicking a group always resolves to a
     concrete row.
     """
-    usable_names = {m.name for m in available_aimodels()}
+    usable_names = {m.name for m in selectable_aimodels()}
     by_name: Dict[str, List[AiModel]] = {}
     for model in AiModel.objects.filter(enabled=True):
         members = by_name.setdefault(model.name, [])
@@ -94,23 +105,24 @@ def sibling_aimodels(model: AiModel, *, exclude: List[int] | None = None) -> Lis
     """
     exclude_pks = {int(pk) for pk in (exclude or ())}
     exclude_pks.add(model.pk)
-    members = [m for m in available_aimodels() if m.name == model.name and m.pk not in exclude_pks]
+    members = [m for m in selectable_aimodels() if m.name == model.name and m.pk not in exclude_pks]
     return sorted(members, key=_member_load)
 
 
 def pick_aimodel(name: str) -> AiModel | None:
     """Return a concrete :class:`AiModel` for the canonical model *name*.
 
-    1. Gather usable rows for the name.
+    1. Gather usable rows for the name that are not health-blocked.
     2. Exclude members whose provider is currently at/over its live free-tier
        rate caps (provider fields only — models themselves stay unlimited by
        default).
     3. Weighted-random selection toward the least-loaded remaining member, so
        the choice is not fully deterministic.
-    4. If every member is throttled, fall back to any member (the rate limiter
-       will park the call rather than hard-fail).
+    4. If every member is throttled, fall back to any healthy member (the rate
+       limiter will park the call rather than hard-fail).  Rows blocked by an
+       observed failure are never returned.
     """
-    members = [m for m in available_aimodels() if m.name == name]
+    members = [m for m in selectable_aimodels() if m.name == name]
     if not members:
         return None
     unthrottled = [m for m in members if not _provider_is_throttled(m)]

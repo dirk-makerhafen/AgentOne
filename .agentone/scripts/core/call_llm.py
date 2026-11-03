@@ -18,12 +18,18 @@ from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
 import litellm
 from runtime.rate_limiter import RateLimitChecker, RateLimitError
+from runtime.llm_errors import (
+    ModelUnavailableError,
+    classify_llm_error,
+    extract_retry_after_seconds,
+)
 from runtime.power import battery_gate_blocked
 import re
 import logging
 # Drop unsupported params (e.g. reasoning_effort on models without thinking)
 # instead of erroring, so the same request works across providers.
 litellm.drop_params = True
+logger = logging.getLogger(__name__)
 litellm_logger = logging.getLogger("LiteLLM")
 litellm_logger.setLevel(logging.ERROR)
 litellm_logger.propagate = False  # Ve
@@ -34,116 +40,20 @@ litellm.suppress_debug_info = True
 def _is_provider_rate_limit(exc) -> bool:
     """True when *exc* is a provider-side rate limit or transient unavailability.
 
-    Matches:
-    * HTTP 429 (rate limit / quota) and HTTP 503 (service temporarily
-      unavailable — e.g. Google's "model is currently experiencing high
-      demand... try again later").
-    * litellm's ``RateLimitError`` and ``ServiceUnavailableError``
-      (``MidStreamFallbackError`` subclasses it), plus any error whose
-      ``original_exception``/``root_exception`` chain carries one of them.
-    * Vertex AI wraps 429 quota errors as ``BadRequestError`` with the real
-      status embedded in the JSON body (``"code": 429``,
-      ``"RESOURCE_EXHAUSTED"``).  We match on the string representation.
-    * ``litellm.Timeout`` — the stream timed out waiting for the next chunk
-      (e.g. a model accepted the request but never streamed back).  Treated
-      as transient so the caller can try the next sibling provider.
-
-    All are transient "retry later" signals: the caller records a key
-    cooldown and parks the call instead of hard-failing it.
+    Compatibility wrapper around :func:`runtime.llm_errors.classify_llm_error`.
+    See that module for the full taxonomy (429/503/timeout are transient;
+    404/401/403/400 are classified separately by the caller).
     """
-    status = getattr(exc, "status_code", None)
-    if status is not None:
-        try:
-            if int(status) in (429, 503):
-                return True
-        except (TypeError, ValueError):
-            pass
-    if isinstance(
-        exc,
-        (
-            litellm.exceptions.RateLimitError,
-            litellm.exceptions.ServiceUnavailableError,
-            litellm.Timeout,
-        ),
-    ):
-        return True
-    for attr in ("original_exception", "root_exception"):
-        root = getattr(exc, attr, None)
-        if isinstance(
-            root,
-            (
-                litellm.exceptions.RateLimitError,
-                litellm.exceptions.ServiceUnavailableError,
-                litellm.Timeout,
-            ),
-        ):
-            return True
-    # Vertex AI wraps 429 as BadRequestError; detect via string patterns.
-    try:
-        msg = str(exc)
-        if re.search(r'"code"\s*:\s*429', msg) or "RESOURCE_EXHAUSTED" in msg:
-            return True
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
-    return False
+    return classify_llm_error(exc).kind == "rate_limit"
 
 
 def _extract_retry_after_seconds(exc) -> float | None:
     """Return the cooldown the provider asked for, in seconds.
 
-    Precedence:
-      1. litellm ``RateLimitError.response.headers[Retry-After]``.
-      2. ``Retry-After`` on the wrapped ``httpx.Response``.
-      3. Text embedded in the error message — Google reports
-         ``Please retry in 58.184175815s`` and ``"retryDelay": "58s"``.
-
-    Returns ``None`` when the 429 carries no explicit delay, so the caller
-    can fall back to a sane default (see ``ApiKey.record_provider_cooldown``).
+    Compatibility wrapper around
+    :func:`runtime.llm_errors.extract_retry_after_seconds`.
     """
-    try:
-        messages: list[str] = []
-        candidate = exc
-        seen: set[int] = set()
-        while candidate is not None and id(candidate) not in seen:
-            seen.add(id(candidate))
-            messages.append(str(getattr(candidate, "message", "") or candidate))
-            response = getattr(candidate, "response", None)
-            if response is not None:
-                for source in (getattr(response, "headers", None), getattr(candidate, "headers", None)):
-                    if source is None:
-                        continue
-                    retry_after = source.get("retry-after") or source.get("Retry-After")
-                    if retry_after:
-                        try:
-                            return max(1.0, float(retry_after))
-                        except (TypeError, ValueError):
-                            pass
-            root = getattr(candidate, "original_exception", None)
-            if root is not None:
-                candidate = root
-            else:
-                deepest = None
-                walk = candidate
-                while walk is not None and id(walk) not in seen:
-                    deepest = walk
-                    walk = getattr(walk, "__cause__", None)
-                candidate = None if deepest is candidate else deepest
-        message = " ".join(messages)
-        patterns = (
-            r"retry in ([\d.]+)s",
-            r'"retryDelay"\s*:\s*"?([\d.]+)s',
-            r"retry[\s_-]*after[\s:=(]*([\d.]+)",
-        )
-        for pattern in patterns:
-            match = re.search(pattern, message, re.IGNORECASE)
-            if match:
-                try:
-                    return max(1.0, float(match.group(1)))
-                except (TypeError, ValueError):
-                    continue
-    except Exception:
-        return None
-    return None
+    return extract_retry_after_seconds(exc)
 
 
 def _get_litellm_model_name(provider: Any, api_model_id: str) -> str:
@@ -224,6 +134,93 @@ def detect_repeat(content):
         if window and window.count(content[-blocksize:]) >= 3:
             return True
     return False
+
+def _backoff_seconds(failures: int) -> float:
+    """Escalating retry delay for transient model failures (1 min → 1 h)."""
+    return min(60.0 * (2 ** min(max(failures - 1, 0), 5)), 3600.0)
+
+
+def _error_detail(info, exc) -> dict:
+    """JSON-safe detail stored alongside the health status."""
+    return {
+        "error_type": info.kind,
+        "status_code": info.status_code,
+        "message": (info.message or "")[:2000],
+        "exception_class": type(exc).__name__,
+    }
+
+
+def _record_health_failure(aimodel: Any, apikey: Any, info, exc) -> None:
+    """Apply a classified provider failure to the affected row(s).
+
+    ``rate_limit`` is handled by ``ApiKey.record_provider_cooldown`` (called
+    by the caller); everything else lands here.  Request-scoped errors (a
+    context-length 400) intentionally do **not** change model health.
+    """
+    if aimodel is None or not info.health_status:
+        return
+    if info.kind == "rate_limit":
+        # The key cooldown (and its status) is recorded by the caller.
+        return
+    detail = _error_detail(info, exc)
+
+    if info.kind == "auth":
+        if apikey is not None:
+            apikey.record_health_error(
+                info.health_status,
+                info.message,
+                detail=detail,
+                sticky=True,
+            )
+        provider = aimodel.api_provider
+        if provider is not None and provider.all_enabled_keys_auth_failed():
+            provider.record_health_error(
+                info.health_status,
+                info.message,
+                detail=detail,
+                sticky=True,
+            )
+        return
+
+    if info.kind in ("timeout", "server", "connection"):
+        failures = (aimodel.consecutive_failures or 0) + 1
+        retry_after = _backoff_seconds(failures)
+        aimodel.record_health_error(
+            info.health_status,
+            info.message,
+            detail=detail,
+            retry_after_seconds=retry_after,
+        )
+        provider = aimodel.api_provider
+        if provider is not None:
+            provider.record_health_error(
+                info.health_status,
+                info.message,
+                detail=detail,
+                retry_after_seconds=retry_after,
+            )
+        return
+
+    # model_not_found / config_like bad_request — sticky or long-retry.
+    aimodel.record_health_error(
+        info.health_status,
+        info.message,
+        detail=detail,
+        retry_after_seconds=None if info.sticky else 3600.0,
+        sticky=info.sticky,
+    )
+
+
+def _record_health_success(aimodel: Any, apikey: Any) -> None:
+    """Clear observed failures after a successful provider call."""
+    if apikey is not None:
+        apikey.record_health_success()
+    if aimodel is not None:
+        aimodel.record_health_success()
+        provider = aimodel.api_provider
+        if provider is not None:
+            provider.record_health_success()
+
 
 def run_streaming_query(
     session: Session,
@@ -363,19 +360,25 @@ def run_streaming_query(
                 response.save()
                 last_save_time = time.time()
     except Exception as exc:
-        # Provider hard-failure (connection, 5xx, auth, etc.).  Record how far
-        # the response got so the caller can avoid duplicating a partial stream,
-        # then mark the orphaned response FAILURE instead of leaving it ACTIVE.
-        if _is_provider_rate_limit(exc):
-            # 429 with a retry delay — park the key the provider throttled so
-            # the rate limiter skips it until the cooldown passes.
+        # Provider hard-failure (connection, 5xx, auth, 404, ...).  Classify
+        # once, record the audit trail on the Response, then apply the failure
+        # to the affected model/key/provider row(s).  Record how far the
+        # stream got first so the caller can avoid duplicating partial output.
+        retry_after = _extract_retry_after_seconds(exc)
+        info = classify_llm_error(exc, retry_after)
+        if info.kind == "rate_limit":
             apikey = query.apikey
             if apikey is not None:
-                apikey.record_provider_cooldown(
-                    _extract_retry_after_seconds(exc),
-                    reason=str(getattr(exc, "message", "") or exc)[:500],
-                )
-        #exc.streamed_content = response.content or response.reasoning
+                # 429/503 with a retry delay — park the key the provider
+                # throttled so the rate limiter skips it until the cooldown.
+                apikey.record_provider_cooldown(retry_after, reason=info.message)
+        try:
+            _record_health_failure(aimodel, query.apikey, info, exc)
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Health bookkeeping must never mask the provider error itself.
+            logger.exception("failed to record model health failure")
+        response.error_type = info.kind
+        response.error_message = (info.message or str(exc))[:50000]
         response.status = ResponseStatus.FAILURE
         response.save()
         raise
@@ -416,6 +419,8 @@ def run_streaming_query(
 
     if first_token_timestamp and response.finish_reason:
         response.status = ResponseStatus.SUCCESS
+        response.error_type = ""
+        response.error_message = ""
         # Update last_usage on provider and model
         if aimodel and aimodel.api_provider:
             aimodel.api_provider.last_usage = timezone.now()
@@ -423,8 +428,15 @@ def run_streaming_query(
         if aimodel:
             aimodel.last_usage = timezone.now()
             aimodel.save(update_fields=["last_usage"])
+        try:
+            _record_health_success(aimodel, query.apikey)
+        except Exception:  # pylint: disable=broad-exception-caught
+            # A bookkeeping failure must not discard a successful response.
+            logger.exception("failed to record model health success")
     else:
         response.status = ResponseStatus.FAILURE
+        response.error_type = response.error_type or "empty_response"
+        response.error_message = response.error_message or "Provider returned no content."
     response.save()
     return response
 
@@ -450,9 +462,17 @@ def _call_with_fallback(
     from runtime.session.aimodel_picker import sibling_aimodels
 
     pinned = session.aimodel
-    candidates = [pinned] + sibling_aimodels(pinned)
+    if pinned is None:
+        candidates = []
+    elif pinned.health_blocks_calls():
+        # The session is pinned to a row that is known-bad (404, revoked key,
+        # ...).  Prefer a healthy sibling; only fall back to the pinned row
+        # when nothing else serves the name, so the failure is still visible.
+        alternatives = sibling_aimodels(pinned)
+        candidates = alternatives or [pinned]
+    else:
+        candidates = [pinned] + sibling_aimodels(pinned)
     last_error: Exception | None = None
-    first = True
     claimed = False
     for aimodel in candidates:
         try:
@@ -499,7 +519,7 @@ def _call_with_fallback(
             )
             if query.apikey is not None:
                 query.apikey.clear_provider_cooldown()
-            if not first:
+            if pinned is None or aimodel.pk != pinned.pk:
                 session.set_aimodel(aimodel)
             Query.objects.filter(pk=query.pk).update(
                 status=QueryStatus.SUCCESS if response.status == ResponseStatus.SUCCESS else QueryStatus.FAILURE
@@ -507,7 +527,15 @@ def _call_with_fallback(
             query.refresh_from_db()
             return response
         except RateLimitError as exc:
+            if "auth_error" in (exc.reason or ""):
+                # A revoked/forbidden key will not recover by waiting.
+                last_error = ModelUnavailableError(str(exc))
+            else:
+                last_error = exc
+        except ModelUnavailableError as exc:
+            # Known-bad model/provider row — try the next candidate.
             last_error = exc
+            continue
         except Exception as exc:
             if _is_provider_rate_limit(exc):
                 # Provider 429 — the candidate's key is now on cooldown (set
@@ -520,8 +548,6 @@ def _call_with_fallback(
             last_error = exc
             if getattr(exc, "streamed_content", ""):
                 raise
-        finally:
-            first = False
     if last_error is not None:
         raise last_error
     raise Exception("No provider could handle the request")

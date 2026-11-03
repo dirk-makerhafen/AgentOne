@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 from django.utils import timezone
 
+from runtime.llm_errors import ModelUnavailableError
+
 if TYPE_CHECKING:
     from server.models.providers.api_key import ApiKey
     from server.models.providers.ai_model import AiModel
@@ -85,11 +87,25 @@ class RateLimitChecker:
         """
         exclude = RateLimitChecker._current_taskrun_id(session)
 
+        # 0. Observed-health gate — a 404 model id or revoked key will not
+        #    recover by waiting, so skip the row instead of parking the call.
+        if not aimodel.enabled:
+            raise ModelUnavailableError("model:disabled")
+        provider = aimodel.api_provider
+        if provider is not None and not provider.enabled:
+            raise ModelUnavailableError("provider:disabled")
+        if aimodel.health_blocks_calls():
+            raise ModelUnavailableError(
+                f"model:{aimodel.status}:{aimodel.status_reason}"
+            )
+
         # 1. Provider limits — per-API-key for keyed providers.  The aggregate
         #    gate trips only when EVERY enabled key is at its own cap, so a
         #    busy key never blocks a free sibling.
         limited, reason = aimodel.api_provider.is_rate_limited(exclude_taskrun_id=exclude)
         if limited:
+            if "auth_error" in reason:
+                raise ModelUnavailableError(f"provider:{reason}")
             raise RateLimitError(f"provider:{reason}")
 
         # 2. Model-level limits
@@ -106,6 +122,8 @@ class RateLimitChecker:
 
         key = RateLimitChecker._select_key(aimodel)
         if key is None:
+            if aimodel.api_provider.all_enabled_keys_auth_failed():
+                raise ModelUnavailableError("provider:auth_error")
             raise RateLimitError("no_key_available: all keys are rate-limited or disabled")
         return RateLimitResult(selected_key=key)
 
@@ -146,11 +164,17 @@ class RateLimitChecker:
                     session.set_preferred_api_key(key)
                     return RateLimitResult(selected_key=key)
                 # Every other key is busy too — park until one recovers.
+                if reason.startswith("auth"):
+                    raise ModelUnavailableError(f"provider_keys:{reason}")
                 raise RateLimitError(f"provider_keys:{reason}")
+            if reason.startswith("auth"):
+                raise ModelUnavailableError(f"key:{reason}")
             raise RateLimitError(f"key:{reason}")
 
         key = RateLimitChecker._select_key(aimodel)
         if key is None:
+            if aimodel.api_provider.all_enabled_keys_auth_failed():
+                raise ModelUnavailableError("provider:auth_error")
             raise RateLimitError("no_key_available: all keys are rate-limited or disabled")
         # No stickiness mandate for a fresh provider — adopt the best key.
         session.set_preferred_api_key(key)

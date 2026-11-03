@@ -327,6 +327,8 @@ class Session:
             return None
         usable = []
         for row in rows:
+            if row.health_blocks_calls():
+                continue
             if row.api_provider.api_keys.filter(enabled=True).exists() or '"default_api_key"' in (row.api_provider.data or {}):
                 usable.append(row)
         model = (usable or rows)[0]

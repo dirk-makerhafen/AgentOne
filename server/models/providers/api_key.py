@@ -8,6 +8,8 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from server.models.base_model import BaseModel, Observables
+from server.models.enums.provider_enums import HealthStatus
+from server.models.providers.health import HealthTrackedModel
 from server.models.queries.response import Response
 
 
@@ -20,14 +22,14 @@ QUOTA_EXHAUSTED_COOLDOWN_SECONDS = 3600
 """Long default when the limit reads like quota exhaustion (no retry will help
 until the window resets — e.g. OpenCode Zen's daily quota)."""
 
-MAX_COOLDOWN_SECONDS = 3600  
+MAX_COOLDOWN_SECONDS = 3600
 """Ceiling for the escalating backoff (1 hour)."""
 
 QUOTA_REASON_PATTERNS = ("quota", "insufficient", "resource exhausted", "daily limit", "exceeded your daily")
 
 
 
-class ApiKey(BaseModel):
+class ApiKey(HealthTrackedModel, BaseModel):  # pylint: disable=too-many-instance-attributes
     """An API key for a provider, with independent rate-limit tracking."""
 
     class ApiKeyObservables(Observables):
@@ -84,6 +86,29 @@ class ApiKey(BaseModel):
         """Return the related Query queryset for this API key."""
         return self.related_queries  # pyright: ignore[reportAttributeAccessIssue]
 
+    def save(self, *args, **kwargs) -> None:
+        """Persist the key and clear a stale provider-wide auth verdict.
+
+        A provider is marked ``AUTH_ERROR`` only when every key failed auth.
+        Adding/re-enabling a key invalidates that verdict immediately, so the
+        provider does not keep showing (and blocking) an obsolete auth error
+        until the next successful call.  Health-only saves are skipped to avoid
+        redundant writes while recording a failure.
+        """
+        super().save(*args, **kwargs)
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and "enabled" not in update_fields:
+            return
+        if not self.enabled:
+            return
+        provider = self.api_provider
+        if (
+            provider is not None
+            and provider.status == HealthStatus.AUTH_ERROR
+            and not provider.all_enabled_keys_auth_failed()
+        ):
+            provider.clear_health()
+
     def record_provider_cooldown(self, retry_after_seconds: float | None, *, reason: str = "") -> float:
         """Park this key until the provider's requested cooldown passes.
 
@@ -103,8 +128,6 @@ class ApiKey(BaseModel):
 
         Returns the cooldown, in seconds.
         """
-        from datetime import timedelta
-
         hits = (self.rate_limit_hits or 0) + 1
         base = retry_after_seconds
         if not base or base <= 0:
@@ -116,26 +139,51 @@ class ApiKey(BaseModel):
         # level is 0-based; 4+ consecutive hits stop growing (8x ceiling).
         level = min(hits - 1, 3)
         cooldown = min(base * (2 ** level), MAX_COOLDOWN_SECONDS)
+        now = timezone.now()
+        until = now + timedelta(seconds=cooldown)
         ApiKey.objects.filter(pk=self.pk).update(
-            rate_limit_until=timezone.now() + timedelta(seconds=cooldown),
+            rate_limit_until=until,
             rate_limit_hits=hits,
+            status=HealthStatus.RATE_LIMITED,
+            status_reason=(reason or "")[:512],
+            status_changed_at=now,
+            status_retry_at=until,
+            consecutive_failures=hits,
         )
-        self.rate_limit_until = timezone.now() + timedelta(seconds=cooldown)
+        self.rate_limit_until = until
         self.rate_limit_hits = hits
+        self.status = HealthStatus.RATE_LIMITED
+        self.status_reason = (reason or "")[:512]
+        self.status_changed_at = now
+        self.status_retry_at = until
+        self.consecutive_failures = hits
         return cooldown
 
     def clear_provider_cooldown(self) -> None:
         """Clear any active provider cooldown (e.g. after a successful call).
 
-        Also resets the consecutive-hit counter so the next 429 starts from
-        the base cooldown again.
+        Also resets the consecutive-hit counter and the observed health status
+        so the next 429 starts from the base cooldown again.
         """
-        if self.rate_limit_until or self.rate_limit_hits:
+        if self.rate_limit_until or self.rate_limit_hits or self.status != HealthStatus.HEALTHY:
             ApiKey.objects.filter(pk=self.pk).update(
-                rate_limit_until=None, rate_limit_hits=0
+                rate_limit_until=None,
+                rate_limit_hits=0,
+                status=HealthStatus.HEALTHY,
+                status_reason="",
+                status_detail={},
+                status_changed_at=timezone.now(),
+                status_retry_at=None,
+                consecutive_failures=0,
             )
             self.rate_limit_until = None
             self.rate_limit_hits = 0
+            self.status = HealthStatus.HEALTHY
+            self.status_reason = ""
+            self.status_detail = {}
+            self.status_changed_at = timezone.now()
+            self.status_retry_at = None
+            self.consecutive_failures = 0
 
     def requests_last_minute(self) -> int:
         """Number of successful responses in the last 60 seconds for this key."""
@@ -188,17 +236,33 @@ class ApiKey(BaseModel):
 
         return Query.objects.filter(apikey=self, status="ACTIVE").count()
 
+    def blocking_reason(self) -> str:
+        """Return why this key must not be used, or ``""`` when it is usable.
+
+        Covers the cheap, non-counting gates only (enabled switch, observed
+        health, active cooldown).  Callers that also need the usage windows
+        call :meth:`is_rate_limited` or the provider's per-key counters.
+        """
+        if not self.enabled:
+            return "disabled"
+        if self.status == HealthStatus.AUTH_ERROR and self.health_blocks_calls():
+            return "auth_error"
+        if self.status == HealthStatus.DEGRADED and self.health_blocks_calls():
+            retry_at = self.status_retry_at.isoformat() if self.status_retry_at else ""
+            return f"degraded_until:{retry_at}"
+        if self.rate_limit_until and timezone.now() < self.rate_limit_until:
+            return f"cooldown_until:{self.rate_limit_until.isoformat()}"
+        return ""
+
     def is_rate_limited(self) -> tuple[bool, str]:
         """Check all key-level limits.
 
         Returns:
             A tuple ``(is_limited, reason)`` where ``reason`` is empty when not limited.
         """
-        if not self.enabled:
-            return True, "disabled"
-
-        if self.rate_limit_until and timezone.now() < self.rate_limit_until:
-            return True, f"cooldown_until:{self.rate_limit_until.isoformat()}"
+        blocking = self.blocking_reason()
+        if blocking:
+            return True, blocking
 
         if self.limit_request_per_minute > 0:
             rpm = self.requests_last_minute()

@@ -27,6 +27,7 @@ class RightPanelProvider(ModelView):
                 {% if pyview.subject.is_local %}<span class="mode-badge">local</span>{% endif %}
                 {% if pyview.subject.data.get("default_api_key") %}<span class="key-badge key-builtin">built-in key</span>{% endif %}
                 {% if not pyview.subject.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
+                {% if pyview.subject.health_label %}<span class="key-badge key-missing" title="{{ pyview.subject.status_reason }}">{{ pyview.subject.health_label }}</span>{% endif %}
             </div>
 
             <div class="rp-section-title">About</div>
@@ -42,9 +43,15 @@ class RightPanelProvider(ModelView):
 
             <div class="rp-section-title">API keys ({{ pyview.key_rows|length }})</div>
             {% for key in pyview.key_rows %}
-            <div class="rp-kv"><span>{{ key.comment or "key" }}</span><span>{% if key.enabled %}✓{% else %}off{% endif %}{% if key.cooling %} · cooling down{% endif %}</span></div>
+            <div class="rp-kv"><span>{{ key.comment or "key" }}</span><span>{% if key.enabled %}✓{% else %}off{% endif %}{% if key.cooling %} · cooling down{% endif %}{% if key.health and key.status != "RATE_LIMITED" %} · {{ key.health }}{% endif %}</span></div>
             {% endfor %}
             {% if not pyview.key_rows %}<div class="muted">No keys configured.</div>{% endif %}
+
+            <div class="rp-section-title">Health</div>
+            <div class="rp-kv"><span>Status</span><span>{{ pyview.subject.health_label or pyview.subject.status|lower }}</span></div>
+            {% if pyview.subject.status_reason %}<div class="rp-kv"><span>Reason</span><span>{{ pyview.subject.status_reason }}</span></div>{% endif %}
+            {% if pyview.subject.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ pyview.subject.status_retry_at }}</span></div>{% endif %}
+            {% if pyview.subject.consecutive_failures %}<div class="rp-kv"><span>Failures</span><span>{{ pyview.subject.consecutive_failures }}</span></div>{% endif %}
 
             <div class="rp-section-title">Limits</div>
             {% for label, value in pyview.limit_rows %}
@@ -108,6 +115,8 @@ class RightPanelProvider(ModelView):
                 "comment": key.comment,
                 "enabled": key.enabled,
                 "cooling": bool(key.rate_limit_until and key.rate_limit_until > now),
+                "status": key.status,
+                "health": key.health_label,
             }
             for key in self.subject.api_keys.all().order_by("-enabled", "id")
         ]
@@ -149,6 +158,30 @@ class RightPanelProvider(ModelView):
             self.subject.aimodels.all().order_by("name").values("id", "name", "provider_model_id")
         )
 
+    def _resolve_session(self):
+        queue = [self]
+        seen = set()
+        while queue:
+            obj = queue.pop(0)
+            if obj is None or id(obj) in seen:
+                continue
+            seen.add(id(obj))
+            for attr in ("session", "current_session"):
+                try:
+                    val = getattr(obj, attr, None)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    val = None
+                if val is not None:
+                    return val
+            for child_attr in ("selected_tab_view", "main_panel", "rightpanel"):
+                child = getattr(obj, child_attr, None)
+                if child is not None and id(child) not in seen:
+                    queue.append(child)
+            parent = getattr(obj, "parent", None)
+            if parent is not None and id(parent) not in seen:
+                queue.append(parent)
+        return None
+
     def test_provider(self) -> None:
         """Test the provider with a simple call using its first available model."""
         from server.models.providers.ai_model import AiModel
@@ -169,7 +202,7 @@ class RightPanelProvider(ModelView):
     def _run_test(self, model) -> None:
         """Run a test call using call_llm_direct."""
         # Get the current session to dispatch from
-        session = getattr(self.parent.parent, "session", None)
+        session = self._resolve_session()
         if session is None:
             return
 
@@ -180,6 +213,7 @@ class RightPanelProvider(ModelView):
             task.delay(
                 messages=[{"role": "user", "content": "Hi, do you see this message?"}],
                 model_name=model.name,
+                model_id=model.pk,
             )
         except Exception:  # pylint: disable=broad-exception-caught
             pass

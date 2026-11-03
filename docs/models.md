@@ -461,6 +461,46 @@ File: `server/models/providers/api_key.py`
 
 Same rate-limiting methods as AiModel.
 
+### Observed health (all three tiers)
+
+`server/models/providers/health.py` — abstract `HealthTrackedModel` mixin.
+
+`enabled` is the admin/manifest *intent*; the health fields record what actually
+happened on the wire.  They are separate so a manifest reload never overwrites
+an observed failure and a failure never silently hides a row from the admin.
+
+| Field | Type | Notes |
+|---|---|---|
+| `status` | `CharField(16, choices=HealthStatus, db_index)` | `UNKNOWN`, `HEALTHY`, `DEGRADED`, `RATE_LIMITED`, `UNAVAILABLE`, `AUTH_ERROR`, `CONFIG_ERROR` |
+| `status_reason` | `CharField(512)` | Short provider message |
+| `status_detail` | `JSONField` | Error type, HTTP status, exception class |
+| `status_changed_at` | `DateTimeField(null)` | |
+| `status_retry_at` | `DateTimeField(null)` | Earliest retry for `DEGRADED` / `CONFIG_ERROR` |
+| `consecutive_failures` | `IntegerField(default=0)` | Drives the backoff, reset on success |
+
+Methods: `health_blocks_calls()`, `health_label` (empty for unknown/healthy,
+and for `DEGRADED` / `CONFIG_ERROR` once their retry window has passed),
+`record_health_error()`, `record_health_success()`, `clear_health()`.
+
+`runtime/llm_errors.py` classifies provider exceptions:
+
+| Kind | Status | Scope | Behaviour |
+|---|---|---|---|
+| `rate_limit` (429/503/timeout) | key cooldown | key | Park the call; retry after the window |
+| `model_not_found` (404) | `UNAVAILABLE` | model | Sticky; skip until a manual probe clears it |
+| `auth` (401/403) | `AUTH_ERROR` | key (+ provider when all keys fail) | Sticky; needs a new key |
+| `bad_request` (400/422) | `CONFIG_ERROR` only when config-like | request/model | Context-length/request errors do **not** poison the model |
+| `server` / `connection` | `DEGRADED` | model (+ provider status) | Escalating 1 min → 1 h backoff |
+| `unknown` | — | request | Recorded on `Response` only |
+
+`Response.error_type` / `Response.error_message` keep the audit trail for every
+failed call.  The composer/model picker skips sticky-bad rows (`available_aimodels`
+→ `selectable_aimodels`), and the UI "Test" action probes one exact row
+(`call_llm_direct(model_id=...)`), clearing the model's, provider's and
+auth-blocked keys' status first.  Rate-limit cooldowns are kept, so a probe
+never bypasses an active 429 window.
+
+
 ---
 
 ## Skills

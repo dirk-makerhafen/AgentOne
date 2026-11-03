@@ -9,12 +9,12 @@ from django.test import TestCase
 
 
 def _load_module():
-    """Load the module from .agentone/scripts/core/call_llm_direct.py."""
+    """Load the module from .agentone/scripts/subagents/call_llm_direct.py."""
     # Drop the cached copy so each test gets a fresh exec of the file.
     sys.modules.pop("call_llm_direct", None)
     spec = importlib.util.spec_from_file_location(
         "call_llm_direct",
-        ".agentone/scripts/core/call_llm_direct.py",
+        ".agentone/scripts/subagents/call_llm_direct.py",
     )
     module = importlib.util.module_from_spec(spec)
     sys.modules["call_llm_direct"] = module

@@ -745,14 +745,27 @@ def _get_ai_model(model_name: Optional[str]) -> Optional[AiModel]:
     """
     if not model_name or model_name == "default":
         return None
-    try:
-        ai_model = AiModel.objects.get(name=model_name)
-        if not ai_model.enabled:
-            raise ValidationError(
-                f"AI Model '{model_name}' exists but is not enabled."
-            )
-        return ai_model
-    except AiModel.DoesNotExist as e:
+    # A canonical model name may be served by several providers (each a
+    # separate AiModel row). Pick a usable one instead of .get(), which
+    # raises MultipleObjectsReturned when more than one provider exists.
+    candidates = list(AiModel.objects.filter(name=model_name))
+    if not candidates:
         raise ValidationError(
             f"AI Model '{model_name}' does not exist in the database."
-        ) from e
+        )
+    # Prefer enabled rows; among those prefer ones with a usable key.
+    enabled = [m for m in candidates if m.enabled]
+    pool = enabled or candidates
+    keyed = [
+        m for m in pool
+        if m.api_provider.data.get("default_api_key")
+        or m.api_provider.api_keys.filter(enabled=True).exists()
+    ]
+    if keyed:
+        pool = keyed
+    ai_model = pool[0]
+    if not ai_model.enabled:
+        raise ValidationError(
+            f"AI Model '{model_name}' exists but is not enabled."
+        )
+    return ai_model

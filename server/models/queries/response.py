@@ -52,6 +52,12 @@ class Response(BaseModel):
 
     finish_reason = models.CharField( default="", null=True, blank=True, max_length=5000)
 
+    # Last observed provider error for this response (empty on success).  Kept
+    # separate from ``finish_reason`` so the audit trail is machine-readable
+    # and the model-health logic can classify failures without re-parsing logs.
+    error_type = models.CharField(max_length=64, default="", blank=True, db_index=True)
+    error_message = models.TextField(default="", blank=True, max_length=50000)
+
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Save the response and optionally recalibrate query token estimates.

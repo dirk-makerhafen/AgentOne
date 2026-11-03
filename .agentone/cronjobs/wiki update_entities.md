@@ -9,7 +9,7 @@ message: 'Run your update_entities tool with limit 10 once, commit results to gi
 
   '
 name: wiki update_entities
-schedule: '30 */6 * * * '
+schedule: '30 */12 * * * '
 session_mode: existing
 session_name: makerhafen:wiki:update_entities
 workspace: makerhafen:wiki

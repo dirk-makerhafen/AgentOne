@@ -332,6 +332,31 @@ class SettingPanelProviders(ModelView):
         ApiKey.objects.filter(pk=key_pk, api_provider=provider).delete()
         self.update()
 
+    def _resolve_session(self):
+        """Resolve the active chat session (if any) for dispatching a test call."""
+        queue = [self]
+        seen = set()
+        while queue:
+            obj = queue.pop(0)
+            if obj is None or id(obj) in seen:
+                continue
+            seen.add(id(obj))
+            for attr in ("session", "current_session"):
+                try:
+                    val = getattr(obj, attr, None)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    val = None
+                if val is not None:
+                    return val
+            for child_attr in ("selected_tab_view", "main_panel", "rightpanel"):
+                child = getattr(obj, child_attr, None)
+                if child is not None and id(child) not in seen:
+                    queue.append(child)
+            parent = getattr(obj, "parent", None)
+            if parent is not None and id(parent) not in seen:
+                queue.append(parent)
+        return None
+
     def test_provider(self, provider_id: int) -> None:
         """Test a provider with a simple call."""
         provider = ApiProvider.objects.filter(pk=int(provider_id)).first()
@@ -342,16 +367,7 @@ class SettingPanelProviders(ModelView):
         if model is None:
             return
 
-        session = getattr(self.parent, "session", None)
-        if session is None:
-            # Try to find session via parent chain
-            parent = self.parent
-            while parent is not None:
-                if hasattr(parent, "session"):
-                    session = parent.session
-                    break
-                parent = getattr(parent, "parent", None)
-
+        session = self._resolve_session()
         if session is None:
             return
 
@@ -362,6 +378,7 @@ class SettingPanelProviders(ModelView):
             task.delay(
                 messages=[{"role": "user", "content": "Hi, do you see this message?"}],
                 model_name=model.name,
+                model_id=model.pk,
             )
         except Exception:  # pylint: disable=broad-exception-caught
             pass

@@ -12,7 +12,7 @@ maxHistoryMessages: 999
 autoCompactMaxTokens: 120000
 autoCompactMinTokens: 30000
 autoCompactIdleSeconds: 300
-autoCompactKeepPercent: 5
+autoCompactKeepPercent: 0
 
 reasoningEffort: high
 schedulerStrategy: queue

@@ -70,6 +70,12 @@ class ResponseView(ModelView):
                             <div class="query-message-content">{{ pyview.subject.finish_reason }}</div>
                         </div>
                     {% endif %}
+                    {% if pyview.subject.error_type %}
+                        <div class="query-message query-message-system">
+                            <div class="query-message-role">Error · {{ pyview.subject.error_type }}</div>
+                            <div class="query-message-content">{{ pyview.subject.error_message }}</div>
+                        </div>
+                    {% endif %}
                     {% if pyview.is_open %}
                         {% if pyview.subject.reasoning %}
                             <div class="query-message query-message-assistant">

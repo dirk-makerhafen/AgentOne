@@ -128,7 +128,7 @@ def _decider_env(review_task_call_id: int) -> Session:
 
 
 def _verdict_module():
-    return _load_script(".agentone/agents/approval_decider/scripts/approval_verdict.py")
+    return _load_script(".agentone/agents/internal/approval_decider/scripts/approval_verdict.py")
 
 
 @pytest.mark.django_db
@@ -295,9 +295,7 @@ class TestAutoReviewApproval:
         assert child is not None
         extra = child.latest_session_version.session_settings.extra_settings
         assert extra["review_task_call_id"] == call.pk
-        combined = " ".join(
-            p["content"] for p in self.captured[0]["parts"]  # type: ignore[index]
-        )
+        combined = " ".join(self.captured[0]["parts"])  # type: ignore[index]
         assert "task_call_id" in combined and str(call.pk) in combined
         assert "Allowed tools" in combined
         assert "Filesystem permissions" in combined

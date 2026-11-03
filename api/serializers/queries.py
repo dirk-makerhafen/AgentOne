@@ -15,6 +15,7 @@ class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Response
         fields = ['id', 'status', 'content', 'reasoning', 'finish_reason',
+                  'error_type', 'error_message',
                   'prompt_tokens', 'completion_tokens', 'tool_calls',
                   'total_time', 'created_at']
 

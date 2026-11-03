@@ -19,6 +19,9 @@ class AiModelItemView(ModelView):
             {% if pyview.subject.is_rate_limited()[0] %}
                 <span class="badge badge--warning">rate limited</span>
             {% endif %}
+            {% if pyview.subject.health_label and pyview.subject.status != "RATE_LIMITED" %}
+                <span class="badge badge--warning" title="{{ pyview.subject.status_reason }}">{{ pyview.subject.health_label }}</span>
+            {% endif %}
         </span>
         <div class="item-stats">
             <span title="Queries">Q: {{ pyview.subject.total_llm_queries }}</span>
@@ -46,6 +49,9 @@ class ApiKeyItemView(ModelView):
             {% if pyview.subject.is_rate_limited()[0] %}
                 <span class="badge badge--warning">rate limited</span>
             {% endif %}
+            {% if pyview.subject.health_label and pyview.subject.status != "RATE_LIMITED" %}
+                <span class="badge badge--warning" title="{{ pyview.subject.status_reason }}">{{ pyview.subject.health_label }}</span>
+            {% endif %}
         </span>
         <div class="item-stats">
             <span title="Queries">Q: {{ pyview.subject.total_llm_queries }}</span>
@@ -70,6 +76,9 @@ class ProviderListItemView(ModelView):
         <div class="provider-card-header">
             <div class="provider-card-title">
                 <span class="provider-name">{{ pyview.subject.name }}</span>
+                {% if pyview.subject.health_label %}
+                    <span class="badge badge--warning" title="{{ pyview.subject.status_reason }}">{{ pyview.subject.health_label }}</span>
+                {% endif %}
                 {% if pyview.subject.url %}
                     <a href="{{ pyview.subject.url }}" target="_blank" class="provider-url">
                         {{ pyview.subject.url }}

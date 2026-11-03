@@ -21,9 +21,12 @@ Args (task):
          {"role": "user", "content": "Hello world"}]
         No system prompt is injected — the caller must include one if needed.
     model_name: Canonical model name (e.g. "gpt-4o").
-                None → caller's model → user's Default Model setting.
+        None → caller's model → user's Default Model setting.
     reasoning_effort: One of none/minimal/low/medium/high/xhigh.
-                None → caller session's setting → MINIMAL fallback.
+        None → caller session's setting → MINIMAL fallback.
+    model_id: Exact ``AiModel`` pk.  Used by the UI's "Test" action to probe
+        one specific provider row even when it is marked unavailable; its
+        stale health status is cleared first.
 
 Returns (task):
     Dict with keys:
@@ -69,21 +72,43 @@ _VALID_ROLES = frozenset(
 )
 
 
-def _resolve_aimodel(
+def _resolve_aimodel(  # pylint: disable=too-many-return-statements
     model_name: str | None,
     caller_session: "Session | None" = None,
+    model_id: int | None = None,
 ) -> "AiModel | None":
     """Resolve an ``AiModel`` for the direct call.
 
     Priority:
-      1. Explicit ``model_name`` parameter
-      2. The caller's model (``caller_session.aimodel``) — "same model as
+      1. Explicit ``model_id`` (an exact provider row — used by the UI's
+         "Test" button; its stale health status is cleared so the probe is a
+         real retry).
+      2. Explicit ``model_name`` parameter
+      3. The caller's model (``caller_session.aimodel``) — "same model as
          caller" default from the feature request
-      3. User's configured Default Model (``runtime.settings.get_default_model_name``)
-      4. ``None`` — no usable model found
+      4. User's configured Default Model (``runtime.settings.get_default_model_name``)
+      5. ``None`` — no usable model found
     """
+    from server.models.providers.ai_model import AiModel
     from runtime.session.aimodel_picker import pick_aimodel
     from runtime.settings.settings import get_default_model_name
+
+    if model_id is not None:
+        model = AiModel.objects.filter(pk=model_id).first()
+        if model is None:
+            return None
+        # Manual probe: clear sticky 404/auth status on the row *and* its
+        # provider/key so the call really hits the wire.  Rate-limit cooldowns
+        # are deliberately left in place.  A failure is re-recorded
+        # immediately.
+        model.clear_health()
+        provider = model.api_provider
+        if provider is not None:
+            provider.clear_health()
+            for key in provider.api_keys.filter(enabled=True):
+                if key.health_blocks_calls():
+                    key.clear_health()
+        return model
 
     if model_name:
         try:
@@ -223,6 +248,7 @@ def call_llm_direct(
     messages: list[dict],
     model_name: str | None = None,
     reasoning_effort: str | None = None,
+    model_id: int | None = None,
 ) -> dict:
     """Execute a raw LLM query via the existing call_llm pipeline.
 
@@ -243,7 +269,7 @@ def call_llm_direct(
         Response dict with content, tokens, timing, and status.
     """
     # ── 1. Resolve model ───────────────────────────────────────────────
-    aimodel = _resolve_aimodel(model_name, caller_session=_session)
+    aimodel = _resolve_aimodel(model_name, caller_session=_session, model_id=model_id)
     if not aimodel:
         return {
             "status": "FAILURE",
@@ -319,6 +345,7 @@ def call_llm_direct(
             "reasoning_tokens": response.reasoning_tokens,
             "total_time": round(response.total_time or 0, 3),
             "status": response.status,
+            "error_type": getattr(response, "error_type", "") or "",
             "session_pk": session_model.pk,
             "query_pk": query.pk,
             "response_pk": response.pk,
@@ -327,7 +354,8 @@ def call_llm_direct(
             # call_llm can return (not raise) a FAILURE response, e.g. an
             # empty stream — surface why, or the caller sees status-only.
             result["error"] = (
-                response.finish_reason
+                getattr(response, "error_message", "")
+                or response.finish_reason
                 or "LLM returned an empty response."
             )
         return result
@@ -345,8 +373,9 @@ def call_llm_direct(
             model_name_out = resp.model_name if resp else ""
             pt = resp.prompt_tokens if resp else 0
             ct = resp.completion_tokens if resp else 0
+            error_type = getattr(resp, "error_type", "") if resp else ""
         except Exception:
-            content, model_name_out, pt, ct = "", "", 0, 0
+            content, model_name_out, pt, ct, error_type = "", "", 0, 0, ""
 
         return {
             "content": content,
@@ -355,6 +384,7 @@ def call_llm_direct(
             "completion_tokens": ct,
             "total_time": 0,
             "status": "FAILURE",
+            "error_type": error_type,
             "session_pk": session_model.pk,
             "query_pk": query.pk,
             "error": str(exc),

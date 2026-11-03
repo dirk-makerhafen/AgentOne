@@ -210,7 +210,11 @@ class TaskInstance(BaseModel):
             "max_subtask_error_rate": task_definition.max_subtask_error_rate,
             "limit_subtask_parallel_runs": task_definition.limit_subtask_parallel_runs,
             "limit_per_instance_parallel_runs": task_definition.limit_per_instance_parallel_runs,
-            "priority": session_runtime.priority,
+            "priority": (
+                session_runtime.priority
+                if session_runtime.priority is not None
+                else 99
+            ),
             "max_retries": task_definition.max_retries,
             "retry_delay": task_definition.retry_delay,
             "retry_requires_approval": task_definition.retry_requires_approval,

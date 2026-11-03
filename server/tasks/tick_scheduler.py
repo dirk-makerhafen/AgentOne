@@ -165,6 +165,7 @@ def _release_rate_limited_calls() -> None:
     """
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.enums.task_enums import TaskCallStatusDetail
+    from runtime.llm_errors import ModelUnavailableError
     from runtime.rate_limiter import RateLimitChecker, RateLimitError
     from runtime.tasks.call_fsm import TaskCallStateMachine
     from runtime.tasks.call_scheduler import CallScheduler
@@ -202,6 +203,10 @@ def _release_rate_limited_calls() -> None:
                 continue
             try:
                 RateLimitChecker.check(aimodel, session=session)
+            except ModelUnavailableError as e:
+                # Known-bad model (404/revoked key): release the parked call so
+                # it fails with the recorded reason instead of waiting forever.
+                print(f"{aimodel} is unavailable: {e}")
             except RateLimitError as e:
                 print(f"{aimodel} is rate limited" ,e )
                 blocked_models.add(aimodel.pk)

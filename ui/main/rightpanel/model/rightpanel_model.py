@@ -26,12 +26,18 @@ class RightPanelModel(ModelView):
             <div class="rp-badges">
                 {% for mode in pyview.group_modes %}<span class="mode-badge">{{ mode }}</span>{% endfor %}
                 {% if not pyview.subject.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
+                {% if pyview.subject.health_label %}<span class="key-badge key-missing" title="{{ pyview.subject.status_reason }}">{{ pyview.subject.health_label }}</span>{% endif %}
             </div>
 
             <div class="rp-section-title">Facts</div>
             <div class="rp-kv"><span>Rank</span><span>{{ pyview.group_rank }}</span></div>
             <div class="rp-kv"><span>Params</span><span>{{ pyview.group_params }}</span></div>
             <div class="rp-kv"><span>Context</span><span>{{ pyview.group_context }}</span></div>
+            {% if pyview.subject.status != "UNKNOWN" %}
+            <div class="rp-kv"><span>Health</span><span>{{ pyview.subject.health_label or pyview.subject.status }}</span></div>
+            {% if pyview.subject.status_reason %}<div class="rp-kv"><span>Reason</span><span>{{ pyview.subject.status_reason }}</span></div>{% endif %}
+            {% if pyview.subject.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ pyview.subject.status_retry_at }}</span></div>{% endif %}
+            {% endif %}
             {% if pyview.subject.canonical_id %}
             <div class="rp-kv"><span>Canonical ID</span><span>{{ pyview.subject.canonical_id }}</span></div>
             {% endif %}
@@ -45,6 +51,7 @@ class RightPanelModel(ModelView):
                 <strong>{{ row.provider }}</strong>
                 <span class="muted">{{ row.provider_model_id }}</span>
                 <span class="muted">{{ row.key_note }}</span>
+                {% if row.health %}<span class="key-badge key-missing" title="{{ row.health_reason }}">{{ row.health }}</span>{% endif %}
                 <button class="provider-test-btn" onclick="event.stopPropagation(); pyview.test_model({{ row.provider_id }})" title="Test this provider's model">Test</button>
                 {% if row.conditions %}<span class="rp-conditions">{{ row.conditions }}</span>{% endif %}
             </div>
@@ -138,10 +145,36 @@ class RightPanelModel(ModelView):
                 "provider": provider.name,
                 "provider_model_id": member.provider_model_id,
                 "key_note": "✓ key" if has_key else "no key",
+                "health": member.health_label,
+                "health_reason": member.status_reason,
                 "conditions": (member.data.get("conditions") or ""),
             })
         rows.sort(key=lambda r: r["provider"].lower())
         return rows
+
+    def _resolve_session(self):
+        queue = [self]
+        seen = set()
+        while queue:
+            obj = queue.pop(0)
+            if obj is None or id(obj) in seen:
+                continue
+            seen.add(id(obj))
+            for attr in ("session", "current_session"):
+                try:
+                    val = getattr(obj, attr, None)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    val = None
+                if val is not None:
+                    return val
+            for child_attr in ("selected_tab_view", "main_panel", "rightpanel"):
+                child = getattr(obj, child_attr, None)
+                if child is not None and id(child) not in seen:
+                    queue.append(child)
+            parent = getattr(obj, "parent", None)
+            if parent is not None and id(parent) not in seen:
+                queue.append(parent)
+        return None
 
     def test_model(self, provider_id: int) -> None:
         """Test a specific provider's model."""
@@ -155,7 +188,7 @@ class RightPanelModel(ModelView):
             return
 
         # Get the current session to dispatch from
-        session = getattr(self.parent.parent, "session", None)
+        session = self._resolve_session()
         if session is None:
             return
 
@@ -166,6 +199,7 @@ class RightPanelModel(ModelView):
             task.delay(
                 messages=[{"role": "user", "content": "Hi, do you see this message?"}],
                 model_name=model.name,
+                model_id=model.pk,
             )
         except Exception:  # pylint: disable=broad-exception-caught
             pass

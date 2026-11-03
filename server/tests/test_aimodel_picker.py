@@ -18,7 +18,7 @@ from server.models.agents.agent_version import AgentVersionModel
 from server.models.providers.api_key import ApiKey
 from server.models.providers.api_provider import ApiProvider
 from server.models.providers.ai_model import AiModel
-from server.models.queries.query import QueryStatus
+from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
@@ -74,8 +74,17 @@ class AimodelPickerTest(TestCase):
         AgentModel.objects.filter(pk=self.agent.pk).update(latest_agent_version=self.av)
 
     def _success_response(self, aimodel):
+        # A real successful response hangs off a Query stamped with the key
+        # that served it — the per-key provider caps count through that link.
+        key = aimodel.api_provider.api_keys.filter(enabled=True).first()
+        query = Query.objects.create(
+            session=self.session,
+            session_version=self.sv,
+            status=QueryStatus.SUCCESS,
+            apikey=key,
+        )
         return Response.objects.create(
-            query=None,
+            query=query,
             session=self.session,
             session_version=self.sv,
             status=ResponseStatus.SUCCESS,

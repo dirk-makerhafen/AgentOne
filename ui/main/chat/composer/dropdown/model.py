@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List
-from runtime.session.aimodel_picker import available_aimodels, model_groups
+from runtime.session.aimodel_picker import model_groups, selectable_aimodels
 from runtime.session.session import Session
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
@@ -50,10 +50,10 @@ class ModelDropdownOption(ModelView):
 
     @property
     def provider_rows(self) -> List[Dict[str, object]]:
-        """One row per WORKING provider — an enabled model row whose provider
-        has a configured API key (or a default key)."""
+        """One row per WORKING provider — an enabled, healthy model row whose
+        provider has a configured API key (or a default key)."""
         current = self.parent.parent.subject.aimodel
-        usable = {(m.api_provider_id, m.name) for m in available_aimodels()}
+        usable = {(m.api_provider_id, m.name) for m in selectable_aimodels()}
         rows: List[Dict[str, object]] = []
         for member in sorted(self.subject.members, key=lambda m: m.api_provider.name):
             if not member.enabled or (member.api_provider_id, member.name) not in usable:
@@ -73,8 +73,9 @@ class ModelDropdownOption(ModelView):
 
     @property
     def missing_count(self) -> int:
-        """Enabled providers serving this model that are NOT usable (no key)."""
-        usable = {(m.api_provider_id, m.name) for m in available_aimodels()}
+        """Enabled providers serving this model that are NOT selectable
+        (missing key or observed health block)."""
+        usable = {(m.api_provider_id, m.name) for m in selectable_aimodels()}
         return sum(
             1
             for member in self.subject.members
@@ -84,7 +85,7 @@ class ModelDropdownOption(ModelView):
     @property
     def missing_note(self) -> str:
         plural = "providers" if self.missing_count != 1 else "provider"
-        return f"{self.missing_count} more {plural} available — add an API key"
+        return f"{self.missing_count} more {plural} unavailable — add a key or check health"
 
     def toggle_providers(self) -> None:
         self._providers_open = not self._providers_open

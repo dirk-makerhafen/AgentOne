@@ -9,12 +9,18 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from server.models.base_model import BaseModel, Observables
+from server.models.enums.provider_enums import HealthStatus
+from server.models.providers.health import HealthTrackedModel
 from server.models.queries.query import Query
 from server.models.queries.response import Response
 
 
-class ApiProvider(BaseModel):
-    """An API provider (e.g. OpenAI, Ollama) hosting one or more AI models."""
+class ApiProvider(HealthTrackedModel, BaseModel):
+    """An API provider (e.g. OpenAI, Ollama) hosting one or more AI models.
+
+    ``enabled`` is the manifest/admin intent; the inherited ``status*`` fields
+    record observed health (auth failures, repeated 5xx, ...).
+    """
 
     class ApiProviderObservables(Observables):
         """Explicit observable keys for an ApiProvider (IDE autocomplete)."""
@@ -180,6 +186,18 @@ class ApiProvider(BaseModel):
             or bool(self.data.get("default_api_key"))
         )
 
+    def all_enabled_keys_auth_failed(self) -> bool:
+        """True when every enabled key (or the keyless default) is auth-blocked.
+
+        Used to decide whether a 401/403 belongs on the provider rather than a
+        single key.  A keyless provider (``default_api_key``) has no key rows,
+        so any auth failure there is provider-wide.
+        """
+        keys = list(self.api_keys.filter(enabled=True))
+        if not keys:
+            return True
+        return all(key.status == HealthStatus.AUTH_ERROR for key in keys)
+
     def _key_is_rate_limited(self, key) -> tuple[bool, str]:
         """Provider free-tier caps scoped to ONE key.
 
@@ -232,6 +250,11 @@ class ApiProvider(BaseModel):
         When the provider resolves requests through ``default_api_key`` (no
         ``ApiKey`` rows exist) there is no per-key dimension, so the caps
         aggregate across the whole provider via the active-run census.
+
+        A provider-wide ``AUTH_ERROR`` is only honoured when there are no keys
+        (keyless ``default_api_key``); with key rows the per-key status is the
+        source of truth, so adding a fresh key immediately makes the provider
+        usable again without waiting for a manual clear.
         """
         if self.limit_parallel_calls > 0:
             active = self.active_call_count(exclude_taskrun_id=exclude_taskrun_id)
@@ -276,7 +299,8 @@ class ApiProvider(BaseModel):
         With a keyed provider the parallel-slot + request/token windows are
         counted per key (see :meth:`_key_is_rate_limited`).  This method
         aggregates: it reports the provider "rate limited" only when EVERY
-        enabled key is at its own cap, which is what the composer picker and
+        enabled key is individually unavailable (disabled, health-blocked,
+        cooling down) or at its own cap, which is what the composer picker and
         provider views need — a splintered key must never block its siblings.
 
         ``apikey=None`` with no ``ApiKey`` rows (keyless config via
@@ -297,11 +321,18 @@ class ApiProvider(BaseModel):
         if keys:
             reasons = []
             for key in keys:
-                limited, reason = self._key_is_rate_limited(key)
-                if not limited:
-                    return False, ""
+                # Cheap non-counting gate first (disabled/health/cooldown),
+                # then the provider's per-key usage windows.
+                reason = key.blocking_reason()
+                if not reason:
+                    limited, reason = self._key_is_rate_limited(key)
+                    if not limited:
+                        return False, ""
                 reasons.append(reason)
             return True, ";".join(reasons) or "all_keys_capped"
+
+        if self.status == HealthStatus.AUTH_ERROR:
+            return True, "auth_error"
 
         return self._provider_wide_is_rate_limited(exclude_taskrun_id)
 
