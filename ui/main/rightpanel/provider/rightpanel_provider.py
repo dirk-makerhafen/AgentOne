@@ -75,14 +75,23 @@ class RightPanelProvider(ModelView):
             {% endfor %}
 
             <div class="rp-actions">
-                <button class="provider-card-btn provider-card-btn-primary" onclick="pyview.test_provider()">Test provider</button>
+                {% if pyview._probe and pyview._probe.verdict == "running" %}
+                <div class="muted" style="font-size:12px;margin-bottom:6px">⟳ testing {{ pyview._probe.model }}…</div>
+                <script>setTimeout(function(){ pyview._poll_probe(); }, 2500);</script>
+                {% elif pyview._probe and pyview._probe.verdict == "healthy" %}
+                <div style="font-size:12px;margin-bottom:6px;color:var(--success)">✓ {{ pyview._probe.model }} · {{ pyview._probe.latency_ms }}ms · {{ pyview._probe.tokens.prompt + pyview._probe.tokens.completion }} tok</div>
+                {% if pyview._probe.session_pk %}<button class="provider-card-btn provider-card-btn-ghost" onclick="pyview.open_test_session({{ pyview._probe.session_pk }})">Open session</button>{% endif %}
+                {% elif pyview._probe and pyview._probe.verdict == "no_tool_call" %}
+                <div style="font-size:12px;margin-bottom:6px;color:#b7791f">⚠ {{ pyview._probe.model }} replied but did not call final_result · {{ pyview._probe.latency_ms }}ms</div>
+                {% if pyview._probe.session_pk %}<button class="provider-card-btn provider-card-btn-ghost" onclick="pyview.open_test_session({{ pyview._probe.session_pk }})">Open session</button>{% endif %}
+                {% elif pyview._probe and pyview._probe.verdict == "failed" %}
+                <div style="font-size:12px;margin-bottom:6px;color:var(--error)">✗ {{ pyview._probe.error_kind or 'failed' }}: {{ pyview._probe.error_message }}</div>
+                {% endif %}
+                <button class="provider-card-btn provider-card-btn-primary" onclick="pyview.test_provider()" {% if pyview._probe and pyview._probe.verdict == "running" %}disabled{% endif %}>Test provider</button>
             </div>
         </div>
         <div class="resize-handle" id="rightpanelResize"></div>
     '''
-
-    def __init__(self, subject: ApiProvider, parent: RightPanel, **kwargs):
-        super().__init__(subject, parent, **kwargs)
 
     def open_model(self, model_id: int) -> None:
         from server.models.providers.ai_model import AiModel
@@ -157,6 +166,128 @@ class RightPanelProvider(ModelView):
         return list(
             self.subject.aimodels.all().order_by("name").values("id", "name", "provider_model_id")
         )
+
+
+
+    def open_test_session(self, session_pk: int) -> None:
+        try:
+            from server.models.sessions.session import SessionModel
+            from ui.main.chat.chat import Chat
+            sm = SessionModel.objects.filter(pk=int(session_pk)).first()
+            if sm is None:
+                return
+            cur = self
+            seen = set()
+            main_view = None
+            while cur is not None and id(cur) not in seen:
+                seen.add(id(cur))
+                if hasattr(cur, "create_and_open_tab"):
+                    main_view = cur
+                    break
+                cur = getattr(cur, "parent", None)
+            if main_view is not None:
+                main_view.create_and_open_tab(Chat, sm)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    def _resolve_session(self):
+        queue = [self]
+        seen = set()
+        while queue:
+            obj = queue.pop(0)
+            if obj is None or id(obj) in seen:
+                continue
+            seen.add(id(obj))
+            for attr in ("session", "current_session"):
+                try:
+                    val = getattr(obj, attr, None)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    val = None
+                if val is not None:
+                    return val
+            for child_attr in ("selected_tab_view", "main_panel", "rightpanel"):
+                child = getattr(obj, child_attr, None)
+                if child is not None and id(child) not in seen:
+                    queue.append(child)
+            parent = getattr(obj, "parent", None)
+            if parent is not None and id(parent) not in seen:
+                queue.append(parent)
+        return None
+
+    def __init__(self, subject, parent, **kwargs):
+        super().__init__(subject, parent, **kwargs)
+        self._probe: dict | None = None
+        self._probe_model_pk: int | None = None
+
+    def test_provider(self) -> None:
+        """Smoke-test the provider via its best usable model."""
+        from runtime.test_run import best_usable_model
+        from server.tasks.probe_model import probe_model
+        model = best_usable_model(self.subject.pk)
+        if model is None:
+            self._probe = {"verdict": "failed", "error_message": "No usable enabled model"}
+            self.update()
+            return
+        self._probe = {"verdict": "running", "model": model.name, "model_pk": model.pk}
+        self._probe_model_pk = model.pk
+        self.update()
+        try:
+            from ui.lib.model_view import orm_subscribe
+            orm_subscribe(self, f"AiModel.pk:{model.pk}", self._on_probe_event)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        try:
+            probe_model.delay(model.pk)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            self._probe = {"verdict": "failed", "error_message": str(exc)}
+            self.update()
+
+    def test_model(self, model_id: int) -> None:
+        """Smoke-test a specific model."""
+        from server.models.providers.ai_model import AiModel
+        from server.tasks.probe_model import probe_model
+        model = AiModel.objects.filter(pk=model_id).first()
+        if model is None:
+            return
+        self._probe = {"verdict": "running", "model": model.name, "model_pk": model.pk}
+        self._probe_model_pk = model.pk
+        self.update()
+        try:
+            from ui.lib.model_view import orm_subscribe
+            orm_subscribe(self, f"AiModel.pk:{model.pk}", self._on_probe_event)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        try:
+            probe_model.delay(model.pk)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            self._probe = {"verdict": "failed", "error_message": str(exc)}
+            self.update()
+
+    def _on_probe_event(self, key=None, model=None, pk=None, action=None, data=None, **_kw):
+        try:
+            payload = None
+            if isinstance(data, dict) and "probe" in data:
+                payload = data["probe"]
+            if payload is None:
+                from server.tasks.probe_model import get_cached_result
+                payload = get_cached_result(int(pk)) if pk is not None else None
+            if payload is not None:
+                self._probe = payload
+                self.update()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    def _poll_probe(self) -> None:
+        if self._probe_model_pk is None:
+            return
+        try:
+            from server.tasks.probe_model import get_cached_result
+            cached = get_cached_result(self._probe_model_pk)
+            if cached is not None:
+                self._probe = cached
+                self.update()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
     def _resolve_session(self):
         queue = [self]

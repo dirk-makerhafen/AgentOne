@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from django.db.models import Q as _Q
 from server.models.providers.api_provider import ApiProvider
 from server.models.providers.api_key import ApiKey
-from ui.lib.model_view import ModelView
+from ui.lib.model_view import ModelView, orm_subscribe, orm_unsubscribe_view
 from ui.main.insights.providers import _limits_str
 
 if TYPE_CHECKING:
@@ -97,7 +97,20 @@ class SettingPanelProviders(ModelView):
                     {% if row.api_key_url %}
                     <a href="{{ row.api_key_url }}" target="_blank" class="provider-card-btn provider-card-btn-ghost" onclick="event.stopPropagation()" style="text-decoration:none">Get key</a>
                     {% endif %}
-                    <button type="button" class="provider-card-btn provider-card-btn-primary" onclick="event.stopPropagation(); pyview.test_provider({{ row.id }})" title="Test provider">Test</button>
+                    {% set probe = row.probe %}
+                    {% if probe and probe.verdict == "running" %}
+                    <span class="provider-card-btn provider-card-btn-ghost" style="font-size:10px;padding:3px 8px">⟳ testing {{ probe.model or "" }}…</span>
+                    <script>setTimeout(function(){ pyview._poll_probe({{ row.id }}); }, 2500);</script>
+                    {% elif probe and probe.verdict == "healthy" %}
+                    <span class="provider-card-btn provider-card-btn-ghost" style="font-size:10px;padding:3px 8px;color:var(--success)" title="{{ probe.answer }} · {{ probe.latency_ms }}ms · {{ probe.tokens.prompt + probe.tokens.completion }} tok{% if probe.session_pk %} · session {{ probe.session_pk }}{% endif %}">✓ {{ probe.model }} · {{ probe.latency_ms }}ms</span>
+                    {% if probe.session_pk %}<a href="#" class="provider-card-btn provider-card-btn-ghost" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation(); pyview.open_test_session({{ probe.session_pk }}); return false;">open</a>{% endif %}
+                    {% elif probe and probe.verdict == "no_tool_call" %}
+                    <span class="provider-card-btn provider-card-btn-ghost" style="font-size:10px;padding:3px 8px;color:#b7791f" title="{{ probe.answer }}">⚠ no tool call · {{ probe.latency_ms }}ms</span>
+                    {% if probe.session_pk %}<a href="#" class="provider-card-btn provider-card-btn-ghost" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation(); pyview.open_test_session({{ probe.session_pk }}); return false;">open</a>{% endif %}
+                    {% elif probe and probe.verdict == "failed" %}
+                    <span class="provider-card-btn provider-card-btn-danger" style="font-size:10px;padding:3px 8px" title="{{ probe.error_kind or '' }}: {{ probe.error_message }}">✗ {{ (probe.error_kind or 'failed') }} · retry?</span>
+                    {% endif %}
+                    <button type="button" class="provider-card-btn provider-card-btn-primary" onclick="event.stopPropagation(); pyview.test_provider({{ row.id }})" title="Test provider"{% if probe and probe.verdict == "running" %} disabled{% endif %}>Test</button>
                     {% if row.key_state == "none" %}
                     <button type="button" class="provider-card-btn provider-card-btn-primary" onclick="event.stopPropagation(); pyview.open_add({{ row.id }})">Add API key</button>
                     {% else %}
@@ -151,6 +164,8 @@ class SettingPanelProviders(ModelView):
         self._keys_revealed = False
         self._sort_col = "name"
         self._sort_desc = False
+        self._probe_results: dict[int, dict] = {}
+        self._probe_model_for: dict[int, int] = {}  # provider_id -> model_pk
 
     # ------------------------------------------------------------------
     # Rows
@@ -195,6 +210,7 @@ class SettingPanelProviders(ModelView):
                 "api_key_url": info.get("api_key_url", ""),
                 "setup_instructions": info.get("setup_instructions", ""),
                 "last_usage": last_usage,
+                "probe": self._probe_results.get(provider.pk),
             })
 
         return sort_provider_rows(rows, self._sort_col, self._sort_desc)
@@ -358,27 +374,96 @@ class SettingPanelProviders(ModelView):
         return None
 
     def test_provider(self, provider_id: int) -> None:
-        """Test a provider with a simple call."""
-        provider = ApiProvider.objects.filter(pk=int(provider_id)).first()
-        if provider is None:
-            return
+        """Smoke-test a provider via a real test session."""
+        from runtime.test_run import best_usable_model
+        from server.tasks.probe_model import probe_model
 
-        model = provider.aimodels.filter(enabled=True).first()
+        pid = int(provider_id)
+        model = best_usable_model(pid)
         if model is None:
+            self._probe_results[pid] = {
+                "verdict": "failed",
+                "error_message": "No usable enabled model on this provider",
+            }
+            self.update()
             return
 
-        session = self._resolve_session()
-        if session is None:
-            return
+        self._probe_results[pid] = {
+            "verdict": "running",
+            "model": model.name,
+            "model_pk": model.pk,
+        }
+        self._probe_model_for[pid] = model.pk
+        self.update()
 
         try:
-            task = session.get_task("call_llm_direct")
-            if task is None:
+            orm_subscribe(self, f"AiModel.pk:{model.pk}", self._on_probe_event)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+        try:
+            probe_model.delay(model.pk)
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            self._probe_results[pid] = {
+                "verdict": "failed",
+                "error_message": str(exc),
+            }
+            self.update()
+
+    def _on_probe_event(self, key=None, model=None, pk=None, action=None, data=None, **_kw):
+        try:
+            payload = None
+            if isinstance(data, dict) and "probe" in data:
+                payload = data["probe"]
+            if payload is None:
+                from server.tasks.probe_model import get_cached_result
+                payload = get_cached_result(int(pk)) if pk is not None else None
+            if payload is None:
                 return
-            task.delay(
-                messages=[{"role": "user", "content": "Hi, do you see this message?"}],
-                model_name=model.name,
-                model_id=model.pk,
-            )
+            pid = None
+            for p, mpk in self._probe_model_for.items():
+                if mpk == pk:
+                    pid = p
+                    break
+            if pid is None:
+                return
+            self._probe_results[pid] = payload
+            self.update()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    def _poll_probe(self, provider_id: int) -> None:
+        pid = int(provider_id)
+        mpk = self._probe_model_for.get(pid)
+        if mpk is None:
+            return
+        try:
+            from server.tasks.probe_model import get_cached_result
+            cached = get_cached_result(mpk)
+            if cached is not None:
+                self._probe_results[pid] = cached
+                self.update()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+
+    def open_test_session(self, session_pk: int) -> None:
+        try:
+            from server.models.sessions.session import SessionModel
+            from ui.main.chat.chat import Chat
+            sm = SessionModel.objects.filter(pk=int(session_pk)).first()
+            if sm is None:
+                return
+            main_view = None
+            cur = self
+            seen = set()
+            while cur is not None and id(cur) not in seen:
+                seen.add(id(cur))
+                if hasattr(cur, "create_and_open_tab"):
+                    main_view = cur
+                    break
+                cur = getattr(cur, "parent", None)
+            if main_view is not None:
+                main_view.create_and_open_tab(Chat, sm)
         except Exception:  # pylint: disable=broad-exception-caught
             pass

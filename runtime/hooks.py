@@ -175,6 +175,7 @@ def matching_intercepts(
     if ctx.get("session_type") in (
         SessionType.SUBTASK_HOOK.value,
         SessionType.SUBTASK_COMPACT.value,
+        SessionType.TEST.value,
     ):
         return []
     if ctx.get("def_name") in hook_task_names(entries):

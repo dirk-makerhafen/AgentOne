@@ -151,46 +151,7 @@ def reflect_session(
     )
 
 
-def _extract_report_text(result: Any) -> str:
-    """Extract plain report text from the reflection fork's final result.
-
-    The fork only advertises ``final_result`` (tool_call_allowlist), so the
-    text arrives as that tool call's ``content`` argument (content-addressed
-    for large bodies) — mirrors ``ingest_compaction._extract_summary_text``.
-    """
-    if isinstance(result, Message):
-        text = ""
-        for part in result.parts.order_by("pk"):
-            if part.type == MessagePartType.MESSAGE:
-                content = part.content.get() if part.content else None
-                text += str(content) if content else ""
-            elif (
-                part.type == MessagePartType.TOOLCALL
-                and part.tool_call
-                and part.tool_call.task_definition.name == "final_result"
-            ):
-                args = part.tool_call.carguments_json or {}
-                content_arg = args.get("content", "")
-                if (
-                    isinstance(content_arg, dict)
-                    and content_arg.get("_type") == "GenericContent"
-                    and "pk" in content_arg
-                ):
-                    try:
-                        from server.models.content import GenericContent
-
-                        content_arg = GenericContent.objects.get(
-                            pk=content_arg["pk"]
-                        ).get()
-                    except Exception:  # pylint: disable=broad-exception-caught
-                        pass
-                text += str(content_arg)
-        return text
-    if isinstance(result, str):
-        return result
-    if isinstance(result, dict) and result.get("content") is not None:
-        return str(result["content"])
-    return ""
+from runtime.final_result import extract_final_result_text as _extract_report_text
 
 
 def _resolve_message(value: Any) -> Message | None:

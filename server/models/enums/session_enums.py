@@ -26,4 +26,6 @@ class SessionType(models.TextChoices):
     SUBTASK_FORK = "subtask_fork", "Subtask (fork)"
     SUBTASK_COMPACT = "subtask_compaction", "Subtask (session compaction)"
     SUBTASK_HOOK = "subtask_hook", "Subtask (hook)"
+    TEST = "test", "Test (provider/model smoke test)"
+
 

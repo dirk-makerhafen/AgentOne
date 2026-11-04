@@ -4,7 +4,7 @@ description: >
   Framework-internal memory synthesizer. Reads reflection/compaction reports and
   consolidates them into memory.md / reflection.md at session, task, agent and
   scope levels. Invoked by the memory cron job; never user-facing.
-model: "Reflection Beam 1.0 Free"
+model: Qwen3.6-35B-A3B-UD-MLX-4bit
 extends: [baseagent]
 visibility: user
 reasoningEffort: high

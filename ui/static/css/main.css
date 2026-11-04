@@ -2863,6 +2863,19 @@ main.main.showing-logs > #mainLogs{display:flex;}
 }
 .provider-card-btn:hover{background:var(--hover-bg);}
 .provider-card-btn:disabled{opacity:.45;cursor:not-allowed;}
+.provider-test-btn{
+  margin-left:8px;
+  padding:2px 8px;
+  font-size:11px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface);
+  color:var(--text);
+  cursor:pointer;
+  white-space:nowrap;
+}
+.provider-test-btn:hover{background:var(--hover-bg);}
+.provider-test-btn:disabled{opacity:.45;cursor:not-allowed;}
 .provider-card-btn-ghost{background:var(--surface);}
 .provider-card-btn-primary{
   background:var(--accent);

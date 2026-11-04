@@ -7,27 +7,11 @@ End-to-end validation of the AgentOne data-flow framework.
     see the side-effects.  This mirrors real-world usage where state
     accumulates across ticks.
 
-**Total:** 7 &nbsp;|&nbsp; **PASS:** 7 &nbsp;|&nbsp; **FAIL:** 0
+**Total:** 5 &nbsp;|&nbsp; **PASS:** 5 &nbsp;|&nbsp; **FAIL:** 0
 
 ---
 
-### 1. `test_01_manifests_load_correctly` ✅
-
-**Status:** `PASS`
-
-All 9 YAML manifests (3 streams, 4 sets, 1 cron, 2 agents) load and produce correct DB records with proper types, sources, processors, and field values.
-
----
-
-### 2. `test_02_loader_upsert_idempotent` ✅
-
-**Status:** `PASS`
-
-Re-loading YAML manifests does not duplicate DB records. The upsert logic correctly identifies and updates existing records.
-
----
-
-### 3. `test_03_agent_tasks_resolved` ✅
+### 1. `test_03_agent_tasks_resolved` ✅
 
 **Status:** `PASS`
 
@@ -35,7 +19,15 @@ Agent manifest loader resolved collect.* and report.* glob patterns into concret
 
 ---
 
-### 4. `test_06_dispatch_skips_non_matching_calls` ✅
+### 2. `test_04_cron_execution_creates_call` ✅
+
+**Status:** `PASS`
+
+execute_cron_job creates an AgentTaskCall for the configured agent and function, updates last_run_at, total_runs, and next_run_at tracking fields.
+
+---
+
+### 3. `test_06_dispatch_skips_non_matching_calls` ✅
 
 **Status:** `PASS`
 
@@ -43,23 +35,15 @@ Calls that do not match the source agent/function criteria are not dispatched. A
 
 ---
 
-### 5. `test_19_retroactive_on_source_change_dispatches` ✅
+### 4. `test_17_on_removed_handler_creates_call` ✅
 
 **Status:** `PASS`
 
-retroactive_on_source_change field persists correctly and is present on the model schema.
+on_removed handler fires when a set item is removed during reprocess. An additional AgentTaskCall is created for the cleanup handler.
 
 ---
 
-### 6. `test_20_empty_sources_does_not_crash` ✅
-
-**Status:** `PASS`
-
-Dispatch handles empty sources gracefully without crashing.
-
----
-
-### 7. `test_25_propagate_skips_item_without_source_call` ✅
+### 5. `test_25_propagate_skips_item_without_source_call` ✅
 
 **Status:** `PASS`
 

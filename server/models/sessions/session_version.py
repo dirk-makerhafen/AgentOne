@@ -6,7 +6,6 @@ from cachetools import LRUCache
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from runtime.session.session import Session
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.base_model import BaseModel, Observables
@@ -55,8 +54,9 @@ class SessionVersionModel(BaseModel):
     session_settings = models.ForeignKey("server.SettingsModel",on_delete=models.SET_NULL,default=None,null=True,blank=True,related_name="related_instance_versions")
     version_number = models.IntegerField(default=0)
 
-    def get_runtime(self) -> Session:
+    def get_runtime(self):
         """Return a runtime Session wrapper pinned to this version."""
+        from runtime.session.session import Session
         return Session(session_model=self.session, pinned_session_version=self)
 
     def unresolved_aimodel(self):

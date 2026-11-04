@@ -19,7 +19,6 @@ from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
 from server.models.message import Message
 from server.models.queries.query import Query
 from server.models.queries.response import Response
-from server.tasks.task_dispatcher import celery_delay
 
 if TYPE_CHECKING:
     from server.models.tasks.task_instance import TaskInstance
