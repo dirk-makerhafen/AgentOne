@@ -36,7 +36,7 @@ Rules:
 - Write `memory.md` (durable facts/knowledge to remember) and `reflection.md`
   (self-improvement observations) in the target directory.
 - Rewrite rather than append: drop stale or superseded detail and keep each
-  file under ~4000 characters.
+  file under ~5000 characters.
 - Do not touch `.memory_sources.md`, git metadata, or memory levels outside the
   target directory.
 - The harness finalizes the node once your `final_result` is awaited. Do not

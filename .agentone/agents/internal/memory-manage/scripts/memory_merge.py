@@ -82,7 +82,7 @@ lessons about doing that task.
   Keep it self-contained.
 - Never invent information. If sources conflict, prefer the newer one and say
   so when it matters.
-- Keep each file under ~4000 characters. Prune rather than spill over.
+- Keep each file under ~5000 characters. Prune rather than spill over.
 - Only read and write inside `{{target_dir}}`. Never touch
   `.memory_sources.md`, git metadata, or other memory levels.
 - The harness marks this node processed when your session ends. Do not advance
@@ -135,7 +135,7 @@ baseline you are updating, not as the only truth.
   or session memories. Keep it self-contained.
 - Never invent information. If sources conflict, prefer the newer one and say
   so when it matters.
-- Keep each file under ~4000 characters. Prune rather than spill over.
+- Keep each file under ~5000 characters. Prune rather than spill over.
 - Only read and write inside `{{target_dir}}` and its child scope directories.
   Never touch `.memory_sources.md`, git metadata, or files above this scope.
 - The harness marks this node processed when your session ends. Do not advance
@@ -192,7 +192,7 @@ well:
   self-contained.
 - Never invent information. If reports conflict, prefer the newer one and say
   so when it matters.
-- Keep each file under ~4000 characters. Prune rather than spill over.
+- Keep each file under ~5000 characters. Prune rather than spill over.
 - Only read and write inside `{{target_dir}}`. Never touch
   `.memory_sources.md`, git metadata, or other memory levels.
 - The harness marks this node processed when your session ends. Do not advance
