@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth.models import User
+from server.models.agents.agent import AgentModel
 
 
 @pytest.mark.django_db
@@ -37,3 +38,11 @@ class TestAuth:
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
         resp2 = api_client.get('/api/v1/agents/')
         assert resp2.status_code == 200
+
+    def test_nonstaff_can_read_but_cannot_mutate_global_agents(self, api_client):
+        user = User.objects.create_user(username='reader', password='readpass')
+        agent = AgentModel.objects.create(name='protected-agent')
+        api_client.force_authenticate(user=user)
+
+        assert api_client.get('/api/v1/agents/').status_code == 200
+        assert api_client.delete(f'/api/v1/agents/{agent.pk}/').status_code == 403

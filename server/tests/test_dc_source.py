@@ -250,6 +250,12 @@ class ExtractMemberTest(TestCase):
             "When the member_field expression raises an exception (undefined attribute), "
             "the code gracefully falls back to the call PK instead of crashing.")
 
+    def test_set_expr_rejects_python_execution(self):
+        self.flow.collection_type = "set"
+        self.flow.member_field = "item.__class__.__mro__"
+        member = _extract_member(self.flow, self.call, self.call)
+        self.assertEqual(member, str(self.call.pk))
+
 
 class ExtractScoreTest(TestCase):
     @classmethod

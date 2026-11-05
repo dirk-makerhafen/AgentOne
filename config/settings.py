@@ -1,7 +1,9 @@
 import logging.handlers
 import os
+import secrets
 import sys
 import warnings
+from pathlib import Path
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -11,17 +13,35 @@ AGENTONE_ROOT = os.path.join(BASE_DIR, ".agentone")
 # <AGENTONE_SESSIONS_DIR>/<session_pk>/.  Override in settings_local.py.
 AGENTONE_SESSIONS_DIR = os.path.expanduser("~/.agentone/sessions")
 
+
+def _persistent_secret_key(name: str) -> str:
+    """Return a stable per-install secret, creating a private file if needed."""
+    home = Path(os.path.expanduser(os.environ.get("AGENTONE_HOME", "~/.agentone")))
+    home.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path = home / name
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        value = path.read_text(encoding="utf-8").strip()
+        if value:
+            return value
+        raise RuntimeError(f"AgentOne secret file is empty: {path}")
+    value = secrets.token_urlsafe(50)
+    with os.fdopen(fd, "w", encoding="utf-8") as secret_file:
+        secret_file.write(value + "\n")
+    return value
+
 # ---------------------------------------------------------------------------
 # Default settings — override any of these in config/settings_local.py
 # ---------------------------------------------------------------------------
-SECRET_KEY = 'django-insecure-change-me-in-production'
-AGENT_SERVER_SECRET_KEY = 'change-me-in-production'
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+AGENT_SERVER_SECRET_KEY = os.environ.get("AGENT_SERVER_SECRET_KEY", "")
 REDIS_URL = 'redis://localhost:6379/1'
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+DEBUG = False
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 99*24*3600
+SESSION_COOKIE_AGE = 14*24*3600
 
 DATABASES = {
     'default': {
@@ -276,6 +296,11 @@ try:
     from .settings_local import *  # noqa
 except ImportError:
     pass
+
+if not SECRET_KEY:
+    SECRET_KEY = _persistent_secret_key("django_secret_key")
+if not AGENT_SERVER_SECRET_KEY:
+    AGENT_SERVER_SECRET_KEY = _persistent_secret_key("agent_server_secret_key")
 
 # ---------------------------------------------------------------------------
 # Logging

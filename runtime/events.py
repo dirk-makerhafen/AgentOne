@@ -43,15 +43,6 @@ def _extract_filter_context(instance: Any) -> dict[str, Any]:
     return ctx
 
 
-_LOG_FILE = "/tmp/agentone_events.log"
-def _log(msg: str) -> None:
-    import os, time
-    try:
-        with open(_LOG_FILE, "a") as f:
-            f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
-    except Exception:
-        pass
-
 def publish_model_event(instance: Any, action: str, data: dict[str, Any] | None = None) -> None:
     """Publish an ORM model event.
 
@@ -67,13 +58,10 @@ def publish_model_event(instance: Any, action: str, data: dict[str, Any] | None 
     trips.  Instances without ``notify_observers`` (non-BaseModel
     mixins) are silently skipped.
     """
-    filter_context = _extract_filter_context(instance)
-    session_id = filter_context.get("session_id")
-    mn = instance._meta.model_name
-    _log(f"PUBLISH_MODEL_EVENT: model={mn} action={action} pk={instance.pk} sid={session_id}")
+    event_data = {**_extract_filter_context(instance), **(data or {})}
     notify = getattr(instance, "notify_observers", None)
     if callable(notify):
         try:
-            notify(action, data)
+            notify(action, event_data)
         except Exception:
             pass

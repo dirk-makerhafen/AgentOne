@@ -1,7 +1,9 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
+from django.db import transaction
+from api.permissions import IsAdminUserOrReadOnly
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from server.models.sessions.session import SessionModel
@@ -17,7 +19,7 @@ from api.serializers.agents import TaskDefinitionVersionSerializer
 
 class SessionViewSet(viewsets.ModelViewSet):
     queryset = SessionModel.objects.all().order_by('-created_at')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUserOrReadOnly]
     ordering = ['-created_at']
     filterset_fields = ['name', 'is_active', 'is_paused', 'is_archived']
     search_fields = ['name']
@@ -60,10 +62,6 @@ class SessionViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
-        if 'name' in data:
-            session_model.name = data['name']
-            session_model.save(update_fields=['name'])
-
         settings_map = {
             'aimodel': 'set_aimodel',
             'reasoning_effort': 'set_reasoning_effort',
@@ -77,12 +75,27 @@ class SessionViewSet(viewsets.ModelViewSet):
             'max_history_messages': 'set_max_history_messages',
             'priority': 'set_priority',
         }
-        for field, method_name in settings_map.items():
-            if field in data and data[field] is not None:
-                try:
-                    getattr(rt, method_name)(data[field])
-                except Exception:
-                    pass
+        try:
+            with transaction.atomic():
+                if 'name' in data:
+                    session_model.name = data['name']
+                    session_model.save(update_fields=['name'])
+                for field, method_name in settings_map.items():
+                    if field not in data or data[field] is None:
+                        continue
+                    value = data[field]
+                    if field == 'aimodel':
+                        from server.models.providers.ai_model import AiModel
+                        try:
+                            value = AiModel.objects.get(pk=value)
+                        except (AiModel.DoesNotExist, TypeError, ValueError) as exc:
+                            raise ValidationError({field: 'Unknown model.'}) from exc
+                    try:
+                        getattr(rt, method_name)(value)
+                    except Exception as exc:
+                        raise ValidationError({field: str(exc)}) from exc
+        except ValidationError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
         detail_serializer = SessionDetailSerializer(session_model)
         return Response(detail_serializer.data)

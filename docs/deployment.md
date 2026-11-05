@@ -54,6 +54,17 @@ DATABASES = {
 }
 ```
 
+AgentOne generates stable, per-install Django and client-registration secrets
+under `~/.agentone/` with owner-only permissions when no explicit values are
+configured. The defaults disable Django debug mode and accept only localhost;
+set `ALLOWED_HOSTS` to the deployment's actual hostnames before exposing the
+server. The setup wizard writes the same safe host default.
+
+The API is currently single-tenant: authenticated users may read API data, but
+only staff users may mutate system-wide agents, sessions, task calls,
+collections, and cron jobs. Do not create untrusted staff accounts;
+object-level tenancy is not implemented.
+
 ### 3. Static files
 
 ```bash

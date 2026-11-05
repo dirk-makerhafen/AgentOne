@@ -299,7 +299,7 @@ class Command(BaseCommand):
             f"SECRET_KEY = {secret_key!r}",
             f"AGENT_SERVER_SECRET_KEY = {client_key!r}",
             "DEBUG = False",
-            'ALLOWED_HOSTS = ["*"]',
+            'ALLOWED_HOSTS = ["localhost", "127.0.0.1"]',
             "",
             "# ---------------------------------------------------------------------------",
             "# Database",

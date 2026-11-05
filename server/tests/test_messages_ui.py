@@ -91,6 +91,17 @@ class MessagesTest(TestCase):
         self.assertIn(msg.pk, pks,
                       "Message pk should be in the observable list after append")
 
+    def test_orm_event_forwards_message_position_context(self):
+        msg = self._create_message(role=MessageRole.USER)
+        with patch.object(self.messages, "_on_message_created") as on_created:
+            self.messages._on_orm_event(
+                model="Message",
+                pk=msg.pk,
+                action="create",
+                data={"prev_message_id": 42},
+            )
+        on_created.assert_called_once_with(msg.pk, "create", {"prev_message_id": 42})
+
     def test_on_message_created_dedup(self):
         """_on_message_created does NOT add the same pk twice."""
         msg = self._create_message(role=MessageRole.USER)

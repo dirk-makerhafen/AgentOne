@@ -113,6 +113,29 @@ class RuntimeSessionTest(AgentMdTestMixin, TestCase):
         with self.assertRaisesMessage(RuntimeError, "has no session version"):
             session.auto_compact_min_tokens
 
+    def test_setting_update_does_not_mutate_previous_version(self):
+        settings = SettingsModel.objects.create(max_turns=3)
+        session = self._session(self.base_agent, self.base_av, session_settings=settings)
+        previous_version = session.get_version_model()
+        previous_settings = previous_version.session_settings
+
+        session.set_max_turns(7)
+
+        self.assertEqual(previous_version.pk, session.model.related_session_versions.order_by("version_number").first().pk)
+        self.assertEqual(previous_settings.pk, settings.pk)
+        self.assertEqual(previous_settings.max_turns, 3)
+        self.assertEqual(session.get_version_model().session_settings.max_turns, 7)
+
+    def test_property_update_does_not_mutate_previous_version(self):
+        session = self._session(self.base_agent, self.base_av)
+        previous_version = session.get_version_model()
+
+        session._set_session_property("description", "updated description")
+
+        self.assertEqual(previous_version.description, "")
+        self.assertEqual(session.get_version_model().description, "updated description")
+        self.assertNotEqual(previous_version.pk, session.get_version_model().pk)
+
     # ------------------------------------------------------------------
     # Tools-only agent (session_override) with session overrides
     # ------------------------------------------------------------------

@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from api.permissions import IsAdminUserOrReadOnly
 
 from server.models.cron import Cronjob
 from api.serializers.cron import (
@@ -12,7 +12,7 @@ from runtime.cron.execute import execute_cron_job
 
 class CronViewSet(viewsets.ModelViewSet):
     queryset = Cronjob.objects.all().order_by('-created_at')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUserOrReadOnly]
     ordering = ['-created_at']
     filterset_fields = ['name', 'is_active', 'schedule']
     search_fields = ['name']

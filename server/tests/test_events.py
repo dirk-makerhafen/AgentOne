@@ -1,7 +1,7 @@
 """Tests for runtime/events.py — event publishing infrastructure."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 from django.test import TestCase, SimpleTestCase
 from server.models.enums.message_enums import MessageRole
 from server.tests.dc_test_helpers import create_agent, create_session, create_task
@@ -80,6 +80,26 @@ class PublishModelEventTest(SimpleTestCase):
         type(instance).pk = PropertyMock(return_value=1)
         result = publish_model_event(instance, "create")
         self.assertIsNone(result)
+
+
+class PublishModelEventPayloadTest(TestCase):
+    def test_fk_context_is_forwarded_and_custom_data_is_preserved(self):
+        agent, av = create_agent("event-payload-agent")
+        session, sv = create_session(agent, av)
+        from server.models.message import Message
+
+        message = Message.objects.create(
+            role=MessageRole.USER,
+            session=session,
+            session_version=sv,
+        )
+        with patch.object(message, "notify_observers") as notify:
+            publish_model_event(message, "create", {"custom": "value"})
+
+        payload = notify.call_args.args[1]
+        self.assertEqual(payload["session_id"], session.pk)
+        self.assertEqual(payload["session_version_id"], sv.pk)
+        self.assertEqual(payload["custom"], "value")
 
 
 class ExtractFilterContextEdgeTest(SimpleTestCase):

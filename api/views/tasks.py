@@ -1,6 +1,6 @@
 from rest_framework import viewsets, serializers, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from api.permissions import IsAdminUserOrReadOnly
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 
@@ -23,7 +23,7 @@ class TaskCallFilter(filters.FilterSet):
 
 class TaskCallViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AgentTaskCall.objects.all().order_by('-created_at')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUserOrReadOnly]
     filterset_class = TaskCallFilter
     ordering = ['-created_at']
 
@@ -135,7 +135,7 @@ class TaskRunFilter(filters.FilterSet):
 
 class TaskRunViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AgentTaskRun.objects.all().order_by('-created_at')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUserOrReadOnly]
     filterset_class = TaskRunFilter
     ordering = ['-created_at']
     serializer_class = TaskRunSerializer

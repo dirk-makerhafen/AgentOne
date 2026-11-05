@@ -1,8 +1,8 @@
 """Tests for the browser daemon transport and path safety.
 
 Covers the two things that must hold without Playwright installed: the local
-HTTP API rejects unauthenticated callers, and daemon-side file writes/read are
-confined to the workspace root the tool passed in.
+HTTP API rejects unauthenticated callers, and daemon-side file reads/writes
+are confined to a session root resolved by the daemon.
 """
 import json
 import os
@@ -12,6 +12,7 @@ import threading
 import urllib.error
 import urllib.request
 from http.server import ThreadingHTTPServer
+from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
@@ -145,6 +146,12 @@ class DaemonPathSafetyTests(SimpleTestCase):
         self.addCleanup(self._restore)
         self.root = os.path.realpath(self._tmp.name)
         self.daemon = Daemon(get_browser_config())
+        self.scope = {"session_pk": 1}
+        self._root_patch = patch.object(
+            self.daemon, "_filesystem_root", return_value=self.root
+        )
+        self._root_patch.start()
+        self.addCleanup(self._root_patch.stop)
 
     def _restore(self):
         if self._prev is None:
@@ -154,39 +161,66 @@ class DaemonPathSafetyTests(SimpleTestCase):
         self._tmp.cleanup()
 
     def test_relative_path_resolves_under_root(self):
-        params = {"path": "shots/a.png", "write_root": self.root}
-        resolved = self.daemon._safe_write_path(params)
+        params = {"path": "shots/a.png", "write_root": "/tmp"}
+        resolved = self.daemon._safe_write_path(self.scope, params)
         self.assertTrue(resolved.startswith(self.root))
         self.assertTrue(resolved.endswith("shots/a.png"))
+
+    def test_filesystem_root_comes_from_session_not_request_scope(self):
+        from types import SimpleNamespace
+
+        session = SimpleNamespace(
+            latest_session_version=SimpleNamespace(
+                workspace=SimpleNamespace(path=self.root)
+            )
+        )
+        with patch(
+            "server.models.sessions.session.SessionModel.objects.select_related"
+        ) as select_related:
+            select_related.return_value.get.return_value = session
+            root = self.daemon._filesystem_root(
+                {"session_pk": 7, "filesystem_root": "/tmp"}
+            )
+
+        self.assertEqual(root, self.root)
 
     def test_parent_traversal_is_blocked(self):
         params = {"path": "../../etc/passwd", "write_root": self.root}
         with self.assertRaises(BrowserError):
-            self.daemon._safe_write_path(params)
+            self.daemon._safe_write_path(self.scope, params)
 
     def test_absolute_path_outside_root_is_blocked(self):
         params = {"path": "/tmp/evil.png", "write_root": self.root}
         with self.assertRaises(BrowserError):
-            self.daemon._safe_write_path(params)
+            self.daemon._safe_write_path(self.scope, params)
 
     def test_absolute_path_inside_root_is_allowed(self):
         target = os.path.join(self.root, "inside.png")
         params = {"path": target, "write_root": self.root}
-        self.assertEqual(self.daemon._safe_write_path(params), os.path.realpath(target))
+        self.assertEqual(
+            self.daemon._safe_write_path(self.scope, params),
+            os.path.realpath(target),
+        )
 
     def test_missing_required_path(self):
         with self.assertRaises(BrowserError):
-            self.daemon._safe_write_path({}, key="download_path", required=True)
-        self.assertIsNone(self.daemon._safe_write_path({}, key="download_path", required=False))
+            self.daemon._safe_write_path(self.scope, {}, key="download_path", required=True)
+        self.assertIsNone(
+            self.daemon._safe_write_path(self.scope, {}, key="download_path", required=False)
+        )
 
     def test_read_path_must_exist(self):
         with self.assertRaises(BrowserError):
-            self.daemon._safe_read_path({"upload_path": "nope.bin", "read_root": self.root})
+            self.daemon._safe_read_path(
+                self.scope, {"upload_path": "nope.bin", "read_root": self.root}
+            )
         present = os.path.join(self.root, "there.bin")
         with open(present, "wb") as handle:
             handle.write(b"x")
         self.assertEqual(
-            self.daemon._safe_read_path({"upload_path": "there.bin", "read_root": self.root}),
+            self.daemon._safe_read_path(
+                self.scope, {"upload_path": "there.bin", "read_root": self.root}
+            ),
             os.path.realpath(present),
         )
 

@@ -2,7 +2,6 @@ import logging
 import time
 import threading
 import sys
-import re 
 import os
 import watchdog.observers.fsevents as fsevents
 from watchdog.observers import Observer
@@ -10,37 +9,9 @@ from watchdog.events import FileSystemEventHandler, FileSystemEvent
 from watchdog.observers.fsevents import FSEventsEmitter
 from dataclasses import dataclass, field
 
-log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-log_handler = logging.StreamHandler(sys.stdout)
-log_handler.setFormatter(log_formatter)
-root_logger = logging.getLogger()
-root_logger.addHandler(log_handler)
-root_logger.setLevel(logging.DEBUG) # Set default level - change to DEBUG for more verbose output
-fsevents.logger.setLevel(logging.DEBUG)  # Set log level to DEBUG
-
-
 DEBUG = False
-TESTS = '''
-2025-05-13 05:08:23,873 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/fooobar", inode=190848082, flags=10800, id=903223066): is_file, is_renamed
-2025-05-13 05:08:23,873 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/fooobar23", inode=190848082, flags=10800, id=903223067): is_file, is_renamed
-2025-05-13 05:08:25,278 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/fooobar23", inode=190848082, flags=10800, id=903223079): is_file, is_renamed
-2025-05-13 05:08:25,278 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/fooobar", inode=190848082, flags=10800, id=903223080): is_file, is_renamed
-
-2025-05-13 02:58:18,508 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Application Support/Code/Cache/Cache_Data/index-dir/the-real-index", inode=190839926, flags=10800, id=903055169): is_file, is_renamed
-2025-05-13 02:58:18,508 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Application Support/Code/Cache/Cache_Data/index-dir/the-real-index", inode=190839914, flags=10800, id=903055170): is_file, is_renamed
-
-2025-05-13 02:58:21,869 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Application Support/Google/Chrome/Default/Preferences", inode=190839928, flags=10800, id=903055207): is_file, is_renamed
-2025-05-13 02:58:21,870 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Application Support/Google/Chrome/Default/Preferences", inode=190839169, flags=10800, id=903055208): is_file, is_renamed
-
-2025-05-13 03:09:40,869 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Biome/tmp/.tmp.9ctHRJeA", inode=190840804, flags=411700, id=903068801): is_cloned, is_coalesced, is_created, is_file, is_inode_meta_mod, is_modified, is_removed
-2025-05-13 03:09:40,869 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Biome/tmp/.tmp.1twcj5TE", inode=190840807, flags=410700, id=903068822): is_cloned, is_coalesced, is_created, is_file, is_inode_meta_mod, is_removed
-
-2025-05-13 03:09:40,869 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Biome/tmp/.tmp.AFp2gBfcGL", inode=190840805, flags=410900, id=903068796): is_cloned, is_coalesced, is_created, is_file, is_renamed
-2025-05-13 03:09:40,869 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Biome/compute/sessions/C43E51BB-1E9A-4AB6-8F59-A264028D603C/bookmarks/server/com.apple.proactived/FocusModes.ReadingMode", inode=190840805, flags=10800, id=903068797): is_file, is_renamed
-2025-05-13 03:09:40,869 - fsevents - DEBUG - NativeEvent(path="/Users/Dirk/Library/Biome/compute/sessions/C43E51BB-1E9A-4AB6-8F59-A264028D603C/bookmarks/server/com.apple.proactived/FocusModes.ReadingMode", inode=190840795, flags=10800, id=903068798): is_file, is_renamed
-'''
 def noop(*args,**kwargs):pass
-debug_log = root_logger.debug if DEBUG else noop
+debug_log = logging.getLogger(__name__).debug if DEBUG else noop
 
 # Filesystem Observer Class
 
@@ -456,30 +427,11 @@ class AggregatingEventHandler(FileSystemEventHandler):
         self.processor.join(timeout=check_interval + 2) # Wait a bit longer than check interval
 
 
-def simulate_events_from_log(event_handler: AggregatingEventHandler):
-    log_pattern = re.compile(r".*? - fsevents - DEBUG - NativeEvent\(path=\"(.*?)\", inode=(\d+), flags=(\d+), id=(\d+)\): (.*)")
-
-    for line in TESTS.split("\n"):
-        match = log_pattern.search(line)
-        if match:
-            path, inode, flags, id, event_flags_str = match.groups()
-            # Parse flags string into boolean attributes
-            event_flags = [flag.strip() for flag in event_flags_str.split(',')]
-            is_directory = "is_directory" in event_flags
-            is_created = "is_created" in event_flags
-            is_modified = "is_modified" in event_flags
-            is_removed = "is_removed" in event_flags
-            is_renamed = "is_renamed" in event_flags
-            simulated_event = GenericEvent(
-                src_path=path,
-                is_directory=is_directory,
-                is_created=is_created,
-                is_modified=is_modified,
-                is_removed=is_removed,
-                is_renamed=is_renamed,
-                inode=int(inode),
-            )
-            event_handler.on_generic(simulated_event)
+def simulate_event(event_handler: AggregatingEventHandler):
+    """Feed one synthetic create event to the manual test command."""
+    event_handler.on_generic(
+        GenericEvent(src_path=os.path.join(os.getcwd(), "fsobserver-test"), is_created=True)
+    )
 
 def my_callback(path, event_type, old_path=None):
     # event_type  in  created, modified, renamed, removed
@@ -511,7 +463,7 @@ if __name__ == "__main__":
             ],
             callback=my_callback # Pass the callback here for the test simulation
         )
-        simulate_events_from_log(event_handler=event_handler)
+        simulate_event(event_handler=event_handler)
         time.sleep(max(10, 5, min(10, 5)/2.0)*2.5) # Use the default values for sleep calculation
         event_handler.shutdown() # Ensure the processor thread is shut down
         exit(0)

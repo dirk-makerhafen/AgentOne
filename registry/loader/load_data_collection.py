@@ -27,6 +27,7 @@ def load_data_collection_manifest(
     md_path: Path,
     seen_names: set[str] | None = None,
     details: list | None = None,
+    parent_project=None,
 ) -> DataCollection:
     """Create or update a ``DataCollection`` from a YAML frontmatter file.
 
@@ -96,7 +97,7 @@ def load_data_collection_manifest(
     # Snapshot old sources before update to detect changes for retroactive
     old_sources = None
     try:
-        existing = DataCollection.objects.get(name=name)
+        existing = DataCollection.objects.get(name=name, parent_project=parent_project)
         old_sources = existing.sources
     except DataCollection.DoesNotExist:
         existing = None
@@ -116,6 +117,7 @@ def load_data_collection_manifest(
 
     collection, created = DataCollection.objects.get_or_create(
         name=name,
+        parent_project=parent_project,
         defaults=defaults,
     )
     changed = False
@@ -139,7 +141,7 @@ def load_data_collection_manifest(
     ):
         from server.tasks.reprocess_collection import reprocess_collection
         try:
-            reprocess_collection.delay(name, max_items=retroactive_on_source_change)
+            reprocess_collection.delay(collection.pk, max_items=retroactive_on_source_change)
         except Exception:
             pass  # Celery may not be available (e.g., in tests)
 

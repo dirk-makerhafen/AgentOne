@@ -62,6 +62,35 @@ class TestSessions:
         resp2 = auth_client.patch(f'/api/v1/sessions/{session_id}/', {'aimodel': model.id})
         assert resp2.status_code == 200
 
+    def test_patch_session_rejects_unknown_aimodel(self, auth_client):
+        agent = AgentModel.objects.create(name='invalid-model-session-agent')
+        created = auth_client.post('/api/v1/sessions/', {'agent_id': agent.id})
+        session_id = created.data['id']
+        version_before = SessionModel.objects.get(pk=session_id).latest_session_version_id
+
+        response = auth_client.patch(f'/api/v1/sessions/{session_id}/', {'aimodel': 999999})
+
+        assert response.status_code == 400
+        assert 'aimodel' in response.data
+        assert SessionModel.objects.get(pk=session_id).latest_session_version_id == version_before
+
+    def test_patch_session_rejects_invalid_setting(self, auth_client):
+        agent = AgentModel.objects.create(name='invalid-setting-session-agent')
+        created = auth_client.post('/api/v1/sessions/', {'agent_id': agent.id})
+        session_id = created.data['id']
+        version_before = SessionModel.objects.get(pk=session_id).latest_session_version_id
+
+        response = auth_client.patch(
+            f'/api/v1/sessions/{session_id}/',
+            {'name': 'should-not-persist', 'reasoning_effort': 'impossible'},
+        )
+
+        assert response.status_code == 400
+        assert 'reasoning_effort' in response.data
+        session = SessionModel.objects.get(pk=session_id)
+        assert session.latest_session_version_id == version_before
+        assert session.name != 'should-not-persist'
+
     def test_message_no_content(self, auth_client):
         agent = AgentModel.objects.create(name='msg-session')
         resp = auth_client.post('/api/v1/sessions/', {'agent_id': agent.id})

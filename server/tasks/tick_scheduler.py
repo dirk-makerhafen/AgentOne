@@ -39,6 +39,8 @@ Celery beat config (settings.py):
 
 from __future__ import annotations
 
+import ast
+import operator
 import traceback
 from typing import Any
 
@@ -360,6 +362,17 @@ def _matches_data_flow_source(call, source_def):
     return False
 
 
+def _call_project_id(call):
+    """Return the project owning a source call, if it has one."""
+    session = getattr(call, "session", None)
+    project_id = getattr(session, "parent_project_id", None) if session is not None else None
+    if project_id is not None:
+        return project_id
+    session_version = getattr(call, "session_version", None)
+    agent = getattr(session_version, "agent", None) if session_version is not None else None
+    return getattr(agent, "parent_project_id", None) if agent is not None else None
+
+
 def _dispatch_processor(flow, call, source_item=None):
     """Execute one data-flow processor for a source call.
 
@@ -377,7 +390,7 @@ def _dispatch_processor(flow, call, source_item=None):
     from server.models.sessions.session import SessionModel
     from server.models.sessions.session_version import SessionVersionModel
     from runtime.session.session import Session
-    print("_dispatch_processor", flow, call, source_item)
+
     processor = flow.processor
     if not processor or not isinstance(processor, dict):
         return
@@ -385,64 +398,46 @@ def _dispatch_processor(flow, call, source_item=None):
     agent_name = processor.get("agent", "")
     function_name = processor.get("function", "")
     session_template = processor.get("session", "") or flow.name
-
     if not agent_name or not function_name:
         return
 
-    # Resolve agent
-    from server.models.agents.agent import AgentModel
-    agent = AgentModel.objects.filter(name=agent_name).first()
+    agent = _collection_agent(flow, agent_name)
     if not agent:
         print(f"[dataflow] agent '{agent_name}' not found for flow '{flow.name}'")
         return
-
-    # Resolve function / task-definition-version
-    from server.models.tasks.task_definition import TaskDefinition
-    tdv = TaskDefinition.objects.filter(
-        name=function_name,
-    ).first()
+    tdv = _collection_task(agent, function_name)
     if not tdv or not tdv.latest_task_version:
         print(f"[dataflow] task '{function_name}' not found for flow '{flow.name}'")
         return
 
-    # Build session name (allow template vars from the source call)
+    source_task = getattr(getattr(call, "task_instance", None), "task_definition_version", None)
+    source_definition = getattr(source_task, "task_definition", None)
+    source_agent = getattr(source_definition, "parent_agent", None)
     session_name = session_template.format(
-        source_agent=AgentModel.objects.get(
-            pk=call.task_instance.task_definition_version.task_definition.parent_agent_id,
-        ).name if call.task_instance and call.task_instance.task_definition_version and call.task_instance.task_definition_version.task_definition and call.task_instance.task_definition_version.task_definition.parent_agent_id else "",
+        source_agent=getattr(source_agent, "name", ""),
         source_session=call.session.name if call.session else "",
-        source_function=call.task_instance.task_definition_version.task_definition.name if call.task_instance and call.task_instance.task_definition_version and call.task_instance.task_definition_version.task_definition else "",
+        source_function=getattr(source_definition, "name", ""),
     ) if "{" in session_template else session_template
 
-    # Create or get session
-    session_model, _ = SessionModel.objects.get_or_create(name=session_name)
+    session_model, _ = SessionModel.objects.get_or_create(
+        name=session_name,
+        parent_project=flow.parent_project,
+    )
     if session_model.latest_session_version_id:
         session_version = session_model.latest_session_version
     else:
-        # Create a minimal session version
         session_version = SessionVersionModel.objects.create(
             session=session_model,
             agent=agent,
-            pinned_agent_version=agent.latest_agent_version if hasattr(agent, 'latest_agent_version') and agent.latest_agent_version else None,
+            pinned_agent_version=agent.latest_agent_version,
         )
         SessionModel.objects.filter(pk=session_model.pk).update(
             latest_session_version=session_version,
         )
-    session_obj = Session(
-        session_model=session_model,
-        pinned_session_version=session_version,
-    )
+    session_obj = Session(session_model=session_model, pinned_session_version=session_version)
 
-    # Determine the pre-dispatch member/score from the source call so we can
-    # persist a CollectionItem (dedup token) immediately — even if the
-    # processor fails or this function throws an exception later.  When the
-    # processor runs synchronously (eager mode) the token is reconciled
-    # below against the real result (result-based member, None-filtering).
     pre_member = _extract_member(flow, None, call)
     score = _extract_score(flow, None, call)
-
-    # Upsert the dedup token right away so the source call won't be
-    # re-dispatched on the next tick regardless of what happens below.
     CollectionItem.objects.update_or_create(
         collection=flow,
         member=pre_member,
@@ -453,16 +448,10 @@ def _dispatch_processor(flow, call, source_item=None):
         },
     )
 
-    # Create (or reuse) a TaskInstance for the consumer.
-    # We intentionally set iarguments_json to {} — copying it from the source
-    # call would double positional args when start_new_taskrun merges
-    # iarguments_json["*"] + carguments_json["*"].
-    # get_or_create (not objects.create) so repeated dispatches share one
-    # instance row instead of violating uniq_taskinstance_dedupe.
     src_ti = call.task_instance
     task_instance = TaskInstance.get_or_create(
         task_definition=tdv.latest_task_version,
-        session_version=session_obj.latest_version if hasattr(session_obj, 'latest_version') else session_version,
+        session_version=session_version,
         requires_approval=src_ti.requires_approval if src_ti else False,
         max_subtask_errors=src_ti.max_subtask_errors if src_ti else 0,
         max_subtask_error_rate=src_ti.max_subtask_error_rate if src_ti else 0,
@@ -472,20 +461,13 @@ def _dispatch_processor(flow, call, source_item=None):
         retry_delay=src_ti.retry_delay if src_ti else 10,
         retry_requires_approval=src_ti.retry_requires_approval if src_ti else True,
     )
-
-    # Create and dispatch the processor call
     processor_call = AgentTaskCall.create(
         task_instance=task_instance,
         kwargs=call.carguments_json,
     )
     processor_call.apply_async()
 
-    # Try to capture the processor function's return value (synchronous path:
-    # eager mode, where the call completed before we got here).  In async
-    # (production) mode the call hasn't completed yet, so we keep the
-    # args-derived token as-is — the result is unknowable at this point.
     from server.models.enums.task_enums import TaskCallStatusDetail, TaskRunStatus
-    from server.models.tasks.agent_task_run import AgentTaskRun
 
     processor_call.refresh_from_db()
     completed_run = getattr(processor_call, "taskcall_result_run", None)
@@ -496,18 +478,12 @@ def _dispatch_processor(flow, call, source_item=None):
 
     member = pre_member
     if completed_run is not None:
-        # The processor really ran: its return value is authoritative.
         processor_result = completed_run.result_json
         if processor_result is None:
-            # Filtered out (processor returned None): drop the pre-created
-            # dedup token and report no item.
             CollectionItem.objects.filter(
                 collection=flow, member=pre_member, dispatch_source_call=call,
             ).delete()
             return None
-        # Re-derive member/score from the processor result (set member_field
-        # / score_field read the result, not the raw args).  A changed
-        # member orphans the pre-created token — remove it.
         member = _extract_member(flow, processor_call, call, processor_result)
         score = _extract_score(flow, processor_call, call, processor_result)
         if member != pre_member:
@@ -515,14 +491,11 @@ def _dispatch_processor(flow, call, source_item=None):
                 collection=flow, member=pre_member, dispatch_source_call=call,
             ).delete()
 
-    # Update the CollectionItem with the actual processor call and result
     defaults: dict = {
         "source_call": processor_call,
         "dispatch_source_call": call,
         "score": score,
-        "value": completed_run.result_json
-        if completed_run is not None
-        else call.carguments_json,
+        "value": completed_run.result_json if completed_run is not None else call.carguments_json,
         "reconciled_at": timezone.now() if completed_run is not None else None,
     }
     if source_item is not None:
@@ -533,6 +506,58 @@ def _dispatch_processor(flow, call, source_item=None):
         defaults=defaults,
     )
     return member
+
+
+_DATAFLOW_BINARY_OPERATORS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.FloorDiv: operator.floordiv,
+    ast.Mod: operator.mod,
+}
+_DATAFLOW_UNARY_OPERATORS = {ast.UAdd: operator.pos, ast.USub: operator.neg}
+
+
+def _eval_dataflow_expression(expression, item):
+    """Evaluate the small, non-executable expression subset used by sets."""
+    if not isinstance(expression, str) or len(expression) > 1024:
+        raise ValueError("expression must be at most 1024 characters")
+    tree = ast.parse(expression, mode="eval")
+    if sum(1 for _ in ast.walk(tree)) > 64:
+        raise ValueError("expression is too complex")
+
+    def evaluate(node):
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, (str, int, float, bool, type(None))):
+                return node.value
+            raise ValueError("unsupported constant")
+        if isinstance(node, ast.Name) and node.id == "item":
+            return item
+        if isinstance(node, ast.Attribute):
+            if node.attr.startswith("_"):
+                raise ValueError("private attributes are not allowed")
+            return getattr(evaluate(node.value), node.attr)
+        if isinstance(node, ast.Subscript):
+            return evaluate(node.value)[evaluate(node.slice)]
+        if isinstance(node, ast.Call) and not node.keywords:
+            args = [evaluate(arg) for arg in node.args]
+            if isinstance(node.func, ast.Name) and node.func.id in ("str", "int", "float"):
+                if len(args) != 1:
+                    raise ValueError("scalar conversions take one argument")
+                return {"str": str, "int": int, "float": float}[node.func.id](args[0])
+            if isinstance(node.func, ast.Attribute) and node.func.attr == "get":
+                target = evaluate(node.func.value)
+                if isinstance(target, dict) and 1 <= len(args) <= 2:
+                    return target.get(*args)
+            raise ValueError("function calls are not allowed")
+        if isinstance(node, ast.BinOp) and type(node.op) in _DATAFLOW_BINARY_OPERATORS:
+            return _DATAFLOW_BINARY_OPERATORS[type(node.op)](evaluate(node.left), evaluate(node.right))
+        if isinstance(node, ast.UnaryOp) and type(node.op) in _DATAFLOW_UNARY_OPERATORS:
+            return _DATAFLOW_UNARY_OPERATORS[type(node.op)](evaluate(node.operand))
+        raise ValueError(f"unsupported expression: {type(node).__name__}")
+
+    return evaluate(tree.body)
 
 
 def _extract_member(flow, processor_call, source_call, processor_result=None):
@@ -548,7 +573,7 @@ def _extract_member(flow, processor_call, source_call, processor_result=None):
         return str(source_call.pk)
     try:
         item = processor_result if processor_result is not None else source_call.carguments_json
-        result = eval(expr, {"__builtins__": {}, "str": str, "float": float, "int": int}, {"item": item})
+        result = _eval_dataflow_expression(expr, item)
         return str(result)
     except Exception as ex:
         print(f"[dataflow] member_field eval error for '{flow.name}': {ex}")
@@ -568,7 +593,7 @@ def _extract_score(flow, processor_call, source_call, processor_result=None):
         return timezone.now().timestamp()
     try:
         item = processor_result if processor_result is not None else source_call.carguments_json
-        result = eval(expr, {"__builtins__": {}, "str": str, "float": float, "int": int}, {"item": item})
+        result = _eval_dataflow_expression(expr, item)
         return float(result)
     except Exception as ex:
         print(f"[dataflow] score_field eval error for '{flow.name}': {ex}")
@@ -576,12 +601,33 @@ def _extract_score(flow, processor_call, source_call, processor_result=None):
         return timezone.now().timestamp()
 
 
+def _collection_agent(collection, name):
+    """Resolve a collection processor agent in its project, then globally."""
+    from server.models.agents.agent import AgentModel
+
+    agents = AgentModel.objects.filter(name=name)
+    if collection.parent_project_id:
+        return (
+            agents.filter(parent_project_id=collection.parent_project_id).first()
+            or agents.filter(parent_project__isnull=True).first()
+        )
+    return agents.filter(parent_project__isnull=True).first()
+
+
+def _collection_task(agent, name):
+    """Resolve a collection processor task from its owning agent."""
+    from server.models.tasks.task_definition import TaskDefinition
+
+    if agent is None:
+        return None
+    return TaskDefinition.objects.filter(name=name, parent_agent=agent).first()
+
+
 def _trigger_on_removed(collection, source_calls):
     """Dispatch the ``on_removed`` handler for removed items."""
     from server.models.tasks.task_instance import TaskInstance
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.sessions.session import SessionModel
-    from server.models.agents.agent import AgentModel
 
     on_removed_cfg = collection.on_removed
     if not on_removed_cfg or not isinstance(on_removed_cfg, dict):
@@ -594,20 +640,21 @@ def _trigger_on_removed(collection, source_calls):
     if not agent_name or not function_name:
         return
 
-    agent = AgentModel.objects.filter(name=agent_name).first()
+    agent = _collection_agent(collection, agent_name)
     if not agent:
         print(f"[dataflow] on_removed agent '{agent_name}' not found")
         return
 
-    from server.models.tasks.task_definition import TaskDefinition
-    tdv = TaskDefinition.objects.filter(name=function_name).first()
+    tdv = _collection_task(agent, function_name)
     if not tdv or not tdv.latest_task_version:
         print(f"[dataflow] on_removed task '{function_name}' not found")
         return
 
     from server.models.sessions.session_version import SessionVersionModel
 
-    session_model, _ = SessionModel.objects.get_or_create(name=session_name)
+    session_model, _ = SessionModel.objects.get_or_create(
+        name=session_name, parent_project=collection.parent_project
+    )
     if not session_model.latest_session_version_id:
         sv = SessionVersionModel.objects.create(
             session=session_model,
@@ -688,6 +735,8 @@ def _dispatch_data_flows() -> None:
             continue
 
         for call in calls:
+            if flow.parent_project_id and _call_project_id(call) != flow.parent_project_id:
+                continue
             if any(_matches_data_flow_source(call, s) for s in flow_sources):
                 if CollectionItem.objects.filter(collection=flow, dispatch_source_call=call).exists():
                     continue  # Already dispatched
@@ -741,17 +790,23 @@ def _propagate_from_collections(collection: Any = None) -> None:
         return
 
     for item in recent_items:
-        source_collection_name = item.collection.name
         for flow in all_flows:
             for source_def in flow.sources:
                 src_type = source_def.get("type", "query")
-                if src_type == "stream" and source_def.get("stream") == source_collection_name:
-                    if item.source_call:
-                        if CollectionItem.objects.filter(collection=flow, source_item=item).exists():
-                            break
-                        _dispatch_processor(flow, item.source_call, source_item=item)
-                    break
-                if src_type == "set" and source_def.get("set") == source_collection_name:
+                source_name = source_def.get(src_type, "") if src_type in ("stream", "set") else ""
+                if not source_name:
+                    continue
+                try:
+                    source_collection = DataCollection.resolve_in_scope(
+                        source_name, flow.parent_project
+                    )
+                except DataCollection.DoesNotExist:
+                    continue
+                if source_collection.pk != item.collection_id:
+                    continue
+                if flow.parent_project_id and item.collection.parent_project_id != flow.parent_project_id:
+                    continue
+                if src_type in ("stream", "set"):
                     if item.source_call:
                         if CollectionItem.objects.filter(collection=flow, source_item=item).exists():
                             break

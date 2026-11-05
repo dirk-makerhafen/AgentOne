@@ -284,15 +284,16 @@ Unified model for both streams (append-only) and ordered sets (mutable). Each co
 
 | Field | Type | Notes |
 |---|---|---|
-| `name` | `CharField(255, unique)` | Collection name |
+| `name` | `CharField(255)` | Unique within global or project scope |
+| `parent_project` | `FK(Project, CASCADE, null)` | Project scope; `NULL` means global |
 | `description` | `TextField` | Human-readable description |
 | `collection_type` | `CharField(10)` | `"stream"` or `"set"` |
 | `is_active` | `BooleanField(default=True)` | Inactive flows are skipped |
 | `sources` | `JSONField(list)` | Array of source definitions |
 | `processor` | `JSONField(dict)` | Agent+function that transforms items |
 | `on_removed` | `JSONField(dict)` | Handler for set removals |
-| `member_field` | `TextField` | Python eval expression for set member |
-| `score_field` | `TextField` | Python eval expression for set score |
+| `member_field` | `TextField` | Restricted expression for set member |
+| `score_field` | `TextField` | Restricted expression for set score |
 | `retroactive_on_source_change` | `IntegerField` | Max items to reprocess when sources change |
 | `max_reprocess` | `IntegerField` | Max items to reprocess on processor update |
 

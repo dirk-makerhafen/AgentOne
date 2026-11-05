@@ -20,10 +20,22 @@ class DataCollection(BaseModel):
         @property
         def items(self):
             return f"CollectionItem.collection:{self.model.pk}"
+
+        @property
+        def parent_project(self):
+            return f"DataCollection.parent_project:{self.model.parent_project_id}"
         
     COLLECTION_TYPES = [("stream", "Stream"), ("set", "Ordered Set")]
 
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+    parent_project = models.ForeignKey(
+        "server.Project",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="data_collections",
+    )
+    scope_key = models.CharField(max_length=32, default="global", editable=False)
     description = models.TextField(default="", blank=True)
     collection_type = models.CharField(max_length=10, choices=COLLECTION_TYPES, default="stream")
     is_active = models.BooleanField(default=True)
@@ -63,6 +75,34 @@ class DataCollection(BaseModel):
             models.Index(fields=["collection_type"]),
             models.Index(fields=["collection_type", "is_active"]),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["scope_key", "name"],
+                name="uniq_dc_scope_name",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        """Keep the portable uniqueness scope synchronized with its project FK."""
+        project_id = getattr(self, "parent_project_id", None)
+        self.scope_key = (
+            f"project-{project_id}"
+            if project_id is not None
+            else "global"
+        )
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            kwargs["update_fields"] = set(update_fields) | {"scope_key"}
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def resolve_in_scope(cls, name: str, parent_project=None):
+        """Resolve a collection in a project, falling back to the global scope."""
+        if parent_project is not None:
+            scoped = cls.objects.filter(name=name, parent_project=parent_project).first()
+            if scoped is not None:
+                return scoped
+        return cls.objects.get(name=name, parent_project__isnull=True)
 
     def __str__(self) -> str:
         return f"{self.get_collection_type_display()}[{self.name}]"

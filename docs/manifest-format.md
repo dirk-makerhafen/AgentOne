@@ -486,15 +486,20 @@ switching to the "Archived" tab in the cron panel.
 
 ## `stream.md` / `set.md` — Data Flow Definition
 
-Defines a data flow (stream or set) that collects and processes task results. Lives at `.agentone/streams/<name>.md` or `.agentone/sets/<name>.md`.
+Defines a data flow (stream or set) that collects and processes task results. Lives at `.agentone/streams/<name>.md` or `.agentone/sets/<name>.md`; project-level files live in the project's `.agentone/` tree.
 
 The directory determines the type: `streams/` → append-only stream (auto member/score), `sets/` → mutable ordered set (user-defined member/score).
+
+Global collections and project collections have separate namespaces. A project
+collection resolves a referenced stream or set in its own project first, then
+falls back to a global collection. Project collection names may therefore be
+reused by other projects without cross-project propagation.
 
 ### YAML Frontmatter Fields
 
 | Field | Required | Type | Default | Description |
 |---|---|---|---|---|
-| `name` | yes | string | — | Collection name (unique) |
+| `name` | yes | string | — | Collection name (unique within global or project scope) |
 | `description` | no | string | `""` | Human-readable description |
 | `sources` | yes | list | `[]` | Source definitions (see below) |
 | `processor` | yes | dict | `{}` | Agent + function that transforms items |
@@ -504,8 +509,8 @@ The directory determines the type: `streams/` → append-only stream (auto membe
 | `on_removed` | no | dict | `{}` | Handler fired when a set item is removed |
 | `on_removed.agent` | yes | string | — | Agent for the removal handler |
 | `on_removed.function` | yes | string | — | Task function for the removal handler |
-| `member_field` | no | string | `""` | Python eval expression for set member (sets only) |
-| `score_field` | no | string | `""` | Python eval expression for set score (sets only) |
+| `member_field` | no | string | `""` | Restricted expression for set member (sets only) |
+| `score_field` | no | string | `""` | Restricted expression for set score (sets only) |
 | `retroactive_on_source_change` | no | int | `0` | Max items to reprocess when sources change (0=off) |
 | `max_reprocess` | no | int | `0` | Max items to reprocess on processor update (0=off) |
 

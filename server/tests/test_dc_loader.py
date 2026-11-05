@@ -3,15 +3,18 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
 from django.utils import timezone
 
 from server.models.collections import DataCollection, CollectionItem
+from server.models.project import Project
 from server.tasks.tick_scheduler import _dispatch_data_flows, _propagate_from_collections
 from server.tasks.reprocess_collection import reprocess_collection
 from server.tests.dc_test_helpers import TESTPROJECT, create_agent, create_task, create_session, create_completed_call
 from registry.loader.load_data_collection import load_data_collection_manifest
+from registry.loader.load_project_folder import load_scope_dir
 from server.tests.test_reporter import TestReport
 
 
@@ -76,6 +79,36 @@ class LoadDataCollectionManifestTest(TestCase):
         self.report.add("test_missing_name_raises", "PASS",
             "A YAML file without a 'name' field raises ValueError with a descriptive message. "
             "Prevents creation of unnamed collections.")
+
+    def test_collection_names_are_unique_within_project_scope(self):
+        project_a = Project.objects.create(name="collection-project-a")
+        project_b = Project.objects.create(name="collection-project-b")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root_a = Path(temp_dir) / "project-a"
+            root_b = Path(temp_dir) / "project-b"
+            for root in (root_a, root_b):
+                streams = root / "streams"
+                streams.mkdir(parents=True)
+                (streams / "shared.md").write_text(
+                    "---\nname: shared\nsources: []\n---\n", encoding="utf-8"
+                )
+            with patch(
+                "registry.loader.load_project_folder.InstallRepo.for_project",
+                return_value=MagicMock(),
+            ):
+                load_scope_dir(root_a, project_a)
+                load_scope_dir(root_b, project_b)
+
+        collection_a = DataCollection.resolve_in_scope("shared", project_a)
+        collection_b = DataCollection.resolve_in_scope("shared", project_b)
+
+        self.assertNotEqual(collection_a.pk, collection_b.pk)
+        self.assertEqual(collection_a.parent_project_id, project_a.pk)
+        self.assertEqual(collection_b.parent_project_id, project_b.pk)
+        self.assertEqual(collection_a.scope_key, f"project-{project_a.pk}")
+        self.assertEqual(collection_b.scope_key, f"project-{project_b.pk}")
+        self.assertEqual(DataCollection.resolve_in_scope("shared", project_a).pk, collection_a.pk)
+        self.assertEqual(DataCollection.resolve_in_scope("shared", project_b).pk, collection_b.pk)
 
 
 class DataFlowIntegrationTest(TestCase):

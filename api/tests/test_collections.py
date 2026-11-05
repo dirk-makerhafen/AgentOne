@@ -1,5 +1,6 @@
 import pytest
 from server.models.collections.data_collection import DataCollection
+from server.models.project import Project
 
 
 @pytest.mark.django_db
@@ -22,6 +23,26 @@ class TestCollections:
         })
         assert resp.status_code == 201
         assert DataCollection.objects.filter(name='test-stream').exists()
+
+    def test_create_same_collection_name_in_different_projects(self, auth_client):
+        project_a = Project.objects.create(name='collection-api-project-a')
+        project_b = Project.objects.create(name='collection-api-project-b')
+        body = {'name': 'shared-stream', 'collection_type': 'stream'}
+
+        response_a = auth_client.post(
+            '/api/v1/collections/', {**body, 'parent_project': project_a.pk}
+        )
+        response_b = auth_client.post(
+            '/api/v1/collections/', {**body, 'parent_project': project_b.pk}
+        )
+
+        assert response_a.status_code == 201
+        assert response_b.status_code == 201
+        scoped = DataCollection.objects.filter(name='shared-stream').order_by('parent_project_id')
+        assert scoped.count() == 2
+        assert list(scoped.values_list('parent_project_id', flat=True)) == [
+            project_a.pk, project_b.pk,
+        ]
 
     def test_create_collection_missing_name(self, auth_client):
         resp = auth_client.post('/api/v1/collections/', {'collection_type': 'stream'})

@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from api.permissions import IsAdminUserOrReadOnly
 
 from server.models.collections.data_collection import DataCollection
 from server.models.collections.collection_item import CollectionItem
@@ -13,7 +13,7 @@ from api.serializers.collections import (
 
 class CollectionViewSet(viewsets.ModelViewSet):
     queryset = DataCollection.objects.all().order_by('-created_at')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUserOrReadOnly]
     ordering = ['-created_at']
     filterset_fields = ['name', 'collection_type', 'is_active']
     search_fields = ['name']
@@ -41,7 +41,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         collection = self.get_object()
         from server.tasks.reprocess_collection import reprocess_collection
         try:
-            reprocess_collection.delay(collection.name)
+            reprocess_collection.delay(collection.pk)
             return Response({'status': 'reprocess triggered'})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_ERROR)

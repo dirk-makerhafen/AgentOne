@@ -29,6 +29,9 @@ class Project(ObservableMixin, models.Model):
         @property
         def work_items(self):
             return f"WorkItem.project:{self.model.pk}"
+        @property
+        def data_collections(self):
+            return f"DataCollection.parent_project:{self.model.pk}"
 
     created_at: datetime = models.DateTimeField(auto_now_add=True)
     updated_at: datetime = models.DateTimeField(auto_now=True)

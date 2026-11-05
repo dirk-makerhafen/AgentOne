@@ -8,7 +8,7 @@ class DataCollectionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataCollection
-        fields = ['id', 'name', 'collection_type', 'description',
+        fields = ['id', 'name', 'parent_project', 'collection_type', 'description',
                   'is_active', 'item_count', 'created_at', 'updated_at']
 
     def get_item_count(self, obj) -> int:
@@ -18,7 +18,7 @@ class DataCollectionListSerializer(serializers.ModelSerializer):
 class DataCollectionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataCollection
-        fields = ['id', 'name', 'description', 'collection_type',
+        fields = ['id', 'name', 'parent_project', 'description', 'collection_type',
                   'is_active', 'sources', 'processor', 'on_removed',
                   'member_field', 'score_field',
                   'retroactive_on_source_change', 'max_reprocess',
@@ -28,7 +28,7 @@ class DataCollectionDetailSerializer(serializers.ModelSerializer):
 class DataCollectionWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataCollection
-        fields = ['name', 'description', 'collection_type', 'is_active',
+        fields = ['name', 'parent_project', 'description', 'collection_type', 'is_active',
                   'sources', 'processor', 'on_removed',
                   'member_field', 'score_field',
                   'retroactive_on_source_change', 'max_reprocess']

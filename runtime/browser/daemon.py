@@ -340,7 +340,7 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
 
     def _action_screenshot(self, scope: dict, params: dict) -> dict:
         _, page, rec = self._page_for(scope, params)
-        path = self._safe_write_path(params)
+        path = self._safe_write_path(scope, params)
         page.screenshot(path=path, full_page=bool(params.get("full_page")), timeout=self.nav_timeout)
         return {"page_id": rec.page_id, "path": path}
 
@@ -349,14 +349,14 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
         target = params.get("ref") or params.get("selector")
         if not target:
             raise BrowserError("upload requires a ref or selector")
-        upload_path = self._safe_read_path(params, key="upload_path")
+        upload_path = self._safe_read_path(scope, params, key="upload_path")
         selector = resolve_ref(target) if params.get("ref") else str(target)
         page.set_input_files(selector, upload_path, timeout=self.action_timeout)
         return {"page_id": rec.page_id, "uploaded": upload_path}
 
     def _action_download(self, scope: dict, params: dict) -> dict:
         _, page, rec = self._page_for(scope, params)
-        dest = self._safe_write_path(params, key="download_path", required=False)
+        dest = self._safe_write_path(scope, params, key="download_path", required=False)
         with page.expect_download(timeout=self.nav_timeout) as dl_info:
             if params.get("url"):
                 allowed, reason = policy.check_navigation(str(params["url"]), self.cfg)
@@ -371,10 +371,18 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
             else:
                 raise BrowserError("download requires a url or a ref")
         download = dl_info.value
-        target = dest or str(Path(download.suggested_filename))
-        if dest:
-            download.save_as(dest)
-        return {"page_id": rec.page_id, "suggested_filename": download.suggested_filename, "path": dest, "note": None if dest else f"suggested filename: {target}"}
+        if dest is None:
+            root = Path(self._filesystem_root(scope))
+            filename = Path(download.suggested_filename).name or "download"
+            stem, suffix = Path(filename).stem, Path(filename).suffix
+            dest = str(root / "downloads" / filename)
+            index = 1
+            while Path(dest).exists():
+                dest = str(root / "downloads" / f"{stem}-{index}{suffix}")
+                index += 1
+            dest = self._safe_write_path(scope, {"download_path": dest}, key="download_path")
+        download.save_as(dest)
+        return {"page_id": rec.page_id, "suggested_filename": download.suggested_filename, "path": dest, "note": None}
 
     def _action_evaluate(self, scope: dict, params: dict) -> dict:
         _, page, rec = self._page_for(scope, params)
@@ -409,41 +417,60 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
     # Path safety
     # ------------------------------------------------------------------
 
-    def _safe_path(self, params: dict, key: str, write: bool) -> str | None:
+    @staticmethod
+    def _filesystem_root(scope: dict) -> str:
+        """Resolve the caller's workspace or private folder from the database."""
+        session_pk = scope.get("session_pk")
+        if not isinstance(session_pk, int):
+            raise BrowserError("session scope is missing a valid session id")
+        try:
+            from server.models.sessions.session import SessionModel
+
+            session = SessionModel.objects.select_related(
+                "latest_session_version__workspace"
+            ).get(pk=session_pk)
+            version = session.latest_session_version
+            workspace = version.workspace if version is not None else None
+            workspace_path = getattr(workspace, "path", None) if workspace is not None else None
+            if workspace_path:
+                return str(Path(workspace_path).expanduser().resolve())
+            from runtime.session_folder import session_dir
+
+            return str(session_dir(session).expanduser().resolve())
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            raise BrowserError("could not resolve session filesystem root") from exc
+
+    def _safe_path(self, scope: dict, params: dict, key: str, write: bool) -> str | None:
         raw = params.get(key)
         if not raw:
             return None
-        root = params.get("write_root") or params.get("read_root")
+        root = self._filesystem_root(scope)
         candidate = Path(os.path.expanduser(str(raw)))
         if not candidate.is_absolute():
-            candidate = Path(root or os.getcwd()) / candidate
+            candidate = Path(root) / candidate
         try:
             resolved = candidate.resolve()
         except OSError:
             resolved = candidate
-        if root:
-            try:
-                root_resolved = Path(os.path.expanduser(str(root))).resolve()
-            except OSError:
-                root_resolved = Path(str(root))
-            try:
-                resolved.relative_to(root_resolved)
-            except ValueError as exc:
-                raise BrowserError(f"path escapes allowed root: {raw}") from exc
+        try:
+            root_resolved = Path(root).expanduser().resolve()
+            resolved.relative_to(root_resolved)
+        except ValueError as exc:
+            raise BrowserError(f"path escapes allowed root: {raw}") from exc
         if write:
             resolved.parent.mkdir(parents=True, exist_ok=True)
         elif not resolved.exists():
             raise BrowserError(f"no such file: {resolved}")
         return str(resolved)
 
-    def _safe_write_path(self, params: dict, key: str = "path", required: bool = True) -> str | None:
-        path = self._safe_path(params, key, write=True)
+    def _safe_write_path(self, scope: dict, params: dict, key: str = "path", required: bool = True) -> str | None:
+        path = self._safe_path(scope, params, key, write=True)
         if required and not path:
             raise BrowserError(f"{key} is required")
         return path
 
-    def _safe_read_path(self, params: dict, key: str = "upload_path") -> str:
-        path = self._safe_path(params, key, write=False)
+    def _safe_read_path(self, scope: dict, params: dict, key: str = "upload_path") -> str:
+        path = self._safe_path(scope, params, key, write=False)
         if not path:
             raise BrowserError(f"{key} is required")
         return path

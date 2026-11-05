@@ -712,7 +712,7 @@ class CollectionDetailView(ModelView):
 
     def reprocess(self) -> None:
         from server.tasks import reprocess_collection
-        reprocess_collection.delay(self.subject.name)
+        reprocess_collection.delay(self.subject.pk)
 
     def startEdit(self) -> None:
         self._editing = True

@@ -195,14 +195,6 @@ class Messages(PyHtmlView):
         self._refresh_turns()
 
 
-    def _log(self, msg: str) -> None:
-        try:
-            with open("/tmp/agentone_events.log", "a") as _f:
-                import time
-                _f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
-        except Exception:
-            pass
-
     def scrollToBottom(self) -> None:
         self.load_message_from_bottom()
         try:
@@ -228,36 +220,33 @@ class Messages(PyHtmlView):
 
     def _on_orm_event(self, key=None, model=None, pk=None, action=None, data=None) -> None:
         """Redis observable callback: route to the matching chat-log handler."""
+        if pk is None:
+            return
         try:
             if model == "Message" and action == "create":
-                self._on_message_created(pk, action, {})
+                self._on_message_created(pk, action, data or {})
             elif model == "Query" and action == "create":
-                self._on_query_created(pk, action, {})
+                self._on_query_created(pk, action, data or {})
             elif model == "Query" and action == "update":
-                self._on_query_updated(pk, action, {})
+                self._on_query_updated(pk, action, data or {})
             elif model == "Response" and action == "create":
-                self._on_response_created(pk, action, {})
+                self._on_response_created(pk, action, data or {})
             elif model == "Response" and action == "update":
-                self._on_response_updated(pk, action, {})
+                self._on_response_updated(pk, action, data or {})
             elif model == "AgentTaskCall" and action in ("create", "update"):
-                self._on_taskcall_updated(pk, action, {})
+                self._on_taskcall_updated(pk, action, data or {})
         except Exception:
             pass
 
     def _on_message_created(self, pk: int, action: str, filter_context: dict) -> None:
         from server.models.message import Message as Msg
-        import traceback
-        stack = ''.join(traceback.format_stack()[-5:-1])
-        self._log(f"Messages._on_message_created: pk={pk} action={action} uid={id(self)} listlen={len(self.message_list)} fc={filter_context}\n{stack}")
         with self._callback_lock:
             try:
                 msg = Msg.objects.get(pk=pk)
             except Msg.DoesNotExist:
-                self._log(f"Messages._on_message_created: Msg {pk} DoesNotExist")
                 return
             existing = [item for item in self.message_list if isinstance(item, Msg) and item.pk == pk]
             if existing:
-                self._log(f"Messages._on_message_created: {pk} already in list, skipping (found {len(existing)} existing)")
                 return
 
             prev_id = (filter_context or {}).get("prev_message_id")
@@ -267,12 +256,10 @@ class Messages(PyHtmlView):
             if prev_id is not None:
                 for idx, item in enumerate(self.message_list):
                     if isinstance(item, Msg) and item.pk == prev_id:
-                        self._log(f"Messages._on_message_created: inserting {pk} after msg {prev_id} at index {idx+1}")
                         self.message_list.insert(idx + 1, msg)
                         inserted = True
                         break
             if not inserted:
-                self._log(f"Messages._on_message_created: appending {pk} (list had {len(self.message_list)} items)")
                 self.message_list.append(msg)
 
             if hasattr(msg, "related_queries"):
@@ -300,25 +287,21 @@ class Messages(PyHtmlView):
             if trigger_msg_pk is None:
                 return
             if any(isinstance(item, Query) and item.pk == pk for item in self.message_list):
-                self._log(f"_on_query_created: Query {pk} already in list, skipping")
                 return
             for idx, item in enumerate(self.message_list):
                 if isinstance(item, Message) and item.pk == trigger_msg_pk:
-                    self._log(f"_on_query_created: inserting Query {pk} after msg {trigger_msg_pk} at index {idx+1}")
                     self.message_list.insert(idx + 1, query)
                     self._auto_scroll_if_needed()
                     self._refresh_turns()
                     return
 
     def _on_query_updated(self, pk: int, action: str, filter_context: dict) -> None:
-        self._log(f"_on_query_updated: pk={pk} action={action} fc={filter_context}")
         for wrapper in self.messages_view._wrapped_data:
             subj = wrapper.subject
             if subj is None:
                 continue
             if isinstance(subj, Query) and subj.pk == pk:
                 if hasattr(wrapper, 'view'):
-                    self._log(f"_on_query_updated: found wrapper for Query {pk}, calling view.update()")
                     try:
                         subj.refresh_from_db()
                     except Exception:
@@ -326,7 +309,6 @@ class Messages(PyHtmlView):
                     wrapper.view.update()
                     self._refresh_turns()
                 return
-        self._log(f"_on_query_updated: no wrapper found for Query {pk} in _wrapped_data (len={len(self.messages_view._wrapped_data)})")
 
     def _refresh_toolcard_by_pk(self, pk: int) -> bool:
         """Refresh the ToolCard for call *pk*; return True when found."""
@@ -343,7 +325,6 @@ class Messages(PyHtmlView):
                 continue
             for tool_card in tool_list._wrapped_data:
                 if getattr(tool_card.subject, 'pk', None) == pk:
-                    self._log(f"_on_taskcall_updated: found ToolCard for call {pk}, calling update()")
                     try:
                         tool_card.subject.refresh_from_db()
                     except Exception:
@@ -359,7 +340,6 @@ class Messages(PyHtmlView):
         return False
 
     def _on_taskcall_updated(self, pk: int, action: str, filter_context: dict) -> None:
-        self._log(f"_on_taskcall_updated: pk={pk} action={action} fc={filter_context}")
         # Direct card first (the call itself is a top-level tool call).
         direct = self._refresh_toolcard_by_pk(pk)
         # Then ancestors: a new/changed sub-call must refresh every parent
@@ -378,8 +358,6 @@ class Messages(PyHtmlView):
                     refreshed_ancestors += 1
             except Exception:
                 continue
-        if not direct and not refreshed_ancestors:
-            self._log(f"_on_taskcall_updated: no ToolCard found for call {pk}")
 
     def _turn_effective(self, assistant_pk: int | None) -> bool:
         """Effective collapse state: a pinned block stays fully expanded."""

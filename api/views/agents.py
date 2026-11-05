@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from api.permissions import IsAdminUserOrReadOnly
 
 from server.models.agents.agent import AgentModel
 from api.serializers.agents import (
@@ -13,7 +13,7 @@ from api.serializers.agents import (
 
 class AgentViewSet(viewsets.ModelViewSet):
     queryset = AgentModel.objects.filter(is_archived=False).order_by('-created_at')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUserOrReadOnly]
     ordering = ['-created_at']
     filterset_fields = ['name']
     search_fields = ['name']

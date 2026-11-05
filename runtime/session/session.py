@@ -1088,43 +1088,72 @@ class Session:
         Persist a setting override.  Creates a new SettingsModel row and a new
         SessionVersion row (copy-on-write).
         """
-        session_version_model = self.get_version_model()
-        if not session_version_model.session_settings:
-            new_session_setting = SettingsModel()
-        else:
-            new_session_setting = session_version_model.session_settings
-            if getattr(new_session_setting, name) == value:
+        from django.db import transaction
+
+        with transaction.atomic():
+            session_model = type(self.model).objects.select_for_update().select_related(
+                "latest_session_version__session_settings"
+            ).get(pk=self.model.pk)
+            session_version_model = session_model.latest_session_version
+            if session_version_model is None:
+                session_version_model = self.get_version_model()
+
+            source_settings = session_version_model.session_settings
+            if source_settings is not None and getattr(source_settings, name) == value:
                 return
-        
-        print("_set_session_setting", name, value)
-        new_session_setting.pk = None
-        new_session_setting.created_at = None
-        setattr(new_session_setting, name, value)
-        new_session_setting.save()
-        session_version_model.pk = None
-        session_version_model.created_at = None
-        session_version_model.version_number += 1
-        session_version_model.session_settings = new_session_setting
-        session_version_model.save()
-        print(session_version_model.pk)
-        self.model.latest_session_version = session_version_model
-        self.model.save()
+
+            settings_fields = {
+                field.attname: getattr(source_settings, field.attname)
+                for field in SettingsModel._meta.concrete_fields
+                if source_settings is not None
+                and not field.primary_key
+                and field.name not in ("created_at", "updated_at")
+            }
+            new_session_setting = SettingsModel(**settings_fields)
+            setattr(new_session_setting, name, value)
+            new_session_setting.full_clean(exclude=["commit"])
+            new_session_setting.save()
+
+            version_fields = {
+                field.attname: getattr(session_version_model, field.attname)
+                for field in session_version_model._meta.concrete_fields
+                if not field.primary_key and field.name not in ("created_at", "updated_at")
+            }
+            version_fields["version_number"] = session_version_model.version_number + 1
+            version_fields["session_settings_id"] = new_session_setting.pk
+            new_session_version = type(session_version_model)(**version_fields)
+            new_session_version.save()
+
+            setattr(session_model, "latest_session_version", new_session_version)
+            session_model.save(update_fields=["latest_session_version"])
+            setattr(self.model, "latest_session_version", new_session_version)
+            self._pinned_session_version = new_session_version
 
     def _set_session_property(self, name: str, value: Any) -> None:
         """
         Persist a property override on the session version.
         Creates a new SessionVersion row (copy-on-write).
         """
-        session_version_model = self.get_version_model()
-        if getattr(session_version_model, name) == value:
-            return
-        session_version_model.pk = None
-        session_version_model.created_at = None
-        session_version_model.version_number += 1
-        session_version_model.__setattr__(name, value)
-        session_version_model.save()
-        self.model.latest_session_version = session_version_model
-        self.model.save()
+        with transaction.atomic():
+            session_model = type(self.model).objects.select_for_update().get(pk=self.model.pk)
+            session_version_model = session_model.latest_session_version or self.get_version_model()
+            if getattr(session_version_model, name) == value:
+                return
+
+            version_fields = {
+                field.attname: getattr(session_version_model, field.attname)
+                for field in session_version_model._meta.concrete_fields
+                if not field.primary_key and field.name not in ("created_at", "updated_at")
+            }
+            field = session_version_model._meta.get_field(name)
+            version_fields[field.attname] = getattr(value, "pk", value) if field.is_relation else value
+            version_fields["version_number"] = session_version_model.version_number + 1
+            new_session_version = type(session_version_model)(**version_fields)
+            new_session_version.save()
+            setattr(session_model, "latest_session_version", new_session_version)
+            session_model.save(update_fields=["latest_session_version"])
+            setattr(self.model, "latest_session_version", new_session_version)
+            self._pinned_session_version = new_session_version
 
     def get_version_model(self) -> SessionVersionModel:
         """Return the pinned session version, or the session's latest version.

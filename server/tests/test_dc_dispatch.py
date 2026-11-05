@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from django.test import TestCase
 from django.utils import timezone
+from unittest.mock import patch
 
 from server.models.collections import DataCollection, CollectionItem
+from server.models.project import Project
 from server.tests.dc_test_helpers import create_agent, create_task, create_session, create_completed_call
 from server.tasks.tick_scheduler import _dispatch_data_flows, _propagate_from_collections
 from server.tests.test_reporter import TestReport
@@ -40,6 +42,32 @@ class DispatchDataFlowsTest(TestCase):
         self.report.add("test_dispatch_creates_collection_item", "PASS",
             "A completed call matching query-type source criteria triggers _dispatch_data_flows "
             "to create exactly one CollectionItem in the target collection.")
+
+    def test_propagation_keeps_same_named_sources_in_project_scope(self):
+        project_a = Project.objects.create(name="flow-project-a")
+        project_b = Project.objects.create(name="flow-project-b")
+        source_a = DataCollection.objects.create(name="shared-source", parent_project=project_a)
+        source_b = DataCollection.objects.create(name="shared-source", parent_project=project_b)
+        flow_a = DataCollection.objects.create(
+            name="derived", parent_project=project_a,
+            sources=[{"type": "stream", "stream": "shared-source"}],
+        )
+        flow_b = DataCollection.objects.create(
+            name="derived", parent_project=project_b,
+            sources=[{"type": "stream", "stream": "shared-source"}],
+        )
+        item_a = CollectionItem.objects.create(
+            collection=source_a, member="a", source_call=self.call,
+        )
+        item_b = CollectionItem.objects.create(
+            collection=source_b, member="b", source_call=self.call,
+        )
+
+        with patch("server.tasks.tick_scheduler._dispatch_processor") as dispatch:
+            _propagate_from_collections()
+
+        pairs = {(call.args[0].pk, call.kwargs["source_item"].pk) for call in dispatch.call_args_list}
+        self.assertEqual(pairs, {(flow_a.pk, item_a.pk), (flow_b.pk, item_b.pk)})
 
     def test_dispatch_skips_inactive_flow(self):
         DataCollection.objects.create(

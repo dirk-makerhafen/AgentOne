@@ -18,6 +18,7 @@ import frontmatter
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_cron_manifest import load_cron_manifest
+from registry.loader.load_data_collection import load_data_collection_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
@@ -47,6 +48,7 @@ def load_scope_dir(
     details: list | None = None,
     cron_precedence: set[str] | None = None,
     archive_missing_crons: bool = True,
+    load_data_collections: bool = True,
 ) -> None:
     """Load scripts/skills/agents/cronjobs from *manifest_dir* for *project*.
 
@@ -114,6 +116,18 @@ def load_scope_dir(
                 manifest_dir__in=["", scope_dir],
             ).exclude(name__in=seen).update(is_archived=True)
 
+    if load_data_collections:
+        for directory in ("streams", "sets"):
+            source_dir = project_folder / directory
+            if not source_dir.is_dir():
+                continue
+            for collection_md in sorted(source_dir.glob("*.md")):
+                load_data_collection_manifest(
+                    collection_md,
+                    parent_project=project,
+                    details=details,
+                )
+
 
 def load_project_folder(folder: str, details: list | None = None) -> None:
     """Compatibility entry: load the manifest tree rooted at *folder*.
@@ -163,6 +177,7 @@ def load_workspace_scope(manifest_dir: str | Path, project,
     load_scope_dir(
         manifest_dir, project, details=details,
         cron_precedence=precedence, archive_missing_crons=False,
+        load_data_collections=False,
     )
 
 

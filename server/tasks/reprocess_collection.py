@@ -66,13 +66,17 @@ def reprocess_collection(collection_name: str, max_items: int = 0) -> None:
     from server.models.tasks.agent_task_call import AgentTaskCall
     from server.models.enums.task_enums import TaskCallStatusDetail
     from server.tasks.tick_scheduler import (
+        _call_project_id,
         _matches_data_flow_source,
         _dispatch_processor,
         _trigger_on_removed,
     )
 
     try:
-        collection = DataCollection.objects.get(name=collection_name)
+        if isinstance(collection_name, int):
+            collection = DataCollection.objects.get(pk=collection_name)
+        else:
+            collection = DataCollection.resolve_in_scope(str(collection_name))
     except DataCollection.DoesNotExist:
         print(f"[reprocess] collection '{collection_name}' not found")
         return
@@ -94,7 +98,12 @@ def reprocess_collection(collection_name: str, max_items: int = 0) -> None:
                 "session_version__agent__parent_project",
             ).order_by("-pk")
 
-            matched = [c for c in qs if _matches_data_flow_source(c, source_def)]
+            matched = [
+                c for c in qs
+                if (not collection.parent_project_id or
+                    _call_project_id(c) == collection.parent_project_id)
+                and _matches_data_flow_source(c, source_def)
+            ]
             source_calls.extend(matched)
 
         elif src_type in ("stream", "set"):
@@ -102,7 +111,9 @@ def reprocess_collection(collection_name: str, max_items: int = 0) -> None:
             if not source_name:
                 continue
             try:
-                source_col = DataCollection.objects.get(name=source_name)
+                source_col = DataCollection.resolve_in_scope(
+                    source_name, collection.parent_project
+                )
             except DataCollection.DoesNotExist:
                 print(f"[reprocess] source collection '{source_name}' not found")
                 continue
