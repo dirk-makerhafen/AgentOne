@@ -109,7 +109,7 @@ def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep
             "aimodel": model,
             "tool_call_syntax": AgentToolCallSyntax.DEFAULT.value,
             "tool_call_allowlist": ["final_result"],
-            "reasoning_effort": ReasoningEffort.MINIMAL.value,
+            "reasoning_effort": ReasoningEffort.LOW.value,
             "max_turns": 3,
             "precision": ResponseTemperature.PRECISE.value,
         },

@@ -121,6 +121,8 @@ class SmokeTestVerdictTest(TestCase):
         self.assertFalse(result["ok"])
         self.assertEqual(result["verdict"], "failed")
         self.assertEqual(result["error_kind"], "exception")
+        overrides = agent_version.get_or_create_session.call_args.kwargs["settings_overrides"]
+        self.assertEqual(overrides["reasoning_effort"], "low")
 
 
 class ProbeTaskTest(TestCase):
