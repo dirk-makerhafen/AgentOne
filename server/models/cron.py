@@ -58,6 +58,51 @@ class Cronjob(BaseModel):
     last_status: str = models.CharField(max_length=50, blank=True, default="")
     total_runs: int = models.IntegerField(default=0)
 
+    def _schedule_changed(self, update_fields) -> bool:
+        """Return whether ``schedule`` differs from the stored row."""
+        if self._state.adding or self.pk is None:
+            return False
+        if update_fields is not None and "schedule" not in update_fields:
+            return False
+        previous = (
+            type(self).objects.filter(pk=self.pk)
+            .values_list("schedule", flat=True)
+            .first()
+        )
+        return previous is not None and previous != self.schedule
+
+    def save(self, *args, **kwargs) -> None:
+        """Save the row, keeping ``next_run_at`` in sync with the schedule.
+
+        This is the single choke point for admin, API, assistant and manifest
+        writes: a newly created or re-scheduled active job always gets a
+        ``next_run_at``, and disabling a job clears it so it cannot be due.
+        """
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and not isinstance(update_fields, list):
+            update_fields = list(update_fields)
+            kwargs["update_fields"] = update_fields
+
+        changed_fields: list[str] = []
+        if not self.is_active:
+            if self.next_run_at is not None:
+                self.next_run_at = None
+                changed_fields.append("next_run_at")
+        elif self.next_run_at is None or self._schedule_changed(update_fields):
+            from runtime.cron.schedule import compute_next_run
+
+            next_run_at = compute_next_run(self.schedule)
+            if next_run_at != self.next_run_at:
+                self.next_run_at = next_run_at
+                changed_fields.append("next_run_at")
+
+        if update_fields is not None:
+            for field_name in changed_fields:
+                if field_name not in update_fields:
+                    update_fields.append(field_name)
+
+        super().save(*args, **kwargs)
+
     def refresh_from_disk(self, details=None) -> None:
         """Reload this cron job from disk.
 

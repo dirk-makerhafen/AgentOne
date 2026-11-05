@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -11,6 +12,8 @@ from server.models.enums.task_enums import TaskExecutionMode, TaskType
 from server.models.tasks.scripts_generation import ScriptsGeneration
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
+
+logger = logging.getLogger(__name__)
 
 
 def load_scripts_manifest(
@@ -42,18 +45,6 @@ def load_scripts_manifest(
     is_global = parent_project is None and parent_agent is None and parent_skill is None
     results: List[Tuple[TaskDefinition, TaskDefinitionVersion]] = []
 
-    # For global scripts, create a fresh ScriptsGeneration for this
-    # reload, so all current tasks share the same generation and the
-    # latest generation always reflects the current manifest state.
-    # Old generations (from prior reloads) are left in place so that
-    # orphaned/removed tasks automatically fall out of scope.
-    parent_generation = None
-    if is_global:
-        root_commit = install_repo.tree_sha(scripts_dir) or ""
-        parent_generation = ScriptsGeneration.objects.create(
-            commit=root_commit
-        )
-
     # Collect every entry from every scripts.md before loading, so a chain in
     # one file can reference a task defined in any other file.
     collected: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
@@ -62,12 +53,28 @@ def load_scripts_manifest(
         manifest = frontmatter.load(manifest_path)
         if len(manifest.keys()) == 0:
             if len(manifest_path.read_text().strip()) == 0:
-                # empty file
-                return []
+                # An empty manifest must not disable the other scopes; skip it
+                # and keep collecting (a stray empty file used to abort the
+                # whole loader and make every tool vanish).
+                logger.warning("Skipping empty scripts manifest: %s", manifest_path)
+                continue
             raise Exception(f"Failed to load frontmatter from {manifest_path}, did you forget closing \\n---\\n\\n?")
         commit = install_repo.tree_sha(subdir)
         for entry in _collect_manifest_entries(manifest):
             collected.append((entry, subdir, commit, manifest_path))
+
+    # For global scripts, create a fresh ScriptsGeneration for this reload,
+    # so all current tasks share the same generation and the latest generation
+    # always reflects the current manifest state.  Created only after
+    # collection succeeds, so a bad manifest cannot leak an unused row.
+    # Old generations (from prior reloads) are left in place so that
+    # orphaned/removed tasks automatically fall out of scope.
+    parent_generation = None
+    if is_global:
+        root_commit = install_repo.tree_sha(scripts_dir) or ""
+        parent_generation = ScriptsGeneration.objects.create(
+            commit=root_commit
+        )
 
     # Pass 1 — standalone functions/scripts (chains depend on these).
     deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []

@@ -100,6 +100,14 @@ class AgentTaskRun(BaseModel):
         Dynamically resolves the task definition version from the session's
         current agent version scope, so retries pick up updated versions.
         """
+        if (
+            agent_task_call.task_definition_version_id is None
+            or agent_task_call.task_definition_id is None
+        ):
+            # Cannot resolve or run anything — let the scheduler surface a
+            # visible failure instead of raising an AttributeError.
+            return None
+
         session: Session = agent_task_call.session.latest_session_version.get_runtime()
 
         task_type = agent_task_call.task_definition_version.task_type
@@ -107,19 +115,26 @@ class AgentTaskRun(BaseModel):
 
         if task_type == TaskType.TASK:
             t = session.get_task(task_name)
-            if not t:
-                return None
-            task_definition_version = t.task_definition_version
         elif task_type == TaskType.TOOL:
             t = session.get_tool(task_name)
-            if not t:
-                return None
-            task_definition_version = t.task_definition_version
         elif task_type == TaskType.COMMAND:
             t = session.get_command(task_name)
-            if not t:
+        else:
+            t = None
+
+        if task_type in (TaskType.TASK, TaskType.TOOL, TaskType.COMMAND):
+            if t:
+                # Re-resolve against the live session scope so retries pick up
+                # updated versions.
+                task_definition_version = t.task_definition_version
+            elif agent_task_call.task_definition_version_id:
+                # The live scope no longer exposes the task (e.g. a
+                # version-pinned session created before the agent's toolset
+                # changed).  Run the version that was pinned on the call
+                # instead of silently dropping the turn.
+                task_definition_version = agent_task_call.task_definition_version
+            else:
                 return None
-            task_definition_version = t.task_definition_version
         else:
             task_definition_version = agent_task_call.task_definition_version
 

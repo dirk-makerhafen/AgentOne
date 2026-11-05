@@ -1,16 +1,13 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 
-from celery import shared_task
-from croniter import croniter
 from django.db import models
 from django.utils import timezone
 
 from server.models.cron import Cronjob
 from server.models.enums.session_enums import SessionType
-from server.models.sessions.session import SessionModel
+from runtime.cron.schedule import compute_next_run
 from runtime.session.session import Session
 
 
@@ -72,7 +69,7 @@ def execute_cron_job(cronjob_id: int) -> None:
             session.get_task("ingest_user_message").apply_async(kwargs=dict(message=message_data), cronjob=cronjob)
         
         # 3. Update tracking
-        next_run = croniter(cronjob.schedule, timezone.localtime()).get_next(datetime)
+        next_run = compute_next_run(cronjob.schedule)
 
         Cronjob.objects.filter(pk=cronjob_id).update(
             last_run_at=timezone.now(),
@@ -86,38 +83,19 @@ def execute_cron_job(cronjob_id: int) -> None:
 
     except Exception as e:
         print(f"[cron] error executing job {cronjob_id}: {e}")
-        Cronjob.objects.filter(pk=cronjob_id).update(last_status=f"error")
+        # Advance the schedule even on failure.  Leaving ``next_run_at`` in the
+        # past makes the job permanently due, so the one-minute scheduler
+        # retries it on every tick with no backoff.  An invalid/empty schedule
+        # yields ``None``, which parks the job instead of spinning.
+        next_run = compute_next_run(
+            Cronjob.objects.filter(pk=cronjob_id)
+            .values_list("schedule", flat=True)
+            .first()
+            or ""
+        )
+        Cronjob.objects.filter(pk=cronjob_id).update(
+            last_run_at=timezone.now(),
+            next_run_at=next_run,
+            last_status="error",
+        )
         raise e
-
-
-
-def _expand_shorthand(schedule: str) -> str:
-    """Convert human-friendly shorthands to cron expressions.
-
-    Supported:
-      ``every N (min|m|hour|h)``  →  ``*/N * * * *`` (min) / ``N * * * *`` (hour)
-    """
-    s = schedule.strip().lower()
-    import re
-    m = re.match(r"^every\s+(\d+)\s*(min|m|minute|minutes|hour|hours|h)\s*$", s)
-    if m:
-        n = int(m.group(1))
-        unit = m.group(2)
-        if unit in ("min", "m", "minute", "minutes"):
-            return f"*/{n} * * * *"
-        else:
-            return f"0 */{n} * * *"
-    return schedule
-
-
-def compute_next_run(schedule: str) -> datetime | None:
-    """Compute the next run datetime from a cron expression using croniter.
-
-    Supports standard cron (``*/5 * * * *``), shorthands (``@daily``,
-    ``@hourly``), and human-friendly ``every N (min|m|hour|h)``.
-    """
-    try:
-        expanded = _expand_shorthand(schedule)
-        return croniter(expanded, timezone.localtime()).get_next(datetime)
-    except (ValueError, KeyError):
-        return None

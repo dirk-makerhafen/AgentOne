@@ -1,17 +1,15 @@
 """Cron manifest loader (cron.md)."""
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import frontmatter
-from croniter import croniter
 from django.db import models
-from django.utils import timezone
 
 from registry.install_repo import InstallRepo
 from runtime.cron.content import build_cron_message
+from runtime.cron.schedule import compute_next_run
 from server.models.agents.agent import AgentModel
 from server.models.cron import Cronjob
 from server.models.workspace import WorkspaceModel
@@ -70,12 +68,9 @@ def load_cron_manifest(
             )
         agent = agent_qs.first()
 
-    # Compute next run
-    next_run_at = None
-    try:
-        next_run_at = croniter(schedule, timezone.localtime()).get_next(datetime)
-    except (ValueError, KeyError):
-        pass
+    # ``Cronjob.save()`` derives ``next_run_at`` from the schedule.  The loader
+    # must not include it in the upsert: recomputing it on every reload would
+    # randomise the schedule of a manifest job.
 
     # Resolve workspace
     workspace = None
@@ -104,7 +99,6 @@ def load_cron_manifest(
             "function_type": function_type,
             "function_name": function_name,
             "message": message,
-            "next_run_at": next_run_at,
             "manifest_dir": cron_md_path.parent.as_posix(),
         },
     )
@@ -113,6 +107,7 @@ def load_cron_manifest(
         _fields_to_check = [
             ("description", description),
             ("schedule", schedule),
+            ("is_active", is_active),
             ("is_archived", False),
             ("agent", agent),
             ("workspace", workspace),
@@ -121,13 +116,19 @@ def load_cron_manifest(
             ("function_type", function_type),
             ("function_name", function_name),
             ("message", message),
-            ("next_run_at", next_run_at),
             ("manifest_dir", cron_md_path.parent.as_posix()),
         ]
         for field_name, new_val in _fields_to_check:
             if getattr(cronjob, field_name) != new_val:
                 setattr(cronjob, field_name, new_val)
                 changed = True
+        # Repair rows whose next_run_at was never derived (pre-model-save
+        # rows, or a flaky/invalid schedule that has since been fixed).
+        if cronjob.is_active and cronjob.next_run_at is None:
+            if compute_next_run(schedule) is not None:
+                changed = True
+        if not cronjob.is_active and cronjob.next_run_at is not None:
+            changed = True
         if changed:
             cronjob.save()
     if details is not None:

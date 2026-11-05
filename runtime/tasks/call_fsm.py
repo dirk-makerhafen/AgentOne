@@ -73,6 +73,10 @@ _VALID_TRANSITIONS: frozenset[tuple[TaskCallStatusDetail, TaskCallStatusDetail]]
     (TaskCallStatusDetail.WAITING_QUEUE,      TaskCallStatusDetail.ENDED_STOPPED),
     (TaskCallStatusDetail.ACTIVE_QUEUED,      TaskCallStatusDetail.ENDED_STOPPED),
 
+    # The picked-up call has no runnable task in the session's agent scope.
+    # Report it as a failure (not a cancel) so the user sees an error.
+    (TaskCallStatusDetail.ACTIVE_QUEUED,      TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION),
+
     # Rate limiting.
     # ACTIVE_RUNNING → WAITING_RATELIMIT: _execute_query discovered no LLM capacity.
     # WAITING_RATELIMIT → WAITING_QUEUE:  scheduler releases when capacity returns.
@@ -431,6 +435,21 @@ class TaskCallStateMachine:
         if updated:
             _publish_call_event(call_id, "update", data=fields)
         return updated
+
+    @staticmethod
+    def fail_unavailable(call_id: int) -> bool:
+        """``ACTIVE_QUEUED`` → ``ENDED_FAILURE_EXCEPTION``.
+
+        Used when a picked-up call cannot create a run because the session's
+        agent no longer exposes its task.  Failing it (rather than cancelling
+        it) keeps the failure visible to the user and to error callbacks.
+        """
+        return TaskCallStateMachine.transition(
+            call_id,
+            TaskCallStatusDetail.ACTIVE_QUEUED,
+            TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            extra={"ended_at": timezone.now()},
+        )
 
     @staticmethod
     def cancel(call_id: int, from_detail: TaskCallStatusDetail) -> bool:

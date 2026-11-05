@@ -199,6 +199,64 @@ class LoadScriptsTwoPassTest(TestCase):
         child_names = {c.task_definition.name for c in chain_tdv.child_tasks.all()}
         self.assertIn("call_llm", child_names)
 
+    def test_empty_manifest_is_skipped_not_fatal(self):
+        """An empty scripts.md must not abort the rest of the scope.
+
+        Regression for the loader returning ``[]`` and silently disabling
+        every collected tool.
+        """
+        import shutil
+        import tempfile
+        from pathlib import Path
+        from registry.loader.load_scripts_manifest import load_scripts_manifest
+        from registry.install_repo import InstallRepo
+
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        scripts_dir = tmp / "scripts"
+
+        # Sorts before the real manifest, so it used to abort collection.
+        self._write_manifest(scripts_dir, "a-empty", "")
+        self._write_manifest(
+            scripts_dir,
+            "z-core",
+            "---\ngroup: core\ntasks:\n  - name: call_llm\n"
+            "    file: dummy.py\n    function: dummy\n---\n",
+        )
+        (scripts_dir / "z-core" / "dummy.py").write_text(
+            "def dummy():\n    return 1\n"
+        )
+
+        repo = InstallRepo(repo_path=tmp / "install")
+        repo.source_root = scripts_dir
+        repo.sync()
+
+        results = load_scripts_manifest(scripts_dir, install_repo=repo)
+        names = {td.name for td, _ in results}
+        self.assertIn("call_llm", names)
+
+    def test_bad_frontmatter_does_not_leak_a_generation(self):
+        import shutil
+        import tempfile
+        from pathlib import Path
+        from registry.loader.load_scripts_manifest import load_scripts_manifest
+        from registry.install_repo import InstallRepo
+        from server.models.tasks.scripts_generation import ScriptsGeneration
+
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        scripts_dir = tmp / "scripts"
+        self._write_manifest(scripts_dir, "broken", "---\nthis is not: closed\n")
+
+        repo = InstallRepo(repo_path=tmp / "install")
+        repo.source_root = scripts_dir
+        repo.sync()
+
+        before = ScriptsGeneration.objects.count()
+        with self.assertRaises(Exception):
+            load_scripts_manifest(scripts_dir, install_repo=repo)
+        self.assertEqual(ScriptsGeneration.objects.count(), before)
+
     def test_truly_missing_step_raises_aggregate_error(self):
         import shutil
         import tempfile

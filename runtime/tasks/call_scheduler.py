@@ -27,6 +27,20 @@ def _merge_guardrail_verdicts(*verdicts: Any) -> Any:
 AUTO_REVIEW_TOOL_NAMES = ("python", "shell", "terminal_exec", "terminal_send")
 
 
+class _TaskUnavailable:
+    """Sentinel: the call was picked up but no run could be created.
+
+    ``_pick_up_and_create_run`` returns this (instead of ``None``, which means
+    the pick-up race was lost) when :meth:`AgentTaskRun.create` cannot resolve
+    the call's task in the session's agent scope even after falling back to the
+    call's pinned task version.
+    """
+
+    def __init__(self, task_name: str) -> None:
+        self.task_name = task_name
+
+
+
 class CallScheduler:
     """
     Orchestrates the lifecycle of AgentTaskCall instances.
@@ -972,40 +986,28 @@ class CallScheduler:
         else:
             taskrun = CallScheduler._pick_up_and_create_run(task_call_id)
 
+        if isinstance(taskrun, _TaskUnavailable):
+            # The run could not be created because the session's agent no
+            # longer exposes the task.  Fail the call (instead of cancelling
+            # it silently) so the user sees an error and dependents unblock.
+            CallScheduler._fail_unavailable_task(task_call_id, taskrun.task_name)
+            return
+
         if taskrun:
             taskrun.apply_async()
             return
 
-        # ``_pick_up_and_create_run`` returns ``None`` either because the
-        # pick_up() race was lost (call no longer WAITING_QUEUE — nothing to
-        # do) or because ``AgentTaskRun.create`` could not resolve the task in
-        # the owning session (e.g. a version-pinned session that no longer
-        # exposes it).  In the latter case the call is already ACTIVE_QUEUED
-        # with no run and would hang forever (recovery only re-queues it,
-        # which fails the same way).  Cancel it so dependents/parents unblock.
-        try:
-            from server.models.enums.task_enums import TaskCallStatusDetail as _TCD
-            from runtime.tasks.call_fsm import TaskCallStateMachine as _TCSM
-            tc = AgentTaskCall.objects.get(pk=task_call_id)
-            if (
-                tc.status_detail == _TCD.ACTIVE_QUEUED
-                and not _ATR.objects.filter(agent_task_call=tc).exists()
-            ):
-                if _TCSM.cancel(tc.pk, _TCD.ACTIVE_QUEUED):
-                    CallScheduler._on_taskcall_ended(
-                        tc.pk, 0, _TCD.ENDED_CANCELLED,
-                    )
-                    print(f"[scheduler] cancelled ACTIVE_QUEUED call {tc.pk} — run could not be created")
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            print(f"[scheduler] error handling uncreated run for call {task_call_id}: {e}")
+        # ``None`` means ``pick_up()`` lost the race — another dispatcher owns
+        # the call now, so there is nothing to do.
 
     @staticmethod
-    def _pick_up_and_create_run(task_call_id: int) -> AgentTaskRun | None:
+    def _pick_up_and_create_run(task_call_id: int) -> AgentTaskRun | _TaskUnavailable | None:
         """``pick_up()`` the call, merge its args, and create the run.
 
         Returns ``None`` if ``pick_up()`` lost the race (call no longer in
-        ``WAITING_QUEUE``).  The run is dispatched by the caller after the
-        admission-control transaction commits.
+        ``WAITING_QUEUE``) and :class:`_TaskUnavailable` if the call was picked
+        up but its task can no longer be resolved.  The run is dispatched by
+        the caller after the admission-control transaction commits.
         """
         if not TaskCallStateMachine.pick_up(task_call_id):
             print(f" # TaksCallId {task_call_id} was not queued, maybe some race condition")
@@ -1031,7 +1033,108 @@ class CallScheduler:
 
         from server.models.tasks.agent_task_run import AgentTaskRun
 
-        return AgentTaskRun.create(agent_task_call=taskcall, args=args, kwargs=kwargs)
+        taskrun = AgentTaskRun.create(agent_task_call=taskcall, args=args, kwargs=kwargs)
+        if taskrun is None:
+            task_name = (
+                taskcall.task_definition.name
+                if taskcall.task_definition is not None
+                else f"#{taskcall.pk}"
+            )
+            return _TaskUnavailable(task_name)
+        return taskrun
+
+    @staticmethod
+    def _fail_unavailable_task(task_call_id: int, task_name: str) -> None:
+        """End a call whose task cannot be resolved with a visible error.
+
+        Previously this path cancelled the call, so the user's turn vanished
+        without an error.  Now the call ends ``ENDED_FAILURE_EXCEPTION``, any
+        Query it belongs to is failed with an explanatory Response, and
+        dependents are notified through the normal completion cascade.
+        """
+        from server.models.enums.task_enums import TaskCallStatusDetail as _TCD
+        from runtime.tasks.call_fsm import TaskCallStateMachine as _TCSM
+
+        try:
+            tc = AgentTaskCall.objects.select_related(
+                "task_definition", "session", "session_version"
+            ).get(pk=task_call_id)
+        except AgentTaskCall.DoesNotExist:
+            return
+
+        message = (
+            f"task '{task_name}' is not available in this session's agent "
+            "(the agent version no longer exposes it)"
+        )
+        CallScheduler._fail_query_for_unavailable_call(tc, message)
+
+        if _TCSM.fail_unavailable(tc.pk):
+            CallScheduler._on_taskcall_ended(
+                tc.pk, 0, _TCD.ENDED_FAILURE_EXCEPTION,
+            )
+            print(f"[scheduler] failed ACTIVE_QUEUED call {tc.pk}: {message}")
+
+    @staticmethod
+    def _fail_query_for_unavailable_call(tc: AgentTaskCall, message: str) -> None:
+        """Mark the Query referenced by *tc* as FAILURE so the UI shows *message*."""
+        from server.models.queries.query import Query, QueryStatus
+        from server.models.queries.response import Response, ResponseStatus
+
+        query_pk = CallScheduler._referenced_query_pk(tc.carguments_json)
+        if query_pk is None:
+            return
+        query = Query.objects.filter(pk=query_pk).first()
+        if query is None:
+            return
+        updated = query.atomic_update(
+            expect={
+                "status__in": [
+                    QueryStatus.WAITING,
+                    QueryStatus.ACTIVE,
+                    QueryStatus.RATE_LIMITED,
+                ]
+            },
+            status=QueryStatus.FAILURE,
+        )
+        if not updated and query.status == QueryStatus.SUCCESS:
+            # The query already produced an answer — don't clobber it.
+            return
+        existing = Response.objects.filter(query=query).order_by("-pk").first()
+        if existing is None:
+            Response.objects.create(
+                query=query,
+                session=tc.session,
+                session_version=tc.session_version,
+                status=ResponseStatus.FAILURE,
+                error_type="task_unavailable",
+                error_message=message,
+            )
+        else:
+            Response.objects.filter(pk=existing.pk).update(
+                status=ResponseStatus.FAILURE,
+                error_type="task_unavailable",
+                error_message=message,
+            )
+
+    @staticmethod
+    def _referenced_query_pk(json_data: Any) -> int | None:
+        """Return the first ``{"_type": "Query", "pk": ...}`` found anywhere."""
+        if isinstance(json_data, dict):
+            if json_data.get("_type") == "Query":
+                try:
+                    return int(json_data.get("pk"))
+                except (TypeError, ValueError):
+                    return None
+            for value in json_data.values():
+                found = CallScheduler._referenced_query_pk(value)
+                if found is not None:
+                    return found
+        elif isinstance(json_data, (list, tuple)):
+            for value in json_data:
+                found = CallScheduler._referenced_query_pk(value)
+                if found is not None:
+                    return found
+        return None
 
     @staticmethod
     def release_waiting_ratelimit_calls(

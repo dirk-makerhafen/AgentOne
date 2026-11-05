@@ -10,7 +10,7 @@ from django.utils import timezone
 from server.models.cron import Cronjob
 from server.models.content import GenericContent
 from runtime.cron.crons import Cronjobs
-from runtime.cron.execute import compute_next_run
+from runtime.cron.execute import compute_next_run, execute_cron_job
 from server.models.enums.message_enums import MessageContentType
 
 
@@ -30,7 +30,8 @@ class CronjobModelTest(TestCase):
         self.assertEqual(job.function_type, "")
         self.assertEqual(job.function_name, "")
         self.assertIsNone(job.last_run_at)
-        self.assertIsNone(job.next_run_at)
+        # next_run_at is derived by save() so a directly-created row is due.
+        self.assertIsNotNone(job.next_run_at)
         self.assertEqual(job.last_status, "")
         self.assertEqual(job.total_runs, 0)
         self.assertIsNone(job.message)
@@ -40,6 +41,31 @@ class CronjobModelTest(TestCase):
             name="paused-job", schedule="0 0 * * *", is_active=False
         )
         self.assertFalse(job.is_active)
+        self.assertIsNone(job.next_run_at)
+
+    def test_disabling_clears_next_run_at(self):
+        job = Cronjob.objects.create(name="toggle", schedule="0 0 * * *")
+        self.assertIsNotNone(job.next_run_at)
+        job.is_active = False
+        job.save(update_fields=["is_active"])
+        job.refresh_from_db()
+        self.assertIsNone(job.next_run_at)
+
+    def test_reschedule_recomputes_next_run_at(self):
+        job = Cronjob.objects.create(name="reschedule", schedule="0 9 * * *")
+        before = timezone.localtime(job.next_run_at)
+        self.assertEqual((before.hour, before.minute), (9, 0))
+
+        job.schedule = "30 6 * * 1-5"
+        job.save()
+        job.refresh_from_db()
+        after = timezone.localtime(job.next_run_at)
+        self.assertEqual((after.hour, after.minute), (6, 30))
+
+    def test_shorthand_schedule_is_accepted_by_the_model(self):
+        job = Cronjob.objects.create(name="shorthand", schedule="every 15 min")
+        self.assertIsNotNone(job.next_run_at)
+        self.assertEqual(timezone.localtime(job.next_run_at).minute % 15, 0)
 
     def test_session_mode_choices(self):
         job = Cronjob.objects.create(
@@ -244,3 +270,18 @@ class CronExecuteTest(TestCase):
     def test_compute_next_run_empty_string(self):
         result = compute_next_run("")
         self.assertIsNone(result)
+
+    def test_failed_execution_advances_next_run_at(self):
+        """A failure must not leave the job permanently due (retry storm)."""
+        past = timezone.now() - timedelta(minutes=10)
+        job = Cronjob.objects.create(
+            name="broken", schedule="*/5 * * * *", is_active=True,
+            next_run_at=past,
+        )
+        with self.assertRaises(Exception):
+            # No agent configured -> session resolution fails.
+            execute_cron_job(job.pk)
+        job.refresh_from_db()
+        self.assertEqual(job.last_status, "error")
+        self.assertIsNotNone(job.next_run_at)
+        self.assertGreater(job.next_run_at, timezone.now())

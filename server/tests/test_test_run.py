@@ -65,6 +65,64 @@ class RetentionTest(TestCase):
         self.assertEqual(remaining, 20)
 
 
+class SmokeTestVerdictTest(TestCase):
+    """Regression: the wait loop must not reference nonexistent enum members.
+
+    ``TaskCallStatus`` has no ``FAILED``/``CANCELLED``/``RATE_LIMITED`` members
+    (those live in ``status_detail``), so the old loop raised
+    ``AttributeError`` on its first iteration and reported every model as
+    failed.
+    """
+
+    class _FakeCall:
+        pk = 1
+        status = None
+        status_detail = None
+
+        class objects:  # noqa: N801 - mimics the model manager
+            @staticmethod
+            def get(**kwargs):
+                return SmokeTestVerdictTest._FakeCall()
+
+        def get_result(self, timeout=0):
+            return None
+
+    def setUp(self):
+        from server.models.enums.task_enums import (
+            TaskCallStatus,
+            TaskCallStatusDetail,
+        )
+
+        self.provider = ApiProvider.objects.create(name="verdict-provider")
+        self.model = AiModel.objects.create(
+            api_provider=self.provider, name="Verdict", provider_model_id="verdict",
+            enabled=True,
+        )
+        self._FakeCall.status = TaskCallStatus.ENDED
+        self._FakeCall.status_detail = TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION
+
+    def test_ended_failure_reports_failed_without_attribute_error(self):
+        from runtime.test_run import run_model_test
+
+        session_mock = MagicMock()
+        session_mock.add_user_message.return_value = self._FakeCall()
+        sv = MagicMock()
+        sv.session.pk = 1
+        agent_version = MagicMock()
+        agent_version.get_or_create_session.return_value = sv
+
+        agent = MagicMock()
+        agent.latest_agent_version = agent_version
+
+        with patch("runtime.test_run._pick_test_agent", return_value=agent), \
+             patch("runtime.test_run.Session", return_value=session_mock):
+            result = run_model_test(self.model.pk, timeout=1)
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["verdict"], "failed")
+        self.assertEqual(result["error_kind"], "exception")
+
+
 class ProbeTaskTest(TestCase):
     def setUp(self):
         self.provider = ApiProvider.objects.create(name="p2")

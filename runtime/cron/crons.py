@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from croniter import croniter
 from django.db.models import QuerySet
 from django.utils import timezone
 
 from runtime.assistant_scope import AssistantScopeMixin
 from runtime.cron.content import build_cron_message, normalize_function_type
+from runtime.cron.schedule import compute_next_run
 from server.models.cron import Cronjob
 
 
@@ -83,13 +82,6 @@ class Cronjobs(AssistantScopeMixin):
             next_run_at__lte=now,
         )
 
-    def _compute_next_run(self, schedule: str) -> Any:
-        """Compute next run datetime from a cron expression, or None."""
-        try:
-            return croniter(schedule, timezone.localtime()).get_next(datetime)
-        except (ValueError, KeyError):
-            return None
-
     def create(
         self,
         name: str,
@@ -122,7 +114,7 @@ class Cronjobs(AssistantScopeMixin):
             function_type=function_type,
             function_name=function_name,
             workspace_id=workspace_id,
-            next_run_at=self._compute_next_run(schedule),
+            next_run_at=compute_next_run(schedule),
         )
 
     def update(self, cronjob: Cronjob, **kwargs: Any) -> Cronjob:

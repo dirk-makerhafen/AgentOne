@@ -22,7 +22,7 @@ changes). Findings that concern that in-progress work are marked **[new]**.
 
 | Severity | Count | Theme |
 |---|---|---|
-| **P0** — breaks a shipped feature or loses user work | 5 | probe smoke test crashes; a turn can be silently cancelled; cron never runs; all tools can vanish on reload |
+| **P0** — breaks a shipped feature or loses user work | 5 | probe smoke test crashes *(fixed)*; a turn can be silently cancelled *(fixed)*; cron never runs *(fixed)*; all tools can vanish on reload *(fixed)* |
 | **P1** — wrong behaviour under realistic conditions | 14 | work-item reopen/resume, data-flow reprocessing, browser tab targeting/timeouts, UI event loss, dispatch options dropped |
 | **P2** — correctness or safety gaps with narrower reach | 13 | session/agent settings inheritance, call-scheduler edge cases, browser path/ownership, API/config posture |
 | **P3** — hygiene, dead code, misleading debug output | 12 | `display:none1`, `/tmp` logging, root-logger DEBUG, stale tests |
@@ -30,8 +30,10 @@ changes). Findings that concern that in-progress work are marked **[new]**.
 Plus one **blocking build defect** (import cycle, §1.1) that was already fixed
 because the test suite would not collect without it.
 
-**Two fixes were applied during the review** because they blocked the test
-suite outright (see §1.1). Everything else is reported, not changed.
+**Six fixes are now applied.** §1.1 was fixed during the review because the
+test suite would not collect without it; the user-visible P0s (§1.2, §1.3) and
+the silent-subsystem-loss issues (§1.4, §1.5, §1.6) were fixed afterwards.
+Everything else is reported, not changed.
 
 ---
 
@@ -55,7 +57,7 @@ suite outright (see §1.1). Everything else is reported, not changed.
 **Follow-up worth doing:** add an import-cycle regression test (import
 `server.models` in a clean interpreter) — the cycle will otherwise creep back.
 
-### 1.2 **[new]** Provider/model smoke test raises `AttributeError` on every run — P0
+### 1.2 **[new]** Provider/model smoke test raises `AttributeError` on every run — P0 — *fixed*
 
 `runtime/test_run.py:136-138` and `:176` test the call status against
 
@@ -77,11 +79,17 @@ for every provider — a false negative that looks like a real outage.
 `server/tests/test_test_run.py` passes only because it mocks
 `run_model_test`.
 
-Fix: compare against `TaskCallStatus.ENDED` and inspect
-`status_detail` (`ENDED_FAILURE_EXCEPTION`, `ENDED_CANCELLED`,
-`WAITING_RATELIMIT`) instead.
+**Applied fix:** `runtime/test_run.py` now waits only for
+`TaskCallStatus.ENDED` and derives the verdict from `status_detail`
+(`ENDED_SUCCESS` / `ENDED_FAILURE_EXCEPTION` / `ENDED_FAILURE_LOGIC` /
+`ENDED_CANCELLED` / `ENDED_STOPPED` / `WAITING_RATELIMIT`), preferring the
+provider-level detail recorded on the latest `Response`. The wait loop reuses
+the freshly-read call row for `get_result()` instead of the stale local
+object. A regression test (`server/tests/test_test_run.py::SmokeTestVerdictTest`)
+drives the runner through an `ENDED_FAILURE_EXCEPTION` call and would have
+raised `AttributeError` before the fix.
 
-### 1.3 `AgentTaskRun.create` returns `None`, and the scheduler silently cancels the turn — P0
+### 1.3 `AgentTaskRun.create` returns `None`, and the scheduler silently cancels the turn — P0 — *fixed*
 
 `server/models/tasks/agent_task_run.py:109-112`:
 
@@ -108,15 +116,26 @@ So the user's message disappears with no error anywhere in the UI.
 
 **Reproduced by**
 `server/tests/test_recovery_scheduler.py::StaleQueryLivenessTest::test_resumes_query_with_stale_response`
-(fails: no non-ended `call_llm` call exists after recovery).
+(now passes: a non-ended `call_llm` call exists after recovery).
 
-Fix direction: don't cancel silently. Persist a failure on the call
-(`ENDED_FAILURE_EXCEPTION` with `"task '<name>' not available in this session's
-agent"`), and surface it on the query/response so the UI shows an error. Also
-consider resolving the task from `AgentTaskCall.task_definition_version` when
-the live session scope no longer exposes it.
+**Applied fix:**
 
-### 1.4 Registry: one empty `scripts.md` disables every tool in the scope — P0
+* `AgentTaskRun.create` falls back to `AgentTaskCall.task_definition_version`
+  when the live session scope no longer exposes the task, so version-pinned
+  sessions keep answering. A call with no resolvable task/definition returns
+  `None` instead of raising.
+* `CallScheduler._pick_up_and_create_run` returns a `_TaskUnavailable` sentinel
+  when a run truly cannot be created (distinct from a lost `pick_up()` race,
+  which still returns `None`).
+* `start_new_taskrun` fails such a call with `ENDED_FAILURE_EXCEPTION`
+  (`TaskCallStateMachine.fail_unavailable`, new
+  `ACTIVE_QUEUED → ENDED_FAILURE_EXCEPTION` transition) instead of cancelling
+  it. If the call references a `Query`, that query is set to `FAILURE` and a
+  failure `Response` (`error_type="task_unavailable"`) carries
+  `"task '<name>' is not available in this session's agent"` to the chat UI.
+* Regression coverage: `server/tests/test_call_scheduler_unavailable.py`.
+
+### 1.4 Registry: one empty `scripts.md` disables every tool in the scope — P0 — *fixed*
 
 `registry/loader/load_scripts_manifest.py:62-67`:
 
@@ -138,10 +157,12 @@ For global scripts (`~/.agentone/runtime/...` + upstream merge) this can make
 *all* tools disappear after a reload, with no log line. An empty `scripts.md`
 is realistic after a bad merge or an upstream sync.
 
-Fix: `continue`, and log a warning naming the file. Also guard the
-`ScriptsGeneration` creation until after collection succeeds.
+**Applied fix:** an empty `scripts.md` is skipped with a warning that names the
+file, and the `ScriptsGeneration` row is created only after collection
+succeeds. Regression test:
+`server/tests/test_loader.py::LoadScriptsTwoPassTest::test_empty_manifest_is_skipped_not_fatal`.
 
-### 1.5 Cron: jobs created through the API never run — P0
+### 1.5 Cron: jobs created through the API never run — P0 — *fixed*
 
 `Cronjob.next_run_at` defaults to `NULL` (`server/models/cron.py:57`).
 `Cronjobs.due()` filters `next_run_at__lte=now`
@@ -160,11 +181,15 @@ Fix: `continue`, and log a warning naming the file. Also guard the
 `api/tests/test_cron.py::test_create_cron` asserts only `201` + row existence,
 which is why this is green.
 
-Fix: compute `next_run_at` in `Cronjob.save()` (single choke point, covers
-admin/API/assistant) or in the serializer's `create`/`update`, and force
-`next_run_at=None` when `is_active` flips to false.
+**Applied fix:** `Cronjob.save()` is now the single choke point. It derives
+`next_run_at` for new/active/re-scheduled jobs and clears it when `is_active`
+flips to false. `CronWriteSerializer` accepts a text/JSON `message`, builds it
+through `build_cron_message()`, and defaults `is_active` to true (DRF treats a
+missing multipart boolean as false). Regression tests:
+`api/tests/test_cron.py::TestCron` and
+`server/tests/test_cron.py::CronjobModelTest`.
 
-### 1.6 Cron: human-friendly schedules are dead code; failures re-fire every minute — P0/P1
+### 1.6 Cron: human-friendly schedules are dead code; failures re-fire every minute — P0/P1 — *fixed*
 
 `runtime/cron/execute.py:94-124` defines `_expand_shorthand` plus
 `compute_next_run`. **Neither is called anywhere** — `Crons._compute_next_run`
@@ -183,14 +208,19 @@ Consequences:
   advances `next_run_at` (`runtime/cron/execute.py:85-88`), so the job stays
   due and is retried **once per minute forever** with no backoff.
 
-Fix: one shared `compute_next_run()` used by loader, model, API and executor;
-on error, schedule the next attempt (or park the job / disable it after N
-consecutive failures).
+**Applied fix:** `runtime/cron/schedule.py` now holds the single
+`expand_shorthand()` / `compute_next_run()` implementation, used by the model,
+loaders, API and executor (`runtime/cron/execute.py` still re-exports it for
+existing callers). `execute_cron_job()` advances `next_run_at` on failure too,
+so a failing job follows its schedule instead of retrying every minute; an
+invalid schedule parks it (`next_run_at=None`).
 
-Related loader bug (`registry/loader/load_cron_manifest.py:113-127`):
-`is_active` is not in `_fields_to_check`, so disabling a job in its manifest
-has no effect, while `next_run_at` *is* in the list, so every reload
-re-randomises the schedule of a manifest job.
+The related loader bug is also fixed: `is_active` is now reconciled from the
+manifest and `next_run_at` is no longer rewritten on every reload (it is
+derived only when missing, created, or re-scheduled).
+
+Regression tests: `server/tests/test_cron.py::CronExecuteTest` and
+`server/tests/test_cron_content.py::CronFileRoundTripTest`.
 
 ---
 
@@ -716,7 +746,10 @@ name collision would silently pick the wrong project's collection.
 | `pytest server/tests/test_browser_*.py -q --reuse-db` | 74 passed |
 | `pytest server/tests/test_cron.py server/tests/test_dc_reprocess.py -q --reuse-db` | 36 passed |
 | `pytest server/tests/test_test_run.py server/tests/test_messages_ui.py -q --reuse-db` | 16 passed (after the two import fixes) |
-| `pytest server/tests/test_recovery_scheduler.py -q --reuse-db` | **1 failed** (§1.3) |
+| `pytest server/tests/test_test_run.py server/tests/test_call_scheduler_unavailable.py -q --reuse-db` | 8 passed (§1.2 + §1.3 regression tests) |
+| `pytest server/tests/test_recovery_scheduler.py -q --reuse-db` | 15 passed (§1.3 fixed) |
+| `pytest api/tests/test_tasks.py server/tests/test_session_pause.py server/tests/test_rate_limit_card.py -q --reuse-db` | 108 passed |
+| `pytest server/tests/test_call_llm_fallback.py server/tests/test_turn_collapse.py -q --reuse-db` | 37 passed |
 | `pytest server/tests/test_workitem.py -q --reuse-db` | **18 failed** (§2.1 + §4.8) |
 | `pytest .agentone/scripts/ -q` | **3 collection errors** (§4.9) |
 
@@ -729,10 +762,10 @@ so there may be additional failures in the slower suites.
 
 ## 7. Suggested fix order
 
-1. **§1.2** (probe `AttributeError`) and **§1.3** (silent turn cancel) — user-visible
-   failure of a shipped feature.
-2. **§1.4** (scripts manifest `return []`) and **§1.5/§1.6** (cron never runs /
-   retry storm) — silent loss of entire subsystems.
+1. ~~**§1.2** (probe `AttributeError`) and **§1.3** (silent turn cancel) — user-visible
+   failure of a shipped feature.~~ **Done.**
+2. ~~**§1.4** (scripts manifest `return []`) and **§1.5/§1.6** (cron never runs /
+   retry storm) — silent loss of entire subsystems.~~ **Done.**
 3. **§2.1** (`agent_settings is None`) — cheap; also fixes
    `test_workitem.py::test_attach_root_task_is_once_only`. Fix **§4.8** (stale
    verifier path) in the same sitting to unblock the other 17 tests.

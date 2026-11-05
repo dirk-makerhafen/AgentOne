@@ -16,7 +16,7 @@ from django.utils import timezone
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.enums.session_enums import SessionType
-from server.models.enums.task_enums import TaskCallStatus
+from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
 from server.models.providers.ai_model import AiModel
 from server.models.queries.response import Response, ResponseStatus
 from server.models.settings import (
@@ -124,29 +124,33 @@ def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep
         _purge_old_test_sessions(keep)
         return _failed_result(model, provider, session, sv, started, "exception", str(exc))
 
-    # Wait for the turn to end.
+    # Wait for the turn to end.  ``TaskCallStatus`` only has NEW/WAITING/
+    # ACTIVE/HALTED/ENDED — failure and rate-limit information lives in
+    # ``status_detail``.
     deadline = time.monotonic() + timeout
+    fresh_call = None
     while time.monotonic() < deadline:
         try:
-            fresh = type(call).objects.get(pk=call.pk)
+            fresh_call = type(call).objects.get(pk=call.pk)
         except Exception:  # pylint: disable=broad-exception-caught
             break
-        if fresh.status in (
-            TaskCallStatus.ENDED,
-            TaskCallStatus.FAILED,
-            TaskCallStatus.CANCELLED,
-            TaskCallStatus.RATE_LIMITED,
-        ):
+        if fresh_call.status == TaskCallStatus.ENDED:
             break
         time.sleep(1.0)
 
     latency_ms = int((time.monotonic() - started) * 1000)
 
+    if fresh_call is None:
+        try:
+            fresh_call = type(call).objects.get(pk=call.pk)
+        except Exception:  # pylint: disable=broad-exception-caught
+            fresh_call = None
+
     # Resolve the result message.
     result_msg = None
     try:
-        if call is not None:
-            result_msg = call.get_result(timeout=0)
+        if fresh_call is not None:
+            result_msg = fresh_call.get_result(timeout=0)
     except Exception:  # pylint: disable=broad-exception-caught
         result_msg = None
 
@@ -167,25 +171,24 @@ def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep
     error_message = ""
 
     call_status = None
-    try:
-        if call is not None:
-            call_status = type(call).objects.get(pk=call.pk).status
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
+    call_status_detail = None
+    if fresh_call is not None:
+        call_status = fresh_call.status
+        call_status_detail = fresh_call.status_detail
 
-    if call_status in (TaskCallStatus.FAILED, TaskCallStatus.CANCELLED, TaskCallStatus.RATE_LIMITED):
-        verdict = "failed"
-        # Try to read a response-level error.
-        try:
-            resp = Response.objects.filter(session_version=sv).order_by("-pk").first()
-            if resp is not None:
-                error_kind = (resp.error_type or "").strip() or None
-                error_message = (resp.error_message or "").strip()
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
-        if not error_message:
-            error_message = str(call_status)
-    else:
+    # Detail → short machine-readable error kind for a failed turn.
+    failure_kinds = {
+        TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION: "exception",
+        TaskCallStatusDetail.ENDED_FAILURE_LOGIC: "logic_error",
+        TaskCallStatusDetail.ENDED_CANCELLED: "cancelled",
+        TaskCallStatusDetail.ENDED_STOPPED: "stopped",
+        TaskCallStatusDetail.WAITING_RATELIMIT: "rate_limit",
+    }
+
+    if (
+        call_status == TaskCallStatus.ENDED
+        and call_status_detail == TaskCallStatusDetail.ENDED_SUCCESS
+    ):
         text = extract_final_result_text(result_msg) if result_msg is not None else ""
         answer = text.strip()
         if text.strip():
@@ -200,6 +203,28 @@ def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep
                     error_message = (resp.error_message or "").strip() or "request failed"
             except Exception:  # pylint: disable=broad-exception-caught
                 pass
+    else:
+        verdict = "failed"
+        if call_status == TaskCallStatus.ENDED:
+            error_kind = failure_kinds.get(call_status_detail, "failed")
+            error_message = f"turn ended: {call_status_detail or 'unknown'}"
+        elif call_status_detail == TaskCallStatusDetail.WAITING_RATELIMIT:
+            error_kind = "rate_limit"
+            error_message = "model is rate limited"
+        else:
+            error_kind = "timeout"
+            error_message = (
+                f"test timed out after {timeout:.0f}s "
+                f"(call {call_status or 'unknown'}/{call_status_detail or 'unknown'})"
+            )
+        # Prefer the provider-level error recorded on the response.
+        try:
+            resp = Response.objects.filter(session_version=sv).order_by("-pk").first()
+            if resp is not None:
+                error_kind = (resp.error_type or "").strip() or error_kind
+                error_message = (resp.error_message or "").strip() or error_message
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
     # Mark the session inactive/archived-ish (keep inspectable).
     try:

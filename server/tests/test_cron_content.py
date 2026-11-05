@@ -249,6 +249,30 @@ class CronFileRoundTripTest(TestCase):
         self.assertTrue((workspace_dir / "scoped-job.md").is_file())
         self.assertFalse((self._tmp / "cronjobs" / "scoped-job.md").exists())
 
+    def test_loader_respects_is_active(self):
+        path = self._write("toggle-job", is_active=False)
+        job = load_cron_manifest(path, install_repo=None)
+        self.assertFalse(job.is_active)
+        self.assertIsNone(job.next_run_at)
+
+        path.write_text(
+            "---\nname: toggle-job\nschedule: every 15 min\nis_active: true\n---\n",
+            encoding="utf-8",
+        )
+        job = load_cron_manifest(path, install_repo=None)
+        job.refresh_from_db()
+        self.assertTrue(job.is_active)
+        self.assertIsNotNone(job.next_run_at)
+
+    def test_reload_does_not_recalculate_next_run_at(self):
+        path = self._write("stable-job")
+        job = load_cron_manifest(path, install_repo=None)
+        first = job.next_run_at
+        self.assertIsNotNone(first)
+
+        reloaded = load_cron_manifest(path, install_repo=None)
+        self.assertEqual(reloaded.next_run_at, first)
+
     def test_function_type_without_name_raises(self):
         path = self._write(
             "invalid-job",
