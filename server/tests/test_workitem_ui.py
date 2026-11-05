@@ -276,8 +276,9 @@ class TestApplyActionGuards(TestCase):
         item.refresh_from_db()
         assert item.verify_status == WorkItemVerifyStatus.ESCALATED
         assert item.status == WorkItemStatus.IN_REVIEW
+        assert item.verify_attempts == 0, "a lost verdict must not consume budget"
 
-    def test_resume_clears_the_verdict_for_a_fresh_attempt(self):
+    def test_resume_requeues_and_clears_the_verdict_for_a_fresh_attempt(self):
         item = WorkItem.objects.create(
             title="Review me", status=WorkItemStatus.IN_REVIEW, requires_verification=True,
             verify_status=WorkItemVerifyStatus.ESCALATED, verify_reason="ping",
@@ -285,15 +286,18 @@ class TestApplyActionGuards(TestCase):
         ok, message = apply_action(item.pk, "resume")
         assert ok is True, message
         item.refresh_from_db()
-        assert item.status == WorkItemStatus.IN_PROGRESS
+        # A fresh attempt must be dispatchable, so it goes back to the queue.
+        assert item.status == WorkItemStatus.READY
+        assert item.root_task is None
         assert item.verify_status is None and item.verify_reason == ""
 
-    def test_reopen_done_item_returns_it_to_in_progress(self):
+    def test_reopen_done_item_returns_it_to_the_ready_queue(self):
         item = WorkItem.objects.create(title="Shipped", status=WorkItemStatus.DONE)
         ok, message = apply_action(item.pk, "reopen")
         assert ok is True, message
         item.refresh_from_db()
-        assert item.status == WorkItemStatus.IN_PROGRESS
+        assert item.status == WorkItemStatus.READY
+        assert item.root_task is None
         assert item.completed_at is None
 
     def test_stale_board_cannot_overwrite_a_settled_verdict(self):

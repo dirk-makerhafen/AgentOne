@@ -159,7 +159,8 @@ def _apply_verdict(item: Any, decision: str, reason: str) -> tuple[bool, dict]:
 
     if decision == "reject":
         # reject_or_escalate consumes a verify attempt and escalates instead
-        # once the budget is gone.
+        # once the budget is gone. It returns the status it actually wrote, or
+        # None when the item was no longer awaiting an undecided review.
         status = WorkItemStateMachine.reject_or_escalate(item.pk, reason)
         if status == "escalated":
             return _verdict_result(
@@ -167,7 +168,11 @@ def _apply_verdict(item: Any, decision: str, reason: str) -> tuple[bool, dict]:
                 True,
                 note="Rejected, but the verify-attempt budget is spent; escalated to a human.",
             )
-        return _verdict_result(decision, True, note="Rejected; blocked for rework.")
+        if status == "rejected":
+            return _verdict_result(decision, True, note="Rejected; blocked for rework.")
+        return _verdict_result(
+            decision, False, note="Item was no longer awaiting review; not applied."
+        )
 
     # ask_human — stay in review so a human can decide.
     if WorkItemStateMachine.escalate(item.pk, reason or "reviewer could not decide"):

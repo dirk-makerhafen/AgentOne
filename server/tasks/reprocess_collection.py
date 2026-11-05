@@ -10,6 +10,7 @@ updated in place without triggering downstream work.
 from __future__ import annotations
 
 from celery import shared_task
+from typing import Any
 
 
 def _cascade_deletion(removed_items: list) -> None:
@@ -80,6 +81,7 @@ def reprocess_collection(collection_name: str, max_items: int = 0) -> None:
 
     # ── Gather source items ─────────────────────────────────────────────
     source_calls: list[AgentTaskCall] = []
+    call_source_items: dict[int, Any] = {}
     for source_def in collection.sources or []:
         src_type = source_def.get("type", "query")
 
@@ -112,6 +114,9 @@ def reprocess_collection(collection_name: str, max_items: int = 0) -> None:
             for item in items_qs:
                 if item.source_call:
                     source_calls.append(item.source_call)
+                    # Track the upstream item so the processor result can be
+                    # linked via source_item for cascade deletion.
+                    call_source_items[item.source_call.pk] = item
 
     if limit and len(source_calls) > limit:
         source_calls = source_calls[:limit]
@@ -135,12 +140,13 @@ def reprocess_collection(collection_name: str, max_items: int = 0) -> None:
         new_members: set[str] = set()
 
     for call in source_calls:
+        source_item = call_source_items.get(call.pk)
         if is_set:
-            member = _dispatch_processor(collection, call)
+            member = _dispatch_processor(collection, call, source_item=source_item)
             if member is not None:
                 new_members.add(member)
         else:
-            _dispatch_processor(collection, call)
+            _dispatch_processor(collection, call, source_item=source_item)
 
     # ── For sets: detect removals, cascade, fire on_removed ────────────
     if is_set:

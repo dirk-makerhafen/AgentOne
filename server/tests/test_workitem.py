@@ -71,8 +71,13 @@ class WorkItemFsmTest(TestCase):
 
         self.assertTrue(WorkItemStateMachine.reopen(self.item.pk))
         self.item.refresh_from_db()
-        self.assertEqual(self.item.status, WorkItemStatus.IN_PROGRESS)
+        # Reopening re-enters the queue; an in_progress item with no root_task
+        # would never be dispatched and never reported.
+        self.assertEqual(self.item.status, WorkItemStatus.READY)
 
+        self.assertTrue(
+            WorkItemStateMachine.start_dispatch(self.item.pk, dispatch_count=2)
+        )
         self.assertTrue(WorkItemStateMachine.report_failure(self.item.pk, "boom"))
         self.item.refresh_from_db()
         self.assertEqual(self.item.status, WorkItemStatus.BLOCKED)
@@ -135,6 +140,43 @@ class WorkItemFsmTest(TestCase):
         self.assertFalse(WorkItemStateMachine.attach_root_task(self.item.pk, call.pk + 1))
         self.item.refresh_from_db()
         self.assertEqual(self.item.root_task_id, call.pk)
+
+    def test_reopen_and_resume_requeue_and_clear_the_previous_attempt(self):
+        """Reopen/resume must go to ``ready`` with no stale dispatch/verdict.
+
+        Jumping to ``in_progress`` while ``root_task`` still points at the
+        already-ended call makes the next tick report the old outcome and park
+        the item in ``blocked`` — the board's Reopen/Resume buttons were
+        silently no-ops.
+        """
+        agent = _minimal_agent()
+        call = _make_ended_call(agent)
+
+        WorkItem.objects.filter(pk=self.item.pk).update(
+            status=WorkItemStatus.DONE,
+            root_task=call,
+            verify_status=WorkItemVerifyStatus.APPROVED,
+            verify_reason="old verdict",
+        )
+        self.assertTrue(WorkItemStateMachine.reopen(self.item.pk))
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.status, WorkItemStatus.READY)
+        self.assertIsNone(self.item.root_task_id)
+        self.assertIsNone(self.item.verify_status)
+        self.assertEqual(self.item.verify_reason, "")
+
+        WorkItem.objects.filter(pk=self.item.pk).update(
+            status=WorkItemStatus.IN_REVIEW,
+            root_task=call,
+            verify_status=WorkItemVerifyStatus.ESCALATED,
+            verify_reason="needs a human",
+        )
+        self.assertTrue(WorkItemStateMachine.resume(self.item.pk))
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.status, WorkItemStatus.READY)
+        self.assertIsNone(self.item.root_task_id)
+        self.assertIsNone(self.item.verify_status)
+        self.assertEqual(self.item.verify_reason, "")
 
 
 # ---------------------------------------------------------------------------
@@ -400,7 +442,8 @@ class WorkItemVerificationTest(AgentMdTestMixin, TestCase):
 
     def setUp(self):
         self.verdict = _load_script(
-            ".agentone/agents/work_verifier/scripts/workitem_verdict.py", "workitem_verdict"
+            ".agentone/agents/internal/work_verifier/scripts/workitem_verdict.py",
+            "workitem_verdict",
         )
 
     def _in_review(self, **kwargs) -> WorkItem:

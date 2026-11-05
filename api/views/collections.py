@@ -39,9 +39,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def reprocess(self, request, pk=None):
         collection = self.get_object()
-        from server.tasks.tick_scheduler import _propagate_from_collections
+        from server.tasks.reprocess_collection import reprocess_collection
         try:
-            _propagate_from_collections(collection)
+            reprocess_collection.delay(collection.name)
             return Response({'status': 'reprocess triggered'})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_ERROR)

@@ -38,6 +38,8 @@ class CollectionItem(BaseModel):
     collection = models.ForeignKey("DataCollection",on_delete=models.CASCADE,related_name="items")
     source_call = models.ForeignKey("server.AgentTaskCall",on_delete=models.SET_NULL,null=True,blank=True,default=None,related_name="collection_items")
     source_item = models.ForeignKey("self",on_delete=models.SET_NULL,null=True,blank=True,default=None,related_name="derived_items",help_text="The upstream CollectionItem whose propagation created this item")
+    dispatch_source_call = models.ForeignKey("server.AgentTaskCall",on_delete=models.SET_NULL,null=True,blank=True,default=None,related_name="dispatched_collection_items",help_text="The source call dispatched to the processor (dedupe link)")
+    reconciled_at = models.DateTimeField(null=True,blank=True,default=None,help_text="When the processor result was applied to this item")
 
     member = models.CharField(max_length=1024)
     score = models.FloatField(default=0.0)

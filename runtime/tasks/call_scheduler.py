@@ -92,7 +92,7 @@ class CallScheduler:
         if related_call_status == TaskCallStatusDetail.ENDED_STOPPED:
             if TaskCallStateMachine.stop(task_call_id, TaskCallStatusDetail.WAITING_DEPENDENCY):
                 CallScheduler._on_taskcall_ended(
-                    task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED
+                    task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_STOPPED
                 )
                 print("required_task_call.ENDED_STOPPED, TaskCallStatusDetail.ENDED_STOPPED")
             return
@@ -1349,7 +1349,11 @@ class CallScheduler:
                 for i, hook_instance in enumerate(after_hooks):
                     hook_instance: TaskInstance
                     if not hook_instance:
-                        return
+                        print(
+                            f"  -> skipping missing after_run hook "
+                            f"(step {i + 1}/{len(after_hooks)})"
+                        )
+                        continue
                     print(
                         f"  -> Launching after_run hook "
                         f"{hook_instance.task_definition_version.name} "
@@ -1379,7 +1383,7 @@ class CallScheduler:
         if related_call_status == TaskCallStatusDetail.ENDED_STOPPED:
             if TaskCallStateMachine.stop(task_call_id, TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS):
                 CallScheduler._on_taskcall_ended(
-                    task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_CANCELLED
+                    task_call_id, last_taskrun_id, TaskCallStatusDetail.ENDED_STOPPED
                 )
                 print("required_task_call.ENDED_STOPPED, TaskCallStatusDetail.ENDED_STOPPED")
             return
@@ -1610,33 +1614,33 @@ class CallScheduler:
         if sd == TaskCallStatusDetail.ACTIVE_RUNNING:
             if TaskCallStateMachine.fail(call_id):
                 CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
-            return
+                return True
+            return False
 
         # Try FSM transition from the call's current state
-        if TaskCallStateMachine.transition(
-            call_id, sd, TaskCallStatusDetail.ENDED_CANCELLED,
-            extra={"ended_at": timezone.now()},
-        ):
-            CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
-            return
+        try:
+            if TaskCallStateMachine.transition(
+                call_id, sd, status_detail,
+                extra={"ended_at": timezone.now()},
+            ):
+                CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
+                return True
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
         # Fallback for any state the FSM doesn't cover.
-        # This should never fire — all non-terminal states now have FSM paths.
-        # If it does, it indicates a programming bug (a state was added without
-        # updating the FSM). We still do the cascade to leave the system
-        # consistent, then raise.
-        updated = AgentTaskCall.objects.filter(pk=call_id).update(
+        updated = AgentTaskCall.objects.filter(pk=call_id, status__in=[
+            TaskCallStatus.NEW, TaskCallStatus.WAITING, TaskCallStatus.HALTED, TaskCallStatus.ACTIVE,
+        ]).update(
             status=TaskCallStatus.ENDED,
-            status_detail=TaskCallStatusDetail.ENDED_CANCELLED,
+            status_detail=status_detail,
             ended_at=timezone.now(),
         ) > 0
         if updated:
             _publish_call_event(call_id)
             CallScheduler._on_taskcall_ended(call_id, last_taskrun_id, status_detail)
-        raise RuntimeError(
-            f"_cancel_safe fallback fired for call {call_id} "
-            f"(state={tc.status_detail}) — programming bug: no FSM path to ENDED_CANCELLED"
-        )
+            return True
+        return False
 
     @staticmethod
     def cancel_root_tasktree(root_call_id: int) -> None:

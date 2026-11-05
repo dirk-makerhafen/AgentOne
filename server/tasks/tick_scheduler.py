@@ -57,6 +57,7 @@ def tick_scheduler() -> None:
     for routine in (
         _dispatch_data_flows,
         _propagate_from_collections,
+        _reconcile_collection_items,
         _release_scheduled_calls,
         _release_rate_limited_calls,
         _release_retry_calls,
@@ -448,6 +449,7 @@ def _dispatch_processor(flow, call, source_item=None):
         defaults={
             "score": score,
             "value": call.carguments_json,
+            "dispatch_source_call": call,
         },
     )
 
@@ -486,11 +488,11 @@ def _dispatch_processor(flow, call, source_item=None):
     from server.models.tasks.agent_task_run import AgentTaskRun
 
     processor_call.refresh_from_db()
-    completed_run = None
-    if processor_call.status_detail == TaskCallStatusDetail.ENDED_SUCCESS:
+    completed_run = getattr(processor_call, "taskcall_result_run", None)
+    if completed_run is None or completed_run.status != TaskRunStatus.SUCCESS:
         completed_run = processor_call.related_agent_task_runs.filter(
             status=TaskRunStatus.SUCCESS
-        ).first()
+        ).first() if processor_call.status_detail == TaskCallStatusDetail.ENDED_SUCCESS else None
 
     member = pre_member
     if completed_run is not None:
@@ -500,7 +502,7 @@ def _dispatch_processor(flow, call, source_item=None):
             # Filtered out (processor returned None): drop the pre-created
             # dedup token and report no item.
             CollectionItem.objects.filter(
-                collection=flow, member=pre_member
+                collection=flow, member=pre_member, dispatch_source_call=call,
             ).delete()
             return None
         # Re-derive member/score from the processor result (set member_field
@@ -510,16 +512,18 @@ def _dispatch_processor(flow, call, source_item=None):
         score = _extract_score(flow, processor_call, call, processor_result)
         if member != pre_member:
             CollectionItem.objects.filter(
-                collection=flow, member=pre_member
+                collection=flow, member=pre_member, dispatch_source_call=call,
             ).delete()
 
     # Update the CollectionItem with the actual processor call and result
     defaults: dict = {
         "source_call": processor_call,
+        "dispatch_source_call": call,
         "score": score,
         "value": completed_run.result_json
         if completed_run is not None
         else call.carguments_json,
+        "reconciled_at": timezone.now() if completed_run is not None else None,
     }
     if source_item is not None:
         defaults["source_item"] = source_item
@@ -685,9 +689,11 @@ def _dispatch_data_flows() -> None:
 
         for call in calls:
             if any(_matches_data_flow_source(call, s) for s in flow_sources):
+                if CollectionItem.objects.filter(collection=flow, dispatch_source_call=call).exists():
+                    continue  # Already dispatched
                 member = _extract_member(flow, None, call)
                 if CollectionItem.objects.filter(collection=flow, member=member).exists():
-                    continue  # Already dispatched
+                    continue  # Already dispatched (legacy token)
                 _dispatch_processor(flow, call)
                 break  # One fresh dispatch per flow per tick (conservative
                 # throttling — drains catch-up backlogs over several ticks
@@ -751,6 +757,90 @@ def _propagate_from_collections(collection: Any = None) -> None:
                             break
                         _dispatch_processor(flow, item.source_call, source_item=item)
                     break
+
+
+def _reconcile_collection_items(collection: Any = None) -> None:
+    """Apply processor results to items created asynchronously.
+
+    For items whose ``source_call`` (processor call) has reached a terminal
+    state but whose ``reconciled_at`` is still null, derive the final
+    ``member`` / ``score`` / ``value`` from the processor result (sets) or
+    store the result (streams).  Handles the async (production) path where
+    ``_dispatch_processor`` could not know the result at dispatch time.
+    """
+    from server.models.collections import DataCollection, CollectionItem
+    from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
+    from server.tasks.reprocess_collection import _cascade_deletion
+
+    qs = CollectionItem.objects.filter(
+        reconciled_at__isnull=True,
+        source_call__isnull=False,
+    ).select_related("collection", "source_call", "dispatch_source_call")
+    if collection is not None:
+        qs = qs.filter(collection=collection)
+    # Bound the work per tick.
+    items = list(qs.order_by("-pk")[:200])
+    for item in items:
+        flow = item.collection
+        processor_call = item.source_call
+        if processor_call is None:
+            item.reconciled_at = timezone.now()
+            item.save(update_fields=["reconciled_at", "updated_at"])
+            continue
+        sd = processor_call.status_detail
+        if sd not in (
+            TaskCallStatusDetail.ENDED_SUCCESS,
+            TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION,
+            TaskCallStatusDetail.ENDED_CANCELLED,
+            TaskCallStatusDetail.ENDED_STOPPED,
+            TaskCallStatusDetail.ENDED_FAILURE_LOGIC,
+        ):
+            # Not terminal yet.
+            continue
+        if sd != TaskCallStatusDetail.ENDED_SUCCESS:
+            item.reconciled_at = timezone.now()
+            item.save(update_fields=["reconciled_at", "updated_at"])
+            continue
+
+        result_run = getattr(processor_call, "taskcall_result_run", None)
+        if result_run is None or result_run.status != TaskRunStatus.SUCCESS:
+            result_run = processor_call.related_agent_task_runs.filter(
+                status=TaskRunStatus.SUCCESS
+            ).first()
+        processor_result = result_run.result_json if result_run is not None else None
+
+        if processor_result is None:
+            # Filtered out: remove the item and cascade downstream.
+            _cascade_deletion([item])
+            _trigger_on_removed(flow, [processor_call])
+            item.delete()
+            continue
+
+        source_call = item.dispatch_source_call
+        if flow.collection_type == "set":
+            target_member = _extract_member(flow, processor_call, source_call, processor_result)
+            target_score = _extract_score(flow, processor_call, source_call, processor_result)
+            if target_member != item.member:
+                existing = CollectionItem.objects.filter(
+                    collection=flow, member=target_member
+                ).exclude(pk=item.pk).first()
+                if existing is not None:
+                    existing.score = target_score
+                    existing.value = processor_result
+                    existing.source_call = processor_call
+                    existing.dispatch_source_call = item.dispatch_source_call
+                    existing.source_item = item.source_item
+                    existing.reconciled_at = timezone.now()
+                    existing.save()
+                    _cascade_deletion([item])
+                    item.delete()
+                    continue
+                item.member = target_member
+            item.score = target_score
+        item.value = processor_result
+        item.source_call = processor_call
+        item.reconciled_at = timezone.now()
+        item.save()
 
 
 # ---------------------------------------------------------------------------

@@ -251,19 +251,11 @@ def apply_action(item_id: int, action_key: str, reason: str = "") -> tuple[bool,
         elif action_key == "approve":
             ok = WorkItemStateMachine.approve(item_id, reason)
         elif action_key == "reject":
-            # reject_or_escalate returns the applied verify_status, not a bool,
-            # and its inner reject() is guarded on the verdict still being
-            # undecided. A stale board can therefore no-op, so compare the
-            # verdict before and after rather than assuming the write landed.
-            before = (item.status, item.verify_status)
-            WorkItemStateMachine.reject_or_escalate(item_id, reason)
-            item.refresh_from_db()
-            ok = (item.status, item.verify_status) != before
+            # reject_or_escalate returns the verify_status actually written,
+            # or None when a stale board/no-longer-undecided verdict lost.
+            ok = WorkItemStateMachine.reject_or_escalate(item_id, reason) is not None
         elif action_key == "resume":
-            ok = WorkItemStateMachine.transition(
-                item_id, WorkItemStatus.IN_REVIEW, WorkItemStatus.IN_PROGRESS,
-                extra={"verify_status": None, "verify_reason": ""},
-            )
+            ok = WorkItemStateMachine.resume(item_id)
         elif action_key == "reopen":
             ok = WorkItemStateMachine.reopen(item_id)
         else:  # pragma: no cover — guarded by the ``legal`` check above

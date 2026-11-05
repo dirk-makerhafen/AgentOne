@@ -69,9 +69,10 @@ def loop(instance: PyHtmlGuiInstance):
                     if instance.connections_count() == 0:
                         return
                     continue
-                # Drain the entire list at once.
+                # Drain the entire list at once.  Use LTRIM (not DELETE) so
+                # anything pushed between LRANGE and the trim survives.
                 remaining = r.lrange(queue_key, 0, -1)
-                r.delete(queue_key)
+                r.ltrim(queue_key, len(remaining), -1)
                 messages = [json.loads(result[1])]
                 messages.extend(json.loads(m) for m in remaining)
             except Exception:

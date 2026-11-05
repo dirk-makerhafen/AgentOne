@@ -466,8 +466,41 @@ class BoundTask:
         priority : int
             Task priority. Lower number = higher priority (0 = most urgent, 99 = lowest).
         """
-        task_instance = self.instance()
-        return task_instance.apply_async(args=args, kwargs=kwargs, **options)
+        import copy
+        from datetime import datetime, timedelta, timezone as _tz
+
+        args_list = list(args) if args else []
+        kwargs_dict = dict(kwargs) if kwargs else {}
+
+        dont_start_before = None
+        if eta is not None:
+            dont_start_before = eta
+        elif countdown:
+            dont_start_before = datetime.now(_tz.utc) + timedelta(seconds=int(countdown))
+        dont_start_after = None
+        if expires is not None:
+            if isinstance(expires, (int, float)):
+                dont_start_after = datetime.now(_tz.utc) + timedelta(seconds=int(expires))
+            else:
+                dont_start_after = expires
+
+        instance_kwargs = {}
+        if time_limit:
+            instance_kwargs["time_limit"] = time_limit
+        if priority is not None:
+            instance_kwargs["priority"] = priority
+
+        task_instance = self.instance(
+            args=list(args_list), kwargs=dict(kwargs_dict), **instance_kwargs
+        )
+        call_options = dict(options)
+        call_options.update({
+            "dont_start_before": dont_start_before,
+            "dont_start_after": dont_start_after,
+            "time_limit": time_limit if time_limit else None,
+            "priority": priority,
+        })
+        return task_instance.apply_async(args=args_list, kwargs=kwargs_dict, **call_options)
 
     def instance(self, args: Any = None, kwargs: Any = None, **options: Any) -> TaskInstance:
         """

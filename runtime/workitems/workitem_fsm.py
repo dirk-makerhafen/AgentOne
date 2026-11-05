@@ -11,6 +11,7 @@ The work layer deliberately does **not** reuse ``call_fsm`` or
 """
 from __future__ import annotations
 
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -51,8 +52,9 @@ _VALID_TRANSITIONS: frozenset[tuple[WorkItemStatus, WorkItemStatus]] = frozenset
     (WorkItemStatus.IN_REVIEW, WorkItemStatus.DONE),      # approve
     (WorkItemStatus.IN_REVIEW, WorkItemStatus.BLOCKED),   # reject
     (WorkItemStatus.IN_REVIEW, WorkItemStatus.IN_REVIEW),  # escalate: stay put
-    # Human sends it back for another attempt.
-    (WorkItemStatus.IN_REVIEW, WorkItemStatus.IN_PROGRESS),
+    # Human sends it back for another attempt: a fresh dispatch, not a state
+    # the scheduler will never observe (see ``mark_ready``).
+    (WorkItemStatus.IN_REVIEW, WorkItemStatus.READY),
     (WorkItemStatus.IN_REVIEW, WorkItemStatus.CANCELLED),
 
     # Human re-queue.
@@ -61,7 +63,7 @@ _VALID_TRANSITIONS: frozenset[tuple[WorkItemStatus, WorkItemStatus]] = frozenset
     (WorkItemStatus.BLOCKED, WorkItemStatus.CANCELLED),
 
     # Reopen / restore.
-    (WorkItemStatus.DONE, WorkItemStatus.IN_PROGRESS),
+    (WorkItemStatus.DONE, WorkItemStatus.READY),
     (WorkItemStatus.CANCELLED, WorkItemStatus.READY),
 })
 
@@ -163,10 +165,11 @@ class WorkItemStateMachine:
 
     @staticmethod
     def mark_ready(item_id: int) -> bool:
-        """``backlog``/``blocked``/``cancelled`` → ``ready``.
+        """``backlog``/``blocked``/``cancelled``/``in_review``/``done`` → ``ready``.
 
-        A requeue means "do this work again", so the *previous* attempt's
-        dispatch and verdict bookkeeping is cleared:
+        A requeue — including reopening finished work or sending reviewed work
+        back — means "do this work again", so the *previous* attempt's dispatch
+        and verdict bookkeeping is cleared:
 
         * ``root_task`` — dispatch only selects items whose ``root_task`` is
           NULL, so leaving the old call in place would strand the item in
@@ -195,6 +198,8 @@ class WorkItemStateMachine:
                 WorkItemStatus.BACKLOG,
                 WorkItemStatus.BLOCKED,
                 WorkItemStatus.CANCELLED,
+                WorkItemStatus.IN_REVIEW,
+                WorkItemStatus.DONE,
             ],
         ).update(**fields) > 0
         if updated:
@@ -359,30 +364,48 @@ class WorkItemStateMachine:
         )
 
     @staticmethod
-    def reject_or_escalate(item_id: int, reason: str = "") -> str:
+    def reject_or_escalate(item_id: int, reason: str = "") -> str | None:
         """Apply a rejection while honouring the verify-attempt bound.
 
-        Returns the verify_status actually applied: ``"rejected"`` while
-        budget remains, ``"escalated"`` once ``MAX_VERIFY_ATTEMPTS`` is spent.
+        Returns the verify_status actually written: ``"rejected"`` while
+        budget remains, ``"escalated"`` once ``MAX_VERIFY_ATTEMPTS`` is spent,
+        or ``None`` when the item was no longer awaiting an undecided review.
         Without this bound a reviewer that keeps rejecting would let a human
         re-queue indefinitely and the item would ping-pong forever
         (``docs/work-items.md`` §8.5).
+
+        The attempt counter and the status change are written by one atomic,
+        conditional update under a row lock.  Incrementing first and then
+        calling :meth:`reject` let a stale/racing verdict consume budget
+        without changing the item, eventually escalating over a history that
+        never happened.
         """
-        item = WorkItem.objects.filter(pk=item_id).first()
-        if item is None:
-            return WorkItemVerifyStatus.ESCALATED
-        if item.verify_attempts >= MAX_VERIFY_ATTEMPTS:
-            WorkItemStateMachine.escalate(
-                item_id,
-                f"Rejected {item.verify_attempts}× without meeting the requirement; "
-                f"escalating to a human. Last reason: {reason}",
+        with transaction.atomic():
+            item = (
+                WorkItem.objects.select_for_update().filter(pk=item_id).first()
             )
-            return WorkItemVerifyStatus.ESCALATED
-        WorkItem.objects.filter(pk=item_id).update(
-            verify_attempts=item.verify_attempts + 1, updated_at=timezone.now()
-        )
-        WorkItemStateMachine.reject(item_id, reason)
-        return WorkItemVerifyStatus.REJECTED
+            if item is None or item.status != WorkItemStatus.IN_REVIEW:
+                return None
+            if item.verify_attempts >= MAX_VERIFY_ATTEMPTS:
+                applied = WorkItemStateMachine.escalate(
+                    item_id,
+                    f"Rejected {item.verify_attempts}× without meeting the requirement; "
+                    f"escalating to a human. Last reason: {reason}",
+                )
+                return WorkItemVerifyStatus.ESCALATED if applied else None
+            applied = WorkItemStateMachine.transition(
+                item_id,
+                WorkItemStatus.IN_REVIEW,
+                WorkItemStatus.BLOCKED,
+                extra_filter=_undecided_filter(),
+                extra={
+                    "verify_status": WorkItemVerifyStatus.REJECTED,
+                    "verify_reason": reason or "",
+                    "last_outcome": reason or "",
+                    "verify_attempts": item.verify_attempts + 1,
+                },
+            )
+            return WorkItemVerifyStatus.REJECTED if applied else None
 
     # ------------------------------------------------------------------
     # Terminal
@@ -417,10 +440,21 @@ class WorkItemStateMachine:
 
     @staticmethod
     def reopen(item_id: int) -> bool:
-        """``done`` → ``in_progress`` — send completed work back to an agent."""
-        return WorkItemStateMachine.transition(
-            item_id,
-            WorkItemStatus.DONE,
-            WorkItemStatus.IN_PROGRESS,
-            extra={"completed_at": None, "verify_status": WorkItemVerifyStatus.SKIPPED},
-        )
+        """``done`` → ``ready`` — send completed work back to an agent.
+
+        Reopening is a *new attempt*, so it re-enters the ready queue rather
+        than jumping to ``in_progress``.  ``in_progress`` with the old
+        (already terminal) ``root_task`` still attached would be reported as
+        finished by the next tick (``_report_work_item_outcomes``), silently
+        converting ``done`` into ``blocked`` with the previous outcome.
+        """
+        return WorkItemStateMachine.mark_ready(item_id)
+
+    @staticmethod
+    def resume(item_id: int) -> bool:
+        """``in_review`` → ``ready`` — send reviewed work back for another attempt.
+
+        Same trap as :meth:`reopen`: leaving the old ``root_task`` attached
+        makes the outcome reporter bounce the item straight to ``blocked``.
+        """
+        return WorkItemStateMachine.mark_ready(item_id)

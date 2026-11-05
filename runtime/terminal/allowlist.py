@@ -66,21 +66,73 @@ def allowed_binaries() -> set[str]:
     return {*(b.lower() for b in EXTERNAL_CLI_ALLOWLIST), *(str(b).lower() for b in extra)}
 
 
+_LAUNCHERS = {"sudo", "env", "nohup", "time", "command", "xargs"}
+_SHELLS = {"sh", "bash", "zsh", "dash", "ksh"}
+
+
+def _unwrap(parts: list[str]) -> list[str]:
+    """Strip common launcher prefixes and shell ``-c`` wrappers.
+
+    Handles ``sudo``, ``env``, ``nohup``, ``time``, ``command``, ``xargs``,
+    leading ``VAR=value`` env assignments, and ``sh -c "..."`` style wrappers.
+    Returns the remaining argv (possibly a single shell command string).
+    """
+    i = 0
+    n = len(parts)
+    # Unwrap launcher prefixes and env assignments.
+    while i < n:
+        tok = parts[i]
+        base = tok.rsplit("/", 1)[-1].lower()
+        if base in _LAUNCHERS:
+            i += 1
+            # sudo/env options: skip flags and their args crudely.
+            while i < n and parts[i].startswith("-"):
+                # sudo -u user, env -i
+                if base in ("sudo", "env") and i + 1 < n and not parts[i + 1].startswith("-"):
+                    i += 2
+                else:
+                    i += 1
+            # env assignments after options
+            while i < n and "=" in parts[i] and not parts[i].startswith("/"):
+                i += 1
+            continue
+        if "=" in tok and not tok.startswith("/"):
+            i += 1
+            continue
+        break
+
+    # Shell -c wrapper: sh -c "claude ..."
+    if i < n and parts[i].rsplit("/", 1)[-1].lower() in _SHELLS:
+        # find -c
+        j = i + 1
+        while j < n and parts[j] != "-c":
+            j += 1
+        if j + 1 < n:
+            inner = parts[j + 1]
+            try:
+                inner_parts = shlex.split(inner, posix=True)
+            except ValueError:
+                inner_parts = inner.strip().split()
+            if inner_parts:
+                return _unwrap(inner_parts)
+        # fall through
+
+    # xargs ... command: already handled prefix; remaining may be command
+    return parts[i:]
+
+
 def first_token(command: str) -> str:
-    """Return the binary of a shell *command* (``"npx hermes …"`` → ``"npx"``)."""
+    """Return the binary of a shell *command*, unwrapping common launchers."""
     try:
         parts = shlex.split(command, posix=True)
     except ValueError:
         parts = command.strip().split()
     if not parts:
         return ""
-    token = parts[0]
-    # ``VAR=x cmd`` env prefixes — skip them.
-    idx = 0
-    while idx < len(parts) and "=" in parts[idx] and not parts[idx].startswith("/"):
-        idx += 1
-    token = parts[idx] if idx < len(parts) else ""
-    # Bare path → basename (``/usr/local/bin/claude`` → ``claude``).
+    remaining = _unwrap(parts)
+    if not remaining:
+        return ""
+    token = remaining[0]
     return token.rsplit("/", 1)[-1].lower()
 
 

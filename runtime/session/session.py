@@ -1064,9 +1064,14 @@ class Session:
 
         if isinstance(session_settings_value, (list,)):
             if "+" not in session_settings_value:  # overwrite parent list
-                return session_settings_value
-            extend_at_index = session_settings_value.index("+")
-            session_settings_value[extend_at_index:extend_at_index + 1] = self.agent.get_agent_setting(name)
+                return list(session_settings_value)
+            idx = session_settings_value.index("+")
+            agent_value = self.agent.get_agent_setting(name)
+            return [
+                *session_settings_value[:idx],
+                *(agent_value if isinstance(agent_value, list) else ([agent_value] if agent_value is not None else [])),
+                *session_settings_value[idx + 1:],
+            ]
         elif isinstance(session_settings_value, dict):
             return session_settings_value
         elif isinstance(session_settings_value, AiModel): 

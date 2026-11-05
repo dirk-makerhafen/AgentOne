@@ -246,8 +246,8 @@ to a single atomic `transition()` guarded by `WHERE status = <from>`.
                   └──────────────────┘
 ```
 
-Terminal states are `done` and `cancelled`; `done` may be reopened to
-`in_progress`, `cancelled` may be restored to `ready`.
+Terminal states are `done` and `cancelled`; both may be restored to `ready`
+(reopen/re-queue) so the dispatcher can pick them up again.
 
 ### 6.2 Transitions
 
@@ -256,14 +256,20 @@ Terminal states are `done` and `cancelled`; `done` may be reopened to
 | `backlog` | `ready`, `cancelled` |
 | `ready` | `in_progress`, `blocked`, `backlog`, `cancelled` |
 | `in_progress` | `in_review`, `blocked`, `done`, `ready`, `cancelled` |
-| `in_review` | `done`, `blocked`, `in_progress`, `cancelled` |
+| `in_review` | `done`, `blocked`, `ready`, `cancelled` |
 | `blocked` | `ready`, `in_progress`, `cancelled` |
-| `done` | `in_progress` |
+| `done` | `ready` |
 | `cancelled` | `ready` |
 
 Methods: `mark_ready`, `mark_blocked`, `start_dispatch`, `report_success`,
 `report_failure`, `begin_review`, `approve`, `reject`, `escalate`, `cancel`,
-`reopen`.
+`reopen`, `resume`.
+
+`reopen` (`done → ready`) and `resume` (`in_review → ready`) are new attempts,
+so they use `mark_ready`'s bookkeeping reset. They deliberately do **not** jump
+to `in_progress`: with the previous attempt's already-terminal `root_task`
+still attached, `_report_work_item_outcomes` would immediately report that old
+outcome and park the item in `blocked` again.
 
 `mark_blocked` and `reject` take a reason recorded into `last_outcome`;
 `approve` / `reject` / `escalate` also write `verify_status` and `verify_reason`.
@@ -286,7 +292,7 @@ An item reaches `done` by one of two routes:
 - **Unverified** — the flag is unset and a human moved it to `done`, or
   approval came back `ask_human` and a human confirmed.
 
-A human always retains the final say: `done → in_progress` (reopen) and
+A human always retains the final say: `done → ready` (reopen) and
 `in_review → done` (confirm) are both legal transitions. Verification reduces
 human attention, it does not remove it.
 
@@ -452,7 +458,7 @@ the work itself.
 ### 8.4 Verdict tool
 
 `workitem_verdict(work_item_id, decision, reason)` in
-`.agentone/agents/work_verifier/scripts/`, registered as a `TaskType.TASK`
+`.agentone/agents/internal/work_verifier/scripts/`, registered as a `TaskType.TASK`
 against that agent. Mirrors `approval_verdict.py:121-142`.
 
 | `decision` | Effect |
@@ -596,9 +602,9 @@ strand an item (see §12a):
 | `runtime/workitems/__init__.py` | new |
 | `runtime/workitems/work_item_verifier.py` | new — `WorkItemVerifier.verify`, `_build_verification_brief` |
 | `server/tasks/tick_scheduler.py` | three routines + registration |
-| `.agentone/agents/work_verifier/agent.md` | new — reviewer agent |
-| `.agentone/agents/work_verifier/scripts/workitem_verdict.py` | new |
-| `.agentone/agents/work_verifier/scripts/scripts.md` | new |
+| `.agentone/agents/internal/work_verifier/agent.md` | new — reviewer agent |
+| `.agentone/agents/internal/work_verifier/scripts/workitem_verdict.py` | new |
+| `.agentone/agents/internal/work_verifier/scripts/scripts.md` | new |
 | `.agentone/scripts/workitems/workitem_action.py` | new |
 | `.agentone/scripts/workitems/scripts.md` | new |
 | `server/migrations/0132_session_name_unique.py` | new — per-parent session-name constraint |

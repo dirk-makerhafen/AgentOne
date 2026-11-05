@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from runtime.browser import launcher, paths, policy, registry as registry_mod
+from runtime.browser import actions as actions_mod
 from runtime.browser.snapshot import clear_refs, read_text, resolve_ref, snapshot as build_snapshot
 from runtime.browser.config import get_browser_config
 
@@ -193,8 +194,13 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
                     return candidate
             except Exception:  # pylint: disable=broad-exception-caught
                 continue
-        # Fallback: the registry is the source of truth, so trust the last page.
-        return binding.context.pages[-1]
+        # The live page is gone (closed/crashed). Prune the stale registry
+        # record and refuse to act on an unrelated tab.
+        try:
+            binding.pages.pop(rec.page_id, None)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        raise BrowserError("page is gone — open a new tab")
 
     def _open_page(self, binding: "registry_mod.Binding", scope: dict, owner_pk: int, url: str | None = None) -> tuple["registry_mod.Binding", Any, "registry_mod.PageRecord"]:
         page = binding.context.new_page()
@@ -228,6 +234,8 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
 
     def handle(self, action: str, scope: dict, params: dict) -> dict:
         """Dispatch one action on the driver thread."""
+        if action not in actions_mod.ALL_ACTIONS:
+            raise BrowserError(f"unknown browser action: {action!r}")
         fn = getattr(self, f"_action_{action}", None)
         if fn is None:
             raise BrowserError(f"unknown browser action: {action!r}")
@@ -315,7 +323,7 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
     def _action_wait(self, scope: dict, params: dict) -> dict:
         _, page, rec = self._page_for(scope, params)
         if params.get("ms"):
-            page.wait_for_timeout(int(params["ms"]))
+            page.wait_for_timeout(min(int(params["ms"]), self.action_timeout))
         elif params.get("ref"):
             page.wait_for_selector(resolve_ref(params["ref"]), timeout=self.nav_timeout)
         elif params.get("selector"):
@@ -373,7 +381,7 @@ class Daemon:  # pylint: disable=too-many-instance-attributes
         script = str(params.get("script") or "")
         if not script.strip():
             raise BrowserError("evaluate requires a script")
-        result = page.evaluate(script)
+        result = page.evaluate(script, timeout=self.action_timeout)
         return {"page_id": rec.page_id, "result": result}
 
     def _action_cookies(self, scope: dict, params: dict) -> dict:

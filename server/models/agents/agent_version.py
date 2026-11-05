@@ -288,16 +288,21 @@ class AgentVersionModel(BaseModel):
 
         Uses ``*`` (wildcard) elements in list settings to merge parent values.
         """
+        # ``agent_settings`` is nullable (SET_NULL when a settings row is
+        # deleted), so resolve from a missing snapshot as "inherit from the
+        # parent", not as an AttributeError.
+        value = getattr(self.agent_settings, name, None)
         extend_at_index = None
-        if (value := getattr(self.agent_settings, name)) is not None:
+        if value is not None:
             if isinstance(value, (str, int, bool, float, GenericContent, BaseModel)):
                 return value
             if isinstance(value, dict):
                 return value
             if isinstance(value, (list,)):
                 if "+" not in value:
-                    return value
+                    return list(value)
                 extend_at_index = value.index("+")
+                value = list(value)
             else:
                 raise Exception(
                     f"_get_agent_setting does not yet support type of '{name}': {type(value)}"
@@ -305,9 +310,20 @@ class AgentVersionModel(BaseModel):
         for extends_agent_version in self.extends_agent_versions.all():
             if (ext_value := extends_agent_version.resolve_setting(name)) is not None:
                 if isinstance(value, (list,)) and extend_at_index is not None:
-                    value[extend_at_index : extend_at_index + 1] = ext_value
+                    if "+" in value:
+                        idx = value.index("+")
+                        parent_list = ext_value if isinstance(ext_value, list) else [ext_value]
+                        value = [*value[:idx], *parent_list, *value[idx + 1:]]
+                        extend_at_index = None
+                    else:
+                        # Wildcard already substituted by a previous parent:
+                        # append this parent's values instead of overwriting.
+                        parent_list = ext_value if isinstance(ext_value, list) else [ext_value]
+                        value = [*value, *parent_list]
                 else:
                     return ext_value
+        if isinstance(value, (list,)):
+            return list(value)
         return value
 
 
@@ -390,14 +406,18 @@ class AgentVersionModel(BaseModel):
 
     def resolve_property(self, name: str) -> Any:
         """Resolve a property value, walking the agent inheritance chain."""
+        # Free-form properties are optional; an undeclared one means "inherit
+        # from the parent chain", not "raise AttributeError".
+        value = getattr(self, name, None)
         extend_at_index = None
-        if (value := getattr(self, name)) is not None:
+        if value is not None:
             if isinstance(value, (str, int, bool, float, GenericContent)):
                 return value
             if isinstance(value, (list,)):
                 if "+" not in value:
-                    return value
+                    return list(value)
                 extend_at_index = value.index("+")
+                value = list(value)
             else:
                 raise Exception(
                     f"resolve_property does not yet support type of '{name}': {type(value)}"
@@ -411,9 +431,18 @@ class AgentVersionModel(BaseModel):
                 continue
             if (ext_value := extends_agent_version.resolve_property(name)) is not None:
                 if isinstance(value, (list,)) and extend_at_index is not None:
-                    value[extend_at_index : extend_at_index + 1] = ext_value
+                    if "+" in value:
+                        idx = value.index("+")
+                        parent_list = ext_value if isinstance(ext_value, list) else [ext_value]
+                        value = [*value[:idx], *parent_list, *value[idx + 1:]]
+                        extend_at_index = None
+                    else:
+                        parent_list = ext_value if isinstance(ext_value, list) else [ext_value]
+                        value = [*value, *parent_list]
                 else:
                     return ext_value
+        if isinstance(value, (list,)):
+            return list(value)
         return value
 
     def save(self, *args: Any, **kwargs: Any) -> None:

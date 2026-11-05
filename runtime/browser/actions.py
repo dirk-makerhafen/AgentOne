@@ -11,7 +11,7 @@ housekeeping that cannot change server state.
 from __future__ import annotations
 
 READ_ONLY_ACTIONS = frozenset({"status", "snapshot", "read", "tabs", "cookies", "wait", "close_tab"})
-MUTATING_ACTIONS = frozenset({"open", "navigate", "click", "type", "back", "evaluate", "upload", "download"})
+MUTATING_ACTIONS = frozenset({"open", "navigate", "click", "type", "back", "evaluate", "upload", "download", "screenshot"})
 
 ALL_ACTIONS = READ_ONLY_ACTIONS | MUTATING_ACTIONS
 

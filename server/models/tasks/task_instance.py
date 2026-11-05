@@ -368,6 +368,22 @@ class TaskInstance(BaseModel):
                 return tuple(_create_recursive(item, ref_pks) for item in obj)
             if isinstance(obj, TaskInstance):
                 return {"_type": "AgentTaskInstance", "pk": obj.pk}
+            # Support the same model references as AgentTaskCall arguments so
+            # BoundTask instance dedupe can key on real call arguments.
+            try:
+                from server.models.message import Message
+                from server.models.queries.query import Query
+                from server.models.queries.response import Response
+                from server.models.content import GenericContent
+                from server.models.tasks.agent_task_call import AgentTaskCall
+                from server.models.tasks.agent_task_run import AgentTaskRun
+                _allowed = (Message, Query, Response, GenericContent, AgentTaskCall, AgentTaskRun)
+            except Exception:  # pylint: disable=broad-exception-caught
+                _allowed = ()
+            if isinstance(obj, _allowed):
+                if isinstance(obj, AgentTaskCall):
+                    ref_pks.append(obj.pk)
+                return {"_type": obj.__class__.__qualname__, "pk": obj.pk}
             if isinstance(obj, Path):
                 return obj.as_posix()
             raise Exception(f"Type {type(obj)} unknown")
