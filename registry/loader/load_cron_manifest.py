@@ -53,8 +53,17 @@ def load_cron_manifest(
         raise ValueError(
             f"cron.md at {cron_md_path} sets 'function_type' without 'function_name'"
         )
-    raw_active = manifest.get("is_active", True)
-    is_active = True if raw_active is None else bool(raw_active)
+    # Preserve a job's paused state on reload: only honour ``is_active``
+    # when the manifest explicitly declares it.  Manifests that omit the
+    # key (older files, hand-written crons) must not clobber a pause that
+    # was recorded in the database.
+    if "is_active" in manifest:
+        raw_active = manifest.get("is_active")
+        is_active = True if raw_active is None else bool(raw_active)
+        manifest_sets_active = True
+    else:
+        is_active = None
+        manifest_sets_active = False
     workspace_name = _as_str(manifest.get("workspace", ""))
     message_text = manifest.get("message", "")
 
@@ -90,7 +99,7 @@ def load_cron_manifest(
         defaults={
             "description": description,
             "schedule": schedule,
-            "is_active": is_active,
+            "is_active": True if is_active is None else is_active,
             "is_archived": False,
             "agent": agent,
             "workspace": workspace,
@@ -107,7 +116,6 @@ def load_cron_manifest(
         _fields_to_check = [
             ("description", description),
             ("schedule", schedule),
-            ("is_active", is_active),
             ("is_archived", False),
             ("agent", agent),
             ("workspace", workspace),
@@ -118,6 +126,8 @@ def load_cron_manifest(
             ("message", message),
             ("manifest_dir", cron_md_path.parent.as_posix()),
         ]
+        if manifest_sets_active:
+            _fields_to_check.append(("is_active", is_active))
         for field_name, new_val in _fields_to_check:
             if getattr(cronjob, field_name) != new_val:
                 setattr(cronjob, field_name, new_val)

@@ -586,7 +586,7 @@ class Agent(AssistantScopeMixin):
         from runtime.workspace.workspaces import Workspaces
 
         source = self.get_source_dir()
-        return Workspaces.ensure_named(
+        return Workspaces.ensure_source_scope(
             f"{source.as_posix()} assistant scope",
             source,
             f"source scope for agent {self.name}",

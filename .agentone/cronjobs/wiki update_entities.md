@@ -3,7 +3,7 @@ agent: wiki
 description: ''
 function_name: ''
 function_type: ''
-is_active: true
+is_active: false
 message: 'Run your update_entities tool with limit 10 once, commit results to git
   and call final_result with a short one sentence summary of your work.
 

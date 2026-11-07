@@ -112,7 +112,7 @@ class Skills(AssistantScopeMixin):
         project = self.project
         nested = self.parent_agent is not None or self.parent_skill is not None
         if nested:
-            return Workspaces.ensure_named(
+            return Workspaces.ensure_source_scope(
                 f"{source.as_posix()} assistant scope", source,
                 "assistant scope for nested skills",
             )

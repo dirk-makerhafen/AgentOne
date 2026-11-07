@@ -46,6 +46,7 @@ reload warns and skips.
 | `runtime/<ver_pk>/` | Full tree extract per version + `.last_used`. GC after 1h idle, re-extracted on demand. |
 | `install/global\|user\|project_<n>\|workspace_<n>/` | Git repos synced from scope source (`rsync --delete`), versioned by tree SHA. Re-syncable. |
 | `memory/` | One local Git repo per global/project/workspace memory root. Legacy nested `.git` directories under that root are deleted during the next memory walk; memory files are retained, but their nested Git histories are discarded. |
+| `workspaces/_assistant_scopes/<source path>/assistant_scope/` | Central data for source-bound assistant workspaces. Source path components are preserved instead of flattened; existing scope data is moved on first access. |
 | `upstream/*`, `staging/*` | Upstream clones + merged staging (upstream first, local overlays; `sources.yaml` + `skills.yaml` are config-only, excluded; staging uses `--delete`). Re-syncable. |
 | `browser/` | Daemon token (`0600`), profiles, audit log. **Durable — back up.** Outside runtime GC. |
 | `projects/<n>/`, `workspaces/<n>/` | Central manifest dirs (DB content). Back up with the DB. |

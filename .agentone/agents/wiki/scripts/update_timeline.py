@@ -850,7 +850,7 @@ def update_timeline(_session: Session, limit: int = 1):
     results = map_task.delay(
         target="update_timeline_item",
         list_of_kwargs=items,
-        concurrency=1,
+        concurrency=4,
     )
     return True, {"status": "success", "results": results}
 

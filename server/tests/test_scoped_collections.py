@@ -374,6 +374,59 @@ class WorkspacesScopeTest(TestCase):
         adopted.refresh_from_db()
         self.assertEqual(adopted.parent_project_id, project.pk)
 
+    def test_source_scope_preserves_path_hierarchy_and_migrates_data(self):
+        from runtime.paths import central_workspaces_base
+
+        with tempfile.TemporaryDirectory() as home, patch.dict(
+            os.environ, {"AGENTONE_HOME": home}
+        ):
+            source = Path(home) / "checkout" / "agents" / "wiki"
+            name = f"{source.as_posix()} assistant scope"
+            old_dir = Path(home) / "workspaces" / "_flattened_scope"
+            (old_dir / "memory").mkdir(parents=True)
+            (old_dir / "memory" / "reflection.md").write_text(
+                "existing memory", encoding="utf-8"
+            )
+            (old_dir / "memory" / ".git").mkdir()
+            (old_dir / "memory" / ".git" / "config").write_text(
+                "repository metadata", encoding="utf-8"
+            )
+            existing = WorkspaceModel.objects.create(
+                name=name,
+                path=source.as_posix(),
+                agentone_dir=old_dir.as_posix(),
+            )
+
+            workspace = Workspaces.ensure_source_scope(
+                name, source, "source scope for wiki"
+            )
+
+            expected = (
+                central_workspaces_base()
+                / "_assistant_scopes"
+                / source.relative_to(source.anchor)
+                / "assistant_scope"
+            )
+            workspace.refresh_from_db()
+            self.assertEqual(workspace.pk, existing.pk)
+            self.assertEqual(workspace.get_agentone_dir(), expected)
+            self.assertFalse(old_dir.exists())
+            self.assertEqual(
+                (expected / "memory" / "reflection.md").read_text(
+                    encoding="utf-8"
+                ),
+                "existing memory",
+            )
+            self.assertEqual(
+                (expected / "memory" / ".git" / "config").read_text(
+                    encoding="utf-8"
+                ),
+                "repository metadata",
+            )
+            self.assertEqual(
+                Workspaces.ensure_source_scope(name, source).pk, existing.pk
+            )
+
     def test_for_project_prefers_main_workspace(self):
         import tempfile
 

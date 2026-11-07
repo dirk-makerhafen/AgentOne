@@ -97,7 +97,7 @@ def call_assistant(
     workspace = None
     if override:
         target = override.strip().rstrip("/")
-        workspace = Workspaces.ensure_named(
+        workspace = Workspaces.ensure_source_scope(
             f"{target} assistant scope", target,
             "assistant scope override",
             parent_project=project,

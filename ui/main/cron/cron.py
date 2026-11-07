@@ -274,6 +274,7 @@ class CronView(ModelView):
     def toggleActive(self) -> None:
         self.subject.is_active = not self.subject.is_active
         self.subject.save(update_fields=["is_active"])
+        write_cron_file(self.subject)
         self.update()
 
     def deleteCron(self) -> None:
