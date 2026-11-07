@@ -9,9 +9,17 @@ validated and advanced here — the LLM never touches ``.memory_sources.md``.
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from typing import Any
 
-from runtime.memory.finalize import finalize_memory
+# Executed from the source manifest folder (registry load) or an extracted
+# runtime cache copy — keep the sibling ``memory_lib`` package importable.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from memory_lib.finalize import finalize_memory
 
 #: Keep the synthesizer's summary short in the task result payload.
 MAX_RESULT_CHARS = 500

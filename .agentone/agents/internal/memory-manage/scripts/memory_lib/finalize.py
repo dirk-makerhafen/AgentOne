@@ -13,8 +13,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from runtime.memory import paths as mempaths
-from runtime.memory import sources as memsources
+from . import paths as mempaths
+from . import sources as memsources
 
 #: Files a synthesis run must produce before the manifest may advance.
 OUTPUT_FILES = ("memory.md", "reflection.md")
@@ -41,7 +41,7 @@ def finalize_memory(
         ``(True, {...})`` when the manifest advanced, otherwise
         ``(False, {"status": "error", "message": ...})``.
     """
-    from runtime.memory.tree import mark_processed
+    from .tree import mark_processed
 
     raw = str(target_dir or "").strip()
     if not raw:

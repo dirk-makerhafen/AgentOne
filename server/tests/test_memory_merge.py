@@ -13,19 +13,12 @@ from unittest.mock import patch
 import frontmatter
 import pytest
 
-from runtime.memory import finalize as memfinalize
-from runtime.memory import git as memgit
-from runtime.memory import sources as memsources
+from server.tests.memory_test_support import MEMORY_SCRIPTS
+from server.tests.memory_test_support import finalize as memfinalize
+from server.tests.memory_test_support import git as memgit
+from server.tests.memory_test_support import sources as memsources
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-MEMORY_SCRIPTS = (
-    REPO_ROOT
-    / ".agentone"
-    / "agents"
-    / "internal"
-    / "memory-manage"
-    / "scripts"
-)
 
 
 def _load_module(file_name: str, module_name: str):
@@ -627,7 +620,7 @@ def test_finalize_advances_the_node(tmp_path):
     (folder / "reflection.md").write_text("lessons", encoding="utf-8")
     _marker(folder, time.time())
 
-    with patch("runtime.memory.tree.mark_processed", return_value=True) as mocked:
+    with patch("memory_lib.tree.mark_processed", return_value=True) as mocked:
         ok, result = memfinalize.finalize_memory(folder.as_posix())
 
     assert ok is True
@@ -646,7 +639,7 @@ def test_finalize_refuses_stale_output(tmp_path):
     os.utime(output, (stale, stale))
     _marker(folder, time.time())
 
-    with patch("runtime.memory.tree.mark_processed", return_value=True) as mocked:
+    with patch("memory_lib.tree.mark_processed", return_value=True) as mocked:
         ok, result = memfinalize.finalize_memory(
             folder.as_posix(), started_at=time.time()
         )
@@ -664,7 +657,7 @@ def test_memory_finalize_task_advances_node_and_reports_result(tmp_path):
     started = time.time()
     _marker(folder, started)
 
-    with patch("runtime.memory.tree.mark_processed", return_value=True) as mocked:
+    with patch("memory_lib.tree.mark_processed", return_value=True) as mocked:
         ok, result = finalize.memory_finalize(
             None,
             "task synthesis done",

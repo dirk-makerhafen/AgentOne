@@ -1,4 +1,4 @@
-"""Tests for runtime.memory.paths helpers (pure functions, no DB)."""
+"""Tests for the memory-manage script library path helpers (pure functions, no DB)."""
 
 import os
 import tempfile
@@ -6,7 +6,7 @@ from pathlib import Path
 
 from django.test import TestCase
 
-from runtime.memory import paths as mempaths
+from server.tests.memory_test_support import paths as mempaths
 from server.models.project import Project
 from server.models.workspace import WorkspaceModel
 

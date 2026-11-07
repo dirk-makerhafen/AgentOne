@@ -22,9 +22,9 @@ from typing import Any, Optional
 
 from django.db.models import Prefetch
 
-from runtime.memory import git as memgit
-from runtime.memory import paths as mempaths
-from runtime.memory import sources as memsources
+from . import git as memgit
+from . import paths as mempaths
+from . import sources as memsources
 
 _SCOPE_KINDS = {"global", "project", "workspace"}
 _SOURCE_DIR = {

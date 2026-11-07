@@ -1,6 +1,6 @@
 """Dispatch layer-aware memory synthesis for pending ``.memory_sources.md`` nodes.
 
-:func:`runtime.memory.tree.walk_memory` decides *what* is stale and owns the
+:func:`memory_lib.tree.walk_memory` decides *what* is stale and owns the
 manifest files.  This module decides *who* consolidates it and *what they are
 told*: every pending node gets a prompt tailored to its layer (task, agent, or
 scope), and that prompt is sent to a fresh ``memory-manage`` subtask session.
@@ -10,7 +10,7 @@ without touching the dispatch code.  The synthesizer only writes ``memory.md`` /
 ``reflection.md``; each spawn is immediately followed by a delayed
 ``memory_finalize`` call that references the child's task call, so the
 framework auto-awaits the synthesizer and then advances the manifest through
-:func:`runtime.memory.finalize.finalize_memory`.  The LLM never edits or
+:func:`memory_lib.finalize.finalize_memory`.  The LLM never edits or
 advances ``.memory_sources.md``.
 
 Layers are dispatched deepest-first: task memories before agent memories, and
@@ -23,14 +23,21 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import time
 import uuid
 from pathlib import Path
 from typing import Any
 
-from runtime.memory import git as memgit
-from runtime.memory import paths as mempaths
-from runtime.memory import sources as memsources
+# Executed from the source manifest folder (registry load) or an extracted
+# runtime cache copy — keep the sibling ``memory_lib`` package importable.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from memory_lib import git as memgit
+from memory_lib import paths as mempaths
+from memory_lib import sources as memsources
 
 
 AGENT_PROMPT = '''
@@ -863,7 +870,7 @@ def memory_merge(
 
 def _walk_pending() -> list[dict[str, Any]]:
     """Re-walk the memory tree and return its ``needs_update`` list."""
-    from runtime.memory.tree import walk_memory
+    from memory_lib.tree import walk_memory
 
     summary = walk_memory(write=True, refresh=False)
     return list(summary.get("needs_update") or [])

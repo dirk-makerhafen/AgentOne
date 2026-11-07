@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from types import SimpleNamespace
 
-from runtime.memory import paths as mempaths
-from runtime.memory import sources as memsources
+from server.tests.memory_test_support import paths as mempaths
+from server.tests.memory_test_support import sources as memsources
 
 
 def _payload(**overrides):

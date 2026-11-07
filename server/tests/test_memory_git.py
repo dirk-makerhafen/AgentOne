@@ -1,11 +1,11 @@
-"""Tests for runtime.memory.git helpers (require git)."""
+"""Tests for the memory-manage script library git helpers (require git)."""
 
 import subprocess
 from pathlib import Path
 
 import pytest
 
-from runtime.memory import git as memgit
+from server.tests.memory_test_support import git as memgit
 
 
 def _git_ok() -> bool:

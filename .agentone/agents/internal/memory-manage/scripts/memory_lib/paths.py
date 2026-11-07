@@ -16,7 +16,7 @@ from runtime.session_folder import (
 
 
 #: Sidecar written while a memory node is being synthesized.  It is never
-#: committed (see ``runtime.memory.git.ensure_repo``) and only exists to stop
+#: committed (see ``memory_lib.git.ensure_repo``) and only exists to stop
 #: two dispatch passes from synthesizing the same node in parallel.
 INFLIGHT_FILENAME = ".memory_inflight"
 

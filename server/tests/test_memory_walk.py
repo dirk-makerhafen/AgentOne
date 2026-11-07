@@ -9,9 +9,13 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from runtime.memory import git as memgit
-from runtime.memory import sources as memsources
-from runtime.memory.tree import walk_memory, _compute_memory_type, _source_type
+from server.tests.memory_test_support import git as memgit
+from server.tests.memory_test_support import sources as memsources
+from server.tests.memory_test_support import tree as memtree
+
+walk_memory = memtree.walk_memory
+_compute_memory_type = memtree._compute_memory_type
+_source_type = memtree._source_type
 from server.models.agents.agent import AgentModel
 from server.models.project import Project
 from server.models.sessions.session import SessionModel
@@ -92,7 +96,7 @@ class MemoryWalkTest(TestCase):
         }
         missing = self.tmp / "missing"
         fake_root = self._fake_memory_root(missing)
-        self.patch = patch("runtime.memory.tree.mempaths.memory_root", side_effect=fake_root)
+        self.patch = patch("memory_lib.tree.mempaths.memory_root", side_effect=fake_root)
         self.patch.start()
         self.addCleanup(self.patch.stop)
 
@@ -419,7 +423,7 @@ class MemoryWalkTest(TestCase):
         )
         changed.write_text("new agent memory", encoding="utf-8")
 
-        from runtime.memory.tree import mark_processed
+        from memory_lib.tree import mark_processed
 
         self.assertTrue(mark_processed(self.global_mem))
         for source in self._manifest(self.global_mem)["sources"]:
@@ -806,7 +810,7 @@ class MemorySourceTypeTest(TestCase):
         self.roots = {("project", self.project.pk): self.project_mem}
         missing = self.tmp / "missing"
         fake_root = self._fake_memory_root(missing)
-        self.patch = patch("runtime.memory.tree.mempaths.memory_root", side_effect=fake_root)
+        self.patch = patch("memory_lib.tree.mempaths.memory_root", side_effect=fake_root)
         self.patch.start()
         self.addCleanup(self.patch.stop)
 

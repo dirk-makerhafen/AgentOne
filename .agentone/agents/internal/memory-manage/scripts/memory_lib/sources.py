@@ -2,7 +2,7 @@
 
 Each memory node (scope root, agent, task) gets a generated, gitignored
 manifest describing the files it consumes and the git commit seen at the
-last successful synthesis.  The walker in :mod:`runtime.memory.tree` owns
+last successful synthesis.  The walker in :mod:`memory_lib.tree` owns
 writing these files; synthesis agents never write them.
 """
 
