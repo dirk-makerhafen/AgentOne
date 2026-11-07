@@ -11,6 +11,8 @@ Celery beat periodic task handling the 10-second time-driven wakeups:
                          sessions before their KV cache expires
   7. Hook reaping      - cancel expired session-hook runs, delete finished
                          ones (``runtime.hooks`` owns the logic)
+  8. Session folders   - prune orphaned and empty ended-session folders
+                         (throttled to once every 10 minutes)
 
 Sibling one-minute tasks live in their own modules:
 
@@ -69,6 +71,7 @@ def tick_scheduler() -> None:
         _verify_work_items,
         _compact_idle_sessions,
         _reap_idle_terminals,
+        _sweep_session_folders,
     ):
         try:
             routine()
@@ -615,12 +618,32 @@ def _collection_agent(collection, name):
 
 
 def _collection_task(agent, name):
-    """Resolve a collection processor task from its owning agent."""
+    """Resolve a collection processor task for *agent*.
+
+    A processor is either defined directly on the agent (scripts) or pulled in
+    through the agent's ``tasks:`` patterns, which expand to agent-defined,
+    inherited and global task versions (``task_versions`` M2M).  Prefer the
+    agent's own definition, then fall back to the resolved task set so a
+    processor such as ``report.parse`` can live in a shared global group.
+    """
     from server.models.tasks.task_definition import TaskDefinition
 
     if agent is None:
         return None
-    return TaskDefinition.objects.filter(name=name, parent_agent=agent).first()
+    own = TaskDefinition.objects.filter(name=name, parent_agent=agent).first()
+    if own is not None:
+        return own
+    version = agent.latest_agent_version
+    if version is not None:
+        tdv = (
+            version.tasks()
+            .filter(task_definition__name=name)
+            .select_related("task_definition")
+            .first()
+        )
+        if tdv is not None:
+            return tdv.task_definition
+    return None
 
 
 def _trigger_on_removed(collection, source_calls):
@@ -1244,6 +1267,27 @@ def _compact_idle_sessions() -> None:
                 f"[scheduler] error in _compact_idle_sessions "
                 f"for session {session_model.pk}: {e}"
             )
+
+
+_SESSION_FOLDER_SWEEP_KEY = "agentone:session-folder-sweep"
+_SESSION_FOLDER_SWEEP_SECONDS = 600
+
+
+def _sweep_session_folders() -> None:
+    """Prune orphaned and empty ended-session folders (at most every 10 min).
+
+    Cheap directory walk plus a per-pk DB lookup; throttled through the cache
+    so it does not run on every 10-second tick.
+    """
+    from django.core.cache import cache
+
+    if not cache.add(
+        _SESSION_FOLDER_SWEEP_KEY, 1, _SESSION_FOLDER_SWEEP_SECONDS
+    ):
+        return
+    from runtime.session_folder import cleanup_orphaned_session_folders
+
+    cleanup_orphaned_session_folders()
 
 
 def _reap_idle_terminals() -> None:

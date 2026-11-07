@@ -33,7 +33,7 @@ grant writes.
 Sessions without a workspace are not restricted (returns ``allow``),
 except for other sessions' private-storage folders (always ``deny``).
 
-Session-private storage (``~/.agentone/sessions/<pk>/``, see
+Session-private storage (``<scope>/var/sessions/<agent>/<pk>/``, see
 ``runtime/session_folder.py``) is carved out in :func:`evaluate`: the owning
 session's own folder is always ``allow`` (read and write); other sessions'
 folders and the base dir itself are always ``deny``.  Only an explicit
@@ -97,7 +97,7 @@ class _WorkspaceAccessPolicy:
     external_read: _ActionPolicy = field(default_factory=_ActionPolicy)
     external_write: _ActionPolicy = field(default_factory=_ActionPolicy)
     # Owning session pk for the session-private storage carve-out
-    # (``~/.agentone/sessions/<pk>/``).  *None* when unknown.
+    # (``<scope>/var/sessions/<agent>/<pk>/``).  *None* when unknown.
     session_pk: int | None = None
     # Additional roots treated as "inside" for policy purposes: the
     # session's manifest directories (project/workspace ``.agentone``),

@@ -286,7 +286,7 @@ def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
     roots: list[tuple[Path, Any, InstallRepo]] = []
     if project is not None:
         md = project.get_agentone_dir()
-        roots.append((md, project, InstallRepo.for_project(project.name, source_root=md)))
+        roots.append((md, project, InstallRepo.for_project(project, source_root=md)))
     else:
         roots.append((agentone_root(), None, InstallRepo.for_global(source_root=agentone_root())))
         roots.append((agentone_home(), None, InstallRepo.for_user(source_root=agentone_home())))

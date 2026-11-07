@@ -11,7 +11,7 @@ scheduler:
   keep a single ``caffeinate -dimsu`` running while local models have been
   used within the ``sleep_guard_release_delay_minutes`` grace window **and**
   power conditions allow it (AC, or battery >= ``min_battery_pct_for_caffeinate``).
-* The guard process is tracked by a pidfile (``~/.agentone/sleep_guard.pid``),
+* The guard process is tracked by a pidfile (``~/.agentone/var/run/sleep_guard.pid``),
   and its pin is validated via ``ps`` so a recycled PID is never killed.
 
 The low-battery *pause* gate (parking local calls) is independent and lives
@@ -34,9 +34,20 @@ from runtime.settings.settings import (
     get_sleep_guard_release_delay_minutes,
 )
 
+def _pid_file() -> Path:
+    """Return the pidfile path (new ``var/run``, legacy home fallback)."""
+    from runtime.paths import legacy_pid_file, run_base
+
+    new = run_base() / "sleep_guard.pid"
+    legacy = legacy_pid_file()
+    if new.exists() or not legacy.exists():
+        return new
+    return legacy
+
+
 #: Where the running ``caffeinate`` process id is persisted so any worker —
 #: or the UI process — can find and stop it.
-PID_FILE = Path.home() / ".agentone" / "sleep_guard.pid"
+PID_FILE = _pid_file()
 
 #: Serializes spawn/kill/read within a single process; pidfile writes are
 #: atomic enough for the (already serialized) 60s recovery cadence.

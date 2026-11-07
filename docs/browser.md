@@ -46,7 +46,7 @@ A daemon is required rather than module-level state in the tools: the Celery
 pool is five prefork workers, so per-worker globals would create five
 disconnected browsers and lose them on every worker restart. The daemon is
 bound to `127.0.0.1` and requires a bearer token from
-`~/.agentone/browser/token` (`0600`).
+`~/.agentone/var/browser/token` (`0600`).
 
 ### Files
 
@@ -64,8 +64,8 @@ bound to `127.0.0.1` and requires a bearer token from
 | `runtime/browser/actions.py` | action catalogue shared with the approval gate |
 | `.agentone/scripts/browser/browser.py` | the `browser` tool |
 
-Profiles live in `~/.agentone/browser/profiles/`, deliberately **not** under
-`~/.agentone/runtime/` (which is garbage-collected versioned task state).
+Profiles live in `~/.agentone/var/browser/profiles/`, deliberately **not** under
+`~/.agentone/var/cache/runtime/` (which is garbage-collected versioned task state).
 
 ## Sessions, tabs, and ownership
 
@@ -201,7 +201,7 @@ any browser.
   bearer token in a `0600` file, profiles `0700`. The token is not accepted as
   a query parameter (it would land in logs).
 - **Domain policy is allow-all for now**, and every navigation is appended to
-  `~/.agentone/browser/nav-audit.jsonl` with the session and profile that made
+  `~/.agentone/var/browser/nav-audit.jsonl` with the session and profile that made
   it. Add `deny_domains`/`allow_domains` later without any tool change.
 - Cookie **values** are never returned; only names and domains.
 - The user's real browser profile is never used.
@@ -219,7 +219,7 @@ python3 manage.py server browser stop       # graceful shutdown
 real `browser` tool call (or an explicit `start`, or `manage.py server run`)
 spawns it.
 
-Logs and state: `~/.agentone/browser/daemon.log`, `state.json` (pid + port),
+Logs and state: `~/.agentone/var/browser/daemon.log`, `state.json` (pid + port),
 `nav-audit.jsonl`.
 
 Idle browsers are closed after `idle_seconds`; if the process count is at

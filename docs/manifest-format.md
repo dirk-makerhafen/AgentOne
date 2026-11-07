@@ -132,7 +132,7 @@ rules never grant writes.
 
 **Session-private storage carve-out** — independent of the `access:` blocks
 above, every session may always read/write its own private folder at
-`~/.agentone/sessions/<session_pk>/`, and may never touch another session's
+`~/.agentone/var/sessions/<agent>/<pk>/`, and may never touch another session's
 folder (nor list the base dir). Only an explicit global `deny` pattern
 overrides the own-folder allow. See [core-mechanisms.md](core-mechanisms.md)
 (Session-Private Storage).
@@ -683,7 +683,7 @@ DB-canonical, see `docs/folders.md`.)
 1. **`scripts.md`** is the single source of truth — no `@tool()`/`@task()` decorators
 2. Manifests use `---` both to open **and** close the frontmatter block
 3. Python files are loaded via `importlib`, never `exec()`
-4. Version identifiers are **git tree SHAs** from install repos at ``~/.agentone/install/`` (one per scope: global, user, per-project, per-workspace). Tree SHAs are deterministic — same content always produces the same hash.
+4. Version identifiers are **git tree SHAs** from install repos at ``~/.agentone/var/install/`` (one per scope: global, user, per-project, per-workspace). Tree SHAs are deterministic — same content always produces the same hash.
 5. Versioned models (`AgentVersionModel`, `TaskDefinitionVersion`, etc.) are immutable — `save()` raises `ValidationError` if `pk` exists
 
 ---
@@ -693,10 +693,10 @@ DB-canonical, see `docs/folders.md`.)
 `python3 manage.py reload_all .` triggers:
 
 1. **Sync — copy sources into install repos:**
-   - Global: ``rsync .agentone/ → ~/.agentone/install/global/``
-   - User: ``rsync ~/.agentone/ → ~/.agentone/install/user/``
-   - Per-project: ``rsync <manifest_dir>/ → ~/.agentone/install/project_<name>/``
-   - Per-workspace: ``rsync <manifest_dir>/ → ~/.agentone/install/workspace_<name>/``
+   - Global: ``rsync .agentone/ → ~/.agentone/var/install/global/``
+   - User: ``rsync ~/.agentone/ → ~/.agentone/var/install/user/``
+   - Per-project: ``rsync <manifest_dir>/ → ~/.agentone/var/install/projects/<pk>/``
+   - Per-workspace: ``rsync <manifest_dir>/ → ~/.agentone/var/install/workspaces/<pk>/``
    - ``git add -A && git commit`` (only if dirty) in each install repo
 
 2. **Pass 1 — Create models:**
@@ -743,7 +743,7 @@ sources:
 ### How it works during reload
 
 1. **Collect** — ``sync_upstream_sources()`` reads all three source YAML files
-2. **Clone/Fetch** — each upstream repo is cloned into ``~/.agentone/upstream/<name>-<hash>/`` (or fetched if already present), then checked out to the configured ``ref``
+2. **Clone/Fetch** — each upstream repo is cloned into ``~/.agentone/var/cache/upstream/<name>-<hash>/`` (or fetched if already present), then checked out to the configured ``ref``
 3. **Merge** — a staging directory is built:
    - Upstream content is copied in first (from each repo's ``.agentone/`` subdirectory — or the repo root if no ``.agentone/`` exists)
    - Local ``.agentone/`` files are copied on top — **local always wins** on path conflicts

@@ -183,7 +183,7 @@ path into `allow` / `ask` / `deny`:
 
 - Global deny patterns are checked first (any scope, anywhere).
 - Session-private storage carve-out second: paths under
-  `~/.agentone/sessions/<own_pk>/` are always `allow` (read and write),
+  `~/.agentone/var/sessions/<agent>/<own_pk>/` are always `allow` (read and write),
   paths under another session's folder (or the base dir itself) are always
   `deny`. Only an explicit global `deny` pattern overrides the own-folder
   allow. Applies even to sessions without a workspace.
@@ -233,8 +233,10 @@ guarantee even if a call bypasses the scheduler path (e.g. direct `BoundTask.cal
 (`private_dir` / `ensure_private_dir`), `runtime/session_bootstrap.py`
 
 Every session owns an isolated private folder at
-`<AGENTONE_SESSIONS_DIR>/<session_pk>/` (`~/.agentone/sessions` by default,
-overridable via `config/settings_local.py`). It holds scratch files,
+`<scope>/var/sessions/<agent>/<session_pk>/` — global/user sessions use
+`<AGENTONE_SESSIONS_DIR>` (`~/.agentone/var/sessions` by default, overridable
+via `config/settings_local.py`), project/workspace sessions use their own
+scope's `var/`. It holds scratch files,
 temporary memory, ad-hoc prompts/tools, intermediate results, generated
 scripts and other session-specific artifacts; subsessions get their own
 folder. Agents can announce it with `{{session_dir}}` in their
@@ -245,10 +247,12 @@ re-embedded in the compaction marker after compaction. Agents use the normal
 announcement in history (instead of re-injecting it every turn) keeps the
 prompt-cache prefix stable. Creation is lazy (`ensure_session_dir`, also
 triggered by `BoundTask._ensure_private_dir_on_access` on first use; never
-inside `evaluate()`, which stays a pure policy check). Archived sessions are
-kept forever; folders whose session row is hard-deleted are removed by the
-`_cleanup_orphaned_session_folders` startup pass
-(`server/tasks/recovery_scheduler.py`, `server/tasks/startup_cleanup.py`).
+inside `evaluate()`, which stays a pure policy check). Folders holding scratch
+files are kept forever (including archived sessions). The sweep removes
+folders whose session row was hard-deleted, plus empty folders of ended
+(`is_active=False`) sessions; it runs at startup
+(`server/tasks/startup_cleanup.py`) and roughly every 10 minutes from the tick
+scheduler (`_sweep_session_folders`).
 
 Reusable query templates live in the database, not the folder
 (`runtime/query_templates.py`, models `QueryTemplateVersion` +

@@ -613,7 +613,7 @@ sources:
 
 **Merge semantics:**
 
-1. On every `reload_all`, upstream repos are cloned/fetched into `~/.agentone/upstream/`
+1. On every `reload_all`, upstream repos are cloned/fetched into `~/.agentone/var/cache/upstream/`
 2. A staging directory is built — upstream content first, then local `.agentone/` files overlay on top
 3. **Local files always win** on path conflicts
 4. The merged staging directory becomes the install repo's source root — version tracking (git tree SHAs) works identically for upstream and local files

@@ -2,7 +2,7 @@
 
 Domain policy is deliberately permissive for now: ``allow_domains`` empty means
 allow-all, and ``deny_domains`` is an optional floor.  Every navigation is
-appended to ``~/.agentone/browser/nav-audit.jsonl`` so a permissive default is
+appended to ``~/.agentone/var/browser/nav-audit.jsonl`` so a permissive default is
 still accountable.  Tightening the allowlist later needs no tool-surface
 change — only config.
 """

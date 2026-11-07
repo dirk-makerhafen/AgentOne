@@ -244,9 +244,12 @@ def _load_user_scope(details: list, errors: list, counts: Dict[str, int],
     user_install = InstallRepo.for_user(source_root=root)
     try:
         user_install.sync(excludes=[
+            # Current layout (everything except the user manifest dirs).
+            "var", "secrets", "projects", "workspaces", "memory",
+            "config.yaml", "sleep_guard.pid", ".DS_Store",
+            # Pre-var/ leftovers, cleaned out of the repo after migration.
             "install", "runtime", "sessions", "browser", "upstream",
-            "staging", "projects", "workspaces", "memory", "terminals",
-            ".DS_Store",
+            "staging", "terminals",
         ])
     except Exception as e:
         errors.append(f"User scope sync: {e}")

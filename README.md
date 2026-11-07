@@ -84,6 +84,7 @@ AgentOne ships with comprehensive documentation organized by audience. Below is 
 | `docs/development.md` | Developer's guide: setup, adding models/tools/agents/UI, testing, REST API |
 | `docs/core-mechanisms.md` | Deep-dive: task dispatch pipeline, auto-await, pyHtmlGui renderer internals |
 | `docs/deployment.md` | Production deployment: prerequisites, services, nginx, TLS |
+| `docs/folders.md` | Canonical filesystem layout: scopes, `var/` subtrees, install repos, backup |
 | `docs/manifest-format.md` | YAML manifest format reference (agents, scripts, cron, streams, sets) |
 | `docs/models.md` | Model reference (~30 models including DataCollection, full field tables) |
 | `docs/skills.yaml.md` | Skill directory structure and manifest format |

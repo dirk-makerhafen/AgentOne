@@ -7,6 +7,7 @@ Quick reference for developers working on AgentOne. See also:
 - [docs/development.md](docs/development.md) — setup, coding conventions, how-to guides
 - [docs/core-mechanisms.md](docs/core-mechanisms.md) — task dispatch pipeline, auto-await, renderer internals
 - [docs/deployment.md](docs/deployment.md) — production deployment, supervisor, nginx
+- [docs/folders.md](docs/folders.md) — canonical filesystem layout (scopes, `var/`, install repos)
 - [docs/manifest-format.md](docs/manifest-format.md) — YAML manifest format (agents, scripts, cron, streams, sets)
 - [docs/models.md](docs/models.md) — model reference (all ~30 models including DataCollection)
 - [docs/terminals.md](docs/terminals.md) — persistent tmux terminals + external CLI agents (tools, allowlist, guardrails, UI tab)
@@ -77,9 +78,10 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 
 ## Constraints & gotchas
 
+- **Filesystem layout**: each scope (global, user, project, workspace) owns its manifests + a `var/` subtree (sessions/log/run/cache); machine-wide state lives under `~/.agentone/var/{install,browser}` and secrets under `~/.agentone/secrets/`. All path decisions go through `runtime/paths.py` (`ScopeRef`), never recompute `~/.agentone/...`. `python3 manage.py migrate_layout [--dry-run]` upgrades a pre-`var/` home.
 - **Use `python3`**, not `python`.
 - **Run tests with the repo venv** (`venv/bin/python -m pytest ...`, or with the venv activated) — system `python3` has the wrong Django version and DB tests error out.
-- Session-private folders live at `~/.agentone/sessions/<session_pk>/` (`runtime/session_folder.py`, base overridable via `AGENTONE_SESSIONS_DIR` in `settings_local.py`). Own folder is always guardrail-allowed, other sessions' folders always denied; archived sessions keep theirs forever, orphans are swept at startup.
+- Session-private folders live in each scope's `var/sessions/<agent>/<pk>/` — global/user at `~/.agentone/var/sessions/<agent>/<pk>/` (`runtime/session_folder.py`, base overridable via `AGENTONE_SESSIONS_DIR` in `settings_local.py`); project/workspace at `<agentone dir>/var/sessions/<agent>/<pk>/`. Own folder is always guardrail-allowed, other sessions' folders always denied; folders with files are kept forever (incl. archived), while hard-deleted orphans and empty folders of ended (`is_active=False`) sessions are swept at startup and every ~10 min by `tick_scheduler._sweep_session_folders`.
 - `.pylintrc`: `max-line-length=200`, disables `C0114/C0115/C0116`, loads `pylint_django`.
 - `config/settings.py` defaults to SQLite. Override in `config/settings_local.py` for MySQL or custom config. File is gitignored. Run `python3 manage.py server setup` to generate one.
 - `db.sqlite3` is gitignored and stale.
@@ -88,7 +90,7 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - `agentone_public.py` at repo root is a flat re-export — not a module.
 - `old/` is dead code; `registry/task_decorators.py` has commented-out sections.
 - UI tools in `.agentone/scripts/` must return `(bool, dict)` and be registered in a `scripts.md` manifest.
-- Upstream sources (`.agentone/{skills}/skills.yaml`, `{agents}/sources.yaml`, `{scripts}/sources.yaml`) are merged via `~/.agentone/upstream/` on every reload. Local files always override upstream.
+- Upstream sources (`.agentone/{skills}/skills.yaml`, `{agents}/sources.yaml`, `{scripts}/sources.yaml`) are merged via `~/.agentone/var/cache/upstream/` on every reload. Local files always override upstream.
 - Data flows (`.agentone/streams/*.md`, `.agentone/sets/*.md`) replaced legacy named-pipe system.
 - Browser: one long-lived daemon (`runtime/browser/`) owns every Camoufox process, because the Celery pool is 5 prefork workers and per-worker globals would give 5 disconnected browsers. The daemon listens on loopback with a `0600` bearer token, reaps idle browsers, and persists Camoufox fingerprints so a reopened profile keeps its identity. One process per top-level chat session; child/subsession agents inherit the root's browser but only see tabs they opened. `browser` is `access: write`, and mutating actions (`open`/`navigate`/`click`/`type`/`back`/`evaluate`/`upload`/`download`) require approval — see [docs/browser.md](docs/browser.md).
 - `_trigger_on_removed` in `tick_scheduler.py` (not reprocess_collection.py — it imports it) — the `source_calls` param must contain the AgentTaskCalls whose items were removed, not all source calls.

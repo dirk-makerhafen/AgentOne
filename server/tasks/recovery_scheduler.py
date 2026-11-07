@@ -1055,7 +1055,7 @@ def _recover_stale_queries() -> None:
 
 
 def _cleanup_stale_runtime_folders() -> None:
-    """Remove runtime version folders (``~/.agentone/runtime/<pk>/``) whose
+    """Remove runtime version folders (``<scope>/var/cache/runtime/<pk>/``) whose
     ``.last_used`` is older than the stale threshold.
 
     If a version is needed again after cleanup, ``BoundTask.call()``
@@ -1071,7 +1071,7 @@ def _cleanup_stale_runtime_folders() -> None:
 
 
 def _cleanup_orphaned_session_folders() -> None:
-    """Remove session-private folders (``~/.agentone/sessions/<pk>/``) whose
+    """Remove session-private folders (``<scope>/var/sessions/<agent>/<pk>/``) whose
     session row no longer exists (hard delete).
 
     Archived/inactive sessions are kept forever — only folders with no

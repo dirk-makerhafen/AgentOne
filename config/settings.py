@@ -10,15 +10,27 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENTONE_ROOT = os.path.join(BASE_DIR, ".agentone")
 
 # Session-private storage: per-session isolated folders at
-# <AGENTONE_SESSIONS_DIR>/<session_pk>/.  Override in settings_local.py.
-AGENTONE_SESSIONS_DIR = os.path.expanduser("~/.agentone/sessions")
+# <AGENTONE_SESSIONS_DIR>/<agent>/<session_pk>/.  Empty means "use the layout
+# default" (``~/.agentone/var/sessions``, with a pre-``var/`` read fallback
+# until ``migrate_layout`` has run).  Override in settings_local.py or with
+# the AGENTONE_SESSIONS_DIR environment variable.
+AGENTONE_SESSIONS_DIR = os.environ.get("AGENTONE_SESSIONS_DIR", "")
 
 
 def _persistent_secret_key(name: str) -> str:
     """Return a stable per-install secret, creating a private file if needed."""
     home = Path(os.path.expanduser(os.environ.get("AGENTONE_HOME", "~/.agentone")))
     home.mkdir(mode=0o700, parents=True, exist_ok=True)
-    path = home / name
+    # Pre-var/ layout kept secrets as loose files in the home root; honour
+    # them until ``migrate_layout`` has moved them into secrets/.
+    legacy = home / name
+    secrets = home / "secrets"
+    if legacy.exists() and not (secrets / name).exists():
+        value = legacy.read_text(encoding="utf-8").strip()
+        if value:
+            return value
+    secrets.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path = secrets / name
     try:
         fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     except FileExistsError:

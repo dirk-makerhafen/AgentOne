@@ -380,3 +380,112 @@ class MessagesTest(TestCase):
             [m.pk for m in loaded], [m.pk for m in chain],
             "Parent UI must render its own chain after forks",
         )
+
+    def test_down_does_not_enter_fork_child_chain(self):
+        """Scrolling down at a session's tail must not render a fork's messages.
+
+        A fork's first message anchors to a parent message via ``prev_message``,
+        so it appears in that parent message's ``next_messages``. ``down()``
+        used to follow that foreign branch, bleeding a reflection/subtask fork
+        into the parent session's chat log.
+        """
+        from runtime.session.session import Session as RuntimeSession
+
+        chain = []
+        prev = None
+        for _ in range(3):
+            msg = Message.objects.create(
+                role=MessageRole.USER,
+                session=self.session_model,
+                session_version=self.session_version,
+                prev_message=prev,
+            )
+            chain.append(msg)
+            prev = msg
+
+        wrapper = self._fork_wrapper(chain[-1])
+        wrapper.fork(chain[-1].pk)
+
+        child = SessionModel.objects.get(parent_session=self.session_model)
+        child_version = child.latest_session_version
+        child_anchor = Message.objects.get(
+            session_version__session=child,
+            prev_message=chain[-1],
+        )
+        Message.objects.create(
+            role=MessageRole.INFO,
+            session=child,
+            session_version=child_version,
+            prev_message=child_anchor,
+        )
+
+        parent_session = RuntimeSession(session_model=self.session_model)
+        messages = Messages(subject=parent_session, parent=self.chat)
+        messages.messages_view.set_visible(True)
+
+        before = [i.pk for i in messages.message_list if isinstance(i, Message)]
+        messages.down()
+        after = [i.pk for i in messages.message_list if isinstance(i, Message)]
+
+        self.assertEqual(after, before, "down() at the tail must not add messages")
+        self.assertTrue(
+            all(
+                item.session_id == self.session_model.pk
+                for item in messages.message_list
+                if isinstance(item, Message)
+            ),
+            "Parent UI must never show a forked child's messages",
+        )
+
+    def test_down_returns_from_ancestor_history_to_own_chain(self):
+        """Scrolling down through a fork's inherited parent history returns to
+        this session at the fork point (and does not continue past it)."""
+        from runtime.session.session import Session as RuntimeSession
+
+        chain = []
+        prev = None
+        for _ in range(3):
+            msg = Message.objects.create(
+                role=MessageRole.USER,
+                session=self.session_model,
+                session_version=self.session_version,
+                prev_message=prev,
+            )
+            chain.append(msg)
+            prev = msg
+        p1, p2, p3 = chain
+
+        wrapper = self._fork_wrapper(p2)
+        wrapper.fork(p2.pk)
+
+        child = SessionModel.objects.get(parent_session=self.session_model)
+        child_version = child.latest_session_version
+        child_anchor = Message.objects.get(
+            session_version__session=child,
+            prev_message=p2,
+        )
+        child_msg = Message.objects.create(
+            role=MessageRole.USER,
+            session=child,
+            session_version=child_version,
+            prev_message=child_anchor,
+        )
+
+        child_session = RuntimeSession(session_model=child)
+        messages = Messages(subject=child_session, parent=self.chat)
+        messages.messages_view.set_visible(True)
+        # Simulate a window scrolled up into the inherited parent history.
+        with messages._callback_lock:
+            messages.message_list.clear()
+            messages.message_list.append(p1)
+            messages.message_list.append(p2)
+
+        messages.down()
+
+        pks = [i.pk for i in messages.message_list if isinstance(i, Message)]
+        self.assertEqual(
+            pks,
+            [p1.pk, p2.pk, child_anchor.pk, child_msg.pk],
+            "down() must re-enter the child chain at the fork point",
+        )
+        self.assertNotIn(p3.pk, pks, "down() must not continue past the fork point")

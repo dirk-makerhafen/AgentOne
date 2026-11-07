@@ -301,7 +301,14 @@ class PublishByPkTest(TestCase):
             type(msg).publish_by_pk(msg.pk, "update", data={"role": MessageRole.ASSISTANT})
         queued = fake.lrange("agentone:uiq:inst-pk", 0, -1)
         self.assertEqual(len(queued), 1)
-        self.assertEqual(json.loads(queued[0])["data"], {"role": "assistant"})
+        payload = json.loads(queued[0])["data"]
+        # The explicit payload is merged on top of the FK filter context that
+        # subscribers use as routing hints.
+        self.assertEqual(payload["role"], "assistant")
+        self.assertEqual(payload["session_id"], msg.session_id)
+        self.assertEqual(payload["session_version_id"], msg.session_version_id)
+        self.assertIsNone(payload["prev_message_id"])
+        self.assertIsNone(payload["response_id"])
 
     def test_atomic_update_by_pk_updates_and_publishes(self):
         msg = self._message("obs-pk-agent2")

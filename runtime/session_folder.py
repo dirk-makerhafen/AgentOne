@@ -1,16 +1,16 @@
 """
 Session-private storage — per-session isolated folders.
 
-Each agent session gets a private folder.  The location depends on the
-session's scope:
+Each agent session gets a private folder inside its scope's ``var/`` tree.
+The location depends on the session's scope:
 
-* workspace session: ``<workspace agentone dir>/sessions/<agent name>/<pk>/``
-* project session (no workspace): ``<project agentone dir>/sessions/<agent name>/<pk>/``
+* workspace session: ``<workspace agentone dir>/var/sessions/<agent name>/<pk>/``
+* project session (no workspace): ``<project agentone dir>/var/sessions/<agent name>/<pk>/``
 * global session (neither): ``<AGENTONE_SESSIONS_DIR>/<agent name>/<pk>/``
-  (defaults to ``~/.agentone/sessions/<agent name>/<pk>/``).
+  (defaults to ``~/.agentone/var/sessions/<agent name>/<pk>/``).
 
-Default ``SESSIONS_BASE`` is ``~/.agentone/sessions`` (overridable via the
-``AGENTONE_SESSIONS_DIR`` Django setting, see ``config/settings.py`` and
+Default ``SESSIONS_BASE`` is ``~/.agentone/var/sessions`` (overridable via
+the ``AGENTONE_SESSIONS_DIR`` Django setting, see ``config/settings.py`` and
 ``config/settings_local.example.py``).
 
 The folder is for scratch files, temporary memory, ad-hoc prompts/tools,
@@ -20,9 +20,10 @@ Isolation is enforced by the filesystem guardrail
 but never another session's folder.
 
 Creation is lazy — use :func:`ensure_session_dir` on first use, never
-eagerly at session creation.  Archived sessions (``is_archived=True``) are
-kept forever; only folders whose DB row is gone (hard delete) are removed
-by :func:`cleanup_orphaned_session_folders`.
+eagerly at session creation.  Folders with scratch files are kept forever,
+including archived sessions; :func:`cleanup_orphaned_session_folders` removes
+hard-deleted sessions' folders and empty folders of ended (inactive)
+sessions.
 """
 
 from __future__ import annotations
@@ -40,7 +41,7 @@ def _safe_segment(name: Any) -> str:
 
 
 def get_sessions_base() -> Path:
-    """Return the global sessions base directory (``~/.agentone/sessions`` by default)."""
+    """Return the global sessions base directory (``~/.agentone/var/sessions`` by default)."""
     return _sessions_base()
 
 
@@ -232,7 +233,7 @@ def session_dir(session_or_pk: Any, *args: Any, **kwargs: Any) -> Path:
         sessions_base_dir = sessions_base()
     else:
         base = _agentone_dir(workspace, project)
-        sessions_base_dir = base / "sessions"
+        sessions_base_dir = base / "var" / "sessions"
 
     return sessions_base_dir / str(agent_name) / str(pk)
 
@@ -288,51 +289,128 @@ def parse_session_pk(target: Path | str) -> str | None:
     return None
 
 
+def _is_effectively_empty(folder: Path) -> bool:
+    """True when *folder* has no entries besides Finder noise."""
+    try:
+        return all(child.name == ".DS_Store" for child in folder.iterdir())
+    except OSError:
+        return False
+
+
+def _session_roots() -> list[Path]:
+    """Return every session-storage root (global + project/workspace scopes).
+
+    ``get_sessions_base()`` already resolves the pre-``var/`` fallback when no
+    explicit base is configured, so the legacy tree is covered without a
+    second scan.
+    """
+    roots: list[Path] = [get_sessions_base()]
+    try:
+        from server.models.project import Project
+        from server.models.workspace import WorkspaceModel
+
+        for obj in (*Project.objects.all(), *WorkspaceModel.objects.all()):
+            try:
+                md = Path(obj.get_agentone_dir()).expanduser()
+            except Exception:  # pylint: disable=broad-exception-caught
+                continue
+            roots.append(md / "var" / "sessions")
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
+    seen: set[str] = set()
+    unique: list[Path] = []
+    for root in roots:
+        key = str(root)
+        if key not in seen:
+            seen.add(key)
+            unique.append(root)
+    return unique
+
+
 def cleanup_orphaned_session_folders() -> int:
-    """Remove session folders whose DB row no longer exists.
+    """Sweep session-private folders for orphaned or empty ended sessions.
 
     Handles both the legacy flat layout (``<base>/<pk>``) and the new nested
-    layout (``<base>/<agent>/<pk>``).  Only folders named by an integer pk
-    with no matching ``SessionModel`` row are removed.  Archived/inactive
-    sessions are kept forever.  Non-numeric entries are ignored.  Returns the
-    number removed.
+    layout (``<base>/<agent>/<pk>``), across the global base and every
+    project/workspace scope.
+
+    A numeric folder is removed when:
+
+    * its ``<pk>`` has no matching ``SessionModel`` row (hard delete), or
+    * the owning session has ended (``is_active=False``) and the folder is
+      empty (``.DS_Store`` ignored).
+
+    Scratch content is never touched: ended/archived sessions with files keep
+    their folder forever.  Empty folders are recreated lazily by
+    :func:`ensure_session_dir`.  Non-numeric entries are ignored.  Returns the
+    number of session folders removed.
     """
-    base = get_sessions_base()
-    if not base.exists():
-        return 0
-    removed = 0
     try:
         from server.models.sessions.session import SessionModel
     except Exception:  # pylint: disable=broad-exception-caught
         return 0
 
-    def _exists(pk: int) -> bool:
-        try:
-            return SessionModel.objects.filter(pk=pk).exists()
-        except Exception:  # pylint: disable=broad-exception-caught
-            return True
+    # pk -> is_active (``None`` means the row is gone).  Cached per sweep so a
+    # folder appearing under several roots costs one query.
+    states: dict[int, bool | None] = {}
 
-    # Flat legacy entries: <base>/<pk>
-    for entry in sorted(base.iterdir()):
-        if not entry.is_dir() or entry.is_symlink():
+    def _state(pk: int) -> bool | None:
+        if pk not in states:
+            try:
+                states[pk] = (
+                    SessionModel.objects.filter(pk=pk)
+                    .values_list("is_active", flat=True)
+                    .first()
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                states[pk] = True  # be conservative: keep the folder
+        return states[pk]
+
+    def _sweep(folder: Path, pk: int) -> bool:
+        state = _state(pk)
+        if state is None or (not state and _is_effectively_empty(folder)):
+            shutil.rmtree(folder, ignore_errors=True)
+            return True
+        return False
+
+    removed = 0
+    for base in _session_roots():
+        if not base.is_dir():
             continue
-        try:
-            pk = int(entry.name)
-        except ValueError:
-            # Agent-named directory: <base>/<agent>/<pk>
-            if entry.is_dir():
+        for entry in sorted(base.iterdir()):
+            if not entry.is_dir() or entry.is_symlink():
+                continue
+            try:
+                pk = int(entry.name)
+            except ValueError:
+                # Agent-named directory: <base>/<agent>/<pk>
+                saw_session = False
                 for pk_entry in sorted(entry.iterdir()):
                     if not pk_entry.is_dir() or pk_entry.is_symlink():
                         continue
                     try:
-                        pk2 = int(pk_entry.name)
+                        child_pk = int(pk_entry.name)
                     except ValueError:
                         continue
-                    if not _exists(pk2):
-                        shutil.rmtree(pk_entry, ignore_errors=True)
+                    saw_session = True
+                    if _sweep(pk_entry, child_pk):
                         removed += 1
-            continue
-        if not _exists(pk):
-            shutil.rmtree(entry, ignore_errors=True)
-            removed += 1
+                # Drop the agent directory only when it held session folders
+                # and is now empty (recreated on demand).  ``rmdir`` refuses
+                # even a ``.DS_Store``-only directory, so clear the noise
+                # first.
+                if saw_session and _is_effectively_empty(entry):
+                    for noise in entry.iterdir():
+                        try:
+                            noise.unlink()
+                        except OSError:
+                            pass
+                    try:
+                        entry.rmdir()
+                    except OSError:
+                        pass
+                continue
+            if _sweep(entry, pk):
+                removed += 1
     return removed

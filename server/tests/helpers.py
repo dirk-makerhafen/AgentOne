@@ -47,7 +47,7 @@ def create_global_taskdef_version(
 class AgentMdTestMixin:
     """Mixin for test classes that load agents from ``testproject/``.
 
-    Sets up a temp ``InstallRepo`` (isolated from ``~/.agentone/install/``),
+    Sets up a temp ``InstallRepo`` (isolated from ``~/.agentone/var/install/``),
     creates standard global ``TaskDefinition`` + ``TaskDefinitionVersion``
     fixtures, and provides ``_load_agent()`` to run the real loader pipeline.
     """

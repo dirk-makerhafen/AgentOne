@@ -1,9 +1,9 @@
 """Filesystem layout for the browser daemon.
 
-Everything lives under ``~/.agentone/browser/`` (overridable via the
+Everything lives under ``~/.agentone/var/browser/`` (overridable via the
 ``AGENTONE_BROWSER_DIR`` environment variable, so tests can redirect it)::
 
-    ~/.agentone/browser/
+    ~/.agentone/var/browser/
         token                    0600 bearer token for the local HTTP API
         state.json               pid + port of the running daemon
         start.lock               flock, serializes lazy daemon starts
@@ -15,7 +15,7 @@ Everything lives under ``~/.agentone/browser/`` (overridable via the
             named-<slug>/            opt-in durable profile, shared by name
             clean-<uuid>/            ephemeral throwaway profile
 
-This base dir is intentionally outside ``~/.agentone/runtime/`` (which is
+This base dir is intentionally outside ``var/cache/runtime/`` (which is
 garbage-collected) and outside session-private storage, so browser profiles
 outlive worker restarts and are not swept with a versioned runtime folder.
 """
@@ -43,7 +43,11 @@ def browser_base() -> Path:
         return _central_browser_base()
     except Exception:
         configured = os.environ.get(BROWSER_DIR_ENV, "").strip()
-        base = Path(os.path.expanduser(configured)) if configured else Path.home() / ".agentone" / "browser"
+        base = (
+            Path(os.path.expanduser(configured))
+            if configured
+            else Path.home() / ".agentone" / "var" / "browser"
+        )
         return base
 
 

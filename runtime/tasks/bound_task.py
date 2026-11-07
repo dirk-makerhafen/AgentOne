@@ -45,8 +45,8 @@ class BoundTask:
     ``on_error_callback``).
 
     Runtime files are resolved through versioned runtime folders
-    (``~/.agentone/runtime/<version_pk>/``) extracted from the install repo,
-    not from the source tree.
+    (``<scope>/var/cache/runtime/<version_pk>/``) extracted from the install
+    repo, not from the source tree.
     """
 
     def __init__(self, session: Session, task_definition_version: TaskDefinitionVersion) -> None:
@@ -63,8 +63,8 @@ class BoundTask:
         function is not found.
 
         The script file is loaded from the versioned runtime folder
-        (``~/.agentone/runtime/<pk>/``), ensuring the exact versioned copy
-        is used.
+        (``<scope>/var/cache/runtime/<pk>/``), ensuring the exact versioned
+        copy is used.
 
         If the task definition is *bound* the session is passed as the first
         argument.

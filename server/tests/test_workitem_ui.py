@@ -683,7 +683,11 @@ class TestSidebarPanelFiltering(TestCase):
     def test_the_list_query_is_the_filtered_queryset(self):
         """_refresh_list must install _scoped, or filters never reach the list."""
         panel = self._panel(project_id=self.project.pk, status_filter=WorkItemStatus.READY)
-        panel.workitem_list = SimpleNamespace(query=None, _recreate=lambda: None)
+        panel.workitem_list = SimpleNamespace(
+            query=None,
+            _recreate=lambda: None,
+            set_observable_keys=lambda *args, **kwargs: None,
+        )
         panel._refresh_list()
         assert [i.title for i in panel.workitem_list.query] == ["Beta task"]
 

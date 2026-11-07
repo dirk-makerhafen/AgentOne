@@ -787,19 +787,63 @@ class Messages(PyHtmlView):
         self._sync_standalone_responses()
         self._refresh_turns()
 
+    def _ancestor_session_ids(self) -> set[int]:
+        """Return this session's id plus every session above it in the fork chain.
+
+        A forked session's message chain continues through its ancestors'
+        messages, so scrolling down through that inherited history must follow
+        only the ancestors on the path back to this session — never a sibling
+        fork hanging off the same message.
+        """
+        ids = {self._session_id}
+        try:
+            version = self.subject.get_version_model()
+        except Exception:
+            return ids
+        seen: set[int] = set()
+        while version is not None:
+            pk = getattr(version, "pk", None)
+            if pk is None or pk in seen:
+                break
+            seen.add(pk)
+            parent_version = getattr(version, "parent_session_version", None)
+            if parent_version is None:
+                break
+            parent_session_id = getattr(parent_version, "session_id", None)
+            if parent_session_id is not None:
+                ids.add(parent_session_id)
+            version = parent_version
+        return ids
+
     def down(self):
         last = self._last_message()
         if not last:
             return
+        ancestor_ids: set[int] | None = None
 
         for _ in range(self.max_visible_items//4):
             newer = last.next_messages.filter(session_version__session=self.subject.model).first()
             if newer is None:
-                # Window was scrolled up across a fork into another session's
-                # chain (up() follows prev_message unfiltered). The foreign
-                # chain is linear here, so walk it back toward the fork;
-                # at the fork itself the filtered lookup above already hits.
-                newer = last.next_messages.order_by("pk").first()
+                if last.session_id == self._session_id:
+                    # This is our own chain's tail. ``next_messages`` here only
+                    # holds fork anchors (children), which are branches rather
+                    # than successors — following one bleeds a child session
+                    # (e.g. the reflection fork) into this session's chat log.
+                    break
+                # Window was scrolled up across a fork into a parent session's
+                # inherited chain (up() follows prev_message unfiltered). Walk
+                # it back toward this session: at a fork point jump into the
+                # next ancestor's anchor, otherwise continue that ancestor's
+                # own linear chain.
+                if ancestor_ids is None:
+                    ancestor_ids = self._ancestor_session_ids()
+                newer = last.next_messages.filter(
+                    session_version__session_id__in=ancestor_ids
+                ).order_by("pk").first()
+                if newer is None:
+                    newer = last.next_messages.filter(
+                        session_version__session=last.session_id
+                    ).order_by("pk").first()
             if newer is None:
                 break
             self.message_list.append(newer)

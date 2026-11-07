@@ -8,13 +8,14 @@ from typing import Any, Tuple
 
 from registry.install_repo import InstallRepo
 from registry.loader.load_scripts_manifest import load_scripts_manifest
+from runtime.paths import ScopeRef
 from runtime.paths import runtime_base as _runtime_base
 from server.models.skills.skill import SkillModel
 from server.models.skills.skill_version import SkillModelVersion
 
 
-def _runtime_for_pk(pk: object) -> Path:
-    return _runtime_base() / str(pk)
+def _runtime_for_pk(pk: object, project: Any = None, agent: Any = None) -> Path:
+    return ScopeRef.for_manifest(project, agent).runtime_dir() / str(pk)
 
 
 RUNTIME_BASE = _runtime_base()
@@ -33,7 +34,7 @@ def load_skill_manifest(
     recursively loads any scripts from the ``scripts/`` subfolder.
 
     Version identifiers are deterministic git tree SHAs from *install_repo*.
-    Files are extracted to ``~/.agentone/runtime/<version_pk>/`` so that
+    Files are extracted to ``<scope>/var/cache/runtime/<version_pk>/`` so that
     the view reads a versioned copy, not whatever is on disk in the source tree.
     """
     manifest = frontmatter.load(skill_md_path)
@@ -70,8 +71,8 @@ def load_skill_manifest(
         SkillModel.objects.filter(pk=skill.pk).update(
             latest_skill_version=skill_version
         )
-        # Extract versioned files to runtime folder
-        dest = _runtime_for_pk(skill_version.pk)
+        # Extract versioned files to the owning scope's runtime cache.
+        dest = _runtime_for_pk(skill_version.pk, parent_project, parent_agent)
         install_repo.checkout_tree(tree_sha=commit, dest=dest)
         extracted_md = dest / skill_md_path.name
         SkillModelVersion.objects.filter(pk=skill_version.pk).update(

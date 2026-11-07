@@ -163,13 +163,52 @@ class SessionFolderCleanupTest(TestCase):
                 self.assertFalse(orphan.exists())
                 self.assertTrue(ignoreme.is_dir())
 
-    def test_cleanup_keeps_archived_sessions(self):
+    def test_cleanup_keeps_archived_sessions_with_files(self):
         with tempfile.TemporaryDirectory() as td:
             with override_settings(AGENTONE_SESSIONS_DIR=td):
                 session = SessionModel.objects.create(name="archived", is_archived=True)
                 folder = ensure_session_dir(session.pk)
+                (folder / "note.md").write_text("keep")
                 self.assertEqual(cleanup_orphaned_session_folders(), 0)
                 self.assertTrue(folder.is_dir())
+                self.assertTrue((folder / "note.md").exists())
+
+    def test_cleanup_removes_empty_ended_session_folders(self):
+        with tempfile.TemporaryDirectory() as td:
+            with override_settings(AGENTONE_SESSIONS_DIR=td):
+                ended = SessionModel.objects.create(name="ended", is_active=False)
+                folder = ensure_session_dir(ended.pk)
+                (folder.parent / ".DS_Store").write_text("junk")
+                self.assertEqual(cleanup_orphaned_session_folders(), 1)
+                self.assertFalse(folder.exists())
+                # The intermediate agent directory is pruned too.
+                self.assertFalse(folder.parent.exists())
+
+    def test_cleanup_keeps_empty_active_session_folders(self):
+        with tempfile.TemporaryDirectory() as td:
+            with override_settings(AGENTONE_SESSIONS_DIR=td):
+                session = SessionModel.objects.create(name="active")
+                folder = ensure_session_dir(session.pk)
+                self.assertEqual(cleanup_orphaned_session_folders(), 0)
+                self.assertTrue(folder.is_dir())
+
+    def test_cleanup_keeps_ended_session_folders_with_files(self):
+        with tempfile.TemporaryDirectory() as td:
+            with override_settings(AGENTONE_SESSIONS_DIR=td):
+                ended = SessionModel.objects.create(name="ended2", is_active=False)
+                folder = ensure_session_dir(ended.pk)
+                (folder / "result.json").write_text("{}")
+                self.assertEqual(cleanup_orphaned_session_folders(), 0)
+                self.assertTrue(folder.is_dir())
+
+    def test_cleanup_treats_ds_store_as_empty(self):
+        with tempfile.TemporaryDirectory() as td:
+            with override_settings(AGENTONE_SESSIONS_DIR=td):
+                ended = SessionModel.objects.create(name="ended3", is_active=False)
+                folder = ensure_session_dir(ended.pk)
+                (folder / ".DS_Store").write_text("junk")
+                self.assertEqual(cleanup_orphaned_session_folders(), 1)
+                self.assertFalse(folder.exists())
 
 
 class RuntimeSessionPrivateDirTest(TestCase):

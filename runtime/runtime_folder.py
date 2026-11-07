@@ -1,8 +1,9 @@
 """
 Runtime version folders — versioned copies of tool/script files.
 
-Each ``~/.agentone/runtime/<version_pk>/`` folder holds the **full file tree**
-for one ``TaskDefinitionVersion``. The entire manifest folder is extracted
+Each ``<scope>/var/cache/runtime/<version_pk>/`` folder holds the **full
+file tree** for one ``TaskDefinitionVersion``.  Global and user scopes share
+``~/.agentone/var/cache/runtime/``.  The entire manifest folder is extracted
 from the install repo at the version's tree SHA, so sibling imports
 (e.g. ``from .helpers import x``) work correctly.
 
@@ -15,11 +16,46 @@ from pathlib import Path
 from typing import Optional
 
 from registry.install_repo import InstallRepo
+from runtime.paths import ScopeRef
+from runtime.paths import legacy_runtime_base
 from runtime.paths import runtime_base as _runtime_base
 
 
 def _base() -> Path:
     return _runtime_base()
+
+
+def _scope_for(tdv: object) -> ScopeRef:
+    parent_project = getattr(
+        getattr(tdv, "task_definition", None), "parent_project", None
+    )
+    if parent_project is not None:
+        return ScopeRef.for_project(parent_project)
+    return ScopeRef.global_scope()
+
+
+def _runtime_bases() -> list[Path]:
+    """Every runtime cache dir (global/user + each project/workspace)."""
+    bases = [_runtime_base(), legacy_runtime_base()]
+    try:
+        from server.models.project import Project
+        from server.models.workspace import WorkspaceModel
+
+        for project in Project.objects.all():
+            bases.append(ScopeRef.for_project(project).runtime_dir())
+        for workspace in WorkspaceModel.objects.all():
+            bases.append(ScopeRef.for_workspace(workspace).runtime_dir())
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+
+    seen: set[str] = set()
+    unique: list[Path] = []
+    for base in bases:
+        key = str(base)
+        if key not in seen:
+            seen.add(key)
+            unique.append(base)
+    return unique
 
 
 RUNTIME_BASE = _runtime_base()
@@ -38,7 +74,8 @@ class RuntimeFolder:
 
     def __init__(self, task_definition_version: object) -> None:
         self.tdv = task_definition_version
-        self.folder = _base() / str(task_definition_version.pk)
+        self.scope = _scope_for(task_definition_version)
+        self.folder = self.scope.runtime_dir() / str(task_definition_version.pk)
 
     # ------------------------------------------------------------------
     # Public API
@@ -215,18 +252,18 @@ class RuntimeFolder:
 
         Returns the number of folders removed.
         """
-        base = _base()
-        if not base.exists():
-            return 0
         now = int(time.time())
         removed = 0
-        for entry in sorted(base.iterdir()):
-            if not entry.is_dir():
+        for base in _runtime_bases():
+            if not base.exists():
                 continue
-            lu = cls.last_used_time(entry)
-            if lu is not None and (now - lu) > max_age_seconds:
-                _rmtree(entry)
-                removed += 1
+            for entry in sorted(base.iterdir()):
+                if not entry.is_dir():
+                    continue
+                lu = cls.last_used_time(entry)
+                if lu is not None and (now - lu) > max_age_seconds:
+                    _rmtree(entry)
+                    removed += 1
         return removed
 
 

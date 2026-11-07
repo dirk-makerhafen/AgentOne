@@ -19,9 +19,6 @@ from registry.sources.types import SourceConfig
 from runtime.paths import staging_base as _staging_base
 from runtime.paths import upstream_base as _upstream_base
 
-UPSTREAM_BASE = _upstream_base()
-STAGING_BASE = _staging_base()
-
 
 # ---------------------------------------------------------------------------
 # Public API

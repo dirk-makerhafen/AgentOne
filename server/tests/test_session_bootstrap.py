@@ -110,7 +110,7 @@ class SessionBootstrapTest(TestCase):
         trigger = self._user_message("hello")
         created = ensure_session_bootstrap(self.runtime, trigger)
         self.assertEqual(len(created), 2)
-        self.assertEqual(created[0].role, MessageRole.SYSTEM)
+        self.assertEqual(created[0].role, MessageRole.USER)
         self.assertEqual(created[1].role, MessageRole.USER)
         for message in created:
             self.assertTrue(message.pin_to_context)

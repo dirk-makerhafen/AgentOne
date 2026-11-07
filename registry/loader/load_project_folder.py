@@ -61,9 +61,11 @@ def load_scope_dir(
     _warn_if_project_md(project_folder, details)
 
     install_repo = InstallRepo.for_project(
-        project_name=project.name,
+        project,
         source_root=project_folder,
     )
+    # Version only executable manifests; memory/dashboard/var are excluded
+    # by InstallRepo.DEFAULT_EXCLUDES.
     install_repo.sync()
 
     scripts_dir = project_folder / "scripts"

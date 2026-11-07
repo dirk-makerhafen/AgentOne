@@ -56,7 +56,7 @@ Uncomment and change only what you need.
 # ---------------------------------------------------------------------------
 # Session-private storage — per-session folders (<base>/<session_pk>/)
 # ---------------------------------------------------------------------------
-# AGENTONE_SESSIONS_DIR = os.path.expanduser("~/.agentone/sessions")
+# AGENTONE_SESSIONS_DIR = os.path.expanduser("~/.agentone/var/sessions")
 
 # ---------------------------------------------------------------------------
 # HTTP server (used by `manage.py server run`)

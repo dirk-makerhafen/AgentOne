@@ -1,6 +1,7 @@
 """Browser configuration.
 
-Read from the ``browser:`` block of ``~/.agentone/config.yaml``, merged over
+Read from the ``browser:`` block of ``~/.agentone/config.yaml`` (home honours
+``AGENTONE_HOME``), merged over
 :data:`DEFAULTS`.  This module deliberately avoids importing Django or
 ``runtime.settings.settings`` so the daemon can run as a plain Python
 process; the YAML is read directly.  Unknown keys are ignored and invalid
@@ -69,7 +70,12 @@ def _config_path() -> Path:
     configured = os.environ.get("AGENTONE_CONFIG_FILE", "").strip()
     if configured:
         return Path(os.path.expanduser(configured))
-    return Path.home() / ".agentone" / "config.yaml"
+    try:
+        from runtime.paths import agentone_home
+
+        return agentone_home() / "config.yaml"
+    except Exception:  # pylint: disable=broad-exception-caught
+        return Path.home() / ".agentone" / "config.yaml"
 
 
 def _read_section() -> dict:

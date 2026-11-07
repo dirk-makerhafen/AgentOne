@@ -23,7 +23,7 @@ def install_repo_for_path(path: Path):
         try:
             md = project.get_agentone_dir()
             p.relative_to(md)
-            return md, InstallRepo.for_project(project.name, source_root=md)
+            return md, InstallRepo.for_project(project, source_root=md)
         except ValueError:
             continue
         except Exception:  # pylint: disable=broad-exception-caught

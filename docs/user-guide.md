@@ -88,13 +88,14 @@ allowed; access outside the workspace defaults to **deny** unless an agent
 `external:` rule grants it.
 
 Each session also has a **private session folder** at
-`~/.agentone/sessions/<session_pk>/` (subsessions get their own). It is for
+`~/.agentone/var/sessions/<agent>/<session_pk>/` (subsessions get their own). It is for
 scratch files, temporary memory, ad-hoc prompts/tools, intermediate results,
 and other session-specific artifacts. The agent is told its folder and uses
 the normal filesystem tools with it — no `access:` configuration needed:
 reads and writes to your own folder are always allowed, while other
-sessions' folders are always denied. Archived sessions keep their folder
-forever.
+sessions' folders are always denied. Folders holding scratch files are kept
+forever, including archived sessions; empty folders of ended sessions are
+pruned automatically.
 
 ### Queue
 

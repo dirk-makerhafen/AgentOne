@@ -279,9 +279,9 @@ def ensure_terminal(
         tmux_session = server.new_session(**kwargs)
         try:
             pane = _active_pane(tmux_session)
-            log_path = str(
-                Path.home() / ".agentone" / "terminals" / f"{tmux_name}.log"
-            )
+            from runtime.paths import log_base
+
+            log_path = str(log_base() / "terminals" / f"{tmux_name}.log")
             Path(log_path).parent.mkdir(parents=True, exist_ok=True)
             try:
                 # pipe-pane targets the pane via Pane.cmd's -t binding.

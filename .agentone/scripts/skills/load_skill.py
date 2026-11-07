@@ -3,7 +3,7 @@ Load a skill's markdown content by name.
 
 Uses the session's allowed skills to look up a SkillModelVersion, reads
 the versioned ``skill.md`` from its versioned runtime path
-(``SkillModelVersion.path``, extracted under ``~/.agentone/runtime/``),
+(``SkillModelVersion.path``, extracted under ``<scope>/var/cache/runtime/``),
 parses YAML frontmatter, and returns the metadata + body to the agent.
 """
 

@@ -16,8 +16,9 @@ workers, so module-level browser state would be split across (and dropped
 with) worker processes.  The daemon owns every browser process, survives
 worker restarts, and is supervised by ``manage.py server run``.
 
-Profiles live under ``~/.agentone/browser/`` — deliberately *not* under
-``~/.agentone/runtime/``, which is garbage-collected versioned task state.
+Profiles live under ``~/.agentone/var/browser/`` — deliberately *not* under
+``~/.agentone/var/cache/runtime/``, which is garbage-collected versioned task
+state.
 """
 
 from __future__ import annotations
