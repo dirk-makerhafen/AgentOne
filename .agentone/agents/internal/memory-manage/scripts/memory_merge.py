@@ -29,15 +29,9 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-# Executed from the source manifest folder (registry load) or an extracted
-# runtime cache copy — keep the sibling ``memory_lib`` package importable.
-_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
-if _SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, _SCRIPTS_DIR)
-
-from memory_lib import git as memgit
-from memory_lib import paths as mempaths
-from memory_lib import sources as memsources
+import git as memgit
+import paths as mempaths
+import sources as memsources
 
 
 AGENT_PROMPT = '''
@@ -870,7 +864,7 @@ def memory_merge(
 
 def _walk_pending() -> list[dict[str, Any]]:
     """Re-walk the memory tree and return its ``needs_update`` list."""
-    from memory_lib.tree import walk_memory
+    from tree import walk_memory
 
     summary = walk_memory(write=True, refresh=False)
     return list(summary.get("needs_update") or [])

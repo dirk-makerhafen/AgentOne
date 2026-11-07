@@ -620,7 +620,7 @@ def test_finalize_advances_the_node(tmp_path):
     (folder / "reflection.md").write_text("lessons", encoding="utf-8")
     _marker(folder, time.time())
 
-    with patch("memory_lib.tree.mark_processed", return_value=True) as mocked:
+    with patch("tree.mark_processed", return_value=True) as mocked:
         ok, result = memfinalize.finalize_memory(folder.as_posix())
 
     assert ok is True
@@ -639,7 +639,7 @@ def test_finalize_refuses_stale_output(tmp_path):
     os.utime(output, (stale, stale))
     _marker(folder, time.time())
 
-    with patch("memory_lib.tree.mark_processed", return_value=True) as mocked:
+    with patch("tree.mark_processed", return_value=True) as mocked:
         ok, result = memfinalize.finalize_memory(
             folder.as_posix(), started_at=time.time()
         )
@@ -657,7 +657,7 @@ def test_memory_finalize_task_advances_node_and_reports_result(tmp_path):
     started = time.time()
     _marker(folder, started)
 
-    with patch("memory_lib.tree.mark_processed", return_value=True) as mocked:
+    with patch("tree.mark_processed", return_value=True) as mocked:
         ok, result = finalize.memory_finalize(
             None,
             "task synthesis done",

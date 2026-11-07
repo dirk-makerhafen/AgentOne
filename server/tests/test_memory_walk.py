@@ -96,7 +96,7 @@ class MemoryWalkTest(TestCase):
         }
         missing = self.tmp / "missing"
         fake_root = self._fake_memory_root(missing)
-        self.patch = patch("memory_lib.tree.mempaths.memory_root", side_effect=fake_root)
+        self.patch = patch("tree.mempaths.memory_root", side_effect=fake_root)
         self.patch.start()
         self.addCleanup(self.patch.stop)
 
@@ -423,7 +423,7 @@ class MemoryWalkTest(TestCase):
         )
         changed.write_text("new agent memory", encoding="utf-8")
 
-        from memory_lib.tree import mark_processed
+        from tree import mark_processed
 
         self.assertTrue(mark_processed(self.global_mem))
         for source in self._manifest(self.global_mem)["sources"]:
@@ -810,7 +810,7 @@ class MemorySourceTypeTest(TestCase):
         self.roots = {("project", self.project.pk): self.project_mem}
         missing = self.tmp / "missing"
         fake_root = self._fake_memory_root(missing)
-        self.patch = patch("memory_lib.tree.mempaths.memory_root", side_effect=fake_root)
+        self.patch = patch("tree.mempaths.memory_root", side_effect=fake_root)
         self.patch.start()
         self.addCleanup(self.patch.stop)
 

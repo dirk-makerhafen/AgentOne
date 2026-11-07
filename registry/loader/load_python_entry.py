@@ -1,6 +1,8 @@
 import importlib
 import inspect
+import os
 import re
+import sys
 import enum
 import types
 from pathlib import Path
@@ -55,9 +57,28 @@ def load_python_entry(
     if not file_path.exists():
         raise FileNotFoundError(f"Script file not found: {file_path}")
 
-    spec = importlib.util.spec_from_file_location(f"_manifest_{name}", file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)  # type: ignore[union-attr]
+    # Make sibling modules in the scripts directory importable, mirroring
+    # ``BoundTask.call()`` which puts the (runtime copy of the) script dir on
+    # ``sys.path`` and runs with that directory as the working directory.  Without
+    # this, manifests whose Python functions do ``import sibling`` (e.g. the
+    # memory-manage scripts) fail to load with ``ModuleNotFoundError``.
+    scripts_dir_str = str(scripts_dir)
+    path_inserted = scripts_dir_str not in sys.path
+    if path_inserted:
+        sys.path.insert(0, scripts_dir_str)
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(scripts_dir_str)
+        spec = importlib.util.spec_from_file_location(f"_manifest_{name}", file_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)  # type: ignore[union-attr]
+    finally:
+        os.chdir(old_cwd)
+        if path_inserted:
+            try:
+                sys.path.remove(scripts_dir_str)
+            except ValueError:
+                pass
     func: Callable[..., Any] = getattr(module, function_name, None)
     if func is None:
         raise AttributeError(f"Function '{function_name}' not in {file_path}")

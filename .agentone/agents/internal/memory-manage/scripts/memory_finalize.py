@@ -13,16 +13,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Executed from the source manifest folder (registry load) or an extracted
-# runtime cache copy — keep the sibling ``memory_lib`` package importable.
-_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
-if _SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, _SCRIPTS_DIR)
-
-from memory_lib.finalize import finalize_memory
+from finalize import finalize_memory
 
 #: Keep the synthesizer's summary short in the task result payload.
-MAX_RESULT_CHARS = 500
+MAX_RESULT_CHARS = 5000
 
 
 def _result_text(result: Any) -> str:

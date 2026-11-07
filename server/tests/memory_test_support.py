@@ -23,6 +23,10 @@ MEMORY_SCRIPTS = (
 if str(MEMORY_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(MEMORY_SCRIPTS))
 
-from memory_lib import finalize, git, paths, sources, tree  # noqa: E402
+import finalize  # noqa: E402
+import git  # noqa: E402
+import paths  # noqa: E402
+import sources  # noqa: E402
+import tree  # noqa: E402
 
 __all__ = ["MEMORY_SCRIPTS", "finalize", "git", "paths", "sources", "tree"]

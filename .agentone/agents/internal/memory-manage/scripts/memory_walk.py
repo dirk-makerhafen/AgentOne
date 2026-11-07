@@ -2,17 +2,6 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# The script is executed both from the source manifest folder (registry load)
-# and from an extracted runtime cache copy.  Put this file's folder on
-# ``sys.path`` so the sibling ``memory_lib`` package resolves either way.
-_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
-if _SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, _SCRIPTS_DIR)
-
-
 def memory_walk(write: bool = True, refresh: bool = True):
     """Walk every existing memory root and update ``.memory_sources.md``.
 
@@ -40,7 +29,7 @@ def memory_walk(write: bool = True, refresh: bool = True):
         ``compactions_written`` counts.  On failure, *result* is a dict
         with an ``"error"`` key.
     """
-    from memory_lib.tree import walk_memory
+    from tree import walk_memory
 
     try:
         return True, walk_memory(write=write, refresh=refresh)
