@@ -377,6 +377,21 @@ class MemoryWalkTest(TestCase):
         result = walk_memory(write=True)
         self.assertEqual(result["manifests_written"], 0)
 
+    def test_walk_migrates_agent_memory_into_scope_repo(self):
+        agent_dir = self.global_mem / "agents" / str(self.global_agent.pk)
+        nested_git = agent_dir / ".git"
+        nested_git.mkdir()
+        (nested_git / "legacy-history").write_text("discarded", encoding="utf-8")
+
+        walk_memory(write=True, refresh=False)
+
+        self.assertFalse(nested_git.exists())
+        self.assertEqual(memgit.repo_for(agent_dir), self.global_mem.resolve())
+        self.assertTrue(
+            (agent_dir / "memory.md").is_file(),
+            "Migration must retain memory files while deleting nested Git metadata.",
+        )
+
     def test_source_git_stats_track_changed_content(self):
         walk_memory(write=True)
         manifest_path = self.global_mem / memsources.SOURCES_FILENAME

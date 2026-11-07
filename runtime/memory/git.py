@@ -1,17 +1,20 @@
-"""Git helpers for per-memory-directory repositories.
+"""Git helpers for scope-level memory repositories.
 
 Each memory root (``~/.agentone/memory``, ``<agentone_dir>/memory``) gets its
 own lightweight git repository so memory state can be versioned, diffed and
-rolled back independently of the rest of the instance. Repos are local-only.
+rolled back independently of the rest of the instance. Descendant memory
+directories share that repository; repositories are local-only.
 """
 
 from __future__ import annotations
 
+import os
 import re
+import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 
 def _run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
@@ -154,15 +157,21 @@ def diff_stats(
     return hours, chars
 
 
-def ensure_repo(memory_root: Path) -> Path:
+def ensure_repo(
+    memory_root: Path,
+    *,
+    preserve_repos: Iterable[Path] = (),
+) -> Path:
     """Ensure *memory_root* is a git repository (local-only).
 
     Creates the directory, initializes git, writes a ``.gitignore`` for
-    sidecar/OS files, and creates an initial baseline commit when the repo
-    has no HEAD yet. Returns *memory_root*.
+    sidecar/OS files, removes legacy nested memory repositories, and creates
+    an initial baseline commit when the repo has no HEAD yet. Nested scope
+    repositories listed in *preserve_repos* are left intact.
     """
     root = Path(memory_root)
     root.mkdir(parents=True, exist_ok=True)
+    _remove_nested_repos(root, preserve_repos)
 
     if not (root / ".git").exists():
         _run(["git", "init", "--quiet"], cwd=root)
@@ -184,6 +193,23 @@ def ensure_repo(memory_root: Path) -> Path:
     if not _has_head(root):
         commit_all(root, message="baseline")
     return root
+
+
+def _remove_nested_repos(root: Path, preserve_repos: Iterable[Path]) -> None:
+    """Remove nested Git metadata below *root*, except separate scope repos."""
+    root = root.resolve()
+    preserved = {Path(path).resolve() for path in preserve_repos}
+    for current, dirs, _files in os.walk(root, topdown=True, followlinks=False):
+        current_path = Path(current).resolve()
+        if current_path != root and current_path in preserved:
+            dirs[:] = []
+            continue
+        if ".git" not in dirs or current_path == root:
+            continue
+        git_dir = current_path / ".git"
+        dirs.remove(".git")
+        if not git_dir.is_symlink():
+            shutil.rmtree(git_dir)
 
 
 def _has_head(root: Path) -> bool:

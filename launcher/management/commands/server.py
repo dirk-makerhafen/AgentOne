@@ -441,7 +441,7 @@ class Command(BaseCommand):
                               "-v", str(daphne_verbosity),
                               'config.asgi:application'],
 
-            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '5'],
+            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '16'],
             "celery_beat":   ['celery', '-A', 'config', 'beat',   '-l', log_level],
             # Browser daemon: one process owns every Camoufox instance so the
             # five prefork workers share them (and survive worker restarts).

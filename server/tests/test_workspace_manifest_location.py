@@ -82,13 +82,24 @@ class TestDetectStorage(TestCase):
 
 
 class TestEnsureManifestDir(TestCase):
-    def test_inline_creates_dir_and_gitignore(self):
+    def test_inline_ignores_config_by_default(self):
         with tempfile.TemporaryDirectory() as d:
             ws = WorkspaceModel.objects.create(name="w", path=d)
-            out = ensure_manifest_dir(ws, STORAGE_INLINE, d, gitignore=True)
+            out = ensure_manifest_dir(ws, STORAGE_INLINE, d)
             assert out == inline_manifest_dir(d).as_posix()
             assert (Path(d) / ".agentone").is_dir()
             assert ".agentone/" in (Path(d) / ".gitignore").read_text()
+
+    def test_inline_tracking_opt_in_removes_ignore_rule(self):
+        with tempfile.TemporaryDirectory() as d:
+            ws = WorkspaceModel.objects.create(name="w", path=d)
+            ensure_manifest_dir(ws, STORAGE_INLINE, d)
+            gitignore = Path(d) / ".gitignore"
+            gitignore.write_text("build/\n.agentone/\n", encoding="utf-8")
+
+            ensure_manifest_dir(ws, STORAGE_INLINE, d, track_agentone=True)
+
+            assert gitignore.read_text(encoding="utf-8") == "build/\n"
 
     def test_project_creates_dir_under_project_tree(self):
         with tempfile.TemporaryDirectory() as home:

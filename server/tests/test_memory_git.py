@@ -27,6 +27,43 @@ def test_ensure_repo_creates_git(tmp_path):
     assert memgit.head(root) != ""
 
 
+def test_ensure_repo_removes_nested_git_history_and_keeps_files(tmp_path):
+    root = tmp_path / "memory"
+    memgit.ensure_repo(root)
+    nested = root / "agents" / "1"
+    nested.mkdir(parents=True)
+    subprocess.run(["git", "init", "--quiet"], cwd=nested, check=True)
+    (nested / "memory.md").write_text("remember this", encoding="utf-8")
+
+    memgit.ensure_repo(root)
+    head = memgit.commit_all(root, message="migrate nested memory")
+
+    assert not (nested / ".git").exists()
+    assert (nested / "memory.md").read_text(encoding="utf-8") == "remember this"
+    tracked = subprocess.run(
+        ["git", "ls-files", "agents/1/memory.md"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert tracked.stdout.strip() == "agents/1/memory.md"
+    assert head == memgit.head(root)
+
+
+def test_ensure_repo_preserves_nested_scope_repo(tmp_path):
+    root = tmp_path / "project-memory"
+    nested = root / "workspace-memory"
+    nested.mkdir(parents=True)
+    memgit.ensure_repo(root)
+    memgit.ensure_repo(nested)
+
+    memgit.ensure_repo(root, preserve_repos=[nested])
+
+    assert memgit.repo_for(nested) == nested.resolve()
+    assert memgit.head(nested)
+
+
 def test_commit_all_noop_when_clean(tmp_path):
     root = tmp_path / "memory"
     memgit.ensure_repo(root)

@@ -71,6 +71,13 @@ class ProjectCreateView(PyHtmlView):
                         </div>
                     </div>
 
+                    <div class="detail-form-row">
+                        <label for="pcTrackAgentone">Git</label>
+                        <input type="checkbox" id="pcTrackAgentone"{% if not pyview.inline_manifest_enabled %} disabled{% endif %}{% if pyview._form_data.track_agentone %} checked{% endif %} onchange="pyview.setTrackAgentone(this.checked)">
+                        <span>Share/track <code>.agentone/</code> config in Git</span>
+                        <div class="detail-form-hint">Inline config is ignored by default. Enable this to share it with the project.</div>
+                    </div>
+
                     <div id="pcError" class="detail-form-error" style="display:{% if pyview._form_error %}block{% else %}none{% endif %}">
                         {{ pyview._form_error }}
                     </div>
@@ -88,6 +95,7 @@ class ProjectCreateView(PyHtmlView):
             "workspace_ref": "",
             "workspace_new_path": "",
             "manifest_in_workspace": False,
+            "track_agentone": False,
         }
         self._form_error: str = ""
 
@@ -100,6 +108,10 @@ class ProjectCreateView(PyHtmlView):
     @property
     def has_workspace(self) -> bool:
         return bool(self._form_data.get("workspace_ref"))
+
+    @property
+    def inline_manifest_enabled(self) -> bool:
+        return self.has_workspace and bool(self._form_data.get("manifest_in_workspace"))
 
     @property
     def central_manifest_dir(self) -> str:
@@ -128,6 +140,10 @@ class ProjectCreateView(PyHtmlView):
 
     def setManifestInWorkspace(self, value: bool) -> None:
         self._form_data["manifest_in_workspace"] = bool(value)
+        self.update()
+
+    def setTrackAgentone(self, value: bool) -> None:
+        self._form_data["track_agentone"] = bool(value)
         self.update()
 
     def save(self) -> None:
@@ -186,6 +202,17 @@ class ProjectCreateView(PyHtmlView):
             ensure_private_dir(manifest)
         except OSError as e:
             raise _FormError(f"Cannot create manifest directory {manifest}: {e}") from e
+        if manifest_in_workspace:
+            if ws is None:
+                raise _FormError("Choose a primary workspace for inline manifests.")
+            from ui.main.workspace.manifest_location import configure_agentone_gitignore
+
+            try:
+                configure_agentone_gitignore(
+                    ws.path, ignore=not bool(fd.get("track_agentone"))
+                )
+            except OSError as e:
+                raise _FormError(f"Cannot update workspace .gitignore: {e}") from e
         updates["agentone_dir"] = manifest.as_posix()
 
         try:

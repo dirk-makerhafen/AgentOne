@@ -61,8 +61,8 @@ class CreateWorkspace(ModelView):
                     </div>
                     <div class="detail-form-row">
                         <label for="workspaceFormGitignore">Git</label>
-                        <input type="checkbox" id="workspaceFormGitignore" {% if pyview.form.manifest_gitignore %}checked{% endif %} onchange="pyview.setWsField('manifest_gitignore', this.checked ? '1' : '')">
-                        <span>Add <code>.agentone/</code> to <code>.gitignore</code> (inline storage only)</span>
+                        <input type="checkbox" id="workspaceFormTrackAgentone" {% if pyview.form.storage != "inline" %}disabled{% endif %}{% if pyview.form.track_agentone %}checked{% endif %} onchange="pyview.setWsField('track_agentone', this.checked ? '1' : '')">
+                        <span>Share/track <code>.agentone/</code> config in Git (off by default)</span>
                     </div>
                     <div class="detail-form-row">
                         <label for="workspaceFormColor">Color</label>
@@ -92,7 +92,7 @@ class CreateWorkspace(ModelView):
             "name": "", "path": "", "description": "",
             "color": random_workspace_color(),
             "parent_project_id": "", "storage": "user",
-            "manifest_gitignore": True,
+            "track_agentone": False,
         }
         self._form_error = ""
         self.access_editor = AccessEditor(subject=subject, parent=self)
@@ -142,7 +142,7 @@ class CreateWorkspace(ModelView):
     def setWsField(self, field: str, value: str) -> None:
         if field in ("name", "path", "description", "color", "parent_project_id", "storage"):
             self._form[field] = value
-        elif field == "manifest_gitignore":
+        elif field == "track_agentone":
             self._form[field] = bool(value and value != "0")
 
     def saveWorkspaceForm(self) -> None:
@@ -192,7 +192,7 @@ class CreateWorkspace(ModelView):
 
             manifest_dir = ensure_manifest_dir(
                 created, storage, path,
-                gitignore=bool(self._form.get("manifest_gitignore")),
+                track_agentone=bool(self._form.get("track_agentone")),
             )
             if manifest_dir:
                 WorkspaceModel.objects.filter(pk=created.pk).update(agentone_dir=manifest_dir)

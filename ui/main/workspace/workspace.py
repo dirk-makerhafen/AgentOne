@@ -234,8 +234,8 @@ class Workspace(ModelView):
                             {% if pyview.edit_data.storage == "inline" %}
                                 <div class="ws-current-color-row">
                                     <label for="wsEditGitignore">Git</label>
-                                    <input type="checkbox" id="wsEditGitignore"{% if pyview.edit_data.manifest_gitignore %} checked{% endif %} onchange="pyview.setEditField('manifest_gitignore', this.checked)">
-                                    <span>Add <code>.agentone/</code> to <code>.gitignore</code> (inline storage only)</span>
+                                    <input type="checkbox" id="wsEditTrackAgentone"{% if pyview.edit_data.track_agentone %} checked{% endif %} onchange="pyview.setEditField('track_agentone', this.checked)">
+                                    <span>Share/track <code>.agentone/</code> config in Git</span>
                                 </div>
                             {% endif %}
                             {{ pyview.access_editor.render() }}
@@ -611,13 +611,17 @@ class Workspace(ModelView):
 
         self._editing = True
         self._edit_error = ""
+        storage = detect_storage(self.subject)
         self._edit_data = {
             "name": self.subject.name,
             "description": self.subject.description or "",
             "path": self.subject.path,
             "color": getattr(self.subject, "color", "") or "#6366f1",
-            "storage": detect_storage(self.subject),
-            "manifest_gitignore": gitignore_has_agentone(self.subject.path),
+            "storage": storage,
+            "track_agentone": (
+                storage == "inline"
+                and not gitignore_has_agentone(self.subject.path)
+            ),
             "parent_project_id": (
                 str(self.subject.parent_project_id)
                 if self.subject.parent_project_id else ""
@@ -631,10 +635,11 @@ class Workspace(ModelView):
         self.update()
 
     def setEditField(self, field: str, value) -> None:
-        if field == "manifest_gitignore":
+        if field == "track_agentone":
             self._edit_data[field] = bool(value)
         elif field in ("name", "description", "path", "color", "storage", "parent_project_id"):
             self._edit_data[field] = value
+        self.update()
 
     def saveEdit(self) -> None:
         from server.models.workspace import validate_workspace_color
@@ -690,10 +695,15 @@ class Workspace(ModelView):
         self.subject.access = self.access_editor.access_data
         self.subject.parent_project = parent_project
 
-        manifest_dir = ensure_manifest_dir(
-            self.subject, storage, path,
-            gitignore=bool(self._edit_data.get("manifest_gitignore")),
-        )
+        try:
+            manifest_dir = ensure_manifest_dir(
+                self.subject, storage, path,
+                track_agentone=bool(self._edit_data.get("track_agentone")),
+            )
+        except OSError as exc:
+            self._edit_error = f"Cannot update workspace .gitignore: {exc}"
+            self.update()
+            return
         if not manifest_dir:
             manifest_dir = self.subject.get_agentone_dir().as_posix()
         self.subject.agentone_dir = manifest_dir

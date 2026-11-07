@@ -29,11 +29,14 @@ reload warns and skips.
   creates/updates rows from them. Safe to delete.
 - Only the resulting `agentone_dir` is stored — not the location type that
   produced it. The UI offers the usual defaults:
-  - inline workspace: `<workspace>/.agentone/` (creation offers `.gitignore`).
+  - inline workspace: `<workspace>/.agentone/` (ignored by default; enable
+    “Share/track `.agentone/` config in Git” to include it in the project repo).
   - project workspace: `<project agentone>/workspaces/<name>/`.
   - user workspace: `~/.agentone/workspaces/<name>/`.
   - project manifests live at `~/.agentone/projects/<name>/` when central.
   - git projects (future): row with `git_url/ref`, temp workspace on demand.
+  - inline project manifests follow the same Git ignore/share choice as inline
+    workspace manifests.
 
 ## Derived state under `~/.agentone/`
 
@@ -42,6 +45,7 @@ reload warns and skips.
 | `sessions/<agent>/<pk>/` | Per-session scratch, lazy, `0700`. Location depends on scope (workspace/project/global agentone dir). Own=allow, other/base=deny. Archived kept forever; int-named orphans swept at startup only (`startup_cleanup`; recovery beat is disabled). |
 | `runtime/<ver_pk>/` | Full tree extract per version + `.last_used`. GC after 1h idle, re-extracted on demand. |
 | `install/global\|user\|project_<n>\|workspace_<n>/` | Git repos synced from scope source (`rsync --delete`), versioned by tree SHA. Re-syncable. |
+| `memory/` | One local Git repo per global/project/workspace memory root. Legacy nested `.git` directories under that root are deleted during the next memory walk; memory files are retained, but their nested Git histories are discarded. |
 | `upstream/*`, `staging/*` | Upstream clones + merged staging (upstream first, local overlays; `sources.yaml` + `skills.yaml` are config-only, excluded; staging uses `--delete`). Re-syncable. |
 | `browser/` | Daemon token (`0600`), profiles, audit log. **Durable — back up.** Outside runtime GC. |
 | `projects/<n>/`, `workspaces/<n>/` | Central manifest dirs (DB content). Back up with the DB. |
@@ -72,4 +76,5 @@ reload warns and skips.
 
 DB dump + `~/.agentone/{sessions,browser,projects,workspaces}/` + inline
 `.agentone/` manifest dirs. `install/upstream/staging/runtime` are
-re-creatable and need no backup.
+re-creatable and need no backup. Back up memory roots if their contents need
+to be preserved.

@@ -76,6 +76,12 @@ class ProjectView(ModelView):
                                     Central location: <code>{{ pyview.central_manifest_dir }}</code>
                                 </div>
                             </div>
+                            <div class="detail-form-row">
+                                <label for="pvTrackAgentone">Git</label>
+                                <input type="checkbox" id="pvTrackAgentone"{% if not pyview.inline_manifest_enabled %} disabled{% endif %}{% if pyview.edit_data.track_agentone %} checked{% endif %} onchange="pyview.setEditField('track_agentone', this.checked)">
+                                <span>Share/track <code>.agentone/</code> config in Git</span>
+                                <div class="detail-form-hint">Inline config is ignored by default. Enable this to share it with the project.</div>
+                            </div>
                             {% if pyview.edit_error %}
                             <div class="detail-form-error">{{ pyview.edit_error }}</div>
                             {% endif %}
@@ -313,12 +319,19 @@ class ProjectView(ModelView):
                 )
             except Exception:  # pylint: disable=broad-exception-caught
                 manifest_in_workspace = False
+        from ui.main.workspace.manifest_location import gitignore_has_agentone
+
+        track_agentone = bool(
+            manifest_in_workspace
+            and not gitignore_has_agentone(ws_path)
+        )
         self._edit_data = {
             "name": self.subject.name,
             "description": self.subject.description or "",
             "workspace_ref": str(ws.pk) if ws is not None else "",
             "workspace_new_path": "",
             "manifest_in_workspace": manifest_in_workspace,
+            "track_agentone": track_agentone,
         }
         self._edit_error = ""
         self._editing = True
@@ -334,6 +347,10 @@ class ProjectView(ModelView):
     def has_workspace(self) -> bool:
         return bool(self._edit_data.get("workspace_ref"))
 
+    @property
+    def inline_manifest_enabled(self) -> bool:
+        return self.has_workspace and bool(self._edit_data.get("manifest_in_workspace"))
+
     def cancelEdit(self) -> None:
         self._editing = False
         self._edit_error = ""
@@ -342,8 +359,11 @@ class ProjectView(ModelView):
     def setEditField(self, field: str, value) -> None:
         if field == "manifest_in_workspace":
             self._edit_data[field] = bool(value)
+        elif field == "track_agentone":
+            self._edit_data[field] = bool(value)
         elif field in ("name", "description", "workspace_new_path"):
             self._edit_data[field] = value
+        self.update()
 
     def setWorkspaceRef(self, value: str) -> None:
         self._edit_data["workspace_ref"] = value
@@ -396,6 +416,17 @@ class ProjectView(ModelView):
             ensure_private_dir(manifest)
         except OSError as e:
             raise _FormError(f"Cannot create manifest directory {manifest}: {e}") from e
+        if manifest_in_workspace:
+            if ws is None:
+                raise _FormError("Choose a primary workspace for inline manifests.")
+            from ui.main.workspace.manifest_location import configure_agentone_gitignore
+
+            try:
+                configure_agentone_gitignore(
+                    ws.path, ignore=not bool(d.get("track_agentone"))
+                )
+            except OSError as e:
+                raise _FormError(f"Cannot update workspace .gitignore: {e}") from e
         updates["agentone_dir"] = manifest.as_posix()
 
         try:

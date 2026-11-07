@@ -115,25 +115,54 @@ def detect_storage(workspace: Any) -> str:
 
 
 def gitignore_has_agentone(ws_path: str) -> bool:
-    """Return True when ``<ws_path>/.gitignore`` already ignores ``.agentone/``."""
+    """Return True when ``<ws_path>/.gitignore`` ignores its root ``.agentone``."""
     if not ws_path:
         return False
     gi = Path(ws_path) / ".gitignore"
     try:
         if not gi.exists():
             return False
-        return ".agentone/" in gi.read_text(encoding="utf-8").splitlines()
+        return any(
+            _is_agentone_ignore_rule(line)
+            for line in gi.read_text(encoding="utf-8").splitlines()
+        )
     except OSError:
         return False
 
 
+def configure_agentone_gitignore(ws_path: str, *, ignore: bool) -> None:
+    """Add or remove the direct ``.agentone`` ignore rule in *ws_path*."""
+    if not ws_path:
+        return
+    gi = Path(ws_path) / ".gitignore"
+    existing = gi.read_text(encoding="utf-8") if gi.exists() else ""
+    if ignore:
+        if any(_is_agentone_ignore_rule(line) for line in existing.splitlines()):
+            return
+        separator = "" if not existing or existing.endswith(("\n", "\r")) else "\n"
+        gi.write_text(f"{existing}{separator}.agentone/\n", encoding="utf-8")
+    else:
+        lines = existing.splitlines(keepends=True)
+        updated = "".join(
+            line for line in lines if not _is_agentone_ignore_rule(line)
+        )
+        if updated != existing:
+            gi.write_text(updated, encoding="utf-8")
+
+
+def _is_agentone_ignore_rule(line: str) -> bool:
+    """Match simple root-level ignore rules for the AgentOne config directory."""
+    return line.strip().strip("/").strip() == ".agentone"
+
+
 def ensure_manifest_dir(workspace: Any, storage: str, ws_path: str,
-                        gitignore: bool = False) -> str:
+                        track_agentone: bool = False) -> str:
     """Create the agentone dir for *storage*; return its path.
 
-    ``none`` returns ``""``. Inline storage optionally appends ``.agentone/``
-    to the workspace's ``.gitignore``. Never raises on filesystem errors —
-    returns ``""`` so the caller can leave the workspace unmanaged.
+    ``none`` returns ``""``. Inline storage ignores ``.agentone/`` by default;
+    ``track_agentone`` opts into sharing it through the workspace's Git repo.
+    Returns ``""`` when creating the manifest directory fails. Errors while
+    updating ``.gitignore`` are allowed to reach the caller.
     """
     if storage == STORAGE_NONE:
         return ""
@@ -143,8 +172,7 @@ def ensure_manifest_dir(workspace: Any, storage: str, ws_path: str,
             manifest.mkdir(parents=True, exist_ok=True)
         except OSError:
             return ""
-        if gitignore:
-            _add_gitignore_entry(Path(ws_path))
+        configure_agentone_gitignore(ws_path, ignore=not track_agentone)
         return manifest.as_posix()
     if storage == STORAGE_PROJECT:
         manifest = project_workspace_manifest_dir(workspace) or user_manifest_dir(workspace)
@@ -157,16 +185,3 @@ def ensure_manifest_dir(workspace: Any, storage: str, ws_path: str,
     except OSError:
         return ""
     return manifest.as_posix()
-
-
-def _add_gitignore_entry(ws_path: Path) -> None:
-    gi = ws_path / ".gitignore"
-    try:
-        existing = gi.read_text(encoding="utf-8") if gi.exists() else ""
-        if ".agentone/" not in existing.splitlines():
-            with gi.open("a", encoding="utf-8") as f:
-                if existing and not existing.endswith("\n"):
-                    f.write("\n")
-                f.write(".agentone/\n")
-    except OSError:
-        pass

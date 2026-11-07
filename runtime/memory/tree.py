@@ -482,7 +482,14 @@ def _prepare_write_repos(tree: MemoryTree) -> None:
         if node.kind not in _SCOPE_KINDS:
             continue
         try:
-            memgit.ensure_repo(node.path)
+            preserved = [
+                candidate.path
+                for candidate in tree.nodes
+                if candidate.kind in _SCOPE_KINDS
+                and candidate is not node
+                and _is_within(candidate.path, node.path)
+            ]
+            memgit.ensure_repo(node.path, preserve_repos=preserved)
             memgit.commit_all(node.path, message="memory: walk")
         except OSError as exc:
             tree.warnings.append(f"git sync failed for {node.path}: {exc}")
@@ -500,16 +507,37 @@ def mark_processed(target_dir: Path) -> bool:
     if node is None:
         return False
 
-    children = tree.scope_children.get(id(node), [])
-    if node.kind in _SCOPE_KINDS:
-        memgit.ensure_repo(node.path)
-    for child in children:
-        memgit.ensure_repo(child.path)
+    parents: dict[int, MemoryNode] = {}
+    for parent in tree.nodes:
+        for child in tree.scope_children.get(id(parent), []):
+            parents[id(child)] = parent
+    scope_root = node
+    while scope_root.kind not in _SCOPE_KINDS:
+        scope_root = parents.get(id(scope_root))
+        if scope_root is None:
+            return False
 
-    repo = memgit.repo_for(node.path)
-    if repo is not None:
-        memgit.commit_all(repo, message="memory: synthesized")
-    for child in children:
+    preserved = [
+        candidate.path
+        for candidate in tree.nodes
+        if candidate.kind in _SCOPE_KINDS
+        and candidate is not scope_root
+        and _is_within(candidate.path, scope_root.path)
+    ]
+    memgit.ensure_repo(scope_root.path, preserve_repos=preserved)
+    memgit.commit_all(scope_root.path, message="memory: synthesized")
+
+    for child in tree.scope_children.get(id(node), []):
+        if child.kind not in _SCOPE_KINDS:
+            continue
+        child_preserved = [
+            candidate.path
+            for candidate in tree.nodes
+            if candidate.kind in _SCOPE_KINDS
+            and candidate is not child
+            and _is_within(candidate.path, child.path)
+        ]
+        memgit.ensure_repo(child.path, preserve_repos=child_preserved)
         memgit.commit_all(child.path, message="memory: synthesized")
 
     payload = _build_manifest(node, tree)
