@@ -8,8 +8,7 @@ from django.db import models
 
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
-from server.models.base_model import BaseModel
-from server.models.observable import ObservableKeys
+from server.models.base_model import BaseModel, ObservableKeys
 from server.models.sessions.session import SessionModel
 
 AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE = LRUCache(maxsize=1024)

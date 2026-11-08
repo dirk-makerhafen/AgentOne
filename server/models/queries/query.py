@@ -7,8 +7,7 @@ from django.db import models
 from django_enum import EnumField
 from sortedm2m.fields import SortedManyToManyField
 
-from server.models.base_model import BaseModel
-from server.models.observable import ObservableKeys
+from server.models.base_model import BaseModel, ObservableKeys
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.message import Message
 from server.models.queries.query_message import QueryMessage

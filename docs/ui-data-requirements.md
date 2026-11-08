@@ -11,7 +11,7 @@
 
 Producers call `publish_model_event(instance, action)` (`runtime/observables.py`),
 which calls `instance.notify_observers(action)`. `ObservableMixin.observable_keys()`
-(`server/models/observable.py`) derives keys: any-key (`<Model>`), pk-key
+(`server/models/base_model.py`) derives keys: any-key (`<Model>`), pk-key
 (`<Model>.pk:<pk>`), plus one key per set FK (e.g. `Message.session:7`).
 `runtime/observables.py:88 notify()` RPUSHes one message per subscribed UI
 instance to `agentone:uiq:<instance_key>`. Each websocket instance runs one
@@ -156,7 +156,7 @@ on mutation. Grouped by area.
 
 ## 5. File index (where to look when building the new UI)
 
-- Transport: `runtime/observables.py:55 subscribe`, `:88 notify`, and `publish_model_event`; `server/models/observable.py` defines `ObservableMixin`.
+- Transport: `runtime/observables.py:55 subscribe`, `:88 notify`, and `publish_model_event`; `server/models/base_model.py` defines `ObservableMixin`.
 - Consumer: `ui/consumer.py:25 process_queue_messages`, `:55 loop`, `:91 _ensure_loop_thread`; `ui/lib/model_view.py:17 orm_subscribe`, `:40 orm_unsubscribe_view`.
 - Live views: `ui/main/chat/messages/messages.py`, `ui/main/chat/composer/footer.py`, `ui/main/chat/composer/wrap/ctxindicator.py`, `ui/main/chat/toc.py`, `ui/main/chat/cards/{approval,queue,question,guardrail_approval,rate_limit}.py`, `ui/main/workitems/board.py`, `ui/sidebar/panels/workspaces.py`, `ui/main/rightpanel/session/rightpanel_session_templates.py`.
 - API: `api/urls.py`, `api/views/{sessions,queries,tasks,agents,workspaces,collections,cron,providers,skills,projects,systems}.py`, `api/serializers/`.

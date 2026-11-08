@@ -7,8 +7,7 @@ from typing import Any
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from server.models.base_model import BaseModel
-from server.models.observable import ObservableKeys
+from server.models.base_model import BaseModel, ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.task_enums import TaskSchedulerStrategy
 

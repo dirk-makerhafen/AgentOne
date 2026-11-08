@@ -7,7 +7,7 @@ from typing import Any
 from django.db.models import Model, QuerySet
 
 from runtime.observable_queries.subscription import ObservableSubscription
-from server.models.observable import ObservableMixin
+from server.models.base_model import ObservableMixin
 
 Callback = Callable[[dict[str, Any]], None]
 

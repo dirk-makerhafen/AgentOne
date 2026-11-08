@@ -4,7 +4,7 @@ from typing import Any
 
 from django.db import models
 
-from server.models.observable import ObservableMixin, ObservableKeys
+from server.models.base_model import ObservableMixin, ObservableKeys
 from server.models.skills.skill_version import SkillModelVersion
 
 

@@ -7,8 +7,7 @@ from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
-from server.models.base_model import BaseModel
-from server.models.observable import ObservableKeys
+from server.models.base_model import BaseModel, ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.message_enums import (
     MessageContentType,

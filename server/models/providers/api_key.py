@@ -7,8 +7,7 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 
-from server.models.base_model import BaseModel
-from server.models.observable import ObservableKeys
+from server.models.base_model import BaseModel, ObservableKeys
 from server.models.enums.provider_enums import HealthStatus
 from server.models.providers.health import HealthTrackedModel
 from server.models.queries.response import Response

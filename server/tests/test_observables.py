@@ -504,7 +504,7 @@ class AllModelsObservableTest(SimpleTestCase):
         self.assertEqual(missing, [])
 
     def test_every_model_has_observables_property(self):
-        from server.models.observable import ObservableMixin
+        from server.models.base_model import ObservableMixin
 
         missing = []
         for m in self._server_models():

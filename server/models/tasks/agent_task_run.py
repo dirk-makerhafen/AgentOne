@@ -16,8 +16,7 @@ from django.utils import timezone
 
 from runtime.context_manager import ContextTracker
 from runtime.rate_limiter import RateLimitError
-from server.models.base_model import BaseModel
-from server.models.observable import ObservableKeys
+from server.models.base_model import BaseModel, ObservableKeys
 from server.models.content import GenericContent, pack_large_string
 from server.models.enums.task_enums import TaskExecutionMode, TaskRunStatus, TaskType
 from server.models.message import Message

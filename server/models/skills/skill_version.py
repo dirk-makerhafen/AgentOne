@@ -5,7 +5,7 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.observable import ObservableMixin, ObservableKeys
+from server.models.base_model import ObservableMixin, ObservableKeys
 
 
 class SkillModelVersion(ObservableMixin, models.Model):
