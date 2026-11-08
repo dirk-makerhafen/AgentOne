@@ -23,7 +23,11 @@ Direct calls (bulk paths that bypass the model — ``QuerySet.update()``,
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
+import logging
 from typing import Any
+
+log = logging.getLogger(__name__)
 
 
 def _extract_filter_context(instance: Any) -> dict[str, Any]:
@@ -58,10 +62,39 @@ def publish_model_event(instance: Any, action: str, data: dict[str, Any] | None 
     trips.  Instances without ``notify_observers`` (non-BaseModel
     mixins) are silently skipped.
     """
-    event_data = {**_extract_filter_context(instance), **(data or {})}
-    notify = getattr(instance, "notify_observers", None)
+    event_instance = instance
+    event_data = {**_extract_filter_context(event_instance), **(data or {})}
+    serialize: Callable[[], dict[str, Any]] | None = getattr(
+        event_instance, "serialize_observable", None
+    )
+    observable_keys: Callable[[], Sequence[str]] | None = getattr(
+        event_instance, "observable_keys", None
+    )
+    if callable(serialize) and callable(observable_keys):
+        def serialize_event() -> dict[str, Any]:
+            current_instance = event_instance
+            if action != "delete" and getattr(current_instance, "pk", None) is not None:
+                refreshed = type(current_instance)._default_manager.filter(
+                    pk=current_instance.pk
+                ).first()
+                if refreshed is not None:
+                    current_instance = refreshed
+            return {
+                **_extract_filter_context(current_instance),
+                **(data or {}),
+                "object": current_instance.serialize_observable(),
+            }
+
+    notify = getattr(event_instance, "notify_observers", None)
     if callable(notify):
         try:
-            notify(action, event_data)
+            if callable(serialize) and callable(observable_keys):
+                notify(action, event_data, data_factory=serialize_event)
+            else:
+                notify(action, event_data)
         except Exception:
-            pass
+            log.exception(
+                "Failed to publish observable event for %s pk=%s",
+                type(event_instance).__name__,
+                getattr(event_instance, "pk", None),
+            )

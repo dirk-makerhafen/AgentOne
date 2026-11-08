@@ -31,11 +31,12 @@ Flow
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 import redis
 from django.conf import settings
+from redis.exceptions import WatchError
 
 OBS_PREFIX = "agentone:obs:"
 QUEUE_PREFIX = "agentone:uiq:"
@@ -54,27 +55,47 @@ def get_redis() -> redis.Redis:
 
 def subscribe(instance_key: str, observable_key: str, function_id: int) -> None:
     """Register ``function_id`` of UI instance *instance_key* on *observable_key*."""
+    _update_subscription(instance_key, observable_key, function_id, add=True)
+
+
+def _update_subscription(
+    instance_key: str,
+    observable_key: str,
+    function_id: int,
+    *,
+    add: bool,
+) -> None:
     r = get_redis()
     obs_key = OBS_PREFIX + observable_key
-    fids = json.loads(r.hget(obs_key, instance_key) or "[]")
-    if function_id not in fids:
-        fids.append(function_id)
-    r.hset(obs_key, instance_key, json.dumps(fids))
-    r.sadd(UKEYS_PREFIX + instance_key, observable_key)
+    with r.pipeline() as pipeline:
+        while True:
+            try:
+                pipeline.watch(obs_key)
+                fids = json.loads(pipeline.hget(obs_key, instance_key) or "[]")
+                if add:
+                    if function_id not in fids:
+                        fids.append(function_id)
+                elif function_id in fids:
+                    fids.remove(function_id)
+
+                pipeline.multi()
+                if fids:
+                    pipeline.hset(obs_key, instance_key, json.dumps(fids))
+                    pipeline.sadd(UKEYS_PREFIX + instance_key, observable_key)
+                else:
+                    pipeline.hdel(obs_key, instance_key)
+                    pipeline.srem(UKEYS_PREFIX + instance_key, observable_key)
+                pipeline.execute()
+                return
+            except WatchError:
+                continue
+            finally:
+                pipeline.reset()
 
 
 def unsubscribe(instance_key: str, observable_key: str, function_id: int) -> None:
     """Remove ``function_id`` of *instance_key* from *observable_key*."""
-    r = get_redis()
-    obs_key = OBS_PREFIX + observable_key
-    fids = json.loads(r.hget(obs_key, instance_key) or "[]")
-    if function_id in fids:
-        fids.remove(function_id)
-    if fids:
-        r.hset(obs_key, instance_key, json.dumps(fids))
-    else:
-        r.hdel(obs_key, instance_key)
-        r.srem(UKEYS_PREFIX + instance_key, observable_key)
+    _update_subscription(instance_key, observable_key, function_id, add=False)
 
 
 def unsubscribe_all(instance_key: str) -> None:
@@ -85,12 +106,20 @@ def unsubscribe_all(instance_key: str) -> None:
     r.delete(UKEYS_PREFIX + instance_key, QUEUE_PREFIX + instance_key)
 
 
+def has_subscribers(observable_keys: Sequence[str]) -> bool:
+    """Return whether any event key currently has registered observers."""
+    r = get_redis()
+    return any(r.hlen(OBS_PREFIX + key) for key in observable_keys)
+
+
 def notify(
     observable_keys: Sequence[str],
     model: str,
     pk: int,
     action: str,
     data: dict[str, Any] | None = None,
+    *,
+    data_factory: Callable[[], dict[str, Any]] | None = None,
 ) -> None:
     """Push a message to every UI instance subscribed to any of *observable_keys*.
 
@@ -129,7 +158,9 @@ def notify(
                     msg["function_ids"].append(fid)
     if not messages:
         return
+    event_data = {**(data or {}), **(data_factory() if data_factory else {})}
     with r.pipeline() as p:
         for instance_key, msg in messages.items():
+            msg["data"] = event_data
             p.rpush(QUEUE_PREFIX + instance_key, json.dumps(msg, default=str))
         p.execute()

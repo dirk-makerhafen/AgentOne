@@ -114,11 +114,8 @@ class SidebarPanelWorkspaces(ModelView):
                 </span>
                 {% endif %}
                 <div class="ws-row-info">
-                    <div class="ws-row-name">
+                    <div class="ws-row-name" style="display:none">
                         {{ row.name }}
-                        {% if row.pk == pyview.active_workspace_pk %}
-                        <span class="detail-badge active" style="margin-left:6px;font-size:9px;padding:1px 6px">ACTIVE</span>
-                        {% endif %}
                     </div>
                     <div class="ws-row-path">{{ row.display_path }}</div>
                 </div>

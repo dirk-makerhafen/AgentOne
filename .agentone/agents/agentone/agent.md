@@ -13,10 +13,10 @@ schedulerStrategy: queue
 subagentResultDelivery: immediate
 priority: 50
 
-autoCompactMaxTokens: 120000
+autoCompactMaxTokens: 100000
 autoCompactMinTokens: 30000
 autoCompactIdleSeconds: 300
-autoCompactKeepPercent: 10
+autoCompactKeepPercent: 5
 
 maxRetries: 0
 maxTurns: 200

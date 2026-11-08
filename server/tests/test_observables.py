@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import inspect
 import json
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import MagicMock, patch
 
 import fakeredis
@@ -70,6 +71,23 @@ class RegistryTest(SimpleTestCase):
             [42],
         )
 
+    def test_concurrent_subscriptions_preserve_all_function_ids(self):
+        function_ids = list(range(32))
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            list(executor.map(
+                lambda function_id: observables.subscribe(
+                    "inst-1", "Message.session:5", function_id
+                ),
+                function_ids,
+            ))
+        self.assertEqual(
+            sorted(json.loads(self.redis.hget(
+                "agentone:obs:Message.session:5",
+                "inst-1",
+            ))),
+            function_ids,
+        )
+
     def test_notify_queues_only_for_subscribers(self):
         observables.subscribe("inst-1", "Message.session:5", 42)
         observables.notify(["Message.session:5", "Message.session:6"], "Message", 9, "create")
@@ -92,6 +110,26 @@ class RegistryTest(SimpleTestCase):
         msg = json.loads(self.redis.lrange("agentone:uiq:inst-1", 0, -1)[0])
         self.assertEqual(sorted(msg["function_ids"]), [7, 8])
         self.assertEqual(sorted(msg["keys"]), ["Message", "Message.session:5"])
+
+    def test_notify_builds_serialized_payload_once_for_all_subscribers(self):
+        data_factory = MagicMock(return_value={"object": {"pk": 9}})
+        observables.subscribe("inst-1", "Message", 7)
+        observables.subscribe("inst-2", "Message", 8)
+
+        observables.notify(
+            ["Message"],
+            "Message",
+            9,
+            "update",
+            data_factory=data_factory,
+        )
+
+        data_factory.assert_called_once_with()
+        for instance_key in ("inst-1", "inst-2"):
+            message = json.loads(
+                self.redis.lrange(f"agentone:uiq:{instance_key}", 0, -1)[0]
+            )
+            self.assertEqual(message["data"]["object"], {"pk": 9})
 
     def test_notify_empty_keys_is_noop(self):
         observables.notify([], "Message", 9, "create")

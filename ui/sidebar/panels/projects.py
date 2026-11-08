@@ -14,18 +14,12 @@ if TYPE_CHECKING:
 class SidebarPanelProject(ModelView):
     #<div class="ws-row" data-path="/Users/Dirk/AgentOne" draggable="true">
     TEMPLATE_STR = '''
-        <span class="ws-drag-handle" title="Drag to reorder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg></span>
+        <span class="ws-drag-handle" style="display:none" title="Drag to reorder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-0.15em;flex-shrink:0"><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg></span>
         <div class="ws-row-info" onclick="pyview.open_project_details()">
             <div class="ws-row-name">
-                {{ pyview.subject.name }} ·  
-                <i class="fa fa-cogs">89</i> ·  
-                <i class="fa fa-wrench">42</i> ·  
-                <i class="fa fa-code">1</i>
-                <span class="detail-badge active" style="margin-left:6px;font-size:9px;padding:1px 6px">
-                    ACTIVE
-                </span>
+                {{ pyview.subject.name }} 
             </div>
-            <div class="ws-row-path"> {{ pyview.subject.path }} </div>
+            <div class="ws-row-path"> {{ pyview.subject.main_workspace.path }} </div>
         </div>
     '''
     # </div>

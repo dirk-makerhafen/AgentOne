@@ -9,8 +9,8 @@ maxRetries: 0
 maxTurns: 10
 maxUnattendedTurns: 20
 maxHistoryMessages: 200
-autoCompactMaxTokens: 120000
-autoCompactKeepPercent: 10
+autoCompactMaxTokens: 100000
+autoCompactKeepPercent: 0
 reasoningEffort: high
 schedulerStrategy: queue
 precision: precise

@@ -113,6 +113,7 @@ def reflect_session(
         auto_compact_max_tokens=0,
         auto_compact_idle_seconds=0,
         tool_call_allowlist=["final_result"],
+        max_turns=2,   
     )
 
     # Trigger the fork's turn; the returned call is the report source the

@@ -22,7 +22,7 @@ maxUnattendedTurns: 100
 maxHistoryMessages: 500
 priority: 30
 
-autoCompactMaxTokens: 120000
+autoCompactMaxTokens: 100000
 autoCompactMinTokens: 30000
 autoCompactIdleSeconds: 300
 autoCompactKeepPercent: 5

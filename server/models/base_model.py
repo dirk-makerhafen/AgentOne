@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import json
 import traceback
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
+from django.core.serializers.json import DjangoJSONEncoder
 from dirtyfields import DirtyFieldsMixin
 from dirtyfields.dirtyfields import reset_state
 from django.db import models
@@ -74,6 +76,8 @@ class ObservableMixin:
     ``pk`` / ``_meta``, so it works on plain ``models.Model`` subclasses.
     """
 
+    OBSERVABLE_EXCLUDED_FIELDS = frozenset({"raw_data"})
+
     @property
     def observables(self):
         if not hasattr(self, "_observables") or self._observables is None:
@@ -114,7 +118,13 @@ class ObservableMixin:
             keys.append(self.observables.noparents)
         return keys
 
-    def notify_observers(self, action: str = "update", data: dict[str, Any] | None = None) -> None:
+    def notify_observers(
+        self,
+        action: str = "update",
+        data: dict[str, Any] | None = None,
+        *,
+        data_factory: Callable[[], dict[str, Any]] | None = None,
+    ) -> None:
         """Notify subscribed UI observers for this instance's observable keys.
 
         Observer-gated: :func:`runtime.observables.notify` only pushes to
@@ -127,7 +137,22 @@ class ObservableMixin:
             self.pk,
             action,
             data,
+            data_factory=data_factory,
         )
+
+    def serialize_observable(self) -> dict[str, Any]:
+        """Serialize concrete model fields for trusted observable callbacks."""
+        data: dict[str, Any] = {
+            "model": type(self)._meta.model.__name__,
+            "pk": self.pk,
+        }
+        excluded = self.OBSERVABLE_EXCLUDED_FIELDS
+        for field in self._meta.concrete_fields:
+            if field.name in excluded or field.attname in excluded:
+                continue
+            data[field.attname] = getattr(self, field.attname)
+        data["revision"] = data.get("updated_at") or data.get("created_at") or timezone.now()
+        return json.loads(json.dumps(data, cls=DjangoJSONEncoder, default=str))
 
     def publish(self, action: str = "update", data: dict[str, Any] | None = None) -> None:
         """Publish a model event for this instance (``create``/``update``/``delete``).

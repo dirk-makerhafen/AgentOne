@@ -17,9 +17,10 @@ import re
 from typing import Any
 import json
 from runtime.session.session import Session
+from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
 from server.models.enums.session_enums import SessionType
-from server.models.message import Message
+from server.models.message import Message, MessagePart
 from server.models.queries.response import Response
 from server.models.enums.task_enums import TaskRunStatus
 
@@ -211,6 +212,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
         walk_message = parent_message
 
     has_tool_calls = kwargs.get("has_tool_calls")
+
     if has_tool_calls is None:
         # Direct/test invocation without the ingest flags: derive locally.
         has_tool_calls = any(True for part in parts if "tool_call" in part) if parts else False
@@ -220,7 +222,6 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
 
     if kwargs.get("has_final_result"):  # agent did call final_result tool
         is_final_result = True
-
 
     elif has_message and not has_tool_calls and _session.session_type in (SessionType.SESSION, SessionType.SUBSESSION, SessionType.SUBTASK_COMPACT):  
         # Heuristic guestimation if session is over
@@ -259,7 +260,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     no_tool_turn_count = 0
     pmessage = walk_message
     for _ in range(MAX_NO_TOOL_ASSISTANT_TURNS):
-        if not pmessage or (pmessage.role != MessageRole.ASSISTANT and pmessage.role != MessageRole.TOOL) or (pmessage.response and pmessage.response.tool_calls):
+        if not pmessage or (pmessage.role != MessageRole.ASSISTANT and pmessage.role != MessageRole.TOOL ) or (pmessage.response and pmessage.response.tool_calls):
             warn_no_toolcall_loop = False
             break
         no_tool_turn_count += 1
@@ -268,23 +269,37 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     if warn_no_toolcall_loop:
         prev_message = _session.get_last_message() or message
         sv = _session.get_version_model()
-        message = Message.objects.create(
-            role=MessageRole.USER,
-            message_type=MessageType.SYSTEM_NOTICE,
-            session=sv.session,
-            session_version=sv,
-            prev_message=prev_message,
-        )
+        message = Message.objects.create(role=MessageRole.USER, message_type=MessageType.SYSTEM_NOTICE, session=sv.session, session_version=sv, prev_message=prev_message)
         hint_prompt = (
             f"<SYSTEM NOTICE>You have responded {no_tool_turn_count} times in a row without using any tools. "
             "If your task is complete, call final_result(content='your answer') to finish. "
             "If you need to continue working, use a tool in your next response.</SYSTEM NOTICE>"
         )
+        message.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=hint_prompt)
 
-        message.add_part(
-            type=MessagePartType.MESSAGE,
-            content_type=MessageContentType.TEXT,
-            content=hint_prompt,
-        )
+
+    # add turn ending warning to sub agents to they know to wrap it up and return to the parent agent
+    if _session.max_turns and _session.session_type in (SessionType.SUBTASK_FORK, SessionType.SUBTASK_DELEGATE, SessionType.SUBTASK_COMPACT, SessionType.SUBTASK_COMPACT):
+        TURN_WARNING = None
+        if _session.current_turn_count >= _session.max_turns-1:
+            TURN_WARNING = ["<SYSTEM NOTICE>You have reached the maximum number of turns for this session.\n" \
+                "Please call final_result(content='your answer') to finish.\n" \
+                "This session will end automatically if you continue to respond without calling final_result.</SYSTEM NOTICE>"]
+        elif  _session.current_turn_count >= _session.max_turns*0.80:
+            TURN_WARNING =["<SYSTEM NOTICE>You are approaching the maximum number of turns for this session.\n" \
+                "Please try to finish your work in the remaining turns and call final_result(content='your answer') to finish.\n",
+                f"Turn {_session.current_turn_count} of { _session.max_turns} ({_session.current_turn_count/_session.max_turns*100:.1f}%) reached.</SYSTEM NOTICE>"]
+
+        if TURN_WARNING:
+            if not MessagePart.objects.filter(message__session_version__session=_session.get_version_model().session, 
+                message__message_type=MessageType.SYSTEM_NOTICE, 
+                message__role=MessageRole.USER, 
+                content=GenericContent.from_text(TURN_WARNING[0])
+            ).exists():
+                sv = _session.get_version_model()
+                prev_message = _session.get_last_message() or message
+                message = Message.objects.create(role=MessageRole.USER, message_type=MessageType.SYSTEM_NOTICE, session=sv.session, session_version=sv, prev_message=prev_message)
+                for warning in TURN_WARNING:
+                    message.add_part(type=MessagePartType.MESSAGE, content_type=MessageContentType.TEXT, content=warning)   
 
     return _session.get_task("process_turn").delay(message=message)

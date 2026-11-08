@@ -64,12 +64,7 @@ class AgentVersionModel(BaseModel):
 
     # Undeclared (NULL) means "inherit through extends, else user".
     # Stored per version so changing it bumps the agent version.
-    visibility = models.CharField(
-        max_length=16,
-        choices=AgentVisibility.choices,
-        default=None,
-        null=True,
-    )
+    visibility = models.CharField(max_length=16, choices=AgentVisibility.choices, default=None, null=True)
 
     extends_agent_names = models.JSONField(default=list, blank=True)
     extends_agent_versions = SortedManyToManyField("self", related_name="related_inheritors", default=None, symmetrical=False)

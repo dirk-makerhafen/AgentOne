@@ -138,6 +138,34 @@ ui/                 Web UI (pyHtmlGui)
   skills/           Skill installation configuration
 ```
 
+### Observable ORM subscriptions
+
+`runtime.observable_queries` exposes callback-based subscriptions for
+explicitly supported live query shapes. A subscription registers its Redis
+event keys before reading the initial rows, buffers concurrent changes until
+the initial `snapshot` callback is delivered, then sends `upsert` and `remove`
+events to the same callback. Call `close()` or use the subscription as a
+context manager to unregister it.
+
+```python
+from runtime.observable_queries import ObservableProject, ObservableRoot, ObservableSession
+
+subscription = ObservableRoot().get_agents(handle_agent_events)
+project_subscription = ObservableProject(project).get_skills(handle_skill_events)
+session_subscription = ObservableSession(session).get_messages(handle_message_events)
+```
+
+The public API intentionally contains only named query methods. It does not
+accept arbitrary models, querysets, relation names, or filters: if a query
+shape is not exposed as a named method, it is not currently supported as an
+observable subscription. Every event delivered to observers includes the
+serialized row and a revision timestamp. The row is refreshed and serialized
+once per model change, regardless of the number of subscribers; changes with
+no subscribers avoid the refresh and serialization. Sensitive fields such as
+API credentials are excluded by the model serializer. These subscriptions
+are an internal Python callback API; they do not yet change the UI or
+`QuerySetView`.
+
 ## How to add a new model
 
 1. Create the model file in `server/models/<domain>/<name>.py`:

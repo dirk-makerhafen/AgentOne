@@ -198,6 +198,7 @@ def build_llm_compact_context(
         auto_compact_max_tokens=0,
         auto_compact_idle_seconds=0,
         tool_call_allowlist=["final_result"],
+        max_turns=2, 
     )
     compact_result = child_session.add_user_message(
         [

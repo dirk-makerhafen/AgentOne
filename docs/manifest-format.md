@@ -60,10 +60,10 @@ autoload:                      # optional — AGENTS.md autoload (see below)
 sessionBootstrap: |             # optional — one template per agent; inherited parent-first
   Workspace: {{workspace_dir}}
   Session folder: {{session_dir}}
-autoCompactMaxTokens: 120000      # hard token threshold for reactive auto-compaction (0 = disabled)
+autoCompactMaxTokens: 100000      # hard token threshold for reactive auto-compaction (0 = disabled)
 autoCompactMinTokens: 50000       # context floor for idle-triggered compaction (0 = idle compaction disabled)
 autoCompactIdleSeconds: 300       # idle seconds after which an oversized session is compacted (0 = disabled)
-autoCompactKeepPercent: 10     # percentage of newest tokens to keep in full on compaction (0 = compact everything)
+autoCompactKeepPercent: 5     # percentage of newest tokens to keep in full on compaction (0 = compact everything)
 reasoningEffort: medium        # none | minimal | low | medium | high | xhigh
 schedulerStrategy: queue       # interrupt | queue | merge | parallel
 toolCallSyntax: default        # default | custom

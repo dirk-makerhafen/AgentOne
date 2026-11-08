@@ -18,10 +18,10 @@ toolCallSyntax: default
 schedulerStrategy: queue
 subagentResultDelivery: immediate
 
-autoCompactMaxTokens: 120000
-autoCompactMinTokens: 50000
+autoCompactMaxTokens: 100000
+autoCompactMinTokens: 40000
 autoCompactIdleSeconds: 300
-autoCompactKeepPercent: 10
+autoCompactKeepPercent: 5
 
 maxRetries: 0
 maxTurns: 200
