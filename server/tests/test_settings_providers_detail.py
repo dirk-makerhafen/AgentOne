@@ -75,20 +75,24 @@ class TestProvidersTableDetail:
 
 
 class TestProviderDetailDescription:
-    def _detail(self, data, url="https://example.com"):
+    def _detail(self, description="", setup_instructions="", url="https://example.com"):
         from ui.main.rightpanel.provider.rightpanel_provider import RightPanelProvider
 
         view = object.__new__(RightPanelProvider)
-        view._subject_ref = SimpleNamespace(data=data, url=url)
+        view._subject_ref = SimpleNamespace(
+            description=description,
+            setup_instructions=setup_instructions,
+            url=url,
+        )
         return view
 
     def test_prefers_description(self):
-        d = self._detail({"description": "Full blurb here."})
+        d = self._detail(description="Full blurb here.")
         assert d.full_description == "Full blurb here."
 
     def test_falls_back_to_setup_then_url(self):
-        assert self._detail({"setup_instructions": "1. Sign up"}).full_description == "1. Sign up"
-        assert self._detail({}).full_description == "https://example.com"
+        assert self._detail(setup_instructions="1. Sign up").full_description == "1. Sign up"
+        assert self._detail().full_description == "https://example.com"
 
     def test_template_has_about_section(self):
         from ui.main.rightpanel.provider.rightpanel_provider import RightPanelProvider

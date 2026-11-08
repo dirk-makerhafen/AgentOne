@@ -418,19 +418,21 @@ def load_providers_manifest(
         else:
             action = "created"
 
-        # Store free-tier / setup info in raw_data (skip for user-managed).
+        # Store free-tier / setup info in dedicated columns (skip for user-managed).
+        free_info = provider_data.get("free_info")
         if not (not created and provider.api_keys.exists()):
-            free_info = provider_data.get("free_info")
-            if free_info or provider_data.get("api_key_url") or provider_data.get("setup_instructions") or provider_data.get("description"):
-                info = dict(free_info) if isinstance(free_info, dict) else {}
-                if provider_data.get("api_key_url"):
-                    info["api_key_url"] = provider_data["api_key_url"]
-                if provider_data.get("setup_instructions"):
-                    info["setup_instructions"] = provider_data["setup_instructions"]
-                if provider_data.get("description"):
-                    info["description"] = provider_data["description"]
-                provider.data = info
-                provider.save(update_fields=["raw_data"])
+            info = dict(free_info) if isinstance(free_info, dict) else {}
+            for key in ("api_key_url", "setup_instructions", "description", "default_api_key"):
+                if provider_data.get(key):
+                    info[key] = provider_data[key]
+            setup_changed = []
+            for field in ("api_key_url", "setup_instructions", "description", "default_api_key"):
+                value = info.get(field) or ""
+                if getattr(provider, field) != value:
+                    setattr(provider, field, value)
+                    setup_changed.append(field)
+            if setup_changed:
+                provider.save(update_fields=setup_changed)
 
         # Persist free-tier rate limits (skip for user-managed).
         if created or not provider.api_keys.exists():
@@ -584,6 +586,10 @@ def _upsert_provider_from_frontmatter(
         "is_local": is_local,
         "litellm_prefix": meta.get("litellm_prefix") or "",
         "enabled": True,
+        "description": description or meta.get("description") or "",
+        "setup_instructions": meta.get("setup_instructions") or "",
+        "api_key_url": meta.get("api_key_url") or "",
+        "default_api_key": meta.get("default_api_key") or "",
     }
     provider, created = ApiProvider.objects.update_or_create(
         slug=slug,
@@ -596,20 +602,6 @@ def _upsert_provider_from_frontmatter(
         if getattr(provider, field) != value:
             setattr(provider, field, value)
             changed_fields.append(field)
-
-    # Build the raw_data dict and save only when it changed.
-    info: Dict[str, Any] = {
-        "api_key_url": meta.get("api_key_url") or "",
-        "setup_instructions": meta.get("setup_instructions") or "",
-        "description": description or meta.get("description") or "",
-    }
-    if meta.get("default_api_key"):
-        info["default_api_key"] = meta["default_api_key"]
-    if meta.get("wire"):
-        info["wire"] = meta["wire"]
-    if provider.data != info:
-        provider.data = info
-        changed_fields.append("raw_data")
 
     # Rate-limit fields.
     flat = _nested_limits_to_flat(meta.get("limits"))
@@ -671,9 +663,6 @@ def _upsert_model_from_card_entry(
 
     rank, is_estimate = _parse_leaderboard_rank(card_meta)
     flags = _modalities_to_flags(card_meta.get("modalities"))
-    card_wire = card_meta.get("wire") or {}
-    entry_wire = entry.get("wire") or {}
-    wire = {**card_wire, **entry_wire} if isinstance(card_wire, dict) and isinstance(entry_wire, dict) else (entry_wire or card_wire or None)
 
     seen_key: str | None = None
     for provider_model_id in model_ids:
@@ -701,6 +690,7 @@ def _upsert_model_from_card_entry(
             "context_length": entry.get("context_window", card_meta.get("context_window", 1000000)),
             "max_response_tokens": entry.get("max_output_tokens", card_meta.get("max_output_tokens", 1000000)),
             "description": card_meta.get("description") or "",
+            "conditions": entry.get("conditions") or "",
             "enabled": True,
             "limit_request_per_minute": model_limits.get("limit_request_per_minute", 0),
             "limit_request_per_hour": model_limits.get("limit_request_per_hour", 0),
@@ -729,17 +719,6 @@ def _upsert_model_from_card_entry(
             if getattr(model_obj, field) != value:
                 setattr(model_obj, field, value)
                 changed_fields.append(field)
-
-        # Build the raw_data dict and save only when it changed.
-        raw_data = {
-            "card": card_slug,
-            "conditions": entry.get("conditions") or "",
-            "verified": entry.get("verified") or "",
-            "wire": wire,
-        }
-        if model_obj.data != raw_data:
-            model_obj.data = raw_data
-            changed_fields.append("raw_data")
 
         if changed_fields:
             model_obj.save(update_fields=changed_fields)

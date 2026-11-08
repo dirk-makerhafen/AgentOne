@@ -165,7 +165,7 @@ class ProvidersView(ModelView):
         providers = ApiProvider.objects.filter(enabled=True).order_by("name").prefetch_related("api_keys")
         for provider in providers:
             keys = [k for k in provider.api_keys.all() if k.enabled]
-            if provider.data.get("default_api_key"):
+            if provider.default_api_key:
                 key_state, key_count = "built-in", 0
             elif keys:
                 key_state, key_count = "keys", len(keys)

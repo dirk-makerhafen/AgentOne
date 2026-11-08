@@ -32,7 +32,7 @@ QUOTA_REASON_PATTERNS = ("quota", "insufficient", "resource exhausted", "daily l
 class ApiKey(HealthTrackedModel, BaseModel):  # pylint: disable=too-many-instance-attributes
     """An API key for a provider, with independent rate-limit tracking."""
 
-    OBSERVABLE_EXCLUDED_FIELDS = frozenset({"raw_data", "key"})
+    OBSERVABLE_EXCLUDED_FIELDS = frozenset({"key"})
 
     class ApiKeyObservableKeys(ObservableKeys):
         """Explicit observable keys for an ApiKey (IDE autocomplete)."""

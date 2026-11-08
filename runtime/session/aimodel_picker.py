@@ -48,7 +48,7 @@ def available_aimodels() -> List[AiModel]:
         AiModel.objects.filter(enabled=True)
         .filter(
             Q(api_provider__api_keys__enabled=True)
-            | Q(api_provider__raw_data__contains='"default_api_key"')
+            | Q(api_provider__default_api_key__gt="")
         )
         .distinct()
     )

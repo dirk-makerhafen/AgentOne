@@ -329,7 +329,7 @@ class Session:
         for row in rows:
             if row.health_blocks_calls():
                 continue
-            if row.api_provider.api_keys.filter(enabled=True).exists() or '"default_api_key"' in (row.api_provider.data or {}):
+            if row.api_provider.api_keys.filter(enabled=True).exists() or row.api_provider.default_api_key:
                 usable.append(row)
         model = (usable or rows)[0]
         self.set_aimodel(model)

@@ -155,7 +155,7 @@ class RightPanelModel(ModelView):
         rows = []
         for member in self._members:
             provider = member.api_provider
-            has_key = bool(provider.data.get("default_api_key")) or any(
+            has_key = bool(provider.default_api_key) or any(
                 k.enabled for k in provider.api_keys.all()
             )
             rows.append({
@@ -165,7 +165,7 @@ class RightPanelModel(ModelView):
                 "key_note": "✓ key" if has_key else "no key",
                 "health": member.health_label,
                 "health_reason": member.status_reason,
-                "conditions": (member.data.get("conditions") or ""),
+                "conditions": member.conditions,
             })
         rows.sort(key=lambda r: r["provider"].lower())
         return rows

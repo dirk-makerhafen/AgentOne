@@ -34,6 +34,9 @@ class AiModel(HealthTrackedModel, BaseModel):
     family = models.CharField(max_length=512, default="", blank=True)
     description = models.TextField(max_length=65000, default="", blank=True)
 
+    # Free-tier condition note from the model card's provider entry.
+    conditions = models.CharField(max_length=512, default="", blank=True)
+
     enabled = models.BooleanField(default=True)
 
     # Model-card facts (from ``models/<slug>.md`` frontmatter).

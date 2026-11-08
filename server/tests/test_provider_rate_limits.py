@@ -68,8 +68,6 @@ providers:
             count = load_providers_manifest(manifest, details)
             self.assertEqual(count, 1)
             provider = ApiProvider.objects.get(name="Snowflake Test")
-            self.assertEqual(provider.data["RPM"], 15)
-            self.assertEqual(provider.data["RPD"], 1500)
             self.assertEqual(provider.limit_request_per_minute, 15)
             self.assertEqual(provider.limit_request_per_day, 1500)
             self.assertEqual(provider.limit_tokens_per_day, 20000)

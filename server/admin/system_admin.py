@@ -17,7 +17,7 @@ class SystemAdmin(admin.ModelAdmin):
     list_display_links: tuple[str, ...] = ("name",)
     list_filter: tuple[str, ...] = ("status", "os", "executor_mode", "created_at")
     search_fields: tuple[str, ...] = (
-        "name", "description", "executor_url", "executor_api_key", "raw_data",
+        "name", "description", "executor_url", "executor_api_key",
     )
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at", "last_heartbeat")
     list_per_page: int = 25
@@ -31,7 +31,7 @@ class SystemAdmin(admin.ModelAdmin):
             "description": "Settings for how tools are executed on this system.",
         }),
         ("Runtime Info", {
-            "fields": ("last_heartbeat", "raw_data"),
+            "fields": ("last_heartbeat",),
             "classes": ("collapse",),
         }),
         ("Metadata", {

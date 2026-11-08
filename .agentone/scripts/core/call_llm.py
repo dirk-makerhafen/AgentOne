@@ -255,7 +255,7 @@ def run_streaming_query(
         messages=messages,
         stream=True,
         stream_options={"include_usage": True},
-        api_key=query.apikey.key if query.apikey else (api_provider.data or {}).get("default_api_key", "") if api_provider else "",
+        api_key=query.apikey.key if query.apikey else (api_provider.default_api_key if api_provider else ""),
     )
     if aimodel and aimodel.supports_reasoning:
         args["reasoning_effort"] = session.reasoning_effort

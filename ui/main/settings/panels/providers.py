@@ -37,15 +37,14 @@ def sort_provider_rows(rows: list[dict], col: str, desc: bool) -> list[dict]:
 
 def _provider_description(provider: ApiProvider) -> str:
     """Short human description for the settings table.
-    Prefers the research-doc blurb stored by the provider loader
-    (``data["description"]``), then the first line of the setup
-    instructions, then the endpoint URL.
+
+    Prefers the research-doc blurb stored by the provider loader, then the
+    first line of the setup instructions, then the endpoint URL.
     """
-    info = getattr(provider, "data", None) or {}
-    desc = (info.get("description") or "").strip()
+    desc = (provider.description or "").strip()
     if desc:
         return desc
-    setup = (info.get("setup_instructions") or "").strip()
+    setup = (provider.setup_instructions or "").strip()
     if setup:
         first = setup.splitlines()[0].strip()
         # Strip leading list markers ("1. ", "- ") for a cleaner cell.
@@ -186,8 +185,7 @@ class SettingPanelProviders(ModelView):
         rows = []
         for provider in providers:
             keys = [k for k in provider.api_keys.all() if k.enabled]
-            info = getattr(provider, "data", None) or {}
-            if info.get("default_api_key"):
+            if provider.default_api_key:
                 key_state, key_count = "built-in", 0
             elif keys:
                 key_state, key_count = "keys", len(keys)
@@ -207,8 +205,8 @@ class SettingPanelProviders(ModelView):
                 "key_state": key_state,
                 "key_count": key_count,
                 "description": _provider_description(provider),
-                "api_key_url": info.get("api_key_url", ""),
-                "setup_instructions": info.get("setup_instructions", ""),
+                "api_key_url": provider.api_key_url,
+                "setup_instructions": provider.setup_instructions,
                 "last_usage": last_usage,
                 "probe": self._probe_results.get(provider.pk),
             })

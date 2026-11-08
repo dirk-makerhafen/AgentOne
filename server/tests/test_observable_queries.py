@@ -25,6 +25,7 @@ from server.models.skills.skill import SkillModel
 from server.models.sessions.session import SessionModel
 from server.models.workspace import WorkspaceModel
 from server.models.providers.api_key import ApiKey
+from server.models.providers.api_provider import ApiProvider
 from server.models.system import System
 from server.tests.dc_test_helpers import create_agent, create_session
 
@@ -229,6 +230,9 @@ class ObservableSubscriptionTest(TestCase):
         self.addCleanup(subscription.close)
 
         api_key_data = ApiKey(key="do-not-publish").serialize_observable()
+        provider_data = ApiProvider(
+            name="observable-provider", default_api_key="do-not-publish"
+        ).serialize_observable()
         system_data = System(executor_api_key="do-not-publish").serialize_observable()
 
         self.assertEqual(subscription.keys, (
@@ -236,8 +240,8 @@ class ObservableSubscriptionTest(TestCase):
             f"TerminalSession.workspace:{workspace.pk}",
         ))
         self.assertNotIn("key", api_key_data)
+        self.assertNotIn("default_api_key", provider_data)
         self.assertNotIn("executor_api_key", system_data)
-        self.assertNotIn("raw_data", system_data)
 
     def test_root_does_not_expose_generic_query_shapes(self):
         root = ObservableRoot()

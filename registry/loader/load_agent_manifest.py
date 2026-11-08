@@ -758,7 +758,7 @@ def _get_ai_model(model_name: Optional[str]) -> Optional[AiModel]:
     pool = enabled or candidates
     keyed = [
         m for m in pool
-        if m.api_provider.data.get("default_api_key")
+        if m.api_provider.default_api_key
         or m.api_provider.api_keys.filter(enabled=True).exists()
     ]
     if keyed:

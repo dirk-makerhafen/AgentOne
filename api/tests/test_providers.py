@@ -57,11 +57,9 @@ class TestSyncProviderModels:
             name="free-tier-provider",
             url="https://example.com/api/v1",
         )
-        provider.data = {
-            "RPM": 15,
-            "RPD": 1500,
-            "api_key_url": "https://aistudio.google.com/app/apikey",
-        }
+        provider.limit_request_per_minute = 15
+        provider.limit_request_per_day = 1500
+        provider.api_key_url = "https://aistudio.google.com/app/apikey"
         provider.save()
         _stub_model_list(monkeypatch, [{"id": "rate-limit-test-model", "object": "model"}])
 

@@ -22,6 +22,8 @@ class ApiProvider(HealthTrackedModel, BaseModel):
     record observed health (auth failures, repeated 5xx, ...).
     """
 
+    OBSERVABLE_EXCLUDED_FIELDS = frozenset({"default_api_key"})
+
     class ApiProviderObservableKeys(ObservableKeys):
         """Explicit observable keys for an ApiProvider (IDE autocomplete)."""
         @property
@@ -33,6 +35,15 @@ class ApiProvider(HealthTrackedModel, BaseModel):
 
     name = models.CharField(max_length=512)
     url = models.CharField(max_length=512, default="")
+
+    # Human-facing provider metadata sourced from ``providers/<slug>.md``.
+    description = models.TextField(max_length=65000, default="", blank=True)
+    setup_instructions = models.TextField(max_length=65000, default="", blank=True)
+    api_key_url = models.CharField(max_length=512, default="", blank=True)
+
+    # Optional keyless access (e.g. ``default_api_key: public``).  Providers
+    # that carry this can be used without an ``ApiKey`` row.
+    default_api_key = models.CharField(max_length=512, default="", blank=True)
 
     # Stable identity for file-based loading: the ``providers/<slug>.md``
     # filename stem.  Upserts match on slug so a frontmatter ``name:`` rename
@@ -183,7 +194,7 @@ class ApiProvider(HealthTrackedModel, BaseModel):
         """Whether this provider can make LLM calls — has enabled keys or a default key."""
         return (
             self.api_keys.filter(enabled=True).exists()
-            or bool(self.data.get("default_api_key"))
+            or bool(self.default_api_key)
         )
 
     def all_enabled_keys_auth_failed(self) -> bool:

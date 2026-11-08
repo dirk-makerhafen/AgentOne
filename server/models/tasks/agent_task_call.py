@@ -504,8 +504,8 @@ class AgentTaskCall(BaseModel):
         """Return cheap descendant stats without loading full objects.
 
         Same BFS as :meth:`get_subcall_tree` but fetching only ``(pk,
-        status)`` pairs, so no heavy payload columns (``carguments_json``,
-        ``raw_data``) are loaded.         Returns ``{"active": int, "finished":
+        status)`` pairs, so heavy payload columns (``carguments_json``) are
+        not loaded.         Returns ``{"active": int, "finished":
         int, "executing": [(pk, depth), ...], "truncated": bool}`` where
         ``active`` means not ``ENDED`` and ``executing`` lists the
         currently-executing (``ACTIVE`` status) descendants — capped at 10

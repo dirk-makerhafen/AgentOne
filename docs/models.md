@@ -7,7 +7,7 @@ All ~30 model classes, organized by domain.
 ```
 models.Model
   ├── BaseModel(DirtyFieldsMixin, abstract)    ← most models inherit this
-  │     ├── created_at, updated_at, raw_data
+  │     ├── created_at, updated_at
   │     │
   │     ├── AgentModel                         # Agent definition
   │     ├── AgentVersionModel                   # Immutable agent version
@@ -54,11 +54,8 @@ class BaseModel(DirtyFieldsMixin, models.Model):
 |---|---|---|
 | `created_at` | `DateTimeField(auto_now_add, db_index)` | Set once on creation |
 | `updated_at` | `DateTimeField(auto_now)` | Updated on every save |
-| `raw_data` | `TextField(100MB)` | JSON blob storage (arbitrary model data) |
 
-**`.data` property**: Parses `raw_data` as JSON (cached). Setter serializes dict to JSON.
-
-**`save()`**: Auto-serializes `_data` to `raw_data`. Tracks dirty fields via `DirtyFieldsMixin` and only updates changed fields. Sets `updated_at`.
+**`save()`**: Tracks dirty fields via `DirtyFieldsMixin` and only updates changed fields. Sets `updated_at`.
 
 ---
 
@@ -415,6 +412,10 @@ File: `server/models/providers/api_provider.py`
 |---|---|---|
 | `name` | `CharField(512)` | Provider name |
 | `url` | `CharField(512)` | Base URL |
+| `description` | `TextField(65000)` | Human-facing blurb from `providers/<slug>.md` |
+| `setup_instructions` | `TextField(65000)` | Setup steps from the provider manifest |
+| `api_key_url` | `CharField(512, blank)` | Where to obtain a key |
+| `default_api_key` | `CharField(512, blank)` | Keyless access (e.g. `public`); excluded from observable events |
 | `litellm_prefix` | `CharField(64, blank)` | LiteLLM native prefix (e.g. `groq`, `gemini`); empty = OpenAI-compatible (`openai/` + `url` api_base) |
 | `limit_parallel_calls` | `IntegerField(default=0)` | 0 = unlimited |
 
@@ -428,6 +429,7 @@ File: `server/models/providers/ai_model.py`
 | `name` | `CharField(512)` | Model name |
 | `family` | `CharField(512)` | Model family |
 | `description` | `TextField(65000)` | |
+| `conditions` | `CharField(512, blank)` | Free-tier note from the model card's provider entry |
 | `enabled` | `BooleanField(default=True)` | |
 | `context_length` | `IntegerField(default=1000000)` | Context window |
 | `is_cloud` | `BooleanField(default=True)` | Cloud vs local |

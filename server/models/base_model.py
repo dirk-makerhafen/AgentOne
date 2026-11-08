@@ -1,8 +1,7 @@
-"""Abstract base model with dirty-field tracking, JSON data support, and fork/dedup."""
+"""Abstract base model with dirty-field tracking and observability."""
 from __future__ import annotations
 
 import json
-import traceback
 from collections.abc import Callable
 from datetime import datetime
 from typing import Any
@@ -48,7 +47,7 @@ class ObservableKeys:
 class ObservableMixin:
     """Make Django model events observable through the Redis registry."""
 
-    OBSERVABLE_EXCLUDED_FIELDS = frozenset({"raw_data"})
+    OBSERVABLE_EXCLUDED_FIELDS: frozenset[str] = frozenset()
 
     @property
     def observables(self) -> ObservableKeys:
@@ -222,44 +221,17 @@ class ObservableMixin:
 
 
 class BaseModel(ObservableMixin, DirtyFieldsMixin, models.Model):
-    """Abstract base model providing created/updated timestamps, raw JSON data
-    storage, and fork-based data deduplication."""
+    """Abstract base model providing created/updated timestamps and dirty-field
+    tracking for partial updates."""
 
     created_at: datetime = models.DateTimeField(db_index=True, editable=False, auto_now_add=True)
     updated_at: datetime = models.DateTimeField(editable=False, auto_now=True)
-    raw_data: str = models.TextField(max_length=100 * 1024 * 1024, default="", blank=True)
 
     class Meta:
         abstract = True
 
-    @property
-    def data(self) -> dict[str, Any]:
-        """Return the parsed JSON content of ``raw_data`` (or the referenced fork's
-        data).
-
-        Results are cached on the instance as ``_data``.
-        """
-        if not hasattr(self, "_data") or self._data is None:
-            source_raw_data = self.raw_data
-            try:
-                self._data = json.loads(source_raw_data) if source_raw_data else {}
-            except Exception as e:
-                self._data = {
-                    "__error": (
-                        f"Failed to load data for {self}: {e} {traceback.format_exc()}"
-                    )
-                }
-        return self._data
-
-    @data.setter
-    def data(self, new_data: dict[str, Any]) -> None:
-        """Set new data (copy-on-write — breaks the fork reference).
-        """
-        self._data = new_data
-
     def save(self, *args: Any, **kwargs: Any) -> Any:
-        """Save the model, auto-serialising ``_data`` to ``raw_data`` and tracking
-        dirty fields for partial updates.
+        """Save the model, tracking dirty fields for partial updates.
 
         Only fields that have changed are included in ``update_fields``, which
         reduces unnecessary DB writes.
@@ -270,29 +242,17 @@ class BaseModel(ObservableMixin, DirtyFieldsMixin, models.Model):
 
         _dirty_fields = self.get_dirty_fields(check_relationship=True)
         self.updated_at = now
-        if hasattr(self, "_data"):
-            new_raw_data = json.dumps(self.data)
-            if self.raw_data != new_raw_data:
-                self.raw_data = new_raw_data
-                _dirty_fields["raw_data"] = self.raw_data
 
         if self.pk is not None:
             if "update_fields" not in kwargs:
                 fields_to_update = list(_dirty_fields.keys())
                 if "updated_at" not in fields_to_update:
                     fields_to_update.append("updated_at")
-                if "raw_data" not in fields_to_update and "raw_data" in _dirty_fields:
-                    fields_to_update.append("raw_data")
                 if fields_to_update:
                     kwargs["update_fields"] = fields_to_update
             else:
                 if "updated_at" not in kwargs["update_fields"]:
                     kwargs["update_fields"].append("updated_at")
-                if (
-                    "raw_data" in _dirty_fields
-                    and "raw_data" not in kwargs["update_fields"]
-                ):
-                    kwargs["update_fields"].append("raw_data")
 
         r = super().save(*args, **kwargs)
         reset_state(

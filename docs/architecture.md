@@ -83,7 +83,7 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  ├── Providers: ApiProvider → AiModel → ApiKey                  │
 │  ├── SettingsModel, Project, WorkspaceModel, Cronjob,           │
 │  │   TerminalSession (persistent tmux terminals)                │
-│  └── BaseModel (abstract: created_at, updated_at, raw_data,    │
+│  └── BaseModel (abstract: created_at, updated_at,              │
 │                  dirty-tracking, immutable save)       │
 │                                                                 │
 │  Admin: all models registered with django admin                 │
@@ -227,7 +227,6 @@ Most models follow a **definition/version split**:
 - Definition records can be updated (name, parent pointers)
 - Version records override `save()` to raise `ValidationError` on update
 - Creating a new version increments `version_number` and updates the definition's `latest_*` pointer
-- `raw_data` enable content-addressed JSON storage
 
 ## pyHtmlGui render pipeline
 

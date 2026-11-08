@@ -84,7 +84,7 @@ class ProviderMdLoaderTest(TestCase):
         self.assertEqual(provider.url, "https://example.com/api/v1")
         self.assertEqual(provider.limit_request_per_minute, 20)
         self.assertEqual(provider.limit_request_per_day, 1000)
-        self.assertEqual(provider.data.get("default_api_key"), "public")
+        self.assertEqual(provider.default_api_key, "public")
         self.assertTrue(provider.enabled)
 
     def test_rename_updates_without_dupe(self):
@@ -117,7 +117,7 @@ class ProviderMdLoaderTest(TestCase):
         self.assertTrue(model.vision)
         self.assertEqual(model.context_length, 131072)
         self.assertEqual(model.max_response_tokens, 8192)
-        self.assertEqual(model.data.get("conditions"), "Free lane, no card")
+        self.assertEqual(model.conditions, "Free lane, no card")
 
     def test_estimated_rank_stored_as_int_with_flag(self):
         self._write(self.providers, "test-provider.md", PROVIDER_MD)

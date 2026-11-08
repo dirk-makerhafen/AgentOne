@@ -142,7 +142,7 @@ class ModelsView(ModelView):
             # Distinct providers with a key (a model may repeat per provider).
             keyed_providers = {
                 m.api_provider_id for m in members
-                if m.api_provider.data.get("default_api_key")
+                if m.api_provider.default_api_key
                 or any(k.enabled for k in m.api_provider.api_keys.all())
             }
             rows.append({

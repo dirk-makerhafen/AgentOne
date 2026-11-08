@@ -34,7 +34,7 @@ class SystemConnectionMode(models.TextChoices):
 
 class System(BaseModel):
     """A registered execution environment (local or remote) that agents can use for tool execution."""
-    OBSERVABLE_EXCLUDED_FIELDS = frozenset({"raw_data", "executor_api_key"})
+    OBSERVABLE_EXCLUDED_FIELDS = frozenset({"executor_api_key"})
 
     class SystemObservableKeys(ObservableKeys):
         pass

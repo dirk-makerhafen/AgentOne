@@ -25,7 +25,7 @@ class RightPanelProvider(ModelView):
             <div class="rp-detail-sub muted">{{ pyview.subject.url }}</div>
             <div class="rp-badges">
                 {% if pyview.subject.is_local %}<span class="mode-badge">local</span>{% endif %}
-                {% if pyview.subject.data.get("default_api_key") %}<span class="key-badge key-builtin">built-in key</span>{% endif %}
+                {% if pyview.subject.default_api_key %}<span class="key-badge key-builtin">built-in key</span>{% endif %}
                 {% if not pyview.subject.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
                 {% if pyview.subject.health_label %}<span class="key-badge key-missing" title="{{ pyview.subject.status_reason }}">{{ pyview.subject.health_label }}</span>{% endif %}
             </div>
@@ -37,8 +37,8 @@ class RightPanelProvider(ModelView):
             <div class="rp-kv"><span>Endpoint</span><span>{{ pyview.subject.url or "—" }}</span></div>
             <div class="rp-kv"><span>Protocol</span><span>{{ pyview.subject.litellm_prefix or "OpenAI-compatible" }}</span></div>
             <div class="rp-kv"><span>Slug</span><span>{{ pyview.subject.slug }}</span></div>
-            {% if pyview.subject.data.get("api_key_url") %}
-            <div class="rp-kv"><span>Get key</span><span><a href="{{ pyview.subject.data.get('api_key_url') }}" target="_blank">console</a></span></div>
+            {% if pyview.subject.api_key_url %}
+            <div class="rp-kv"><span>Get key</span><span><a href="{{ pyview.subject.api_key_url }}" target="_blank">console</a></span></div>
             {% endif %}
 
             <div class="rp-section-title">API keys ({{ pyview.key_rows|length }})</div>
@@ -105,11 +105,10 @@ class RightPanelProvider(ModelView):
         """Full provider blurb: research-doc description, else the setup
         instructions, else the endpoint URL (never raises)."""
         try:
-            info = getattr(self.subject, "data", None) or {}
-            desc = (info.get("description") or "").strip()
+            desc = (self.subject.description or "").strip()
             if desc:
                 return desc
-            setup = (info.get("setup_instructions") or "").strip()
+            setup = (self.subject.setup_instructions or "").strip()
             if setup:
                 return setup
             return getattr(self.subject, "url", "") or "—"

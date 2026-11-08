@@ -113,7 +113,7 @@ class InsightTablesTest(TestCase):
         ApiKey.objects.create(api_provider=keyed, key="sk-x", enabled=True)
         ApiKey.objects.create(api_provider=keyed, key="sk-old", enabled=False)
         builtin = self._provider("builtin")
-        builtin.data = {"default_api_key": "public"}
+        builtin.default_api_key = "public"
         builtin.save()
         self._provider("bare")
 
@@ -182,7 +182,7 @@ class InsightTablesTest(TestCase):
             "detail", url="https://example.com/api/v1",
             limit_request_per_minute=20, litellm_prefix="",
         )
-        provider.data = {"default_api_key": "", "setup_instructions": "sign up"}
+        provider.setup_instructions = "sign up"
         provider.save()
         ApiKey.objects.create(api_provider=provider, key="sk-x", enabled=True, comment="main")
         ApiKey.objects.create(api_provider=provider, key="sk-old", enabled=False)
@@ -210,7 +210,7 @@ class InsightTablesTest(TestCase):
                   "leaderboard_rank": 9, "total_parameters": 30,
                   "context_length": 200000, "supports_tool_call": True}
         m1 = self._model(p1, "Q Model", provider_model_id="q-a", **shared)
-        m1.data = {"conditions": "free lane"}
+        m1.conditions = "free lane"
         m1.save()
         self._model(p2, "Q Model", provider_model_id="q-b",
                     **{k: v for k, v in shared.items() if k != "supports_tool_call"})
