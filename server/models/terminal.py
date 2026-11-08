@@ -11,7 +11,8 @@ from typing import Any
 
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class TerminalStatus(models.TextChoices):
@@ -23,7 +24,7 @@ class TerminalStatus(models.TextChoices):
 class TerminalSession(BaseModel):
     """A named persistent shell belonging to an AgentOne session."""
 
-    class TerminalSessionObservables(Observables):
+    class TerminalSessionObservableKeys(ObservableKeys):
         """Explicit observable keys for a TerminalSession."""
 
     session = models.ForeignKey(

@@ -7,13 +7,14 @@ from django.db import models
 from django.db.models import QuerySet
 
 from runtime.agents.agent import Agent
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class AgentModel(BaseModel):
     """Uniquely identifies an Agent across all versions and variants."""
 
-    class AgentModelObservables(Observables):
+    class AgentModelObservableKeys(ObservableKeys):
         """Explicit observable keys for an AgentModel (IDE autocomplete)."""
         @property
         def child_agents(self):

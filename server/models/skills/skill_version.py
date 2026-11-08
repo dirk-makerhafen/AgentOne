@@ -5,13 +5,13 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import ObservableMixin, Observables
+from server.models.observable import ObservableMixin, ObservableKeys
 
 
 class SkillModelVersion(ObservableMixin, models.Model):
     """A specific versioned snapshot of a skill's configuration."""
 
-    class SkillModelVersionObservables(Observables):
+    class SkillModelVersionObservableKeys(ObservableKeys):
         """Explicit observable keys for a SkillModelVersion (IDE autocomplete)."""
         @property
         def newest_for_skills(self):

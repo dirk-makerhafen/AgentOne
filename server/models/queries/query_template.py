@@ -22,13 +22,14 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class QueryTemplateVersion(BaseModel):
     """One immutable snapshot of a query template's full ``.md`` text."""
 
-    class QueryTemplateVersionObservables(Observables):
+    class QueryTemplateVersionObservableKeys(ObservableKeys):
         """Explicit observable keys for a QueryTemplateVersion (IDE autocomplete)."""
         @property
         def links(self):
@@ -75,7 +76,7 @@ class QueryTemplateVersion(BaseModel):
 class SessionQueryTemplate(BaseModel):
     """A session's current pointer to one template version (the link row)."""
 
-    class SessionQueryTemplateObservables(Observables):
+    class SessionQueryTemplateObservableKeys(ObservableKeys):
         """Explicit observable keys for a SessionQueryTemplate (IDE autocomplete)."""
         @property
         def session_templates(self):

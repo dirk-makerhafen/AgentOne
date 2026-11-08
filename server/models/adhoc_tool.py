@@ -28,13 +28,14 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class AdhocToolVersion(BaseModel):
     """One immutable snapshot of an ad-hoc tool (code + metadata)."""
 
-    class AdhocToolVersionObservables(Observables):
+    class AdhocToolVersionObservableKeys(ObservableKeys):
         """Explicit observable keys for an AdhocToolVersion (IDE autocomplete)."""
         @property
         def links(self):
@@ -98,7 +99,7 @@ class AdhocToolVersion(BaseModel):
 class SessionAdhocTool(BaseModel):
     """A session's current pointer to one ad-hoc tool version (the link row)."""
 
-    class SessionAdhocToolObservables(Observables):
+    class SessionAdhocToolObservableKeys(ObservableKeys):
         """Explicit observable keys for a SessionAdhocTool (IDE autocomplete)."""
         @property
         def session_adhoc_tools(self):  # type: ignore[no-untyped-def]

@@ -4,14 +4,14 @@ from typing import Any
 
 from django.db import models
 
-from server.models.base_model import ObservableMixin, Observables
+from server.models.observable import ObservableMixin, ObservableKeys
 from server.models.skills.skill_version import SkillModelVersion
 
 
 class SkillModel(ObservableMixin, models.Model):
     """A skill group that versions its configuration over time."""
 
-    class SkillModelObservables(Observables):
+    class SkillModelObservableKeys(ObservableKeys):
         """Explicit observable keys for an SkillModel (IDE autocomplete)."""
         @property
         def child_agents(self):

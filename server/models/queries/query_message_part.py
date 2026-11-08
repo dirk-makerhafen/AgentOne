@@ -9,7 +9,8 @@ from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.content import GenericContent, IMAGE_TOKEN_ESTIMATE, resolve_generic_content_refs
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 
@@ -57,7 +58,7 @@ def estimate_openai_tokens(obj: Any) -> int:
 class QueryMessagePart(BaseModel):
     """A single content part within a query message."""
 
-    class QueryMessagePartObservables(Observables):
+    class QueryMessagePartObservableKeys(ObservableKeys):
         """Explicit observable keys for a QueryMessagePart (IDE autocomplete)."""
         pass
     

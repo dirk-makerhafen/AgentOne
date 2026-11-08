@@ -12,8 +12,8 @@ Structures
 - ``agentone:uikeys:<instance_key>``  SET   observable keys an instance is subscribed to (cleanup)
 
 An observable_key is a stable string like ``AgentModel.pk:23`` or
-``AgentModel.parent_project:12``.  Models expose them via a per-model
-``Observables`` helper (e.g. ``agent.observables.pk``).
+``AgentModel.parent_project:12``. Models expose them via a per-model
+``ObservableKeys`` helper (e.g. ``agent.observables.pk``).
 
 Flow
 ----
@@ -30,6 +30,7 @@ Flow
 
 from __future__ import annotations
 
+import logging
 import json
 from collections.abc import Callable, Sequence
 from typing import Any
@@ -37,6 +38,8 @@ from typing import Any
 import redis
 from django.conf import settings
 from redis.exceptions import WatchError
+
+log = logging.getLogger(__name__)
 
 OBS_PREFIX = "agentone:obs:"
 QUEUE_PREFIX = "agentone:uiq:"
@@ -110,6 +113,63 @@ def has_subscribers(observable_keys: Sequence[str]) -> bool:
     """Return whether any event key currently has registered observers."""
     r = get_redis()
     return any(r.hlen(OBS_PREFIX + key) for key in observable_keys)
+
+
+def _extract_filter_context(instance: Any) -> dict[str, Any]:
+    """Extract FK fields + resolved session_id from a model instance."""
+    from django.db.models import ForeignKey, OneToOneField
+
+    ctx: dict[str, Any] = {}
+    for field in instance._meta.fields:
+        if isinstance(field, (ForeignKey, OneToOneField)):
+            ctx[field.attname] = getattr(instance, field.attname)
+    if "session_id" not in ctx and hasattr(instance, "session_version"):
+        try:
+            if instance.session_version_id:
+                ctx["session_id"] = instance.session_version.session_id
+        except Exception:
+            pass
+    return ctx
+
+
+def publish_model_event(
+    instance: Any,
+    action: str,
+    data: dict[str, Any] | None = None,
+) -> None:
+    """Publish a model change to subscribers of its observable keys."""
+    event_data = {**_extract_filter_context(instance), **(data or {})}
+    serialize = getattr(instance, "serialize_observable", None)
+    observable_keys = getattr(instance, "observable_keys", None)
+
+    if callable(serialize) and callable(observable_keys):
+        def serialize_event() -> dict[str, Any]:
+            current_instance = instance
+            if action != "delete" and getattr(current_instance, "pk", None) is not None:
+                refreshed = type(current_instance)._default_manager.filter(
+                    pk=current_instance.pk
+                ).first()
+                if refreshed is not None:
+                    current_instance = refreshed
+            return {
+                **_extract_filter_context(current_instance),
+                **(data or {}),
+                "object": current_instance.serialize_observable(),
+            }
+
+    notify_observers = getattr(instance, "notify_observers", None)
+    if callable(notify_observers):
+        try:
+            if callable(serialize) and callable(observable_keys):
+                notify_observers(action, event_data, data_factory=serialize_event)
+            else:
+                notify_observers(action, event_data)
+        except Exception:
+            log.exception(
+                "Failed to publish observable event for %s pk=%s",
+                type(instance).__name__,
+                getattr(instance, "pk", None),
+            )
 
 
 def notify(

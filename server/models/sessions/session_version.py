@@ -8,7 +8,8 @@ from django.db import models
 
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.sessions.session import SessionModel
 
 AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE = LRUCache(maxsize=1024)
@@ -17,7 +18,7 @@ AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE = LRUCache(maxsize=1024)
 class SessionVersionModel(BaseModel):
     """A versioned snapshot of a session's configuration and agent binding."""
 
-    class SessionVersionModelObservables(Observables):
+    class SessionVersionModelObservableKeys(ObservableKeys):
         """Explicit observable keys for a SessionVersionModel (IDE autocomplete)."""
         @property
         def messages(self):

@@ -7,7 +7,8 @@ from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.message_enums import (
     MessageContentType,
@@ -22,7 +23,7 @@ _JINJA_ENV = Environment(loader=BaseLoader())
 class Message(BaseModel):
     """A single message within a conversation session."""
 
-    class MessageObservables(Observables):
+    class MessageObservableKeys(ObservableKeys):
         """Explicit observable keys for an Message (IDE autocomplete)."""
         @property
         def parts(self):
@@ -121,7 +122,7 @@ class MessagePart(BaseModel):
     """A single part within a :class:`Message`, representing e.g. text content,
     an image, a tool call, or a reasoning block."""
 
-    class MessagePartObservables(Observables):
+    class MessagePartObservableKeys(ObservableKeys):
         """Explicit observable keys for a MessagePart (IDE autocomplete)."""
         @property
         def query_parts(self):

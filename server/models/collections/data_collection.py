@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 
@@ -15,7 +16,7 @@ class DataCollection(BaseModel):
     reprocess settings) so each collection is self-contained.
     """
 
-    class DataCollectionObservables(Observables):
+    class DataCollectionObservableKeys(ObservableKeys):
         """Explicit observable keys for an DataCollection (IDE autocomplete)."""
         @property
         def items(self):

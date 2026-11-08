@@ -17,7 +17,6 @@ from runtime.observable_queries import (
     ObservableSubscription,
     ObservableWorkspace,
 )
-from runtime.observable_queries.base import _model_predicate
 from server.models.agents.agent import AgentModel
 from server.models.enums.message_enums import MessageRole
 from server.models.message import Message
@@ -61,7 +60,7 @@ class ObservableSubscriptionTest(TestCase):
         subscription = ObservableSubscription(
             events.append,
             Project,
-            _model_predicate(Project),
+            lambda item: item["model"] == "Project",
         )
         self.addCleanup(subscription.close)
         subscription.start(("Project",))

@@ -7,7 +7,8 @@ from typing import Any
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.task_enums import TaskSchedulerStrategy
 
@@ -62,7 +63,7 @@ class SettingsModel(BaseModel):
     :class:`ValidationError` if ``self.pk`` is already set).
     """
 
-    class SettingsModelObservables(Observables):
+    class SettingsModelObservableKeys(ObservableKeys):
         """Explicit observable keys for a SettingsModel (IDE autocomplete)."""
         @property
         def agent_versions(self):

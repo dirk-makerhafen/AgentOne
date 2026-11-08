@@ -7,7 +7,8 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.providers.health import HealthTrackedModel
 
 
@@ -19,7 +20,7 @@ class AiModel(HealthTrackedModel, BaseModel):
     ...).  Selection prefers healthy rows and skips sticky failures.
     """
 
-    class AiModelObservables(Observables):
+    class AiModelObservableKeys(ObservableKeys):
         """Explicit observable keys for an AiModel (IDE autocomplete)."""
         @property
         def responses(self):

@@ -5,7 +5,8 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
@@ -17,7 +18,7 @@ class TaskDefinition(BaseModel):
     and may be owned by a skill, agent, or project.
     """
 
-    class TaskDefinitionObservables(Observables):
+    class TaskDefinitionObservableKeys(ObservableKeys):
         """Explicit observable keys for an TaskDefinition (IDE autocomplete)."""
         @property
         def versions(self):

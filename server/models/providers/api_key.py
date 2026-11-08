@@ -7,7 +7,8 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.enums.provider_enums import HealthStatus
 from server.models.providers.health import HealthTrackedModel
 from server.models.queries.response import Response
@@ -34,7 +35,7 @@ class ApiKey(HealthTrackedModel, BaseModel):  # pylint: disable=too-many-instanc
 
     OBSERVABLE_EXCLUDED_FIELDS = frozenset({"raw_data", "key"})
 
-    class ApiKeyObservables(Observables):
+    class ApiKeyObservableKeys(ObservableKeys):
         """Explicit observable keys for an ApiKey (IDE autocomplete)."""
         @property
         def queries(self):

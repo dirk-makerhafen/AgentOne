@@ -6,7 +6,8 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class DebugLogEntry(BaseModel):
@@ -16,7 +17,7 @@ class DebugLogEntry(BaseModel):
     raises :class:`ValidationError` if ``self.pk`` is already set).
     """
 
-    class DebugLogEntryObservables(Observables):
+    class DebugLogEntryObservableKeys(ObservableKeys):
         """Explicit observable keys for a DebugLogEntry (IDE autocomplete)."""
 
     session: models.ForeignKey | None = models.ForeignKey("server.SessionModel",on_delete=models.CASCADE,related_name="debug_log_entries")

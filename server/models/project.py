@@ -3,13 +3,13 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from django.db import models
-from server.models.base_model import ObservableMixin, Observables
+from server.models.observable import ObservableMixin, ObservableKeys
 
 
 class Project(ObservableMixin, models.Model):
     """A named project with an optional primary workspace folder."""
 
-    class ProjectObservables(Observables):
+    class ProjectObservableKeys(ObservableKeys):
         """Explicit observable keys for an Project (IDE autocomplete)."""
         @property
         def child_agents(self):

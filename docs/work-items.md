@@ -182,7 +182,7 @@ which is globally unique by construction and immune to the collision.
 ## 5. Data model
 
 `server/models/workitems/work_item.py` — follows the `ObservableMixin` /
-explicit `Observables` convention of `server/models/project.py:8-27`.
+explicit `ProjectObservableKeys` convention of `server/models/project.py`.
 
 | Field | Type | Notes |
 |---|---|---|

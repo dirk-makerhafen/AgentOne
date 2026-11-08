@@ -7,7 +7,8 @@ from __future__ import annotations
 
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class CollectionItem(BaseModel):
@@ -29,7 +30,7 @@ class CollectionItem(BaseModel):
         The actual payload (processor result data).
     """
 
-    class CollectionItemObservables(Observables):
+    class CollectionItemObservableKeys(ObservableKeys):
         """Explicit observable keys for an CollectionItem (IDE autocomplete)."""
         @property
         def derived_items(self):

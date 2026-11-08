@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class ScriptsGeneration(BaseModel):
@@ -13,7 +14,7 @@ class ScriptsGeneration(BaseModel):
     agent resolution.
     """
 
-    class ScriptsGenerationObservables(Observables):
+    class ScriptsGenerationObservableKeys(ObservableKeys):
         """Explicit observable keys for a ScriptsGeneration (IDE autocomplete)."""
         @property
         def task_definitions(self):

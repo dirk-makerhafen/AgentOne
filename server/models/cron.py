@@ -5,13 +5,14 @@ from datetime import datetime
 
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.content import GenericContent
 
 
 class Cronjob(BaseModel):
     """A scheduled job that runs an agent on a recurring schedule."""
-    class CronjobObservables(Observables):
+    class CronjobObservableKeys(ObservableKeys):
         """Explicit observable keys for an Cronjob (IDE autocomplete)."""
         @property
         def calls(self):

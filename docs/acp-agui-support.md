@@ -173,7 +173,7 @@ The UI learns about turns only at coarse boundaries (`Query create` in
 **Plan.**
 
 1. Add `publish_token_event()` / `publish_agui_event()` beside
-   `publish_model_event()` in `runtime/events.py`, publishing through
+   `publish_model_event()` in `runtime/observables.py`, publishing through
    `runtime.observables.notify()` on dedicated stream keys (the retired
    `CHANNEL_GROUP` broadcast no longer exists). The registry is already
    gated on active subscriptions, which satisfies step 4's near-zero

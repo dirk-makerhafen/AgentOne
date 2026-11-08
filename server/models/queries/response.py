@@ -5,7 +5,8 @@ from typing import Any
 from django.db import models
 from django_enum import EnumField
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class ResponseStatus(models.TextChoices):
@@ -19,7 +20,7 @@ class ResponseStatus(models.TextChoices):
 
 class Response(BaseModel):
     """Stores the result of a single LLM query including token usage and timing."""
-    class ResponseObservables(Observables):
+    class ResponseObservableKeys(ObservableKeys):
         """Explicit observable keys for an Response (IDE autocomplete)."""
         @property
         def messages(self):

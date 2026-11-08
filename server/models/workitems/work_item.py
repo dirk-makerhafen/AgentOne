@@ -19,7 +19,8 @@ from typing import Any
 
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.workitems.enums import WorkItemStatus, WorkItemVerifyStatus
 
 #: Reject → re-queue → verify cycles allowed before escalating to a human.
@@ -32,7 +33,7 @@ MAX_VERIFY_ATTEMPTS = 3
 class WorkItem(BaseModel):
     """A durable, verifiable unit of work."""
 
-    class WorkItemObservables(Observables):
+    class WorkItemObservableKeys(ObservableKeys):
         """Explicit observable keys for a WorkItem (IDE autocomplete)."""
 
         @property

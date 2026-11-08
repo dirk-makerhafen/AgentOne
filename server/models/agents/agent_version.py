@@ -13,7 +13,8 @@ from django.db.models import QuerySet
 from sortedm2m.fields import SortedManyToManyField
 
 from runtime.agents.agent import Agent
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.task_enums import TaskType
 from server.models.settings import SettingsModel
@@ -52,7 +53,7 @@ DEFAULT_AGENT_VISIBILITY = AgentVisibility.USER.value
 class AgentVersionModel(BaseModel):
     """A versioned snapshot of an agent's configuration."""
 
-    class AgentVersionModelObservables(Observables):
+    class AgentVersionModelObservableKeys(ObservableKeys):
         """Explicit observable keys for an AgentVersionModel (IDE autocomplete)."""
         @property
         def pinned_sessions(self):

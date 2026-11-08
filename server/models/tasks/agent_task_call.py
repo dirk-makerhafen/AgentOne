@@ -13,7 +13,8 @@ from django.db.models import F, Q
 from django.utils import timezone
 
 from runtime.context_manager import ContextTracker
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.content import GenericContent, pack_large_string
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
 from server.models.message import Message
@@ -58,7 +59,7 @@ class AgentTaskCall(BaseModel):
     hook references, and lifecycle status.
     """
 
-    class AgentTaskCallObservables(Observables):
+    class AgentTaskCallObservableKeys(ObservableKeys):
         """Explicit observable keys for an AgentTaskCall (IDE autocomplete)."""
         @property
         def runs(self):

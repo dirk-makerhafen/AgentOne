@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, Any
 from django.db import models
 from django.db.models import QuerySet
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.queries.query import Query
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 class SessionModel(BaseModel):
     """A conversation session that versions its state over time."""
 
-    class SessionModelObservables(Observables):
+    class SessionModelObservableKeys(ObservableKeys):
         """Explicit observable keys for an SessionModel (IDE autocomplete)."""
         @property
         def child_sessions(self):

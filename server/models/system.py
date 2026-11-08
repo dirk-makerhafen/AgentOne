@@ -5,7 +5,8 @@ from datetime import datetime
 
 from django.db import models
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 
 
 class SystemStatus(models.TextChoices):
@@ -36,7 +37,7 @@ class System(BaseModel):
     """A registered execution environment (local or remote) that agents can use for tool execution."""
     OBSERVABLE_EXCLUDED_FIELDS = frozenset({"raw_data", "executor_api_key"})
 
-    class SystemObservables(Observables):
+    class SystemObservableKeys(ObservableKeys):
         pass
 
     name: str = models.CharField(max_length=255, unique=True)

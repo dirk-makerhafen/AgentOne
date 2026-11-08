@@ -1,7 +1,7 @@
 """Tests for the Redis-backed observable registry (new ORM→UI reactive layer).
 
 Covers ``runtime/observables.py`` (subscribe/notify/unsubscribe against
-fakeredis), ``Observables`` key helpers + ``observable_keys()`` /
+fakeredis), ``ObservableKeys`` key helpers + ``observable_keys()`` /
 ``notify_observers()`` (now on ``ObservableMixin`` so every ORM model is
 covered), the dual-publish in ``publish_model_event``, the
 ``orm_subscribe`` view helper, and ``consumer.process_queue_messages``.
@@ -168,7 +168,7 @@ class RegistryTest(SimpleTestCase):
         self.assertEqual(self.redis.keys("agentone:uikeys:*"), [])
 
 
-class ObservablesKeysTest(TestCase):
+class ObservableKeysTest(TestCase):
     """Key helpers produce the strings notify() publishes on."""
 
     def test_message_keys(self):
@@ -272,7 +272,7 @@ class PublishDualPublishTest(TestCase):
     """publish_model_event feeds the redis registry (no channel layer involved)."""
 
     def test_dual_publish(self):
-        from runtime.events import publish_model_event
+        from runtime.observables import publish_model_event
 
         agent, av = create_agent("obs-agent4")
         session, sv = create_session(agent, av)
@@ -290,7 +290,7 @@ class PublishDualPublishTest(TestCase):
             self.assertEqual(json.loads(queued[0])["action"], "create")
 
     def test_non_observable_instance_still_ok(self):
-        from runtime.events import publish_model_event
+        from runtime.observables import publish_model_event
 
         instance = MagicMock()
         instance._meta.model_name = "test"
@@ -504,7 +504,7 @@ class AllModelsObservableTest(SimpleTestCase):
         self.assertEqual(missing, [])
 
     def test_every_model_has_observables_property(self):
-        from server.models.base_model import ObservableMixin
+        from server.models.observable import ObservableMixin
 
         missing = []
         for m in self._server_models():

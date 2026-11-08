@@ -1,8 +1,9 @@
 """Callback subscriptions to explicit session-scoped observable queries."""
 from __future__ import annotations
 
-from runtime.observable_queries.base import Callback
-from runtime.observable_queries.root import ObservableRoot
+from django.db.models.fields.reverse_related import ManyToOneRel
+
+from runtime.observable_queries.base import Callback, _subscribe_queryset
 from runtime.observable_queries.subscription import ObservableSubscription
 from server.models.sessions.session import SessionModel
 
@@ -16,7 +17,6 @@ class ObservableSession:
         if not isinstance(session, SessionModel):
             raise TypeError("ObservableSession requires a SessionModel or runtime Session")
         self.session = session
-        self._root = ObservableRoot()
 
     def get_child_sessions(self, callback: Callback) -> ObservableSubscription:
         """Observe the unordered set of direct child sessions."""
@@ -27,8 +27,7 @@ class ObservableSession:
         return self._related(
             "child_sessions",
             callback,
-            queryset_filter={"is_active": True},
-            predicate_fields={"is_active": True},
+            is_active=True,
         )
 
     def get_messages(self, callback: Callback) -> ObservableSubscription:
@@ -79,21 +78,22 @@ class ObservableSession:
         self,
         relation_name: str,
         callback: Callback,
-        queryset_filter: dict | None = None,
-        predicate_fields: dict | None = None,
+        **filters: object,
     ) -> ObservableSubscription:
         relation = self.session._meta.get_field(relation_name)
-        child_model = relation.related_model
-        if child_model is None:
-            raise TypeError(f"{relation_name} has no related model")
-        queryset = getattr(self.session, relation_name).all()
-        if queryset_filter:
-            queryset = queryset.filter(**queryset_filter)
-        return self._root._observe_related(
-            self.session,
-            relation_name,
-            child_model,
+        if not isinstance(relation, ManyToOneRel):
+            raise TypeError(f"{relation_name!r} is not a reverse foreign-key relation")
+        queryset = getattr(self.session, relation_name).filter(**filters)
+        model = queryset.model
+        foreign_key = relation.field
+        return _subscribe_queryset(
+            queryset,
+            model,
+            (model.__name__, f"{model.__name__}.{foreign_key.name}:{self.session.pk}"),
             callback,
-            predicate_fields=predicate_fields,
-            queryset=queryset,
+            lambda item: (
+                item["model"] == model.__name__
+                and item.get(foreign_key.attname) == self.session.pk
+                and all(item.get(name) == value for name, value in filters.items())
+            ),
         )

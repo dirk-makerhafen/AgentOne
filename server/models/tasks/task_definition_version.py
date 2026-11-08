@@ -6,14 +6,15 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from sortedm2m.fields import SortedManyToManyField
 
-from server.models.base_model import BaseModel, Observables
+from server.models.base_model import BaseModel
+from server.models.observable import ObservableKeys
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
 
 
 class TaskDefinitionVersion(BaseModel):
     """A versioned snapshot of a task definition's configuration."""
 
-    class TaskDefinitionVersionObservables(Observables):
+    class TaskDefinitionVersionObservableKeys(ObservableKeys):
         """Explicit observable keys for a TaskDefinitionVersion (IDE autocomplete)."""
         @property
         def instances(self):
