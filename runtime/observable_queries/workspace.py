@@ -27,15 +27,15 @@ class ObservableWorkspace:
 
     def get_cron_jobs(self, callback: Callback) -> ObservableSubscription:
         """Observe cron jobs assigned to this workspace."""
-        return self._related("cron_jobs", callback, ("name",))
+        return self._related("cron_jobs", callback)
 
     def get_session_versions(self, callback: Callback) -> ObservableSubscription:
         """Observe session versions assigned to this workspace."""
-        return self._related("related_session_versions", callback, ("-created_at",))
+        return self._related("related_session_versions", callback)
 
     def get_terminals(self, callback: Callback) -> ObservableSubscription:
         """Observe terminals assigned to this workspace."""
-        return self._related("terminals", callback, ("-created_at",))
+        return self._related("terminals", callback)
 
     def get_agents(self, callback: Callback) -> ObservableSubscription:
         """Observe active global and project agents visible in this scope."""
@@ -51,7 +51,7 @@ class ObservableWorkspace:
             queryset = queryset.filter(
                 Q(parent_project_id=project_id) | Q(parent_project__isnull=True)
             )
-        return self._observe_project_scope(AgentModel, queryset.order_by("name"), callback)
+        return self._observe_project_scope(AgentModel, queryset, callback)
 
     def get_skills(self, callback: Callback) -> ObservableSubscription:
         """Observe active global and project skills visible in this scope."""
@@ -67,15 +67,14 @@ class ObservableWorkspace:
             queryset = queryset.filter(
                 Q(parent_project_id=project_id) | Q(parent_project__isnull=True)
             )
-        return self._observe_project_scope(SkillModel, queryset.order_by("name"), callback)
+        return self._observe_project_scope(SkillModel, queryset, callback)
 
     def _related(
         self,
         relation_name: str,
         callback: Callback,
-        order_by: tuple[str, ...],
     ) -> ObservableSubscription:
-        queryset = getattr(self.workspace, relation_name).all().order_by(*order_by)
+        queryset = getattr(self.workspace, relation_name).all()
         return self._root._observe_related(
             self.workspace,
             relation_name,

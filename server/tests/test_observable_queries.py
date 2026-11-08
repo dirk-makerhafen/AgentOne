@@ -5,7 +5,9 @@ import threading
 from unittest.mock import patch
 
 import fakeredis
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 
 from runtime import observables
 from runtime.observable_queries import (
@@ -20,6 +22,7 @@ from server.models.agents.agent import AgentModel
 from server.models.enums.message_enums import MessageRole
 from server.models.message import Message
 from server.models.project import Project
+from server.models.skills.skill import SkillModel
 from server.models.sessions.session import SessionModel
 from server.models.workspace import WorkspaceModel
 from server.models.providers.api_key import ApiKey
@@ -38,16 +41,20 @@ class ObservableSubscriptionTest(TestCase):
         project = Project.objects.create(name="observable-project")
         events = []
 
-        subscription = ObservableRoot().get_projects(events.append)
+        with CaptureQueriesContext(connection) as captured_queries:
+            subscription = ObservableRoot().get_projects(events.append)
         self.addCleanup(subscription.close)
 
+        self.assertFalse(any("ORDER BY" in query["sql"].upper() for query in captured_queries))
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["type"], "snapshot")
         self.assertEqual(events[0]["items"][0]["pk"], project.pk)
         self.assertEqual(events[0]["items"][0]["name"], project.name)
         self.assertTrue(events[0]["items"][0]["revision"])
         self.assertEqual(subscription.keys, ("Project",))
-        self.assertTrue(any("Project" in key for key in self.redis.keys("agentone:obs:*")))
+        self.assertTrue(any(
+            "Project" in str(key) for key in self.redis.keys("agentone:obs:*")
+        ))
 
     def test_subscribe_before_initial_read_buffers_events(self):
         events = []
@@ -143,6 +150,42 @@ class ObservableSubscriptionTest(TestCase):
             "Message",
             f"Message.session:{session.pk}",
         ))
+
+    def test_project_list_receives_updates_and_removals_for_child_models(self):
+        project = Project.objects.create(name="observable-project-child-updates")
+        skill = SkillModel.objects.create(
+            name="observable-skill-before",
+            parent_project=project,
+        )
+        skill_pk = skill.pk
+        events = []
+        update_received = threading.Event()
+        remove_received = threading.Event()
+
+        def capture(event):
+            events.append(event)
+            if event["type"] == "upsert" and event["item"]["pk"] == skill_pk:
+                update_received.set()
+            elif event["type"] == "remove" and event["pk"] == skill_pk:
+                remove_received.set()
+
+        subscription = ObservableProject(project).get_skills(capture)
+        self.addCleanup(subscription.close)
+
+        skill.name = "observable-skill-after"
+        skill.save()
+        self.assertTrue(update_received.wait(2))
+        update_event = next(
+            event for event in events
+            if event["type"] == "upsert" and event["item"]["pk"] == skill_pk
+        )
+        self.assertEqual(update_event["item"]["name"], "observable-skill-after")
+
+        skill.delete()
+        self.assertTrue(
+            remove_received.wait(2),
+            f"Expected removal; events={events!r}",
+        )
 
     def test_filtered_session_subscription_emits_remove_when_row_stops_matching(self):
         agent, version = create_agent("observable-active-agent")

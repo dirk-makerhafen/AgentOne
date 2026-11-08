@@ -162,9 +162,10 @@ observable subscription. Every event delivered to observers includes the
 serialized row and a revision timestamp. The row is refreshed and serialized
 once per model change, regardless of the number of subscribers; changes with
 no subscribers avoid the refresh and serialization. Sensitive fields such as
-API credentials are excluded by the model serializer. These subscriptions
-are an internal Python callback API; they do not yet change the UI or
-`QuerySetView`.
+API credentials are excluded by the model serializer. Collection order is
+unspecified: callbacks describe membership and item changes, not a stable
+ordering. These subscriptions are an internal Python callback API; they do
+not yet change the UI or `QuerySetView`.
 
 ## How to add a new model
 

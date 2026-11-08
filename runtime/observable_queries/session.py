@@ -19,46 +19,45 @@ class ObservableSession:
         self._root = ObservableRoot()
 
     def get_child_sessions(self, callback: Callback) -> ObservableSubscription:
-        """Observe direct child sessions, newest first."""
-        return self._related("child_sessions", callback, order_by=("-created_at",))
+        """Observe the unordered set of direct child sessions."""
+        return self._related("child_sessions", callback)
 
     def get_active_child_sessions(self, callback: Callback) -> ObservableSubscription:
-        """Observe direct active child sessions, newest first."""
+        """Observe the unordered set of direct active child sessions."""
         return self._related(
             "child_sessions",
             callback,
-            order_by=("-created_at",),
             queryset_filter={"is_active": True},
             predicate_fields={"is_active": True},
         )
 
     def get_messages(self, callback: Callback) -> ObservableSubscription:
-        """Observe messages in chronological order."""
-        return self._related("related_messages", callback, order_by=("created_at",))
+        """Observe the unordered set of messages."""
+        return self._related("related_messages", callback)
 
     def get_queries(self, callback: Callback) -> ObservableSubscription:
-        """Observe queries in chronological order."""
-        return self._related("related_queries", callback, order_by=("created_at",))
+        """Observe the unordered set of queries."""
+        return self._related("related_queries", callback)
 
     def get_responses(self, callback: Callback) -> ObservableSubscription:
-        """Observe responses in chronological order."""
-        return self._related("related_response", callback, order_by=("created_at",))
+        """Observe the unordered set of responses."""
+        return self._related("related_response", callback)
 
     def get_session_versions(self, callback: Callback) -> ObservableSubscription:
-        """Observe session configuration versions."""
-        return self._related("related_session_versions", callback, order_by=("version_number",))
+        """Observe the unordered set of session configuration versions."""
+        return self._related("related_session_versions", callback)
 
     def get_task_calls(self, callback: Callback) -> ObservableSubscription:
-        """Observe task calls in creation order."""
-        return self._related("related_agent_task_calls", callback, order_by=("created_at",))
+        """Observe the unordered set of task calls."""
+        return self._related("related_agent_task_calls", callback)
 
     def get_task_runs(self, callback: Callback) -> ObservableSubscription:
-        """Observe task runs in creation order."""
-        return self._related("related_task_runs", callback, order_by=("created_at",))
+        """Observe the unordered set of task runs."""
+        return self._related("related_task_runs", callback)
 
     def get_task_instances(self, callback: Callback) -> ObservableSubscription:
-        """Observe task instances in creation order."""
-        return self._related("related_task_instances", callback, order_by=("created_at",))
+        """Observe the unordered set of task instances."""
+        return self._related("related_task_instances", callback)
 
     def get_templates(self, callback: Callback) -> ObservableSubscription:
         """Observe query-template links for this session."""
@@ -80,7 +79,6 @@ class ObservableSession:
         self,
         relation_name: str,
         callback: Callback,
-        order_by: tuple[str, ...] = (),
         queryset_filter: dict | None = None,
         predicate_fields: dict | None = None,
     ) -> ObservableSubscription:
@@ -91,8 +89,6 @@ class ObservableSession:
         queryset = getattr(self.session, relation_name).all()
         if queryset_filter:
             queryset = queryset.filter(**queryset_filter)
-        if order_by:
-            queryset = queryset.order_by(*order_by)
         return self._root._observe_related(
             self.session,
             relation_name,

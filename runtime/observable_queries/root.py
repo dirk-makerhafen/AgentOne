@@ -72,10 +72,10 @@ class ObservableRoot:
         )
 
     def get_projects(self, callback: Callback) -> ObservableSubscription:
-        """Observe all projects ordered by name."""
+        """Observe the unordered set of projects."""
         from server.models.project import Project
 
-        return self._observe(Project, Project.objects.order_by("name"), callback)
+        return self._observe(Project, Project.objects.all(), callback)
 
     def get_agents(self, callback: Callback) -> ObservableSubscription:
         """Observe active, unparented global agents."""
@@ -86,7 +86,7 @@ class ObservableRoot:
             parent_agent__isnull=True,
             parent_skill__isnull=True,
             is_archived=False,
-        ).order_by("name")
+        )
         predicate = _filtered_predicate(
             AgentModel,
             lambda item: True,
@@ -106,7 +106,7 @@ class ObservableRoot:
             parent_agent__isnull=True,
             parent_skill__isnull=True,
             is_archived=False,
-        ).order_by("name")
+        )
         predicate = _filtered_predicate(
             SkillModel,
             lambda item: True,

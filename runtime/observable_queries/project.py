@@ -28,7 +28,6 @@ class ObservableProject:
             AgentModel,
             "parent_project",
             callback,
-            order_by=("name",),
             is_archived=False,
         )
 
@@ -40,7 +39,6 @@ class ObservableProject:
             SkillModel,
             "parent_project",
             callback,
-            order_by=("name",),
             is_archived=False,
         )
 
@@ -49,46 +47,39 @@ class ObservableProject:
         from server.models.sessions.session import SessionModel
 
         return self._children(
-            SessionModel, "parent_project", callback, order_by=("-created_at",)
+            SessionModel, "parent_project", callback
         )
 
     def get_workspaces(self, callback: Callback) -> ObservableSubscription:
         from server.models.workspace import WorkspaceModel
 
-        return self._children(
-            WorkspaceModel, "parent_project", callback, order_by=("name",)
-        )
+        return self._children(WorkspaceModel, "parent_project", callback)
 
     def get_cron_jobs(self, callback: Callback) -> ObservableSubscription:
         from server.models.cron import Cronjob
 
-        return self._children(Cronjob, "parent_project", callback, order_by=("name",))
+        return self._children(Cronjob, "parent_project", callback)
 
     def get_task_definitions(self, callback: Callback) -> ObservableSubscription:
         from server.models.tasks.task_definition import TaskDefinition
 
-        return self._children(
-            TaskDefinition, "parent_project", callback, order_by=("name",)
-        )
+        return self._children(TaskDefinition, "parent_project", callback)
 
     def get_work_items(self, callback: Callback) -> ObservableSubscription:
         from server.models.workitems.work_item import WorkItem
 
-        return self._children(WorkItem, "project", callback, order_by=("-created_at",))
+        return self._children(WorkItem, "project", callback)
 
     def get_data_collections(self, callback: Callback) -> ObservableSubscription:
         from server.models.collections.data_collection import DataCollection
 
-        return self._children(
-            DataCollection, "parent_project", callback, order_by=("name",)
-        )
+        return self._children(DataCollection, "parent_project", callback)
 
     def _children(
         self,
         model,
         field_name: str,
         callback: Callback,
-        order_by: tuple[str, ...] = (),
         **conditions,
     ):
         field = model._meta.get_field(field_name)
@@ -96,8 +87,6 @@ class ObservableProject:
             **{field.name: self.project},
             **conditions,
         )
-        if order_by:
-            queryset = queryset.order_by(*order_by)
         relation_key = f"{_model_name(model)}.{field.name}:{self.project.pk}"
         expected = {
             field.attname: self.project.pk,

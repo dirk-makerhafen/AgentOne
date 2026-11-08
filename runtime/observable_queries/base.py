@@ -36,12 +36,12 @@ def _subscribe_queryset(
     callback: Callback,
     predicate: Callable[[dict[str, Any]], bool],
 ) -> ObservableSubscription:
-    """Register first, read the initial snapshot, then release buffered events."""
+    """Subscribe to an unordered collection and then release buffered events."""
     _require_observable_model(model)
     subscription = ObservableSubscription(callback, model, predicate)
     subscription.start(keys)
     try:
-        items = [item.serialize_observable() for item in queryset]
+        items = [item.serialize_observable() for item in queryset.order_by()]
         subscription.initialize(items)
     except Exception:
         subscription.close()
