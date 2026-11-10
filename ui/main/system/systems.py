@@ -1,6 +1,10 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from ui.lib.model_view import ModelView
 from server.models.system import System, SystemStatus, SystemOS, SystemConnectionMode
+
+if TYPE_CHECKING:
+    from ui.app import UiApp
 
 
 class SystemListItemView(ModelView):
@@ -82,7 +86,7 @@ class SystemListItemView(ModelView):
     </div>
     """
 
-    def __init__(self, subject, parent, **kwargs):
+    def __init__(self, subject: System, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.is_editing = False
         self.status_choices = SystemStatus.choices
@@ -170,7 +174,7 @@ class SystemsView(ModelView):
     </div>
     """
 
-    def __init__(self, subject, parent, **kwargs):
+    def __init__(self, subject: UiApp, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.show_add_form = False
         self.system_views = []

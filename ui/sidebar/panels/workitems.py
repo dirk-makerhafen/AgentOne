@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from ui.app import UiApp
     from ui.app_view import UiAppView
     from ui.sidebar.sidebar import SidebarView
+    from server.models.workitems.work_item import WorkItem
 
 
 _STATUS_LABELS = dict(STATUS_COLUMNS)
@@ -36,7 +37,7 @@ class SidebarPanelWorkItem(ModelView):
         <div class="kanban-list-title">{{ pyview.title }}</div>
     '''
 
-    def __init__(self, subject, parent: QuerySetView, **kwargs):
+    def __init__(self, subject: WorkItem, parent: QuerySetView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.root_view: UiAppView = parent.parent.root_view
 

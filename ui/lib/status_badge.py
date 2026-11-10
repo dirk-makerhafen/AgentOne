@@ -1,7 +1,12 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from ui.lib.model_view import ModelView
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
+
+if TYPE_CHECKING:
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from server.models.tasks.agent_task_run import AgentTaskRun
  
  
 # Maps status detail values to (css_modifier, display_label) pairs.
@@ -53,7 +58,7 @@ class StatusBadgeView(ModelView):
     DOM_ELEMENT = "span"
     TEMPLATE_STR = """<span class="badge badge--{{ pyview.modifier }}">{{ pyview.label }}</span>"""
  
-    def __init__(self, subject, parent, **kwargs):
+    def __init__(self, subject: "AgentTaskCall | AgentTaskRun", parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
  
     @property

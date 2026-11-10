@@ -26,6 +26,10 @@ from ui.main.rightpanel.workspace.rightpanel_workspace_manager import (
 )
 
 if TYPE_CHECKING:
+    from ui.app import UiApp
+    from server.models.agents.agent import AgentModel
+    from server.models.skills.skill import SkillModel
+    from server.models.cron import Cronjob
     from server.models.project import Project
     from server.models.workspace import WorkspaceModel
 
@@ -321,7 +325,7 @@ class _ItemAssistantPanel(AssistantChatMixin, ModelView):
         + ASSISTANT_CHAT_BODY_TEMPLATE
     )
 
-    def __init__(self, subject, parent, **kwargs):
+    def __init__(self, subject: "AgentModel | SkillModel | Cronjob | Project", parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._selected_pk: int | None = None
         self.chat = None
@@ -388,10 +392,9 @@ class _DashboardAssistantPanel(AssistantChatMixin, ModelView):
     '''
     )
 
-    def __init__(self, subject, parent, **kwargs):
+    def __init__(self, subject: UiApp, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._selected_pk: int | None = None
-        self.chat = None
         self._reselect()
 
 

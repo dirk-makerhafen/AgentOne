@@ -213,7 +213,7 @@ class RightPanelProvider(ModelView):
                 queue.append(parent)
         return None
 
-    def __init__(self, subject, parent, **kwargs):
+    def __init__(self, subject: ApiProvider, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._probe: dict | None = None
         self._probe_model_pk: int | None = None

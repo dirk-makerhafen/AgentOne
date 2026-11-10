@@ -6,6 +6,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
+    from ui.app import UiApp
 
 
 class MainLogsView(PyHtmlView):
@@ -27,6 +28,6 @@ class MainLogsView(PyHtmlView):
         </div>
     '''
     
-    def __init__(self, subject, parent: MainView, **kwargs):
+    def __init__(self, subject: UiApp, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.uid = "mainLogs"

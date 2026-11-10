@@ -60,7 +60,7 @@ def orm_unsubscribe_view(view: PyHtmlView, observable_key: str | None = None) ->
 
 
 class ModelView(PyHtmlView):
-    def __init__(self, subject, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
+    def __init__(self, subject: typing.Any, parent: PyHtmlView | PyHtmlGuiInstance, **kwargs):
         self.uid = "pv%s" % ("".join(random.choices(CHARACTERS, k=16)))
         self.is_visible = False
         parent._add_child(self)

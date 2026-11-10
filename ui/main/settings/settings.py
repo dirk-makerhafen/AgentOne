@@ -10,6 +10,7 @@ from ui.main.settings.panels.system import SettingPanelSystem
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
+    from ui.app import UiApp
 
 class SettingsView(ModelView):
     DOM_ELEMENT_CLASS = "main-view"
@@ -19,7 +20,7 @@ class SettingsView(ModelView):
         </div>
     '''
 
-    def __init__(self, subject, parent: MainView, **kwargs):
+    def __init__(self, subject: UiApp, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.uid = "mainSettings"
         self.selected_settings_panel_name = ""

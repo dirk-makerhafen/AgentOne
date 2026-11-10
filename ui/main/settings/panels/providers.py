@@ -8,6 +8,7 @@ from ui.main.insights.providers import _limits_str
 
 if TYPE_CHECKING:
     from ui.main.settings.settings import SettingsView
+    from ui.app import UiApp
 
 
 def sort_provider_rows(rows: list[dict], col: str, desc: bool) -> list[dict]:
@@ -156,7 +157,7 @@ class SettingPanelProviders(ModelView):
 
     NUMERIC_COLS = ("models",)
 
-    def __init__(self, subject, parent: SettingsView, **kwargs):
+    def __init__(self, subject: UiApp, parent: SettingsView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._expanded_id: int | None = None
         self._detail_id: int | None = None

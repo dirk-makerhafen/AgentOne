@@ -11,6 +11,7 @@ from ui.main.rightpanel.cron.rightpanel_cron import RightPanelCron
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
+    from server.models.cron import Cronjob
 
 
 class CronView(ModelView):
@@ -220,7 +221,7 @@ class CronView(ModelView):
         </div>
     '''
 
-    def __init__(self, subject: Any, parent: Any, **kwargs):
+    def __init__(self, subject: Cronjob, parent: Any, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._editing = False
         self._edit_data: dict[str, str] = {}

@@ -8,6 +8,7 @@ from ui.main.rightpanel.project.rightpanel_project import RightPanelProject
 
 if TYPE_CHECKING:
     from ui.main.main_view import MainView
+    from server.models.project import Project
 
 
 class _FormError(Exception):
@@ -177,7 +178,7 @@ class ProjectView(ModelView):
         </div>
     '''
 
-    def __init__(self, subject, parent: MainView, **kwargs):
+    def __init__(self, subject: Project, parent: MainView, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._editing = False
         self._edit_data: dict[str, Any] = {}

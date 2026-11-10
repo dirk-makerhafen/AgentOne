@@ -8,7 +8,12 @@ focus is never lost); the parent reads :attr:`access_data` on save.
 Used by the workspace create page and the current-workspace card edit mode.
 """
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from ui.lib.model_view import ModelView
+
+if TYPE_CHECKING:
+    from ui.app import UiApp
+    from server.models.workspace import WorkspaceModel
 
 
 SECTIONS = ("read", "write")
@@ -61,7 +66,7 @@ class AccessEditor(ModelView):
         {% endfor %}
     '''
 
-    def __init__(self, subject, parent, access: dict | None = None, **kwargs):
+    def __init__(self, subject: "UiApp | WorkspaceModel", parent, access: dict | None = None, **kwargs):
         super().__init__(subject, parent, **kwargs)
         if access is None:
             access = getattr(subject, "access", None)

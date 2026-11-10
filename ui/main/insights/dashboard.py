@@ -151,7 +151,7 @@ class InspectRowView(PyHtmlView):
         </div>
     """
 
-    def __init__(self, subject, parent, dashboard_view=None, **kwargs):
+    def __init__(self, subject: AgentTaskCall, parent, dashboard_view=None, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self._dashboard_view = dashboard_view
         self._expanded = False

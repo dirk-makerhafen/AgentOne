@@ -4,6 +4,7 @@ from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
     from ui.main.settings.settings import SettingsView
+    from ui.app import UiApp
 
 
 class SettingPanelSystem(ModelView):
@@ -73,5 +74,5 @@ class SettingPanelSystem(ModelView):
    
     '''
 
-    def __init__(self, subject, parent: SettingsView, **kwargs):
+    def __init__(self, subject: UiApp, parent: SettingsView, **kwargs):
         super().__init__(subject, parent, **kwargs)

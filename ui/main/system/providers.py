@@ -1,8 +1,13 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from ui.lib.model_view import ModelView
 from server.models.providers.api_provider import ApiProvider
 from server.models.providers.api_key import ApiKey
 from server.models.providers.ai_model import AiModel
+
+if TYPE_CHECKING:
+    from ui.app import UiApp
 
 
 class AiModelItemView(ModelView):
@@ -187,7 +192,7 @@ class ProviderListItemView(ModelView):
     </div>
     """
 
-    def __init__(self, subject, parent, **kwargs):
+    def __init__(self, subject: ApiProvider, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.is_editing = False
         self.show_add_key_form = False
@@ -285,7 +290,7 @@ class ProvidersView(ModelView):
     </div>
     """
 
-    def __init__(self, subject, parent, **kwargs):
+    def __init__(self, subject: UiApp, parent, **kwargs):
         super().__init__(subject, parent, **kwargs)
         self.show_add_form = False
         self.provider_views = []
