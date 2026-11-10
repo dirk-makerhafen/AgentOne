@@ -6,7 +6,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from sortedm2m.fields import SortedManyToManyField
 
-from server.models.base_model import BaseModel, ObservableKeys
+from server.models.base_model import BaseModel
+from server.models.observables import ObservableKeys
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
 
 

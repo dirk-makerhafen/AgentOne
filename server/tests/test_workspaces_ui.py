@@ -800,7 +800,7 @@ class TestWorkspacePublish(TestCase):
 
         tmp = tempfile.mkdtemp()
         view, _ = TestCreateWorkspace()._create_view()
-        with patch("runtime.observables.publish_model_event") as mock_publish:
+        with patch("server.models.observables.publish_model_event") as mock_publish:
             view.setWsField("name", "Live One")
             view.setWsField("path", tmp)
             view.saveWorkspaceForm()
@@ -815,7 +815,7 @@ class TestWorkspacePublish(TestCase):
         ws = WorkspaceModel.objects.create(name="E", path="/h/e")
         view, _ = TestWorkspaceHierarchy()._detail(ws)
         tmp = tempfile.mkdtemp()
-        with patch("runtime.observables.publish_model_event") as mock_publish:
+        with patch("server.models.observables.publish_model_event") as mock_publish:
             view.startEdit()
             view.setEditField("path", tmp)
             view.saveEdit()
@@ -827,7 +827,7 @@ class TestWorkspacePublish(TestCase):
         ws = WorkspaceModel.objects.create(name="D", path="/h/d")
         other = WorkspaceModel.objects.create(name="D2", path="/h/d2")
         view, _ = TestWorkspaceHierarchy()._detail(ws)
-        with patch("runtime.observables.publish_model_event") as mock_publish:
+        with patch("server.models.observables.publish_model_event") as mock_publish:
             view.deleteWorkspace(other.pk)
         # NOTE: Django nulls pk on the in-memory instance after delete, so
         # only the action (and the WorkspaceModel any-key delivery) is asserted.
@@ -841,7 +841,7 @@ class TestWorkspacePublish(TestCase):
 
         import fakeredis
 
-        from runtime import observables
+        from server.models import observables
         from server.models.workspace import WorkspaceModel
         from ui.app import UiApp
         from ui.consumer import process_queue_messages

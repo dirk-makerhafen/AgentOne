@@ -1,6 +1,6 @@
 """Tests for the Redis-backed observable registry (new ORM→UI reactive layer).
 
-Covers ``runtime/observables.py`` (subscribe/notify/unsubscribe against
+Covers ``server/models/observables.py`` (subscribe/notify/unsubscribe against
 fakeredis), ``ObservableKeys`` key helpers + ``observable_keys()`` /
 ``notify_observers()`` (now on ``ObservableMixin`` so every ORM model is
 covered), the dual-publish in ``publish_model_event``, the
@@ -17,7 +17,7 @@ import fakeredis
 from django.apps import apps
 from django.test import SimpleTestCase, TestCase
 
-from runtime import observables
+from server.models import observables
 from server.models.enums.message_enums import MessageRole
 from server.tests.dc_test_helpers import (
     create_agent,
@@ -254,7 +254,7 @@ class ObservableKeysTest(TestCase):
             role=MessageRole.USER, session=session, session_version=sv,
         )
         with patch.object(observables, "get_redis", return_value=make_fake_redis()) as _:
-            import runtime.observables as obs_module
+            import server.models.observables as obs_module
 
             r = obs_module.get_redis()
             observables.subscribe("inst-9", f"Message.session:{session.pk}", 11)
@@ -272,7 +272,7 @@ class PublishDualPublishTest(TestCase):
     """publish_model_event feeds the redis registry (no channel layer involved)."""
 
     def test_dual_publish(self):
-        from runtime.observables import publish_model_event
+        from server.models.observables import publish_model_event
 
         agent, av = create_agent("obs-agent4")
         session, sv = create_session(agent, av)
@@ -290,7 +290,7 @@ class PublishDualPublishTest(TestCase):
             self.assertEqual(json.loads(queued[0])["action"], "create")
 
     def test_non_observable_instance_still_ok(self):
-        from runtime.observables import publish_model_event
+        from server.models.observables import publish_model_event
 
         instance = MagicMock()
         instance._meta.model_name = "test"
@@ -504,7 +504,7 @@ class AllModelsObservableTest(SimpleTestCase):
         self.assertEqual(missing, [])
 
     def test_every_model_has_observables_property(self):
-        from server.models.base_model import ObservableMixin
+        from server.models.observables import ObservableMixin
 
         missing = []
         for m in self._server_models():

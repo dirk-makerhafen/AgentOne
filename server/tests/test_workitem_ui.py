@@ -797,7 +797,7 @@ class WorkItemsBoardObserverTest(TestCase):
     def setUp(self):
         import fakeredis
 
-        from runtime import observables
+        from server.models import observables
 
         fake = fakeredis.FakeStrictRedis(decode_responses=True)
         self._redis_patch = mock.patch.object(

@@ -13,7 +13,8 @@ from django.db.models import QuerySet
 from sortedm2m.fields import SortedManyToManyField
 
 from runtime.agents.agent import Agent
-from server.models.base_model import BaseModel, ObservableKeys
+from server.models.base_model import BaseModel
+from server.models.observables import ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.task_enums import TaskType
 from server.models.settings import SettingsModel

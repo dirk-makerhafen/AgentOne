@@ -9,7 +9,7 @@ from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui import PyHtmlGui
 from ui.app import UiApp
 from ui.app_view import UiAppView
-from runtime import observables
+from server.models import observables
 
 log = logging.getLogger("ui.consumer")
 

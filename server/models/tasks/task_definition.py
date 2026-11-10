@@ -5,7 +5,8 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from server.models.base_model import BaseModel, ObservableKeys
+from server.models.base_model import BaseModel
+from server.models.observables import ObservableKeys
 
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 

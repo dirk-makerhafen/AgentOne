@@ -185,7 +185,7 @@ class StaleQueryLivenessTest(RecoveryFixture):
         query = self._query(status=QueryStatus.ACTIVE, age_min=30)
         self._response(query, status=ResponseStatus.ACTIVE, age_min=1)
         with mock.patch(
-            "runtime.observables.publish_model_event"
+            "server.models.observables.publish_model_event"
         ):
             _recover_stale_queries()
         query.refresh_from_db()
@@ -198,7 +198,7 @@ class StaleQueryLivenessTest(RecoveryFixture):
         query = self._query(status=QueryStatus.ACTIVE, age_min=30)
         self._response(query, status=ResponseStatus.ACTIVE, age_min=30)
         with mock.patch(
-            "runtime.observables.publish_model_event"
+            "server.models.observables.publish_model_event"
         ), mock.patch(
             "server.tasks.task_dispatcher._celery_run.delay"
         ):

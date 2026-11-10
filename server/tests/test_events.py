@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from django.test import TestCase, SimpleTestCase
 from server.models.enums.message_enums import MessageRole
 from server.tests.dc_test_helpers import create_agent, create_session, create_task
-from runtime.observables import (
+from server.models.observables import (
     publish_model_event,
     _extract_filter_context,
 )

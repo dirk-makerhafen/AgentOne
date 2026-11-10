@@ -26,7 +26,7 @@ class TestWorkspaces:
         from unittest.mock import patch
 
         ws = WorkspaceModel.objects.create(name='upd-ws', path='/tmp/upd')
-        with patch("runtime.observables.publish_model_event") as mock_publish:
+        with patch("server.models.observables.publish_model_event") as mock_publish:
             resp = auth_client.patch(
                 f'/api/v1/workspaces/{ws.id}/', {'name': 'upd-ws-2'},
                 content_type='application/json',
@@ -39,7 +39,7 @@ class TestWorkspaces:
         from unittest.mock import patch
 
         ws = WorkspaceModel.objects.create(name='del-ws', path='/tmp/del')
-        with patch("runtime.observables.publish_model_event") as mock_publish:
+        with patch("server.models.observables.publish_model_event") as mock_publish:
             resp = auth_client.delete(f'/api/v1/workspaces/{ws.id}/')
         assert resp.status_code == 204
         mock_publish.assert_called_once()
@@ -48,7 +48,7 @@ class TestWorkspaces:
     def test_create_workspace_publishes(self, auth_client, admin_user):
         from unittest.mock import patch
 
-        with patch("runtime.observables.publish_model_event") as mock_publish:
+        with patch("server.models.observables.publish_model_event") as mock_publish:
             resp = auth_client.post('/api/v1/workspaces/', {
                 'name': 'pub-ws',
                 'path': '/tmp/pub-ws',

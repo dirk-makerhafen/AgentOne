@@ -10,7 +10,7 @@ from typing import Any
 from django.db import models
 from django_enum import EnumField
 
-from server.models.base_model import ObservableMixin, ObservableKeys
+from server.models.observables import ObservableMixin, ObservableKeys
 
 
 # Context-budget estimate for a single image part.  Providers bill per image

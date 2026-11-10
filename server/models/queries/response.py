@@ -5,7 +5,8 @@ from typing import Any
 from django.db import models
 from django_enum import EnumField
 
-from server.models.base_model import BaseModel, ObservableKeys
+from server.models.base_model import BaseModel
+from server.models.observables import ObservableKeys
 
 
 class ResponseStatus(models.TextChoices):

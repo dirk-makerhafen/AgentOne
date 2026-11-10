@@ -228,7 +228,7 @@ class MessagesTest(TestCase):
 
         import fakeredis
 
-        from runtime import observables
+        from server.models import observables
         from ui.consumer import process_queue_messages
         from ui.lib.pyHtmlGui.pyhtmlgui.lib.weakFunctionReferences import (
             WeakFunctionReferences,

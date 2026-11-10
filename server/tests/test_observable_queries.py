@@ -9,7 +9,7 @@ from django.db import connection
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 
-from runtime import observables
+from server.models import observables
 from runtime.observable_queries import (
     ObservableProject,
     ObservableRoot,

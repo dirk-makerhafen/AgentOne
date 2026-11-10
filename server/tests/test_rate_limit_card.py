@@ -768,7 +768,7 @@ class _CardOrmTestBase(TestCase):
     def setUp(self):
         import fakeredis
 
-        from runtime import observables
+        from server.models import observables
 
         self.agent = AgentModel.objects.create(name="card-obs-agent")
         self.av = AgentVersionModel.objects.create(agent=self.agent)
@@ -880,14 +880,14 @@ class SessionCounterPublishTest(TestCase):
         self.runtime = Session(session_model=self.session)
 
     def test_count_unattended_turn_publishes(self):
-        with patch("runtime.observables.publish_model_event") as mock_publish:
+        with patch("server.models.observables.publish_model_event") as mock_publish:
             self.runtime.count_unattended_turn()
         mock_publish.assert_called_once_with(self.session, "update")
         self.session.refresh_from_db()
         self.assertEqual(self.session.unattended_turn_count, 1)
 
     def test_count_turn_publishes(self):
-        with patch("runtime.observables.publish_model_event") as mock_publish:
+        with patch("server.models.observables.publish_model_event") as mock_publish:
             self.runtime.count_turn()
         mock_publish.assert_called_once_with(self.session, "update")
         self.session.refresh_from_db()

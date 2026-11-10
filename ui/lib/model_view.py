@@ -6,7 +6,7 @@ import string
 from server.models.agents.agent import AgentModel
 from ui.lib.pyHtmlGui.pyhtmlgui.lib.observable import Observable
 from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import ObservableMappings, PyHtmlView
-from runtime import observables
+from server.models import observables
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance

@@ -9,7 +9,8 @@ from django.db import models
 from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
-from server.models.base_model import BaseModel, ObservableKeys
+from server.models.base_model import BaseModel
+from server.models.observables import ObservableKeys
 from server.models.content import GenericContent, IMAGE_TOKEN_ESTIMATE, resolve_generic_content_refs
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 

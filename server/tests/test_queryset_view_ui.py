@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 import fakeredis
 from django.test import SimpleTestCase, TestCase
 
-from runtime import observables
+from server.models import observables
 from ui.lib.model_view import ModelView
 from ui.lib.queryset_view import QuerySetView
 

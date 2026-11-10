@@ -7,7 +7,8 @@ from django.db import models
 from django.db.models import QuerySet
 
 from runtime.agents.agent import Agent
-from server.models.base_model import BaseModel, ObservableKeys
+from server.models.base_model import BaseModel
+from server.models.observables import ObservableKeys
 
 
 class AgentModel(BaseModel):

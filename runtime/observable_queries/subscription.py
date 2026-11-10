@@ -11,7 +11,7 @@ from typing import Any
 
 from django.db.models import Model
 
-from runtime import observables
+from server.models import observables
 
 log = logging.getLogger(__name__)
 

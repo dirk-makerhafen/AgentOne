@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from django.db import models
-from server.models.base_model import ObservableMixin, ObservableKeys
+from server.models.observables import ObservableMixin, ObservableKeys
 
 
 class Project(ObservableMixin, models.Model):

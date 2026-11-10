@@ -11,7 +11,8 @@ from typing import Any
 
 from django.db import models
 
-from server.models.base_model import BaseModel, ObservableKeys
+from server.models.base_model import BaseModel
+from server.models.observables import ObservableKeys
 
 
 class TerminalStatus(models.TextChoices):

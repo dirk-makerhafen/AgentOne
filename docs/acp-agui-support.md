@@ -27,7 +27,7 @@ track. It makes no priority recommendation; §7 lists the decision factors.
   (`config/asgi.py:14-18`); REST lives at `api/v1/` (`config/urls.py:90`).
 - **UI:** one global pyHtmlGui instance over that socket. The Redis→UI pump
   (per-instance drain threads in `ui/consumer.py`, coalescing in
-  `process_queue_messages`) delivers `runtime/observables.py` registry
+  `process_queue_messages`) delivers `server/models/observables.py` registry
   messages to subscribed views (see `docs/observables-migration.md`).
   The old channel-group + `ModelObserver` fan-out is removed.
 - **Sessions:** `SessionModel` (identity) + `SessionVersion` (copy-on-write state);
@@ -173,8 +173,8 @@ The UI learns about turns only at coarse boundaries (`Query create` in
 **Plan.**
 
 1. Add `publish_token_event()` / `publish_agui_event()` beside
-   `publish_model_event()` in `runtime/observables.py`, publishing through
-   `runtime.observables.notify()` on dedicated stream keys (the retired
+   `publish_model_event()` in `server/models/observables.py`, publishing through
+   `server.models.observables.notify()` on dedicated stream keys (the retired
    `CHANNEL_GROUP` broadcast no longer exists). The registry is already
    gated on active subscriptions, which satisfies step 4's near-zero
    overhead requirement by construction.

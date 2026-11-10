@@ -99,7 +99,7 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 
 ## Real-time UI events
 
-The system uses `publish_model_event(instance, action)` in Celery tasks to push model changes to the browser. Delivery is via the Redis observable registry (`runtime/observables.py`): the call invokes `instance.notify_observers(action)`, which RPUSHes to the per-UI-instance queue (`agentone:uiq:<instance_key>`) only for instances subscribed to the affected keys. The consumer drain thread (`ui/consumer.py:loop`, one per instance) coalesces and dispatches to view callbacks. The old Channels-group broadcast is gone.
+The system uses `publish_model_event(instance, action)` in Celery tasks to push model changes to the browser. The Redis registry and ORM mixin live together in `server/models/observables.py`: the mixin invokes the registry, which RPUSHes to the per-UI-instance queue (`agentone:uiq:<instance_key>`) only for instances subscribed to affected keys. The consumer drain thread (`ui/consumer.py:loop`, one per instance) coalesces and dispatches to view callbacks. The old Channels-group broadcast is gone.
 
 | Model | Action | Celery file | Purpose |
 |---|---|---|---|
@@ -117,7 +117,7 @@ Views subscribe with `orm_subscribe(view, "<Model>.session:<sid>", router)` from
 | `ui/lib/pyHtmlGui/pyhtmlgui/view/observable_list_view.py` | `set_visible` snapshot fix, dedup guard in `_on_subject_updated` |
 | `ui/lib/model_view.py` | `orm_subscribe` / `orm_unsubscribe_view` shared subscription helpers |
 | `runtime/events.py` | `publish_model_event` (redis notify only) |
-| `runtime/observables.py` | `subscribe` / `notify` / `unsubscribe` registry |
+| `server/models/observables.py` | `ObservableMixin`, `ObservableKeys`, Redis `subscribe` / `notify` / `unsubscribe` registry |
 
 Skills provide specialized instructions and workflows for specific tasks.
 Use the skill tool to load a skill when a task matches its description.

@@ -1,7 +1,7 @@
 # Observables migration — current state
 
 > **Status: implemented.** ORM→UI updates flow exclusively through the
-> Redis observable registry (`runtime/observables.py`). The Channels-group
+> Redis observable registry (`server/models/observables.py`). The Channels-group
 > path is fully removed (`publish()` / `CHANNEL_GROUP`,
 > `PyHtmlGuiConsumer.session_event`, consumer group membership, and
 > `UiApp.dispatch_session_event` are all gone); `ui/model_observer.py`
@@ -11,9 +11,9 @@
 
 | Stage | Mechanism |
 |---|---|
-| Producer | `publish_model_event(instance, action)` (`runtime/observables.py`) calls `instance.notify_observers(action)` — one choke point for all ~50 call sites (Celery tasks, `.agentone/scripts/`, `runtime/`, `api/`, `ui/`), including `QuerySet.update()` flows that bypass `save()`. Instances without `notify_observers` are skipped via `getattr`. |
-| Transport | `runtime.observables.notify()` (`runtime/observables.py:88`) `HGETALL`s each key's observers and `RPUSH`es **one message per subscribed UI instance** to `agentone:uiq:<instance_key>`. Observer-gated: instances with no subscription for the affected keys get nothing. |
-| Keys | `ObservableMixin.observable_keys()` (`server/models/base_model.py`) returns the `any` key (`<Model>`), the `pk` key (`<Model>.pk:<pk>`), plus one key per set FK (`<Model>.<field>:<id>`). Per-model `<Model>ObservableKeys` helpers expose the same strings for subscribers (e.g. `project.observables.child_agents` → `AgentModel.parent_project:<pk>`). The mixin (not just `BaseModel`) owns `.observables` / `observable_keys()` / `notify_observers()`, so **every** ORM model is observable — including plain `models.Model` ones (`WorkspaceModel`, `GenericContent`, `SkillModelVersion`, `Project`, `SkillModel`). Auto-created M2M through-models are the only exception. Covered by `AllModelsObservableTest`, which asserts the capability on every concrete `server` model. |
+| Producer | `publish_model_event(instance, action)` (`server/models/observables.py`) calls `instance.notify_observers(action)` — one choke point for all ~50 call sites (Celery tasks, `.agentone/scripts/`, `runtime/`, `api/`, `ui/`), including `QuerySet.update()` flows that bypass `save()`. Instances without `notify_observers` are skipped via `getattr`. |
+| Transport | `notify()` (`server/models/observables.py`) `HGETALL`s each key's observers and `RPUSH`es **one message per subscribed UI instance** to `agentone:uiq:<instance_key>`. Observer-gated: instances with no subscription for the affected keys get nothing. |
+| Keys | `ObservableMixin.observable_keys()` (`server/models/observables.py`) returns the `any` key (`<Model>`), the `pk` key (`<Model>.pk:<pk>`), plus one key per set FK (`<Model>.<field>:<id>`). Per-model `<Model>ObservableKeys` helpers expose the same strings for subscribers (e.g. `project.observables.child_agents` → `AgentModel.parent_project:<pk>`). The mixin (not just `BaseModel`) owns `.observables` / `observable_keys()` / `notify_observers()`, so **every** ORM model is observable — including plain `models.Model` ones (`WorkspaceModel`, `GenericContent`, `SkillModelVersion`, `Project`, `SkillModel`). Auto-created M2M through-models are the only exception. Covered by `AllModelsObservableTest`, which asserts the capability on every concrete `server` model. |
 | Consumer | One drain thread per UI instance (`ui/consumer.py:55`, started via `_ensure_loop_thread`, `ui/consumer.py:91`). `BLPOP timeout=5` + full-list drain so bursts coalesce; the thread exits once its instance has no connections. `process_queue_messages` (`ui/consumer.py:25`) invokes one callback per `function_id` (latest message wins), resolving through the instance's `_function_references` (weak — GC'd views are skipped). |
 | Subscription | `orm_subscribe(view, key, target)` / `orm_unsubscribe_view(view, key?)` (`ui/lib/model_view.py:17,40`) — usable from any view; tracked on `view._observed_function_ids` and `instance.observed_views`. `ModelView.add_observable` delegates to `orm_subscribe`; `ModelView.__init__` auto-subscribes only when the subject is an ORM instance (has `.observables`). |
 
@@ -96,11 +96,10 @@ in-memory copy, so the approval card appears exactly when the limit is hit.
 
 ## File index
 
-- `runtime/observables.py` (135 lines) — `get_redis:47`, `subscribe:55`,
-  `unsubscribe:66`, `unsubscribe_all:80`, `notify:88`
-- `server/models/base_model.py` — `ObservableKeys`, `ObservableMixin`, `BaseModel`
-- `runtime/observables.py` — Redis registry, `publish_model_event`,
-  `_extract_filter_context` (kept for logging/tests)
+- `server/models/observables.py` — `ObservableKeys`, `ObservableMixin`,
+  Redis registry, `publish_model_event`
+- `server/models/observables.py` — `ObservableKeys`, `ObservableMixin`, Redis registry
+- `server/models/base_model.py` — `BaseModel`
 - `ui/lib/model_view.py` — `orm_subscribe:17`,
   `orm_unsubscribe_view:40`, `ModelView` (`__init__:63`,
   `add_observable:113`, `remove_observable:121`)
