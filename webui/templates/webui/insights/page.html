@@ -1,0 +1,285 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}Insights · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">Insights</div>
+        <div class="main-view-actions">
+            <nav class="webui-tab-strip" aria-label="Insights tabs">
+                {% for key, label in insight_tabs %}
+                <a class="webui-tab{% if key == tab %} active{% endif %}" href="{% url 'webui:insights_tab' key %}">{{ label }}</a>
+                {% endfor %}
+            </nav>
+        </div>
+    </header>
+    <div class="main-view-body">
+        <div class="main-view-content">
+            {% if tab == "dashboard" %}
+                <div class="insights-grid">
+                    {% for label, value in stats %}
+                    <div class="insights-stat">
+                        <div class="insights-stat-value">{{ value }}</div>
+                        <div class="insights-stat-label">{{ label }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="insights-row">
+                    <div class="insights-card">
+                        <div class="insights-card-title">Tokens</div>
+                        <div class="insights-token-row"><span class="insights-token-label">Prompt</span><span class="insights-token-value">{{ tokens.prompt }}</span></div>
+                        <div class="insights-token-row"><span class="insights-token-label">Completion</span><span class="insights-token-value">{{ tokens.completion }}</span></div>
+                        <div class="insights-token-row"><span class="insights-token-label">Cached</span><span class="insights-token-value">{{ tokens.cached }}</span></div>
+                        <div class="insights-token-row"><span class="insights-token-label">Reasoning</span><span class="insights-token-value">{{ tokens.reasoning }}</span></div>
+                    </div>
+                    <div class="insights-card">
+                        <div class="insights-card-title">Task call status</div>
+                        {% for row in task_status %}
+                        <div class="insights-table-row"><span>{{ row.status }}</span><span>{{ row.total }}</span></div>
+                        {% empty %}
+                        <div class="insights-empty">No task calls yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="insights-card">
+                    <div class="insights-card-title">Response status</div>
+                    {% for row in response_status %}
+                    <div class="insights-table-row"><span>{{ row.status }}</span><span>{{ row.total }}</span></div>
+                    {% empty %}
+                    <div class="insights-empty">No responses yet.</div>
+                    {% endfor %}
+                </div>
+
+                <div class="insights-card">
+                    <div class="insights-card-title">Inspect task calls</div>
+                    <form class="webui-inline-form" method="get" action="{% url 'webui:insights_tab' 'dashboard' %}">
+                        <input type="search" name="agent" value="{{ inspect.agent }}" placeholder="Filter by agent…" aria-label="Filter by agent">
+                        <select name="status" aria-label="Filter by status">
+                            <option value="">Any status</option>
+                            {% for option in inspect.status_options %}
+                            <option value="{{ option }}"{% if option == inspect.status %} selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="search" name="task" value="{{ inspect.task }}" placeholder="Filter by task…" aria-label="Filter by task">
+                        <input type="search" name="session" value="{{ inspect.session }}" placeholder="Session # or name" aria-label="Filter by session">
+                        <button class="webui-action-btn" type="submit">Apply</button>
+                        <a class="webui-action-btn" href="{% url 'webui:insights_tab' 'dashboard' %}">Reset</a>
+                        <span class="webui-muted-note">{{ inspect.count }} call{{ inspect.count|pluralize }}{% if inspect.count > inspect.limit %} · showing {{ inspect.limit }}{% endif %}</span>
+                    </form>
+                    <table class="insights-table">
+                        <thead><tr><th>Call</th><th>Agent</th><th>Task</th><th>Session</th><th>Status</th><th>When</th></tr></thead>
+                        <tbody>
+                            {% for call in inspect.rows %}
+                            <tr id="call-{{ call.pk }}">
+                                <td>#{{ call.pk }}</td>
+                                <td>{{ call.session_version.agent.name|default:"—" }}</td>
+                                <td>{{ call.task_definition.name|default:"—" }}</td>
+                                <td>{% if call.session %}<a class="webui-link" href="{% url 'webui:chat' call.session.pk %}">{{ call.session.name }}</a>{% else %}—{% endif %}</td>
+                                <td><span class="detail-badge">{{ call.status }}</span></td>
+                                <td>{{ call.created_at|timesince }} ago</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6"><div class="insights-empty">No task calls match these filters.</div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            {% elif tab == "analytics" %}
+                <form class="webui-inline-form insights-filters" method="get" action="{% url 'webui:insights_tab' 'analytics' %}">
+                    <select name="range" aria-label="Time range">
+                        {% for value, label in range_options %}
+                        <option value="{{ value }}"{% if value == range_key %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="provider" aria-label="Provider">
+                        <option value="">All providers</option>
+                        {% for option in provider_options %}
+                        <option value="{{ option }}"{% if option == provider_filter %} selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="model" aria-label="Model">
+                        <option value="">All models</option>
+                        {% for option in model_options %}
+                        <option value="{{ option }}"{% if option == model_filter %} selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="webui-action-btn" type="submit">Apply</button>
+                    <a class="webui-action-btn" href="{% url 'webui:insights_tab' 'analytics' %}">Reset</a>
+                </form>
+
+                <div class="insights-grid">
+                    {% for stat in analytics_stats %}
+                    <div class="insights-stat">
+                        <div class="insights-stat-value">{{ stat.value }}</div>
+                        <div class="insights-stat-label">{{ stat.label }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="insights-card">
+                    <div class="insights-card-title">Tokens · {{ range_label }}</div>
+                    <div class="insights-daily-token-chart">
+                        {% for day in daily %}
+                        <div class="insights-daily-bar" title="{{ day.label }} · in {{ day.input }} / out {{ day.output }}">
+                            <div class="insights-daily-stack">
+                                <div class="insights-daily-bar-output" style="height:{{ day.output_pct }}%"></div>
+                                <div class="insights-daily-bar-input" style="height:{{ day.input_pct }}%"></div>
+                            </div>
+                            <span>{{ day.label }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="insights-daily-legend">
+                        <span><i class="insights-daily-legend-input"></i> Input</span>
+                        <span><i class="insights-daily-legend-output"></i> Output</span>
+                    </div>
+                </div>
+
+                <div class="insights-row">
+                    <div class="insights-card">
+                        <div class="insights-card-title">Providers</div>
+                        <div class="insights-bars">
+                            {% for row in providers %}
+                            <div class="insights-bar-row">
+                                <span class="insights-bar-label">{{ row.provider_name|default:"unknown"|truncatechars:12 }}</span>
+                                <span class="insights-bar-track"><span class="insights-bar-fill" style="width:{{ row.pct }}%"></span></span>
+                                <span class="insights-bar-value">{{ row.total }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="insights-empty">No responses yet.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="insights-card">
+                        <div class="insights-card-title">Models</div>
+                        <div class="insights-bars">
+                            {% for row in models %}
+                            <div class="insights-bar-row">
+                                <span class="insights-bar-label">{{ row.model_name|default:"unknown"|truncatechars:12 }}</span>
+                                <span class="insights-bar-track"><span class="insights-bar-fill" style="width:{{ row.pct|default:0 }}%"></span></span>
+                                <span class="insights-bar-value">{{ row.total }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="insights-empty">No responses yet.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+            {% elif tab == "providers" %}
+                <div class="detail-card">
+                    <table class="insights-table">
+                        <thead><tr><th>Provider</th><th>Slug</th><th>URL</th><th class="num">Models</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for provider in providers %}
+                            <tr id="provider-{{ provider.pk }}">
+                                <td>
+                                    <details>
+                                        <summary>{{ provider.name }}</summary>
+                                        <div class="detail-card">
+                                            {% if provider.description %}<div class="webui-prose">{{ provider.description }}</div>{% elif provider.setup_instructions %}<div class="webui-prose">{{ provider.setup_instructions }}</div>{% endif %}
+                                            <div class="detail-row"><span class="detail-row-label">Endpoint</span><span class="detail-row-value">{{ provider.url|default:"—" }}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Protocol</span><span class="detail-row-value">{{ provider.litellm_prefix|default:"OpenAI-compatible" }}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Health</span><span class="detail-row-value">{{ provider.health_label|default:provider.status }}</span></div>
+                                            {% if provider.status_reason %}<div class="detail-row"><span class="detail-row-label">Reason</span><span class="detail-row-value">{{ provider.status_reason }}</span></div>{% endif %}
+                                            {% if provider.status_retry_at %}<div class="detail-row"><span class="detail-row-label">Retry after</span><span class="detail-row-value">{{ provider.status_retry_at }}</span></div>{% endif %}
+                                            {% if provider.consecutive_failures %}<div class="detail-row"><span class="detail-row-label">Failures</span><span class="detail-row-value">{{ provider.consecutive_failures }}</span></div>{% endif %}
+                                            {% if provider.default_api_key %}<div class="detail-row"><span class="detail-row-label">Built-in key</span><span class="detail-row-value">yes</span></div>{% endif %}
+                                            {% if provider.api_key_url %}<div class="detail-row"><span class="detail-row-label">Get key</span><span class="detail-row-value"><a href="{{ provider.api_key_url }}" target="_blank" rel="noopener noreferrer">Provider console</a></span></div>{% endif %}
+                                            <div class="detail-row"><span class="detail-row-label">API keys</span><span class="detail-row-value">{% for key in provider.api_keys.all %}{{ key.comment|default:"key" }}{% if key.enabled %} (enabled){% else %} (disabled){% endif %}{% if key.health_label %} · {{ key.health_label }}{% endif %}{% if not forloop.last %}, {% endif %}{% empty %}None configured{% endfor %}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Limits</span><span class="detail-row-value">{% for label, value in provider.limit_rows %}{{ value }} {{ label }}{% if not forloop.last %} · {% endif %}{% empty %}Unlimited{% endfor %}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Last used</span><span class="detail-row-value">{{ provider.last_usage|default:"—" }}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Usage</span><span class="detail-row-value">{{ provider.detail_usage|join:" · " }}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Models</span><span class="detail-row-value">{% for model in provider.aimodels.all %}<a class="webui-link" href="{% url 'webui:insights_tab' 'models' %}#model-{{ model.pk }}">{{ model.name }}</a>{% if not forloop.last %}, {% endif %}{% empty %}None{% endfor %}</span></div>
+                                            {% for model in provider.aimodels.all %}
+                                            <form method="post" action="{% url 'webui:model_probe' model.pk %}"
+                                                  hx-post="{% url 'webui:model_probe' model.pk %}"
+                                                  hx-target="#provider-model-probe-{{ model.pk }}" hx-swap="innerHTML">
+                                                {% csrf_token %}
+                                                <button class="webui-action-btn" type="submit">Test {{ model.name }}</button>
+                                            </form>
+                                            <div id="provider-model-probe-{{ model.pk }}"></div>
+                                            {% endfor %}
+                                            <form method="post" action="{% url 'webui:settings_provider_test' provider.pk %}">
+                                                {% csrf_token %}
+                                                <button class="webui-action-btn" type="submit">Test provider</button>
+                                            </form>
+                                        </div>
+                                    </details>
+                                </td>
+                                <td><code>{{ provider.slug }}</code></td>
+                                <td><code>{{ provider.url|default:"—" }}</code></td>
+                                <td class="num">{{ provider.model_total }}</td>
+                                <td>{% if provider.enabled %}<span class="detail-badge ok">enabled</span>{% else %}<span class="detail-badge">disabled</span>{% endif %}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5"><div class="insights-empty">No providers configured.</div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            {% else %}
+                <div class="detail-card">
+                    <table class="insights-table">
+                        <thead><tr><th>Model</th><th>Provider</th><th class="num">Context</th><th>Capabilities</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {% for model in models %}
+                            <tr id="model-{{ model.pk }}">
+                                <td>
+                                    <details>
+                                        <summary>{{ model.name }}</summary>
+                                        <div class="detail-card">
+                                            {% if model.description %}<div class="webui-prose">{{ model.description }}</div>{% endif %}
+                                            <div class="detail-row"><span class="detail-row-label">Provider model ID</span><span class="detail-row-value"><code>{{ model.provider_model_id }}</code></span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Canonical ID</span><span class="detail-row-value">{{ model.canonical_id|default:"—" }}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Parameters</span><span class="detail-row-value">{{ model.total_parameters|default:"—" }}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Rank</span><span class="detail-row-value">{{ model.leaderboard_rank|default:"—" }}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Health</span><span class="detail-row-value">{{ model.health_label|default:model.status }}</span></div>
+                                            <div class="detail-row"><span class="detail-row-label">Last used</span><span class="detail-row-value">{{ model.last_usage|default:"—" }}</span></div>
+                                            {% if model.status_reason %}<div class="detail-row"><span class="detail-row-label">Health reason</span><span class="detail-row-value">{{ model.status_reason }}</span></div>{% endif %}
+                                            <div class="detail-row"><span class="detail-row-label">Capabilities</span><span class="detail-row-value">{% if model.supports_tool_call %}tools {% endif %}{% if model.supports_reasoning %}reasoning {% endif %}{% if model.vision %}vision {% endif %}{% if model.audio %}audio {% endif %}{% if model.video %}video {% endif %}</span></div>
+                                            {% if model.open_weights %}<div class="detail-row"><span class="detail-row-label">Weights</span><span class="detail-row-value">open</span></div>{% endif %}
+                                            {% if model.variant_rows %}<div class="detail-row"><span class="detail-row-label">Provider variants</span><span class="detail-row-value">{{ model.variant_rows|length }}</span></div>{% endif %}
+                                            {% if model.variant_rows|length > 1 %}
+                                            {% for row in model.variant_rows %}
+                                            <div class="detail-row">
+                                                <span class="detail-row-label">{{ row.provider }}</span>
+                                                <span class="detail-row-value"><code>{{ row.provider_model_id }}</code> · {{ row.key_note }}{% if row.health %} · {{ row.health }}{% endif %}{% if row.conditions %} · {{ row.conditions }}{% endif %}</span>
+                                            </div>
+                                            {% endfor %}
+                                            {% endif %}
+                                            <a class="webui-link" href="{% url 'webui:insights_tab' 'providers' %}#provider-{{ model.api_provider_id }}">View provider details</a>
+                                            <form method="post" action="{% url 'webui:model_probe' model.pk %}"
+                                                  hx-post="{% url 'webui:model_probe' model.pk %}"
+                                                  hx-target="#model-probe-{{ model.pk }}" hx-swap="innerHTML">
+                                                {% csrf_token %}
+                                                <button class="webui-action-btn" type="submit">Test this model</button>
+                                            </form>
+                                            <div id="model-probe-{{ model.pk }}"></div>
+                                        </div>
+                                    </details>
+                                    {% if model.description %}<div class="webui-muted-note">{{ model.description|truncatechars:100 }}</div>{% endif %}
+                                </td>
+                                <td><a class="webui-link" href="{% url 'webui:insights_tab' 'providers' %}#provider-{{ model.api_provider_id }}">{{ model.api_provider.name|default:"—" }}</a></td>
+                                <td class="num">{{ model.context_length }}</td>
+                                <td>
+                                    {% if model.supports_tool_call %}<span class="detail-badge ok">tools</span>{% endif %}
+                                    {% if model.supports_reasoning %}<span class="detail-badge ok">reasoning</span>{% endif %}
+                                    {% if model.vision %}<span class="detail-badge ok">vision</span>{% endif %}
+                                </td>
+                                <td>{% if model.enabled %}<span class="detail-badge ok">enabled</span>{% else %}<span class="detail-badge">disabled</span>{% endif %}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5"><div class="insights-empty">No models configured.</div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

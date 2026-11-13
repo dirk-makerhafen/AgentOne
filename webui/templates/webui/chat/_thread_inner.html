@@ -1,0 +1,48 @@
+{% load webui %}
+<div class="messages-inner" id="thread-inner">
+    {% if thread_has_older %}
+    <div class="webui-load-older">
+        <button class="webui-action-btn" type="button"
+                hx-get="{% url 'webui:thread' session.pk %}?limit={{ thread_older_limit }}{% if thread_around %}&around={{ thread_around }}{% endif %}&full=1"
+                hx-target="#thread"
+                hx-swap="outerHTML">
+            Load older messages
+        </button>
+    </div>
+    {% endif %}
+
+    {% for row in rows %}
+        {% if row.kind == "message" %}
+            {% include "webui/chat/_message.html" %}
+        {% elif row.kind == "query" %}
+            {% include "webui/chat/_query.html" %}
+        {% else %}
+            {% include "webui/chat/_response.html" %}
+        {% endif %}
+    {% empty %}
+        {% if not pending_text %}
+        <div class="empty-state" style="display:flex">
+            <h2>What can I help with?</h2>
+            <p>Ask anything, run commands, explore files, or manage your scheduled tasks.</p>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    {% if send_error %}
+        <div class="webui-error">Could not send: {{ send_error }}</div>
+    {% endif %}
+
+    {% if pending_text or pending_images %}
+        <div class="msg-row webui-pending" data-role="user">
+            {% for image in pending_images %}
+            <img class="chat-image" src="{{ image }}" alt="attached image">
+            {% endfor %}
+            {% if pending_text %}<div class="msg-body">{{ pending_text|linebreaksbr }}</div>{% endif %}
+            <div class="msg-foot"><span class="msg-time">sending…</span></div>
+        </div>
+    {% endif %}
+
+    {% include "webui/chat/_cards.html" %}
+
+    <div id="bottom-sentinel"></div>
+</div>

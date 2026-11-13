@@ -1,0 +1,19 @@
+<details class="query-card webui-query-card{% if row.obj.status == 'ACTIVE' %} query-active{% endif %}"
+         data-open-key="query-{{ row.obj.pk }}"
+         hx-get="{% url 'webui:query_detail' row.obj.pk %}"
+         hx-trigger="toggle once"
+         hx-target="find .query-card-detail"
+         hx-swap="innerHTML"
+         hx-sync="this:replace">
+    <summary class="query-card-header">
+        <span class="card-icon">◷</span>
+        <span class="card-title">Query</span>
+        {% if row.response %}
+            <span class="card-sub">{{ row.response.provider_name }}{% if row.response.model_name %} · {{ row.response.model_name }}{% endif %}</span>
+        {% endif %}
+        <span class="card-meta">{{ row.obj.tokens|default:0 }} tok</span>
+        <span class="card-status {{ row.obj.status|lower }}">{{ row.obj.status }}</span>
+        <span class="query-card-toggle">▸</span>
+    </summary>
+    <div class="query-card-detail"><span class="webui-detail-loading">Loading…</span></div>
+</details>

@@ -1,0 +1,18 @@
+<div class="sidebar-section"><span>Work items</span></div>
+<div class="side-counts">
+    {% for column in sidebar_workitem_columns %}
+    <span class="side-count" title="{{ column.label }}">{{ column.count }}</span>
+    {% endfor %}
+</div>
+<div class="side-list">
+    {% for item in sidebar_workitems %}
+    <a class="ws-row{% if item.pk == active_id %} active{% endif %}" href="{% url 'webui:workitem' item.pk %}">
+        <span class="ws-row-info">
+            <span class="ws-row-name">{{ item.title }}</span>
+            <span class="ws-row-path">{{ item.get_status_display }}{% if item.assigned_agent %} · {{ item.assigned_agent.name }}{% endif %}</span>
+        </span>
+    </a>
+    {% empty %}
+    <div class="webui-empty-note">No work items in scope.</div>
+    {% endfor %}
+</div>

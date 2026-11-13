@@ -1,0 +1,1781 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   htmx UI layer
+
+   Everything structural (layout, sidebar, message body, query cards,
+   composer, thinking cards) comes from ui/static/css/main.css so the new UI
+   keeps the same design tokens and skins.  This file only adds the handful of
+   classes that the server-rendered templates introduce.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* The legacy shell reserves 17px for the Electron titlebar.  The web UI has
+   no titlebar, so the layout should fill the viewport. */
+.layout { max-height: 100vh; height: 100vh; }
+
+/* Sidebar ---------------------------------------------------------------- */
+.webui-brand {
+    display: inline-block;
+    padding: 2px 4px 6px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    color: var(--text);
+    text-decoration: none;
+}
+.webui-brand:hover { color: var(--accent-text); }
+
+.webui-new-chat { margin: 0; }
+
+/* Sidebar project filter (legacy ProjectSelector parity). */
+.sidebar-project-bar {
+    padding: 0 10px 8px;
+    flex-shrink: 0;
+}
+.sidebar-project-select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 11px;
+    font-family: inherit;
+}
+.sidebar-project-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* The sidebar rows are anchors in the new UI (legacy used divs). */
+a.session-item {
+    text-decoration: none;
+    color: inherit;
+}
+a.session-item:hover { color: var(--text); }
+
+.session-pin-icon {
+    flex-shrink: 0;
+    font-size: 10px;
+    line-height: 1;
+    color: var(--accent);
+}
+
+.webui-empty-note {
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* Chat header ------------------------------------------------------------ */
+.webui-chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--topbar-bg);
+    min-width: 0;
+}
+.webui-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    flex-shrink: 0;
+}
+.webui-back:hover { background: var(--hover-bg); color: var(--text); }
+.webui-chat-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+.webui-chat-meta {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+.webui-badge {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: var(--accent-text);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-bg-strong);
+}
+.webui-badge.is-busy { animation: webui-pulse 1.4s ease-in-out infinite; }
+@keyframes webui-pulse { 50% { opacity: .55; } }
+
+/* Thread ---------------------------------------------------------------- */
+#thread { scroll-behavior: auto; }
+
+.msg-row { width: 100%; }
+
+/* Optimistic bubble shown between POST and the Message.create event. */
+.webui-pending { opacity: .7; }
+.webui-pending .msg-body {
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: var(--input-bg);
+    border: 1px dashed var(--border2);
+    max-width: 680px;
+    white-space: pre-wrap;
+}
+.webui-pending .msg-time { font-style: italic; }
+
+.webui-error {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--error);
+    background: rgba(198, 40, 40, .08);
+    border: 1px solid rgba(198, 40, 40, .25);
+}
+
+.webui-notice {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    padding: 4px 0 4px var(--msg-rail, 0);
+}
+
+/* Response / query rows -------------------------------------------------- */
+.webui-response-row .query-card,
+.webui-query-row .query-card { margin-top: 3px; }
+
+.webui-response-body { padding: 4px 0 0; }
+.webui-response-body p:first-child { margin-top: 0; }
+
+.webui-inline-thinking { margin: 0 0 8px; }
+
+/* Disclosure cards -------------------------------------------------------
+   Thinking / query / response cards are native <details> elements.  The
+   legacy sheet expands them via a `.open` class, which never gets set here,
+   so the [open] state needs explicit overrides. */
+.thinking-card > summary,
+.query-card > summary { list-style: none; }
+.thinking-card > summary::-webkit-details-marker,
+.query-card > summary::-webkit-details-marker { display: none; }
+
+.thinking-card[open] > .thinking-card-body {
+    max-height: none;
+    opacity: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+    border-top-color: var(--accent-bg-strong);
+}
+.query-card[open] > .query-card-detail {
+    max-height: none;
+    opacity: 1;
+    overflow: visible;
+    padding: var(--space-2) var(--space-3);
+    border-top: 1px solid var(--border-subtle);
+}
+
+.thinking-card-toggle {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 10px;
+    line-height: 1;
+    opacity: .45;
+    transition: transform .18s ease;
+}
+.thinking-card[open] .thinking-card-toggle,
+.query-card[open] > .query-card-header .query-card-toggle { transform: rotate(90deg); }
+
+.webui-detail-loading {
+    display: block;
+    padding: 2px 0;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+}
+
+/* Tool cards ------------------------------------------------------------- */
+.webui-tool-card {
+    margin: 6px 0 0 var(--msg-rail, 0);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md, 8px);
+    background: var(--surface-subtle);
+    overflow: hidden;
+}
+.webui-tool-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--muted);
+    user-select: none;
+}
+.webui-tool-summary:hover { color: var(--text); }
+.webui-tool-icon { opacity: .6; }
+.webui-tool-name {
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.webui-tool-body {
+    margin: 0;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border-subtle);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--pre-text, var(--text));
+    background: var(--code-bg);
+    max-height: 340px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.webui-tool-approval {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--warning-text, #b45309);
+    background: var(--warning-bg, rgba(245, 158, 11, .12));
+    border-radius: 999px;
+    padding: 1px 7px;
+}
+.webui-tool-toggle {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform .12s ease;
+}
+.webui-tool-card[open] > .webui-tool-summary .webui-tool-toggle { transform: rotate(90deg); }
+.webui-tool-detail { border-top: 1px solid var(--border-subtle); }
+.webui-tool-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--muted);
+}
+.webui-tool-section { padding: 6px 12px 8px; }
+.webui-tool-section + .webui-tool-section { border-top: 1px solid var(--border-subtle); }
+.webui-tool-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+.webui-tool-args { display: flex; flex-direction: column; gap: 3px; }
+.webui-tool-arg { font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; line-height: 1.5; }
+.webui-tool-arg-key { color: var(--muted); font-weight: 600; }
+.webui-tool-arg-key::after { content: ": "; }
+.webui-tool-arg-val { white-space: pre-wrap; word-break: break-word; }
+.webui-tool-section .webui-tool-body { border-top: 0; padding: 0; }
+.webui-tool-subcalls { display: flex; flex-direction: column; gap: 2px; font-size: 11px; }
+.webui-tool-subcall { display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.webui-tool-subcall-arrow { color: var(--muted); }
+.webui-tool-subcall-name { font-family: var(--font-mono, ui-monospace, monospace); font-weight: 600; }
+.webui-tool-subcall-pk { color: var(--muted); }
+.webui-tool-subcall-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+.webui-tool-subcall-time { color: var(--muted); }
+.webui-tool-more {
+    margin-top: 5px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    cursor: pointer;
+}
+.webui-tool-approval-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--surface-subtle);
+}
+.webui-tool-approval-box form { display: flex; align-items: center; gap: 6px; }
+
+/* Composer --------------------------------------------------------------- */
+.webui-composer { position: relative; }
+.webui-composer-hint {
+    font-size: 11px;
+    color: var(--muted);
+    padding-left: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.webui-composer .composer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* Dashboard -------------------------------------------------------------- */
+.webui-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 48px 24px 32px;
+    text-align: center;
+}
+.webui-hero h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--text);
+}
+.webui-hero p { font-size: 14px; color: var(--muted); }
+
+.webui-primary-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: 1px solid var(--accent-bg-strong);
+    border-radius: 10px;
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.webui-primary-btn:hover {
+    background: var(--accent-bg-strong);
+    border-color: var(--accent);
+}
+
+.webui-recent {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.webui-recent-title {
+    padding: 8px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--muted);
+}
+.webui-recent-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    color: var(--text);
+    min-width: 0;
+}
+.webui-recent-row:hover {
+    background: var(--hover-bg);
+    border-color: var(--border-subtle);
+}
+.webui-recent-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.webui-recent-meta {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Small screens ---------------------------------------------------------- */
+@media (max-width: 700px) {
+    .webui-chat-header { padding: 8px 12px; }
+    .webui-chat-meta { display: none; }
+    .webui-hero { padding: 32px 16px 24px; }
+    .webui-hero h1 { font-size: 24px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Management screens
+
+   Reuses the legacy `.main-view*`, `.insights-*`, `.detail-*`, `.kanban-*`
+   and `.ws-row*` layers.  The rules below only cover the handful of classes
+   the server-rendered templates add on top.
+   ───────────────────────────────────────────────────────────────────────── */
+
+a.insights-stat { text-decoration: none; color: inherit; display: block; }
+a.insights-stat:hover { border-color: var(--accent); }
+
+.webui-link { color: var(--accent-text); text-decoration: none; }
+.webui-link:hover { text-decoration: underline; }
+
+.webui-muted-note {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    line-height: 1.4;
+    margin-top: 2px;
+}
+.main-view-title .webui-muted-note { margin-left: 8px; }
+
+.webui-prose {
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text);
+}
+
+.webui-list-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 6px;
+    border-radius: 8px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+    text-decoration: none;
+    color: var(--text);
+    min-width: 0;
+}
+.webui-list-row:last-child { border-bottom: none; }
+.webui-list-row:hover { background: var(--hover-bg); }
+.webui-list-row-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.webui-list-row-meta {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.webui-chat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+.webui-chat-row:last-child { border-bottom: none; }
+.webui-chat-row .webui-list-row { flex: 1; border-bottom: none; }
+
+/* Buttons ---------------------------------------------------------------- */
+.webui-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--border2, var(--border));
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color .15s, background .15s, color .15s;
+}
+.webui-action-btn:hover { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-text); }
+.webui-action-btn.danger { color: var(--error, #e05); }
+.webui-action-btn.danger:hover { border-color: var(--error, #e05); background: rgba(220, 80, 80, .12); color: var(--error, #e05); }
+.webui-action-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.webui-icon-btn {
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+.webui-icon-btn:hover { background: var(--hover-bg); color: var(--text); }
+
+/* Chat layout ------------------------------------------------------------ */
+.webui-chat-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+}
+.webui-chat-column {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.webui-chat-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.webui-chat-actions form { margin: 0; }
+
+.webui-chat-panel {
+    width: 300px;
+    flex-shrink: 0;
+    min-height: 0;
+    display: none;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+    background: var(--sidebar);
+    overflow: hidden;
+}
+.webui-chat-body.panel-open .webui-chat-panel { display: flex; }
+.webui-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+}
+.webui-panel-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+}
+.webui-panel-tab {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.webui-panel-tab:hover { color: var(--text); background: var(--hover-bg); }
+.webui-panel-tab.active { color: var(--accent-text); background: var(--accent-bg); }
+.webui-panel-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 10px 12px;
+}
+.webui-panel-section { margin-bottom: 18px; }
+.webui-panel-list { display: flex; flex-direction: column; gap: 2px; }
+.webui-panel-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 6px;
+    border-radius: 6px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+    color: var(--text);
+    text-decoration: none;
+    min-width: 0;
+}
+a.webui-panel-row:hover { background: var(--hover-bg); }
+.webui-panel-row-name { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.webui-panel-row-meta { font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.webui-panel-setting {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 5px 8px;
+    padding: 7px 6px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+.webui-panel-setting label { font-size: 11px; color: var(--muted); }
+.webui-panel-setting select,
+.webui-panel-setting input,
+.webui-panel-setting textarea {
+    min-width: 0;
+    width: 100%;
+    font: inherit;
+    font-size: 11px;
+}
+.webui-panel-setting textarea,
+.webui-panel-setting button { grid-column: 1 / -1; }
+.webui-panel-setting button { justify-self: start; }
+
+/* Entity detail + embedded assistant chat ------------------------------ */
+.webui-entity-body {
+    display: flex;
+    overflow: hidden;
+    padding: 0;
+}
+.webui-entity-layout {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+.webui-entity-content {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px 32px;
+}
+.webui-entity-assistant {
+    width: 360px;
+    flex: 0 0 360px;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+    background: var(--sidebar);
+}
+.webui-entity-assistant-head,
+.webui-entity-assistant-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.webui-entity-assistant-title {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--text);
+}
+.webui-entity-assistant-subtitle {
+    margin-top: 2px;
+    font-size: 10px;
+    color: var(--muted);
+}
+.webui-entity-assistant-controls form { margin: 0; flex-shrink: 0; }
+.webui-entity-assistant-controls select {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+}
+.webui-entity-assistant-history {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+}
+.webui-entity-assistant-history summary {
+    padding: 6px 12px;
+    font-size: 10px;
+    cursor: pointer;
+}
+.webui-entity-assistant-history nav {
+    display: flex;
+    flex-direction: column;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 0 8px 8px;
+}
+.webui-entity-assistant-history a {
+    overflow: hidden;
+    padding: 5px 6px;
+    color: var(--text);
+    font-size: 10px;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.webui-entity-assistant-history a:hover,
+.webui-entity-assistant-history a[aria-current="page"] {
+    border-radius: 5px;
+    background: var(--hover-bg);
+}
+.webui-entity-assistant-chat {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.webui-entity-assistant-chat #thread {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px 10px;
+}
+.webui-entity-assistant-chat .messages-inner { max-width: 100%; }
+.webui-entity-assistant-composer {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.webui-entity-assistant-composer textarea {
+    flex: 1;
+    min-width: 0;
+    max-height: 160px;
+    resize: vertical;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+}
+.webui-entity-assistant-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+}
+.webui-entity-assistant-error { margin: 10px; }
+.webui-entity-assistant .webui-load-older { text-align: center; }
+.webui-entity-assistant .empty-state { min-height: 180px; padding: 20px; }
+.webui-entity-assistant .empty-state h2 { font-size: 16px; }
+.webui-entity-assistant .empty-state p { font-size: 11px; }
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+@media (max-width: 900px) {
+    .webui-entity-layout { flex-direction: column; }
+    .webui-entity-content { flex: 1 1 50%; padding: 16px; }
+    .webui-entity-assistant {
+        width: auto;
+        flex: 0 1 48%;
+        border-left: 0;
+        border-top: 1px solid var(--border);
+    }
+}
+
+.webui-usage { margin-bottom: 8px; }
+.webui-usage-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.webui-usage-bar > span { display: block; height: 100%; background: var(--accent); }
+.webui-usage-meta { margin-top: 4px; font-size: 10px; color: var(--muted); }
+
+/* Sidebar panels --------------------------------------------------------- */
+.side-link {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    text-transform: none;
+    letter-spacing: normal;
+}
+.side-link:hover { color: var(--accent-text); }
+.side-list { display: flex; flex-direction: column; gap: 1px; padding: 0 6px 10px; }
+.side-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.4;
+    flex-shrink: 0;
+}
+.side-badge.ok { color: var(--success, #22c55e); border-color: rgba(34, 197, 94, .35); background: rgba(34, 197, 94, .12); }
+.side-filter { padding: 0 10px 8px; }
+.side-filter select {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+    padding: 5px 7px;
+}
+.side-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 0 10px 8px;
+}
+.side-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--muted);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Disclosures / tabs ----------------------------------------------------- */
+.webui-disclosure { padding: 0; overflow: hidden; }
+.webui-disclosure-title {
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+.webui-disclosure-title::-webkit-details-marker { display: none; }
+.webui-disclosure[open] .webui-disclosure-title { border-bottom: 1px solid var(--border); color: var(--text); }
+.webui-disclosure .detail-form { padding: 14px; }
+
+.webui-tab-strip { display: flex; gap: 2px; flex-wrap: wrap; }
+.webui-tab {
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+}
+.webui-tab:hover { background: var(--hover-bg); color: var(--text); }
+.webui-tab.active { background: var(--accent-bg); color: var(--accent-text); }
+
+.webui-tag-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.webui-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--muted);
+    font-size: 11px;
+    text-decoration: none;
+}
+.webui-tag:hover { border-color: var(--accent); color: var(--accent-text); }
+
+.webui-inline-form { display: flex; align-items: center; gap: 6px; margin: 0; flex-wrap: wrap; }
+.webui-inline-form select {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+    padding: 5px 8px;
+}
+.webui-inline-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+.webui-inline-check input { accent-color: var(--accent); }
+.insights-filters { margin-bottom: 12px; }
+
+/* Logs ------------------------------------------------------------------- */
+.webui-log-viewer { height: 100%; min-height: 0; }
+.webui-log {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--code-bg);
+    color: var(--pre-text, var(--text));
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: calc(100vh - 190px);
+    overflow: auto;
+}
+
+.webui-item { border-bottom: 1px solid var(--border-subtle, var(--border)); padding: 6px 0; }
+.webui-item-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text);
+    list-style: none;
+}
+.webui-item-summary::-webkit-details-marker { display: none; }
+.webui-item .detail-prompt { margin-top: 8px; }
+
+.webui-saved-note {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(34, 197, 94, .35);
+    background: rgba(34, 197, 94, .1);
+    color: var(--success, #22c55e);
+    font-size: 12px;
+}
+
+/* Work items board ------------------------------------------------------- */
+.webui-board-new { margin: 0 16px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.webui-board-new .webui-disclosure-title { padding: 9px 12px; }
+.webui-board-new-form { padding: 12px; }
+
+.kanban-card { cursor: grab; }
+.kanban-card:active { cursor: grabbing; }
+.kanban-card.dragging { opacity: .45; border-style: dashed; }
+.kanban-column-body.drag-over { background: var(--accent-bg); outline: 1px dashed var(--accent); outline-offset: -4px; border-radius: 6px; }
+a.kanban-card-title { display: block; color: var(--text); text-decoration: none; }
+a.kanban-card-title:hover { color: var(--accent-text); }
+.kanban-priority { font-variant-numeric: tabular-nums; }
+.kanban-card .detail-badge { font-size: 9px; padding: 1px 6px; }
+
+@media (max-width: 900px) {
+    .webui-chat-panel { position: absolute; right: 0; top: 0; bottom: 0; z-index: 40; box-shadow: -8px 0 24px rgba(0,0,0,.25); }
+    .webui-chat-body { position: relative; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Chat status cards (queue / questions / approvals / turn limit / rate limit)
+   ───────────────────────────────────────────────────────────────────────── */
+
+.webui-load-older {
+    display: flex;
+    justify-content: center;
+    padding: 6px 0 14px;
+}
+
+.webui-card {
+    margin: 12px 0;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 12px;
+    background: var(--surface);
+    overflow: hidden;
+}
+.webui-card-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+    background: var(--topbar-bg);
+}
+.webui-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text);
+}
+.webui-card-sub { font-size: 11px; color: var(--muted); }
+.webui-card-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; }
+.webui-card-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+.webui-card-row:last-child { border-bottom: none; }
+.webui-card-row-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+.webui-card-row-meta { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.webui-card-foot { padding: 8px 12px; font-size: 11px; color: var(--muted); }
+.webui-card-note { padding: 6px 12px; font-size: 11px; color: var(--muted); }
+
+/* Queue ---------------------------------------------------------------- */
+.webui-queue-card { border-color: var(--border2, var(--border)); }
+
+/* Questions ------------------------------------------------------------ */
+.webui-question-block {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+.webui-question-block:last-of-type { border-bottom: none; }
+.webui-question-tag {
+    display: inline-block;
+    margin-bottom: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    background: var(--accent-bg);
+}
+.webui-question-text { margin-bottom: 8px; font-size: 13px; color: var(--text); }
+.webui-question-options { display: flex; flex-direction: column; gap: 6px; }
+.webui-question-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 8px 10px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.webui-question-row:hover { border-color: var(--accent); background: var(--accent-bg); }
+.webui-question-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+}
+.webui-question-opt { display: flex; flex-direction: column; gap: 1px; }
+.webui-question-opt-label { font-weight: 600; }
+.webui-question-opt-desc { font-size: 11px; color: var(--muted); }
+.webui-question-other { display: flex; gap: 6px; margin-top: 8px; }
+.webui-question-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 9px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+}
+.webui-question-answered { font-size: 12px; color: var(--success, #2f9e44); }
+.webui-question-decline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border-subtle, var(--border));
+}
+
+/* Approvals ------------------------------------------------------------ */
+.webui-approval-card { border-color: var(--warning, #b7791f); }
+.webui-approval-call {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+.webui-approval-call:last-of-type { border-bottom: none; }
+.webui-approval-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.webui-approval-reason { margin-top: 2px; font-size: 11px; color: var(--warning, #b7791f); }
+.webui-approval-args {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+.webui-approval-arg-key { color: var(--text); font-weight: 600; }
+.webui-approval-btns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+.webui-approval-deny { display: flex; flex: 1; min-width: 220px; gap: 6px; }
+
+/* Turn limit / rate limit --------------------------------------------- */
+.webui-turnlimit-card,
+.webui-ratelimit-card { border-color: var(--warning, #b7791f); }
+.webui-turnlimit-card .webui-card-actions { margin-left: 0; padding: 0 12px 12px; }
+.webui-ratelimit-card .webui-card-row { border-bottom: none; }
+.webui-ratelimit-section {
+    padding: 8px 12px 2px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.webui-ratelimit-row { display: block; padding: 0 12px; }
+.webui-ratelimit-row-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+.webui-ratelimit-row-btn:hover {
+    background: var(--surface-subtle);
+    border-color: var(--border-subtle, var(--border));
+}
+.webui-ratelimit-row.is-current .webui-ratelimit-row-btn {
+    border-color: var(--accent);
+    background: var(--surface-subtle);
+}
+.webui-ratelimit-row-label { font-weight: 600; }
+.webui-ratelimit-row-meta { margin-left: auto; font-size: 11px; color: var(--muted); }
+.webui-ratelimit-policy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 12px;
+}
+.webui-ratelimit-policy form { display: flex; align-items: center; gap: 6px; }
+.webui-ratelimit-maxwait { margin-left: auto; font-size: 11px; color: var(--muted); }
+.webui-ratelimit-maxwait input {
+    width: 64px;
+    padding: 3px 6px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+}
+
+/* Settings → Providers ------------------------------------------------ */
+.webui-key-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+.webui-key-name { min-width: 80px; font-size: 11px; color: var(--muted); }
+.webui-key-value {
+    flex: 1;
+    min-width: 120px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--surface);
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.webui-key-add { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.webui-key-add input {
+    flex: 1;
+    min-width: 120px;
+    padding: 6px 9px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+}
+.webui-todo-index { margin-right: 4px; font-size: 10px; color: var(--muted); }
+
+/* ── Connection banner ──────────────────────────────────────────────── */
+#connection-banner {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 400;
+    padding: 6px 12px;
+    background: var(--warning-bg, #4a3a12);
+    color: var(--warning-text, #f5d67a);
+    border-bottom: 1px solid var(--warning-border, #6b5418);
+    font-size: 12px;
+    text-align: center;
+}
+html.sse-down #connection-banner { display: block; }
+
+/* ── Composer config bar ────────────────────────────────────────────── */
+.webui-composer-config {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    max-width: 95%;
+    margin: 0 auto 6px;
+    padding: 0 2px;
+}
+.webui-config-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--muted);
+}
+.webui-config-label {
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: 9.5px;
+    opacity: .8;
+}
+.webui-config-field select {
+    max-width: 180px;
+    padding: 3px 6px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+}
+
+/* ── Templates panel ────────────────────────────────────────────────── */
+.webui-template-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+.webui-template-preview {
+    max-height: 260px;
+    overflow: auto;
+    margin: 6px 0 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ── Provider probe ─────────────────────────────────────────────────── */
+.webui-probe-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+.webui-probe-status {
+    font-size: 11px;
+    color: var(--muted);
+}
+.webui-probe-status.is-healthy { color: var(--success, #4caf50); }
+.webui-probe-status.is-failed { color: var(--danger, #e06c75); }
+
+/* ── Chat header context usage ──────────────────────────────────────── */
+.webui-ctx {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--muted);
+    border: none;
+    padding: 0;
+    background: none;
+}
+.webui-ctx .ctx-ring {
+    width: 24px;
+    height: 24px;
+}
+.webui-ctx .ctx-ring-center {
+    font-size: 8px;
+}
+
+/* ── Chat search ────────────────────────────────────────────────────── */
+.webui-sidebar-search {
+    padding: 0 8px 6px;
+}
+.webui-sidebar-search input,
+.webui-page-search input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 11.5px;
+}
+.webui-page-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.webui-page-search input { width: 180px; }
+
+/* ── Composer image attachments ─────────────────────────────────────── */
+.webui-attach-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+}
+.webui-attach-btn:hover { color: var(--accent-text); background: var(--accent-bg); }
+.webui-attach-tray {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 8px 0;
+}
+.webui-attach-item {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border2, var(--border));
+}
+.webui-attach-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.webui-attach-remove {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 16px;
+    height: 16px;
+    line-height: 14px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .6);
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* ── Slash-command palette ──────────────────────────────────────────── */
+.webui-cmd-btn {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+}
+.webui-cmd-btn:hover { color: var(--text); border-color: var(--accent); }
+.webui-cmd-palette {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% - 4px);
+    transform: translateX(-50%);
+    width: min(560px, calc(100% - 24px));
+    max-height: 380px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 60;
+    background: var(--surface);
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, .35);
+}
+.webui-cmd-palette[hidden] { display: none; }
+.webui-cmd-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border2, var(--border));
+}
+.webui-cmd-head input {
+    flex: 1;
+    min-width: 0;
+    padding: 5px 8px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+}
+.webui-cmd-close {
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+}
+.webui-cmd-list { overflow-y: auto; padding: 4px; }
+.webui-cmd-item {
+    display: block;
+    width: 100%;
+    padding: 7px 9px;
+    border: none;
+    border-radius: 7px;
+    background: none;
+    color: var(--text);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+.webui-cmd-item:hover,
+.webui-cmd-item.active { background: var(--hover-bg); }
+.webui-cmd-item-name {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.webui-cmd-item-arg {
+    font-weight: 400;
+    font-size: 10.5px;
+    color: var(--muted);
+}
+.webui-cmd-item-desc {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.webui-cmd-empty { padding: 12px; font-size: 12px; color: var(--muted); }
+.webui-cmd-form { padding: 10px; overflow-y: auto; }
+.webui-cmd-form-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 8px;
+}
+.webui-cmd-form-head strong { font-size: 13px; }
+.webui-cmd-form-head span { font-size: 11px; color: var(--muted); }
+.webui-cmd-fields { display: flex; flex-direction: column; gap: 8px; }
+.webui-cmd-field { display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
+.webui-cmd-field > span { color: var(--muted); }
+.webui-cmd-field input,
+.webui-cmd-field select {
+    padding: 5px 8px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+}
+.webui-cmd-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+/* ── Inline message editing ─────────────────────────────────────────── */
+.webui-msg-edit {
+    margin: 6px 0 0;
+    padding: 8px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 8px;
+    background: var(--surface);
+}
+.webui-msg-edit[hidden] { display: none; }
+.webui-msg-edit textarea {
+    width: 100%;
+    min-height: 54px;
+    padding: 6px 8px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 12.5px;
+    resize: vertical;
+}
+.webui-msg-edit-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+.webui-msg-edit-actions .detail-form-hint { margin-right: auto; }
+
+/* ── Chat table of contents (compaction boundaries) ─────────────────── */
+.webui-chat-toc {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 20;
+    pointer-events: none;
+}
+.webui-chat-toc-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 4px;
+    pointer-events: auto;
+}
+.webui-chat-toc-item {
+    width: 18px;
+    height: 3px;
+    border: none;
+    border-radius: 999px;
+    padding: 0;
+    cursor: pointer;
+    background: color-mix(in srgb, var(--muted) 45%, transparent);
+    transition: background .15s ease, transform .15s ease;
+}
+.webui-chat-toc-item:hover { background: var(--muted); transform: scaleX(1.15); }
+.webui-chat-toc-item.active {
+    background: var(--accent);
+    transform: scaleX(1.25);
+}
+@media (max-width: 900px) {
+    .webui-chat-toc { right: 2px; }
+    .webui-chat-toc-item { width: 14px; }
+}
+
+/* ── Sidebar session actions menu ───────────────────────────────────── */
+.webui-session-wrap { position: relative; }
+.webui-session-menu {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    z-index: 5;
+}
+.webui-session-menu-trigger {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    color: var(--muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .12s ease, background .12s ease;
+    list-style: none;
+}
+.webui-session-menu-trigger::-webkit-details-marker { display: none; }
+.webui-session-wrap:hover .webui-session-menu-trigger,
+.webui-session-menu[open] .webui-session-menu-trigger {
+    opacity: 1;
+}
+.webui-session-menu-trigger:hover { background: var(--hover-bg); color: var(--text); }
+.webui-session-menu-body {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    width: 230px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 9px;
+    background: var(--surface);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .35);
+}
+.webui-session-menu-body form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 5px 4px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+.webui-session-menu-body form:last-child { border-bottom: none; }
+.webui-session-menu-item {
+    width: 100%;
+    padding: 5px 7px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: var(--text);
+    text-align: left;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+.webui-session-menu-item:hover { background: var(--hover-bg); }
+.webui-session-menu-item.danger { color: var(--error, #e05); }
+.webui-session-menu-input {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 11.5px;
+}
+
+/* ── Live terminal buffer (panel tab) ───────────────────────────────── */
+.webui-terminal .webui-item-summary { cursor: pointer; }
+.webui-terminal-live {
+    margin-top: 6px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 7px;
+    background: var(--input-bg);
+    overflow: hidden;
+}
+.webui-terminal-output {
+    margin: 0;
+    padding: 8px;
+    max-height: 320px;
+    overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.webui-terminal-live .webui-error { padding: 8px; }
+
+/* ── Right-panel detail rows (settings/subagents/calls/terminals) ───── */
+.webui-settings-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.webui-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+    min-width: 0;
+}
+.webui-line-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+.webui-session-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: .55;
+}
+.webui-session-dot.is-streaming {
+    background: var(--success, #3fb950);
+    opacity: 1;
+    animation: webui-pulse 1.4s ease-in-out infinite;
+}
+.webui-session-dot.needs-approval {
+    background: #f59e0b;
+    opacity: 1;
+}
+.webui-call-badge {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 999px;
+    color: #fff;
+    white-space: nowrap;
+}
+
+/* ── Compaction boundary bubble: neutral marker, distinct from accent user bubble ── */
+:root {
+  --compaction-bubble-bg: var(--surface, #f4f4f5);
+  --compaction-bubble-border: var(--border, #e4e4e7);
+  --compaction-bubble-text: var(--muted, #71717a);
+}
+.msg-row[data-role="user"][data-compaction="1"] .msg-body {
+  background: var(--compaction-bubble-bg);
+  border-color: var(--compaction-bubble-border);
+  color: var(--compaction-bubble-text);
+  font-size: 12.5px;
+}
+.msg-row[data-role="user"][data-compaction="1"] .msg-body code,
+.msg-row[data-role="user"][data-compaction="1"] .msg-body a {
+  color: var(--compaction-bubble-text);
+}

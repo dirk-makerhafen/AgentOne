@@ -1,0 +1,36 @@
+{% load webui %}
+<div id="workitems-board" class="kanban-board-wrap"
+     hx-get="{% url 'webui:workitems_board' %}{% if board_qs %}?{{ board_qs }}{% endif %}"
+     hx-trigger="sse:WorkItem delay:400ms"
+     hx-swap="outerHTML">
+    <div class="kanban-board">
+        {% for column in columns %}
+        <section class="kanban-column" data-status="{{ column.value }}">
+            <header class="kanban-column-head">
+                <span>{{ column.label }}</span>
+                <span class="kanban-count">{{ counts|get_item:column.value }}</span>
+            </header>
+            <div class="kanban-column-body" data-status="{{ column.value }}">
+                {% for row in grouped|get_item:column.value %}
+                <article class="kanban-card" draggable="true"
+                         data-id="{{ row.id }}"
+                         data-status="{{ row.status }}"
+                         data-actions="{% for action in row.actions %}{{ action.key }} {% endfor %}">
+                    <a class="kanban-card-title" href="{% url 'webui:workitem' row.id %}">{{ row.title }}</a>
+                    {% if row.body %}<div class="kanban-card-body">{{ row.body|truncatechars:140 }}</div>{% endif %}
+                    <div class="kanban-card-meta">
+                        <span class="kanban-priority">P{{ row.priority }}</span>
+                        {% if row.assignee %}<span>{{ row.assignee }}</span>{% endif %}
+                        {% if row.requires_verification %}
+                        <span class="detail-badge{% if row.verify_status == 'APPROVED' %} ok{% elif row.verify_status == 'REJECTED' %} err{% endif %}">
+                            {{ row.verify_status|default:"verify" }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+</div>

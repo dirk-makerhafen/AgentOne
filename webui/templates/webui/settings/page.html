@@ -1,0 +1,227 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}Settings · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">Settings</div>
+        <div class="main-view-actions">
+            <nav class="webui-tab-strip" aria-label="Settings tabs">
+                {% for key, label in settings_tabs %}
+                <a class="webui-tab{% if key == tab %} active{% endif %}" href="{% url 'webui:settings_tab' key %}">{{ label }}</a>
+                {% endfor %}
+            </nav>
+        </div>
+    </header>
+    <div class="main-view-body">
+        <div class="main-view-content">
+            {% if saved %}<div class="webui-saved-note">Settings saved.</div>{% endif %}
+
+            {% if tab == "appearance" %}
+            <div class="detail-card">
+                <div class="detail-card-title">Appearance</div>
+                <form class="detail-form" method="post" action="{% url 'webui:settings_save' 'appearance' %}">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="setting-theme">Theme</label>
+                            <select id="setting-theme" name="theme">
+                                {% for value in themes %}
+                                <option value="{{ value }}"{% if value == user_settings.theme %} selected{% endif %}>{{ value|capfirst }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="setting-skin">Skin</label>
+                            <select id="setting-skin" name="skin">
+                                {% for value in skins %}
+                                <option value="{{ value }}"{% if value == user_settings.skin %} selected{% endif %}>{{ value|capfirst }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="setting-font-size">Font size</label>
+                        <select id="setting-font-size" name="font_size">
+                            {% for value in font_sizes %}
+                            <option value="{{ value }}"{% if value == user_settings.font_size %} selected{% endif %}>{{ value|capfirst }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="detail-form-row">
+                        <label class="detail-form-check">
+                            <input type="checkbox" name="workspace_panel_open"{% if user_settings.workspace_panel_open %} checked{% endif %}>
+                            Open the session panel by default
+                        </label>
+                    </div>
+                    <button class="webui-primary-btn" type="submit">Save appearance</button>
+                </form>
+            </div>
+
+            {% elif tab == "preferences" %}
+            <div class="detail-card">
+                <div class="detail-card-title">Preferences</div>
+                <form class="detail-form" method="post" action="{% url 'webui:settings_save' 'preferences' %}">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="setting-send-key">Send key</label>
+                            <select id="setting-send-key" name="send_key">
+                                {% for value in send_keys %}
+                                <option value="{{ value }}"{% if value == user_settings.send_key %} selected{% endif %}>
+                                    {% if value == "enter" %}Enter{% else %}Ctrl/⌘ + Enter{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="setting-default-model">Default model</label>
+                            <input id="setting-default-model" type="text" name="default_model"
+                                   value="{{ user_settings.default_model }}" list="model-options" placeholder="provider/model">
+                            <datalist id="model-options">
+                                {% for model in models %}<option value="{{ model }}">{% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label class="detail-form-check">
+                            <input type="checkbox" name="prevent_sleep_when_local_ai"{% if user_settings.prevent_sleep_when_local_ai %} checked{% endif %}>
+                            Keep the machine awake while local AI is running
+                        </label>
+                    </div>
+                    {% if power %}
+                    <div class="webui-muted-note" style="margin-bottom:10px">
+                        Live: battery {{ power.battery_percent|default:"—" }}% · {{ power.source }} ·
+                        sleep prevention: {{ power.sleep_state }} · local AI: {% if power.paused %}paused ({{ power.pause_reason }}){% else %}OK{% endif %}
+                    </div>
+                    {% endif %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="setting-min-battery">Keep awake above battery %</label>
+                            <input id="setting-min-battery" type="number" name="min_battery_pct_for_caffeinate"
+                                   value="{{ user_settings.min_battery_pct_for_caffeinate }}" min="0" max="100">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="setting-pause-battery">Pause local AI below battery %</label>
+                            <input id="setting-pause-battery" type="number" name="pause_local_ai_below_battery_pct"
+                                   value="{{ user_settings.pause_local_ai_below_battery_pct }}" min="0" max="100">
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="setting-release-delay">Release delay (minutes)</label>
+                        <input id="setting-release-delay" type="number" name="sleep_guard_release_delay_minutes"
+                               value="{{ user_settings.sleep_guard_release_delay_minutes }}" min="0">
+                    </div>
+                    <button class="webui-primary-btn" type="submit">Save preferences</button>
+                </form>
+            </div>
+
+            {% elif tab == "providers" %}
+            <div class="detail-card" id="providers-card"
+                 {% if provider_probe_running %}
+                 hx-get="{% url 'webui:settings_tab' 'providers' %}"
+                 hx-trigger="every 3s" hx-select="#providers-card" hx-swap="outerHTML"
+                 {% endif %}>
+                <div class="detail-card-title">Providers</div>
+                <div class="webui-muted-note" style="margin-bottom:10px">
+                    Manage API keys. Changes take effect immediately. Keys are masked here; they are never sent to the browser in full.
+                </div>
+                {% for provider in providers %}
+                <details class="webui-item">
+                    <summary class="webui-item-summary">
+                        <span>
+                            <strong>{{ provider.name }}</strong>
+                            {% if provider.is_local %}<span class="detail-badge">local</span>{% endif %}
+                            <span class="webui-muted-note">{{ provider.model_count }} model{{ provider.model_count|pluralize }}</span>
+                        </span>
+                        <span class="webui-muted-note">
+                            {% if provider.has_default %}built-in key
+                            {% elif provider.keys %}{{ provider.keys|length }} key{{ provider.keys|length|pluralize }}
+                            {% else %}no key{% endif %}
+                        </span>
+                    </summary>
+                    <div class="detail-form" style="padding-top:0">
+                        {% if provider.api_key_url %}
+                        <div class="detail-form-row">
+                            <a class="webui-link" href="{{ provider.api_key_url }}" target="_blank" rel="noopener">Get an API key</a>
+                        </div>
+                        {% endif %}
+                        {% for key in provider.keys %}
+                        <div class="webui-key-row">
+                            <span class="webui-key-name">{{ key.comment }}</span>
+                            <code class="webui-key-value">{{ key.display }}</code>
+                            {% if key.cooling %}<span class="webui-muted-note">{{ key.cooling }}</span>{% endif %}
+                            <form method="post" action="{% url 'webui:settings_provider_key' provider.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="key_id" value="{{ key.pk }}">
+                                <button class="webui-action-btn" type="submit">{% if key.enabled %}Disable{% else %}Enable{% endif %}</button>
+                            </form>
+                            <form method="post" action="{% url 'webui:settings_provider_key' provider.id %}"
+                                  onsubmit="return confirm('Delete this API key?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="key_id" value="{{ key.pk }}">
+                                <button class="webui-action-btn danger" type="submit">Delete</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                        <form class="webui-key-add" method="post" action="{% url 'webui:settings_provider_key' provider.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="add">
+                            <input type="text" name="comment" placeholder="Name" autocomplete="off">
+                            <input type="password" name="key" placeholder="Paste API key" autocomplete="off" required>
+                            <button class="webui-action-btn" type="submit">Add key</button>
+                        </form>
+                        {% if provider.setup %}
+                        <div class="webui-muted-note">{{ provider.setup|linebreaksbr }}</div>
+                        {% endif %}
+                        <div class="webui-probe-row">
+                            <form method="post" action="{% url 'webui:settings_provider_test' provider.id %}">
+                                {% csrf_token %}
+                                <button class="webui-action-btn" type="submit"
+                                        {% if provider.probe.verdict == "running" %}disabled{% endif %}>
+                                    {% if provider.probe.verdict == "running" %}Testing…{% else %}Test{% endif %}
+                                </button>
+                            </form>
+                            {% if provider.probe %}
+                            <span class="webui-probe-status is-{{ provider.probe.verdict }}">
+                                {% if provider.probe.verdict == "running" %}
+                                Running a smoke-test turn…
+                                {% elif provider.probe.verdict == "healthy" %}
+                                Healthy · {{ provider.probe.latency_ms }} ms{% if provider.probe.model %} · {{ provider.probe.model }}{% endif %}
+                                {% elif provider.probe.verdict == "failed" %}
+                                Failed{% if provider.probe.error_kind %} ({{ provider.probe.error_kind }}){% endif %}:
+                                {{ provider.probe.error_message }}
+                                {% else %}
+                                {{ provider.probe.verdict }}{% if provider.probe.latency_ms %} · {{ provider.probe.latency_ms }} ms{% endif %}
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </details>
+                {% empty %}
+                <div class="insights-empty">No providers configured.</div>
+                {% endfor %}
+            </div>
+
+            {% elif tab == "system" %}
+            <div class="detail-card">
+                <div class="detail-card-title">System</div>
+                <div class="detail-row"><span class="detail-row-label">Python</span><span class="detail-row-value">{{ system.python }}</span></div>
+                <div class="detail-row"><span class="detail-row-label">Platform</span><span class="detail-row-value">{{ system.platform }}</span></div>
+                <div class="detail-row"><span class="detail-row-label">AgentOne home</span><span class="detail-row-value"><code>{{ system.agentone_home }}</code></span></div>
+                <div class="detail-row"><span class="detail-row-label">Base dir</span><span class="detail-row-value"><code>{{ system.base_dir }}</code></span></div>
+                <div class="detail-row"><span class="detail-row-label">Log dir</span><span class="detail-row-value"><code>{{ system.log_dir }}</code></span></div>
+                <div class="detail-row"><span class="detail-row-label">Database</span><span class="detail-row-value"><code>{{ system.database }}</code></span></div>
+                <div class="detail-row"><span class="detail-row-label">Redis</span><span class="detail-row-value"><code>{{ system.redis|default:"—" }}</code></span></div>
+                <div class="detail-row"><span class="detail-row-label">Timezone</span><span class="detail-row-value">{{ system.timezone }}</span></div>
+                <div class="detail-row"><span class="detail-row-label">Debug</span><span class="detail-row-value">{% if system.debug %}on{% else %}off{% endif %}</span></div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

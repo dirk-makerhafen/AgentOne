@@ -1,0 +1,287 @@
+{% load webui %}
+{# Status/action cards.  Rendered inside the thread fragment so every SSE
+   refresh reflects the current task-call state. #}
+
+{% if cards.queue.count %}
+<div class="webui-card webui-queue-card" role="region" aria-label="Queued messages">
+    <div class="webui-card-head">
+        <span class="webui-card-title">{{ cards.queue.count }} queued</span>
+        <span class="webui-card-sub">Sends automatically when the current response finishes.</span>
+        <span class="webui-card-actions">
+            <form method="post" hx-post="{% url 'webui:queue_action' session.pk %}"
+                  hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+                {% csrf_token %}<input type="hidden" name="action" value="combine">
+                <button class="webui-action-btn" type="submit" title="Combine all queued messages into one">Combine</button>
+            </form>
+            <form method="post" hx-post="{% url 'webui:queue_action' session.pk %}"
+                  hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+                {% csrf_token %}<input type="hidden" name="action" value="clear">
+                <button class="webui-action-btn danger" type="submit" title="Clear all queued messages">Clear</button>
+            </form>
+        </span>
+    </div>
+    {% for row in cards.queue.rows %}
+    <div class="webui-card-row">
+        <span class="webui-card-row-text">{{ row.text|linebreaksbr }}</span>
+        {% if row.model %}<span class="webui-card-row-meta">{{ row.model }}</span>{% endif %}
+        <form method="post" hx-post="{% url 'webui:queue_action' session.pk %}"
+              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="cancel">
+            <input type="hidden" name="call_id" value="{{ row.pk }}">
+            <button class="webui-icon-btn" type="submit" title="Remove from queue" aria-label="Remove from queue">×</button>
+        </form>
+    </div>
+    {% endfor %}
+    {% if cards.queue.remaining %}
+    <div class="webui-card-foot">+{{ cards.queue.remaining }} more queued</div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if cards.questions.items %}
+<div class="webui-card webui-question-card" role="dialog" aria-labelledby="webui-question-title">
+    <div class="webui-card-head">
+        <span class="webui-card-title" id="webui-question-title">Questions for you</span>
+        <span class="webui-card-sub">The agent needs your input before it can continue.</span>
+    </div>
+    {% for item in cards.questions.items %}
+    <div class="webui-question-block">
+        {% if item.header %}<div class="webui-question-tag">{{ item.header }}</div>{% endif %}
+        <div class="webui-question-text">{{ item.question }}</div>
+
+        {% if item.answered %}
+        <div class="webui-question-answered">✓ {{ item.answer_text }}</div>
+        {% elif item.multi %}
+        <form method="post" hx-post="{% url 'webui:call_action' item.call_pk %}"
+              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="answer">
+            <input type="hidden" name="qidx" value="{{ item.qidx }}">
+            <div class="webui-question-options">
+                {% for opt in item.options %}
+                <label class="webui-question-check">
+                    <input type="checkbox" name="option" value="{{ opt.oidx }}">
+                    <span class="webui-question-opt">
+                        <span class="webui-question-opt-label">{{ opt.label }}</span>
+                        {% if opt.description %}<span class="webui-question-opt-desc">{{ opt.description }}</span>{% endif %}
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="webui-question-other">
+                <input class="webui-question-input" type="text" name="other" placeholder="Other (free text, optional)" autocomplete="off">
+                <button class="webui-action-btn" type="submit">Submit</button>
+            </div>
+        </form>
+        {% else %}
+        <form method="post" hx-post="{% url 'webui:call_action' item.call_pk %}"
+              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="answer">
+            <input type="hidden" name="qidx" value="{{ item.qidx }}">
+            <div class="webui-question-options">
+                {% for opt in item.options %}
+                <button class="webui-question-row" type="submit" name="option" value="{{ opt.oidx }}">
+                    <span class="webui-question-opt-label">{{ opt.label }}</span>
+                    {% if opt.description %}<span class="webui-question-opt-desc">{{ opt.description }}</span>{% endif %}
+                </button>
+                {% endfor %}
+            </div>
+            <div class="webui-question-other">
+                <input class="webui-question-input" type="text" name="other" placeholder="Other (free text)" autocomplete="off">
+                <button class="webui-action-btn" type="submit">Send</button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% for call in cards.questions.calls %}
+    <form class="webui-question-decline" method="post"
+          hx-post="{% url 'webui:call_action' call.pk %}"
+          hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="decline">
+        <input class="webui-question-input" type="text" name="feedback" placeholder="Why decline? (optional)" autocomplete="off">
+        <button class="webui-action-btn danger" type="submit">Decline — use your best judgment</button>
+    </form>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if cards.approvals.count %}
+<div class="webui-card webui-approval-card" role="alertdialog" aria-labelledby="webui-approval-title">
+    <div class="webui-card-head">
+        <span class="webui-card-title" id="webui-approval-title">Commands awaiting approval</span>
+        <span class="webui-card-sub">These calls need your approval before they can execute.</span>
+    </div>
+    {% for row in cards.approvals.rows %}
+    <div class="webui-approval-call">
+        <div class="webui-approval-name">{{ row.name }}</div>
+        {% if row.auto_status == "pending" %}
+        <div class="webui-card-note">Auto-review in progress — you may still approve or deny manually.</div>
+        {% elif row.auto_status == "escalated" %}
+        <div class="webui-card-note">Escalated by auto-review: {{ row.auto_reason }}</div>
+        {% endif %}
+        {% if row.reason %}<div class="webui-approval-reason">{{ row.reason }}</div>{% endif %}
+        {% if row.arguments %}
+        <div class="webui-approval-args">
+            {% for arg in row.arguments %}
+            <div><span class="webui-approval-arg-key">{{ arg.key }}:</span> <span class="webui-approval-arg-val">{{ arg.value }}</span></div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="webui-approval-btns">
+            <form method="post" hx-post="{% url 'webui:call_action' row.pk %}"
+                  hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve">
+                <button class="webui-action-btn" type="submit">Approve</button>
+            </form>
+            <form class="webui-approval-deny" method="post"
+                  hx-post="{% url 'webui:call_action' row.pk %}"
+                  hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="deny">
+                <input class="webui-question-input" type="text" name="feedback" placeholder="Reason for denying (optional)" autocomplete="off">
+                <button class="webui-action-btn danger" type="submit">Deny</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    {% if cards.approvals.remaining %}
+    <div class="webui-card-foot">+{{ cards.approvals.remaining }} more awaiting approval</div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if cards.turn_limit.active %}
+<div class="webui-card webui-turnlimit-card" role="alertdialog" aria-labelledby="webui-turnlimit-title">
+    <div class="webui-card-head">
+        <span class="webui-card-title" id="webui-turnlimit-title">Unattended turn limit reached</span>
+        <span class="webui-card-sub">
+            The agent reached {{ cards.turn_limit.maximum }} unattended turns
+            ({{ cards.turn_limit.current }} so far). Approve to reset the counters and continue.
+        </span>
+    </div>
+    <div class="webui-card-actions">
+        <form method="post" hx-post="{% url 'webui:turn_approval' session.pk %}"
+              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+            {% csrf_token %}<input type="hidden" name="action" value="approve">
+            <button class="webui-primary-btn" type="submit">Approve &amp; continue</button>
+        </form>
+        <form method="post" hx-post="{% url 'webui:turn_approval' session.pk %}"
+              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+            {% csrf_token %}<input type="hidden" name="action" value="deny">
+            <button class="webui-action-btn" type="submit">Deny</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if cards.ratelimit.count %}
+<div class="webui-card webui-ratelimit-card" role="status" aria-live="polite">
+    <div class="webui-card-head">
+        <span class="webui-card-title">LLM rate limited</span>
+        <span class="webui-card-sub">{{ cards.ratelimit.count }} waiting{% if cards.ratelimit.model %} · {{ cards.ratelimit.model }}{% endif %}{% if cards.ratelimit.provider %} ({{ cards.ratelimit.provider }}){% endif %}</span>
+    </div>
+    <div class="webui-card-row">
+        <span class="webui-card-row-text">
+            {% if cards.ratelimit.resuming %}Resuming on another API key…
+            {% elif cards.ratelimit.wait_text %}Auto-retrying in {{ cards.ratelimit.wait_text }}.
+            {% else %}Waiting for capacity to free up.{% endif %}
+        </span>
+        <form method="post" hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+            {% csrf_token %}<input type="hidden" name="action" value="retry">
+            <button class="webui-action-btn" type="submit">Retry now</button>
+        </form>
+    </div>
+
+    {% if cards.ratelimit.keys %}
+    <div class="webui-ratelimit-section">API keys for {{ cards.ratelimit.provider }}</div>
+    {% for key in cards.ratelimit.keys %}
+    <form class="webui-ratelimit-row{% if key.current %} is-current{% endif %}" method="post"
+          hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+          hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="switch-key">
+        <input type="hidden" name="key" value="{{ key.pk }}">
+        <button class="webui-ratelimit-row-btn" type="submit"
+                title="Use this key for the session{% if key.current %} (currently in use){% endif %}">
+            <span class="webui-ratelimit-row-label">{{ key.label }}</span>
+            <span class="webui-ratelimit-row-meta">{{ key.status }}</span>
+        </button>
+    </form>
+    {% endfor %}
+    {% endif %}
+
+    {% if cards.ratelimit.providers %}
+    <div class="webui-ratelimit-section">Alternative providers for {{ cards.ratelimit.model }}</div>
+    {% for alt in cards.ratelimit.providers %}
+    <form class="webui-ratelimit-row" method="post"
+          hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+          hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="switch-provider">
+        <input type="hidden" name="provider" value="{{ alt.pk }}">
+        <button class="webui-ratelimit-row-btn" type="submit"
+                title="Use {{ alt.name }} for {{ cards.ratelimit.model }}">
+            <span class="webui-ratelimit-row-label">{{ alt.name }}</span>
+            <span class="webui-ratelimit-row-meta">{{ alt.keys_text }}</span>
+        </button>
+    </form>
+    {% endfor %}
+    {% endif %}
+
+    {% if cards.ratelimit.models %}
+    <div class="webui-ratelimit-section">Or switch model</div>
+    {% for alt in cards.ratelimit.models %}
+    <form class="webui-ratelimit-row" method="post"
+          hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+          hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="switch-model">
+        <input type="hidden" name="model" value="{{ alt.name }}">
+        <button class="webui-ratelimit-row-btn" type="submit" title="Switch to {{ alt.name }}">
+            <span class="webui-ratelimit-row-label">{{ alt.name }}</span>
+            <span class="webui-ratelimit-row-meta">{{ alt.providers_text }}</span>
+        </button>
+    </form>
+    {% endfor %}
+    {% endif %}
+
+    <div class="webui-ratelimit-policy">
+        <form method="post" hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle-failover">
+            <button class="webui-ratelimit-row-btn" type="submit"
+                    title="Automatically use another key of the same provider when one is rate-limited">
+                <span class="webui-ratelimit-row-label">Automatic key switching</span>
+                <span class="webui-ratelimit-row-meta">{% if cards.ratelimit.auto_failover %}On{% else %}Off{% endif %}</span>
+            </button>
+        </form>
+        <form class="webui-ratelimit-maxwait" method="post"
+              hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="max-wait">
+            <label>Max wait
+                <input type="number" min="0" step="5" name="seconds"
+                       value="{{ cards.ratelimit.max_wait }}"
+                       title="If the wait for the current key exceeds this, fail over automatically (0 = no limit)"> s
+            </label>
+            <button class="webui-action-btn" type="submit">Apply</button>
+        </form>
+    </div>
+
+    {% if not cards.ratelimit.has_alternatives %}
+    <div class="webui-card-foot">
+        No alternative provider or model available — add an API key in
+        <a class="webui-link" href="{% url 'webui:settings_tab' 'providers' %}">Settings → Providers</a>,
+        or wait for the auto-retry.
+    </div>
+    {% endif %}
+</div>
+{% endif %}

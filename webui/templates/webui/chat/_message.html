@@ -1,0 +1,111 @@
+{% load webui %}
+{% if row.role == "user" %}
+<div class="msg-row" data-role="user" data-pk="{{ row.obj.pk }}"{% if row.obj.message_type == "compaction" %} data-compaction="1"{% endif %}>
+    <div class="msg-body">
+        {% for image in row.images %}
+            <img class="chat-image" src="{{ image }}" alt="attached image">
+        {% endfor %}
+        {% if row.body_text %}{{ row.body_text|linebreaksbr }}{% endif %}
+    </div>
+    <div class="msg-foot">
+        <span class="msg-time" title="{{ row.obj.created_at }}">{{ row.obj.created_at|clock }}</span>
+        <span class="msg-actions">
+            <button class="msg-action-btn" type="button" data-copy title="Copy message" aria-label="Copy message">⧉</button>
+            <button class="msg-action-btn" type="button" data-tts title="Listen" aria-label="Listen">🔊</button>
+            <button class="msg-action-btn" type="button" data-msg-edit title="Edit message" aria-label="Edit message">✎</button>
+            <form method="post" action="{% url 'webui:fork_chat' session.pk %}">
+                {% csrf_token %}<input type="hidden" name="message_id" value="{{ row.obj.pk }}">
+                <button class="msg-action-btn" type="submit" title="Fork from here" aria-label="Fork from here">⑂</button>
+            </form>
+        </span>
+    </div>
+    <form class="webui-msg-edit" method="post"
+          action="{% url 'webui:edit_message' session.pk row.obj.pk %}" hidden>
+        {% csrf_token %}
+        <textarea name="text" rows="2" aria-label="Edit message">{{ row.body_text }}</textarea>
+        <div class="webui-msg-edit-actions">
+            <span class="detail-form-hint">Saving removes every later message and reruns the turn.</span>
+            <button class="webui-action-btn" type="button" data-msg-edit-cancel>Cancel</button>
+            <button class="webui-primary-btn" type="submit">Save &amp; rerun</button>
+        </div>
+    </form>
+</div>
+{% elif row.role == "assistant" %}
+<div class="msg-row" data-role="assistant" data-pk="{{ row.obj.pk }}">
+    <div class="assistant-turn-blocks">
+        {% if row.reasoning %}
+        <details class="thinking-card" data-open-key="think-{{ row.obj.pk }}">
+            <summary class="thinking-card-header">
+                <span class="thinking-card-icon">✦</span>
+                <span class="thinking-card-label">Thinking</span>
+                <span class="thinking-card-toggle">▸</span>
+            </summary>
+            <div class="thinking-card-body"><pre>{{ row.reasoning }}</pre></div>
+        </details>
+        {% endif %}
+
+        {% if row.body_html %}
+        <div class="assistant-segment">
+            <div class="msg-body">{{ row.body_html|safe }}</div>
+        </div>
+        {% endif %}
+
+        {% for part in row.tools %}
+        <details class="tool-card webui-tool-card{% if part.halted %} approval-pending{% endif %}"
+                 data-open-key="tool-{{ part.pk }}"
+                 {% if part.pk %}hx-get="{% url 'webui:call_detail' part.pk %}"
+                 hx-trigger="toggle once"
+                 hx-target="find .webui-tool-detail"
+                 hx-swap="innerHTML"
+                 hx-sync="this:replace"{% endif %}>
+            <summary class="webui-tool-summary">
+                <span class="webui-tool-icon">⚙</span>
+                <span class="webui-tool-name" title="{{ part.name }}">{{ part.name }}</span>
+                {% if part.halted %}
+                    <span class="webui-tool-approval">approval needed</span>
+                {% elif part.status_label %}
+                    <span class="card-status {{ part.status_class }}">{{ part.status_label }}</span>
+                {% endif %}
+                {% if part.subcalls.executing %}
+                    <span class="card-meta" title="{{ part.subcalls.executing }} sub-task call(s) currently executing{% if part.subcalls.truncated %} (counts capped — tree is bigger){% endif %}">↳ {{ part.subcalls.executing }} running</span>
+                {% elif part.subcalls.waiting %}
+                    <span class="card-meta" title="{{ part.subcalls.waiting }} sub-task call(s) queued">↳ {{ part.subcalls.waiting }} queued</span>
+                {% elif part.subcalls.finished %}
+                    <span class="card-meta" title="{{ part.subcalls.finished }} finished sub-task call(s)">↳ {{ part.subcalls.finished }} subtasks</span>
+                {% endif %}
+                {% if part.duration %}<span class="card-meta" title="Time the tool took so far / in total">{{ part.duration }}</span>{% endif %}
+                {% if part.pk %}
+                    <span class="webui-tool-toggle">▸</span>
+                {% endif %}
+            </summary>
+            <div class="webui-tool-detail">
+                {% if part.pk %}<span class="webui-detail-loading">Loading…</span>
+                {% elif part.body %}<pre class="webui-tool-body">{{ part.body }}</pre>{% endif %}
+            </div>
+        </details>
+        {% endfor %}
+
+        <div class="msg-foot">
+            <span class="msg-time" title="{{ row.obj.created_at }}">{{ row.obj.created_at|clock }}</span>
+            <span class="msg-actions">
+                <button class="msg-action-btn" type="button" data-copy title="Copy message" aria-label="Copy message">⧉</button>
+                <button class="msg-action-btn" type="button" data-tts title="Listen" aria-label="Listen">🔊</button>
+                <form method="post" action="{% url 'webui:fork_chat' session.pk %}">
+                    {% csrf_token %}<input type="hidden" name="message_id" value="{{ row.obj.pk }}">
+                    <button class="msg-action-btn" type="submit" title="Fork from here" aria-label="Fork from here">⑂</button>
+                </form>
+            </span>
+            {% if row.obj.response %}
+                <span class="card-status {{ row.obj.response.status|lower }}">{{ row.obj.response.status }}</span>
+                {% if row.obj.response.completion_tokens %}
+                    <span class="card-meta">{{ row.obj.response.completion_tokens }} tkn</span>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="msg-row webui-notice" data-role="{{ row.role }}" data-pk="{{ row.obj.pk }}">
+    {{ row.body_text|default:""|linebreaksbr }}
+</div>
+{% endif %}

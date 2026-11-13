@@ -1,0 +1,208 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}{{ agent.name }} · Agents · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">
+            {{ agent.name }}
+            {% if agent.is_archived %}<span class="detail-badge">archived</span>{% endif %}
+        </div>
+        <div class="main-view-actions">
+            <a class="webui-action-btn" href="{% url 'webui:agents' %}">All agents</a>
+            <button class="webui-action-btn" type="button" data-toggle-target="#edit-agent">Edit</button>
+            <form method="post" action="{% url 'webui:agent_delete' agent.pk %}"
+                  onsubmit="return confirm('Delete agent {{ agent.name|escapejs }}?');">
+                {% csrf_token %}
+                <button class="webui-action-btn danger" type="submit">Delete</button>
+            </form>
+        </div>
+    </header>
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content">
+            {% if error %}
+            <div class="webui-error">
+                {% if error == "exists" %}Another agent already uses that name.
+                {% elif error == "write" %}Could not write the agent manifest to disk.
+                {% elif error == "assistant-unavailable" %}The agent assistant is unavailable.
+                {% elif error == "assistant-scope" %}Could not resolve the agent assistant scope.
+                {% elif error == "assistant-create" %}Could not create an agent assistant chat.
+                {% else %}The change could not be saved.{% endif %}
+            </div>
+            {% endif %}
+
+            <details class="detail-card webui-disclosure" id="edit-agent">
+                <summary class="webui-disclosure-title">Edit agent</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:agent_edit' agent.pk %}">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-agent-name">Name</label>
+                            <input id="edit-agent-name" type="text" name="name" value="{{ agent.name }}" required>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-agent-model">Model</label>
+                            <select id="edit-agent-model" name="model">
+                                <option value="">Default model</option>
+                                {% for name in models %}
+                                <option value="{{ name }}"{% if manifest.model == name %} selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-agent-reasoning">Reasoning effort</label>
+                            <select id="edit-agent-reasoning" name="reasoning_effort">
+                                {% for value in reasoning_choices %}
+                                <option value="{{ value }}"{% if manifest.reasoningEffort == value %} selected{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-agent-priority-note">Manifest</label>
+                            <input id="edit-agent-priority-note" type="text" value="{{ agent.manifest_dir|default:'conventional location' }}" disabled>
+                        </div>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-agent-max-turns">Max turns</label>
+                            <input id="edit-agent-max-turns" type="number" name="max_turns" min="0" value="{{ manifest.maxTurns|default:0 }}">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-agent-max-unattended">Max unattended turns</label>
+                            <input id="edit-agent-max-unattended" type="number" name="max_unattended_turns" min="0" value="{{ manifest.maxUnattendedTurns|default:0 }}">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-agent-max-retries">Max retries</label>
+                            <input id="edit-agent-max-retries" type="number" name="max_retries" min="0" value="{{ manifest.maxRetries|default:0 }}">
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-agent-description">Description / system prompt</label>
+                        <textarea id="edit-agent-description" name="description" rows="6">{% if manifest_body %}{{ manifest_body }}{% elif version %}{{ version.description }}{% endif %}</textarea>
+                    </div>
+                    <button class="webui-primary-btn" type="submit">Save agent</button>
+                </form>
+            </details>
+
+            <div class="insights-row">
+                <div class="detail-card">
+                    <div class="detail-card-title">Overview</div>
+                    <div class="detail-row"><span class="detail-row-label">Name</span><span class="detail-row-value">{{ agent.name }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Version</span><span class="detail-row-value">{% if version %}{{ version.version_number }}{% else %}—{% endif %}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Visibility</span><span class="detail-row-value">{% if version %}{{ version.visibility }}{% else %}—{% endif %}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Extends</span>
+                        <span class="detail-row-value">{% if extends_names %}{{ extends_names|join:", " }}{% else %}—{% endif %}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Sessions</span><span class="detail-row-value">{{ session_count }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Project</span>
+                        <span class="detail-row-value">{% if agent.parent_project %}{{ agent.parent_project.name }}{% else %}—{% endif %}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Parent agent</span>
+                        <span class="detail-row-value">{% if agent.parent_agent %}<a class="webui-link" href="{% url 'webui:agent' agent.parent_agent.pk %}">{{ agent.parent_agent.name }}</a>{% else %}—{% endif %}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Manifest</span><span class="detail-row-value"><code>{{ agent.manifest_dir|default:"—" }}</code></span></div>
+                    {% if version and version.description %}
+                    <div class="webui-prose">{{ version.description|linebreaksbr }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-card-title">Relationships</div>
+                    <div class="detail-row"><span class="detail-row-label">Skills</span>
+                        <span class="detail-row-value">{{ skills|length }}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Cron jobs</span>
+                        <span class="detail-row-value">{{ crons|length }}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Child agents</span>
+                        <span class="detail-row-value">{{ child_agents|length }}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Task definitions</span>
+                        <span class="detail-row-value">{{ task_definitions|length }}</span>
+                    </div>
+                    <div class="webui-tag-list">
+                        {% for skill in skills %}
+                        <a class="webui-tag" href="{% url 'webui:skill' skill.pk %}">{{ skill.name }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Task definitions</div>
+                <table class="insights-table">
+                    <thead><tr><th>Name</th><th>Version</th><th>Description</th></tr></thead>
+                    <tbody>
+                        {% for task_version in task_definitions %}
+                        <tr>
+                            <td>{{ task_version.task_definition.name }}</td>
+                            <td class="num">{{ task_version.version_number }}</td>
+                            <td>{{ task_version.description|default:""|truncatechars:140 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3"><div class="insights-empty">No task definitions.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Capabilities</div>
+                <div class="insights-row">
+                    {% for section in capability_sections %}
+                    <section>
+                        <h3>{{ section.title }}</h3>
+                        {% for row in section.rows %}
+                        <div class="detail-row">
+                            <span class="detail-row-label"{% if not row.allowed %} style="text-decoration:line-through"{% endif %}>{{ row.name }}</span>
+                            <span class="detail-row-value">{% if row.allowed %}<span class="detail-badge ok">allowed</span>{% else %}<span class="detail-badge">disallowed</span>{% endif %}</span>
+                        </div>
+                        {% empty %}
+                        <div class="insights-empty">None.</div>
+                        {% endfor %}
+                    </section>
+                    {% empty %}
+                    <div class="insights-empty">No capability settings available.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Recent sessions</div>
+                {% for session in sessions %}
+                <a class="webui-list-row" href="{% url 'webui:chat' session.pk %}">
+                    <span class="webui-list-row-name">{{ session.name }}</span>
+                    <span class="webui-list-row-meta">{{ session.last_active_at|reltime }} · {{ session.turn_count }} turn{{ session.turn_count|pluralize }}</span>
+                </a>
+                {% empty %}
+                <div class="insights-empty">No sessions yet.</div>
+                {% endfor %}
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Versions</div>
+                <table class="insights-table">
+                    <thead><tr><th class="num">#</th><th>Commit</th><th>Created</th></tr></thead>
+                    <tbody>
+                        {% for item in versions %}
+                        <tr>
+                            <td class="num">{{ item.version_number }}</td>
+                            <td><code>{{ item.commit|default:"—"|truncatechars:40 }}</code></td>
+                            <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3"><div class="insights-empty">No versions.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div></div>
+        </div>
+        {% include "webui/entities/_assistant_panel.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

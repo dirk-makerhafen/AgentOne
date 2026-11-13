@@ -1,0 +1,27 @@
+{% load static webui %}<!DOCTYPE html>
+<html lang="en" data-skin="{{ skin|default:'slate' }}" data-font-size="{{ font_size|default:'default' }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}AgentOne{% endblock %}</title>
+    <script>
+        (function () {
+            var theme = "{{ theme|default:'system'|escapejs }}";
+            var dark = theme === "dark" || (theme === "system"
+                && window.matchMedia
+                && window.matchMedia("(prefers-color-scheme: dark)").matches);
+            if (dark) document.documentElement.classList.add("dark");
+        })();
+    </script>
+    <link rel="stylesheet" href="{% static_v 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static_v 'webui/app.css' %}">
+    <script src="{% static_v 'webui/htmx.min.js' %}" defer></script>
+    <script src="{% static_v 'webui/sse.js' %}" defer></script>
+    <script src="{% static_v 'webui/app.js' %}" defer></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+</body>
+</html>

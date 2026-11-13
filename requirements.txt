@@ -43,6 +43,7 @@ zeroconf
 daphne
 python-frontmatter
 markdown
+nh3
 psutil
 pureshellcheck
 html2text

@@ -5,7 +5,7 @@ AgentOne is a Django-based autonomous agent framework with real-time Web UI, sch
 ## Features
 
 - **Multi-agent runtime** — Run multiple agents with independent configurations, models, and tool sets, each with version-pinned agent definitions
-- **Real-time WebSocket UI** — Custom pyHtmlGui framework delivers live DOM updates over WebSocket; no page reloads, no REST boilerplate
+- **Real-time server-rendered UI** — Django templates + htmx + SSE deliver live fragments without a Node build step or a page reload (the legacy pyHtmlGui UI is frozen at `/legacy/`)
 - **Versioned everything** — Agents, tools, sessions, and settings are immutable once created; changes produce new versions with full history
 - **Plugin tool system** — Tools are plain Python functions in YAML-defined groups with auto-extracted JSON schemas — no decorators
 - **Celery task pipeline** — Asynchronous task dispatch with scheduling (5s tick, 2min heartbeat), state machine execution, and dependency resolution via M2M references
@@ -46,16 +46,16 @@ Runs `git pull`, `pip install -r requirements.txt`, `migrate`, and `reload_all` 
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                     Browser (WebSocket)                     │
+│                 Browser (HTML + htmx + SSE)                 │
 └──────────────────────┬──────────────────────────────────────┘
-                       │ /ws
+                       │ HTTP fragments / EventSource /app/sse
 ┌──────────────────────▼──────────────────────────────────────┐
-│  Django ASGI / Channels / PyHtmlGuiConsumer                 │
-│  ┌─────────────┐  ┌──────────┐  ┌─────────────────────────┐│
-│  │ UiApp        │  │ UiAppView │  │ pyHtmlGui (DOM sync)   ││
-│  │ (Observable) │◄─┤ (root     │◄─┤ Jinja2→HTML→WebSocket  ││
-│  │ data model   │  │  view)   │  │                         ││
-│  └──────┬───────┘  └──────────┘  └─────────────────────────┘│
+│  Django ASGI (Daphne) — webui/ + server/                     │
+│  ┌─────────────────┐  ┌───────────────┐  ┌────────────────┐ │
+│  │ webui views      │  │ Django        │  │ SSE bridge     │ │
+│  │ (templates +     │◄─┤ ORM / runtime │◄─┤ Redis pub/sub  │ │
+│  │  fragment GETs)  │  │               │  │                │ │
+│  └─────────────────┘  └───────────────┘  └────────────────┘ │
 └─────────┼────────────────────────────────────────────────────┘
           │
 ┌─────────▼────────────────────────────────────────────────────┐
@@ -82,7 +82,8 @@ AgentOne ships with comprehensive documentation organized by audience. Below is 
 | `docs/architecture.md` | System architecture, data flow, component interactions (API/UI/Runtime/Celery) |
 | `docs/user-guide.md` | End-user guide: chat, agents, skills, projects, settings, troubleshooting |
 | `docs/development.md` | Developer's guide: setup, adding models/tools/agents/UI, testing, REST API |
-| `docs/core-mechanisms.md` | Deep-dive: task dispatch pipeline, auto-await, pyHtmlGui renderer internals |
+| `docs/core-mechanisms.md` | Deep-dive: task dispatch pipeline, auto-await, renderer internals (legacy pyHtmlGui section) |
+| `docs/ui-rewrite.md` | UI rewrite plan/status: htmx + Django templates + SSE, route map, deferred items |
 | `docs/deployment.md` | Production deployment: prerequisites, services, nginx, TLS |
 | `docs/folders.md` | Canonical filesystem layout: scopes, `var/` subtrees, install repos, backup |
 | `docs/manifest-format.md` | YAML manifest format reference (agents, scripts, cron, streams, sets) |
@@ -103,7 +104,7 @@ New to AgentOne?
 
 Building on the platform?
 
-5. **`docs/core-mechanisms.md`** — understand task dispatch, auto-await, and the pyHtmlGui renderer
+5. **`docs/core-mechanisms.md`** — understand task dispatch and auto-await (the pyHtmlGui section is legacy)
 6. **`docs/manifest-format.md`** — master YAML manifests for agents, scripts, cron, and data flows
 7. **`docs/models.md`** — model reference for all ~30 Django models
 8. **`docs/deployment.md`** — deploy to production with Supervisor + Nginx
@@ -124,7 +125,8 @@ server/         Core Django app: models (~30), admin, Celery tasks, tests
 registry/       YAML manifest loader pipeline, install repo management
 runtime/        Agent/session wrappers, task dispatch state machines, rate limiter
 launcher/       Launcher service for remote agent management
-ui/             Web UI: pyHtmlGui views, sidebar, chat, settings, overlays
+webui/          Primary UI: Django templates + htmx + SSE (mounted at /app/)
+ui/             Legacy pyHtmlGui UI, frozen at /legacy/ until the soak period ends
 .agentone/      Active tool/agent configuration: YAML manifests, scripts, skills
 docs/           All documentation
 ```

@@ -84,6 +84,7 @@ INSTALLED_APPS = (
     'launcher',
     'registry',
     'ui',
+    'webui',
     'sortedm2m',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -139,6 +140,7 @@ MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'webui.middleware.WebuiLoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -199,7 +201,7 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR + "/ui/static",]
+STATICFILES_DIRS = [BASE_DIR + "/ui/static", BASE_DIR + "/webui/static",]
 STATIC_ROOT = os.path.join(BASE_DIR, '_staticfiles')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
@@ -214,6 +216,8 @@ DJANGORESIZED_DEFAULT_NORMALIZE_ROTATION = True
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 65000
 
 LOGIN_REDIRECT_URL = '/'
+#: Require a Django login for the server-rendered UI under ``/app/``.
+WEBUI_LOGIN_REQUIRED = True
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 CACHES = {

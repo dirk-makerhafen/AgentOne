@@ -1,0 +1,140 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}{{ project.name }} · Projects · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">{{ project.name }}</div>
+        <div class="main-view-actions">
+            <a class="webui-action-btn" href="{% url 'webui:projects' %}">All projects</a>
+            <a class="webui-action-btn" href="{% url 'webui:workitems' %}?project={{ project.pk }}">Board</a>
+            <button class="webui-action-btn" type="button" data-toggle-target="#edit-project">Edit</button>
+        </div>
+    </header>
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content">
+            {% if error %}
+            <div class="webui-error">
+                {% if error == "name" %}A project name is required.
+                {% elif error == "write" %}Could not create the manifest directory.
+                {% elif error == "assistant-unavailable" %}The project assistant is unavailable.
+                {% elif error == "assistant-scope" %}Could not resolve the project assistant scope.
+                {% elif error == "assistant-create" %}Could not create a project assistant chat.
+                {% else %}The change could not be saved.{% endif %}
+            </div>
+            {% endif %}
+
+            <details class="detail-card webui-disclosure" id="edit-project">
+                <summary class="webui-disclosure-title">Edit project</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:project_edit' project.pk %}">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-project-name">Name</label>
+                            <input id="edit-project-name" type="text" name="name" value="{{ project.name }}" required>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-project-git">Git URL</label>
+                            <input id="edit-project-git" type="text" name="git_url" value="{{ project.git_url }}">
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-project-workspace">Primary workspace</label>
+                        <select id="edit-project-workspace" name="main_workspace">
+                            <option value="">None — store manifests centrally</option>
+                            {% for ws in workspace_options %}
+                            <option value="{{ ws.pk }}"{% if project.main_workspace_id == ws.pk %} selected{% endif %}>{{ ws.name }} ({{ ws.path }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="detail-form-row">
+                        <label class="detail-form-check">
+                            <input type="checkbox" name="manifest_in_workspace"{% if manifest_in_workspace %} checked{% endif %}>
+                            Store manifests inside the primary workspace (&lt;workspace&gt;/.agentone)
+                        </label>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-project-description">Description</label>
+                        <textarea id="edit-project-description" name="description" rows="4">{{ project.description }}</textarea>
+                    </div>
+                    <button class="webui-primary-btn" type="submit">Save project</button>
+                </form>
+            </details>
+
+            <div class="insights-row">
+                <div class="detail-card">
+                    <div class="detail-card-title">Overview</div>
+                    <div class="detail-row"><span class="detail-row-label">Name</span><span class="detail-row-value">{{ project.name }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Folder</span><span class="detail-row-value"><code>{{ project.path|default:"—" }}</code></span></div>
+                    <div class="detail-row"><span class="detail-row-label">Primary workspace</span>
+                        <span class="detail-row-value">{% if project.main_workspace %}<a class="webui-link" href="{% url 'webui:workspace' project.main_workspace.pk %}">{{ project.main_workspace.name }}</a> <code>{{ project.main_workspace.path }}</code>{% else %}—{% endif %}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">AgentOne dir</span><span class="detail-row-value"><code>{{ project.get_agentone_dir }}</code></span></div>
+                    <div class="detail-row"><span class="detail-row-label">Git URL</span><span class="detail-row-value">{{ project.git_url|default:"—" }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Git ref</span><span class="detail-row-value">{{ project.git_ref|default:"—" }}</span></div>
+                    {% if project.description %}
+                    <div class="webui-prose">{{ project.description|linebreaksbr }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-card-title">Contents</div>
+                    <div class="detail-row"><span class="detail-row-label">Workspaces</span><span class="detail-row-value">{{ workspaces|length }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Agents</span><span class="detail-row-value">{{ agents|length }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Skills</span><span class="detail-row-value">{{ skills|length }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Cron jobs</span><span class="detail-row-value">{{ crons|length }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Collections</span><span class="detail-row-value">{{ collections|length }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Sessions</span><span class="detail-row-value">{{ session_count }}</span></div>
+                    <div class="webui-tag-list">
+                        {% for ws in workspaces %}
+                        <a class="webui-tag" href="{% url 'webui:workspace' ws.pk %}">{{ ws.name }}</a>
+                        {% endfor %}
+                        {% for agent in agents %}
+                        <a class="webui-tag" href="{% url 'webui:agent' agent.pk %}">{{ agent.name }}</a>
+                        {% endfor %}
+                        {% for skill in skills %}
+                        <a class="webui-tag" href="{% url 'webui:skill' skill.pk %}">{{ skill.name }}</a>
+                        {% endfor %}
+                        {% for cron in crons %}
+                        <a class="webui-tag" href="{% url 'webui:cronjob' cron.pk %}">{{ cron.name }}</a>
+                        {% endfor %}
+                        {% for collection in collections %}
+                        <a class="webui-tag" href="{% url 'webui:collection' collection.pk %}">{{ collection.name }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Work items</div>
+                {% for item in work_items %}
+                <a class="webui-list-row" href="{% url 'webui:workitem' item.pk %}">
+                    <span class="webui-list-row-name">{{ item.title }}</span>
+                    <span class="webui-list-row-meta">{{ item.get_status_display }} · P{{ item.priority }}{% if item.assigned_agent %} · {{ item.assigned_agent.name }}{% endif %}</span>
+                </a>
+                {% empty %}
+                <div class="insights-empty">No work items for this project.</div>
+                {% endfor %}
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Sessions</div>
+                {% for session in sessions %}
+                <a class="webui-list-row" href="{% url 'webui:chat' session.pk %}">
+                    <span class="webui-list-row-name">{{ session.name }}</span>
+                    <span class="webui-list-row-meta">{{ session.last_active_at|reltime }}{% if session.latest_session_version.agent %} · {{ session.latest_session_version.agent.name }}{% endif %}</span>
+                </a>
+                {% empty %}
+                <div class="insights-empty">No sessions yet.</div>
+                {% endfor %}
+            </div>
+
+        </div>
+        </div>
+        {% include "webui/entities/_assistant_panel.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

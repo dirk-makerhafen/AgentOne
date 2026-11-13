@@ -1,0 +1,16 @@
+<div class="sidebar-section"><span>Spaces</span></div>
+<div class="side-list">
+    {% for ws in sidebar_workspaces %}
+    <a class="ws-row{% if ws.pk == active_id %} active{% endif %}" href="{% url 'webui:workspace' ws.pk %}">
+        <span class="ws-row-info">
+            <span class="ws-row-name">
+                <span class="session-project-dot" style="background:{{ ws.color|default:'var(--accent)' }}"></span>
+                {{ ws.name }}
+            </span>
+            <span class="ws-row-path">{{ ws.path }}</span>
+        </span>
+    </a>
+    {% empty %}
+    <div class="webui-empty-note">No workspaces yet.</div>
+    {% endfor %}
+</div>

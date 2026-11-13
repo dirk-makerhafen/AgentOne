@@ -1,0 +1,18 @@
+<div class="sidebar-section"><span>Skills</span></div>
+<div class="side-list">
+    {% for skill in sidebar_skills %}
+    <a class="ws-row{% if skill.pk == active_id %} active{% endif %}" href="{% url 'webui:skill' skill.pk %}">
+        <span class="ws-row-info">
+            <span class="ws-row-name">{{ skill.name }}</span>
+            <span class="ws-row-path">
+                {% if skill.parent_agent %}agent {{ skill.parent_agent.name }}
+                {% elif skill.parent_skill %}child of {{ skill.parent_skill.name }}
+                {% elif skill.parent_project %}{{ skill.parent_project.name }}
+                {% else %}global{% endif %}
+            </span>
+        </span>
+    </a>
+    {% empty %}
+    <div class="webui-empty-note">No skills loaded.</div>
+    {% endfor %}
+</div>

@@ -1,0 +1,2134 @@
+"""Tests for the htmx UI app (pure helpers + routing + render smoke).
+
+The chat render path is exercised end-to-end by the views; these tests pin the
+pieces that are easy to break silently: markdown sanitisation, the SSE trigger
+string, the URL contract, the sidebar wiring, and the log tail helper.
+"""
+
+from __future__ import annotations
+
+import asyncio
+
+import pytest
+from django.test import override_settings
+from django.urls import reverse
+
+from webui.markdown import render_markdown
+from webui.templatetags.webui import get_item, static_v
+from webui.views import _thread_triggers
+from webui.views.common import (
+    NAV_SECTIONS,
+    SIDEBAR_TEMPLATES,
+    SIDEBAR_TRIGGERS,
+)
+from webui.events import _resolve_scope
+from webui.views.logs import _resolve, log_files, tail
+
+
+@pytest.fixture(autouse=True)
+def _disable_webui_login(settings):
+    """Most tests exercise fragments directly; auth has dedicated tests."""
+    settings.WEBUI_LOGIN_REQUIRED = False
+
+
+def _assert_panel_is_rightbar(content: bytes, route: str) -> None:
+    """The embedded assistant must be a sibling of the content column.
+
+    Regression guard: the panel was once nested inside ``.webui-entity-content``,
+    which pushed it below the page content instead of docking it on the right.
+    """
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(content, "html.parser")
+    panel = soup.find(id="entity-assistant-panel")
+    assert panel is not None, route
+    layout = panel.parent
+    assert layout is not None and "webui-entity-layout" in (layout.get("class") or []), (
+        f"{route}: assistant panel parent is {layout.get('class') if layout else None}"
+    )
+    content_column = layout.find(class_="webui-entity-content")
+    assert content_column is not None, route
+    assert panel not in content_column.descendants, route
+
+
+def test_markdown_renders_fenced_code_with_language():
+    html = render_markdown("```python\nprint('hi')\n```")
+    assert 'class="language-python"' in html
+
+
+def test_markdown_opens_external_links_in_new_tab():
+    html = render_markdown("[site](https://example.com)")
+    assert 'target="_blank"' in html
+    assert 'href="https://example.com"' in html
+
+
+def test_markdown_strips_scripts_and_event_handlers():
+    html = render_markdown('<script>alert(1)</script><img src=x onerror=alert(1)>')
+    assert "<script" not in html
+    assert "onerror" not in html
+
+
+def test_markdown_is_cached_and_stable():
+    text = "**bold** and `code`"
+    assert render_markdown(text) == render_markdown(text)
+
+
+def test_thread_triggers_cover_every_session_key():
+    triggers = _thread_triggers(7)
+    for key in (
+        "Message.session:7",
+        "Query.session:7",
+        "Response.session:7",
+        "AgentTaskCall.session:7",
+        "SessionModel.pk:7",
+    ):
+        assert f"sse:{key} delay:150ms" in triggers
+
+
+def test_url_names_reverse():
+    assert reverse("webui:dashboard") == "/app/"
+    assert reverse("webui:chats") == "/app/chats"
+    assert reverse("webui:sidebar") == "/app/sidebar"
+    assert reverse("webui:sse") == "/app/sse/"
+    assert reverse("webui:new_chat") == "/app/chat/new"
+    assert reverse("webui:chat", args=[12]) == "/app/chat/12"
+    assert reverse("webui:thread", args=[12]) == "/app/chat/12/thread"
+    assert reverse("webui:send", args=[12]) == "/app/chat/12/send"
+    assert reverse("webui:chat_header", args=[12]) == "/app/chat/12/header"
+    assert reverse("webui:chat_toc", args=[12]) == "/app/chat/12/toc"
+    assert reverse("webui:chat_action", args=[12]) == "/app/chat/12/action"
+    assert reverse("webui:chat_todo_action", args=[12]) == "/app/chat/12/todos"
+    assert reverse("webui:call_cancel", args=[12, 34]) == "/app/chat/12/calls/34/cancel"
+    assert (
+        reverse("webui:edit_message", args=[12, 34])
+        == "/app/chat/12/message/34/edit"
+    )
+    assert reverse("webui:clear_conversation", args=[12]) == "/app/chat/12/clear"
+    assert reverse("webui:import_conversation", args=[12]) == "/app/chat/12/import"
+    assert reverse("webui:chat_panel", args=[12]) == "/app/chat/12/panel"
+    assert reverse("webui:chat_panel_tab", args=[12, "tasks"]) == "/app/chat/12/panel/tasks"
+    assert reverse("webui:chat_setting", args=[12]) == "/app/chat/12/setting"
+    assert reverse("webui:subagent_open", args=[12]) == "/app/chat/12/subagent"
+    assert reverse("webui:query_detail", args=[34]) == "/app/query/34/detail"
+    assert reverse("webui:entity_assistant_open", args=["agent", 5]) == "/app/assistant/agent/5"
+    assert reverse("webui:assistant_panel", args=["agent", 5]) == "/app/assistant/agent/5/panel"
+    assert reverse("webui:assistant_overview_panel", args=["agents"]) == "/app/assistant/overview/agents/panel"
+    assert reverse("webui:assistant_overview_open", args=["agents"]) == "/app/assistant/overview/agents/open"
+    assert reverse("webui:agents") == "/app/agents"
+    assert reverse("webui:agent_create") == "/app/agents/new"
+    assert reverse("webui:agent_edit", args=[5]) == "/app/agents/5/edit"
+    assert reverse("webui:agent_delete", args=[5]) == "/app/agents/5/delete"
+    assert reverse("webui:agent", args=[5]) == "/app/agents/5"
+    assert reverse("webui:projects") == "/app/projects"
+    assert reverse("webui:project_create") == "/app/projects/new"
+    assert reverse("webui:project_edit", args=[5]) == "/app/projects/5/edit"
+    assert reverse("webui:project", args=[5]) == "/app/projects/5"
+    assert reverse("webui:workspaces") == "/app/workspaces"
+    assert reverse("webui:workspace_create") == "/app/workspaces/new"
+    assert reverse("webui:workspace_edit", args=[5]) == "/app/workspaces/5/edit"
+    assert reverse("webui:workspace_delete", args=[5]) == "/app/workspaces/5/delete"
+    assert reverse("webui:workspace_manager_open", args=[5]) == "/app/workspaces/5/manager"
+    assert reverse("webui:workspace", args=[5]) == "/app/workspaces/5"
+    assert reverse("webui:skills") == "/app/skills"
+    assert reverse("webui:skill_edit", args=[5]) == "/app/skills/5/edit"
+    assert reverse("webui:skill_delete", args=[5]) == "/app/skills/5/delete"
+    assert reverse("webui:skill", args=[5]) == "/app/skills/5"
+    assert reverse("webui:cron") == "/app/cron"
+    assert reverse("webui:cron_create") == "/app/cron/new"
+    assert reverse("webui:cronjob", args=[5]) == "/app/cron/5"
+    assert reverse("webui:cron_edit", args=[5]) == "/app/cron/5/edit"
+    assert reverse("webui:cron_delete", args=[5]) == "/app/cron/5/delete"
+    assert reverse("webui:cron_duplicate", args=[5]) == "/app/cron/5/duplicate"
+    assert reverse("webui:cron_run_now", args=[5]) == "/app/cron/5/run"
+    assert reverse("webui:cron_toggle", args=[5]) == "/app/cron/5/toggle"
+    assert reverse("webui:cron_call_cancel", args=[5, 6]) == "/app/cron/5/calls/6/cancel"
+    assert reverse("webui:collections") == "/app/collections"
+    assert reverse("webui:collection_create") == "/app/collections/new"
+    assert reverse("webui:collection", args=[5]) == "/app/collections/5"
+    assert reverse("webui:collection_edit", args=[5]) == "/app/collections/5/edit"
+    assert reverse("webui:collection_delete", args=[5]) == "/app/collections/5/delete"
+    assert reverse("webui:collection_reprocess", args=[5]) == "/app/collections/5/reprocess"
+    assert reverse("webui:collection_toggle", args=[5]) == "/app/collections/5/toggle"
+    assert reverse("webui:workitems") == "/app/workitems"
+    assert reverse("webui:workitems_board") == "/app/workitems/board"
+    assert reverse("webui:workitem_create") == "/app/workitems/new"
+    assert reverse("webui:workitem", args=[5]) == "/app/workitems/5"
+    assert reverse("webui:workitem_action", args=[5]) == "/app/workitems/5/action"
+    assert reverse("webui:workitem_update", args=[5]) == "/app/workitems/5/update"
+    assert reverse("webui:workitem_delete", args=[5]) == "/app/workitems/5/delete"
+    assert reverse("webui:insights") == "/app/insights"
+    assert reverse("webui:insights_tab", args=["analytics"]) == "/app/insights/analytics"
+    assert reverse("webui:model_probe", args=[9]) == "/app/insights/models/9/probe"
+    assert reverse("webui:model_probe_status", args=[9]) == "/app/insights/models/9/probe/status"
+    assert reverse("webui:logs") == "/app/logs"
+    assert reverse("webui:logs_tail") == "/app/logs/tail"
+    assert reverse("webui:settings") == "/app/settings"
+    assert reverse("webui:settings_tab", args=["system"]) == "/app/settings/system"
+    assert reverse("webui:settings_save", args=["system"]) == "/app/settings/system/save"
+
+
+def test_static_v_appends_mtime_cache_buster():
+    assert "?v=" in static_v("webui/app.js")
+
+
+def test_get_item_filter_looks_up_dict_keys():
+    assert get_item({"ready": 3}, "ready") == 3
+    assert get_item({"ready": 3}, "missing") is None
+    assert get_item(None, "ready") is None
+
+
+def test_every_nav_section_has_a_sidebar_template():
+    for key, _label in NAV_SECTIONS:
+        assert key in SIDEBAR_TEMPLATES, key
+    # Data-driven panels self-refresh; the static tab lists do not need to.
+    for key in (
+        "dashboard",
+        "chats",
+        "agents",
+        "projects",
+        "workspaces",
+        "skills",
+        "cron",
+        "collections",
+        "workitems",
+    ):
+        assert key in SIDEBAR_TRIGGERS, key
+
+
+def test_global_scope_subscribes_to_every_model_key():
+    keys = asyncio.run(_resolve_scope("global"))
+    assert keys is not None
+    assert "SessionModel" in keys
+    assert "WorkItem" in keys
+
+
+def test_unknown_scope_is_rejected():
+    assert asyncio.run(_resolve_scope("nope")) is None
+
+
+def test_log_tail_reads_the_last_lines(tmp_path):
+    path = tmp_path / "test.log"
+    path.write_text("\n".join(f"line {i}" for i in range(1, 21)))
+    with override_settings(LOG_DIR=str(tmp_path)):
+        assert log_files() == ["test.log"]
+        content = tail(path, lines=3)
+        assert content.splitlines() == ["line 18", "line 19", "line 20"]
+        assert _resolve("test.log") == path.resolve()
+
+
+def test_log_resolve_rejects_path_traversal(tmp_path):
+    (tmp_path / "inside.log").write_text("ok")
+    (tmp_path.parent / "outside.log").write_text("no")
+    with override_settings(LOG_DIR=str(tmp_path)):
+        with pytest.raises(Exception):
+            _resolve("../outside.log")
+
+
+@pytest.mark.django_db
+def test_shell_pages_render(client):
+    """Every full page renders against an empty database."""
+    routes = [
+        reverse("webui:dashboard"),
+        reverse("webui:chats"),
+        reverse("webui:agents"),
+        reverse("webui:projects"),
+        reverse("webui:workspaces"),
+        reverse("webui:skills"),
+        reverse("webui:cron"),
+        reverse("webui:collections"),
+        reverse("webui:workitems"),
+        reverse("webui:workitems_board"),
+        reverse("webui:insights"),
+        reverse("webui:insights_tab", args=["analytics"]),
+        reverse("webui:insights_tab", args=["providers"]),
+        reverse("webui:insights_tab", args=["models"]),
+        reverse("webui:logs"),
+        reverse("webui:settings"),
+        reverse("webui:settings_tab", args=["preferences"]),
+        reverse("webui:settings_tab", args=["system"]),
+    ]
+    for route in routes:
+        response = client.get(route)
+        assert response.status_code == 200, route
+
+
+@pytest.mark.django_db
+def test_manifest_entity_detail_pages_render(client, tmp_path):
+    """Detail templates resolve their edit/delete forms and access controls."""
+    from server.models.agents.agent import AgentModel
+    from server.models.cron import Cronjob
+    from server.models.project import Project
+    from server.models.skills.skill import SkillModel
+    from server.models.workspace import WorkspaceModel
+
+    project = Project.objects.create(
+        name="webui-project",
+        agentone_dir=str(tmp_path / "project-agentone"),
+    )
+    workspace = WorkspaceModel.objects.create(
+        name="webui-workspace",
+        path=str(tmp_path),
+        parent_project=project,
+        agentone_dir=str(tmp_path / "workspace-agentone"),
+    )
+    agent = AgentModel.objects.create(name="webui-agent", parent_project=project)
+    skill = SkillModel.objects.create(name="webui-skill", parent_project=project)
+    cron = Cronjob.objects.create(
+        name="webui-cron", schedule="0 0 * * *", parent_project=project
+    )
+
+    routes = [
+        reverse("webui:agent", args=[agent.pk]),
+        reverse("webui:project", args=[project.pk]),
+        reverse("webui:workspace", args=[workspace.pk]),
+        reverse("webui:skill", args=[skill.pk]),
+        reverse("webui:cronjob", args=[cron.pk]),
+    ]
+    for route in routes:
+        response = client.get(route)
+        assert response.status_code == 200, route
+        assert b'id="entity-assistant-panel"' in response.content
+        _assert_panel_is_rightbar(response.content, route)
+
+
+@pytest.mark.django_db
+def test_sidebar_fragment_renders_for_every_section(client):
+    for key, _label in NAV_SECTIONS:
+        response = client.get(reverse("webui:sidebar"), {"section": key})
+        assert response.status_code == 200, key
+        assert b'class="sidebar"' in response.content
+
+
+@pytest.mark.django_db
+def test_sidebar_project_filter_scopes_and_persists(client):
+    from server.models.agents.agent import AgentModel
+    from server.models.cron import Cronjob
+    from server.models.project import Project
+    from server.models.skills.skill import SkillModel
+
+    alpha = Project.objects.create(name="Alpha project")
+    beta = Project.objects.create(name="Beta project")
+    AgentModel.objects.create(name="alpha-agent", parent_project=alpha)
+    AgentModel.objects.create(name="beta-agent", parent_project=beta)
+    SkillModel.objects.create(name="alpha-skill", parent_project=alpha)
+    SkillModel.objects.create(name="beta-skill", parent_project=beta)
+    Cronjob.objects.create(name="alpha-cron", schedule="0 0 * * *", parent_project=alpha)
+    Cronjob.objects.create(name="beta-cron", schedule="0 0 * * *", parent_project=beta)
+
+    filtered = client.get(reverse("webui:agents"), {"project": alpha.pk})
+    assert b'<option value="%d" selected>Alpha project</option>' % alpha.pk in filtered.content
+
+    # The page's own agent table still lists everything; only the sidebar is
+    # scoped. This also guards against page context overwriting sidebar keys.
+    from bs4 import BeautifulSoup
+
+    sidebar = BeautifulSoup(filtered.content, "html.parser").find(id="sidebar")
+    assert "alpha-agent" in sidebar.get_text()
+    assert "beta-agent" not in sidebar.get_text()
+    assert "beta-agent" in filtered.content.decode()
+
+    # Later sidebar requests without the query parameter keep the saved
+    # selection (the legacy ProjectSelector behaved the same across tabs).
+    agents_side = client.get(reverse("webui:sidebar"), {"section": "agents"})
+    assert b"alpha-agent" in agents_side.content
+    assert b"beta-agent" not in agents_side.content
+    skills_side = client.get(reverse("webui:sidebar"), {"section": "skills"})
+    assert b"alpha-skill" in skills_side.content
+    assert b"beta-skill" not in skills_side.content
+    cron_side = client.get(reverse("webui:sidebar"), {"section": "cron"})
+    assert b"alpha-cron" in cron_side.content
+    assert b"beta-cron" not in cron_side.content
+
+    # Empty value clears it.
+    client.get(reverse("webui:agents"), {"project": ""})
+    cleared = client.get(reverse("webui:sidebar"), {"section": "agents"})
+    assert b"alpha-agent" in cleared.content
+    assert b"beta-agent" in cleared.content
+
+
+@pytest.mark.django_db
+def test_chat_action_honours_in_app_next(client):
+    from server.models.sessions.session import SessionModel
+
+    session = SessionModel.objects.create(name="next-test")
+    response = client.post(
+        reverse("webui:chat_action", args=[session.pk]),
+        {"action": "pin", "next": "/app/chats"},
+    )
+    assert response.status_code == 302
+    assert response["Location"] == "/app/chats"
+
+    response = client.post(
+        reverse("webui:chat_action", args=[session.pk]),
+        {"action": "pin", "next": "https://example.com/"},
+    )
+    assert response["Location"] == reverse("webui:chat", args=[session.pk])
+
+
+@pytest.mark.django_db
+def test_workitem_create_detail_and_fsm_action(client):
+    """Create → detail → mark_ready → board shows the queued item."""
+    from server.models.workitems.enums import WorkItemStatus
+    from server.models.workitems.work_item import WorkItem
+
+    response = client.post(
+        reverse("webui:workitem_create"),
+        {"title": "Ship the htmx UI", "body": "port the screens", "priority": "10"},
+    )
+    assert response.status_code == 302
+    item = WorkItem.objects.get(title="Ship the htmx UI")
+    assert item.status == WorkItemStatus.BACKLOG
+
+    detail = client.get(reverse("webui:workitem", args=[item.pk]))
+    assert detail.status_code == 200
+    assert b"Ship the htmx UI" in detail.content
+    assert b'id="entity-assistant-panel"' in detail.content
+    _assert_panel_is_rightbar(detail.content, reverse("webui:workitem", args=[item.pk]))
+
+    action = client.post(
+        reverse("webui:workitem_action", args=[item.pk]),
+        {"action": "mark_ready"},
+    )
+    assert action.status_code == 302
+    item.refresh_from_db()
+    assert item.status == WorkItemStatus.READY
+
+    board = client.get(reverse("webui:workitems_board"))
+    assert board.status_code == 200
+    assert b"Ship the htmx UI" in board.content
+
+
+@pytest.mark.django_db
+def test_workitem_board_hides_terminal_items_by_default(client):
+    from server.models.workitems.enums import WorkItemStatus
+    from server.models.workitems.work_item import WorkItem
+
+    WorkItem.objects.create(title="Finished work", status=WorkItemStatus.DONE)
+    WorkItem.objects.create(title="Open work", status=WorkItemStatus.BACKLOG)
+
+    default = client.get(reverse("webui:workitems_board"), HTTP_HX_REQUEST="true")
+    assert b"Open work" in default.content
+    assert b"Finished work" not in default.content
+
+    with_terminal = client.get(
+        reverse("webui:workitems_board"),
+        {"terminal": "1"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert b"Finished work" in with_terminal.content
+
+    # htmx gets the bare fragment; a direct visit gets the full shell.
+    fragment = client.get(
+        reverse("webui:workitems_board"), HTTP_HX_REQUEST="true"
+    )
+    assert b"<html" not in fragment.content
+    assert b'id="workitems-board"' in fragment.content
+
+
+@pytest.mark.django_db
+def test_archive_without_next_returns_to_chats(client):
+    from server.models.sessions.session import SessionModel
+
+    session = SessionModel.objects.create(name="archive-test")
+    response = client.post(
+        reverse("webui:chat_action", args=[session.pk]),
+        {"action": "archive"},
+    )
+    assert response["Location"] == reverse("webui:chats")
+
+
+# ---------------------------------------------------------------------------
+# Chat status cards, paging, panel todos and provider settings
+# ---------------------------------------------------------------------------
+
+def _session_with_version(name="card-session"):
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.sessions.session import SessionModel
+    from server.models.sessions.session_version import SessionVersionModel
+
+    agent = AgentModel.objects.create(name=f"{name}-agent")
+    agent_version = AgentVersionModel.objects.create(agent=agent, version_number=1)
+    AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=agent_version)
+    session = SessionModel.objects.create(name=name)
+    session_version = SessionVersionModel.objects.create(
+        session=session,
+        agent=agent,
+        pinned_agent_version=agent_version,
+        version_number=1,
+    )
+    SessionModel.objects.filter(pk=session.pk).update(
+        latest_session_version=session_version
+    )
+    session.refresh_from_db()
+    return session, session_version
+
+
+def _task_call(session, session_version, *, detail, name="some_task", args=None):
+    from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from server.models.tasks.task_definition import TaskDefinition
+
+    definition = TaskDefinition.objects.create(name=name)
+    return AgentTaskCall.objects.create(
+        session=session,
+        session_version=session_version,
+        task_definition=definition,
+        status=TaskCallStatus.WAITING,
+        status_detail=detail,
+        carguments_json=args or {},
+        requires_approval=False,
+        max_subtask_errors=0,
+        max_subtask_error_rate=0,
+        limit_subtask_parallel_runs=0,
+        limit_per_instance_parallel_runs=0,
+        max_retries=0,
+        retry_delay=0,
+        retry_requires_approval=False,
+    )
+
+
+@pytest.mark.django_db
+def test_queue_card_renders_and_cancel_removes_call(client):
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from server.models.tasks.agent_task_call import AgentTaskCall
+
+    session, version = _session_with_version("queue")
+    call = _task_call(
+        session,
+        version,
+        detail=TaskCallStatusDetail.WAITING_QUEUE,
+        name="ingest_user_message",
+        args={"message": [{"role": "user", "parts": [{"content": "queued hello"}]}]},
+    )
+
+    page = client.get(reverse("webui:chat", args=[session.pk]))
+    assert page.status_code == 200
+    assert b"1 queued" in page.content
+    assert b"queued hello" in page.content
+
+    response = client.post(
+        reverse("webui:queue_action", args=[session.pk]),
+        {"action": "cancel", "call_id": call.pk},
+    )
+    assert response.status_code == 200
+    assert not AgentTaskCall.objects.filter(pk=call.pk).exists()
+    assert b"queued hello" not in response.content
+
+
+@pytest.mark.django_db
+def test_guardrail_approval_and_deny_call_scheduler(client):
+    from unittest.mock import patch
+
+    from server.models.enums.task_enums import TaskCallStatusDetail
+
+    session, version = _session_with_version("approval")
+    call = _task_call(
+        session,
+        version,
+        detail=TaskCallStatusDetail.HALTED_APPROVAL,
+        name="run_shell",
+        args={"command": "ls", "guardrail_reason": "write access"},
+    )
+
+    page = client.get(reverse("webui:chat", args=[session.pk]))
+    assert b"Commands awaiting approval" in page.content
+    assert b"run_shell" in page.content
+
+    with patch("runtime.tasks.call_scheduler.CallScheduler.approve_taskcall") as approve:
+        response = client.post(
+            reverse("webui:call_action", args=[call.pk]),
+            {"action": "approve"},
+        )
+    assert response.status_code == 200
+    approve.assert_called_once_with(call.pk)
+
+    with patch("runtime.tasks.call_scheduler.CallScheduler.deny_taskcall") as deny:
+        client.post(
+            reverse("webui:call_action", args=[call.pk]),
+            {"action": "deny", "feedback": "not now"},
+        )
+    deny.assert_called_once_with(call.pk, feedback="not now")
+
+
+@pytest.mark.django_db
+def test_question_card_answers_single_select(client):
+    from unittest.mock import patch
+
+    from server.models.enums.task_enums import TaskCallStatusDetail
+
+    session, version = _session_with_version("question")
+    call = _task_call(
+        session,
+        version,
+        detail=TaskCallStatusDetail.HALTED_APPROVAL,
+        name="ask_user",
+        args={
+            "questions": [
+                {
+                    "question": "Pick one",
+                    "header": "Choice",
+                    "options": [
+                        {"label": "Alpha", "description": "first"},
+                        {"label": "Beta", "description": "second"},
+                    ],
+                    "multiSelect": False,
+                }
+            ]
+        },
+    )
+
+    page = client.get(reverse("webui:chat", args=[session.pk]))
+    assert b"Questions for you" in page.content
+    assert b"Pick one" in page.content
+
+    with patch("runtime.tasks.call_scheduler.CallScheduler.answer_question_call") as answer:
+        response = client.post(
+            reverse("webui:call_action", args=[call.pk]),
+            {"action": "answer", "qidx": "0", "option": "1"},
+        )
+    assert response.status_code == 200
+    answer.assert_called_once_with(call.pk, {"Pick one": "Beta"})
+
+
+@pytest.mark.django_db
+def test_turn_approval_resets_counters_and_dispatches(client):
+    from unittest.mock import MagicMock, patch
+
+    from server.models.message import Message
+    from server.models.sessions.session import SessionModel
+
+    session, version = _session_with_version("turn-limit")
+    Message.objects.create(session=session, session_version=version, role="assistant")
+
+    runtime = MagicMock()
+    runtime.needs_approval.return_value = False
+    runtime.current_unattended_turn_count = 0
+    runtime.max_unattended_turns = 0
+    runtime.aimodel = None
+    task = MagicMock()
+    runtime.get_task.return_value = task
+
+    with patch.object(SessionModel, "get_runtime", return_value=runtime):
+        response = client.post(
+            reverse("webui:turn_approval", args=[session.pk]),
+            {"action": "approve"},
+        )
+    assert response.status_code == 200
+    runtime.reset_turn_count.assert_called_once()
+    runtime.reset_unattended_turn_count.assert_called_once()
+    task.delay.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_thread_fragment_full_page_and_load_older(client):
+    from server.models.message import Message
+
+    session, version = _session_with_version("paging")
+    for index in range(3):
+        Message.objects.create(
+            session=session, session_version=version, role="user"
+        )
+
+    fragment = client.get(
+        reverse("webui:thread", args=[session.pk]),
+        {"limit": "1"},
+    )
+    assert b'id="thread-inner"' in fragment.content
+    assert b"Load older messages" in fragment.content
+
+    full = client.get(
+        reverse("webui:thread", args=[session.pk]),
+        {"limit": "2", "full": "1"},
+    )
+    assert b'id="thread"' in full.content
+    assert b'?limit=2' in full.content
+
+
+@pytest.mark.django_db
+def test_panel_todos_tab_renders(client):
+    session, _version = _session_with_version("todos")
+    response = client.get(reverse("webui:chat_panel_tab", args=[session.pk, "todos"]))
+    assert response.status_code == 200
+    assert b"todo_append" in response.content
+
+
+@pytest.mark.django_db
+def test_missing_legacy_session_panel_tabs_render(client, tmp_path):
+    from server.models.sessions.session_version import SessionVersionModel
+    from server.models.workspace import WorkspaceModel
+
+    session, _version = _session_with_version("right-panel-parity")
+    workspace = WorkspaceModel.objects.create(
+        name="panel-workspace",
+        path=str(tmp_path),
+        agentone_dir=str(tmp_path / ".agentone"),
+    )
+    (tmp_path / "folder").mkdir()
+    (tmp_path / "example.txt").write_text("contents")
+
+    version = session.latest_session_version
+    SessionVersionModel.objects.filter(pk=version.pk).update(workspace=workspace)
+
+    for tab in ("workspace", "settings", "capabilities", "calls"):
+        response = client.get(
+            reverse("webui:chat_panel_tab", args=[session.pk, tab])
+        )
+        assert response.status_code == 200
+    workspace_panel = client.get(
+        reverse("webui:chat_panel_tab", args=[session.pk, "workspace"])
+    )
+    assert b"example.txt" in workspace_panel.content
+    assert b"folder" in workspace_panel.content
+
+    outside = tmp_path.parent / "outside-panel-file.txt"
+    outside.write_text("must not be shown")
+    escaped = client.get(
+        reverse("webui:chat_panel_tab", args=[session.pk, "workspace"]),
+        {"path": "../outside-panel-file.txt"},
+    )
+    assert b"must not be shown" not in escaped.content
+    assert b"Directory is unavailable." in escaped.content
+
+
+@pytest.mark.django_db
+def test_workspace_detail_browses_files_and_blocks_escape(client, tmp_path):
+    from server.models.workspace import WorkspaceModel
+
+    workspace_path = tmp_path / "workspace"
+    workspace_path.mkdir()
+    nested = workspace_path / "folder"
+    nested.mkdir()
+    (nested / "example.txt").write_text("contents")
+    workspace = WorkspaceModel.objects.create(
+        name="workspace-files",
+        path=str(workspace_path),
+        agentone_dir=str(workspace_path / ".agentone"),
+    )
+
+    response = client.get(reverse("webui:workspace", args=[workspace.pk]))
+    assert response.status_code == 200
+    assert b'class="webui-entity-layout"' in response.content
+    assert b'class="webui-entity-assistant" id="entity-assistant-panel"' in response.content
+    assert b"example.txt" not in response.content
+    assert b"folder/" in response.content
+
+    nested_response = client.get(
+        reverse("webui:workspace", args=[workspace.pk]),
+        {"files": "folder"},
+    )
+    assert nested_response.status_code == 200
+    assert b"example.txt" in nested_response.content
+
+    outside = tmp_path / "outside.txt"
+    outside.write_text("must not be shown")
+    escaped = client.get(
+        reverse("webui:workspace", args=[workspace.pk]),
+        {"files": "../outside.txt"},
+    )
+    assert b"must not be shown" not in escaped.content
+    assert b"Directory is unavailable." in escaped.content
+
+
+@pytest.mark.django_db
+def test_workspace_manager_reports_missing_agent(client, tmp_path):
+    from server.models.workspace import WorkspaceModel
+
+    workspace = WorkspaceModel.objects.create(
+        name="workspace-manager",
+        path=str(tmp_path),
+        agentone_dir=str(tmp_path / ".agentone"),
+    )
+    response = client.post(
+        reverse("webui:workspace_manager_open", args=[workspace.pk])
+    )
+    assert response.status_code == 302
+    assert response["Location"].endswith("?error=manager-agent")
+
+
+def test_agent_capabilities_preserve_disallowed_names():
+    from types import SimpleNamespace
+
+    from webui.views.agents import _capability_sections
+
+    values = {
+        "toolNames": ["shell", "read"],
+        "disallowedToolNames": ["shell"],
+        "taskNames": ["build"],
+        "disallowedTaskNames": [],
+    }
+    version = SimpleNamespace(resolve_setting=lambda name: values.get(name, []))
+    sections = _capability_sections(version)
+    tools = {row["name"]: row["allowed"] for row in sections[0]["rows"]}
+    assert tools == {"read": True, "shell": False}
+    assert sections[1]["rows"] == [{"name": "build", "allowed": True}]
+
+
+@pytest.mark.django_db
+def test_collection_detail_lists_derived_flows(client):
+    from server.models.collections.data_collection import DataCollection
+
+    source = DataCollection.objects.create(name="upstream-flow", collection_type="stream")
+    derived = DataCollection.objects.create(
+        name="downstream-flow",
+        collection_type="set",
+        sources=[{"type": "stream", "stream": source.name}],
+    )
+    response = client.get(reverse("webui:collection", args=[source.pk]))
+    assert response.status_code == 200
+    assert b"downstream-flow" in response.content
+    assert reverse("webui:collection", args=[derived.pk]).encode() in response.content
+
+
+@pytest.mark.django_db
+def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.sessions.session import SessionModel
+    from webui.views import assistants
+
+    subject = AgentModel.objects.create(name="assistant-target")
+    assistant = AgentModel.objects.create(name="agent_assistant")
+    version = AgentVersionModel.objects.create(agent=assistant, version_number=1)
+    AgentModel.objects.filter(pk=assistant.pk).update(latest_agent_version=version)
+    monkeypatch.setattr(
+        assistants,
+        "_assistant_scope",
+        lambda kind, item: ("agent_assistant", None, None),
+    )
+
+    response = client.post(
+        reverse("webui:entity_assistant_open", args=["agent", subject.pk])
+    )
+    assert response.status_code == 302
+    assert response["Location"].startswith("/app/chat/")
+    assert SessionModel.objects.filter(
+        latest_session_version__agent=assistant,
+        name__startswith="agent_assistant - assistant-target",
+    ).exists()
+
+    embedded = client.post(
+        reverse("webui:entity_assistant_open", args=["agent", subject.pk]),
+        HTTP_HX_REQUEST="true",
+    )
+    assert embedded.status_code == 200
+    assert b'id="entity-assistant-panel"' in embedded.content
+    assert b'class="webui-entity-assistant-composer"' in embedded.content
+    assert b'hx-target="#thread"' in embedded.content
+
+
+@pytest.mark.django_db
+def test_overview_pages_render_embedded_assistant_panels(client, monkeypatch):
+    from webui.views import assistants
+
+    assistant_names = {
+        "dashboard": "AgentOne",
+        "agents": "agents_assistant",
+        "projects": "projects_assistant",
+        "workspaces": "workspaces_assistant",
+        "cronjobs": "cronjobs_assistant",
+        "workitems": "workitems_assistant",
+    }
+    monkeypatch.setattr(
+        assistants,
+        "_overview_scope",
+        lambda kind, project: (assistant_names[kind], project, None),
+    )
+    monkeypatch.setattr(assistants, "_sessions_for_scope", lambda *_args: [])
+
+    for path in (
+        reverse("webui:dashboard"),
+        reverse("webui:agents"),
+        reverse("webui:projects"),
+        reverse("webui:workspaces"),
+        reverse("webui:cron"),
+        reverse("webui:workitems"),
+    ):
+        response = client.get(path)
+        assert response.status_code == 200, path
+        assert b'id="entity-assistant-panel"' in response.content, path
+        _assert_panel_is_rightbar(response.content, path)
+
+
+@pytest.mark.django_db
+def test_workitems_overview_assistant_preserves_project_scope(client, monkeypatch):
+    from server.models.project import Project
+    from webui.views import assistants
+
+    project = Project.objects.create(name="Assistant project scope")
+    monkeypatch.setattr(
+        assistants,
+        "_overview_scope",
+        lambda _kind, requested_project: (
+            "workitems_assistant",
+            requested_project,
+            None,
+        ),
+    )
+    monkeypatch.setattr(assistants, "_sessions_for_scope", lambda *_args: [])
+
+    response = client.get(
+        reverse("webui:workitems"),
+        {"project": project.pk},
+    )
+    assert response.status_code == 200
+    assert b'hx-post="/app/assistant/overview/workitems/open"' in response.content
+    assert (
+        f'<input type="hidden" name="project" value="{project.pk}">'.encode()
+        in response.content
+    )
+
+
+@pytest.mark.django_db
+def test_provider_and_model_insight_details_render(client):
+    from server.models.providers.ai_model import AiModel
+    from server.models.providers.api_provider import ApiProvider
+
+    provider = ApiProvider.objects.create(
+        name="Insight Provider",
+        url="https://provider.example",
+        limit_request_per_minute=12,
+    )
+    model = AiModel.objects.create(
+        api_provider=provider,
+        name="Insight Model",
+        provider_model_id="model-v1",
+        context_length=12345,
+        supports_tool_call=True,
+    )
+    providers = client.get(reverse("webui:insights_tab", args=["providers"]))
+    models = client.get(reverse("webui:insights_tab", args=["models"]))
+    assert providers.status_code == models.status_code == 200
+    assert b"Insight Provider" in providers.content
+    assert b"12 RPM" in providers.content
+    assert f"#model-{model.pk}".encode() in providers.content
+    assert b"Insight Model" in models.content
+    assert f"#provider-{provider.pk}".encode() in models.content
+    assert reverse("webui:model_probe", args=[model.pk]).encode() in models.content
+
+
+@pytest.mark.django_db
+def test_model_probe_dispatches_specific_model(client, monkeypatch):
+    import importlib
+
+    from django.core.cache import cache
+
+    from server.models.providers.ai_model import AiModel
+    from server.models.providers.api_provider import ApiProvider
+    probe_module = importlib.import_module("server.tasks.probe_model")
+
+    provider = ApiProvider.objects.create(name="Model Probe Provider")
+    model = AiModel.objects.create(
+        api_provider=provider,
+        name="Model Probe Target",
+        provider_model_id="target",
+    )
+    dispatched = []
+
+    class FakeTask:
+        @staticmethod
+        def delay(model_pk):
+            dispatched.append(model_pk)
+
+    monkeypatch.setattr(probe_module, "probe_model", FakeTask())
+    monkeypatch.setattr(probe_module, "get_cached_result", lambda _pk: None)
+    monkeypatch.setattr(probe_module, "is_running", lambda _pk: False)
+    response = client.post(
+        reverse("webui:model_probe", args=[model.pk]),
+        HTTP_HX_REQUEST="true",
+    )
+    assert response.status_code == 200
+    assert b"Testing Model Probe Target" in response.content
+    assert dispatched == [model.pk]
+    cache.delete(f"webui:probe:model-requested:{model.pk}")
+
+
+@pytest.mark.django_db
+def test_chat_todo_controls_save_auto_state_and_clear(client, monkeypatch):
+    from server.models.sessions.session import SessionModel
+
+    session, _version = _session_with_version("todo-controls")
+    state = {}
+    cleared = []
+
+    class Anchor:
+        @staticmethod
+        def delay(**kwargs):
+            cleared.append(kwargs)
+
+    class FakeRuntime:
+        @staticmethod
+        def _set_session_setting(name, value):
+            state[name] = value
+
+        @staticmethod
+        def get_task(name):
+            return Anchor() if name == "todolist_action" else None
+
+        @staticmethod
+        def get_tool(_name):
+            return None
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    endpoint = reverse("webui:chat_todo_action", args=[session.pk])
+    assert client.post(endpoint, {"action": "auto"}).status_code == 302
+    assert state["todo_auto_process"] is True
+    assert client.post(endpoint, {"action": "pause"}).status_code == 302
+    assert state["todo_auto_process"] is False
+    assert client.post(endpoint, {"action": "clear"}).status_code == 302
+    assert cleared == [{"action": "clear"}]
+    assert client.post(endpoint, {"action": "unknown"}).status_code == 400
+
+
+@pytest.mark.django_db
+def test_chat_call_cancel_is_limited_to_session(client, monkeypatch):
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from server.tasks import recovery_scheduler
+
+    session, version = _session_with_version("call-cancel")
+    call = _task_call(session, version, detail=TaskCallStatusDetail.WAITING_QUEUE)
+    cancelled = []
+    monkeypatch.setattr(
+        recovery_scheduler, "_force_end_call", lambda target: cancelled.append(target.pk)
+    )
+    response = client.post(
+        reverse("webui:call_cancel", args=[session.pk, call.pk])
+    )
+    assert response.status_code == 302
+    assert cancelled == [call.pk]
+
+
+@pytest.mark.django_db
+def test_chat_setting_override_and_reset(client):
+    session, _version = _session_with_version("right-panel-settings")
+    endpoint = reverse("webui:chat_setting", args=[session.pk])
+
+    saved = client.post(endpoint, {"name": "max_turns", "value": "5"})
+    assert saved.status_code == 200
+    assert b'value="5"' in saved.content
+    session.refresh_from_db()
+    assert session.latest_session_version.session_settings.max_turns == 5
+
+    reset = client.post(endpoint, {"name": "max_turns", "action": "reset"})
+    assert reset.status_code == 200
+    session.refresh_from_db()
+    assert session.latest_session_version.session_settings.max_turns is None
+
+    invalid = client.post(endpoint, {"name": "reasoning_effort", "value": "invalid"})
+    assert invalid.status_code == 400
+
+
+@pytest.mark.django_db
+def test_settings_providers_tab_masks_keys(client):
+    from server.models.providers.api_key import ApiKey
+    from server.models.providers.api_provider import ApiProvider
+
+    provider = ApiProvider.objects.create(name="Test Provider")
+    ApiKey.objects.create(
+        api_provider=provider, key="sk-1234567890abcdef", comment="primary"
+    )
+
+    response = client.get(reverse("webui:settings_tab", args=["providers"]))
+    assert response.status_code == 200
+    assert b"Test Provider" in response.content
+    assert b"sk-1234567890abcdef" not in response.content
+    assert b"sk-1" in response.content and b"cdef" in response.content
+
+
+@pytest.mark.django_db
+def test_settings_provider_key_add_toggle_delete(client):
+    from server.models.providers.api_key import ApiKey
+    from server.models.providers.api_provider import ApiProvider
+
+    provider = ApiProvider.objects.create(name="Key Provider")
+    add = client.post(
+        reverse("webui:settings_provider_key", args=[provider.pk]),
+        {"action": "add", "comment": "new", "key": "secret-key"},
+    )
+    assert add.status_code == 302
+    key = ApiKey.objects.get(api_provider=provider, key="secret-key")
+
+    client.post(
+        reverse("webui:settings_provider_key", args=[provider.pk]),
+        {"action": "toggle", "key_id": key.pk},
+    )
+    key.refresh_from_db()
+    assert key.enabled is False
+
+    client.post(
+        reverse("webui:settings_provider_key", args=[provider.pk]),
+        {"action": "delete", "key_id": key.pk},
+    )
+    assert not ApiKey.objects.filter(pk=key.pk).exists()
+
+
+# ---------------------------------------------------------------------------
+# Composer config, message actions, transcript/export, templates, probe
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_chat_page_renders_composer_config(client):
+    from server.models.workspace import WorkspaceModel
+
+    WorkspaceModel.objects.create(name="Config Space", path="/tmp/config-space")
+    session, _version = _session_with_version("config")
+    response = client.get(reverse("webui:chat", args=[session.pk]))
+    assert response.status_code == 200
+    assert b'class="webui-composer-config"' in response.content
+    assert b'name="model"' in response.content
+    assert b'name="reasoning"' in response.content
+    assert b'name="workspace"' in response.content
+
+
+@pytest.mark.django_db
+def test_chat_config_persists_overrides(client, monkeypatch):
+    from server.models.sessions.session import SessionModel
+
+    session, _version = _session_with_version("config-post")
+
+    calls = {}
+
+    class FakeRuntime:
+        def set_aimodel_by_name(self, name):
+            calls["model"] = name
+
+        def set_reasoning_effort(self, value):
+            calls["reasoning"] = value
+
+        def set_workspace(self, workspace):
+            calls["workspace"] = workspace
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    response = client.post(
+        reverse("webui:chat_config", args=[session.pk]),
+        {"model": "gpt-test", "reasoning": "high", "workspace": ""},
+    )
+    assert response.status_code == 302
+    assert calls == {"model": "gpt-test", "reasoning": "high", "workspace": None}
+
+
+@pytest.mark.django_db
+def test_fork_chat_redirects_to_child(client, monkeypatch):
+    from server.models.sessions.session import SessionModel
+
+    session, _version = _session_with_version("fork")
+    message = _user_message(session, _version, "fork here")
+
+    class FakeAgent:
+        def get_version_model(self):
+            return object()
+
+    class FakeChild:
+        class model:
+            pk = 4242
+
+    class FakeRuntime:
+        agent = FakeAgent()
+
+        def fork(self, **kwargs):
+            assert kwargs["anchor"].pk == message.pk
+            return FakeChild()
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    response = client.post(
+        reverse("webui:fork_chat", args=[session.pk]), {"message_id": message.pk}
+    )
+    assert response.status_code == 302
+    assert response["Location"] == reverse("webui:chat", args=[4242])
+
+
+def _user_message(session, version, text):
+    from server.models.content import GenericContent
+    from server.models.enums.message_enums import (
+        MessageContentType,
+        MessagePartType,
+        MessageRole,
+    )
+    from server.models.message import Message, MessagePart
+
+    message = Message.objects.create(
+        session=session, session_version=version, role=MessageRole.USER
+    )
+    MessagePart.objects.create(
+        message=message,
+        type=MessagePartType.MESSAGE,
+        content=GenericContent.from_text(text),
+        content_type=MessageContentType.TEXT,
+    )
+    return message
+
+
+@pytest.mark.django_db
+def test_chat_transcript_and_export_downloads(client):
+    import json
+
+    session, version = _session_with_version("downloads")
+    _user_message(session, version, "hello transcript")
+
+    transcript = client.get(reverse("webui:chat_transcript", args=[session.pk]))
+    assert transcript.status_code == 200
+    assert transcript["Content-Disposition"].startswith("attachment;")
+    assert b"hello transcript" in transcript.content
+
+    export = client.get(reverse("webui:chat_export", args=[session.pk]))
+    assert export.status_code == 200
+    assert export["Content-Disposition"].endswith('.json"')
+    payload = json.loads(export.content)
+    assert payload["session"]["pk"] == session.pk
+    assert payload["messages"][0]["parts"][0]["content"] == "hello transcript"
+
+
+@pytest.mark.django_db
+def test_panel_templates_tab_renders_empty_state(client):
+    session, _version = _session_with_version("templates-empty")
+    response = client.get(
+        reverse("webui:chat_panel_tab", args=[session.pk, "templates"])
+    )
+    assert response.status_code == 200
+    assert b"No templates yet" in response.content
+
+
+@pytest.mark.django_db
+def test_template_preview_reports_unknown_template(client):
+    session, _version = _session_with_version("templates-preview")
+    response = client.post(
+        reverse("webui:template_preview", args=[session.pk]),
+        {"name": "does-not-exist"},
+    )
+    assert response.status_code == 200
+    assert b"not found" in response.content.lower()
+
+
+@pytest.mark.django_db
+def test_provider_test_dispatches_probe(client, monkeypatch):
+    import importlib
+
+    from server.models.providers.api_provider import ApiProvider
+
+    probe_module = importlib.import_module("server.tasks.probe_model")
+    provider = ApiProvider.objects.create(name="Probe Provider")
+
+    class FakeModel:
+        pk = 77
+
+    dispatched = {}
+
+    class FakeTask:
+        @staticmethod
+        def delay(pk):
+            dispatched["pk"] = pk
+
+    monkeypatch.setattr(
+        "runtime.test_run.best_usable_model", lambda provider_pk: FakeModel()
+    )
+    monkeypatch.setattr(probe_module, "probe_model", FakeTask())
+
+    response = client.post(
+        reverse("webui:settings_provider_test", args=[provider.pk])
+    )
+    assert response.status_code == 302
+    assert dispatched["pk"] == 77
+
+
+@pytest.mark.django_db
+def test_connection_banner_is_present(client):
+    response = client.get(reverse("webui:dashboard"))
+    assert b'id="connection-banner"' in response.content
+
+
+def test_image_parts_accepts_only_image_data_uris():
+    import json
+
+    from webui.views.chat import _image_parts
+
+    raw = json.dumps(
+        [
+            {"name": "a.png", "content": "data:image/png;base64,AAAA"},
+            {"name": "evil", "content": "javascript:alert(1)"},
+            "data:image/jpeg;base64,BBBB",
+        ]
+    )
+    parts = _image_parts(raw)
+    assert [part["content"] for part in parts] == [
+        "data:image/png;base64,AAAA",
+        "data:image/jpeg;base64,BBBB",
+    ]
+    assert all(part["content_type"] == "IMAGE" for part in parts)
+    assert _image_parts("not json") == []
+
+
+@pytest.mark.django_db
+def test_send_message_passes_image_parts(client, monkeypatch):
+    import json
+
+    from server.models.sessions.session import SessionModel
+
+    session, _version = _session_with_version("attach")
+    captured = {}
+
+    class FakeRuntime:
+        def add_user_message(self, spec):
+            captured["spec"] = spec
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    response = client.post(
+        reverse("webui:send", args=[session.pk]),
+        {
+            "text": "look at this",
+            "images": json.dumps(
+                [{"name": "a.png", "content": "data:image/png;base64,AAAA"}]
+            ),
+        },
+    )
+    assert response.status_code == 200
+    spec = captured["spec"]
+    assert [part["content_type"] for part in spec] == ["IMAGE", "TEXT"]
+    assert b"data:image/png;base64,AAAA" in response.content
+
+
+@pytest.mark.django_db
+def test_sidebar_search_filters_chats(client):
+    _session_with_version("alpha chat")
+    _session_with_version("beta chat")
+    response = client.get(reverse("webui:sidebar"), {"section": "chats", "q": "alpha"})
+    assert response.status_code == 200
+    assert b"alpha chat" in response.content
+    assert b"beta chat" not in response.content
+
+
+@pytest.mark.django_db
+def test_chat_header_shows_context_usage(client, monkeypatch):
+    from server.models.sessions.session import SessionModel
+
+    session, _version = _session_with_version("usage")
+
+    class FakeRuntime:
+        def context_usage(self):
+            return {
+                "used_context_tokens": 1000,
+                "max_context_tokens": 10000,
+                "used_context_percent": 10.0,
+            }
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    response = client.get(reverse("webui:chat_header", args=[session.pk]))
+    assert response.status_code == 200
+    assert b"10%" in response.content
+    assert b"ctx-ring-value" in response.content
+    assert b"1k of 10k" in response.content
+    assert b"sse:Query.session:" in response.content
+
+
+# ---------------------------------------------------------------------------
+# Remaining-gap ports: command palette, ToC, message editing, conversation
+# management, sidebar activity, agent picker
+# ---------------------------------------------------------------------------
+
+def test_fmt_tokens_and_ring_geometry():
+    from webui.views.common import _RING_CIRCUMFERENCE, _fmt_tokens
+
+    assert _fmt_tokens(999) == "999"
+    assert _fmt_tokens(1000) == "1k"
+    assert _fmt_tokens(1_500_000) == "1.5M"
+    assert _fmt_tokens(10_000_000) == "10M"
+    assert _fmt_tokens("nope") == "0"
+    assert _RING_CIRCUMFERENCE > 61.0
+
+
+@pytest.mark.django_db
+def test_usage_summary_exposes_ring_fields(monkeypatch):
+    from server.models.sessions.session import SessionModel
+    from webui.views.common import usage_summary
+
+    session, _version = _session_with_version("ring")
+
+    class FakeRuntime:
+        def context_usage(self):
+            return {
+                "used_context_tokens": 9500,
+                "max_context_tokens": 10000,
+                "used_context_percent": 95.0,
+                "tokens_send": 1200,
+                "tokens_received": 800,
+                "tokens_cached": 400,
+                "tokens_reasoning": 100,
+            }
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    usage = usage_summary(session)
+    assert usage["level"] == "high"
+    assert usage["percent_label"] == "95%"
+    assert usage["used_label"] == "10k"
+    assert usage["window_label"] == "10k"
+    assert float(usage["ring_offset"]) >= 0.0
+
+
+@pytest.mark.django_db
+def test_command_options_merge_commands_and_tools(monkeypatch):
+    from types import SimpleNamespace
+
+    from server.models.sessions.session import SessionModel
+    from webui.views.common import command_options
+
+    session, _version = _session_with_version("commands")
+    schema = {
+        "properties": {
+            "target": {"type": "string", "description": "where to look"},
+            "depth": {"type": "integer", "description": "levels"},
+        },
+        "required": ["target"],
+    }
+
+    class FakeRuntime:
+        allowedCommandNames = ["tree"]
+        allowedToolNames = ["grep"]
+        allowedCommands = [
+            SimpleNamespace(
+                task_definition=SimpleNamespace(name="tree", description="list files"),
+                function_schema=schema,
+            )
+        ]
+        allowedTools = [
+            SimpleNamespace(
+                task_definition=SimpleNamespace(name="grep", description="search"),
+                function_schema=None,
+            ),
+            SimpleNamespace(
+                task_definition=SimpleNamespace(name="not-allowed", description=""),
+                function_schema=None,
+            ),
+        ]
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    options = {item["name"]: item for item in command_options(session)}
+    assert set(options) == {"tree", "grep"}
+    assert options["tree"]["fields"][0]["name"] == "target"
+    assert options["tree"]["fields"][0]["required"] is True
+    assert options["tree"]["fields"][1]["input_type"] == "number"
+    assert options["grep"]["fields"] == []
+
+
+@pytest.mark.django_db
+def test_compaction_segments_and_around_window():
+    from server.models.enums.message_enums import MessageType
+    from server.models.message import Message
+    from webui.thread import build_thread
+    from webui.views.common import compaction_segments
+
+    session, version = _session_with_version("toc")
+    first = _user_message(session, version, "first")
+    boundary = Message.objects.create(
+        session=session,
+        session_version=version,
+        role="user",
+        message_type=MessageType.COMPACTION,
+    )
+    last = _user_message(session, version, "last")
+
+    segments = compaction_segments(session)
+    assert [seg["pk"] for seg in segments] == [boundary.pk]
+
+    window = build_thread(session, limit=50, end_pk=boundary.pk)
+    pks = [row.obj.pk for row in window if row.kind == "message"]
+    assert boundary.pk in pks
+    assert last.pk not in pks
+    assert first.pk in pks
+
+
+@pytest.mark.django_db
+def test_edit_message_rewrites_and_truncates(client, monkeypatch):
+    from server.models.enums.message_enums import MessagePartType
+    from server.models.message import Message
+    from server.models.sessions.session import SessionModel
+
+    session, version = _session_with_version("edit")
+    original = _user_message(session, version, "old prompt")
+    later = _user_message(session, version, "later prompt")
+    dispatched = {}
+
+    class FakeTask:
+        def delay(self, **kwargs):
+            dispatched.update(kwargs)
+
+    class FakeRuntime:
+        def reset_turn_count(self):
+            dispatched["turn_reset"] = True
+
+        def reset_unattended_turn_count(self):
+            dispatched["unattended_reset"] = True
+
+        def get_task(self, name):
+            dispatched["task"] = name
+            return FakeTask()
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    response = client.post(
+        reverse("webui:edit_message", args=[session.pk, original.pk]),
+        {"text": "new prompt"},
+    )
+    assert response.status_code == 302
+    original.refresh_from_db()
+    part = original.parts.filter(type=MessagePartType.MESSAGE).first()
+    assert part.content.get() == "new prompt"
+    assert not Message.objects.filter(pk=later.pk).exists()
+    assert dispatched["task"] == "process_turn"
+    assert dispatched["message"].pk == original.pk
+    assert dispatched["turn_reset"] and dispatched["unattended_reset"]
+
+
+@pytest.mark.django_db
+def test_clear_conversation_removes_messages(client, monkeypatch):
+    from server.models.sessions.session import SessionModel
+
+    session, version = _session_with_version("clear")
+    _user_message(session, version, "one")
+    _user_message(session, version, "two")
+    calls = {}
+
+    class FakeRuntime:
+        def reset_turn_count(self):
+            calls["turn"] = True
+
+        def reset_unattended_turn_count(self):
+            calls["unattended"] = True
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    response = client.post(reverse("webui:clear_conversation", args=[session.pk]))
+    assert response.status_code == 302
+    assert session.related_messages.count() == 0
+    assert calls == {"turn": True, "unattended": True}
+
+
+@pytest.mark.django_db
+def test_import_conversation_creates_messages(client):
+    import json
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from server.models.sessions.session import SessionModel
+
+    session, _version = _session_with_version("import")
+    payload = {
+        "messages": [
+            {
+                "role": "user",
+                "message_type": "user_chat",
+                "parts": [{"type": "MESSAGE", "content_type": "TEXT", "content": "hi"}],
+            },
+            {
+                "role": "assistant",
+                "message_type": "assistant_message",
+                "parts": [
+                    {"type": "MESSAGE", "content_type": "TEXT", "content": "hello"},
+                    {"type": "TOOLCALL", "content_type": "TEXT", "content": "skipped"},
+                ],
+            },
+        ]
+    }
+    upload = SimpleUploadedFile(
+        "chat.json", json.dumps(payload).encode("utf-8"), content_type="application/json"
+    )
+    response = client.post(
+        reverse("webui:import_conversation", args=[session.pk]), {"file": upload}
+    )
+    assert response.status_code == 302
+    messages = list(session.related_messages.order_by("pk"))
+    assert [message.role for message in messages] == ["user", "assistant"]
+    assert messages[0].prev_message_id is None
+    assert messages[1].prev_message_id == messages[0].pk
+    assert messages[1].parts.count() == 1
+    assert messages[1].parts.first().content.get() == "hello"
+
+
+@pytest.mark.django_db
+def test_chat_action_move_sets_project(client):
+    from server.models.project import Project
+    from server.models.sessions.session import SessionModel
+
+    session = SessionModel.objects.create(name="move-me")
+    project = Project.objects.create(name="Moved Here")
+    response = client.post(
+        reverse("webui:chat_action", args=[session.pk]),
+        {"action": "move", "project": project.pk},
+    )
+    assert response.status_code == 302
+    session.refresh_from_db()
+    assert session.parent_project_id == project.pk
+
+
+@pytest.mark.django_db
+def test_sidebar_marks_streaming_and_approval_sessions(client):
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from server.models.queries.query import Query, QueryStatus
+
+    streaming, streaming_version = _session_with_version("streaming chat")
+    waiting, waiting_version = _session_with_version("approval chat")
+    idle, _idle_version = _session_with_version("idle chat")
+
+    Query.objects.create(
+        session=streaming,
+        session_version=streaming_version,
+        status=QueryStatus.ACTIVE,
+    )
+    call = _task_call(
+        waiting,
+        waiting_version,
+        detail=TaskCallStatusDetail.HALTED_APPROVAL,
+        name="guardrail",
+    )
+    from server.models.tasks.agent_task_call import AgentTaskCall
+
+    AgentTaskCall.objects.filter(pk=call.pk).update(requires_approval=True)
+
+    response = client.get(reverse("webui:sidebar"), {"section": "chats"})
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "is-streaming" in body
+    assert "needs-approval" in body
+    assert idle.name in body
+
+
+@pytest.mark.django_db
+def test_chat_config_sets_agent(client, monkeypatch):
+    from server.models.agents.agent import AgentModel
+    from server.models.sessions.session import SessionModel
+
+    session, _version = _session_with_version("agent-picker")
+    agent = AgentModel.objects.create(name="chosen-agent")
+    applied = {}
+
+    class FakeRuntime:
+        def set_agent(self, value):
+            applied["agent"] = value
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    response = client.post(
+        reverse("webui:chat_config", args=[session.pk]), {"agent": agent.pk}
+    )
+    assert response.status_code == 302
+    assert applied["agent"].pk == agent.pk
+
+
+@pytest.mark.django_db
+def test_terminal_output_renders_polled_buffer(client, monkeypatch):
+    from server.models.terminal import TerminalSession
+    import runtime.terminal as terminal_module
+
+    session, _version = _session_with_version("terminal")
+    TerminalSession.objects.create(
+        session=session,
+        name="default",
+        tmux_session_name=f"agentone-test-{session.pk}-default",
+        status="running",
+        cwd="/tmp",
+    )
+
+    def fake_poll(session_model, name="default", lines=200):
+        assert session_model.pk == session.pk
+        assert name == "default"
+        return {"status": "success", "terminal": name, "output": "$ echo hi\nhi"}
+
+    monkeypatch.setattr(terminal_module, "poll_output", fake_poll)
+    response = client.get(
+        reverse("webui:terminal_output", args=[session.pk, "default"])
+    )
+    assert response.status_code == 200
+    assert b"echo hi" in response.content
+    assert b"webui-terminal-output" in response.content
+
+
+@pytest.mark.django_db
+def test_terminal_output_ignores_unknown_terminal(client):
+    session, _version = _session_with_version("terminal-missing")
+    response = client.get(
+        reverse("webui:terminal_output", args=[session.pk, "nope"])
+    )
+    assert response.status_code == 200
+    assert response.content == b""
+
+
+@pytest.mark.django_db
+def test_root_redirects_to_new_ui_for_authenticated_users(client):
+    from django.contrib.auth import get_user_model
+
+    user = get_user_model().objects.create_user("root-user", password="x")
+    client.force_login(user)
+    response = client.get("/")
+    assert response.status_code == 302
+    assert response["Location"] == "/app/"
+
+
+@pytest.mark.django_db
+def test_root_requires_login(client):
+    response = client.get("/")
+    assert response.status_code == 302
+    assert "/accounts/login/" in response["Location"]
+
+
+@override_settings(WEBUI_LOGIN_REQUIRED=True)
+def test_app_requires_login_when_enabled(client):
+    response = client.get(reverse("webui:dashboard"))
+    assert response.status_code == 302
+    assert "/accounts/login/" in response["Location"]
+    assert "next=/app/" in response["Location"]
+
+
+@pytest.mark.django_db
+@override_settings(WEBUI_LOGIN_REQUIRED=True)
+def test_app_allows_authenticated_user(client):
+    from django.contrib.auth import get_user_model
+
+    user = get_user_model().objects.create_user("ui-user", password="x")
+    client.force_login(user)
+    response = client.get(reverse("webui:dashboard"))
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_cron_create_edit_duplicate_run_and_delete(client, tmp_path, monkeypatch):
+    """Cron manifests round-trip through create, edit, duplicate and delete."""
+    from unittest.mock import patch
+
+    from server.models.agents.agent import AgentModel
+    from server.models.cron import Cronjob
+    from server.models.project import Project
+
+    project = Project.objects.create(
+        name="cron-project", agentone_dir=str(tmp_path / "project-agentone")
+    )
+    agent = AgentModel.objects.create(name="cron-agent", parent_project=project)
+
+    response = client.post(
+        reverse("webui:cron_create"),
+        {
+            "name": "hourly-report",
+            "schedule": "0 * * * *",
+            "agent": str(agent.pk),
+            "parent_project": str(project.pk),
+            "message": "Write the report",
+        },
+    )
+    assert response.status_code == 302
+    cron = Cronjob.objects.get(name="hourly-report")
+    assert cron.agent_id == agent.pk
+    assert cron.next_run_at is not None
+    assert cron.message.get() == "Write the report"
+    assert (tmp_path / "project-agentone" / "cronjobs" / "hourly-report.md").is_file()
+
+    response = client.post(
+        reverse("webui:cron_edit", args=[cron.pk]),
+        {
+            "name": "daily-report",
+            "schedule": "@daily",
+            "agent": str(agent.pk),
+            "parent_project": str(project.pk),
+            "message": "Write the daily report",
+        },
+    )
+    assert response.status_code == 302
+    cron.refresh_from_db()
+    assert cron.name == "daily-report"
+    assert cron.schedule == "@daily"
+    assert (tmp_path / "project-agentone" / "cronjobs" / "daily-report.md").is_file()
+    assert not (tmp_path / "project-agentone" / "cronjobs" / "hourly-report.md").exists()
+
+    response = client.post(reverse("webui:cron_duplicate", args=[cron.pk]))
+    assert response.status_code == 302
+    copy = Cronjob.objects.get(name="daily-report-copy")
+    assert copy.function_type == ""
+
+    with patch("webui.views.cron.execute_cron_job") as execute:
+        response = client.post(reverse("webui:cron_run_now", args=[cron.pk]))
+    assert response.status_code == 302
+    execute.assert_called_once_with(cron.pk)
+
+    response = client.post(reverse("webui:cron_delete", args=[cron.pk]))
+    assert response.status_code == 302
+    assert not Cronjob.objects.filter(pk=cron.pk).exists()
+    assert not (tmp_path / "project-agentone" / "cronjobs" / "daily-report.md").exists()
+
+
+@pytest.mark.django_db
+def test_collection_edit_reprocess_and_delete(client, monkeypatch):
+    from unittest.mock import patch
+
+    from server.models.collections.data_collection import DataCollection
+
+    collection = DataCollection.objects.create(name="webui-flow", collection_type="stream")
+
+    response = client.post(
+        reverse("webui:collection_edit", args=[collection.pk]),
+        {
+            "name": "webui-flow-renamed",
+            "collection_type": "set",
+            "is_active": "on",
+            "description": "edited",
+            "sources": '[{"type": "stream", "stream": "input"}]',
+            "processor": '{"agent": "processor", "function": "handle"}',
+            "on_removed": '{"agent": "cleaner", "function": "remove"}',
+            "member_field": "item.id",
+            "score_field": "item.score",
+            "retroactive_on_source_change": "5",
+            "max_reprocess": "7",
+        },
+    )
+    assert response.status_code == 302
+    collection.refresh_from_db()
+    assert collection.name == "webui-flow-renamed"
+    assert collection.collection_type == "set"
+    assert collection.sources == [{"type": "stream", "stream": "input"}]
+    assert collection.processor == {"agent": "processor", "function": "handle"}
+    assert collection.on_removed == {"agent": "cleaner", "function": "remove"}
+    assert collection.member_field == "item.id"
+    assert collection.retroactive_on_source_change == 5
+    assert collection.max_reprocess == 7
+
+    with patch("server.tasks.reprocess_collection.reprocess_collection.delay") as delay:
+        response = client.post(reverse("webui:collection_reprocess", args=[collection.pk]))
+    assert response.status_code == 302
+    assert "reprocessed=1" in response["Location"]
+    delay.assert_called_once_with("webui-flow-renamed")
+
+    response = client.post(reverse("webui:collection_delete", args=[collection.pk]))
+    assert response.status_code == 302
+    assert not DataCollection.objects.filter(pk=collection.pk).exists()
+
+
+@pytest.mark.django_db
+def test_workitem_board_filters_and_delete(client):
+    from server.models.agents.agent import AgentModel
+    from server.models.workitems.enums import WorkItemStatus
+    from server.models.workitems.work_item import WorkItem
+
+    agent_a = AgentModel.objects.create(name="filter-agent-a")
+    agent_b = AgentModel.objects.create(name="filter-agent-b")
+    WorkItem.objects.create(
+        title="Review this", assigned_agent=agent_a,
+        status=WorkItemStatus.IN_REVIEW, requires_verification=True,
+    )
+    WorkItem.objects.create(
+        title="Blocked task", assigned_agent=agent_b,
+        status=WorkItemStatus.BLOCKED,
+    )
+    WorkItem.objects.create(
+        title="Backlog task", assigned_agent=agent_a,
+        status=WorkItemStatus.BACKLOG,
+    )
+
+    page = client.get(
+        reverse("webui:workitems_board"),
+        {"assignee": "filter-agent-a"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert b"Review this" in page.content
+    assert b"Backlog task" in page.content
+    assert b"Blocked task" not in page.content
+
+    page = client.get(
+        reverse("webui:workitems_board"),
+        {"verify": "required"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert b"Review this" in page.content
+    assert b"Backlog task" not in page.content
+
+    page = client.get(
+        reverse("webui:workitems_board"),
+        {"actionable": "1"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert b"Review this" in page.content
+    assert b"Blocked task" in page.content
+    assert b"Backlog task" not in page.content
+
+    item = WorkItem.objects.get(title="Review this")
+    response = client.post(reverse("webui:workitem_delete", args=[item.pk]))
+    assert response.status_code == 302
+    assert not WorkItem.objects.filter(pk=item.pk).exists()
+
+
+@pytest.mark.django_db
+def test_sidebar_nests_child_sessions_and_counts_subagents(client):
+    """The chat sidebar shows child sessions under their parent."""
+    from server.models.sessions.session import SessionModel
+
+    parent = SessionModel.objects.create(name="Parent chat")
+    SessionModel.objects.create(name="Child subagent", parent_session=parent)
+
+    response = client.get(reverse("webui:sidebar"), {"section": "chats"})
+    assert response.status_code == 200
+    content = response.content
+    assert b"Parent chat" in content
+    assert b"Child subagent" in content
+    assert b"session-tree-child" in content
+    assert b"1 subagents" in content
+
+
+@pytest.mark.django_db
+def test_insights_analytics_filters_and_dashboard_inspect(client):
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.queries.response import Response, ResponseStatus
+    from server.models.sessions.session import SessionModel
+    from server.models.sessions.session_version import SessionVersionModel
+    from server.models.settings import SettingsModel
+    from server.models.tasks.agent_task_call import AgentTaskCall
+
+    agent = AgentModel.objects.create(name="insights-agent")
+    agent_version = AgentVersionModel.objects.create(
+        agent=agent, agent_settings=SettingsModel.objects.create()
+    )
+    session = SessionModel.objects.create(name="insights-session")
+    session_version = SessionVersionModel.objects.create(
+        session=session, agent=agent, pinned_agent_version=agent_version
+    )
+
+    Response.objects.create(
+        session=session,
+        session_version=session_version,
+        status=ResponseStatus.SUCCESS,
+        provider_name="provA",
+        model_name="modelA",
+        prompt_tokens=10,
+        completion_tokens=5,
+    )
+    Response.objects.create(
+        session=session,
+        session_version=session_version,
+        status=ResponseStatus.SUCCESS,
+        provider_name="provB",
+        model_name="modelB",
+        prompt_tokens=20,
+        completion_tokens=7,
+    )
+
+    page = client.get(
+        reverse("webui:insights_tab", args=["analytics"]),
+        {"provider": "provA", "range": "7d"},
+    )
+    assert page.status_code == 200
+    assert page.context["provider_filter"] == "provA"
+    assert page.context["range_key"] == "7d"
+    assert [row["provider_name"] for row in page.context["providers"]] == ["provA"]
+    assert {row["model_name"] for row in page.context["models"]} == {"modelA"}
+    assert page.context["analytics_stats"][0]["label"] == "Requests"
+
+    page = client.get(
+        reverse("webui:insights_tab", args=["analytics"]),
+        {"range": "all", "model": "modelB"},
+    )
+    assert page.context["range_key"] == "all"
+    assert {row["model_name"] for row in page.context["models"]} == {"modelB"}
+
+    AgentTaskCall.objects.create(
+        session=session,
+        session_version=session_version,
+        status="NEW",
+        requires_approval=False,
+        max_subtask_errors=0,
+        max_subtask_error_rate=0,
+        limit_subtask_parallel_runs=0,
+        limit_per_instance_parallel_runs=0,
+        max_retries=0,
+        retry_delay=0,
+        retry_requires_approval=False,
+    )
+    page = client.get(
+        reverse("webui:insights_tab", args=["dashboard"]),
+        {"agent": "insights-agent", "status": "NEW"},
+    )
+    assert page.context["inspect"]["count"] == 1
+    assert page.context["inspect"]["agent"] == "insights-agent"
+
+    page = client.get(
+        reverse("webui:insights_tab", args=["dashboard"]), {"agent": "nobody"}
+    )
+    assert page.context["inspect"]["count"] == 0
+
+    from webui.views.insights import _analytics_buckets
+
+    assert _analytics_buckets("24h")[1] == "hour"
+    assert _analytics_buckets("7d")[1] == "day"
+    assert _analytics_buckets("30d")[1] == "day"
+    assert _analytics_buckets("90d")[1] == "week"
+
+
+@pytest.mark.django_db
+def test_workspace_create_edit_access_roundtrip_and_delete(client, tmp_path):
+    from server.models.workspace import WorkspaceModel
+
+    ws_path = tmp_path / "roundtrip-space"
+    ws_path.mkdir()
+    payload = {
+        "name": "roundtrip-space",
+        "path": str(ws_path),
+        "color": "#123456",
+        "description": "temporary",
+        "storage": "inline",
+        "access_read_default": "ask",
+        "access_read_allow": "src/**\nlib/**",
+        "access_read_ask": "docs/**",
+        "access_read_deny": "secrets/**",
+        "access_write_default": "deny",
+        "access_write_allow": "out/**",
+    }
+    response = client.post(reverse("webui:workspace_create"), payload)
+    assert response.status_code == 302
+    workspace = WorkspaceModel.objects.get(name="roundtrip-space")
+    assert workspace.path == str(ws_path)
+    assert workspace.color == "#123456"
+    assert workspace.access["read"]["default"] == "ask"
+    assert workspace.access["read"]["allow"] == ["src/**", "lib/**"]
+    assert workspace.access["write"]["default"] == "deny"
+    assert workspace.access["write"]["allow"] == ["out/**"]
+    assert (ws_path / ".agentone").is_dir()
+
+    payload.update(
+        {
+            "name": "roundtrip-space-edited",
+            "description": "edited",
+            "access_read_default": "deny",
+            "access_read_allow": "changed/**",
+            "access_write_default": "allow",
+        }
+    )
+    response = client.post(reverse("webui:workspace_edit", args=[workspace.pk]), payload)
+    assert response.status_code == 302
+    workspace.refresh_from_db()
+    assert workspace.name == "roundtrip-space-edited"
+    assert workspace.description == "edited"
+    assert workspace.access["read"]["default"] == "deny"
+    assert workspace.access["read"]["allow"] == ["changed/**"]
+    assert workspace.access["write"]["default"] == "allow"
+
+    response = client.post(reverse("webui:workspace_delete", args=[workspace.pk]))
+    assert response.status_code == 302
+    assert not WorkspaceModel.objects.filter(pk=workspace.pk).exists()
+
+
+@pytest.mark.django_db
+def test_settings_tab_shows_identity_fields(client):
+    session, _version = _session_with_version("settings-identity")
+    response = client.get(
+        reverse("webui:chat_panel_tab", args=[session.pk, "settings"])
+    )
+    assert response.status_code == 200
+    assert b"settings-identity" in response.content
+    assert b"settings-identity-agent" in response.content
+    assert b"settings-name" in response.content
+    assert b"v1" in response.content
+
+
+@pytest.mark.django_db
+def test_subagent_tab_lists_active_children_and_close(client):
+    from server.models.sessions.session import SessionModel
+    from server.models.enums.session_enums import SessionType
+
+    session, _version = _session_with_version("subagents-close")
+    child = SessionModel.objects.create(
+        name="child-session",
+        parent_session=session,
+        session_type=SessionType.SUBSESSION,
+    )
+    response = client.get(
+        reverse("webui:chat_panel_tab", args=[session.pk, "subagents"])
+    )
+    assert response.status_code == 200
+    assert b"child-session" in response.content
+    assert b"0 msgs" in response.content
+
+    closed = client.post(
+        reverse("webui:subagent_close", args=[session.pk, child.pk])
+    )
+    assert closed.status_code == 200
+    child.refresh_from_db()
+    assert child.is_active is False
+
+
+@pytest.mark.django_db
+def test_terminal_tab_shows_liveness_and_kill(client, monkeypatch):
+    from server.models.terminal import TerminalSession
+    import runtime.terminal as terminal_module
+
+    session, _version = _session_with_version("terminal-kill")
+    TerminalSession.objects.create(
+        session=session,
+        name="build",
+        tmux_session_name=f"agentone-test-{session.pk}-build",
+        status="running",
+        cwd="/tmp",
+    )
+    monkeypatch.setattr(
+        terminal_module,
+        "list_terminals",
+        lambda session_model: [
+            {
+                "name": "build",
+                "status": "running",
+                "tmux": f"agentone-test-{session.pk}-build",
+                "alive": True,
+                "cwd": "/tmp",
+                "last_active_at": None,
+            }
+        ],
+    )
+    killed = {}
+    monkeypatch.setattr(
+        terminal_module,
+        "kill_terminal",
+        lambda session_model, name="default": killed.update(name=name),
+    )
+    response = client.get(
+        reverse("webui:chat_panel_tab", args=[session.pk, "terminals"])
+    )
+    assert response.status_code == 200
+    assert b"build" in response.content
+    assert b"tmux live" in response.content
+
+    response = client.post(
+        reverse("webui:terminal_kill", args=[session.pk, "build"])
+    )
+    assert response.status_code == 200
+    assert killed == {"name": "build"}
+
+
+@pytest.mark.django_db
+def test_new_chat_honours_agent_workspace_name_and_description(client, tmp_path):
+    from server.models.sessions.session import SessionModel
+    from server.models.workspace import WorkspaceModel
+
+    agent = _session_with_version("new-chat-agent")[0].latest_session_version.agent
+    workspace = WorkspaceModel.objects.create(
+        name="new-chat-workspace",
+        path=str(tmp_path),
+        agentone_dir=str(tmp_path / ".agentone"),
+    )
+    response = client.post(
+        reverse("webui:new_chat"),
+        {
+            "agent": agent.pk,
+            "workspace": workspace.pk,
+            "name": "custom-chat-name",
+            "description": "Talk about the audit",
+        },
+    )
+    assert response.status_code == 302
+    session = SessionModel.objects.get(name="custom-chat-name")
+    assert response["Location"] == reverse("webui:chat", args=[session.pk])
+    version = session.latest_session_version
+    assert version.description == "Talk about the audit"
+    assert version.workspace_id == workspace.pk
+    assert version.agent_id == agent.pk
+
+
+@pytest.mark.django_db
+def test_chats_page_offers_new_chat_form(client):
+    from server.models.workspace import WorkspaceModel
+
+    _session_with_version("chats-form")
+    WorkspaceModel.objects.create(name="form-workspace", path="/tmp/form-workspace")
+    response = client.get(reverse("webui:chats"))
+    assert response.status_code == 200
+    assert b'id="new-chat"' in response.content
+    assert b"form-workspace" in response.content

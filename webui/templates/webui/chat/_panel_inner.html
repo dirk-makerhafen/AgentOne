@@ -1,0 +1,534 @@
+{% load webui %}
+{% if has_agent_update %}
+<div class="webui-error">
+    New agent version available (v{{ pinned_agent_version }} → v{{ latest_agent_version }}).
+    This chat remains pinned to preserve its prompt cache.
+    <form method="post" action="{% url 'webui:chat_action' session.pk %}">
+        {% csrf_token %}<input type="hidden" name="action" value="upgrade_agent">
+        <button class="webui-action-btn" type="submit">Use latest now</button>
+    </form>
+</div>
+{% endif %}
+
+{% if panel_tab == "workspace" %}
+    {% if not workspace %}
+    <div class="webui-empty-note">This chat has no workspace assigned.</div>
+    {% else %}
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Workspace</span>
+            <button class="webui-action-btn" type="button" title="Refresh"
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'workspace' %}{% if workspace_relative_path %}?path={{ workspace_relative_path|urlencode }}{% endif %}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
+        </div>
+        <div class="webui-muted-note">{{ workspace_root|default:workspace.path }}</div>
+        {% if workspace_relative_path %}
+        <a class="webui-action-btn"
+           hx-get="{% url 'webui:chat_panel_tab' session.pk 'workspace' %}"
+           hx-target="#chat-panel-body" hx-swap="innerHTML">Workspace root</a>
+        {% endif %}
+        {% if workspace_parent_path %}
+        <a class="webui-action-btn"
+           hx-get="{% url 'webui:chat_panel_tab' session.pk 'workspace' %}?path={{ workspace_parent_path|urlencode }}"
+           hx-target="#chat-panel-body" hx-swap="innerHTML">↑ Parent folder</a>
+        {% endif %}
+        {% if workspace_error %}<div class="webui-error">{{ workspace_error }}</div>{% endif %}
+    </div>
+    <div class="webui-panel-list">
+        {% for entry in workspace_entries %}
+        {% if entry.is_dir %}
+        <a class="webui-panel-row"
+           hx-get="{% url 'webui:chat_panel_tab' session.pk 'workspace' %}?path={{ entry.relative_path|urlencode }}"
+           hx-target="#chat-panel-body" hx-swap="innerHTML">
+            <span class="webui-panel-row-name">📁 {{ entry.name }}</span>
+            <span class="webui-panel-row-meta">Folder</span>
+        </a>
+        {% else %}
+        <div class="webui-panel-row">
+            <span class="webui-panel-row-name">▤ {{ entry.name }}</span>
+            <span class="webui-panel-row-meta">{{ entry.size_label }}</span>
+        </div>
+        {% endif %}
+        {% empty %}
+        {% if not workspace_error %}<div class="webui-empty-note">This folder is empty.</div>{% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+{% elif panel_tab == "settings" %}
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Session</span>
+            <span class="webui-badge">
+                {% if settings_version_number %}v{{ settings_version_number }}{% endif %}
+                {% if settings_version_is_latest %}· latest{% endif %}
+            </span>
+        </div>
+        <form class="detail-form webui-panel-setting" method="post"
+              action="{% url 'webui:chat_action' session.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="rename">
+            <input type="hidden" name="next" value="/app/chat/{{ session.pk }}?panel=settings">
+            <label for="settings-name">Name</label>
+            <input id="settings-name" type="text" name="name" value="{{ settings_name }}">
+            <button class="webui-action-btn" type="submit">Save</button>
+        </form>
+        <div class="detail-row"><span class="detail-row-label">Type</span>
+            <span class="detail-row-value">{{ settings_type_label }}</span>
+        </div>
+        <form class="detail-form webui-panel-setting"
+              hx-post="{% url 'webui:chat_config' session.pk %}"
+              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="panel" value="settings">
+            <label for="settings-workspace">Workspace</label>
+            <select id="settings-workspace" name="workspace">
+                <option value="">No workspace</option>
+                {% for ws in composer_workspaces %}
+                <option value="{{ ws.pk }}"{% if ws.pk == composer_workspace_id %} selected{% endif %}>{{ ws.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <form class="detail-form webui-panel-setting"
+              hx-post="{% url 'webui:chat_config' session.pk %}"
+              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="panel" value="settings">
+            <label for="settings-agent">Agent</label>
+            <select id="settings-agent" name="agent">
+                {% for agent in composer_agents %}
+                <option value="{{ agent.pk }}"{% if agent.pk == composer_agent_id %} selected{% endif %}>{{ agent.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <form class="detail-form webui-panel-setting"
+              hx-post="{% url 'webui:chat_config' session.pk %}"
+              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="panel" value="settings">
+            <label for="settings-model">AI model</label>
+            <select id="settings-model" name="model">
+                <option value="">Agent default</option>
+                {% for model_name in composer_models %}
+                <option value="{{ model_name }}"{% if model_name == composer_model %} selected{% endif %}>{{ model_name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <div class="detail-row"><span class="detail-row-label">Active</span>
+            <span class="detail-row-value">
+                {% if settings_active %}yes{% else %}no{% endif %}
+                {% if settings_is_paused %} · paused{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="webui-panel-list">
+        {% for setting in setting_rows %}
+        {% if setting.control == "choice" %}
+        <form class="detail-form webui-panel-setting" hx-post="{% url 'webui:chat_setting' session.pk %}"
+              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
+            <label for="setting-{{ setting.name }}">{{ setting.label }}</label>
+            <select id="setting-{{ setting.name }}" name="value">
+                <option value="">Agent default</option>
+                {% for choice in setting.choices %}
+                <option value="{{ choice.value }}"{% if setting.value == choice.value %} selected{% endif %}>{{ choice.label }}</option>
+                {% endfor %}
+            </select>
+            {% if setting.overridden %}
+            <button type="submit" name="action" value="reset" class="webui-action-btn">Reset</button>
+            {% endif %}
+        </form>
+        {% elif setting.control == "boolean" %}
+        <form class="detail-form webui-panel-setting" hx-post="{% url 'webui:chat_setting' session.pk %}"
+              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
+            <label for="setting-{{ setting.name }}">{{ setting.label }}</label>
+            <select id="setting-{{ setting.name }}" name="value">
+                <option value="">Agent default</option>
+                <option value="true"{% if setting.value == "true" %} selected{% endif %}>true</option>
+                <option value="false"{% if setting.value == "false" %} selected{% endif %}>false</option>
+            </select>
+            {% if setting.overridden %}
+            <button type="submit" name="action" value="reset" class="webui-action-btn">Reset</button>
+            {% endif %}
+        </form>
+        {% elif setting.control == "integer" %}
+        <form class="detail-form webui-panel-setting" hx-post="{% url 'webui:chat_setting' session.pk %}"
+              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
+            <label for="setting-{{ setting.name }}">{{ setting.label }}</label>
+            <input id="setting-{{ setting.name }}" type="number" min="0" name="value"
+                   value="{{ setting.value }}">
+            <button type="submit" class="webui-action-btn">Save</button>
+            {% if setting.overridden %}
+            <button type="submit" name="action" value="reset" class="webui-action-btn">Reset</button>
+            {% endif %}
+        </form>
+        {% elif setting.control == "json" %}
+        <form class="detail-form webui-panel-setting" hx-post="{% url 'webui:chat_setting' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
+            <label for="setting-{{ setting.name }}">{{ setting.label }} (JSON object)</label>
+            <textarea id="setting-{{ setting.name }}" name="value" rows="5">{{ setting.value }}</textarea>
+            <button type="submit" class="webui-action-btn">Save</button>
+            {% if setting.overridden %}
+            <button type="submit" name="action" value="reset" class="webui-action-btn">Reset</button>
+            {% endif %}
+        </form>
+        {% else %}
+        <div class="webui-panel-row">
+            <span class="webui-panel-row-name">{{ setting.label }}</span>
+            <span class="webui-panel-row-meta">{% if setting.value %}{{ setting.value }}{% else %}Agent default{% endif %}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+{% elif panel_tab == "capabilities" %}
+    <div class="webui-panel-list">
+        {% for section in capability_sections %}
+        <section class="webui-panel-section">
+            <div class="detail-card-title">{{ section.title }}</div>
+            {% for item in section.rows %}
+            <div class="webui-panel-row">
+                <span class="webui-panel-row-name{% if not item.allowed %} webui-muted-note{% endif %}">{{ item.name }}</span>
+                <span class="webui-panel-row-meta">{% if item.allowed %}allowed{% else %}disallowed{% endif %}</span>
+            </div>
+            {% empty %}
+            <div class="webui-empty-note">None</div>
+            {% endfor %}
+        </section>
+        {% endfor %}
+    </div>
+
+{% elif panel_tab == "calls" %}
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Task calls</span>
+            <button class="webui-action-btn" type="button" title="Refresh"
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'calls' %}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
+        </div>
+        {% if active_call_count %}<div class="webui-muted-note">{{ active_call_count }} active call{{ active_call_count|pluralize }}</div>{% endif %}
+        {% for row in current_calls %}
+        <div class="webui-line" style="padding-left:{{ row.depth|add:1 }}em">
+            <a class="webui-panel-row-name" href="{% url 'webui:call_detail' row.call.pk %}">{{ row.name }} #{{ row.call.pk }}</a>
+            <span class="webui-call-badge" style="background:{{ row.status_color }}">{{ row.status_label }}</span>
+            {% if row.active %}
+            <form method="post" action="{% url 'webui:call_cancel' session.pk row.call.pk %}"
+                  hx-post="{% url 'webui:call_cancel' session.pk row.call.pk %}"
+                  hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button class="webui-action-btn danger" type="submit">Cancel</button>
+            </form>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="webui-empty-note">No task calls in the current turn.</div>
+        {% endfor %}
+    </div>
+
+{% elif panel_tab == "tasks" %}
+    <div class="webui-panel-list">
+        {% for call in task_calls %}
+        <div class="webui-panel-row">
+            <span class="webui-panel-row-name">
+                {% if call.task_definition %}{{ call.task_definition.name }}{% else %}task call #{{ call.pk }}{% endif %}
+            </span>
+            <span class="webui-panel-row-meta">
+                {{ call.status }}{% if call.ended_at %} · {{ call.ended_at|reltime }}{% endif %}
+            </span>
+        </div>
+        {% empty %}
+        <div class="webui-empty-note">No task calls yet.</div>
+        {% endfor %}
+    </div>
+
+{% elif panel_tab == "subagents" %}
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Available subagents</span>
+            <button class="webui-action-btn" type="button" title="Refresh"
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'subagents' %}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
+        </div>
+        {% for subagent in available_subagents %}
+        <form class="webui-line" method="post"
+              hx-post="{% url 'webui:subagent_open' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="name" value="{{ subagent.name }}">
+            <div class="webui-line-body">
+                <span class="webui-panel-row-name">{{ subagent.name }}</span>
+                <span class="webui-panel-row-meta">
+                    {{ subagent.parent_name }}{% if subagent.max_turns %} · max {{ subagent.max_turns }} turns{% endif %}
+                </span>
+            </div>
+            <button class="webui-action-btn" type="submit">Open</button>
+        </form>
+        {% empty %}
+        <div class="webui-empty-note">No subagents are available to this session.</div>
+        {% endfor %}
+    </div>
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Active child sessions</div>
+        {% for child in children %}
+        <div class="webui-line">
+            <span class="webui-session-dot{% if child.active %} is-streaming{% elif child.needs_approval %} needs-approval{% endif %}"
+                  title="{% if child.active %}active{% elif child.needs_approval %}needs approval{% else %}idle{% endif %}"></span>
+            <div class="webui-line-body">
+                <a class="webui-panel-row-name" href="{% url 'webui:chat' child.session.pk %}">{{ child.session.name }}</a>
+                <span class="webui-panel-row-meta">
+                    {{ child.message_count }} msg{{ child.message_count|pluralize }}
+                    {% if child.model_name %} · {{ child.model_name }}{% endif %}
+                </span>
+            </div>
+            <form method="post"
+                  hx-post="{% url 'webui:subagent_close' session.pk child.session.pk %}"
+                  hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button class="webui-action-btn" type="submit">Close</button>
+            </form>
+        </div>
+        {% empty %}
+        <div class="webui-empty-note">No active child sessions.</div>
+        {% endfor %}
+    </div>
+
+{% elif panel_tab == "terminals" %}
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Terminals</span>
+            <button class="webui-action-btn" type="button" title="Refresh"
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'terminals' %}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
+        </div>
+        {% for terminal in terminals %}
+        <details class="webui-item webui-terminal"
+                 hx-get="{% url 'webui:terminal_output' session.pk terminal.name %}"
+                 hx-trigger="toggle"
+                 hx-target="find .webui-terminal-live"
+                 hx-swap="innerHTML">
+            <summary class="webui-item-summary">
+                <span class="webui-line">
+                    <span class="webui-session-dot{% if terminal.alive %} is-streaming{% endif %}"
+                          title="{% if terminal.alive %}tmux live{% else %}tmux not live{% endif %}"></span>
+                    <span>
+                        <strong>{{ terminal.name }}</strong>
+                        <span class="webui-muted-note">{{ terminal.status }}{% if terminal.cwd %} · {{ terminal.cwd }}{% endif %}</span>
+                    </span>
+                </span>
+                <span class="webui-muted-note">{{ terminal.last_active_at|default:"" }}</span>
+            </summary>
+            <div class="webui-terminal-live"
+                 hx-get="{% url 'webui:terminal_output' session.pk terminal.name %}"
+                 hx-trigger="load, every 2s"
+                 hx-swap="innerHTML">
+                <div class="webui-empty-note">Loading terminal output…</div>
+            </div>
+            <form method="post" style="margin-top:6px"
+                  hx-post="{% url 'webui:terminal_kill' session.pk terminal.name %}"
+                  hx-target="#chat-panel-body" hx-swap="innerHTML"
+                  hx-confirm="Kill terminal {{ terminal.name }}?">
+                {% csrf_token %}
+                <button class="webui-action-btn danger" type="submit">Kill</button>
+            </form>
+        </details>
+        {% empty %}
+        <div class="webui-empty-note">No persistent terminals for this chat.</div>
+        {% endfor %}
+        <div class="webui-muted-note">Read-only — only the agent can type into a terminal.</div>
+    </div>
+
+{% elif panel_tab == "todos" %}
+    {% if todo_action_message %}<div class="webui-muted-note">{{ todo_action_message }}</div>{% endif %}
+    <div class="webui-panel-row">
+        <span class="webui-panel-row-name">Automatic processing</span>
+        <span class="webui-panel-row-meta">{% if todo_auto %}on{% else %}paused{% endif %}</span>
+        <form method="post" action="{% url 'webui:chat_todo_action' session.pk %}"
+              hx-post="{% url 'webui:chat_todo_action' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="{% if todo_auto %}pause{% else %}auto{% endif %}">
+            <button class="webui-action-btn" type="submit">{% if todo_auto %}Pause{% else %}Auto{% endif %}</button>
+        </form>
+        <form method="post" action="{% url 'webui:chat_todo_action' session.pk %}"
+              hx-post="{% url 'webui:chat_todo_action' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="clear">
+            <button class="webui-action-btn" type="submit">Clear</button>
+        </form>
+    </div>
+    <div class="webui-panel-list">
+        {% for item in todos %}
+        <div class="webui-panel-row">
+            <span class="webui-panel-row-name">
+                <span class="webui-todo-index">#{{ item.task_id|default:forloop.counter }}</span>
+                {{ item.text }}
+            </span>
+            <span class="webui-panel-row-meta">{{ item.status }}</span>
+        </div>
+        {% empty %}
+        <div class="webui-empty-note">No todo items. The agent can add some with the todo_append tool, or type /todo in chat.</div>
+        {% endfor %}
+    </div>
+
+{% elif panel_tab == "templates" %}
+    {% if template_error %}
+    <div class="webui-error" style="margin-bottom:8px">{{ template_error }}</div>
+    {% endif %}
+    <div class="webui-panel-list">
+        {% for template in templates %}
+        <details class="webui-item">
+            <summary class="webui-item-summary">
+                <span>
+                    <strong>{{ template.name }}</strong>
+                    {% if template.description %}<span class="webui-muted-note">{{ template.description }}</span>{% endif %}
+                </span>
+                <span class="webui-muted-note">{{ template.variables|length }} var{{ template.variables|length|pluralize }}</span>
+            </summary>
+            <form class="detail-form" style="padding-top:4px">
+                {% csrf_token %}
+                <input type="hidden" name="name" value="{{ template.name }}">
+                {% for var in template.variables %}
+                <div class="detail-form-row">
+                    <label for="tpl-{{ template.name }}-{{ var.name }}">
+                        {{ var.name }}{% if var.required %} *{% endif %}
+                        <span class="webui-muted-note">({{ var.type }}{% if var.default %}, default: {{ var.default }}{% endif %})</span>
+                    </label>
+                    <input id="tpl-{{ template.name }}-{{ var.name }}" type="text"
+                           name="var_{{ var.name }}" placeholder="{{ var.default|default:'' }}"
+                           value="{{ var.default|default:'' }}" autocomplete="off">
+                    {% if var.description %}<div class="detail-form-hint">{{ var.description }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                <div class="webui-template-actions">
+                    <button class="webui-action-btn" type="button"
+                            hx-post="{% url 'webui:template_preview' session.pk %}"
+                            hx-include="closest form" hx-target="#chat-panel-body" hx-swap="innerHTML">Preview</button>
+                    <button class="webui-primary-btn" type="button"
+                            hx-post="{% url 'webui:template_run' session.pk %}"
+                            hx-include="closest form" hx-target="#chat-panel-body" hx-swap="innerHTML">Run</button>
+                    <button class="webui-action-btn danger" type="button"
+                            hx-post="{% url 'webui:template_delete' session.pk %}"
+                            hx-include="closest form" hx-target="#chat-panel-body" hx-swap="innerHTML"
+                            hx-confirm="Delete template {{ template.name }}?">Delete</button>
+                </div>
+            </form>
+        </details>
+        {% empty %}
+        <div class="webui-empty-note">
+            No templates yet. Ask the agent to save one with the <code>template_save</code> tool
+            (name, body, and variable specs).
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if template_preview %}
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Preview — {{ template_preview.name }}</div>
+        <pre class="webui-template-preview">{{ template_preview.text }}</pre>
+    </div>
+    {% endif %}
+
+    {% if template_run %}
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Run — {{ template_run.name }} · {{ template_run.status }}</div>
+        {% if template_run.model %}<div class="webui-muted-note">{{ template_run.model }}</div>{% endif %}
+        {% if template_run.content %}<pre class="webui-template-preview">{{ template_run.content }}</pre>{% endif %}
+    </div>
+    {% endif %}
+
+{% else %}
+    <div class="webui-panel-section">
+        <div class="detail-row"><span class="detail-row-label">Status</span>
+            <span class="detail-row-value">
+                {% if session.is_paused %}paused{% else %}active{% endif %}
+                {% if session.is_archived %} · archived{% endif %}
+                {% if session.is_pinned %} · pinned{% endif %}
+            </span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Agent</span>
+            <span class="detail-row-value">
+                {% if session.latest_session_version.agent %}
+                    <a href="{% url 'webui:agent' session.latest_session_version.agent.pk %}">{{ session.latest_session_version.agent.name }}</a>
+                {% else %}—{% endif %}
+            </span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Workspace</span>
+            <span class="detail-row-value">
+                {% if session.latest_session_version.workspace %}
+                    <a href="{% url 'webui:workspace' session.latest_session_version.workspace.pk %}">{{ session.latest_session_version.workspace.name }}</a>
+                {% else %}—{% endif %}
+            </span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Project</span>
+            <span class="detail-row-value">
+                {% if session.parent_project %}
+                    <a href="{% url 'webui:project' session.parent_project.pk %}">{{ session.parent_project.name }}</a>
+                {% else %}—{% endif %}
+            </span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Turns</span>
+            <span class="detail-row-value">{{ session.turn_count }}</span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Last active</span>
+            <span class="detail-row-value">{{ session.last_active_at|reltime|default:"—" }}</span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Created</span>
+            <span class="detail-row-value">{{ session.created_at|date:"Y-m-d H:i" }}</span>
+        </div>
+    </div>
+
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Context</div>
+        {% if usage.max_context_tokens %}
+        <div class="webui-usage">
+            <div class="webui-usage-bar"><span style="width:{{ usage.used_context_percent|floatformat:0 }}%"></span></div>
+            <div class="webui-usage-meta">
+                {{ usage.used_context_tokens }} / {{ usage.max_context_tokens }} tokens
+                ({{ usage.used_context_percent|floatformat:0 }}%)
+            </div>
+        </div>
+        {% else %}
+        <div class="webui-empty-note">No token usage recorded yet.</div>
+        {% endif %}
+        <div class="detail-row"><span class="detail-row-label">Sent</span><span class="detail-row-value">{{ usage.tokens_send|default:0 }}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Received</span><span class="detail-row-value">{{ usage.tokens_received|default:0 }}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Cached</span><span class="detail-row-value">{{ usage.tokens_cached|default:0 }}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Reasoning</span><span class="detail-row-value">{{ usage.tokens_reasoning|default:0 }}</span></div>
+    </div>
+
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Rename</div>
+        <form class="detail-form" method="post" action="{% url 'webui:chat_action' session.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="rename">
+            <div class="detail-form-row">
+                <input type="text" name="name" value="{{ session.name }}" aria-label="Chat name">
+            </div>
+            <button class="webui-primary-btn" type="submit">Save name</button>
+        </form>
+    </div>
+
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Conversation</div>
+        <form class="detail-form" method="post"
+              action="{% url 'webui:import_conversation' session.pk %}"
+              enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="detail-form-row">
+                <label for="import-file">Import JSON export</label>
+                <input id="import-file" type="file" name="file" accept=".json,application/json" required>
+            </div>
+            <button class="webui-action-btn" type="submit">Import messages</button>
+        </form>
+        <form method="post" action="{% url 'webui:clear_conversation' session.pk %}"
+              onsubmit="return confirm('Delete every message in this conversation?');">
+            {% csrf_token %}
+            <button class="webui-action-btn danger" type="submit">Clear conversation</button>
+        </form>
+    </div>
+{% endif %}

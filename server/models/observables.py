@@ -249,6 +249,10 @@ class ObservableMixin:
 OBS_PREFIX = "agentone:obs:"
 QUEUE_PREFIX = "agentone:uiq:"
 UKEYS_PREFIX = "agentone:uikeys:"
+# Redis pub/sub channels for the htmx/SSE UI.  One channel per observable key;
+# the channel suffix *is* the event name the browser listens for
+# (``hx-trigger="sse:Message.session:7"``).
+PUBSUB_PREFIX = "agentone:pubsub:"
 
 _client: redis.Redis | None = None
 
@@ -421,11 +425,29 @@ def notify(
             for fid in fids:
                 if fid not in msg["function_ids"]:
                     msg["function_ids"].append(fid)
-    if not messages:
-        return
-    event_data = {**(data or {}), **(data_factory() if data_factory else {})}
+
+    # Dual-publish: the legacy per-instance queues above feed the pyHtmlGui UI,
+    # while this pub/sub fan-out feeds the htmx/SSE UI.  The envelope is small
+    # on purpose -- SSE consumers only use the channel name as the event name
+    # and refetch the fragment themselves, so no serialized object is needed.
+    envelope = json.dumps(
+        {
+            "model": model,
+            "pk": pk,
+            "action": action,
+            "keys": list(observable_keys),
+        },
+        default=str,
+    )
+
+    event_data: dict[str, Any] | None = None
+    if messages:
+        event_data = {**(data or {}), **(data_factory() if data_factory else {})}
+
     with r.pipeline() as p:
+        for observable_key in observable_keys:
+            p.publish(PUBSUB_PREFIX + observable_key, envelope)
         for instance_key, msg in messages.items():
-            msg["data"] = event_data
+            msg["data"] = event_data or {}
             p.rpush(QUEUE_PREFIX + instance_key, json.dumps(msg, default=str))
         p.execute()

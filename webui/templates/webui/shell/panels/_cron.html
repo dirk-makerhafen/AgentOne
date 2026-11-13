@@ -1,0 +1,17 @@
+{% load webui %}
+<div class="sidebar-section"><span>Cron jobs</span></div>
+<div class="side-list">
+    {% for cron in sidebar_cronjobs %}
+    <a class="ws-row{% if cron.pk == active_id %} active{% endif %}" href="{% url 'webui:cronjob' cron.pk %}">
+        <span class="ws-row-info">
+            <span class="ws-row-name">
+                {{ cron.name }}
+                <span class="side-badge{% if cron.is_active %} ok{% endif %}">{% if cron.is_active %}active{% else %}paused{% endif %}</span>
+            </span>
+            <span class="ws-row-path">{{ cron.schedule }}{% if cron.next_run_at %} · next {{ cron.next_run_at|reltime }}{% endif %}</span>
+        </span>
+    </a>
+    {% empty %}
+    <div class="webui-empty-note">No cron jobs yet.</div>
+    {% endfor %}
+</div>

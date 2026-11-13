@@ -1,0 +1,64 @@
+{% load webui %}
+<header id="chat-header" class="webui-chat-header"
+        hx-get="{% url 'webui:chat_header' session.pk %}"
+        hx-trigger="sse:SessionModel.pk:{{ session.pk }} delay:300ms, sse:Query.session:{{ session.pk }} delay:500ms"
+        hx-swap="outerHTML">
+    <a class="webui-back" href="{% url 'webui:chats' %}" title="All chats">←</a>
+    <span class="webui-chat-title" title="{{ session.name }}">{{ session.name }}</span>
+    <span class="webui-chat-meta">
+        {% if session.latest_session_version.agent %}{{ session.latest_session_version.agent.name }}{% endif %}
+        {% if session.parent_project %} · {{ session.parent_project.name }}{% endif %}
+        {% if session.is_paused %} · paused{% endif %}
+        {% if session.is_pinned %} · ★ pinned{% endif %}
+    </span>
+    {% if is_busy %}<span class="webui-badge is-busy">working</span>{% endif %}
+    {% if usage.window %}
+    <span class="webui-ctx ctx-indicator{% if usage.level %} ctx-{{ usage.level }}{% endif %}"
+          title="Context: {{ usage.used_label }} of {{ usage.window_label }} used ({{ usage.percent_label }})
+Send {{ usage.tokens_send }} · Received {{ usage.tokens_received }} · Cached {{ usage.tokens_cached }}
+Reasoning {{ usage.tokens_reasoning }} ({{ usage.reasoning_percent|floatformat:0 }}%)"
+          aria-label="Context window usage {{ usage.percent_label }}">
+        <span class="ctx-ring">
+            <svg class="ctx-ring-svg" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="ctx-ring-track" cx="12" cy="12" r="9.75"></circle>
+                <circle class="ctx-ring-value" cx="12" cy="12" r="9.75"
+                        stroke-dasharray="{{ usage.ring_circumference }}"
+                        stroke-dashoffset="{{ usage.ring_offset }}"></circle>
+            </svg>
+            <span class="ctx-ring-center">{{ usage.percent_label }}</span>
+        </span>
+    </span>
+    {% endif %}
+
+    <div class="webui-chat-actions">
+        <a class="webui-action-btn" href="{% url 'webui:chat_transcript' session.pk %}"
+           title="Download this conversation as Markdown" download>Transcript</a>
+        <a class="webui-action-btn" href="{% url 'webui:chat_export' session.pk %}"
+           title="Export this session as JSON" download>Export</a>
+        {% if is_busy %}
+        <form method="post" action="{% url 'webui:chat_action' session.pk %}">
+            {% csrf_token %}<input type="hidden" name="action" value="stop">
+            <button class="webui-action-btn" type="submit" title="Stop the running turn">Stop</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{% url 'webui:chat_action' session.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="{% if session.is_paused %}resume{% else %}pause{% endif %}">
+            <button class="webui-action-btn" type="submit" title="{% if session.is_paused %}Resume this chat{% else %}Pause this chat{% endif %}">
+                {% if session.is_paused %}Resume{% else %}Pause{% endif %}
+            </button>
+        </form>
+        <form method="post" action="{% url 'webui:chat_action' session.pk %}">
+            {% csrf_token %}<input type="hidden" name="action" value="pin">
+            <button class="webui-action-btn" type="submit" title="{% if session.is_pinned %}Unpin{% else %}Pin{% endif %} this chat">
+                {% if session.is_pinned %}★{% else %}☆{% endif %}
+            </button>
+        </form>
+        <button class="webui-action-btn" type="button" data-panel-toggle title="Toggle session panel">Panel</button>
+        <form method="post" action="{% url 'webui:chat_action' session.pk %}"
+              onsubmit="return confirm('Archive this chat?');">
+            {% csrf_token %}<input type="hidden" name="action" value="archive">
+            <button class="webui-action-btn danger" type="submit" title="Archive this chat">Archive</button>
+        </form>
+    </div>
+</header>

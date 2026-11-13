@@ -1,0 +1,874 @@
+/* htmx UI glue: CSRF, composer ergonomics, and scroll behaviour.
+ *
+ * Everything else is server-rendered.  Keep this file small and boring; the
+ * islands that need real client state (terminal, kanban, charts) get their
+ * own files later.
+ */
+(function () {
+    'use strict';
+
+    function csrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    // htmx form posts carry the hidden input, but non-form requests (fragment
+    // refetches that ever become POSTs) need the header.
+    document.addEventListener('htmx:configRequest', function (evt) {
+        var token = csrfToken();
+        if (token && evt.detail && evt.detail.headers) {
+            evt.detail.headers['X-CSRFToken'] = token;
+        }
+    });
+
+    function autoGrow(el) {
+        if (!el) return;
+        el.style.height = '';
+        var max = Math.max(80, window.innerHeight * 0.5);
+        el.style.height = Math.min(el.scrollHeight, max) + 'px';
+    }
+
+    function threadEl() {
+        return document.getElementById('thread');
+    }
+
+    function nearBottom(el) {
+        if (!el) return true;
+        return el.scrollHeight - el.scrollTop - el.clientHeight < 200;
+    }
+
+    function scrollToBottom(el) {
+        if (el) el.scrollTop = el.scrollHeight;
+    }
+
+    document.addEventListener('input', function (evt) {
+        if (evt.target && evt.target.matches && evt.target.matches('.composer-chat-message')) {
+            autoGrow(evt.target);
+        }
+    });
+
+    document.addEventListener('keydown', function (evt) {
+        var ta = evt.target;
+        if (!ta || !ta.matches || !ta.matches('.composer-chat-message')) return;
+        if (evt.isComposing) return;
+        if (evt.key !== 'Enter') return;
+
+        var mode = ta.dataset.sendKey || 'ctrl+enter';
+        var send = mode === 'enter' ? !evt.shiftKey : (evt.ctrlKey || evt.metaKey);
+        if (!send) return;
+
+        evt.preventDefault();
+        var form = ta.closest('form');
+        if (!form) return;
+        if (form.requestSubmit) form.requestSubmit();
+        else form.submit();
+    });
+
+    // Remember whether the reader was at the bottom *before* a thread swap so
+    // an SSE refresh never yanks them away from history they scrolled back to.
+    var wasNearBottom = true;
+
+    // A full innerHTML swap replaces the disclosure cards, which would reset
+    // every expanded <details>.  Record the open ones before the swap and
+    // re-apply the state afterwards.
+    var openCards = null;
+
+    function captureOpenCards(el) {
+        openCards = new Set();
+        el.querySelectorAll('details[data-open-key]').forEach(function (card) {
+            if (card.open) openCards.add(card.getAttribute('data-open-key'));
+        });
+    }
+
+    function restoreOpenCards(el) {
+        if (!openCards) return;
+        el.querySelectorAll('details[data-open-key]').forEach(function (card) {
+            var shouldOpen = openCards.has(card.getAttribute('data-open-key'));
+            if (card.open === shouldOpen) return;
+            card.open = shouldOpen;
+            // A lazily-loaded card loses its content after a full thread
+            // swap; setting `.open` may not emit `toggle` in time for htmx,
+            // so trigger it explicitly (the `once` modifier dedupes).
+            if (shouldOpen && card.hasAttribute('hx-get')) {
+                htmx.trigger(card, 'toggle');
+            }
+        });
+        openCards = null;
+    }
+
+    document.addEventListener('htmx:beforeSwap', function (evt) {
+        var el = threadEl();
+        if (!el || !evt.detail || evt.detail.target !== el) return;
+        captureOpenCards(el);
+    });
+
+    document.addEventListener('htmx:beforeRequest', function (evt) {
+        var el = threadEl();
+        if (!el) return;
+        var trigger = evt.detail && evt.detail.elt;
+        if (trigger === el || (trigger && el.contains(trigger))) {
+            // Never yank a reader who is selecting text or has scrolled up.
+            var selection = window.getSelection ? String(window.getSelection()) : '';
+            wasNearBottom = !selection && nearBottom(el);
+        }
+    });
+
+    document.addEventListener('htmx:afterSwap', function (evt) {
+        var el = threadEl();
+        if (!el || evt.target !== el) return;
+        if (wasNearBottom) {
+            scrollToBottom(el);
+        }
+    });
+
+    // Restore only after htmx finished settling: requests triggered from
+    // inside the afterSwap stack are ignored by htmx's own event listeners.
+    document.addEventListener('htmx:afterSettle', function (evt) {
+        var el = threadEl();
+        if (!el || evt.target !== el) return;
+        restoreOpenCards(el);
+    });
+
+    document.addEventListener('htmx:sseError', function () {
+        document.documentElement.classList.add('sse-down');
+    });
+
+    document.addEventListener('htmx:sseOpen', function () {
+        document.documentElement.classList.remove('sse-down');
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        scrollToBottom(threadEl());
+        var ta = document.querySelector('.composer-chat-message');
+        if (ta) {
+            restoreDraft(ta);
+            autoGrow(ta);
+            ta.focus();
+        }
+        bindKanban(document);
+        bindMobileSidebar(document);
+    });
+
+    // ── Panel / disclosure toggles ───────────────────────────────────────
+    function bindPanelToggles(root) {
+        root.querySelectorAll('[data-panel-toggle]').forEach(function (btn) {
+            if (btn.dataset.bound === '1') return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function () {
+                var body = document.getElementById('chat-body');
+                if (body) body.classList.toggle('panel-open');
+            });
+        });
+        root.querySelectorAll('[data-toggle-target]').forEach(function (btn) {
+            if (btn.dataset.bound === '1') return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function () {
+                var target = document.querySelector(btn.getAttribute('data-toggle-target'));
+                if (!target) return;
+                if (target.tagName === 'DETAILS') target.open = true;
+                else target.hidden = false;
+                target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            });
+        });
+    }
+
+    // Panel tabs swap the body via htmx, but the active marker and the SSE
+    // refetch URL live outside that fragment, so keep them in sync here.
+    function bindPanelTabs(root) {
+        root.querySelectorAll('.webui-panel-tab').forEach(function (btn) {
+            if (btn.dataset.bound === '1') return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function () {
+                var strip = btn.closest('.webui-panel-tabs');
+                if (strip) {
+                    strip.querySelectorAll('.webui-panel-tab').forEach(function (other) {
+                        other.classList.toggle('active', other === btn);
+                    });
+                }
+                var body = document.getElementById('chat-panel-body');
+                var url = btn.getAttribute('hx-get');
+                if (body && url) body.setAttribute('hx-get', url);
+            });
+        });
+    }
+
+    // ── Mobile sidebar ───────────────────────────────────────────────────
+    function bindMobileSidebar(root) {
+        var toggle = root.querySelector('[data-mobile-sidebar]');
+        var overlay = root.querySelector('[data-mobile-overlay]');
+
+        function setOpen(open) {
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.toggle('mobile-open', open);
+            if (overlay) overlay.classList.toggle('visible', open);
+            if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        if (toggle && toggle.dataset.bound !== '1') {
+            toggle.dataset.bound = '1';
+            toggle.addEventListener('click', function () {
+                var sidebar = document.getElementById('sidebar');
+                setOpen(!(sidebar && sidebar.classList.contains('mobile-open')));
+            });
+        }
+        if (overlay && overlay.dataset.bound !== '1') {
+            overlay.dataset.bound = '1';
+            overlay.addEventListener('click', function () { setOpen(false); });
+        }
+    }
+
+    function restoreMobileSidebar() {
+        var overlay = document.querySelector('[data-mobile-overlay]');
+        var sidebar = document.getElementById('sidebar');
+        if (overlay && sidebar && overlay.classList.contains('visible')) {
+            sidebar.classList.add('mobile-open');
+        }
+    }
+
+    // ── Composer drafts ─────────────────────────────────────────────────
+    function draftKey() {
+        return 'webui:draft:' + window.location.pathname;
+    }
+
+    function saveDraft(ta) {
+        try {
+            if (ta.value) window.sessionStorage.setItem(draftKey(), ta.value);
+            else window.sessionStorage.removeItem(draftKey());
+        } catch (err) { /* private mode */ }
+    }
+
+    function restoreDraft(ta) {
+        try {
+            var saved = window.sessionStorage.getItem(draftKey());
+            if (saved && !ta.value) ta.value = saved;
+        } catch (err) { /* private mode */ }
+    }
+
+    document.addEventListener('input', function (evt) {
+        if (evt.target && evt.target.matches && evt.target.matches('.composer-chat-message')) {
+            saveDraft(evt.target);
+        }
+    });
+
+    document.addEventListener('submit', function (evt) {
+        var form = evt.target;
+        if (!form || !form.matches || !form.matches('.webui-composer')) return;
+        try { window.sessionStorage.removeItem(draftKey()); } catch (err) { /* private mode */ }
+    });
+
+    // ── Kanban drag & drop ───────────────────────────────────────────────
+    // Allowed drags map one FSM action to the column it lands in.  The card
+    // only carries the actions its current status allows, so an illegal drop
+    // simply finds no action and is ignored.
+    var ACTION_TARGET = {
+        mark_ready: 'ready',
+        defer: 'backlog',
+        block: 'blocked',
+        cancel: 'cancelled',
+        finish: 'done',
+        approve: 'done',
+        reject: 'in_review',
+        resume: 'in_progress',
+        reopen: 'ready'
+    };
+
+    var draggedCard = null;
+
+    function bindKanban(root) {
+        root.querySelectorAll('.kanban-card a').forEach(function (a) {
+            a.setAttribute('draggable', 'false');
+        });
+        root.querySelectorAll('.kanban-card').forEach(function (card) {
+            if (card.dataset.bound === '1') return;
+            card.dataset.bound = '1';
+            card.addEventListener('dragstart', function (evt) {
+                draggedCard = card;
+                card.classList.add('dragging');
+                if (evt.dataTransfer) {
+                    evt.dataTransfer.effectAllowed = 'move';
+                    evt.dataTransfer.setData('text/plain', card.dataset.id || '');
+                }
+            });
+            card.addEventListener('dragend', function () {
+                card.classList.remove('dragging');
+                document.querySelectorAll('.kanban-column-body.drag-over')
+                    .forEach(function (el) { el.classList.remove('drag-over'); });
+                draggedCard = null;
+            });
+        });
+        root.querySelectorAll('.kanban-column-body').forEach(function (body) {
+            if (body.dataset.bound === '1') return;
+            body.dataset.bound = '1';
+            body.addEventListener('dragover', function (evt) {
+                if (!draggedCard) return;
+                evt.preventDefault();
+                if (evt.dataTransfer) evt.dataTransfer.dropEffect = 'move';
+                body.classList.add('drag-over');
+            });
+            body.addEventListener('dragleave', function (evt) {
+                if (!body.contains(evt.relatedTarget)) body.classList.remove('drag-over');
+            });
+            body.addEventListener('drop', function (evt) {
+                evt.preventDefault();
+                body.classList.remove('drag-over');
+                if (!draggedCard) return;
+                var target = body.getAttribute('data-status');
+                var allowed = (draggedCard.dataset.actions || '').split(/\s+/).filter(Boolean);
+                var action = allowed.find(function (key) { return ACTION_TARGET[key] === target; });
+                if (!action) return;
+                postWorkItemAction(draggedCard.dataset.id, action);
+            });
+        });
+    }
+
+    function postWorkItemAction(id, action) {
+        if (!id || !action) return;
+        var form = document.createElement('form');
+        form.method = 'post';
+        form.action = '/app/workitems/' + encodeURIComponent(id) + '/action';
+        form.style.display = 'none';
+        var fields = {
+            action: action,
+            next: window.location.pathname + window.location.search
+        };
+        Object.keys(fields).forEach(function (name) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = fields[name];
+            form.appendChild(input);
+        });
+        var token = csrfToken();
+        if (token) {
+            var csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrfmiddlewaretoken';
+            csrf.value = token;
+            form.appendChild(csrf);
+        }
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // ── Log tail auto-scroll ─────────────────────────────────────────────
+    document.addEventListener('htmx:afterSwap', function (evt) {
+        var viewer = document.getElementById('log-viewer');
+        if (!viewer || evt.target !== viewer) return;
+        var pre = document.getElementById('log-tail');
+        if (pre) pre.scrollTop = pre.scrollHeight;
+    });
+
+    // ── Message actions (copy / listen) ──────────────────────────────────
+    function flashButton(btn, text) {
+        var previous = btn.getAttribute('title') || '';
+        btn.classList.add('copied');
+        btn.setAttribute('title', text);
+        window.setTimeout(function () {
+            btn.classList.remove('copied');
+            btn.setAttribute('title', previous);
+        }, 1600);
+    }
+
+    function copyText(text, done) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(
+                function () { done(true); },
+                function () { done(false); }
+            );
+            return;
+        }
+        var area = document.createElement('textarea');
+        area.value = text;
+        area.style.position = 'fixed';
+        area.style.top = '-9999px';
+        document.body.appendChild(area);
+        area.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+        document.body.removeChild(area);
+        done(ok);
+    }
+
+    document.addEventListener('click', function (evt) {
+        var btn = evt.target && evt.target.closest
+            ? evt.target.closest('[data-copy], [data-tts]')
+            : null;
+        if (!btn) return;
+        var row = btn.closest('.msg-row');
+        if (!row) return;
+        var body = row.querySelector('.msg-body');
+        var text = body ? (body.innerText || body.textContent || '').trim() : '';
+        if (!text) return;
+
+        if (btn.hasAttribute('data-copy')) {
+            copyText(text, function (ok) {
+                flashButton(btn, ok ? 'Copied!' : 'Copy failed');
+            });
+            return;
+        }
+
+        if (!window.speechSynthesis) {
+            flashButton(btn, 'Speech not supported');
+            return;
+        }
+        window.speechSynthesis.cancel();
+        var utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = document.documentElement.lang || 'en';
+        window.speechSynthesis.speak(utterance);
+        flashButton(btn, 'Listening…');
+    });
+
+    // ── Image attachments ────────────────────────────────────────────────
+    // Images are downscaled to a data URI in the browser (mirroring the
+    // legacy composer) and carried in the hidden ``images`` JSON field.
+    var ATTACH_MAX_EDGE = 1600;
+    var ATTACH_LIMIT = 6;
+    var attachItems = [];
+
+    function attachForm() {
+        return document.querySelector('.webui-composer');
+    }
+
+    function renderAttachTray() {
+        var form = attachForm();
+        if (!form) return;
+        var tray = form.querySelector('[data-attach-tray]');
+        var input = form.querySelector('input[name="images"]');
+        if (input) {
+            input.value = attachItems.length ? JSON.stringify(attachItems) : '';
+        }
+        if (!tray) return;
+        tray.innerHTML = '';
+        tray.hidden = attachItems.length === 0;
+        attachItems.forEach(function (item, index) {
+            var wrap = document.createElement('div');
+            wrap.className = 'webui-attach-item';
+            var img = document.createElement('img');
+            img.src = item.content;
+            img.alt = item.name || 'attached image';
+            var remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'webui-attach-remove';
+            remove.title = 'Remove attachment';
+            remove.setAttribute('aria-label', 'Remove attachment');
+            remove.textContent = '×';
+            remove.addEventListener('click', function () {
+                attachItems.splice(index, 1);
+                renderAttachTray();
+            });
+            wrap.appendChild(img);
+            wrap.appendChild(remove);
+            tray.appendChild(wrap);
+        });
+    }
+
+    function attachImageFile(file) {
+        if (attachItems.length >= ATTACH_LIMIT) return;
+        var reader = new FileReader();
+        reader.onload = function (evt) {
+            var image = new Image();
+            image.onload = function () {
+                var scale = Math.min(1, ATTACH_MAX_EDGE / Math.max(image.width, image.height));
+                var canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.round(image.width * scale));
+                canvas.height = Math.max(1, Math.round(image.height * scale));
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                var keepAlpha = file.type === 'image/png' || file.type === 'image/webp'
+                    || file.type === 'image/gif';
+                var dataUri = canvas.toDataURL(keepAlpha ? 'image/png' : 'image/jpeg', 0.85);
+                attachItems.push({name: file.name, content: dataUri});
+                renderAttachTray();
+            };
+            image.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function handleAttachFiles(files) {
+        for (var i = 0; i < files.length; i += 1) {
+            var file = files[i];
+            if (file.type && file.type.indexOf('image/') === 0 && file.type !== 'image/svg+xml') {
+                attachImageFile(file);
+            }
+        }
+    }
+
+    document.addEventListener('click', function (evt) {
+        if (!evt.target || !evt.target.closest) return;
+        if (!evt.target.closest('[data-attach]')) return;
+        var form = attachForm();
+        var input = form ? form.querySelector('[data-attach-input]') : null;
+        if (input) input.click();
+    });
+
+    document.addEventListener('change', function (evt) {
+        var target = evt.target;
+        if (!target || !target.matches || !target.matches('[data-attach-input]')) return;
+        if (target.files) handleAttachFiles(target.files);
+        target.value = '';
+    });
+
+    document.addEventListener('dragover', function (evt) {
+        var box = evt.target && evt.target.closest
+            ? evt.target.closest('.webui-composer') : null;
+        if (!box) return;
+        evt.preventDefault();
+        if (evt.dataTransfer) evt.dataTransfer.dropEffect = 'copy';
+        box.classList.add('drag-over');
+    });
+
+    document.addEventListener('dragleave', function (evt) {
+        var box = evt.target && evt.target.closest
+            ? evt.target.closest('.webui-composer') : null;
+        if (box) box.classList.remove('drag-over');
+    });
+
+    document.addEventListener('drop', function (evt) {
+        var box = evt.target && evt.target.closest
+            ? evt.target.closest('.webui-composer') : null;
+        if (!box) return;
+        evt.preventDefault();
+        box.classList.remove('drag-over');
+        if (evt.dataTransfer && evt.dataTransfer.files) {
+            handleAttachFiles(evt.dataTransfer.files);
+        }
+    });
+
+    document.addEventListener('paste', function (evt) {
+        var box = evt.target && evt.target.closest
+            ? evt.target.closest('.webui-composer') : null;
+        if (!box) return;
+        var items = (evt.clipboardData && evt.clipboardData.items) || [];
+        var files = [];
+        for (var i = 0; i < items.length; i += 1) {
+            var item = items[i];
+            if (item.kind === 'file' && item.type && item.type.indexOf('image/') === 0) {
+                var file = item.getAsFile();
+                if (file) files.push(file);
+            }
+        }
+        if (files.length) {
+            evt.preventDefault();
+            handleAttachFiles(files);
+        }
+    });
+
+    document.addEventListener('htmx:afterRequest', function (evt) {
+        var elt = evt.detail && evt.detail.elt;
+        if (!elt || !elt.classList || !elt.classList.contains('webui-composer')) return;
+        if (evt.detail.successful) {
+            attachItems = [];
+            renderAttachTray();
+        }
+    });
+
+    // ── Bind dynamic fragments ───────────────────────────────────────────
+    document.addEventListener('htmx:afterSettle', function (evt) {
+        var target = evt.target;
+        if (target && target.querySelectorAll) {
+            bindPanelToggles(target);
+            bindPanelTabs(target);
+            bindKanban(target);
+            bindMobileSidebar(target);
+            restoreMobileSidebar();
+        }
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        bindPanelToggles(document);
+        bindPanelTabs(document);
+        bindCommandPalette();
+        bindChatToc();
+        restoreAroundScroll();
+    });
+
+    // ── Slash-command palette ────────────────────────────────────────────
+    function commandData() {
+        var node = document.getElementById('webui-commands');
+        if (!node) return [];
+        try {
+            var parsed = JSON.parse(node.textContent || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+            return [];
+        }
+    }
+
+    function composerTextarea() {
+        return document.querySelector('.webui-composer .composer-chat-message');
+    }
+
+    function insertCommand(text) {
+        var ta = composerTextarea();
+        if (!ta) return;
+        ta.value = text;
+        ta.focus();
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function submitComposer() {
+        var ta = composerTextarea();
+        var form = ta ? ta.closest('form') : null;
+        if (form && form.requestSubmit) form.requestSubmit();
+    }
+
+    function bindCommandPalette() {
+        var palette = document.querySelector('[data-cmd-palette]');
+        if (!palette || palette.dataset.bound === '1') return;
+        palette.dataset.bound = '1';
+
+        var commands = commandData();
+        var list = palette.querySelector('[data-cmd-list]');
+        var search = palette.querySelector('[data-cmd-search]');
+        var formBox = palette.querySelector('[data-cmd-form]');
+        var fieldsBox = palette.querySelector('[data-cmd-fields]');
+        var nameBox = palette.querySelector('[data-cmd-form-name]');
+        var descBox = palette.querySelector('[data-cmd-form-desc]');
+        var active = null;
+
+        function close() {
+            palette.hidden = true;
+            formBox.hidden = true;
+            list.hidden = false;
+        }
+
+        function open(query) {
+            palette.hidden = false;
+            formBox.hidden = true;
+            list.hidden = false;
+            if (search) {
+                search.value = query || '';
+                search.focus();
+            }
+            renderList(query || '');
+        }
+
+        function renderList(query) {
+            var needle = (query || '').toLowerCase();
+            list.innerHTML = '';
+            var matches = commands.filter(function (cmd) {
+                return !needle
+                    || cmd.name.toLowerCase().indexOf(needle) !== -1
+                    || (cmd.description || '').toLowerCase().indexOf(needle) !== -1;
+            });
+            if (!matches.length) {
+                var empty = document.createElement('div');
+                empty.className = 'webui-cmd-empty';
+                empty.textContent = commands.length ? 'No matching commands.' : 'No commands available for this agent.';
+                list.appendChild(empty);
+                return;
+            }
+            matches.forEach(function (cmd) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'webui-cmd-item';
+                button.setAttribute('role', 'option');
+
+                var nameRow = document.createElement('span');
+                nameRow.className = 'webui-cmd-item-name';
+                nameRow.textContent = '/' + cmd.name;
+                var required = (cmd.fields || []).filter(function (field) { return field.required; });
+                if (required.length) {
+                    var arg = document.createElement('span');
+                    arg.className = 'webui-cmd-item-arg';
+                    arg.textContent = required.map(function (field) { return '<' + field.name + '>'; }).join(' ');
+                    nameRow.appendChild(arg);
+                }
+                button.appendChild(nameRow);
+
+                if (cmd.description) {
+                    var desc = document.createElement('span');
+                    desc.className = 'webui-cmd-item-desc';
+                    desc.textContent = cmd.description;
+                    button.appendChild(desc);
+                }
+                button.addEventListener('click', function () {
+                    active = cmd;
+                    if ((cmd.fields || []).length) {
+                        showForm(cmd);
+                    } else {
+                        insertCommand('/' + cmd.name + ' ');
+                        close();
+                    }
+                });
+                list.appendChild(button);
+            });
+        }
+
+        function showForm(cmd) {
+            list.hidden = true;
+            formBox.hidden = false;
+            nameBox.textContent = '/' + cmd.name;
+            descBox.textContent = cmd.description || '';
+            fieldsBox.innerHTML = '';
+            (cmd.fields || []).forEach(function (field) {
+                var label = document.createElement('label');
+                label.className = 'webui-cmd-field';
+                var caption = document.createElement('span');
+                caption.textContent = field.name + (field.required ? ' *' : '');
+                label.appendChild(caption);
+
+                var input;
+                if (field.enum && field.enum.length) {
+                    input = document.createElement('select');
+                    field.enum.forEach(function (option) {
+                        var opt = document.createElement('option');
+                        opt.value = String(option);
+                        opt.textContent = String(option);
+                        input.appendChild(opt);
+                    });
+                } else if (field.type === 'boolean') {
+                    input = document.createElement('select');
+                    ['false', 'true'].forEach(function (value) {
+                        var opt = document.createElement('option');
+                        opt.value = value;
+                        opt.textContent = value;
+                        input.appendChild(opt);
+                    });
+                } else {
+                    input = document.createElement('input');
+                    input.type = field.input_type || 'text';
+                    if (field.placeholder) input.placeholder = field.placeholder;
+                    if (field.required) input.required = true;
+                }
+                input.dataset.field = field.name;
+                input.dataset.fieldType = field.type || 'string';
+                label.appendChild(input);
+                if (field.description) {
+                    var hint = document.createElement('span');
+                    hint.textContent = field.description;
+                    label.appendChild(hint);
+                }
+                fieldsBox.appendChild(label);
+            });
+        }
+
+        function insertFromForm() {
+            if (!active) return;
+            var payload = {};
+            fieldsBox.querySelectorAll('[data-field]').forEach(function (input) {
+                if (input.value === '') return;
+                var value = input.value;
+                var type = input.dataset.fieldType;
+                if (type === 'integer') value = parseInt(value, 10);
+                else if (type === 'number') value = parseFloat(value);
+                else if (type === 'boolean') value = value === 'true';
+                payload[input.dataset.field] = value;
+            });
+            var text = '/' + active.name;
+            if (Object.keys(payload).length) text += ' ' + JSON.stringify(payload);
+            insertCommand(text);
+            close();
+            submitComposer();
+        }
+
+        var toggle = document.querySelector('[data-cmd-toggle]');
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                if (palette.hidden) open('');
+                else close();
+            });
+        }
+        var closeBtn = palette.querySelector('[data-cmd-close]');
+        if (closeBtn) closeBtn.addEventListener('click', close);
+        var backBtn = palette.querySelector('[data-cmd-back]');
+        if (backBtn) backBtn.addEventListener('click', function () {
+            formBox.hidden = true;
+            list.hidden = false;
+            if (search) search.focus();
+        });
+        var insertBtn = palette.querySelector('[data-cmd-insert]');
+        if (insertBtn) insertBtn.addEventListener('click', insertFromForm);
+        if (search) {
+            search.addEventListener('input', function () { renderList(search.value); });
+            search.addEventListener('keydown', function (evt) {
+                if (evt.key === 'Escape') { evt.preventDefault(); close(); }
+            });
+        }
+
+        var ta = composerTextarea();
+        if (ta) {
+            ta.addEventListener('input', function () {
+                var value = ta.value;
+                if (value.charAt(0) === '/' && value.indexOf(' ') === -1 && value.indexOf('\n') === -1) {
+                    if (palette.hidden) open(value.slice(1));
+                    else if (search) { search.value = value.slice(1); renderList(value.slice(1)); }
+                } else if (!palette.hidden) {
+                    close();
+                }
+            });
+            ta.addEventListener('keydown', function (evt) {
+                if (evt.key === 'Escape' && !palette.hidden) {
+                    evt.preventDefault();
+                    close();
+                }
+            });
+        }
+
+        document.addEventListener('click', function (evt) {
+            if (palette.hidden) return;
+            if (palette.contains(evt.target)) return;
+            if (evt.target.closest && evt.target.closest('[data-cmd-toggle]')) return;
+            close();
+        });
+    }
+
+    // ── Chat table of contents ───────────────────────────────────────────
+    function bindChatToc() {
+        var toc = document.getElementById('chat-toc');
+        if (!toc || toc.dataset.bound === '1') return;
+        toc.dataset.bound = '1';
+        toc.querySelectorAll('[data-toc-pk]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var pk = button.getAttribute('data-toc-pk');
+                var thread = threadEl();
+                var target = thread ? thread.querySelector('[data-pk="' + pk + '"]') : null;
+                if (target && thread) {
+                    var top = target.getBoundingClientRect().top
+                        - thread.getBoundingClientRect().top + thread.scrollTop;
+                    thread.scrollTo({ top: top, behavior: 'smooth' });
+                    return;
+                }
+                var sessionID = toc.getAttribute('data-session');
+                if (sessionID) {
+                    window.location = '/app/chat/' + encodeURIComponent(sessionID)
+                        + '?around=' + encodeURIComponent(pk);
+                }
+            });
+        });
+    }
+
+    function restoreAroundScroll() {
+        var params = new URLSearchParams(window.location.search);
+        var around = params.get('around');
+        if (!around) return;
+        var thread = threadEl();
+        var target = thread ? thread.querySelector('[data-pk="' + around + '"]') : null;
+        if (!target || !thread) return;
+        var top = target.getBoundingClientRect().top
+            - thread.getBoundingClientRect().top + thread.scrollTop;
+        thread.scrollTop = top;
+    }
+
+    // ── Inline message editing ───────────────────────────────────────────
+    document.addEventListener('click', function (evt) {
+        if (!evt.target || !evt.target.closest) return;
+        var edit = evt.target.closest('[data-msg-edit]');
+        if (edit) {
+            var row = edit.closest('.msg-row');
+            var form = row ? row.querySelector('.webui-msg-edit') : null;
+            if (!form) return;
+            form.hidden = !form.hidden;
+            if (!form.hidden) {
+                var ta = form.querySelector('textarea');
+                if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+            }
+            return;
+        }
+        var cancel = evt.target.closest('[data-msg-edit-cancel]');
+        if (cancel) {
+            var parent = cancel.closest('.webui-msg-edit');
+            if (parent) parent.hidden = true;
+        }
+    });
+})();

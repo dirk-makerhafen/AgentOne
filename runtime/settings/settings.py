@@ -27,7 +27,7 @@ DEFAULT_CONFIG = {
 
 #: Short-lived cache so hot paths (e.g. ``Session.aimodel``) do not re-read the
 #: config file on every access. Invalidated whenever ``UserSettings`` saves.
-_CONFIG_CACHE: dict = {"t": 0.0, "data": None}
+_CONFIG_CACHE: dict = {"t": 0.0, "data": None, "mtime": None}
 _CONFIG_CACHE_TTL: float = 30.0
 
 
@@ -67,18 +67,34 @@ def _read_config_file() -> dict:
 
 
 def get_config() -> dict:
-    """Return the merged ``config.yaml`` contents (cached briefly)."""
+    """Return the merged ``config.yaml`` contents (cached briefly).
+
+    The cache is invalidated both by TTL and by the config file's mtime, so
+    changes made in another process (e.g. the web UI saving preferences) are
+    picked up promptly instead of waiting for the TTL to expire.
+    """
     now = time.time()
-    if _CONFIG_CACHE["data"] is not None and (now - _CONFIG_CACHE["t"]) < _CONFIG_CACHE_TTL:
+    path = _config_path()
+    try:
+        mtime = path.stat().st_mtime if path.exists() else 0.0
+    except OSError:
+        mtime = 0.0
+    if (
+        _CONFIG_CACHE["data"] is not None
+        and _CONFIG_CACHE.get("mtime") == mtime
+        and (now - _CONFIG_CACHE["t"]) < _CONFIG_CACHE_TTL
+    ):
         return _CONFIG_CACHE["data"]
     data = _read_config_file()
     _CONFIG_CACHE["t"] = now
     _CONFIG_CACHE["data"] = data
+    _CONFIG_CACHE["mtime"] = mtime
     return data
 
 
 def invalidate_config_cache() -> None:
     _CONFIG_CACHE["data"] = None
+    _CONFIG_CACHE["mtime"] = None
 
 
 def get_default_model_name() -> str:
@@ -167,9 +183,10 @@ class UserSettings(Observable):
             if key in (
                 "min_battery_pct_for_caffeinate",
                 "pause_local_ai_below_battery_pct",
-                "sleep_guard_release_delay_minutes",
             ):
                 return isinstance(val, int) and 0 <= val <= 100
+            if key == "sleep_guard_release_delay_minutes":
+                return isinstance(val, int) and 0 <= val <= 120
         return True
 
     def _save(self):

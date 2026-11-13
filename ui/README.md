@@ -1,4 +1,9 @@
-# UI directory structure
+# UI directory structure (legacy)
+
+> **Legacy UI.** The primary UI is now `webui/` (Django templates + htmx + SSE,
+> mounted at `/app/`); see [`../docs/ui-rewrite.md`](../docs/ui-rewrite.md).
+> The tree below is the pyHtmlGui UI, frozen at `/legacy/` until the soak
+> period ends. Do not add new features here.
 
 ```
 ui/

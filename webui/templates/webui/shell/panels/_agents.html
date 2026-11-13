@@ -1,0 +1,18 @@
+<div class="sidebar-section"><span>Agents</span></div>
+<div class="side-list">
+    {% for agent in sidebar_agents %}
+    <a class="ws-row{% if agent.pk == active_id %} active{% endif %}" href="{% url 'webui:agent' agent.pk %}">
+        <span class="ws-row-info">
+            <span class="ws-row-name">
+                {{ agent.name }}
+                {% if agent.is_archived %}<span class="side-badge">archived</span>{% endif %}
+            </span>
+            <span class="ws-row-path">
+                {% if agent.parent_project %}{{ agent.parent_project.name }}{% elif agent.parent_agent %}subagent of {{ agent.parent_agent.name }}{% else %}top level{% endif %}
+            </span>
+        </span>
+    </a>
+    {% empty %}
+    <div class="webui-empty-note">No agents loaded.</div>
+    {% endfor %}
+</div>

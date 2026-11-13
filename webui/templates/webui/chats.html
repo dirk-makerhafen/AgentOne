@@ -1,0 +1,103 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}Chats · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">{% if show_archived %}Archived chats{% else %}Chats{% endif %}</div>
+        <div class="main-view-actions">
+            <form class="webui-page-search" method="get" action="{% url 'webui:chats' %}">
+                {% if show_archived %}<input type="hidden" name="archived" value="1">{% endif %}
+                <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search chats…"
+                       autocomplete="off" aria-label="Search chats">
+                <button class="webui-action-btn" type="submit">Search</button>
+            </form>
+            {% if show_archived %}
+            <a class="webui-action-btn" href="{% url 'webui:chats' %}">Back to active</a>
+            {% else %}
+            <a class="webui-action-btn" href="{% url 'webui:chats' %}?archived=1">Archived ({{ archived_count }})</a>
+            {% endif %}
+            <form method="post" action="{% url 'webui:new_chat' %}">
+                {% csrf_token %}
+                <button class="webui-primary-btn" type="submit">＋ New chat</button>
+            </form>
+        </div>
+    </header>
+    <div class="main-view-body">
+        <div class="main-view-content">
+            {% if not show_archived %}
+            <details class="detail-card webui-disclosure" id="new-chat">
+                <summary class="webui-disclosure-title">Start a new chat</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:new_chat' %}">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="new-chat-name">Name</label>
+                            <input id="new-chat-name" type="text" name="name"
+                                   placeholder="Auto-generated when left blank" autocomplete="off">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="new-chat-agent">Agent</label>
+                            <select id="new-chat-agent" name="agent">
+                                <option value="">Default agent</option>
+                                {% for agent in agents %}
+                                <option value="{{ agent.pk }}">{{ agent.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="new-chat-workspace">Workspace</label>
+                        <select id="new-chat-workspace" name="workspace">
+                            <option value="">No workspace</option>
+                            {% for ws in workspaces %}
+                            <option value="{{ ws.pk }}">{{ ws.name }} ({{ ws.path }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="detail-form-hint">The workspace controls filesystem access for this chat.</div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="new-chat-description">Description</label>
+                        <textarea id="new-chat-description" name="description" rows="2"
+                                  placeholder="What is this chat about? (optional)"></textarea>
+                    </div>
+                    <button class="webui-primary-btn" type="submit">＋ Start chat</button>
+                </form>
+            </details>
+            {% endif %}
+            <div class="detail-card">
+                {% for s in sessions %}
+                <div class="webui-chat-row">
+                    <a class="webui-list-row" href="{% url 'webui:chat' s.pk %}">
+                        <span class="webui-list-row-name">
+                            {% if s.is_pinned %}<span class="session-pin-icon">★</span>{% endif %}
+                            {{ s.name }}
+                        </span>
+                        <span class="webui-list-row-meta">
+                            {{ s.message_count }} message{{ s.message_count|pluralize }}
+                            · {{ s.turn_count }} turn{{ s.turn_count|pluralize }}
+                            {% if s.latest_session_version.agent %} · {{ s.latest_session_version.agent.name }}{% endif %}
+                            {% if s.parent_project %} · {{ s.parent_project.name }}{% endif %}
+                            · {{ s.last_active_at|reltime }}
+                        </span>
+                    </a>
+                    <form method="post" action="{% url 'webui:chat_action' s.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="hidden" name="action" value="{% if s.is_archived %}unarchive{% else %}archive{% endif %}">
+                        <button class="webui-action-btn" type="submit">
+                            {% if s.is_archived %}Restore{% else %}Archive{% endif %}
+                        </button>
+                    </form>
+                </div>
+                {% empty %}
+                <div class="insights-empty">
+                    {% if show_archived %}No archived chats.{% else %}No chats yet — start one above.{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

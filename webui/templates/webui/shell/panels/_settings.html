@@ -1,0 +1,8 @@
+<div class="sidebar-section"><span>Settings</span></div>
+<div class="side-list">
+    {% for key, label in settings_tabs %}
+    <a class="ws-row" href="{% url 'webui:settings_tab' key %}">
+        <span class="ws-row-info"><span class="ws-row-name">{{ label }}</span></span>
+    </a>
+    {% endfor %}
+</div>

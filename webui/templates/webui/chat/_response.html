@@ -1,0 +1,32 @@
+<div class="msg-row webui-response-row" data-role="assistant" data-pk="{{ row.obj.pk }}">
+    <details class="query-card response-card{% if row.obj.status == 'ACTIVE' %} query-active{% endif %}"
+             data-open-key="response-{{ row.obj.pk }}" open>
+        <summary class="query-card-header">
+            <span class="card-icon">✎</span>
+            <span class="card-title">Response</span>
+            <span class="card-sub">{{ row.obj.provider_name }}{% if row.obj.model_name %} · {{ row.obj.model_name }}{% endif %}</span>
+            {% if row.obj.completion_tokens %}
+                <span class="card-meta">{{ row.obj.completion_tokens }} tkn</span>
+            {% endif %}
+            <span class="card-status {{ row.obj.status|lower }}">{{ row.obj.status }}</span>
+            <span class="query-card-toggle">▸</span>
+        </summary>
+        <div class="query-card-detail">
+            {% if row.reasoning %}
+            <details class="thinking-card webui-inline-thinking"
+                     data-open-key="think-response-{{ row.obj.pk }}">
+                <summary class="thinking-card-header">
+                    <span class="thinking-card-icon">✦</span>
+                    <span class="thinking-card-label">Thinking</span>
+                    <span class="thinking-card-toggle">▸</span>
+                </summary>
+                <div class="thinking-card-body"><pre>{{ row.reasoning }}</pre></div>
+            </details>
+            {% endif %}
+            <div class="msg-body webui-response-body">{{ row.body_html|safe }}</div>
+            {% if row.obj.error_message %}
+                <div class="webui-error">{{ row.obj.error_type }}: {{ row.obj.error_message }}</div>
+            {% endif %}
+        </div>
+    </details>
+</div>

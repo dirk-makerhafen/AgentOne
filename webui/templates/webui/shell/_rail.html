@@ -1,0 +1,64 @@
+{% load webui %}
+<nav class="rail" aria-label="Primary navigation">
+    <a class="rail-btn has-tooltip{% if section == 'dashboard' %} active{% endif %}"
+       href="{% url 'webui:dashboard' %}" data-tooltip="Dashboard" aria-label="Dashboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="rail-button-text">Home</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'chats' %} active{% endif %}"
+       href="{% url 'webui:chats' %}" data-tooltip="Chats" aria-label="Chats">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="rail-button-text">Chats</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'cron' %} active{% endif %}"
+       href="{% url 'webui:cron' %}" data-tooltip="Cron" aria-label="Cron">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="rail-button-text">Cron</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'collections' %} active{% endif %}"
+       href="{% url 'webui:collections' %}" data-tooltip="Data flows" aria-label="Data flows">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M4 12h16"/><path d="M12 4v16"/></svg>
+        <span class="rail-button-text">Flows</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'agents' %} active{% endif %}"
+       href="{% url 'webui:agents' %}" data-tooltip="Agents" aria-label="Agents">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="rail-button-text">Agents</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'projects' %} active{% endif %}"
+       href="{% url 'webui:projects' %}" data-tooltip="Projects" aria-label="Projects">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span class="rail-button-text">Projects</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'workspaces' %} active{% endif %}"
+       href="{% url 'webui:workspaces' %}" data-tooltip="Spaces" aria-label="Spaces">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span class="rail-button-text">Spaces</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'skills' %} active{% endif %}"
+       href="{% url 'webui:skills' %}" data-tooltip="Skills" aria-label="Skills">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span class="rail-button-text">Skills</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'workitems' %} active{% endif %}"
+       href="{% url 'webui:workitems' %}" data-tooltip="Work items" aria-label="Work items">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16"/><path d="M16 4v16"/><path d="M3 10h18"/></svg>
+        <span class="rail-button-text">Work</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'insights' %} active{% endif %}"
+       href="{% url 'webui:insights' %}" data-tooltip="Insights" aria-label="Insights">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        <span class="rail-button-text">Stats</span>
+    </a>
+    <a class="rail-btn has-tooltip{% if section == 'logs' %} active{% endif %}"
+       href="{% url 'webui:logs' %}" data-tooltip="Logs" aria-label="Logs">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/></svg>
+        <span class="rail-button-text">Logs</span>
+    </a>
+    <div class="rail-spacer"></div>
+    <a class="rail-btn has-tooltip{% if section == 'settings' %} active{% endif %}"
+       href="{% url 'webui:settings' %}" data-tooltip="Settings" aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="rail-button-text">Settings</span>
+    </a>
+</nav>

@@ -1,0 +1,13 @@
+<div class="sidebar-section"><span>Projects</span></div>
+<div class="side-list">
+    {% for project in sidebar_projects %}
+    <a class="ws-row{% if project.pk == active_id %} active{% endif %}" href="{% url 'webui:project' project.pk %}">
+        <span class="ws-row-info">
+            <span class="ws-row-name">{{ project.name }}</span>
+            <span class="ws-row-path">{{ project.path|default:"no workspace" }}</span>
+        </span>
+    </a>
+    {% empty %}
+    <div class="webui-empty-note">No projects yet.</div>
+    {% endfor %}
+</div>

@@ -1,0 +1,44 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}Skills · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">Skills</div>
+        <div class="main-view-actions">
+            <span class="webui-muted-note">{{ skills|length }} loaded</span>
+        </div>
+    </header>
+    <div class="main-view-body">
+        <div class="main-view-content">
+            <div class="detail-card">
+                <table class="insights-table">
+                    <thead><tr><th>Skill</th><th>Scope</th><th>Version</th></tr></thead>
+                    <tbody>
+                        {% for skill in skills %}
+                        <tr>
+                            <td>
+                                <a class="webui-link" href="{% url 'webui:skill' skill.pk %}">{{ skill.name }}</a>
+                                {% if skill.latest_skill_version.description %}
+                                <div class="webui-muted-note">{{ skill.latest_skill_version.description|truncatechars:120 }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if skill.parent_agent %}agent {{ skill.parent_agent.name }}
+                                {% elif skill.parent_skill %}child of {{ skill.parent_skill.name }}
+                                {% elif skill.parent_project %}{{ skill.parent_project.name }}
+                                {% else %}global{% endif %}
+                            </td>
+                            <td class="num">{{ skill.latest_skill_version.version_number|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3"><div class="insights-empty">No skills loaded.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+<div id="thread" class="messages"
+     hx-get="{% url 'webui:thread' session.pk %}?limit={{ thread_limit }}{% if thread_around %}&around={{ thread_around }}{% endif %}"
+     hx-trigger="{{ thread_triggers }}"
+     hx-swap="innerHTML"
+     hx-sync="this:replace">
+    {% include "webui/chat/_thread_inner.html" %}
+</div>

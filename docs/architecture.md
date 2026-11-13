@@ -1,15 +1,23 @@
 # Architecture
 
+> **UI status (2026-11):** the primary UI is `webui/` — Django templates + htmx
+> + SSE, mounted at `/app/` (and `/` redirects there). The pyHtmlGui/WebSocket
+> sections below describe the legacy UI, which is frozen at `/legacy/` for one
+> release; see [`ui-rewrite.md`](ui-rewrite.md) for the new design.
+
 ## System overview
 
-AgentOne is structured as a Django monolith with Celery for async task execution and a custom WebSocket UI framework (pyHtmlGui). Data flows from the browser through Django Channels into a reactive Python view layer, which drives the agent runtime and Celery task pipeline.
+AgentOne is structured as a Django monolith with Celery for async task execution. The primary UI is server-rendered: `webui/` renders Django templates, htmx fetches fragments over HTTP, and an SSE bridge forwards Redis pub/sub events so fragments refresh in place. The legacy pyHtmlGui WebSocket view layer still exists under `ui/` for `/legacy/`.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                          BROWSER / HTTP CLIENT                 │
-│  pyhtmlgui JS client ────── WebSocket ────► Django ASGI      │
-│  (DOM sync, reconnect,        /ws                             │
-│   ping, callbacks)                                            │
+│  Browser (primary UI) ──── HTTP + SSE ──────► Django ASGI      │
+│  (Django templates + htmx,     /app/*, /app/sse               │
+│   plain links, EventSource)                                    │
+│                                                               │
+│  Legacy UI (frozen) ──────── WebSocket ─────► Django ASGI      │
+│  pyhtmlgui JS client            /legacy/, /ws                  │
 │                                                               │
 │  REST API client ──────────── HTTP ────────► Django WSGI     │
 │  (curl, scripts, CI)            /api/v1/*                     │

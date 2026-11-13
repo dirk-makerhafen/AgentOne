@@ -1,6 +1,6 @@
 # Core Runtime Mechanisms
 
-Three interconnected subsystems power AgentOne's agent execution: the **task dispatch system** (how tools/tasks/commands are invoked), the **auto-await mechanism** (how results propagate across chains), and the **pyHtmlGui renderer** (how the UI stays in sync). This document covers each in depth.
+Three interconnected subsystems power AgentOne's agent execution: the **task dispatch system** (how tools/tasks/commands are invoked), the **auto-await mechanism** (how results propagate across chains), and the **pyHtmlGui renderer** (legacy UI only; the primary UI is `webui/` with htmx + SSE — see [`ui-rewrite.md`](ui-rewrite.md)). This document covers each in depth.
 
 ---
 
@@ -521,7 +521,12 @@ delegate_task(blocking=False)  (or start_subsession / spawn_subtask / message_su
 
 
 
-## pyHtmlGui Renderer
+## pyHtmlGui Renderer (legacy)
+
+> **Legacy UI only.** The primary UI no longer uses pyHtmlGui; `webui/` renders
+> Django templates and refreshes fragments with htmx + SSE (see
+> [`ui-rewrite.md`](ui-rewrite.md)). The old UI remains mounted at `/legacy/`
+> until the soak period ends, so this section is kept for reference.
 
 pyHtmlGui is a custom WebSocket-based UI framework built on Jinja2 templates and Django Channels. It maintains an in-memory view tree on the server, renders it to HTML, and sends surgical DOM updates (not full pages) over the WebSocket.
 

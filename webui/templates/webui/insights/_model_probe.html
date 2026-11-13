@@ -1,0 +1,24 @@
+{% if probe_running %}
+<div hx-get="{% url 'webui:model_probe_status' model.pk %}"
+     hx-trigger="every 2s" hx-swap="outerHTML">
+    <span class="webui-muted-note">Testing {{ model.name }}…</span>
+</div>
+{% elif probe %}
+<div>
+    {% if probe.verdict == "healthy" %}
+    <span class="detail-badge ok">healthy</span>
+    <span class="webui-muted-note">{{ probe.latency_ms }} ms · {{ probe.tokens.prompt|add:probe.tokens.completion }} tokens</span>
+    {% elif probe.verdict == "no_tool_call" %}
+    <span class="detail-badge">No expected tool call</span>
+    <span class="webui-muted-note">{{ probe.latency_ms }} ms</span>
+    {% else %}
+    <span class="detail-badge">{{ probe.error_kind|default:"failed" }}</span>
+    <span class="webui-muted-note">{{ probe.error_message }}</span>
+    {% endif %}
+    {% if probe.session_pk %}
+    <a class="webui-link" href="{% url 'webui:chat' probe.session_pk %}">Open test session</a>
+    {% endif %}
+</div>
+{% else %}
+<div class="webui-muted-note">No model test has run yet.</div>
+{% endif %}

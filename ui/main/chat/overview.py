@@ -20,7 +20,6 @@ RECENT_CHAT_LIMIT = 10
 
 def _is_workspace_subject(subject) -> bool:
     from server.models.workspace import WorkspaceModel
-
     return isinstance(subject, WorkspaceModel)
 
 

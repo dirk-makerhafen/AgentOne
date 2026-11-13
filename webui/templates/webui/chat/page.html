@@ -1,0 +1,15 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}{{ session.name }} · AgentOne{% endblock %}
+
+{% block main %}
+{% include "webui/chat/_header.html" %}
+<div class="webui-chat-body{% if panel_tab %} panel-open{% endif %}" id="chat-body">
+    <div class="webui-chat-column">
+        {% include "webui/chat/_thread.html" %}
+        {% include "webui/chat/_toc.html" %}
+        {% include "webui/chat/_composer.html" %}
+    </div>
+    {% include "webui/chat/_panel.html" %}
+</div>
+{% endblock %}

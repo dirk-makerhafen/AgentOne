@@ -1,0 +1,79 @@
+{% load webui %}
+{% if call %}
+<div class="webui-tool-meta">
+    <span class="webui-tool-meta-item" title="Call ID">#{{ call.pk }}</span>
+    {% if call.created_at %}<span class="webui-tool-meta-item">{{ call.created_at|clock }}</span>{% endif %}
+    {% if counts.active %}<span class="webui-tool-meta-item">{{ counts.active }} active</span>{% endif %}
+    {% if counts.finished %}<span class="webui-tool-meta-item">{{ counts.finished }} finished</span>{% endif %}
+</div>
+
+{% if arguments %}
+<div class="webui-tool-section">
+    <div class="webui-tool-section-title">Arguments</div>
+    <div class="webui-tool-args">
+        {% for arg in arguments %}
+        <div class="webui-tool-arg">
+            <span class="webui-tool-arg-key">{{ arg.key }}</span>
+            <span class="webui-tool-arg-val">{{ arg.value }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if result %}
+<div class="webui-tool-section">
+    <div class="webui-tool-section-title">Result</div>
+    <pre class="webui-tool-body">{{ result }}</pre>
+</div>
+{% endif %}
+
+{% if subcalls or counts.finished or counts.truncated %}
+<div class="webui-tool-section">
+    <div class="webui-tool-section-title">Sub-calls</div>
+    <div class="webui-tool-subcalls">
+        {% for node in subcalls %}
+        <div class="webui-tool-subcall" style="margin-left:{{ node.indent }}px"
+             title="#{{ node.pk }} · {{ node.status_detail }} · {{ node.duration }}">
+            <span class="webui-tool-subcall-arrow">↳</span>
+            <span class="webui-tool-subcall-name">{{ node.name }}</span>
+            <span class="webui-tool-subcall-pk">:{{ node.pk }}</span>
+            <span class="card-status {{ node.status_class }}">{{ node.status }}</span>
+            {% if node.executing %}<span class="webui-tool-subcall-dot" title="currently executing"></span>{% endif %}
+            {% if node.duration %}<span class="webui-tool-subcall-time">{{ node.duration }}</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% if not full and counts.finished %}
+    <button class="webui-tool-more" type="button"
+            hx-get="{% url 'webui:call_detail' call.pk %}?full=1"
+            hx-target="closest .webui-tool-detail"
+            hx-swap="innerHTML">
+        Show {{ counts.finished }}{% if counts.truncated %}+{% endif %} finished
+    </button>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if halted %}
+<div class="webui-tool-approval-box">
+    <form method="post" hx-post="{% url 'webui:call_action' call.pk %}"
+          hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="approve">
+        <button class="webui-action-btn" type="submit">Approve</button>
+    </form>
+    <form class="webui-tool-deny" method="post"
+          hx-post="{% url 'webui:call_action' call.pk %}"
+          hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="deny">
+        <input class="webui-question-input" type="text" name="feedback"
+               placeholder="Reason for denying (optional)" autocomplete="off">
+        <button class="webui-action-btn danger" type="submit">Deny</button>
+    </form>
+</div>
+{% endif %}
+{% else %}
+<div class="webui-error">This call no longer exists.</div>
+{% endif %}

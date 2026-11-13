@@ -1,0 +1,19 @@
+<div class="sidebar-section"><span>Data flows</span></div>
+<div class="side-list">
+    {% for collection in sidebar_collections %}
+    <a class="ws-row{% if collection.pk == active_id %} active{% endif %}" href="{% url 'webui:collection' collection.pk %}">
+        <span class="ws-row-info">
+            <span class="ws-row-name">
+                {{ collection.name }}
+                <span class="side-badge">{{ collection.get_collection_type_display }}</span>
+            </span>
+            <span class="ws-row-path">
+                {% if collection.parent_project %}{{ collection.parent_project.name }}{% else %}global{% endif %}
+                · {% if collection.is_active %}active{% else %}paused{% endif %}
+            </span>
+        </span>
+    </a>
+    {% empty %}
+    <div class="webui-empty-note">No data flows yet.</div>
+    {% endfor %}
+</div>

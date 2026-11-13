@@ -1,0 +1,23 @@
+{% load webui %}
+{% for section in access_sections %}
+{% with section_data=access_form|get_item:section %}
+<div class="detail-card ws-access-section">
+    <div class="detail-card-title">{{ section|title }} access</div>
+    <div class="detail-form-row">
+        <label for="ws-access-{{ section }}-default">Default</label>
+        <select id="ws-access-{{ section }}-default" name="access_{{ section }}_default">
+            {% for option in access_defaults %}
+            <option value="{{ option }}"{% if section_data.default == option %} selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% for key in access_keys %}
+    <div class="detail-form-row">
+        <label for="ws-access-{{ section }}-{{ key }}">{{ key|title }} <span class="webui-muted-note">one glob per line</span></label>
+        <textarea id="ws-access-{{ section }}-{{ key }}" name="access_{{ section }}_{{ key }}" rows="2" placeholder="e.g. src/**">{% for line in section_data|get_item:key %}{{ line }}
+{% endfor %}</textarea>
+    </div>
+    {% endfor %}
+</div>
+{% endwith %}
+{% endfor %}

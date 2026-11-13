@@ -1,0 +1,146 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}{{ item.title }} · Work items · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">
+            {{ item.title }}
+            <span class="detail-badge{% if item.status == 'done' %} ok{% elif item.status == 'cancelled' %} err{% elif item.status == 'in_progress' %} running{% endif %}">{{ row.status_label }}</span>
+        </div>
+        <div class="main-view-actions">
+            <a class="webui-action-btn" href="{% url 'webui:workitems' %}{% if item.project %}?project={{ item.project.pk }}{% endif %}">Board</a>
+            <form method="post" action="{% url 'webui:workitem_delete' item.pk %}"
+                  onsubmit="return confirm('Delete work item {{ item.title|escapejs }}?');">
+                {% csrf_token %}
+                <button class="webui-action-btn danger" type="submit">Delete</button>
+            </form>
+        </div>
+    </header>
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content">
+            <div class="insights-row">
+                <div class="detail-card">
+                    <div class="detail-card-title">Details</div>
+                    <div class="detail-row"><span class="detail-row-label">Status</span><span class="detail-row-value">{{ row.status_label }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Priority</span><span class="detail-row-value">P{{ row.priority }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Project</span>
+                        <span class="detail-row-value">{% if item.project %}<a class="webui-link" href="{% url 'webui:project' item.project.pk %}">{{ item.project.name }}</a>{% else %}—{% endif %}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Assigned agent</span>
+                        <span class="detail-row-value">{% if item.assigned_agent %}<a class="webui-link" href="{% url 'webui:agent' item.assigned_agent.pk %}">{{ item.assigned_agent.name }}</a>{% else %}unassigned{% endif %}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Verification</span>
+                        <span class="detail-row-value">{{ row.verify_status|default:"not required" }}{% if row.verify_attempts %} · {{ row.verify_attempts }} attempt{{ row.verify_attempts|pluralize }}{% endif %}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Dispatches</span><span class="detail-row-value">{{ row.dispatch_count }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Created</span><span class="detail-row-value">{{ row.created_at|date:"Y-m-d H:i"|default:"—" }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Started</span><span class="detail-row-value">{{ row.started_at|date:"Y-m-d H:i"|default:"—" }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Completed</span><span class="detail-row-value">{{ row.completed_at|date:"Y-m-d H:i"|default:"—" }}</span></div>
+                    {% if item.parent %}
+                    <div class="detail-row"><span class="detail-row-label">Parent</span>
+                        <span class="detail-row-value"><a class="webui-link" href="{% url 'webui:workitem' item.parent.pk %}">{{ item.parent.title }}</a></span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-card-title">Actions</div>
+                    {% if actions %}
+                    <form class="detail-form" method="post" action="{% url 'webui:workitem_action' item.pk %}">
+                        {% csrf_token %}
+                        <div class="detail-form-row">
+                            <label for="workitem-reason">Reason (used by block / reject / cancel)</label>
+                            <input id="workitem-reason" type="text" name="reason">
+                        </div>
+                        <div class="webui-action-row">
+                            {% for action in actions %}
+                            <button class="webui-action-btn{% if action.danger %} danger{% endif %}" type="submit"
+                                    name="action" value="{{ action.key }}">{{ action.label }}</button>
+                            {% endfor %}
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="insights-empty">No manual actions available from this status.</div>
+                    {% endif %}
+                    {% if row.last_outcome %}
+                    <div class="detail-card-title" style="margin-top:14px">Last outcome</div>
+                    <pre class="detail-prompt">{{ row.last_outcome }}</pre>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Requirement</div>
+                {% if row.body %}
+                <div class="webui-prose">{{ row.body|linebreaksbr }}</div>
+                {% else %}
+                <div class="insights-empty">No body text.</div>
+                {% endif %}
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Edit</div>
+                <form class="detail-form" method="post" action="{% url 'webui:workitem_update' item.pk %}">
+                    {% csrf_token %}
+                    <div class="detail-form-row">
+                        <label for="edit-title">Title</label>
+                        <input id="edit-title" type="text" name="title" value="{{ item.title }}">
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-project">Project</label>
+                            <select id="edit-project" name="project">
+                                <option value="">No project</option>
+                                {% for project in projects %}
+                                <option value="{{ project.pk }}"{% if project.pk == item.project_id %} selected{% endif %}>{{ project.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-agent">Assigned agent</label>
+                            <select id="edit-agent" name="assigned_agent">
+                                <option value="">Unassigned</option>
+                                {% for agent in agents %}
+                                <option value="{{ agent.pk }}"{% if agent.pk == item.assigned_agent_id %} selected{% endif %}>{{ agent.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-priority">Priority</label>
+                        <input id="edit-priority" type="number" name="priority" value="{{ item.priority }}" min="0">
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-body">Body</label>
+                        <textarea id="edit-body" name="body" rows="5">{{ item.body }}</textarea>
+                    </div>
+                    <div class="detail-form-row">
+                        <label class="detail-form-check">
+                            <input type="checkbox" name="requires_verification"{% if item.requires_verification %} checked{% endif %}>
+                            Requires verification
+                        </label>
+                    </div>
+                    <button class="webui-primary-btn" type="submit">Save changes</button>
+                </form>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Children</div>
+                {% for child in children %}
+                <a class="webui-list-row" href="{% url 'webui:workitem' child.pk %}">
+                    <span class="webui-list-row-name">{{ child.title }}</span>
+                    <span class="webui-list-row-meta">{{ child.get_status_display }} · P{{ child.priority }}</span>
+                </a>
+                {% empty %}
+                <div class="insights-empty">No child items.</div>
+                {% endfor %}
+            </div>
+        </div></div>
+        {% include "webui/entities/_assistant_panel.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

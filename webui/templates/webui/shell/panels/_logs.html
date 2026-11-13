@@ -1,0 +1,10 @@
+<div class="sidebar-section"><span>Log files</span></div>
+<div class="side-list">
+    {% for file in log_files %}
+    <a class="ws-row{% if file == selected_log %} active{% endif %}" href="{% url 'webui:logs' %}?file={{ file|urlencode }}">
+        <span class="ws-row-info"><span class="ws-row-name">{{ file }}</span></span>
+    </a>
+    {% empty %}
+    <div class="webui-empty-note">No log files found.</div>
+    {% endfor %}
+</div>
