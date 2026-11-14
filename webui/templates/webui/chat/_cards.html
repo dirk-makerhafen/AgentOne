@@ -1,6 +1,4 @@
 {% load webui %}
-{# Status/action cards.  Rendered inside the thread fragment so every SSE
-   refresh reflects the current task-call state. #}
 
 {% if cards.queue.count %}
 <div class="webui-card webui-queue-card" role="region" aria-label="Queued messages">
