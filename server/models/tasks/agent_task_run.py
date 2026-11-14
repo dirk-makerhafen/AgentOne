@@ -433,7 +433,7 @@ class AgentTaskRun(BaseModel):
                         model_instance = apps.get_model("server", data["_type"]).objects.get(
                             pk=data["pk"]
                         )
-                    except:
+                    except Exception:
                         return None
                     if isinstance(model_instance, GenericContent):
                         try:
@@ -552,7 +552,7 @@ class AgentTaskRun(BaseModel):
                         model_instance = apps.get_model("server", data["_type"]).objects.get(
                             pk=data["pk"]
                         )
-                    except:
+                    except Exception:
                         return None
                     if isinstance(model_instance, GenericContent):
                         try:

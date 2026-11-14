@@ -1,15 +1,26 @@
 <div class="sidebar-section"><span>Spaces</span></div>
-<div class="side-list">
-    {% for ws in sidebar_workspaces %}
-    <a class="ws-row{% if ws.pk == active_id %} active{% endif %}" href="{% url 'webui:workspace' ws.pk %}">
-        <span class="ws-row-info">
-            <span class="ws-row-name">
-                <span class="session-project-dot" style="background:{{ ws.color|default:'var(--accent)' }}"></span>
-                {{ ws.name }}
+<div class="side-list ws-tree" id="ws-sidebar-tree">
+    {% for row in sidebar_workspaces %}
+    <div class="ws-row{% if row.pk == active_id %} active{% endif %}"
+         data-ws-pk="{{ row.pk }}"
+         data-ws-depth="{{ row.depth }}"
+         data-ws-has-children="{% if row.has_children %}1{% else %}0{% endif %}"
+         style="padding-left: calc(8px + {{ row.depth }} * 18px)">
+        {% if row.has_children %}
+        <button type="button" class="ws-tree-toggle" data-ws-toggle="{{ row.pk }}" title="Toggle">▸</button>
+        {% else %}
+        <span class="ws-tree-leaf"></span>
+        {% endif %}
+        <a class="ws-row-link" href="{% url 'webui:workspace' row.pk %}">
+            <span class="ws-row-info">
+                <span class="ws-row-name">
+                    <span class="session-project-dot" style="background:{{ row.color|default:'var(--accent)' }}"></span>
+                    {{ row.name }}
+                </span>
+                <span class="ws-row-path">{{ row.display_path }}</span>
             </span>
-            <span class="ws-row-path">{{ ws.path }}</span>
-        </span>
-    </a>
+        </a>
+    </div>
     {% empty %}
     <div class="webui-empty-note">No workspaces yet.</div>
     {% endfor %}

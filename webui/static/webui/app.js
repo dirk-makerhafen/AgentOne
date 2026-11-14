@@ -73,33 +73,86 @@
     // re-apply the state afterwards.
     var openCards = null;
 
+    // ── Providers settings: keep <details> open across HTMX swaps/reloads ──
+    function providersCardEl() {
+        return document.getElementById('providers-card');
+    }
+
+    function captureProviderOpenState() {
+        var el = providersCardEl();
+        if (!el) return;
+        var open = [];
+        try {
+            el.querySelectorAll('details[data-open-key]').forEach(function (card) {
+                if (card.open) open.push(card.getAttribute('data-open-key'));
+            });
+            sessionStorage.setItem('agentone:providers:open', JSON.stringify(open));
+        } catch (e) {
+            if (window.console && console.error) console.error('captureProviderOpenState failed:', e);
+        }
+    }
+
+    function restoreProviderOpenState() {
+        var el = providersCardEl();
+        if (!el) return;
+        var open = [];
+        try {
+            open = JSON.parse(sessionStorage.getItem('agentone:providers:open') || '[]');
+        } catch (e) {
+            open = [];
+        }
+        var set = new Set(open || []);
+        try {
+            el.querySelectorAll('details[data-open-key]').forEach(function (card) {
+                var key = card.getAttribute('data-open-key');
+                var shouldOpen = !!key && set.has(key);
+                if (card.open !== shouldOpen) card.open = shouldOpen;
+            });
+        } catch (e) {
+            if (window.console && console.error) console.error('restoreProviderOpenState failed:', e);
+        }
+    }
+
     function captureOpenCards(el) {
         openCards = new Set();
-        el.querySelectorAll('details[data-open-key]').forEach(function (card) {
-            if (card.open) openCards.add(card.getAttribute('data-open-key'));
-        });
+        try {
+            el.querySelectorAll('details[data-open-key]').forEach(function (card) {
+                var key = card.getAttribute('data-open-key');
+                if (card.open && key) openCards.add(key);
+            });
+        } catch (e) {
+            if (window.console && console.error) console.error('captureOpenCards failed:', e);
+        }
     }
 
     function restoreOpenCards(el) {
         if (!openCards) return;
-        el.querySelectorAll('details[data-open-key]').forEach(function (card) {
-            var shouldOpen = openCards.has(card.getAttribute('data-open-key'));
-            if (card.open === shouldOpen) return;
-            card.open = shouldOpen;
-            // A lazily-loaded card loses its content after a full thread
-            // swap; setting `.open` may not emit `toggle` in time for htmx,
-            // so trigger it explicitly (the `once` modifier dedupes).
-            if (shouldOpen && card.hasAttribute('hx-get')) {
-                htmx.trigger(card, 'toggle');
-            }
-        });
+        try {
+            el.querySelectorAll('details[data-open-key]').forEach(function (card) {
+                var key = card.getAttribute('data-open-key');
+                var shouldOpen = !!key && openCards.has(key);
+                if (card.open === shouldOpen) return;
+                card.open = shouldOpen;
+                if (shouldOpen && card.hasAttribute('hx-get')) {
+                    htmx.trigger(card, 'toggle');
+                }
+            });
+        } catch (e) {
+            // Never let a card-restore failure take down the thread swap.
+            if (window.console && console.error) console.error('restoreOpenCards failed:', e);
+        }
         openCards = null;
     }
 
     document.addEventListener('htmx:beforeSwap', function (evt) {
         var el = threadEl();
-        if (!el || !evt.detail || evt.detail.target !== el) return;
-        captureOpenCards(el);
+        if (el && evt.detail && evt.detail.target === el) {
+            captureOpenCards(el);
+        }
+        var pc = providersCardEl();
+        if (pc && evt.detail && evt.detail.target === pc) {
+            captureProviderOpenState();
+        }
     });
 
     document.addEventListener('htmx:beforeRequest', function (evt) {
@@ -125,8 +178,13 @@
     // inside the afterSwap stack are ignored by htmx's own event listeners.
     document.addEventListener('htmx:afterSettle', function (evt) {
         var el = threadEl();
-        if (!el || evt.target !== el) return;
-        restoreOpenCards(el);
+        if (el && evt.target === el) {
+            restoreOpenCards(el);
+        }
+        var pc = providersCardEl();
+        if (pc && evt.target === pc) {
+            restoreProviderOpenState();
+        }
     });
 
     document.addEventListener('htmx:sseError', function () {
@@ -870,5 +928,140 @@
             var parent = cancel.closest('.webui-msg-edit');
             if (parent) parent.hidden = true;
         }
+    });
+
+    // Persist provider <details> open state across toggles/submits.
+    document.addEventListener('toggle', function (evt) {
+        var t = evt.target;
+        if (!t || !t.matches || !t.matches('details[data-open-key]')) return;
+        var pc = providersCardEl();
+        if (pc && pc.contains(t)) captureProviderOpenState();
+    }, true);
+
+    document.addEventListener('submit', function (evt) {
+        var form = evt.target;
+        var pc = providersCardEl();
+        if (pc && form && pc.contains(form)) captureProviderOpenState();
+    }, true);
+
+    document.addEventListener('DOMContentLoaded', function () {
+        restoreProviderOpenState();
+    });
+    // Initial run in case DOM already ready.
+    if (document.readyState !== 'loading') restoreProviderOpenState();
+})();
+
+// Workspace sidebar tree collapse (persisted in localStorage).
+(function () {
+    'use strict';
+    var KEY = 'wsCollapsed';
+    function load() {
+        try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; }
+    }
+    function save(state) { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+    function apply() {
+        var tree = document.getElementById('ws-sidebar-tree');
+        if (!tree) return;
+        var state = load();
+        var rows = Array.prototype.slice.call(tree.querySelectorAll('.ws-row'));
+        // Determine visibility: a row is visible if none of its ancestors (by depth) are collapsed.
+        var stack = []; // stack of {pk, depth, visible}
+        rows.forEach(function (row) {
+            var depth = parseInt(row.getAttribute('data-ws-depth') || '0', 10);
+            var pk = row.getAttribute('data-ws-pk');
+            // pop stack to parent depth
+            while (stack.length && stack[stack.length - 1].depth >= depth) stack.pop();
+            var parent = stack.length ? stack[stack.length - 1] : null;
+            var visible = !parent || (parent.visible && !state[parent.pk]);
+            row.style.display = visible ? '' : 'none';
+            // toggle chevron
+            var btn = row.querySelector('.ws-tree-toggle');
+            if (btn) {
+                if (state[pk]) btn.classList.add('collapsed');
+                else btn.classList.remove('collapsed');
+                btn.textContent = state[pk] ? '▸' : '▾';
+            }
+            stack.push({ pk: pk, depth: depth, visible: visible });
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest && e.target.closest('.ws-tree-toggle');
+        if (!btn) return;
+        var pk = btn.getAttribute('data-ws-toggle');
+        if (!pk) return;
+        e.preventDefault();
+        var state = load();
+        state[pk] = !state[pk];
+        save(state);
+        apply();
+    });
+
+    document.addEventListener('htmx:afterSwap', function () { apply(); });
+    document.addEventListener('DOMContentLoaded', function () { apply(); });
+    // initial (script may run after DOM ready)
+    if (document.readyState !== 'loading') apply();
+})();
+
+// Draggable resize handles for sidebar / right panel.
+(function () {
+    'use strict';
+    var MIN_W = 200, MAX_W = 600;
+    function loadWidth(key, fallback) {
+        try { var v = parseInt(localStorage.getItem(key), 10); return (v && v >= MIN_W && v <= MAX_W) ? v : fallback; } catch (e) { return fallback; }
+    }
+    function restoreWidths() {
+        var s = document.querySelector('.sidebar');
+        var r = document.querySelector('.webui-chat-panel');
+        if (s) s.style.width = loadWidth('sidebarWidth', 300) + 'px';
+        if (r) r.style.width = loadWidth('rightpanelWidth', 300) + 'px';
+    }
+    restoreWidths();
+
+    var layout = document.querySelector('.layout');
+    if (layout && window.MutationObserver) {
+        var obs = new MutationObserver(function () {
+            if (!window._panelDragging) restoreWidths();
+        });
+        obs.observe(layout, { childList: true, subtree: false });
+    }
+
+    var handle = null, startX = 0, startW = 0;
+    document.addEventListener('mousedown', function (e) {
+        var el = e.target && e.target.closest ? e.target.closest('.resize-handle') : null;
+        if (!el || el.id === 'terminalResizeHandle') return;
+        if (el.id !== 'sidebarResize' && el.id !== 'rightpanelResize') return;
+        var panel = el.closest('.sidebar, .webui-chat-panel');
+        if (!panel) return;
+        handle = el;
+        startX = e.clientX;
+        startW = panel.getBoundingClientRect().width;
+        document.body.classList.add('resizing');
+        window._panelDragging = true;
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', function (e) {
+        if (!handle) return;
+        var panel = handle.closest('.sidebar, .webui-chat-panel');
+        if (!panel) return;
+        var dx = e.clientX - startX;
+        var w = (handle.id === 'sidebarResize') ? (startW + dx) : (startW - dx);
+        w = Math.max(MIN_W, Math.min(MAX_W, w));
+        panel.style.width = w + 'px';
+    });
+    document.addEventListener('mouseup', function () {
+        if (!handle) return;
+        var panel = handle.closest('.sidebar, .webui-chat-panel');
+        if (panel) {
+            var w = parseInt(panel.style.width, 10);
+            if (w) {
+                var key = (handle.id === 'sidebarResize') ? 'sidebarWidth' : 'rightpanelWidth';
+                try { localStorage.setItem(key, w); } catch (e) {}
+            }
+        }
+        handle = null;
+        document.body.classList.remove('resizing');
+        window._panelDragging = false;
     });
 })();

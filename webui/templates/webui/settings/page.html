@@ -128,7 +128,7 @@
                     Manage API keys. Changes take effect immediately. Keys are masked here; they are never sent to the browser in full.
                 </div>
                 {% for provider in providers %}
-                <details class="webui-item">
+                <details class="webui-item" data-open-key="provider-{{ provider.id }}">
                     <summary class="webui-item-summary">
                         <span>
                             <strong>{{ provider.name }}</strong>

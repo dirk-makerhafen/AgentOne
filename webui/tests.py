@@ -517,6 +517,31 @@ def test_queue_card_renders_and_cancel_removes_call(client):
 
 
 @pytest.mark.django_db
+def test_composer_footer_swap_targets_itself_not_thread(client):
+    """The footer sits inside the composer form, which sets ``hx-target="#thread"``.
+
+    ``hx-target`` is inherited, so an SSE refresh without its own target would
+    replace the whole thread with the footer markup and make the chat disappear.
+    """
+    from server.models.sessions.session import SessionModel
+
+    session = SessionModel.objects.create(name="footer-target")
+
+    footer = client.get(reverse("webui:chat_composer_footer", args=[session.pk]))
+    assert footer.status_code == 200
+    footer_content = footer.content.decode()
+    assert 'id="composer-footer"' in footer_content
+    assert 'hx-target="this"' in footer_content
+
+    page = client.get(reverse("webui:chat", args=[session.pk]))
+    assert page.status_code == 200
+    page_content = page.content.decode()
+    assert 'class="composer-box webui-composer"' in page_content
+    assert 'hx-target="#thread"' in page_content
+    assert 'hx-target="this"' in page_content
+
+
+@pytest.mark.django_db
 def test_guardrail_approval_and_deny_call_scheduler(client):
     from unittest.mock import patch
 
@@ -1016,6 +1041,41 @@ def test_chat_setting_override_and_reset(client):
 
     invalid = client.post(endpoint, {"name": "reasoning_effort", "value": "invalid"})
     assert invalid.status_code == 400
+
+
+@pytest.mark.django_db
+def test_chat_settings_panel_is_grouped_and_autosaves(client):
+    session, _version = _session_with_version("settings-layout")
+    response = client.get(
+        reverse("webui:chat_panel_tab", args=[session.pk, "settings"])
+    )
+    assert response.status_code == 200
+    for title in (b"Behavior", b"Limits", b"Compaction", b"Access", b"Prompts"):
+        assert title in response.content
+    # The redesign removed the scattered per-field Save buttons.
+    assert b">Save<" not in response.content
+    assert b"webui-form-row" in response.content
+
+    renamed = client.post(
+        reverse("webui:chat_config", args=[session.pk]),
+        {"panel": "settings", "name": "renamed-session"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert renamed.status_code == 200
+    session.refresh_from_db()
+    assert session.name == "renamed-session"
+
+
+@pytest.mark.django_db
+def test_chat_capabilities_panel_uses_chips(client):
+    session, _version = _session_with_version("capabilities-layout")
+    response = client.get(
+        reverse("webui:chat_panel_tab", args=[session.pk, "capabilities"])
+    )
+    assert response.status_code == 200
+    assert b"webui-panel-card" in response.content
+    assert b"webui-chip-wrap" in response.content
+    assert b"Effective for this session" in response.content
 
 
 @pytest.mark.django_db

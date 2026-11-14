@@ -56,149 +56,192 @@
     {% endif %}
 
 {% elif panel_tab == "settings" %}
-    <div class="webui-panel-section">
-        <div class="webui-settings-head">
-            <span class="detail-card-title">Session</span>
-            <span class="webui-badge">
-                {% if settings_version_number %}v{{ settings_version_number }}{% endif %}
-                {% if settings_version_is_latest %}· latest{% endif %}
-            </span>
-        </div>
-        <form class="detail-form webui-panel-setting" method="post"
-              action="{% url 'webui:chat_action' session.pk %}">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="rename">
-            <input type="hidden" name="next" value="/app/chat/{{ session.pk }}?panel=settings">
-            <label for="settings-name">Name</label>
-            <input id="settings-name" type="text" name="name" value="{{ settings_name }}">
-            <button class="webui-action-btn" type="submit">Save</button>
-        </form>
-        <div class="detail-row"><span class="detail-row-label">Type</span>
-            <span class="detail-row-value">{{ settings_type_label }}</span>
-        </div>
-        <form class="detail-form webui-panel-setting"
-              hx-post="{% url 'webui:chat_config' session.pk %}"
-              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
-            {% csrf_token %}
-            <input type="hidden" name="panel" value="settings">
-            <label for="settings-workspace">Workspace</label>
-            <select id="settings-workspace" name="workspace">
-                <option value="">No workspace</option>
-                {% for ws in composer_workspaces %}
-                <option value="{{ ws.pk }}"{% if ws.pk == composer_workspace_id %} selected{% endif %}>{{ ws.name }}</option>
-                {% endfor %}
-            </select>
-        </form>
-        <form class="detail-form webui-panel-setting"
-              hx-post="{% url 'webui:chat_config' session.pk %}"
-              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
-            {% csrf_token %}
-            <input type="hidden" name="panel" value="settings">
-            <label for="settings-agent">Agent</label>
-            <select id="settings-agent" name="agent">
-                {% for agent in composer_agents %}
-                <option value="{{ agent.pk }}"{% if agent.pk == composer_agent_id %} selected{% endif %}>{{ agent.name }}</option>
-                {% endfor %}
-            </select>
-        </form>
-        <form class="detail-form webui-panel-setting"
-              hx-post="{% url 'webui:chat_config' session.pk %}"
-              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
-            {% csrf_token %}
-            <input type="hidden" name="panel" value="settings">
-            <label for="settings-model">AI model</label>
-            <select id="settings-model" name="model">
-                <option value="">Agent default</option>
-                {% for model_name in composer_models %}
-                <option value="{{ model_name }}"{% if model_name == composer_model %} selected{% endif %}>{{ model_name }}</option>
-                {% endfor %}
-            </select>
-        </form>
-        <div class="detail-row"><span class="detail-row-label">Active</span>
-            <span class="detail-row-value">
-                {% if settings_active %}yes{% else %}no{% endif %}
-                {% if settings_is_paused %} · paused{% endif %}
-            </span>
-        </div>
-    </div>
+    <div class="webui-panel-stack">
+        <section class="webui-panel-card">
+            <div class="webui-card-head">
+                <span class="detail-card-title">Session</span>
+                <span class="webui-badge">
+                    {% if settings_version_number %}v{{ settings_version_number }}{% endif %}
+                    {% if settings_version_is_latest %}· latest{% endif %}
+                </span>
+            </div>
+            <form class="webui-form-row" hx-post="{% url 'webui:chat_config' session.pk %}"
+                  hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="panel" value="settings">
+                <label for="settings-name">Name</label>
+                <input id="settings-name" type="text" name="name" value="{{ settings_name }}"
+                       autocomplete="off" spellcheck="false">
+                <span></span>
+            </form>
+            <div class="webui-form-row">
+                <span class="webui-form-label">Type</span>
+                <span class="webui-form-value">{{ settings_type_label }}</span>
+                <span></span>
+            </div>
+            <form class="webui-form-row" hx-post="{% url 'webui:chat_config' session.pk %}"
+                  hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="panel" value="settings">
+                <label for="settings-workspace">Workspace</label>
+                <select id="settings-workspace" name="workspace">
+                    <option value="">No workspace</option>
+                    {% for ws in composer_workspaces %}
+                    <option value="{{ ws.pk }}"{% if ws.pk == composer_workspace_id %} selected{% endif %}>{{ ws.name }}</option>
+                    {% endfor %}
+                </select>
+                <span></span>
+            </form>
+            <form class="webui-form-row" hx-post="{% url 'webui:chat_config' session.pk %}"
+                  hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="panel" value="settings">
+                <label for="settings-agent">Agent</label>
+                <select id="settings-agent" name="agent">
+                    {% for agent in composer_agents %}
+                    <option value="{{ agent.pk }}"{% if agent.pk == composer_agent_id %} selected{% endif %}>{{ agent.name }}</option>
+                    {% endfor %}
+                </select>
+                <span></span>
+            </form>
+            <form class="webui-form-row" hx-post="{% url 'webui:chat_config' session.pk %}"
+                  hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="panel" value="settings">
+                <label for="settings-model">AI model</label>
+                <select id="settings-model" name="model">
+                    <option value="">Agent default</option>
+                    {% for model_name in composer_models %}
+                    <option value="{{ model_name }}"{% if model_name == composer_model %} selected{% endif %}>{{ model_name }}</option>
+                    {% endfor %}
+                </select>
+                <span></span>
+            </form>
+            <div class="webui-form-row">
+                <span class="webui-form-label">Active</span>
+                <span class="webui-form-value">
+                    {% if settings_active %}<span class="detail-badge ok">active</span>{% else %}<span class="detail-badge">inactive</span>{% endif %}
+                    {% if settings_is_paused %}<span class="detail-badge warn">paused</span>{% endif %}
+                </span>
+                <span></span>
+            </div>
+            <div class="webui-form-row">
+                <span class="webui-form-label">Turns</span>
+                <span class="webui-form-value">
+                    {{ settings_turn_count }}
+                    {% if settings_unattended_turns %}· {{ settings_unattended_turns }} unattended{% endif %}
+                </span>
+                <span></span>
+            </div>
+        </section>
 
-    <div class="webui-panel-list">
-        {% for setting in setting_rows %}
-        {% if setting.control == "choice" %}
-        <form class="detail-form webui-panel-setting" hx-post="{% url 'webui:chat_setting' session.pk %}"
-              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
-            {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
-            <label for="setting-{{ setting.name }}">{{ setting.label }}</label>
-            <select id="setting-{{ setting.name }}" name="value">
-                <option value="">Agent default</option>
-                {% for choice in setting.choices %}
-                <option value="{{ choice.value }}"{% if setting.value == choice.value %} selected{% endif %}>{{ choice.label }}</option>
-                {% endfor %}
-            </select>
-            {% if setting.overridden %}
-            <button type="submit" name="action" value="reset" class="webui-action-btn">Reset</button>
+        {% for section in setting_sections %}
+        <section class="webui-panel-card">
+            <div class="webui-card-head">
+                <span class="detail-card-title">{{ section.title }}</span>
+                {% if section.overridden %}
+                <span class="webui-cap-count">{{ section.overridden }} override{{ section.overridden|pluralize }}</span>
+                {% endif %}
+            </div>
+            {% for setting in section.rows %}
+            {% if setting.control == "json" %}
+            <details class="webui-setting-details">
+                <summary>
+                    <span>{{ setting.label }}</span>
+                    {% if setting.overridden %}<span class="webui-badge">override</span>{% endif %}
+                </summary>
+                <pre class="webui-code-value">{{ setting.value|default:"Agent default" }}</pre>
+                {% if setting.overridden %}
+                <button type="button" class="webui-reset-btn webui-reset-btn--text"
+                        hx-post="{% url 'webui:chat_setting' session.pk %}"
+                        hx-vals='{"name": "{{ setting.name }}", "action": "reset", "value": ""}'
+                        hx-target="#chat-panel-body" hx-swap="innerHTML">Reset to agent default</button>
+                {% endif %}
+            </details>
+            {% else %}
+            <form class="webui-form-row" hx-post="{% url 'webui:chat_setting' session.pk %}"
+                  hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
+                <label for="setting-{{ setting.name }}">{{ setting.label }}</label>
+                {% if setting.control == "choice" %}
+                <select id="setting-{{ setting.name }}" name="value">
+                    <option value="">Agent default</option>
+                    {% for choice in setting.choices %}
+                    <option value="{{ choice.value }}"{% if setting.value == choice.value %} selected{% endif %}>{{ choice.label }}</option>
+                    {% endfor %}
+                </select>
+                {% elif setting.control == "boolean" %}
+                <select id="setting-{{ setting.name }}" name="value">
+                    <option value="">Agent default</option>
+                    <option value="true"{% if setting.value == "true" %} selected{% endif %}>true</option>
+                    <option value="false"{% if setting.value == "false" %} selected{% endif %}>false</option>
+                </select>
+                {% elif setting.control == "integer" %}
+                <input id="setting-{{ setting.name }}" type="number" min="0" name="value"
+                       value="{{ setting.value }}" placeholder="Agent default">
+                {% else %}
+                <span class="webui-form-value">{{ setting.value|default:"Agent default" }}</span>
+                {% endif %}
+                {% if setting.overridden %}
+                <button type="button" class="webui-reset-btn" title="Reset to agent default"
+                        hx-post="{% url 'webui:chat_setting' session.pk %}"
+                        hx-vals='{"name": "{{ setting.name }}", "action": "reset", "value": ""}'
+                        hx-include="closest form"
+                        hx-target="#chat-panel-body" hx-swap="innerHTML">⟳</button>
+                {% else %}
+                <span class="webui-default-dot" title="Agent default"></span>
+                {% endif %}
+            </form>
             {% endif %}
-        </form>
-        {% elif setting.control == "boolean" %}
-        <form class="detail-form webui-panel-setting" hx-post="{% url 'webui:chat_setting' session.pk %}"
-              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
-            {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
-            <label for="setting-{{ setting.name }}">{{ setting.label }}</label>
-            <select id="setting-{{ setting.name }}" name="value">
-                <option value="">Agent default</option>
-                <option value="true"{% if setting.value == "true" %} selected{% endif %}>true</option>
-                <option value="false"{% if setting.value == "false" %} selected{% endif %}>false</option>
-            </select>
-            {% if setting.overridden %}
-            <button type="submit" name="action" value="reset" class="webui-action-btn">Reset</button>
-            {% endif %}
-        </form>
-        {% elif setting.control == "integer" %}
-        <form class="detail-form webui-panel-setting" hx-post="{% url 'webui:chat_setting' session.pk %}"
-              hx-trigger="change" hx-target="#chat-panel-body" hx-swap="innerHTML">
-            {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
-            <label for="setting-{{ setting.name }}">{{ setting.label }}</label>
-            <input id="setting-{{ setting.name }}" type="number" min="0" name="value"
-                   value="{{ setting.value }}">
-            <button type="submit" class="webui-action-btn">Save</button>
-            {% if setting.overridden %}
-            <button type="submit" name="action" value="reset" class="webui-action-btn">Reset</button>
-            {% endif %}
-        </form>
-        {% elif setting.control == "json" %}
-        <form class="detail-form webui-panel-setting" hx-post="{% url 'webui:chat_setting' session.pk %}"
-              hx-target="#chat-panel-body" hx-swap="innerHTML">
-            {% csrf_token %}<input type="hidden" name="name" value="{{ setting.name }}">
-            <label for="setting-{{ setting.name }}">{{ setting.label }} (JSON object)</label>
-            <textarea id="setting-{{ setting.name }}" name="value" rows="5">{{ setting.value }}</textarea>
-            <button type="submit" class="webui-action-btn">Save</button>
-            {% if setting.overridden %}
-            <button type="submit" name="action" value="reset" class="webui-action-btn">Reset</button>
-            {% endif %}
-        </form>
-        {% else %}
-        <div class="webui-panel-row">
-            <span class="webui-panel-row-name">{{ setting.label }}</span>
-            <span class="webui-panel-row-meta">{% if setting.value %}{{ setting.value }}{% else %}Agent default{% endif %}</span>
-        </div>
-        {% endif %}
+            {% endfor %}
+        </section>
+        {% empty %}
+        <div class="webui-empty-note">No editable session settings.</div>
         {% endfor %}
+
+        <section class="webui-panel-card">
+            <div class="webui-card-head">
+                <span class="detail-card-title">Prompts</span>
+            </div>
+            {% if settings_system_prompt %}
+            <details class="webui-setting-details">
+                <summary>
+                    <span>System prompt</span>
+                    <span class="webui-form-hint">{{ settings_system_prompt|length }} chars</span>
+                </summary>
+                <pre class="webui-code-value">{{ settings_system_prompt }}</pre>
+            </details>
+            {% else %}
+            <div class="webui-empty-note">No system prompt.</div>
+            {% endif %}
+        </section>
     </div>
 
 {% elif panel_tab == "capabilities" %}
-    <div class="webui-panel-list">
+    <div class="webui-panel-stack">
+        <div class="webui-muted-note">Effective for this session — inherited from the agent unless overridden.</div>
         {% for section in capability_sections %}
-        <section class="webui-panel-section">
-            <div class="detail-card-title">{{ section.title }}</div>
-            {% for item in section.rows %}
-            <div class="webui-panel-row">
-                <span class="webui-panel-row-name{% if not item.allowed %} webui-muted-note{% endif %}">{{ item.name }}</span>
-                <span class="webui-panel-row-meta">{% if item.allowed %}allowed{% else %}disallowed{% endif %}</span>
+        <section class="webui-panel-card">
+            <div class="webui-card-head">
+                <span class="detail-card-title">{{ section.title }}</span>
+                <span class="webui-cap-count">
+                    {{ section.allowed_count }} allowed{% if section.denied_count %} · {{ section.denied_count }} blocked{% endif %}
+                </span>
             </div>
-            {% empty %}
-            <div class="webui-empty-note">None</div>
-            {% endfor %}
+            <div class="webui-chip-wrap">
+                {% for name in section.allowed %}
+                <span class="webui-chip is-allowed" title="Allowed">{{ name }}</span>
+                {% endfor %}
+                {% for name in section.denied %}
+                <span class="webui-chip is-blocked" title="Explicitly blocked">{{ name }}</span>
+                {% endfor %}
+                {% if not section.allowed_count and not section.denied_count %}
+                <span class="webui-empty-note">None</span>
+                {% endif %}
+            </div>
         </section>
+        {% empty %}
+        <div class="webui-empty-note">No capability settings available.</div>
         {% endfor %}
     </div>
 

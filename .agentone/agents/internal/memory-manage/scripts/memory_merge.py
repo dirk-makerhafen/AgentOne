@@ -83,7 +83,7 @@ lessons about doing that task.
   Keep it self-contained.
 - Never invent information. If sources conflict, prefer the newer one and say
   so when it matters.
-- Keep each file under ~5000 characters. Prune rather than spill over.
+- Keep each file under ~5000 characters. If files get longer, analyse their content, compact them, keep most important content.
 - Only read and write inside `{{target_dir}}`. Never touch
   `.memory_sources.md`, git metadata, or other memory levels.
 - The harness marks this node processed when your session ends. Do not advance

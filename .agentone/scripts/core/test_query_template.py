@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 "..", "..", ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "..", "adhoc"))
 
 import query_template as tools_module  # noqa: E402
 from query_template import (  # noqa: E402

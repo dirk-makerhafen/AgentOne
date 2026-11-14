@@ -37,7 +37,7 @@ def agent_webapi_call(request, instance_id:int, method:str):
         
     try:
         session = SessionModel.objects.get(pk=int(instance_id))
-    except:
+    except (SessionModel.DoesNotExist, ValueError):
         print("no agent_instance")
         return HttpResponseNotFound()
     session_version = session.latest_session_version
@@ -56,7 +56,7 @@ def agent_webapi_call(request, instance_id:int, method:str):
 def agent_webapi_response(request, call_id:int):
     try:
         agent_task_call = AgentTaskCall.objects.get(pk=int(call_id))
-    except:
+    except (AgentTaskCall.DoesNotExist, ValueError):
         return HttpResponseNotFound()
     response_data = { "call_id": agent_task_call.pk, "status": agent_task_call.status_detail}
     try:
@@ -81,7 +81,7 @@ def agent_webapi_view(request, instance_id:int, method:str):
         
     try:
         agent_instance = SessionModel.objects.get(pk=instance_id)
-    except:
+    except (SessionModel.DoesNotExist, ValueError):
         return HttpResponseNotFound("session not found")
     session_version = agent_instance.latest_session_version
     if not session_version.agent_version.task_definitions.filter(name=method, task_type=TaskType.WEBVIEW).exists():

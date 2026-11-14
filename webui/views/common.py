@@ -692,10 +692,12 @@ def sidebar_context(request, section: str, active_id=None) -> dict:
 
     elif section == "workspaces":
         from server.models.workspace import WorkspaceModel
+        from ui.sidebar.panels.workspaces import build_workspace_tree
 
-        ctx["sidebar_workspaces"] = list(
+        items = list(
             WorkspaceModel.objects.select_related("parent_project").order_by("name")
         )
+        ctx["sidebar_workspaces"] = build_workspace_tree(items)
 
     elif section == "skills":
         from server.models.skills.skill import SkillModel

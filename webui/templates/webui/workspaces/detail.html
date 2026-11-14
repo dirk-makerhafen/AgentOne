@@ -109,6 +109,15 @@
             </div>
 
             <div class="detail-card">
+                <div class="detail-card-title">Dashboard</div>
+                {% if dashboard_content %}
+                <div class="webui-prose">{{ dashboard_content|markdown }}</div>
+                {% else %}
+                <div class="insights-empty">No dashboard yet. Ask the workspace assistant to create <code>dashboard/index.md</code>.</div>
+                {% endif %}
+            </div>
+
+            <div class="detail-card">
                 <div class="detail-card-title">Files</div>
                 <div class="webui-list-row-meta"><code>{{ workspace_root }}</code>{% if workspace_relative_path %} · {{ workspace_relative_path }}{% endif %}</div>
                 {% if workspace_error %}

@@ -183,6 +183,31 @@ def workspace_create(request):
     return redirect("webui:workspace", workspace_id=workspace.pk)
 
 
+
+def _workspace_dashboard_content(workspace) -> str:
+    """Return raw markdown for the workspace dashboard/index.md (or empty)."""
+    path = getattr(workspace, "dashboard_index", None)
+    if path is None:
+        return ""
+    try:
+        if not path.is_file():
+            return ""
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
+    try:
+        import frontmatter
+
+        post = frontmatter.loads(raw)
+        content = (post.content or "").strip()
+        return content if content else raw.strip()
+    except Exception:  # pylint: disable=broad-exception-caught
+        return raw.strip()
+
+
 def workspace_detail(request, workspace_id: int):
     workspace = get_object_or_404(
         WorkspaceModel.objects.select_related("parent_project"), pk=workspace_id
@@ -201,6 +226,7 @@ def workspace_detail(request, workspace_id: int):
     context = {
         "workspace": workspace,
         "sessions": sessions,
+        "dashboard_content": _workspace_dashboard_content(workspace),
         "crons": list(workspace.cron_jobs.filter(is_archived=False).order_by("name")),
         "access": normalize_access(workspace.access),
         "access_form": normalize_access(workspace.access),

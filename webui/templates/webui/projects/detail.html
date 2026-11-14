@@ -108,6 +108,15 @@
             </div>
 
             <div class="detail-card">
+                <div class="detail-card-title">Dashboard</div>
+                {% if dashboard_content %}
+                <div class="webui-prose">{{ dashboard_content|markdown }}</div>
+                {% else %}
+                <div class="insights-empty">No dashboard yet. Ask the project assistant to create <code>dashboard/index.md</code>.</div>
+                {% endif %}
+            </div>
+
+            <div class="detail-card">
                 <div class="detail-card-title">Work items</div>
                 {% for item in work_items %}
                 <a class="webui-list-row" href="{% url 'webui:workitem' item.pk %}">

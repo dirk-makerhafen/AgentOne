@@ -17,7 +17,20 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-import litellm
+
+def _litellm():
+    """Import ``litellm`` lazily.
+
+    ``litellm`` pulls in the whole provider/openai type tree and costs several
+    seconds to import.  This module is imported during Django app startup
+    (``server.admin`` -> ``agent_task_run`` -> ``runtime.rate_limiter``), but
+    the library is only needed when an actual provider error is classified.
+    Keeping the import inside the helpers avoids paying that cost before the
+    web server starts accepting requests.
+    """
+    import litellm  # pylint: disable=import-outside-toplevel
+
+    return litellm
 
 
 #: Health status values (mirrors ``server.models.enums.provider_enums.HealthStatus``).
@@ -155,6 +168,7 @@ def extract_retry_after_seconds(exc) -> float | None:
 def _is_rate_limit(exc, status_code: int | None, message: str) -> bool:
     if status_code in _RATE_LIMIT_STATUS:
         return True
+    litellm = _litellm()
     if isinstance(
         exc,
         (
@@ -184,7 +198,7 @@ def _is_rate_limit(exc, status_code: int | None, message: str) -> bool:
 def _is_model_not_found(exc, status_code: int | None, message: str) -> bool:
     if status_code == 404:
         return True
-    if isinstance(exc, litellm.exceptions.NotFoundError):
+    if isinstance(exc, _litellm().exceptions.NotFoundError):
         return True
     lower = message.lower()
     return "model_not_found" in lower or (
@@ -195,6 +209,7 @@ def _is_model_not_found(exc, status_code: int | None, message: str) -> bool:
 def _is_auth(exc, status_code: int | None) -> bool:
     if status_code in (401, 403):
         return True
+    litellm = _litellm()
     if isinstance(
         exc,
         (
@@ -260,7 +275,7 @@ def classify_llm_error(  # pylint: disable=too-many-return-statements
             sticky=True,
         )
 
-    if status_code == 408 or isinstance(exc, litellm.Timeout):
+    if status_code == 408 or isinstance(exc, _litellm().Timeout):
         return LLMErrorInfo(
             kind="timeout",
             message=message,
@@ -270,7 +285,7 @@ def classify_llm_error(  # pylint: disable=too-many-return-statements
             health_status=HEALTH_DEGRADED,
         )
 
-    if status_code in (400, 422) or isinstance(exc, litellm.exceptions.BadRequestError):
+    if status_code in (400, 422) or isinstance(exc, _litellm().exceptions.BadRequestError):
         config_like = _looks_like_config(message)
         return LLMErrorInfo(
             kind="bad_request",
@@ -292,7 +307,7 @@ def classify_llm_error(  # pylint: disable=too-many-return-statements
             health_status=HEALTH_DEGRADED,
         )
 
-    if isinstance(exc, litellm.exceptions.APIConnectionError):
+    if isinstance(exc, _litellm().exceptions.APIConnectionError):
         return LLMErrorInfo(
             kind="connection",
             message=message,

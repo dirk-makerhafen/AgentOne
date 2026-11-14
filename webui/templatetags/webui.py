@@ -8,6 +8,7 @@ from django import template
 from django.contrib.staticfiles import finders
 from django.templatetags.static import static as static_url
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 
 from webui.markdown import render_markdown
 
@@ -39,10 +40,10 @@ def get_item(mapping, key):
         return None
 
 
-@register.filter(name="markdown")
+@register.filter(name="markdown", is_safe=True)
 def markdown_filter(value) -> str:
     """Render *value* as sanitised markdown (cached)."""
-    return render_markdown(str(value or ""))
+    return mark_safe(render_markdown(str(value or "")))
 
 
 @register.filter(name="reltime")

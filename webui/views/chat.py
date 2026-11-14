@@ -321,7 +321,9 @@ def _panel_context(session_model: SessionModel, tab: str, request=None) -> dict:
     if tab == "workspace":
         context.update(_workspace_context(session_model, request))
     elif tab == "settings":
-        context["setting_rows"] = _session_setting_rows(session_model)
+        setting_rows = _session_setting_rows(session_model)
+        context["setting_rows"] = setting_rows
+        context["setting_sections"] = _setting_sections(setting_rows)
         context.update(_settings_header(session_model))
         context.update(composer_config(session_model))
     elif tab == "capabilities":
@@ -377,6 +379,16 @@ def _settings_header(session_model: SessionModel) -> dict:
         settings_model = getattr(version, "session_settings", None)
         if settings_model is not None and settings_model.aimodel is not None:
             model_name = settings_model.aimodel.name
+    turn_count = ""
+    unattended_turns = ""
+    system_prompt = ""
+    try:
+        runtime = session_model.get_runtime()
+        turn_count = runtime.current_turn_count
+        unattended_turns = runtime.current_unattended_turn_count
+        system_prompt = runtime.system_prompt or ""
+    except Exception:  # pylint: disable=broad-exception-caught
+        log.exception("could not load prompt details for session %s", session_model.pk)
     return {
         "settings_name": session_model.name,
         "settings_active": session_model.is_active,
@@ -389,6 +401,9 @@ def _settings_header(session_model: SessionModel) -> dict:
         "settings_model_name": model_name,
         "settings_version_number": version_number,
         "settings_version_is_latest": version_is_latest,
+        "settings_turn_count": turn_count,
+        "settings_unattended_turns": unattended_turns,
+        "settings_system_prompt": system_prompt,
     }
 
 
@@ -496,6 +511,42 @@ _SESSION_INTEGER_SETTINGS = {
     "auto_compact_idle_seconds", "auto_compact_keep_percent", "priority",
 }
 
+#: Cards shown in the Settings tab, in order.  Every field is editable in
+#: place (auto-saved on change), so the groups are purely visual.
+_SESSION_SETTING_GROUPS = (
+    (
+        "Behavior",
+        (
+            "precision",
+            "reasoning_effort",
+            "scheduler_strategy",
+            "tool_call_syntax",
+            "subagentResultDelivery",
+            "inherit_system_prompt",
+        ),
+    ),
+    (
+        "Limits",
+        (
+            "max_turns",
+            "max_unattended_turns",
+            "max_history_messages",
+            "max_retries",
+            "priority",
+        ),
+    ),
+    (
+        "Compaction",
+        (
+            "auto_compact_max_tokens",
+            "auto_compact_min_tokens",
+            "auto_compact_idle_seconds",
+            "auto_compact_keep_percent",
+        ),
+    ),
+    ("Access", ("access",)),
+)
+
 
 def _display_setting(value) -> str:
     if value is None:
@@ -570,6 +621,22 @@ def _session_setting_rows(session_model: SessionModel) -> list[dict]:
     return rows
 
 
+def _setting_sections(rows: list[dict]) -> list[dict]:
+    """Group the session setting rows into readable cards."""
+    by_name = {row["name"]: row for row in rows}
+    sections = []
+    for title, names in _SESSION_SETTING_GROUPS:
+        group_rows = [by_name[name] for name in names if name in by_name]
+        if not group_rows:
+            continue
+        sections.append({
+            "title": title,
+            "rows": group_rows,
+            "overridden": sum(1 for row in group_rows if row["overridden"]),
+        })
+    return sections
+
+
 def _capability_sections(session_model: SessionModel) -> list[dict]:
     try:
         runtime = session_model.get_runtime()
@@ -591,7 +658,16 @@ def _capability_sections(session_model: SessionModel) -> list[dict]:
         except Exception:  # pylint: disable=broad-exception-caught
             log.exception("could not resolve %s capabilities for session %s", title, session_model.pk)
             rows = []
-        sections.append({"title": title, "rows": rows})
+        allowed_names = [row["name"] for row in rows if row["allowed"]]
+        denied_names = [row["name"] for row in rows if not row["allowed"]]
+        sections.append({
+            "title": title,
+            "rows": rows,
+            "allowed": allowed_names,
+            "denied": denied_names,
+            "allowed_count": len(allowed_names),
+            "denied_count": len(denied_names),
+        })
     return sections
 
 
@@ -1021,6 +1097,15 @@ def chat_config(request, session_id: int):
     session_model = get_object_or_404(SessionModel, pk=session_id)
     try:
         runtime = session_model.get_runtime()
+        if "name" in request.POST:
+            name = (request.POST.get("name") or "").strip()
+            if name and name != session_model.name:
+                session_model.name = name
+                session_model.save(update_fields=["name"])
+                version = session_model.latest_session_version
+                if version is not None:
+                    version.display_name = name
+                    version.save(update_fields=["display_name"])
         if "model" in request.POST:
             model_name = (request.POST.get("model") or "").strip()
             if model_name:

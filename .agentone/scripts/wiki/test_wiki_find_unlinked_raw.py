@@ -1,4 +1,9 @@
-from wiki_find_unlinked_raw import _extract_date_from_path
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".agentone", "agents", "wiki", "scripts")))
+
+from wiki_checks import _extract_date_from_path
 
 
 def test_extract_date_from_path():

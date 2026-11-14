@@ -49,6 +49,7 @@ def project_detail(request, project_id: int):
     project = get_object_or_404(Project, pk=project_id)
     context = {
         "project": project,
+        "dashboard_content": _project_dashboard_content(project),
         "workspaces": list(project.workspaces.order_by("name")),
         "agents": list(project.child_agents.select_related("latest_agent_version").order_by("name")),
         "sessions": list(
@@ -69,6 +70,31 @@ def project_detail(request, project_id: int):
     context.update(assistant_panel_context("project", project, request.GET.get("assistant_session")))
     return render_page(request, "projects", "webui/projects/detail.html", context,
                        active_id=project.pk)
+
+
+
+def _project_dashboard_content(project) -> str:
+    """Return raw markdown for the project dashboard/index.md (or empty)."""
+    path = getattr(project, "dashboard_index", None)
+    if path is None:
+        return ""
+    try:
+        if not path.is_file():
+            return ""
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
+    try:
+        import frontmatter
+
+        post = frontmatter.loads(raw)
+        content = (post.content or "").strip()
+        return content if content else raw.strip()
+    except Exception:  # pylint: disable=broad-exception-caught
+        return raw.strip()
 
 
 def _manifest_in_workspace(project: Project) -> bool:

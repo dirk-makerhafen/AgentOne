@@ -2,6 +2,7 @@
 <div class="composer-footer" id="composer-footer"
      hx-get="{% url 'webui:chat_composer_footer' session.pk %}"
      hx-trigger="sse:SessionModel.pk:{{ session.pk }} delay:300ms, sse:AgentTaskCall.session:{{ session.pk }} delay:300ms"
+     hx-target="this"
      hx-swap="outerHTML">
     <button class="webui-cmd-btn" type="button" data-cmd-toggle
             title="Slash commands" aria-label="Slash commands">/</button>
