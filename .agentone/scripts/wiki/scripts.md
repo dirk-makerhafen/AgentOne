@@ -21,5 +21,4 @@ tools:
     function: wiki_lint
     bound: True
 
-
 ---

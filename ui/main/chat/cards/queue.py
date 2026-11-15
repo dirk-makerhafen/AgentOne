@@ -77,6 +77,9 @@ class QueueCard(PyHtmlView):
         return AgentTaskCall.objects.filter(
             session=self.subject.model,
             status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+            task_definition__name__in=(
+                "ingest_user_message", "ingest_slash_command",
+            ),
         ).order_by("created_at")
 
     @property

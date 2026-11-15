@@ -36,7 +36,7 @@ def _resolve_folder(_session: Session, folder: str | None = None) -> str | None:
     return None
 
 
-def wiki_query(_session: Session, question: str, folder: str | None = None, blocking: bool = False) -> dict[str, Any]:
+def wiki_query(_session: Session, question: str, folder: str | None = None, blocking: bool = True) -> dict[str, Any]:
     """Send a question to the memory wiki.
 
     When *blocking* is ``True`` the answer is returned directly.
@@ -49,7 +49,7 @@ def wiki_query(_session: Session, question: str, folder: str | None = None, bloc
         folder: Optional wiki root path. When omitted and there is exactly
             one subsession with agent type ``wiki``, its workspace is used.
         blocking: ``True`` to wait for the answer, ``False`` to submit and
-            receive the answer later. Defaults to ``False``.
+            receive the answer later. Defaults to ``True``.
 
     Returns:
         A dict indicating the command was sent.

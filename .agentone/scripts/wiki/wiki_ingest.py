@@ -36,7 +36,7 @@ def _resolve_folder(_session: Session, folder: str | None = None) -> str | None:
     return None
 
 
-def wiki_ingest(_session: Session, source: str, folder: str | None = None, blocking: bool = False) -> dict[str, Any]:
+def wiki_ingest(_session: Session, source: str, folder: str | None = None, blocking: bool = True) -> dict[str, Any]:
     """Send an ``ingest`` command to a wiki subagent session.
 
     When *blocking* is ``True`` the command's result is returned directly.
@@ -49,7 +49,7 @@ def wiki_ingest(_session: Session, source: str, folder: str | None = None, block
         folder: Optional wiki root path. When omitted and there is exactly
             one subsession with agent type ``wiki``, its workspace is used.
         blocking: ``True`` to wait for the result, ``False`` to submit and
-            receive the result later. Defaults to ``False``.
+            receive the result later. Defaults to ``True``.
 
     Returns:
         A dict indicating the command was sent.
