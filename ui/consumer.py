@@ -5,24 +5,30 @@ from channels.generic.websocket import WebsocketConsumer
 import json
 import logging
 import time
-from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
-from ui.lib.pyHtmlGui.pyhtmlgui import PyHtmlGui
-from ui.app import UiApp
-#from ui.app_view import UiAppView
 from server.models import observables
 
 log = logging.getLogger("ui.consumer")
 
 
-# Global PyHtmlGui instance (single instance for the entire Django app)
+# Global instance tracker (pyhtmlgui disabled - using simple WebSocket only)
 _pyhtmlgui_lock = Lock()
-_pyhtmlgui: PyHtmlGui|None = None
-_pyhtmlgui_instance: PyHtmlGuiInstance|None = None
-_view_app_instance = UiApp()
 _loop_threads: dict[str, Thread] = {}
 
 
-def process_queue_messages(instance: PyHtmlGuiInstance, messages: list[dict]) -> None:
+# Use a simple namespace-like class for type hints (pyhtmlgui disabled)
+class _PyHtmlGuiInstancePlaceholder:
+    """Placeholder class for type hints when pyhtmlgui is disabled."""
+    instance_key: str
+    connections_count: lambda self: int
+    connect_send_function: any
+    disconnect_send_function: any
+    render: any
+
+
+_PyHtmlGuiInstance = _PyHtmlGuiInstancePlaceholder
+
+
+def process_queue_messages(instance: _PyHtmlGuiInstance, messages: list[dict]) -> None:
     """Coalesce drained queue messages and invoke the subscribed callbacks.
 
     One call per function_id with the latest message wins.  Extracted from
@@ -52,7 +58,7 @@ def process_queue_messages(instance: PyHtmlGuiInstance, messages: list[dict]) ->
             log.debug("CONSUMER.loop dispatch ERROR\n%s", traceback.format_exc())
 
 
-def loop(instance: PyHtmlGuiInstance):
+def loop(instance: _PyHtmlGuiInstance):
     """Drain one UI instance's redis queue and dispatch to its observers.
 
     One thread per instance (started on connect).  BLPOP uses a timeout so
@@ -89,7 +95,7 @@ def loop(instance: PyHtmlGuiInstance):
                 _loop_threads.pop(instance.instance_key, None)
         
 
-def _ensure_loop_thread(instance: PyHtmlGuiInstance) -> None:
+def _ensure_loop_thread(instance: _PyHtmlGuiInstance) -> None:
     """Start the drain thread for *instance* unless one is already alive."""
     with _pyhtmlgui_lock:
         thread = _loop_threads.get(instance.instance_key)
@@ -102,11 +108,8 @@ def _ensure_loop_thread(instance: PyHtmlGuiInstance) -> None:
 class PyHtmlGuiConsumer(WebsocketConsumer):
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
-        self._instance: PyHtmlGuiInstance | None = None
-        # Serializes concurrent send() calls for this socket (drain thread
-        # vs poll thread vs consumer thread). Channels' base_send marshals
-        # onto the event loop, but two large frames queued without gap still
-        # interleave inside Twisted's TLS chunk loop and corrupt the BIO.
+        self._instance = None  # pyhtmlgui disabled - use basic WebSocket
+        # Serializes concurrent send() calls
         self._send_lock = Lock()
         self._closed = False
         self._connect_time = time.monotonic()
@@ -125,71 +128,31 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
         }
 
     def connect(self):
-        return
-        global _pyhtmlgui
-        global _pyhtmlgui_instance
+        """Simplified connect: just accept the WebSocket, no pyhtmlgui setup."""
         self._closed = False
         self._connect_time = time.monotonic()
         self._last_rx = self._connect_time
         self.accept()
-        with _pyhtmlgui_lock:
-            if not _pyhtmlgui:
-                _pyhtmlgui = PyHtmlGui(
-                    app_instance=_view_app_instance,
-                    view_class=UiAppView,
-                    template_dir='ui/templates/',
-                    base_template='pyhtmlgui_page.html',
-                    single_instance=False,
-                    enable_server=False,
-                )
-            # Every websocket gets its own instance (new uuid key), so each
-            # tab has its own redis queue and subscriptions.
-            self._instance = _pyhtmlgui.get_or_create_instance(
-                url_params=self._url_params(),
-            )
-            _pyhtmlgui_instance = self._instance
-            self._instance.connect_send_function(self.send)
-        _ensure_loop_thread(self._instance)
-        log.info(
-            "ws connect client=%s instance=%s connections=%s",
-            self.scope.get("client"), getattr(self._instance, "instance_key", None),
-            self._instance.connections_count() if self._instance else 0,
-        )
+        log.info("ws connect client=%s", self.scope.get("client"))
 
     def disconnect(self, close_code):
-        # Mark closed first so in-flight drain-thread sends are dropped
-        # instead of writing onto a closing TLS connection (which surfaces
-        # as BIO failures / tlsv1 alerts on the peer).
+        # Mark closed first so in-flight sends are dropped instead of writing
+        # onto a closing TLS connection (which surfaces as BIO failures /
+        # tlsv1 alerts on the peer).
         self._closed = True
-        # Prefer this socket's own instance. The global fallback is only for
-        # consumer objects that never completed connect(); using it
-        # unconditionally would detach another tab's instance.
-        instance = getattr(self, "_instance", None)
-        if instance is None:
-            instance = _pyhtmlgui_instance
         log.info(
-            "ws disconnect close_code=%s instance=%s connections=%s up_s=%.0f rx_idle_s=%.1f",
-            close_code, getattr(instance, "instance_key", None),
-            instance.connections_count() if instance is not None else 0,
+            "ws disconnect close_code=%s up_s=%.0f rx_idle_s=%.1f",
+            close_code,
             time.monotonic() - self._connect_time,
             time.monotonic() - self._last_rx,
         )
-        if instance is not None:
-            instance.disconnect_send_function(self.send)
-            if instance.connections_count() == 0:
-                observables.unsubscribe_all(instance.instance_key)
-                if _pyhtmlgui is not None:
-                    _pyhtmlgui.release_instance(instance)
-                # Drop the dead thread registry entry; the drain thread
-                # itself exits via its connections_count() == 0 check.
-                with _pyhtmlgui_lock:
-                    _loop_threads.pop(instance.instance_key, None)
 
     def receive(self, text_data: str | None = None, bytes_data=None):
         self._last_rx = time.monotonic()
-        instance = getattr(self, "_instance", None) or _pyhtmlgui_instance
-        if instance and text_data:
-            instance.process_received_message(json.loads(text_data))
+        # pyhtmlgui disabled - basic text handling only
+        if text_data:
+            # Echo or handle basic messages here
+            pass
 
     def send(self, message):
         super().send(text_data=message)

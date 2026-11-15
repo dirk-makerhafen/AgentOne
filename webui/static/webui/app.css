@@ -555,6 +555,7 @@ a.insights-stat:hover { border-color: var(--accent); }
 }
 .webui-dropdown-item {
     display: block;
+    width: 100%;
     padding: 7px 12px;
     color: var(--text);
     font-size: 11px;
@@ -562,10 +563,34 @@ a.insights-stat:hover { border-color: var(--accent); }
     text-decoration: none;
     white-space: nowrap;
     transition: background .1s;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
 }
 .webui-dropdown-item:hover {
     background: var(--accent-bg);
     color: var(--accent-text);
+}
+
+/* Download hint ------------------------------------------------------------ */
+.webui-download-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent);
+    border-radius: 7px;
+    animation: webui-pulse 1.5s ease-in-out infinite;
+}
+@keyframes webui-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
 }
 
 .webui-icon-btn {

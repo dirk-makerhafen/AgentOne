@@ -22,6 +22,7 @@ class WebuiLoginRequiredMiddleware:
             getattr(settings, "WEBUI_LOGIN_REQUIRED", True)
             and request.path.startswith("/app/")
             and not request.user.is_authenticated
+            and not request.path.startswith("/app/sse/")
         ):
             return redirect_to_login(request.get_full_path())
         return self.get_response(request)

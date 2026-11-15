@@ -1,8 +1,6 @@
 <div class="msg-row webui-response-row" data-role="assistant" data-pk="{{ row.obj.pk }}">
     <details class="query-card response-card{% if row.obj.status == 'ACTIVE' %} query-active{% endif %}"
-             data-open-key="response-{{ row.obj.pk }}" open
-             hx-ext="sse"
-             sse-connect="{% url 'webui:sse' %}?scope=session:{{ session.pk }}">
+             data-open-key="response-{{ row.obj.pk }}" open>
         <summary class="query-card-header">
             <span class="card-icon">✎</span>
             <span class="card-title">Response</span>

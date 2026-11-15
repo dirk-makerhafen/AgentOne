@@ -46,8 +46,6 @@
 
         {% if row.body_html %}
         <div class="assistant-segment"
-             hx-ext="sse"
-             sse-connect="{% url 'webui:sse' %}?scope=session:{{ session.pk }}"
              hx-get="{% url 'webui:thread' session.pk %}?limit=1&around={{ row.obj.pk }}"
              hx-trigger="sse:Message.session:{{ session.pk }} delay:150ms"
              hx-target="this"

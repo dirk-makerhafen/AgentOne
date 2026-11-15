@@ -1,6 +1,4 @@
 <div id="thread" class="messages"
-     hx-ext="sse"
-     sse-connect="{% url 'webui:sse' %}?scope=session:{{ session.pk }}"
      hx-swap="innerHTML"
      hx-sync="this:replace">
     {% include "webui/chat/_thread_inner.html" %}

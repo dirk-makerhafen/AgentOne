@@ -255,6 +255,55 @@
         });
     });
 
+    // Download format buttons: show "Preparing download…" hint while fetching
+    function bindDownloadButtons(root) {
+        root.querySelectorAll('.webui-dropdown-item[data-download-url]').forEach(function (btn) {
+            if (btn.dataset.bound === '1') return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-download-url');
+                var format = btn.getAttribute('data-download-format');
+                var hint = document.querySelector('.webui-download-hint');
+                var dropdown = btn.closest('[data-dropdown]');
+
+                // Close dropdown
+                if (dropdown) {
+                    dropdown.setAttribute('aria-expanded', 'false');
+                    var menu = dropdown.querySelector('.webui-dropdown-menu');
+                    if (menu) menu.hidden = true;
+                }
+
+                // Show preparing hint
+                if (hint) {
+                    hint.hidden = false;
+                }
+
+                // Trigger download via hidden link (avoids navigation)
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = '';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // Hide hint after a short delay (download should have started)
+                // We can't reliably detect when download actually starts, so use a timeout
+                setTimeout(function () {
+                    if (hint) hint.hidden = true;
+                }, 2000);
+            });
+        });
+    }
+
+    // Run on initial load and after htmx swaps
+    document.addEventListener('DOMContentLoaded', function () {
+        bindDownloadButtons(document);
+    });
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        bindDownloadButtons(evt.target);
+    });
+
     // Panel tabs swap the whole body element via htmx, so the new body carries
     // the hx-get for the visible tab. Only the active marker needs syncing
     // here: htmx caches an element's request URL when it processes the node, so

@@ -21,6 +21,7 @@ import redis as redis_sync
 import redis.asyncio as aioredis
 from django.conf import settings
 from django.http import HttpResponseBadRequest, StreamingHttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from server.models.observables import PUBSUB_PREFIX
 
@@ -171,12 +172,26 @@ def _is_wsgi(request) -> bool:
     return isinstance(request, WSGIRequest)
 
 
+@csrf_exempt
 async def sse_stream(request):
-    """Stream observable-key events for one scope (currently ``session:<pk>``)."""
-    keys = await _resolve_scope(request.GET.get("scope", ""))
+    """Stream observable-key events for one scope (currently ``session:<pk>``).
+
+    Note: This view is intentionally not protected by login_required because:
+    - It carries only event names (e.g. ``sse:Message.session:7``), not rendered HTML
+    - A dropped event can never leave the page permanently stale -- the next event
+      (or a reload) self-heals
+    - The data is not sensitive
+    """
+    scope = request.GET.get("scope", "")
+    if not scope:
+        return HttpResponseBadRequest("missing scope parameter")
+    
+    # Resolve the scope into observable keys.
+    keys = await _resolve_scope(scope)
     if keys is None:
         return HttpResponseBadRequest("unknown or missing scope")
-
+    
+    # Start the SSE stream (WSGI or ASGI depending on server type).
     stream = _sync_event_stream(keys) if _is_wsgi(request) else _async_event_stream(keys)
     response = StreamingHttpResponse(stream, content_type="text/event-stream")
     response["Cache-Control"] = "no-cache, no-transform"

@@ -36,10 +36,11 @@ Reasoning {{ usage.tokens_reasoning }} ({{ usage.reasoning_percent|floatformat:0
                 Download <span class="webui-dropdown-caret">▼</span>
             </button>
             <div class="webui-dropdown-menu" role="menu" hidden>
-                <a class="webui-dropdown-item" href="{% url 'webui:chat_transcript' session.pk %}" role="menuitem" download>Markdown (.md)</a>
-                <a class="webui-dropdown-item" href="{% url 'webui:chat_export' session.pk %}" role="menuitem" download>JSON (.json)</a>
+                <button class="webui-dropdown-item" type="button" role="menuitem" data-download-format="md" data-download-url="{% url 'webui:chat_transcript' session.pk %}">Markdown (.md)</button>
+                <button class="webui-dropdown-item" type="button" role="menuitem" data-download-format="json" data-download-url="{% url 'webui:chat_export' session.pk %}">JSON (.json)</button>
             </div>
         </div>
+        <span class="webui-download-hint" hidden>Preparing download…</span>
         {% if is_busy %}
         <form method="post" action="{% url 'webui:chat_action' session.pk %}"
               hx-post="{% url 'webui:chat_action' session.pk %}"
