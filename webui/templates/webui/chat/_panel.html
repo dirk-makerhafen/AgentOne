@@ -7,19 +7,17 @@
         <button class="webui-icon-btn" type="button" data-panel-toggle title="Close panel" aria-label="Close panel">×</button>
     </div>
     <nav class="webui-panel-tabs" aria-label="Session panel tabs">
+        {# Swap the whole body element: htmx caches each element's request URL #}
+        {# at process time, so an in-place hx-get edit would not move the SSE #}
+        {# refresh and the panel would snap back to the first tab. #}
         {% for key, label in panel_tabs %}
         <button type="button"
                 class="webui-panel-tab{% if key == active_panel_tab %} active{% endif %}"
-                hx-get="{% url 'webui:chat_panel_tab' session.pk key %}"
+                hx-get="{% url 'webui:chat_panel_body' session.pk key %}"
                 hx-target="#chat-panel-body"
-                hx-swap="innerHTML"
+                hx-swap="outerHTML"
                 hx-sync="#chat-panel-body:replace">{{ label }}</button>
         {% endfor %}
     </nav>
-    <div id="chat-panel-body" class="webui-panel-body"
-         hx-get="{% url 'webui:chat_panel_tab' session.pk active_panel_tab %}"
-         hx-trigger="sse:SessionModel.pk:{{ session.pk }} delay:600ms, sse:AgentTaskCall.session:{{ session.pk }} delay:600ms"
-         hx-swap="innerHTML">
-        {% include "webui/chat/_panel_inner.html" with panel_tab=active_panel_tab %}
-    </div>
+    {% include "webui/chat/_panel_body.html" %}
 </aside>

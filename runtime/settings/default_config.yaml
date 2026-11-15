@@ -2,7 +2,7 @@ appearance:
   theme: system
   skin: default
   font_size: default
-  workspace_panel_open: false
+  workspace_panel_open: true
 
 preferences:
   default_model: ""

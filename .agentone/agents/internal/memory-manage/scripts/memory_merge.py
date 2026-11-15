@@ -34,6 +34,73 @@ import paths as mempaths
 import sources as memsources
 
 
+#: Shared output contract for every layer.  Appended to each layer prompt so
+#: the three variants cannot drift apart on the playbook schema.
+PLAYBOOK_OUTPUT = '''
+## Self-improvement output (required format)
+
+`reflection.md` is the *playbook*: YAML frontmatter plus an optional
+human-readable body. Every behavioural lesson is one directive with a stable
+fingerprint, so repeats merge instead of piling up.
+
+```
+---
+schema: agentone.playbook/1
+directives:
+  - id: PB-1a2b3c4d
+    fingerprint: stop-after-empty-dispatches
+    rule: "Stop calling memory_merge after two consecutive empty dispatches."
+    trigger: "running a memory tick"
+    routing: prompt
+    status: active
+    support: 2
+    evidence: [session:12355, session:23826]
+    verification: "No memory_merge call follows an empty result."
+---
+```
+
+Directive rules:
+
+- `routing` names the lightest place the fix belongs: `prompt` (a line of
+  guidance), `skill` (a multi-step procedure), `tool` (a deterministic
+  operation), `script` (standalone code the agent runs with its shell),
+  `harness` (a platform bug) or `memory` (a fact, not a rule).
+- `status: active` needs evidence. A one-off hunch stays `candidate`.
+- One sentence per directive. A procedure that needs steps, examples or
+  templates belongs in `improvements.md` as a `skill` proposal; the directive
+  only says when to load it.
+- Keep a `retired` directive with a short note instead of deleting it, so the
+  same dead lesson is not rediscovered and re-added.
+- Task-specific detail does not belong here; that is `memory.md`.
+
+Anything bigger than a behavioural rule goes to `improvements.md` (schema
+`agentone.improvements/1`):
+
+```
+---
+schema: agentone.improvements/1
+proposals:
+  - id: IMP-4a2f1c90
+    fingerprint: memory-merge-settings-override
+    kind: harness
+    scope: global
+    status: candidate
+    trigger: "memory_merge rejects settings_overrides"
+    summary: "Transient failure is a harness bug, not an agent rule"
+    detail: "spawn_subagent nests settings_overrides; pass access= instead."
+    acceptance: "No agent workaround is recorded for this failure."
+    evidence: [session:23826]
+---
+```
+
+`kind` is one of `prompt`, `system_prompt`, `skill`, `tool`, `script`,
+`harness`. Use `scope` to say where the change belongs (`task`, `agent`,
+`project`, `workspace`, `global`). A proposal states *what* should change and
+how to verify it — never executable code, and never a patch to the harness.
+The harness only records proposals; a human or a coding agent implements them.
+'''
+
+
 AGENT_PROMPT = '''
 # Agent memory synthesis
 
@@ -68,12 +135,13 @@ lessons about doing that task.
 - environment and tooling facts the next agent would otherwise rediscover
 - recurring traps and how to avoid them
 
-`{{target_dir}}/reflection.md` — how this agent should work:
+`{{target_dir}}/reflection.md` — this agent's playbook: how it should work.
 
 - patterns that repeatedly succeed
 - mistakes that keep recurring and their fix
 - delegation habits and sequencing that worked
 - user preferences that apply across its tasks
+- pointers to skills, tools or scripts that replace a long procedure
 
 ## Rules
 
@@ -89,7 +157,12 @@ lessons about doing that task.
 - The harness marks this node processed when your session ends. Do not advance
   the manifest yourself: write both files, call `final_result` with a one-line
   summary, and stop.
-'''
+- Write `improvements.md` whenever the sources contain a change that is bigger
+  than a behavioural rule. Omit it when there is nothing to propose.
+- The harness normalizes your playbook (stable IDs, dedupe by fingerprint,
+  caps). Malformed new-format frontmatter is rejected and the node stays
+  pending, so keep the YAML shape exactly.
+''' + PLAYBOOK_OUTPUT
 SCOPE_PROMPT = '''
 # Scope memory synthesis
 
@@ -121,12 +194,14 @@ baseline you are updating, not as the only truth.
 - conventions and decisions that hold across agents and child scopes
 - relationships between child scopes and where responsibility sits
 
-`{{target_dir}}/reflection.md` — cross-agent lessons:
+`{{target_dir}}/reflection.md` — the cross-agent playbook for this scope:
 
 - coordination patterns that work (and the ones that do not)
 - recurring failures and their fixes
 - preferences that should shape how work is done here
 - what to check first when something in this scope breaks
+- capabilities that are missing here and should be proposed in
+  `improvements.md`
 
 ## Rules
 
@@ -142,7 +217,12 @@ baseline you are updating, not as the only truth.
 - The harness marks this node processed when your session ends. Do not advance
   the manifest yourself: write both files, call `final_result` with a one-line
   summary, and stop.
-'''
+- Write `improvements.md` whenever the sources contain a change that is bigger
+  than a behavioural rule. Omit it when there is nothing to propose.
+- The harness normalizes your playbook (stable IDs, dedupe by fingerprint,
+  caps). Malformed new-format frontmatter is rejected and the node stays
+  pending, so keep the YAML shape exactly.
+''' + PLAYBOOK_OUTPUT
 TASK_PROMPT = '''
 # Task memory synthesis
 
@@ -179,11 +259,13 @@ well:
 - environment specifics, gotchas, and approaches that failed
 - open threads and how they were resolved (or what is still pending)
 
-`{{target_dir}}/reflection.md` — how to do this task better:
+`{{target_dir}}/reflection.md` — the playbook for this task: how to do it
+better.
 
 - recurring mistakes and the fix that worked
 - patterns and shortcuts worth reusing
 - user feedback and preferences that should shape future runs
+- procedures that are big enough to become a skill or a script
 
 ## Rules
 
@@ -199,7 +281,12 @@ well:
 - The harness marks this node processed when your session ends. Do not advance
   the manifest yourself: write both files, call `final_result` with a one-line
   summary, and stop.
-'''
+- Write `improvements.md` whenever the sources contain a change that is bigger
+  than a behavioural rule. Omit it when there is nothing to propose.
+- The harness normalizes your playbook (stable IDs, dedupe by fingerprint,
+  caps). Malformed new-format frontmatter is rejected and the node stays
+  pending, so keep the YAML shape exactly.
+''' + PLAYBOOK_OUTPUT
 
 _PROMPTS = {
     "task": TASK_PROMPT,

@@ -15,6 +15,7 @@ from typing import Any
 
 import paths as mempaths
 import sources as memsources
+from playbook import normalize_node
 
 #: Files a synthesis run must produce before the manifest may advance.
 OUTPUT_FILES = ("memory.md", "reflection.md")
@@ -103,6 +104,23 @@ def finalize_memory(
                 }
 
     try:
+        normalized, playbook_report = normalize_node(path)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        return False, {
+            "status": "error",
+            "message": f"playbook normalization failed: {exc}",
+            "files": written,
+        }
+    if not normalized:
+        return False, {
+            "status": "error",
+            "message": playbook_report.get("message")
+            or "reflection.md / improvements.md are malformed",
+            "files": written,
+            "playbook": playbook_report,
+        }
+
+    try:
         if not mark_processed(path):
             return False, {
                 "status": "error",
@@ -120,5 +138,6 @@ def finalize_memory(
         "status": "success",
         "target_dir": path.as_posix(),
         "files": written,
+        "playbook": playbook_report,
         "message": "manifest advanced; this node is now current",
     }

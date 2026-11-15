@@ -230,8 +230,11 @@
         });
     }
 
-    // Panel tabs swap the body via htmx, but the active marker and the SSE
-    // refetch URL live outside that fragment, so keep them in sync here.
+    // Panel tabs swap the whole body element via htmx, so the new body carries
+    // the hx-get for the visible tab. Only the active marker needs syncing
+    // here: htmx caches an element's request URL when it processes the node, so
+    // rewriting hx-get on the old body would leave SSE refreshes on the tab
+    // that was rendered with the page.
     function bindPanelTabs(root) {
         root.querySelectorAll('.webui-panel-tab').forEach(function (btn) {
             if (btn.dataset.bound === '1') return;
@@ -243,9 +246,6 @@
                         other.classList.toggle('active', other === btn);
                     });
                 }
-                var body = document.getElementById('chat-panel-body');
-                var url = btn.getAttribute('hx-get');
-                if (body && url) body.setAttribute('hx-get', url);
             });
         });
     }
@@ -1064,4 +1064,85 @@
         document.body.classList.remove('resizing');
         window._panelDragging = false;
     });
+})();
+
+// Preserve scroll positions across full-page posts and reloads.
+// Form actions (cancel, toggle, save, ...) do a POST + redirect back to the
+// same URL; without this every nested scroll container would reset to the top.
+(function () {
+    'use strict';
+    var KEY = 'agentone:scroll';
+    var MAX_CONTAINERS = 25;
+
+    function currentUrl() {
+        return window.location.pathname + window.location.search;
+    }
+
+    function currentPath() {
+        return window.location.pathname;
+    }
+
+    function elementPath(el) {
+        var parts = [];
+        while (el && el !== document.body && el.parentElement) {
+            var index = 1;
+            var sibling = el;
+            while ((sibling = sibling.previousElementSibling)) {
+                if (sibling.tagName === el.tagName) index += 1;
+            }
+            parts.unshift(el.tagName.toLowerCase() + ':nth-of-type(' + index + ')');
+            el = el.parentElement;
+        }
+        return parts.length ? 'body>' + parts.join('>') : '';
+    }
+
+    function captureScroll() {
+        var positions = [];
+        var doc = document.scrollingElement || document.documentElement;
+        if (doc && doc.scrollTop) positions.push({document: true, top: doc.scrollTop});
+        var nodes = document.querySelectorAll('body *');
+        for (var i = 0; i < nodes.length && positions.length < MAX_CONTAINERS; i += 1) {
+            var el = nodes[i];
+            if (!el.scrollTop || el.scrollHeight <= el.clientHeight) continue;
+            var path = elementPath(el);
+            if (path) positions.push({path: path, top: el.scrollTop});
+        }
+        try {
+            window.sessionStorage.setItem(KEY, JSON.stringify({
+                url: currentUrl(),
+                path: currentPath(),
+                positions: positions
+            }));
+        } catch (err) { /* private mode */ }
+    }
+
+    function restoreScroll() {
+        var raw;
+        try { raw = window.sessionStorage.getItem(KEY); } catch (err) { return; }
+        if (!raw) return;
+        try { window.sessionStorage.removeItem(KEY); } catch (err) { /* private mode */ }
+        var saved;
+        try { saved = JSON.parse(raw); } catch (err) { return; }
+        if (!saved || saved.path !== currentPath()) return;
+        (saved.positions || []).forEach(function (entry) {
+            if (entry.document) {
+                var doc = document.scrollingElement || document.documentElement;
+                if (doc) doc.scrollTop = entry.top;
+                return;
+            }
+            var target = null;
+            try { target = document.querySelector(entry.path); } catch (err) { target = null; }
+            if (target) target.scrollTop = entry.top;
+        });
+    }
+
+    window.addEventListener('pagehide', captureScroll);
+    window.addEventListener('pageshow', function (evt) {
+        if (evt.persisted) {
+            try { window.sessionStorage.removeItem(KEY); } catch (err) { /* private mode */ }
+            return;
+        }
+        restoreScroll();
+    });
+    if (document.readyState === 'complete') restoreScroll();
 })();

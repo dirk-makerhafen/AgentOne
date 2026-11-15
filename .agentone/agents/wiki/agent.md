@@ -46,6 +46,7 @@ sessionBootstrap: |
 
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
+memoryPlaybook: true
 ---
 
 # My Second Brain - Wiki Maintainer Rules

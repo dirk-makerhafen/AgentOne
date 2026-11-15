@@ -702,7 +702,8 @@ def sidebar_context(request, section: str, active_id=None) -> dict:
     elif section == "skills":
         from server.models.skills.skill import SkillModel
 
-        qs = SkillModel.objects.all()
+        show_archived = request.GET.get("archived") == "1"
+        qs = SkillModel.objects.filter(is_archived=show_archived)
         if project_id is not None:
             qs = qs.filter(parent_project_id=project_id)
         ctx["sidebar_skills"] = list(
@@ -710,6 +711,7 @@ def sidebar_context(request, section: str, active_id=None) -> dict:
                 "parent_agent", "parent_project", "parent_skill", "latest_skill_version"
             ).order_by("name")
         )
+        ctx["show_archived"] = show_archived
 
     elif section == "cron":
         from server.models.cron import Cronjob

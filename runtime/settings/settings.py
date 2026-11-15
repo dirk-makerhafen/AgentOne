@@ -13,7 +13,7 @@ DEFAULT_CONFIG = {
         "theme": "system",
         "skin": "default",
         "font_size": "default",
-        "workspace_panel_open": False,
+        "workspace_panel_open": True,
     },
     "preferences": {
         "default_model": "",

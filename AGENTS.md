@@ -12,6 +12,7 @@ Quick reference for developers working on AgentOne. See also:
 - [docs/models.md](docs/models.md) — model reference (all ~30 models including DataCollection)
 - [docs/terminals.md](docs/terminals.md) — persistent tmux terminals + external CLI agents (tools, allowlist, guardrails, UI tab)
 - [docs/browser.md](docs/browser.md) — Camoufox browser capability (daemon, session/tab scope, approvals, config)
+- [docs/self-improvement.md](docs/self-improvement.md) — reflection → playbook → capability/harness loop, `memoryPlaybook` injection
 
 ## Directory ownership
 

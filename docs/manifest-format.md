@@ -57,6 +57,7 @@ autoload:                      # optional — AGENTS.md autoload (see below)
   maxFiles: 10                 # max files pinned into context
   maxChars: 32768              # total char budget (0 = disable contents)
   maxCharsPerFile: 8192        # per-file char cap (remainder truncated with marker)
+memoryPlaybook: true             # pin synthesized reflection.md directives + skill catalog (see below)
 sessionBootstrap: |             # optional — one template per agent; inherited parent-first
   Workspace: {{workspace_dir}}
   Session folder: {{session_dir}}
@@ -103,6 +104,7 @@ Agent body content goes here — used as the system prompt.
 | `disallowed*` | list | Denied item names |
 | `access` | dict | Filesystem access policy (see [Access Policy](#access-policy)) |
 | `autoload` | dict | AGENTS.md autoload (see [Autoload](#autoload)) |
+| `memoryPlaybook` | bool \| dict | Pin synthesized memory-playbook directives and the assigned-skill catalog at session start (default false — opt-in; see [Memory playbook](#memory-playbook)) |
 | `sessionBootstrap` | string | Optional bootstrap template, rendered once per compaction segment; inherited through `extends`, parent-first (see [Session bootstrap](#session-bootstrap)) |
 | `loadGuidanceFileIndex` | bool | Nested guidance-file index toggle (default false — opt-in) |
 | `guidanceFileIndexLimit` | int | Max nested guidance files listed in the index (default 10, 0 = omit) |
@@ -206,6 +208,28 @@ Available variables (missing paths render as `null`):
 
 Rendering is strict: unknown variables fail that template and are logged;
 empty or failed templates are skipped.
+
+### Memory playbook
+
+`memoryPlaybook` turns on injection of the synthesized memory playbook
+(`docs/self-improvement.md`) into the session bootstrap. It is off by
+default and accepts a boolean or a mapping:
+
+```yaml
+memoryPlaybook:
+  enabled: true
+  maxDirectives: 12      # total directives injected
+  maxChars: 4000         # total budget for the message
+  includeCandidates: false   # inject unproven (candidate) directives too
+  includeSkills: true    # append the assigned-skill catalog
+  maxSkills: 12
+```
+
+The renderer resolves task → agent → workspace → project → global
+`reflection.md` files, dedupes directives by fingerprint (most specific
+source wins) and skips `retired`, `harness`-routed and `memory`-routed
+directives. The resulting message is advisory: it cannot add tools or change
+permissions. It is pinned once per compaction segment like `autoload:`.
 
 ### Subagent Entry
 

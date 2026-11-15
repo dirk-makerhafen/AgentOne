@@ -31,7 +31,8 @@ autoload:
   maxCharsPerFile: 8192
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
-tools: [+, core.*, filesystem-read.*, web.*, subagents.*, execution.python]
+memoryPlaybook: true
+tools: [+, core.*, filesystem-read.*, web.*, subagents.*, skills.*, execution.python]
 tasks: [ +,core.*, compact.*,  ]
 subagents:
     - name: researcher

@@ -36,28 +36,41 @@ Reasoning {{ usage.tokens_reasoning }} ({{ usage.reasoning_percent|floatformat:0
         <a class="webui-action-btn" href="{% url 'webui:chat_export' session.pk %}"
            title="Export this session as JSON" download>Export</a>
         {% if is_busy %}
-        <form method="post" action="{% url 'webui:chat_action' session.pk %}">
+        <form method="post" action="{% url 'webui:chat_action' session.pk %}"
+              hx-post="{% url 'webui:chat_action' session.pk %}"
+              hx-target="#chat-header" hx-swap="outerHTML" hx-sync="this:replace">
             {% csrf_token %}<input type="hidden" name="action" value="stop">
+            <input type="hidden" name="surface" value="header">
             <button class="webui-action-btn" type="submit" title="Stop the running turn">Stop</button>
         </form>
         {% endif %}
-        <form method="post" action="{% url 'webui:chat_action' session.pk %}">
+        <form method="post" action="{% url 'webui:chat_action' session.pk %}"
+              hx-post="{% url 'webui:chat_action' session.pk %}"
+              hx-target="#chat-header" hx-swap="outerHTML" hx-sync="this:replace">
             {% csrf_token %}
             <input type="hidden" name="action" value="{% if session.is_paused %}resume{% else %}pause{% endif %}">
+            <input type="hidden" name="surface" value="header">
             <button class="webui-action-btn" type="submit" title="{% if session.is_paused %}Resume this chat{% else %}Pause this chat{% endif %}">
                 {% if session.is_paused %}Resume{% else %}Pause{% endif %}
             </button>
         </form>
-        <form method="post" action="{% url 'webui:chat_action' session.pk %}">
-            {% csrf_token %}<input type="hidden" name="action" value="pin">
+        <form method="post" action="{% url 'webui:chat_action' session.pk %}"
+              hx-post="{% url 'webui:chat_action' session.pk %}"
+              hx-target="#chat-header" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="pin">
+            <input type="hidden" name="surface" value="header">
             <button class="webui-action-btn" type="submit" title="{% if session.is_pinned %}Unpin{% else %}Pin{% endif %} this chat">
                 {% if session.is_pinned %}★{% else %}☆{% endif %}
             </button>
         </form>
         <button class="webui-action-btn" type="button" data-panel-toggle title="Toggle session panel">Panel</button>
         <form method="post" action="{% url 'webui:chat_action' session.pk %}"
-              onsubmit="return confirm('Archive this chat?');">
+              hx-post="{% url 'webui:chat_action' session.pk %}"
+              hx-confirm="Archive this chat?"
+              hx-target="#chat-header" hx-swap="none">
             {% csrf_token %}<input type="hidden" name="action" value="archive">
+            <input type="hidden" name="surface" value="header">
             <button class="webui-action-btn danger" type="submit" title="Archive this chat">Archive</button>
         </form>
     </div>

@@ -8,7 +8,7 @@ from django.conf import settings as django_settings
 from django.core.cache import cache
 from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -53,10 +53,6 @@ def settings_page(request, tab: str = "appearance"):
     }
     if tab == "providers":
         context["providers"] = _provider_rows()
-        context["provider_probe_running"] = any(
-            (row.get("probe") or {}).get("verdict") == "running"
-            for row in context["providers"]
-        )
     elif tab == "system":
         context["system"] = _system_info()
     elif tab == "preferences":
@@ -86,6 +82,23 @@ def _provider_probe(provider: ApiProvider) -> dict | None:
     # running.  The mapping key expires long before the result key, so this
     # cannot mask an expired result.
     return {"verdict": "running", "model_pk": int(model_pk)}
+
+
+def _provider_probe_context(provider: ApiProvider) -> dict:
+    return {
+        "provider_id": provider.pk,
+        "probe": _provider_probe(provider),
+    }
+
+
+def settings_provider_probe(request, provider_id: int):
+    """Return just the probe row so polling never replaces the whole card."""
+    provider = get_object_or_404(ApiProvider, pk=provider_id)
+    return render(
+        request,
+        "webui/settings/_provider_probe.html",
+        _provider_probe_context(provider),
+    )
 
 
 def _provider_rows() -> list[dict]:

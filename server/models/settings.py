@@ -153,6 +153,12 @@ class SettingsModel(BaseModel):
     guidance_file_index_limit: int | None = models.IntegerField(default=None, null=True, blank=True)
     load_guidance_file_index: bool | None = models.BooleanField(default=None, null=True, blank=True)
 
+    # Memory playbook injection (agent.md ``memoryPlaybook:`` block — boolean
+    # or {enabled, maxDirectives, maxChars, includeCandidates, includeSkills,
+    # maxSkills}).  Controls whether the synthesized ``reflection.md``
+    # directives and the assigned-skill catalog are pinned at session start.
+    memory_playbook: Any = models.JSONField(default=None, null=True, blank=True)
+
     # Session todo list auto-processing (user-controlled through the Todos
     # panel / /todo command; the list items themselves are event-sourced
     # from the todo task-call history, not stored here).  None = off.

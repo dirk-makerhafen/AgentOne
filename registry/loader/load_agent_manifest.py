@@ -21,6 +21,7 @@ from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 from runtime.workspace_access import validate_agent_access
 from runtime.guidance_files import validate_autoload_block
+from runtime.memory_playbook import validate_memory_playbook_block
 
 
 # ---------------------------------------------------------------------------
@@ -428,6 +429,15 @@ def load_agent_manifest(
                 f"boolean, got {load_index!r}"
             )
         settings_kwargs["load_guidance_file_index"] = load_index
+
+    # Memory playbook injection (agent.md ``memoryPlaybook:`` — boolean or a
+    # mapping with caps).  Pins synthesized ``reflection.md`` directives and
+    # the assigned-skill catalog at session start; see docs/self-improvement.md.
+    memory_playbook_block = manifest.get("memoryPlaybook")
+    if memory_playbook_block is not None:
+        settings_kwargs["memory_playbook"] = validate_memory_playbook_block(
+            memory_playbook_block, source=f"agent.md {agent.name!r}"
+        )
 
     if settings_kwargs.get("precision",None):
         key = settings_kwargs.get("precision","").upper()

@@ -29,24 +29,39 @@
         <summary class="webui-session-menu-trigger" title="Chat actions"
                  aria-label="Chat actions">⋯</summary>
         <div class="webui-session-menu-body">
-            <form method="post" action="{% url 'webui:chat_action' s.pk %}">
+            <form method="post" action="{% url 'webui:chat_action' s.pk %}"
+                  hx-post="{% url 'webui:chat_action' s.pk %}"
+                  hx-target="#sidebar" hx-swap="outerHTML" hx-sync="this:replace">
                 {% csrf_token %}
+                <input type="hidden" name="surface" value="sidebar">
+                <input type="hidden" name="sidebar_section" value="{{ section }}">
+                <input type="hidden" name="sidebar_active" value="{{ active_id }}">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <input type="hidden" name="action" value="pin">
                 <button class="webui-session-menu-item" type="submit">
                     {% if s.is_pinned %}Unpin{% else %}Pin{% endif %}
                 </button>
             </form>
-            <form method="post" action="{% url 'webui:chat_action' s.pk %}">
+            <form method="post" action="{% url 'webui:chat_action' s.pk %}"
+                  hx-post="{% url 'webui:chat_action' s.pk %}"
+                  hx-target="#sidebar" hx-swap="outerHTML" hx-sync="this:replace">
                 {% csrf_token %}
+                <input type="hidden" name="surface" value="sidebar">
+                <input type="hidden" name="sidebar_section" value="{{ section }}">
+                <input type="hidden" name="sidebar_active" value="{{ active_id }}">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <input type="hidden" name="action" value="rename">
                 <input class="webui-session-menu-input" type="text" name="name"
                        value="{{ s.name }}" aria-label="Chat name">
                 <button class="webui-session-menu-item" type="submit">Rename</button>
             </form>
-            <form method="post" action="{% url 'webui:chat_action' s.pk %}">
+            <form method="post" action="{% url 'webui:chat_action' s.pk %}"
+                  hx-post="{% url 'webui:chat_action' s.pk %}"
+                  hx-target="#sidebar" hx-swap="outerHTML" hx-sync="this:replace">
                 {% csrf_token %}
+                <input type="hidden" name="surface" value="sidebar">
+                <input type="hidden" name="sidebar_section" value="{{ section }}">
+                <input type="hidden" name="sidebar_active" value="{{ active_id }}">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <input type="hidden" name="action" value="move">
                 <select class="webui-session-menu-input" name="project" aria-label="Move to project">
@@ -58,8 +73,13 @@
                 <button class="webui-session-menu-item" type="submit">Move</button>
             </form>
             <form method="post" action="{% url 'webui:chat_action' s.pk %}"
-                  onsubmit="return confirm('Archive this chat?');">
+                  hx-post="{% url 'webui:chat_action' s.pk %}"
+                  hx-confirm="Archive this chat?"
+                  hx-target="#sidebar" hx-swap="outerHTML" hx-sync="this:replace">
                 {% csrf_token %}
+                <input type="hidden" name="surface" value="sidebar">
+                <input type="hidden" name="sidebar_section" value="{{ section }}">
+                <input type="hidden" name="sidebar_active" value="{{ active_id }}">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <input type="hidden" name="action" value="archive">
                 <button class="webui-session-menu-item danger" type="submit">Archive</button>

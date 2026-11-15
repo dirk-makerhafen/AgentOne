@@ -36,7 +36,8 @@ autoload:
 
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
-tools: [+, core.*, filesystem-read.*, web.*, subagents.*]
+memoryPlaybook: true
+tools: [+, core.*, filesystem-read.*, web.*, subagents.*, skills.*]
 tasks: [+, core.*, compact.*,  ]
 disallowedTasks: []
 

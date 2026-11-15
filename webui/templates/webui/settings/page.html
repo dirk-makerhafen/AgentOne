@@ -118,11 +118,7 @@
             </div>
 
             {% elif tab == "providers" %}
-            <div class="detail-card" id="providers-card"
-                 {% if provider_probe_running %}
-                 hx-get="{% url 'webui:settings_tab' 'providers' %}"
-                 hx-trigger="every 3s" hx-select="#providers-card" hx-swap="outerHTML"
-                 {% endif %}>
+            <div class="detail-card" id="providers-card">
                 <div class="detail-card-title">Providers</div>
                 <div class="webui-muted-note" style="margin-bottom:10px">
                     Manage API keys. Changes take effect immediately. Keys are masked here; they are never sent to the browser in full.
@@ -177,29 +173,7 @@
                         {% if provider.setup %}
                         <div class="webui-muted-note">{{ provider.setup|linebreaksbr }}</div>
                         {% endif %}
-                        <div class="webui-probe-row">
-                            <form method="post" action="{% url 'webui:settings_provider_test' provider.id %}">
-                                {% csrf_token %}
-                                <button class="webui-action-btn" type="submit"
-                                        {% if provider.probe.verdict == "running" %}disabled{% endif %}>
-                                    {% if provider.probe.verdict == "running" %}Testing…{% else %}Test{% endif %}
-                                </button>
-                            </form>
-                            {% if provider.probe %}
-                            <span class="webui-probe-status is-{{ provider.probe.verdict }}">
-                                {% if provider.probe.verdict == "running" %}
-                                Running a smoke-test turn…
-                                {% elif provider.probe.verdict == "healthy" %}
-                                Healthy · {{ provider.probe.latency_ms }} ms{% if provider.probe.model %} · {{ provider.probe.model }}{% endif %}
-                                {% elif provider.probe.verdict == "failed" %}
-                                Failed{% if provider.probe.error_kind %} ({{ provider.probe.error_kind }}){% endif %}:
-                                {{ provider.probe.error_message }}
-                                {% else %}
-                                {{ provider.probe.verdict }}{% if provider.probe.latency_ms %} · {{ provider.probe.latency_ms }} ms{% endif %}
-                                {% endif %}
-                            </span>
-                            {% endif %}
-                        </div>
+                        {% include "webui/settings/_provider_probe.html" with provider_id=provider.id probe=provider.probe %}
                     </div>
                 </details>
                 {% empty %}

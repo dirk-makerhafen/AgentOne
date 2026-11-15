@@ -25,8 +25,19 @@ if str(MEMORY_SCRIPTS) not in sys.path:
 
 import finalize  # noqa: E402
 import git  # noqa: E402
+import improvements  # noqa: E402
 import paths  # noqa: E402
+import playbook  # noqa: E402
 import sources  # noqa: E402
 import tree  # noqa: E402
 
-__all__ = ["MEMORY_SCRIPTS", "finalize", "git", "paths", "sources", "tree"]
+__all__ = [
+    "MEMORY_SCRIPTS",
+    "finalize",
+    "git",
+    "improvements",
+    "paths",
+    "playbook",
+    "sources",
+    "tree",
+]

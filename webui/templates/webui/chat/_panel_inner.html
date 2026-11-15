@@ -3,8 +3,12 @@
 <div class="webui-error">
     New agent version available (v{{ pinned_agent_version }} → v{{ latest_agent_version }}).
     This chat remains pinned to preserve its prompt cache.
-    <form method="post" action="{% url 'webui:chat_action' session.pk %}">
+    <form method="post" action="{% url 'webui:chat_action' session.pk %}"
+          hx-post="{% url 'webui:chat_action' session.pk %}"
+          hx-target="#chat-panel-body" hx-swap="outerHTML">
         {% csrf_token %}<input type="hidden" name="action" value="upgrade_agent">
+        <input type="hidden" name="surface" value="panel">
+        <input type="hidden" name="panel" value="{{ panel_tab|default:'details' }}">
         <button class="webui-action-btn" type="submit">Use latest now</button>
     </form>
 </div>
@@ -546,9 +550,13 @@
 
     <div class="webui-panel-section">
         <div class="detail-card-title">Rename</div>
-        <form class="detail-form" method="post" action="{% url 'webui:chat_action' session.pk %}">
+        <form class="detail-form" method="post" action="{% url 'webui:chat_action' session.pk %}"
+              hx-post="{% url 'webui:chat_action' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="outerHTML">
             {% csrf_token %}
             <input type="hidden" name="action" value="rename">
+            <input type="hidden" name="surface" value="panel">
+            <input type="hidden" name="panel" value="details">
             <div class="detail-form-row">
                 <input type="text" name="name" value="{{ session.name }}" aria-label="Chat name">
             </div>

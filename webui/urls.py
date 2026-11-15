@@ -263,5 +263,4 @@ urlpatterns = [
         views.memory_node_queue,
         name="memory_node_queue",
     ),
-
 ]

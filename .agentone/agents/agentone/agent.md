@@ -36,11 +36,12 @@ sessionBootstrap: |
 
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
+memoryPlaybook: true
 
 commands: [+, ping, todo.* ]
 disallowedCommands: []
 
-tools: [+, core.*, subagents.*, history.*, todo.*, workitems.*]
+tools: [+, core.*, subagents.*, history.*, skills.*, todo.*, workitems.*]
 disallowedTools: []
 
 skills: []

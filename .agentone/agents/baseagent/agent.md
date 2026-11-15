@@ -21,11 +21,12 @@ subagentResultDelivery: immediate
 toolCallSyntax: default
 skills: []
 disallowedSkills: []
-tools: [filesystem-read.*, filesystem-write.*,]
+tools: [filesystem-read.*, filesystem-write.*, skills.load_skill]
 disallowedTools: []
 tasks: [core.*, compact.*]
 disallowedTasks: []
 commands: []
 disallowedCommands: []
 priority: 99
+memoryPlaybook: true
 ---

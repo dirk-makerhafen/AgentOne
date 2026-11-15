@@ -8,6 +8,11 @@
         <div class="main-view-title">Skills</div>
         <div class="main-view-actions">
             <span class="webui-muted-note">{{ skills|length }} loaded</span>
+            {% if not show_archived %}
+            <a class="webui-action-btn tiny" href="{% url 'webui:skills' %}?archived=1">Show archived</a>
+            {% else %}
+            <a class="webui-action-btn tiny" href="{% url 'webui:skills' %}">Hide archived</a>
+            {% endif %}
         </div>
     </header>
     <div class="main-view-body">

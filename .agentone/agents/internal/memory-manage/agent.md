@@ -11,6 +11,7 @@ reasoningEffort: high
 
 inheritSystemPrompt: false
 schedulerStrategy: queue
+memoryPlaybook: false
 
 tools: [+, core.*, filesystem-read.*, filesystem-write.*, memory.*]
 disallowedTools: []
@@ -34,13 +35,24 @@ Rules:
 - Do not invent information. Only consolidate what the sources and the
   existing memory files contain.
 - Write `memory.md` (durable facts/knowledge to remember) and `reflection.md`
-  (self-improvement observations) in the target directory.
+  (the behavioural playbook: how to do this work better) in the target
+  directory.
+- `reflection.md` must keep the `agentone.playbook/1` frontmatter described in
+  your layer prompt. The harness normalizes it (stable IDs, dedupe, caps) and
+  rejects malformed frontmatter, leaving the node pending.
+- Write `improvements.md` (`agentone.improvements/1`) when the sources contain
+  a change bigger than a rule: a prompt edit, a skill, a tool, a standalone
+  script, or a harness fix. Never write executable code or apply the change.
 - Rewrite rather than append: drop stale or superseded detail and keep each
   file under ~5000 characters.
 - Do not touch `.memory_sources.md`, git metadata, or memory levels outside the
   target directory.
 - The harness finalizes the node once your `final_result` is awaited. Do not
   mark manifests yourself; just write the files and return a one-line summary.
+- When you drive a full cycle yourself (walk → merge until no node remains),
+  finish it with one `memory_improvements(action="queue")` call so new
+  proposals become backlog work items. Never promote or implement them — that
+  is a human decision.
 
 ## Completing Tasks
 

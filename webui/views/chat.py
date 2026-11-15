@@ -11,6 +11,7 @@ from django.core.cache import cache
 from django.db.models import F
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from server.models.enums.session_enums import SessionType
@@ -27,6 +28,7 @@ from server.models.settings import AgentToolCallSyntax, ResponseTemperature, Sub
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.workspace import WorkspaceModel
 from webui.views.workspaces import workspace_directory_context
+from webui.views.shell import sidebar_fragment
 from webui.chat_cards import queue_text
 from webui.thread import (
     DEFAULT_LIMIT,
@@ -223,6 +225,14 @@ def terminal_kill(request, session_id: int, name: str):
     )
 
 
+def _header_context(session_model: SessionModel) -> dict:
+    return {
+        "session": session_model,
+        "is_busy": is_busy(session_model),
+        "usage": usage_summary(session_model),
+    }
+
+
 def chat_header(request, session_id: int):
     session_model = get_object_or_404(
         SessionModel.objects.select_related(
@@ -230,15 +240,7 @@ def chat_header(request, session_id: int):
         ),
         pk=session_id,
     )
-    return render(
-        request,
-        "webui/chat/_header.html",
-        {
-            "session": session_model,
-            "is_busy": is_busy(session_model),
-            "usage": usage_summary(session_model),
-        },
-    )
+    return render(request, "webui/chat/_header.html", _header_context(session_model))
 
 
 def _composer_footer_response(request, session_model: SessionModel):
@@ -290,6 +292,22 @@ def chat_panel_tab(request, session_id: int, tab: str):
     return render(
         request,
         "webui/chat/_panel_inner.html",
+        _panel_context(session_model, tab, request),
+    )
+
+
+def chat_panel_body(request, session_id: int, tab: str):
+    """The panel body wrapper for one tab, including its SSE refetch URL.
+
+    Tab clicks swap this element with ``hx-swap="outerHTML"`` so the new body
+    carries the ``hx-get`` for the visible tab. htmx caches an element's request
+    URL when it processes the node, so patching ``hx-get`` in place (what the
+    old JS did) left SSE refreshes pointed at the tab rendered on page load.
+    """
+    session_model = get_object_or_404(SessionModel, pk=session_id)
+    return render(
+        request,
+        "webui/chat/_panel_body.html",
         _panel_context(session_model, tab, request),
     )
 
@@ -1136,6 +1154,11 @@ def chat_config(request, session_id: int):
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("composer config failed for session %s", session_id)
     panel = (request.POST.get("panel") or "").strip()
+    if (request.POST.get("composer") or "").strip() == "1":
+        session_model.refresh_from_db()
+        context = {"session": session_model}
+        context.update(composer_config(session_model))
+        return render(request, "webui/chat/_composer_config.html", context)
     if request.headers.get("HX-Request") == "true" or panel:
         session_model.refresh_from_db()
         return render(
@@ -1588,6 +1611,8 @@ def chat_action(request, session_id: int):
         elif action == "archive":
             session_model.is_archived = True
             session_model.save(update_fields=["is_archived", "is_active"])
+            if request.headers.get("HX-Request") == "true":
+                return HttpResponse(headers={"HX-Redirect": reverse("webui:chats")})
             return _chat_action_redirect(request, session_model, fallback="chats")
         elif action == "unarchive":
             session_model.is_archived = False
@@ -1615,6 +1640,30 @@ def chat_action(request, session_id: int):
             session_model.save(update_fields=["parent_project"])
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("chat action %s failed for session %s", action, session_id)
+
+    if request.headers.get("HX-Request") == "true":
+        surface = (request.POST.get("surface") or "").strip()
+        if surface == "header":
+            session_model.refresh_from_db()
+            return render(
+                request, "webui/chat/_header.html", _header_context(session_model)
+            )
+        if surface == "panel":
+            session_model.refresh_from_db()
+            tab = (request.POST.get("panel") or "details").strip()
+            return render(
+                request,
+                "webui/chat/_panel_body.html",
+                _panel_context(session_model, tab, request),
+            )
+        if surface == "sidebar":
+            section = (request.POST.get("sidebar_section") or "chats").strip()
+            active = (request.POST.get("sidebar_active") or "").strip()
+            request.GET = request.GET.copy()
+            request.GET["section"] = section
+            if active:
+                request.GET["active"] = active
+            return sidebar_fragment(request)
 
     return _chat_action_redirect(request, session_model)
 

@@ -107,6 +107,10 @@ def test_url_names_reverse():
     assert reverse("webui:import_conversation", args=[12]) == "/app/chat/12/import"
     assert reverse("webui:chat_panel", args=[12]) == "/app/chat/12/panel"
     assert reverse("webui:chat_panel_tab", args=[12, "tasks"]) == "/app/chat/12/panel/tasks"
+    assert (
+        reverse("webui:chat_panel_body", args=[12, "tasks"])
+        == "/app/chat/12/panel/tasks/body"
+    )
     assert reverse("webui:chat_setting", args=[12]) == "/app/chat/12/setting"
     assert reverse("webui:subagent_open", args=[12]) == "/app/chat/12/subagent"
     assert reverse("webui:query_detail", args=[34]) == "/app/query/34/detail"
@@ -165,6 +169,9 @@ def test_url_names_reverse():
     assert reverse("webui:settings") == "/app/settings"
     assert reverse("webui:settings_tab", args=["system"]) == "/app/settings/system"
     assert reverse("webui:settings_save", args=["system"]) == "/app/settings/system/save"
+    assert reverse("webui:settings_provider_key", args=[7]) == "/app/settings/providers/7/key"
+    assert reverse("webui:settings_provider_test", args=[7]) == "/app/settings/providers/7/test"
+    assert reverse("webui:settings_provider_probe", args=[7]) == "/app/settings/providers/7/probe"
 
 
 def test_static_v_appends_mtime_cache_buster():
@@ -347,7 +354,43 @@ def test_sidebar_project_filter_scopes_and_persists(client):
 
 
 @pytest.mark.django_db
-def test_chat_action_honours_in_app_next(client):
+def test_chat_action_htmx_header_returns_header_fragment(client):
+    from server.models.sessions.session import SessionModel
+
+    session = SessionModel.objects.create(name="hx-header")
+    response = client.post(
+        reverse("webui:chat_action", args=[session.pk]),
+        {"action": "pin", "surface": "header"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert response.status_code == 200
+    assert b'id="chat-header"' in response.content or b"webui-chat-header" in response.content
+
+
+@pytest.mark.django_db
+def test_chat_action_htmx_panel_returns_panel_body(client):
+    from server.models.sessions.session import SessionModel
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.sessions.session_version import SessionVersionModel
+
+    session = SessionModel.objects.create(name="hx-panel")
+    agent = AgentModel.objects.create(name="hx-agent")
+    av = AgentVersionModel.objects.create(agent=agent, version_number=1)
+    AgentModel.objects.filter(pk=agent.pk).update(latest_agent_version=av)
+    sv = SessionVersionModel.objects.create(
+        session=session, agent=agent, pinned_agent_version=av, version_number=1
+    )
+    SessionModel.objects.filter(pk=session.pk).update(latest_session_version=sv)
+    session.refresh_from_db()
+
+    response = client.post(
+        reverse("webui:chat_action", args=[session.pk]),
+        {"action": "upgrade_agent", "surface": "panel", "panel": "details"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert response.status_code == 200
+    assert b'id="chat-panel-body"' in response.content
     from server.models.sessions.session import SessionModel
 
     session = SessionModel.objects.create(name="next-test")
@@ -676,6 +719,59 @@ def test_panel_todos_tab_renders(client):
     response = client.get(reverse("webui:chat_panel_tab", args=[session.pk, "todos"]))
     assert response.status_code == 200
     assert b"todo_append" in response.content
+
+
+@pytest.mark.django_db
+def test_chat_page_panel_tabs_swap_the_whole_body(client):
+    """Tab clicks must replace #chat-panel-body, not just its children.
+
+    htmx caches an element's request URL when it processes the node. Patching
+    hx-get in place therefore left SSE refreshes pointed at the tab that was
+    rendered with the page, so the panel snapped back to Details.
+    """
+    from bs4 import BeautifulSoup
+
+    session, _version = _session_with_version("panel-tab-swap")
+    page = client.get(reverse("webui:chat", args=[session.pk]))
+    soup = BeautifulSoup(page.content, "html.parser")
+    tabs = soup.select("button.webui-panel-tab")
+    assert tabs
+    for tab in tabs:
+        assert tab.get("hx-target") == "#chat-panel-body"
+        assert tab.get("hx-swap") == "outerHTML"
+        assert "/panel/" in tab.get("hx-get") and tab["hx-get"].endswith("/body")
+
+
+@pytest.mark.django_db
+def test_panel_body_carries_the_visible_tab_refresh_url(client):
+    from bs4 import BeautifulSoup
+
+    session, _version = _session_with_version("panel-body-tab")
+    expected = reverse("webui:chat_panel_tab", args=[session.pk, "settings"])
+    response = client.get(
+        reverse("webui:chat_panel_body", args=[session.pk, "settings"])
+    )
+    assert response.status_code == 200
+    body = BeautifulSoup(response.content, "html.parser").find(id="chat-panel-body")
+    assert body is not None
+    assert body.get("hx-get") == expected
+    assert "AgentTaskCall.session" in (body.get("hx-trigger") or "")
+    assert b'id="settings-name"' in response.content
+
+
+@pytest.mark.django_db
+def test_panel_body_unknown_tab_falls_back_to_details(client):
+    from bs4 import BeautifulSoup
+
+    session, _version = _session_with_version("panel-body-fallback")
+    response = client.get(
+        reverse("webui:chat_panel_body", args=[session.pk, "nope"])
+    )
+    assert response.status_code == 200
+    body = BeautifulSoup(response.content, "html.parser").find(id="chat-panel-body")
+    assert body.get("hx-get") == reverse(
+        "webui:chat_panel_tab", args=[session.pk, "details"]
+    )
 
 
 @pytest.mark.django_db
@@ -1096,6 +1192,31 @@ def test_settings_providers_tab_masks_keys(client):
 
 
 @pytest.mark.django_db
+def test_settings_provider_probe_polls_only_the_probe_row(client, monkeypatch):
+    from server.models.providers.api_provider import ApiProvider
+    import webui.views.settings as settings_views
+
+    provider = ApiProvider.objects.create(name="Probe Provider")
+    monkeypatch.setattr(
+        settings_views,
+        "_provider_probe",
+        lambda _provider: {"verdict": "running", "model_pk": 1},
+    )
+
+    page = client.get(reverse("webui:settings_tab", args=["providers"]))
+    assert b'id="provider-probe-%d"' % provider.pk in page.content
+    assert b'hx-trigger="every 3s"' in page.content
+    assert b'hx-select="#providers-card"' not in page.content
+
+    fragment = client.get(
+        reverse("webui:settings_provider_probe", args=[provider.pk])
+    )
+    assert fragment.status_code == 200
+    assert b'id="provider-probe-%d"' % provider.pk in fragment.content
+    assert b'Running a smoke-test turn' in fragment.content
+
+
+@pytest.mark.django_db
 def test_settings_provider_key_add_toggle_delete(client):
     from server.models.providers.api_key import ApiKey
     from server.models.providers.api_provider import ApiProvider
@@ -1289,6 +1410,14 @@ def test_provider_test_dispatches_probe(client, monkeypatch):
     )
     assert response.status_code == 302
     assert dispatched["pk"] == 77
+
+    fragment = client.post(
+        reverse("webui:settings_provider_test", args=[provider.pk]),
+        HTTP_HX_REQUEST="true",
+    )
+    assert fragment.status_code == 200
+    assert b'id="provider-probe-' in fragment.content
+    assert b'Running a smoke-test turn' in fragment.content
 
 
 @pytest.mark.django_db

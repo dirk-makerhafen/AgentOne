@@ -47,12 +47,13 @@ def _reload_skill_scope(skill: SkillModel) -> None:
 
 
 def skills(request):
+    show_archived = request.GET.get("archived") == "1"
     rows = list(
         SkillModel.objects.select_related(
             "parent_agent", "parent_project", "parent_skill", "latest_skill_version"
-        ).order_by("name")
+        ).filter(is_archived=show_archived).order_by("name")
     )
-    return render_page(request, "skills", "webui/skills/list.html", {"skills": rows})
+    return render_page(request, "skills", "webui/skills/list.html", {"skills": rows, "show_archived": show_archived})
 
 
 def skill_detail(request, skill_id: int):

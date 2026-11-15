@@ -1,51 +1,6 @@
 <div class="composer-wrap">
     {% if composer_models or composer_workspaces or composer_agents %}
-    <form class="webui-composer-config" method="post"
-          action="{% url 'webui:chat_config' session.pk %}">
-        {% csrf_token %}
-        {% if composer_agents %}
-        <label class="webui-config-field" title="Agent handling this conversation">
-            <span class="webui-config-label">Agent</span>
-            <select name="agent" onchange="this.form.submit()">
-                {% for agent in composer_agents %}
-                <option value="{{ agent.pk }}"{% if agent.pk == composer_agent_id %} selected{% endif %}>{{ agent.name }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        {% endif %}
-        <label class="webui-config-field" title="Model used for the next turn">
-            <span class="webui-config-label">Model</span>
-            <select name="model" onchange="this.form.submit()">
-                <option value=""{% if not composer_model %} selected{% endif %}>Default model</option>
-                {% for name in composer_models %}
-                <option value="{{ name }}"{% if name == composer_model %} selected{% endif %}>{{ name }}</option>
-                {% endfor %}
-                {% if composer_model and composer_model not in composer_models %}
-                <option value="{{ composer_model }}" selected>{{ composer_model }}</option>
-                {% endif %}
-            </select>
-        </label>
-        <label class="webui-config-field" title="Reasoning effort for the next turn">
-            <span class="webui-config-label">Reasoning</span>
-            <select name="reasoning" onchange="this.form.submit()">
-                {% for value, label in composer_reasoning_choices %}
-                <option value="{{ value }}"{% if value == composer_reasoning %} selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        {% if composer_workspaces %}
-        <label class="webui-config-field" title="Workspace this chat writes to">
-            <span class="webui-config-label">Workspace</span>
-            <select name="workspace" onchange="this.form.submit()">
-                <option value=""{% if not composer_workspace_id %} selected{% endif %}>No workspace</option>
-                {% for workspace in composer_workspaces %}
-                <option value="{{ workspace.pk }}"{% if workspace.pk == composer_workspace_id %} selected{% endif %}>{{ workspace.name }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        {% endif %}
-        <noscript><button class="webui-action-btn" type="submit">Apply</button></noscript>
-    </form>
+    {% include "webui/chat/_composer_config.html" %}
     {% endif %}
 
     <form class="composer-box webui-composer"
