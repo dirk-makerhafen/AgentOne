@@ -8,7 +8,7 @@ import time
 from ui.lib.pyHtmlGui.pyhtmlgui.pyhtmlgui_instance import PyHtmlGuiInstance
 from ui.lib.pyHtmlGui.pyhtmlgui import PyHtmlGui
 from ui.app import UiApp
-from ui.app_view import UiAppView
+#from ui.app_view import UiAppView
 from server.models import observables
 
 log = logging.getLogger("ui.consumer")
@@ -125,6 +125,7 @@ class PyHtmlGuiConsumer(WebsocketConsumer):
         }
 
     def connect(self):
+        return
         global _pyhtmlgui
         global _pyhtmlgui_instance
         self._closed = False
