@@ -1032,7 +1032,7 @@
         var el = e.target && e.target.closest ? e.target.closest('.resize-handle') : null;
         if (!el || el.id === 'terminalResizeHandle') return;
         if (el.id !== 'sidebarResize' && el.id !== 'rightpanelResize') return;
-        var panel = el.closest('.sidebar, .webui-chat-panel');
+        var panel = el.closest('.sidebar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
         if (!panel) return;
         handle = el;
         startX = e.clientX;
@@ -1043,20 +1043,24 @@
     });
     document.addEventListener('mousemove', function (e) {
         if (!handle) return;
-        var panel = handle.closest('.sidebar, .webui-chat-panel');
+        var panel = handle.closest('.sidebar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
         if (!panel) return;
         var dx = e.clientX - startX;
-        var w = (handle.id === 'sidebarResize') ? (startW + dx) : (startW - dx);
+        // Sidebar: handle on right edge, drag right = increase width
+        // Right panels (chat, entity-assistant, insights-rightbar): handle on left edge, drag left = increase width
+        var isSidebar = panel.classList.contains('sidebar');
+        var w = isSidebar ? (startW + dx) : (startW - dx);
         w = Math.max(MIN_W, Math.min(MAX_W, w));
         panel.style.width = w + 'px';
     });
     document.addEventListener('mouseup', function () {
         if (!handle) return;
-        var panel = handle.closest('.sidebar, .webui-chat-panel');
+        var panel = handle.closest('.sidebar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
         if (panel) {
             var w = parseInt(panel.style.width, 10);
             if (w) {
-                var key = (handle.id === 'sidebarResize') ? 'sidebarWidth' : 'rightpanelWidth';
+                var isSidebar = panel.classList.contains('sidebar');
+                var key = isSidebar ? 'sidebarWidth' : 'rightpanelWidth';
                 try { localStorage.setItem(key, w); } catch (e) {}
             }
         }

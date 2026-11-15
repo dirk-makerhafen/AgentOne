@@ -16,7 +16,7 @@ from typing import Any
 from finalize import finalize_memory
 
 #: Keep the synthesizer's summary short in the task result payload.
-MAX_RESULT_CHARS = 5000
+MAX_RESULT_CHARS = 8000
 
 
 def _result_text(result: Any) -> str:

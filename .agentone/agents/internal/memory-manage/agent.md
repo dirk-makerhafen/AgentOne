@@ -44,7 +44,7 @@ Rules:
   a change bigger than a rule: a prompt edit, a skill, a tool, a standalone
   script, or a harness fix. Never write executable code or apply the change.
 - Rewrite rather than append: drop stale or superseded detail and keep each
-  file under ~5000 characters.
+  file under ~8000 characters.
 - Do not touch `.memory_sources.md`, git metadata, or memory levels outside the
   target directory.
 - The harness finalizes the node once your `final_result` is awaited. Do not
