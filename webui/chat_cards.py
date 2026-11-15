@@ -22,6 +22,7 @@ from typing import Any
 from django.utils import timezone
 
 from runtime.user_questions import ASK_USER_TOOL_NAME, normalize_questions
+from server.models.content import resolve_generic_content_refs
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
 
@@ -88,6 +89,8 @@ def _question_items(calls: list[AgentTaskCall]) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for call in calls:
         args = call.carguments_json or {}
+        # Resolve any GenericContent references in the stored arguments
+        args = resolve_generic_content_refs(args)
         answers = args.get("answers") or {}
         for qidx, question in enumerate(normalize_questions(args.get("questions"))):
             raw = answers.get(question["question"])

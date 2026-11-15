@@ -1040,6 +1040,10 @@ def double_check_summary(_session, raw_path, summary_path, lint_results=None):
         allow_internal=True,
         reasoning_effort=ReasoningEffort.NONE,
         max_turns=20,
+        # Disable memory playbook injection: the reviewer is a focused
+        # single-shot task that only needs the raw source + summary; past
+        # directives would just be noise.
+        memory_playbook=False,
     )
     if child_session is None:
         return {

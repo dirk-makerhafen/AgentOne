@@ -54,6 +54,7 @@ tasks:
     file: session_end.py
     function: session_end
     bound: True
+    priority: 0
   - name: process_slashcommand  
     file: slash_commands.py
     function: process_slashcommand

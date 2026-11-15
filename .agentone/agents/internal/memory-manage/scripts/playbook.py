@@ -401,7 +401,7 @@ def read_frontmatter(path: Path) -> tuple[dict[str, Any], str, bool]:
         head = text[:2000]
         if any(marker in head for marker in ("schema:", "directives:", "proposals:")):
             raise PlaybookError(
-                f"invalid YAML frontmatter in {path.name}: {exc}"
+                f"invalid YAML frontmatter in {path.as_posix()}: {exc}"
             ) from exc
         return {}, text, False
     return dict(post.metadata or {}), post.content, True

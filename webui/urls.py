@@ -114,6 +114,7 @@ urlpatterns = [
     ),
     path("query/<int:query_id>/detail", views.query_detail, name="query_detail"),
     path("call/<int:call_id>/detail", views.call_detail, name="call_detail"),
+    path("response/<int:response_id>/detail", views.response_detail, name="response_detail"),
     path(
         "assistant/<str:kind>/<int:item_id>",
         views.entity_assistant_open,

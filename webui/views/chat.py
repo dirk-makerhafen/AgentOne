@@ -17,7 +17,7 @@ from django.views.decorators.http import require_POST
 from server.models.enums.session_enums import SessionType
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskSchedulerStrategy
 from server.models.agents.agent import AgentModel
-from server.models.content import GenericContent
+from server.models.content import GenericContent, resolve_generic_content_refs
 from server.models.enums.message_enums import MessageType
 from server.models.message import Message, MessagePart
 from server.models.queries.query import Query, QueryStatus
@@ -170,6 +170,16 @@ def call_detail(request, call_id: int):
     )
     context = build_call_detail(call, full=request.GET.get("full") == "1")
     return render(request, "webui/chat/_tool_detail.html", context)
+
+
+def response_detail(request, response_id: int):
+    """Lazily render a response card's body (for streaming tokens)."""
+    response = get_object_or_404(Response, pk=response_id)
+    return render(
+        request,
+        "webui/chat/_response_detail.html",
+        {"response": response},
+    )
 
 
 def chat_toc(request, session_id: int):
@@ -994,7 +1004,10 @@ def _answer_question(call: AgentTaskCall, post) -> None:
     from runtime.tasks.call_scheduler import CallScheduler
     from runtime.user_questions import normalize_questions
 
-    questions = normalize_questions((call.carguments_json or {}).get("questions"))
+    args = call.carguments_json or {}
+    # Resolve any GenericContent references in the stored arguments
+    args = resolve_generic_content_refs(args)
+    questions = normalize_questions(args.get("questions"))
     raw_index = post.get("qidx", "")
     if not raw_index.isdigit():
         return
@@ -1301,19 +1314,30 @@ def chat_transcript(request, session_id: int):
         if row.kind != "message":
             continue
         role = {
-            "user": "You",
-            "assistant": "Assistant",
-            "info": "Info",
-            "system": "System",
-        }.get(row.role, row.role.title())
+            "user": "user",
+            "assistant": "assistant",
+            "info": "info",
+            "system": "system",
+        }.get(row.role, row.role.lower())
         text = row.body_text.strip()
         if not text:
             continue
         lines.extend([f"## {role}", "", text, ""])
-        if row.reasoning:
-            lines.extend(
-                ["<details><summary>Thinking</summary>", "", row.reasoning, "", "</details>", ""]
-            )
+        # Include tool calls if present
+        if row.tools:
+            for tool in row.tools:
+                tool_name = tool.get("name", "tool")
+                tool_status = tool.get("status_detail") or tool.get("status") or "unknown"
+                tool_body = tool.get("body", "")
+                lines.extend([
+                    f"### Tool: {tool_name}",
+                    f"Status: {tool_status}",
+                    "",
+                    "```",
+                    tool_body,
+                    "```",
+                    ""
+                ])
     response = HttpResponse("\n".join(lines), content_type="text/markdown; charset=utf-8")
     filename = _safe_filename(session_model.name or f"chat-{session_model.pk}")
     response["Content-Disposition"] = f'attachment; filename="{filename}.md"'
@@ -1322,6 +1346,8 @@ def chat_transcript(request, session_id: int):
 
 def chat_export(request, session_id: int):
     """Download the full session (messages + parts) as JSON."""
+    from server.models.enums.message_enums import MessagePartType
+    
     session_model = get_object_or_404(SessionModel, pk=session_id)
     messages = (
         Message.objects.filter(session=session_model)
@@ -1349,6 +1375,8 @@ def chat_export(request, session_id: int):
                         "content": _part_content(part),
                     }
                     for part in message.parts.all()
+                    # Exclude reasoning/reflection parts
+                    if part.type != MessagePartType.REASONING
                 ],
             }
             for message in messages

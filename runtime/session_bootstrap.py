@@ -157,6 +157,16 @@ def ensure_session_bootstrap(session: Any, trigger: Any) -> list[Any]:
     )
     from server.models.message import Message
 
+    # All single-use forks that inherit parent context via fork anchor
+    # should not create their own bootstrap - they inherit parent's context
+    NO_BOOTSTRAP_TYPES = {
+        "subtask_compaction",   # compaction fork (bootstrap in parent marker)
+        "subtask_fork",         # normal fork via spawn_subtask (inherits via anchor)
+        "subtask_hook",         # reflection/hook fork (specialized prompt)
+    }
+    if getattr(session.model, "session_type", "") in NO_BOOTSTRAP_TYPES:
+        return []
+
     session_pk = session.model.pk
     trigger = trigger or session.get_last_message()
     if trigger is None:

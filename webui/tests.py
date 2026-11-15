@@ -15,7 +15,6 @@ from django.urls import reverse
 
 from webui.markdown import render_markdown
 from webui.templatetags.webui import get_item, static_v
-from webui.views import _thread_triggers
 from webui.views.common import (
     NAV_SECTIONS,
     SIDEBAR_TEMPLATES,
@@ -71,18 +70,6 @@ def test_markdown_strips_scripts_and_event_handlers():
 def test_markdown_is_cached_and_stable():
     text = "**bold** and `code`"
     assert render_markdown(text) == render_markdown(text)
-
-
-def test_thread_triggers_cover_every_session_key():
-    triggers = _thread_triggers(7)
-    for key in (
-        "Message.session:7",
-        "Query.session:7",
-        "Response.session:7",
-        "AgentTaskCall.session:7",
-        "SessionModel.pk:7",
-    ):
-        assert f"sse:{key} delay:150ms" in triggers
 
 
 def test_url_names_reverse():
@@ -712,7 +699,9 @@ def test_thread_fragment_full_page_and_load_older(client):
         {"limit": "2", "full": "1"},
     )
     assert b'id="thread"' in full.content
-    assert b'?limit=2' in full.content
+    # "Load older" button uses thread_older_limit = min(limit + DEFAULT_LIMIT, 2000)
+    # where DEFAULT_LIMIT=120, so it becomes 122
+    assert b'?limit=122' in full.content
 
 
 @pytest.mark.django_db

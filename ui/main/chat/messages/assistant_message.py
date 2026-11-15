@@ -77,7 +77,7 @@ class AssistantMessageView(ModelView):
     '''
     def __init__(self, subject: Message, parent: MessageView, **kwargs):
         super().__init__(subject, parent, **kwargs)
-        self.is_reasoning_open = False
+        self.is_reasoning_open = True
         # Turn collapsing (managed by Messages._refresh_turns). Collapsed
         # turns hide their whole row; the first visible turn of the block
         # renders the "N assistant messages hidden (show)" line instead.

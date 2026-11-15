@@ -1,0 +1,27 @@
+{% load webui %}
+<div class="query-card-detail"
+     hx-get="{% url 'webui:response_detail' response.pk %}"
+     hx-trigger="sse:Response.session:{{ response.session.pk }} delay:50ms"
+     hx-target="this"
+     hx-swap="outerHTML"
+     hx-sync="this:replace">
+    {% if response.reasoning %}
+    <details class="thinking-card webui-inline-thinking"
+             data-open-key="think-response-{{ response.pk }}">
+        <summary class="thinking-card-header">
+            <span class="thinking-card-icon">✦</span>
+            <span class="thinking-card-label">Thinking</span>
+            <span class="thinking-card-toggle">▸</span>
+        </summary>
+        <div class="thinking-card-body"><pre>{{ response.reasoning }}</pre></div>
+    </details>
+    {% endif %}
+    <div class="msg-body webui-response-body"
+         data-pk="{{ response.pk }}"
+         data-status="{{ response.status }}">
+        {{ response.body_html|safe }}
+    </div>
+    {% if response.error_message %}
+        <div class="webui-error">{{ response.error_type }}: {{ response.error_message }}</div>
+    {% endif %}
+</div>

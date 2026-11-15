@@ -26,7 +26,7 @@
         <div class="webui-msg-edit-actions">
             <span class="detail-form-hint">Saving removes every later message and reruns the turn.</span>
             <button class="webui-action-btn" type="button" data-msg-edit-cancel>Cancel</button>
-            <button class="webui-primary-btn" type="submit">Save &amp; rerun</button>
+            <button class="webui-primary-btn" type="submit">Save & rerun</button>
         </div>
     </form>
 </div>
@@ -45,7 +45,14 @@
         {% endif %}
 
         {% if row.body_html %}
-        <div class="assistant-segment">
+        <div class="assistant-segment"
+             hx-ext="sse"
+             sse-connect="{% url 'webui:sse' %}?scope=session:{{ session.pk }}"
+             hx-get="{% url 'webui:thread' session.pk %}?limit=1&around={{ row.obj.pk }}"
+             hx-trigger="sse:Message.session:{{ session.pk }} delay:150ms"
+             hx-target="this"
+             hx-swap="outerHTML"
+             hx-sync="this:replace">
             <div class="msg-body">{{ row.body_html|safe }}</div>
         </div>
         {% endif %}
@@ -53,11 +60,12 @@
         {% for part in row.tools %}
         <details class="tool-card webui-tool-card{% if part.halted %} approval-pending{% endif %}"
                  data-open-key="tool-{{ part.pk }}"
-                 {% if part.pk %}hx-get="{% url 'webui:call_detail' part.pk %}"
+                 {% if part.pk %}hx-get="{% url 'webui:call_detail' part.pk %}"{% endif %}
                  hx-trigger="toggle once"
                  hx-target="find .webui-tool-detail"
                  hx-swap="innerHTML"
-                 hx-sync="this:replace"{% endif %}>
+                 hx-sync="this:replace"
+                 {% if part.pk %}sse-swap="AgentTaskCall.session:{{ session.pk }}"{% endif %}>
             <summary class="webui-tool-summary">
                 <span class="webui-tool-icon">⚙</span>
                 <span class="webui-tool-name" title="{{ part.name }}">{{ part.name }}</span>

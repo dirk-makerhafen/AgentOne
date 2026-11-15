@@ -31,10 +31,15 @@ Reasoning {{ usage.tokens_reasoning }} ({{ usage.reasoning_percent|floatformat:0
     {% endif %}
 
     <div class="webui-chat-actions">
-        <a class="webui-action-btn" href="{% url 'webui:chat_transcript' session.pk %}"
-           title="Download this conversation as Markdown" download>Transcript</a>
-        <a class="webui-action-btn" href="{% url 'webui:chat_export' session.pk %}"
-           title="Export this session as JSON" download>Export</a>
+        <div class="webui-dropdown" data-dropdown>
+            <button class="webui-action-btn" type="button" data-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                Download <span class="webui-dropdown-caret">▼</span>
+            </button>
+            <div class="webui-dropdown-menu" role="menu" hidden>
+                <a class="webui-dropdown-item" href="{% url 'webui:chat_transcript' session.pk %}" role="menuitem" download>Markdown (.md)</a>
+                <a class="webui-dropdown-item" href="{% url 'webui:chat_export' session.pk %}" role="menuitem" download>JSON (.json)</a>
+            </div>
+        </div>
         {% if is_busy %}
         <form method="post" action="{% url 'webui:chat_action' session.pk %}"
               hx-post="{% url 'webui:chat_action' session.pk %}"

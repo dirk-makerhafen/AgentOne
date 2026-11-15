@@ -500,7 +500,76 @@ class BoundTask:
             "time_limit": time_limit if time_limit else None,
             "priority": priority,
         })
-        return task_instance.apply_async(args=args_list, kwargs=kwargs_dict, **call_options)
+        new_call = task_instance.apply_async(args=args_list, kwargs=kwargs_dict, **call_options)
+
+        # Re-point the newly created call chain to the latest session version.
+        # Settings changes (e.g., auto_compact_max_tokens) create a new SessionVersion.
+        # The call was created with the version at dispatch time, but if settings
+        # changed before the worker picks it up, we need to use the latest version.
+        self._repoint_new_call_chain(new_call)
+
+        return new_call
+
+    def _repoint_new_call_chain(self, new_call) -> None:
+        """Re-point a newly created call chain to the latest session version.
+
+        When a new turn is dispatched, the AgentTaskCall and its TaskInstance subtree
+        are created with the session version at that moment. If session settings
+        changed (e.g., auto_compact_max_tokens) before the worker picks up the call,
+        the call would use the old settings. This method ensures the chain uses the
+        latest session version by re-pointing it, similar to what
+        CallScheduler._repoint_chain_to_latest() does for rate-limited calls.
+        """
+        from server.models.tasks.task_instance import TaskInstance
+        from server.models.tasks.agent_task_call import AgentTaskCall
+        from server.models.enums.task_enums import TaskCallStatus
+
+        latest = self.session.model.latest_session_version
+        if latest is None:
+            return
+
+        # Only re-point if the call's version differs from latest
+        if new_call.session_version_id == latest.pk:
+            return
+
+        if new_call.task_instance_id is None:
+            AgentTaskCall.objects.filter(pk=new_call.pk).update(session_version=latest)
+            return
+
+        # Walk up to the chain root (parent chain TaskInstance).
+        node = new_call.task_instance
+        seen: set[int] = set()
+        while node is not None and node.pk not in seen:
+            seen.add(node.pk)
+            parents = list(node.parent_instances.all())
+            if not parents:
+                break
+            node = parents[0] if parents else node
+        root = node
+
+        # Collect the whole subtree (root + all descendant instances).
+        subtree: set[int] = set()
+        stack = [root]
+        while stack:
+            node = stack.pop()
+            if node.pk in subtree:
+                continue
+            subtree.add(node.pk)
+            stack.extend(node.child_instances.all())
+
+        if not subtree:
+            AgentTaskCall.objects.filter(pk=new_call.pk).update(session_version=latest)
+            return
+
+        TaskInstance.objects.filter(pk__in=subtree).update(session_version=latest)
+        AgentTaskCall.objects.filter(
+            task_instance_id__in=subtree,
+            status__in=[
+                TaskCallStatus.NEW,
+                TaskCallStatus.WAITING,
+                TaskCallStatus.HALTED,
+            ],
+        ).update(session_version=latest)
 
     def instance(self, args: Any = None, kwargs: Any = None, **options: Any) -> TaskInstance:
         """

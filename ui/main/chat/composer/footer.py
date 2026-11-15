@@ -396,7 +396,7 @@ class ComposerFooter(PyHtmlView):
                 "content_type": MessageContentType.TEXT,
                 "content": parts
             },]
-        self.eval_javascript(f"document.getElementById('input_{self.parent.uid}').value = ''", skip_results=True)
+        self.eval_javascript(f"var el=document.getElementById('input_{self.parent.uid}');if(el)el.value=''", skip_results=True)
         try:
             if action == "stop":
                 self.subject.stop_generation()

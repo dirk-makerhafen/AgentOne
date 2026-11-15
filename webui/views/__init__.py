@@ -43,6 +43,7 @@ from webui.views.chat import (
     query_detail,
     queue_action,
     ratelimit_action,
+    response_detail,
     send_message,
     subagent_close,
     subagent_open,
@@ -63,7 +64,6 @@ from webui.views.collections import (
     collection_toggle,
     collections,
 )
-from webui.views.common import thread_triggers as _thread_triggers
 from webui.views.cron import (
     cron_call_cancel,
     cron_create,

@@ -18,7 +18,9 @@ from server.models.enums.message_enums import (
     MessageContentType,
     MessagePartType,
     MessageRole,
+    MessageType,
 )
+from server.models.enums.session_enums import SessionType
 from server.models.message import Message, MessagePart
 
 COMPACT_SCRIPTS = os.path.join(
@@ -205,3 +207,99 @@ class SessionBootstrapTest(TestCase):
                 session=self.sv.session, pin_to_context=True
             ).exists()
         )
+
+    def _make_fork_session(self, session_type: str, anchor=None):
+        """Create a child session with the given session_type, linked to parent."""
+        from server.models.agents.agent_version import AgentVersionModel
+        from server.models.sessions.session import SessionModel
+        from server.models.sessions.session_version import SessionVersionModel
+
+        child_session_model = SessionModel.objects.create(
+            name=f"fork-{session_type}",
+            parent_session=self.session_model,
+            session_type=session_type,
+        )
+        child_sv = SessionVersionModel.objects.create(
+            session=child_session_model,
+            agent=self.agent,
+            pinned_agent_version=self.av,
+            workspace=self.workspace,
+            parent_session=self.session_model,
+            version_number=1,
+        )
+        SessionModel.objects.filter(pk=child_session_model.pk).update(
+            latest_session_version=child_sv
+        )
+        child_session_model.refresh_from_db()
+        from runtime.session.session import Session
+
+        child_runtime = Session(session_model=child_session_model)
+        if anchor is not None:
+            # Create a hidden anchor message in child session pointing to parent
+            child_runtime._persist_message(
+                role="info",
+                message_type="info",
+                content=f"Forked from session #{self.session_model.pk}.",
+                hide_from_context=True,
+                prev_message=anchor,
+            )
+        return child_runtime
+
+    def test_subtask_fork_no_bootstrap(self):
+        """SUBTASK_FORK sessions inherit history via anchor and should not create bootstrap."""
+        anchor = self._user_message("parent message")
+        child_runtime = self._make_fork_session(SessionType.SUBTASK_FORK.value, anchor=anchor)
+
+        trigger = self._user_message("child trigger", prev=child_runtime.get_last_message())
+        created = ensure_session_bootstrap(child_runtime, trigger)
+        self.assertEqual(created, [], "SUBTASK_FORK should not create bootstrap messages")
+
+    def test_subtask_hook_no_bootstrap(self):
+        """SUBTASK_HOOK sessions inherit history via anchor and should not create bootstrap."""
+        anchor = self._user_message("parent message")
+        child_runtime = self._make_fork_session(SessionType.SUBTASK_HOOK.value, anchor=anchor)
+
+        trigger = self._user_message("child trigger", prev=child_runtime.get_last_message())
+        created = ensure_session_bootstrap(child_runtime, trigger)
+        self.assertEqual(created, [], "SUBTASK_HOOK should not create bootstrap messages")
+
+    def test_subtask_compaction_no_bootstrap(self):
+        """SUBTASK_COMPACT sessions inherit history via anchor and should not create bootstrap."""
+        anchor = self._user_message("parent message")
+        child_runtime = self._make_fork_session(SessionType.SUBTASK_COMPACT.value, anchor=anchor)
+
+        trigger = self._user_message("child trigger", prev=child_runtime.get_last_message())
+        created = ensure_session_bootstrap(child_runtime, trigger)
+        self.assertEqual(created, [], "SUBTASK_COMPACT should not create bootstrap messages")
+
+    def test_subtask_delegate_gets_bootstrap(self):
+        """SUBTASK_DELEGATE sessions have fresh history (no anchor) and SHOULD get bootstrap."""
+        child_runtime = self._make_fork_session(SessionType.SUBTASK_DELEGATE.value)
+
+        trigger = self._user_message("child trigger", prev=child_runtime.get_last_message())
+        created = ensure_session_bootstrap(child_runtime, trigger)
+        self.assertEqual(len(created), 2, "SUBTASK_DELEGATE should create bootstrap messages")
+
+    def test_subsession_gets_bootstrap(self):
+        """SUBSESSION (named background session) has fresh history and SHOULD get bootstrap."""
+        child_runtime = self._make_fork_session(SessionType.SUBSESSION.value)
+
+        trigger = self._user_message("child trigger", prev=child_runtime.get_last_message())
+        created = ensure_session_bootstrap(child_runtime, trigger)
+        self.assertEqual(len(created), 2, "SUBSESSION should create bootstrap messages")
+
+    def test_regular_session_gets_bootstrap(self):
+        """SESSION (user-facing) has fresh history and SHOULD get bootstrap."""
+        child_runtime = self._make_fork_session(SessionType.SESSION.value)
+
+        trigger = self._user_message("child trigger", prev=child_runtime.get_last_message())
+        created = ensure_session_bootstrap(child_runtime, trigger)
+        self.assertEqual(len(created), 2, "SESSION should create bootstrap messages")
+
+    def test_cronjob_gets_bootstrap(self):
+        """CRONJOB sessions have fresh history and SHOULD get bootstrap."""
+        child_runtime = self._make_fork_session(SessionType.CRONJOB.value)
+
+        trigger = self._user_message("child trigger", prev=child_runtime.get_last_message())
+        created = ensure_session_bootstrap(child_runtime, trigger)
+        self.assertEqual(len(created), 2, "CRONJOB should create bootstrap messages")

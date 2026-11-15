@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any
 
 from django.utils import timezone
 
+from server.models.content import resolve_generic_content_refs
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail, TaskRunStatus
 from runtime.tasks.call_fsm import TaskCallStateMachine
@@ -496,12 +497,14 @@ class CallScheduler:
         if tc.requires_approval:
             return
 
-        ok, reason = validate_questions((tc.carguments_json or {}).get("questions"))
+        args = dict(tc.carguments_json or {})
+        # Resolve any GenericContent references in the stored arguments
+        args = resolve_generic_content_refs(args)
+        ok, reason = validate_questions(args.get("questions"))
         if not ok:
             print(f"  # ASK_USER: invalid questions, letting tool report: {reason[:80]}")
             return
 
-        args = dict(tc.carguments_json or {})
         # Never trust LLM-supplied answers — the user answers via the card.
         args.pop("answers", None)
         count = len(normalize_questions(args.get("questions")))
@@ -549,6 +552,8 @@ class CallScheduler:
             return False, "This call is not a user question."
 
         args = dict(call.carguments_json or {})
+        # Resolve any GenericContent references in the stored arguments
+        args = resolve_generic_content_refs(args)
         questions = normalize_questions(args.get("questions"))
         ok, reason = validate_questions(args.get("questions"))
         if not ok:

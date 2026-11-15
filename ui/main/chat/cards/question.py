@@ -12,6 +12,7 @@ the approval-denial path ("proceed with best judgment").
 from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any
+from server.models.content import resolve_generic_content_refs
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
 from runtime.user_questions import (
@@ -137,6 +138,8 @@ class QuestionCard(PyHtmlView):
         items: list[dict[str, Any]] = []
         for call in self.pending_calls:
             args = call.carguments_json or {}
+            # Resolve any GenericContent references in the stored arguments
+            args = resolve_generic_content_refs(args)
             answers = args.get("answers") or {}
             for qidx, q in enumerate(normalize_questions(args.get("questions"))):
                 raw = answers.get(q["question"])
@@ -170,7 +173,10 @@ class QuestionCard(PyHtmlView):
         ).first()
 
     def _question_text(self, call: AgentTaskCall, qidx: int) -> str | None:
-        questions = normalize_questions((call.carguments_json or {}).get("questions"))
+        args = call.carguments_json or {}
+        # Resolve any GenericContent references in the stored arguments
+        args = resolve_generic_content_refs(args)
+        questions = normalize_questions(args.get("questions"))
         if 0 <= qidx < len(questions):
             return questions[qidx]["question"]
         return None
@@ -191,7 +197,10 @@ class QuestionCard(PyHtmlView):
         call = self._call_or_none(pk)
         if call is None:
             return
-        questions = normalize_questions((call.carguments_json or {}).get("questions"))
+        args = call.carguments_json or {}
+        # Resolve any GenericContent references in the stored arguments
+        args = resolve_generic_content_refs(args)
+        questions = normalize_questions(args.get("questions"))
         if not (0 <= qidx < len(questions)):
             return
         options = questions[qidx]["options"]
@@ -208,7 +217,10 @@ class QuestionCard(PyHtmlView):
         call = self._call_or_none(pk)
         if call is None:
             return
-        questions = normalize_questions((call.carguments_json or {}).get("questions"))
+        args = call.carguments_json or {}
+        # Resolve any GenericContent references in the stored arguments
+        args = resolve_generic_content_refs(args)
+        questions = normalize_questions(args.get("questions"))
         if not (0 <= qidx < len(questions)):
             return
         options = questions[qidx]["options"]

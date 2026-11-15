@@ -1,6 +1,8 @@
 <div class="msg-row webui-response-row" data-role="assistant" data-pk="{{ row.obj.pk }}">
     <details class="query-card response-card{% if row.obj.status == 'ACTIVE' %} query-active{% endif %}"
-             data-open-key="response-{{ row.obj.pk }}" open>
+             data-open-key="response-{{ row.obj.pk }}" open
+             hx-ext="sse"
+             sse-connect="{% url 'webui:sse' %}?scope=session:{{ session.pk }}">
         <summary class="query-card-header">
             <span class="card-icon">✎</span>
             <span class="card-title">Response</span>
@@ -11,7 +13,12 @@
             <span class="card-status {{ row.obj.status|lower }}">{{ row.obj.status }}</span>
             <span class="query-card-toggle">▸</span>
         </summary>
-        <div class="query-card-detail">
+        <div class="query-card-detail"
+             hx-get="{% url 'webui:response_detail' row.obj.pk %}"
+             hx-trigger="sse:Response.session:{{ session.pk }} delay:50ms"
+             hx-target="this"
+             hx-swap="outerHTML"
+             hx-sync="this:replace">
             {% if row.reasoning %}
             <details class="thinking-card webui-inline-thinking"
                      data-open-key="think-response-{{ row.obj.pk }}">

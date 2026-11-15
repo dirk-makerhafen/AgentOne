@@ -194,6 +194,7 @@ def decide_next_step(_session: Session, response: Response, parts: list[dict[str
     is_final_result = False
 
     if _session.max_turns and _session.current_turn_count >= _session.max_turns:
+        _session.request_end(reason="max_turns_reached")
         return message
 
     if _session.max_unattended_turns and _session.current_unattended_turn_count >= _session.max_unattended_turns:

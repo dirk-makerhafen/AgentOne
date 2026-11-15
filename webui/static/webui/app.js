@@ -228,7 +228,32 @@
                 target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             });
         });
+        // Dropdown toggles
+        root.querySelectorAll('[data-dropdown-toggle]').forEach(function (btn) {
+            if (btn.dataset.bound === '1') return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function (evt) {
+                evt.stopPropagation();
+                var dropdown = btn.closest('[data-dropdown]');
+                if (!dropdown) return;
+                var isOpen = dropdown.getAttribute('aria-expanded') === 'true';
+                dropdown.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+                var menu = dropdown.querySelector('.webui-dropdown-menu');
+                if (menu) menu.hidden = isOpen;
+            });
+        });
     }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function (evt) {
+        document.querySelectorAll('[data-dropdown][aria-expanded="true"]').forEach(function (dropdown) {
+            if (!dropdown.contains(evt.target)) {
+                dropdown.setAttribute('aria-expanded', 'false');
+                var menu = dropdown.querySelector('.webui-dropdown-menu');
+                if (menu) menu.hidden = true;
+            }
+        });
+    });
 
     // Panel tabs swap the whole body element via htmx, so the new body carries
     // the hx-get for the visible tab. Only the active marker needs syncing
