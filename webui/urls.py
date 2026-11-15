@@ -223,6 +223,16 @@ urlpatterns = [
         views.model_probe_status,
         name="model_probe_status",
     ),
+    path(
+        "insights/models/<int:model_id>/detail",
+        views.model_detail,
+        name="model_detail",
+    ),
+    path(
+        "insights/providers/<int:provider_id>/detail",
+        views.provider_detail,
+        name="provider_detail",
+    ),
     path("logs", views.logs, name="logs"),
     path("logs/tail", views.logs_tail, name="logs_tail"),
     path("settings", views.settings_page, {"tab": "appearance"}, name="settings"),
@@ -238,4 +248,20 @@ urlpatterns = [
         views.settings_provider_test,
         name="settings_provider_test",
     ),
+
+    # Memory --------------------------------------------------------------
+    path("memory", views.memory, name="memory"),
+    path("memory/<str:node_id>", views.memory_node, name="memory_node"),
+    path("memory/improvements", views.memory_improvements, name="memory_improvements"),
+    path(
+        "memory/improvements/queue",
+        views.memory_improvements_queue,
+        name="memory_improvements_queue",
+    ),
+    path(
+        "memory/node/<str:node_id>/queue",
+        views.memory_node_queue,
+        name="memory_node_queue",
+    ),
+
 ]

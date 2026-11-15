@@ -75,7 +75,13 @@ from webui.views.cron import (
     cronjobs,
 )
 from webui.views.dashboard import chats, dashboard
-from webui.views.insights import insights, model_probe, model_probe_status
+from webui.views.insights import (
+    insights,
+    model_detail,
+    model_probe,
+    model_probe_status,
+    provider_detail,
+)
 from webui.views.logs import log_files, logs, logs_tail, tail
 from webui.views.projects import project_create, project_detail, project_edit, projects
 from webui.views.settings import (
@@ -103,6 +109,14 @@ from webui.views.workitems import (
     workitem_update,
     workitems,
     workitems_board,
+)
+
+from webui.views.memory import (
+    memory,
+    memory_improvements,
+    memory_improvements_queue,
+    memory_node,
+    memory_node_queue,
 )
 
 __all__ = [
@@ -154,8 +168,10 @@ __all__ = [
     "fork_chat",
     "import_conversation",
     "insights",
+    "model_detail",
     "model_probe",
     "model_probe_status",
+    "provider_detail",
     "log_files",
     "logs",
     "logs_tail",
@@ -201,4 +217,9 @@ __all__ = [
     "workitem_update",
     "workitems",
     "workitems_board",
+    "memory",
+    "memory_improvements",
+    "memory_improvements_queue",
+    "memory_node",
+    "memory_node_queue",
 ]

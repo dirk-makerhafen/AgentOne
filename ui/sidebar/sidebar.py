@@ -12,6 +12,7 @@ from ui.sidebar.panels.logs import SidebarPanelLogs
 from ui.sidebar.panels.projects import SidebarPanelProjects
 from ui.sidebar.panels.settings import SidebarPanelSettings
 from ui.sidebar.panels.skills import SidebarPanelSkills
+from ui.sidebar.panels.memory import SidebarPanelMemory
 from ui.sidebar.panels.workitems import SidebarPanelWorkItems
 from ui.sidebar.panels.workspaces import SidebarPanelWorkspaces
 from ui.sidebar.project_selector import ProjectSelector
@@ -56,9 +57,9 @@ class SidebarView(ModelView):
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 <div class="rail-button-text" style="display:none">Skills</div>
             </button>
-            <button class="nav-tab" data-panel="memory" data-label="Memory" onclick="pyview.switchPanel('memory')" title="Memory" data-i18n-title="tab_memory" style="display:none">
+            <button class="nav-tab" data-panel="memory" data-label="Memory" onclick="pyview.switchPanel('memory')" title="Memory" data-i18n-title="tab_memory">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2z"/></svg>
-                <div class="rail-button-text" style="display:none">Memory</div>
+                <div class="rail-button-text">Memory</div>
             </button>
             <button class="nav-tab" data-panel="workspaces" data-label="Spaces" onclick="pyview.switchPanel('workspaces')" title="Spaces" data-i18n-title="tab_workspaces">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -125,6 +126,7 @@ class SidebarView(ModelView):
             workspaces = SidebarPanelWorkspaces(subject=self.subject, parent=self),
             settings = SidebarPanelSettings(subject=self.subject, parent=self),
             skills = SidebarPanelSkills(subject=self.subject, parent=self),
+            memory = SidebarPanelMemory(subject=self.subject, parent=self),
         )
         default_panel = self._instance.url_params.get("SidebarView", "dashboard")
         self.switchPanel(default_panel)

@@ -7,6 +7,7 @@ import platform
 from django.conf import settings as django_settings
 from django.core.cache import cache
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -175,7 +176,15 @@ def settings_provider_test(request, provider_id: int):
             probe_model.delay(model.pk)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         cache.set(_probe_error_key(provider.pk), str(exc), _PROBE_MAPPING_TTL)
-    return redirect("/app/settings/providers")
+    redirect_to = "/app/settings/providers"
+    next_url = (request.POST.get("next") or "").strip()
+    if next_url.startswith("/app/"):
+        redirect_to = next_url
+    if request.headers.get("HX-Request") == "true":
+        # htmx follows HX-Redirect as a full page navigation, so the calling
+        # view can send the user back to wherever the test was started.
+        return HttpResponse("", headers={"HX-Redirect": redirect_to})
+    return redirect(redirect_to)
 
 
 def _system_info() -> dict:

@@ -1,0 +1,137 @@
+{% extends "webui/page.html" %}
+{% load webui %}
+{% block title %}Memory improvements · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title-row">
+            <div class="main-view-title">Memory improvements</div>
+            <span class="mem-badge kind">{{ pyview.project_label }}</span>
+        </div>
+        <div class="main-view-actions">
+            {% if pyview.counts.queueable %}
+            <button class="btn primary" onclick="pyview.queue_visible()">
+                File visible ({{ pyview.counts.queueable }})
+            </button>
+            {% endif %}
+            <button class="panel-head-btn" onclick="pyview.refresh()"
+                    title="Refresh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+        </div>
+    </header>
+    <div class="main-view-body">
+        <div class="main-view-content mem-page">
+
+            {% if pyview.message %}
+            <div class="mem-message
+                 {% if pyview.message_ok %}ok{% else %}err{% endif %}">
+                {{ pyview.message }}</div>
+            {% endif %}
+
+            <div class="mem-hero">
+                <div class="mem-stat">
+                    <div class="mem-stat-label">Visible proposals</div>
+                    <div class="mem-stat-value">{{ pyview.counts.total }}</div>
+                    <div class="mem-stat-sub">deduplicated across scopes</div>
+                </div>
+                <div class="mem-stat {% if pyview.counts.queueable %}warn{% endif %}">
+                    <div class="mem-stat-label">Waiting</div>
+                    <div class="mem-stat-value">{{ pyview.counts.queueable }}</div>
+                    <div class="mem-stat-sub">not filed yet</div>
+                </div>
+                <div class="mem-stat ok">
+                    <div class="mem-stat-label">Filed</div>
+                    <div class="mem-stat-value">{{ pyview.counts.queued }}</div>
+                    <div class="mem-stat-sub">backlog work items</div>
+                </div>
+            </div>
+
+            <div class="mem-filter-bar">
+                <select onchange="pyview.set_kind_filter(this.value)">
+                    <option value="">All kinds</option>
+                    {% for kind in pyview.kind_options %}
+                    <option value="{{ kind }}" {% if kind == pyview.kind_filter %}selected{% endif %}>{{ kind }}</option>
+                    {% endfor %}
+                </select>
+                <select onchange="pyview.set_status_filter(this.value)">
+                    <option value="">All statuses</option>
+                    {% for status in pyview.status_options %}
+                    <option value="{{ status }}" {% if status == pyview.status_filter %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+                <select onchange="pyview.set_scope_filter(this.value)">
+                    <option value="">All scopes</option>
+                    {% for scope in pyview.scope_options %}
+                    <option value="{{ scope }}" {% if scope == pyview.scope_filter %}selected{% endif %}>{{ scope }}</option>
+                    {% endfor %}
+                </select>
+                <input type="text" placeholder="Search proposals..."
+                       value="{{ pyview.search }}" onchange="pyview.set_search(this.value)">
+                <label class="mem-filter-check">
+                    <input type="checkbox" {% if pyview.hide_queued %}checked{% endif %}
+                           onchange="pyview.set_hide_queued(this.checked)">
+                    Hide filed
+                </label>
+            </div>
+
+            {% if not pyview.proposals %}
+                <div class="mem-empty">
+                    No proposals match these filters.
+                    {% if not pyview.all_proposals %}
+                        Improvement proposals appear after a node is synthesized with something bigger than a directive.
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% for proposal in pyview.proposals %}
+            <div class="mem-proposal">
+                <div class="mem-proposal-head">
+                    <span class="mem-badge kind">{{ proposal.kind }}</span>
+                    <span class="mem-badge{% if proposal.status == 'candidate' %} warn{% endif %}">{{ proposal.status }}</span>
+                    <span class="mem-badge">{{ proposal.source }}</span>
+                    <code class="mem-mono">{{ proposal.id }}</code>
+                    {% if proposal.queued %}<span class="mem-badge ok">filed #{{ proposal.queued.id }}</span>{% endif %}
+                </div>
+                <div class="mem-proposal-summary">{{ proposal.summary }}</div>
+                {% if proposal.detail %}<div class="mem-proposal-detail">{{ proposal.detail }}</div>{% endif %}
+                {% if proposal.trigger %}<div class="mem-proposal-meta">Trigger: {{ proposal.trigger }}</div>{% endif %}
+                {% if proposal.acceptance %}<div class="mem-proposal-meta">Acceptance: {{ proposal.acceptance }}</div>{% endif %}
+                {% if proposal.evidence %}<div class="mem-proposal-meta">Evidence: {{ proposal.evidence|join(', ') }}</div>{% endif %}
+                <div class="mem-proposal-meta">From <span class="mem-mono">{{ proposal.node_label }}</span> · {{ proposal.path }}</div>
+                <div class="mem-proposal-actions">
+                    <button class="btn" onclick="pyview.open_node('{{ proposal.node_id }}')">Open node</button>
+                    {% if proposal.queued %}
+                        <span class="mem-muted">Already filed as #{{ proposal.queued.id }} ({{ proposal.queued.status }}).</span>
+                    {% elif proposal.kind in pyview._queueable_kinds() %}
+                        <button class="btn primary"
+                                onclick="pyview.queue_proposal('{{ proposal.fingerprint }}')">
+                            File as backlog
+                        </button>
+                    {% else %}
+                        <span class="mem-muted">Not queueable.</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="detail-card">
+                <div class="detail-card-title">What filing does</div>
+                <div class="mem-ladder">
+                    A filed proposal becomes a <strong>backlog</strong> work item with the full
+                    spec, acceptance check and evidence. Backlog items do not dispatch. A
+                    human promotes one to <em>ready</em> after reviewing it, and implementation
+                    still goes through the normal coding/verification path.
+                    <br><br>
+                    This page never applies a proposal, edits a manifest, or runs the memory
+                    walker. Duplicate fingerprints are shown once; the most specific scope wins.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

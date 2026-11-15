@@ -82,7 +82,7 @@ class MainView(PyHtmlView):
         if panel is None:
             return
         for attr in ('agent_list', 'cronjob_list', 'collection_list', 'project_list',
-                     'workspace_list', 'skill_list', 'workitem_list'):
+                     'workspace_list', 'skill_list', 'workitem_list', 'memory_list'):
             lst = getattr(panel, attr, None)
             if lst is not None:
                 lst.update()

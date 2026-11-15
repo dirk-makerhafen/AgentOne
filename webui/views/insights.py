@@ -10,12 +10,14 @@ from django.db.models import Avg, Count, Sum
 from django.db.models.functions import Trunc
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from server.models.agents.agent import AgentModel
 from server.models.collections.data_collection import DataCollection
 from server.models.cron import Cronjob
+from server.models.enums.provider_enums import HealthStatus
 from server.models.message import Message
 from server.models.project import Project
 from server.models.providers.ai_model import AiModel
@@ -365,95 +367,438 @@ def _analytics_context(request):
     }
 
 
-def _providers_context(request=None):
-    providers = list(
-        ApiProvider.objects.prefetch_related("api_keys", "aimodels")
-        .annotate(model_total=Count("aimodels", distinct=True))
-        .order_by("name")
-    )
-    provider_ids = [provider.pk for provider in providers]
-    windows = (
+MODE_LABELS = (
+    ("supports_reasoning", "Reason"),
+    ("supports_tool_call", "Tools"),
+    ("vision", "Vision"),
+    ("audio", "Audio"),
+    ("video", "Video"),
+)
+
+LIMIT_LABELS = (
+    ("limit_request_per_minute", "RPM"),
+    ("limit_request_per_hour", "RPH"),
+    ("limit_request_per_day", "RPD"),
+    ("limit_request_per_week", "RPW"),
+    ("limit_request_per_month", "RPMo"),
+    ("limit_tokens_per_minute", "TPM"),
+    ("limit_tokens_per_hour", "TPH"),
+    ("limit_tokens_per_day", "TPD"),
+    ("limit_tokens_per_week", "TPW"),
+    ("limit_tokens_per_month", "TPMo"),
+    ("limit_parallel_calls", "Parallel calls"),
+)
+
+#: Model catalog rows rendered in one page (the table filters client-side).
+INSIGHT_MODEL_LIMIT = 500
+
+_HEALTH_PRIORITY = {
+    HealthStatus.UNKNOWN: 0,
+    HealthStatus.HEALTHY: 1,
+    HealthStatus.RATE_LIMITED: 2,
+    HealthStatus.DEGRADED: 3,
+    HealthStatus.CONFIG_ERROR: 4,
+    HealthStatus.UNAVAILABLE: 5,
+    HealthStatus.AUTH_ERROR: 6,
+}
+
+_STATUS_META = {
+    HealthStatus.HEALTHY: ("healthy", "ok"),
+    HealthStatus.RATE_LIMITED: ("rate limited", "warn"),
+    HealthStatus.DEGRADED: ("degraded", "warn"),
+    HealthStatus.CONFIG_ERROR: ("config error", "err"),
+    HealthStatus.UNAVAILABLE: ("unavailable", "err"),
+    HealthStatus.AUTH_ERROR: ("auth error", "err"),
+}
+
+
+def _status_dict(status: str) -> dict:
+    """UI badge data for an observed health status."""
+    label, kind = _STATUS_META.get(status, ("", ""))
+    return {"label": label, "kind": kind}
+
+
+def _worst_status(members) -> str:
+    """Most severe observed status across *members* (models/providers/keys)."""
+    worst = HealthStatus.UNKNOWN
+    for member in members:
+        status = getattr(member, "status", HealthStatus.UNKNOWN)
+        if _HEALTH_PRIORITY.get(status, 0) > _HEALTH_PRIORITY.get(worst, 0):
+            worst = status
+    return worst
+
+
+def _params_str(total_parameters: float | None) -> str:
+    if not total_parameters:
+        return "—"
+    value = float(total_parameters)
+    if value >= 1:
+        return f"{value:g}B"
+    return f"{value * 1000:g}M"
+
+
+def _rank_str(rank: int | None, is_estimate: bool = False) -> str:
+    if rank is None:
+        return "—"
+    return f"~{rank}" if is_estimate else f"#{rank}"
+
+
+def _context_str(context: int | None) -> str:
+    if not context:
+        return "—"
+    if context >= 1_000_000:
+        return f"{context / 1_000_000:g}M"
+    if context >= 1_000:
+        return f"{context / 1_000:g}k"
+    return f"{context:,}"
+
+
+def _last_usage_display(value) -> str:
+    if not value:
+        return "—"
+    return timezone.localtime(value).strftime("%Y-%m-%d %H:%M")
+
+
+def _limit_rows(instance) -> list[tuple[str, int]]:
+    return [
+        (label, getattr(instance, field, 0))
+        for field, label in LIMIT_LABELS
+        if getattr(instance, field, 0)
+    ]
+
+
+def _limits_str(instance) -> str:
+    parts = [
+        f"{value} {label}"
+        for field, label in LIMIT_LABELS
+        if (value := getattr(instance, field, 0))
+    ]
+    return " · ".join(parts) if parts else "Unlimited"
+
+
+def _modes_for(members) -> list[str]:
+    return [
+        label
+        for field, label in MODE_LABELS
+        if any(getattr(member, field, False) for member in members)
+    ]
+
+
+def _usage_windows(qs, now=None) -> list[dict]:
+    """Successful request/token counts for the last 24h, 7d and 30d."""
+    now = now or timezone.now()
+    windows = []
+    for label, delta in (
         ("24h", timedelta(hours=24)),
         ("7d", timedelta(days=7)),
         ("30d", timedelta(days=30)),
-    )
-    usage = {provider_id: [] for provider_id in provider_ids}
-    now = timezone.now()
-    for label, delta in windows:
-        rows = Response.objects.filter(
-            status=ResponseStatus.SUCCESS,
-            created_at__gte=now - delta,
-            aimodel__api_provider_id__in=provider_ids,
-        ).values("aimodel__api_provider_id").annotate(
+    ):
+        agg = qs.filter(created_at__gte=now - delta).aggregate(
             requests=Count("pk"),
             prompt=Sum("prompt_tokens"),
             completion=Sum("completion_tokens"),
         )
-        by_provider = {row["aimodel__api_provider_id"]: row for row in rows}
-        for provider_id in provider_ids:
-            row = by_provider.get(provider_id, {})
-            tokens = (row.get("prompt") or 0) + (row.get("completion") or 0)
-            usage[provider_id].append(
-                f'{label}: {row.get("requests") or 0} req · {tokens} tok'
-            )
-    limit_labels = (
-        ("limit_request_per_minute", "RPM"),
-        ("limit_request_per_hour", "RPH"),
-        ("limit_request_per_day", "RPD"),
-        ("limit_request_per_week", "RPW"),
-        ("limit_request_per_month", "RPMo"),
-        ("limit_tokens_per_minute", "TPM"),
-        ("limit_tokens_per_hour", "TPH"),
-        ("limit_tokens_per_day", "TPD"),
-        ("limit_tokens_per_week", "TPW"),
-        ("limit_tokens_per_month", "TPMo"),
-        ("limit_parallel_calls", "Parallel calls"),
-    )
-    for provider in providers:
-        provider.detail_usage = usage.get(provider.pk, [])
-        provider.limit_rows = [
-            (label, getattr(provider, field))
-            for field, label in limit_labels
-            if getattr(provider, field, 0)
-        ]
-    return {"providers": providers}
+        windows.append(
+            {
+                "window": label,
+                "requests": agg["requests"] or 0,
+                "tokens": (agg["prompt"] or 0) + (agg["completion"] or 0),
+            }
+        )
+    return windows
 
 
-def _models_context(request=None):
-    models = list(
-        AiModel.objects.select_related("api_provider").order_by("name")[:500]
-    )
+def _key_state(provider) -> tuple[str, int]:
+    if provider.default_api_key:
+        return "built-in", 0
+    enabled = sum(1 for key in provider.api_keys.all() if key.enabled)
+    return ("keys", enabled) if enabled else ("none", 0)
+
+
+def _model_groups() -> tuple[dict[str, list], list[str]]:
+    """Group model variants by canonical identity, preserving name order."""
     variants = list(
         AiModel.objects.select_related("api_provider")
         .prefetch_related("api_provider__api_keys")
-        .order_by("name")
+        .order_by("name")[:INSIGHT_MODEL_LIMIT]
     )
     groups: dict[str, list] = {}
+    order: list[str] = []
     for variant in variants:
         key = variant.canonical_id or variant.leaderboard_id or variant.name
-        groups.setdefault(key, []).append(variant)
-    for model in models:
-        key = model.canonical_id or model.leaderboard_id or model.name
-        rows = []
-        for variant in groups.get(key, []):
-            provider = variant.api_provider
-            has_key = bool(provider.default_api_key) or any(
-                api_key.enabled for api_key in provider.api_keys.all()
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(variant)
+    return groups, order
+
+
+def _model_representatives() -> dict[int, int]:
+    """Map every ``AiModel`` pk to the pk its canonical group renders as."""
+    representatives: dict[str, int] = {}
+    mapping: dict[int, int] = {}
+    for pk, canonical_id, leaderboard_id, name in AiModel.objects.values_list(
+        "pk", "canonical_id", "leaderboard_id", "name"
+    ):
+        key = canonical_id or leaderboard_id or name
+        mapping[pk] = representatives.setdefault(key, pk)
+    return mapping
+
+
+def _providers_context(request=None):
+    providers = list(
+        ApiProvider.objects.prefetch_related("api_keys", "aimodels").order_by("name")
+    )
+    provider_ids = [provider.pk for provider in providers]
+    usage = {provider_id: {} for provider_id in provider_ids}
+    now = timezone.now()
+    for label, delta in (
+        ("24h", timedelta(hours=24)),
+        ("7d", timedelta(days=7)),
+        ("30d", timedelta(days=30)),
+    ):
+        stats = (
+            Response.objects.filter(
+                status=ResponseStatus.SUCCESS,
+                created_at__gte=now - delta,
+                aimodel__api_provider_id__in=provider_ids,
             )
-            rows.append(
-                {
-                    "pk": variant.pk,
-                    "provider": provider.name,
-                    "provider_model_id": variant.provider_model_id,
-                    "key_note": "key" if has_key else "no key",
-                    "health": variant.health_label,
-                    "health_reason": variant.status_reason,
-                    "conditions": variant.conditions,
-                }
+            .values("aimodel__api_provider_id")
+            .annotate(
+                requests=Count("pk"),
+                prompt=Sum("prompt_tokens"),
+                completion=Sum("completion_tokens"),
             )
-        rows.sort(key=lambda row: row["provider"].lower())
-        model.variant_rows = rows
-    return {"models": models}
+        )
+        by_provider = {row["aimodel__api_provider_id"]: row for row in stats}
+        for provider in providers:
+            row = by_provider.get(provider.pk, {})
+            usage[provider.pk][label] = {
+                "requests": row.get("requests") or 0,
+                "tokens": (row.get("prompt") or 0) + (row.get("completion") or 0),
+            }
+
+    representative = _model_representatives()
+    rows = []
+    for provider in providers:
+        key_state, key_count = _key_state(provider)
+        models = sorted(provider.aimodels.all(), key=lambda model: model.name.lower())
+        limits = _limits_str(provider)
+        search_parts = [
+            provider.name,
+            provider.slug,
+            provider.url,
+            provider.litellm_prefix,
+            limits,
+        ]
+        search_parts.extend(model.name for model in models)
+        rows.append(
+            {
+                "id": provider.pk,
+                "name": provider.name,
+                "slug": provider.slug,
+                "is_local": provider.is_local,
+                "key_state": key_state,
+                "key_count": key_count,
+                "limits": limits,
+                "requests_24h": usage[provider.pk]["24h"]["requests"],
+                "tokens_24h": usage[provider.pk]["24h"]["tokens"],
+                "requests_30d": usage[provider.pk]["30d"]["requests"],
+                "tokens_30d": usage[provider.pk]["30d"]["tokens"],
+                "model_count": len(models),
+                "model_links": [
+                    {"pk": representative.get(model.pk, model.pk), "name": model.name}
+                    for model in models[:2]
+                ],
+                "status": {**_status_dict(provider.status), "reason": provider.status_reason},
+                "enabled": provider.enabled,
+                "detail_url": reverse("webui:provider_detail", args=[provider.pk]),
+                "search": " ".join(part for part in search_parts if part).lower(),
+            }
+        )
+    return {"providers": rows}
+
+
+def _models_context(request=None):
+    groups, order = _model_groups()
+    rows = []
+    for key in order:
+        members = groups[key]
+        first = members[0]
+        providers = sorted(
+            {member.api_provider for member in members},
+            key=lambda provider: provider.name.lower(),
+        )
+        with_key = sum(
+            1
+            for provider in providers
+            if provider.default_api_key
+            or any(api_key.enabled for api_key in provider.api_keys.all())
+        )
+        ranks = [
+            (member.leaderboard_rank, member.leaderboard_rank_is_estimate)
+            for member in members
+            if member.leaderboard_rank is not None
+        ]
+        best_rank, best_estimate = (
+            min(ranks, key=lambda item: item[0]) if ranks else (None, False)
+        )
+        params = max((member.total_parameters or 0) for member in members)
+        context = max((member.context_length or 0) for member in members)
+        modes = _modes_for(members)
+        search_parts = [
+            first.name,
+            first.developer,
+            first.family,
+            first.canonical_id,
+            first.provider_model_id,
+        ]
+        search_parts.extend(provider.name for provider in providers)
+        search_parts.extend(member.provider_model_id for member in members)
+        search_parts.extend(modes)
+        rows.append(
+            {
+                "id": first.pk,
+                "name": first.name,
+                "developer": first.developer,
+                "providers": [
+                    {"pk": provider.pk, "name": provider.name}
+                    for provider in providers[:2]
+                ],
+                "provider_count": len(providers),
+                "with_key": with_key,
+                "params": _params_str(params or None),
+                "_params": params,
+                "context": _context_str(context),
+                "_context": context,
+                "rank": _rank_str(best_rank, best_estimate),
+                "_rank": best_rank if best_rank is not None else "",
+                "modes": modes,
+                "health": _status_dict(_worst_status(members)),
+                "enabled": first.enabled,
+                "detail_url": reverse("webui:model_detail", args=[first.pk]),
+                "search": " ".join(part for part in search_parts if part).lower(),
+            }
+        )
+    return {"models": rows, "model_limit": INSIGHT_MODEL_LIMIT}
+
+
+def _model_group_members(model: AiModel) -> list[AiModel]:
+    base = AiModel.objects.select_related("api_provider").prefetch_related(
+        "api_provider__api_keys"
+    )
+    if model.canonical_id:
+        return list(base.filter(canonical_id=model.canonical_id).order_by("name"))
+    if model.leaderboard_id:
+        return list(base.filter(leaderboard_id=model.leaderboard_id).order_by("name"))
+    return list(base.filter(name=model.name).order_by("name"))
+
+
+def _model_detail_context(model: AiModel) -> dict:
+    from server.tasks.probe_model import get_cached_result, is_running
+
+    members = _model_group_members(model)
+    first = members[0] if members else model
+    ranks = [
+        (member.leaderboard_rank, member.leaderboard_rank_is_estimate)
+        for member in members
+        if member.leaderboard_rank is not None
+    ]
+    best_rank, best_estimate = (
+        min(ranks, key=lambda item: item[0]) if ranks else (None, False)
+    )
+    params = max((member.total_parameters or 0) for member in members)
+    context = max((member.context_length or 0) for member in members)
+    provider_rows = []
+    for member in members:
+        provider = member.api_provider
+        provider_rows.append(
+            {
+                "id": member.pk,
+                "provider_id": provider.pk,
+                "provider": provider.name,
+                "provider_model_id": member.provider_model_id,
+                "has_key": bool(provider.default_api_key)
+                or any(key.enabled for key in provider.api_keys.all()),
+                "health": _status_dict(member.status),
+                "health_reason": member.status_reason,
+                "conditions": member.conditions,
+                "enabled": member.enabled,
+                "probe": get_cached_result(member.pk),
+                "probe_running": is_running(member.pk),
+            }
+        )
+    provider_rows.sort(key=lambda row: row["provider"].lower())
+    last_usage = max(
+        (member.last_usage for member in members if member.last_usage), default=None
+    )
+    return {
+        "model": first,
+        "modes": _modes_for(members),
+        "rank": _rank_str(best_rank, best_estimate),
+        "params": _params_str(params or None),
+        "context": _context_str(context),
+        "health": _status_dict(_worst_status(members)),
+        "limits": _limit_rows(first),
+        "provider_rows": provider_rows,
+        "usage": _usage_windows(
+            Response.objects.filter(
+                status=ResponseStatus.SUCCESS,
+                aimodel_id__in=[member.pk for member in members],
+            )
+        ),
+        "last_usage": _last_usage_display(last_usage),
+    }
+
+
+def _provider_detail_context(provider: ApiProvider) -> dict:
+    from server.tasks.probe_model import get_cached_result, is_running
+
+    now = timezone.now()
+    keys = list(provider.api_keys.all().order_by("-enabled", "pk"))
+    models = list(provider.aimodels.select_related("api_provider").order_by("name"))
+    representative = _model_representatives()
+    description = (provider.description or "").strip() or (
+        provider.setup_instructions or ""
+    ).strip()
+    return {
+        "provider": provider,
+        "description": description,
+        "health": _status_dict(provider.status),
+        "key_rows": [
+            {
+                "comment": key.comment or "key",
+                "enabled": key.enabled,
+                "cooling": bool(key.rate_limit_until and key.rate_limit_until > now),
+                "health": _status_dict(key.status),
+                "limits": _limit_rows(key),
+            }
+            for key in keys
+        ],
+        "limit_rows": _limit_rows(provider),
+        "usage": _usage_windows(
+            Response.objects.filter(
+                status=ResponseStatus.SUCCESS,
+                aimodel__api_provider=provider,
+            ),
+            now=now,
+        ),
+        "last_usage": _last_usage_display(provider.last_usage),
+        "model_rows": [
+            {
+                "id": model.pk,
+                "representative_id": representative.get(model.pk, model.pk),
+                "name": model.name,
+                "provider_model_id": model.provider_model_id,
+                "enabled": model.enabled,
+                "health": _status_dict(model.status),
+                "last_usage": _last_usage_display(model.last_usage),
+                "probe": get_cached_result(model.pk),
+                "probe_running": is_running(model.pk),
+            }
+            for model in models
+        ],
+    }
 
 
 @require_POST
@@ -497,3 +842,23 @@ def model_probe_status(request, model_id: int):
 
 def _model_probe_requested_key(model_id: int) -> str:
     return f"webui:probe:model-requested:{model_id}"
+
+
+def model_detail(request, model_id: int):
+    """Right-panel fragment for one canonical model group."""
+    model = get_object_or_404(AiModel, pk=model_id)
+    return render(
+        request,
+        "webui/insights/_model_detail.html",
+        _model_detail_context(model),
+    )
+
+
+def provider_detail(request, provider_id: int):
+    """Right-panel fragment for one provider."""
+    provider = get_object_or_404(ApiProvider, pk=provider_id)
+    return render(
+        request,
+        "webui/insights/_provider_detail.html",
+        _provider_detail_context(provider),
+    )

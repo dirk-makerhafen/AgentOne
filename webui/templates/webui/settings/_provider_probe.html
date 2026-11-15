@@ -1,0 +1,29 @@
+<div class="webui-probe-row" id="provider-probe-{{ provider_id }}"
+     {% if probe.verdict == "running" %}
+     hx-get="{% url 'webui:settings_provider_probe' provider_id %}"
+     hx-trigger="every 3s" hx-swap="outerHTML"
+     {% endif %}>
+    <form method="post" action="{% url 'webui:settings_provider_test' provider_id %}"
+          hx-post="{% url 'webui:settings_provider_test' provider_id %}"
+          hx-target="#provider-probe-{{ provider_id }}" hx-swap="outerHTML">
+        {% csrf_token %}
+        <button class="webui-action-btn" type="submit"
+                {% if probe.verdict == "running" %}disabled{% endif %}>
+            {% if probe.verdict == "running" %}Testing…{% else %}Test{% endif %}
+        </button>
+    </form>
+    {% if probe %}
+    <span class="webui-probe-status is-{{ probe.verdict }}">
+        {% if probe.verdict == "running" %}
+        Running a smoke-test turn…
+        {% elif probe.verdict == "healthy" %}
+        Healthy · {{ probe.latency_ms }} ms{% if probe.model %} · {{ probe.model }}{% endif %}
+        {% elif probe.verdict == "failed" %}
+        Failed{% if probe.error_kind %} ({{ probe.error_kind }}){% endif %}:
+        {{ probe.error_message }}
+        {% else %}
+        {{ probe.verdict }}{% if probe.latency_ms %} · {{ probe.latency_ms }} ms{% endif %}
+        {% endif %}
+    </span>
+    {% endif %}
+</div>
