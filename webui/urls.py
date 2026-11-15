@@ -249,7 +249,6 @@ urlpatterns = [
         name="settings_provider_test",
     ),
 
-    # Memory --------------------------------------------------------------
     path("memory", views.memory, name="memory"),
     path("memory/<str:node_id>", views.memory_node, name="memory_node"),
     path("memory/improvements", views.memory_improvements, name="memory_improvements"),

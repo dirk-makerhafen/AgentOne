@@ -8,7 +8,7 @@ from django.conf import settings as django_settings
 from django.core.cache import cache
 from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect, render, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
