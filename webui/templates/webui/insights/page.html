@@ -15,8 +15,8 @@
             </nav>
         </div>
     </header>
-    <div class="main-view-body">
-        <div class="main-view-content">
+    <div class="main-view-body{% if tab == 'providers' or tab == 'models' %} insights-page-body{% endif %}">
+        <div class="main-view-content{% if tab == 'providers' or tab == 'models' %} insights-wide{% endif %}">
             {% if tab == "dashboard" %}
                 <div class="insights-grid">
                     {% for label, value in stats %}
@@ -180,7 +180,7 @@
                 <div class="insights-split" data-insights-split>
                     <div class="insights-table-card">
                         {% if providers %}
-                        <table class="insights-table">
+                        <table class="insights-table" data-insights-table>
                             <thead><tr>
                                 <th data-sort="name">Provider</th>
                                 <th data-sort="key">API key</th>
@@ -255,7 +255,7 @@
                 <div class="insights-split" data-insights-split>
                     <div class="insights-table-card">
                         {% if models %}
-                        <table class="insights-table">
+                        <table class="insights-table" data-insights-table>
                             <thead><tr>
                                 <th data-sort="name">Model</th>
                                 <th class="num" data-sort="providers" data-sort-type="number">Providers</th>

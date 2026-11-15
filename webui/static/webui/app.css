@@ -1164,6 +1164,11 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     color: var(--muted);
     white-space: nowrap;
 }
+.insights-page-body .main-view-content.insights-wide {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
 .insights-page-body {
     padding: 16px 24px;
     overflow: hidden;

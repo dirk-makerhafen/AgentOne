@@ -201,14 +201,12 @@
         var hash = (location.hash || '').replace('#', '');
         if (hash) initial = findRowById(hash);
         if (!initial && rows.length) initial = rows[0];
+        sortRows();
+        applyFilter();
         if (initial) {
-            // keep the default sort first so the selected row is in a sane place
-            sortRows();
-            applyFilter();
-            selectRow(initial, { silentScroll: false, updateHash: true });
-        } else {
-            sortRows();
-            applyFilter();
+            window.setTimeout(function () {
+                selectRow(initial, { silentScroll: false, updateHash: true });
+            }, 500);
         }
 
         window.addEventListener('hashchange', function () {

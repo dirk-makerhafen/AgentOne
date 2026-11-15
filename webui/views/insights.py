@@ -738,7 +738,7 @@ def _model_detail_context(model: AiModel) -> dict:
         "rank": _rank_str(best_rank, best_estimate),
         "params": _params_str(params or None),
         "context": _context_str(context),
-        "health": _status_dict(_worst_status(members)),
+        "health": {**_status_dict(_worst_status(members)), "reason": first.status_reason},
         "limits": _limit_rows(first),
         "provider_rows": provider_rows,
         "usage": _usage_windows(
@@ -764,7 +764,7 @@ def _provider_detail_context(provider: ApiProvider) -> dict:
     return {
         "provider": provider,
         "description": description,
-        "health": _status_dict(provider.status),
+        "health": {**_status_dict(provider.status), "reason": provider.status_reason},
         "key_rows": [
             {
                 "comment": key.comment or "key",
