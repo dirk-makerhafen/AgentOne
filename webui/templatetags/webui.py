@@ -70,6 +70,20 @@ def reltime(value) -> str:
     return f"{int(seconds // (365 * 86400))}y"
 
 
+@register.filter(name="intcomma")
+def intcomma(value) -> str:
+    """Format an integer with thousands separators (``1,234``)."""
+    if value is None or value == "":
+        return ""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if number == int(number):
+        return f"{int(number):,}"
+    return f"{number:,.2f}".rstrip("0").rstrip(".")
+
+
 @register.filter(name="clock")
 def clock(value) -> str:
     """Wall-clock time in the active timezone (``HH:MM``)."""

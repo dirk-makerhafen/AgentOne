@@ -1,0 +1,83 @@
+{% load webui %}
+<div class="rp-detail">
+    <div class="rp-detail-title">{{ provider.name }}</div>
+    <div class="rp-detail-sub muted">{{ provider.url|default:provider.slug }}</div>
+    <div class="rp-badges">
+        {% if provider.is_local %}<span class="mode-badge">local</span>{% endif %}
+        {% if provider.default_api_key %}<span class="key-badge key-builtin">built-in key</span>{% endif %}
+        {% if not provider.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
+        {% if health.label %}<span class="key-badge key-{{ health.kind }}" title="{{ health.reason }}">{{ health.label }}</span>{% endif %}
+    </div>
+
+    {% if description %}<div class="rp-section-title">About</div><div class="rp-desc">{{ description }}</div>{% endif %}
+
+    <div class="rp-section-title">Routing</div>
+    <div class="rp-kv"><span>Endpoint</span><span>{{ provider.url|default:"—" }}</span></div>
+    <div class="rp-kv"><span>Protocol</span><span>{{ provider.litellm_prefix|default:"OpenAI-compatible" }}</span></div>
+    <div class="rp-kv"><span>Slug</span><span><code>{{ provider.slug }}</code></span></div>
+    {% if provider.api_key_url %}<div class="rp-kv"><span>Get key</span><span><a class="webui-link" href="{{ provider.api_key_url }}" target="_blank" rel="noopener noreferrer">Provider console</a></span></div>{% endif %}
+
+    <div class="rp-section-title">API keys ({{ key_rows|length }})</div>
+    {% for key in key_rows %}
+    <div class="rp-kv">
+        <span>{{ key.comment }}</span>
+        <span>
+            {% if key.enabled %}enabled{% else %}disabled{% endif %}
+            {% if key.cooling %} · cooling down{% endif %}
+            {% if key.health.label %} · {{ key.health.label }}{% endif %}
+        </span>
+    </div>
+    {% if key.limits %}{% for label, value in key.limits %}<div class="rp-kv"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}{% endif %}
+    {% empty %}
+    <div class="muted">No keys configured.</div>
+    {% endfor %}
+
+    <div class="rp-section-title">Health</div>
+    <div class="rp-kv"><span>Status</span><span>{{ health.label|default:provider.status|lower }}</span></div>
+    {% if provider.status_reason %}<div class="rp-kv"><span>Reason</span><span>{{ provider.status_reason }}</span></div>{% endif %}
+    {% if provider.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ provider.status_retry_at }}</span></div>{% endif %}
+    {% if provider.consecutive_failures %}<div class="rp-kv"><span>Failures</span><span>{{ provider.consecutive_failures }}</span></div>{% endif %}
+
+    {% if limit_rows %}
+    <div class="rp-section-title">Limits</div>
+    {% for label, value in limit_rows %}<div class="rp-kv"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}
+    {% endif %}
+
+    <div class="rp-section-title">Usage</div>
+    <div class="rp-kv"><span>Last used</span><span>{{ last_usage }}</span></div>
+    {% for window in usage %}<div class="rp-kv"><span>{{ window.window }}</span><span>{{ window.requests }} req · {{ window.tokens }} tok</span></div>{% endfor %}
+
+    <div class="rp-section-title">Models ({{ model_rows|length }})</div>
+    {% for row in model_rows %}
+    <div class="rp-provider-row">
+        <div class="rp-provider-main">
+            <a class="webui-link" href="{% url 'webui:insights_tab' 'models' %}#model-{{ row.representative_id }}">{{ row.name }}</a>
+            {% if row.provider_model_id %}<span class="muted">{{ row.provider_model_id }}</span>{% endif %}
+            {% if not row.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
+            {% if row.health.label %}<span class="key-badge key-{{ row.health.kind }}">{{ row.health.label }}</span>{% endif %}
+        </div>
+        {% if row.last_usage and row.last_usage != "—" %}<div class="rp-conditions">last used {{ row.last_usage }}</div>{% endif %}
+        <form method="post" action="{% url 'webui:model_probe' row.id %}"
+              hx-post="{% url 'webui:model_probe' row.id %}"
+              hx-target="#model-probe-{{ row.id }}" hx-swap="innerHTML">
+            {% csrf_token %}
+            <button class="webui-action-btn" type="submit">Test</button>
+        </form>
+        <div id="model-probe-{{ row.id }}" class="insights-probe-out">
+            {% if row.probe_running %}<span class="webui-muted-note">Testing {{ row.name }}…</span>
+            {% elif row.probe %}<span class="webui-muted-note">{{ row.probe.verdict }}</span>
+            {% else %}<span class="webui-muted-note">No model test has run yet.</span>{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="rp-actions">
+        <form method="post" action="{% url 'webui:settings_provider_test' provider.pk %}"
+              hx-post="{% url 'webui:settings_provider_test' provider.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'webui:insights_tab' 'providers' %}#provider-{{ provider.pk }}">
+            <button class="webui-action-btn" type="submit">Test provider</button>
+        </form>
+        <a class="webui-link" href="{% url 'webui:settings_tab' 'providers' %}">Manage in settings</a>
+    </div>
+</div>

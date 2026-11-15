@@ -1,0 +1,60 @@
+{% load webui %}
+<div class="rp-detail">
+    <div class="rp-detail-title">{{ model.name }}</div>
+    {% if model.developer %}<div class="rp-detail-sub muted">{{ model.developer }}</div>{% endif %}
+    <div class="rp-badges">
+        {% for mode in modes %}<span class="mode-badge">{{ mode }}</span>{% endfor %}
+        {% if not model.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
+        {% if health.label %}<span class="key-badge key-{{ health.kind }}" title="{{ health.reason }}">{{ health.label }}</span>{% endif %}
+        {% if model.open_weights %}<span class="mode-badge">open weights</span>{% endif %}
+        {% if model.is_local_model %}<span class="mode-badge">local</span>{% endif %}
+    </div>
+
+    <div class="rp-section-title">Facts</div>
+    <div class="rp-kv"><span>Rank</span><span>{{ rank }}</span></div>
+    <div class="rp-kv"><span>Parameters</span><span>{{ params }}</span></div>
+    <div class="rp-kv"><span>Context</span><span>{{ context }}</span></div>
+    {% if model.family %}<div class="rp-kv"><span>Family</span><span>{{ model.family }}</span></div>{% endif %}
+    {% if model.canonical_id %}<div class="rp-kv"><span>Canonical ID</span><span><code>{{ model.canonical_id }}</code></span></div>{% endif %}
+    {% if model.leaderboard_id and model.leaderboard_id != model.canonical_id %}<div class="rp-kv"><span>Leaderboard ID</span><span><code>{{ model.leaderboard_id }}</code></span></div>{% endif %}
+    {% if model.quantization %}<div class="rp-kv"><span>Quantization</span><span>{{ model.quantization }}</span></div>{% endif %}
+    <div class="rp-kv"><span>Last used</span><span>{{ last_usage }}</span></div>
+    {% if health.label and model.status_reason %}<div class="rp-kv"><span>Reason</span><span>{{ model.status_reason }}</span></div>{% endif %}
+    {% if model.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ model.status_retry_at }}</span></div>{% endif %}
+
+    {% if model.description %}<div class="rp-desc">{{ model.description }}</div>{% endif %}
+    {% if model.conditions %}<div class="rp-conditions">{{ model.conditions }}</div>{% endif %}
+
+    {% if limits %}
+    <div class="rp-section-title">Limits</div>
+    {% for label, value in limits %}<div class="rp-kv"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}
+    {% endif %}
+
+    <div class="rp-section-title">Usage</div>
+    {% for window in usage %}<div class="rp-kv"><span>{{ window.window }}</span><span>{{ window.requests }} req · {{ window.tokens }} tok</span></div>{% endfor %}
+
+    <div class="rp-section-title">Providers ({{ provider_rows|length }})</div>
+    {% for row in provider_rows %}
+    <div class="rp-provider-row">
+        <div class="rp-provider-main">
+            <a class="webui-link" href="{% url 'webui:insights_tab' 'providers' %}#provider-{{ row.provider_id }}">{{ row.provider }}</a>
+            {% if row.provider_model_id %}<span class="muted">{{ row.provider_model_id }}</span>{% endif %}
+            {% if row.has_key %}<span class="key-badge key-ok">key</span>{% else %}<span class="key-badge key-missing">no key</span>{% endif %}
+            {% if row.health.label %}<span class="key-badge key-{{ row.health.kind }}" title="{{ row.health_reason }}">{{ row.health.label }}</span>{% endif %}
+            {% if not row.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
+        </div>
+        {% if row.conditions %}<div class="rp-conditions">{{ row.conditions }}</div>{% endif %}
+        <form method="post" action="{% url 'webui:model_probe' row.id %}"
+              hx-post="{% url 'webui:model_probe' row.id %}"
+              hx-target="#model-probe-{{ row.id }}" hx-swap="innerHTML">
+            {% csrf_token %}
+            <button class="webui-action-btn" type="submit">Test</button>
+        </form>
+        <div id="model-probe-{{ row.id }}" class="insights-probe-out">
+            {% if row.probe_running %}<span class="webui-muted-note">Testing {{ model.name }}…</span>
+            {% elif row.probe %}<span class="webui-muted-note">{{ row.probe.verdict }}</span>
+            {% else %}<span class="webui-muted-note">No model test has run yet.</span>{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>

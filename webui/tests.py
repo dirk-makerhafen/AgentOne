@@ -164,6 +164,8 @@ def test_url_names_reverse():
     assert reverse("webui:insights_tab", args=["analytics"]) == "/app/insights/analytics"
     assert reverse("webui:model_probe", args=[9]) == "/app/insights/models/9/probe"
     assert reverse("webui:model_probe_status", args=[9]) == "/app/insights/models/9/probe/status"
+    assert reverse("webui:model_detail", args=[9]) == "/app/insights/models/9/detail"
+    assert reverse("webui:provider_detail", args=[9]) == "/app/insights/providers/9/detail"
     assert reverse("webui:logs") == "/app/logs"
     assert reverse("webui:logs_tail") == "/app/logs/tail"
     assert reverse("webui:settings") == "/app/settings"
@@ -1025,7 +1027,11 @@ def test_provider_and_model_insight_details_render(client):
     assert f"#model-{model.pk}".encode() in providers.content
     assert b"Insight Model" in models.content
     assert f"#provider-{provider.pk}".encode() in models.content
-    assert reverse("webui:model_probe", args=[model.pk]).encode() in models.content
+    model_detail = client.get(reverse("webui:model_detail", args=[model.pk]))
+    provider_detail = client.get(reverse("webui:provider_detail", args=[provider.pk]))
+    assert model_detail.status_code == provider_detail.status_code == 200
+    assert reverse("webui:model_probe", args=[model.pk]).encode() in model_detail.content
+    assert b"Insight Provider" in provider_detail.content
 
 
 @pytest.mark.django_db

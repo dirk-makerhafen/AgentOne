@@ -279,17 +279,22 @@
                                         {% if row.provider_count > row.providers|length %}<span class="muted">+{{ row.provider_count|add:"-2" }} more</span>{% endif %}
                                     </td>
                                     <td class="num" data-sort-key="keys" data-sort-value="{{ row.with_key }}">{{ row.with_key }}/{{ row.provider_count }}</td>
-                                    <td class="num" data-sort-key="params" data-sort-value="{{ row._params }}">{{ row.params }}</td>
-                                    <td class="num" data-sort-key="context" data-sort-value="{{ row._context }}">{{ row.context }}</td>
+                                    <td class="num" data-sort-key="params" data-sort-value="{{ row.params_sort }}">{{ row.params }}</td>
+                                    <td class="num" data-sort-key="context" data-sort-value="{{ row.context_sort }}">{{ row.context }}</td>
                                     <td>
                                         {% for mode in row.modes %}<span class="mode-badge">{{ mode }}</span>{% endfor %}
                                         {% if not row.modes %}<span class="muted">—</span>{% endif %}
                                     </td>
-                                    <td data-sort-key="rank" data-sort-value="{{ row._rank }}">{{ row.rank }}</td>
+                                    <td data-sort-key="rank" data-sort-value="{{ row.rank_sort }}">{{ row.rank }}</td>
                                     <td>
                                         {% if not row.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
                                         {% if row.health.label %}<span class="key-badge key-{{ row.health.kind }}" title="{{ row.health.reason }}">{{ row.health.label }}</span>
                                         {% elif row.enabled %}<span class="insights-ok-dot" title="No issues reported"></span>{% endif %}
+                                        <form method="post" action="{% url 'webui:model_probe' row.id %}" hx-post="{% url 'webui:model_probe' row.id %}" hx-target="#model-probe-{{ row.id }}" hx-swap="innerHTML" style="display:inline">
+                                            {% csrf_token %}
+                                            <button class="webui-action-btn" type="submit">Test</button>
+                                        </form>
+                                        <div id="model-probe-{{ row.id }}"></div>
                                     </td>
                                 </tr>
                                 {% endfor %}

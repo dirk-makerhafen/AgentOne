@@ -107,6 +107,11 @@ urlpatterns = [
         views.chat_panel_tab,
         name="chat_panel_tab",
     ),
+    path(
+        "chat/<int:session_id>/panel/<str:tab>/body",
+        views.chat_panel_body,
+        name="chat_panel_body",
+    ),
     path("query/<int:query_id>/detail", views.query_detail, name="query_detail"),
     path("call/<int:call_id>/detail", views.call_detail, name="call_detail"),
     path(
@@ -247,6 +252,11 @@ urlpatterns = [
         "settings/providers/<int:provider_id>/test",
         views.settings_provider_test,
         name="settings_provider_test",
+    ),
+    path(
+        "settings/providers/<int:provider_id>/probe",
+        views.settings_provider_probe,
+        name="settings_provider_probe",
     ),
 
     path("memory", views.memory, name="memory"),

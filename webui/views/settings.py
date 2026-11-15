@@ -194,9 +194,11 @@ def settings_provider_test(request, provider_id: int):
     if next_url.startswith("/app/"):
         redirect_to = next_url
     if request.headers.get("HX-Request") == "true":
-        # htmx follows HX-Redirect as a full page navigation, so the calling
-        # view can send the user back to wherever the test was started.
-        return HttpResponse("", headers={"HX-Redirect": redirect_to})
+        return render(
+            request,
+            "webui/settings/_provider_probe.html",
+            _provider_probe_context(provider),
+        )
     return redirect(redirect_to)
 
 
