@@ -83,7 +83,6 @@ INSTALLED_APPS = (
     'server',
     'launcher',
     'registry',
-    'ui',
     'webui',
     'sortedm2m',
     'django.contrib.admin',
@@ -150,7 +149,7 @@ MIDDLEWARE = (
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'ui', 'templates')], # Add this line to include app templates
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -201,7 +200,7 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR + "/ui/static", BASE_DIR + "/webui/static",]
+STATICFILES_DIRS = [BASE_DIR + "/webui/static",]
 STATIC_ROOT = os.path.join(BASE_DIR, '_staticfiles')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'

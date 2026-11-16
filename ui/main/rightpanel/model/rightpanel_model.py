@@ -9,14 +9,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from server.models.providers.ai_model import AiModel
-from ui.lib.model_view import ModelView
 from ui.main.insights.models import MODE_LABELS, _params_str, _rank_str
 
 if TYPE_CHECKING:
     from ui.main.rightpanel.rightpanel import RightPanel
 
 
-class RightPanelModel(ModelView):
+class RightPanelModel:
+    @property
+    def subject(self):
+        return getattr(self, "_subject_ref", None)
+
     DOM_ELEMENT = "aside"
     DOM_ELEMENT_CLASS = "rightpanel-inner"
     TEMPLATE_STR = '''
@@ -77,7 +80,6 @@ class RightPanelModel(ModelView):
     '''
 
     def __init__(self, subject: AiModel, parent: RightPanel, **kwargs):
-        super().__init__(subject, parent, **kwargs)
         self._probe: dict | None = None
         self._probe_model_pk: int | None = None
 

@@ -402,33 +402,9 @@ def notify(
     if not observable_keys:
         return
     r = get_redis()
-    messages: dict[str, dict[str, Any]] = {}
-    for observable_key in observable_keys:
-        observers = r.hgetall(OBS_PREFIX + observable_key)
-        if not observers:
-            continue
-        for instance_key, fids_json in observers.items():
-            fids = json.loads(fids_json)
-            if not fids:
-                continue
-            msg = messages.setdefault(instance_key, {
-                "key": observable_key,
-                "model": model,
-                "pk": pk,
-                "action": action,
-                "data": data or {},
-                "function_ids": [],
-                "keys": [],
-            })
-            if observable_key not in msg["keys"]:
-                msg["keys"].append(observable_key)
-            for fid in fids:
-                if fid not in msg["function_ids"]:
-                    msg["function_ids"].append(fid)
 
-    # Dual-publish: the legacy per-instance queues above feed the pyHtmlGui UI,
-    # while this pub/sub fan-out feeds the htmx/SSE UI.  The envelope is small
-    # on purpose -- SSE consumers only use the channel name as the event name
+    # Pub/sub fan-out feeds the htmx/SSE UI.  The envelope is small on
+    # purpose -- SSE consumers only use the channel name as the event name
     # and refetch the fragment themselves, so no serialized object is needed.
     envelope = json.dumps(
         {
@@ -440,14 +416,7 @@ def notify(
         default=str,
     )
 
-    event_data: dict[str, Any] | None = None
-    if messages:
-        event_data = {**(data or {}), **(data_factory() if data_factory else {})}
-
     with r.pipeline() as p:
         for observable_key in observable_keys:
             p.publish(PUBSUB_PREFIX + observable_key, envelope)
-        for instance_key, msg in messages.items():
-            msg["data"] = event_data or {}
-            p.rpush(QUEUE_PREFIX + instance_key, json.dumps(msg, default=str))
         p.execute()

@@ -31,143 +31,6 @@ def make_fake_redis():
     return fakeredis.FakeStrictRedis(decode_responses=True)
 
 
-class FakeInstance:
-    """Minimal stand-in for PyHtmlGuiInstance (queue dispatch side)."""
-
-    def __init__(self, instance_key="test-instance"):
-        from ui.lib.pyHtmlGui.pyhtmlgui.lib.weakFunctionReferences import (
-            WeakFunctionReferences,
-        )
-
-        self.instance_key = instance_key
-        self._function_references = WeakFunctionReferences()
-        self.observed_views = {}
-
-
-class RegistryTest(SimpleTestCase):
-    """subscribe/notify/unsubscribe/unsubscribe_all against fakeredis."""
-
-    def setUp(self):
-        self.redis = make_fake_redis()
-        self.patch = patch.object(observables, "get_redis", return_value=self.redis)
-        self.patch.start()
-        self.addCleanup(self.patch.stop)
-
-    def test_subscribe_registers_function_id(self):
-        observables.subscribe("inst-1", "Message.session:5", 42)
-        self.assertEqual(
-            json.loads(self.redis.hget("agentone:obs:Message.session:5", "inst-1")),
-            [42],
-        )
-        self.assertEqual(
-            self.redis.smembers("agentone:uikeys:inst-1"), {"Message.session:5"}
-        )
-
-    def test_subscribe_is_idempotent(self):
-        observables.subscribe("inst-1", "Message.session:5", 42)
-        observables.subscribe("inst-1", "Message.session:5", 42)
-        self.assertEqual(
-            json.loads(self.redis.hget("agentone:obs:Message.session:5", "inst-1")),
-            [42],
-        )
-
-    def test_concurrent_subscriptions_preserve_all_function_ids(self):
-        function_ids = list(range(32))
-        with ThreadPoolExecutor(max_workers=8) as executor:
-            list(executor.map(
-                lambda function_id: observables.subscribe(
-                    "inst-1", "Message.session:5", function_id
-                ),
-                function_ids,
-            ))
-        self.assertEqual(
-            sorted(json.loads(self.redis.hget(
-                "agentone:obs:Message.session:5",
-                "inst-1",
-            ))),
-            function_ids,
-        )
-
-    def test_notify_queues_only_for_subscribers(self):
-        observables.subscribe("inst-1", "Message.session:5", 42)
-        observables.notify(["Message.session:5", "Message.session:6"], "Message", 9, "create")
-        queued = self.redis.lrange("agentone:uiq:inst-1", 0, -1)
-        self.assertEqual(len(queued), 1)
-        msg = json.loads(queued[0])
-        self.assertEqual(msg["key"], "Message.session:5")
-        self.assertEqual(msg["keys"], ["Message.session:5"])
-        self.assertEqual(msg["model"], "Message")
-        self.assertEqual(msg["pk"], 9)
-        self.assertEqual(msg["action"], "create")
-        self.assertEqual(msg["function_ids"], [42])
-        # No subscriber for session 6 → no second queue, no queue at all.
-        self.assertEqual(self.redis.llen("agentone:uiq:nobody"), 0)
-
-    def test_notify_merges_keys_but_keeps_all(self):
-        observables.subscribe("inst-1", "Message", 7)
-        observables.subscribe("inst-1", "Message.session:5", 8)
-        observables.notify(["Message", "Message.session:5"], "Message", 9, "update")
-        msg = json.loads(self.redis.lrange("agentone:uiq:inst-1", 0, -1)[0])
-        self.assertEqual(sorted(msg["function_ids"]), [7, 8])
-        self.assertEqual(sorted(msg["keys"]), ["Message", "Message.session:5"])
-
-    def test_notify_builds_serialized_payload_once_for_all_subscribers(self):
-        data_factory = MagicMock(return_value={"object": {"pk": 9}})
-        observables.subscribe("inst-1", "Message", 7)
-        observables.subscribe("inst-2", "Message", 8)
-
-        observables.notify(
-            ["Message"],
-            "Message",
-            9,
-            "update",
-            data_factory=data_factory,
-        )
-
-        data_factory.assert_called_once_with()
-        for instance_key in ("inst-1", "inst-2"):
-            message = json.loads(
-                self.redis.lrange(f"agentone:uiq:{instance_key}", 0, -1)[0]
-            )
-            self.assertEqual(message["data"]["object"], {"pk": 9})
-
-    def test_notify_empty_keys_is_noop(self):
-        observables.notify([], "Message", 9, "create")
-        self.assertEqual(self.redis.keys("agentone:uiq:*"), [])
-
-    def test_notify_serializes_non_json_data(self):
-        from datetime import datetime, timezone as tz
-
-        observables.subscribe("inst-1", "Message", 1)
-        observables.notify(
-            ["Message"], "Message", 9, "update",
-            {"updated_at": datetime.now(tz.utc)},
-        )
-        msg = json.loads(self.redis.lrange("agentone:uiq:inst-1", 0, -1)[0])
-        self.assertIn("updated_at", msg["data"])
-
-    def test_unsubscribe_removes_function_id(self):
-        observables.subscribe("inst-1", "Message.session:5", 42)
-        observables.subscribe("inst-1", "Message.session:5", 43)
-        observables.unsubscribe("inst-1", "Message.session:5", 42)
-        self.assertEqual(
-            json.loads(self.redis.hget("agentone:obs:Message.session:5", "inst-1")),
-            [43],
-        )
-        observables.unsubscribe("inst-1", "Message.session:5", 43)
-        self.assertIsNone(self.redis.hget("agentone:obs:Message.session:5", "inst-1"))
-        self.assertEqual(self.redis.smembers("agentone:uikeys:inst-1"), set())
-
-    def test_unsubscribe_all_cleans_everything(self):
-        observables.subscribe("inst-1", "Message.session:5", 42)
-        observables.subscribe("inst-1", "Query.session:5", 43)
-        observables.notify(["Message.session:5"], "Message", 1, "create")
-        observables.unsubscribe_all("inst-1")
-        self.assertEqual(self.redis.keys("agentone:obs:*"), [])
-        self.assertEqual(self.redis.keys("agentone:uiq:*"), [])
-        self.assertEqual(self.redis.keys("agentone:uikeys:*"), [])
-
-
 class ObservableKeysTest(TestCase):
     """Key helpers produce the strings notify() publishes on."""
 
@@ -245,49 +108,8 @@ class ObservableKeysTest(TestCase):
         project = Project.objects.create(name="obs-flat-proj")
         self.assertNotIn("Project.noparents", project.observable_keys())
 
-    def test_notify_observers_end_to_end(self):
-        agent, av = create_agent("obs-agent3")
-        session, sv = create_session(agent, av)
-        from server.models.message import Message
-
-        msg = Message.objects.create(
-            role=MessageRole.USER, session=session, session_version=sv,
-        )
-        with patch.object(observables, "get_redis", return_value=make_fake_redis()) as _:
-            import server.models.observables as obs_module
-
-            r = obs_module.get_redis()
-            observables.subscribe("inst-9", f"Message.session:{session.pk}", 11)
-            msg.notify_observers("create")
-            queued = r.lrange("agentone:uiq:inst-9", 0, -1)
-            self.assertEqual(len(queued), 1)
-            payload = json.loads(queued[0])
-            self.assertEqual(payload["model"], "Message")
-            self.assertEqual(payload["pk"], msg.pk)
-            self.assertEqual(payload["action"], "create")
-            self.assertEqual(payload["function_ids"], [11])
-
-
 class PublishDualPublishTest(TestCase):
     """publish_model_event feeds the redis registry (no channel layer involved)."""
-
-    def test_dual_publish(self):
-        from server.models.observables import publish_model_event
-
-        agent, av = create_agent("obs-agent4")
-        session, sv = create_session(agent, av)
-        from server.models.message import Message
-
-        msg = Message.objects.create(
-            role=MessageRole.USER, session=session, session_version=sv,
-        )
-        fake = make_fake_redis()
-        with patch.object(observables, "get_redis", return_value=fake):
-            observables.subscribe("inst-7", f"Message.session:{session.pk}", 21)
-            publish_model_event(msg, "create")
-            queued = fake.lrange("agentone:uiq:inst-7", 0, -1)
-            self.assertEqual(len(queued), 1)
-            self.assertEqual(json.loads(queued[0])["action"], "create")
 
     def test_non_observable_instance_still_ok(self):
         from server.models.observables import publish_model_event
@@ -330,23 +152,6 @@ class PublishByPkTest(TestCase):
         with patch.object(observables, "notify") as mock_notify:
             Message.publish_by_pk(999999)
         mock_notify.assert_not_called()
-
-    def test_data_reaches_subscribers(self):
-        msg = self._message("obs-pk-agent3")
-        fake = make_fake_redis()
-        with patch.object(observables, "get_redis", return_value=fake):
-            observables.subscribe("inst-pk", f"Message.pk:{msg.pk}", 5)
-            type(msg).publish_by_pk(msg.pk, "update", data={"role": MessageRole.ASSISTANT})
-        queued = fake.lrange("agentone:uiq:inst-pk", 0, -1)
-        self.assertEqual(len(queued), 1)
-        payload = json.loads(queued[0])["data"]
-        # The explicit payload is merged on top of the FK filter context that
-        # subscribers use as routing hints.
-        self.assertEqual(payload["role"], "assistant")
-        self.assertEqual(payload["session_id"], msg.session_id)
-        self.assertEqual(payload["session_version_id"], msg.session_version_id)
-        self.assertIsNone(payload["prev_message_id"])
-        self.assertIsNone(payload["response_id"])
 
     def test_atomic_update_by_pk_updates_and_publishes(self):
         msg = self._message("obs-pk-agent2")
@@ -391,89 +196,6 @@ class FsmPublishActionTest(SimpleTestCase):
         mock_pub.assert_called_once_with(3, "update", data=fields)
 
 
-class OrmSubscribeTest(SimpleTestCase):
-    """orm_subscribe/orm_unsubscribe_view bookkeeping."""
-
-    def setUp(self):
-        self.redis = make_fake_redis()
-        self.patch = patch.object(observables, "get_redis", return_value=self.redis)
-        self.patch.start()
-        self.addCleanup(self.patch.stop)
-
-    def _view(self):
-        view = MagicMock()
-        view._instance = FakeInstance()
-        view._observed_function_ids = []
-        return view
-
-    def test_subscribe_and_unsubscribe(self):
-        from ui.lib.model_view import orm_subscribe, orm_unsubscribe_view
-
-        class Cb:
-            def on_event(self, **kwargs):
-                pass
-
-        view = self._view()
-        fid = orm_subscribe(view, "Message.session:5", Cb().on_event)
-        self.assertIsNotNone(fid)
-        self.assertEqual(
-            json.loads(self.redis.hget("agentone:obs:Message.session:5", "test-instance")),
-            [fid],
-        )
-        self.assertEqual(view._instance.observed_views["Message.session:5"], [fid])
-        orm_unsubscribe_view(view)
-        self.assertIsNone(
-            self.redis.hget("agentone:obs:Message.session:5", "test-instance")
-        )
-        self.assertEqual(view._observed_function_ids, [])
-
-
-class ProcessQueueMessagesTest(SimpleTestCase):
-    """Loop dispatch coalesces per function_id and skips dead callbacks."""
-
-    def test_coalesce_and_dispatch(self):
-        from ui.consumer import process_queue_messages
-
-        instance = FakeInstance()
-        calls = []
-
-        class View:
-            def on_event(self, **kwargs):
-                calls.append(kwargs)
-
-        view = View()
-        fid = instance._function_references.add(view.on_event)
-        process_queue_messages(instance, [
-            {"key": "K1", "model": "M", "pk": 1, "action": "create",
-             "data": {}, "function_ids": [fid, 999999]},
-            {"key": "K2", "model": "M", "pk": 2, "action": "update",
-             "data": {"x": 1}, "function_ids": [fid]},
-        ])
-        # One call (latest message wins), unknown fid skipped.
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0]["pk"], 2)
-        self.assertEqual(calls[0]["data"], {"x": 1})
-
-    def test_dead_weakref_skipped(self):
-        from ui.consumer import process_queue_messages
-
-        instance = FakeInstance()
-
-        class View:
-            def on_event(self, **kwargs):
-                raise AssertionError("must not be called")
-
-        fid = instance._function_references.add(View().on_event)
-        import gc
-
-        gc.collect()
-        # No exception, no call.
-        process_queue_messages(instance, [
-            {"key": "K", "model": "M", "pk": 1, "action": "create",
-             "data": {}, "function_ids": [fid]},
-        ])
-
-
 class AllModelsObservableTest(SimpleTestCase):
     """Every ORM model supports being observable (no DB needed)."""
 
@@ -516,21 +238,6 @@ class AllModelsObservableTest(SimpleTestCase):
 
 class PlainModelsObservableTest(TestCase):
     """Instance-level checks for the non-BaseModel mixins."""
-
-    def test_workspace_notify_end_to_end(self):
-        from server.models.workspace import WorkspaceModel
-
-        ws = WorkspaceModel.objects.create(name="obs-ws", path="/tmp")
-        self.assertEqual(ws.observables.any, "WorkspaceModel")
-        self.assertIn("WorkspaceModel", ws.observable_keys())
-        self.assertIn(f"WorkspaceModel.pk:{ws.pk}", ws.observable_keys())
-        fake = make_fake_redis()
-        with patch.object(observables, "get_redis", return_value=fake):
-            observables.subscribe("inst-ws", "WorkspaceModel", 31)
-            ws.notify_observers("create")
-            queued = fake.lrange("agentone:uiq:inst-ws", 0, -1)
-            self.assertEqual(len(queued), 1)
-            self.assertEqual(json.loads(queued[0])["model"], "WorkspaceModel")
 
     def test_skill_version_keys_include_skill_fk(self):
         from server.models.skills.skill_version import SkillModelVersion

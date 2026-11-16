@@ -2,7 +2,33 @@ from __future__ import annotations
 import time
 from pathlib import Path
 import yaml
-from ui.lib.pyHtmlGui.pyhtmlgui.lib.observable import Observable
+
+
+class Observable:
+    """Minimal observable base (no pyHtmlGui dependency)."""
+
+    def __init__(self):
+        self._observers = []
+
+    def attach_observer(self, target_function) -> None:
+        if target_function not in self._observers:
+            self._observers.append(target_function)
+
+    def detach_observer(self, target_function) -> None:
+        try:
+            self._observers.remove(target_function)
+        except ValueError:
+            pass
+
+    def notify_observers(self, **kwargs) -> None:
+        for target_function in list(self._observers):
+            try:
+                if getattr(target_function, "__code__", None) is not None and target_function.__code__.co_argcount > 1:
+                    target_function(self, **kwargs)
+                else:
+                    target_function()
+            except Exception:
+                pass
 
 
 CONFIG_FILENAME = "config.yaml"

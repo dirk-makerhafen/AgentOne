@@ -10,7 +10,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from server.models.providers.ai_model import AiModel
-from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -40,7 +39,7 @@ def _rank_str(rank: int | None, is_estimate: bool) -> str:
     return f"~{rank}" if is_estimate else f"#{rank}"
 
 
-class ModelsView(ModelView):
+class ModelsView:
     DOM_ELEMENT_CLASS = "main-view"
 
     TEMPLATE_STR = '''
@@ -85,7 +84,6 @@ class ModelsView(ModelView):
     '''
 
     def __init__(self, subject: UiApp, parent: MainView, **kwargs):
-        super().__init__(subject, parent, **kwargs)
         self._sort_col = "rank"
         self._sort_desc = False
         self._selected_id: int | None = None

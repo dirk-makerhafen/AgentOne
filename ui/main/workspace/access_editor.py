@@ -9,7 +9,6 @@ Used by the workspace create page and the current-workspace card edit mode.
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -43,7 +42,7 @@ def normalize_access(raw: dict | None) -> dict:
     return data
 
 
-class AccessEditor(ModelView):
+class AccessEditor:
     DOM_ELEMENT_CLASS = "ws-access"
     TEMPLATE_STR = '''
         {% for section in pyview.sections %}
@@ -67,7 +66,6 @@ class AccessEditor(ModelView):
     '''
 
     def __init__(self, subject: "UiApp | WorkspaceModel", parent, access: dict | None = None, **kwargs):
-        super().__init__(subject, parent, **kwargs)
         if access is None:
             access = getattr(subject, "access", None)
         self._data = normalize_access(access)

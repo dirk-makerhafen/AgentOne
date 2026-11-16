@@ -14,7 +14,6 @@ from django.utils import timezone
 
 from server.models.providers.api_provider import ApiProvider
 from server.models.queries.response import Response, ResponseStatus
-from ui.lib.model_view import ModelView
 
 if TYPE_CHECKING:
     from ui.app import UiApp
@@ -53,7 +52,7 @@ def _limits_str(provider: ApiProvider) -> str:
     return " · ".join(parts) if parts else "—"
 
 
-class ProvidersView(ModelView):
+class ProvidersView:
     DOM_ELEMENT_CLASS = "main-view"
 
     NUMERIC_COLS = ("req_24h", "tok_24h", "req_7d", "tok_7d", "req_30d", "tok_30d")
@@ -103,7 +102,6 @@ class ProvidersView(ModelView):
     '''
 
     def __init__(self, subject: UiApp, parent: MainView, **kwargs):
-        super().__init__(subject, parent, **kwargs)
         self._sort_col = "name"
         self._sort_desc = False
         self._selected_id: int | None = None

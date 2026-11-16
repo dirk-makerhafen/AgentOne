@@ -9,16 +9,19 @@ from django.utils import timezone
 
 from server.models.providers.api_provider import ApiProvider
 from server.models.queries.response import Response, ResponseStatus
-from ui.lib.model_view import ModelView
 from ui.main.insights.providers import _human, LIMIT_LABELS
 
 if TYPE_CHECKING:
     from ui.main.rightpanel.rightpanel import RightPanel
 
 
-class RightPanelProvider(ModelView):
+class RightPanelProvider:
     DOM_ELEMENT = "aside"
     DOM_ELEMENT_CLASS = "rightpanel-inner"
+
+    @property
+    def subject(self):
+        return getattr(self, "_subject_ref", None)
     TEMPLATE_STR = '''
         <div class="rp-detail">
             <div class="rp-detail-title">{{ pyview.subject.name }}</div>
@@ -214,7 +217,6 @@ class RightPanelProvider(ModelView):
         return None
 
     def __init__(self, subject: ApiProvider, parent, **kwargs):
-        super().__init__(subject, parent, **kwargs)
         self._probe: dict | None = None
         self._probe_model_pk: int | None = None
 

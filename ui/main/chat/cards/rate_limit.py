@@ -21,7 +21,6 @@ from django.utils import timezone
 
 from server.models.enums.task_enums import TaskCallStatusDetail
 from server.models.tasks.agent_task_call import AgentTaskCall
-from ui.lib.pyHtmlGui.pyhtmlgui.view.pyhtml_view import PyHtmlView
 
 if TYPE_CHECKING:
     from runtime.session.session import Session
@@ -37,7 +36,7 @@ def _humanize_seconds(seconds: int) -> str:
     return f"{secs}s"
 
 
-class RateLimitCard(PyHtmlView):
+class RateLimitCard:
     # pylint: disable=too-many-ancestors
     DOM_ELEMENT_EXTRAS = 'role="status" aria-live="polite" aria-labelledby="rateLimitHeading"'
     TEMPLATE_STR = '''
@@ -133,7 +132,6 @@ class RateLimitCard(PyHtmlView):
     '''
 
     def __init__(self, subject: Session, parent, **kwargs):
-        super().__init__(subject, parent, **kwargs)
         self._snap: Dict[str, Any] | None = None
         self._session_id = subject.model.pk
         try:
