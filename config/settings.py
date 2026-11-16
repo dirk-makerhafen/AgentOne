@@ -416,12 +416,5 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
-        # WebSocket lifecycle from the UI consumer. DEBUG is off by default
-        # because it is chatty; raise to DEBUG to trace connect/disconnect.
-        "ui.consumer": {
-            "handlers": _ROOT_HANDLERS,
-            "level": os.environ.get("AGENTONE_WS_LOG_LEVEL", "INFO"),
-            "propagate": False,
-        },
     },
 }

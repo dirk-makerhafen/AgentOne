@@ -2,6 +2,12 @@
 <div class="webui-session-wrap">
     <a class="session-item{% if s.tree_depth %} session-tree-child{% endif %}{% if s.pk == active_id %} active{% endif %}"
        href="{% url 'webui:chat' s.pk %}"
+       hx-get="{% url 'webui:chat' s.pk %}"
+       hx-target="main"
+       hx-select="main"
+       hx-swap="outerHTML"
+       hx-push-url="true"
+       data-session-id="{{ s.pk }}"
        title="{{ s.name }}">
         <span class="session-text">
             <span class="session-title-row">

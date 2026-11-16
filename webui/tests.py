@@ -253,6 +253,8 @@ def _shell_routes() -> list[str]:
         reverse("webui:cron"),
         reverse("webui:collections"),
         reverse("webui:workitems"),
+        reverse("webui:memory"),
+        reverse("webui:memory_improvements"),
         reverse("webui:insights"),
         reverse("webui:insights_tab", args=["analytics"]),
         reverse("webui:insights_tab", args=["providers"]),

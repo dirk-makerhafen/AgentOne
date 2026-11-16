@@ -9,7 +9,7 @@ from server.models.agents.agent import AgentModel
 from server.models.project import Project
 from server.models.workitems.enums import WorkItemStatus
 from server.models.workitems.work_item import WorkItem
-from ui.main.workitems.board_data import (
+from webui.main.workitems.board_data import (
     STATUS_COLUMNS,
     actions_for,
     agent_filter_options,

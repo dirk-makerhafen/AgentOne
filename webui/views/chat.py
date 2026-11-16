@@ -64,6 +64,7 @@ PANEL_TABS = (
     ("templates", "Templates"),
     ("todos", "Todos"),
     ("terminals", "Terminals"),
+    ("history", "History"),
 )
 
 #: Cache keys for the templates tab.  The panel is stateless between htmx
@@ -177,6 +178,53 @@ def call_detail(request, call_id: int):
     if request.GET.get("back") == "1" and session_id.isdigit():
         context["back_session"] = int(session_id)
     return render(request, "webui/chat/_tool_detail.html", context)
+
+
+def inspect_history_item(request, session_id: int):
+    """Return the full content of a history item (message or tool call)."""
+    session_model = get_object_or_404(SessionModel, pk=session_id)
+    message_pk = request.GET.get("message_pk")
+    task_call_pk = request.GET.get("task_call_pk")
+    max_chars = int(request.GET.get("max_chars", "8000"))
+
+    try:
+        runtime = session_model.get_runtime()
+        tool = runtime.get_tool("inspect_history_item")
+        if tool is None:
+            return HttpResponse("History inspect tool not available.", status=503)
+    except Exception:  # pylint: disable=broad-exception-caught
+        log.exception("could not get inspect_history_item tool for session %s", session_model.pk)
+        return HttpResponse("Could not initialize history inspect.", status=503)
+
+    if (message_pk is None) == (task_call_pk is None):
+        return HttpResponse("Pass exactly one of message_pk or task_call_pk.", status=400)
+
+    result = tool.call(
+        message_pk=int(message_pk) if message_pk else None,
+        task_call_pk=int(task_call_pk) if task_call_pk else None,
+        max_chars=max_chars,
+    )
+
+    if "error" in result:
+        return HttpResponse(f"Error: {result['error']}", status=404)
+
+    if result.get("type") == "message":
+        context = {
+            "message": result,
+            "session": session_model,
+        }
+        return render(request, "webui/chat/_history_message_detail.html", context)
+    else:
+        # For tool calls, reuse the existing call_detail template
+        call = get_object_or_404(
+            AgentTaskCall.objects.select_related(
+                "task_definition", "task_definition_version__task_definition"
+            ),
+            pk=result.get("task_call_pk"),
+        )
+        context = build_call_detail(call, full=True)
+        context["back_session"] = session_id
+        return render(request, "webui/chat/_tool_detail.html", context)
 
 
 def response_detail(request, response_id: int):
@@ -332,7 +380,7 @@ def chat_panel_body(request, session_id: int, tab: str):
 def _panel_context(session_model: SessionModel, tab: str, request=None) -> dict:
     allowed = (
         "details", "workspace", "settings", "capabilities", "tasks", "calls",
-        "subagents", "templates", "terminals", "todos",
+        "subagents", "templates", "terminals", "todos", "history",
     )
     if tab not in allowed:
         tab = "details"
@@ -390,6 +438,8 @@ def _panel_context(session_model: SessionModel, tab: str, request=None) -> dict:
         context["template_preview"] = cache.get(_template_preview_key(session_model.pk))
         context["template_run"] = _template_run_state(session_model)
         context["template_error"] = cache.get(_template_error_key(session_model.pk)) or ""
+    elif tab == "history":
+        context["history_results"] = _search_history(session_model, request)
     return context
 
 
@@ -924,6 +974,88 @@ def _read_todos(session_model: SessionModel) -> list[dict]:
         return []
     items = raw.get("items", []) if isinstance(raw, dict) else []
     return [item for item in items if isinstance(item, dict)]
+
+
+def _search_history(session_model: SessionModel, request=None) -> dict:
+    """Search the session's own history using the search_own_history tool."""
+    try:
+        runtime = session_model.get_runtime()
+        tool = runtime.get_tool("search_own_history")
+        if tool is None:
+            return {"error": "History search tool not available.", "results": [], "total_count": 0}
+    except Exception:  # pylint: disable=broad-exception-caught
+        log.exception("could not get history search tool for session %s", session_model.pk)
+        return {"error": "Could not initialize history search.", "results": [], "total_count": 0}
+
+    # Get query parameters from request
+    text = ""
+    role = ""
+    part_type = ""
+    tool_call_name = ""
+    include_compacted = False  # Default: resolved view (show resolved only)
+    include_hidden = False
+    include_subsessions = False
+    limit = 20
+    offset = 0
+    order = "newest"
+    date_from = ""
+    date_to = ""
+
+    if request and request.GET:
+        text = request.GET.get("q", "") or ""
+        role = request.GET.get("role", "") or ""
+        part_type = request.GET.get("part_type", "") or ""
+        tool_call_name = request.GET.get("tool_call_name", "") or ""
+        # resolved_view=True (default) -> include_compacted=False (show resolved only)
+        # resolved_view=False -> include_compacted=True (show all including compacted)
+        resolved_view = request.GET.get("resolved_view", "true").lower() == "true"
+        include_compacted = not resolved_view
+        include_hidden = request.GET.get("include_hidden", "false").lower() == "true"
+        include_subsessions = request.GET.get("include_subsessions", "false").lower() == "true"
+        try:
+            limit = int(request.GET.get("limit", "20"))
+        except ValueError:
+            limit = 20
+        try:
+            offset = int(request.GET.get("offset", "0"))
+        except ValueError:
+            offset = 0
+        order = request.GET.get("order", "newest")
+        date_from = request.GET.get("date_from", "") or ""
+        date_to = request.GET.get("date_to", "") or ""
+
+    # Call the tool using BoundTask.call()
+    result = tool.call(
+        text=text if text else None,
+        role=role if role else None,
+        part_type=part_type if part_type else None,
+        tool_call_name=tool_call_name if tool_call_name else None,
+        include_hidden=include_hidden,
+        include_compacted=include_compacted,
+        include_subsessions=include_subsessions,
+        limit=limit,
+        offset=offset,
+        order=order,
+        date_from=date_from if date_from else None,
+        date_to=date_to if date_to else None,
+    )
+
+    # Add query parameters back for the template
+    result["query"] = {
+        "q": text,
+        "role": role,
+        "part_type": part_type,
+        "tool_call_name": tool_call_name,
+        "resolved_view": not include_compacted,
+        "include_hidden": include_hidden,
+        "include_subsessions": include_subsessions,
+        "limit": limit,
+        "offset": offset,
+        "order": order,
+        "date_from": date_from,
+        "date_to": date_to,
+    }
+    return result
 
 
 @require_POST

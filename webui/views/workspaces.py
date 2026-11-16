@@ -18,14 +18,14 @@ from server.models.workspace import (
     random_workspace_color,
     validate_workspace_color,
 )
-from ui.main.workspace.access_editor import (
+from webui.main.workspace.access_editor import (
     DEFAULTS,
     KEYS,
     SECTIONS,
     normalize_access,
 )
 from webui.views.assistants import assistant_overview_context, assistant_panel_context
-from ui.main.workspace.manifest_location import (
+from webui.main.workspace.manifest_location import (
     STORAGES,
     detect_storage,
     ensure_manifest_dir,

@@ -114,6 +114,11 @@ urlpatterns = [
     ),
     path("query/<int:query_id>/detail", views.query_detail, name="query_detail"),
     path("call/<int:call_id>/detail", views.call_detail, name="call_detail"),
+    path(
+        "chat/<int:session_id>/history/inspect",
+        views.inspect_history_item,
+        name="inspect_history_item",
+    ),
     path("response/<int:response_id>/detail", views.response_detail, name="response_detail"),
     path(
         "assistant/<str:kind>/<int:item_id>",
@@ -262,15 +267,15 @@ urlpatterns = [
 
     path("memory", views.memory, name="memory"),
     path("memory/improvements", views.memory_improvements, name="memory_improvements"),
-    path("memory/<str:node_id>", views.memory_node, name="memory_node"),
     path(
         "memory/improvements/queue",
         views.memory_improvements_queue,
         name="memory_improvements_queue",
     ),
     path(
-        "memory/node/<str:node_id>/queue",
+        "memory/node/<path:node_id>/queue",
         views.memory_node_queue,
         name="memory_node_queue",
     ),
+    path("memory/<path:node_id>", views.memory_node, name="memory_node"),
 ]

@@ -1,7 +1,9 @@
 <div class="sidebar-section"><span>Projects</span></div>
 <div class="side-list">
     {% for project in sidebar_projects %}
-    <a class="ws-row{% if project.pk == active_id %} active{% endif %}" href="{% url 'webui:project' project.pk %}">
+    <a class="ws-row{% if project.pk == active_id %} active{% endif %}" href="{% url 'webui:project' project.pk %}"
+       hx-get="{% url 'webui:project' project.pk %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+       data-sidebar-active-key="{{ project.pk }}">
         <span class="ws-row-info">
             <span class="ws-row-name">{{ project.name }}</span>
             <span class="ws-row-path">{{ project.path|default:"no workspace" }}</span>

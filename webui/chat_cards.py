@@ -1,6 +1,6 @@
 """Status cards shown under the chat thread.
 
-The legacy UI rendered these as separate pyHtmlGui views pinned above the
+The legacy UI rendered these as separate  views pinned above the
 composer.  The server-rendered equivalent is one context dict built with the
 thread fragment, so every SSE refresh re-reads the current call state:
 

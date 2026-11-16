@@ -1343,3 +1343,137 @@
     });
     if (document.readyState === 'complete') restoreScroll();
 })();
+
+// Preserve sidebar scroll position across htmx swaps (SSE/boost refreshes)
+// and full page navigations (e.g. clicking an item in a sidebar list).
+(function () {
+    'use strict';
+    var STORAGE_KEY = 'agentone:sidebar-scroll';
+    var SCROLL_SELECTORS = ['.session-list', '.side-list', '.ws-tree'];
+    var savedSidebarScroll = null;
+
+    function scrollContainers() {
+        var nodes = [];
+        SCROLL_SELECTORS.forEach(function (sel) {
+            document.querySelectorAll('#sidebar ' + sel).forEach(function (el) {
+                nodes.push(el);
+            });
+        });
+        return nodes;
+    }
+
+    function captureSidebarScroll() {
+        savedSidebarScroll = scrollContainers().map(function (el) { return el.scrollTop; });
+    }
+
+    function persistSidebarScroll() {
+        var tops = scrollContainers().map(function (el) { return el.scrollTop; });
+        try {
+            window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(tops));
+        } catch (err) { /* private mode */ }
+    }
+
+    function restoreSidebarScroll() {
+        var tops = savedSidebarScroll;
+        if (!tops) {
+            try {
+                var raw = window.sessionStorage.getItem(STORAGE_KEY);
+                if (raw) tops = JSON.parse(raw);
+            } catch (err) { /* private mode */ }
+        }
+        if (!tops || !tops.length) return;
+        var nodes = scrollContainers();
+        for (var i = 0; i < nodes.length && i < tops.length; i += 1) {
+            var top = parseInt(tops[i], 10);
+            if (!isNaN(top)) nodes[i].scrollTop = top;
+        }
+        savedSidebarScroll = tops;
+    }
+
+    function clearPersistedSidebarScroll() {
+        try { window.sessionStorage.removeItem(STORAGE_KEY); } catch (err) { /* private mode */ }
+        savedSidebarScroll = null;
+    }
+
+    function isSidebarSwapTarget(target) {
+        return !!target && (
+            target.id === 'sidebar' ||
+            target === document.body ||
+            (target.tagName === 'BODY')
+        );
+    }
+
+    function activeTargetForLink(link) {
+        var sel = link.getAttribute('data-sidebar-active-target');
+        if (sel && sel.indexOf('closest:') === 0) {
+            return link.closest(sel.slice(8)) || link;
+        }
+        return link;
+    }
+
+    function setActiveSidebarItem(link) {
+        if (!link) return;
+        var key = link.getAttribute('data-sidebar-active-key') || link.getAttribute('data-session-id');
+        if (!key) return;
+        var attr = link.hasAttribute('data-sidebar-active-key') ? 'data-sidebar-active-key' : 'data-session-id';
+        var links = document.querySelectorAll('a[' + attr + ']');
+        links.forEach(function (item) {
+            var match = String(item.getAttribute(attr)) === String(key);
+            var target = activeTargetForLink(item);
+            if (match) target.classList.add('active');
+            else target.classList.remove('active');
+        });
+    }
+
+    document.addEventListener('click', function (evt) {
+        var link = evt.target && evt.target.closest
+            ? evt.target.closest('a.session-item, a[data-sidebar-active-key]')
+            : null;
+        if (!link) return;
+        persistSidebarScroll();
+        captureSidebarScroll();
+        setActiveSidebarItem(link);
+    }, true);
+
+    document.addEventListener('htmx:beforeRequest', function (evt) {
+        var trigger = evt.detail && evt.detail.elt;
+        if (trigger && trigger.closest && trigger.closest('a.session-item, a[data-sidebar-active-key]')) {
+            persistSidebarScroll();
+            captureSidebarScroll();
+        }
+    });
+
+    document.addEventListener('htmx:beforeSwap', function (evt) {
+        var target = evt.detail && evt.detail.target;
+        if (isSidebarSwapTarget(target)) {
+            captureSidebarScroll();
+        }
+    });
+
+    document.addEventListener('htmx:afterSwap', function (evt) {
+        var target = evt.target;
+        if (isSidebarSwapTarget(target)) {
+            restoreSidebarScroll();
+        }
+        var elt = evt.detail && evt.detail.elt;
+        if (elt && elt.matches && elt.matches('a.session-item, a[data-sidebar-active-key]')) {
+            setActiveSidebarItem(elt);
+        }
+    });
+
+    document.addEventListener('htmx:afterSettle', function (evt) {
+        var target = evt.target;
+        if (isSidebarSwapTarget(target)) {
+            restoreSidebarScroll();
+            clearPersistedSidebarScroll();
+        }
+    });
+
+    function initRestore() {
+        restoreSidebarScroll();
+        window.setTimeout(clearPersistedSidebarScroll, 500);
+    }
+
+    document.addEventListener('DOMContentLoaded', initRestore);
+    if (document.readyState !== 'loading') initRestore();
+})();

@@ -1,0 +1,57 @@
+{% load webui %}
+<div class="webui-panel-section">
+    <div class="webui-settings-head">
+        <span class="detail-card-title">Message #{{ message.message_pk }}</span>
+        <a class="webui-action-btn" href="{% url 'webui:chat_panel_tab' session.pk 'history' %}?{{ request.GET.urlencode|default:'' }}"
+           hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}?{{ request.GET.urlencode|default:'' }}"
+           hx-target="#chat-panel-body" hx-swap="innerHTML">Back to search</a>
+    </div>
+
+    <div class="detail-row"><span class="detail-row-label">Role</span>
+        <span class="detail-row-value">
+            <span class="webui-badge" style="background:{% if message.role == 'user' %}var(--link){% elif message.role == 'assistant' %}var(--success){% elif message.role == 'tool' %}var(--warning){% else %}var(--muted){% endif %}">{{ message.role }}</span>
+        </span>
+    </div>
+    <div class="detail-row"><span class="detail-row-label">Session</span>
+        <span class="detail-row-value">{{ message.session_pk }}{% if message.session_pk != session.pk %} (sub-session){% endif %}</span>
+    </div>
+    <div class="detail-row"><span class="detail-row-label">Created</span>
+        <span class="detail-row-value">{{ message.created_at|date:"Y-m-d H:i:s" }}</span>
+    </div>
+    <div class="detail-row"><span class="detail-row-label">Hidden from LLM</span>
+        <span class="detail-row-value">{% if message.hidden_from_llm %}Yes{% else %}No{% endif %}</span>
+    </div>
+    <div class="detail-row"><span class="detail-row-label">Compaction boundary</span>
+        <span class="detail-row-value">{% if message.is_compaction_boundary %}Yes{% else %}No{% endif %}</span>
+    </div>
+
+    {% for part in message.parts %}
+    <details class="webui-item" style="margin-top:12px; border:1px solid var(--border); border-radius:4px;">
+        <summary class="webui-item-summary" style="padding:8px;">
+            <div class="webui-line" style="gap:8px; align-items:center;">
+                <span class="webui-badge" style="background:var(--muted); font-size:0.75em;">{{ part.type }}</span>
+                <span class="webui-muted-note" style="font-size:0.85em;">{{ part.content_type }}</span>
+                {% if part.tokens %}<span class="webui-muted-note" style="font-size:0.75em;">{{ part.tokens }} tokens</span>{% endif %}
+                {% if part.tool_call_name %}
+                <span class="webui-badge" style="background:var(--primary); font-size:0.75em;">{{ part.tool_call_name }}</span>
+                {% endif %}
+            </div>
+        </summary>
+        <div style="padding:8px; border-top:1px solid var(--border);">
+            <pre class="webui-code-value" style="white-space:pre-wrap; word-break:break-word; max-height:400px; overflow:auto;">{{ part.body }}</pre>
+            {% if part.truncated %}
+            <div class="webui-muted-note" style="margin-top:4px;">[Truncated — original content exceeds {{ max_chars|default:8000 }} chars]</div>
+            {% endif %}
+            {% if part.tool_call_pk %}
+            <form class="webui-form-row" style="margin-top:8px; gap:4px;">
+                <button type="button" class="webui-action-btn"
+                        hx-get="{% url 'webui:call_detail' part.tool_call_pk %}?full=1&back=1&session={{ session.pk }}"
+                        hx-target="#chat-panel-body" hx-swap="innerHTML">View Tool Call Detail</button>
+            </form>
+            {% endif %}
+        </div>
+    </details>
+    {% empty %}
+    <div class="webui-empty-note">No parts in this message.</div>
+    {% endfor %}
+</div>

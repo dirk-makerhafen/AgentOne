@@ -2,7 +2,9 @@
 <div class="sidebar-section"><span>Cron jobs</span></div>
 <div class="side-list">
     {% for cron in sidebar_cronjobs %}
-    <a class="ws-row{% if cron.pk == active_id %} active{% endif %}" href="{% url 'webui:cronjob' cron.pk %}">
+    <a class="ws-row{% if cron.pk == active_id %} active{% endif %}" href="{% url 'webui:cronjob' cron.pk %}"
+       hx-get="{% url 'webui:cronjob' cron.pk %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+       data-sidebar-active-key="{{ cron.pk }}">
         <span class="ws-row-info">
             <span class="ws-row-name">
                 {{ cron.name }}

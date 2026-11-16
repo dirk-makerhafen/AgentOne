@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from server.models.project import Project
 from webui.views.common import render_page
 
-from ui.main.memory.memory_data import (
+from webui.main.memory.memory_data import (
     build_inventory,
     find_node,
     unique_proposals,
@@ -57,6 +57,8 @@ def memory(request):
     for node in inventory.nodes:
         for error in node.errors:
             errors.append(f"{node.id}: {error}")
+    queued_param = request.GET.get("queued", "")
+    message = f"Filed {queued_param} proposal(s) as backlog work items." if queued_param else ""
     context = {
         "inventory": inventory,
         "scopes": inventory.scopes,
@@ -68,10 +70,12 @@ def memory(request):
         "queued_count": queued_count,
         "project_id": project_id,
         "projects": list(Project.objects.order_by("name")),
-        "queued_param": request.GET.get("queued", ""),
+        "queued_param": queued_param,
+        "message": message,
+        "message_ok": True,
     }
     context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
-    return render_page(request, "memory", "webui/memory/overview.html", context)
+    return render_page(request, "memory", "webui/memory/overview.html", context, active_id="overview")
 
 
 def memory_node(request, node_id):
@@ -107,18 +111,28 @@ def memory_node(request, node_id):
             if row["queueable"] and not row["queued"] and row.get("status") != "retired"
         ]
     )
+    try:
+        improvements_raw = node.improvements_path.read_text(encoding="utf-8") if node.improvements_path.is_file() else ""
+    except Exception:
+        improvements_raw = ""
+    qp = request.GET.get("queued", "")
     context = {
         "node": node,
         "inventory": inventory,
         "proposal_rows": proposal_rows,
         "open_proposal_count": open_proposal_count,
         "queueable_count": queueable_count,
-        "queued_param": request.GET.get("queued", ""),
+        "queued_param": qp,
         "project_id": project_id,
         "projects": list(Project.objects.order_by("name")),
+        "reflection_raw": node.read_reflection(),
+        "sources_raw": node.read_sources_raw(),
+        "improvements_raw": improvements_raw,
+        "message": f"Filed {qp} proposal(s) as backlog work items." if qp else "",
+        "message_ok": True,
     }
     context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
-    return render_page(request, "memory", "webui/memory/node.html", context)
+    return render_page(request, "memory", "webui/memory/node.html", context, active_id=node_id)
 
 
 @require_POST
@@ -231,8 +245,11 @@ def memory_improvements(request):
         "projects": list(Project.objects.order_by("name")),
         "queued_param": request.GET.get("queued", ""),
     }
+    qp = request.GET.get("queued", "")
+    context["message"] = f"Filed {qp} proposal(s) as backlog work items." if qp else ""
+    context["message_ok"] = True
     context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
-    return render_page(request, "memory", "webui/memory/improvements.html", context)
+    return render_page(request, "memory", "webui/memory/improvements.html", context, active_id="improvements")
 
 
 @require_POST

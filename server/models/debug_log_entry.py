@@ -24,6 +24,8 @@ class DebugLogEntry(BaseModel):
     event: str = models.CharField(max_length=64)
     status: str = models.CharField(max_length=16)
 
+    data: Any = models.JSONField(default=None, null=True, blank=True)
+
     def save(self, *args: Any, **kwargs: Any) -> Any:
         """Raise :class:`ValidationError` on update; delegate to super on create."""
         if self.pk:

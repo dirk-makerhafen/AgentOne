@@ -56,6 +56,7 @@ NAV_SECTIONS = (
     ("cron", "Cron"),
     ("collections", "Data flows"),
     ("workitems", "Work items"),
+    ("memory", "Memory"),
     ("insights", "Insights"),
     ("logs", "Logs"),
     ("settings", "Settings"),
@@ -85,6 +86,7 @@ SIDEBAR_TEMPLATES = {
     "cron": "webui/shell/panels/_cron.html",
     "collections": "webui/shell/panels/_collections.html",
     "workitems": "webui/shell/panels/_workitems.html",
+    "memory": "webui/shell/panels/_memory.html",
     "insights": "webui/shell/panels/_insights.html",
     "logs": "webui/shell/panels/_logs.html",
     "settings": "webui/shell/panels/_settings.html",
@@ -745,7 +747,7 @@ def sidebar_context(request, section: str, active_id=None) -> dict:
 
     elif section == "workspaces":
         from server.models.workspace import WorkspaceModel
-        from ui.sidebar.panels.workspaces import build_workspace_tree
+        from webui.sidebar.panels.workspaces import build_workspace_tree
 
         items = list(
             WorkspaceModel.objects.select_related("parent_project").order_by("name")
@@ -820,6 +822,36 @@ def sidebar_context(request, section: str, active_id=None) -> dict:
                 + counts.get(WorkItemStatus.CANCELLED, 0),
             }
         )
+
+    elif section == "memory":
+        from runtime.memory_improvements import queued_work_items
+        from webui.main.memory.memory_data import build_inventory, unique_proposals
+
+        try:
+            inventory = build_inventory(project_id=project_id)
+            proposals = unique_proposals(inventory.nodes)
+            queued = queued_work_items()
+            queued_count = sum(
+                1 for p in proposals if str(p.get("fingerprint")) in queued
+            )
+            ctx.update(
+                {
+                    "memory_scopes": inventory.scopes,
+                    "memory_totals": inventory.totals,
+                    "memory_proposals_count": len(proposals),
+                    "memory_queued_count": queued_count,
+                }
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            log.exception("Failed to build memory sidebar context")
+            ctx.update(
+                {
+                    "memory_scopes": [],
+                    "memory_totals": {"nodes": 0, "pending": 0},
+                    "memory_proposals_count": 0,
+                    "memory_queued_count": 0,
+                }
+            )
 
     elif section == "logs":
         from django.conf import settings as django_settings

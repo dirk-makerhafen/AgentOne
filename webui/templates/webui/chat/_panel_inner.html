@@ -490,6 +490,113 @@
     </div>
     {% endif %}
 
+{% elif panel_tab == "history" %}
+    {% with h=history_results %}
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Search History</span>
+        </div>
+        <form class="webui-form-row" hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML" hx-trigger="submit, change from:select">
+            {% csrf_token %}
+            <input type="hidden" name="q" value="{{ h.query.q }}">
+            <input type="text" name="q" placeholder="Search messages..." value="{{ h.query.q }}"
+                   class="webui-search-input" style="flex:1" aria-label="Search history">
+            <select name="role" class="webui-filter-select">
+                <option value="">All roles</option>
+                <option value="user"{% if h.query.role == "user" %} selected{% endif %}>User</option>
+                <option value="assistant"{% if h.query.role == "assistant" %} selected{% endif %}>Assistant</option>
+                <option value="system"{% if h.query.role == "system" %} selected{% endif %}>System</option>
+                <option value="tool"{% if h.query.role == "tool" %} selected{% endif %}>Tool</option>
+                <option value="developer"{% if h.query.role == "developer" %} selected{% endif %}>Developer</option>
+                <option value="info"{% if h.query.role == "info" %} selected{% endif %}>Info</option>
+            </select>
+            <select name="part_type" class="webui-filter-select">
+                <option value="">All parts</option>
+                <option value="MESSAGE"{% if h.query.part_type == "MESSAGE" %} selected{% endif %}>Message</option>
+                <option value="REASONING"{% if h.query.part_type == "REASONING" %} selected{% endif %}>Reasoning</option>
+                <option value="TOOLCALL"{% if h.query.part_type == "TOOLCALL" %} selected{% endif %}>Tool Call</option>
+                <option value="COMPACTION"{% if h.query.part_type == "COMPACTION" %} selected{% endif %}>Compaction</option>
+            </select>
+            <input type="text" name="tool_call_name" placeholder="Tool name..." value="{{ h.query.tool_call_name }}"
+                   class="webui-filter-input" aria-label="Filter by tool name">
+        </form>
+        <div class="webui-form-row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
+            <label class="webui-checkbox-inline">
+                <input type="checkbox" name="resolved_view" value="true"{% if h.query.resolved_view %} checked{% endif %}
+                       hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
+                       hx-target="#chat-panel-body" hx-swap="innerHTML" hx-include="closest form">
+                Resolved view (default)
+            </label>
+            <label class="webui-checkbox-inline">
+                <input type="checkbox" name="include_hidden" value="true"{% if h.query.include_hidden %} checked{% endif %}
+                       hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
+                       hx-target="#chat-panel-body" hx-swap="innerHTML" hx-include="closest form">
+                Include hidden/INFO
+            </label>
+            <label class="webui-checkbox-inline">
+                <input type="checkbox" name="include_subsessions" value="true"{% if h.query.include_subsessions %} checked{% endif %}
+                       hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
+                       hx-target="#chat-panel-body" hx-swap="innerHTML" hx-include="closest form">
+                Include sub-sessions
+            </label>
+        </div>
+        {% if h.error %}
+        <div class="webui-error" style="margin-top:8px">{{ h.error }}</div>
+        {% else %}
+        <div class="webui-panel-list" style="margin-top:8px; max-height:500px; overflow-y:auto;">
+            {% if h.results %}
+                {% for hit in h.results %}
+                <details class="webui-item webui-history-hit" style="border:1px solid var(--border); border-radius:4px; margin-bottom:4px;">
+                    <summary class="webui-item-summary" style="padding:8px; cursor:pointer;">
+                        <div class="webui-line" style="gap:8px; align-items:center;">
+                            <span class="webui-badge" style="background:var(--muted); font-size:0.75em;">{{ hit.part_type }}</span>
+                            <span class="webui-badge" style="background:{% if hit.role == 'user' %}var(--link){% elif hit.role == 'assistant' %}var(--success){% elif hit.role == 'tool' %}var(--warning){% else %}var(--muted){% endif %}; font-size:0.75em;">{{ hit.role }}</span>
+                            {% if hit.tool_call_name %}
+                            <span class="webui-badge" style="background:var(--primary); font-size:0.75em;">{{ hit.tool_call_name }}</span>
+                            {% endif %}
+                            {% if hit.beyond_compaction %}
+                            <span class="webui-badge is-blocked" style="font-size:0.75em;">compacted</span>
+                            {% endif %}
+                            {% if hit.hidden_from_llm %}
+                            <span class="webui-badge is-blocked" style="font-size:0.75em;">hidden</span>
+                            {% endif %}
+                            <span class="webui-muted-note" style="font-size:0.8em; margin-left:auto;">{{ hit.created_at|date:"H:i:s" }}</span>
+                        </div>
+                        <div class="webui-line" style="margin-top:4px;">
+                            <span class="webui-muted-note" style="font-family:monospace; font-size:0.85em;">{{ hit.preview|escape }}</span>
+                        </div>
+                    </summary>
+                    <div style="padding:8px; border-top:1px solid var(--border);">
+                        <form class="webui-form-row" style="gap:4px;">
+                            <button type="button" class="webui-action-btn"
+                                    hx-get="{% url 'webui:inspect_history_item' session.pk %}?message_pk={{ hit.message_pk }}"
+                                    hx-target="#chat-panel-body" hx-swap="innerHTML"
+                                    hx-push-url="false">Inspect</button>
+                            {% if hit.tool_call_pk %}
+                            <button type="button" class="webui-action-btn"
+                                    hx-get="{% url 'webui:call_detail' hit.tool_call_pk %}?full=1&back=1&session={{ session.pk }}"
+                                    hx-target="#chat-panel-body" hx-swap="innerHTML">Call Detail</button>
+                            {% endif %}
+                        </form>
+                    </div>
+                </details>
+                {% endfor %}
+            {% else %}
+            <div class="webui-empty-note" style="padding:16px; text-align:center;">No history results found.</div>
+            {% endif %}
+        </div>
+        {% if h.has_more %}
+        <div style="text-align:center; margin-top:8px;">
+            <button class="webui-action-btn"
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}?{{ request.GET.urlencode }}&offset={{ h.next_offset }}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Load more ({{ h.total_count|add:"-"|add:h.next_offset }} remaining)</button>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+    {% endwith %}
+
 {% else %}
     <div class="webui-panel-section">
         <div class="detail-row"><span class="detail-row-label">Status</span>

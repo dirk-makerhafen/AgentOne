@@ -1,7 +1,7 @@
 """
 Redis-backed observable registry for the ORM→UI reactive layer.
 
-The pyHtmlGui in-process observables only work when the subject and the view
+The  in-process observables only work when the subject and the view
 live in the same process.  Celery workers mutate ORM entities in another
 process, so we keep the observer registry in Redis:
 

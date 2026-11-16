@@ -5,7 +5,7 @@ import yaml
 
 
 class Observable:
-    """Minimal observable base (no pyHtmlGui dependency)."""
+    """Minimal observable base (no  dependency)."""
 
     def __init__(self):
         self._observers = []

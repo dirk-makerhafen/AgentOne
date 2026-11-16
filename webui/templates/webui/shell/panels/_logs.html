@@ -1,7 +1,9 @@
 <div class="sidebar-section"><span>Log files</span></div>
 <div class="side-list">
     {% for file in log_files %}
-    <a class="ws-row{% if file == selected_log %} active{% endif %}" href="{% url 'webui:logs' %}?file={{ file|urlencode }}">
+    <a class="ws-row{% if file == selected_log %} active{% endif %}" href="{% url 'webui:logs' %}?file={{ file|urlencode }}"
+       hx-get="{% url 'webui:logs' %}?file={{ file|urlencode }}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+       data-sidebar-active-key="{{ file }}">
         <span class="ws-row-info"><span class="ws-row-name">{{ file }}</span></span>
     </a>
     {% empty %}

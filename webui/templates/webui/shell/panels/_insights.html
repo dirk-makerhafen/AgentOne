@@ -1,7 +1,9 @@
 <div class="sidebar-section"><span>Insights</span></div>
 <div class="side-list">
     {% for key, label in insight_tabs %}
-    <a class="ws-row" href="{% url 'webui:insights_tab' key %}">
+    <a class="ws-row{% if key == active_id %} active{% endif %}" href="{% url 'webui:insights_tab' key %}"
+       hx-get="{% url 'webui:insights_tab' key %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+       data-sidebar-active-key="{{ key }}">
         <span class="ws-row-info"><span class="ws-row-name">{{ label }}</span></span>
     </a>
     {% endfor %}

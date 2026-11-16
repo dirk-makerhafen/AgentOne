@@ -6,30 +6,29 @@
 <div class="main-view">
     <header class="main-view-header">
         <div class="main-view-title-row">
-            <div class="main-view-title">Memory improvements</div>
-            <span class="mem-badge kind">{{ pyview.project_label }}</span>
+            <a href="{% url 'webui:memory' %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}" class="mem-muted" style="text-decoration:none">Memory</a>
+            <span class="mem-muted">/</span>
+            <div class="main-view-title">Improvements</div>
         </div>
         <div class="main-view-actions">
             {% if pyview.counts.queueable %}
-            <button class="btn primary" onclick="pyview.queue_visible()">
-                File visible ({{ pyview.counts.queueable }})
-            </button>
+            <form method="post" action="{% url 'webui:memory_improvements_queue' %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="all" value="1">
+                <button class="btn primary" type="submit">File visible ({{ pyview.counts.queueable }})</button>
+            </form>
             {% endif %}
-            <button class="panel-head-btn" onclick="pyview.refresh()"
-                    title="Refresh">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                     aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            </button>
+            <a class="panel-head-btn" href="{% url 'webui:memory_improvements' %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}" title="Refresh" aria-label="Refresh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </a>
         </div>
     </header>
+
     <div class="main-view-body">
         <div class="main-view-content mem-page">
 
             {% if pyview.message %}
-            <div class="mem-message
-                 {% if pyview.message_ok %}ok{% else %}err{% endif %}">
-                {{ pyview.message }}</div>
+            <div class="mem-message {% if pyview.message_ok %}ok{% else %}err{% endif %}">{{ pyview.message }}</div>
             {% endif %}
 
             <div class="mem-hero">
@@ -50,33 +49,33 @@
                 </div>
             </div>
 
-            <div class="mem-filter-bar">
-                <select onchange="pyview.set_kind_filter(this.value)">
+            <form method="get" class="mem-filter-bar">
+                {% if pyview.project_id %}<input type="hidden" name="project" value="{{ pyview.project_id }}">{% endif %}
+                <select name="kind" onchange="this.form.submit()">
                     <option value="">All kinds</option>
                     {% for kind in pyview.kind_options %}
                     <option value="{{ kind }}" {% if kind == pyview.kind_filter %}selected{% endif %}>{{ kind }}</option>
                     {% endfor %}
                 </select>
-                <select onchange="pyview.set_status_filter(this.value)">
+                <select name="status" onchange="this.form.submit()">
                     <option value="">All statuses</option>
                     {% for status in pyview.status_options %}
                     <option value="{{ status }}" {% if status == pyview.status_filter %}selected{% endif %}>{{ status }}</option>
                     {% endfor %}
                 </select>
-                <select onchange="pyview.set_scope_filter(this.value)">
+                <select name="scope" onchange="this.form.submit()">
                     <option value="">All scopes</option>
                     {% for scope in pyview.scope_options %}
                     <option value="{{ scope }}" {% if scope == pyview.scope_filter %}selected{% endif %}>{{ scope }}</option>
                     {% endfor %}
                 </select>
-                <input type="text" placeholder="Search proposals..."
-                       value="{{ pyview.search }}" onchange="pyview.set_search(this.value)">
+                <input type="text" name="search" placeholder="Search proposals..." value="{{ pyview.search }}">
                 <label class="mem-filter-check">
-                    <input type="checkbox" {% if pyview.hide_queued %}checked{% endif %}
-                           onchange="pyview.set_hide_queued(this.checked)">
+                    <input type="checkbox" name="hide_queued" value="1" {% if pyview.hide_queued %}checked{% endif %} onchange="this.form.submit()">
                     Hide filed
                 </label>
-            </div>
+                <button class="btn" type="submit">Apply</button>
+            </form>
 
             {% if not pyview.proposals %}
                 <div class="mem-empty">
@@ -91,7 +90,7 @@
             <div class="mem-proposal">
                 <div class="mem-proposal-head">
                     <span class="mem-badge kind">{{ proposal.kind }}</span>
-                    <span class="mem-badge{% if proposal.status == 'candidate' %} warn{% endif %}">{{ proposal.status }}</span>
+                    {% if proposal.status == 'candidate' %}<span class="mem-badge warn">{{ proposal.status }}</span>{% else %}<span class="mem-badge">{{ proposal.status }}</span>{% endif %}
                     <span class="mem-badge">{{ proposal.source }}</span>
                     <code class="mem-mono">{{ proposal.id }}</code>
                     {% if proposal.queued %}<span class="mem-badge ok">filed #{{ proposal.queued.id }}</span>{% endif %}
@@ -103,14 +102,15 @@
                 {% if proposal.evidence %}<div class="mem-proposal-meta">Evidence: {{ proposal.evidence|join:", " }}</div>{% endif %}
                 <div class="mem-proposal-meta">From <span class="mem-mono">{{ proposal.node_label }}</span> · {{ proposal.path }}</div>
                 <div class="mem-proposal-actions">
-                    <button class="btn" onclick="pyview.open_node('{{ proposal.node_id }}')">Open node</button>
+                    <a class="btn" href="{% url 'webui:memory_node' proposal.node_id %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}">Open node</a>
                     {% if proposal.queued %}
                         <span class="mem-muted">Already filed as #{{ proposal.queued.id }} ({{ proposal.queued.status }}).</span>
                     {% elif proposal.queueable %}
-                        <button class="btn primary"
-                                onclick="pyview.queue_proposal('{{ proposal.fingerprint }}')">
-                            File as backlog
-                        </button>
+                        <form method="post" action="{% url 'webui:memory_improvements_queue' %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}" style="display:inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="fingerprint" value="{{ proposal.fingerprint }}">
+                            <button class="btn primary" type="submit">File as backlog</button>
+                        </form>
                     {% else %}
                         <span class="mem-muted">Not queueable.</span>
                     {% endif %}
@@ -118,7 +118,7 @@
             </div>
             {% endfor %}
 
-            <div class="detail-card">
+            <div class="detail-card mem-card">
                 <div class="detail-card-title">What filing does</div>
                 <div class="mem-ladder">
                     A filed proposal becomes a <strong>backlog</strong> work item with the full

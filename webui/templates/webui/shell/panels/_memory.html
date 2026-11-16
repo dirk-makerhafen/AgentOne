@@ -1,0 +1,50 @@
+<div class="sidebar-section"><span>Memory</span></div>
+<div class="side-list" style="padding: 0 8px 8px;">
+    <a class="ws-row{% if active_id == 'overview' or not active_id %} active{% endif %}"
+       href="{% url 'webui:memory' %}{% if sidebar_project_id %}?project={{ sidebar_project_id }}{% endif %}"
+       hx-get="{% url 'webui:memory' %}{% if sidebar_project_id %}?project={{ sidebar_project_id }}{% endif %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+       data-sidebar-active-key="overview">
+        <span class="ws-row-info">
+            <span class="ws-row-name">Overview</span>
+            <span class="ws-row-path">{{ memory_totals.nodes|default:0 }} node(s) · {{ memory_totals.pending|default:0 }} needs walk</span>
+        </span>
+    </a>
+    <a class="ws-row{% if active_id == 'improvements' %} active{% endif %}"
+       href="{% url 'webui:memory_improvements' %}{% if sidebar_project_id %}?project={{ sidebar_project_id }}{% endif %}"
+       hx-get="{% url 'webui:memory_improvements' %}{% if sidebar_project_id %}?project={{ sidebar_project_id }}{% endif %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+       data-sidebar-active-key="improvements">
+        <span class="ws-row-info">
+            <span class="ws-row-name">Improvements</span>
+            <span class="ws-row-path">{{ memory_proposals_count|default:0 }} proposal(s){% if memory_queued_count %} · {{ memory_queued_count }} filed{% endif %}</span>
+        </span>
+    </a>
+</div>
+
+{% for scope in memory_scopes %}
+{% if scope.nodes %}
+<div class="sidebar-section"><span>{{ scope.label }}</span></div>
+<div class="side-list">
+    {% for node in scope.nodes %}
+    <a class="ws-row{% if node.id == active_id %} active{% endif %}"
+       href="{% url 'webui:memory_node' node.id %}{% if sidebar_project_id %}?project={{ sidebar_project_id }}{% endif %}"
+       hx-get="{% url 'webui:memory_node' node.id %}{% if sidebar_project_id %}?project={{ sidebar_project_id }}{% endif %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+       data-sidebar-active-key="{{ node.id }}"
+       title="{{ node.relative_path }}">
+        <span class="ws-row-info">
+            <span class="ws-row-name">{{ node.label }}</span>
+            <span class="ws-row-path">
+                {{ node.kind_label }}
+                {% if node.pending_count %} · {{ node.pending_count }} changed{% endif %}
+                {% if node.missing_count %} · {{ node.missing_count }} missing{% endif %}
+                {% if node.proposal_count %} · {{ node.proposal_count }} proposals{% endif %}
+            </span>
+        </span>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endfor %}
+
+{% if not memory_totals.nodes %}
+<div class="webui-empty-note">No memory nodes yet. Synthesized scopes and tasks will appear here.</div>
+{% endif %}

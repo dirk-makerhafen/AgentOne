@@ -1,6 +1,6 @@
 """Middleware for the server-rendered UI.
 
-The legacy pyHtmlGui entry point was login-protected.  The new UI lives under
+The legacy  entry point was login-protected.  The new UI lives under
 ``/app/`` and must keep the same protection even when it is linked directly
 (not through the ``/`` redirect).  Fragment and SSE endpoints are covered too.
 

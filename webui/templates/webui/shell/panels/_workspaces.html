@@ -11,7 +11,9 @@
         {% else %}
         <span class="ws-tree-leaf"></span>
         {% endif %}
-        <a class="ws-row-link" href="{% url 'webui:workspace' row.pk %}">
+        <a class="ws-row-link" href="{% url 'webui:workspace' row.pk %}"
+           hx-get="{% url 'webui:workspace' row.pk %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+           data-sidebar-active-key="{{ row.pk }}" data-sidebar-active-target="closest:.ws-row">
             <span class="ws-row-info">
                 <span class="ws-row-name">
                     <span class="session-project-dot" style="background:{{ row.color|default:'var(--accent)' }}"></span>

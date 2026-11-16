@@ -6,7 +6,9 @@
 </div>
 <div class="side-list">
     {% for item in sidebar_workitems %}
-    <a class="ws-row{% if item.pk == active_id %} active{% endif %}" href="{% url 'webui:workitem' item.pk %}">
+    <a class="ws-row{% if item.pk == active_id %} active{% endif %}" href="{% url 'webui:workitem' item.pk %}"
+       hx-get="{% url 'webui:workitem' item.pk %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
+       data-sidebar-active-key="{{ item.pk }}">
         <span class="ws-row-info">
             <span class="ws-row-name">{{ item.title }}</span>
             <span class="ws-row-path">{{ item.get_status_display }}{% if item.assigned_agent %} · {{ item.assigned_agent.name }}{% endif %}</span>
