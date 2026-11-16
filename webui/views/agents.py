@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
+from django.http import HttpResponse
 import yaml
 from django.conf import settings
 from django.db.models import Count
@@ -73,7 +74,7 @@ def _read_agent_frontmatter(agent: AgentModel) -> tuple[Path, dict, str]:
         return directory, {}, ""
 
 
-def agents(request):
+def agents(request) -> HttpResponse: 
     rows = list(
         AgentModel.objects.select_related(
             "latest_agent_version", "parent_project", "parent_agent", "parent_skill"

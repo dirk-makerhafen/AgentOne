@@ -1189,11 +1189,21 @@
     function loadWidth(key, fallback) {
         try { var v = parseInt(localStorage.getItem(key), 10); return (v && v >= MIN_W && v <= MAX_W) ? v : fallback; } catch (e) { return fallback; }
     }
+    function rightPanels() {
+        return document.querySelectorAll('.webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
+    }
+    function applyRightWidth(panel, w) {
+        panel.style.width = w + 'px';
+        panel.style.flex = '0 0 ' + w + 'px';
+    }
     function restoreWidths() {
         var s = document.querySelector('.sidebar');
-        var r = document.querySelector('.webui-chat-panel');
-        if (s) s.style.width = loadWidth('sidebarWidth', 300) + 'px';
-        if (r) r.style.width = loadWidth('rightpanelWidth', 300) + 'px';
+        var sw = parseInt(localStorage.getItem('sidebarWidth'), 10);
+        if (s && sw >= MIN_W && sw <= MAX_W) s.style.width = sw + 'px';
+        var rw = parseInt(localStorage.getItem('rightpanelWidth'), 10);
+        if (rw >= MIN_W && rw <= MAX_W) {
+            rightPanels().forEach(function (r) { applyRightWidth(r, rw); });
+        }
     }
     // Boosted navigation replaces the whole body, so the panel nodes and the
     // observed layout node have to be re-resolved after every swap.
@@ -1244,7 +1254,11 @@
         var isSidebar = panel.classList.contains('sidebar');
         var w = isSidebar ? (startW + dx) : (startW - dx);
         w = Math.max(MIN_W, Math.min(MAX_W, w));
-        panel.style.width = w + 'px';
+        if (isSidebar) {
+            panel.style.width = w + 'px';
+        } else {
+            applyRightWidth(panel, w);
+        }
     });
     document.addEventListener('mouseup', function () {
         if (!handle) return;

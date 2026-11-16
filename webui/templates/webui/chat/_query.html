@@ -13,6 +13,9 @@
         {% endif %}
         <span class="card-meta">{{ row.obj.tokens|default:0 }} tok</span>
         <span class="card-status {{ row.obj.status|lower }}">{{ row.obj.status }}</span>
+        {% if row.obj.status == 'FAILURE' and row.response and row.response.error_message %}
+            <span class="card-meta query-fail-reason" title="{{ row.response.error_type }}: {{ row.response.error_message }}">{{ row.response.error_type|default:"Error" }}</span>
+        {% endif %}
         <span class="query-card-toggle">▸</span>
     </summary>
     <div class="query-card-detail"><span class="webui-detail-loading">Loading…</span></div>

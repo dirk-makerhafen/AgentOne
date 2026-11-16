@@ -122,14 +122,32 @@ class ObservableMixin:
         data_factory: Callable[[], dict[str, Any]] | None = None,
     ) -> None:
         """Publish this row's change to subscribers of its observable keys."""
-        notify(
-            self.observable_keys(),
-            self.__class__.__name__,
-            self.pk,
-            action,
-            data,
-            data_factory=data_factory,
+        observable_keys = self.observable_keys()
+        if not observable_keys:
+            return
+        r = get_redis()
+
+        # Pub/sub fan-out feeds the htmx/SSE UI.  The envelope is small on
+        # purpose -- SSE consumers only use the channel name as the event name
+        # and refetch the fragment themselves, so no serialized object is needed.
+        envelope = json.dumps(
+            {
+                "model": self.__class__.__name__,
+                "pk": self.pk,
+                "action": action,
+                "keys": list(observable_keys),
+            },
+            default=str,
         )
+
+        with r.pipeline() as p:
+            for observable_key in observable_keys:
+                p.publish(PUBSUB_PREFIX + observable_key, envelope)
+            p.execute()
+
+
+
+
 
     def serialize_observable(self) -> dict[str, Any]:
         """Serialize concrete model fields for observable callbacks."""
@@ -380,43 +398,3 @@ def publish_model_event(
                 getattr(instance, "pk", None),
             )
 
-
-def notify(
-    observable_keys: Sequence[str],
-    model: str,
-    pk: int,
-    action: str,
-    data: dict[str, Any] | None = None,
-    *,
-    data_factory: Callable[[], dict[str, Any]] | None = None,
-) -> None:
-    """Push a message to every UI instance subscribed to any of *observable_keys*.
-
-    Called by ORM ``notify_observers`` (which ``publish_model_event`` invokes
-    for dual-publish during the migration).  Only queues that actually have
-    an observer for one of the keys receive a message, and all their
-    function_ids are batched into a single message per instance so the UI
-    loop can coalesce repeated updates.  ``key`` is the first matched key
-    (kept for backward compatibility); ``keys`` lists every matched key.
-    """
-    if not observable_keys:
-        return
-    r = get_redis()
-
-    # Pub/sub fan-out feeds the htmx/SSE UI.  The envelope is small on
-    # purpose -- SSE consumers only use the channel name as the event name
-    # and refetch the fragment themselves, so no serialized object is needed.
-    envelope = json.dumps(
-        {
-            "model": model,
-            "pk": pk,
-            "action": action,
-            "keys": list(observable_keys),
-        },
-        default=str,
-    )
-
-    with r.pipeline() as p:
-        for observable_key in observable_keys:
-            p.publish(PUBSUB_PREFIX + observable_key, envelope)
-        p.execute()

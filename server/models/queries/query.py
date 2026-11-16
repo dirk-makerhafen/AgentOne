@@ -29,23 +29,21 @@ class QueryStatus(models.TextChoices):
 class Query(BaseModel):
     """Represents a single LLM query including its message history."""
 
-    apikey = models.ForeignKey(  "server.ApiKey",  null=True,  on_delete=models.SET_NULL,  related_name="related_queries",  blank=True)
-    session = models.ForeignKey(  "server.SessionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
-    session_version = models.ForeignKey(  "server.SessionVersionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
-    trigger_message = models.ForeignKey(  "server.Message",  null=True,  blank=True,  on_delete=models.CASCADE,  related_name="related_queries")
-    status = EnumField(QueryStatus, default=QueryStatus.WAITING, db_index=True)
-    tokens = models.IntegerField(default=None, blank=True, null=True)
-
-
     class QueryObservableKeys(ObservableKeys):
         """Explicit observable keys for an Query (IDE autocomplete)."""
-
         @property
         def messages(self):
             return f"QueryMessage.query:{self.model.pk}"
         @property
         def response(self):
             return f"Response.query:{self.model.pk}"
+
+    apikey = models.ForeignKey(  "server.ApiKey",  null=True,  on_delete=models.SET_NULL,  related_name="related_queries",  blank=True)
+    session = models.ForeignKey(  "server.SessionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
+    session_version = models.ForeignKey(  "server.SessionVersionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")
+    trigger_message = models.ForeignKey(  "server.Message",  null=True,  blank=True,  on_delete=models.CASCADE,  related_name="related_queries")
+    status = EnumField(QueryStatus, default=QueryStatus.WAITING, db_index=True)
+    tokens = models.IntegerField(default=None, blank=True, null=True)
 
     @property
     def response(self):

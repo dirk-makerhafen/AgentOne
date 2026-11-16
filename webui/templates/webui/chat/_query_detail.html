@@ -1,4 +1,7 @@
 {% load webui %}
+{% if error_message %}
+<div class="webui-error query-error">Failure{% if error_type %} ({{ error_type }}){% endif %}: {{ error_message }}</div>
+{% endif %}
 <div class="query-card-messages">
     {% for m in messages %}
     <div class="query-message query-message-{{ m.role }}">

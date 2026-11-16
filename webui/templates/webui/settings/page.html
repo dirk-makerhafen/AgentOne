@@ -170,30 +170,14 @@
                     <div class="insights-empty">No providers configured.</div>
                     {% endif %}
                 </div>
-                <div class="resize-handle" id="rightpanelResize" aria-label="Resize panel" role="slider" tabindex="0" aria-orientation="horizontal"></div>
                 <aside class="insights-rightbar" id="insights-detail" aria-label="Provider details">
+                    <div class="resize-handle" id="rightpanelResize" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize panel"></div>
                     <header class="insights-rightbar-head">
                         <span>Details</span>
                         <button type="button" class="webui-icon-btn" data-insights-close aria-label="Close details">×</button>
                     </header>
                     <div class="insights-rightbar-body" id="insights-detail-body">
-                        {% if providers %}
-                        <div class="insights-rightbar-empty">
-                            <p><strong>{{ providers_summary.total }} provider{{ providers_summary.total|pluralize }} configured.</strong></p>
-                            <p>Select a provider to see keys, limits, usage and models.</p>
-                            <hr style="margin: 12px 0; border-color: var(--border);">
-                            <ul style="margin: 0; padding-left: 20px;">
-                                <li>{{ providers_summary.total }} provider{{ providers_summary.total|pluralize }} total</li>
-                                <li>{{ providers_summary.local }} local, {{ providers_summary.remote }} remote</li>
-                                <li>{{ providers_summary.with_keys }} provider{{ providers_summary.with_keys|pluralize }} with keys ({{ providers_summary.total_keys }} key{{ providers_summary.total_keys|pluralize }} total)</li>
-                                {% if providers_summary.healthy or providers_summary.failed %}
-                                <li>{{ providers_summary.healthy }} healthy, {{ providers_summary.failed }} failed probes</li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                        {% else %}
-                        <div class="insights-rightbar-empty">No providers configured.</div>
-                        {% endif %}
+                        <div class="insights-rightbar-empty">Select a provider to see keys, limits, usage and models.</div>
                     </div>
                 </aside>
             </div>

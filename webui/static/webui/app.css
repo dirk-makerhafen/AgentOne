@@ -2230,10 +2230,10 @@ html.sse-down #connection-banner { display: block; }
 .webui-chat-panel { position: relative; }
 .webui-entity-assistant { position: relative; }
 .insights-rightbar { position: relative; }
-.sidebar .resize-handle { right: -2px; }
-.webui-chat-panel .resize-handle { left: -2px; }
-.webui-entity-assistant .resize-handle { left: -2px; }
-.insights-rightbar .resize-handle { left: -2px; }
+.sidebar .resize-handle { right: 0; }
+.webui-chat-panel .resize-handle { left: 0; }
+.webui-entity-assistant .resize-handle { left: 0; }
+.insights-rightbar .resize-handle { left: 0; }
 .resize-handle:hover, .resize-handle.dragging { background: var(--accent, #4f8cff); }
 body.resizing { user-select: none; cursor: col-resize; }
 

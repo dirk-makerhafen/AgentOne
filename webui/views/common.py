@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
@@ -602,7 +603,7 @@ def is_boosted_request(request) -> bool:
 
 
 def render_page(request, section: str, template: str, context: dict | None = None,
-                active_id=None) -> object:
+                active_id=None) -> HttpResponse:
     """Render a page, or just the swappable shell for boosted navigation.
 
     Full document loads (new tabs, reloads, no-JS) get the complete
