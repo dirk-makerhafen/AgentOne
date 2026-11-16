@@ -1,7 +1,7 @@
 {% load webui %}
 {% firstof panel_tab "details" as active_panel_tab %}
 <aside class="webui-chat-panel" id="chat-panel" aria-label="Session panel">
-    <div class="resize-handle" id="rightpanelResize" role="separator" aria-orientation="vertical" tabindex="0"></div>
+    {% include "webui/includes/resize_handle.html" %}
     <div class="webui-panel-head">
         <span>Session</span>
         <button class="webui-icon-btn" type="button" data-panel-toggle title="Close panel" aria-label="Close panel">×</button>

@@ -1,23 +1,19 @@
-"""Providers insight view — per-provider limits, keys and usage windows.
+"""Provider insight data helpers.
 
-One table row per enabled provider: configured limits, whether an API key
-is set up, and successful request / token counts for the last 24h, 7 days
-and 30 days (from ``Response`` rows via their ``AiModel``).
+Computes per-provider limits, key state and usage windows from ``Response`` rows. The
+Django/htmx web UI renders this via ``webui.views.insights`` +
+``webui/templates/webui/insights/page.html``; this module keeps the shared/sortable data
+logic (also exercised by ``server.tests.test_insight_tables``).
 """
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 from django.db.models import Count, Sum
 from django.utils import timezone
 
 from server.models.providers.api_provider import ApiProvider
 from server.models.queries.response import Response, ResponseStatus
-
-if TYPE_CHECKING:
-    from ui.app import UiApp
-    from ui.main.main_view import MainView
 
 
 LIMIT_LABELS = (
@@ -53,73 +49,20 @@ def _limits_str(provider: ApiProvider) -> str:
 
 
 class ProvidersView:
-    DOM_ELEMENT_CLASS = "main-view"
+    """Sortable provider insight data (no UI rendering)."""
 
     NUMERIC_COLS = ("req_24h", "tok_24h", "req_7d", "tok_7d", "req_30d", "tok_30d")
 
-    TEMPLATE_STR = '''
-        <div class="main-view-header">
-            <div class="main-view-title">Providers</div>
-            <div class="main-view-actions">
-                <button class="panel-head-btn" title="Refresh" onclick="pyview.refresh()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                </button>
-            </div>
-        </div>
-        <div class="main-view-body">
-            <div class="main-view-content" style="max-width:1200px">
-                <div class="analytics-card">
-                    <div class="analytics-card-title">Usage by provider</div>
-                    <div class="analytics-card-sub">Successful responses in the last 24 hours, 7 days and 30 days — click a column header to sort</div>
-                    <table class="insights-table">
-                        <thead><tr>
-                            <th class="sortable" onclick="pyview.apply_sort('name')">Provider{{ pyview.sort_arrow('name') }}</th>
-                            <th class="sortable" onclick="pyview.apply_sort('key')">API key{{ pyview.sort_arrow('key') }}</th>
-                            <th class="sortable" onclick="pyview.apply_sort('limits')">Limits{{ pyview.sort_arrow('limits') }}</th>
-                            <th class="num sortable" onclick="pyview.apply_sort('req_24h')">Req 24h{{ pyview.sort_arrow('req_24h') }}</th>
-                            <th class="num sortable" onclick="pyview.apply_sort('tok_24h')">Tok 24h{{ pyview.sort_arrow('tok_24h') }}</th>
-                            <th class="num sortable" onclick="pyview.apply_sort('req_7d')">Req 7d{{ pyview.sort_arrow('req_7d') }}</th>
-                            <th class="num sortable" onclick="pyview.apply_sort('tok_7d')">Tok 7d{{ pyview.sort_arrow('tok_7d') }}</th>
-                            <th class="num sortable" onclick="pyview.apply_sort('req_30d')">Req 30d{{ pyview.sort_arrow('req_30d') }}</th>
-                            <th class="num sortable" onclick="pyview.apply_sort('tok_30d')">Tok 30d{{ pyview.sort_arrow('tok_30d') }}</th>
-                        </tr></thead>
-                        <tbody>
-                        {% for row in pyview.provider_rows %}
-                        <tr class="clickable{% if row.id == pyview._selected_id %} selected{% endif %}" onclick="pyview.open_provider({{ row.id }})">
-                            <td><strong>{{ row.name }}</strong></td>
-                            <td>{% if row.key_state == "built-in" %}<span class="key-badge key-builtin">built-in</span>{% elif row.key_state == "keys" %}<span class="key-badge key-ok">✓ {{ row.key_count }}</span>{% else %}<span class="key-badge key-missing">—</span>{% endif %}</td>
-                            <td class="muted">{{ row.limits }}</td>
-                            <td class="num">{{ row.req_24h }}</td><td class="num">{{ row.tok_24h }}</td>
-                            <td class="num">{{ row.req_7d }}</td><td class="num">{{ row.tok_7d }}</td>
-                            <td class="num">{{ row.req_30d }}</td><td class="num">{{ row.tok_30d }}</td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    '''
-
-    def __init__(self, subject: UiApp, parent: MainView, **kwargs):
+    def __init__(self, *args, **kwargs):
         self._sort_col = "name"
         self._sort_desc = False
         self._selected_id: int | None = None
 
-    def refresh(self) -> None:
-        self.update()
-
-    def open_provider(self, provider_id: int) -> None:
-        from webui.main.rightpanel.provider.rightpanel_provider import RightPanelProvider
-        provider = ApiProvider.objects.filter(pk=provider_id).first()
-        if provider is None:
-            return
-        self._selected_id = provider.pk
-        self.parent.parent.rightpanel.set_view(RightPanelProvider, provider)
-        self.update()
+    def update(self) -> None:
+        """UI refresh hook (no-op outside pyHtmlGui)."""
 
     def apply_sort(self, col: str) -> None:
-        """Header click: toggle direction on repeat, else sort the column
+        """Toggle direction on repeat, else sort the column
         (names/limits ascending, numbers descending)."""
         if col == self._sort_col:
             self._sort_desc = not self._sort_desc

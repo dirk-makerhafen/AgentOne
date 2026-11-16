@@ -1,7 +1,7 @@
 {% load webui %}
 <aside class="webui-entity-assistant" id="entity-assistant-panel"
        aria-label="{{ assistant_title }} chat">
-    <div class="resize-handle" id="rightpanelResize" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize panel"></div>
+    {% include "webui/includes/resize_handle.html" %}
     <header class="webui-entity-assistant-head">
         <div>
             <div class="webui-entity-assistant-title">{{ assistant_title }}</div>

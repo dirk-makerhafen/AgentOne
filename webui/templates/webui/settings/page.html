@@ -170,16 +170,7 @@
                     <div class="insights-empty">No providers configured.</div>
                     {% endif %}
                 </div>
-                <aside class="insights-rightbar" id="insights-detail" aria-label="Provider details">
-                    <div class="resize-handle" id="rightpanelResize" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize panel"></div>
-                    <header class="insights-rightbar-head">
-                        <span>Details</span>
-                        <button type="button" class="webui-icon-btn" data-insights-close aria-label="Close details">×</button>
-                    </header>
-                    <div class="insights-rightbar-body" id="insights-detail-body">
-                        <div class="insights-rightbar-empty">Select a provider to see keys, limits, usage and models.</div>
-                    </div>
-                </aside>
+                {% include "webui/includes/detail_pane.html" with detail_aria_label="Provider details" detail_empty="Select a provider to see keys, limits, usage and models." %}
             </div>
 
             {% elif tab == "system" %}

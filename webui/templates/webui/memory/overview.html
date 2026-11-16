@@ -7,10 +7,10 @@
     <header class="main-view-header">
         <div class="main-view-title">Memory</div>
         <div class="main-view-actions">
-            <a class="panel-head-btn" href="{% url 'webui:memory_improvements' %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}" title="Improvement proposals" aria-label="Improvement proposals">
+            <a class="panel-head-btn" href="{% url 'webui:memory_improvements' %}{% if project_id %}?project={{ project_id }}{% endif %}" title="Improvement proposals" aria-label="Improvement proposals">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
             </a>
-            <a class="panel-head-btn" href="{% url 'webui:memory' %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}" title="Reload from disk" aria-label="Reload from disk">
+            <a class="panel-head-btn" href="{% url 'webui:memory' %}{% if project_id %}?project={{ project_id }}{% endif %}" title="Reload from disk" aria-label="Reload from disk">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             </a>
         </div>
@@ -18,46 +18,46 @@
     <div class="main-view-body">
         <div class="main-view-content mem-page">
 
-            {% if pyview.message %}
-            <div class="mem-message {% if pyview.message_ok %}ok{% else %}err{% endif %}">{{ pyview.message }}</div>
+            {% if message %}
+            <div class="mem-message {% if message_ok %}ok{% else %}err{% endif %}">{{ message }}</div>
             {% endif %}
 
             <div class="mem-hero">
                 <div class="mem-stat">
                     <div class="mem-stat-label">Nodes</div>
-                    <div class="mem-stat-value">{{ pyview.totals.nodes }}</div>
-                    <div class="mem-stat-sub">{{ pyview.totals.scopes }} scope(s) · {{ pyview.totals.agents }} agent(s) · {{ pyview.totals.tasks }} task(s)</div>
+                    <div class="mem-stat-value">{{ totals.nodes }}</div>
+                    <div class="mem-stat-sub">{{ totals.scopes }} scope(s) · {{ totals.agents }} agent(s) · {{ totals.tasks }} task(s)</div>
                 </div>
-                <div class="mem-stat {% if pyview.totals.pending %}warn{% endif %}">
+                <div class="mem-stat {% if totals.pending %}warn{% endif %}">
                     <div class="mem-stat-label">Needs a walk</div>
-                    <div class="mem-stat-value">{{ pyview.totals.pending }}</div>
+                    <div class="mem-stat-value">{{ totals.pending }}</div>
                     <div class="mem-stat-sub">changed source(s) not yet synthesized</div>
                 </div>
-                <div class="mem-stat {% if pyview.totals.missing %}err{% endif %}">
+                <div class="mem-stat {% if totals.missing %}err{% endif %}">
                     <div class="mem-stat-label">Missing sources</div>
-                    <div class="mem-stat-value">{{ pyview.totals.missing }}</div>
+                    <div class="mem-stat-value">{{ totals.missing }}</div>
                     <div class="mem-stat-sub">path recorded but no longer present</div>
                 </div>
                 <div class="mem-stat">
                     <div class="mem-stat-label">Directives</div>
-                    <div class="mem-stat-value">{{ pyview.totals.directives }}</div>
-                    <div class="mem-stat-sub">{{ pyview.totals.active_directives }} active · candidates opt-in</div>
+                    <div class="mem-stat-value">{{ totals.directives }}</div>
+                    <div class="mem-stat-sub">{{ totals.active_directives }} active · candidates opt-in</div>
                 </div>
-                <div class="mem-stat {% if pyview.totals.proposals %}warn{% endif %}">
+                <div class="mem-stat {% if totals.proposals %}warn{% endif %}">
                     <div class="mem-stat-label">Proposals</div>
-                    <div class="mem-stat-value">{{ pyview.totals.proposals }}</div>
+                    <div class="mem-stat-value">{{ totals.proposals }}</div>
                     <div class="mem-stat-sub">improvements waiting for a decision</div>
                 </div>
                 <div class="mem-stat">
                     <div class="mem-stat-label">Legacy playbooks</div>
-                    <div class="mem-stat-value">{{ pyview.totals.legacy }}</div>
+                    <div class="mem-stat-value">{{ totals.legacy }}</div>
                     <div class="mem-stat-sub">prose reflections inject nothing</div>
                 </div>
             </div>
 
-            {% if pyview.warnings %}
+            {% if warnings %}
             <div class="mem-message err">
-                {% for warning in pyview.warnings %}<div>{{ warning }}</div>{% endfor %}
+                {% for warning in warnings %}<div>{{ warning }}</div>{% endfor %}
             </div>
             {% endif %}
 
@@ -68,9 +68,9 @@
                         <div class="mem-section-sub">Nodes whose sources changed since the last synthesize. This view is read-only and does not run the memory walker.</div>
                     </div>
                 </div>
-                {% if pyview.stale_nodes %}
-                    {% for node in pyview.stale_nodes %}
-                    <a class="mem-row" href="{% url 'webui:memory_node' node.id %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}" style="text-decoration:none;color:inherit">
+                {% if stale_nodes %}
+                    {% for node in stale_nodes %}
+                    <a class="mem-row" href="{% url 'webui:memory_node' node.id %}{% if project_id %}?project={{ project_id }}{% endif %}" style="text-decoration:none;color:inherit">
                         <span class="mem-row-kind">{{ node.kind_label }}</span>
                         <div class="mem-row-main">
                             <div class="mem-row-label">{{ node.label }}</div>
@@ -94,14 +94,14 @@
                         <div class="mem-section-title">Memory tree</div>
                         <div class="mem-section-sub">Read from disk. Click a node to inspect its facts, playbook, proposals, and source freshness.</div>
                     </div>
-                    <a class="btn" href="{% url 'webui:memory_improvements' %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}">Open proposals</a>
+                    <a class="btn" href="{% url 'webui:memory_improvements' %}{% if project_id %}?project={{ project_id }}{% endif %}">Open proposals</a>
                 </div>
 
-                {% if not pyview.totals.nodes %}
+                {% if not totals.nodes %}
                     <div class="mem-empty">No memory has been written yet. A synthesized scope or task node will appear here.</div>
                 {% endif %}
 
-                {% for scope in pyview.scopes %}
+                {% for scope in scopes %}
                     {% if scope.nodes %}
                     <div class="mem-scope-group">
                         <div class="mem-scope-head">
@@ -111,7 +111,7 @@
                             {% if scope.missing_count %}<span class="mem-badge err">{{ scope.missing_count }} missing</span>{% endif %}
                         </div>
                         {% for node in scope.nodes %}
-                        <a class="mem-row" href="{% url 'webui:memory_node' node.id %}{% if pyview.project_id %}?project={{ pyview.project_id }}{% endif %}" style="text-decoration:none;color:inherit">
+                        <a class="mem-row" href="{% url 'webui:memory_node' node.id %}{% if project_id %}?project={{ project_id }}{% endif %}" style="text-decoration:none;color:inherit">
                             <span class="mem-row-kind">{{ node.kind_label }}</span>
                             <div class="mem-row-main">
                                 <div class="mem-row-label">{{ node.label }}</div>
@@ -132,11 +132,11 @@
                 {% endfor %}
             </div>
 
-            {% if pyview.errors %}
+            {% if errors %}
             <div class="mem-section">
                 <div class="mem-section-title">Parse errors</div>
                 <div class="mem-section-sub">Invalid files fail closed: the node stays pending so the synthesizer can retry.</div>
-                {% for error in pyview.errors %}
+                {% for error in errors %}
                     <div class="mem-proposal"><span class="mem-badge err">error</span> <span class="mem-mono">{{ error }}</span></div>
                 {% endfor %}
             </div>

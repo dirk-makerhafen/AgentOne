@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from urllib.parse import urlencode
 
-from django.shortcuts import get_object_or_404, redirect
-from types import SimpleNamespace
+from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
 from server.models.project import Project
@@ -74,7 +73,6 @@ def memory(request):
         "message": message,
         "message_ok": True,
     }
-    context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
     return render_page(request, "memory", "webui/memory/overview.html", context, active_id="overview")
 
 
@@ -131,7 +129,6 @@ def memory_node(request, node_id):
         "message": f"Filed {qp} proposal(s) as backlog work items." if qp else "",
         "message_ok": True,
     }
-    context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
     return render_page(request, "memory", "webui/memory/node.html", context, active_id=node_id)
 
 
@@ -248,7 +245,6 @@ def memory_improvements(request):
     qp = request.GET.get("queued", "")
     context["message"] = f"Filed {qp} proposal(s) as backlog work items." if qp else ""
     context["message_ok"] = True
-    context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
     return render_page(request, "memory", "webui/memory/improvements.html", context, active_id="improvements")
 
 

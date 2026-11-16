@@ -25,5 +25,5 @@
     </form>
     {% endif %}
     {% include sidebar_template %}
-    <div class="resize-handle" id="sidebarResize" role="separator" aria-orientation="vertical" tabindex="0"></div>
+    {% include "webui/includes/resize_handle.html" with resize_handle_id="sidebarResize" resize_aria_label="Resize sidebar" %}
 </aside>
