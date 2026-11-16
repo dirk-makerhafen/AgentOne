@@ -399,11 +399,34 @@ class Command(BaseCommand):
                 "You can create one later with 'python3 manage.py createsuperuser'."
             ))
 
+    def _collectstatic(self):
+        """Publish static assets for WhiteNoise.
+
+        ``DEBUG`` is off in production, so WhiteNoise serves from
+        ``STATIC_ROOT`` (``_staticfiles``) and never reads ``STATICFILES_DIRS``.
+        Without this step an edited ``app.css``/``app.js`` stays invisible after
+        an update or a restart.
+        """
+        from django.conf import settings
+
+        if getattr(settings, "DEBUG", False):
+            return
+        from django.core.management import call_command
+
+        self.stdout.write("Collecting static files...")
+        try:
+            call_command("collectstatic", interactive=False, verbosity=0)
+            self.stdout.write(self.style.SUCCESS("  Static files collected."))
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            self.stdout.write(self.style.WARNING(f"  collectstatic failed: {exc}"))
+
     def handle_run(self, **options):
         import select
         from django.conf import settings
 
         self.stdout.write(self.style.SUCCESS("--- AgentOne Server ---"))
+
+        self._collectstatic()
 
         listen_address = getattr(settings, 'LISTEN_ADDRESS', '0.0.0.0')
         listen_port = getattr(settings, 'LISTEN_PORT', '7999')
@@ -589,7 +612,10 @@ class Command(BaseCommand):
                 "You can retry with 'python3 manage.py migrate'."
             ))
 
-        # 8. Reload manifests
+        # 8. Publish static assets
+        self._collectstatic()
+
+        # 9. Reload manifests
         self.stdout.write("Reloading manifests...")
         try:
             from registry.management.commands.reload_all import run_reload_all

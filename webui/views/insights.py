@@ -18,6 +18,7 @@ from server.models.agents.agent import AgentModel
 from server.models.collections.data_collection import DataCollection
 from server.models.cron import Cronjob
 from server.models.enums.provider_enums import HealthStatus
+from server.models.enums.task_enums import TaskCallStatus
 from server.models.message import Message
 from server.models.project import Project
 from server.models.providers.ai_model import AiModel
@@ -95,30 +96,42 @@ def _dashboard_context(request):
             calls = calls.filter(session__name__icontains=session_filter)
     result_count = calls.count()
     inspect_rows = list(calls[:INSPECT_LIMIT])
+
+    # Global aggregates are expensive on large tables; cache them briefly.
+    cached = cache.get("webui:insights:dashboard:aggregates")
+    if cached is None:
+        cached = {
+            "stats": [
+                ("Agents", AgentModel.objects.filter(is_archived=False).count()),
+                ("Projects", Project.objects.count()),
+                ("Sessions", SessionModel.objects.count()),
+                ("Messages", Message.objects.count()),
+                ("Queries", Query.objects.count()),
+                ("Responses", Response.objects.count()),
+                ("Task calls", AgentTaskCall.objects.count()),
+                ("Work items", WorkItem.objects.count()),
+                ("Collections", DataCollection.objects.count()),
+                ("Cron jobs", Cronjob.objects.filter(is_archived=False).count()),
+            ],
+            "tokens": _token_totals(),
+            "task_status": list(
+                AgentTaskCall.objects.values("status")
+                .annotate(total=Count("pk"))
+                .order_by("-total")[:12]
+            ),
+            "response_status": list(
+                Response.objects.values("status")
+                .annotate(total=Count("pk"))
+                .order_by("-total")
+            ),
+        }
+        cache.set("webui:insights:dashboard:aggregates", cached, 30)
+
     return {
-        "stats": [
-            ("Agents", AgentModel.objects.filter(is_archived=False).count()),
-            ("Projects", Project.objects.count()),
-            ("Sessions", SessionModel.objects.count()),
-            ("Messages", Message.objects.count()),
-            ("Queries", Query.objects.count()),
-            ("Responses", Response.objects.count()),
-            ("Task calls", AgentTaskCall.objects.count()),
-            ("Work items", WorkItem.objects.count()),
-            ("Collections", DataCollection.objects.count()),
-            ("Cron jobs", Cronjob.objects.filter(is_archived=False).count()),
-        ],
-        "tokens": _token_totals(),
-        "task_status": list(
-            AgentTaskCall.objects.values("status")
-            .annotate(total=Count("pk"))
-            .order_by("-total")[:12]
-        ),
-        "response_status": list(
-            Response.objects.values("status")
-            .annotate(total=Count("pk"))
-            .order_by("-total")
-        ),
+        "stats": cached["stats"],
+        "tokens": cached["tokens"],
+        "task_status": cached["task_status"],
+        "response_status": cached["response_status"],
         "inspect": {
             "agent": agent_filter,
             "status": status_filter,
@@ -127,11 +140,7 @@ def _dashboard_context(request):
             "rows": inspect_rows,
             "count": result_count,
             "limit": INSPECT_LIMIT,
-            "status_options": list(
-                AgentTaskCall.objects.values_list("status", flat=True)
-                .order_by("status")
-                .distinct()
-            ),
+            "status_options": [choice[0] for choice in TaskCallStatus.choices],
         },
     }
 

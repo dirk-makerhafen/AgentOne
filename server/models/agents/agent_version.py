@@ -257,23 +257,23 @@ class AgentVersionModel(BaseModel):
         # key.  The M2M join has no inherent order (nondeterministic on
         # MySQL) — sort by definition name so the same tool set always
         # serialises to the same bytes.
-        return self.task_versions.filter(task_type=TaskType.TASK).order_by(
-            "task_definition__name", "pk"
-        )
+        return self.task_versions.select_related("task_definition").filter(
+            task_type=TaskType.TASK
+        ).order_by("task_definition__name", "pk")
 
     def tools(self) -> QuerySet:
         """Return task versions classified as TOOL type."""
         # Deterministic order: see tasks() — prompt prefix stability.
-        return self.task_versions.filter(task_type=TaskType.TOOL).order_by(
-            "task_definition__name", "pk"
-        )
+        return self.task_versions.select_related("task_definition").filter(
+            task_type=TaskType.TOOL
+        ).order_by("task_definition__name", "pk")
 
     def commands(self) -> QuerySet:
         """Return task versions classified as COMMAND type."""
         # Deterministic order: see tasks() — prompt prefix stability.
-        return self.task_versions.filter(task_type=TaskType.COMMAND).order_by(
-            "task_definition__name", "pk"
-        )
+        return self.task_versions.select_related("task_definition").filter(
+            task_type=TaskType.COMMAND
+        ).order_by("task_definition__name", "pk")
 
     def skills(self):
         """Return all skill versions available to this agent version."""

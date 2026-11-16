@@ -21,7 +21,7 @@
     <script src="{% static_v 'webui/app.js' %}" defer></script>
     {% block head %}{% endblock %}
 </head>
-<body>
+<body hx-boost="true">
 {% block body %}{% endblock %}
 </body>
 </html>

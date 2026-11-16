@@ -113,6 +113,10 @@ def chat_page(request, session_id: int):
     session_model = get_object_or_404(
         SessionModel.objects.select_related(
             "latest_session_version__agent",
+            "latest_session_version__agent__latest_agent_version",
+            "latest_session_version__agent__latest_agent_version__agent_settings",
+            "latest_session_version__pinned_agent_version",
+            "latest_session_version__session_settings",
             "latest_session_version__workspace",
             "parent_project",
         ),
@@ -169,6 +173,9 @@ def call_detail(request, call_id: int):
         pk=call_id,
     )
     context = build_call_detail(call, full=request.GET.get("full") == "1")
+    session_id = request.GET.get("session", "")
+    if request.GET.get("back") == "1" and session_id.isdigit():
+        context["back_session"] = int(session_id)
     return render(request, "webui/chat/_tool_detail.html", context)
 
 

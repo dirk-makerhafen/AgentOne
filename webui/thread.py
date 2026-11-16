@@ -352,7 +352,10 @@ def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None =
             Prefetch(
                 "parts",
                 queryset=MessagePart.objects.select_related(
-                    "content", "template_data", "tool_call"
+                    "content", "template_data",
+                    "tool_call",
+                    "tool_call__task_definition",
+                    "tool_call__task_definition_version__task_definition",
                 ).order_by("pk"),
             )
         )

@@ -61,6 +61,20 @@ def test_markdown_opens_external_links_in_new_tab():
     assert 'href="https://example.com"' in html
 
 
+def test_markdown_keeps_boost_only_for_in_app_links():
+    """hx-boost partial navigation must not swallow downloads or assets."""
+    in_app = render_markdown("[chat](/app/chat/7)")
+    assert 'hx-boost="false"' not in in_app
+
+    asset = render_markdown("[file](/media/report.pdf)")
+    assert 'href="/media/report.pdf"' in asset
+    assert 'hx-boost="false"' in asset
+
+    external = render_markdown("[site](https://example.com)")
+    assert 'target="_blank"' in external
+    assert 'hx-boost="false"' not in external
+
+
 def test_markdown_strips_scripts_and_event_handlers():
     html = render_markdown('<script>alert(1)</script><img src=x onerror=alert(1)>')
     assert "<script" not in html
@@ -223,7 +237,13 @@ def test_log_resolve_rejects_path_traversal(tmp_path):
 @pytest.mark.django_db
 def test_shell_pages_render(client):
     """Every full page renders against an empty database."""
-    routes = [
+    for route in _shell_routes() + [reverse("webui:workitems_board")]:
+        response = client.get(route)
+        assert response.status_code == 200, route
+
+
+def _shell_routes() -> list[str]:
+    return [
         reverse("webui:dashboard"),
         reverse("webui:chats"),
         reverse("webui:agents"),
@@ -233,7 +253,6 @@ def test_shell_pages_render(client):
         reverse("webui:cron"),
         reverse("webui:collections"),
         reverse("webui:workitems"),
-        reverse("webui:workitems_board"),
         reverse("webui:insights"),
         reverse("webui:insights_tab", args=["analytics"]),
         reverse("webui:insights_tab", args=["providers"]),
@@ -243,9 +262,100 @@ def test_shell_pages_render(client):
         reverse("webui:settings_tab", args=["preferences"]),
         reverse("webui:settings_tab", args=["system"]),
     ]
-    for route in routes:
-        response = client.get(route)
+
+
+@pytest.mark.django_db
+def test_boosted_shell_routes_render_fragments(client):
+    """Every page must be swappable into <body> without a document shell."""
+    for route in _shell_routes():
+        response = client.get(route, HTTP_HX_REQUEST="true")
         assert response.status_code == 200, route
+        content = response.content
+        assert b"<!DOCTYPE" not in content, route
+        assert b"</html>" not in content, route
+        assert b"</head>" not in content, route
+        assert b"<title>" in content, route
+        assert b'id="sidebar"' in content, route
+
+
+@pytest.mark.django_db
+def test_full_page_load_keeps_document_shell(client):
+    response = client.get(reverse("webui:dashboard"))
+    assert b"<!DOCTYPE html>" in response.content
+    assert b'<body hx-boost="true">' in response.content
+    assert "HX-Request" in response["Vary"]
+
+
+@pytest.mark.django_db
+def test_pages_are_gzipped_when_the_client_accepts_it(client):
+    """Chat pages are hundreds of kilobytes; gzip is the cheapest speed-up."""
+    import gzip
+
+    plain = client.get(reverse("webui:dashboard"))
+    assert "Content-Encoding" not in plain.headers
+
+    packed = client.get(reverse("webui:dashboard"), HTTP_ACCEPT_ENCODING="gzip, deflate")
+    assert packed["Content-Encoding"] == "gzip"
+    assert "Accept-Encoding" in packed["Vary"]
+    assert int(packed["Content-Length"]) == len(packed.content)
+    html = gzip.decompress(packed.content)
+    # The CSRF token rotates per request, so compare shape, not the bytes.
+    assert len(html) == len(plain.content)
+    assert b"<!DOCTYPE html>" in html
+    assert b'id="sidebar"' in html
+
+
+@pytest.mark.django_db
+def test_boosted_navigation_returns_body_fragment(client):
+    """hx-boost swaps ``<body>``, so boosted responses must be fragments.
+
+    Normal clicks must not re-download or re-execute the whole document, but
+    the payload still has to carry the shell (rail + sidebar + SSE wiring) and
+    a ``<title>`` for htmx to apply to ``document.title``.
+    """
+    response = client.get(
+        reverse("webui:dashboard"),
+        HTTP_HX_REQUEST="true",
+        HTTP_HX_BOOSTED="true",
+    )
+    assert response.status_code == 200
+    assert "HX-Request" in response["Vary"]
+    content = response.content
+    assert b"<!DOCTYPE" not in content
+    assert b"<html" not in content
+    assert b"<head>" not in content
+    assert b"</head>" not in content
+    assert b"<body" not in content
+    assert b"</html>" not in content
+    assert content.lstrip().startswith(b"<title>")
+    assert b"Dashboard" in content
+    assert b'id="sidebar"' in content
+    assert b'hx-boost="true"' not in content
+
+
+@pytest.mark.django_db
+def test_fragment_endpoints_are_unaffected_by_boost(client):
+    """Explicit fragment URLs keep returning fragments for boosted requests."""
+    response = client.get(
+        reverse("webui:sidebar"), {"section": "chats"}, HTTP_HX_REQUEST="true"
+    )
+    assert response.status_code == 200
+    assert b"<!DOCTYPE" not in response.content
+    assert b'id="sidebar"' in response.content
+
+    board = client.get(reverse("webui:workitems_board"), HTTP_HX_REQUEST="true")
+    assert board.status_code == 200
+    assert b"<!DOCTYPE" not in board.content
+    assert b'id="workitems-board"' in board.content
+
+
+@pytest.mark.django_db
+@override_settings(WEBUI_LOGIN_REQUIRED=True)
+def test_htmx_navigation_to_login_uses_hx_redirect(client):
+    """A 302 would be followed by XHR and swapped into <body>; use HX-Redirect."""
+    response = client.get(reverse("webui:dashboard"), HTTP_HX_REQUEST="true")
+    assert response.status_code == 204
+    assert response["HX-Redirect"].startswith("/accounts/login/")
 
 
 @pytest.mark.django_db
@@ -1271,6 +1381,13 @@ def test_chat_page_renders_composer_config(client):
     assert b'name="model"' in response.content
     assert b'name="reasoning"' in response.content
     assert b'name="workspace"' in response.content
+
+    # Live chat state must be refetched on back/forward, not restored stale.
+    assert b'hx-history="false"' in response.content
+    boosted = client.get(
+        reverse("webui:chat", args=[session.pk]), HTTP_HX_REQUEST="true"
+    )
+    assert b'hx-history="false"' in boosted.content
 
 
 @pytest.mark.django_db

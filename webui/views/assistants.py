@@ -145,7 +145,7 @@ def assistant_panel_context(kind: str, item, selected_id: str | None = None) -> 
     if selected is not None:
         from webui.views.common import session_context
 
-        context.update(session_context(selected))
+        context.update(session_context(selected, limit=40))
     return context
 
 
@@ -186,7 +186,7 @@ def assistant_overview_context(
     if selected is not None:
         from webui.views.common import session_context
 
-        context.update(session_context(selected))
+        context.update(session_context(selected, limit=40))
     return context
 
 

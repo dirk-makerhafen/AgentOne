@@ -335,18 +335,17 @@ def build_chat_cards(session_model) -> dict[str, Any]:
     approval_calls = [call for call in halted if _task_name(call) != ASK_USER_TOOL_NAME]
 
     model_name = ""
-    try:
-        aimodel = session_model.get_runtime().aimodel
-        model_name = aimodel.name if aimodel is not None else ""
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
-
     turn_limit = {"active": False, "current": 0, "maximum": 0}
     try:
         runtime = session_model.get_runtime()
+        aimodel = runtime.aimodel
+        model_name = aimodel.name if aimodel is not None else ""
         turn_limit = {
-            "active": bool(runtime.needs_approval()),
-            "current": runtime.current_unattended_turn_count,
+            "active": bool(
+                runtime.max_unattended_turns
+                and (session_model.unattended_turn_count or 0) >= runtime.max_unattended_turns
+            ),
+            "current": session_model.unattended_turn_count or 0,
             "maximum": runtime.max_unattended_turns or 0,
         }
     except Exception:  # pylint: disable=broad-exception-caught

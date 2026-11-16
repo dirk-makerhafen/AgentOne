@@ -629,12 +629,18 @@ class Session:
     @property
     def commandNames(self) -> list[str]:
         """Return the resolved command names."""
-        return self._get_session_setting("commandNames") or []
+        if not hasattr(self, "_cache_command_names"):
+            self._cache_command_names = self._get_session_setting("commandNames") or []
+        return self._cache_command_names
 
     @property
     def disallowedCommandNames(self) -> list[str]:
         """Return the resolved disallowed command names."""
-        return self._get_session_setting("disallowedCommandNames") or []
+        if not hasattr(self, "_cache_disallowed_command_names"):
+            self._cache_disallowed_command_names = (
+                self._get_session_setting("disallowedCommandNames") or []
+            )
+        return self._cache_disallowed_command_names
 
     def _filter_allowed_names(self, tdvs: list[TaskDefinitionVersion], disallowed: list[str]) -> list[str]:
         """Return names from *tdvs* that don't match any disallowed pattern."""
@@ -647,12 +653,18 @@ class Session:
     @property
     def allowedCommandNames(self) -> list[str]:
         """Return concrete command names, expanded from patterns via the resolved M2M."""
-        return self._filter_allowed_names(self.agent.allowedCommands, self.disallowedCommandNames)
+        if not hasattr(self, "_cache_allowed_command_names"):
+            self._cache_allowed_command_names = self._filter_allowed_names(
+                self.agent.allowedCommands, self.disallowedCommandNames
+            )
+        return self._cache_allowed_command_names
 
     @property
     def allowedCommands(self) -> list[TaskDefinitionVersion]:
         """Return allowed command TaskDefinitionVersion instances (from agent)."""
-        return list(self.agent.allowedCommands)
+        if not hasattr(self, "_cache_allowed_commands"):
+            self._cache_allowed_commands = list(self.agent.allowedCommands)
+        return self._cache_allowed_commands
 
     def get_command(self, name: str) -> BoundTask | None:
         """Return a BoundTask for command *name*, or *None*."""
@@ -670,22 +682,34 @@ class Session:
     @property
     def taskNames(self) -> list[str]:
         """Return the resolved task names."""
-        return self._get_session_setting("taskNames") or []
+        if not hasattr(self, "_cache_task_names"):
+            self._cache_task_names = self._get_session_setting("taskNames") or []
+        return self._cache_task_names
 
     @property
     def disallowedTaskNames(self) -> list[str]:
         """Return the resolved disallowed task names."""
-        return self._get_session_setting("disallowedTaskNames") or []
+        if not hasattr(self, "_cache_disallowed_task_names"):
+            self._cache_disallowed_task_names = (
+                self._get_session_setting("disallowedTaskNames") or []
+            )
+        return self._cache_disallowed_task_names
 
     @property
     def allowedTaskNames(self) -> list[str]:
         """Return concrete task names, expanded from patterns via the resolved M2M."""
-        return self._filter_allowed_names(self.agent.allowedTasks, self.disallowedTaskNames)
+        if not hasattr(self, "_cache_allowed_task_names"):
+            self._cache_allowed_task_names = self._filter_allowed_names(
+                self.agent.allowedTasks, self.disallowedTaskNames
+            )
+        return self._cache_allowed_task_names
 
     @property
     def allowedTasks(self) -> list[TaskDefinitionVersion]:
         """Return allowed task TaskDefinitionVersion instances (from agent)."""
-        return list(self.agent.allowedTasks)
+        if not hasattr(self, "_cache_allowed_tasks"):
+            self._cache_allowed_tasks = list(self.agent.allowedTasks)
+        return self._cache_allowed_tasks
 
     def get_task(self, name: str) -> BoundTask | None:
         """Return a BoundTask for task *name*, or *None*."""
@@ -703,22 +727,34 @@ class Session:
     @property
     def toolNames(self) -> list[str]:
         """Return the resolved tool names."""
-        return self._get_session_setting("toolNames") or []
+        if not hasattr(self, "_cache_tool_names"):
+            self._cache_tool_names = self._get_session_setting("toolNames") or []
+        return self._cache_tool_names
 
     @property
     def disallowedToolNames(self) -> list[str]:
         """Return the resolved disallowed tool names."""
-        return self._get_session_setting("disallowedToolNames") or []
+        if not hasattr(self, "_cache_disallowed_tool_names"):
+            self._cache_disallowed_tool_names = (
+                self._get_session_setting("disallowedToolNames") or []
+            )
+        return self._cache_disallowed_tool_names
 
     @property
     def allowedToolNames(self) -> list[str]:
         """Return concrete tool names, expanded from patterns via the resolved M2M."""
-        return self._filter_allowed_names(self.agent.allowedTools, self.disallowedToolNames)
+        if not hasattr(self, "_cache_allowed_tool_names"):
+            self._cache_allowed_tool_names = self._filter_allowed_names(
+                self.agent.allowedTools, self.disallowedToolNames
+            )
+        return self._cache_allowed_tool_names
 
     @property
     def allowedTools(self) -> list[TaskDefinitionVersion]:
         """Return allowed tool TaskDefinitionVersion instances (from agent)."""
-        return list(self.agent.allowedTools)
+        if not hasattr(self, "_cache_allowed_tools"):
+            self._cache_allowed_tools = list(self.agent.allowedTools)
+        return self._cache_allowed_tools
 
     def get_tool(self, name: str) -> BoundTask | None:
         """Return a BoundTask for tool *name*, or *None*."""

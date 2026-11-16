@@ -260,7 +260,9 @@
         {% if active_call_count %}<div class="webui-muted-note">{{ active_call_count }} active call{{ active_call_count|pluralize }}</div>{% endif %}
         {% for row in current_calls %}
         <div class="webui-line" style="padding-left:{{ row.depth|add:1 }}em">
-            <a class="webui-panel-row-name" href="{% url 'webui:call_detail' row.call.pk %}">{{ row.name }} #{{ row.call.pk }}</a>
+            <a class="webui-panel-row-name" href="{% url 'webui:chat' session.pk %}?panel=calls"
+               hx-get="{% url 'webui:call_detail' row.call.pk %}?full=1&back=1&session={{ session.pk }}"
+               hx-target="#chat-panel-body" hx-swap="innerHTML">{{ row.name }} #{{ row.call.pk }}</a>
             <span class="webui-call-badge" style="background:{{ row.status_color }}">{{ row.status_label }}</span>
             {% if row.active %}
             <form method="post" action="{% url 'webui:call_cancel' session.pk row.call.pk %}"
@@ -568,7 +570,7 @@
         <div class="detail-card-title">Conversation</div>
         <form class="detail-form" method="post"
               action="{% url 'webui:import_conversation' session.pk %}"
-              enctype="multipart/form-data">
+              enctype="multipart/form-data" hx-boost="false">
             {% csrf_token %}
             <div class="detail-form-row">
                 <label for="import-file">Import JSON export</label>

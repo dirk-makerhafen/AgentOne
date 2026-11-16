@@ -1,12 +1,14 @@
 """Shared context helpers for the server-rendered UI.
 
-Every page is a normal Django view, so links are plain ``<a href>``: opening a
-chat in a new tab and browser back/forward work without any client-side
-routing.  Fragments are fetched by htmx on SSE events.
+Every page is a normal Django view.  Links stay real ``<a href>`` anchors so
+new tabs, bookmarks and no-JS work; ``hx-boost`` (set on ``<body>``) upgrades an
+ordinary click to a partial swap that only replaces the page shell.  Fragments
+are fetched by htmx on SSE events.
 """
 
 from __future__ import annotations
 
+import gzip
 import logging
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
@@ -15,6 +17,7 @@ from django.db.models import Q
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.cache import patch_vary_headers
 
 from runtime.session.aimodel_picker import model_groups
 from runtime.settings import UserSettings, get_send_key
@@ -329,7 +332,9 @@ def command_options(session_model: SessionModel) -> list[dict]:
     try:
         command_names = set(runtime.allowedCommandNames or [])
         tool_names = set(runtime.allowedToolNames or [])
-        versions = list(runtime.allowedCommands or []) + list(runtime.allowedTools or [])
+        allowed_commands = list(runtime.allowedCommands or [])
+        allowed_tools = list(runtime.allowedTools or [])
+        versions = allowed_commands + allowed_tools
     except Exception:  # pylint: disable=broad-exception-caught
         return []
 
@@ -475,10 +480,7 @@ def composer_state(session_model: SessionModel) -> dict:
         state["composer_busy"] = bool(runtime.is_busy())
     except Exception:  # pylint: disable=broad-exception-caught
         pass
-    try:
-        state["composer_paused"] = bool(runtime.is_paused)
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
+    # Keep the model-field value (already loaded) to avoid a per-page DB read.
     if state["composer_busy"]:
         try:
             strategy = runtime.scheduler_strategy
@@ -587,12 +589,65 @@ def shell_context(request, section: str, active_id=None) -> dict:
     return context
 
 
+def is_htmx_request(request) -> bool:
+    """True for htmx requests (boosts and explicit fragment fetches)."""
+    return request.headers.get("HX-Request") == "true"
+
+
+def is_boosted_request(request) -> bool:
+    """True when htmx intercepted a normal link/form (``hx-boost``)."""
+    return request.headers.get("HX-Boosted") == "true"
+
+
 def render_page(request, section: str, template: str, context: dict | None = None,
                 active_id=None) -> object:
-    """Render a full page with the rail + domain sidebar."""
+    """Render a page, or just the swappable shell for boosted navigation.
+
+    Full document loads (new tabs, reloads, no-JS) get the complete
+    ``base.html`` layout.  htmx navigation gets ``hx_base.html``: a ``<title>``
+    followed by exactly the markup that lives inside ``<body>``, so the page
+    keeps its single SSE connection, rail and sidebar without a document
+    reload.  Both variants render the same block structure, so no view needs
+    to know which one the client asked for.
+    """
     ctx = shell_context(request, section, active_id)
+    ctx["layout_base"] = (
+        "webui/hx_base.html" if is_htmx_request(request) else "webui/base.html"
+    )
+    # Live pages must not come back from the htmx history snapshot: a restored
+    # chat would show the messages that existed when it was cached.  With
+    # ``hx-history="false"`` a back/forward triggers the normal cache-miss
+    # refetch, which lands here and renders fresh state.
+    ctx["disable_history"] = template.startswith("webui/chat/")
     ctx.update(context or {})
-    return render(request, template, ctx)
+    response = render(request, template, ctx)
+    patch_vary_headers(response, ("HX-Request",))
+    # Authenticated HTML must never be reused without revalidation: a cached
+    # fragment served for a real navigation (or the reverse) would break the
+    # shell.  ``Vary`` keeps the two variants apart, ``no-cache`` keeps both
+    # fresh while still allowing bfcache/history restores.
+    response["Cache-Control"] = "private, no-cache"
+    _gzip_html(request, response)
+    return response
+
+
+def _gzip_html(request, response, *, minimum: int = 1024) -> None:
+    """Compress a rendered page in place.
+
+    A chat page is easily hundreds of kilobytes of markup, so this is the
+    single cheapest way to make navigation feel fast on a remote connection.
+    Only page responses go through here: SSE streams and API responses keep
+    their identity encoding, where a compressor would add buffering.
+    """
+    body = response.content
+    if len(body) < minimum:
+        return
+    if "gzip" not in request.headers.get("Accept-Encoding", "").lower():
+        return
+    patch_vary_headers(response, ("Accept-Encoding",))
+    response.content = gzip.compress(body, compresslevel=6)
+    response["Content-Encoding"] = "gzip"
+    response["Content-Length"] = str(len(response.content))
 
 
 def _session_activity(sessions: list[SessionModel]) -> dict:
@@ -675,9 +730,7 @@ def sidebar_context(request, section: str, active_id=None) -> dict:
             session_type=SessionType.SESSION,
         ).count()
         ctx.update(_session_activity(list(flatten_session_tree(sessions))))
-        from server.models.project import Project
-
-        ctx["projects"] = list(Project.objects.order_by("name"))
+        ctx["projects"] = ctx["sidebar_projects"]
 
     elif section == "agents":
         qs = AgentModel.objects.filter(is_archived=False)

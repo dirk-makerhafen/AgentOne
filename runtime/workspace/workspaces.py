@@ -71,43 +71,86 @@ class Workspaces(AssistantScopeMixin):
         and an existing unowned row is adopted. Rows already owned by
         another project are left untouched. ``agentone_dir`` can override the
         default manifest location for synthetic source-scope workspaces.
+
+        Read-first: if a row already exists and nothing has drifted, return it
+        without writing (avoids a DB UPDATE on every GET).
         """
         wanted = Path(path).expanduser().as_posix()
-        defaults = {"path": wanted, "description": description}
-        if parent_project is not None:
-            defaults["parent_project"] = parent_project
-        migration = None
-        if agentone_dir is not None:
-            manifest_dir = Path(agentone_dir).expanduser()
-            existing = WorkspaceModel.objects.filter(name=name).first()
-            old_dir = existing.get_agentone_dir() if existing is not None else None
-            migration = _move_manifest_dir(old_dir, manifest_dir)
-            defaults["agentone_dir"] = manifest_dir.as_posix()
-        try:
-            workspace, _ = WorkspaceModel.objects.update_or_create(
-                name=name,
-                defaults=defaults,
-            )
-        except Exception:
-            if migration is not None:
-                old_dir, new_dir = migration
-                try:
-                    new_dir.rename(old_dir)
-                except OSError as rollback_error:
-                    raise RuntimeError(
-                        f"Workspace data moved to {new_dir}, but the database "
-                        f"update failed and rollback to {old_dir} also failed"
-                    ) from rollback_error
-            raise
-        if parent_project is not None and workspace.parent_project_id is None:
+        existing = WorkspaceModel.objects.filter(name=name).first()
+
+        # Adopt an unowned row when a parent project is given.
+        if (
+            existing is not None
+            and parent_project is not None
+            and existing.parent_project_id is None
+        ):
             try:
-                WorkspaceModel.objects.filter(pk=workspace.pk).update(
+                WorkspaceModel.objects.filter(pk=existing.pk).update(
                     parent_project=parent_project
                 )
-                workspace.parent_project = parent_project
+                existing.parent_project = parent_project
             except Exception:  # pylint: disable=broad-exception-caught
                 pass
-        return workspace
+
+        if agentone_dir is not None:
+            manifest_dir = Path(agentone_dir).expanduser()
+            old_dir = existing.get_agentone_dir() if existing is not None else None
+            if old_dir is None or old_dir.resolve() != manifest_dir.resolve():
+                migration = _move_manifest_dir(old_dir, manifest_dir)
+                try:
+                    if existing is None:
+                        workspace = WorkspaceModel.objects.create(
+                            name=name,
+                            path=wanted,
+                            description=description,
+                            parent_project=parent_project,
+                            agentone_dir=manifest_dir.as_posix(),
+                        )
+                    else:
+                        WorkspaceModel.objects.filter(pk=existing.pk).update(
+                            path=wanted,
+                            description=description,
+                            agentone_dir=manifest_dir.as_posix(),
+                        )
+                        existing.path = wanted
+                        existing.description = description
+                        existing.agentone_dir = manifest_dir.as_posix()
+                        workspace = existing
+                except Exception:
+                    if migration is not None:
+                        old_dir, new_dir = migration
+                        try:
+                            new_dir.rename(old_dir)
+                        except OSError as rollback_error:
+                            raise RuntimeError(
+                                f"Workspace data moved to {new_dir}, but the database "
+                                f"update failed and rollback to {old_dir} also failed"
+                            ) from rollback_error
+                    raise
+                return workspace
+
+        # Fast path: row already exists and nothing drifted -> no write.
+        if existing is not None:
+            updates = {}
+            if existing.path != wanted:
+                updates["path"] = wanted
+            if existing.description != description:
+                updates["description"] = description
+            if updates:
+                try:
+                    WorkspaceModel.objects.filter(pk=existing.pk).update(**updates)
+                    for key, value in updates.items():
+                        setattr(existing, key, value)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    pass
+            return existing
+
+        return WorkspaceModel.objects.create(
+            name=name,
+            path=wanted,
+            description=description,
+            parent_project=parent_project,
+        )
 
     @staticmethod
     def ensure_source_scope(

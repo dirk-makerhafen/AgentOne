@@ -1,7 +1,13 @@
 (function () {
     'use strict';
 
+    // The script is re-executed when htmx swaps in a page that references it.
+    // Keep a single instance (and one set of document listeners).
+    if (window.__agentOneInsightsLoaded) return;
+    window.__agentOneInsightsLoaded = true;
+
     var PLACEHOLDER = '<div class="insights-rightbar-empty">Select a row to see details.</div>';
+    var swapListenerBound = false;
 
     function init() {
         var splits = document.querySelectorAll('[data-insights-split]');
@@ -190,11 +196,15 @@
         }
 
         // htmx swap bookkeeping for the rightbar body
-        document.body.addEventListener('htmx:afterSwap', function (evt) {
-            if (panelBody && evt.detail && evt.detail.target === panelBody) {
-                panelBody.removeAttribute('aria-busy');
-            }
-        });
+        if (!swapListenerBound) {
+            swapListenerBound = true;
+            document.body.addEventListener('htmx:afterSwap', function (evt) {
+                var body = document.getElementById('insights-detail-body');
+                if (body && evt.detail && evt.detail.target === body) {
+                    body.removeAttribute('aria-busy');
+                }
+            });
+        }
 
         // initial selection
         var initial = null;
@@ -221,4 +231,10 @@
     } else {
         init();
     }
+    // Partial navigation replaces the page shell, so bind the new table after
+    // every htmx settle (the dataset guard makes repeat calls a no-op).
+    document.addEventListener('htmx:afterSettle', init);
+    // History restores re-insert a cloned tree without its listeners; app.js
+    // clears the bound markers on the same event, so re-init here too.
+    document.addEventListener('htmx:historyRestore', init);
 })();

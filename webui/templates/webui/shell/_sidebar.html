@@ -16,7 +16,7 @@
         {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
         <label class="sr-only" for="sidebar-project-select">Filter sidebar by project</label>
         <select id="sidebar-project-select" name="project"
-                class="sidebar-project-select" onchange="this.form.submit()">
+                class="sidebar-project-select" onchange="this.form.requestSubmit()">
             <option value="">All projects</option>
             {% for project in sidebar_projects %}
             <option value="{{ project.pk }}"{% if project.pk == sidebar_project_id %} selected{% endif %}>{{ project.name }}</option>

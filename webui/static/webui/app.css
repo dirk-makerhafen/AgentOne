@@ -2236,3 +2236,33 @@ html.sse-down #connection-banner { display: block; }
 .insights-rightbar .resize-handle { left: -2px; }
 .resize-handle:hover, .resize-handle.dragging { background: var(--accent, #4f8cff); }
 body.resizing { user-select: none; cursor: col-resize; }
+
+/* Partial navigation ------------------------------------------------------ */
+/* Boosted links swap the page shell in place; this hairline bar (plus the
+   progress cursor) makes the click feel acknowledged while the request flies. */
+html.nav-pending { cursor: progress; }
+html.nav-pending::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 9999;
+    pointer-events: none;
+    background: var(--accent, #98860B);
+    transform-origin: left center;
+    animation: navPending 1.2s ease-out infinite;
+}
+@keyframes navPending {
+    0%   { transform: scaleX(0);   opacity: .85; }
+    60%  { transform: scaleX(.75); opacity: 1; }
+    100% { transform: scaleX(1);   opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    html.nav-pending::before {
+        animation: none;
+        transform: scaleX(.4);
+        opacity: .9;
+    }
+}

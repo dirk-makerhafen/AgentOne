@@ -174,23 +174,28 @@ def _is_wsgi(request) -> bool:
 
 @csrf_exempt
 async def sse_stream(request):
-    """Stream observable-key events for one scope (currently ``session:<pk>``).
+    """Stream observable-key events for one scope (``session:<pk>`` or ``global``).
 
-    Note: This view is intentionally not protected by login_required because:
-    - It carries only event names (e.g. ``sse:Message.session:7``), not rendered HTML
-    - A dropped event can never leave the page permanently stale -- the next event
-      (or a reload) self-heals
-    - The data is not sensitive
+    The middleware deliberately lets this path through unauthenticated so an
+    expired session cannot turn the stream into a 302-to-login loop.  The view
+    still refuses to subscribe anonymous clients: it returns a valid, idle
+    stream that simply never emits events.
     """
+    if not request.user.is_authenticated:
+        return StreamingHttpResponse(
+            ["retry: 60000\n\n", ": unauthenticated\n\n"],
+            content_type="text/event-stream",
+        )
+
     scope = request.GET.get("scope", "")
     if not scope:
         return HttpResponseBadRequest("missing scope parameter")
-    
+
     # Resolve the scope into observable keys.
     keys = await _resolve_scope(scope)
     if keys is None:
         return HttpResponseBadRequest("unknown or missing scope")
-    
+
     # Start the SSE stream (WSGI or ASGI depending on server type).
     stream = _sync_event_stream(keys) if _is_wsgi(request) else _async_event_stream(keys)
     response = StreamingHttpResponse(stream, content_type="text/event-stream")

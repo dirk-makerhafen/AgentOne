@@ -715,6 +715,8 @@
     });
 
     // ── Slash-command palette ────────────────────────────────────────────
+    var commandPaletteDocBound = false;
+
     function commandData() {
         var node = document.getElementById('webui-commands');
         if (!node) return [];
@@ -937,12 +939,16 @@
             });
         }
 
-        document.addEventListener('click', function (evt) {
-            if (palette.hidden) return;
-            if (palette.contains(evt.target)) return;
-            if (evt.target.closest && evt.target.closest('[data-cmd-toggle]')) return;
-            close();
-        });
+        if (!commandPaletteDocBound) {
+            commandPaletteDocBound = true;
+            document.addEventListener('click', function (evt) {
+                var current = document.querySelector('[data-cmd-palette]');
+                if (!current || current.hidden) return;
+                if (current.contains(evt.target)) return;
+                if (evt.target.closest && evt.target.closest('[data-cmd-toggle]')) return;
+                current.hidden = true;
+            });
+        }
     }
 
     // ── Chat table of contents ───────────────────────────────────────────
@@ -1023,6 +1029,102 @@
     });
     // Initial run in case DOM already ready.
     if (document.readyState !== 'loading') restoreProviderOpenState();
+
+    // ── Partial navigation (hx-boost) ────────────────────────────────────
+    // A boosted click swaps <body> with the server's shell fragment.  Re-bind
+    // the few behaviours that live on nodes instead of using event delegation,
+    // and reset per-chat UI state that a full reload used to clear.
+    function isNavigation(evt) {
+        var detail = evt.detail || {};
+        return detail.boosted === true
+            || detail.target === document.body
+            || evt.target === document.body;
+    }
+
+    function initContent(root) {
+        if (!root || !root.querySelectorAll) root = document;
+        bindPanelToggles(root);
+        bindPanelTabs(root);
+        bindKanban(root);
+        bindMobileSidebar(root);
+        bindDownloadButtons(root);
+        bindCommandPalette();
+        bindChatToc();
+        restoreProviderOpenState();
+        restoreMobileSidebar();
+    }
+
+    function initEntry() {
+        scrollToBottom(threadEl());
+        restoreAroundScroll();
+        var ta = document.querySelector('.composer-chat-message');
+        if (ta) {
+            restoreDraft(ta);
+            autoGrow(ta);
+            ta.focus();
+        }
+    }
+
+    // htmx fires ``afterSettle`` once per settled element, so collapse the
+    // whole navigation into a single entry reset.
+    var navSettled = false;
+
+    document.addEventListener('htmx:afterSettle', function (evt) {
+        initContent(evt.target);
+        if (isNavigation(evt) && !navSettled) {
+            navSettled = true;
+            // Attachments and drafts belong to one conversation; a full reload
+            // used to clear them.  Do the same now that navigation is partial.
+            attachItems = [];
+            initEntry();
+        }
+    });
+
+    // Back/forward restores a cloned copy of the page: data attributes survive
+    // the clone but DOM listeners do not, so drop our bound markers and wire
+    // the restored shell up again.
+    document.addEventListener('htmx:historyRestore', function () {
+        document.querySelectorAll('[data-bound]').forEach(function (el) {
+            el.removeAttribute('data-bound');
+        });
+        navSettled = false;
+        initContent(document);
+        initEntry();
+    });
+
+    document.addEventListener('htmx:beforeRequest', function (evt) {
+        if (evt.detail && evt.detail.boosted) {
+            navSettled = false;
+            document.documentElement.classList.add('nav-pending');
+        }
+    });
+
+    function clearNavPending() {
+        document.documentElement.classList.remove('nav-pending');
+    }
+    document.addEventListener('htmx:afterRequest', clearNavPending);
+    document.addEventListener('htmx:sendError', clearNavPending);
+    document.addEventListener('htmx:timeout', clearNavPending);
+
+    // If a boosted request fails, fall back to a normal navigation instead of
+    // leaving the user on a page that looks alive but does nothing.
+    document.addEventListener('htmx:responseError', function (evt) {
+        clearNavPending();
+        var detail = evt.detail || {};
+        if (detail.boosted && detail.pathInfo && detail.pathInfo.requestPath) {
+            window.location.href = detail.pathInfo.requestPath;
+        }
+    });
+
+    // An expired session redirects to the login page.  htmx would happily swap
+    // that document into <body>; navigate for real instead.
+    document.addEventListener('htmx:beforeSwap', function (evt) {
+        var xhr = evt.detail && evt.detail.xhr;
+        if (!xhr || !xhr.responseURL) return;
+        if (xhr.responseURL.indexOf('/accounts/login/') === -1) return;
+        evt.detail.shouldSwap = false;
+        window.location.href = xhr.responseURL;
+    });
 })();
 
 // Workspace sidebar tree collapse (persisted in localStorage).
@@ -1072,7 +1174,9 @@
         apply();
     });
 
-    document.addEventListener('htmx:afterSwap', function () { apply(); });
+    // afterSettle rather than afterSwap: boosted navigation hands us a fresh
+    // tree only once the swap and attribute settling are done.
+    document.addEventListener('htmx:afterSettle', function () { apply(); });
     document.addEventListener('DOMContentLoaded', function () { apply(); });
     // initial (script may run after DOM ready)
     if (document.readyState !== 'loading') apply();
@@ -1091,15 +1195,30 @@
         if (s) s.style.width = loadWidth('sidebarWidth', 300) + 'px';
         if (r) r.style.width = loadWidth('rightpanelWidth', 300) + 'px';
     }
-    restoreWidths();
+    // Boosted navigation replaces the whole body, so the panel nodes and the
+    // observed layout node have to be re-resolved after every swap.
+    var observedLayout = null;
+    var layoutObserver = null;
 
-    var layout = document.querySelector('.layout');
-    if (layout && window.MutationObserver) {
-        var obs = new MutationObserver(function () {
+    function observeLayout() {
+        var layout = document.querySelector('.layout');
+        if (layout === observedLayout) return;
+        if (layoutObserver) { layoutObserver.disconnect(); layoutObserver = null; }
+        observedLayout = layout;
+        if (!layout || !window.MutationObserver) return;
+        layoutObserver = new MutationObserver(function () {
             if (!window._panelDragging) restoreWidths();
         });
-        obs.observe(layout, { childList: true, subtree: false });
+        layoutObserver.observe(layout, { childList: true, subtree: false });
     }
+
+    function refreshLayoutState() {
+        restoreWidths();
+        observeLayout();
+    }
+
+    refreshLayoutState();
+    document.addEventListener('htmx:afterSettle', refreshLayoutState);
 
     var handle = null, startX = 0, startW = 0;
     document.addEventListener('mousedown', function (e) {

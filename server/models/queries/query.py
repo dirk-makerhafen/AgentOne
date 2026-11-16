@@ -119,7 +119,7 @@ class Query(BaseModel):
         if self.tokens != tokens:
             self.tokens = tokens
             self.save()
-        cache[cache_key] = messages
+        cache.set(cache_key, messages)
         return messages
 
     def save(self, *args: Any, **kwargs: Any) -> None:

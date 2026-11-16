@@ -1,5 +1,10 @@
 {% load webui %}
 {% if call %}
+{% if back_session %}
+<a class="webui-back" href="{% url 'webui:chat' back_session %}?panel=calls" title="Back to task calls"
+   hx-get="{% url 'webui:chat_panel_tab' back_session 'calls' %}"
+   hx-target="#chat-panel-body" hx-swap="innerHTML">← Calls</a>
+{% endif %}
 <div class="webui-tool-meta">
     <span class="webui-tool-meta-item" title="Call ID">#{{ call.pk }}</span>
     {% if call.created_at %}<span class="webui-tool-meta-item">{{ call.created_at|clock }}</span>{% endif %}

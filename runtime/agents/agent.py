@@ -271,26 +271,27 @@ class Agent(AssistantScopeMixin):
     @property
     def disallowedCommandNames(self) -> list[str]:
         """Return disallowed command names (raw, may include patterns)."""
-        return self.get_version_model().resolve_setting("disallowedCommandNames") or []
-
-    @property
-    def allowedCommandNames(self) -> list[str]:
-        """Return concrete command names, expanded from patterns via the resolved M2M."""
-        disallowed = self.disallowedCommandNames
-        return [
-            tdv.task_definition.name
-            for tdv in self.get_version_model().commands()
-            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
-        ]
+        if not hasattr(self, "_cached_disallowed_command_names"):
+            self._cached_disallowed_command_names = (
+                self.get_version_model().resolve_setting("disallowedCommandNames") or []
+            )
+        return self._cached_disallowed_command_names
 
     @property
     def allowedCommands(self) -> list[TaskDefinitionVersion]:
         """Return :class:`TaskDefinitionVersion` instances for allowed commands, excluding disallowed."""
-        disallowed = self.disallowedCommandNames
-        return [
-            tdv for tdv in self.get_version_model().commands()
-            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
-        ]
+        if getattr(self, "_cached_allowed_commands", None) is None:
+            disallowed = self.disallowedCommandNames
+            self._cached_allowed_commands = [
+                tdv for tdv in self.get_version_model().commands()
+                if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+            ]
+        return self._cached_allowed_commands
+
+    @property
+    def allowedCommandNames(self) -> list[str]:
+        """Return concrete command names, expanded from patterns via the resolved M2M."""
+        return [tdv.task_definition.name for tdv in self.allowedCommands]
 
     def get_command(self, name: str) -> TaskDefinitionVersion | None:
         """Return the command *name* as a TaskDefinitionVersion, or *None* (None if disallowed)."""
@@ -310,26 +311,27 @@ class Agent(AssistantScopeMixin):
     @property
     def disallowedTaskNames(self) -> list[str]:
         """Return disallowed task names (raw, may include patterns)."""
-        return self.get_version_model().resolve_setting("disallowedTaskNames") or []
-
-    @property
-    def allowedTaskNames(self) -> list[str]:
-        """Return concrete task names, expanded from patterns via the resolved M2M."""
-        disallowed = self.disallowedTaskNames
-        return [
-            tdv.task_definition.name
-            for tdv in self.get_version_model().tasks()
-            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
-        ]
+        if not hasattr(self, "_cached_disallowed_task_names"):
+            self._cached_disallowed_task_names = (
+                self.get_version_model().resolve_setting("disallowedTaskNames") or []
+            )
+        return self._cached_disallowed_task_names
 
     @property
     def allowedTasks(self) -> list[TaskDefinitionVersion]:
         """Return :class:`TaskDefinitionVersion` instances for allowed tasks, excluding disallowed."""
-        disallowed = self.disallowedTaskNames
-        return [
-            tdv for tdv in self.get_version_model().tasks()
-            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
-        ]
+        if getattr(self, "_cached_allowed_tasks", None) is None:
+            disallowed = self.disallowedTaskNames
+            self._cached_allowed_tasks = [
+                tdv for tdv in self.get_version_model().tasks()
+                if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+            ]
+        return self._cached_allowed_tasks
+
+    @property
+    def allowedTaskNames(self) -> list[str]:
+        """Return concrete task names, expanded from patterns via the resolved M2M."""
+        return [tdv.task_definition.name for tdv in self.allowedTasks]
 
     def get_task(self, name: str) -> TaskDefinitionVersion | None:
         """Return the task *name* as a TaskDefinitionVersion, or *None* (None if disallowed)."""
@@ -349,26 +351,27 @@ class Agent(AssistantScopeMixin):
     @property
     def disallowedToolNames(self) -> list[str]:
         """Return disallowed tool names (raw, may include patterns)."""
-        return self.get_version_model().resolve_setting("disallowedToolNames") or []
-
-    @property
-    def allowedToolNames(self) -> list[str]:
-        """Return concrete tool names, expanded from patterns via the resolved M2M."""
-        disallowed = self.disallowedToolNames
-        return [
-            tdv.task_definition.name
-            for tdv in self.get_version_model().tools()
-            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
-        ]
+        if not hasattr(self, "_cached_disallowed_tool_names"):
+            self._cached_disallowed_tool_names = (
+                self.get_version_model().resolve_setting("disallowedToolNames") or []
+            )
+        return self._cached_disallowed_tool_names
 
     @property
     def allowedTools(self) -> list[TaskDefinitionVersion]:
         """Return :class:`TaskDefinitionVersion` instances for allowed tools, excluding disallowed."""
-        disallowed = self.disallowedToolNames
-        return [
-            tdv for tdv in self.get_version_model().tools()
-            if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
-        ]
+        if getattr(self, "_cached_allowed_tools", None) is None:
+            disallowed = self.disallowedToolNames
+            self._cached_allowed_tools = [
+                tdv for tdv in self.get_version_model().tools()
+                if not is_name_disallowed(tdv.task_definition.name, tdv.task_definition.group_name, disallowed)
+            ]
+        return self._cached_allowed_tools
+
+    @property
+    def allowedToolNames(self) -> list[str]:
+        """Return concrete tool names, expanded from patterns via the resolved M2M."""
+        return [tdv.task_definition.name for tdv in self.allowedTools]
 
     def get_tool(self, name: str) -> TaskDefinitionVersion | None:
         """Return the tool *name* as a TaskDefinitionVersion, or *None* (None if disallowed)."""

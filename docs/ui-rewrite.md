@@ -512,6 +512,22 @@ htmx specifics:
 - Filters and search live in the query string (`?agent=`, `?project=`,
   `?status=`) so views are shareable.
 
+Implementation notes (shipped 2026-11):
+
+- Boosted responses do not re-send the document: `render_page()` switches to
+  `webui/hx_base.html` (`<title>` + body markup + head block) when the request
+  carries `HX-Request`. A normal click therefore replaces only `<body>`; the
+  asset bundle is never re-fetched or re-executed. Full document loads (new
+  tab, reload, no-JS) keep using `webui/base.html` from the same templates.
+- Page responses set `Vary: HX-Request` and `Cache-Control: private, no-cache`,
+  and are gzipped above 1 KiB (~200 KiB chat pages shrink to ~16 KiB). SSE and
+  API responses are untouched.
+- `render_page()` sets `hx-history="false"` on chat pages only, so back/forward
+  takes the htmx cache-miss path and refetches live messages.
+- `insights.js` and the resize/workspace-tree code re-initialise on
+  `htmx:afterSettle` and `htmx:historyRestore`; `data-bound` markers are
+  cleared on history restore because cloned DOM nodes have no listeners.
+
 ### 5.6 Templates and component structure
 
 Move the 148 `TEMPLATE_STR` blocks into template files. The markup is reusable;
