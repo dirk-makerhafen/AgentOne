@@ -385,6 +385,8 @@ def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None =
 
     # A response that already backs an assistant message is rendered by that
     # message; only unanchored ones (still streaming, or orphaned) get a row.
+    # However, we always include standalone response rows even when the session
+    # is inactive/archived, so that response models are always rendered.
     anchored = set(
         Message.objects.filter(response_id__in=[response.pk for response in responses])
         .values_list("response_id", flat=True)
@@ -408,6 +410,19 @@ def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None =
                         reasoning=response.reasoning or "",
                     )
                 )
+    # If the session is inactive/archived and there are responses but no standalone
+    # rows were generated (because all are anchored), still include the anchored
+    # responses as standalone rows so the response model is rendered.
+    if not standalone_by_query and responses and session_model.is_active is False:
+        for response in responses:
+            rows.append(
+                Row(
+                    kind="response",
+                    obj=response,
+                    body_html=render_markdown(response.content or ""),
+                    reasoning=response.reasoning or "",
+                )
+            )
     return rows
 
 

@@ -1255,14 +1255,15 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     flex: 1;
     min-height: 0;
     display: flex;
-    gap: 14px;
+    gap: 0;
     min-width: 0;
 }
 .insights-table-card {
     flex: 1;
     min-width: 0;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-right: 0;
+    border-radius: 10px 0 0 10px;
     background: var(--surface);
     overflow: auto;
 }
@@ -1296,7 +1297,7 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     width: 360px;
     flex-shrink: 0;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 0 10px 10px 0;
     background: var(--surface);
     display: flex;
     flex-direction: column;
@@ -2235,6 +2236,7 @@ html.sse-down #connection-banner { display: block; }
 .webui-entity-assistant .resize-handle { left: 0; }
 .insights-rightbar .resize-handle { left: 0; }
 .resize-handle:hover, .resize-handle.dragging { background: var(--accent, #4f8cff); }
+.insights-rightbar > .resize-handle { background: transparent; }
 body.resizing { user-select: none; cursor: col-resize; }
 
 /* Partial navigation ------------------------------------------------------ */
