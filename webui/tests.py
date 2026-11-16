@@ -1171,6 +1171,8 @@ def test_chat_capabilities_panel_uses_chips(client):
 
 @pytest.mark.django_db
 def test_settings_providers_tab_masks_keys(client):
+    """The providers table shows key badges (count/masked), not full keys.
+    Full masked keys are shown in the provider detail rightbar."""
     from server.models.providers.api_key import ApiKey
     from server.models.providers.api_provider import ApiProvider
 
@@ -1182,12 +1184,23 @@ def test_settings_providers_tab_masks_keys(client):
     response = client.get(reverse("webui:settings_tab", args=["providers"]))
     assert response.status_code == 200
     assert b"Test Provider" in response.content
+    # Full key never appears in table
     assert b"sk-1234567890abcdef" not in response.content
-    assert b"sk-1" in response.content and b"cdef" in response.content
+    # Table shows key badge with count (new UI: key-badge key-ok with ✓ 1)
+    assert b"key-badge key-ok" in response.content
+    assert b"\xe2\x9c\x93 1" in response.content  # ✓ 1
+    # Masked key only appears in detail view
+    detail = client.get(reverse("webui:provider_detail", args=[provider.pk]))
+    assert detail.status_code == 200
+    assert b"primary" in detail.content  # key comment shown
+    assert b"enabled" in detail.content  # key status shown
+    assert b"sk-1234567890abcdef" not in detail.content  # full key still masked
 
 
 @pytest.mark.django_db
-def test_settings_provider_probe_polls_only_the_probe_row(client, monkeypatch):
+def test_settings_provider_probe_shows_in_status_column(client, monkeypatch):
+    """Probe status is shown as a badge in the table's Status column (new UI).
+    The polling probe row is only used in the provider detail rightbar."""
     from server.models.providers.api_provider import ApiProvider
     import webui.views.settings as settings_views
 
@@ -1199,15 +1212,18 @@ def test_settings_provider_probe_polls_only_the_probe_row(client, monkeypatch):
     )
 
     page = client.get(reverse("webui:settings_tab", args=["providers"]))
-    assert b'id="provider-probe-%d"' % provider.pk in page.content
-    assert b'hx-trigger="every 3s"' in page.content
-    assert b'hx-select="#providers-card"' not in page.content
-
+    assert page.status_code == 200
+    # In the new UI, probe status shows as a badge in the Status column
+    # key-badge key-warn with "testing…"
+    assert b"key-badge key-warn" in page.content
+    assert b"testing" in page.content
+    # No separate polling probe row in the table
+    assert b'id="provider-probe-%d"' % provider.pk not in page.content
+    # The dedicated probe endpoint still exists for the rightbar detail
     fragment = client.get(
         reverse("webui:settings_provider_probe", args=[provider.pk])
     )
     assert fragment.status_code == 200
-    assert b'id="provider-probe-%d"' % provider.pk in fragment.content
     assert b'Running a smoke-test turn' in fragment.content
 
 

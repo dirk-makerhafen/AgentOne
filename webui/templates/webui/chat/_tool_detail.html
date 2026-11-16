@@ -56,16 +56,16 @@
 {% endif %}
 
 {% if halted %}
-<div class="webui-tool-approval-box">
+<div class="webui-tool-approval-box" id="tool-approval-{{ call.pk }}">
     <form method="post" hx-post="{% url 'webui:call_action' call.pk %}"
-          hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+          hx-target="#tool-approval-{{ call.pk }}" hx-swap="outerHTML" hx-sync="this:replace">
         {% csrf_token %}
         <input type="hidden" name="action" value="approve">
         <button class="webui-action-btn" type="submit">Approve</button>
     </form>
     <form class="webui-tool-deny" method="post"
           hx-post="{% url 'webui:call_action' call.pk %}"
-          hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace">
+          hx-target="#tool-approval-{{ call.pk }}" hx-swap="outerHTML" hx-sync="this:replace">
         {% csrf_token %}
         <input type="hidden" name="action" value="deny">
         <input class="webui-question-input" type="text" name="feedback"

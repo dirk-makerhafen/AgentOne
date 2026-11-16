@@ -1,6 +1,10 @@
 {% extends "webui/page.html" %}
-{% load webui %}
+{% load webui static %}
 {% block title %}Settings · AgentOne{% endblock %}
+
+{% block head %}
+<script src="{% static 'webui/insights.js' %}" defer></script>
+{% endblock %}
 
 {% block main %}
 <div class="main-view">
@@ -14,8 +18,8 @@
             </nav>
         </div>
     </header>
-    <div class="main-view-body">
-        <div class="main-view-content">
+    <div class="main-view-body insights-page-body">
+        <div class="main-view-content insights-wide">
             {% if saved %}<div class="webui-saved-note">Settings saved.</div>{% endif %}
 
             {% if tab == "appearance" %}
@@ -118,67 +122,80 @@
             </div>
 
             {% elif tab == "providers" %}
-            <div class="detail-card" id="providers-card">
-                <div class="detail-card-title">Providers</div>
-                <div class="webui-muted-note" style="margin-bottom:10px">
-                    Manage API keys. Changes take effect immediately. Keys are masked here; they are never sent to the browser in full.
+            <div class="insights-toolbar">
+                <div class="insights-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="search" data-insights-search placeholder="Filter providers…" aria-label="Filter providers">
                 </div>
-                {% for provider in providers %}
-                <details class="webui-item" data-open-key="provider-{{ provider.id }}">
-                    <summary class="webui-item-summary">
-                        <span>
-                            <strong>{{ provider.name }}</strong>
-                            {% if provider.is_local %}<span class="detail-badge">local</span>{% endif %}
-                            <span class="webui-muted-note">{{ provider.model_count }} model{{ provider.model_count|pluralize }}</span>
-                        </span>
-                        <span class="webui-muted-note">
-                            {% if provider.has_default %}built-in key
-                            {% elif provider.keys %}{{ provider.keys|length }} key{{ provider.keys|length|pluralize }}
-                            {% else %}no key{% endif %}
-                        </span>
-                    </summary>
-                    <div class="detail-form" style="padding-top:0">
-                        {% if provider.api_key_url %}
-                        <div class="detail-form-row">
-                            <a class="webui-link" href="{{ provider.api_key_url }}" target="_blank" rel="noopener">Get an API key</a>
+                <span class="insights-count" data-insights-count>{{ providers|length }} provider{{ providers|length|pluralize }}</span>
+            </div>
+            <div class="insights-split" data-insights-split>
+                <div class="insights-table-card">
+                    {% if providers %}
+                    <table class="insights-table" data-insights-table>
+                        <thead><tr>
+                            <th data-sort="name">Provider</th>
+                            <th data-sort="models">Models</th>
+                            <th data-sort="key">API key</th>
+                            <th data-sort="status">Status</th>
+                        </tr></thead>
+                        <tbody>
+                            {% for provider in providers %}
+                            <tr class="clickable" id="provider-{{ provider.id }}" tabindex="0"
+                                data-detail-url="{% url 'webui:provider_detail' provider.id %}"
+                                data-search="{{ provider.name|lower }} {{ provider.slug|lower }}">
+                                <td>
+                                    <strong>{{ provider.name }}</strong>
+                                    {% if provider.is_local %}<span class="mode-badge">local</span>{% endif %}
+                                    <div class="muted">{{ provider.model_count }} model{{ provider.model_count|pluralize }}</div>
+                                </td>
+                                <td class="muted">{{ provider.model_count }}</td>
+                                <td>
+                                    {% if provider.has_default %}<span class="key-badge key-builtin">built-in</span>
+                                    {% elif provider.keys %}<span class="key-badge key-ok">✓ {{ provider.keys|length }}</span>
+                                    {% else %}<span class="key-badge key-missing">—</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if provider.probe and provider.probe.verdict == "healthy" %}<span class="key-badge key-ok">{{ provider.probe.verdict }}</span>
+                                    {% elif provider.probe and provider.probe.verdict == "failed" %}<span class="key-badge key-error">{{ provider.probe.verdict }}</span>
+                                    {% elif provider.probe and provider.probe.verdict == "running" %}<span class="key-badge key-warn">testing…</span>
+                                    {% else %}<span class="insights-ok-dot" title="No probe run"></span>{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="insights-empty-row" hidden><td colspan="4">No providers match your filter.</td></tr>
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="insights-empty">No providers configured.</div>
+                    {% endif %}
+                </div>
+                <div class="resize-handle" id="rightpanelResize" aria-label="Resize panel" role="slider" tabindex="0" aria-orientation="horizontal"></div>
+                <aside class="insights-rightbar" id="insights-detail" aria-label="Provider details">
+                    <header class="insights-rightbar-head">
+                        <span>Details</span>
+                        <button type="button" class="webui-icon-btn" data-insights-close aria-label="Close details">×</button>
+                    </header>
+                    <div class="insights-rightbar-body" id="insights-detail-body">
+                        {% if providers %}
+                        <div class="insights-rightbar-empty">
+                            <p><strong>{{ providers_summary.total }} provider{{ providers_summary.total|pluralize }} configured.</strong></p>
+                            <p>Select a provider to see keys, limits, usage and models.</p>
+                            <hr style="margin: 12px 0; border-color: var(--border);">
+                            <ul style="margin: 0; padding-left: 20px;">
+                                <li>{{ providers_summary.total }} provider{{ providers_summary.total|pluralize }} total</li>
+                                <li>{{ providers_summary.local }} local, {{ providers_summary.remote }} remote</li>
+                                <li>{{ providers_summary.with_keys }} provider{{ providers_summary.with_keys|pluralize }} with keys ({{ providers_summary.total_keys }} key{{ providers_summary.total_keys|pluralize }} total)</li>
+                                {% if providers_summary.healthy or providers_summary.failed %}
+                                <li>{{ providers_summary.healthy }} healthy, {{ providers_summary.failed }} failed probes</li>
+                                {% endif %}
+                            </ul>
                         </div>
+                        {% else %}
+                        <div class="insights-rightbar-empty">No providers configured.</div>
                         {% endif %}
-                        {% for key in provider.keys %}
-                        <div class="webui-key-row">
-                            <span class="webui-key-name">{{ key.comment }}</span>
-                            <code class="webui-key-value">{{ key.display }}</code>
-                            {% if key.cooling %}<span class="webui-muted-note">{{ key.cooling }}</span>{% endif %}
-                            <form method="post" action="{% url 'webui:settings_provider_key' provider.id %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="toggle">
-                                <input type="hidden" name="key_id" value="{{ key.pk }}">
-                                <button class="webui-action-btn" type="submit">{% if key.enabled %}Disable{% else %}Enable{% endif %}</button>
-                            </form>
-                            <form method="post" action="{% url 'webui:settings_provider_key' provider.id %}"
-                                  onsubmit="return confirm('Delete this API key?');">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="key_id" value="{{ key.pk }}">
-                                <button class="webui-action-btn danger" type="submit">Delete</button>
-                            </form>
-                        </div>
-                        {% endfor %}
-                        <form class="webui-key-add" method="post" action="{% url 'webui:settings_provider_key' provider.id %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="add">
-                            <input type="text" name="comment" placeholder="Name" autocomplete="off">
-                            <input type="password" name="key" placeholder="Paste API key" autocomplete="off" required>
-                            <button class="webui-action-btn" type="submit">Add key</button>
-                        </form>
-                        {% if provider.setup %}
-                        <div class="webui-muted-note">{{ provider.setup|linebreaksbr }}</div>
-                        {% endif %}
-                        {% include "webui/settings/_provider_probe.html" with provider_id=provider.id probe=provider.probe %}
                     </div>
-                </details>
-                {% empty %}
-                <div class="insights-empty">No providers configured.</div>
-                {% endfor %}
+                </aside>
             </div>
 
             {% elif tab == "system" %}

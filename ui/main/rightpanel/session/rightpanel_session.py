@@ -7,6 +7,7 @@ from server.models.sessions.session import SessionModel
 from server.models.workspace import WorkspaceModel
 from ui.lib.model_view import ModelView
 from ui.main.rightpanel.session.rightpanel_session_calls import RightPanelSessionCalls
+from ui.main.rightpanel.session.rightpanel_session_history import RightPanelSessionHistory
 from ui.main.rightpanel.session.rightpanel_session_settings import RightPanelSessionSettings
 from ui.main.rightpanel.session.rightpanel_session_subagents import RightPanelSessionSubagents
 from ui.main.rightpanel.session.rightpanel_session_terminal import RightPanelSessionTerminals
@@ -55,6 +56,9 @@ class RightPanelSession(ModelView):
             </button>
             <button class="nav-tab{% if pyview.current_tab_name == "terminal" %} active{% endif %}" data-panel="terminal" data-label="Terminals" onclick="pyview.switchTab('terminal')" title="Terminals">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </button>
+            <button class="nav-tab{% if pyview.current_tab_name == "history" %} active{% endif %}" data-panel="history" data-label="History" onclick="pyview.switchTab('history')" title="History">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </button>
 
         </div>
@@ -127,7 +131,7 @@ class RightPanelSession(ModelView):
     def switchTab(self, name: str) -> None:
         if name == self.current_tab_name:
             return 
-        if name not in ["workspace", "settings", "tasks", "templates", "todos", "calls", "subagents", "terminal"]:
+        if name not in ["workspace", "settings", "tasks", "templates", "todos", "calls", "subagents", "terminal", "history"]:
             return
         self.current_tab_name = name
         if self.current_tab:
@@ -151,5 +155,7 @@ class RightPanelSession(ModelView):
             self.current_tab = RightPanelSessionSubagents(self.subject, self)
         elif name == "terminal":
             self.current_tab = RightPanelSessionTerminals(self.subject, self)
+        elif name == "history":
+            self.current_tab = RightPanelSessionHistory(self.subject, self)
         self.update()
 

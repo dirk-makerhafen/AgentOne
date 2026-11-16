@@ -1,0 +1,59 @@
+{% load webui %}
+{% if cards.questions.items %}
+<div class="webui-card webui-question-card" role="form" aria-labelledby="webui-question-title" id="question-card">
+    <div class="webui-card-head">
+        <span class="webui-card-title" id="webui-question-title">Questions for you</span>
+        <span class="webui-card-sub">{{ cards.questions.items|length }} question{{ cards.questions.items|pluralize }} pending answer</span>
+    </div>
+
+    {% for item in cards.questions.items %}
+    <div class="webui-question-block" id="question-block-{{ item.call_pk }}-{{ item.qidx }}">
+        <div class="webui-question-text">{{ item.question }}</div>
+
+        {% if item.allow_free_text %}
+        <form method="post"
+              hx-post="{% url 'webui:call_action' item.call_pk %}"
+              hx-target="#question-block-{{ item.call_pk }}-{{ item.qidx }}"
+              hx-swap="outerHTML"
+              hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="answer">
+            <input type="hidden" name="qidx" value="{{ item.qidx }}">
+            <input type="text" class="webui-question-input" name="other" placeholder="Type your answer…" autocomplete="off" autofocus>
+            <button class="webui-primary-btn" type="submit">Submit</button>
+        </form>
+        {% else %}
+        <form method="post"
+              hx-post="{% url 'webui:call_action' item.call_pk %}"
+              hx-target="#question-block-{{ item.call_pk }}-{{ item.qidx }}"
+              hx-swap="outerHTML"
+              hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="answer">
+            <input type="hidden" name="qidx" value="{{ item.qidx }}">
+            <div class="webui-question-options" role="radiogroup" aria-label="{{ item.question }}">
+                {% for opt in item.options %}
+                <label class="webui-question-opt{% if item.multi %} webui-question-multi{% endif %}">
+                    <input type="{% if item.multi %}checkbox{% else %}radio{% endif %}"
+                           name="option" value="{{ opt.index }}" autocomplete="off">
+                    <span>{{ opt.label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <button class="webui-primary-btn" type="submit">{% if item.multi %}Submit{% else %}Continue{% endif %}</button>
+        </form>
+        {% endif %}
+
+        <form class="webui-question-decline" method="post"
+              hx-post="{% url 'webui:call_action' item.call_pk %}"
+              hx-target="#question-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="decline">
+            <input type="hidden" name="qidx" value="{{ item.qidx }}">
+            <input class="webui-question-input" type="text" name="feedback" placeholder="Reason for declining (optional)" autocomplete="off">
+            <button class="webui-action-btn danger" type="submit">Decline</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

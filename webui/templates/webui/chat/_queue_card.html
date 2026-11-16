@@ -1,0 +1,47 @@
+{% load webui %}
+{% if cards.queue.count %}
+<div class="webui-card webui-queue-card" role="status" aria-live="polite" id="queue-card">
+    <div class="webui-card-head">
+        <span class="webui-card-title">Queued messages</span>
+        <span class="webui-card-sub">{{ cards.queue.count }} waiting{% if cards.queue.remaining %} ({{ cards.queue.remaining }} more){% endif %}</span>
+    </div>
+
+    {% for row in cards.queue.rows %}
+    <form class="webui-queue-row{% if row.is_user %} webui-queue-user{% endif %}"
+          id="queue-row-{{ row.pk }}"
+          method="post"
+          hx-post="{% url 'webui:queue_action' session.pk %}"
+          hx-target="#queue-row-{{ row.pk }}"
+          hx-swap="outerHTML"
+          hx-sync="this:replace">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cancel">
+        <input type="hidden" name="call_id" value="{{ row.pk }}">
+        <button class="webui-queue-row-btn" type="submit" title="Cancel this message">
+            <span class="webui-queue-row-icon" aria-hidden="true">{% if row.is_user %}💬{% else %}🔧{% endif %}</span>
+            <span class="webui-queue-row-text">{{ row.text }}</span>
+            <span class="webui-queue-row-time">{{ row.created_at|clock }}</span>
+        </button>
+    </form>
+    {% endfor %}
+
+    {% if cards.queue.remaining %}
+    <div class="webui-card-foot">
+        <span>{{ cards.queue.remaining }} more queued message{{ cards.queue.remaining|pluralize }}…</span>
+    </div>
+    {% endif %}
+
+    <div class="webui-card-actions">
+        <form method="post" hx-post="{% url 'webui:queue_action' session.pk %}"
+              hx-target="#queue-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}<input type="hidden" name="action" value="combine">
+            <button class="webui-action-btn" type="submit">Combine all</button>
+        </form>
+        <form method="post" hx-post="{% url 'webui:queue_action' session.pk %}"
+              hx-target="#queue-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}<input type="hidden" name="action" value="clear">
+            <button class="webui-action-btn danger" type="submit">Clear queue</button>
+        </form>
+    </div>
+</div>
+{% endif %}

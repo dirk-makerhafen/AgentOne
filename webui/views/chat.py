@@ -996,7 +996,21 @@ def call_action(request, call_id: int):
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("call action %s failed for call %s", action, call_id)
 
-    return _thread_response(request, call.session)
+    # Return the appropriate card partial based on the call type
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    
+    call.refresh_from_db()
+    if call.status_detail == TaskCallStatusDetail.HALTED_APPROVAL:
+        # Still halted - show updated approval card
+        context = session_context(call.session)
+        return render(request, "webui/chat/_approval_card.html", context)
+    elif call.status_detail == TaskCallStatusDetail.WAITING_QUEUE:
+        # Was answered - show updated question card
+        context = session_context(call.session)
+        return render(request, "webui/chat/_question_card.html", context)
+    else:
+        # Call was processed - return empty to remove the card
+        return HttpResponse("")
 
 
 def _answer_question(call: AgentTaskCall, post) -> None:
@@ -1061,7 +1075,8 @@ def queue_action(request, session_id: int):
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("queue action %s failed for session %s", action, session_id)
 
-    return _thread_response(request, session_model)
+    context = session_context(session_model)
+    return render(request, "webui/chat/_queue_card.html", context)
 
 
 @require_POST
@@ -1080,7 +1095,8 @@ def turn_approval(request, session_id: int):
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("turn approval failed for session %s", session_id)
 
-    return _thread_response(request, session_model)
+    context = session_context(session_model)
+    return render(request, "webui/chat/_turnlimit_card.html", context)
 
 
 @require_POST
@@ -1119,7 +1135,9 @@ def ratelimit_action(request, session_id: int):
         CallScheduler.release_waiting_ratelimit_calls(session_model, repoint=True)
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("rate-limit action %s failed for session %s", action, session_id)
-    return _thread_response(request, session_model)
+
+    context = session_context(session_model)
+    return render(request, "webui/chat/_ratelimit_card.html", context)
 
 
 @require_POST

@@ -1,0 +1,24 @@
+{% load webui %}
+{% if cards.turn_limit.active %}
+<div class="webui-card webui-turnlimit-card" role="alertdialog" aria-labelledby="webui-turnlimit-title" id="turnlimit-card">
+    <div class="webui-card-head">
+        <span class="webui-card-title" id="webui-turnlimit-title">Unattended turn limit reached</span>
+        <span class="webui-card-sub">
+            The agent reached {{ cards.turn_limit.maximum }} unattended turns
+            ({{ cards.turn_limit.current }} so far). Approve to reset the counters and continue.
+        </span>
+    </div>
+    <div class="webui-card-actions">
+        <form method="post" hx-post="{% url 'webui:turn_approval' session.pk %}"
+              hx-target="#turnlimit-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}<input type="hidden" name="action" value="approve">
+            <button class="webui-primary-btn" type="submit">Approve & continue</button>
+        </form>
+        <form method="post" hx-post="{% url 'webui:turn_approval' session.pk %}"
+              hx-target="#turnlimit-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}<input type="hidden" name="action" value="deny">
+            <button class="webui-action-btn" type="submit">Deny</button>
+        </form>
+    </div>
+</div>
+{% endif %}

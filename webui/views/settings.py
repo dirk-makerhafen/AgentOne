@@ -52,7 +52,9 @@ def settings_page(request, tab: str = "appearance"):
         "saved": request.GET.get("saved") == "1",
     }
     if tab == "providers":
-        context["providers"] = _provider_rows()
+        rows = _provider_rows()
+        context["providers"] = rows
+        context["providers_summary"] = _providers_summary(rows)
     elif tab == "system":
         context["system"] = _system_info()
     elif tab == "preferences":
@@ -107,7 +109,7 @@ def _provider_rows() -> list[dict]:
     providers = (
         ApiProvider.objects.filter(Q(enabled=True) | Q(api_keys__isnull=False))
         .distinct()
-        .prefetch_related("api_keys")
+        .prefetch_related("api_keys", "aimodels")
         .order_by("is_local", "name")
     )
     rows = []
@@ -132,6 +134,7 @@ def _provider_rows() -> list[dict]:
             {
                 "id": provider.pk,
                 "name": provider.name,
+                "slug": provider.slug,
                 "is_local": provider.is_local,
                 "model_count": provider.aimodels.filter(enabled=True).count(),
                 "has_default": bool(provider.default_api_key),
@@ -142,6 +145,26 @@ def _provider_rows() -> list[dict]:
             }
         )
     return rows
+
+
+def _providers_summary(rows: list[dict]) -> dict:
+    """Compute summary statistics for the providers overview."""
+    total = len(rows)
+    local = sum(1 for r in rows if r["is_local"])
+    remote = total - local
+    with_keys = sum(1 for r in rows if r["keys"])
+    total_keys = sum(len(r["keys"]) for r in rows)
+    healthy = sum(1 for r in rows if r["probe"] and r["probe"].get("verdict") == "healthy")
+    failed = sum(1 for r in rows if r["probe"] and r["probe"].get("verdict") == "failed")
+    return {
+        "total": total,
+        "local": local,
+        "remote": remote,
+        "with_keys": with_keys,
+        "total_keys": total_keys,
+        "healthy": healthy,
+        "failed": failed,
+    }
 
 
 @require_POST

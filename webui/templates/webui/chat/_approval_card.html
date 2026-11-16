@@ -1,0 +1,37 @@
+{% load webui %}
+{% if cards.approvals.rows %}
+<div class="webui-card webui-approval-card" role="alertdialog" aria-labelledby="webui-approval-title" id="approval-card">
+    <div class="webui-card-head">
+        <span class="webui-card-title" id="webui-approval-title">Commands awaiting approval</span>
+        <span class="webui-card-sub">{{ cards.approvals.count }} call{{ cards.approvals.count|pluralize }} waiting{% if cards.approvals.remaining %} ({{ cards.approvals.remaining }} more){% endif %}</span>
+    </div>
+
+    {% for row in cards.approvals.rows %}
+    <div class="webui-approval-call" id="approval-call-{{ row.pk }}">
+        <div class="webui-approval-call-head">
+            <span class="webui-approval-call-name">{{ row.name }}</span>
+            <span class="webui-approval-call-meta">#{{ row.pk }} · {{ row.args }}</span>
+        </div>
+        <div class="webui-approval-call-actions">
+            <form method="post" hx-post="{% url 'webui:call_action' row.pk %}"
+                  hx-target="#approval-call-{{ row.pk }}" hx-swap="outerHTML" hx-sync="this:replace">
+                {% csrf_token %}<input type="hidden" name="action" value="approve">
+                <button class="webui-primary-btn" type="submit">Approve</button>
+            </form>
+            <form method="post" hx-post="{% url 'webui:call_action' row.pk %}"
+                  hx-target="#approval-call-{{ row.pk }}" hx-swap="outerHTML" hx-sync="this:replace">
+                {% csrf_token %}<input type="hidden" name="action" value="deny">
+                <input class="webui-question-input" type="text" name="feedback" placeholder="Reason for denying (optional)" autocomplete="off">
+                <button class="webui-action-btn danger" type="submit">Deny</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if cards.approvals.remaining %}
+    <div class="webui-card-foot">
+        <span>{{ cards.approvals.remaining }} more approval{{ cards.approvals.remaining|pluralize }}…</span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
