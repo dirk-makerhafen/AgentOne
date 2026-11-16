@@ -17,10 +17,10 @@ from server.models.queries.response import Response
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel
 from server.models.settings import SettingsModel
-from webui.main.insights.models import ModelsView
-from webui.main.insights.providers import ProvidersView
-from webui.main.rightpanel.model.rightpanel_model import RightPanelModel
-from webui.main.rightpanel.provider.rightpanel_provider import RightPanelProvider
+from webui.features.insights.models import ModelsView
+from webui.features.insights.providers import ProvidersView
+from webui.features.insights.model_detail import RightPanelModel
+from webui.features.insights.provider_detail import RightPanelProvider
 
 
 def _detail(view_cls, subject):

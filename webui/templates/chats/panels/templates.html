@@ -1,0 +1,64 @@
+    {% if template_error %}
+    <div class="webui-error" style="margin-bottom:8px">{{ template_error }}</div>
+    {% endif %}
+    <div class="webui-panel-list">
+        {% for template in templates %}
+        <details class="webui-item">
+            <summary class="webui-item-summary">
+                <span>
+                    <strong>{{ template.name }}</strong>
+                    {% if template.description %}<span class="webui-muted-note">{{ template.description }}</span>{% endif %}
+                </span>
+                <span class="webui-muted-note">{{ template.variables|length }} var{{ template.variables|length|pluralize }}</span>
+            </summary>
+            <form class="detail-form" style="padding-top:4px">
+                {% csrf_token %}
+                <input type="hidden" name="name" value="{{ template.name }}">
+                {% for var in template.variables %}
+                <div class="detail-form-row">
+                    <label for="tpl-{{ template.name }}-{{ var.name }}">
+                        {{ var.name }}{% if var.required %} *{% endif %}
+                        <span class="webui-muted-note">({{ var.type }}{% if var.default %}, default: {{ var.default }}{% endif %})</span>
+                    </label>
+                    <input id="tpl-{{ template.name }}-{{ var.name }}" type="text"
+                           name="var_{{ var.name }}" placeholder="{{ var.default|default:'' }}"
+                           value="{{ var.default|default:'' }}" autocomplete="off">
+                    {% if var.description %}<div class="detail-form-hint">{{ var.description }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                <div class="webui-template-actions">
+                    <button class="webui-action-btn" type="button"
+                            hx-post="{% url 'webui:template_preview' session.pk %}"
+                            hx-include="closest form" hx-target="#chat-panel-body" hx-swap="innerHTML">Preview</button>
+                    <button class="webui-primary-btn" type="button"
+                            hx-post="{% url 'webui:template_run' session.pk %}"
+                            hx-include="closest form" hx-target="#chat-panel-body" hx-swap="innerHTML">Run</button>
+                    <button class="webui-action-btn danger" type="button"
+                            hx-post="{% url 'webui:template_delete' session.pk %}"
+                            hx-include="closest form" hx-target="#chat-panel-body" hx-swap="innerHTML"
+                            hx-confirm="Delete template {{ template.name }}?">Delete</button>
+                </div>
+            </form>
+        </details>
+        {% empty %}
+        <div class="webui-empty-note">
+            No templates yet. Ask the agent to save one with the <code>template_save</code> tool
+            (name, body, and variable specs).
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if template_preview %}
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Preview — {{ template_preview.name }}</div>
+        <pre class="webui-template-preview">{{ template_preview.text }}</pre>
+    </div>
+    {% endif %}
+
+    {% if template_run %}
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Run — {{ template_run.name }} · {{ template_run.status }}</div>
+        {% if template_run.model %}<div class="webui-muted-note">{{ template_run.model }}</div>{% endif %}
+        {% if template_run.content %}<pre class="webui-template-preview">{{ template_run.content }}</pre>{% endif %}
+    </div>
+    {% endif %}

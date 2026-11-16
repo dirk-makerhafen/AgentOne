@@ -1,0 +1,30 @@
+{% load webui %}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-top-bar">
+        <a class="webui-brand" href="{% url 'webui:dashboard' %}" title="AgentOne home">AgentOne</a>
+        <form method="post" action="{% url 'webui:new_chat' %}" class="webui-new-chat">
+            {% csrf_token %}
+            <button class="new-chat-btn" type="submit" title="Start a new chat">＋ New chat</button>
+        </form>
+    </div>
+    {% if sidebar_projects %}
+    <form class="sidebar-project-bar" method="get"
+          hx-get="{{ sidebar_base_url }}"
+          hx-target="closest [data-component]"
+          hx-swap="outerHTML"
+          hx-sync="this:replace">
+        {% if show_archived %}<input type="hidden" name="archived" value="1">{% endif %}
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        <label class="sr-only" for="sidebar-project-select">Filter sidebar by project</label>
+        <select id="sidebar-project-select" name="project"
+                class="sidebar-project-select" onchange="this.form.requestSubmit()">
+            <option value="">All projects</option>
+            {% for project in sidebar_projects %}
+            <option value="{{ project.pk }}"{% if project.pk == sidebar_project_id %} selected{% endif %}>{{ project.name }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    {% endif %}
+    {% include sidebar_template %}
+    {% include "shared/_resize_handle.html" with resize_handle_id="sidebarResize" resize_aria_label="Resize sidebar" %}
+</aside>

@@ -10,7 +10,7 @@ from django.templatetags.static import static as static_url
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 
-from webui.markdown import render_markdown
+from webui.core.markdown import render_markdown
 
 register = template.Library()
 
@@ -23,7 +23,7 @@ def component_tag(context, name, pk=None, **params):
     trigger; htmx mode emits a placeholders that loads from the component URL
     and is preserved across parent swaps.
     """
-    from webui.components import render_component_ref
+    from webui.core.components import render_component_ref
 
     return render_component_ref(context, name, pk, params)
 

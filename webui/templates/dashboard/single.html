@@ -1,0 +1,104 @@
+{% extends "layout/shell.html" %}
+{% load webui %}
+{% block title %}Dashboard · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">Dashboard</div>
+        <div class="main-view-actions">
+            <form method="post" action="{% url 'webui:new_chat' %}">
+                {% csrf_token %}
+                <button class="webui-primary-btn" type="submit">＋ New chat</button>
+            </form>
+        </div>
+    </header>
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content">
+            {% if error %}
+            <div class="webui-error">
+                {% if error == "no-agent" %}No chat agent is available yet.
+                {% elif error == "create-failed" %}Could not create the chat.
+                {% else %}{{ error }}{% endif %}
+            </div>
+            {% endif %}
+
+            <div class="insights-grid">
+                <a class="insights-stat" href="{% url 'webui:chats' %}">
+                    <div class="insights-stat-value">{{ stats.chats }}</div>
+                    <div class="insights-stat-label">Open chats</div>
+                </a>
+                <a class="insights-stat" href="{% url 'webui:agents' %}">
+                    <div class="insights-stat-value">{{ stats.agents }}</div>
+                    <div class="insights-stat-label">Agents</div>
+                </a>
+                <a class="insights-stat" href="{% url 'webui:projects' %}">
+                    <div class="insights-stat-value">{{ stats.projects }}</div>
+                    <div class="insights-stat-label">Projects</div>
+                </a>
+                <a class="insights-stat" href="{% url 'webui:workitems' %}">
+                    <div class="insights-stat-value">{{ stats.open_work }}</div>
+                    <div class="insights-stat-label">Open work items</div>
+                </a>
+                <a class="insights-stat" href="{% url 'webui:cron' %}">
+                    <div class="insights-stat-value">{{ stats.cron_active }}</div>
+                    <div class="insights-stat-label">Active cron jobs</div>
+                </a>
+            </div>
+
+            <div class="insights-row">
+                <div class="insights-card">
+                    <div class="insights-card-title">Recent conversations</div>
+                    {% for s in sessions %}
+                    <a class="webui-list-row" href="{% url 'webui:chat' s.pk %}">
+                        <span class="webui-list-row-name">
+                            {% if s.is_pinned %}<span class="session-pin-icon">★</span>{% endif %}
+                            {{ s.name }}
+                        </span>
+                        <span class="webui-list-row-meta">
+                            {{ s.turn_count }} turn{{ s.turn_count|pluralize }}
+                            {% if s.latest_session_version.agent %} · {{ s.latest_session_version.agent.name }}{% endif %}
+                            · {{ s.last_active_at|reltime }}
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="insights-empty">No conversations yet.</div>
+                    {% endfor %}
+                </div>
+
+                <div class="insights-card">
+                    <div class="insights-card-title">Open work</div>
+                    {% for item in recent_work %}
+                    <a class="webui-list-row" href="{% url 'webui:workitem' item.pk %}">
+                        <span class="webui-list-row-name">{{ item.title }}</span>
+                        <span class="webui-list-row-meta">
+                            {{ item.get_status_display }}
+                            {% if item.assigned_agent %} · {{ item.assigned_agent.name }}{% endif %}
+                            · P{{ item.priority }}
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="insights-empty">Nothing queued — the board is clear.</div>
+                    {% endfor %}
+                </div>
+
+                <div class="insights-card">
+                    <div class="insights-card-title">Projects</div>
+                    {% for project in latest_projects %}
+                    <a class="webui-list-row" href="{% url 'webui:project' project.pk %}">
+                        <span class="webui-list-row-name">{{ project.name }}</span>
+                        <span class="webui-list-row-meta">
+                            {{ project.agent_count }} agent{{ project.agent_count|pluralize }}
+                            · {{ project.session_count }} chat{{ project.session_count|pluralize }}
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="insights-empty">No projects yet.</div>
+                    {% endfor %}
+                </div></div></div></div>
+                {% include "shared/_assistant_panel.html" %}
+                </div>
+            </div>
+        </div>
+{% endblock %}

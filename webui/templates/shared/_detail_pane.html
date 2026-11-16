@@ -1,0 +1,12 @@
+<aside class="insights-rightbar" id="insights-detail" aria-label="{{ detail_aria_label|default:'Details' }}">
+    {% include "shared/_resize_handle.html" %}
+    <header class="insights-rightbar-head">
+        <span>{{ detail_title|default:'Details' }}</span>
+        {% if detail_close != False %}
+        <button type="button" class="webui-icon-btn" data-insights-close aria-label="Close details">×</button>
+        {% endif %}
+    </header>
+    <div class="insights-rightbar-body" id="insights-detail-body">
+        <div class="insights-rightbar-empty">{{ detail_empty|default:'Select a row to see details.' }}</div>
+    </div>
+</aside>

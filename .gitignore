@@ -34,8 +34,8 @@ config/settings_local.py
 /q1.py
 /q2.py
 /p
-logs/
-_staticfiles
+/logs/
+/_staticfiles
 
 .shadowgit
 cert.pem

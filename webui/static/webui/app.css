@@ -124,7 +124,10 @@ a.session-item:hover { color: var(--text); }
 /* Thread ---------------------------------------------------------------- */
 #thread { scroll-behavior: auto; }
 
-.msg-row { width: 100%; }
+/* Defensive: keep user bubbles right-aligned even if wrapper/layout shifts. */
+.msg-row[data-role="user"] { margin-left: auto; }
+
+
 
 /* Optimistic bubble shown between POST and the Message.create event. */
 .webui-pending { opacity: .7; }
@@ -1087,7 +1090,7 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     letter-spacing: normal;
 }
 .side-link:hover { color: var(--accent-text); }
-.side-list { display: flex; flex-direction: column; gap: 1px; padding: 0 6px 10px; }
+.side-list { display: flex; flex-direction: column; gap: 1px; padding: 0 6px 10px; flex: 1; overflow-y: auto; min-height: 0; }
 .side-badge {
     display: inline-flex;
     align-items: center;

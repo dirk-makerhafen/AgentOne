@@ -1,0 +1,26 @@
+    <div class="webui-panel-stack">
+        <div class="webui-muted-note">Effective for this session — inherited from the agent unless overridden.</div>
+        {% for section in capability_sections %}
+        <section class="webui-panel-card">
+            <div class="webui-card-head">
+                <span class="detail-card-title">{{ section.title }}</span>
+                <span class="webui-cap-count">
+                    {{ section.allowed_count }} allowed{% if section.denied_count %} · {{ section.denied_count }} blocked{% endif %}
+                </span>
+            </div>
+            <div class="webui-chip-wrap">
+                {% for name in section.allowed %}
+                <span class="webui-chip is-allowed" title="Allowed">{{ name }}</span>
+                {% endfor %}
+                {% for name in section.denied %}
+                <span class="webui-chip is-blocked" title="Explicitly blocked">{{ name }}</span>
+                {% endfor %}
+                {% if not section.allowed_count and not section.denied_count %}
+                <span class="webui-empty-note">None</span>
+                {% endif %}
+            </div>
+        </section>
+        {% empty %}
+        <div class="webui-empty-note">No capability settings available.</div>
+        {% endfor %}
+    </div>

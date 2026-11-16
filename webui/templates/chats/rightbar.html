@@ -1,0 +1,23 @@
+{% load webui %}
+{% firstof panel_tab "details" as active_panel_tab %}
+<aside class="webui-chat-panel" id="chat-panel" aria-label="Session panel">
+    {% include "shared/_resize_handle.html" %}
+    <div class="webui-panel-head">
+        <span>Session</span>
+        <button class="webui-icon-btn" type="button" data-panel-toggle title="Close panel" aria-label="Close panel">×</button>
+    </div>
+    <nav class="webui-panel-tabs" aria-label="Session panel tabs">
+        {# Swap the whole body element: htmx caches each element's request URL #}
+        {# at process time, so an in-place hx-get edit would not move the SSE #}
+        {# refresh and the panel would snap back to the first tab. #}
+        {% for key, label in panel_tabs %}
+        <button type="button"
+                class="webui-panel-tab{% if key == active_panel_tab %} active{% endif %}"
+                hx-get="{% url 'webui:chat_panel_body' session.pk key %}"
+                hx-target="#chat-panel-body"
+                hx-swap="outerHTML"
+                hx-sync="#chat-panel-body:replace">{{ label }}</button>
+        {% endfor %}
+    </nav>
+    {% include "chats/rightbar_body.html" %}
+</aside>

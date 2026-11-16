@@ -1,7 +1,4 @@
-"""Section sidebar views (thin wrappers around the component layer)."""
-
-from __future__ import annotations
-
-from webui.components import section_sidebar
-
-__all__ = ["section_sidebar"]
+"""Compatibility shim — moved to ``webui.core.components``."""
+import sys
+import webui.core.components as _target
+sys.modules[__name__] = _target

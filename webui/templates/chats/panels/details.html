@@ -1,0 +1,94 @@
+{% load webui %}
+    <div class="webui-panel-section">
+        <div class="detail-row"><span class="detail-row-label">Status</span>
+            <span class="detail-row-value">
+                {% if session.is_paused %}paused{% else %}active{% endif %}
+                {% if session.is_archived %} · archived{% endif %}
+                {% if session.is_pinned %} · pinned{% endif %}
+            </span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Agent</span>
+            <span class="detail-row-value">
+                {% if session.latest_session_version.agent %}
+                    <a href="{% url 'webui:agent' session.latest_session_version.agent.pk %}">{{ session.latest_session_version.agent.name }}</a>
+                {% else %}—{% endif %}
+            </span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Workspace</span>
+            <span class="detail-row-value">
+                {% if session.latest_session_version.workspace %}
+                    <a href="{% url 'webui:workspace' session.latest_session_version.workspace.pk %}">{{ session.latest_session_version.workspace.name }}</a>
+                {% else %}—{% endif %}
+            </span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Project</span>
+            <span class="detail-row-value">
+                {% if session.parent_project %}
+                    <a href="{% url 'webui:project' session.parent_project.pk %}">{{ session.parent_project.name }}</a>
+                {% else %}—{% endif %}
+            </span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Turns</span>
+            <span class="detail-row-value">{{ session.turn_count }}</span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Last active</span>
+            <span class="detail-row-value">{{ session.last_active_at|reltime|default:"—" }}</span>
+        </div>
+        <div class="detail-row"><span class="detail-row-label">Created</span>
+            <span class="detail-row-value">{{ session.created_at|date:"Y-m-d H:i" }}</span>
+        </div>
+    </div>
+
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Context</div>
+        {% if usage.max_context_tokens %}
+        <div class="webui-usage">
+            <div class="webui-usage-bar"><span style="width:{{ usage.used_context_percent|floatformat:0 }}%"></span></div>
+            <div class="webui-usage-meta">
+                {{ usage.used_context_tokens }} / {{ usage.max_context_tokens }} tokens
+                ({{ usage.used_context_percent|floatformat:0 }}%)
+            </div>
+        </div>
+        {% else %}
+        <div class="webui-empty-note">No token usage recorded yet.</div>
+        {% endif %}
+        <div class="detail-row"><span class="detail-row-label">Sent</span><span class="detail-row-value">{{ usage.tokens_send|default:0 }}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Received</span><span class="detail-row-value">{{ usage.tokens_received|default:0 }}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Cached</span><span class="detail-row-value">{{ usage.tokens_cached|default:0 }}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Reasoning</span><span class="detail-row-value">{{ usage.tokens_reasoning|default:0 }}</span></div>
+    </div>
+
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Rename</div>
+        <form class="detail-form" method="post" action="{% url 'webui:chat_action' session.pk %}"
+              hx-post="{% url 'webui:chat_action' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="outerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="rename">
+            <input type="hidden" name="surface" value="panel">
+            <input type="hidden" name="panel" value="details">
+            <div class="detail-form-row">
+                <input type="text" name="name" value="{{ session.name }}" aria-label="Chat name">
+            </div>
+            <button class="webui-primary-btn" type="submit">Save name</button>
+        </form>
+    </div>
+
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Conversation</div>
+        <form class="detail-form" method="post"
+              action="{% url 'webui:import_conversation' session.pk %}"
+              enctype="multipart/form-data" hx-boost="false">
+            {% csrf_token %}
+            <div class="detail-form-row">
+                <label for="import-file">Import JSON export</label>
+                <input id="import-file" type="file" name="file" accept=".json,application/json" required>
+            </div>
+            <button class="webui-action-btn" type="submit">Import messages</button>
+        </form>
+        <form method="post" action="{% url 'webui:clear_conversation' session.pk %}"
+              onsubmit="return confirm('Delete every message in this conversation?');">
+            {% csrf_token %}
+            <button class="webui-action-btn danger" type="submit">Clear conversation</button>
+        </form>
+    </div>

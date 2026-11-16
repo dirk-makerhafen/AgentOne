@@ -1,0 +1,126 @@
+{% extends "layout/shell.html" %}
+{% load webui %}
+{% block title %}Agents · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">Agents</div>
+        <div class="main-view-actions">
+            <span class="webui-muted-note">{{ agents|length }} loaded · {{ archived_count }} archived</span>
+            <button class="webui-primary-btn" type="button" data-toggle-target="#new-agent">＋ New agent</button>
+        </div>
+    </header>
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content">
+            {% if error %}
+            <div class="webui-error">
+                {% if error == "exists" %}An agent manifest with that name already exists.
+                {% elif error == "name" %}A name is required.
+                {% elif error == "write" %}Could not write the agent manifest to disk.
+                {% else %}Could not create the agent.{% endif %}
+            </div>
+            {% endif %}
+
+            <details class="detail-card webui-disclosure" id="new-agent">
+                <summary class="webui-disclosure-title">Create an agent</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:agent_create' %}">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="agent-name">Name</label>
+                            <input id="agent-name" type="text" name="name" required placeholder="my-agent">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="agent-extends">Extends</label>
+                            <input id="agent-extends" type="text" name="extends" placeholder="baseagent">
+                        </div></div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="agent-model">Model</label>
+                            <select id="agent-model" name="model">
+                                <option value="">Default model</option>
+                                {% for name in models %}<option value="{{ name }}">{{ name }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="agent-reasoning">Reasoning effort</label>
+                            <select id="agent-reasoning" name="reasoning_effort">
+                                {% for value in reasoning_choices %}
+                                <option value="{{ value }}"{% if value == "medium" %} selected{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="agent-max-turns">Max turns</label>
+                            <input id="agent-max-turns" type="number" name="max_turns" min="0" value="2">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="agent-max-unattended">Max unattended turns</label>
+                            <input id="agent-max-unattended" type="number" name="max_unattended_turns" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="agent-project">Project scope</label>
+                        <select id="agent-project" name="parent_project">
+                            <option value="">Global</option>
+                            {% for project in projects %}
+                            <option value="{{ project.pk }}">{{ project.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="agent-description">Description / system prompt</label>
+                        <textarea id="agent-description" name="description" rows="6"></textarea>
+                    </div>
+                    <button class="webui-primary-btn" type="submit">Create agent</button>
+                </form>
+            </details>
+
+            <div class="detail-card">
+                <table class="insights-table">
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Scope</th>
+                            <th class="num">Sessions</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for agent in agents %}
+                        <tr>
+                            <td>
+                                <a class="webui-link" href="{% url 'webui:agent' agent.pk %}">{{ agent.name }}</a>
+                                {% if agent.latest_agent_version.description %}
+                                <div class="webui-muted-note">{{ agent.latest_agent_version.description|truncatechars:120 }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if agent.parent_project %}{{ agent.parent_project.name }}
+                                {% elif agent.parent_agent %}subagent of {{ agent.parent_agent.name }}
+                                {% elif agent.parent_skill %}skill {{ agent.parent_skill.name }}
+                                {% else %}global{% endif %}
+                            </td>
+                            <td class="num">{{ agent.session_total }}</td>
+                            <td>
+                                {% if agent.is_archived %}<span class="detail-badge">archived</span>
+                                {% elif agent.is_user_visible %}<span class="detail-badge ok">visible</span>
+                                {% else %}<span class="detail-badge">internal</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4"><div class="insights-empty">No agents loaded.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div></div>
+        {% include "shared/_assistant_panel.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

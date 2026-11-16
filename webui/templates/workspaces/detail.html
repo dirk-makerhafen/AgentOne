@@ -1,0 +1,180 @@
+{% extends "layout/shell.html" %}
+{% load webui %}
+{% block title %}{{ workspace.name }} · Spaces · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">{{ workspace.name }}</div>
+        <div class="main-view-actions">
+            <a class="webui-action-btn" href="{% url 'webui:workspaces' %}">All spaces</a>
+            <form method="post" action="{% url 'webui:workspace_manager_open' workspace.pk %}">
+                {% csrf_token %}
+                <button class="webui-action-btn" type="submit">Manager chat</button>
+            </form>
+            <button class="webui-action-btn" type="button" data-toggle-target="#edit-workspace">Edit</button>
+            <form method="post" action="{% url 'webui:workspace_delete' workspace.pk %}"
+                  onsubmit="return confirm('Delete workspace {{ workspace.name|escapejs }}?');">
+                {% csrf_token %}
+                <button class="webui-action-btn danger" type="submit">Delete</button>
+            </form>
+        </div>
+    </header>
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content">
+            {% if error %}
+            <div class="webui-error">
+                {% if error == "name" %}A workspace name is required.
+                {% elif error == "path" %}Choose an existing folder.
+                {% elif error == "color" %}Enter a valid color.
+                {% elif error == "project" %}Choose a project for project storage.
+                {% elif error == "write" %}Could not update the workspace manifest.
+                {% elif error == "manager-agent" %}The workspace assistant is unavailable.
+                {% elif error == "manager-create" %}Could not create a workspace manager chat.
+                {% else %}The change could not be saved.{% endif %}
+            </div>
+            {% endif %}
+
+            <details class="detail-card webui-disclosure" id="edit-workspace">
+                <summary class="webui-disclosure-title">Edit workspace</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:workspace_edit' workspace.pk %}">
+                    {% csrf_token %}
+                    <div class="detail-form-row">
+                        <label for="edit-ws-name">Name</label>
+                        <input id="edit-ws-name" type="text" name="name" value="{{ workspace.name }}" required>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-ws-path">Folder path</label>
+                        <input id="edit-ws-path" type="text" name="path" value="{{ workspace.path }}" required>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-ws-project">Project</label>
+                        <select id="edit-ws-project" name="parent_project">
+                            <option value="">No project</option>
+                            {% for project in projects %}
+                            <option value="{{ project.pk }}"{% if workspace.parent_project_id == project.pk %} selected{% endif %}>{{ project.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-ws-color">Color</label>
+                        <input id="edit-ws-color" type="text" name="color" value="{{ workspace.color }}" required>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-ws-storage">Manifest location</label>
+                        <select id="edit-ws-storage" name="storage">
+                            {% for option in storage_options %}
+                            <option value="{{ option.value }}"{% if option.value == storage %} selected{% endif %}>{{ option.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if storage == "inline" %}
+                    <label class="detail-form-check">
+                        <input type="checkbox" name="track_agentone"{% if track_agentone %} checked{% endif %}>
+                        Track the in-workspace .agentone directory with Git
+                    </label>
+                    {% endif %}
+                    <div class="detail-form-row">
+                        <label for="edit-ws-description">Description</label>
+                        <textarea id="edit-ws-description" name="description" rows="2">{{ workspace.description }}</textarea>
+                    </div>
+                    {% include "workspaces/parts/access_form.html" %}
+                    <button class="webui-primary-btn" type="submit">Save workspace</button>
+                </form>
+            </details>
+
+            <div class="insights-row">
+                <div class="detail-card">
+                    <div class="detail-card-title">Overview</div>
+                    <div class="detail-row"><span class="detail-row-label">Name</span><span class="detail-row-value">{{ workspace.name }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Path</span><span class="detail-row-value"><code>{{ workspace.path }}</code></span></div>
+                    <div class="detail-row"><span class="detail-row-label">Project</span>
+                        <span class="detail-row-value">{% if workspace.parent_project %}<a class="webui-link" href="{% url 'webui:project' workspace.parent_project.pk %}">{{ workspace.parent_project.name }}</a>{% else %}—{% endif %}</span>
+                    </div>
+                    <div class="detail-row"><span class="detail-row-label">Color</span><span class="detail-row-value"><code>{{ workspace.color }}</code></span></div>
+                    {% if workspace.description %}
+                    <div class="webui-prose">{{ workspace.description|linebreaksbr }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-card-title">Access</div>
+                    {% for key, value in access.items %}
+                    <div class="detail-row"><span class="detail-row-label">{{ key }}</span><span class="detail-row-value">{{ value }}</span></div>
+                    {% empty %}
+                    <div class="insights-empty">No access rules configured.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Dashboard</div>
+                {% if dashboard_content %}
+                <div class="webui-prose">{{ dashboard_content|markdown }}</div>
+                {% else %}
+                <div class="insights-empty">No dashboard yet. Ask the workspace assistant to create <code>dashboard/index.md</code>.</div>
+                {% endif %}
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Files</div>
+                <div class="webui-list-row-meta"><code>{{ workspace_root }}</code>{% if workspace_relative_path %} · {{ workspace_relative_path }}{% endif %}</div>
+                {% if workspace_error %}
+                <div class="insights-empty">{{ workspace_error }}</div>
+                {% else %}
+                {% if workspace_parent_path != None %}
+                <a class="webui-list-row" href="?files={{ workspace_parent_path|urlencode }}">
+                    <span class="webui-list-row-name">..</span>
+                    <span class="webui-list-row-meta">Parent directory</span>
+                </a>
+                {% endif %}
+                {% for entry in workspace_entries %}
+                {% if entry.is_dir %}
+                <a class="webui-list-row" href="?files={{ entry.relative_path|urlencode }}">
+                    <span class="webui-list-row-name">▸ {{ entry.name }}/</span>
+                    <span class="webui-list-row-meta">Folder</span>
+                </a>
+                {% else %}
+                <div class="webui-list-row">
+                    <span class="webui-list-row-name">{{ entry.name }}</span>
+                    <span class="webui-list-row-meta">{{ entry.size_label }}</span>
+                </div>
+                {% endif %}
+                {% empty %}
+                <div class="insights-empty">This directory is empty.</div>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Usage · Sessions</div>
+                {% for session in sessions %}
+                <a class="webui-list-row" href="{% url 'webui:chat' session.pk %}">
+                    <span class="webui-list-row-name">{{ session.name }}</span>
+                    <span class="webui-list-row-meta">{{ session.last_active_at|reltime }}{% if session.latest_session_version.agent %} · {{ session.latest_session_version.agent.name }}{% endif %}</span>
+                </a>
+                {% empty %}
+                <div class="insights-empty">No sessions yet.</div>
+                {% endfor %}
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Usage · Cron jobs</div>
+                {% for cron in crons %}
+                <a class="webui-list-row" href="{% url 'webui:cronjob' cron.pk %}">
+                    <span class="webui-list-row-name">{{ cron.name }}</span>
+                    <span class="webui-list-row-meta">{{ cron.schedule }} · {% if cron.is_active %}active{% else %}paused{% endif %}</span>
+                </a>
+                {% empty %}
+                <div class="insights-empty">No cron jobs.</div>
+                {% endfor %}
+            </div>
+
+        </div>
+        </div>
+        {% include "shared/_assistant_panel.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

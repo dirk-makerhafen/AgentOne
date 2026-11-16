@@ -1,0 +1,130 @@
+{% extends "layout/shell.html" %}
+{% load webui %}
+{% block title %}Cron jobs · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">Cron jobs</div>
+        <div class="main-view-actions">
+            <button class="webui-primary-btn" type="button" data-toggle-target="#new-cron">＋ New cron job</button>
+        </div>
+    </header>
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content">
+            {% if error %}
+            <div class="webui-error">
+                {% if error == "invalid" %}Could not create the cron job — check the schedule and agent.
+                {% elif error == "function" %}Choose a function name for the selected function type.
+                {% elif error == "json" %}The message must be valid JSON when a function is selected.
+                {% else %}Could not create the cron job.{% endif %}
+            </div>
+            {% endif %}
+
+            <details class="detail-card webui-disclosure" id="new-cron">
+                <summary class="webui-disclosure-title">Create a cron job</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:cron_create' %}">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="cron-name">Name</label>
+                            <input id="cron-name" type="text" name="name" placeholder="daily-summary">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="cron-schedule">Schedule</label>
+                            <input id="cron-schedule" type="text" name="schedule" required placeholder="0 9 * * * or every 30 minutes">
+                        </div></div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="cron-agent">Agent</label>
+                            <select id="cron-agent" name="agent" required>
+                                <option value="">Choose an agent…</option>
+                                {% for agent in agents %}
+                                <option value="{{ agent.pk }}">{{ agent.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="cron-project">Project</label>
+                            <select id="cron-project" name="parent_project">
+                                <option value="">No project</option>
+                                {% for project in projects %}
+                                <option value="{{ project.pk }}">{{ project.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="cron-workspace">Workspace</label>
+                            <select id="cron-workspace" name="workspace">
+                                <option value="">No workspace</option>
+                                {% for workspace in workspaces %}
+                                <option value="{{ workspace.pk }}">{{ workspace.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="cron-session-mode">Session mode</label>
+                            <select id="cron-session-mode" name="session_mode">
+                                <option value="new">New session each run</option>
+                                <option value="existing">Reuse existing session</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="cron-session-name">Session name (for reuse)</label>
+                        <input id="cron-session-name" type="text" name="session_name">
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="cron-message">Message</label>
+                        <textarea id="cron-message" name="message" rows="4" placeholder="What should the agent do? (JSON when a function is chosen)"></textarea>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="cron-function-type">Function</label>
+                            <select id="cron-function-type" name="function_type">
+                                <option value="">Send message (ingest_user_message)</option>
+                                <option value="task">Task</option>
+                                <option value="tool">Tool</option>
+                                <option value="command">Command</option>
+                            </select>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="cron-function-name">Function name</label>
+                            <input id="cron-function-name" type="text" name="function_name" placeholder="Only with a function type">
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="cron-description">Description</label>
+                        <textarea id="cron-description" name="description" rows="2"></textarea>
+                    </div>
+                    <button class="webui-primary-btn" type="submit">Create cron job</button>
+                </form>
+            </details>
+
+            <div class="detail-card">
+                <table class="insights-table">
+                    <thead><tr><th>Cron job</th><th>Agent</th><th>Schedule</th><th>Next run</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for cron in cronjobs %}
+                        <tr>
+                            <td><a class="webui-link" href="{% url 'webui:cronjob' cron.pk %}">{{ cron.name }}</a></td>
+                            <td>{{ cron.agent.name|default:"—" }}</td>
+                            <td><code>{{ cron.schedule }}</code></td>
+                            <td>{{ cron.next_run_at|default:"—" }}</td>
+                            <td>{% if cron.is_active %}<span class="detail-badge ok">active</span>{% else %}<span class="detail-badge">paused</span>{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5"><div class="insights-empty">No cron jobs yet.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div></div>
+        {% include "shared/_assistant_panel.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

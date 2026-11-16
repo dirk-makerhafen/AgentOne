@@ -1,0 +1,24 @@
+{% include "chats/panels/_prefix.html" %}
+{% if panel_tab == "workspace" %}
+{% include "chats/panels/workspace.html" %}
+{% elif panel_tab == "settings" %}
+{% include "chats/panels/settings.html" %}
+{% elif panel_tab == "capabilities" %}
+{% include "chats/panels/capabilities.html" %}
+{% elif panel_tab == "calls" %}
+{% include "chats/panels/calls.html" %}
+{% elif panel_tab == "tasks" %}
+{% include "chats/panels/tasks.html" %}
+{% elif panel_tab == "subagents" %}
+{% include "chats/panels/subagents.html" %}
+{% elif panel_tab == "terminals" %}
+{% include "chats/panels/terminals.html" %}
+{% elif panel_tab == "todos" %}
+{% include "chats/panels/todos.html" %}
+{% elif panel_tab == "templates" %}
+{% include "chats/panels/templates.html" %}
+{% elif panel_tab == "history" %}
+{% include "chats/panels/history.html" %}
+{% else %}
+{% include "chats/panels/details.html" %}
+{% endif %}

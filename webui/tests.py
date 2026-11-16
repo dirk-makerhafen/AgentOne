@@ -11,9 +11,9 @@ import pytest
 from django.test import override_settings
 from django.urls import reverse
 
-from webui.markdown import render_markdown
+from webui.core.markdown import render_markdown
 from webui.templatetags.webui import get_item, static_v
-from webui.views.common import NAV_SECTIONS, SIDEBAR_TEMPLATES
+from webui.core.shell import NAV_SECTIONS, SIDEBAR_TEMPLATES
 from webui.views.logs import _resolve, log_files, tail
 
 
@@ -181,17 +181,17 @@ def test_get_item_filter_looks_up_dict_keys():
 
 
 def test_every_nav_section_has_a_sidebar_component():
-    from webui.components import get_spec
+    from webui.core.components import get_spec
 
     for key, _label in NAV_SECTIONS:
         assert key in SIDEBAR_TEMPLATES, key
         spec = get_spec(f"{key}-sidebar")
-        assert spec.template == "webui/shell/_sidebar.html"
+        assert spec.template == "layout/_sidebar_frame.html"
         assert reverse(f"webui:{key}_sidebar").startswith("/app/")
 
 
 def test_component_registry_covers_chat_and_sidebars():
-    from webui.components import _REGISTRY
+    from webui.core.components import _REGISTRY
 
     for name in (
         "chat-header",
@@ -1643,7 +1643,7 @@ def test_chat_header_shows_context_usage(client, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_fmt_tokens_and_ring_geometry():
-    from webui.views.common import _RING_CIRCUMFERENCE, _fmt_tokens
+    from webui.core.shell import _RING_CIRCUMFERENCE, _fmt_tokens
 
     assert _fmt_tokens(999) == "999"
     assert _fmt_tokens(1000) == "1k"
@@ -1656,7 +1656,7 @@ def test_fmt_tokens_and_ring_geometry():
 @pytest.mark.django_db
 def test_usage_summary_exposes_ring_fields(monkeypatch):
     from server.models.sessions.session import SessionModel
-    from webui.views.common import usage_summary
+    from webui.core.shell import usage_summary
 
     session, _version = _session_with_version("ring")
 
@@ -1686,7 +1686,7 @@ def test_command_options_merge_commands_and_tools(monkeypatch):
     from types import SimpleNamespace
 
     from server.models.sessions.session import SessionModel
-    from webui.views.common import command_options
+    from webui.core.shell import command_options
 
     session, _version = _session_with_version("commands")
     schema = {
@@ -1730,8 +1730,8 @@ def test_command_options_merge_commands_and_tools(monkeypatch):
 def test_compaction_segments_and_around_window():
     from server.models.enums.message_enums import MessageType
     from server.models.message import Message
-    from webui.thread import build_thread
-    from webui.views.common import compaction_segments
+    from webui.features.chats.thread import build_thread
+    from webui.core.shell import compaction_segments
 
     session, version = _session_with_version("toc")
     first = _user_message(session, version, "first")

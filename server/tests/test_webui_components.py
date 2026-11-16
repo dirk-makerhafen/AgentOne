@@ -16,7 +16,7 @@ import re
 import pytest
 from django.urls import reverse
 
-from webui.components import component_id, component_url
+from webui.core.components import component_id, component_url
 
 pytestmark = pytest.mark.django_db
 
@@ -212,7 +212,7 @@ def test_every_section_sidebar_route_is_wrapped_as_a_component(client):
 
 
 def test_sidebar_component_placeholder_keeps_the_landmark(client):
-    from webui.components import render_component_ref
+    from webui.core.components import render_component_ref
 
     html = render_component_ref(
         {"component_inline": False}, "chats-sidebar", None, {}

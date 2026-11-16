@@ -1,0 +1,32 @@
+    {% if todo_action_message %}<div class="webui-muted-note">{{ todo_action_message }}</div>{% endif %}
+    <div class="webui-panel-row">
+        <span class="webui-panel-row-name">Automatic processing</span>
+        <span class="webui-panel-row-meta">{% if todo_auto %}on{% else %}paused{% endif %}</span>
+        <form method="post" action="{% url 'webui:chat_todo_action' session.pk %}"
+              hx-post="{% url 'webui:chat_todo_action' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="{% if todo_auto %}pause{% else %}auto{% endif %}">
+            <button class="webui-action-btn" type="submit">{% if todo_auto %}Pause{% else %}Auto{% endif %}</button>
+        </form>
+        <form method="post" action="{% url 'webui:chat_todo_action' session.pk %}"
+              hx-post="{% url 'webui:chat_todo_action' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="clear">
+            <button class="webui-action-btn" type="submit">Clear</button>
+        </form>
+    </div>
+    <div class="webui-panel-list">
+        {% for item in todos %}
+        <div class="webui-panel-row">
+            <span class="webui-panel-row-name">
+                <span class="webui-todo-index">#{{ item.task_id|default:forloop.counter }}</span>
+                {{ item.text }}
+            </span>
+            <span class="webui-panel-row-meta">{{ item.status }}</span>
+        </div>
+        {% empty %}
+        <div class="webui-empty-note">No todo items. The agent can add some with the todo_append tool, or type /todo in chat.</div>
+        {% endfor %}
+    </div>

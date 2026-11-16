@@ -1,0 +1,15 @@
+{% load webui %}
+    <div class="webui-panel-list">
+        {% for call in task_calls %}
+        <div class="webui-panel-row">
+            <span class="webui-panel-row-name">
+                {% if call.task_definition %}{{ call.task_definition.name }}{% else %}task call #{{ call.pk }}{% endif %}
+            </span>
+            <span class="webui-panel-row-meta">
+                {{ call.status }}{% if call.ended_at %} · {{ call.ended_at|reltime }}{% endif %}
+            </span>
+        </div>
+        {% empty %}
+        <div class="webui-empty-note">No task calls yet.</div>
+        {% endfor %}
+    </div>

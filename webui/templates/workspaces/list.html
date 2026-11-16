@@ -1,0 +1,82 @@
+{% extends "layout/shell.html" %}
+{% load webui %}
+{% block title %}Spaces · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">Spaces</div>
+        <div class="main-view-actions">
+            <button class="webui-primary-btn" type="button" data-toggle-target="#new-workspace">＋ New space</button>
+        </div>
+    </header>
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content">
+            <details class="detail-card webui-disclosure" id="new-workspace">
+                <summary class="webui-disclosure-title">Create a workspace</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:workspace_create' %}">
+                    {% csrf_token %}
+                    <div class="detail-form-row">
+                        <label for="ws-name">Name</label>
+                        <input id="ws-name" type="text" name="name" required>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="ws-path">Folder path</label>
+                        <input id="ws-path" type="text" name="path" required placeholder="/Users/me/project">
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="ws-project">Project</label>
+                        <select id="ws-project" name="parent_project">
+                            <option value="">No project</option>
+                            {% for project in projects %}
+                            <option value="{{ project.pk }}">{{ project.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="ws-color">Color</label>
+                        <input id="ws-color" type="text" name="color" placeholder="#3b82f6">
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="ws-storage">Manifest location</label>
+                        <select id="ws-storage" name="storage">
+                            {% for option in storage_options %}
+                            <option value="{{ option.value }}"{% if option.value == "user" %} selected{% endif %}>{{ option.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label class="detail-form-check">
+                        <input type="checkbox" name="track_agentone">
+                        Track the in-workspace .agentone directory with Git
+                    </label>
+                    <div class="detail-form-row">
+                        <label for="ws-description">Description</label>
+                        <textarea id="ws-description" name="description" rows="2"></textarea>
+                    </div>
+                    {% include "workspaces/parts/access_form.html" %}
+                    <button class="webui-primary-btn" type="submit">Create space</button>
+                </form>
+            </details>
+
+            <div class="detail-card">
+                <table class="insights-table">
+                    <thead><tr><th>Space</th><th>Project</th><th>Path</th></tr></thead>
+                    <tbody>
+                        {% for ws in workspaces %}
+                        <tr>
+                            <td><a class="webui-link" href="{% url 'webui:workspace' ws.pk %}">{{ ws.name }}</a></td>
+                            <td>{% if ws.parent_project %}{{ ws.parent_project.name }}{% else %}—{% endif %}</td>
+                            <td><code>{{ ws.path }}</code></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3"><div class="insights-empty">No workspaces yet.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div></div></div>
+            {% include "shared/_assistant_panel.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

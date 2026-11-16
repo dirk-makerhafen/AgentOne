@@ -13,7 +13,7 @@ from django.test import TestCase
 
 from server.models.project import Project
 from server.models.workspace import WorkspaceModel
-from webui.main.project.workspace_binding import (
+from webui.features.projects.binding import (
     resolve_primary_workspace,
     workspace_options,
 )

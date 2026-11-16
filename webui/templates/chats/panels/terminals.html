@@ -1,0 +1,43 @@
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Terminals</span>
+            <button class="webui-action-btn" type="button" title="Refresh"
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'terminals' %}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
+        </div>
+        {% for terminal in terminals %}
+        <details class="webui-item webui-terminal"
+                 hx-get="{% url 'webui:terminal_output' session.pk terminal.name %}"
+                 hx-trigger="toggle"
+                 hx-target="find .webui-terminal-live"
+                 hx-swap="innerHTML">
+            <summary class="webui-item-summary">
+                <span class="webui-line">
+                    <span class="webui-session-dot{% if terminal.alive %} is-streaming{% endif %}"
+                          title="{% if terminal.alive %}tmux live{% else %}tmux not live{% endif %}"></span>
+                    <span>
+                        <strong>{{ terminal.name }}</strong>
+                        <span class="webui-muted-note">{{ terminal.status }}{% if terminal.cwd %} · {{ terminal.cwd }}{% endif %}</span>
+                    </span>
+                </span>
+                <span class="webui-muted-note">{{ terminal.last_active_at|default:"" }}</span>
+            </summary>
+            <div class="webui-terminal-live"
+                 hx-get="{% url 'webui:terminal_output' session.pk terminal.name %}"
+                 hx-trigger="load, every 2s"
+                 hx-swap="innerHTML">
+                <div class="webui-empty-note">Loading terminal output…</div>
+            </div>
+            <form method="post" style="margin-top:6px"
+                  hx-post="{% url 'webui:terminal_kill' session.pk terminal.name %}"
+                  hx-target="#chat-panel-body" hx-swap="innerHTML"
+                  hx-confirm="Kill terminal {{ terminal.name }}?">
+                {% csrf_token %}
+                <button class="webui-action-btn danger" type="submit">Kill</button>
+            </form>
+        </details>
+        {% empty %}
+        <div class="webui-empty-note">No persistent terminals for this chat.</div>
+        {% endfor %}
+        <div class="webui-muted-note">Read-only — only the agent can type into a terminal.</div>
+    </div>

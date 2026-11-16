@@ -1,0 +1,49 @@
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Available subagents</span>
+            <button class="webui-action-btn" type="button" title="Refresh"
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'subagents' %}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
+        </div>
+        {% for subagent in available_subagents %}
+        <form class="webui-line" method="post"
+              hx-post="{% url 'webui:subagent_open' session.pk %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="name" value="{{ subagent.name }}">
+            <div class="webui-line-body">
+                <span class="webui-panel-row-name">{{ subagent.name }}</span>
+                <span class="webui-panel-row-meta">
+                    {{ subagent.parent_name }}{% if subagent.max_turns %} · max {{ subagent.max_turns }} turns{% endif %}
+                </span>
+            </div>
+            <button class="webui-action-btn" type="submit">Open</button>
+        </form>
+        {% empty %}
+        <div class="webui-empty-note">No subagents are available to this session.</div>
+        {% endfor %}
+    </div>
+    <div class="webui-panel-section">
+        <div class="detail-card-title">Active child sessions</div>
+        {% for child in children %}
+        <div class="webui-line">
+            <span class="webui-session-dot{% if child.active %} is-streaming{% elif child.needs_approval %} needs-approval{% endif %}"
+                  title="{% if child.active %}active{% elif child.needs_approval %}needs approval{% else %}idle{% endif %}"></span>
+            <div class="webui-line-body">
+                <a class="webui-panel-row-name" href="{% url 'webui:chat' child.session.pk %}">{{ child.session.name }}</a>
+                <span class="webui-panel-row-meta">
+                    {{ child.message_count }} msg{{ child.message_count|pluralize }}
+                    {% if child.model_name %} · {{ child.model_name }}{% endif %}
+                </span>
+            </div>
+            <form method="post"
+                  hx-post="{% url 'webui:subagent_close' session.pk child.session.pk %}"
+                  hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button class="webui-action-btn" type="submit">Close</button>
+            </form>
+        </div>
+        {% empty %}
+        <div class="webui-empty-note">No active child sessions.</div>
+        {% endfor %}
+    </div>

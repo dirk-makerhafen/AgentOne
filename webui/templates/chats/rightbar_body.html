@@ -1,0 +1,7 @@
+{% firstof panel_tab "details" as active_panel_tab %}
+<div id="chat-panel-body" class="webui-panel-body"
+     hx-get="{% url 'webui:chat_panel_tab' session.pk active_panel_tab %}"
+     hx-trigger="sse:SessionModel:{{ session.pk }} delay:600ms, sse:AgentTaskCall.session:{{ session.pk }} delay:600ms"
+     hx-swap="innerHTML">
+    {% include "chats/panels/inner.html" with panel_tab=active_panel_tab %}
+</div>

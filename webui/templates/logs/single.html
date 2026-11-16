@@ -1,0 +1,38 @@
+{% extends "layout/shell.html" %}
+{% load webui %}
+{% block title %}Logs · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">Logs</div>
+        <div class="main-view-actions">
+            <form class="webui-inline-form" method="get" action="{% url 'webui:logs' %}">
+                <select name="file" onchange="this.form.requestSubmit()" aria-label="Log file">
+                    {% for file in log_files %}
+                    <option value="{{ file }}"{% if file == selected_log %} selected{% endif %}>{{ file }}</option>
+                    {% empty %}
+                    <option value="">No log files</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </header>
+    <div class="main-view-body">
+        <div class="main-view-content">
+            {% if error %}<div class="webui-error">{{ error }}</div>{% endif %}
+            {% if selected_log %}
+            <div id="log-viewer"
+                 class="webui-log-viewer"
+                 hx-get="{% url 'webui:logs_tail' %}?file={{ selected_log|urlencode }}&lines=400"
+                 hx-trigger="every 2s"
+                 hx-swap="innerHTML">
+                {% include "logs/parts/tail.html" with content=content file=selected_log %}
+            </div>
+            {% else %}
+            <div class="insights-empty">No log files found under <code>{{ log_dir|default:"the configured log directory" }}</code>.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

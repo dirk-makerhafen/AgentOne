@@ -1,0 +1,15 @@
+{% load webui %}
+{% if has_agent_update %}
+<div class="webui-error">
+    New agent version available (v{{ pinned_agent_version }} → v{{ latest_agent_version }}).
+    This chat remains pinned to preserve its prompt cache.
+    <form method="post" action="{% url 'webui:chat_action' session.pk %}"
+          hx-post="{% url 'webui:chat_action' session.pk %}"
+          hx-target="#chat-panel-body" hx-swap="outerHTML">
+        {% csrf_token %}<input type="hidden" name="action" value="upgrade_agent">
+        <input type="hidden" name="surface" value="panel">
+        <input type="hidden" name="panel" value="{{ panel_tab|default:'details' }}">
+        <button class="webui-action-btn" type="submit">Use latest now</button>
+    </form>
+</div>
+{% endif %}

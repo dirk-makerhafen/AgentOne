@@ -9,7 +9,7 @@ from django.test import TestCase
 
 from server.models.project import Project
 from server.models.workspace import WorkspaceModel
-from webui.main.workspace.manifest_location import (
+from webui.features.workspaces.manifest import (
     STORAGE_CENTRAL,
     STORAGE_INLINE,
     STORAGE_NONE,

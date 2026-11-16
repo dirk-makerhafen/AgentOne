@@ -1,0 +1,43 @@
+<div class="composer-wrap">
+    {% if composer_models or composer_workspaces or composer_agents %}
+    {% include "chats/parts/composer_config.html" %}
+    {% endif %}
+
+    <form class="composer-box webui-composer"
+          hx-post="{% url 'webui:send' session.pk %}"
+          hx-target="#thread"
+          hx-swap="innerHTML"
+          hx-disabled-elt="find button[type='submit']"
+          hx-on::after-request="if (event.detail.successful && !document.querySelector('#thread .webui-error')) { this.reset(); var t = this.querySelector('textarea'); if (t) { t.style.height = ''; t.focus(); } }">
+        {% csrf_token %}
+        <div class="webui-attach-tray" data-attach-tray hidden></div>
+        <input type="hidden" name="images" value="">
+        <input type="file" accept="image/*" multiple hidden data-attach-input>
+        <textarea name="text" class="composer-chat-message" rows="1"
+                  placeholder="Message AgentOne…" autocomplete="off"
+                  data-send-key="{{ send_key|default:'ctrl+enter' }}"></textarea>
+        {% include "chats/parts/composer_footer.html" %}
+    </form>
+
+    <div class="webui-cmd-palette" data-cmd-palette hidden>
+        <div class="webui-cmd-head">
+            <input type="search" data-cmd-search placeholder="Search commands…"
+                   autocomplete="off" aria-label="Search commands">
+            <button type="button" class="webui-cmd-close" data-cmd-close
+                    title="Close" aria-label="Close command palette">×</button>
+        </div>
+        <div class="webui-cmd-list" data-cmd-list role="listbox"></div>
+        <div class="webui-cmd-form" data-cmd-form hidden>
+            <div class="webui-cmd-form-head">
+                <strong data-cmd-form-name></strong>
+                <span data-cmd-form-desc></span>
+            </div>
+            <div class="webui-cmd-fields" data-cmd-fields></div>
+            <div class="webui-cmd-actions">
+                <button type="button" class="webui-action-btn" data-cmd-back>Back</button>
+                <button type="button" class="webui-primary-btn" data-cmd-insert>Send</button>
+            </div>
+        </div>
+    </div>
+    {{ commands|json_script:"webui-commands" }}
+</div>

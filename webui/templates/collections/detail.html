@@ -1,0 +1,166 @@
+{% extends "layout/shell.html" %}
+{% load webui %}
+{% block title %}{{ collection.name }} · Data flows · AgentOne{% endblock %}
+
+{% block main %}
+<div class="main-view">
+    <header class="main-view-header">
+        <div class="main-view-title">
+            {{ collection.name }}
+            {% if collection.is_active %}<span class="detail-badge ok">active</span>{% else %}<span class="detail-badge">paused</span>{% endif %}
+        </div>
+        <div class="main-view-actions">
+            <a class="webui-action-btn" href="{% url 'webui:collections' %}">All data flows</a>
+            <form method="post" action="{% url 'webui:collection_reprocess' collection.pk %}">
+                {% csrf_token %}
+                <button class="webui-action-btn" type="submit">Reprocess</button>
+            </form>
+            <form method="post" action="{% url 'webui:collection_toggle' collection.pk %}">
+                {% csrf_token %}
+                <button class="webui-action-btn" type="submit">{% if collection.is_active %}Pause{% else %}Activate{% endif %}</button>
+            </form>
+            <button class="webui-action-btn" type="button" data-toggle-target="#edit-collection">Edit</button>
+            <form method="post" action="{% url 'webui:collection_delete' collection.pk %}"
+                  onsubmit="return confirm('Delete data flow {{ collection.name|escapejs }}?');">
+                {% csrf_token %}
+                <button class="webui-action-btn danger" type="submit">Delete</button>
+            </form>
+        </div>
+    </header>
+    <div class="main-view-body">
+        <div class="main-view-content">
+            {% if error %}
+            <div class="webui-error">
+                {% if error == "name" %}A data-flow name is required.
+                {% elif error == "json" %}Sources, processor and on-removed must be valid JSON (sources = list, processor/on-removed = objects).
+                {% elif error == "reprocess" %}Could not queue a reprocess run.
+                {% else %}The data flow could not be saved.{% endif %}
+            </div>
+            {% endif %}
+            {% if reprocessed %}
+            <div class="detail-card webui-muted-note">Reprocessing was queued. Items will update as the worker walks the sources.</div>
+            {% endif %}
+
+            <details class="detail-card webui-disclosure" id="edit-collection">
+                <summary class="webui-disclosure-title">Edit data flow</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:collection_edit' collection.pk %}">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-collection-name">Name</label>
+                            <input id="edit-collection-name" type="text" name="name" value="{{ collection.name }}" required>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-collection-type">Type</label>
+                            <select id="edit-collection-type" name="collection_type">
+                                <option value="stream"{% if collection.collection_type == "stream" %} selected{% endif %}>Stream</option>
+                                <option value="set"{% if collection.collection_type == "set" %} selected{% endif %}>Set</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-collection-project">Project</label>
+                        <select id="edit-collection-project" name="parent_project" disabled>
+                            <option value="">Global</option>
+                            {% for project in projects %}
+                            <option value="{{ project.pk }}"{% if collection.parent_project_id == project.pk %} selected{% endif %}>{{ project.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="webui-muted-note">Scope is fixed after creation.</span>
+                    </div>
+                    <label class="detail-form-check">
+                        <input type="checkbox" name="is_active"{% if collection.is_active %} checked{% endif %}>
+                        Active
+                    </label>
+                    <div class="detail-form-row">
+                        <label for="edit-collection-description">Description</label>
+                        <textarea id="edit-collection-description" name="description" rows="2">{{ collection.description }}</textarea>
+                    </div>
+                    <div class="detail-form-row">
+                        <label for="edit-collection-sources">Sources (JSON list)</label>
+                        <textarea id="edit-collection-sources" name="sources" rows="8">{{ sources_json }}</textarea>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-collection-processor">Processor (JSON object)</label>
+                            <textarea id="edit-collection-processor" name="processor" rows="6">{{ processor_json }}</textarea>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-collection-removed">On removed (JSON object)</label>
+                            <textarea id="edit-collection-removed" name="on_removed" rows="6">{{ on_removed_json }}</textarea>
+                        </div>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-collection-member">Member field</label>
+                            <input id="edit-collection-member" type="text" name="member_field" value="{{ collection.member_field }}">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-collection-score">Score field</label>
+                            <input id="edit-collection-score" type="text" name="score_field" value="{{ collection.score_field }}">
+                        </div>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="edit-collection-retroactive">Retroactive on source change</label>
+                            <input id="edit-collection-retroactive" type="number" min="0" name="retroactive_on_source_change" value="{{ collection.retroactive_on_source_change }}">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="edit-collection-max-reprocess">Max reprocess</label>
+                            <input id="edit-collection-max-reprocess" type="number" min="0" name="max_reprocess" value="{{ collection.max_reprocess }}">
+                        </div>
+                    </div>
+                    <button class="webui-primary-btn" type="submit">Save data flow</button>
+                </form>
+            </details>
+            <div class="insights-row">
+                <div class="detail-card">
+                    <div class="detail-card-title">Overview</div>
+                    <div class="detail-row"><span class="detail-row-label">Name</span><span class="detail-row-value">{{ collection.name }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Type</span><span class="detail-row-value">{{ collection.get_collection_type_display }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Scope</span><span class="detail-row-value">{{ collection.scope_key }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Project</span>
+                        <span class="detail-row-value">{% if collection.parent_project %}<a class="webui-link" href="{% url 'webui:project' collection.parent_project.pk %}">{{ collection.parent_project.name }}</a>{% else %}global{% endif %}</span>
+                    </div>
+                    {% if collection.description %}
+                    <div class="webui-prose">{{ collection.description|linebreaksbr }}</div>
+                    {% endif %}
+                </div>
+                <div class="detail-card">
+                    <div class="detail-card-title">Sources</div>
+                    <pre class="detail-prompt">{{ sources_json }}</pre>
+                    <div class="detail-card-title">Processor</div>
+                    <pre class="detail-prompt">{{ processor_json }}</pre>
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Activity · Recent items</div>
+                {% for item in items %}
+                <details class="webui-item">
+                    <summary class="webui-item-summary">
+                        <span>Item #{{ item.pk }}</span>
+                        <span class="webui-muted-note">{{ item.created_at|date:"Y-m-d H:i" }}</span>
+                    </summary>
+                    <pre class="detail-prompt">{{ item.value_json }}</pre>
+                </details>
+                {% empty %}
+                <div class="insights-empty">No items collected yet.</div>
+                {% endfor %}
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-card-title">Derived flows</div>
+                {% for flow in derived_flows %}
+                <a class="webui-list-row" href="{% url 'webui:collection' flow.pk %}">
+                    <span class="webui-list-row-name">{{ flow.name }}</span>
+                    <span class="webui-list-row-meta">{{ flow.get_collection_type_display }}</span>
+                </a>
+                {% empty %}
+                <div class="insights-empty">No active flows consume this collection.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

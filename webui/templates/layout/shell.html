@@ -1,0 +1,21 @@
+{% extends layout_base|default:"layout/base.html" %}
+{% load webui %}
+{% block body %}
+<div class="app-titlebar">
+    <button class="app-titlebar-hamburger" type="button" data-mobile-sidebar
+            aria-label="Toggle navigation" aria-expanded="false">☰</button>
+    <div class="app-titlebar-inner"><span class="app-titlebar-title">AgentOne</span></div>
+    <div class="app-titlebar-spacer"></div>
+</div>
+<div class="mobile-overlay" data-mobile-overlay></div>
+<div id="connection-banner" class="webui-connection-banner" role="status" aria-live="polite">
+    Live updates disconnected — retrying…
+</div>
+<div class="layout"{% if disable_history %} hx-history="false"{% endif %}>
+    {% include "layout/_rail.html" %}
+    {% component sidebar_component project=request.GET.project archived=request.GET.archived q=request.GET.q %}
+    <main class="main">
+        {% block main %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

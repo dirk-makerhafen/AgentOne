@@ -1,0 +1,27 @@
+    <div class="webui-panel-section">
+        <div class="webui-settings-head">
+            <span class="detail-card-title">Task calls</span>
+            <button class="webui-action-btn" type="button" title="Refresh"
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'calls' %}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
+        </div>
+        {% if active_call_count %}<div class="webui-muted-note">{{ active_call_count }} active call{{ active_call_count|pluralize }}</div>{% endif %}
+        {% for row in current_calls %}
+        <div class="webui-line" style="padding-left:{{ row.depth|add:1 }}em">
+            <a class="webui-panel-row-name" href="{% url 'webui:chat' session.pk %}?panel=calls"
+               hx-get="{% url 'webui:call_detail' row.call.pk %}?full=1&back=1&session={{ session.pk }}"
+               hx-target="#chat-panel-body" hx-swap="innerHTML">{{ row.name }} #{{ row.call.pk }}</a>
+            <span class="webui-call-badge" style="background:{{ row.status_color }}">{{ row.status_label }}</span>
+            {% if row.active %}
+            <form method="post" action="{% url 'webui:call_cancel' session.pk row.call.pk %}"
+                  hx-post="{% url 'webui:call_cancel' session.pk row.call.pk %}"
+                  hx-target="#chat-panel-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <button class="webui-action-btn danger" type="submit">Cancel</button>
+            </form>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="webui-empty-note">No task calls in the current turn.</div>
+        {% endfor %}
+    </div>
