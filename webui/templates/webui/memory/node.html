@@ -50,7 +50,7 @@
                         <tr><th>Scope</th><td>{{ pyview.node.scope.label }}</td></tr>
                         <tr><th>Layer</th><td>{{ pyview.node.kind_label }}</td></tr>
                         {% if pyview.node.agent_pk is not none %}
-                        <tr><th>Agent</th><td>{{ pyview.node.agent_name or ('#' ~ pyview.node.agent_pk) }}{% if pyview.node.agent_name %} <span class="mem-muted">(#{{ pyview.node.agent_pk }})</span>{% endif %}</td></tr>
+                        <tr><th>Agent</th><td>{% if pyview.node.agent_name %}{{ pyview.node.agent_name }} <span class="mem-muted">(#{{ pyview.node.agent_pk }})</span>{% else %}#{{ pyview.node.agent_pk }}{% endif %}</td></tr>
                         {% endif %}
                         {% if pyview.node.kind == 'task' %}
                         <tr><th>Task group</th><td class="mem-mono">{{ pyview.node.group_key }}</td></tr>
@@ -65,7 +65,7 @@
             <div class="detail-card">
                 <div class="detail-card-title">Facts — memory.md</div>
                 {% if pyview.node.has_memory %}
-                    <div class="mem-markdown">{{ pyview.node.read_memory() }}</div>
+                    <div class="mem-markdown">{{ pyview.node.read_memory }}</div>
                     <script>
                         (function(){var el=document.getElementById('memFacts_{{ pyview.uid }}');if(el)el.innerHTML=marked.parse(el.textContent);})();
                     </script>
@@ -83,7 +83,7 @@
                         Legacy prose reflection. Nothing is injected from it; the node is upgraded to
                         the directive schema on its next synthesis.
                     </div>
-                    <div class="mem-markdown">{{ pyview.node.read_reflection() }}</div>
+                    <div class="mem-markdown">{{ pyview.node.read_reflection }}</div>
                     <script>
                         (function(){var el=document.getElementById('memReflection_{{ pyview.uid }}');if(el)el.innerHTML=marked.parse(el.textContent);})();
                     </script>
@@ -104,7 +104,7 @@
                         </div>
                         {% if directive.capability %}<div class="mem-proposal-meta">Capability: {{ directive.capability }}</div>{% endif %}
                         {% if directive.verification %}<div class="mem-proposal-meta">Check: {{ directive.verification }}</div>{% endif %}
-                        {% if directive.evidence %}<div class="mem-proposal-meta">Evidence: {{ directive.evidence|join(', ') }}</div>{% endif %}
+                        {% if directive.evidence %}<div class="mem-proposal-meta">Evidence: {{ directive.evidence|join:", " }}</div>{% endif %}
                     </div>
                     {% endfor %}
                     {% for directive in pyview.node.candidate_directives %}
@@ -119,7 +119,7 @@
                             {% if directive.trigger %}<em>When {{ directive.trigger }}:</em> {% endif %}
                             {{ directive.rule }}
                         </div>
-                        {% if directive.evidence %}<div class="mem-proposal-meta">Evidence: {{ directive.evidence|join(', ') }}</div>{% endif %}
+                        {% if directive.evidence %}<div class="mem-proposal-meta">Evidence: {{ directive.evidence|join:", " }}</div>{% endif %}
                     </div>
                     {% endfor %}
                     {% for directive in pyview.node.retired_directives %}
@@ -154,7 +154,7 @@
                     <div class="mem-proposal-head">
                         <span class="mem-badge kind">{{ proposal.kind }}</span>
                         <span class="mem-badge{% if proposal.status == 'candidate' %} warn{% endif %}">{{ proposal.status }}</span>
-                        <span class="mem-badge">{{ proposal.scope or 'task' }}</span>
+                        {% if proposal.scope %}<span class="mem-badge">{{ proposal.scope }}</span>{% else %}<span class="mem-badge">task</span>{% endif %}
                         <code class="mem-mono">{{ proposal.id }}</code>
                         {% if proposal.queued %}<span class="mem-badge ok">queued #{{ proposal.queued.id }}</span>{% endif %}
                     </div>
@@ -162,7 +162,7 @@
                     {% if proposal.detail %}<div class="mem-proposal-detail">{{ proposal.detail }}</div>{% endif %}
                     {% if proposal.trigger %}<div class="mem-proposal-meta">Trigger: {{ proposal.trigger }}</div>{% endif %}
                     {% if proposal.acceptance %}<div class="mem-proposal-meta">Acceptance: {{ proposal.acceptance }}</div>{% endif %}
-                    {% if proposal.evidence %}<div class="mem-proposal-meta">Evidence: {{ proposal.evidence|join(', ') }}</div>{% endif %}
+                    {% if proposal.evidence %}<div class="mem-proposal-meta">Evidence: {{ proposal.evidence|join:", " }}</div>{% endif %}
                     <div class="mem-proposal-actions">
                         {% if proposal.queued %}
                         <span class="mem-muted">Already filed as work item #{{ proposal.queued.id }} ({{ proposal.queued.status }}).</span>
@@ -182,7 +182,7 @@
                 <div class="detail-card-title">Sources — as of the last memory walk</div>
                 {% if pyview.node.sources %}
                     <div class="mem-muted" style="margin-bottom:6px">
-                        Recorded {{ pyview.node.sources_as_of or 'unknown' }}. This page does not re-run the walker.
+                        {% if pyview.node.sources_as_of %}Recorded {{ pyview.node.sources_as_of }}. {% endif %}This page does not re-run the walker.
                     </div>
                     <table class="mem-table">
                         <thead><tr><th>Path</th><th>Type</th><th>Status</th><th>Last processed</th><th>Current</th><th>Hours</th><th>Changed</th></tr></thead>
@@ -192,8 +192,8 @@
                             <td class="mem-mono">{{ source.path }}</td>
                             <td class="mem-muted">{{ source.type }}</td>
                             <td><span class="mem-badge {% if source.status == 'pending' %}warn{% elif source.status == 'missing' %}err{% else %}ok{% endif %}">{{ source.status_label }}</span></td>
-                            <td class="mem-mono">{{ source.last_processed_hash[:10] if source.last_processed_hash else '—' }}</td>
-                            <td class="mem-mono">{{ source.current_hash[:10] if source.current_hash else '—' }}</td>
+                            <td class="mem-mono">{% if source.last_processed_hash %}{{ source.last_processed_hash|slice:':10' }}{% else %}—{% endif %}</td>
+                            <td class="mem-mono">{% if source.current_hash %}{{ source.current_hash|slice:':10' }}{% else %}—{% endif %}</td>
                             <td>{{ source.hours_label }}</td>
                             <td>{{ source.changed_chars }}</td>
                         </tr>
@@ -209,19 +209,19 @@
                 <div class="detail-card-title">Raw files</div>
                 <details class="mem-raw">
                     <summary>reflection.md</summary>
-                    <pre>{{ pyview.reflection_raw or '(missing)' }}</pre>
+                    <pre>{% if pyview.reflection_raw %}{{ pyview.reflection_raw }}{% else %}(missing){% endif %}</pre>
                 </details>
                 <details class="mem-raw">
                     <summary>improvements.md</summary>
-                    <pre>{{ pyview.improvements_raw or '(missing)' }}</pre>
+                    <pre>{% if pyview.improvements_raw %}{{ pyview.improvements_raw }}{% else %}(missing){% endif %}</pre>
                 </details>
                 <details class="mem-raw">
                     <summary>.memory_sources.md</summary>
-                    <pre>{{ pyview.sources_raw or '(missing)' }}</pre>
+                    <pre>{% if pyview.sources_raw %}{{ pyview.sources_raw }}{% else %}(missing){% endif %}</pre>
                 </details>
                 <details class="mem-raw">
                     <summary>memory.md</summary>
-                    <pre>{{ pyview.node.read_memory() or '(missing)' }}</pre>
+                    <pre>{{ pyview.node.read_memory|default:"(missing)" }}</pre>
                 </details>
             </div>
 

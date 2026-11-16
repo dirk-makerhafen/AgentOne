@@ -100,13 +100,13 @@
                 {% if proposal.detail %}<div class="mem-proposal-detail">{{ proposal.detail }}</div>{% endif %}
                 {% if proposal.trigger %}<div class="mem-proposal-meta">Trigger: {{ proposal.trigger }}</div>{% endif %}
                 {% if proposal.acceptance %}<div class="mem-proposal-meta">Acceptance: {{ proposal.acceptance }}</div>{% endif %}
-                {% if proposal.evidence %}<div class="mem-proposal-meta">Evidence: {{ proposal.evidence|join(', ') }}</div>{% endif %}
+                {% if proposal.evidence %}<div class="mem-proposal-meta">Evidence: {{ proposal.evidence|join:", " }}</div>{% endif %}
                 <div class="mem-proposal-meta">From <span class="mem-mono">{{ proposal.node_label }}</span> · {{ proposal.path }}</div>
                 <div class="mem-proposal-actions">
                     <button class="btn" onclick="pyview.open_node('{{ proposal.node_id }}')">Open node</button>
                     {% if proposal.queued %}
                         <span class="mem-muted">Already filed as #{{ proposal.queued.id }} ({{ proposal.queued.status }}).</span>
-                    {% elif proposal.kind in pyview._queueable_kinds() %}
+                    {% elif proposal.queueable %}
                         <button class="btn primary"
                                 onclick="pyview.queue_proposal('{{ proposal.fingerprint }}')">
                             File as backlog

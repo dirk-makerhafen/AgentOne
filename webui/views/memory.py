@@ -5,6 +5,7 @@ from __future__ import annotations
 from urllib.parse import urlencode
 
 from django.shortcuts import get_object_or_404, redirect
+from types import SimpleNamespace
 from django.views.decorators.http import require_POST
 
 from server.models.project import Project
@@ -39,7 +40,10 @@ def _proposal_rows(inventory, queued):
     for proposal in unique_proposals(inventory.nodes):
         fp = str(proposal.get("fingerprint") or "")
         item = queued.get(fp)
-        rows.append({**proposal, "queued": item})
+        queueable = bool(fp) and proposal.get("kind") in (
+            "prompt", "system_prompt", "skill", "tool", "script", "harness"
+        ) and proposal.get("status") != "retired"
+        rows.append({**proposal, "queued": item, "queueable": queueable})
     return rows
 
 
@@ -66,6 +70,7 @@ def memory(request):
         "projects": list(Project.objects.order_by("name")),
         "queued_param": request.GET.get("queued", ""),
     }
+    context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
     return render_page(request, "memory", "webui/memory/overview.html", context)
 
 
@@ -112,6 +117,7 @@ def memory_node(request, node_id):
         "project_id": project_id,
         "projects": list(Project.objects.order_by("name")),
     }
+    context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
     return render_page(request, "memory", "webui/memory/node.html", context)
 
 
@@ -225,6 +231,7 @@ def memory_improvements(request):
         "projects": list(Project.objects.order_by("name")),
         "queued_param": request.GET.get("queued", ""),
     }
+    context["pyview"] = SimpleNamespace(**{k: v for k, v in context.items() if k != "pyview"})
     return render_page(request, "memory", "webui/memory/improvements.html", context)
 
 

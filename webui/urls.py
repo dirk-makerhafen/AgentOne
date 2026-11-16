@@ -261,8 +261,8 @@ urlpatterns = [
     ),
 
     path("memory", views.memory, name="memory"),
-    path("memory/<str:node_id>", views.memory_node, name="memory_node"),
     path("memory/improvements", views.memory_improvements, name="memory_improvements"),
+    path("memory/<str:node_id>", views.memory_node, name="memory_node"),
     path(
         "memory/improvements/queue",
         views.memory_improvements_queue,

@@ -9,7 +9,6 @@ from ui.sidebar.panels.dashboard import SidebarPanelDashboard
 from ui.sidebar.panels.insights import SidebarPanelInsights
 
 from ui.sidebar.panels.logs import SidebarPanelLogs
-from ui.sidebar.panels.memory import SidebarPanelMemory
 from ui.sidebar.panels.projects import SidebarPanelProjects
 from ui.sidebar.panels.settings import SidebarPanelSettings
 from ui.sidebar.panels.skills import SidebarPanelSkills
@@ -128,7 +127,6 @@ class SidebarView(ModelView):
             workspaces = SidebarPanelWorkspaces(subject=self.subject, parent=self),
             settings = SidebarPanelSettings(subject=self.subject, parent=self),
             skills = SidebarPanelSkills(subject=self.subject, parent=self),
-            memory = SidebarPanelMemory(subject=self.subject, parent=self),
         )
         default_panel = self._instance.url_params.get("SidebarView", "dashboard")
         self.switchPanel(default_panel)
