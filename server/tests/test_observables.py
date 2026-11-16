@@ -1,271 +1,457 @@
-"""Tests for the Redis-backed observable registry (new ORM→UI reactive layer).
+"""Write-side observables: explicit keys, the ORM mixin, and Redis fan-out.
 
-Covers ``server/models/observables.py`` (subscribe/notify/unsubscribe against
-fakeredis), ``ObservableKeys`` key helpers + ``observable_keys()`` /
-``notify_observers()`` (now on ``ObservableMixin`` so every ORM model is
-covered), the dual-publish in ``publish_model_event``, the
-``orm_subscribe`` view helper, and ``consumer.process_queue_messages``.
+The contract these tests pin down:
+
+* every publishable key is produced by :mod:`runtime.observable_keys`, never
+  derived generically from the model at publish time;
+* a filter transition publishes **both** the old and the new value;
+* an ORM write defers the fan-out to ``transaction.on_commit``;
+* a tab only receives events for keys it registered.
 """
 from __future__ import annotations
 
-import inspect
 import json
-from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import MagicMock, patch
 
 import fakeredis
+import pytest
 from django.apps import apps
-from django.test import SimpleTestCase, TestCase
 
+from runtime.observable_keys import _BUILDERS, observable_keys
+from runtime.observable_queries.registry import _APIS, ROW_ONLY
 from server.models import observables
 from server.models.enums.message_enums import MessageRole
+from server.models.workitems.enums import WorkItemStatus
 from server.tests.dc_test_helpers import (
     create_agent,
-    create_completed_call,
     create_session,
-    create_task,
 )
 
 
-def make_fake_redis():
-    return fakeredis.FakeStrictRedis(decode_responses=True)
+# ---------------------------------------------------------------------------
+# fixtures / helpers
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def fake_redis():
+    redis = fakeredis.FakeStrictRedis(decode_responses=True)
+    with patch.object(observables, "get_redis", return_value=redis):
+        yield redis
 
 
-class ObservableKeysTest(TestCase):
-    """Key helpers produce the strings notify() publishes on."""
+def _server_models():
+    return [
+        model
+        for model in apps.get_models()
+        if model._meta.app_label == "server"
+        and not model._meta.abstract
+        and not model._meta.proxy
+        and not model._meta.auto_created
+    ]
 
-    def test_message_keys(self):
-        agent, av = create_agent("obs-agent")
-        session, sv = create_session(agent, av)
-        from server.models.message import Message
 
-        msg = Message.objects.create(
-            role=MessageRole.USER, session=session, session_version=sv,
+def _no_htmx_metacharacters(key: str) -> bool:
+    return not any(char in key for char in "[] ,\n\t")
+
+
+# ---------------------------------------------------------------------------
+# key builders
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db
+def test_row_and_session_keys_are_explicit():
+    agent, version = create_agent("keys-agent")
+    session, sv = create_session(agent, version)
+    from server.models.message import Message
+
+    message = Message.objects.create(
+        role=MessageRole.USER, session=session, session_version=sv
+    )
+    keys = observable_keys(message)
+
+    assert keys[0] == "Message"  # bare model key for unwatched all-row lists
+    assert f"Message:{message.pk}" in keys
+    assert f"Message.session:{session.pk}" in keys
+    assert f"Message.session_version:{sv.pk}" in keys
+    assert len(keys) == len(set(keys))
+
+
+@pytest.mark.django_db
+def test_root_session_publishes_root_and_project_variants():
+    from server.models.project import Project
+
+    agent, version = create_agent("root-agent")
+    project = Project.objects.create(name="root-project")
+    session, _sv = create_session(agent, version)
+    session.parent_project = project
+    session.save()
+
+    keys = observable_keys(session)
+    assert "SessionModel" in keys
+    assert f"SessionModel:{session.pk}" in keys
+    assert "SessionModel.root@is_archived:false" in keys
+    assert f"SessionModel.root@project:{project.pk}@is_archived:false" in keys
+    assert "SessionModel@is_active:true" in keys
+
+
+@pytest.mark.django_db
+def test_child_session_never_publishes_root():
+    agent, version = create_agent("child-agent")
+    parent, _pv = create_session(agent, version)
+    from server.models.sessions.session import SessionModel
+
+    child = SessionModel.objects.create(
+        name="child",
+        parent_session=parent,
+        latest_session_version=parent.latest_session_version,
+    )
+    keys = observable_keys(child)
+    assert f"SessionModel.parent_session:{parent.pk}@is_archived:false" in keys
+    assert not any(key.startswith("SessionModel.root") for key in keys)
+
+
+@pytest.mark.django_db
+def test_archive_transition_publishes_both_values():
+    agent, version = create_agent("archive-agent")
+    session, _sv = create_session(agent, version)
+    assert "SessionModel.root@is_archived:false" in observable_keys(session)
+
+    session.is_archived = True
+    keys = observable_keys(session, {"is_archived": False, "is_active": True})
+    assert "SessionModel.root@is_archived:true" in keys
+    assert "SessionModel.root@is_archived:false" in keys
+
+
+@pytest.mark.django_db
+def test_work_item_project_transition_publishes_terminal_filter():
+    from server.models.project import Project
+    from server.models.workitems.work_item import WorkItem
+
+    project = Project.objects.create(name="work-project")
+    item = WorkItem.objects.create(title="live", project=project)
+    keys = observable_keys(item)
+
+    assert "WorkItem" in keys
+    assert f"WorkItem:{item.pk}" in keys
+    assert f"WorkItem.project:{project.pk}" in keys
+    assert f"WorkItem.project:{project.pk}@terminal:false" in keys
+
+    item.status = WorkItemStatus.DONE
+    keys = observable_keys(item, {"status": WorkItemStatus.IN_PROGRESS})
+    assert f"WorkItem.project:{project.pk}@terminal:true" in keys
+    assert f"WorkItem.project:{project.pk}@terminal:false" in keys
+
+
+@pytest.mark.django_db
+def test_cron_parenting_drops_the_root_key():
+    from server.models.cron import Cronjob
+    from server.models.project import Project
+
+    cron = Cronjob.objects.create(name="root-cron", schedule="* * * * *")
+    assert "Cronjob" in observable_keys(cron)
+    assert "Cronjob.root@is_archived:false" in observable_keys(cron)
+
+    project = Project.objects.create(name="cron-project")
+    cron.parent_project = project
+    cron.save()
+    keys = observable_keys(cron)
+    assert "Cronjob.root@is_archived:false" not in keys
+    assert f"Cronjob.parent_project:{project.pk}@is_archived:false" in keys
+
+
+@pytest.mark.django_db
+def test_every_key_is_safe_inside_an_htmx_trigger():
+    from server.models.sessions.session import SessionModel
+    from server.models.workitems.work_item import WorkItem
+
+    agent, version = create_agent("grammar-agent")
+    parent, _pv = create_session(agent, version)
+    child = SessionModel.objects.create(
+        name="child", parent_session=parent, latest_session_version=parent.latest_session_version
+    )
+    item = WorkItem.objects.create(title="grammar")
+
+    for instance in (parent, child, item):
+        for key in observable_keys(instance):
+            assert _no_htmx_metacharacters(key), key
+
+
+def test_every_model_with_a_read_api_has_an_explicit_builder():
+    missing = sorted(name for name in _APIS if name not in _BUILDERS)
+    assert missing == []
+
+
+def test_registry_covers_every_server_model():
+    known = set(_BUILDERS) | set(ROW_ONLY)
+    missing = sorted(
+        model.__name__ for model in _server_models() if model.__name__ not in known
+    )
+    # GenericContent / ScriptsGeneration are row-only fallbacks.
+    assert missing in ([], ["GenericContent", "ScriptsGeneration"])
+
+
+# ---------------------------------------------------------------------------
+# Redis client registry
+# ---------------------------------------------------------------------------
+
+def test_register_client_replaces_the_watch_set(fake_redis):
+    observables.register_client("client-aaaa", ["A:1", "B:2"])
+    assert observables.watch_keys("client-aaaa") == ["A:1", "B:2"]
+    assert fake_redis.smembers("agentone:sse:keys:A:1") == {"client-aaaa"}
+
+    observables.register_client("client-aaaa", ["B:2", "C:3"])
+    assert observables.watch_keys("client-aaaa") == ["B:2", "C:3"]
+    assert fake_redis.smembers("agentone:sse:keys:A:1") == set()
+    assert fake_redis.smembers("agentone:sse:keys:C:3") == {"client-aaaa"}
+
+
+def test_register_client_deduplicates_and_rejects_oversized_keys(fake_redis):
+    stored = observables.register_client(
+        "client-bbbb", ["A:1", "A:1", "", "x" * 201]
+    )
+    assert stored == ["A:1"]
+
+
+def test_watch_ttl_and_heartbeat(fake_redis):
+    observables.register_client("client-cccc", ["A:1"])
+    assert 0 < fake_redis.ttl("agentone:sse:watch:client-cccc") <= observables.WATCH_TTL
+
+    fake_redis.expire("agentone:sse:watch:client-cccc", 1)
+    observables.touch_client("client-cccc")
+    assert fake_redis.ttl("agentone:sse:watch:client-cccc") > 1
+
+
+def test_reset_client_clears_the_reverse_index(fake_redis):
+    observables.register_client("client-dddd", ["A:1", "B:2"])
+    observables.reset_client("client-dddd")
+    assert observables.watch_keys("client-dddd") == []
+    assert fake_redis.smembers("agentone:sse:keys:A:1") == set()
+
+
+def test_mark_seen_returns_true_only_on_reconnect(fake_redis):
+    assert observables.mark_seen("client-eeee") is False
+    assert observables.mark_seen("client-eeee") is True
+
+
+# ---------------------------------------------------------------------------
+# fan-out
+# ---------------------------------------------------------------------------
+
+def test_fan_out_only_reaches_watching_clients(fake_redis):
+    observables.register_client("client-one", ["Message.session:1"])
+    observables.register_client("client-two", ["Message.session:2"])
+
+    one = fake_redis.pubsub()
+    two = fake_redis.pubsub()
+    one.subscribe("agentone:sse:client-one")
+    two.subscribe("agentone:sse:client-two")
+    one.get_message(timeout=0.1)
+    two.get_message(timeout=0.1)
+
+    observables._fan_out(
+        ["Message.session:1"],
+        {"model": "Message", "pk": 5, "action": "create", "data": None},
+    )
+
+    first = one.get_message(ignore_subscribe_messages=True, timeout=0.5)
+    second = two.get_message(ignore_subscribe_messages=True, timeout=0.5)
+    assert first is not None
+    assert second is None
+
+    payload = json.loads(first["data"])
+    assert payload["key"] == "Message.session:1"
+    assert payload["model"] == "Message"
+    assert payload["pk"] == 5
+    assert payload["action"] == "create"
+
+
+def test_fan_out_prunes_dead_clients(fake_redis):
+    observables.register_client("client-dead", ["A:1"])
+    fake_redis.delete("agentone:sse:watch:client-dead")
+
+    observables._fan_out(["A:1"], {"model": "A", "pk": 1, "action": "update", "data": None})
+
+    assert fake_redis.smembers("agentone:sse:keys:A:1") == set()
+
+
+def test_publish_is_deferred_until_commit():
+    instance = MagicMock()
+    instance.pk = 1
+
+    with patch.object(observables.transaction, "on_commit") as on_commit:
+        observables.publish_model_event(["Message:1"], instance, "update")
+
+    on_commit.assert_called_once()
+    callback = on_commit.call_args.args[0]
+
+    with patch.object(observables, "_fan_out") as fan_out:
+        callback()
+    fan_out.assert_called_once()
+    keys, envelope = fan_out.call_args.args
+    assert keys == ["Message:1"]
+    assert envelope["pk"] == 1
+
+
+def test_publish_without_keys_is_a_noop():
+    instance = MagicMock()
+    instance.pk = 1
+    with patch.object(observables, "_fan_out") as fan_out:
+        observables.publish_model_event([], instance, "update")
+    fan_out.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# ObservableMixin
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db
+def test_save_publishes_create_then_update(monkeypatch):
+    from server.models.project import Project
+
+    calls = []
+    monkeypatch.setattr(
+        Project, "notify_observers", lambda self, action="update", previous=None: calls.append(
+            (action, previous)
         )
-        self.assertEqual(msg.observables.any, "Message")
-        self.assertEqual(msg.observables.pk, f"Message.pk:{msg.pk}")
-        # __getattr__ FK fallback matches the explicit key format.
-        self.assertEqual(msg.observables.session, f"Message.session:{session.pk}")
-        keys = msg.observable_keys()
-        self.assertIn("Message", keys)
-        self.assertIn(f"Message.pk:{msg.pk}", keys)
-        self.assertIn(f"Message.session:{session.pk}", keys)
-        self.assertIn(f"Message.session_version:{sv.pk}", keys)
+    )
+    project = Project.objects.create(name="mixin-project")
+    assert calls[0][0] == "create"
 
-    def test_query_and_call_keys_include_session(self):
-        agent, av = create_agent("obs-agent2")
-        session, sv = create_session(agent, av)
-        task_def = create_task("obs-task", agent=agent)
-        from server.models.message import Message
-        from server.models.queries.query import Query
+    project.name = "renamed"
+    project.save()
+    action, _previous = calls[-1]
+    assert action == "update"
 
-        msg = Message.objects.create(
-            role=MessageRole.USER, session=session, session_version=sv,
+
+@pytest.mark.django_db
+def test_save_can_skip_publishing(monkeypatch):
+    from server.models.project import Project
+
+    calls = []
+    monkeypatch.setattr(
+        Project, "notify_observers", lambda self, action="update", previous=None: calls.append(action)
+    )
+    Project(name="quiet-project").save(publish=False)
+    assert calls == []
+
+
+@pytest.mark.django_db
+def test_delete_publishes_with_the_original_pk(monkeypatch):
+    from server.models.project import Project
+
+    project = Project.objects.create(name="delete-project")
+    published = []
+
+    def fake_notify(self, action="update", previous=None):
+        published.append((action, self.pk))
+
+    monkeypatch.setattr(Project, "notify_observers", fake_notify)
+    pk = project.pk
+    project.delete()
+    assert published == [("delete", pk)]
+    assert project.pk is None
+
+
+@pytest.mark.django_db
+def test_atomic_update_publishes_the_previous_value(monkeypatch):
+    from server.models.sessions.session import SessionModel
+
+    agent, version = create_agent("atomic-agent")
+    session, _sv = create_session(agent, version)
+
+    published = []
+    monkeypatch.setattr(
+        SessionModel,
+        "notify_observers",
+        lambda self, action="update", previous=None: published.append((action, previous)),
+    )
+
+    session.atomic_update("update", is_archived=True)
+    action, previous = published[-1]
+    assert action == "update"
+    assert previous["is_archived"] is False
+
+
+@pytest.mark.django_db
+def test_atomic_update_by_pk_reads_previous_values(monkeypatch):
+    from server.models.sessions.session import SessionModel
+
+    agent, version = create_agent("atomic-pk-agent")
+    session, _sv = create_session(agent, version)
+
+    captured = {}
+
+    def fake_publish(cls, pk, action="update", data=None, previous=None):
+        captured.update(pk=pk, action=action, previous=previous)
+
+    monkeypatch.setattr(SessionModel, "publish_by_pk", classmethod(fake_publish))
+    SessionModel.atomic_update_by_pk(session.pk, is_archived=True)
+
+    assert captured["pk"] == session.pk
+    assert captured["previous"]["is_archived"] is False
+
+
+@pytest.mark.django_db
+def test_publish_by_pk_rebuilds_keys_from_the_row(monkeypatch):
+    from server.models.message import Message
+
+    agent, version = create_agent("publish-pk-agent")
+    session, sv = create_session(agent, version)
+    message = Message.objects.create(
+        role=MessageRole.USER, session=session, session_version=sv
+    )
+
+    published = {}
+
+    def fake_notify(self, action="update", previous=None):
+        published["keys"] = observable_keys(self)
+        published["action"] = action
+        published["pk"] = self.pk
+
+    monkeypatch.setattr(Message, "notify_observers", fake_notify)
+    Message.publish_by_pk(message.pk, "update")
+
+    assert published["pk"] == message.pk
+    assert f"Message.session:{session.pk}" in published["keys"]
+    assert "Message" in published["keys"]
+
+
+@pytest.mark.django_db
+def test_publish_by_pk_for_a_missing_row_is_a_noop(monkeypatch):
+    from server.models.message import Message
+
+    published = []
+    monkeypatch.setattr(
+        Message, "notify_observers", lambda self, action="update", previous=None: published.append(action)
+    )
+    Message.publish_by_pk(999_999)
+    assert published == []
+
+
+@pytest.mark.django_db
+def test_task_call_keys_are_published_by_the_fsm_helpers(monkeypatch):
+    from runtime.tasks import call_fsm
+    from runtime.tasks import run_fsm
+    from runtime.workitems import workitem_fsm
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from server.models.tasks.agent_task_run import AgentTaskRun
+    from server.models.workitems.work_item import WorkItem
+
+    paths = (
+        (AgentTaskCall, call_fsm._publish_call_event),
+        (AgentTaskRun, run_fsm._publish_run_event),
+        (WorkItem, workitem_fsm._publish_item_event),
+    )
+    for model, helper in paths:
+        captured = {}
+        monkeypatch.setattr(
+            model,
+            "publish_by_pk",
+            classmethod(
+                lambda cls, pk, action="update", data=None, previous=None, _c=captured: _c.update(
+                    pk=pk, action=action, data=data
+                )
+            ),
         )
-        query = Query.objects.create(
-            session=session, session_version=sv, trigger_message=msg,
-        )
-        self.assertIn(f"Query.session:{session.pk}", query.observable_keys())
-        call = create_completed_call(agent, task_def, session, sv)
-        self.assertIn(f"AgentTaskCall.session:{session.pk}", call.observable_keys())
-        # notify_observers() works on all of them (previously TypeError on
-        # the models that shadowed observable_keys with a property).
-        for instance in (msg, query, call):
-            with patch.object(observables, "notify") as mock_notify:
-                instance.notify_observers("update")
-                mock_notify.assert_called_once()
-                keys = mock_notify.call_args[0][0]
-                self.assertIn(instance.observables.pk, keys)
-
-    def test_reverse_side_keys_match(self):
-        from server.models.project import Project
-
-        project = Project.objects.create(name="obs-proj")
-        self.assertEqual(
-            project.observables.child_agents,
-            f"AgentModel.parent_project:{project.pk}",
-        )
-
-    def test_noparents_key_for_root_rows(self):
-        from server.models.cron import Cronjob
-        from server.models.project import Project
-
-        cron = Cronjob.objects.create(name="obs-root-cron", schedule="* * * * *")
-        self.assertEqual(cron.observables.noparents, "Cronjob.noparents")
-        self.assertIn("Cronjob.noparents", cron.observable_keys())
-
-        # Parenting the row drops the noparents key and adds the FK key.
-        project = Project.objects.create(name="obs-root-proj")
-        cron.parent_project = project
-        cron.save()
-        keys = cron.observable_keys()
-        self.assertNotIn("Cronjob.noparents", keys)
-        self.assertIn(f"Cronjob.parent_project:{project.pk}", keys)
-
-    def test_flat_model_never_has_noparents(self):
-        from server.models.project import Project
-
-        project = Project.objects.create(name="obs-flat-proj")
-        self.assertNotIn("Project.noparents", project.observable_keys())
-
-class PublishDualPublishTest(TestCase):
-    """publish_model_event feeds the redis registry (no channel layer involved)."""
-
-    def test_non_observable_instance_still_ok(self):
-        from server.models.observables import publish_model_event
-
-        instance = MagicMock()
-        instance._meta.model_name = "test"
-        instance._meta.app_label = "test"
-        instance._meta.fields = []
-        instance.pk = 1
-        del instance.notify_observers  # instances without notify support
-        publish_model_event(instance, "create")  # must not raise
-
-
-class PublishByPkTest(TestCase):
-    """publish_by_pk builds FK observable keys without materializing the row."""
-
-    def _message(self, name):
-        agent, av = create_agent(name)
-        session, sv = create_session(agent, av)
-        from server.models.message import Message
-
-        return Message.objects.create(
-            role=MessageRole.USER, session=session, session_version=sv,
-        )
-
-    def test_keys_match_materialized_instance(self):
-        msg = self._message("obs-pk-agent")
-        with patch.object(observables, "notify") as mock_notify:
-            type(msg).publish_by_pk(msg.pk, "update")
-        mock_notify.assert_called_once()
-        keys, model, pk, action = mock_notify.call_args[0][:4]
-        self.assertEqual(set(keys), set(msg.observable_keys()))
-        self.assertEqual(model, "Message")
-        self.assertEqual(pk, msg.pk)
-        self.assertEqual(action, "update")
-
-    def test_missing_row_is_noop(self):
-        from server.models.message import Message
-
-        with patch.object(observables, "notify") as mock_notify:
-            Message.publish_by_pk(999999)
-        mock_notify.assert_not_called()
-
-    def test_atomic_update_by_pk_updates_and_publishes(self):
-        msg = self._message("obs-pk-agent2")
-        from server.models.message import Message
-
-        with patch.object(Message, "publish_by_pk") as mock_pub:
-            n = Message.atomic_update_by_pk(msg.pk, role=MessageRole.ASSISTANT)
-        self.assertEqual(n, 1)
-        mock_pub.assert_called_once_with(msg.pk, "update")
-        msg.refresh_from_db()
-        self.assertEqual(msg.role, MessageRole.ASSISTANT)
-
-
-class FsmPublishActionTest(SimpleTestCase):
-    """FSM publish helpers forward action + updated fields (no row load)."""
-
-    def test_call_event_forwards_action_and_data(self):
-        from server.models.tasks.agent_task_call import AgentTaskCall
-        from runtime.tasks import call_fsm
-
-        fields = {"status": "waiting", "updated_at": object()}
-        with patch.object(AgentTaskCall, "publish_by_pk") as mock_pub:
-            call_fsm._publish_call_event(42, "update", data=fields)
-        mock_pub.assert_called_once_with(42, "update", data=fields)
-
-    def test_run_event_forwards_action_and_data(self):
-        from server.models.tasks.agent_task_run import AgentTaskRun
-        from runtime.tasks import run_fsm
-
-        fields = {"status": "active", "updated_at": object()}
-        with patch.object(AgentTaskRun, "publish_by_pk") as mock_pub:
-            run_fsm._publish_run_event(7, "update", data=fields)
-        mock_pub.assert_called_once_with(7, "update", data=fields)
-
-    def test_item_event_forwards_action_and_data(self):
-        from server.models.workitems.work_item import WorkItem
-        from runtime.workitems import workitem_fsm
-
-        fields = {"status": "ready", "updated_at": object()}
-        with patch.object(WorkItem, "publish_by_pk") as mock_pub:
-            workitem_fsm._publish_item_event(3, "update", data=fields)
-        mock_pub.assert_called_once_with(3, "update", data=fields)
-
-
-class AllModelsObservableTest(SimpleTestCase):
-    """Every ORM model supports being observable (no DB needed)."""
-
-    def _server_models(self):
-        return [
-            m for m in apps.get_models()
-            if m._meta.app_label == "server"
-            and not m._meta.abstract
-            and not m._meta.proxy
-            and not m._meta.auto_created
-        ]
-
-    def test_models_exist(self):
-        self.assertGreater(len(self._server_models()), 20)
-
-    def test_every_model_has_notify_observers(self):
-        missing = [
-            m.__name__ for m in self._server_models()
-            if not callable(getattr(m, "notify_observers", None))
-        ]
-        self.assertEqual(missing, [])
-
-    def test_every_model_has_observable_keys(self):
-        missing = [
-            m.__name__ for m in self._server_models()
-            if not callable(getattr(m, "observable_keys", None))
-        ]
-        self.assertEqual(missing, [])
-
-    def test_every_model_has_observables_property(self):
-        from server.models.observables import ObservableMixin
-
-        missing = []
-        for m in self._server_models():
-            prop = inspect.getattr_static(m, "observables", None)
-            if not isinstance(prop, property) or not issubclass(m, ObservableMixin):
-                missing.append(m.__name__)
-        self.assertEqual(missing, [])
-
-
-class PlainModelsObservableTest(TestCase):
-    """Instance-level checks for the non-BaseModel mixins."""
-
-    def test_skill_version_keys_include_skill_fk(self):
-        from server.models.skills.skill_version import SkillModelVersion
-
-        ver = SkillModelVersion.objects.create()
-        self.assertIn("SkillModelVersion", ver.observable_keys())
-        self.assertIn(f"SkillModelVersion.pk:{ver.pk}", ver.observable_keys())
-
-    def test_generic_content_keys_with_string_pk(self):
-        from server.models.content import GenericContent
-
-        content = GenericContent.objects.create(sha256="ab" * 32, content="hi")
-        keys = content.observable_keys()
-        self.assertIn("GenericContent", keys)
-        self.assertIn(f"GenericContent.pk:{content.pk}", keys)
-
-    def test_project_and_skill_notify(self):
-        from server.models.project import Project
-        from server.models.skills.skill import SkillModel
-
-        project = Project.objects.create(name="obs-proj2")
-        with patch.object(observables, "notify") as mock_notify:
-            project.notify_observers("update")
-            mock_notify.assert_called_once()
-        skill = SkillModel.objects.create(name="obs-skill", parent_project=project)
-        self.assertIn(
-            f"SkillModel.parent_project:{project.pk}", skill.observable_keys()
-        )
-        with patch.object(observables, "notify") as mock_notify:
-            skill.notify_observers("create")
-            mock_notify.assert_called_once()
+        helper(42, "update", data={"status": "x"})
+        assert captured == {"pk": 42, "action": "update", "data": {"status": "x"}}

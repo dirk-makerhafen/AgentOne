@@ -2499,3 +2499,6 @@ html.nav-pending::before {
 .main-view-actions .panel-head-btn { display: inline-flex; align-items: center; justify-content: center; }
 .main-view-actions .panel-head-btn svg { width: 16px; height: 16px; }
 .main-view-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Independently cached htmx components: the wrapper must not affect layout. */
+.c { display: contents; }

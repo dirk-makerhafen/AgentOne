@@ -20,7 +20,6 @@ from typing import Any
 from django.db import models
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.workitems.enums import WorkItemStatus, WorkItemVerifyStatus
 
 #: Reject → re-queue → verify cycles allowed before escalating to a human.
@@ -33,12 +32,6 @@ MAX_VERIFY_ATTEMPTS = 3
 class WorkItem(BaseModel):
     """A durable, verifiable unit of work."""
 
-    class WorkItemObservableKeys(ObservableKeys):
-        """Explicit observable keys for a WorkItem (IDE autocomplete)."""
-
-        @property
-        def child_items(self):
-            return f"WorkItem.parent:{self.model.pk}"
 
     #: Human-facing reason the item is blocked / rejected, plus a result summary.
     last_outcome: str = models.TextField(default="", blank=True)

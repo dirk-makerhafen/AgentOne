@@ -11,7 +11,6 @@ from __future__ import annotations
 import gzip
 import logging
 from datetime import datetime, timedelta
-from urllib.parse import urlencode
 
 from django.db.models import Q
 from django.http import HttpResponse
@@ -63,20 +62,7 @@ NAV_SECTIONS = (
     ("settings", "Settings"),
 )
 
-#: Which observable keys refresh each sidebar.  The stream carries event
-#: *names*, so the trigger is just the model key.
-SIDEBAR_TRIGGERS = {
-    "dashboard": "sse:SessionModel delay:400ms",
-    "chats": "sse:SessionModel delay:400ms",
-    "agents": "sse:AgentModel delay:400ms",
-    "projects": "sse:Project delay:400ms, sse:SessionModel delay:600ms",
-    "workspaces": "sse:WorkspaceModel delay:400ms",
-    "skills": "sse:SkillModel delay:400ms",
-    "cron": "sse:Cronjob delay:400ms",
-    "collections": "sse:DataCollection delay:400ms",
-    "workitems": "sse:WorkItem delay:400ms",
-}
-
+#: Which panel template each section's sidebar renders.
 SIDEBAR_TEMPLATES = {
     "dashboard": "webui/shell/panels/_chats.html",
     "chats": "webui/shell/panels/_chats.html",
@@ -94,16 +80,13 @@ SIDEBAR_TEMPLATES = {
 }
 
 #: Any-model keys used by the global SSE stream.
-GLOBAL_SSE_KEYS = (
-    "SessionModel",
-    "AgentModel",
-    "Project",
-    "WorkspaceModel",
-    "SkillModel",
-    "Cronjob",
-    "DataCollection",
-    "WorkItem",
-)
+#: (Kept as a comment marker; the per-client watch set replaces it.)
+
+def component_sidebar_url(section: str, params: dict | None = None) -> str:
+    """URL of a section sidebar component (htmx variant)."""
+    from webui.components import component_url
+
+    return component_url(f"{section}-sidebar", None, params or {}, htmx=True)
 
 
 # ---------------------------------------------------------------------------
@@ -235,7 +218,7 @@ def thread_triggers(session_pk: int) -> str:
         f"Query.session:{session_pk}",
         f"Response.session:{session_pk}",
         f"AgentTaskCall.session:{session_pk}",
-        f"SessionModel.pk:{session_pk}",
+        f"SessionModel:{session_pk}",
     ]
     return ", ".join(f"sse:{key} delay:150ms" for key in keys)
 
@@ -541,18 +524,6 @@ def unique_session_name(base: str) -> str:
 # Shell context
 # ---------------------------------------------------------------------------
 
-def _sidebar_query(request, section: str, active_id) -> str:
-    params = {}
-    for key in ("project", "q", "archived"):
-        value = request.GET.get(key)
-        if value not in (None, ""):
-            params[key] = value
-    params["section"] = section
-    if active_id not in (None, ""):
-        params["active"] = str(active_id)
-    return urlencode(params)
-
-
 def _sidebar_project_id(request):
     """Resolve the sidebar's project filter, persisting it in the session.
 
@@ -582,12 +553,8 @@ def shell_context(request, section: str, active_id=None) -> dict:
         "sections": NAV_SECTIONS,
         "section": section,
         "active_id": active_id,
-        "sidebar_template": SIDEBAR_TEMPLATES.get(section, SIDEBAR_TEMPLATES["chats"]),
-        "sidebar_triggers": SIDEBAR_TRIGGERS.get(section, ""),
-        "sidebar_qs": _sidebar_query(request, section, active_id),
-        "global_sse_url": f"{reverse('webui:sse')}?scope=global",
+        "sidebar_component": f"{section}-sidebar",
     }
-    context.update(sidebar_context(request, section, active_id))
     context.update(appearance())
     return context
 
@@ -617,6 +584,9 @@ def render_page(request, section: str, template: str, context: dict | None = Non
     ctx["layout_base"] = (
         "webui/hx_base.html" if is_htmx_request(request) else "webui/base.html"
     )
+    # Boosted navigation gets a shell with component placeholders; a real
+    # document load renders the full tree for no-JS clients.
+    ctx["component_inline"] = not is_htmx_request(request)
     # Live pages must not come back from the htmx history snapshot: a restored
     # chat would show the messages that existed when it was cached.  With
     # ``hx-history="false"`` a back/forward triggers the normal cache-miss
@@ -699,7 +669,6 @@ def sidebar_context(request, section: str, active_id=None) -> dict:
     ctx: dict = {
         "section": section,
         "active_id": active_id,
-        "sidebar_query": _sidebar_query(request, section, active_id),
         "sidebar_project_id": project_id,
         "sidebar_projects": list(Project.objects.order_by("name")),
     }

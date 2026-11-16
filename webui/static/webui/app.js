@@ -12,12 +12,118 @@
         return meta ? meta.getAttribute('content') : '';
     }
 
+    // ── Per-tab SSE client ───────────────────────────────────────────────
+    // The client id lives in sessionStorage: stable across reloads, distinct
+    // per tab.  The server uses it to fan out only the keys this tab renders.
+    var clientId = '';
+    try {
+        clientId = sessionStorage.getItem('agentone:client') || '';
+        if (!clientId) {
+            clientId = (window.crypto && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : 'c' + Date.now() + Math.random().toString(36).slice(2);
+            sessionStorage.setItem('agentone:client', clientId);
+        }
+        window.agentoneClientId = clientId;
+        if (document.body) {
+            var sseUrl = document.body.getAttribute('data-sse-url') || '/app/sse/';
+            document.body.setAttribute(
+                'sse-connect',
+                sseUrl + (sseUrl.indexOf('?') === -1 ? '?' : '&') + 'client=' + encodeURIComponent(clientId)
+            );
+        }
+    } catch (err) {
+        if (window.console && console.error) console.error('client id setup failed:', err);
+    }
+
+    function watchUrl() {
+        return (document.body && document.body.getAttribute('data-sse-watch-url')) || '/app/sse/watch';
+    }
+
+    function collectWatchKeys() {
+        var keys = Object.create(null);
+        function add(raw) {
+            if (!raw) return;
+            raw.split(',').forEach(function (part) {
+                part = part.trim();
+                if (part.slice(0, 4) !== 'sse:') return;
+                var name = part.slice(4).split(/\s+/)[0];
+                if (name && name !== 'reset') keys[name] = 1;
+            });
+        }
+        function addSwap(raw) {
+            if (!raw) return;
+            raw.split(',').forEach(function (name) {
+                name = name.trim();
+                if (name) keys[name] = 1;
+            });
+        }
+        document.querySelectorAll('[hx-trigger], [data-hx-trigger]').forEach(function (el) {
+            add(el.getAttribute('hx-trigger'));
+            add(el.getAttribute('data-hx-trigger'));
+        });
+        document.querySelectorAll('[sse-swap], [data-sse-swap]').forEach(function (el) {
+            addSwap(el.getAttribute('sse-swap'));
+            addSwap(el.getAttribute('data-sse-swap'));
+        });
+        return Object.keys(keys).sort();
+    }
+
+    var lastWatchPayload = '';
+    var watchTimer = null;
+
+    function syncWatch() {
+        if (!clientId) return;
+        var payload = JSON.stringify({ client: clientId, keys: collectWatchKeys() });
+        if (payload === lastWatchPayload) return;
+        lastWatchPayload = payload;
+        fetch(watchUrl(), {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+            body: payload
+        }).catch(function (err) {
+            if (window.console && console.error) console.error('watch sync failed:', err);
+        });
+    }
+
+    function scheduleWatch() {
+        clearTimeout(watchTimer);
+        watchTimer = setTimeout(syncWatch, 150);
+    }
+
+    function markActiveRows() {
+        var path = location.pathname.replace(/\/$/, '');
+        document.querySelectorAll('a[data-session-id], [data-sidebar-active-key]').forEach(function (el) {
+            var link = el.matches('a') ? el : el.querySelector('a');
+            if (!link) return;
+            var url;
+            try { url = new URL(link.href, location.origin); } catch (e) { return; }
+            var samePath = url.pathname.replace(/\/$/, '') === path;
+            var sameQuery = !url.search || url.search === location.search;
+            var active = samePath && sameQuery;
+            var target = el.getAttribute('data-sidebar-active-target');
+            if (target === 'closest:.ws-row') {
+                var row = el.closest('.ws-row');
+                if (row) row.classList.toggle('active', active);
+            } else {
+                el.classList.toggle('active', active);
+            }
+        });
+    }
+
     // htmx form posts carry the hidden input, but non-form requests (fragment
     // refetches that ever become POSTs) need the header.
     document.addEventListener('htmx:configRequest', function (evt) {
         var token = csrfToken();
         if (token && evt.detail && evt.detail.headers) {
             evt.detail.headers['X-CSRFToken'] = token;
+        }
+        var etag = evt.detail && evt.detail.elt && evt.detail.elt.getAttribute
+            ? evt.detail.elt.getAttribute('data-component-etag')
+            : '';
+        if (etag && evt.detail && evt.detail.headers) {
+            evt.detail.headers['If-None-Match'] = etag;
         }
     });
 
@@ -30,6 +136,19 @@
 
     function threadEl() {
         return document.getElementById('thread');
+    }
+
+    function threadWrapper() {
+        var el = threadEl();
+        return el ? el.closest('[data-component="chat-thread"]') : null;
+    }
+
+    function isThreadSwap(evt) {
+        if (!evt || !evt.detail) return false;
+        var el = threadEl();
+        if (!el) return false;
+        var target = evt.detail.target;
+        return target === el || target === threadWrapper();
     }
 
     function nearBottom(el) {
@@ -145,9 +264,8 @@
     }
 
     document.addEventListener('htmx:beforeSwap', function (evt) {
-        var el = threadEl();
-        if (el && evt.detail && evt.detail.target === el) {
-            captureOpenCards(el);
+        if (isThreadSwap(evt)) {
+            captureOpenCards(threadEl());
         }
         var pc = providersCardEl();
         if (pc && evt.detail && evt.detail.target === pc) {
@@ -158,8 +276,11 @@
     document.addEventListener('htmx:beforeRequest', function (evt) {
         var el = threadEl();
         if (!el) return;
+        var wrapper = threadWrapper();
         var trigger = evt.detail && evt.detail.elt;
-        if (trigger === el || (trigger && el.contains(trigger))) {
+        if (trigger === el || trigger === wrapper
+            || (trigger && el.contains(trigger))
+            || (wrapper && trigger && wrapper.contains(trigger))) {
             // Never yank a reader who is selecting text or has scrolled up.
             var selection = window.getSelection ? String(window.getSelection()) : '';
             wasNearBottom = !selection && nearBottom(el);
@@ -167,9 +288,9 @@
     });
 
     document.addEventListener('htmx:afterSwap', function (evt) {
+        if (!isThreadSwap(evt)) return;
         var el = threadEl();
-        if (!el || evt.target !== el) return;
-        if (wasNearBottom) {
+        if (el && wasNearBottom) {
             scrollToBottom(el);
         }
     });
@@ -177,14 +298,16 @@
     // Restore only after htmx finished settling: requests triggered from
     // inside the afterSwap stack are ignored by htmx's own event listeners.
     document.addEventListener('htmx:afterSettle', function (evt) {
-        var el = threadEl();
-        if (el && evt.target === el) {
-            restoreOpenCards(el);
+        if (isThreadSwap(evt)) {
+            var el = threadEl();
+            if (el) restoreOpenCards(el);
         }
         var pc = providersCardEl();
         if (pc && evt.target === pc) {
             restoreProviderOpenState();
         }
+        markActiveRows();
+        scheduleWatch();
     });
 
     document.addEventListener('htmx:sseError', function () {
@@ -193,10 +316,14 @@
 
     document.addEventListener('htmx:sseOpen', function () {
         document.documentElement.classList.remove('sse-down');
+        lastWatchPayload = '';
+        scheduleWatch();
     });
 
     document.addEventListener('DOMContentLoaded', function () {
         scrollToBottom(threadEl());
+        markActiveRows();
+        scheduleWatch();
         var ta = document.querySelector('.composer-chat-message');
         if (ta) {
             restoreDraft(ta);

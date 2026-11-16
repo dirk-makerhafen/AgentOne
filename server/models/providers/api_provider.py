@@ -9,7 +9,6 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.enums.provider_enums import HealthStatus
 from server.models.providers.health import HealthTrackedModel
 from server.models.queries.query import Query
@@ -25,14 +24,6 @@ class ApiProvider(HealthTrackedModel, BaseModel):
 
     OBSERVABLE_EXCLUDED_FIELDS = frozenset({"default_api_key"})
 
-    class ApiProviderObservableKeys(ObservableKeys):
-        """Explicit observable keys for an ApiProvider (IDE autocomplete)."""
-        @property
-        def models(self):
-            return f"AiModel.api_provider:{self.model.pk}"
-        @property
-        def keys(self):
-            return f"ApiKey.api_provider:{self.model.pk}"
 
     name = models.CharField(max_length=512)
     url = models.CharField(max_length=512, default="")

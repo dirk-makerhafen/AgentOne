@@ -8,7 +8,6 @@ from django_enum import EnumField
 from sortedm2m.fields import SortedManyToManyField
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.enums.message_enums import MessageContentType, MessagePartType
 from server.models.message import Message
 from server.models.queries.query_message import QueryMessage
@@ -29,14 +28,6 @@ class QueryStatus(models.TextChoices):
 class Query(BaseModel):
     """Represents a single LLM query including its message history."""
 
-    class QueryObservableKeys(ObservableKeys):
-        """Explicit observable keys for an Query (IDE autocomplete)."""
-        @property
-        def messages(self):
-            return f"QueryMessage.query:{self.model.pk}"
-        @property
-        def response(self):
-            return f"Response.query:{self.model.pk}"
 
     apikey = models.ForeignKey(  "server.ApiKey",  null=True,  on_delete=models.SET_NULL,  related_name="related_queries",  blank=True)
     session = models.ForeignKey(  "server.SessionModel",  null=False,  on_delete=models.CASCADE,  related_name="related_queries")

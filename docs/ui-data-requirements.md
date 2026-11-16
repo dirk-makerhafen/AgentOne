@@ -1,6 +1,13 @@
 # UI data requirements — components, data needs, and subscriptions
 
-> Purpose: inventory of what the current pyHtmlGui UI (`ui/`) needs
+> **Historical (pre-rewrite).** This is the 2026-10-12 inventory of the
+> pyHtmlGui UI (`ui/`), which has since been deleted. It is kept as the
+> scoping record for the htmx rewrite; the shipped live-update model is
+> documented in [`observables-migration.md`](observables-migration.md).
+> Mechanism reference then: `ui/consumer.py`, `ui/lib/model_view.py` — both
+> gone.
+
+> Purpose: inventory of what the pyHtmlGui UI (`ui/`) needed
 > (initial data + live updates) so a UI migration can be scoped against the
 > REST API surface (`api/`). Generated 2026-10-12 from source audit.
 > Mechanism reference: `docs/observables-migration.md`,

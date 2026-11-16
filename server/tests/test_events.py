@@ -1,118 +1,104 @@
-"""Tests for runtime/events.py — event publishing infrastructure."""
+"""Tests for ``webui/events.py`` — the per-tab SSE stream and watch endpoint."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, PropertyMock, patch
-from django.test import TestCase, SimpleTestCase
-from server.models.enums.message_enums import MessageRole
-from server.tests.dc_test_helpers import create_agent, create_session, create_task
-from server.models.observables import (
-    publish_model_event,
-    _extract_filter_context,
+import json
+from unittest.mock import patch
+
+import pytest
+from django.urls import reverse
+
+from webui import events
+
+
+@pytest.fixture
+def auth_client(client, db):
+    from django.contrib.auth import get_user_model
+
+    user = get_user_model().objects.create_user("sse-user", password="x")
+    client.force_login(user)
+    return client
+
+
+def _watch(client, payload):
+    return client.post(
+        reverse("webui:sse_watch"),
+        data=json.dumps(payload),
+        content_type="application/json",
+    )
+
+
+def test_frame_format():
+    assert events._frame("Message:1", "{}") == "event: Message:1\ndata: {}\n\n"
+
+
+def test_event_name_extracts_the_key():
+    parsed = events._event_name('{"key": "Message:1", "pk": 1}')
+    assert parsed is not None
+    assert parsed[0] == "Message:1"
+    assert json.loads(parsed[1])["pk"] == 1
+
+
+@pytest.mark.parametrize("payload", ["", "not json", "{}", '{"key": 5}'])
+def test_event_name_ignores_malformed_payloads(payload):
+    assert events._event_name(payload) is None
+
+
+def test_stream_requires_a_valid_client_id(client):
+    assert client.get(reverse("webui:sse")).status_code == 400
+    assert client.get(reverse("webui:sse"), {"client": "short"}).status_code == 400
+    assert client.get(reverse("webui:sse"), {"client": "x" * 65}).status_code == 400
+
+
+def test_stream_accepts_a_uuid_client_id(auth_client):
+    response = auth_client.get(
+        reverse("webui:sse"), {"client": "0b9c1d2e-aaaa-bbbb-cccc-1234567890ab"}
+    )
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("text/event-stream")
+    assert response["Cache-Control"] == "no-cache, no-transform"
+    assert response["X-Accel-Buffering"] == "no"
+
+
+@pytest.mark.django_db
+def test_watch_registers_the_keys(auth_client):
+    with patch.object(events, "register_client") as register:
+        response = _watch(auth_client, {"client": "client-1234", "keys": ["A:1", "B:2"]})
+    assert response.status_code == 200
+    assert response.json() == {"keys": ["A:1", "B:2"]}
+    register.assert_called_once_with("client-1234", ["A:1", "B:2"])
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"client": "bad id!"},
+        {"client": "client-1234", "keys": "A:1"},
+        {"client": "client-1234", "keys": ["x"] * 501},
+    ],
 )
+@pytest.mark.django_db
+def test_watch_rejects_malformed_payloads(auth_client, payload):
+    assert _watch(auth_client, payload).status_code == 400
 
 
-class ExtractFilterContextTest(TestCase):
-    """_extract_filter_context correctly resolves FK fields."""
-
-    def test_message_includes_session_version_and_resolved_session(self):
-        agent, av = create_agent("event-test-agent")
-        session, sv = create_session(agent, av)
-        from server.models.message import Message
-        msg = Message.objects.create(
-            role=MessageRole.USER,
-            session=sv.session,
-            session_version=sv,
-        )
-        ctx = _extract_filter_context(msg)
-        self.assertIn("session_version_id", ctx)
-        self.assertEqual(ctx["session_version_id"], sv.pk)
-        self.assertIn("session_id", ctx)
-        self.assertEqual(ctx["session_id"], session.pk)
-
-    def test_model_with_direct_session_id_does_not_resolve(self):
-        agent, av = create_agent("event-test-agent2")
-        session, sv = create_session(agent, av)
-        task_def = create_task("event-task")
-        from server.tests.dc_test_helpers import create_completed_call
-        # create_completed_call already creates with ENDED_SUCCESS status
-        tdv = task_def.latest_task_version
-        from server.models.tasks.task_instance import TaskInstance
-        ti = TaskInstance.objects.create(
-            task_definition_version=tdv,
-            session=session,
-            session_version=sv,
-            iarguments_json={},
-            requires_approval=False,
-            max_subtask_errors=0,
-            max_subtask_error_rate=0,
-            limit_subtask_parallel_runs=0,
-            limit_per_instance_parallel_runs=1,
-            max_retries=0,
-            retry_delay=10,
-            retry_requires_approval=True,
-        )
-        ctx = _extract_filter_context(ti)
-        self.assertIn("session_id", ctx)
-        self.assertEqual(ctx["session_id"], session.pk)
-
-    def test_model_with_no_session_fk_returns_no_session_id(self):
-        agent, av = create_agent("event-test-agent3")
-        ctx = _extract_filter_context(agent)
-        self.assertNotIn("session_id", ctx)
-        self.assertIn("latest_agent_version_id", ctx)
-
-    def test_only_fk_and_o2o_fields_are_extracted(self):
-        agent, av = create_agent("event-test-agent4")
-        ctx = _extract_filter_context(agent)
-        for key in ctx:
-            self.assertTrue(key.endswith("_id"), f"Unexpected non-FK key: {key}")
+@pytest.mark.django_db
+def test_watch_rejects_invalid_json(auth_client):
+    response = auth_client.post(
+        reverse("webui:sse_watch"), data="{", content_type="application/json"
+    )
+    assert response.status_code == 400
 
 
-class PublishModelEventTest(SimpleTestCase):
-    """publish_model_event() needs no channel layer and skips non-observables."""
-
-    def test_publish_model_event_returns_silently(self):
-        from django.db.models.base import Model
-        instance = MagicMock(spec=Model)
-        type(instance)._meta = PropertyMock(return_value=MagicMock(
-            model_name="test", app_label="test",
-        ))
-        type(instance).pk = PropertyMock(return_value=1)
-        result = publish_model_event(instance, "create")
-        self.assertIsNone(result)
+@pytest.mark.django_db
+def test_watch_drops_non_string_keys(auth_client):
+    with patch.object(events, "register_client") as register:
+        response = _watch(auth_client, {"client": "client-1234", "keys": ["A:1", 5, None]})
+    assert response.status_code == 200
+    register.assert_called_once_with("client-1234", ["A:1"])
 
 
-class PublishModelEventPayloadTest(TestCase):
-    def test_fk_context_is_forwarded_and_custom_data_is_preserved(self):
-        agent, av = create_agent("event-payload-agent")
-        session, sv = create_session(agent, av)
-        from server.models.message import Message
-
-        message = Message.objects.create(
-            role=MessageRole.USER,
-            session=session,
-            session_version=sv,
-        )
-        with patch.object(message, "notify_observers") as notify:
-            publish_model_event(message, "create", {"custom": "value"})
-
-        payload = notify.call_args.args[1]
-        self.assertEqual(payload["session_id"], session.pk)
-        self.assertEqual(payload["session_version_id"], sv.pk)
-        self.assertEqual(payload["custom"], "value")
-
-
-class ExtractFilterContextEdgeTest(SimpleTestCase):
-    """Edge cases for FK extraction."""
-
-    def test_none_instance_does_not_crash(self):
-        with self.assertRaises(AttributeError):
-            _extract_filter_context(None)
-
-    def test_instance_with_no_fk_fields_returns_empty_dict(self):
-        from django.db.models.base import Model
-        obj = MagicMock(spec=Model)
-        type(obj)._meta = PropertyMock(return_value=MagicMock(fields=[]))
-        # spec=Model prevents hasattr from returning True for random attrs
-        ctx = _extract_filter_context(obj)
-        self.assertEqual(ctx, {})
+@pytest.mark.django_db
+def test_watch_requires_authentication(client):
+    response = _watch(client, {"client": "client-1234", "keys": []})
+    assert response.status_code == 403

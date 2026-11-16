@@ -3,13 +3,13 @@
 {% block title %}{{ session.name }} · AgentOne{% endblock %}
 
 {% block main %}
-{% include "webui/chat/_header.html" %}
+{% component "chat-header" session.pk %}
 <div class="webui-chat-body{% if panel_tab %} panel-open{% endif %}" id="chat-body">
     <div class="webui-chat-column">
-        {% include "webui/chat/_thread.html" %}
-        {% include "webui/chat/_toc.html" %}
-        {% include "webui/chat/_composer.html" %}
+        {% component "chat-thread" session.pk around=request.GET.around %}
+        {% component "chat-toc" session.pk %}
+        {% component "chat-composer" session.pk %}
     </div>
-    {% include "webui/chat/_panel.html" %}
+    {% component "chat-panel" session.pk tab=panel_tab %}
 </div>
 {% endblock %}

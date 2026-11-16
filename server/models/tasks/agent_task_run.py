@@ -17,7 +17,6 @@ from django.utils import timezone
 from runtime.context_manager import ContextTracker
 from runtime.rate_limiter import RateLimitError
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.content import GenericContent, pack_large_string
 from server.models.enums.task_enums import TaskExecutionMode, TaskRunStatus, TaskType
 from server.models.message import Message
@@ -37,11 +36,6 @@ class AgentTaskRun(BaseModel):
     Captures resolved arguments, the runtime result, status transitions,
     and references to other runs/calls used in arguments or results.
     """
-    class AgentTaskRunObservableKeys(ObservableKeys):
-        """Explicit observable keys for an AgentTaskRun (IDE autocomplete)."""
-        @property
-        def child_calls(self):
-            return f"AgentTaskCall.parent_taskrun:{self.model.pk}"
         
 
     agent_task_call = models.ForeignKey("AgentTaskCall",on_delete=models.CASCADE,related_name="related_agent_task_runs",)

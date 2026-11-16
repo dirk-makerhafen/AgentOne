@@ -8,35 +8,11 @@ from django.db.models import QuerySet
 
 from runtime.agents.agent import Agent
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 
 
 class AgentModel(BaseModel):
     """Uniquely identifies an Agent across all versions and variants."""
 
-    class AgentModelObservableKeys(ObservableKeys):
-        """Explicit observable keys for an AgentModel (IDE autocomplete)."""
-        @property
-        def child_agents(self):
-            return f"AgentModel.parent_agent:{self.model.pk}"
-        @property
-        def child_skills(self):
-            return f"SkillModel.parent_agent:{self.model.pk}"
-        @property
-        def cron_jobs(self):
-            return f"Cronjob.agent:{self.model.pk}"
-        @property
-        def versions(self):
-            return f"AgentVersionModel.agent:{self.model.pk}"
-        @property
-        def session_versions(self):
-            return f"SessionVersionModel.agent:{self.model.pk}"
-        @property
-        def task_definitions(self):
-            return f"TaskDefinition.parent_agent:{self.model.pk}"
-        @property
-        def work_items(self):
-            return f"WorkItem.assigned_agent:{self.model.pk}"
 
     name = models.CharField(max_length=255, unique=True)
     latest_agent_version = models.ForeignKey("server.AgentVersionModel",default=None,null=True,on_delete=models.SET_NULL,related_name="related_newest_version")

@@ -6,17 +6,11 @@ from datetime import datetime
 from django.db import models
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.content import GenericContent
 
 
 class Cronjob(BaseModel):
     """A scheduled job that runs an agent on a recurring schedule."""
-    class CronjobObservableKeys(ObservableKeys):
-        """Explicit observable keys for an Cronjob (IDE autocomplete)."""
-        @property
-        def calls(self):
-            return f"AgentTaskCall.cronjob:{self.model.pk}"
     
     SESSION_MODE_CHOICES = [ ("new", "New session each run"), ("existing", "Reuse existing session"),]
 

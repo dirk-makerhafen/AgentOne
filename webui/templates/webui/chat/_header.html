@@ -1,8 +1,5 @@
 {% load webui %}
-<header id="chat-header" class="webui-chat-header"
-        hx-get="{% url 'webui:chat_header' session.pk %}"
-        hx-trigger="sse:SessionModel.pk:{{ session.pk }} delay:300ms, sse:Query.session:{{ session.pk }} delay:500ms"
-        hx-swap="outerHTML">
+<header id="chat-header" class="webui-chat-header">
     <a class="webui-back" href="{% url 'webui:chats' %}" title="All chats">←</a>
     <span class="webui-chat-title" title="{{ session.name }}">{{ session.name }}</span>
     <span class="webui-chat-meta">

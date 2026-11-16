@@ -6,7 +6,6 @@ from django.db import models
 from django_enum import EnumField
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 
 
 class ResponseStatus(models.TextChoices):
@@ -20,11 +19,6 @@ class ResponseStatus(models.TextChoices):
 
 class Response(BaseModel):
     """Stores the result of a single LLM query including token usage and timing."""
-    class ResponseObservableKeys(ObservableKeys):
-        """Explicit observable keys for an Response (IDE autocomplete)."""
-        @property
-        def messages(self):
-            return f"Message.response:{self.model.pk}"
 
     query = models.ForeignKey("Query", null=True, on_delete=models.CASCADE, related_name="related_response")
 

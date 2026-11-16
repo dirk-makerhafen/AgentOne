@@ -33,7 +33,10 @@ class TestWorkspaces:
             )
         assert resp.status_code == 200
         mock_publish.assert_called_once()
-        assert mock_publish.call_args[0][1] == "update"
+        keys, instance, action = mock_publish.call_args[0][:3]
+        assert action == "update"
+        assert f"WorkspaceModel:{ws.pk}" in keys
+        assert instance.pk == ws.pk
 
     def test_delete_workspace_publishes(self, auth_client, admin_user):
         from unittest.mock import patch
@@ -43,7 +46,10 @@ class TestWorkspaces:
             resp = auth_client.delete(f'/api/v1/workspaces/{ws.id}/')
         assert resp.status_code == 204
         mock_publish.assert_called_once()
-        assert mock_publish.call_args[0][1] == "delete"
+        keys, instance, action = mock_publish.call_args[0][:3]
+        assert action == "delete"
+        assert f"WorkspaceModel:{ws.pk}" in keys
+        # ``delete()`` clears the in-memory pk after publishing; keys carry it.
 
     def test_create_workspace_publishes(self, auth_client, admin_user):
         from unittest.mock import patch
@@ -55,4 +61,6 @@ class TestWorkspaces:
             })
         assert resp.status_code == 201
         mock_publish.assert_called_once()
-        assert mock_publish.call_args[0][1] == "create"
+        keys, instance, action = mock_publish.call_args[0][:3]
+        assert action == "create"
+        assert f"WorkspaceModel:{instance.pk}" in keys

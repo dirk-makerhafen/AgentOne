@@ -8,7 +8,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.task_enums import TaskSchedulerStrategy
 
@@ -63,14 +62,6 @@ class SettingsModel(BaseModel):
     :class:`ValidationError` if ``self.pk`` is already set).
     """
 
-    class SettingsModelObservableKeys(ObservableKeys):
-        """Explicit observable keys for a SettingsModel (IDE autocomplete)."""
-        @property
-        def agent_versions(self):
-            return f"AgentVersionModel.agent_settings:{self.model.pk}"
-        @property
-        def session_versions(self):
-            return f"SessionVersionModel.session_settings:{self.model.pk}"
 
     aimodel: models.ForeignKey | None = models.ForeignKey("server.AiModel",on_delete=models.CASCADE,related_name="related_agent_settings",blank=True,null=True)
     thinking: bool | None = models.BooleanField(default=None, null=True, blank=True)

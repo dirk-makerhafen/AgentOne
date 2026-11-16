@@ -1,97 +1,69 @@
-"""Server-Sent Events bridge between the Redis observable registry and htmx.
+"""Per-client SSE stream between the ORM event fan-out and htmx.
 
-The stream carries *event names*, not rendered HTML.  A channel suffix is
-literally the observable key (``Message.session:7``), so a fragment can say
-``hx-trigger="sse:Message.session:7"`` and refetch itself.  Because every
-event is a hint rather than a payload, a dropped event can never leave the
-page permanently stale -- the next event (or a reload) self-heals.
+A tab registers the observable keys it currently renders (``POST /app/sse/watch``);
+``publish_model_event`` fans out to exactly those tabs.  The stream itself
+carries event *names* (the key) and a small JSON hint, never rendered HTML, so
+a dropped event can only cost one refetch.
 
-The production server is daphne (ASGI), which streams an *async* iterator
-natively.  ``manage.py runserver`` is WSGI, which streams a *sync* iterator
-natively.  Django 6 materialises the wrong kind instead of streaming it, so
-the view picks the matching generator from the request class.
+The production server is daphne (ASGI); ``manage.py runserver`` is WSGI.  Django
+materialises the wrong iterator kind instead of streaming it, so the view picks
+the generator that matches the request class.
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import re
 
 import redis as redis_sync
 import redis.asyncio as aioredis
 from django.conf import settings
-from django.http import HttpResponseBadRequest, StreamingHttpResponse
+from django.http import HttpResponseBadRequest, JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
-from server.models.observables import PUBSUB_PREFIX
+from server.models.observables import (
+    CLIENT_PREFIX,
+    mark_seen,
+    register_client,
+    reset_client,
+    touch_client,
+)
 
 log = logging.getLogger(__name__)
 
-#: Keep idle proxies/load balancers from closing the connection.
 HEARTBEAT_SECONDS = 15.0
-
-
-def _session_keys(pk: int) -> list[str]:
-    """Observable keys a chat page cares about.
-
-    ``SessionModel`` (the bare any-key) is included so the sidebar can refresh
-    when *any* session changes; the rest are scoped to this conversation.
-    """
-    return [
-        f"Message.session:{pk}",
-        f"Query.session:{pk}",
-        f"Response.session:{pk}",
-        f"AgentTaskCall.session:{pk}",
-        f"SessionModel.pk:{pk}",
-        "SessionModel",
-    ]
-
-
-async def _resolve_scope(scope: str) -> list[str] | None:
-    """Translate ``scope=session:<pk>`` / ``scope=global`` into observable keys."""
-    kind, _, raw = scope.partition(":")
-    if kind == "global":
-        return [
-            "SessionModel",
-            "AgentModel",
-            "Project",
-            "WorkspaceModel",
-            "SkillModel",
-            "Cronjob",
-            "DataCollection",
-            "WorkItem",
-        ]
-    if kind != "session" or not raw.isdigit():
-        return None
-    pk = int(raw)
-
-    # Async ORM keeps the event loop free while validating the session.
-    from server.models.sessions.session import SessionModel
-
-    if not await SessionModel.objects.filter(pk=pk).aexists():
-        return None
-    return _session_keys(pk)
-
-
-def _event_name(channel: str) -> str | None:
-    if not channel.startswith(PUBSUB_PREFIX):
-        return None
-    return channel[len(PUBSUB_PREFIX):]
+CLIENT_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
 
 
 def _frame(event: str, data: str) -> str:
     return f"event: {event}\ndata: {data}\n\n"
 
 
-def _sync_event_stream(keys: list[str]):
+def _event_name(payload: str) -> tuple[str, str] | None:
+    try:
+        body = json.loads(payload)
+    except ValueError:
+        return None
+    key = body.get("key")
+    if not key or not isinstance(key, str):
+        return None
+    return key, payload
+
+
+def _sync_event_stream(client_id: str):
     """WSGI variant: blocking redis reads, one thread per connection."""
     client = redis_sync.from_url(settings.REDIS_URL, decode_responses=True)
     pubsub = client.pubsub()
-    channels = [PUBSUB_PREFIX + key for key in keys]
-    pubsub.subscribe(*channels)
+    channel = CLIENT_PREFIX + client_id
+    pubsub.subscribe(channel)
     try:
         yield "retry: 3000\n\n"
         yield ": connected\n\n"
+        if mark_seen(client_id):
+            yield _frame("reset", "{}")
         while True:
             try:
                 message = pubsub.get_message(
@@ -102,18 +74,17 @@ def _sync_event_stream(keys: list[str]):
                 log.exception("SSE redis read failed")
                 break
             if message is None:
+                touch_client(client_id)
                 yield ": ping\n\n"
                 continue
-            event = _event_name(message.get("channel") or "")
-            if event is None:
+            parsed = _event_name(message.get("data") or "")
+            if parsed is None:
                 continue
-            data = message.get("data") or "{}"
-            if isinstance(data, bytes):
-                data = data.decode("utf-8", "replace")
+            event, data = parsed
             yield _frame(event, data)
     finally:
         try:
-            pubsub.unsubscribe(*channels)
+            pubsub.unsubscribe(channel)
             pubsub.close()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
@@ -121,17 +92,20 @@ def _sync_event_stream(keys: list[str]):
             client.close()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+        reset_client(client_id)
 
 
-async def _async_event_stream(keys: list[str]):
+async def _async_event_stream(client_id: str):
     """ASGI variant: non-blocking redis reads on the event loop."""
     client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
     pubsub = client.pubsub()
-    channels = [PUBSUB_PREFIX + key for key in keys]
-    await pubsub.subscribe(*channels)
+    channel = CLIENT_PREFIX + client_id
+    await pubsub.subscribe(channel)
     try:
         yield "retry: 3000\n\n"
         yield ": connected\n\n"
+        if mark_seen(client_id):
+            yield _frame("reset", "{}")
         while True:
             try:
                 message = await pubsub.get_message(
@@ -144,18 +118,17 @@ async def _async_event_stream(keys: list[str]):
                 log.exception("SSE redis read failed")
                 break
             if message is None:
+                touch_client(client_id)
                 yield ": ping\n\n"
                 continue
-            event = _event_name(message.get("channel") or "")
-            if event is None:
+            parsed = _event_name(message.get("data") or "")
+            if parsed is None:
                 continue
-            data = message.get("data") or "{}"
-            if isinstance(data, bytes):
-                data = data.decode("utf-8", "replace")
+            event, data = parsed
             yield _frame(event, data)
     finally:
         try:
-            await pubsub.unsubscribe(*channels)
+            await pubsub.unsubscribe(channel)
             await pubsub.aclose()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
@@ -163,10 +136,10 @@ async def _async_event_stream(keys: list[str]):
             await client.aclose()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+        reset_client(client_id)
 
 
 def _is_wsgi(request) -> bool:
-    """True when served by ``runserver``/wsgiref rather than daphne."""
     from django.core.handlers.wsgi import WSGIRequest
 
     return isinstance(request, WSGIRequest)
@@ -174,31 +147,47 @@ def _is_wsgi(request) -> bool:
 
 @csrf_exempt
 async def sse_stream(request):
-    """Stream observable-key events for one scope (``session:<pk>`` or ``global``).
+    """Stream the events one tab asked for (``?client=<id>``)."""
+    client_id = request.GET.get("client", "")
+    if not CLIENT_RE.match(client_id):
+        return HttpResponseBadRequest("missing or invalid client id")
 
-    The middleware deliberately lets this path through unauthenticated so an
-    expired session cannot turn the stream into a 302-to-login loop.  The view
-    still refuses to subscribe anonymous clients: it returns a valid, idle
-    stream that simply never emits events.
-    """
     if not request.user.is_authenticated:
         return StreamingHttpResponse(
             ["retry: 60000\n\n", ": unauthenticated\n\n"],
             content_type="text/event-stream",
         )
 
-    scope = request.GET.get("scope", "")
-    if not scope:
-        return HttpResponseBadRequest("missing scope parameter")
-
-    # Resolve the scope into observable keys.
-    keys = await _resolve_scope(scope)
-    if keys is None:
-        return HttpResponseBadRequest("unknown or missing scope")
-
-    # Start the SSE stream (WSGI or ASGI depending on server type).
-    stream = _sync_event_stream(keys) if _is_wsgi(request) else _async_event_stream(keys)
+    stream = (
+        _sync_event_stream(client_id)
+        if _is_wsgi(request)
+        else _async_event_stream(client_id)
+    )
     response = StreamingHttpResponse(stream, content_type="text/event-stream")
     response["Cache-Control"] = "no-cache, no-transform"
     response["X-Accel-Buffering"] = "no"
     return response
+
+
+@require_POST
+def sse_watch(request):
+    """Replace the set of keys this tab wants (idempotent, debounced client-side)."""
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "authentication required"}, status=403)
+
+    try:
+        payload = json.loads(request.body or b"{}")
+    except ValueError:
+        return JsonResponse({"error": "invalid json"}, status=400)
+
+    client_id = payload.get("client") or ""
+    if not isinstance(client_id, str) or not CLIENT_RE.match(client_id):
+        return JsonResponse({"error": "invalid client id"}, status=400)
+
+    keys = payload.get("keys") or []
+    if not isinstance(keys, list) or len(keys) > 500:
+        return JsonResponse({"error": "invalid keys"}, status=400)
+    keys = [key for key in keys if isinstance(key, str)]
+
+    register_client(client_id, keys)
+    return JsonResponse({"keys": keys})

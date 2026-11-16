@@ -8,7 +8,6 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.providers.health import HealthTrackedModel
 
 
@@ -20,14 +19,6 @@ class AiModel(HealthTrackedModel, BaseModel):
     ...).  Selection prefers healthy rows and skips sticky failures.
     """
 
-    class AiModelObservableKeys(ObservableKeys):
-        """Explicit observable keys for an AiModel (IDE autocomplete)."""
-        @property
-        def responses(self):
-            return f"Response.aimodel:{self.model.pk}"
-        @property
-        def settings(self):
-            return f"SettingsModel.aimodel:{self.model.pk}"
 
     api_provider = models.ForeignKey("server.ApiProvider", on_delete=models.CASCADE, related_name="aimodels")
     name = models.CharField(max_length=512)

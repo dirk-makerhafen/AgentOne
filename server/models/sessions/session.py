@@ -6,7 +6,6 @@ from django.db import models
 from django.db.models import QuerySet
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.enums.session_enums import SessionType
 from server.models.message import Message
 from server.models.queries.query import Query
@@ -18,44 +17,6 @@ if TYPE_CHECKING:
 class SessionModel(BaseModel):
     """A conversation session that versions its state over time."""
 
-    class SessionModelObservableKeys(ObservableKeys):
-        """Explicit observable keys for an SessionModel (IDE autocomplete)."""
-        @property
-        def child_sessions(self):
-            return f"SessionModel.parent_session:{self.model.pk}"
-        @property
-        def messages(self):
-            return f"Message.session:{self.model.pk}"
-        @property
-        def queries(self):
-            return f"Query.session:{self.model.pk}"
-        @property
-        def responses(self):
-            return f"Response.session:{self.model.pk}"
-        @property
-        def session_versions(self):
-            return f"SessionVersionModel.session:{self.model.pk}"
-        @property
-        def task_calls(self):
-            return f"AgentTaskCall.session:{self.model.pk}"
-        @property
-        def task_runs(self):
-            return f"AgentTaskRun.session:{self.model.pk}"
-        @property
-        def task_instances(self):
-            return f"TaskInstance.session:{self.model.pk}"
-        @property
-        def templates(self):
-            return f"SessionQueryTemplate.session:{self.model.pk}"
-        @property
-        def adhoc_tools(self):
-            return f"SessionAdhocTool.session:{self.model.pk}"
-        @property
-        def terminals(self):
-            return f"TerminalSession.session:{self.model.pk}"
-        @property
-        def debug_entries(self):
-            return f"DebugLogEntry.session:{self.model.pk}"
 
     name = models.CharField(max_length=255)
     #: Non-unique grouping key for sessions that do the same kind of work.

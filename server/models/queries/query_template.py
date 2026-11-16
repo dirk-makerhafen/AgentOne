@@ -23,17 +23,11 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 
 
 class QueryTemplateVersion(BaseModel):
     """One immutable snapshot of a query template's full ``.md`` text."""
 
-    class QueryTemplateVersionObservableKeys(ObservableKeys):
-        """Explicit observable keys for a QueryTemplateVersion (IDE autocomplete)."""
-        @property
-        def links(self):
-            return f"SessionQueryTemplate.version:{self.model.pk}"
 
     content = models.ForeignKey(
         "server.GenericContent",
@@ -76,11 +70,6 @@ class QueryTemplateVersion(BaseModel):
 class SessionQueryTemplate(BaseModel):
     """A session's current pointer to one template version (the link row)."""
 
-    class SessionQueryTemplateObservableKeys(ObservableKeys):
-        """Explicit observable keys for a SessionQueryTemplate (IDE autocomplete)."""
-        @property
-        def session_templates(self):
-            return f"SessionQueryTemplate.session:{self.model.session_id}"
 
     session = models.ForeignKey(
         "server.SessionModel",

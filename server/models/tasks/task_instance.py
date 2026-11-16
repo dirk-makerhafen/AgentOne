@@ -13,7 +13,6 @@ from sortedm2m.fields import SortedManyToManyField
 
 from runtime.context_manager import ContextTracker
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
@@ -28,14 +27,6 @@ class TaskInstance(BaseModel):
     and references to child instances (for CHAIN/GROUP) and hooks.
     """
 
-    class TaskInstanceObservableKeys(ObservableKeys):
-        """Explicit observable keys for an TaskInstance (IDE autocomplete)."""
-        @property
-        def calls(self):
-            return f"AgentTaskCall.task_instance:{self.model.pk}"
-        @property
-        def runs(self):
-            return f"AgentTaskRun.task_instance:{self.model.pk}"
         
     task_definition_version = models.ForeignKey("TaskDefinitionVersion",default=None,null=True,on_delete=models.CASCADE,related_name="related_task_instances")
     session = models.ForeignKey("SessionModel",on_delete=models.CASCADE,related_name="related_task_instances")

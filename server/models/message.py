@@ -8,7 +8,6 @@ from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.message_enums import (
     MessageContentType,
@@ -23,17 +22,6 @@ _JINJA_ENV = Environment(loader=BaseLoader())
 class Message(BaseModel):
     """A single message within a conversation session."""
 
-    class MessageObservableKeys(ObservableKeys):
-        """Explicit observable keys for an Message (IDE autocomplete)."""
-        @property
-        def parts(self):
-            return f"MessagePart.message:{self.model.pk}"
-        @property
-        def triggered_queries(self):
-            return f"Query.trigger_message:{self.model.pk}"
-        @property
-        def query_messages(self):
-            return f"QueryMessage.source_message:{self.model.pk}"
 
 
     session = models.ForeignKey( "server.SessionModel", on_delete=models.CASCADE, related_name="related_messages")
@@ -122,11 +110,6 @@ class MessagePart(BaseModel):
     """A single part within a :class:`Message`, representing e.g. text content,
     an image, a tool call, or a reasoning block."""
 
-    class MessagePartObservableKeys(ObservableKeys):
-        """Explicit observable keys for a MessagePart (IDE autocomplete)."""
-        @property
-        def query_parts(self):
-            return f"QueryMessagePart.source_message_part:{self.model.pk}"
 
     message: models.ForeignKey | None = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="parts" )
 

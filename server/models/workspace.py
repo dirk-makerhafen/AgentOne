@@ -10,7 +10,7 @@ from typing import Any
 from django.core.exceptions import ValidationError
 from django.db import models
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableMixin, ObservableKeys
+from server.models.observables import ObservableMixin
 
 
 WORKSPACE_COLOR_PALETTE = [
@@ -45,16 +45,6 @@ def validate_workspace_color(value: str) -> None:
 class WorkspaceModel(ObservableMixin, models.Model):
     """A named workspace bound to a filesystem path."""
 
-    class WorkspaceModelObservableKeys(ObservableKeys):
-        @property
-        def cron_jobs(self):
-            return f"Cronjob.workspace:{self.model.pk}"
-        @property
-        def session_versions(self):
-            return f"SessionVersionModel.workspace:{self.model.pk}"
-        @property
-        def terminals(self):
-            return f"TerminalSession.workspace:{self.model.pk}"
 
     created_at: datetime = models.DateTimeField(auto_now_add=True)
     updated_at: datetime = models.DateTimeField(auto_now=True)

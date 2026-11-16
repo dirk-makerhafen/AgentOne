@@ -8,7 +8,6 @@ from __future__ import annotations
 from django.db import models
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 
 
 class CollectionItem(BaseModel):
@@ -30,11 +29,6 @@ class CollectionItem(BaseModel):
         The actual payload (processor result data).
     """
 
-    class CollectionItemObservableKeys(ObservableKeys):
-        """Explicit observable keys for an CollectionItem (IDE autocomplete)."""
-        @property
-        def derived_items(self):
-            return f"CollectionItem.source_item:{self.model.pk}"
         
     collection = models.ForeignKey("DataCollection",on_delete=models.CASCADE,related_name="items")
     source_call = models.ForeignKey("server.AgentTaskCall",on_delete=models.SET_NULL,null=True,blank=True,default=None,related_name="collection_items")

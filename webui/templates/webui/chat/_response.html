@@ -11,12 +11,7 @@
             <span class="card-status {{ row.obj.status|lower }}">{{ row.obj.status }}</span>
             <span class="query-card-toggle">▸</span>
         </summary>
-        <div class="query-card-detail"
-             hx-get="{% url 'webui:response_detail' row.obj.pk %}"
-             hx-trigger="sse:Response.session:{{ session.pk }} delay:50ms"
-             hx-target="this"
-             hx-swap="outerHTML"
-             hx-sync="this:replace">
+        <div class="query-card-detail">
             {% if row.reasoning %}
             <details class="thinking-card webui-inline-thinking" data-open-key="think-response-{{ row.obj.pk }}">
                 <summary class="thinking-card-header">

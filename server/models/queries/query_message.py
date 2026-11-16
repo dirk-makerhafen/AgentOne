@@ -10,7 +10,6 @@ from django_enum import EnumField
 from jinja2 import BaseLoader, Environment
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message, MessagePart
@@ -23,11 +22,6 @@ cache = LRUCache(maxsize=50000)
 
 class QueryMessage(BaseModel):
     """A single message within a query, containing one or more parts."""
-    class QueryMessageObservableKeys(ObservableKeys):
-        """Explicit observable keys for an QueryMessage (IDE autocomplete)."""
-        @property
-        def parts(self):
-            return f"QueryMessagePart.query_message:{self.model.pk}"
 
     query = models.ForeignKey("server.Query", on_delete=models.CASCADE, related_name="related_query_messages")
     source_message = models.ForeignKey("server.Message",on_delete=models.SET_DEFAULT,related_name="related_query_messages",default=None,null=True)

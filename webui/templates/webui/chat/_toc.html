@@ -1,9 +1,6 @@
 {% if toc_segments %}
 <div class="webui-chat-toc" id="chat-toc"
-     data-session="{{ session.pk }}"
-     hx-get="{% url 'webui:chat_toc' session.pk %}"
-     hx-trigger="sse:Message.session:{{ session.pk }} delay:400ms"
-     hx-swap="outerHTML">
+     data-session="{{ session.pk }}">
     <div class="webui-chat-toc-rail" role="navigation" aria-label="Chat sections">
         {% for seg in toc_segments %}
         <button type="button"

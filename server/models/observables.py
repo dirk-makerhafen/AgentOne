@@ -1,195 +1,277 @@
-"""
-Redis-backed observable registry for the ORM→UI reactive layer.
+"""ORM -> UI event publishing.
 
-The  in-process observables only work when the subject and the view
-live in the same process.  Celery workers mutate ORM entities in another
-process, so we keep the observer registry in Redis:
+There is no observer registry of callbacks any more. A model publishes an
+explicit list of keys (see :mod:`runtime.observable_keys`); each connected tab
+registers the keys it currently renders; Redis fans the event out to exactly
+those tabs.
 
 Structures
 ----------
-- ``agentone:obs:<observable_key>``   HASH  field=<instance_key> value=JSON list of function_ids
-- ``agentone:uiq:<instance_key>``     LIST  one message per drained batch (instance queue)
-- ``agentone:uikeys:<instance_key>``  SET   observable keys an instance is subscribed to (cleanup)
 
-An observable_key is a stable string like ``AgentModel.pk:23`` or
-``AgentModel.parent_project:12``. Models expose them via a per-model
-``ObservableKeys`` helper (e.g. ``agent.observables.pk``).
+``agentone:sse:watch:<client>``  STRING  JSON list of keys  (TTL, heartbeat)
+``agentone:sse:keys:<key>``      SET     client ids         (reverse index)
+``agentone:sse:<client>``        CHANNEL one per connected tab
+``agentone:sse:seen:<client>``   STRING  reconnect marker
 
-Flow
-----
-1. UI: ``ModelView.add_observable(subject, target_function)`` resolves the key
-   (``subject.observables.pk``), registers a function_id and calls
-   :func:`subscribe`.
-2. Backend: the model's ``notify_observers`` computes the object's keys and
-   calls :func:`notify`, which looks up each key's observers and RPUSHes a
-   single message to each subscribed instance queue.
-3. UI loop: ``BLPOP`` the instance queue, drain the whole list at once, dedupe
-   by ``(key, function_id)``, resolve each id via the instance's
-   ``_function_references`` and invoke the callback.
+The watch string is authoritative. Connected tabs refresh its TTL on every
+heartbeat; a hard-killed tab expires within ``WATCH_TTL`` and its reverse-index
+entries are pruned lazily during the next fan-out.
 """
-
 from __future__ import annotations
 
-import logging
 import json
-from collections.abc import Callable, Sequence
+import logging
 from typing import Any
 
 import redis
 from django.conf import settings
-from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
+from django.core.exceptions import FieldDoesNotExist
+from django.db import transaction
 from django.utils import timezone
-from redis.exceptions import WatchError
 
 log = logging.getLogger(__name__)
 
+WATCH_PREFIX = "agentone:sse:watch:"
+KEYS_PREFIX = "agentone:sse:keys:"
+CLIENT_PREFIX = "agentone:sse:"
+SEEN_PREFIX = "agentone:sse:seen:"
 
-class ObservableKeys:
-    """Build observable keys for one model instance."""
+#: Seconds a watch registration survives without a heartbeat.
+WATCH_TTL = 60
+#: Seconds after which a reconnect is treated as a fresh connection again.
+SEEN_TTL = 300
 
-    def __init__(self, model) -> None:
-        self.model = model
+#: Fields that lists may filter on; their previous value is captured on save so
+#: a transition publishes both sides (e.g. archived true *and* false).
+OBSERVABLE_FILTER_FIELDS = frozenset({
+    "is_active",
+    "is_archived",
+    "is_pinned",
+    "session_type",
+    "status",
+    "verify_status",
+})
 
-    @property
-    def any(self) -> str:
-        return type(self.model).__name__
+_client: redis.Redis | None = None
 
-    @property
-    def pk(self) -> str:
-        return f"{self.any}.pk:{self.model.pk}"
 
-    @property
-    def noparents(self) -> str:
-        """Key for rows with no ``parent_*`` foreign key set."""
-        return f"{self.any}.noparents"
+def get_redis() -> redis.Redis:
+    """Return a shared Redis client (lazily created)."""
+    global _client
+    if _client is None:
+        _client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    return _client
 
-    def __getattr__(self, name: str) -> str:
-        if name.startswith("_"):
-            raise AttributeError(name)
-        model = self.__dict__.get("model")
-        if model is None:
-            raise AttributeError(name)
-        for attname in (f"{name}_pk", f"{name}_id", name):
-            if hasattr(model, attname):
-                return f"{self.any}.{name}:{getattr(model, attname)}"
-        raise AttributeError(name)
+
+def _norm(value: Any) -> Any:
+    """Normalise a foreign-key value or enum member to what keys carry."""
+    if value is None:
+        return None
+    value = getattr(value, "pk", value)
+    return getattr(value, "value", value)
+
+
+# ---------------------------------------------------------------------------
+# client registry
+# ---------------------------------------------------------------------------
+
+def _watch_key(client_id: str) -> str:
+    return WATCH_PREFIX + client_id
+
+
+def watch_keys(client_id: str) -> list[str]:
+    raw = get_redis().get(_watch_key(client_id))
+    if not raw:
+        return []
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return []
+
+
+def register_client(client_id: str, keys: list[str]) -> list[str]:
+    """Replace one tab's watch set and update the reverse index.
+
+    Returns the keys that were actually stored (deduplicated, whitespace-free).
+    """
+    keys = [key for key in dict.fromkeys(keys) if key and len(key) <= 200]
+    r = get_redis()
+    previous = set(watch_keys(client_id))
+    current = set(keys)
+
+    with r.pipeline() as pipe:
+        for key in previous - current:
+            pipe.srem(KEYS_PREFIX + key, client_id)
+        for key in current - previous:
+            pipe.sadd(KEYS_PREFIX + key, client_id)
+        pipe.set(_watch_key(client_id), json.dumps(sorted(current)), ex=WATCH_TTL)
+        pipe.set(SEEN_PREFIX + client_id, "1", ex=SEEN_TTL)
+        pipe.execute()
+    return keys
+
+
+def touch_client(client_id: str) -> None:
+    """Refresh the watch TTL from the SSE heartbeat."""
+    try:
+        get_redis().expire(_watch_key(client_id), WATCH_TTL)
+    except Exception:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to refresh watch TTL for %s", client_id)
+
+
+def reset_client(client_id: str) -> None:
+    """Forget a tab (called when the stream ends cleanly)."""
+    try:
+        r = get_redis()
+        for key in watch_keys(client_id):
+            r.srem(KEYS_PREFIX + key, client_id)
+        r.delete(_watch_key(client_id))
+    except Exception:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to reset watch set for %s", client_id)
+
+
+def mark_seen(client_id: str) -> bool:
+    """Return True when this tab had a recent connection (i.e. a reconnect)."""
+    r = get_redis()
+    return not bool(r.set(SEEN_PREFIX + client_id, "1", ex=SEEN_TTL, nx=True))
+
+
+# ---------------------------------------------------------------------------
+# publishing
+# ---------------------------------------------------------------------------
+
+def publish_model_event(
+    keys: list[str],
+    instance: Any,
+    action: str = "update",
+    data: dict[str, Any] | None = None,
+) -> None:
+    """Publish one change to every tab watching each of ``keys``.
+
+    Deferred to ``transaction.on_commit`` so a component refetch can never read
+    the pre-commit row.  Outside an explicit transaction this runs immediately.
+    """
+    keys = list(dict.fromkeys(key for key in keys if key))
+    if not keys:
+        return
+    envelope = {
+        "model": type(instance).__name__,
+        "pk": instance.pk,
+        "action": action,
+        "data": data,
+        "at": timezone.now().isoformat(),
+    }
+    transaction.on_commit(lambda: _fan_out(keys, envelope))
+
+
+def _fan_out(keys: list[str], envelope: dict[str, Any]) -> None:
+    try:
+        r = get_redis()
+        with r.pipeline() as pipe:
+            for key in keys:
+                pipe.smembers(KEYS_PREFIX + key)
+            members = pipe.execute()
+
+        subscriptions: dict[str, list[str]] = {}
+        for key, clients in zip(keys, members):
+            for client in clients:
+                subscriptions.setdefault(client, []).append(key)
+        if not subscriptions:
+            return
+
+        with r.pipeline() as pipe:
+            for client in subscriptions:
+                pipe.exists(_watch_key(client))
+            alive = pipe.execute()
+
+        with r.pipeline() as pipe:
+            for (client, client_keys), is_alive in zip(subscriptions.items(), alive):
+                if not is_alive:
+                    for key in client_keys:
+                        pipe.srem(KEYS_PREFIX + key, client)
+                    continue
+                for key in client_keys:
+                    pipe.publish(
+                        CLIENT_PREFIX + client,
+                        json.dumps({"key": key, **envelope}, default=str),
+                    )
+            pipe.execute()
+    except Exception:  # pylint: disable=broad-exception-caught
+        # A redis hiccup must never fail a database write.
+        log.exception("Failed to publish observable event")
+
+
+# ---------------------------------------------------------------------------
+# model mixin
+# ---------------------------------------------------------------------------
+
+def _previous_state(instance: Any) -> dict[str, Any]:
+    """Snapshot the values ``instance`` had before the pending write."""
+    getter = getattr(instance, "get_dirty_fields", None)
+    if getter is None:
+        return {}
+    try:
+        dirty = getter(check_relationship=True)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return {}
+
+    state: dict[str, Any] = {}
+    for field in instance._meta.concrete_fields:
+        if not (field.is_relation or field.name in OBSERVABLE_FILTER_FIELDS):
+            continue
+        state[field.attname] = _norm(
+            dirty.get(field.name, getattr(instance, field.attname))
+        )
+    return state
+
+
+def _state_of(instance: Any, field_names) -> dict[str, Any]:
+    """Snapshot only the fields named in an ``atomic_update`` call."""
+    state: dict[str, Any] = {}
+    for name in field_names:
+        try:
+            field = instance._meta.get_field(name)
+        except FieldDoesNotExist:
+            continue
+        state[field.attname] = _norm(getattr(instance, field.attname))
+    return state
 
 
 class ObservableMixin:
-    """Make Django model events observable through the Redis registry."""
-
-    OBSERVABLE_EXCLUDED_FIELDS: frozenset[str] = frozenset()
-
-    @property
-    def observables(self) -> ObservableKeys:
-        if not hasattr(self, "_observables") or self._observables is None:
-            keys_class = getattr(
-                self.__class__,
-                f"{self.__class__.__name__}ObservableKeys",
-                ObservableKeys,
-            )
-            self._observables = keys_class(self)
-        return self._observables
-
-    def observable_keys(self) -> list[str]:
-        """Return the general and foreign-key-specific event keys for this row."""
-        keys = [self.observables.any]
-        if self.pk is not None:
-            keys.append(self.observables.pk)
-        has_parent_field = False
-        has_parent = False
-        for field in self._meta.fields:
-            if not isinstance(field, models.ForeignKey):
-                continue
-            is_parent_field = field.name.startswith("parent_")
-            fk_id = getattr(self, field.attname, None)
-            if fk_id is not None:
-                keys.append(f"{self.observables.any}.{field.name}:{fk_id}")
-                if is_parent_field:
-                    has_parent = True
-            elif is_parent_field:
-                has_parent_field = True
-        if has_parent_field and not has_parent:
-            keys.append(self.observables.noparents)
-        return keys
+    """Publish explicit keys whenever a row is created, changed or deleted."""
 
     def notify_observers(
         self,
         action: str = "update",
-        data: dict[str, Any] | None = None,
-        *,
-        data_factory: Callable[[], dict[str, Any]] | None = None,
+        previous: dict[str, Any] | None = None,
     ) -> None:
-        """Publish this row's change to subscribers of its observable keys."""
-        observable_keys = self.observable_keys()
-        if not observable_keys:
-            return
-        r = get_redis()
+        from runtime.observable_keys import observable_keys  # keep imports flat
 
-        # Pub/sub fan-out feeds the htmx/SSE UI.  The envelope is small on
-        # purpose -- SSE consumers only use the channel name as the event name
-        # and refetch the fragment themselves, so no serialized object is needed.
-        envelope = json.dumps(
-            {
-                "model": self.__class__.__name__,
-                "pk": self.pk,
-                "action": action,
-                "keys": list(observable_keys),
-            },
-            default=str,
-        )
-
-        with r.pipeline() as p:
-            for observable_key in observable_keys:
-                p.publish(PUBSUB_PREFIX + observable_key, envelope)
-            p.execute()
-
-
-
-
-
-    def serialize_observable(self) -> dict[str, Any]:
-        """Serialize concrete model fields for observable callbacks."""
-        data: dict[str, Any] = {
-            "model": type(self)._meta.model.__name__,
-            "pk": self.pk,
-        }
-        excluded = self.OBSERVABLE_EXCLUDED_FIELDS
-        for field in self._meta.concrete_fields:
-            if field.name in excluded or field.attname in excluded:
-                continue
-            data[field.attname] = getattr(self, field.attname)
-        data["revision"] = data.get("updated_at") or data.get("created_at") or timezone.now()
-        return json.loads(json.dumps(data, cls=DjangoJSONEncoder, default=str))
+        publish_model_event(observable_keys(self, previous), self, action)
 
     def publish(self, action: str = "update", data: dict[str, Any] | None = None) -> None:
-        if data is None:
-            publish_model_event(self, action)
-        else:
-            publish_model_event(self, action, data=data)
+        """Compatibility shim for ``Model.publish("update")`` call sites."""
+        self.notify_observers(action)
 
     def save(self, *args: Any, publish: bool = True, **kwargs: Any) -> Any:
-        """Save the row and publish its create or update event."""
         is_new = self._state.adding or self.pk is None
+        previous = {} if is_new else _previous_state(self)
         result = super().save(*args, **kwargs)
         if publish:
             try:
-                self.publish("create" if is_new else "update")
-            except Exception:
-                pass
+                self.notify_observers("create" if is_new else "update", previous=previous)
+            except Exception:  # pylint: disable=broad-exception-caught
+                log.exception("Failed to notify observers for %s", type(self).__name__)
         return result
 
     def delete(self, *args: Any, publish: bool = True, **kwargs: Any) -> Any:
-        """Delete the row and publish its delete event."""
         pk = self.pk
         result = super().delete(*args, **kwargs)
-        if publish:
+        if publish and pk is not None:
             self.pk = pk
             try:
-                self.publish("delete")
-            except Exception:
-                pass
+                self.notify_observers("delete")
+            except Exception:  # pylint: disable=broad-exception-caught
+                log.exception("Failed to publish delete for %s", type(self).__name__)
             finally:
                 self.pk = None
         return result
@@ -207,18 +289,19 @@ class ObservableMixin:
             and any(field.name == "updated_at" for field in self._meta.fields)
         ):
             fields["updated_at"] = timezone.now()
+        previous = _state_of(self, fields) if publish else {}
         updated = type(self).objects.filter(pk=self.pk, **(expect or {})).update(**fields)
         if updated:
             for name, value in fields.items():
                 try:
                     setattr(self, name, value)
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     pass
             if publish:
                 try:
-                    self.publish(action)
-                except Exception:
-                    pass
+                    self.notify_observers(action, previous=previous)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    log.exception("Failed to notify observers for %s", type(self).__name__)
         return updated
 
     @classmethod
@@ -236,9 +319,21 @@ class ObservableMixin:
             and any(field.name == "updated_at" for field in cls._meta.fields)
         ):
             fields["updated_at"] = timezone.now()
+
+        previous: dict[str, Any] = {}
+        if publish:
+            attnames = []
+            for name in fields:
+                try:
+                    attnames.append(cls._meta.get_field(name).attname)
+                except FieldDoesNotExist:
+                    continue
+            if attnames:
+                previous = cls.objects.filter(pk=pk).values(*attnames).first() or {}
+
         updated = cls.objects.filter(pk=pk, **(expect or {})).update(**fields)
         if updated and publish:
-            cls.publish_by_pk(pk, action)
+            cls.publish_by_pk(pk, action, previous=previous)
         return updated
 
     @classmethod
@@ -247,154 +342,20 @@ class ObservableMixin:
         pk: Any,
         action: str = "update",
         data: dict[str, Any] | None = None,
+        previous: dict[str, Any] | None = None,
     ) -> None:
-        """Publish an event using a narrow lookup for foreign-key values."""
+        """Publish an event for a row touched by ``QuerySet.update()``."""
         if pk is None:
             return
-        fk_attnames = [
+        attnames = [
             field.attname
-            for field in cls._meta.fields
-            if isinstance(field, models.ForeignKey)
+            for field in cls._meta.concrete_fields
+            if field.is_relation or field.name in OBSERVABLE_FILTER_FIELDS
         ]
-        row = cls.objects.filter(pk=pk).values("pk", *fk_attnames).first()
-        if row is not None:
-            try:
-                publish_model_event(cls(**row), action, data=data)
-            except Exception:
-                pass
-
-
-OBS_PREFIX = "agentone:obs:"
-QUEUE_PREFIX = "agentone:uiq:"
-UKEYS_PREFIX = "agentone:uikeys:"
-# Redis pub/sub channels for the htmx/SSE UI.  One channel per observable key;
-# the channel suffix *is* the event name the browser listens for
-# (``hx-trigger="sse:Message.session:7"``).
-PUBSUB_PREFIX = "agentone:pubsub:"
-
-_client: redis.Redis | None = None
-
-
-def get_redis() -> redis.Redis:
-    """Return a shared Redis client (lazily created)."""
-    global _client
-    if _client is None:
-        _client = redis.from_url(settings.REDIS_URL, decode_responses=True)
-    return _client
-
-
-def subscribe(instance_key: str, observable_key: str, function_id: int) -> None:
-    """Register ``function_id`` of UI instance *instance_key* on *observable_key*."""
-    _update_subscription(instance_key, observable_key, function_id, add=True)
-
-
-def _update_subscription(
-    instance_key: str,
-    observable_key: str,
-    function_id: int,
-    *,
-    add: bool,
-) -> None:
-    r = get_redis()
-    obs_key = OBS_PREFIX + observable_key
-    with r.pipeline() as pipeline:
-        while True:
-            try:
-                pipeline.watch(obs_key)
-                fids = json.loads(pipeline.hget(obs_key, instance_key) or "[]")
-                if add:
-                    if function_id not in fids:
-                        fids.append(function_id)
-                elif function_id in fids:
-                    fids.remove(function_id)
-
-                pipeline.multi()
-                if fids:
-                    pipeline.hset(obs_key, instance_key, json.dumps(fids))
-                    pipeline.sadd(UKEYS_PREFIX + instance_key, observable_key)
-                else:
-                    pipeline.hdel(obs_key, instance_key)
-                    pipeline.srem(UKEYS_PREFIX + instance_key, observable_key)
-                pipeline.execute()
-                return
-            except WatchError:
-                continue
-            finally:
-                pipeline.reset()
-
-
-def unsubscribe(instance_key: str, observable_key: str, function_id: int) -> None:
-    """Remove ``function_id`` of *instance_key* from *observable_key*."""
-    _update_subscription(instance_key, observable_key, function_id, add=False)
-
-
-def unsubscribe_all(instance_key: str) -> None:
-    """Remove every subscription of *instance_key* (e.g. on last disconnect)."""
-    r = get_redis()
-    for observable_key in r.smembers(UKEYS_PREFIX + instance_key):
-        r.hdel(OBS_PREFIX + observable_key, instance_key)
-    r.delete(UKEYS_PREFIX + instance_key, QUEUE_PREFIX + instance_key)
-
-
-def has_subscribers(observable_keys: Sequence[str]) -> bool:
-    """Return whether any event key currently has registered observers."""
-    r = get_redis()
-    return any(r.hlen(OBS_PREFIX + key) for key in observable_keys)
-
-
-def _extract_filter_context(instance: Any) -> dict[str, Any]:
-    """Extract FK fields + resolved session_id from a model instance."""
-    from django.db.models import ForeignKey, OneToOneField
-
-    ctx: dict[str, Any] = {}
-    for field in instance._meta.fields:
-        if isinstance(field, (ForeignKey, OneToOneField)):
-            ctx[field.attname] = getattr(instance, field.attname)
-    if "session_id" not in ctx and hasattr(instance, "session_version"):
+        row = cls.objects.filter(pk=pk).values("pk", *attnames).first()
+        if row is None:
+            return
         try:
-            if instance.session_version_id:
-                ctx["session_id"] = instance.session_version.session_id
-        except Exception:
-            pass
-    return ctx
-
-
-def publish_model_event(
-    instance: Any,
-    action: str,
-    data: dict[str, Any] | None = None,
-) -> None:
-    """Publish a model change to subscribers of its observable keys."""
-    event_data = {**_extract_filter_context(instance), **(data or {})}
-    serialize = getattr(instance, "serialize_observable", None)
-    observable_keys = getattr(instance, "observable_keys", None)
-
-    if callable(serialize) and callable(observable_keys):
-        def serialize_event() -> dict[str, Any]:
-            current_instance = instance
-            if action != "delete" and getattr(current_instance, "pk", None) is not None:
-                refreshed = type(current_instance)._default_manager.filter(
-                    pk=current_instance.pk
-                ).first()
-                if refreshed is not None:
-                    current_instance = refreshed
-            return {
-                **_extract_filter_context(current_instance),
-                **(data or {}),
-                "object": current_instance.serialize_observable(),
-            }
-
-    notify_observers = getattr(instance, "notify_observers", None)
-    if callable(notify_observers):
-        try:
-            if callable(serialize) and callable(observable_keys):
-                notify_observers(action, event_data, data_factory=serialize_event)
-            else:
-                notify_observers(action, event_data)
-        except Exception:
-            log.exception(
-                "Failed to publish observable event for %s pk=%s",
-                type(instance).__name__,
-                getattr(instance, "pk", None),
-            )
-
+            cls(**row).notify_observers(action, previous=previous)
+        except Exception:  # pylint: disable=broad-exception-caught
+            log.exception("Failed to publish %s pk=%s", cls.__name__, pk)

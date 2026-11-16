@@ -11,9 +11,9 @@
 <div id="connection-banner" class="webui-connection-banner" role="status" aria-live="polite">
     Live updates disconnected — retrying…
 </div>
-<div class="layout"{% if disable_history %} hx-history="false"{% endif %} hx-ext="sse" sse-connect="{{ sse_url|default:global_sse_url }}">
+<div class="layout"{% if disable_history %} hx-history="false"{% endif %}>
     {% include "webui/shell/_rail.html" %}
-    {% include "webui/shell/_sidebar.html" %}
+    {% component sidebar_component project=request.GET.project archived=request.GET.archived q=request.GET.q %}
     <main class="main">
         {% block main %}{% endblock %}
     </main>

@@ -15,6 +15,19 @@ from webui.markdown import render_markdown
 register = template.Library()
 
 
+@register.simple_tag(takes_context=True, name="component")
+def component_tag(context, name, pk=None, **params):
+    """Render one independently cacheable component.
+
+    Inline (full document) mode emits the rendered element with its own SSE
+    trigger; htmx mode emits a placeholders that loads from the component URL
+    and is preserved across parent swaps.
+    """
+    from webui.components import render_component_ref
+
+    return render_component_ref(context, name, pk, params)
+
+
 @register.simple_tag(name="static_v")
 def static_v(path: str) -> str:
     """Static URL with an mtime cache-buster.

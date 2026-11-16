@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 
 
 class ScriptsGeneration(BaseModel):
@@ -14,11 +13,6 @@ class ScriptsGeneration(BaseModel):
     agent resolution.
     """
 
-    class ScriptsGenerationObservableKeys(ObservableKeys):
-        """Explicit observable keys for a ScriptsGeneration (IDE autocomplete)."""
-        @property
-        def task_definitions(self):
-            return f"TaskDefinition.parent_generation:{self.model.pk}"
 
     commit = models.CharField(max_length=1024, default="")
 

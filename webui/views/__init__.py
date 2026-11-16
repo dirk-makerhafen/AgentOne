@@ -100,7 +100,7 @@ from webui.views.settings import (
     settings_provider_test,
     settings_save,
 )
-from webui.views.shell import sidebar_fragment
+from webui.views.shell import section_sidebar
 from webui.views.skills import skill_delete, skill_detail, skill_edit, skills
 from webui.views.workspaces import (
     workspace_create,
@@ -206,7 +206,7 @@ __all__ = [
     "settings_provider_probe",
     "settings_provider_test",
     "settings_save",
-    "sidebar_fragment",
+    "section_sidebar",
     "skill_detail",
     "skill_delete",
     "skill_edit",

@@ -1,13 +1,14 @@
 # Architecture
 
-> **UI status (2026-11):** the primary UI is `webui/` — Django templates + htmx
+> **UI status (2026-11):** the only UI is `webui/` — Django templates + htmx
 > + SSE, mounted at `/app/` (and `/` redirects there). The pyHtmlGui/WebSocket
-> sections below describe the legacy UI, which is frozen at `/legacy/` for one
-> release; see [`ui-rewrite.md`](ui-rewrite.md) for the new design.
+> sections below are historical: `ui/` and the `/legacy/` + `/ws` routes have
+> been deleted. See [`ui-rewrite.md`](ui-rewrite.md) §5.6.1 and
+> [`observables-migration.md`](observables-migration.md) for the shipped design.
 
 ## System overview
 
-AgentOne is structured as a Django monolith with Celery for async task execution. The primary UI is server-rendered: `webui/` renders Django templates, htmx fetches fragments over HTTP, and an SSE bridge forwards Redis pub/sub events so fragments refresh in place. The legacy pyHtmlGui WebSocket view layer still exists under `ui/` for `/legacy/`.
+AgentOne is structured as a Django monolith with Celery for async task execution. The UI is server-rendered: `webui/` renders Django templates, htmx fetches independently cached fragments over HTTP, and a per-tab SSE bridge forwards Redis pub/sub events so only the fragments that rendered a key refetch.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐

@@ -3,35 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 from django.db import models
-from server.models.observables import ObservableMixin, ObservableKeys
+from server.models.observables import ObservableMixin
 
 
 class Project(ObservableMixin, models.Model):
     """A named project with an optional primary workspace folder."""
 
-    class ProjectObservableKeys(ObservableKeys):
-        """Explicit observable keys for an Project (IDE autocomplete)."""
-        @property
-        def child_agents(self):
-            return f"AgentModel.parent_project:{self.model.pk}"
-        @property
-        def child_skills(self):
-            return f"SkillModel.parent_project:{self.model.pk}"
-        @property
-        def child_sessions(self):
-            return f"SessionModel.parent_project:{self.model.pk}"
-        @property
-        def cron_jobs(self):
-            return f"Cronjob.parent_project:{self.model.pk}"
-        @property
-        def task_definitions(self):
-            return f"TaskDefinition.parent_project:{self.model.pk}"
-        @property
-        def work_items(self):
-            return f"WorkItem.project:{self.model.pk}"
-        @property
-        def data_collections(self):
-            return f"DataCollection.parent_project:{self.model.pk}"
 
     created_at: datetime = models.DateTimeField(auto_now_add=True)
     updated_at: datetime = models.DateTimeField(auto_now=True)

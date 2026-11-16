@@ -9,7 +9,7 @@ from dirtyfields.dirtyfields import reset_state
 from django.db import models
 from django.utils import timezone
 
-from server.models.observables import ObservableKeys, ObservableMixin
+from server.models.observables import ObservableMixin
 
 
 class BaseModel(ObservableMixin, DirtyFieldsMixin, models.Model):

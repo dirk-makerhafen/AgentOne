@@ -23,7 +23,7 @@ Quick reference for developers working on AgentOne. See also:
 | `registry/` | YAML manifest loader, install repo management, upstream source sync; legacy decorators (dead) |
 | `runtime/` | Agent/session/task runtime wrappers, state machines, rate limiter; `runtime/browser/` holds the Camoufox daemon + client; `runtime/workitems/` holds the WorkItem FSM + verifier |
 | `launcher/` | Launcher service for remote agent management; supervises the browser daemon |
-| `ui/` | Web UI (pyHtmlGui): views, sidebar, chat, settings, overlays |
+| `webui/` | Web UI: Django templates + htmx + SSE — views, components, sidebar, chat, settings, overlays |
 | `old/` | Dead legacy code — do not touch |
 | `.agentone/` | Active tool/agent config: YAML manifests, scripts, skills, streams, sets |
 
@@ -96,29 +96,46 @@ python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - Browser: one long-lived daemon (`runtime/browser/`) owns every Camoufox process, because the Celery pool is 5 prefork workers and per-worker globals would give 5 disconnected browsers. The daemon listens on loopback with a `0600` bearer token, reaps idle browsers, and persists Camoufox fingerprints so a reopened profile keeps its identity. One process per top-level chat session; child/subsession agents inherit the root's browser but only see tabs they opened. `browser` is `access: write`, and mutating actions (`open`/`navigate`/`click`/`type`/`back`/`evaluate`/`upload`/`download`) require approval — see [docs/browser.md](docs/browser.md).
 - `_trigger_on_removed` in `tick_scheduler.py` (not reprocess_collection.py — it imports it) — the `source_calls` param must contain the AgentTaskCalls whose items were removed, not all source calls.
 - Scheduler split: `tick_scheduler.py` runs the 10s tick (dispatch, propagate, release, the three work-item routines, plus idle compaction). One-minute sibling tasks live in their own modules: `cron_scheduler.py` (cron dispatch), `sleep_guard_scheduler.py` (keep-awake guard), `recovery_scheduler.py` (`tasks.tick_scheduler_recovery` — **currently DISABLED**: its `agentone-recovery-scheduler` beat entry is commented out in `config/settings.py:85`, so recovery does not run; `_cancel_duplicate_queries` lives in `startup_cleanup.py`), and `startup_cleanup.py` (one-time full cleanup, dispatched by `server run`).
-- When writing tests for UI views (`ui/`), call `messages_view.set_visible(True)` in setUp to activate ObservableListView observer callbacks before exercising append/insert.
+- When writing tests for UI views (`webui/`), use `webui/tests.py` and `server/tests/test_webui_components.py`; the pyHtmlGui `messages_view.set_visible` guidance no longer applies.
 
 ## Real-time UI events
 
-The system uses `publish_model_event(instance, action)` in Celery tasks to push model changes to the browser. The Redis registry and ORM mixin live together in `server/models/observables.py`: the mixin invokes the registry, which RPUSHes to the per-UI-instance queue (`agentone:uiq:<instance_key>`) only for instances subscribed to affected keys. The consumer drain thread (`ui/consumer.py:loop`, one per instance) coalesces and dispatches to view callbacks. The old Channels-group broadcast is gone.
+`ObservableMixin.save()` / `delete()` / `atomic_update*()` publish an explicit
+key list from `runtime/observable_keys.py` via
+`publish_model_event(keys, instance, action)` (`server/models/observables.py`).
+The event is deferred with `transaction.on_commit`, then fanned out to only the
+tabs that registered one of those keys. Keys look like `Model:<pk>`,
+`Model.<relation>:<id>`, `Model.root` or `Model.root@is_archived:false`; every
+publisher also emits the bare model key (`Model`) for all-row lists, and a
+filter transition publishes both the old and the new value.
 
-| Model | Action | Celery file | Purpose |
-|---|---|---|---|
-| `Message` | `create` | `ingest_user_message.py`, `ingest_assistant_message.py`, `ingest_subagent_result.py` | Add new messages to chat without page reload |
-| `Query` | `create` | `build_llm_context.py` | Insert query-card after trigger_message |
-| `Query` | `update` | `call_llm.py` (after each status transition) | Re-render query-card status |
+Client registry (Redis): `agentone:sse:watch:<client>` (JSON key list, TTL 60s),
+`agentone:sse:keys:<key>` (SET of client ids), `agentone:sse:<client>`
+(channel), `agentone:sse:seen:<client>` (reconnect marker). Each browser tab
+injects `?client=<id>` into the `<body>` SSE connection, derives its watch set
+from the rendered `hx-trigger="sse:…"` attributes, and debounces
+`POST /app/sse/watch` when the set changes. `webui/events.py` streams only that
+tab's events; a reconnect emits `reset`, which every live component also listens
+for.
 
-Views subscribe with `orm_subscribe(view, "<Model>.session:<sid>", router)` from `ui/lib/model_view.py` (session-scoped keys) or `"WorkItem"` / `"WorkspaceModel"` (any-keys); routers receive `(key, model, pk, action, data)`.
+Components are render-on-demand (`webui/components.py`): `GET /app/c/<name>[/<pk>]`
+answers `private, no-cache` + ETag (→ `204` when unchanged), or
+`max-age=31536000, immutable` for finished messages/terminal responses.
+`render=full` (the default) inlines children; `render=htmx` emits
+`hx-preserve` placeholders that load themselves, so a parent swap never
+destroys an already-loaded child. See `docs/observables-migration.md` and
+`docs/ui-rewrite.md` §5.6.1.
 
-### Key UI callback files
+### Key UI files
 
 | File | Role |
 |---|---|
-| `ui/main/chat/messages/messages.py` | `_on_orm_event` router → `_on_message_created`, `_on_query_created`, `_on_query_updated` |
-| `ui/lib/pyHtmlGui/pyhtmlgui/view/observable_list_view.py` | `set_visible` snapshot fix, dedup guard in `_on_subject_updated` |
-| `ui/lib/model_view.py` | `orm_subscribe` / `orm_unsubscribe_view` shared subscription helpers |
-| `runtime/events.py` | `publish_model_event` (redis notify only) |
-| `server/models/observables.py` | `ObservableMixin`, `ObservableKeys`, Redis `subscribe` / `notify` / `unsubscribe` registry |
+| `runtime/observable_keys.py` | write-side key builders + dispatch table |
+| `runtime/observable_queries/` | read-side `ObservableList` / `ObservableValue` API (no queryset escapes) |
+| `server/models/observables.py` | `ObservableMixin`, Redis client registry, `publish_model_event`, `_fan_out` |
+| `webui/events.py` | per-tab SSE stream + `/app/sse/watch` |
+| `webui/components.py` | component registry, ETag/cache policy, placeholders |
+| `webui/static/webui/app.js` | client id, watch-set sync, `If-None-Match`, thread swaps |
 
 Skills provide specialized instructions and workflows for specific tasks.
 Use the skill tool to load a skill when a task matches its description.

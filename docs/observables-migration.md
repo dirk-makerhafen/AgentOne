@@ -1,112 +1,180 @@
-# Observables migration — current state
+# Observables — write-side keys, read-side API, per-tab SSE
 
-> **Status: implemented.** ORM→UI updates flow exclusively through the
-> Redis observable registry (`server/models/observables.py`). The Channels-group
-> path is fully removed (`publish()` / `CHANNEL_GROUP`,
-> `PyHtmlGuiConsumer.session_event`, consumer group membership, and
-> `UiApp.dispatch_session_event` are all gone); `ui/model_observer.py`
-> is retired but kept as an unwired fallback reference.
+> **Status: implemented.** Every ORM row publishes an explicit list of keys;
+> every connected browser tab renders a set of components, each of which
+> subscribes to the keys it needs. Redis fans an event out only to the tabs
+> that registered that key. There is no broadcast, no callback registry, and
+> no client-side invalidation logic.
 
-## How it works now
+The legacy pyHtmlGui app (`ui/`) is gone; `webui/` is the only UI. See
+[`ui-rewrite.md`](ui-rewrite.md) for the rendering/component side.
 
-| Stage | Mechanism |
-|---|---|
-| Producer | `publish_model_event(instance, action)` (`server/models/observables.py`) calls `instance.notify_observers(action)` — one choke point for all ~50 call sites (Celery tasks, `.agentone/scripts/`, `runtime/`, `api/`, `ui/`), including `QuerySet.update()` flows that bypass `save()`. Instances without `notify_observers` are skipped via `getattr`. |
-| Transport | `notify()` (`server/models/observables.py`) `HGETALL`s each key's observers and `RPUSH`es **one message per subscribed UI instance** to `agentone:uiq:<instance_key>`. Observer-gated: instances with no subscription for the affected keys get nothing. |
-| Keys | `ObservableMixin.observable_keys()` (`server/models/observables.py`) returns the `any` key (`<Model>`), the `pk` key (`<Model>.pk:<pk>`), plus one key per set FK (`<Model>.<field>:<id>`). Per-model `<Model>ObservableKeys` helpers expose the same strings for subscribers (e.g. `project.observables.child_agents` → `AgentModel.parent_project:<pk>`). The mixin (not just `BaseModel`) owns `.observables` / `observable_keys()` / `notify_observers()`, so **every** ORM model is observable — including plain `models.Model` ones (`WorkspaceModel`, `GenericContent`, `SkillModelVersion`, `Project`, `SkillModel`). Auto-created M2M through-models are the only exception. Covered by `AllModelsObservableTest`, which asserts the capability on every concrete `server` model. |
-| Consumer | One drain thread per UI instance (`ui/consumer.py:55`, started via `_ensure_loop_thread`, `ui/consumer.py:91`). `BLPOP timeout=5` + full-list drain so bursts coalesce; the thread exits once its instance has no connections. `process_queue_messages` (`ui/consumer.py:25`) invokes one callback per `function_id` (latest message wins), resolving through the instance's `_function_references` (weak — GC'd views are skipped). |
-| Subscription | `orm_subscribe(view, key, target)` / `orm_unsubscribe_view(view, key?)` (`ui/lib/model_view.py:17,40`) — usable from any view; tracked on `view._observed_function_ids` and `instance.observed_views`. `ModelView.add_observable` delegates to `orm_subscribe`; `ModelView.__init__` auto-subscribes only when the subject is an ORM instance (has `.observables`). |
+## Stages
 
-Why this is faster than what it replaced: the old path broadcast **every**
-model event to **every** connected consumer through the channel layer, then
-re-matched filters in-process. The registry pushes only to subscribed
-instance queues, batches one message per instance, and the loop coalesces
-repeats per `function_id` before invoking anything.
-
-## Subscribers (all converted)
-
-Each old `watch(model, filter, action)` became a key subscription plus an
-`_on_orm_event(key, model, pk, action, data)` router. `Message`, `Query`
-and `AgentTaskCall` all have direct `session` FKs, so
-`{"session_id": X}` filters mapped 1:1 to `"<Model>.session:X"` keys:
-
-| View | Keys | Router behavior |
+| Stage | File | Mechanism |
 |---|---|---|
-| chat `Messages` (`ui/main/chat/messages/messages.py`) | `Message`/`Query`/`AgentTaskCall.session:<sid>` | routes create/update to `_on_message_created` / `_on_query_created` / `_on_query_updated` / `_on_taskcall_updated`; the first two fall back to `msg.prev_message_id` / `query.trigger_message_id` from the re-fetched object instead of `filter_context` |
-| composer footer (`ui/main/chat/composer/footer.py`) | same 3 keys | `_on_activity_event` (re-renders only when busy/mode state flipped) |
-| ctxindicator (`ui/main/chat/composer/wrap/ctxindicator.py`) | `Query.session:<sid>` | refresh on `update` (old watch had an empty filter + in-callback session check; the session key delivers exactly the relevant subset) |
-| chat toc (`ui/main/chat/toc.py`) | `Message.session:<sid>` | rebuild segments on compaction-message `create` |
-| question / guardrail / rate-limit cards (`ui/main/chat/cards/`) | `AgentTaskCall.session:<sid>` | `update()` on task-call `update` |
-| approval card (`ui/main/chat/cards/approval.py`) | `SessionModel.pk:<sid>` | `update()` on session `update` (renders `needs_approval()` from the turn counters) |
-| queue card (`ui/main/chat/cards/queue.py`) | `AgentTaskCall.session:<sid>` | `update()` + pill sync on task-call create/update/delete |
-| workitems board (`ui/main/workitems/board.py`) | `WorkItem` (any-key) | clear caches + `update()` |
-| workspaces sidebar (`ui/sidebar/panels/workspaces.py`) | `WorkspaceModel` (any-key) | `update()` |
+| Publish | `server/models/observables.py` | `ObservableMixin.save()` / `delete()` / `atomic_update()` / `atomic_update_by_pk()` call `notify_observers()`, which calls `publish_model_event(keys, instance, action)`. The event is deferred with `transaction.on_commit`, so a component can never refetch a pre-commit row. |
+| Keys | `runtime/observable_keys.py` | One explicit builder per model produces the exact strings. Nothing is derived by introspecting the model at publish time. |
+| Fan-out | `server/models/observables.py` | `_fan_out()` looks up `agentone:sse:keys:<key>` → client ids, drops dead clients, and `PUBLISH`es one JSON message per tab channel. |
+| Transport | `webui/events.py` | `GET /app/sse/?client=<id>` streams only that tab's events; `POST /app/sse/watch` replaces the tab's watch set. |
+| Subscribe | `webui/components.py` | Each component wrapper carries `hx-trigger="sse:<key> delay:150ms, …"`; the browser derives the watch set from those triggers and posts it when it changes. |
 
-`LiveSession` (`ui/live.py`, retired): the four cards used to hold
-in-process subscriptions to it, but nothing ever notified it — the only
-notifier fed off channel events that had no producers. Replaced by the DB
-subscriptions above, then deleted along with `UiApp.get_live_session` and
-`Chat.live_session`. Missing producers were added too:
-`Session.count_turn()` / `count_unattended_turn()`
-(`runtime/session/session.py`) now `publish_model_event(session, "update")`
-after the counter write (same pattern as `set_is_active`) and sync the
-in-memory copy, so the approval card appears exactly when the limit is hit.
+## Key grammar
+
+```
+Model:<pk>                    one row
+Model.<relation>:<id>         a foreign-key scoped list
+Model.root                    rows with no parent_*
+<key>@<field>:<value>         an explicit filter variant
+```
+
+`@` separates filter suffixes from the base key. Keys never contain `[`, `,`
+or whitespace, because htmx tokenises `hx-trigger` on those and the key is used
+verbatim as an SSE event name.
+
+Every publisher also emits the **bare model key** (`Message`, `SessionModel`,
+…). That is the subscription for lists that only ever show "all rows of this
+model"; it removes the need for a generic "any key" filter.
+
+Examples:
+
+| Write | Keys |
+|---|---|
+| `Message` in session 7 | `Message`, `Message:42`, `Message.session:7`, `Message.session_version:3` |
+| Root `SessionModel` archived | `SessionModel`, `SessionModel:7`, `SessionModel.root@is_archived:true`, `SessionModel.root@is_archived:false`, `SessionModel@is_active:true` |
+| `WorkItem` moved to `done` | `WorkItem`, `WorkItem:9`, `WorkItem.project:4@terminal:true`, `WorkItem.project:4@terminal:false`, … |
+
+### Both old and new values
+
+A filter transition publishes both sides:
+
+```python
+observable_keys(session, {"is_archived": False, "is_active": True})
+# ... SessionModel.root@is_archived:true   <- add to archived list
+# ... SessionModel.root@is_archived:false  <- remove from active list
+```
+
+Without the previous value an archived row could only ever be *added* to the
+archived view and would stay in the active view forever.
+
+`ObservableMixin._previous_state()` snapshots every FK and every filter field
+(`is_active`, `is_archived`, `is_pinned`, `session_type`, `status`,
+`verify_status`) before `save()`. `atomic_update_by_pk()` reads the previous
+row from the database; `atomic_update()` snapshots the instance.
+
+```python
+class ObservableMixin:
+    def notify_observers(self, action="update", previous=None):
+        publish_model_event(observable_keys(self, previous), self, action)
+```
+
+The dispatch table in `runtime/observable_keys.py` maps model name → builder.
+A model without an entry falls back to `Model` + `Model:<pk>` (row-only).
+
+## Read side
+
+`runtime/observable_queries/` is the only place a view may obtain live data.
+Each method returns an `ObservableList` (evaluated rows **and** the keys that
+invalidate them) or an `ObservableValue` (a count plus its keys):
+
+```python
+@dataclass(frozen=True)
+class ObservableList:
+    model: type[Model]
+    rows: tuple[Model, ...]
+    keys: tuple[str, ...]
+```
+
+There is no public `QuerySet`: the filter and the key are written on adjacent
+lines, so they cannot drift apart. Adding a new live list is deliberately a
+two-line change — one key builder on the write side, one method here.
+
+| Module | API |
+|---|---|
+| `sessions.py` | `root(archived=, project_id=)`, `children()`, `by_project()`, `by_pk()`, `active_subagent_count()` |
+| `conversation.py` | `Message/Query/Response/TaskCall`: `by_session()`, `by_pk()`, `Response.by_query()` |
+| `agents.py` | `AgentModel`/`SkillModel`: `root()`, `by_parent_project()`, `by_parent_agent()`, `by_parent_skill()`, `by_pk()`; version lists `by_agent()` / `by_skill()` |
+| `structure.py` | `Project.root()`, `WorkspaceModel.root()` / `by_project()`, `ApiProvider.root()`, `AiModel.by_provider()`, `TerminalSession.by_session()` |
+| `work.py` | `Cronjob`/`DataCollection`/`WorkItem` root and relation lists, `CollectionItem.by_collection()` |
+| `registry.py` | `api_for(model)`; everything not listed is `ROW_ONLY` and observed by primary key |
+
+`registry.py` also lists `ROW_ONLY` models explicitly. A coverage test asserts
+that every concrete `server` model either has a domain API or is row-only, so
+adding a model without deciding how the UI observes it fails CI.
+
+A second test asserts the cross-side invariant: for a row in the state a list
+filters on, **every key the list subscribes to is a key the writer publishes**
+(`test_observable_queries.py`). That is the guard against a stale list.
+
+## Redis layout
+
+```
+agentone:sse:watch:<client>   STRING  JSON array of keys   TTL 60s (heartbeat)
+agentone:sse:keys:<key>       SET     client ids
+agentone:sse:<client>         CHANNEL one per connected tab
+agentone:sse:seen:<client>    STRING  reconnect marker     TTL 300s
+```
+
+* `register_client(client, keys)` replaces the watch set, adds/removes the
+  reverse-index entries, and refreshes both TTLs.
+* The SSE heartbeat calls `touch_client()` every 15 s.
+* A hard-killed tab expires after `WATCH_TTL`; the next fan-out prunes its
+  reverse-index entries (`SREM`) instead of publishing into the void.
+* `reset_client()` removes the tab when its stream ends cleanly.
+
+The stream carries **event names**, never HTML. A lost event costs exactly one
+refetch, and a reconnect emits `reset`, which every live component also
+triggers on (`sse:reset`).
+
+## Browser side
+
+`webui/static/webui/app.js`:
+
+1. Reads/creates a per-tab id in `sessionStorage` and injects
+   `sse-connect="…?client=<id>"` into `<body>` before htmx processes the page.
+   `hx-ext="sse"` lives on `<body>` too, so a boosted navigation (which only
+   swaps `<body>`'s contents) keeps the same `EventSource`.
+2. Collects the `sse:` tokens from every rendered `hx-trigger`/`sse-swap`,
+   debounces a `POST /app/sse/watch`, and skips the request when the set has
+   not changed.
+3. Sends `If-None-Match` from `data-component-etag` on every component
+   request, so unchanged components answer `204` and htmx keeps the DOM (and
+   with it focus, scroll and open `<details>`).
+4. Re-derives the watch set after every `htmx:afterSettle` and on
+   `htmx:sseOpen`.
 
 ## Tests
 
-- `server/tests/test_observables.py` (24 tests): registry subscribe/notify/
-  unsubscribe against fakeredis (incl. multi-key merge → `keys` list),
-  key-helper formats, `notify_observers` end-to-end (subscribe → notify →
-  queue payload), delivery via `publish_model_event`, `orm_subscribe`
-  bookkeeping, `process_queue_messages` coalescing + dead-weakref skip,
-  plus `AllModelsObservableTest` (every concrete `server` model exposes
-  `.observables` / `observable_keys()` / `notify_observers()`) and
-  instance-level tests for the non-`BaseModel` mixins.
-- `server/tests/test_workitem_ui.py`: board observer tests rewritten for
-  redis (register → redis hash, re-init stays at 1 fid, `_on_orm_event`
-  clears caches + re-renders).
-- `server/tests/test_messages_ui.py`: fakeredis end-to-end
-  (notify → queue → router → message-list insert).
-- `server/tests/test_rate_limit_card.py`: approval/queue card router tests
-  (session/task-call key → `update`, pill sync crash-safe) plus
-  `SessionCounterPublishTest` (`count_turn` / `count_unattended_turn`
-  publish + increment).
-- Full `server/tests/` suite: no new failures vs the pre-migration
-  baseline (46 pre-existing failures + 1 wall-clock flake in
-  `test_pick_excludes_throttled_provider`, verified identical via
-  `git stash` before/after runs).
+| File | What it pins |
+|---|---|
+| `server/tests/test_observables.py` | key builders, bare keys, old+new transitions, `on_commit`, client registry, fan-out isolation, dead-client pruning, `save/delete/atomic_update/publish_by_pk`, FSM helpers |
+| `server/tests/test_observable_queries.py` | registry coverage, no queryset escape, every read key is published by the writer |
+| `server/tests/test_events.py` | frame format, event-name parsing, client-id validation, `/app/sse/watch` payloads and auth |
+| `server/tests/test_webui_components.py` | ETag/204, cache headers, immutable components, `render=full` vs `render=htmx`, `hx-preserve` only on placeholders, section sidebar routes |
+| `webui/tests.py` | full page/boosted shell contracts, fragment routes, chat rendering |
 
-## Remaining / known limitations
+## Known limitations
 
-- Queued messages carry `keys` (all matched keys) alongside `key` (first
-  match, kept for compatibility).
-- Workspace writes publish (done since the initial migration): the create
-  form (`ui/main/workspace/create.py:saveWorkspaceForm`), the edit form
-  (`ui/main/workspace/workspace.py` save + `deleteWorkspace`), the DRF
-  `WorkspaceViewSet` (`api/views/workspaces.py`
-  `perform_create/update/destroy`), and the `get_or_create` sites in the
-  projectmanager/wiki scripts all call `publish_model_event`, so the
-  sidebar panel re-renders live. NOTE: Django nulls `pk` on the in-memory
-  instance after `.delete()`, so delete events carry `pk=None` and only
-  the `WorkspaceModel` any-key fires — sufficient for the sidebar, which
-  is the only subscriber. Covered by `TestWorkspacePublish`
-  (`server/tests/test_workspaces_ui.py`: UI create/edit/delete publish,
-  API create/update/delete publish in `api/tests/test_workspaces.py`, and
-  a fakeredis end-to-end create → queue → panel re-render).
+- `publish_model_event` is synchronous per publish (one `SMEMBERS` per key,
+  pipelined). Bursts of hundreds of keys would benefit from a single
+  Lua/pipeline lookup; the current volume (a handful of keys per write) does
+  not justify it.
+- An immutable component (finished message, terminal response) is rendered
+  once with `max-age=31536000, immutable` **only when its whole session is
+  inactive**. A message inside an active session stays `no-cache` so an edit
+  or a late part still shows up.
+- No WebSocket bundling yet. If parallel HTTP/1.1 component loads become the
+  bottleneck, the same key set can move to one WebSocket without touching the
+  publish path.
 
 ## File index
 
-- `server/models/observables.py` — `ObservableKeys`, `ObservableMixin`,
-  Redis registry, `publish_model_event`
-- `server/models/observables.py` — `ObservableKeys`, `ObservableMixin`, Redis registry
-- `server/models/base_model.py` — `BaseModel`
-- `ui/lib/model_view.py` — `orm_subscribe:17`,
-  `orm_unsubscribe_view:40`, `ModelView` (`__init__:63`,
-  `add_observable:113`, `remove_observable:121`)
-- `ui/consumer.py` — `process_queue_messages:25`, `loop:55`,
-  `_ensure_loop_thread:91`, per-consumer `self._instance`
-  (`connect` / `disconnect`); no channel-layer code remains
-- `ui/app.py` — `dispatch_session_event`, `_live_sessions`,
-  `get_live_session` removed
-- `ui/main/chat/chat.py` — `live_session` removed; cards subscribe to DB keys
-- `ui/model_observer.py` — retired subscriber registry (unwired, kept)
+- `runtime/observable_keys.py` — grammar, builders, `observable_keys()`
+- `runtime/observable_queries/` — `base.py`, `sessions.py`, `conversation.py`,
+  `agents.py`, `structure.py`, `work.py`, `registry.py`
+- `server/models/observables.py` — `ObservableMixin`, client registry,
+  `publish_model_event`, `_fan_out`
+- `server/models/base_model.py` — `BaseModel(ObservableMixin, DirtyFieldsMixin)`
+- `webui/events.py` — SSE stream + `/app/sse/watch`
+- `webui/components.py` — component registry, ETag/cache policy
+- `webui/static/webui/app.js` — client id, watch-set sync, ETag header

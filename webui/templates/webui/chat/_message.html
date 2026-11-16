@@ -45,12 +45,7 @@
         {% endif %}
 
         {% if row.body_html %}
-        <div class="assistant-segment"
-             hx-get="{% url 'webui:thread' session.pk %}?limit=1&around={{ row.obj.pk }}"
-             hx-trigger="sse:Message.session:{{ session.pk }} delay:150ms"
-             hx-target="this"
-             hx-swap="outerHTML"
-             hx-sync="this:replace">
+        <div class="assistant-segment">
             <div class="msg-body">{{ row.body_html|safe }}</div>
         </div>
         {% endif %}
@@ -59,11 +54,10 @@
         <details class="tool-card webui-tool-card{% if part.halted %} approval-pending{% endif %}"
                  data-open-key="tool-{{ part.pk }}"
                  {% if part.pk %}hx-get="{% url 'webui:call_detail' part.pk %}"{% endif %}
-                 hx-trigger="toggle once"
+                 hx-trigger="toggle once{% if part.pk %}, sse:AgentTaskCall:{{ part.pk }} delay:300ms{% endif %}"
                  hx-target="find .webui-tool-detail"
                  hx-swap="innerHTML"
-                 hx-sync="this:replace"
-                 {% if part.pk %}sse-swap="AgentTaskCall.session:{{ session.pk }}"{% endif %}>
+                 hx-sync="this:replace">
             <summary class="webui-tool-summary">
                 <span class="webui-tool-icon">⚙</span>
                 <span class="webui-tool-name" title="{{ part.name }}">{{ part.name }}</span>

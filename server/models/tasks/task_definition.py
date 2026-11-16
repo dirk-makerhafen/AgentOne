@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 
@@ -18,14 +17,6 @@ class TaskDefinition(BaseModel):
     and may be owned by a skill, agent, or project.
     """
 
-    class TaskDefinitionObservableKeys(ObservableKeys):
-        """Explicit observable keys for an TaskDefinition (IDE autocomplete)."""
-        @property
-        def versions(self):
-            return f"TaskDefinitionVersion.task_definition:{self.model.pk}"
-        @property
-        def calls(self):
-            return f"AgentTaskCall.task_definition:{self.model.pk}"
         
     parent_skill = models.ForeignKey("server.SkillModel",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_task_definitions")
     parent_agent = models.ForeignKey("server.AgentModel",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="related_task_definitions")

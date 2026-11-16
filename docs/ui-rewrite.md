@@ -1,6 +1,6 @@
 # UI rewrite proposal — from pyHtmlGui to server-rendered htmx + SSE
 
-**Status:** The htmx cutover is implemented; soak testing and final sign-off remain. `webui/` (Django templates + htmx + SSE) serves `/`; the legacy pyHtmlGui UI is frozen at `/legacy/` for one release.
+**Status:** The htmx cutover is implemented and the legacy pyHtmlGui app (`ui/`) has been deleted. `webui/` (Django templates + htmx + SSE) serves `/` and is the only UI. Sections 1–4 are the original analysis and are kept for rationale; §5 describes what shipped, including the component cache layer (§5.6.1).
 **Date:** 2026-11-11
 **Decision:** replace pyHtmlGui with **Django templates + htmx + SSE**, keeping Django as the renderer.
 **Related docs:** [`architecture.md`](architecture.md), [`core-mechanisms.md`](core-mechanisms.md).
@@ -122,6 +122,10 @@ estimate is dominated by parity breadth (149 view classes), not technology risk.
 ---
 
 ## 2. How the current UI actually works
+
+> Historical: this describes the pyHtmlGui UI (`ui/`) that the rewrite replaced.
+> That app has been deleted; for the shipped design see §5.6.1 and
+> [`observables-migration.md`](observables-migration.md).
 
 ### 2.1 Runtime path
 
@@ -450,11 +454,10 @@ grow memory — the client self-heals on the next event.
 **Connection budget.** One stream per tab, which stays well under the HTTP/1.1
 six-connection limit; use HTTP/2 in nginx anyway.
 
-**Verify in Phase 0:** htmx's `sse:` trigger parser must accept event names
-containing dots and colons (`Message.pk:42`). This is the one assumption in the
-design that needs an empirical check; if it fails, sanitise the name (e.g.
-`Message-pk-42`) in a single helper used by both the server and the template
-tag.
+**Verified in Phase 0:** htmx's `sse:` trigger parser accepts event names
+containing dots, colons and `@` (`Message.session:42`,
+`SessionModel.root@is_archived:false`). Keys are still constrained to have no
+commas or whitespace, because those are htmx trigger separators.
 
 ### 5.4 Fragment contract and DOM ids
 
@@ -573,6 +576,65 @@ JS.
 
 **Icons** stay inline SVG, as today.
 
+### 5.6.1 Independently cached components (shipped 2026-11)
+
+The shell is a tree of components. Every element whose state comes from the
+server has its own URL, its own ETag and its own observable keys, so the
+browser can answer most navigations and refetches from its own cache.
+
+**URLs.**
+
+| URL | What |
+|---|---|
+| `/app/c/<name>` | component with no primary key (root lists, sidebars) |
+| `/app/c/<name>/<pk>` | one row (`chat-message`, `chat-query`, `chat-header`, …) |
+| `/app/chats/sidebar`, `/app/agents/sidebar`, … | one section sidebar, cacheable on its own |
+| `/app/sse/?client=<id>` | this tab's event stream |
+| `/app/sse/watch` | replace this tab's key set (debounced POST) |
+
+**Two render modes.**
+
+* `render=full` (default) renders the component *and* its children inline.
+  Used for document loads and no-JS clients, so the page is a real tree.
+* `render=htmx` renders the component with **placeholders** for its children.
+  Every placeholder carries `hx-trigger="load"` and `hx-preserve`. The client
+  loads it once; a later parent swap moves the live child into the new
+  fragment by id (htmx's preserve pantry), so a parent refresh never destroys
+  a child that is already loaded.
+
+The rendered root never carries `hx-preserve`; only placeholders do. A
+placeholder also keeps the landmark it replaces (`<aside id="sidebar">`) so
+selectors and CSS still work before the first swap.
+
+**Cache policy.**
+
+| Component | Headers | Trigger |
+|---|---|---|
+| live (has keys) | `Cache-Control: private, no-cache`, `ETag` | `hx-trigger="sse:<key> delay:150ms, …, sse:reset"` |
+| immutable (finished message, terminal response, ended session) | `private, max-age=31536000, immutable` | none |
+
+The client sends `If-None-Match` from `data-component-etag`; an unchanged
+component answers `204`, htmx skips the swap, and focus, scroll position and
+open `<details>` survive. CSRF tokens are masked before hashing because Django
+re-masks them per request; otherwise no two renders would ever share an ETag.
+
+**Component registry.** `webui/components.py` maps a component name to a
+template and a `build(request, pk, params) -> ComponentData(context, keys,
+immutable)`. The `{% component name pk key=value %}` tag renders inline or as a
+placeholder based on `component_inline` in the context. Components are wrapped
+in `<div class="c">` with `display: contents`, so the wrapper never affects
+layout.
+
+**State that is not in the URL.** The active sidebar row and the open rightbar
+tab are client state. Putting them in a component URL would fork the cache
+per click; the client marks the active row and the panel is its own component
+whose `tab` parameter is the only thing that varies.
+
+**Page state vs component state.** A page response sets `component_inline`
+and renders the tree; an htmx page response renders placeholders only. Component
+responses are always swapped `outerHTML`, so the wrapper (and its ETag) is
+replaced atomically.
+
 ### 5.7 The JS islands — and only these
 
 Everything else is HTML. These four are real modules with a documented contract,
@@ -609,9 +671,12 @@ surface**.
   `X-CSRFToken` via a `htmx:configRequest` listener reading a `<meta>` tag.
 - SSE: session cookie, same-origin. `EventSource` sends cookies by default.
   This removes the `?token=<csrf>` handshake.
-- `/sse/?scope=…` is resolved server-side against the same scoped querysets the
-  pages use. A scope value that the caller cannot read returns 404, not a
-  filtered stream. Never accept raw observable keys from the client.
+- `/sse/?client=<id>` is a per-tab channel. The tab registers the keys it
+  renders through `POST /app/sse/watch`; the server never broadcasts an event
+  to a tab that did not ask for that key. The client id is validated as an
+  opaque token and is only ever used to address that tab's channel, never to
+  widen a queryset — component URLs re-resolve their own scope on every
+  request.
 - Add `@login_required` to every new view. It costs nothing and removes the
   current ambiguity. — **done via middleware**: `webui.middleware.
   WebuiLoginRequiredMiddleware` redirects anonymous `/app/` requests to the

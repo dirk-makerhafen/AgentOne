@@ -28,7 +28,6 @@ from server.models.settings import AgentToolCallSyntax, ResponseTemperature, Sub
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.workspace import WorkspaceModel
 from webui.views.workspaces import workspace_directory_context
-from webui.views.shell import sidebar_fragment
 from webui.chat_cards import queue_text
 from webui.thread import (
     DEFAULT_LIMIT,
@@ -1856,13 +1855,10 @@ def chat_action(request, session_id: int):
                 _panel_context(session_model, tab, request),
             )
         if surface == "sidebar":
-            section = (request.POST.get("sidebar_section") or "chats").strip()
-            active = (request.POST.get("sidebar_active") or "").strip()
-            request.GET = request.GET.copy()
-            request.GET["section"] = section
-            if active:
-                request.GET["active"] = active
-            return sidebar_fragment(request)
+            # The sidebar is a live component; its own observable keys refetch
+            # it after the model write.  No HTML is returned here so the POST
+            # never races the SSE-driven refresh.
+            return HttpResponse(status=204)
 
     return _chat_action_redirect(request, session_model)
 

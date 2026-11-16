@@ -7,20 +7,13 @@ string, the URL contract, the sidebar wiring, and the log tail helper.
 
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 from django.test import override_settings
 from django.urls import reverse
 
 from webui.markdown import render_markdown
 from webui.templatetags.webui import get_item, static_v
-from webui.views.common import (
-    NAV_SECTIONS,
-    SIDEBAR_TEMPLATES,
-    SIDEBAR_TRIGGERS,
-)
-from webui.events import _resolve_scope
+from webui.views.common import NAV_SECTIONS, SIDEBAR_TEMPLATES
 from webui.views.logs import _resolve, log_files, tail
 
 
@@ -89,7 +82,7 @@ def test_markdown_is_cached_and_stable():
 def test_url_names_reverse():
     assert reverse("webui:dashboard") == "/app/"
     assert reverse("webui:chats") == "/app/chats"
-    assert reverse("webui:sidebar") == "/app/sidebar"
+    assert reverse("webui:chats_sidebar") == "/app/chats/sidebar"
     assert reverse("webui:sse") == "/app/sse/"
     assert reverse("webui:new_chat") == "/app/chat/new"
     assert reverse("webui:chat", args=[12]) == "/app/chat/12"
@@ -187,33 +180,30 @@ def test_get_item_filter_looks_up_dict_keys():
     assert get_item(None, "ready") is None
 
 
-def test_every_nav_section_has_a_sidebar_template():
+def test_every_nav_section_has_a_sidebar_component():
+    from webui.components import get_spec
+
     for key, _label in NAV_SECTIONS:
         assert key in SIDEBAR_TEMPLATES, key
-    # Data-driven panels self-refresh; the static tab lists do not need to.
-    for key in (
-        "dashboard",
-        "chats",
-        "agents",
-        "projects",
-        "workspaces",
-        "skills",
-        "cron",
-        "collections",
-        "workitems",
+        spec = get_spec(f"{key}-sidebar")
+        assert spec.template == "webui/shell/_sidebar.html"
+        assert reverse(f"webui:{key}_sidebar").startswith("/app/")
+
+
+def test_component_registry_covers_chat_and_sidebars():
+    from webui.components import _REGISTRY
+
+    for name in (
+        "chat-header",
+        "chat-thread",
+        "chat-message",
+        "chat-query",
+        "chat-response",
+        "chat-toc",
+        "chat-composer",
+        "chat-panel",
     ):
-        assert key in SIDEBAR_TRIGGERS, key
-
-
-def test_global_scope_subscribes_to_every_model_key():
-    keys = asyncio.run(_resolve_scope("global"))
-    assert keys is not None
-    assert "SessionModel" in keys
-    assert "WorkItem" in keys
-
-
-def test_unknown_scope_is_rejected():
-    assert asyncio.run(_resolve_scope("nope")) is None
+        assert name in _REGISTRY, name
 
 
 def test_log_tail_reads_the_last_lines(tmp_path):
@@ -284,7 +274,8 @@ def test_boosted_shell_routes_render_fragments(client):
 def test_full_page_load_keeps_document_shell(client):
     response = client.get(reverse("webui:dashboard"))
     assert b"<!DOCTYPE html>" in response.content
-    assert b'<body hx-boost="true">' in response.content
+    assert b'<body hx-boost="true"' in response.content
+    assert b'hx-ext="sse"' in response.content
     assert "HX-Request" in response["Vary"]
 
 
@@ -338,9 +329,7 @@ def test_boosted_navigation_returns_body_fragment(client):
 @pytest.mark.django_db
 def test_fragment_endpoints_are_unaffected_by_boost(client):
     """Explicit fragment URLs keep returning fragments for boosted requests."""
-    response = client.get(
-        reverse("webui:sidebar"), {"section": "chats"}, HTTP_HX_REQUEST="true"
-    )
+    response = client.get(reverse("webui:chats_sidebar"), HTTP_HX_REQUEST="true")
     assert response.status_code == 200
     assert b"<!DOCTYPE" not in response.content
     assert b'id="sidebar"' in response.content
@@ -402,7 +391,7 @@ def test_manifest_entity_detail_pages_render(client, tmp_path):
 @pytest.mark.django_db
 def test_sidebar_fragment_renders_for_every_section(client):
     for key, _label in NAV_SECTIONS:
-        response = client.get(reverse("webui:sidebar"), {"section": key})
+        response = client.get(reverse(f"webui:{key}_sidebar"))
         assert response.status_code == 200, key
         assert b'class="sidebar"' in response.content
 
@@ -437,19 +426,19 @@ def test_sidebar_project_filter_scopes_and_persists(client):
 
     # Later sidebar requests without the query parameter keep the saved
     # selection (the legacy ProjectSelector behaved the same across tabs).
-    agents_side = client.get(reverse("webui:sidebar"), {"section": "agents"})
+    agents_side = client.get(reverse("webui:agents_sidebar"))
     assert b"alpha-agent" in agents_side.content
     assert b"beta-agent" not in agents_side.content
-    skills_side = client.get(reverse("webui:sidebar"), {"section": "skills"})
+    skills_side = client.get(reverse("webui:skills_sidebar"))
     assert b"alpha-skill" in skills_side.content
     assert b"beta-skill" not in skills_side.content
-    cron_side = client.get(reverse("webui:sidebar"), {"section": "cron"})
+    cron_side = client.get(reverse("webui:cron_sidebar"))
     assert b"alpha-cron" in cron_side.content
     assert b"beta-cron" not in cron_side.content
 
     # Empty value clears it.
     client.get(reverse("webui:agents"), {"project": ""})
-    cleared = client.get(reverse("webui:sidebar"), {"section": "agents"})
+    cleared = client.get(reverse("webui:agents_sidebar"))
     assert b"alpha-agent" in cleared.content
     assert b"beta-agent" in cleared.content
 
@@ -1610,7 +1599,7 @@ def test_send_message_passes_image_parts(client, monkeypatch):
 def test_sidebar_search_filters_chats(client):
     _session_with_version("alpha chat")
     _session_with_version("beta chat")
-    response = client.get(reverse("webui:sidebar"), {"section": "chats", "q": "alpha"})
+    response = client.get(reverse("webui:chats_sidebar"), {"q": "alpha"})
     assert response.status_code == 200
     assert b"alpha chat" in response.content
     assert b"beta chat" not in response.content
@@ -1636,7 +1625,16 @@ def test_chat_header_shows_context_usage(client, monkeypatch):
     assert b"10%" in response.content
     assert b"ctx-ring-value" in response.content
     assert b"1k of 10k" in response.content
-    assert b"sse:Query.session:" in response.content
+
+    # SSE triggers live on the component wrapper, not inside the partial.
+    component = client.get(
+        reverse("webui:component", args=["chat-header", session.pk]),
+        {"render": "htmx"},
+    )
+    assert component.status_code == 200
+    assert b"10%" in component.content
+    assert b"sse:Query.session:" in component.content
+    assert b"sse:SessionModel:" in component.content
 
 
 # ---------------------------------------------------------------------------
@@ -1900,7 +1898,7 @@ def test_sidebar_marks_streaming_and_approval_sessions(client):
 
     AgentTaskCall.objects.filter(pk=call.pk).update(requires_approval=True)
 
-    response = client.get(reverse("webui:sidebar"), {"section": "chats"})
+    response = client.get(reverse("webui:chats_sidebar"))
     assert response.status_code == 200
     body = response.content.decode()
     assert "is-streaming" in body
@@ -2175,7 +2173,7 @@ def test_sidebar_nests_child_sessions_and_counts_subagents(client):
     parent = SessionModel.objects.create(name="Parent chat")
     SessionModel.objects.create(name="Child subagent", parent_session=parent)
 
-    response = client.get(reverse("webui:sidebar"), {"section": "chats"})
+    response = client.get(reverse("webui:chats_sidebar"))
     assert response.status_code == 200
     content = response.content
     assert b"Parent chat" in content

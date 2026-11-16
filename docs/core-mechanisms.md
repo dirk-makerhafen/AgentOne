@@ -269,10 +269,9 @@ links (`inherit_templates`, hooked into
 only — version rows stay as the audit trail. The `template_*` tools
 (`.agentone/scripts/core/query_template.py`) list/get/save/delete/render
 them, and `template_execute` dispatches the rendered prompt through the
-`call_llm_direct` ephemeral pipeline; the Templates tab
-(`ui/main/rightpanel/session/rightpanel_session_templates.py`) offers the
-same flow in the UI and tracks the run via the
-`AgentTaskCall.session:<sid>` observable.
+`call_llm_direct` ephemeral pipeline; the Templates panel
+(`webui/chat/_panel_body.html`) offers the same flow in the UI and tracks the
+run via the `AgentTaskCall.session:<sid>` observable.
 
 ### ContextTracker — Parent-Child Tracking
 

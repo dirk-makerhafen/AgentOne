@@ -9,7 +9,6 @@ from django.db import models
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 from server.models.sessions.session import SessionModel
 
 AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE = LRUCache(maxsize=1024)
@@ -18,26 +17,6 @@ AGENT_INSTANCE_VERSION_RUNTIME_CLASS_INSTANCE_CACHE = LRUCache(maxsize=1024)
 class SessionVersionModel(BaseModel):
     """A versioned snapshot of a session's configuration and agent binding."""
 
-    class SessionVersionModelObservableKeys(ObservableKeys):
-        """Explicit observable keys for a SessionVersionModel (IDE autocomplete)."""
-        @property
-        def messages(self):
-            return f"Message.session_version:{self.model.pk}"
-        @property
-        def queries(self):
-            return f"Query.session_version:{self.model.pk}"
-        @property
-        def responses(self):
-            return f"Response.session_version:{self.model.pk}"
-        @property
-        def task_calls(self):
-            return f"AgentTaskCall.session_version:{self.model.pk}"
-        @property
-        def task_runs(self):
-            return f"AgentTaskRun.session_version:{self.model.pk}"
-        @property
-        def task_instances(self):
-            return f"TaskInstance.session_version:{self.model.pk}"
 
     session = models.ForeignKey(SessionModel, on_delete=models.CASCADE, related_name="related_session_versions")
     agent = models.ForeignKey(AgentModel, on_delete=models.CASCADE, related_name="related_session_versions")

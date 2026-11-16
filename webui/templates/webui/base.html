@@ -21,7 +21,7 @@
     <script src="{% static_v 'webui/app.js' %}" defer></script>
     {% block head %}{% endblock %}
 </head>
-<body hx-boost="true">
+<body hx-boost="true" hx-ext="sse" data-sse-url="{% url 'webui:sse' %}" data-sse-watch-url="{% url 'webui:sse_watch' %}">
 {% block body %}{% endblock %}
 </body>
 </html>

@@ -5,7 +5,7 @@ AgentOne is a Django-based autonomous agent framework with real-time Web UI, sch
 ## Features
 
 - **Multi-agent runtime** — Run multiple agents with independent configurations, models, and tool sets, each with version-pinned agent definitions
-- **Real-time server-rendered UI** — Django templates + htmx + SSE deliver live fragments without a Node build step or a page reload (the legacy pyHtmlGui UI is frozen at `/legacy/`)
+- **Real-time server-rendered UI** — Django templates + htmx + SSE deliver independently cached live fragments without a Node build step or a page reload
 - **Versioned everything** — Agents, tools, sessions, and settings are immutable once created; changes produce new versions with full history
 - **Plugin tool system** — Tools are plain Python functions in YAML-defined groups with auto-extracted JSON schemas — no decorators
 - **Celery task pipeline** — Asynchronous task dispatch with scheduling (5s tick, 2min heartbeat), state machine execution, and dependency resolution via M2M references

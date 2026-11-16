@@ -1,6 +1,6 @@
 from django.urls import path
 
-from webui import events, views
+from webui import components, events, views
 
 app_name = "webui"
 
@@ -8,9 +8,27 @@ urlpatterns = [
     # Shell ---------------------------------------------------------------
     path("", views.dashboard, name="dashboard"),
     path("chats", views.chats, name="chats"),
-    path("sidebar", views.sidebar_fragment, name="sidebar"),
     path("sse/", events.sse_stream, name="sse"),
+    path("sse/watch", events.sse_watch, name="sse_watch"),
+    # Components ----------------------------------------------------------
+    path("c/<str:name>", components.render_component, name="component_root"),
+    path("c/<str:name>/<int:pk>", components.render_component, name="component"),
+    # Section sidebars (cached, independently refreshed) -------------------
+    path("dashboard/sidebar", views.section_sidebar, {"section": "dashboard"}, name="dashboard_sidebar"),
+    path("chats/sidebar", views.section_sidebar, {"section": "chats"}, name="chats_sidebar"),
+    path("agents/sidebar", views.section_sidebar, {"section": "agents"}, name="agents_sidebar"),
+    path("projects/sidebar", views.section_sidebar, {"section": "projects"}, name="projects_sidebar"),
+    path("workspaces/sidebar", views.section_sidebar, {"section": "workspaces"}, name="workspaces_sidebar"),
+    path("skills/sidebar", views.section_sidebar, {"section": "skills"}, name="skills_sidebar"),
+    path("cron/sidebar", views.section_sidebar, {"section": "cron"}, name="cron_sidebar"),
+    path("collections/sidebar", views.section_sidebar, {"section": "collections"}, name="collections_sidebar"),
+    path("workitems/sidebar", views.section_sidebar, {"section": "workitems"}, name="workitems_sidebar"),
+    path("memory/sidebar", views.section_sidebar, {"section": "memory"}, name="memory_sidebar"),
+    path("insights/sidebar", views.section_sidebar, {"section": "insights"}, name="insights_sidebar"),
+    path("logs/sidebar", views.section_sidebar, {"section": "logs"}, name="logs_sidebar"),
+    path("settings/sidebar", views.section_sidebar, {"section": "settings"}, name="settings_sidebar"),
     # Chat ----------------------------------------------------------------
+    path("chats/<int:session_id>", views.chat_page, name="chat_by_id"),
     path("chat/new", views.new_chat, name="new_chat"),
     path("chat/<int:session_id>", views.chat_page, name="chat"),
     path("chat/<int:session_id>/thread", views.thread_fragment, name="thread"),

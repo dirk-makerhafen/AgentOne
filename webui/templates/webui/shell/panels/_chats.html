@@ -5,7 +5,12 @@
         {% if show_archived %}Active{% else %}Archived{% endif %}
     </a>
 </div>
-<form class="webui-sidebar-search" method="get" action="{% url 'webui:chats' %}">
+<form class="webui-sidebar-search" method="get"
+      action="{% url 'webui:chats' %}"
+      hx-get="{{ sidebar_base_url }}"
+      hx-target="closest [data-component]"
+      hx-swap="outerHTML"
+      hx-sync="this:replace">
     {% if show_archived %}<input type="hidden" name="archived" value="1">{% endif %}
     <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search chats…"
            autocomplete="off" aria-label="Search chats">

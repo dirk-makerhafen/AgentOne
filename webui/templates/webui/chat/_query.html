@@ -1,7 +1,7 @@
 <details class="query-card webui-query-card{% if row.obj.status == 'ACTIVE' %} query-active{% endif %}"
          data-open-key="query-{{ row.obj.pk }}"
          hx-get="{% url 'webui:query_detail' row.obj.pk %}"
-         hx-trigger="toggle once, sse:Query.session:{{ session.pk }} delay:150ms"
+         hx-trigger="toggle once"
          hx-target="find .query-card-detail"
          hx-swap="innerHTML"
          hx-sync="this:replace">

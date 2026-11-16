@@ -3,8 +3,8 @@
     {% if thread_has_older %}
     <div class="webui-load-older">
         <button class="webui-action-btn" type="button"
-                hx-get="{% url 'webui:thread' session.pk %}?limit={{ thread_older_limit }}{% if thread_around %}&around={{ thread_around }}{% endif %}&full=1"
-                hx-target="#thread"
+                hx-get="{% url 'webui:component' 'chat-thread' session.pk %}?limit={{ thread_older_limit }}{% if thread_around %}&around={{ thread_around }}{% endif %}&render=htmx"
+                hx-target="closest [data-component='chat-thread']"
                 hx-swap="outerHTML">
             Load older messages
         </button>
@@ -13,11 +13,11 @@
 
     {% for row in rows %}
         {% if row.kind == "message" %}
-            {% include "webui/chat/_message.html" %}
+            {% component "chat-message" row.obj.pk %}
         {% elif row.kind == "query" %}
-            {% include "webui/chat/_query.html" %}
+            {% component "chat-query" row.obj.pk %}
         {% else %}
-            {% include "webui/chat/_response.html" %}
+            {% component "chat-response" row.obj.pk %}
         {% endif %}
     {% empty %}
         {% if not pending_text %}

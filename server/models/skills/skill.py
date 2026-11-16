@@ -4,27 +4,13 @@ from typing import Any
 
 from django.db import models
 
-from server.models.observables import ObservableMixin, ObservableKeys
+from server.models.observables import ObservableMixin
 from server.models.skills.skill_version import SkillModelVersion
 
 
 class SkillModel(ObservableMixin, models.Model):
     """A skill group that versions its configuration over time."""
 
-    class SkillModelObservableKeys(ObservableKeys):
-        """Explicit observable keys for an SkillModel (IDE autocomplete)."""
-        @property
-        def child_agents(self):
-            return f"AgentModel.parent_skill:{self.model.pk}"
-        @property
-        def child_skills(self):
-            return f"SkillModel.parent_skill:{self.model.pk}"
-        @property
-        def versions(self):
-            return f"SkillModelVersion.skill:{self.model.pk}"
-        @property
-        def task_definitions(self):
-            return f"TaskDefinition.parent_skill:{self.model.pk}"
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

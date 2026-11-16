@@ -10,7 +10,7 @@ from typing import Any
 from django.db import models
 from django_enum import EnumField
 
-from server.models.observables import ObservableMixin, ObservableKeys
+from server.models.observables import ObservableMixin
 
 
 # Context-budget estimate for a single image part.  Providers bill per image
@@ -45,8 +45,6 @@ class GenericContent(ObservableMixin, models.Model):
     optional expiry for automatic cleanup.
     """
 
-    class GenericContentObservableKeys(ObservableKeys):
-        """Explicit observable keys for a GenericContent (IDE autocomplete)."""
 
     sha256: str = models.CharField(max_length=64, primary_key=True)
     content: str = models.TextField()

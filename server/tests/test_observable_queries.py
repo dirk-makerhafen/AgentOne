@@ -1,250 +1,397 @@
-"""Tests for callback-based observable ORM subscriptions."""
+"""Tests for the read-side observable API.
+
+The important invariant is cross-side: every key a list subscribes to must be
+a key the write side actually publishes for a row in that state.  A list that
+filters on something the publisher never emits would silently go stale.
+"""
 from __future__ import annotations
 
-import threading
-from unittest.mock import patch
+import pytest
+from django.apps import apps
 
-import fakeredis
-from django.db import connection
-from django.test import TestCase
-from django.test.utils import CaptureQueriesContext
-
-from server.models import observables
+from runtime.observable_keys import observable_keys
 from runtime.observable_queries import (
-    ObservableProject,
-    ObservableRoot,
-    ObservableSession,
-    ObservableSubscription,
-    ObservableWorkspace,
+    ObservableList,
+    ObservableValue,
+    RowObservables,
+    api_for,
+    pk_key,
+    relation_key,
+    root_key,
 )
-from server.models.agents.agent import AgentModel
+from runtime.observable_queries.agents import AgentObservables, SkillObservables
+from runtime.observable_queries.conversation import (
+    MessageObservables,
+    QueryObservables,
+    ResponseObservables,
+    TaskCallObservables,
+)
+from runtime.observable_queries.sessions import SessionObservables
+from runtime.observable_queries.structure import (
+    AiModelObservables,
+    ProjectObservables,
+    ProviderObservables,
+    TerminalObservables,
+    WorkspaceObservables,
+)
+from runtime.observable_queries.work import (
+    CollectionObservables,
+    CronjobObservables,
+    WorkItemObservables,
+)
 from server.models.enums.message_enums import MessageRole
-from server.models.message import Message
-from server.models.project import Project
-from server.models.skills.skill import SkillModel
-from server.models.sessions.session import SessionModel
-from server.models.workspace import WorkspaceModel
-from server.models.providers.api_key import ApiKey
-from server.models.providers.api_provider import ApiProvider
-from server.models.system import System
-from server.tests.dc_test_helpers import create_agent, create_session
+from server.models.workitems.enums import WorkItemStatus
+from server.tests.dc_test_helpers import (
+    create_agent,
+    create_completed_call,
+    create_data_collection,
+    create_session,
+    create_task,
+)
 
 
-class ObservableSubscriptionTest(TestCase):
-    def setUp(self):
-        self.redis = fakeredis.FakeStrictRedis(decode_responses=True)
-        patcher = patch.object(observables, "get_redis", return_value=self.redis)
-        patcher.start()
-        self.addCleanup(patcher.stop)
+def _published(instance) -> set[str]:
+    return set(observable_keys(instance))
 
-    def test_root_api_sends_initial_serialized_snapshot(self):
-        project = Project.objects.create(name="observable-project")
-        events = []
 
-        with CaptureQueriesContext(connection) as captured_queries:
-            subscription = ObservableRoot().get_projects(events.append)
-        self.addCleanup(subscription.close)
+def _assert_subscribed(result, instance):
+    assert isinstance(result, ObservableList)
+    assert isinstance(result.rows, tuple)
+    assert result.keys
+    missing = set(result.keys) - _published(instance)
+    assert not missing, f"{result.keys} not published by {instance!r}: {missing}"
 
-        self.assertFalse(any("ORDER BY" in query["sql"].upper() for query in captured_queries))
-        self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["type"], "snapshot")
-        self.assertEqual(events[0]["items"][0]["pk"], project.pk)
-        self.assertEqual(events[0]["items"][0]["name"], project.name)
-        self.assertTrue(events[0]["items"][0]["revision"])
-        self.assertEqual(subscription.keys, ("Project",))
-        self.assertTrue(any(
-            "Project" in str(key) for key in self.redis.keys("agentone:obs:*")
-        ))
 
-    def test_subscribe_before_initial_read_buffers_events(self):
-        events = []
-        subscription = ObservableSubscription(
-            events.append,
-            Project,
-            lambda item: item["model"] == "Project",
-        )
-        self.addCleanup(subscription.close)
-        subscription.start(("Project",))
-        event_item = {
-            "model": "Project",
-            "pk": 42,
-            "revision": "2026-11-08T00:00:00Z",
-            "name": "created-during-read",
-        }
+# ---------------------------------------------------------------------------
+# helpers / registry coverage
+# ---------------------------------------------------------------------------
 
-        subscription.dispatch({
-            "model": "Project",
-            "pk": 42,
-            "action": "create",
-            "data": {"object": event_item},
-        })
-        self.assertEqual(events, [])
+def test_key_helpers_accept_models_and_names():
+    from server.models.message import Message
 
-        subscription.initialize([])
+    assert pk_key(Message, 3) == "Message:3"
+    assert pk_key("Message", 3) == "Message:3"
+    assert relation_key(Message, "session", 4) == "Message.session:4"
+    assert relation_key("Message", "session", 4) == "Message.session:4"
+    assert root_key(Message) == "Message.root"
+    assert root_key("Message") == "Message.root"
 
-        self.assertEqual([event["type"] for event in events], ["snapshot", "upsert"])
-        self.assertEqual(events[1]["item"]["pk"], 42)
 
-    def test_unrelated_model_wide_event_does_not_emit_spurious_remove(self):
-        events = []
-        subscription = ObservableSubscription(
-            events.append,
-            AgentModel,
-            lambda item: (
-                item["model"] == "AgentModel"
-                and item.get("parent_project_id") == 7
-            ),
-        )
-        subscription.initialize([])
-        subscription.dispatch({
-            "model": "AgentModel",
-            "pk": 42,
-            "action": "update",
-            "data": {"object": {
-                "model": "AgentModel",
-                "pk": 42,
-                "parent_project_id": 8,
-                "revision": "2026-11-08T00:00:00Z",
-            }},
-        })
+def test_every_server_model_has_a_read_api():
+    missing = []
+    for model in apps.get_models():
+        if model._meta.app_label != "server":
+            continue
+        if model._meta.abstract or model._meta.proxy or model._meta.auto_created:
+            continue
+        try:
+            api_for(model)
+        except KeyError:
+            missing.append(model.__name__)
+    assert missing == []
 
-        self.assertEqual([event["type"] for event in events], ["snapshot"])
 
-    def test_project_and_session_named_queries_use_scoped_keys(self):
-        project = Project.objects.create(name="observable-project-scope")
-        agent, version = create_agent("observable-session-agent")
-        session, _ = create_session(agent, version)
-        message = Message.objects.create(
-            role=MessageRole.USER,
-            session=session,
-            session_version=session.latest_session_version,
-        )
-        project_events = []
-        session_events = []
-        project_update_received = threading.Event()
+def test_row_only_api_is_by_primary_key():
+    api = api_for("DebugLogEntry")
+    assert isinstance(api, RowObservables)
+    with pytest.raises(AttributeError):
+        api.root  # pylint: disable=pointless-statement
 
-        def capture_project_event(event):
-            project_events.append(event)
-            if event["type"] == "upsert":
-                project_update_received.set()
 
-        project_subscription = ObservableProject(project).get_agents(capture_project_event)
-        session_subscription = ObservableSession(session).get_messages(session_events.append)
-        self.addCleanup(project_subscription.close)
-        self.addCleanup(session_subscription.close)
+def test_observable_list_does_not_expose_a_queryset():
+    assert not hasattr(ObservableList, "filter")
+    assert not hasattr(ObservableValue, "filter")
 
-        project_agent = AgentModel.objects.create(
-            name="project-agent",
-            parent_project=project,
-        )
-        self.assertTrue(project_update_received.wait(2))
 
-        self.assertEqual(project_events[0]["type"], "snapshot")
-        self.assertEqual(project_events[-1]["item"]["pk"], project_agent.pk)
-        self.assertEqual(project_subscription.keys, (
-            "AgentModel",
-            f"AgentModel.parent_project:{project.pk}",
-        ))
-        self.assertEqual(session_events[0]["items"][0]["pk"], message.pk)
-        self.assertEqual(session_subscription.keys, (
-            "Message",
-            f"Message.session:{session.pk}",
-        ))
+# ---------------------------------------------------------------------------
+# sessions
+# ---------------------------------------------------------------------------
 
-    def test_project_list_receives_updates_and_removals_for_child_models(self):
-        project = Project.objects.create(name="observable-project-child-updates")
-        skill = SkillModel.objects.create(
-            name="observable-skill-before",
-            parent_project=project,
-        )
-        skill_pk = skill.pk
-        events = []
-        update_received = threading.Event()
-        remove_received = threading.Event()
+@pytest.mark.django_db
+def test_root_sessions_subscribe_to_the_active_filter():
+    agent, version = create_agent("query-root-agent")
+    session, _sv = create_session(agent, version)
 
-        def capture(event):
-            events.append(event)
-            if event["type"] == "upsert" and event["item"]["pk"] == skill_pk:
-                update_received.set()
-            elif event["type"] == "remove" and event["pk"] == skill_pk:
-                remove_received.set()
+    result = SessionObservables().root()
+    assert [row.pk for row in result.rows] == [session.pk]
+    assert result.keys == ("SessionModel.root@is_archived:false",)
+    _assert_subscribed(result, session)
 
-        subscription = ObservableProject(project).get_skills(capture)
-        self.addCleanup(subscription.close)
 
-        skill.name = "observable-skill-after"
-        skill.save()
-        self.assertTrue(update_received.wait(2))
-        update_event = next(
-            event for event in events
-            if event["type"] == "upsert" and event["item"]["pk"] == skill_pk
-        )
-        self.assertEqual(update_event["item"]["name"], "observable-skill-after")
+@pytest.mark.django_db
+def test_archived_sessions_are_excluded_from_the_default_root():
+    from server.models.sessions.session import SessionModel
 
-        skill.delete()
-        self.assertTrue(
-            remove_received.wait(2),
-            f"Expected removal; events={events!r}",
-        )
+    agent, version = create_agent("query-archived-agent")
+    live, _ = create_session(agent, version)
+    gone, _ = create_session(agent, version)
+    SessionModel.objects.filter(pk=gone.pk).update(is_archived=True)
 
-    def test_filtered_session_subscription_emits_remove_when_row_stops_matching(self):
-        agent, version = create_agent("observable-active-agent")
-        session, _ = create_session(agent, version)
-        child = SessionModel.objects.create(
-            name="inactive-child",
-            parent_session=session,
-            is_active=False,
-        )
-        events = []
-        subscription = ObservableSession(session).get_active_child_sessions(events.append)
-        self.addCleanup(subscription.close)
-        self.assertEqual(events[0]["items"], [])
-        event_received = threading.Event()
-        original_callback = subscription.callback
+    rows = SessionObservables().root()
+    assert [row.pk for row in rows.rows] == [live.pk]
+    assert "SessionModel.root@is_archived:true" not in rows.keys
 
-        def capture(event):
-            original_callback(event)
-            if event["type"] in ("upsert", "remove"):
-                event_received.set()
 
-        subscription.callback = capture
-        child.is_active = True
-        child.save()
+@pytest.mark.django_db
+def test_project_scoped_root_key_matches_the_writer():
+    from server.models.project import Project
+    from server.models.sessions.session import SessionModel
 
-        self.assertTrue(event_received.wait(2))
-        self.assertEqual(events[-1]["type"], "upsert")
-        self.assertEqual(events[-1]["item"]["pk"], child.pk)
-        event_received.clear()
-        child.is_active = False
-        child.save()
-        self.assertTrue(event_received.wait(2))
-        self.assertEqual(events[-1]["type"], "remove")
+    agent, version = create_agent("query-project-agent")
+    project = Project.objects.create(name="query-project")
+    session, _sv = create_session(agent, version)
+    SessionModel.objects.filter(pk=session.pk).update(parent_project=project)
+    session.refresh_from_db()
 
-    def test_workspace_scope_and_secret_field_redaction(self):
-        workspace = WorkspaceModel.objects.create(
-            name="observable-workspace",
-            path="/tmp/observable-workspace",
-        )
-        events = []
-        subscription = ObservableWorkspace(workspace).get_terminals(events.append)
-        self.addCleanup(subscription.close)
+    result = SessionObservables().root(project_id=project.pk)
+    assert [row.pk for row in result.rows] == [session.pk]
+    assert result.keys == (
+        f"SessionModel.root@project:{project.pk}@is_archived:false",
+    )
+    _assert_subscribed(result, session)
 
-        api_key_data = ApiKey(key="do-not-publish").serialize_observable()
-        provider_data = ApiProvider(
-            name="observable-provider", default_api_key="do-not-publish"
-        ).serialize_observable()
-        system_data = System(executor_api_key="do-not-publish").serialize_observable()
 
-        self.assertEqual(subscription.keys, (
-            "TerminalSession",
-            f"TerminalSession.workspace:{workspace.pk}",
-        ))
-        self.assertNotIn("key", api_key_data)
-        self.assertNotIn("default_api_key", provider_data)
-        self.assertNotIn("executor_api_key", system_data)
+@pytest.mark.django_db
+def test_children_and_by_project_keys():
+    from server.models.project import Project
+    from server.models.sessions.session import SessionModel
 
-    def test_root_does_not_expose_generic_query_shapes(self):
-        root = ObservableRoot()
+    agent, version = create_agent("query-child-agent")
+    parent, _pv = create_session(agent, version)
+    project = Project.objects.create(name="query-child-project")
+    child = SessionModel.objects.create(
+        name="child",
+        parent_session=parent,
+        parent_project=project,
+        latest_session_version=parent.latest_session_version,
+    )
 
-        self.assertFalse(hasattr(root, "get_all"))
-        self.assertFalse(hasattr(root, "get_related"))
+    children = SessionObservables().children(parent.pk)
+    assert [row.pk for row in children.rows] == [child.pk]
+    _assert_subscribed(children, child)
+
+    by_project = SessionObservables().by_project(project.pk)
+    assert {row.pk for row in by_project.rows} == {child.pk}
+    _assert_subscribed(by_project, child)
+
+
+@pytest.mark.django_db
+def test_active_subagent_count_uses_the_active_key():
+    agent, version = create_agent("query-count-agent")
+    parent, _pv = create_session(agent, version)
+    from server.models.sessions.session import SessionModel
+
+    SessionModel.objects.create(
+        name="sub",
+        parent_session=parent,
+        is_active=True,
+        latest_session_version=parent.latest_session_version,
+    )
+
+    value = SessionObservables().active_subagent_count()
+    assert isinstance(value, ObservableValue)
+    assert value.value == 1
+    assert value.keys == ("SessionModel@is_active:true",)
+
+
+# ---------------------------------------------------------------------------
+# conversation
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db
+def test_conversation_lists_subscribe_to_their_rows():
+    from server.models.message import Message
+    from server.models.queries.query import Query
+
+    agent, version = create_agent("query-conv-agent")
+    session, sv = create_session(agent, version)
+    message = Message.objects.create(
+        role=MessageRole.USER, session=session, session_version=sv
+    )
+    query = Query.objects.create(
+        session=session, session_version=sv, trigger_message=message
+    )
+    response = query.related_response.create(
+        session=session, session_version=sv
+    )
+    task = create_task("query-conv-task", agent=agent)
+    call = create_completed_call(agent, task, session, sv)
+
+    for api, instance, pk in (
+        (MessageObservables(), message, message.pk),
+        (QueryObservables(), query, query.pk),
+        (ResponseObservables(), response, response.pk),
+        (TaskCallObservables(), call, call.pk),
+    ):
+        by_session = api.by_session(session.pk)
+        assert pk in {row.pk for row in by_session.rows}
+        assert by_session.keys == (f"{type(instance).__name__}.session:{session.pk}",)
+        _assert_subscribed(by_session, instance)
+
+        by_pk = api.by_pk(pk)
+        assert by_pk.keys == (f"{type(instance).__name__}:{pk}",)
+        _assert_subscribed(by_pk, instance)
+
+
+@pytest.mark.django_db
+def test_responses_by_query_are_subscribed():
+    from server.models.queries.query import Query
+
+    agent, version = create_agent("query-response-agent")
+    session, sv = create_session(agent, version)
+    query = Query.objects.create(session=session, session_version=sv)
+    response = query.related_response.create(session=session, session_version=sv)
+
+    result = ResponseObservables().by_query(query.pk)
+    assert [row.pk for row in result.rows] == [response.pk]
+    _assert_subscribed(result, response)
+
+
+# ---------------------------------------------------------------------------
+# agents / skills / structure
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db
+def test_agent_and_skill_lists_use_bare_model_keys():
+    agent, _version = create_agent("query-list-agent")
+    assert AgentObservables().root().keys == ("AgentModel",)
+    assert SkillObservables().root().keys == ("SkillModel",)
+
+
+@pytest.mark.django_db
+def test_agents_by_parent_project_subscribe_to_the_archive_filter():
+    from server.models.agents.agent import AgentModel
+    from server.models.project import Project
+
+    project = Project.objects.create(name="query-agent-project")
+    agent = AgentModel.objects.create(name="query-parent-agent", parent_project=project)
+
+    result = AgentObservables().by_parent_project(project.pk)
+    assert [row.pk for row in result.rows] == [agent.pk]
+    _assert_subscribed(result, agent)
+
+
+@pytest.mark.django_db
+def test_projects_workspaces_and_providers():
+    from server.models.project import Project
+    from server.models.providers.api_provider import ApiProvider
+    from server.models.workspace import WorkspaceModel
+
+    project = Project.objects.create(name="query-project-list")
+    workspace = WorkspaceModel.objects.create(name="ws", path="/tmp/ws")
+    provider = ApiProvider.objects.create(name="prov")
+
+    assert ProjectObservables().root().keys == ("Project.root",)
+    assert [row.pk for row in ProjectObservables().by_pk(project.pk).rows] == [project.pk]
+
+    root_ws = WorkspaceObservables().root()
+    assert "WorkspaceModel" in root_ws.keys
+    assert [row.pk for row in ProviderObservables().root().rows] == [provider.pk]
+
+
+@pytest.mark.django_db
+def test_workspace_by_project_key():
+    from server.models.project import Project
+    from server.models.workspace import WorkspaceModel
+
+    project = Project.objects.create(name="query-ws-project")
+    workspace = WorkspaceModel.objects.create(
+        name="nested-ws", path="/tmp/nested", parent_project=project
+    )
+
+    result = WorkspaceObservables().by_project(project.pk)
+    assert [row.pk for row in result.rows] == [workspace.pk]
+    _assert_subscribed(result, workspace)
+
+
+@pytest.mark.django_db
+def test_terminals_and_ai_models_subscribe_to_their_owner():
+    from server.models.providers.ai_model import AiModel
+    from server.models.providers.api_provider import ApiProvider
+    from server.models.terminal import TerminalSession
+
+    agent, version = create_agent("query-terminal-agent")
+    session, _sv = create_session(agent, version)
+    terminal = TerminalSession.objects.create(
+        session=session, tmux_session_name="tmux-query-test"
+    )
+    provider = ApiProvider.objects.create(name="query-provider")
+    model = AiModel.objects.create(name="query-model", api_provider=provider)
+
+    terminal_list = TerminalObservables().by_session(session.pk)
+    assert [row.pk for row in terminal_list.rows] == [terminal.pk]
+    _assert_subscribed(terminal_list, terminal)
+
+    model_list = AiModelObservables().by_provider(provider.pk)
+    assert [row.pk for row in model_list.rows] == [model.pk]
+    _assert_subscribed(model_list, model)
+
+
+# ---------------------------------------------------------------------------
+# cron / collections / work items
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db
+def test_cron_lists_and_project_filter():
+    from server.models.cron import Cronjob
+    from server.models.project import Project
+
+    project = Project.objects.create(name="query-cron-project")
+    cron = Cronjob.objects.create(
+        name="query-cron", schedule="* * * * *", parent_project=project
+    )
+
+    assert CronjobObservables().root().keys == ("Cronjob",)
+    by_project = CronjobObservables().by_project(project.pk)
+    assert [row.pk for row in by_project.rows] == [cron.pk]
+    _assert_subscribed(by_project, cron)
+
+
+@pytest.mark.django_db
+def test_collection_lists():
+    from server.models.collections.collection_item import CollectionItem
+    from server.models.project import Project
+
+    project = Project.objects.create(name="query-collection-project")
+    collection = create_data_collection("query-collection", parent_project=project)
+    item = CollectionItem.objects.create(
+        collection=collection, member="m", score=1.0, value={}
+    )
+
+    assert CollectionObservables().root().keys == ("DataCollection",)
+    by_project = CollectionObservables().by_project(project.pk)
+    assert [row.pk for row in by_project.rows] == [collection.pk]
+    _assert_subscribed(by_project, collection)
+
+    from runtime.observable_queries.work import CollectionItemObservables
+
+    items = CollectionItemObservables().by_collection(collection.pk)
+    assert [row.pk for row in items.rows] == [item.pk]
+    _assert_subscribed(items, item)
+
+
+@pytest.mark.django_db
+def test_work_item_lists_expose_the_terminal_filter():
+    from server.models.project import Project
+    from server.models.workitems.work_item import WorkItem
+
+    project = Project.objects.create(name="query-work-project")
+    live = WorkItem.objects.create(title="live", project=project)
+    done = WorkItem.objects.create(
+        title="done", project=project, status=WorkItemStatus.DONE
+    )
+
+    root = WorkItemObservables().root()
+    assert root.keys == ("WorkItem",)
+    assert {row.pk for row in root.rows} == {live.pk}
+
+    archived_root = WorkItemObservables().root(terminal=True)
+    assert {row.pk for row in archived_root.rows} == {live.pk, done.pk}
+
+    by_project = WorkItemObservables().by_project(project.pk)
+    assert {row.pk for row in by_project.rows} == {live.pk}
+    _assert_subscribed(by_project, live)
+
+    terminal = WorkItemObservables().by_project(project.pk, terminal=True)
+    assert {row.pk for row in terminal.rows} == {live.pk, done.pk}
+    _assert_subscribed(terminal, done)

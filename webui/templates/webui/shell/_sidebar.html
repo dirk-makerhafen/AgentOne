@@ -1,8 +1,5 @@
 {% load webui %}
-<aside class="sidebar" id="sidebar"{% if sidebar_triggers %}
-       hx-get="{% url 'webui:sidebar' %}?{{ sidebar_qs }}"
-       hx-trigger="{{ sidebar_triggers }}"
-       hx-swap="outerHTML"{% endif %}>
+<aside class="sidebar" id="sidebar">
     <div class="sidebar-top-bar">
         <a class="webui-brand" href="{% url 'webui:dashboard' %}" title="AgentOne home">AgentOne</a>
         <form method="post" action="{% url 'webui:new_chat' %}" class="webui-new-chat">
@@ -11,7 +8,11 @@
         </form>
     </div>
     {% if sidebar_projects %}
-    <form class="sidebar-project-bar" method="get">
+    <form class="sidebar-project-bar" method="get"
+          hx-get="{{ sidebar_base_url }}"
+          hx-target="closest [data-component]"
+          hx-swap="outerHTML"
+          hx-sync="this:replace">
         {% if show_archived %}<input type="hidden" name="archived" value="1">{% endif %}
         {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
         <label class="sr-only" for="sidebar-project-select">Filter sidebar by project</label>

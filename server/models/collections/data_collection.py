@@ -4,7 +4,6 @@ from __future__ import annotations
 from django.db import models
 
 from server.models.base_model import BaseModel
-from server.models.observables import ObservableKeys
 
 
 
@@ -16,15 +15,6 @@ class DataCollection(BaseModel):
     reprocess settings) so each collection is self-contained.
     """
 
-    class DataCollectionObservableKeys(ObservableKeys):
-        """Explicit observable keys for an DataCollection (IDE autocomplete)."""
-        @property
-        def items(self):
-            return f"CollectionItem.collection:{self.model.pk}"
-
-        @property
-        def parent_project(self):
-            return f"DataCollection.parent_project:{self.model.parent_project_id}"
         
     COLLECTION_TYPES = [("stream", "Stream"), ("set", "Ordered Set")]
 
