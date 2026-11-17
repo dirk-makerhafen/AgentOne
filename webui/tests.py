@@ -14,7 +14,7 @@ from django.urls import reverse
 from webui.core.markdown import render_markdown
 from webui.templatetags.webui import get_item, static_v
 from webui.core.shell import NAV_SECTIONS, SIDEBAR_TEMPLATES
-from webui.views.logs import _resolve, log_files, tail
+from webui.features.logs.views import _resolve, log_files, tail
 
 
 @pytest.fixture(autouse=True)
@@ -962,7 +962,7 @@ def test_workspace_manager_reports_missing_agent(client, tmp_path):
 def test_agent_capabilities_preserve_disallowed_names():
     from types import SimpleNamespace
 
-    from webui.views.agents import _capability_sections
+    from webui.features.agents.views import _capability_sections
 
     values = {
         "toolNames": ["shell", "read"],
@@ -998,7 +998,7 @@ def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
     from server.models.agents.agent import AgentModel
     from server.models.agents.agent_version import AgentVersionModel
     from server.models.sessions.session import SessionModel
-    from webui.views import assistants
+    from webui.core import assistants
 
     subject = AgentModel.objects.create(name="assistant-target")
     assistant = AgentModel.objects.create(name="agent_assistant")
@@ -1032,7 +1032,7 @@ def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
 
 @pytest.mark.django_db
 def test_overview_pages_render_embedded_assistant_panels(client, monkeypatch):
-    from webui.views import assistants
+    from webui.core import assistants
 
     assistant_names = {
         "dashboard": "AgentOne",
@@ -1066,7 +1066,7 @@ def test_overview_pages_render_embedded_assistant_panels(client, monkeypatch):
 @pytest.mark.django_db
 def test_workitems_overview_assistant_preserves_project_scope(client, monkeypatch):
     from server.models.project import Project
-    from webui.views import assistants
+    from webui.core import assistants
 
     project = Project.objects.create(name="Assistant project scope")
     monkeypatch.setattr(
@@ -1303,7 +1303,7 @@ def test_settings_provider_probe_shows_in_status_column(client, monkeypatch):
     """Probe status is shown as a badge in the table's Status column (new UI).
     The polling probe row is only used in the provider detail rightbar."""
     from server.models.providers.api_provider import ApiProvider
-    import webui.views.settings as settings_views
+    import webui.features.settings.views as settings_views
 
     provider = ApiProvider.objects.create(name="Probe Provider")
     monkeypatch.setattr(
@@ -1548,7 +1548,7 @@ def test_connection_banner_is_present(client):
 def test_image_parts_accepts_only_image_data_uris():
     import json
 
-    from webui.views.chat import _image_parts
+    from webui.features.chats.views import _image_parts
 
     raw = json.dumps(
         [
@@ -1730,7 +1730,7 @@ def test_command_options_merge_commands_and_tools(monkeypatch):
 def test_compaction_segments_and_around_window():
     from server.models.enums.message_enums import MessageType
     from server.models.message import Message
-    from webui.features.chats.thread import build_thread
+    from webui.features.chats.parts.thread import build_thread
     from webui.core.shell import compaction_segments
 
     session, version = _session_with_version("toc")
@@ -2055,7 +2055,7 @@ def test_cron_create_edit_duplicate_run_and_delete(client, tmp_path, monkeypatch
     copy = Cronjob.objects.get(name="daily-report-copy")
     assert copy.function_type == ""
 
-    with patch("webui.views.cron.execute_cron_job") as execute:
+    with patch("webui.features.cron.views.execute_cron_job") as execute:
         response = client.post(reverse("webui:cron_run_now", args=[cron.pk]))
     assert response.status_code == 302
     execute.assert_called_once_with(cron.pk)
@@ -2263,7 +2263,7 @@ def test_insights_analytics_filters_and_dashboard_inspect(client):
     )
     assert page.context["inspect"]["count"] == 0
 
-    from webui.views.insights import _analytics_buckets
+    from webui.features.insights.views import _analytics_buckets
 
     assert _analytics_buckets("24h")[1] == "hour"
     assert _analytics_buckets("7d")[1] == "day"

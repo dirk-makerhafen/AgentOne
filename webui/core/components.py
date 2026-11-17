@@ -409,8 +409,8 @@ def _build_chat_header(request, pk, params):
 
 
 def _build_chat_thread(request, pk, params):
-    from webui.features.chats.cards import build_chat_cards
-    from webui.features.chats.thread import DEFAULT_LIMIT, build_thread
+    from webui.features.chats.parts.cards import build_chat_cards
+    from webui.features.chats.parts.thread import DEFAULT_LIMIT, build_thread
 
     session = _session(pk)
     limit = _int(params.get("limit"), DEFAULT_LIMIT)
@@ -450,7 +450,7 @@ def _build_chat_thread(request, pk, params):
 
 
 def _build_chat_message(request, pk, params):
-    from webui.features.chats.thread import _message_row
+    from webui.features.chats.parts.thread import _message_row
 
     message = _message(pk)
     row = _message_row(message)
@@ -469,7 +469,7 @@ def _build_chat_message(request, pk, params):
 
 def _build_chat_query(request, pk, params):
     from server.models.queries.query import Query, QueryStatus
-    from webui.features.chats.thread import Row
+    from webui.features.chats.parts.thread import Row
 
     query = Query.objects.select_related("session").get(pk=pk)
     response = query.related_response.order_by("-pk").first()
@@ -488,7 +488,7 @@ def _build_chat_query(request, pk, params):
 def _build_chat_response(request, pk, params):
     from server.models.queries.response import Response, ResponseStatus
     from webui.core.markdown import render_markdown
-    from webui.features.chats.thread import Row
+    from webui.features.chats.parts.thread import Row
 
     response = Response.objects.select_related("session").get(pk=pk)
     row = Row(

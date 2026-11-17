@@ -28,8 +28,8 @@ from server.models.settings import AgentToolCallSyntax, ResponseTemperature, Sub
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.workspace import WorkspaceModel
 from webui.features.workspaces.views import workspace_directory_context
-from webui.features.chats.cards import queue_text
-from webui.features.chats.thread import (
+from webui.features.chats.parts.cards import queue_text
+from webui.features.chats.parts.thread import (
     DEFAULT_LIMIT,
     build_call_detail,
     build_query_detail,

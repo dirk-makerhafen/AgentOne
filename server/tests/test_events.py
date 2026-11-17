@@ -1,4 +1,4 @@
-"""Tests for ``webui/events.py`` — the per-tab SSE stream and watch endpoint."""
+"""Tests for ``webui.core.events`` — the per-tab SSE stream and watch endpoint."""
 from __future__ import annotations
 
 import json
@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from django.urls import reverse
 
-from webui import events
+from webui.core import events
 
 
 @pytest.fixture

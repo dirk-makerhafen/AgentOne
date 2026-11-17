@@ -27,8 +27,8 @@ from server.models.message import Message
 from server.models.sessions.session import SessionModel
 from server.models.settings import ReasoningEffort
 from server.models.workspace import WorkspaceModel
-from webui.features.chats.cards import build_chat_cards
-from webui.features.chats.thread import DEFAULT_LIMIT, build_thread
+from webui.features.chats.parts.cards import build_chat_cards
+from webui.features.chats.parts.thread import DEFAULT_LIMIT, build_thread
 
 log = logging.getLogger(__name__)
 
