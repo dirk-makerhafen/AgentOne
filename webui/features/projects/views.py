@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from server.models.project import Project
 from server.models.workspace import WorkspaceModel
 from webui.core.assistants import assistant_overview_context, assistant_panel_context
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 
 def projects(request):

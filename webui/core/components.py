@@ -283,102 +283,15 @@ def render_component_ref(context, name: str, pk=None, params=None) -> str:
     return mark_safe(_wrap(name, pk, params, "", etag=None, keys=(), placeholder=True))
 
 
-# ---------------------------------------------------------------------------
-# Small shared helpers
-# ---------------------------------------------------------------------------
-
-def _session(pk: int):
-    from server.models.sessions.session import SessionModel
-
-    return SessionModel.objects.select_related(
-        "latest_session_version__agent",
-        "latest_session_version__agent__latest_agent_version",
-        "latest_session_version__agent__latest_agent_version__agent_settings",
-        "latest_session_version__pinned_agent_version",
-        "latest_session_version__session_settings",
-        "latest_session_version__workspace",
-        "parent_project",
-    ).get(pk=pk)
-
-
-def _message(pk: int):
-    from django.db.models import Prefetch
-
-    from server.models.message import Message, MessagePart
-
-    return (
-        Message.objects.select_related("response")
-        .prefetch_related(
-            Prefetch(
-                "parts",
-                queryset=MessagePart.objects.select_related(
-                    "content",
-                    "template_data",
-                    "tool_call",
-                    "tool_call__task_definition",
-                    "tool_call__task_definition_version__task_definition",
-                ).order_by("pk"),
-            )
-        )
-        .get(pk=pk)
-    )
-
 
 # ---------------------------------------------------------------------------
-# Section sidebars
+# Section sidebar helper (used by feature modules)
 # ---------------------------------------------------------------------------
 
-def _sidebar_keys(section: str, context: dict[str, Any]) -> tuple[str, ...]:
-    from webui.core.shell import flatten_session_tree
-
-    if section in ("dashboard", "chats"):
-        archived = "true" if context.get("show_archived") else "false"
-        keys = [
-            f"SessionModel.root@is_archived:{archived}",
-            "SessionModel@is_active:true",
-            "Query",
-            "AgentTaskCall",
-            "Project.root",
-        ]
-        project_id = context.get("sidebar_project_id")
-        if project_id:
-            keys.append(
-                f"SessionModel.root@project:{project_id}@is_archived:{archived}"
-            )
-        for session in flatten_session_tree(context.get("sidebar_sessions") or []):
-            keys.append(f"SessionModel:{session.pk}")
-            keys.append(
-                f"SessionModel.parent_session:{session.pk}@is_archived:{archived}"
-            )
-        return tuple(keys)
-    if section == "agents":
-        return ("AgentModel", "Project.root")
-    if section == "projects":
-        return ("Project",)
-    if section == "workspaces":
-        return ("WorkspaceModel",)
-    if section == "skills":
-        return ("SkillModel",)
-    if section == "cron":
-        return ("Cronjob",)
-    if section == "collections":
-        return ("DataCollection",)
-    if section == "workitems":
-        return ("WorkItem", "Project")
-    if section == "memory":
-        return ("Project", "WorkItem")
-    if section == "insights":
-        return ("ApiProvider", "AiModel")
-    return ()
-
-
-def _build_section_sidebar(section: str):
+def build_section_sidebar(section: str, keys_fn):
+    """Build function for a standard section sidebar component."""
     def build(request, pk, params):
-        from webui.core.shell import (
-            SIDEBAR_TEMPLATES,
-            component_sidebar_url,
-            sidebar_context,
-        )
+        from webui.core.layout import SIDEBAR_TEMPLATES, component_sidebar_url, sidebar_context
 
         context = sidebar_context(request, section, active_id=None)
         context.update(
@@ -388,211 +301,57 @@ def _build_section_sidebar(section: str):
                 "sidebar_base_url": component_sidebar_url(section, {}),
             }
         )
-        return ComponentData(context, _sidebar_keys(section, context))
+        return ComponentData(context, tuple(keys_fn(context)))
 
     return build
 
 
-# ---------------------------------------------------------------------------
-# Chat components
-# ---------------------------------------------------------------------------
-
-def _build_chat_header(request, pk, params):
-    from webui.features.chats.views import _header_context
-
-    session = _session(pk)
-    context = _header_context(session)
-    return ComponentData(
-        context,
-        (f"SessionModel:{pk}", f"Query.session:{pk}"),
-    )
-
-
-def _build_chat_thread(request, pk, params):
-    from webui.features.chats.parts.cards import build_chat_cards
-    from webui.features.chats.parts.thread import DEFAULT_LIMIT, build_thread
-
-    session = _session(pk)
-    limit = _int(params.get("limit"), DEFAULT_LIMIT)
-    limit = max(1, min(limit, 2000))
-    around = _int(params.get("around"), None)
-    rows = build_thread(session, limit=limit, end_pk=around)
-
-    from server.models.message import Message
-
-    total = Message.objects.filter(session=session)
-    if around is not None:
-        total = total.filter(pk__lte=around)
-    try:
-        total_messages = total.count()
-    except Exception:  # pylint: disable=broad-exception-caught
-        total_messages = len(rows)
-
-    context = {
-        "session": session,
-        "rows": rows,
-        "thread_limit": limit,
-        "thread_around": around,
-        "thread_has_older": total_messages > limit,
-        "thread_older_limit": min(limit + DEFAULT_LIMIT, 2000),
-        "cards": build_chat_cards(session),
-    }
-    return ComponentData(
-        context,
-        (
-            # Only structural changes (new/removed rows) should redraw the whole
-            # thread.  Tool-call and session-status updates are high-frequency and
-            # are handled by the individual message/query/response components and
-            # by the composer footer, so subscribing the thread to them caused
-            # the entire chat to be swapped (and scrolled to the top) every few
-            # seconds.
-            f"Message.session:{pk}",
-            f"Query.session:{pk}",
-            f"Response.session:{pk}",
-        ),
-    )
-
-
-def _build_chat_message(request, pk, params):
-    from webui.features.chats.parts.thread import _message_row
-
-    message = _message(pk)
-    row = _message_row(message)
-    session = message.session
-    keys = [f"Message:{pk}", f"MessagePart.message:{pk}"]
-    for part in message.parts.all():
-        call_id = getattr(part, "tool_call_id", None)
-        if call_id:
-            keys.append(f"AgentTaskCall:{call_id}")
-    return ComponentData(
-        {"row": row, "session": session},
-        tuple(keys),
-        immutable=not session.is_active,
-    )
-
-
-def _build_chat_query(request, pk, params):
-    from server.models.queries.query import Query, QueryStatus
-    from webui.features.chats.parts.thread import Row
-
-    query = Query.objects.select_related("session").get(pk=pk)
-    response = query.related_response.order_by("-pk").first()
-    row = Row("query", query, response=response)
-    return ComponentData(
-        {"row": row, "session": query.session},
-        (
-            f"Query:{pk}",
-            f"Query.session:{query.session_id}",
-            f"Response.query:{pk}",
-        ),
-        immutable=query.status != QueryStatus.ACTIVE,
-    )
-
-
-def _build_chat_response(request, pk, params):
-    from server.models.queries.response import Response, ResponseStatus
-    from webui.core.markdown import render_markdown
-    from webui.features.chats.parts.thread import Row
-
-    response = Response.objects.select_related("session").get(pk=pk)
-    row = Row(
-        "response",
-        response,
-        body_html=render_markdown(response.content or ""),
-        reasoning=response.reasoning or "",
-    )
-    return ComponentData(
-        {"row": row, "session": response.session},
-        (
-            f"Response:{pk}",
-            f"Response.session:{response.session_id}",
-        ),
-        immutable=response.status != ResponseStatus.ACTIVE,
-    )
-
-
-def _build_chat_toc(request, pk, params):
-    from webui.core.shell import compaction_segments
-
-    session = _session(pk)
-    return ComponentData(
-        {"session": session, "toc_segments": compaction_segments(session)},
-        (f"Message.session:{pk}",),
-    )
-
-
-def _build_chat_composer(request, pk, params):
-    from webui.core.shell import (
-        command_options,
-        composer_config,
-        composer_state,
-        send_key,
-    )
-
-    session = _session(pk)
-    context = {"session": session, "send_key": send_key(), "commands": command_options(session)}
-    context.update(composer_config(session))
-    context.update(composer_state(session))
-    # The footer is its own live element; the form itself must not be swapped
-    # away while the user is typing.
-    return ComponentData(context)
-
-
-def _build_chat_panel(request, pk, params):
-    from webui.features.chats.views import _panel_context
-
-    session = _session(pk)
-    tab = params.get("tab") or "details"
-    context = _panel_context(session, tab, request)
-    return ComponentData(context)
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _int(raw, default):
-    try:
-        return int(raw)
-    except (TypeError, ValueError):
-        return default
-
-
-# ---------------------------------------------------------------------------
-# Registry
-# ---------------------------------------------------------------------------
-
-SECTIONS_WITH_SIDEBARS = (
-    "dashboard",
-    "chats",
-    "agents",
-    "projects",
-    "workspaces",
-    "skills",
-    "cron",
-    "collections",
-    "workitems",
-    "memory",
-    "insights",
-    "logs",
-    "settings",
-)
-
-for _section in SECTIONS_WITH_SIDEBARS:
+def register_section_sidebar(section: str, keys_fn):
     register(
         ComponentSpec(
-            name=f"{_section}-sidebar",
+            name=f"{section}-sidebar",
             template="layout/_sidebar_frame.html",
-            build=_build_section_sidebar(_section),
-            url_name=f"{_section}_sidebar",
+            build=build_section_sidebar(section, keys_fn),
+            url_name=f"{section}_sidebar",
         )
     )
 
-register(ComponentSpec("chat-header", "chats/parts/header.html", _build_chat_header))
-register(ComponentSpec("chat-thread", "chats/parts/thread.html", _build_chat_thread))
-register(ComponentSpec("chat-message", "chats/parts/message.html", _build_chat_message))
-register(ComponentSpec("chat-query", "chats/parts/query.html", _build_chat_query))
-register(ComponentSpec("chat-response", "chats/parts/response.html", _build_chat_response))
-register(ComponentSpec("chat-toc", "chats/parts/toc.html", _build_chat_toc))
-register(ComponentSpec("chat-composer", "chats/parts/composer.html", _build_chat_composer))
-register(ComponentSpec("chat-panel", "chats/rightbar.html", _build_chat_panel))
+
+# ---------------------------------------------------------------------------
+# Feature component registration
+# ---------------------------------------------------------------------------
+
+def register_feature_components():
+    """Import feature modules so they register their components/sidebars."""
+    from webui.features.chats.components import register_chat_components
+    from webui.features.chats import sidebar as chats_sidebar
+    from webui.features.dashboard import sidebar as dashboard_sidebar
+    from webui.features.agents import sidebar as agents_sidebar
+    from webui.features.projects import sidebar as projects_sidebar
+    from webui.features.workspaces import sidebar as workspaces_sidebar
+    from webui.features.skills import sidebar as skills_sidebar
+    from webui.features.cron import sidebar as cron_sidebar
+    from webui.features.collections import sidebar as collections_sidebar
+    from webui.features.workitems import sidebar as workitems_sidebar
+    from webui.features.memory import sidebar as memory_sidebar
+    from webui.features.insights import sidebar as insights_sidebar
+    from webui.features.logs import sidebar as logs_sidebar
+    from webui.features.settings import sidebar as settings_sidebar
+
+    register_chat_components()
+    chats_sidebar.register_sidebar_component("chats")
+    dashboard_sidebar.register_sidebar_component()
+    agents_sidebar.register_sidebar_component()
+    projects_sidebar.register_sidebar_component()
+    workspaces_sidebar.register_sidebar_component()
+    skills_sidebar.register_sidebar_component()
+    cron_sidebar.register_sidebar_component()
+    collections_sidebar.register_sidebar_component()
+    workitems_sidebar.register_sidebar_component()
+    memory_sidebar.register_sidebar_component()
+    insights_sidebar.register_sidebar_component()
+    logs_sidebar.register_sidebar_component()
+    settings_sidebar.register_sidebar_component()
+
+
+register_feature_components()

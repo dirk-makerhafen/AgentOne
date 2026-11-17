@@ -13,7 +13,7 @@ from django.urls import reverse
 
 from webui.core.markdown import render_markdown
 from webui.templatetags.webui import get_item, static_v
-from webui.core.shell import NAV_SECTIONS, SIDEBAR_TEMPLATES
+from webui.core.layout import NAV_SECTIONS, SIDEBAR_TEMPLATES
 from webui.features.logs.views import _resolve, log_files, tail
 
 
@@ -237,14 +237,14 @@ def test_log_resolve_rejects_path_traversal(tmp_path):
 
 
 @pytest.mark.django_db
-def test_shell_pages_render(client):
+def test_layout_pages_render(client):
     """Every full page renders against an empty database."""
-    for route in _shell_routes() + [reverse("webui:workitems_board")]:
+    for route in _layout_routes() + [reverse("webui:workitems_board")]:
         response = client.get(route)
         assert response.status_code == 200, route
 
 
-def _shell_routes() -> list[str]:
+def _layout_routes() -> list[str]:
     return [
         reverse("webui:dashboard"),
         reverse("webui:chats"),
@@ -269,9 +269,9 @@ def _shell_routes() -> list[str]:
 
 
 @pytest.mark.django_db
-def test_boosted_shell_routes_render_fragments(client):
+def test_boosted_layout_routes_render_fragments(client):
     """Every page must be swappable into <body> without a document shell."""
-    for route in _shell_routes():
+    for route in _layout_routes():
         response = client.get(route, HTTP_HX_REQUEST="true")
         assert response.status_code == 200, route
         content = response.content
@@ -1664,7 +1664,7 @@ def test_chat_header_shows_context_usage(client, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_fmt_tokens_and_ring_geometry():
-    from webui.core.shell import _RING_CIRCUMFERENCE, _fmt_tokens
+    from webui.features.chats.session_ui import _RING_CIRCUMFERENCE, _fmt_tokens
 
     assert _fmt_tokens(999) == "999"
     assert _fmt_tokens(1000) == "1k"
@@ -1677,7 +1677,7 @@ def test_fmt_tokens_and_ring_geometry():
 @pytest.mark.django_db
 def test_usage_summary_exposes_ring_fields(monkeypatch):
     from server.models.sessions.session import SessionModel
-    from webui.core.shell import usage_summary
+    from webui.features.chats.session_ui import usage_summary
 
     session, _version = _session_with_version("ring")
 
@@ -1707,7 +1707,7 @@ def test_command_options_merge_commands_and_tools(monkeypatch):
     from types import SimpleNamespace
 
     from server.models.sessions.session import SessionModel
-    from webui.core.shell import command_options
+    from webui.features.chats.session_ui import command_options
 
     session, _version = _session_with_version("commands")
     schema = {
@@ -1752,7 +1752,7 @@ def test_compaction_segments_and_around_window():
     from server.models.enums.message_enums import MessageType
     from server.models.message import Message
     from webui.features.chats.parts.thread import build_thread
-    from webui.core.shell import compaction_segments
+    from webui.features.chats.session_ui import compaction_segments
 
     session, version = _session_with_version("toc")
     first = _user_message(session, version, "first")

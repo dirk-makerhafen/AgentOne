@@ -8,7 +8,7 @@ from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 
 def _log_dir() -> Path | None:

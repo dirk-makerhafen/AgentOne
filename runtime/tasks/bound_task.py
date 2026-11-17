@@ -516,62 +516,13 @@ class BoundTask:
         When a new turn is dispatched, the AgentTaskCall and its TaskInstance subtree
         are created with the session version at that moment. If session settings
         changed (e.g., auto_compact_max_tokens) before the worker picks up the call,
-        the call would use the old settings. This method ensures the chain uses the
-        latest session version by re-pointing it, similar to what
-        CallScheduler._repoint_chain_to_latest() does for rate-limited calls.
+        the call would use the old settings. This delegates to the shared,
+        dedupe-safe repoint implementation used for rate-limited calls.
         """
-        from server.models.tasks.task_instance import TaskInstance
-        from server.models.tasks.agent_task_call import AgentTaskCall
-        from server.models.enums.task_enums import TaskCallStatus
+        from runtime.tasks.call_scheduler import CallScheduler
 
         latest = self.session.model.latest_session_version
-        if latest is None:
-            return
-
-        # Only re-point if the call's version differs from latest
-        if new_call.session_version_id == latest.pk:
-            return
-
-        if new_call.task_instance_id is None:
-            new_call.atomic_update(session_version=latest)
-            return
-
-        # Walk up to the chain root (parent chain TaskInstance).
-        node = new_call.task_instance
-        seen: set[int] = set()
-        while node is not None and node.pk not in seen:
-            seen.add(node.pk)
-            parents = list(node.parent_instances.all())
-            if not parents:
-                break
-            node = parents[0] if parents else node
-        root = node
-
-        # Collect the whole subtree (root + all descendant instances).
-        subtree: set[int] = set()
-        stack = [root]
-        while stack:
-            node = stack.pop()
-            if node.pk in subtree:
-                continue
-            subtree.add(node.pk)
-            stack.extend(node.child_instances.all())
-
-        if not subtree:
-            new_call.atomic_update(session_version=latest)
-            return
-
-        for _ti_pk in subtree:
-            TaskInstance.atomic_update_by_pk(_ti_pk, session_version=latest)
-        for _atc in AgentTaskCall.objects.filter(
-            task_instance_id__in=subtree,
-            status__in=[
-                TaskCallStatus.NEW,
-                TaskCallStatus.WAITING,
-                TaskCallStatus.HALTED,
-            ],
-        ):
-            _atc.atomic_update(session_version=latest)
+        CallScheduler._repoint_chain_to_latest(new_call, latest)
 
     def instance(self, args: Any = None, kwargs: Any = None, **options: Any) -> TaskInstance:
         """

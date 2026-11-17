@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 
 from server.models.skills.skill import SkillModel
 from webui.core.assistants import assistant_panel_context
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 
 def _read_skill_manifest(skill: SkillModel) -> tuple[Path, dict, str]:

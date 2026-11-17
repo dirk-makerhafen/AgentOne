@@ -1220,13 +1220,28 @@ class CallScheduler:
 
         ``TaskInstance``/``AgentTaskCall`` ``save()`` forbid editing, so the
         re-point is done with ``QuerySet.update()`` (SQL-level).
+
+        Dedupe-safe: ``TaskInstance`` is unique on
+        (task_definition_version, session, session_version, dedupe_hash). When a
+        session version changes, an equivalent instance may already exist at the
+        target version; in that case the conflicting instance is merged by
+        re-pointing its active calls to the canonical instance instead of
+        moving the row.
         """
+        from django.db import IntegrityError
+
         from server.models.enums.task_enums import TaskCallStatus
         from server.models.tasks.agent_task_call import AgentTaskCall
         from server.models.tasks.task_instance import TaskInstance
 
         if latest is None:
             return
+
+        active_statuses = [
+            TaskCallStatus.NEW,
+            TaskCallStatus.WAITING,
+            TaskCallStatus.HALTED,
+        ]
 
         if call.task_instance_id is None:
             call.atomic_update(session_version=latest)
@@ -1257,17 +1272,51 @@ class CallScheduler:
             call.atomic_update(session_version=latest)
             return
 
+        repointed_instances: set[int] = set()
         for _ti_pk in subtree:
-            TaskInstance.atomic_update_by_pk(_ti_pk, session_version=latest)
-        for _atc in AgentTaskCall.objects.filter(
-            task_instance_id__in=subtree,
-            status__in=[
-                TaskCallStatus.NEW,
-                TaskCallStatus.WAITING,
-                TaskCallStatus.HALTED,
-            ],
-        ):
-            _atc.atomic_update(session_version=latest)
+            ti = TaskInstance.objects.filter(pk=_ti_pk).values(
+                "pk",
+                "task_definition_version_id",
+                "session_id",
+                "dedupe_hash",
+                "session_version_id",
+            ).first()
+            if ti is None:
+                continue
+            if ti["session_version_id"] == latest.pk:
+                repointed_instances.add(_ti_pk)
+                continue
+            try:
+                TaskInstance.atomic_update_by_pk(_ti_pk, session_version=latest)
+                repointed_instances.add(_ti_pk)
+            except IntegrityError:
+                canonical = (
+                    TaskInstance.objects.filter(
+                        task_definition_version_id=ti["task_definition_version_id"],
+                        session_id=ti["session_id"],
+                        session_version_id=latest.pk,
+                        dedupe_hash=ti["dedupe_hash"],
+                    )
+                    .order_by("pk")
+                    .first()
+                )
+                if canonical is None or canonical.pk == _ti_pk:
+                    raise
+                for _atc in AgentTaskCall.objects.filter(
+                    task_instance_id=_ti_pk,
+                    status__in=active_statuses,
+                ):
+                    _atc.atomic_update(
+                        session_version=latest, task_instance_id=canonical.pk
+                    )
+                repointed_instances.add(canonical.pk)
+
+        if repointed_instances:
+            for _atc in AgentTaskCall.objects.filter(
+                task_instance_id__in=repointed_instances,
+                status__in=active_statuses,
+            ):
+                _atc.atomic_update(session_version=latest)
 
     @staticmethod
     def on_taskrun_ended(taskrun_id: int, taskrun_status: TaskRunStatus) -> None:

@@ -21,7 +21,7 @@ from webui.features.workitems.board import (
     status_label,
 )
 from webui.core.assistants import assistant_overview_context
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 _ACTIONABLE_STATUSES = ("in_review", "blocked", "ready")
 

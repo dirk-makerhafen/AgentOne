@@ -15,9 +15,10 @@
     <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search chats…"
            autocomplete="off" aria-label="Search chats">
 </form>
+{% load webui %}
 <div class="session-list">
     {% for s in sidebar_sessions %}
-        {% include "chats/parts/session_row.html" with s=s active_id=active_id %}
+        {% component "chat-sidebar-session" s.pk active=active_id section=section archived=archived_flag depth=0 %}
     {% empty %}
         <div class="webui-empty-note">
             {% if show_archived %}No archived chats.{% else %}No chats yet — start one above.{% endif %}

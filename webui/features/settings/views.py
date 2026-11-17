@@ -22,7 +22,7 @@ from runtime.settings.settings import (
 from server.models.providers.ai_model import AiModel
 from server.models.providers.api_key import ApiKey
 from server.models.providers.api_provider import ApiProvider
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 #: How long a provider→model mapping survives between the Test click and the
 #: cached probe result appearing.

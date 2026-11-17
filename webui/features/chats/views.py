@@ -35,18 +35,14 @@ from webui.features.chats.parts.thread import (
     build_query_detail,
     build_thread,
 )
-from webui.core.shell import (
+from webui.core.layout import default_agent, panel_open_default, render_page, send_key, unique_session_name
+from webui.features.chats.session_ui import (
     command_options,
     compaction_segments,
     composer_config,
     composer_state,
-    default_agent,
     is_busy,
-    panel_open_default,
-    render_page,
-    send_key,
     session_context,
-    unique_session_name,
     usage_summary,
 )
 

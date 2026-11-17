@@ -13,7 +13,8 @@ from server.models.workitems.enums import WorkItemStatus
 from server.models.workitems.work_item import WorkItem
 from server.models.workspace import WorkspaceModel
 from webui.core.assistants import assistant_overview_context
-from webui.core.shell import render_page, sidebar_sessions
+from webui.core.layout import render_page
+from webui.features.chats.sidebar import sidebar_sessions
 
 
 def dashboard(request):

@@ -32,7 +32,7 @@ from webui.features.workspaces.manifest import (
     gitignore_has_agentone,
     storage_options,
 )
-from webui.core.shell import render_page, unique_session_name
+from webui.core.layout import render_page, unique_session_name
 
 log = logging.getLogger(__name__)
 _COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")

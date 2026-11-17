@@ -17,7 +17,7 @@ from runtime.cron.execute import execute_cron_job
 # Cron jobs are DB-canonical now: no .md manifest files are written.
 from runtime.cron.schedule import compute_next_run
 from webui.core.assistants import assistant_overview_context, assistant_panel_context
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 log = logging.getLogger(__name__)
 

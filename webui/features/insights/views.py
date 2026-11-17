@@ -28,7 +28,7 @@ from server.models.queries.response import Response, ResponseStatus
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.workitems.work_item import WorkItem
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 log = logging.getLogger(__name__)
 

@@ -17,7 +17,7 @@ from server.models.providers.ai_model import AiModel
 from server.models.project import Project
 from server.models.sessions.session import SessionModel
 from webui.core.assistants import assistant_overview_context, assistant_panel_context
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 #: Reasoning-effort choices offered by the agent form.
 REASONING_CHOICES = ("none", "minimal", "low", "medium", "high", "xhigh")

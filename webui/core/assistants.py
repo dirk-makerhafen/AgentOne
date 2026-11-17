@@ -16,7 +16,7 @@ from server.models.project import Project
 from server.models.sessions.session import SessionModel
 from server.models.skills.skill import SkillModel
 from server.models.workspace import WorkspaceModel
-from webui.core.shell import unique_session_name
+from webui.core.layout import unique_session_name
 
 log = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ def assistant_panel_context(kind: str, item, selected_id: str | None = None) -> 
         ),
     }
     if selected is not None:
-        from webui.core.shell import session_context
+        from webui.features.chats.session_ui import session_context
 
         context.update(session_context(selected, limit=40))
     return context
@@ -184,7 +184,7 @@ def assistant_overview_context(
         "assistant_project_id": project.pk if project else "",
     }
     if selected is not None:
-        from webui.core.shell import session_context
+        from webui.features.chats.session_ui import session_context
 
         context.update(session_context(selected, limit=40))
     return context

@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 from server.models.collections.data_collection import DataCollection
 from server.models.project import Project
-from webui.core.shell import render_page
+from webui.core.layout import render_page
 
 
 def collections(request):
