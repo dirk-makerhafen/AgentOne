@@ -584,9 +584,10 @@ def render_page(request, section: str, template: str, context: dict | None = Non
     ctx["layout_base"] = (
         "layout/hx_base.html" if is_htmx_request(request) else "layout/base.html"
     )
-    # Boosted navigation gets a shell with component placeholders; a real
-    # document load renders the full tree for no-JS clients.
-    ctx["component_inline"] = not is_htmx_request(request)
+    # Full document loads and boosted page navigations render a complete shell
+    # so the sidebar is immediately available.  Other htmx requests to page
+    # endpoints keep placeholders for on-demand loading.
+    ctx["component_inline"] = (not is_htmx_request(request)) or is_boosted_request(request)
     # Live pages must not come back from the htmx history snapshot: a restored
     # chat would show the messages that existed when it was cached.  With
     # ``hx-history="false"`` a back/forward triggers the normal cache-miss

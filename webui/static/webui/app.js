@@ -1362,7 +1362,6 @@
     document.addEventListener('mousedown', function (e) {
         var el = e.target && e.target.closest ? e.target.closest('.resize-handle') : null;
         if (!el || el.id === 'terminalResizeHandle') return;
-        if (el.id !== 'sidebarResize' && el.id !== 'rightpanelResize') return;
         var panel = el.closest('.sidebar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
         if (!panel) return;
         handle = el;

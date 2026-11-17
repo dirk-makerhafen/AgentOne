@@ -37,7 +37,7 @@
         <div class="webui-session-menu-body">
             <form method="post" action="{% url 'webui:chat_action' s.pk %}"
                   hx-post="{% url 'webui:chat_action' s.pk %}"
-                  hx-target="#sidebar" hx-swap="outerHTML" hx-sync="this:replace">
+                  hx-swap="none">
                 {% csrf_token %}
                 <input type="hidden" name="surface" value="sidebar">
                 <input type="hidden" name="sidebar_section" value="{{ section }}">
@@ -50,7 +50,7 @@
             </form>
             <form method="post" action="{% url 'webui:chat_action' s.pk %}"
                   hx-post="{% url 'webui:chat_action' s.pk %}"
-                  hx-target="#sidebar" hx-swap="outerHTML" hx-sync="this:replace">
+                  hx-swap="none">
                 {% csrf_token %}
                 <input type="hidden" name="surface" value="sidebar">
                 <input type="hidden" name="sidebar_section" value="{{ section }}">
@@ -63,7 +63,7 @@
             </form>
             <form method="post" action="{% url 'webui:chat_action' s.pk %}"
                   hx-post="{% url 'webui:chat_action' s.pk %}"
-                  hx-target="#sidebar" hx-swap="outerHTML" hx-sync="this:replace">
+                  hx-swap="none">
                 {% csrf_token %}
                 <input type="hidden" name="surface" value="sidebar">
                 <input type="hidden" name="sidebar_section" value="{{ section }}">
@@ -81,7 +81,7 @@
             <form method="post" action="{% url 'webui:chat_action' s.pk %}"
                   hx-post="{% url 'webui:chat_action' s.pk %}"
                   hx-confirm="Archive this chat?"
-                  hx-target="#sidebar" hx-swap="outerHTML" hx-sync="this:replace">
+                  hx-swap="none">
                 {% csrf_token %}
                 <input type="hidden" name="surface" value="sidebar">
                 <input type="hidden" name="sidebar_section" value="{{ section }}">
