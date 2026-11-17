@@ -174,8 +174,7 @@ class AgentTaskRun(BaseModel):
 
     def apply_async(self) -> None:
         """Dispatch this run asynchronously via Celery."""
-        updated = self.atomic_update_by_pk(
-            self.pk,
+        updated = self.atomic_update(
             expect={"status": TaskRunStatus.NEW},
             status=TaskRunStatus.QUEUED,
         )

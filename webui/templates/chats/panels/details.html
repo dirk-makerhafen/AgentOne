@@ -2,7 +2,8 @@
     <div class="webui-panel-section">
         <div class="detail-row"><span class="detail-row-label">Status</span>
             <span class="detail-row-value">
-                {% if session.is_paused %}paused{% else %}active{% endif %}
+                {% if session.is_paused %}paused{% endif %}
+                {% if session.is_active %}active{% endif %}
                 {% if session.is_archived %} · archived{% endif %}
                 {% if session.is_pinned %} · pinned{% endif %}
             </span>
