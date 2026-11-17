@@ -138,7 +138,7 @@ class ApiKey(HealthTrackedModel, BaseModel):  # pylint: disable=too-many-instanc
         cooldown = min(base * (2 ** level), MAX_COOLDOWN_SECONDS)
         now = timezone.now()
         until = now + timedelta(seconds=cooldown)
-        ApiKey.objects.filter(pk=self.pk).update(
+        self.atomic_update(
             rate_limit_until=until,
             rate_limit_hits=hits,
             status=HealthStatus.RATE_LIMITED,
@@ -163,7 +163,7 @@ class ApiKey(HealthTrackedModel, BaseModel):  # pylint: disable=too-many-instanc
         so the next 429 starts from the base cooldown again.
         """
         if self.rate_limit_until or self.rate_limit_hits or self.status != HealthStatus.HEALTHY:
-            ApiKey.objects.filter(pk=self.pk).update(
+            self.atomic_update(
                 rate_limit_until=None,
                 rate_limit_hits=0,
                 status=HealthStatus.HEALTHY,

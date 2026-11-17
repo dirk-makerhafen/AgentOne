@@ -132,7 +132,8 @@ def run_reload_all(folder: str) -> ReloadResult:
                 cron_count += 1
             except Exception as e:
                 errors.append(f"Cron {cron_md.stem}: {e}")
-        Cronjob.objects.filter(parent_project__isnull=True, is_archived=False).exclude(name__in=seen).update(is_archived=True)
+        for _cj in Cronjob.objects.filter(parent_project__isnull=True, is_archived=False).exclude(name__in=seen):
+            _cj.atomic_update(is_archived=True)
         counts["cron_jobs"] = cron_count
 
     # User scope (~/.agentone/{agents,skills,scripts,cronjobs}/).
@@ -317,7 +318,8 @@ def _archive_missing_globals(
             ).exclude(name__in=seen_agent_names).values_list("pk", flat=True)
         )
         if stale_agents:
-            AgentModel.objects.filter(pk__in=stale_agents).update(is_archived=True)
+            for _pk in stale_agents:
+                AgentModel.atomic_update_by_pk(_pk, is_archived=True)
 
     if skills_present:
         stale_skills = list(
@@ -329,7 +331,8 @@ def _archive_missing_globals(
             ).exclude(name__in=seen_skill_names).values_list("pk", flat=True)
         )
         if stale_skills:
-            SkillModel.objects.filter(pk__in=stale_skills).update(is_archived=True)
+            for _pk in stale_skills:
+                SkillModel.atomic_update_by_pk(_pk, is_archived=True)
 
 
 def _load_db_projects(details: list, errors: list, counts: Dict[str, int]) -> None:

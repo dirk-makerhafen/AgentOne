@@ -100,5 +100,5 @@ def _adopt(ws, project) -> None:
     from server.models.workspace import WorkspaceModel
 
     if project is not None and ws.parent_project_id is None:
-        WorkspaceModel.objects.filter(pk=ws.pk).update(parent_project=project)
+        ws.atomic_update(parent_project=project)
         ws.parent_project = project

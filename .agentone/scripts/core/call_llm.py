@@ -497,22 +497,24 @@ def _call_with_fallback(
                 # a retry).  Never resurrect a terminal (SUCCESS) query or
                 # hijack a foreign ACTIVE one — a retry of an ancient call
                 # must fail here, not open a ghost stream on a sibling.
-                updated = Query.objects.filter(
-                    pk=query.pk,
-                    status__in=[
-                        QueryStatus.WAITING,
-                        QueryStatus.FAILURE,
-                        QueryStatus.RATE_LIMITED,
-                    ],
-                ).update(
-                    apikey=apikey, status=QueryStatus.ACTIVE
+                updated = Query.atomic_update_by_pk(
+                    query.pk,
+                    expect={
+                        "status__in": [
+                            QueryStatus.WAITING,
+                            QueryStatus.FAILURE,
+                            QueryStatus.RATE_LIMITED,
+                        ],
+                    },
+                    apikey=apikey,
+                    status=QueryStatus.ACTIVE,
                 )
                 if not updated:
                     raise Exception("Failed to update query to active state")
                 claimed = True
             else:
                 # Our own in-flight ACTIVE row — just refresh the key.
-                Query.objects.filter(pk=query.pk).update(apikey=apikey)
+                query.atomic_update(apikey=apikey)
             query.apikey = apikey
             query.status = QueryStatus.ACTIVE  # DB row was set by the filter update above
 
@@ -527,7 +529,7 @@ def _call_with_fallback(
                 query.apikey.clear_provider_cooldown()
             if pinned is None or aimodel.pk != pinned.pk:
                 session.set_aimodel(aimodel)
-            Query.objects.filter(pk=query.pk).update(
+            query.atomic_update(
                 status=QueryStatus.SUCCESS if response.status == ResponseStatus.SUCCESS else QueryStatus.FAILURE
             )
             query.refresh_from_db()

@@ -216,16 +216,14 @@ class CallScheduler:
         )
 
         if verdict.action == "ask" and not tc.requires_approval:
-            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-            _ATC.objects.filter(pk=tc.pk).update(
-                requires_approval=True, guardrail_reason = verdict.reason
+            tc.atomic_update(
+                requires_approval=True, guardrail_reason=verdict.reason
             )
             print(f"  # PYTHON GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
         elif verdict.action == "ask" and not tc.guardrail_reason:
             # Already gated (e.g. by policy): don't escalate, but record why
             # for the approval card when no reason was stored yet.
-            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-            _ATC.objects.filter(pk=tc.pk).update(
+            tc.atomic_update(
                 guardrail_reason=verdict.reason
             )
 
@@ -268,16 +266,14 @@ class CallScheduler:
         )
 
         if verdict.action == "ask" and not tc.requires_approval:
-            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-            _ATC.objects.filter(pk=tc.pk).update(
-                requires_approval=True, guardrail_reason = verdict.reason,
+            tc.atomic_update(
+                requires_approval=True, guardrail_reason=verdict.reason,
             )
             print(f"  # GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
         elif verdict.action == "ask" and not tc.guardrail_reason:
             # Already gated (e.g. by policy): don't escalate or touch args,
             # but record why for the approval card when no reason was stored.
-            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-            _ATC.objects.filter(pk=tc.pk).update(
+            tc.atomic_update(
                 guardrail_reason=verdict.reason,
             )
 
@@ -328,8 +324,7 @@ class CallScheduler:
 
         unapproved = unapproved_agent_cli(source)
         if unapproved and not tc.requires_approval:
-            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-            _ATC.objects.filter(pk=tc.pk).update(
+            tc.atomic_update(
                 requires_approval=True,
                 guardrail_reason=(
                     f"External agent CLI '{unapproved}' is not on the terminal "
@@ -349,14 +344,12 @@ class CallScheduler:
         )
 
         if verdict.action == "ask" and not tc.requires_approval:
-            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-            _ATC.objects.filter(pk=tc.pk).update(
+            tc.atomic_update(
                 requires_approval=True, guardrail_reason=verdict.reason,
             )
             print(f"  # TERMINAL GUARDRAIL: {verdict.level} ({verdict.score}) — {verdict.reason[:80]}")
         elif verdict.action == "ask" and not tc.guardrail_reason:
-            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-            _ATC.objects.filter(pk=tc.pk).update(
+            tc.atomic_update(
                 guardrail_reason=verdict.reason,
             )
 
@@ -404,8 +397,7 @@ class CallScheduler:
                 return
 
         if ask_reasons and not tc.requires_approval:
-            from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
-            _ATC.objects.filter(pk=tc.pk).update(
+            tc.atomic_update(
                 requires_approval=True,
                 guardrail_reason="Filesystem access policy: " + "; ".join(ask_reasons),
             )
@@ -442,7 +434,7 @@ class CallScheduler:
 
         if not is_known(action):
             if not tc.requires_approval:
-                AgentTaskCall.objects.filter(pk=tc.pk).update(
+                tc.atomic_update(
                     requires_approval=True,
                     guardrail_reason=f"Unknown browser action: {action}",
                 )
@@ -456,7 +448,7 @@ class CallScheduler:
             reason = f"Browser action '{action}' interacts with a live website."
             if detail:
                 reason += f" Target: {str(detail)[:120]}"
-            AgentTaskCall.objects.filter(pk=tc.pk).update(
+            tc.atomic_update(
                 requires_approval=True,
                 guardrail_reason=reason,
             )
@@ -508,7 +500,7 @@ class CallScheduler:
         # Never trust LLM-supplied answers — the user answers via the card.
         args.pop("answers", None)
         count = len(normalize_questions(args.get("questions")))
-        AgentTaskCall.objects.filter(pk=tc.pk).update(
+        tc.atomic_update(
             carguments_json=args,
             requires_approval=True,
             guardrail_reason="Awaiting your answers to "
@@ -638,7 +630,7 @@ class CallScheduler:
         if parent_session is None or not CallScheduler._auto_review_enabled(parent_session):
             return
 
-        _ATC.objects.filter(pk=call.pk).update(auto_review_status="pending")
+        call.atomic_update(auto_review_status="pending")
         print(f"  # AUTO-REVIEW: reviewing {tool_name} call #{task_call_id}")
         from server.tasks.task_dispatcher import celery_delay
         celery_delay(CallScheduler.auto_review_approval, task_call_id)
@@ -673,7 +665,7 @@ class CallScheduler:
             CallScheduler._launch_review_session(parent_session, call, brief)
         except Exception as exc:  # pylint: disable=broad-exception-caught
             print(f"auto_review_approval: review of call #{task_call_id} failed -> escalate: {exc}")
-            _ATC.objects.filter(pk=call.pk).update(
+            call.atomic_update(
                 auto_review_status="escalated",
                 auto_review_reason=f"Auto-review failed: {exc}",
             )
@@ -866,7 +858,7 @@ class CallScheduler:
             feedback=feedback or "",
         )
 
-        MessagePart.objects.filter(pk=part.pk).update(tool_call=report_call)
+        part.atomic_update(tool_call=report_call)
 
         for waiter in AgentTaskRun.objects.filter(
             taskrun_result_references__pk=call.pk,
@@ -1115,7 +1107,7 @@ class CallScheduler:
                 error_message=message,
             )
         else:
-            Response.objects.filter(pk=existing.pk).update(
+            existing.atomic_update(
                 status=ResponseStatus.FAILURE,
                 error_type="task_unavailable",
                 error_message=message,
@@ -1237,7 +1229,7 @@ class CallScheduler:
             return
 
         if call.task_instance_id is None:
-            AgentTaskCall.objects.filter(pk=call.pk).update(session_version=latest)
+            call.atomic_update(session_version=latest)
             return
 
         # Walk up to the chain root (parent chain TaskInstance).
@@ -1262,18 +1254,20 @@ class CallScheduler:
             stack.extend(node.child_instances.all())
 
         if not subtree:
-            AgentTaskCall.objects.filter(pk=call.pk).update(session_version=latest)
+            call.atomic_update(session_version=latest)
             return
 
-        TaskInstance.objects.filter(pk__in=subtree).update(session_version=latest)
-        AgentTaskCall.objects.filter(
+        for _ti_pk in subtree:
+            TaskInstance.atomic_update_by_pk(_ti_pk, session_version=latest)
+        for _atc in AgentTaskCall.objects.filter(
             task_instance_id__in=subtree,
             status__in=[
                 TaskCallStatus.NEW,
                 TaskCallStatus.WAITING,
                 TaskCallStatus.HALTED,
             ],
-        ).update(session_version=latest)
+        ):
+            _atc.atomic_update(session_version=latest)
 
     @staticmethod
     def on_taskrun_ended(taskrun_id: int, taskrun_status: TaskRunStatus) -> None:
@@ -1470,15 +1464,15 @@ class CallScheduler:
         # already FAILURE.  Mirrors the run sweep in _recover_stuck_calls
         # step 3.
         from django.utils import timezone
-        AgentTaskRun.objects.filter(
+        for _run in AgentTaskRun.objects.filter(
             agent_task_call_id=task_call_id,
         ).exclude(
             status__in=[TaskRunStatus.SUCCESS, TaskRunStatus.FAILURE],
-        ).update(
-            status=TaskRunStatus.FAILURE,
-            ended_at=timezone.now(),
-            updated_at=timezone.now(),
-        )
+        ):
+            _run.atomic_update(
+                status=TaskRunStatus.FAILURE,
+                ended_at=timezone.now(),
+            )
 
         # In case We are a subtask of another task that waits for us to
         # finish for its results
@@ -1634,9 +1628,12 @@ class CallScheduler:
             pass
 
         # Fallback for any state the FSM doesn't cover.
-        updated = AgentTaskCall.objects.filter(pk=call_id, status__in=[
-            TaskCallStatus.NEW, TaskCallStatus.WAITING, TaskCallStatus.HALTED, TaskCallStatus.ACTIVE,
-        ]).update(
+        updated = AgentTaskCall.atomic_update_by_pk(
+            call_id,
+            expect={"status__in": [
+                TaskCallStatus.NEW, TaskCallStatus.WAITING, TaskCallStatus.HALTED, TaskCallStatus.ACTIVE,
+            ]},
+            publish=False,
             status=TaskCallStatus.ENDED,
             status_detail=status_detail,
             ended_at=timezone.now(),

@@ -112,11 +112,12 @@ def load_scope_dir(
             # project's canonical load must not archive workspace-owned jobs
             # (they share ``parent_project`` but live under another dir).
             scope_dir = Path(manifest_dir).as_posix()
-            Cronjob.objects.filter(
+            for _cj in Cronjob.objects.filter(
                 parent_project=project,
                 is_archived=False,
                 manifest_dir__in=["", scope_dir],
-            ).exclude(name__in=seen).update(is_archived=True)
+            ).exclude(name__in=seen):
+                _cj.atomic_update(is_archived=True)
 
     if load_data_collections:
         for directory in ("streams", "sets"):

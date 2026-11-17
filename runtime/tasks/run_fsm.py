@@ -104,7 +104,9 @@ class TaskRunStateMachine:
         if extra:
             fields.update(extra)
 
-        updated = AgentTaskRun.objects.filter(pk=run_id, status=from_status).update(**fields) > 0
+        updated = AgentTaskRun.atomic_update_by_pk(
+            run_id, expect={"status": from_status}, publish=False, **fields
+        ) > 0
         if updated:
             _publish_run_event(run_id, "update", data=fields)
         return updated

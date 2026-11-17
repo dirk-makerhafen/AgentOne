@@ -71,7 +71,7 @@ def execute_cron_job(cronjob_id: int) -> None:
         # 3. Update tracking
         next_run = compute_next_run(cronjob.schedule)
 
-        Cronjob.objects.filter(pk=cronjob_id).update(
+        cronjob.atomic_update(
             last_run_at=timezone.now(),
             next_run_at=next_run,
             last_status="success",
@@ -93,7 +93,8 @@ def execute_cron_job(cronjob_id: int) -> None:
             .first()
             or ""
         )
-        Cronjob.objects.filter(pk=cronjob_id).update(
+        Cronjob.atomic_update_by_pk(
+            cronjob_id,
             last_run_at=timezone.now(),
             next_run_at=next_run,
             last_status="error",

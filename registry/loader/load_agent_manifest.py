@@ -233,7 +233,7 @@ def load_agent_manifest(
         # guard), so renames must go through a queryset update — a pure
         # name change that keeps the row (and all FK references from
         # sessions/versions) intact.
-        AgentModel.objects.filter(pk=agent.pk).update(name=name)
+        agent.atomic_update(name=name)
         agent.name = name
     else:
         agent, _ = AgentModel.objects.get_or_create(
@@ -253,7 +253,7 @@ def load_agent_manifest(
     if getattr(agent, "is_archived", False):
         updates["is_archived"] = False
     if updates:
-        AgentModel.objects.filter(pk=agent.pk).update(**updates)
+        agent.atomic_update(**updates)
         for field, value in updates.items():
             setattr(agent, field, value)
 
@@ -481,23 +481,15 @@ def load_agent_manifest(
     )
     if created:
         agent_version.extends_agent_versions.set(extend_versions)
-        AgentVersionModel.objects.filter(pk=agent_version.pk).update(
-            version_number=current_vn + 1
-        )
-        AgentModel.objects.filter(pk=agent.pk).update(
-            latest_agent_version=agent_version
-        )
+        agent_version.atomic_update(version_number=current_vn + 1)
+        agent.atomic_update(latest_agent_version=agent_version)
         agent_version.defined_skill_versions.set([sv for _, sv in defined_skills])
         agent_version.defined_task_versions.set([tv for _, tv in defined_tasks])
         agent_version.defined_subagent_versions.set(
             [sav for _, sav in defined_subagents]
         )
-        AgentVersionModel.objects.filter(pk=agent_version.pk).update(
-            subagent_configs=subagent_configs
-        )
-        AgentVersionModel.objects.filter(pk=agent_version.pk).update(
-            hooks=hook_entries
-        )
+        agent_version.atomic_update(subagent_configs=subagent_configs)
+        agent_version.atomic_update(hooks=hook_entries)
     if details is not None:
         action = "created" if created else "up to date"
         details.append({"name": agent.name, "type": "agent", "action": action})

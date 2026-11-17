@@ -66,22 +66,16 @@ def load_chain_entry(
         group_name=group_name,
     )
     if task_def.access_posture != access_posture:
-        TaskDefinition.objects.filter(pk=task_def.pk).update(
-            access_posture=access_posture
-        )
+        task_def.atomic_update(access_posture=access_posture)
         task_def.refresh_from_db()
     if parent_generation is not None and task_def.parent_generation_id != parent_generation.pk:
-        TaskDefinition.objects.filter(pk=task_def.pk).update(
-            parent_generation=parent_generation
-        )
+        task_def.atomic_update(parent_generation=parent_generation)
     task_version, created = TaskDefinitionVersion.objects.get_or_create(
         task_definition=task_def, **kw,
     )
     if created:
         task_version.child_tasks.set(child_versions)
-        TaskDefinition.objects.filter(pk=task_def.pk).update(
-            latest_task_version=task_version
-        )
+        task_def.atomic_update(latest_task_version=task_version)
     if details is not None:
         details.append({"name": name, "type": "script", "action": "created" if created else "up to date"})
     existing_results.append((task_def, task_version))

@@ -124,21 +124,21 @@ def _apply_verdict(call: Any, decision: str, reason: str) -> tuple[bool, dict]:
 
     if decision == "allow":
         # Approve + record the verdict on the same call row.
-        _ATC.objects.filter(pk=call.pk).update(
+        call.atomic_update(
             auto_review_status="approved", auto_review_reason=reason or ""
         )
         CallScheduler.approve_taskcall(call.pk)
         return _verdict_result(decision, True, note="Approved automatically.")
 
     if decision == "deny":
-        _ATC.objects.filter(pk=call.pk).update(
+        call.atomic_update(
             auto_review_status="denied", auto_review_reason=reason or ""
         )
         denied = CallScheduler.deny_taskcall(call.pk, feedback=reason or "")
         return _verdict_result(decision, denied, note="Denied automatically." if denied else "Deny failed; left halted.")
 
     # ask_human — leave paused so the human card remains.
-    _ATC.objects.filter(pk=call.pk).update(auto_review_status="escalated", auto_review_reason=reason or "")
+    call.atomic_update(auto_review_status="escalated", auto_review_reason=reason or "")
     return _verdict_result(decision, True, note="Escalated to human.")
 
 

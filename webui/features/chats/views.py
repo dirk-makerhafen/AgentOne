@@ -295,7 +295,8 @@ def terminal_kill(request, session_id: int, name: str):
         kill_terminal(session_model, name=name)
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("could not kill terminal %s for session %s", name, session_id)
-        session_model.terminals.filter(name=name).update(status="dead")
+        for _ts in session_model.terminals.filter(name=name):
+            _ts.atomic_update(status="dead")
     return render(
         request,
         "chats/panels/inner.html",

@@ -56,7 +56,7 @@ def load_skill_manifest(
     if getattr(skill, "is_archived", False):
         updates["is_archived"] = False
     if updates:
-        SkillModel.objects.filter(pk=skill.pk).update(**updates)
+        skill.atomic_update(**updates)
         for field, value in updates.items():
             setattr(skill, field, value)
     skill_version, created = SkillModelVersion.objects.get_or_create(
@@ -68,16 +68,12 @@ def load_skill_manifest(
         },
     )
     if created:
-        SkillModel.objects.filter(pk=skill.pk).update(
-            latest_skill_version=skill_version
-        )
+        skill.atomic_update(latest_skill_version=skill_version)
         # Extract versioned files to the owning scope's runtime cache.
         dest = _runtime_for_pk(skill_version.pk, parent_project, parent_agent)
         install_repo.checkout_tree(tree_sha=commit, dest=dest)
         extracted_md = dest / skill_md_path.name
-        SkillModelVersion.objects.filter(pk=skill_version.pk).update(
-            path=extracted_md.as_posix(),
-        )
+        skill_version.atomic_update(path=extracted_md.as_posix())
     if details is not None:
         action = "created" if created else "up to date"
         details.append({"name": skill.name, "type": "skill", "action": action})

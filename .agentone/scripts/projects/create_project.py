@@ -73,7 +73,7 @@ def create_project(
                 },
             )
             if not ws_created and ws.parent_project_id is None:
-                WorkspaceModel.objects.filter(pk=ws.pk).update(parent_project=proj)
+                ws.atomic_update(parent_project=proj)
         except Exception as e:
             return (False, {"status": "error", "message": f"Failed to create workspace row: {e}"})
         updates["main_workspace"] = ws
@@ -87,7 +87,7 @@ def create_project(
     try:
         ensure_private_dir(manifest)
         updates["agentone_dir"] = manifest.as_posix()
-        Project.objects.filter(pk=proj.pk).update(**updates)
+        proj.atomic_update(**updates)
         proj.refresh_from_db()
     except Exception as e:
         return (False, {"status": "error", "message": f"Failed to save project: {e}"})

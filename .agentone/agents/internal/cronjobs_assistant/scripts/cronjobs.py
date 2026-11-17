@@ -218,7 +218,7 @@ def create_cronjob(
     try:
         from runtime.cron.file_io import cron_file_path
 
-        Cronjob.objects.filter(pk=job.pk).update(
+        job.atomic_update(
             manifest_dir=cron_file_path(job.name, project).parent.as_posix()
         )
     except Exception:

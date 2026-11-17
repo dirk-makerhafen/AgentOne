@@ -512,15 +512,15 @@ def _recover_stuck_calls() -> None:
                 TaskCallStatusDetail.ENDED_CANCELLED,
                 TaskCallStatusDetail.ENDED_STOPPED,
             ):
-                AgentTaskRun.objects.filter(
+                for _run in AgentTaskRun.objects.filter(
                     agent_task_call=call,
                 ).exclude(
                     status__in=[TaskRunStatus.SUCCESS, TaskRunStatus.FAILURE],
-                ).update(
-                    status=TaskRunStatus.FAILURE,
-                    ended_at=timezone.now(),
-                    updated_at=timezone.now(),
-                )
+                ):
+                    _run.atomic_update(
+                        status=TaskRunStatus.FAILURE,
+                        ended_at=timezone.now(),
+                    )
                 if _force_end_call(call):
                     print(f"[recovery] cancelled ACTIVE_QUEUED call {call.pk} — root task {root.pk} cancelled/stopped")
                 continue
@@ -559,15 +559,15 @@ def _recover_stuck_calls() -> None:
                 status=TaskRunStatus.ACTIVE,
             ).exists():
                 # Fail ALL non-ended runs (QUEUED, WAITING_RESULTTASKS, RATE_LIMITED)
-                AgentTaskRun.objects.filter(
+                for _run in AgentTaskRun.objects.filter(
                     agent_task_call=call,
                 ).exclude(
                     status__in=[TaskRunStatus.SUCCESS, TaskRunStatus.FAILURE],
-                ).update(
-                    status=TaskRunStatus.FAILURE,
-                    ended_at=timezone.now(),
-                    updated_at=timezone.now(),
-                )
+                ):
+                    _run.atomic_update(
+                        status=TaskRunStatus.FAILURE,
+                        ended_at=timezone.now(),
+                    )
                 # Ancient calls are failed, never retried: retrying would
                 # replay day-old context (see TURN_DEATH_AGE).
                 if (
@@ -779,7 +779,9 @@ def _force_end_call(call: "AgentTaskCall") -> bool:
 
     else:
         # Fallback for any states not covered by the FSM
-        updated = AgentTaskCall.objects.filter(pk=pk).update(
+        updated = AgentTaskCall.atomic_update_by_pk(
+            pk,
+            publish=False,
             status=TaskCallStatus.ENDED,
             status_detail=TaskCallStatusDetail.ENDED_CANCELLED,
             ended_at=timezone.now(),
@@ -967,9 +969,8 @@ def _recover_stale_queries() -> None:
             if _is_ancient(query.updated_at):
                 # Context-dead: fail it instead of resuming — re-dispatching
                 # would replay a day-old prompt into a fresh LLM call.
-                Response.objects.filter(
-                    query=query, status=ResponseStatus.ACTIVE
-                ).update(status=ResponseStatus.FAILURE)
+                for _resp in Response.objects.filter(query=query, status=ResponseStatus.ACTIVE):
+                    _resp.atomic_update(status=ResponseStatus.FAILURE)
                 query.atomic_update(expect={"status": QueryStatus.ACTIVE}, status=QueryStatus.FAILURE)
                 print(
                     f"[recovery] failed ancient query {query.pk} "
@@ -979,7 +980,8 @@ def _recover_stale_queries() -> None:
             print(f"[recovery] resuming stale query {query.pk} (ACTIVE since {query.updated_at})")
 
             # 1. Fail orphaned ACTIVE Responses
-            Response.objects.filter(query=query, status=ResponseStatus.ACTIVE).update(status=ResponseStatus.FAILURE)
+            for _resp in Response.objects.filter(query=query, status=ResponseStatus.ACTIVE):
+                _resp.atomic_update(status=ResponseStatus.FAILURE)
 
             # 2. Find call_llm calls referencing THIS specific query (not all queries
             #    in the session version).  Uses _references_query for deep JSON matching
@@ -1042,7 +1044,7 @@ def _recover_stale_queries() -> None:
                 requires_approval=orig_requires_approval if orig_requires_approval else None,
             )
             if orig_requires_approval:
-                AgentTaskCall.objects.filter(pk=taskcall.pk).update(
+                taskcall.atomic_update(
                     is_approved=orig_is_approved,
                     guardrail_reason=orig_guardrail_reason,
                 )

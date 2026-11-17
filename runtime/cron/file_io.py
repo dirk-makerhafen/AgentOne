@@ -121,7 +121,7 @@ def write_cron_file(cronjob: Cronjob) -> None:
     if (cronjob.manifest_dir or "") != new_dir:
         cronjob.manifest_dir = new_dir
         if cronjob.pk is not None:
-            Cronjob.objects.filter(pk=cronjob.pk).update(manifest_dir=new_dir)
+            cronjob.atomic_update(manifest_dir=new_dir)
 
 
 def delete_cron_file(name: str, project=None, manifest_dir: str = "") -> None:

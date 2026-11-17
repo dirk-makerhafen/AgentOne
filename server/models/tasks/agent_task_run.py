@@ -174,8 +174,12 @@ class AgentTaskRun(BaseModel):
 
     def apply_async(self) -> None:
         """Dispatch this run asynchronously via Celery."""
-        query = AgentTaskRun.objects.filter(pk=self.pk, status=TaskRunStatus.NEW)
-        if 0 == query.update(status=TaskRunStatus.QUEUED, updated_at=timezone.now()):
+        updated = self.atomic_update_by_pk(
+            self.pk,
+            expect={"status": TaskRunStatus.NEW},
+            status=TaskRunStatus.QUEUED,
+        )
+        if 0 == updated:
             return
         from runtime.tasks.run_scheduler import RunScheduler
 
@@ -343,9 +347,10 @@ class AgentTaskRun(BaseModel):
         """
         waiter.taskrun_result_references.remove(old_call_id)
         waiter.taskrun_result_references.add(*new_ref_pks)
-        AgentTaskRun.objects.filter(
-            pk=waiter.pk, status=TaskRunStatus.WAITING_RESULTTASKS
-        ).update(result_json=result_json)
+        waiter.atomic_update(
+            expect={"status": TaskRunStatus.WAITING_RESULTTASKS},
+            result_json=result_json,
+        )
 
     @staticmethod
     def _create_run_arguments_json(

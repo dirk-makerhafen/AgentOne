@@ -228,7 +228,7 @@ class AgentTaskCall(BaseModel):
         taskcall._detached_intercept_calls = detached_before_calls
 
         if not root:
-            AgentTaskCall.objects.filter(pk=taskcall.pk).update(session_root_task=taskcall)
+            taskcall.atomic_update(session_root_task=taskcall)
             taskcall.session_root_task = taskcall
 
         if ref_pks:

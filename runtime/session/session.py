@@ -486,7 +486,7 @@ class Session:
 
     def reset_turn_count(self) -> None:
         """Reset the turn counter to zero."""
-        SessionModel.objects.filter(pk=self.model.pk).update(turn_count=0)
+        self.model.atomic_update(turn_count=0)
 
     @property
     def max_unattended_turns(self) -> int:
@@ -511,7 +511,7 @@ class Session:
     def reset_unattended_turn_count(self) -> None:
         """Reset the unattended turn counter to zero."""
         try:
-            SessionModel.objects.filter(pk=self.model.pk).update(unattended_turn_count=0)
+            self.model.atomic_update(unattended_turn_count=0)
         except Exception as e:
             print("Failed to update", e)
 
@@ -838,7 +838,7 @@ class Session:
         except Exception:  # pylint: disable=broad-exception-caught
             from server.models.sessions.session import SessionModel as _SM
 
-            _SM.objects.filter(pk=self.model.pk).update(is_paused=True)
+            _SM.atomic_update_by_pk(self.model.pk, is_paused=True)
             try:
                 self.model.is_paused = True
             except Exception:  # pylint: disable=broad-exception-caught
@@ -857,7 +857,7 @@ class Session:
         except Exception:  # pylint: disable=broad-exception-caught
             from server.models.sessions.session import SessionModel as _SM
 
-            _SM.objects.filter(pk=self.model.pk).update(is_paused=False)
+            _SM.atomic_update_by_pk(self.model.pk, is_paused=False)
             try:
                 self.model.is_paused = False
             except Exception:  # pylint: disable=broad-exception-caught
@@ -1408,7 +1408,7 @@ class Session:
             taskcall = ti.create_call(kwargs=call_kwargs)
             from server.models.tasks.agent_task_call import AgentTaskCall as _ATC
             from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
-            _ATC.objects.filter(pk=taskcall.pk).update(
+            taskcall.atomic_update(
                 status=TaskCallStatus.WAITING,
                 status_detail=TaskCallStatusDetail.WAITING_QUEUE,
             )
@@ -1519,14 +1519,14 @@ class Session:
         # behind it. Only valid while ours hasn't started; an already
         # running call is left alone (never observed in practice — a
         # worker cannot pick the run up within this window).
-        _ATC.objects.filter(
-            pk=new_call.pk,
-            status_detail__in=[
-                TaskCallStatusDetail.NEW,
-                TaskCallStatusDetail.WAITING_DEPENDENCY,
-                TaskCallStatusDetail.WAITING_QUEUE,
-            ],
-        ).update(
+        new_call.atomic_update(
+            expect={
+                "status_detail__in": [
+                    TaskCallStatusDetail.NEW,
+                    TaskCallStatusDetail.WAITING_DEPENDENCY,
+                    TaskCallStatusDetail.WAITING_QUEUE,
+                ],
+            },
             status=TaskCallStatus.WAITING,
             status_detail=TaskCallStatusDetail.WAITING_QUEUE,
         )

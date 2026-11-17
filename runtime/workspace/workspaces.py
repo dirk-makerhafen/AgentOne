@@ -85,10 +85,7 @@ class Workspaces(AssistantScopeMixin):
             and existing.parent_project_id is None
         ):
             try:
-                WorkspaceModel.objects.filter(pk=existing.pk).update(
-                    parent_project=parent_project
-                )
-                existing.parent_project = parent_project
+                existing.atomic_update(parent_project=parent_project)
             except Exception:  # pylint: disable=broad-exception-caught
                 pass
 
@@ -107,14 +104,11 @@ class Workspaces(AssistantScopeMixin):
                             agentone_dir=manifest_dir.as_posix(),
                         )
                     else:
-                        WorkspaceModel.objects.filter(pk=existing.pk).update(
+                        existing.atomic_update(
                             path=wanted,
                             description=description,
                             agentone_dir=manifest_dir.as_posix(),
                         )
-                        existing.path = wanted
-                        existing.description = description
-                        existing.agentone_dir = manifest_dir.as_posix()
                         workspace = existing
                 except Exception:
                     if migration is not None:
@@ -138,9 +132,7 @@ class Workspaces(AssistantScopeMixin):
                 updates["description"] = description
             if updates:
                 try:
-                    WorkspaceModel.objects.filter(pk=existing.pk).update(**updates)
-                    for key, value in updates.items():
-                        setattr(existing, key, value)
+                    existing.atomic_update(**updates)
                 except Exception:  # pylint: disable=broad-exception-caught
                     pass
             return existing

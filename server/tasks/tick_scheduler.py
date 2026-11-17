@@ -434,7 +434,7 @@ def _dispatch_processor(flow, call, source_item=None):
             agent=agent,
             pinned_agent_version=agent.latest_agent_version,
         )
-        SessionModel.objects.filter(pk=session_model.pk).update(
+        session_model.atomic_update(
             latest_session_version=session_version,
         )
     session_obj = Session(session_model=session_model, pinned_session_version=session_version)
@@ -1132,11 +1132,9 @@ def _verify_work_items() -> None:
         try:
             if not item.requires_verification:
                 continue
-            claimed = WorkItem.objects.filter(
-                pk=item.pk, verify_status__isnull=True
-            ).update(
+            claimed = item.atomic_update(
+                expect={"verify_status__isnull": True},
                 verify_status=WorkItemVerifyStatus.PENDING,
-                updated_at=timezone.now(),
             )
             if not claimed:
                 continue

@@ -533,7 +533,7 @@ class BoundTask:
             return
 
         if new_call.task_instance_id is None:
-            AgentTaskCall.objects.filter(pk=new_call.pk).update(session_version=latest)
+            new_call.atomic_update(session_version=latest)
             return
 
         # Walk up to the chain root (parent chain TaskInstance).
@@ -558,18 +558,20 @@ class BoundTask:
             stack.extend(node.child_instances.all())
 
         if not subtree:
-            AgentTaskCall.objects.filter(pk=new_call.pk).update(session_version=latest)
+            new_call.atomic_update(session_version=latest)
             return
 
-        TaskInstance.objects.filter(pk__in=subtree).update(session_version=latest)
-        AgentTaskCall.objects.filter(
+        for _ti_pk in subtree:
+            TaskInstance.atomic_update_by_pk(_ti_pk, session_version=latest)
+        for _atc in AgentTaskCall.objects.filter(
             task_instance_id__in=subtree,
             status__in=[
                 TaskCallStatus.NEW,
                 TaskCallStatus.WAITING,
                 TaskCallStatus.HALTED,
             ],
-        ).update(session_version=latest)
+        ):
+            _atc.atomic_update(session_version=latest)
 
     def instance(self, args: Any = None, kwargs: Any = None, **options: Any) -> TaskInstance:
         """

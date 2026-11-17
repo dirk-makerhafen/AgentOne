@@ -140,7 +140,7 @@ def project_edit(request, project_id: int):
     except OSError:
         return redirect(f"/app/projects/{project.pk}?error=write")
 
-    Project.objects.filter(pk=project.pk).update(
+    project.atomic_update(
         name=name,
         description=(request.POST.get("description") or "").strip(),
         main_workspace=workspace,

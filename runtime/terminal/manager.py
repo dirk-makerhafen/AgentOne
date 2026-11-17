@@ -195,7 +195,7 @@ def _live_tmux_session(server: Any, session_model: Any, row: Any) -> tuple[Any, 
         "terminal '%s' (%s) missing in tmux — recreating",
         row.name, row.tmux_session_name,
     )
-    type(row).objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
+    row.atomic_update(status=TerminalStatus.DEAD)
     row = ensure_terminal(session_model, name=row.name)
     tmux_session = _find_tmux_session(server, row.tmux_session_name)
     if tmux_session is None:
@@ -220,7 +220,7 @@ def _capture(pane: Any) -> str:
 
 def _touch(row: Any) -> None:
     try:
-        type(row).objects.filter(pk=row.pk).update(last_active_at=timezone.now())
+        row.atomic_update(last_active_at=timezone.now())
     except Exception:  # pylint: disable=broad-exception-caught
         pass
 
@@ -263,7 +263,7 @@ def ensure_terminal(
     if shell:
         updates["shell"] = shell
     if updates:
-        type(row).objects.filter(pk=row.pk).update(**updates)
+        row.atomic_update(**updates)
         row.refresh_from_db()
 
     server = _server()
@@ -288,13 +288,11 @@ def ensure_terminal(
                 pane.cmd("pipe-pane", "-o", f"cat >> {log_path}")
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 logger.warning("pipe-pane for %s failed: %s", tmux_name, exc)
-            type(row).objects.filter(pk=row.pk).update(log_path=log_path)
+            row.atomic_update(log_path=log_path)
             row.refresh_from_db()
         except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning("terminal log setup for %s failed: %s", tmux_name, exc)
-    type(row).objects.filter(pk=row.pk).update(
-        status=TerminalStatus.RUNNING, last_active_at=timezone.now()
-    )
+    row.atomic_update(status=TerminalStatus.RUNNING, last_active_at=timezone.now())
     row.refresh_from_db()
     return row
 
@@ -344,7 +342,7 @@ def exec_command(
     if shell_exited:
         from server.models.terminal import TerminalStatus
 
-        type(row).objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
+        row.atomic_update(status=TerminalStatus.DEAD)
         return {
             "status": "error",
             "stdout": _tail(clean_terminal_output(output), 20000),
@@ -459,7 +457,7 @@ def kill_terminal(session_model: Any, name: str = "default") -> dict[str, Any]:
             tmux_session.kill()
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return {"status": "error", "message": f"Kill failed: {exc}"}
-    TerminalSession.objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
+    row.atomic_update(status=TerminalStatus.DEAD)
     return {"status": "success", "terminal": slug}
 
 
@@ -486,7 +484,7 @@ def reap_idle_terminals(max_idle_seconds: int = 3600, limit: int = 10) -> int:
                 tmux_session.kill()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
-        TerminalSession.objects.filter(pk=row.pk).update(status=TerminalStatus.DEAD)
+        row.atomic_update(status=TerminalStatus.DEAD)
         count += 1
     return count
 
@@ -525,9 +523,10 @@ def cleanup_orphans() -> int:
                 pass
     # Mark rows whose tmux session vanished as dead.
     present = _session_names(server)
-    TerminalSession.objects.filter(status=TerminalStatus.RUNNING).exclude(
+    for _ts in TerminalSession.objects.filter(status=TerminalStatus.RUNNING).exclude(
         tmux_session_name__in=present
-    ).update(status=TerminalStatus.DEAD)
+    ):
+        _ts.atomic_update(status=TerminalStatus.DEAD)
     return count
 
 

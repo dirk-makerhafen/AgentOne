@@ -175,9 +175,7 @@ class GenericContent(ObservableMixin, models.Model):
         if not max_age:
             return
         new_expiry = datetime.now() + timedelta(days=max_age)
-        GenericContent.objects.filter(pk=self.pk, expires_at__lt=new_expiry).update(
-            expires_at=new_expiry
-        )
+        self.atomic_update(expect={"expires_at__lt": new_expiry}, expires_at=new_expiry)
 
 
 def pack_large_string(text: str) -> Any:

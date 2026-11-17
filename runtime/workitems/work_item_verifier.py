@@ -92,10 +92,9 @@ class WorkItemVerifier:
                 f"workitem_verify: review of item #{work_item_id} failed "
                 f"-> escalate: {exc}"
             )
-            WorkItem.objects.filter(pk=item.pk).update(
+            item.atomic_update(
                 verify_status=WorkItemVerifyStatus.ESCALATED,
                 verify_reason=f"Verification failed: {exc}",
-                updated_at=timezone.now(),
             )
 
     # ------------------------------------------------------------------

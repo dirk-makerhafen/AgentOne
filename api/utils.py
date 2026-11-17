@@ -158,12 +158,18 @@ def sync_provider_models(provider_id: int) -> dict:
             model.save(update_fields=["family", "description", "enabled"])
 
     # Disable models the providers no longer serve
-    stale_count = AiModel.objects.filter(
+    stale_models = list(AiModel.objects.filter(
         api_provider=provider, enabled=True,
-    ).exclude(name__in=seen_names).update(enabled=False)
+    ).exclude(name__in=seen_names))
+    for _m in stale_models:
+        _m.atomic_update(enabled=False)
+    stale_count = len(stale_models)
     if cloud_provider is not None:
-        stale_count += AiModel.objects.filter(
+        cloud_stale = list(AiModel.objects.filter(
             api_provider=cloud_provider, enabled=True,
-        ).exclude(name__in=seen_cloud).update(enabled=False)
+        ).exclude(name__in=seen_cloud))
+        for _m in cloud_stale:
+            _m.atomic_update(enabled=False)
+        stale_count += len(cloud_stale)
 
     return {"error": "", "created": created, "updated": updated, "stale": stale_count, "total": len(raw_models)}
