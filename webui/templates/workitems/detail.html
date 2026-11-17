@@ -12,7 +12,7 @@
         <div class="main-view-actions">
             <a class="webui-action-btn" href="{% url 'webui:workitems' %}{% if item.project %}?project={{ item.project.pk }}{% endif %}">Board</a>
             <form method="post" action="{% url 'webui:workitem_delete' item.pk %}"
-                  onsubmit="return confirm('Delete work item {{ item.title|escapejs }}?');">
+                  hx-confirm="Delete work item {{ item.title }}?">
                 {% csrf_token %}
                 <button class="webui-action-btn danger" type="submit">Delete</button>
             </form>

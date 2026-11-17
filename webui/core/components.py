@@ -440,11 +440,15 @@ def _build_chat_thread(request, pk, params):
     return ComponentData(
         context,
         (
+            # Only structural changes (new/removed rows) should redraw the whole
+            # thread.  Tool-call and session-status updates are high-frequency and
+            # are handled by the individual message/query/response components and
+            # by the composer footer, so subscribing the thread to them caused
+            # the entire chat to be swapped (and scrolled to the top) every few
+            # seconds.
             f"Message.session:{pk}",
             f"Query.session:{pk}",
             f"Response.session:{pk}",
-            f"AgentTaskCall.session:{pk}",
-            f"SessionModel:{pk}",
         ),
     )
 

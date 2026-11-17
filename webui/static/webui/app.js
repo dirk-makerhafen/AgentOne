@@ -390,7 +390,7 @@
             btn.addEventListener('click', function () {
                 var url = btn.getAttribute('data-download-url');
                 var format = btn.getAttribute('data-download-format');
-                var hint = document.querySelector('.webui-download-hint');
+                var hint = root.querySelector('.webui-download-hint');
                 var dropdown = btn.closest('[data-dropdown]');
 
                 // Close dropdown
@@ -416,9 +416,17 @@
 
                 // Hide hint after a short delay (download should have started)
                 // We can't reliably detect when download actually starts, so use a timeout
-                setTimeout(function () {
-                    if (hint) hint.hidden = true;
-                }, 2000);
+                if (hint) {
+                    // Clear any pending timeout from previous clicks to prevent stacking
+                    if (hint._downloadHintTimeout) {
+                        clearTimeout(hint._downloadHintTimeout);
+                        hint._downloadHintTimeout = null;
+                    }
+                    // Set new timeout to hide the hint
+                    hint._downloadHintTimeout = setTimeout(function () {
+                        if (hint) hint.hidden = true;
+                    }, 2000);
+                }
             });
         });
     }
@@ -1313,8 +1321,17 @@
 (function () {
     'use strict';
     var MIN_W = 200, MAX_W = 600;
+    // Below these widths the panels stop being side-by-side columns and become
+    // stacked rows / slide-over drawers.  An inline width from a previous
+    // desktop drag would override those media-query rules, so only restore a
+    // saved width while the panel is actually resizable.
+    var desktopMQ = window.matchMedia('(min-width: 901px)');
+    var wideMQ = window.matchMedia('(min-width: 1101px)');
     function loadWidth(key, fallback) {
         try { var v = parseInt(localStorage.getItem(key), 10); return (v && v >= MIN_W && v <= MAX_W) ? v : fallback; } catch (e) { return fallback; }
+    }
+    function canResize(panel) {
+        return panel.classList.contains('insights-rightbar') ? wideMQ.matches : desktopMQ.matches;
     }
     function applyPanelWidth(panel, w) {
         panel.style.width = w + 'px';
@@ -1323,15 +1340,27 @@
             panel.style.flex = '0 0 ' + w + 'px';
         }
     }
+    function clearPanelWidth(panel) {
+        panel.style.removeProperty('width');
+        if (!panel.classList.contains('sidebar')) panel.style.removeProperty('flex');
+    }
+    function savePanelWidth(panel) {
+        var w = parseInt(panel.style.width, 10);
+        if (!w) return;
+        var key = panel.classList.contains('sidebar') ? 'sidebarWidth' : 'rightpanelWidth';
+        try { localStorage.setItem(key, w); } catch (e) {}
+    }
     function restoreWidths() {
         var s = document.querySelector('.sidebar');
-        if (s) s.style.width = loadWidth('sidebarWidth', 300) + 'px';
-        var rw = loadWidth('rightpanelWidth', null);
-        if (rw) {
-            document.querySelectorAll('.webui-chat-panel, .webui-entity-assistant, .insights-rightbar').forEach(function (r) {
-                applyPanelWidth(r, rw);
-            });
+        if (s) {
+            if (desktopMQ.matches) s.style.width = loadWidth('sidebarWidth', 300) + 'px';
+            else clearPanelWidth(s);
         }
+        var rw = loadWidth('rightpanelWidth', null);
+        document.querySelectorAll('.rightbar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar').forEach(function (r) {
+            if (rw && canResize(r)) applyPanelWidth(r, rw);
+            else clearPanelWidth(r);
+        });
     }
     // Boosted navigation replaces the whole body, so the panel nodes and the
     // observed layout node have to be re-resolved after every swap.
@@ -1357,12 +1386,14 @@
 
     refreshLayoutState();
     document.addEventListener('htmx:afterSettle', refreshLayoutState);
+    desktopMQ.addEventListener('change', refreshLayoutState);
+    wideMQ.addEventListener('change', refreshLayoutState);
 
     var handle = null, startX = 0, startW = 0;
     document.addEventListener('mousedown', function (e) {
         var el = e.target && e.target.closest ? e.target.closest('.resize-handle') : null;
         if (!el || el.id === 'terminalResizeHandle') return;
-        var panel = el.closest('.sidebar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
+        var panel = el.closest('.sidebar, .rightbar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
         if (!panel) return;
         handle = el;
         startX = e.clientX;
@@ -1373,7 +1404,7 @@
     });
     document.addEventListener('mousemove', function (e) {
         if (!handle) return;
-        var panel = handle.closest('.sidebar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
+        var panel = handle.closest('.sidebar, .rightbar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
         if (!panel) return;
         var dx = e.clientX - startX;
         // Sidebar: handle on right edge, drag right = increase width
@@ -1385,18 +1416,26 @@
     });
     document.addEventListener('mouseup', function () {
         if (!handle) return;
-        var panel = handle.closest('.sidebar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
-        if (panel) {
-            var w = parseInt(panel.style.width, 10);
-            if (w) {
-                var isSidebar = panel.classList.contains('sidebar');
-                var key = isSidebar ? 'sidebarWidth' : 'rightpanelWidth';
-                try { localStorage.setItem(key, w); } catch (e) {}
-            }
-        }
+        var panel = handle.closest('.sidebar, .rightbar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
+        if (panel) savePanelWidth(panel);
         handle = null;
         document.body.classList.remove('resizing');
         window._panelDragging = false;
+    });
+    // The handles are focusable separators, so support arrow-key resizing too.
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        var el = e.target && e.target.closest ? e.target.closest('.resize-handle') : null;
+        if (!el || el.id === 'terminalResizeHandle') return;
+        var panel = el.closest('.sidebar, .rightbar, .webui-chat-panel, .webui-entity-assistant, .insights-rightbar');
+        if (!panel || !canResize(panel)) return;
+        var step = e.shiftKey ? 40 : 10;
+        var delta = e.key === 'ArrowRight' ? step : -step;
+        if (!panel.classList.contains('sidebar')) delta = -delta;
+        var w = Math.max(MIN_W, Math.min(MAX_W, Math.round(panel.getBoundingClientRect().width) + delta));
+        applyPanelWidth(panel, w);
+        savePanelWidth(panel);
+        e.preventDefault();
     });
 })();
 
@@ -1613,4 +1652,41 @@
 
     document.addEventListener('DOMContentLoaded', initRestore);
     if (document.readyState !== 'loading') initRestore();
+})();
+
+// Preserve #thread scroll position across htmx swaps of the chat-thread
+// component.  The component is replaced wholesale on new messages, which would
+// otherwise reset the scroll container to the top.
+(function () {
+    'use strict';
+    var saved = null;
+    var wasAtBottom = false;
+    var skipRestore = false;
+    function threadEl() {
+        return document.querySelector("[data-component='chat-thread'] #thread")
+            || document.querySelector('#thread');
+    }
+    document.addEventListener('htmx:beforeSwap', function (evt) {
+        var elt = evt && evt.detail && evt.detail.elt;
+        skipRestore = !!(elt && elt.closest && elt.closest('.webui-load-older'));
+        var el = threadEl();
+        if (el) {
+            saved = el.scrollTop;
+            wasAtBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 40;
+        }
+    });
+    document.addEventListener('htmx:afterSwap', function () {
+        window.setTimeout(function () {
+            if (!skipRestore) {
+                var el = threadEl();
+                if (el) {
+                    if (wasAtBottom) el.scrollTop = el.scrollHeight;
+                    else if (saved !== null) el.scrollTop = saved;
+                }
+            }
+            saved = null;
+            wasAtBottom = false;
+            skipRestore = false;
+        }, 0);
+    });
 })();

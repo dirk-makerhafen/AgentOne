@@ -10,7 +10,7 @@
             <a class="webui-action-btn" href="{% url 'webui:skills' %}">All skills</a>
             <button class="webui-action-btn" type="button" data-toggle-target="#edit-skill">Edit</button>
             <form method="post" action="{% url 'webui:skill_delete' skill.pk %}"
-                  onsubmit="return confirm('Delete skill {{ skill.name|escapejs }}?');">
+                  hx-confirm="Delete skill {{ skill.name }}?">
                 {% csrf_token %}
                 <button class="webui-action-btn danger" type="submit">Delete</button>
             </form>

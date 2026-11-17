@@ -357,7 +357,13 @@ def run_streaming_query(
                 if not first_token_timestamp:
                     first_token_timestamp = time.time()
             if time.time() - last_save_time > SAVE_INTERVAL:
-                response.save()
+                # Periodic streaming saves update the response row itself but
+                # must not republish the session-level keys: those would redraw
+                # the whole thread for every 1 Hz token flush.  Publish only the
+                # row key so the response component still tracks the tokens.
+                response.save(publish=False)
+                from server.models.observables import publish_model_event
+                publish_model_event([f"Response:{response.pk}"], response, "update")
                 last_save_time = time.time()
     except Exception as exc:
         # Provider hard-failure (connection, 5xx, auth, 404, ...).  Classify

@@ -1,8 +1,8 @@
 {% load webui %}
 {% firstof panel_tab "details" as active_panel_tab %}
-<aside class="webui-chat-panel" id="chat-panel" aria-label="Session panel">
+<aside class="webui-chat-panel rightbar" id="chat-panel" aria-label="Session panel">
     {% include "shared/_resize_handle.html" %}
-    <div class="webui-panel-head">
+    <div class="rightbar-head webui-panel-head">
         <span>Session</span>
         <button class="webui-icon-btn" type="button" data-panel-toggle title="Close panel" aria-label="Close panel">×</button>
     </div>

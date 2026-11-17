@@ -76,7 +76,9 @@ class Response(BaseModel):
                         corrected_tokens = int(round(query_message.tokens * correction_factor))
                         if query_message.tokens != corrected_tokens:
                             query_message.tokens = corrected_tokens
-                            query_message.save(update_fields=["tokens"])
+                            query_message.save(update_fields=["tokens"], publish=False)
+                            from server.models.observables import publish_model_event
+                            publish_model_event([f"QueryMessage:{query_message.pk}"], query_message, "update")
 
                         for part in query_message.query_message_parts.all():
                             if not part.tokens:
@@ -84,10 +86,14 @@ class Response(BaseModel):
                             corrected_tokens = int(round(part.tokens * correction_factor))
                             if part.tokens != corrected_tokens:
                                 part.tokens = corrected_tokens
-                                part.save(update_fields=["tokens"])
+                                part.save(update_fields=["tokens"], publish=False)
+                                from server.models.observables import publish_model_event
+                                publish_model_event([f"QueryMessagePart:{part.pk}"], part, "update")
                                 
                     # ``query.tokens`` is the authoritative backend count, not
                     # the (rounded) scaled estimate.
                     if query.tokens != actual_total:
                         query.tokens = actual_total
-                        query.save(update_fields=["tokens"])
+                        query.save(update_fields=["tokens"], publish=False)
+                        from server.models.observables import publish_model_event
+                        publish_model_event([f"Query:{query.pk}"], query, "update")

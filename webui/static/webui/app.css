@@ -25,6 +25,45 @@
 
 .webui-new-chat { margin: 0; }
 
+/* Sign-in page (registration/login.html) ---------------------------------- */
+.webui-login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg);
+}
+.webui-login-card {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .12);
+}
+.webui-login-card .webui-brand { padding: 0; font-size: 18px; }
+.webui-login-card h1 { font-size: 22px; font-weight: 650; letter-spacing: -.01em; }
+.webui-login-sub { margin-top: -8px; font-size: 12px; color: var(--muted); }
+.webui-login-field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted); }
+.webui-login-field input {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 9px;
+    background: var(--input-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+}
+.webui-login-field input:focus { border-color: var(--accent); }
+.webui-login-submit { justify-content: center; width: 100%; }
+
 /* Sidebar project filter (legacy ProjectSelector parity). */
 .sidebar-project-bar {
     padding: 0 10px 8px;
@@ -1245,6 +1284,14 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     max-width: none;
     margin: 0;
     padding: 0;
+    /* The page body is a fixed-height flex column.  Without this the content
+       wrapper stays a block, so `.insights-split` (flex:1) grows to its
+       intrinsic table height and gets clipped by the body's overflow:hidden. */
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
 }
 .insights-page-body {
     padding: 16px 24px;
@@ -2234,10 +2281,12 @@ html.sse-down #connection-banner { display: block; }
 .webui-chat-panel { position: relative; }
 .webui-entity-assistant { position: relative; }
 .insights-rightbar { position: relative; }
+.rightbar { position: relative; }
 .sidebar .resize-handle { right: 0; }
 .webui-chat-panel .resize-handle { left: 0; }
 .webui-entity-assistant .resize-handle { left: 0; }
 .insights-rightbar .resize-handle { left: 0; }
+.rightbar .resize-handle { left: 0; }
 .resize-handle:hover, .resize-handle.dragging { background: var(--accent, #4f8cff); }
 .insights-rightbar > .resize-handle { background: transparent; }
 body.resizing { user-select: none; cursor: col-resize; }

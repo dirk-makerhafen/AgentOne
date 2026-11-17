@@ -14,7 +14,7 @@
             </form>
             <button class="webui-action-btn" type="button" data-toggle-target="#edit-workspace">Edit</button>
             <form method="post" action="{% url 'webui:workspace_delete' workspace.pk %}"
-                  onsubmit="return confirm('Delete workspace {{ workspace.name|escapejs }}?');">
+                  hx-confirm="Delete workspace {{ workspace.name }}?">
                 {% csrf_token %}
                 <button class="webui-action-btn danger" type="submit">Delete</button>
             </form>

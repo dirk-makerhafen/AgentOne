@@ -1,8 +1,8 @@
 {% load webui %}
-<aside class="webui-entity-assistant" id="entity-assistant-panel"
+<aside class="webui-entity-assistant rightbar" id="entity-assistant-panel"
        aria-label="{{ assistant_title }} chat">
     {% include "shared/_resize_handle.html" %}
-    <header class="webui-entity-assistant-head">
+    <header class="rightbar-head webui-entity-assistant-head">
         <div>
             <div class="webui-entity-assistant-title">{{ assistant_title }}</div>
             <div class="webui-entity-assistant-subtitle">{{ assistant_item.name }}</div>
@@ -19,7 +19,7 @@
                 name="session"
                 hx-get="{{ assistant_panel_url }}"
                 hx-include="this"
-                hx-trigger="change" hx-target="#entity-assistant-panel" hx-swap="outerHTML">
+                hx-trigger="change" hx-target="closest .rightbar" hx-swap="outerHTML">
             {% for session in assistant_sessions %}
             <option value="{{ session.pk }}"{% if assistant_session.pk == session.pk %} selected{% endif %}>
                 {{ session.name }}

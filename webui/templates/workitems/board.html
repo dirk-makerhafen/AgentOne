@@ -10,20 +10,23 @@
             <span class="webui-muted-note">{{ scope_label }} · {{ total }} item{{ total|pluralize }}</span>
         </div>
         <div class="main-view-actions">
-            <form class="webui-inline-form" method="get" action="{% url 'webui:workitems' %}">
-                <select name="project" onchange="this.form.requestSubmit()" aria-label="Filter by project">
+            <form class="webui-inline-form" method="get" action="{% url 'webui:workitems' %}"
+                  hx-get="{% url 'webui:workitems' %}"
+                  hx-target="closest .main-view" hx-swap="outerHTML" hx-push-url="true"
+                  hx-trigger="change">
+                <select name="project" aria-label="Filter by project">
                     <option value="">All projects</option>
                     {% for project in projects %}
                     <option value="{{ project.pk }}"{% if project.pk == project_id %} selected{% endif %}>{{ project.name }}</option>
                     {% endfor %}
                 </select>
-                <select name="assignee" onchange="this.form.requestSubmit()" aria-label="Filter by assignee">
+                <select name="assignee" aria-label="Filter by assignee">
                     <option value="">All assignees</option>
                     {% for option in assignee_options %}
                     <option value="{{ option.id }}"{% if option.id == agent_filter %} selected{% endif %}>{{ option.label }}</option>
                     {% endfor %}
                 </select>
-                <select name="verify" onchange="this.form.requestSubmit()" aria-label="Filter by verification">
+                <select name="verify" aria-label="Filter by verification">
                     <option value="">Any verification</option>
                     <option value="required"{% if verify_filter == "required" %} selected{% endif %}>Needs verification</option>
                     <option value="pending"{% if verify_filter == "pending" %} selected{% endif %}>Awaiting verdict</option>
@@ -31,11 +34,11 @@
                     <option value="escalated"{% if verify_filter == "escalated" %} selected{% endif %}>Escalated</option>
                 </select>
                 <label class="webui-inline-check">
-                    <input type="checkbox" name="terminal" value="1"{% if show_terminal %} checked{% endif %} onchange="this.form.requestSubmit()">
+                    <input type="checkbox" name="terminal" value="1"{% if show_terminal %} checked{% endif %}>
                     Show done
                 </label>
                 <label class="webui-inline-check">
-                    <input type="checkbox" name="actionable" value="1"{% if only_actionable %} checked{% endif %} onchange="this.form.requestSubmit()">
+                    <input type="checkbox" name="actionable" value="1"{% if only_actionable %} checked{% endif %}>
                     Only needs a human
                 </label>
             </form>

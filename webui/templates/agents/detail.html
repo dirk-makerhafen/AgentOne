@@ -13,7 +13,7 @@
             <a class="webui-action-btn" href="{% url 'webui:agents' %}">All agents</a>
             <button class="webui-action-btn" type="button" data-toggle-target="#edit-agent">Edit</button>
             <form method="post" action="{% url 'webui:agent_delete' agent.pk %}"
-                  onsubmit="return confirm('Delete agent {{ agent.name|escapejs }}?');">
+                  hx-confirm="Delete agent {{ agent.name }}?">
                 {% csrf_token %}
                 <button class="webui-action-btn danger" type="submit">Delete</button>
             </form>

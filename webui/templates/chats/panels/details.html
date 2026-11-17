@@ -87,7 +87,7 @@
             <button class="webui-action-btn" type="submit">Import messages</button>
         </form>
         <form method="post" action="{% url 'webui:clear_conversation' session.pk %}"
-              onsubmit="return confirm('Delete every message in this conversation?');">
+              hx-confirm="Delete every message in this conversation?">
             {% csrf_token %}
             <button class="webui-action-btn danger" type="submit">Clear conversation</button>
         </form>

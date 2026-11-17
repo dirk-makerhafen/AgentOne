@@ -7,8 +7,11 @@
     <header class="main-view-header">
         <div class="main-view-title">Logs</div>
         <div class="main-view-actions">
-            <form class="webui-inline-form" method="get" action="{% url 'webui:logs' %}">
-                <select name="file" onchange="this.form.requestSubmit()" aria-label="Log file">
+            <form class="webui-inline-form" method="get" action="{% url 'webui:logs' %}"
+                  hx-get="{% url 'webui:logs' %}"
+                  hx-target="closest .main-view" hx-swap="outerHTML" hx-push-url="true"
+                  hx-trigger="change">
+                <select name="file" aria-label="Log file">
                     {% for file in log_files %}
                     <option value="{{ file }}"{% if file == selected_log %} selected{% endif %}>{{ file }}</option>
                     {% empty %}

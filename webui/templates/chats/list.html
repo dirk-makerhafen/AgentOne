@@ -7,7 +7,10 @@
     <header class="main-view-header">
         <div class="main-view-title">{% if show_archived %}Archived chats{% else %}Chats{% endif %}</div>
         <div class="main-view-actions">
-            <form class="webui-page-search" method="get" action="{% url 'webui:chats' %}">
+            <form class="webui-page-search" method="get" action="{% url 'webui:chats' %}"
+                  hx-get="{% url 'webui:chats' %}"
+                  hx-target="closest .main-view" hx-swap="outerHTML" hx-push-url="true"
+                  hx-trigger="submit">
                 {% if show_archived %}<input type="hidden" name="archived" value="1">{% endif %}
                 <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search chats…"
                        autocomplete="off" aria-label="Search chats">

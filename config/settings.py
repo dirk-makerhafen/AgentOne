@@ -203,7 +203,15 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR + "/webui/static",]
 STATIC_ROOT = os.path.join(BASE_DIR, '_staticfiles')
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Django 6 removed the standalone STATICFILES_STORAGE setting: static files
+# resolve through STORAGES["staticfiles"].  Without this entry collectstatic
+# silently keeps plain files (and, worse, any stale .gz/.br siblings that a
+# previous install left in STATIC_ROOT), so WhiteNoise serves an outdated
+# app.css/app.js after an upgrade.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 DJANGORESIZED_DEFAULT_SIZE = [1920, 1280]
 DJANGORESIZED_DEFAULT_QUALITY = 90

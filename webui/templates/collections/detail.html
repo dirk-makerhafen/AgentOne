@@ -21,7 +21,7 @@
             </form>
             <button class="webui-action-btn" type="button" data-toggle-target="#edit-collection">Edit</button>
             <form method="post" action="{% url 'webui:collection_delete' collection.pk %}"
-                  onsubmit="return confirm('Delete data flow {{ collection.name|escapejs }}?');">
+                  hx-confirm="Delete data flow {{ collection.name }}?">
                 {% csrf_token %}
                 <button class="webui-action-btn danger" type="submit">Delete</button>
             </form>

@@ -415,7 +415,11 @@ class Command(BaseCommand):
 
         self.stdout.write("Collecting static files...")
         try:
-            call_command("collectstatic", interactive=False, verbosity=0)
+            # ``clear`` matters: collectstatic only post-processes files it
+            # copied, so a stale ``app.css.gz`` (or a CSS file whose source
+            # mtime did not change) would otherwise survive forever and
+            # WhiteNoise would keep serving the old asset.
+            call_command("collectstatic", interactive=False, verbosity=0, clear=True)
             self.stdout.write(self.style.SUCCESS("  Static files collected."))
         except Exception as exc:  # pylint: disable=broad-exception-caught
             self.stdout.write(self.style.WARNING(f"  collectstatic failed: {exc}"))

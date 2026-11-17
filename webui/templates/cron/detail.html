@@ -25,7 +25,7 @@
             </form>
             <button class="webui-action-btn" type="button" data-toggle-target="#edit-cron">Edit</button>
             <form method="post" action="{% url 'webui:cron_delete' cron.pk %}"
-                  onsubmit="return confirm('Delete cron job {{ cron.name|escapejs }}?');">
+                  hx-confirm="Delete cron job {{ cron.name }}?">
                 {% csrf_token %}
                 <button class="webui-action-btn danger" type="submit">Delete</button>
             </form>

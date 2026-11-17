@@ -174,6 +174,18 @@ def test_static_v_appends_mtime_cache_buster():
     assert "?v=" in static_v("webui/app.js")
 
 
+def test_assets_referenced_by_the_base_layout_exist():
+    """The webui shell depends on the legacy design-token stylesheet.
+
+    It used to live in the deleted ``ui`` app and survived only in a stale
+    ``_staticfiles`` build, so a clean ``collectstatic`` silently dropped it.
+    """
+    from django.contrib.staticfiles import finders
+
+    for path in ("css/main.css", "webui/app.css", "webui/app.js"):
+        assert finders.find(path), path
+
+
 def test_get_item_filter_looks_up_dict_keys():
     assert get_item({"ready": 3}, "ready") == 3
     assert get_item({"ready": 3}, "missing") is None
@@ -347,6 +359,15 @@ def test_htmx_navigation_to_login_uses_hx_redirect(client):
     response = client.get(reverse("webui:dashboard"), HTTP_HX_REQUEST="true")
     assert response.status_code == 204
     assert response["HX-Redirect"].startswith("/accounts/login/")
+
+
+@pytest.mark.django_db
+@override_settings(WEBUI_LOGIN_REQUIRED=True)
+def test_login_page_renders(client):
+    """Anonymous redirects land here, so the registration template must exist."""
+    response = client.get(reverse("login"))
+    assert response.status_code == 200
+    assert b"Sign in" in response.content
 
 
 @pytest.mark.django_db
@@ -922,7 +943,7 @@ def test_workspace_detail_browses_files_and_blocks_escape(client, tmp_path):
     response = client.get(reverse("webui:workspace", args=[workspace.pk]))
     assert response.status_code == 200
     assert b'class="webui-entity-layout"' in response.content
-    assert b'class="webui-entity-assistant" id="entity-assistant-panel"' in response.content
+    assert b'class="webui-entity-assistant rightbar" id="entity-assistant-panel"' in response.content
     assert b"example.txt" not in response.content
     assert b"folder/" in response.content
 
