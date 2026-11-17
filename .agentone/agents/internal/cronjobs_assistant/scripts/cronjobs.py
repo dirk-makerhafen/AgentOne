@@ -6,9 +6,7 @@ health belong here; working on ONE job (describe, tune, pause, runs)
 belongs to ``cronjob_assistant``. Every tool returns a ``(bool, dict)``
 tuple.
 
-Writes go to the database AND to the ``.agentone/cronjobs/<name>.md`` file
-(via ``runtime.cron.file_io``), mirroring what the UI does — otherwise the
-next manifest reload would archive the DB-only record.
+Cron jobs are DB-canonical and created via the Web UI (no manifest files).
 """
 from __future__ import annotations
 
@@ -128,9 +126,9 @@ def create_cronjob(
 ) -> tuple[bool, dict[str, Any]]:
     """Create a new cron job in your managed project scope.
 
-    The job starts active immediately and is written to the database and
-    to its ``.agentone/cronjobs/<name>.md`` file, so manifest reloads
-    keep it. For tuning one job afterwards, see ``cronjob_assistant``.
+    The job starts active immediately and is stored in the database (cron
+    jobs are DB-canonical; no manifest file is written). For tuning one
+    job afterwards, see ``cronjob_assistant``.
 
     Args:
         name: Unique job name in this scope (required).
@@ -155,8 +153,6 @@ def create_cronjob(
     from server.models.cron import Cronjob
     from server.models.workspace import WorkspaceModel
     from runtime.cron.content import build_cron_message
-    from runtime.cron.file_io import write_cron_file
-
     name = (name or "").strip()
     if not name:
         return False, {"status": "error", "message": "A name is required."}
@@ -208,21 +204,6 @@ def create_cronjob(
         )
     except Exception as e:
         return False, {"status": "error", "message": f"Could not create cron job: {e}"}
-    try:
-        write_cron_file(job)
-    except Exception as e:
-        return False, {
-            "status": "error",
-            "message": f"Created cron job {job.pk} but could not write its .md file: {e}",
-        }
-    try:
-        from runtime.cron.file_io import cron_file_path
-
-        job.atomic_update(
-            manifest_dir=cron_file_path(job.name, project).parent.as_posix()
-        )
-    except Exception:
-        pass
     info = _cron_info(job)
     info.update({"status": "success"})
     return True, info
@@ -269,8 +250,8 @@ def set_cronjob_archived(_session: Session, name: str, archived: bool = True) ->
     """Archive or restore a cron job in your managed project scope.
 
     Archiving hides the job from the default views but preserves its
-    tracking data (run count, last run). The ``.md`` file is removed on
-    archive (a missing file means archived) and rewritten on restore.
+    tracking data (run count, last run). Cron jobs are DB-canonical (no
+    manifest files).
 
     Args:
         name: Name of the cron job (required).
@@ -280,8 +261,6 @@ def set_cronjob_archived(_session: Session, name: str, archived: bool = True) ->
         ``(True, {"status": "success", job...})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
-    from runtime.cron.file_io import delete_cron_file, write_cron_file
-
     name = (name or "").strip()
     if not name:
         return False, {"status": "error", "message": "A cron job name is required."}
@@ -292,10 +271,6 @@ def set_cronjob_archived(_session: Session, name: str, archived: bool = True) ->
     job.is_archived = bool(archived)
     try:
         job.save(update_fields=["is_archived", "updated_at"])
-        if archived:
-            delete_cron_file(job.name, job.parent_project, job.manifest_dir)
-        else:
-            write_cron_file(job)
     except Exception as e:
         return False, {"status": "error", "message": f"Could not update cron job: {e}"}
     info = _cron_info(job)
@@ -304,42 +279,10 @@ def set_cronjob_archived(_session: Session, name: str, archived: bool = True) ->
 
 
 def refresh_from_disk(_session: Session) -> tuple[bool, dict[str, Any]]:
-    """Reload all cron jobs visible in the managed scope from disk."""
-    from pathlib import Path
-
-    from runtime.paths import agentone_home, agentone_root
-    from registry.loader.load_cron_manifest import load_cron_manifest
-    from registry.install_repo import InstallRepo
-
-    project = _session.get_project()
-    details: list[dict[str, Any]] = []
-    errors: list[str] = []
-    roots: list[tuple[Path, Any, InstallRepo]] = []
-    if project is not None:
-        md = project.get_agentone_dir()
-        roots.append((md, project, InstallRepo.for_project(project, source_root=md)))
-    else:
-        roots.append((agentone_root(), None, InstallRepo.for_global(source_root=agentone_root())))
-        roots.append((agentone_home(), None, InstallRepo.for_user(source_root=agentone_home())))
-
-    for root, proj, repo in roots:
-        crons_dir = root / "cronjobs"
-        if not crons_dir.is_dir():
-            continue
-        try:
-            repo.sync()
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            errors.append(f"sync {root}: {e}")
-            continue
-        seen: set[str] = set()
-        for cron_md in sorted(crons_dir.glob("*.md")):
-            try:
-                load_cron_manifest(cron_md, install_repo=repo, parent_project=proj, seen_names=seen, details=details)
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                errors.append(f"{cron_md}: {e}")
-
-    return (len(errors) == 0, {
-        "status": "success" if not errors else "partial",
-        "details": details,
-        "errors": errors,
-    })
+    """Cron jobs are DB-canonical; there are no manifest files to reload."""
+    return True, {
+        "status": "success",
+        "message": "Cron jobs are DB-canonical and no longer use .md manifest files.",
+        "details": [],
+        "errors": [],
+    }

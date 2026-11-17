@@ -135,15 +135,24 @@ class Cronjobs(AssistantScopeMixin):
     def get_source_dir(self) -> Path:
         """Return the source directory anchoring this scope (no I/O).
 
-        Canonical cron file location via ``runtime.cron.file_io`` (project
-        manifest ``cronjobs/`` or the global tree); a parent workspace
-        resolves to its own manifest (or path).
+        Cron jobs are DB-canonical (no manifest files). Project scope uses
+        the project's manifest dir; global scope uses the AgentOne root.
+        A parent workspace resolves to its own manifest (or path).
         """
         if self.parent_workspace is not None:
             return self.parent_workspace.get_agentone_dir()
-        from runtime.cron.file_io import cron_file_path
+        project = self.parent_project
+        if project is not None:
+            try:
+                return project.get_agentone_dir()
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+            p = getattr(project, "path", None)
+            if p:
+                return Path(p) / ".agentone"
+        from django.conf import settings
 
-        return cron_file_path(".scope", self.parent_project).parent
+        return Path(settings.AGENTONE_ROOT)
 
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this scope's assistant sessions.
@@ -157,5 +166,5 @@ class Cronjobs(AssistantScopeMixin):
         if project is not None:
             return Workspaces.for_project(project)
         return Workspaces.ensure_named(
-            "System cronjobs", self.get_source_dir(), "User-scope cronjob manifests"
+            "System cronjobs", self.get_source_dir(), "System cron jobs"
         )

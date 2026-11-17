@@ -45,23 +45,23 @@ class Cron(AssistantScopeMixin):
             return None
 
     def get_source_dir(self) -> Path:
-        """Return the directory holding this job's manifest (no I/O).
+        """Return the source directory anchoring this job's scope (no I/O).
 
-        Stored ``manifest_dir`` first; else the canonical cron file
-        location from ``runtime.cron.file_io`` (project manifest
-        ``cronjobs/`` or the global tree).
+        Cron jobs are DB-canonical (no manifest files). The directory is
+        the owning project's manifest dir, or the global AgentOne root.
         """
-        try:
-            stored = str(getattr(self.model, "manifest_dir", "") or "").strip()
-            if stored:
-                import os
+        project = self.project
+        if project is not None:
+            try:
+                return project.get_agentone_dir()
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+            p = getattr(project, "path", None)
+            if p:
+                return Path(p) / ".agentone"
+        from django.conf import settings
 
-                return Path(os.path.expanduser(stored))
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
-        from runtime.cron.file_io import cron_file_path
-
-        return cron_file_path(self.name or ".scope", self.project).parent
+        return Path(settings.AGENTONE_ROOT)
 
     def refresh_from_disk(self, details=None):
         """Reload this cron job from disk."""
@@ -92,5 +92,5 @@ class Cron(AssistantScopeMixin):
         return Workspaces.ensure_named(
             "System cronjobs",
             self.get_source_dir(),
-            "User-scope cronjob manifests",
+            "System cron jobs",
         )

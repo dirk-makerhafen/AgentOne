@@ -52,8 +52,6 @@ Manage the project's `.agentone/` directory:
     │       └── scripts/
     │           ├── scripts.md
     │           └── *.py
-    ├── cronjobs/
-    │   └── <name>.md
     ├── scripts/
     │   ├── scripts.md
     │   └── *.py
@@ -120,8 +118,7 @@ don't reimplement with `glob`:
   2. `write("agents/<name>/agent.md", ...)` (YAML frontmatter + body)
   3. `write("agents/<name>/scripts/scripts.md", ...)` when custom scripts are needed.
 - **Create a cron job**:
-  1. `write("cronjobs/<name>.md", ...)` with frontmatter (`name`,
-     `schedule`, `agent`, `is_active`, `session_mode`, `message`).
+  1. `call_assistant("cronjobs_assistant", "create cron job '<name>' with schedule '<cron>' for agent '<agent>' ...", project_path="<project-root>")` or create it in the Web UI (cron jobs are DB-canonical; no manifest files).
 - **Create a skill**:
   1. `mkdir("skills/<name>/scripts")`
   2. `write("skills/<name>/skill.md", ...)` (YAML frontmatter + body).

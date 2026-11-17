@@ -167,7 +167,6 @@ def edit_cronjob(
     """
     from server.models.workspace import WorkspaceModel
     from runtime.cron.content import build_cron_message
-    from runtime.cron.file_io import write_cron_file
 
     ok, job = _resolve(_session, name)
     if not ok:
@@ -237,7 +236,6 @@ def edit_cronjob(
         return False, {"status": "error", "message": "Nothing to change."}
     try:
         job.save()
-        write_cron_file(job)
     except Exception as e:
         return False, {"status": "error", "message": f"Could not save cron job: {e}"}
     info = _cron_info(job)
@@ -249,7 +247,8 @@ def set_cronjob_active(_session: Session, name: str, is_active: bool = True) -> 
     """Enable or pause one cron job without deleting it.
 
     A paused job keeps its configuration and history; the scheduler
-    simply skips it until re-enabled. The ``.md`` file is updated too.
+    simply skips it until re-enabled. Cron jobs are DB-canonical (no
+    manifest files).
 
     Args:
         name: Name of the cron job (required).
@@ -259,7 +258,6 @@ def set_cronjob_active(_session: Session, name: str, is_active: bool = True) -> 
         ``(True, {"status": "success", job...})`` or
         ``(False, {"status": "error", "message": ...})``.
     """
-    from runtime.cron.file_io import write_cron_file
 
     ok, job = _resolve(_session, name)
     if not ok:
@@ -267,7 +265,6 @@ def set_cronjob_active(_session: Session, name: str, is_active: bool = True) -> 
     job.is_active = bool(is_active)
     try:
         job.save(update_fields=["is_active", "updated_at"])
-        write_cron_file(job)
     except Exception as e:
         return False, {"status": "error", "message": f"Could not update cron job: {e}"}
     info = _cron_info(job)
@@ -338,27 +335,13 @@ def cronjob_runs(_session: Session, name: str, limit: int = 20) -> tuple[bool, d
 
 
 def refresh_from_disk(_session: Session, name: str) -> tuple[bool, dict[str, Any]]:
-    """Reload ONE cron job from disk.
-
-    Use after editing the job's manifest file on disk.
-
-    Args:
-        name: Name of the cron job (required).
-
-    Returns:
-        ``(True, {"status": "success", "job": str, "details": [...]})``
-        or ``(False, {"status": "error", "message": ...})``.
-    """
+    """Cron jobs are DB-canonical; there are no manifest files to reload."""
     ok, job = _resolve(_session, name)
     if not ok:
         return False, job
-    details: list[dict[str, Any]] = []
-    try:
-        job.refresh_from_disk(details=details)
-    except Exception as e:
-        return False, {"status": "error", "message": f"Could not refresh cron job from disk: {e}"}
     return True, {
         "status": "success",
         "job": job.name,
-        "details": details,
+        "message": "Cron jobs are DB-canonical and no longer use .md manifest files.",
+        "details": [],
     }

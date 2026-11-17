@@ -415,9 +415,8 @@ def model_manifest_dir(model: Any, kind: str, name: str = "", project: Any = Non
 
     Prefers the stored ``manifest_dir`` field (set by the loader); falls
     back to the conventional layout for the *kind* (``agent`` | ``skill``).
-    Projects and workspaces resolve through ``get_agentone_dir()``;
-    cronjobs resolve through ``runtime.cron.file_io`` (import cycle if
-    done here).
+    Projects and workspaces resolve through ``get_agentone_dir()``.
+    Cron jobs are DB-canonical (no manifest files).
     """
     stored = str(getattr(model, "manifest_dir", "") or "").strip()
     if stored:

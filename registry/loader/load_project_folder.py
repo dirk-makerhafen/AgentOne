@@ -13,33 +13,18 @@ the preferred direct entry point.
 
 from pathlib import Path
 
-import frontmatter
-
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
-from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_data_collection import load_data_collection_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
-from server.models.cron import Cronjob
 from server.models.project import Project
 
 
 def cron_names_in_scope(manifest_dir: str | Path) -> set[str]:
-    """Return the cron ``name`` values declared under ``<manifest_dir>/cronjobs``."""
-    crons_dir = Path(manifest_dir) / "cronjobs"
-    names: set[str] = set()
-    if not crons_dir.is_dir():
-        return names
-    for cron_md in sorted(crons_dir.glob("*.md")):
-        try:
-            name = (frontmatter.load(cron_md).get("name") or "").strip()
-        except Exception:  # pylint: disable=broad-exception-caught
-            continue
-        if name:
-            names.add(name)
-    return names
+    """Legacy helper: cron jobs are DB-canonical, no manifest files."""
+    return set()
 
 
 def load_scope_dir(
@@ -50,12 +35,10 @@ def load_scope_dir(
     archive_missing_crons: bool = True,
     load_data_collections: bool = True,
 ) -> None:
-    """Load scripts/skills/agents/cronjobs from *manifest_dir* for *project*.
+    """Load scripts/skills/agents from *manifest_dir* for *project*.
 
-    ``cron_precedence`` names are owned by a more canonical scope (the
-    project's own ``cronjobs/`` directory); they are left untouched when
-    loading a workspace scope.  ``archive_missing_crons=False`` keeps a
-    workspace scope from archiving project-level jobs it does not define.
+    Cron jobs are DB-canonical (no manifest files), so cron parameters are
+    accepted for compatibility but ignored.
     """
     project_folder = Path(manifest_dir)
     _warn_if_project_md(project_folder, details)
@@ -91,34 +74,7 @@ def load_scope_dir(
                 install_repo=install_repo, details=details,
             )
 
-    crons_dir = project_folder / "cronjobs"
-    if crons_dir.is_dir():
-        seen = set()
-        for cron_md in sorted(crons_dir.glob("*.md")):
-            if cron_precedence:
-                try:
-                    name = (frontmatter.load(cron_md).get("name") or "").strip()
-                except Exception:  # pylint: disable=broad-exception-caught
-                    name = ""
-                if name and name in cron_precedence:
-                    seen.add(name)
-                    continue
-            load_cron_manifest(
-                cron_md, parent_project=project,
-                install_repo=install_repo, seen_names=seen, details=details,
-            )
-        if archive_missing_crons:
-            # Only archive jobs that were loaded from this same scope.  A
-            # project's canonical load must not archive workspace-owned jobs
-            # (they share ``parent_project`` but live under another dir).
-            scope_dir = Path(manifest_dir).as_posix()
-            for _cj in Cronjob.objects.filter(
-                parent_project=project,
-                is_archived=False,
-                manifest_dir__in=["", scope_dir],
-            ).exclude(name__in=seen):
-                _cj.atomic_update(is_archived=True)
-
+    # Cron jobs are DB-canonical (created via the Web UI); no manifests.
     if load_data_collections:
         for directory in ("streams", "sets"):
             source_dir = project_folder / directory
@@ -168,18 +124,10 @@ def load_project_folder(folder: str, details: list | None = None) -> None:
 
 def load_workspace_scope(manifest_dir: str | Path, project,
                          details: list | None = None) -> None:
-    """Load a workspace-scoped manifest tree under *project*'s namespace.
-
-    Cron manifests already defined in the project's canonical scope win, and
-    a workspace never archives project-level jobs it does not define.
-    """
-    try:
-        precedence = cron_names_in_scope(project.get_agentone_dir())
-    except Exception:  # pylint: disable=broad-exception-caught
-        precedence = set()
+    """Load a workspace-scoped manifest tree under *project*'s namespace."""
     load_scope_dir(
         manifest_dir, project, details=details,
-        cron_precedence=precedence, archive_missing_crons=False,
+        cron_precedence=None, archive_missing_crons=False,
         load_data_collections=False,
     )
 

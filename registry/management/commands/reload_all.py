@@ -5,7 +5,6 @@ import frontmatter
 from django.core.management.base import BaseCommand, CommandError
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
-from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_data_collection import load_data_collection_manifest
 from registry.loader.load_project_folder import (
     load_project_folder,
@@ -22,12 +21,10 @@ from runtime.paths import (
     central_projects_base,
     central_workspaces_base,
     user_agents_dir,
-    user_cronjobs_dir,
     user_scripts_dir,
     user_skills_dir,
 )
 from server.models.agents.agent import AgentModel
-from server.models.cron import Cronjob
 from server.models.skills.skill import SkillModel
 
 
@@ -121,22 +118,9 @@ def run_reload_all(folder: str) -> ReloadResult:
                 errors.append(f"Agent {agent_name}: {e}")
         counts["agents"] = agent_count
 
-    # Global cron jobs (no parent)
-    crons_dir = effective_root / "cronjobs"
-    if crons_dir.is_dir():
-        cron_count = 0
-        seen = set()
-        for cron_md in sorted(crons_dir.glob("*.md")):
-            try:
-                load_cron_manifest(cron_md, install_repo=global_install, seen_names=seen, details=details)
-                cron_count += 1
-            except Exception as e:
-                errors.append(f"Cron {cron_md.stem}: {e}")
-        for _cj in Cronjob.objects.filter(parent_project__isnull=True, is_archived=False).exclude(name__in=seen):
-            _cj.atomic_update(is_archived=True)
-        counts["cron_jobs"] = cron_count
+    # Cron jobs are DB-canonical (created via the Web UI); no manifest files.
 
-    # User scope (~/.agentone/{agents,skills,scripts,cronjobs}/).
+    # User scope (~/.agentone/{agents,skills,scripts}/).
     # Loads into the global namespace (same rows, new versions win).
     _load_user_scope(
         details=details,
@@ -232,7 +216,7 @@ def _manifest_name(manifest_path: Path, default: str) -> str:
 def _load_user_scope(details: list, errors: list, counts: Dict[str, int],
                      seen_skill_names: set[str] | None = None,
                      seen_agent_names: set[str] | None = None) -> None:
-    """Load ``~/.agentone/{scripts,skills,agents,cronjobs}/`` as user scope.
+    """Load ``~/.agentone/{scripts,skills,agents}/`` as user scope.
 
     Loads into the global namespace (same DB rows, user versions win by
     loading after global). Missing dirs are skipped silently. Names are
@@ -284,14 +268,6 @@ def _load_user_scope(details: list, errors: list, counts: Dict[str, int],
             except Exception as e:
                 errors.append(f"User agent {agent_md.parent.name}: {e}")
 
-    crons_dir = user_cronjobs_dir()
-    if crons_dir.is_dir():
-        seen = set()
-        for cron_md in sorted(crons_dir.glob("*.md")):
-            try:
-                load_cron_manifest(cron_md, install_repo=user_install, seen_names=seen, details=details)
-            except Exception as e:
-                errors.append(f"User cron {cron_md.stem}: {e}")
 
 
 def _archive_missing_globals(

@@ -14,11 +14,7 @@ from server.models.project import Project
 from server.models.workspace import WorkspaceModel
 from runtime.cron.content import build_cron_message
 from runtime.cron.execute import execute_cron_job
-from runtime.cron.file_io import (
-    delete_cron_file,
-    rename_cron_file,
-    write_cron_file,
-)
+# Cron jobs are DB-canonical now: no .md manifest files are written.
 from runtime.cron.schedule import compute_next_run
 from webui.core.assistants import assistant_overview_context, assistant_panel_context
 from webui.core.shell import render_page
@@ -109,7 +105,6 @@ def cron_create(request):
     if error:
         return redirect(f"/app/cron?error={error}")
     cron.save()
-    write_cron_file(cron)
     return redirect("webui:cronjob", cron_id=cron.pk)
 
 
@@ -137,16 +132,10 @@ def cron_detail(request, cron_id: int):
 @require_POST
 def cron_edit(request, cron_id: int):
     cron = get_object_or_404(Cronjob, pk=cron_id)
-    old_name = cron.name
-    old_project = cron.parent_project
-    old_manifest_dir = cron.manifest_dir
     error = _apply_form(cron, request)
     if error:
         return redirect(f"/app/cron/{cron.pk}?error={error}")
     cron.save()
-    if cron.name != old_name:
-        rename_cron_file(old_name, cron.name, old_project, old_manifest_dir)
-    write_cron_file(cron)
     return redirect("webui:cronjob", cron_id=cron.pk)
 
 
@@ -155,7 +144,6 @@ def cron_toggle(request, cron_id: int):
     cron = get_object_or_404(Cronjob, pk=cron_id)
     cron.is_active = not cron.is_active
     cron.save(update_fields=["is_active"])
-    write_cron_file(cron)
     return redirect("webui:cronjob", cron_id=cron.pk)
 
 
@@ -189,14 +177,12 @@ def cron_duplicate(request, cron_id: int):
         message=message,
     )
     cron.save()
-    write_cron_file(cron)
     return redirect("webui:cronjob", cron_id=cron.pk)
 
 
 @require_POST
 def cron_delete(request, cron_id: int):
     cron = get_object_or_404(Cronjob, pk=cron_id)
-    delete_cron_file(cron.name, cron.parent_project, cron.manifest_dir)
     cron.delete()
     return redirect("webui:cron")
 

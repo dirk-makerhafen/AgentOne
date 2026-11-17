@@ -107,7 +107,7 @@ AgentOne is structured as a Django monolith with Celery for async task execution
 │  ├── load_agent_manifest()    → agent.md fields                 │
 │  ├── load_scripts_manifest() → scripts.md tool/group lists      │
 │  ├── load_skill_manifest()   → skill.md definition              │
-│  ├── load_cron_manifest()    → cron.md definition               │
+│  ├── (cron manifests removed; cron jobs are DB-canonical)       │
 │  ├── load_chain_entry()      → multi-step chain definitions     │
 │  ├── load_python_entry()     → Python function introspection    │
 │  └── load_project_folder()   → auto-discover from directories   │

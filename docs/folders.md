@@ -8,14 +8,15 @@ Single source of truth for where AgentOne keeps things. Path logic lives in
 | Scope | Manifest dir | DB owner |
 |---|---|---|
 | `global` | `<repo>/.agentone/` (`settings.AGENTONE_ROOT`) | `parent_project=None` |
-| `user` | `~/.agentone/{agents,skills,scripts,cronjobs}/` | `parent_project=None` (loads after global, user versions win) |
+| `user` | `~/.agentone/{agents,skills,scripts}/` | `parent_project=None` (loads after global, user versions win) |
 | `project` | `Project.agentone_dir` (legacy fallback `<path>/.agentone`) | `parent_project=<row>` |
 | `workspace` | `Workspace.agentone_dir` | parent project's namespace (`parent_project=workspace.parent_project`) |
 
 User manifests use the same layout as global (`agents/<n>/agent.md`,
-`skills/<s>/skill.md`, `scripts/`, `cronjobs/<n>.md`). Missing dirs are
-skipped. Workspace manifests require `parent_project` to be set, otherwise
-reload warns and skips.
+`skills/<s>/skill.md`, `scripts/`). Missing dirs are skipped. Cron jobs
+are DB-canonical (created/managed via the Web UI), not manifest files.
+Workspace manifests require `parent_project` to be set, otherwise reload
+warns and skips.
 
 ## DB-canonical metadata (deprecated files)
 
@@ -45,7 +46,7 @@ state below `var/`.
 
 ```
 <scope>/.agentone/                      # or ~/.agentone for global/user
-├── agents/ skills/ scripts/ cronjobs/ dashboard/ memory/
+├── agents/ skills/ scripts/ dashboard/ memory/
 └── var/
     ├── sessions/<agent>/<pk>/          # scope-only session scratch (0700)
     ├── log/                            # scope logs

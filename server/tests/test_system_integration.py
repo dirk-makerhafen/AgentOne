@@ -12,7 +12,6 @@ from __future__ import annotations
 from django.test import TestCase
 from django.utils import timezone
 
-from registry.loader.load_cron_manifest import load_cron_manifest
 from registry.loader.load_data_collection import load_data_collection_manifest
 from runtime.cron.execute import execute_cron_job
 from server.models.collections import DataCollection, CollectionItem
@@ -93,9 +92,13 @@ class SystemValidationTest(AgentMdTestMixin, TestCase):
         cls.alerts_from_report = load_data_collection_manifest(
             TESTPROJECT / "sets" / "alerts_from_report.md"
         )
-        cls.cron = load_cron_manifest(
-            TESTPROJECT / "cronjobs" / "health_check.md",
-            install_repo=cls._install_repo,
+        cls.cron = Cronjob.objects.create(
+            name="health_check",
+            schedule="*/5 * * * *",
+            agent=cls.collector,
+            function_type="task",
+            function_name="health_check",
+            is_active=True,
         )
 
     # ── Helpers ────────────────────────────────────────────────────────
@@ -148,7 +151,7 @@ class SystemValidationTest(AgentMdTestMixin, TestCase):
         self.assertIn({"type": "stream", "stream": "health_events"}, self.all_alerts.sources)
         self.assertIn({"type": "set", "set": "alerts_from_report"}, self.all_alerts.sources)
 
-        # --- Cron ---
+        # --- Cron (DB-canonical) ---
         cron = Cronjob.objects.get(name="health_check")
         self.assertEqual(cron.agent.name, "collector")
         self.assertEqual(cron.function_name, "health_check")
@@ -156,23 +159,16 @@ class SystemValidationTest(AgentMdTestMixin, TestCase):
         self.assertTrue(cron.is_active)
         self.assertIsNotNone(cron.next_run_at)
         self.report.add("test_01_manifests_load_correctly", "PASS",
-            "All 9 YAML manifests (3 streams, 4 sets, 1 cron, 2 agents) load and produce "
-            "correct DB records with proper types, sources, processors, and field values.")
+            "Manifests (streams/sets/agents) load correctly and cron jobs are DB-canonical.")
 
     def test_02_loader_upsert_idempotent(self):
         """Reloading manifests does not duplicate records."""
         prev_dc = DataCollection.objects.count()
-        prev_cron = Cronjob.objects.count()
 
         load_data_collection_manifest(TESTPROJECT / "streams" / "health_events.md")
         load_data_collection_manifest(TESTPROJECT / "sets" / "alert_report.md")
-        load_cron_manifest(
-            TESTPROJECT / "cronjobs" / "health_check.md",
-            install_repo=self.__class__._install_repo,
-        )
 
         self.assertEqual(DataCollection.objects.count(), prev_dc)
-        self.assertEqual(Cronjob.objects.count(), prev_cron)
         self.report.add("test_02_loader_upsert_idempotent", "PASS",
             "Re-loading YAML manifests does not duplicate DB records. "
             "The upsert logic correctly identifies and updates existing records.")

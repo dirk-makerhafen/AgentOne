@@ -25,7 +25,7 @@ tools:
     function: cronjob_runs
     bound: True
 
-  # Reload ONE cron job from disk after manifest edits
+  # Cron jobs are DB-canonical; no manifest files to reload
   - name: refresh_from_disk
     file: cronjob.py
     function: refresh_from_disk

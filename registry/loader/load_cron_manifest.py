@@ -1,148 +1,23 @@
-"""Cron manifest loader (cron.md)."""
+"""Deprecated cron manifest loader.
+
+Cron jobs are now DB-canonical and created via the Web UI; ``cronjobs/*.md``
+manifest files are no longer supported.
+"""
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
-import frontmatter
-from django.db import models
-
-from registry.install_repo import InstallRepo
-from runtime.cron.content import build_cron_message
-from runtime.cron.schedule import compute_next_run
-from server.models.agents.agent import AgentModel
-from server.models.cron import Cronjob
-from server.models.workspace import WorkspaceModel
-
-
-def _as_str(value: Any) -> str:
-    """Coerce YAML values to a string (``None`` → ``""``)."""
-    return "" if value is None else str(value)
-
 
 def load_cron_manifest(
     cron_md_path: Path,
-    install_repo: InstallRepo,
+    install_repo: Any = None,
     parent_project: Any = None,
     seen_names: set | None = None,
     details: list | None = None,
-) -> Cronjob:
-    """Load a ``cron.md`` manifest into the database.
-
-    Creates or updates a ``Cronjob`` by ``(parent_project, name)``.
-    If *seen_names* is provided, the cron's name is added to the set so
-    the caller can archive any crons that were not mentioned in the
-    manifest files.
-    """
-    manifest = frontmatter.load(cron_md_path)
-
-    name = _as_str(manifest.get("name", "")).strip()
-    if not name:
-        raise ValueError(f"cron.md at {cron_md_path} is missing 'name'")
-    if seen_names is not None:
-        seen_names.add(name)
-
-    description = _as_str(manifest.get("description", ""))
-    schedule = _as_str(manifest.get("schedule", ""))
-    agent_name = _as_str(manifest.get("agent", ""))
-    session_mode = _as_str(manifest.get("session_mode", "new")) or "new"
-    session_name = _as_str(manifest.get("session_name", ""))
-    function_type = _as_str(manifest.get("function_type", "")).strip()
-    function_name = _as_str(manifest.get("function_name", "")).strip()
-    if function_type and not function_name:
-        raise ValueError(
-            f"cron.md at {cron_md_path} sets 'function_type' without 'function_name'"
-        )
-    # Preserve a job's paused state on reload: only honour ``is_active``
-    # when the manifest explicitly declares it.  Manifests that omit the
-    # key (older files, hand-written crons) must not clobber a pause that
-    # was recorded in the database.
-    if "is_active" in manifest:
-        raw_active = manifest.get("is_active")
-        is_active = True if raw_active is None else bool(raw_active)
-        manifest_sets_active = True
-    else:
-        is_active = None
-        manifest_sets_active = False
-    workspace_name = _as_str(manifest.get("workspace", ""))
-    message_text = manifest.get("message", "")
-
-    # Resolve agent
-    agent = None
-    if agent_name:
-        agent_qs = AgentModel.objects.filter(name=agent_name)
-        if parent_project is not None:
-            agent_qs = agent_qs.filter(
-                models.Q(parent_project=parent_project) | models.Q(parent_project__isnull=True)
-            )
-        agent = agent_qs.first()
-
-    # ``Cronjob.save()`` derives ``next_run_at`` from the schedule.  The loader
-    # must not include it in the upsert: recomputing it on every reload would
-    # randomise the schedule of a manifest job.
-
-    # Resolve workspace
-    workspace = None
-    if workspace_name:
-        workspace = WorkspaceModel.objects.filter(name=workspace_name).first()
-
-    # Build message content (JSON kwargs for a function target, text otherwise)
-    try:
-        message = build_cron_message(message_text, function_type)
-    except ValueError as exc:
-        raise ValueError(f"{cron_md_path}: {exc}") from exc
-
-    # Upsert by (parent_project, name)
-    cronjob, created = Cronjob.objects.get_or_create(
-        name=name,
-        parent_project=parent_project,
-        defaults={
-            "description": description,
-            "schedule": schedule,
-            "is_active": True if is_active is None else is_active,
-            "is_archived": False,
-            "agent": agent,
-            "workspace": workspace,
-            "session_mode": session_mode,
-            "session_name": session_name,
-            "function_type": function_type,
-            "function_name": function_name,
-            "message": message,
-            "manifest_dir": cron_md_path.parent.as_posix(),
-        },
+):
+    """Cron manifest loading has been removed."""
+    raise ValueError(
+        "Cron job manifest files are no longer supported; cron jobs are DB-canonical "
+        "and must be created via the Web UI."
     )
-    changed = False
-    if not created:
-        _fields_to_check = [
-            ("description", description),
-            ("schedule", schedule),
-            ("is_archived", False),
-            ("agent", agent),
-            ("workspace", workspace),
-            ("session_mode", session_mode),
-            ("session_name", session_name),
-            ("function_type", function_type),
-            ("function_name", function_name),
-            ("message", message),
-            ("manifest_dir", cron_md_path.parent.as_posix()),
-        ]
-        if manifest_sets_active:
-            _fields_to_check.append(("is_active", is_active))
-        for field_name, new_val in _fields_to_check:
-            if getattr(cronjob, field_name) != new_val:
-                setattr(cronjob, field_name, new_val)
-                changed = True
-        # Repair rows whose next_run_at was never derived (pre-model-save
-        # rows, or a flaky/invalid schedule that has since been fixed).
-        if cronjob.is_active and cronjob.next_run_at is None:
-            if compute_next_run(schedule) is not None:
-                changed = True
-        if not cronjob.is_active and cronjob.next_run_at is not None:
-            changed = True
-        if changed:
-            cronjob.save()
-    if details is not None:
-        action = "created" if created else ("updated" if changed else "up to date")
-        details.append({"name": name, "type": "cron", "action": action})
-
-    return cronjob

@@ -782,17 +782,10 @@ class ManifestDirLoaderTest(AgentMdTestMixin, TestCase):
         self.assertEqual(agent2.manifest_dir, first)
         self.assertTrue(first)
 
-    def test_cron_manifest_dir_recorded(self):
-        from registry.loader.load_cron_manifest import load_cron_manifest
-
-        job = load_cron_manifest(
-            TESTPROJECT / "cronjobs" / "health_check.md",
-            install_repo=self.__class__._install_repo,
-        )
-        self.assertEqual(
-            Path(job.manifest_dir).as_posix(),
-            (TESTPROJECT / "cronjobs").as_posix(),
-        )
+    def test_cron_manifest_dir_not_required(self):
+        """Cron jobs are DB-canonical and do not require manifest files."""
+        job = Cronjob.objects.create(name="scoped-cron", schedule="*/5 * * * *")
+        self.assertEqual(job.manifest_dir, "")
 
 
 def _make_ws_session(agent, av, workspace, name="ws-sess", project=None):

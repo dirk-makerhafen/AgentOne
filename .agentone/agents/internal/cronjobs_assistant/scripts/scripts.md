@@ -7,7 +7,7 @@ tools:
     function: list_cronjobs
     bound: True
 
-  # Create a new cron job (DB + .md file)
+  # Create a new cron job (DB-canonical)
   - name: create_cronjob
     file: cronjobs.py
     function: create_cronjob
@@ -25,7 +25,7 @@ tools:
     function: set_cronjob_archived
     bound: True
 
-  # Reload all cron jobs in the managed scope from disk
+  # Cron jobs are DB-canonical; no manifest files to reload
   - name: refresh_from_disk
     file: cronjobs.py
     function: refresh_from_disk

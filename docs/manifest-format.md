@@ -471,40 +471,14 @@ Skills follow the same `scripts/` pattern: a `skills/<name>/scripts/scripts.md` 
 
 ---
 
-## `cron.md` — Cron Job Declaration
+## Cron jobs (DB-canonical)
 
-Declares a scheduled cron job. Lives at `.agentone/cronjobs/<name>.md`.
-Jobs can be global (no `parent_project`) or per-project.
-
-```yaml
----
-name: daily-digest
-description: Send daily summary at 8am
-schedule: "0 8 * * *"              # standard cron expression
-agent: baseagent                    # target agent (resolved by name)
-is_active: true                     # default: true
-session_mode: new                   # new | existing
-session_name: ""                    # session name for existing mode
-message: "Provide a summary"        # message text (stored as GenericContent)
-function_type: ""                   # task | tool | command | "" (send message)
-function_name: ""
-# pipe_names: []                   # (removed — use DataCollection streams/sets instead)
----
-```
-
-Cron jobs created or edited through the UI are automatically written to
-`.agentone/cronjobs/<name>.md` so they stay in sync with the file system.
-Deleting a cron job in the UI removes the corresponding file.
-
-When the loader runs (`reload_all`), cron jobs are upserted by
-`(parent_project, name)` — re-running updates the schedule, message, agent,
-or other fields in place.
-
-Removing a `cron.md` file and re-running the loader **archives** the
-corresponding record (`is_archived=True`) rather than deleting it, so
-tracking data (run count, last run time, etc.) is preserved.  Archived
-crons are hidden from the default sidebar view but can be viewed by
-switching to the "Archived" tab in the cron panel.
+Cron jobs are no longer declared as `.agentone/cronjobs/<name>.md` manifest
+files. They are stored in the database and created/managed via the Web UI
+(and the internal cron assistants). Key fields: `name`, `schedule`,
+`agent`, `description`, `is_active`, `workspace`, `session_mode`,
+`session_name`, `message`, `function_type`, and `function_name`. Reloads
+do not read or archive cron jobs from disk.
 
 ---
 
@@ -669,8 +643,6 @@ created/edited via the UI and linked with `WorkspaceModel.parent_project` /
 
 ```
 .agentone/
-├── cronjobs/                   # Global cron jobs (no parent_project)
-│   └── <name>.md
 ├── scripts/                    # Global scripts (available to all agents)
 │   ├── scripts.md
 │   ├── python.py
@@ -698,9 +670,10 @@ created/edited via the UI and linked with `WorkspaceModel.parent_project` /
 ```
 
 Project and workspace manifest trees use the same layout (`agents/`,
-`skills/`, `scripts/`, `cronjobs/`, `streams/`, `sets/`); user scope mirrors
-it under `~/.agentone/`. (`projects.yaml` was removed — projects are
-DB-canonical, see `docs/folders.md`.)
+`skills/`, `scripts/`, `streams/`, `sets/`); user scope mirrors it under
+`~/.agentone/`. Cron jobs are DB-canonical (not manifests).
+(`projects.yaml` was removed — projects are DB-canonical, see
+`docs/folders.md`.)
 
 ### Key Rules
 
@@ -727,9 +700,8 @@ DB-canonical, see `docs/folders.md`.)
     - Load global ``scripts/`` → create ``TaskDefinition`` + ``TaskDefinitionVersion``
     - Load global ``skills/`` → create ``SkillModel`` + ``SkillModelVersion``
     - Load global ``agents/`` → recursively create ``AgentModel`` + ``AgentVersionModel`` (with ``defined_*versions`` for scripts, skills, subagents)
-    - Load global ``cronjobs/`` → upsert ``Cronjob`` by ``name``
     - Load user scope (same steps, global namespace — user versions win)
-    - For each `Project` row in the DB, repeat from its manifest dir (same steps + cronjobs/ per project); then each managed workspace scope under its parent project
+    - For each `Project` row in the DB, repeat from its manifest dir; then each managed workspace scope under its parent project. Cron jobs are DB-canonical and are not loaded from manifest files.
    - Version identifiers are **git tree SHAs** computed via ``git rev-parse HEAD:{relative_path}`` for each manifest folder
 
 3. **During Pass 1 (per-agent):**

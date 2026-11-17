@@ -2025,7 +2025,7 @@ def test_app_allows_authenticated_user(client):
 
 @pytest.mark.django_db
 def test_cron_create_edit_duplicate_run_and_delete(client, tmp_path, monkeypatch):
-    """Cron manifests round-trip through create, edit, duplicate and delete."""
+    """Cron jobs round-trip through create, edit, duplicate and delete (DB-only)."""
     from unittest.mock import patch
 
     from server.models.agents.agent import AgentModel
@@ -2052,7 +2052,6 @@ def test_cron_create_edit_duplicate_run_and_delete(client, tmp_path, monkeypatch
     assert cron.agent_id == agent.pk
     assert cron.next_run_at is not None
     assert cron.message.get() == "Write the report"
-    assert (tmp_path / "project-agentone" / "cronjobs" / "hourly-report.md").is_file()
 
     response = client.post(
         reverse("webui:cron_edit", args=[cron.pk]),
@@ -2068,8 +2067,6 @@ def test_cron_create_edit_duplicate_run_and_delete(client, tmp_path, monkeypatch
     cron.refresh_from_db()
     assert cron.name == "daily-report"
     assert cron.schedule == "@daily"
-    assert (tmp_path / "project-agentone" / "cronjobs" / "daily-report.md").is_file()
-    assert not (tmp_path / "project-agentone" / "cronjobs" / "hourly-report.md").exists()
 
     response = client.post(reverse("webui:cron_duplicate", args=[cron.pk]))
     assert response.status_code == 302
@@ -2084,7 +2081,6 @@ def test_cron_create_edit_duplicate_run_and_delete(client, tmp_path, monkeypatch
     response = client.post(reverse("webui:cron_delete", args=[cron.pk]))
     assert response.status_code == 302
     assert not Cronjob.objects.filter(pk=cron.pk).exists()
-    assert not (tmp_path / "project-agentone" / "cronjobs" / "daily-report.md").exists()
 
 
 @pytest.mark.django_db

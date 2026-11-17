@@ -32,8 +32,8 @@ class Cronjob(BaseModel):
     agent: models.ForeignKey | None = models.ForeignKey( "server.AgentModel", on_delete=models.CASCADE, related_name="related_cron", blank=True, null=True)
     parent_project = models.ForeignKey("server.Project",default=None,null=True,blank=True,on_delete=models.CASCADE,related_name="child_crons")
     workspace = models.ForeignKey("server.WorkspaceModel",default=None,null=True,blank=True,on_delete=models.SET_NULL,related_name="cron_jobs")
-    # manifest_dir: directory holding this cron's .md manifest (set by the
-    # loader; blank for rows predating the field or created ad hoc / in-DB).
+    # Legacy field from the removed cron manifest files; kept for schema
+    # compatibility. Cron jobs are now DB-canonical and created via the UI.
     manifest_dir: str = models.CharField(max_length=1024, default="", blank=True)
 
     # Session
@@ -99,47 +99,14 @@ class Cronjob(BaseModel):
         super().save(*args, **kwargs)
 
     def refresh_from_disk(self, details=None) -> None:
-        """Reload this cron job from disk.
-
-        Prefers the canonical project/global ``cronjobs/`` directory, then
-        the directory the job was loaded from (``manifest_dir``).  The
-        canonical file is authoritative, so a stale workspace copy cannot
-        shadow it; workspace-only jobs fall back to their own manifest dir.
-        """
-        from pathlib import Path
-
-        from registry.loader.load_cron_manifest import load_cron_manifest
-        from runtime.cron.file_io import _find_cron_file, cron_file_path
-        from runtime.refresh import install_repo_for_path
-
-        candidates: list[Path] = [cron_file_path(self.name, self.parent_project).parent]
-        stored = (self.manifest_dir or "").strip()
-        if stored:
-            candidates.append(Path(stored))
-
-        md = None
-        cron_dir = None
-        for directory in candidates:
-            if not directory.is_dir():
-                continue
-            found = _find_cron_file(directory, self.name)
-            if found is not None:
-                md = found
-                cron_dir = directory
-                break
-        if md is None or cron_dir is None:
-            return
-        if details is None:
-            details = []
-        _source_root, install_repo = install_repo_for_path(cron_dir)
-        try:
-            install_repo.sync()
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
-        load_cron_manifest(
-            md,
-            install_repo=install_repo,
-            parent_project=self.parent_project,
-            details=details,
-        )
+        """Cron jobs are DB-canonical; no manifest files to reload."""
+        if details is not None:
+            details.append(
+                {
+                    "name": self.name,
+                    "type": "cron",
+                    "action": "skipped",
+                    "message": "Cron jobs are DB-canonical and no longer use .md manifest files.",
+                }
+            )
         self.refresh_from_db()

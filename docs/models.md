@@ -629,10 +629,9 @@ File: `server/models/cron.py`
 | `last_status` | `CharField(50)` | |
 | `total_runs` | `IntegerField(default=0)` | |
 
-Cron jobs can be defined via YAML frontmatter in `.agentone/cronjobs/<name>.md`
-files at `.agentone/cronjobs/<name>.md` (loaded by `reload_all` /
-`load_project_folder`) or created through the UI. File-based crons are
-upserted by `(parent_project, name)`.
+Cron jobs are DB-canonical and created/managed via the Web UI (and the
+internal cron assistants). `.agentone/cronjobs/*.md` manifest files are no
+longer used.
 
 ### System (remote executor)
 
