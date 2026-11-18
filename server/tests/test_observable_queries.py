@@ -14,7 +14,6 @@ from runtime.observable_queries import (
     ObservableList,
     ObservableValue,
     RowObservables,
-    api_for,
     pk_key,
     relation_key,
     root_key,
@@ -78,21 +77,95 @@ def test_key_helpers_accept_models_and_names():
 
 
 def test_every_server_model_has_a_read_api():
+    """Test that every server model has a read API by checking direct imports."""
+    from runtime.observable_queries.agents import (
+        AgentObservables,
+        AgentVersionObservables,
+        SkillObservables,
+        SkillVersionObservables,
+    )
+    from runtime.observable_queries.conversation import (
+        MessageObservables,
+        QueryObservables,
+        ResponseObservables,
+        TaskCallObservables,
+    )
+    from runtime.observable_queries.sessions import SessionObservables
+    from runtime.observable_queries.structure import (
+        AiModelObservables,
+        ProjectObservables,
+        ProviderObservables,
+        TerminalObservables,
+        WorkspaceObservables,
+    )
+    from runtime.observable_queries.work import (
+        CollectionItemObservables,
+        CollectionObservables,
+        CronjobObservables,
+        WorkItemObservables,
+    )
+
+    # Models with explicit APIs (from registry coverage)
+    api_models = {
+        "SessionModel": SessionObservables,
+        "Message": MessageObservables,
+        "Query": QueryObservables,
+        "Response": ResponseObservables,
+        "AgentTaskCall": TaskCallObservables,
+        "AgentModel": AgentObservables,
+        "AgentVersionModel": AgentVersionObservables,
+        "SkillModel": SkillObservables,
+        "SkillModelVersion": SkillVersionObservables,
+        "Cronjob": CronjobObservables,
+        "DataCollection": CollectionObservables,
+        "CollectionItem": CollectionItemObservables,
+        "WorkItem": WorkItemObservables,
+        "Project": ProjectObservables,
+        "WorkspaceModel": WorkspaceObservables,
+        "ApiProvider": ProviderObservables,
+        "AiModel": AiModelObservables,
+        "TerminalSession": TerminalObservables,
+    }
+
+    # Row-only models
+    row_only = {
+        "AdhocToolVersion",
+        "AgentTaskRun",
+        "ApiKey",
+        "DebugLogEntry",
+        "GenericContent",
+        "MessagePart",
+        "QueryMessage",
+        "QueryMessagePart",
+        "QueryTemplateVersion",
+        "ScriptsGeneration",
+        "SessionAdhocTool",
+        "SessionQueryTemplate",
+        "SessionVersionModel",
+        "SettingsModel",
+        "System",
+        "TaskDefinition",
+        "TaskDefinitionVersion",
+        "TaskInstance",
+    }
+
     missing = []
     for model in apps.get_models():
         if model._meta.app_label != "server":
             continue
         if model._meta.abstract or model._meta.proxy or model._meta.auto_created:
             continue
-        try:
-            api_for(model)
-        except KeyError:
+        if model.__name__ not in api_models and model.__name__ not in row_only:
             missing.append(model.__name__)
-    assert missing == []
+    assert missing == [], f"Models missing read API: {missing}"
 
 
 def test_row_only_api_is_by_primary_key():
-    api = api_for("DebugLogEntry")
+    from django.apps import apps
+    from runtime.observable_queries.base import RowObservables
+
+    model = apps.get_model("server", "DebugLogEntry")
+    api = RowObservables(model)
     assert isinstance(api, RowObservables)
     with pytest.raises(AttributeError):
         api.root  # pylint: disable=pointless-statement

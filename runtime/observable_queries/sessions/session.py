@@ -1,4 +1,4 @@
-"""Observable session lists."""
+"""Observable SessionModel queries."""
 from __future__ import annotations
 
 from runtime.observable_queries.base import (

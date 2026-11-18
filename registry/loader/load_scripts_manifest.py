@@ -50,7 +50,14 @@ def load_scripts_manifest(
     collected: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
     for manifest_path in sorted(scripts_dir.rglob("scripts.md")):
         subdir = manifest_path.parent
-        manifest = frontmatter.load(manifest_path)
+        #print(manifest_path)
+        try:
+            manifest = frontmatter.load(manifest_path)
+        except Exception as e:
+            print(f"Failed to load frontmatter from {manifest_path}: {e}")
+            continue
+            
+
         if len(manifest.keys()) == 0:
             if len(manifest_path.read_text().strip()) == 0:
                 # An empty manifest must not disable the other scopes; skip it
@@ -79,6 +86,7 @@ def load_scripts_manifest(
     # Pass 1 — standalone functions/scripts (chains depend on these).
     deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
     for entry, subdir, commit, manifest_path in collected:
+        #print( entry, subdir, commit, manifest_path)
         if entry["task_execution_mode"] in (
             TaskExecutionMode.FUNCTION,
             TaskExecutionMode.SCRIPT,
@@ -98,6 +106,7 @@ def load_scripts_manifest(
         still_deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
         progressed = False
         for entry, subdir, commit, manifest_path in deferred:
+            #print(entry, subdir, commit, manifest_path )
             try:
                 _load_script_entry(
                     entry, subdir, commit, results,
@@ -181,6 +190,7 @@ def _load_script_entry(
 
     Supports ``FUNCTION``, ``SCRIPT``, ``CHAIN``, and ``GROUP``.
     """
+    #print(entry, scripts_dir)
     task_type: TaskType = entry["task_type"]
     task_execution_mode: TaskExecutionMode = entry["task_execution_mode"]
     name: str = entry["name"]

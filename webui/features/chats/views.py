@@ -6,6 +6,7 @@ import json
 import logging
 import re
 from datetime import datetime
+from urllib.parse import urlencode
 
 from django.core.cache import cache
 from django.db.models import F
@@ -27,7 +28,7 @@ from server.models.settings import ReasoningEffort
 from server.models.settings import AgentToolCallSyntax, ResponseTemperature, SubagentResultDelivery
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.workspace import WorkspaceModel
-from webui.features.workspaces.views import workspace_directory_context
+from webui.features.workspaces.views import directory_url, workspace_tree_context
 from webui.features.chats.parts.cards import queue_text
 from webui.features.chats.parts.thread import (
     DEFAULT_LIMIT,
@@ -128,7 +129,7 @@ def chat_page(request, session_id: int):
     panel_tab = request.GET.get("panel", "")
     if not panel_tab and panel_open_default():
         panel_tab = "details"
-    panel_context = _panel_context(session_model, panel_tab or "details")
+    panel_context = _panel_context(session_model, panel_tab or "details", request)
     panel_context["panel_tab"] = panel_tab
     context.update(panel_context)
     return render_page(request, "chats", "chats/detail.html", context,
@@ -772,10 +773,27 @@ def _workspace_context(session_model: SessionModel, request=None) -> dict:
         workspace = session_model.latest_session_version.workspace
     except Exception:  # pylint: disable=broad-exception-caught
         workspace = None
-    context = workspace_directory_context(
+    if workspace is None:
+        return {"workspace": None}
+    raw_path = request.GET.get("path", "") if request is not None else ""
+
+    def browse_url(path):
+        return directory_url(
+            "webui:chat_panel_tab", [session_model.pk, "workspace"], path
+        )
+
+    def push_url(path):
+        base = reverse("webui:chat", args=[session_model.pk])
+        params = {"panel": "workspace", "path": path}
+        return f"{base}?{urlencode(params, safe='/')}"
+
+    context = workspace_tree_context(
         workspace,
-        request.GET.get("path", "") if request is not None else "",
-        f"{workspace.pk} session {session_model.pk}" if workspace else f"session {session_model.pk}",
+        raw_path,
+        f"{workspace.pk} session {session_model.pk}",
+        surface="panel",
+        browse_url=browse_url,
+        push_url=push_url,
     )
     return {"workspace": workspace, **context}
 

@@ -15,22 +15,29 @@
     // ── Per-tab SSE client ───────────────────────────────────────────────
     // The client id lives in sessionStorage: stable across reloads, distinct
     // per tab.  The server uses it to fan out only the keys this tab renders.
-    var clientId = '';
+    // An inline bootstrap in base.html sets it and sse-connect before htmx
+    // processes; this is a resilient fallback for non-standard loads.
+    var clientId = window.agentoneClientId || '';
     try {
-        clientId = sessionStorage.getItem('agentone:client') || '';
         if (!clientId) {
-            clientId = (window.crypto && crypto.randomUUID)
-                ? crypto.randomUUID()
-                : 'c' + Date.now() + Math.random().toString(36).slice(2);
-            sessionStorage.setItem('agentone:client', clientId);
+            clientId = sessionStorage.getItem('agentone:client') || '';
+            if (!clientId) {
+                clientId = (window.crypto && crypto.randomUUID)
+                    ? crypto.randomUUID()
+                    : 'c' + Date.now() + Math.random().toString(36).slice(2);
+                sessionStorage.setItem('agentone:client', clientId);
+            }
+            window.agentoneClientId = clientId;
         }
-        window.agentoneClientId = clientId;
-        if (document.body) {
+        if (document.body && !document.body.getAttribute('sse-connect')) {
             var sseUrl = document.body.getAttribute('data-sse-url') || '/app/sse/';
             document.body.setAttribute(
                 'sse-connect',
                 sseUrl + (sseUrl.indexOf('?') === -1 ? '?' : '&') + 'client=' + encodeURIComponent(clientId)
             );
+            if (window.htmx && typeof htmx.process === 'function') {
+                htmx.process(document.body);
+            }
         }
     } catch (err) {
         if (window.console && console.error) console.error('client id setup failed:', err);

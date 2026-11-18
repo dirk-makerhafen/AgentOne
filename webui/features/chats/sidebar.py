@@ -19,10 +19,10 @@ MAX_INACTIVE_SUBSESSIONS = 5
 SESSION_TREE_MAX_DEPTH = 8
 _CHILD_SESSION_TYPES = (
     SessionType.SESSION,
-    SessionType.CRONJOB,
-    SessionType.SUBSESSION,
-    SessionType.SUBTASK_COMPACT,
-    SessionType.SUBTASK_DELEGATE,
+    #SessionType.CRONJOB,
+    #SessionType.SUBSESSION,
+    #SessionType.SUBTASK_COMPACT,
+    #SessionType.SUBTASK_DELEGATE,
 )
 
 

@@ -119,32 +119,9 @@
 
             <div class="detail-card">
                 <div class="detail-card-title">Files</div>
-                <div class="webui-list-row-meta"><code>{{ workspace_root }}</code>{% if workspace_relative_path %} · {{ workspace_relative_path }}{% endif %}</div>
-                {% if workspace_error %}
-                <div class="insights-empty">{{ workspace_error }}</div>
-                {% else %}
-                {% if workspace_parent_path != None %}
-                <a class="webui-list-row" href="?files={{ workspace_parent_path|urlencode }}">
-                    <span class="webui-list-row-name">..</span>
-                    <span class="webui-list-row-meta">Parent directory</span>
-                </a>
-                {% endif %}
-                {% for entry in workspace_entries %}
-                {% if entry.is_dir %}
-                <a class="webui-list-row" href="?files={{ entry.relative_path|urlencode }}">
-                    <span class="webui-list-row-name">▸ {{ entry.name }}/</span>
-                    <span class="webui-list-row-meta">Folder</span>
-                </a>
-                {% else %}
-                <div class="webui-list-row">
-                    <span class="webui-list-row-name">{{ entry.name }}</span>
-                    <span class="webui-list-row-meta">{{ entry.size_label }}</span>
+                <div id="workspace-directory" hx-target="#workspace-directory" hx-swap="innerHTML">
+                    {% include "workspaces/parts/directory_browser.html" %}
                 </div>
-                {% endif %}
-                {% empty %}
-                <div class="insights-empty">This directory is empty.</div>
-                {% endfor %}
-                {% endif %}
             </div>
 
             <div class="detail-card">

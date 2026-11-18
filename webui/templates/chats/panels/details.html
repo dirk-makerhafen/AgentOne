@@ -2,10 +2,19 @@
     <div class="webui-panel-section">
         <div class="detail-row"><span class="detail-row-label">Status</span>
             <span class="detail-row-value">
-                {% if session.is_paused %}paused{% endif %}
-                {% if session.is_active %}active{% endif %}
-                {% if session.is_archived %} · archived{% endif %}
-                {% if session.is_pinned %} · pinned{% endif %}
+                {% if session.is_paused %}
+                    paused
+                {% elif session.is_active %}
+                    active
+                {% else %}
+                    ended
+                {% endif %}
+                {% if session.is_archived %}
+                     · archived
+                {% endif %}
+                {% if session.is_pinned %}
+                     · pinned
+                {% endif %}
             </span>
         </div>
         <div class="detail-row"><span class="detail-row-label">Agent</span>

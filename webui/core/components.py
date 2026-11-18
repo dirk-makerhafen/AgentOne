@@ -61,6 +61,9 @@ class ComponentData:
     context: dict[str, Any]
     keys: tuple[str, ...] = ()
     immutable: bool = False
+    # When True, the component also refetches on SSE reconnect/reset. Disable for
+    # leaf items that are fully rebuilt by a parent container's reset.
+    reset: bool = True
 
 
 @dataclass
@@ -145,11 +148,12 @@ def _etag(html: str) -> str:
     return '"' + hashlib.sha256(canonical.encode()).hexdigest()[:32] + '"'
 
 
-def _trigger(keys: tuple[str, ...]) -> str:
+def _trigger(keys: tuple[str, ...], *, reset: bool = True) -> str:
     if not keys:
         return ""
     parts = [f"sse:{key} delay:150ms" for key in keys]
-    parts.append("sse:reset delay:150ms")
+    if reset:
+        parts.append("sse:reset delay:150ms")
     return ", ".join(parts)
 
 
@@ -160,6 +164,7 @@ def _open_tag(
     *,
     etag: str | None = None,
     keys: tuple[str, ...] = (),
+    reset: bool = True,
     placeholder: bool = False,
 ) -> str:
     url = component_url(name, pk, params, htmx=True)
@@ -177,7 +182,7 @@ def _open_tag(
         attrs.append('hx-trigger="load"')
         attrs.append("hx-preserve")
     else:
-        trigger = _trigger(keys)
+        trigger = _trigger(keys, reset=reset)
         if trigger:
             attrs.append(f'hx-trigger="{escape(trigger)}"')
     return "<div " + " ".join(attrs) + ">"
@@ -191,13 +196,16 @@ def _wrap(
     *,
     etag: str | None,
     keys: tuple[str, ...],
+    reset: bool = True,
     placeholder: bool = False,
 ) -> str:
     if placeholder and name.endswith("-sidebar"):
         # The boosted shell is asserted to contain the sidebar landmark even
         # before the component request settles.
         inner = '<aside class="sidebar" id="sidebar"></aside>'
-    return _open_tag(name, pk, params, etag=etag, keys=keys, placeholder=placeholder) + inner + "</div>"
+    return _open_tag(
+        name, pk, params, etag=etag, keys=keys, reset=reset, placeholder=placeholder
+    ) + inner + "</div>"
 
 
 def _collect_keys(data: ComponentData) -> tuple[str, ...]:
@@ -242,7 +250,9 @@ def _render_request(request, name: str, pk: int | None, params: dict[str, Any]) 
         response.status_code = 204
         return response
 
-    response.content = _wrap(name, pk, params, html, etag=etag, keys=keys)
+    response.content = _wrap(
+        name, pk, params, html, etag=etag, keys=keys, reset=bool(getattr(data, "reset", True))
+    )
     response["Content-Length"] = str(len(response.content))
     return response
 
@@ -278,9 +288,10 @@ def render_component_ref(context, name: str, pk=None, params=None) -> str:
                 html,
                 etag=None,
                 keys=() if data.immutable else _collect_keys(data),
+                reset=bool(getattr(data, "reset", True)),
             )
         )
-    return mark_safe(_wrap(name, pk, params, "", etag=None, keys=(), placeholder=True))
+    return mark_safe(_wrap(name, pk, params, "", etag=None, keys=(), reset=True, placeholder=True))
 
 
 

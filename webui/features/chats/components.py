@@ -113,6 +113,7 @@ def _build_chat_message(request, pk, params):
         {"row": row, "session": session},
         tuple(keys),
         immutable=not session.is_active,
+        reset=False,
     )
 
 
@@ -127,6 +128,7 @@ def _build_chat_query(request, pk, params):
         {"row": row, "session": query.session},
         (f"Query:{pk}", f"Query.session:{query.session_id}", f"Response.query:{pk}"),
         immutable=query.status != QueryStatus.ACTIVE,
+        reset=False,
     )
 
 
@@ -146,6 +148,7 @@ def _build_chat_response(request, pk, params):
         {"row": row, "session": response.session},
         (f"Response:{pk}", f"Response.session:{response.session_id}"),
         immutable=response.status != ResponseStatus.ACTIVE,
+        reset=False,
     )
 
 
@@ -238,7 +241,7 @@ def _build_chat_sidebar_session(request, pk, params):
         f"AgentTaskCall.session:{pk}",
         f"SessionModel.parent_session:{pk}@is_archived:{'true' if archived else 'false'}",
     )
-    return ComponentData(context, keys)
+    return ComponentData(context, keys, reset=False)
 
 
 def register_chat_components():

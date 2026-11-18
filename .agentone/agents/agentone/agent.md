@@ -41,10 +41,17 @@ memoryPlaybook: true
 commands: [+, ping, todo.* ]
 disallowedCommands: []
 
-tools: [+, core.*, subagents.*, history.*, skills.*, todo.*, workitems.*]
+tools: [+, core.*, subagents.*, history.*, skills.*, todo.*, workitems.*, admin.*]
 disallowedTools: []
 
-skills: []
+skills:
+  - project-admin
+  - workspace-admin
+  - agent-admin
+  - skill-admin
+  - cronjob-admin
+  - workitem-admin
+  - system-admin
 disallowedSkills: []
 
 tasks: [ +, core.*, compact.*,  ]
@@ -104,18 +111,25 @@ Framework-internal assistants (never user-facing — reach them via
 
 | Assistant | Scope |
 |---|---|
-| `project_assistant` / `projects_assistant` | One project vs. the project collection |
-| `workspace_assistant` / `workspaces_assistant` | One workspace (and its sub-workspaces) vs. the workspaces in a project/global scope |
-| `skill_assistant` / `skills_assistant` | One skill vs. the skill collection |
-| `agent_assistant` / `agents_assistant` | One agent vs. the agent collection |
-| `cronjob_assistant` / `cronjobs_assistant` | One cronjob vs. the cronjob collection |
-| `workitem_assistant` / `workitems_assistant` | One work item vs. the work-item queue |
+| `approval_decider` | Approval/guardrail decisions |
+| `work_verifier` | Work verification judgments |
+| `memory-manage` | Memory/playbook management |
+
+Admin tools (callable directly via `admin` tool group — no `call_assistant` needed):
+
+| Tool Group | Skills | Description |
+|---|---|---|
+| `admin.project_*` | `project-admin` | Project management (list, create, reload, dashboard) |
+| `admin.workspace_*` | `workspace-admin` | Workspace management (list, create, nest, chat sessions) |
+| `admin.agent_*` | `agent-admin` | Agent management (list, create, edit, usage, versions) |
+| `admin.skill_*` | `skill-admin` | Skill management (list, create, assign/unassign, usage) |
+| `admin.cronjob_*` | `cronjob-admin` | Cron job management (list, create, edit, pause, runs) |
+| `admin.workitem_*` | `workitem-admin` | Work item management (list, create, lifecycle, verification) |
 
 Rule of thumb: user goals → `general-chat` / `coding` / `wiki`;
 research-before-acting → `researcher`; complex breakdown → `planner`;
 anything about administering the framework itself (agents, skills, projects,
-workspaces, cronjobs, work items) → the matching internal assistant via
-`call_assistant`.
+workspaces, cronjobs, work items) → the matching `admin.*` tool directly.
 
 Scope invariant: a plural assistant always sees the caller's session scope
 (project, else global) — it never silently lists the whole instance from a

@@ -22,6 +22,28 @@
     {% block head %}{% endblock %}
 </head>
 <body hx-boost="true" hx-ext="sse" data-sse-url="{% url 'webui:sse' %}" data-sse-watch-url="{% url 'webui:sse_watch' %}">
+<script>
+(function () {
+    try {
+        var clientId = sessionStorage.getItem('agentone:client') || '';
+        if (!clientId) {
+            clientId = (window.crypto && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : 'c' + Date.now() + Math.random().toString(36).slice(2);
+            sessionStorage.setItem('agentone:client', clientId);
+        }
+        window.agentoneClientId = clientId;
+        var body = document.body;
+        var base = body.getAttribute('data-sse-url') || '/app/sse/';
+        body.setAttribute(
+            'sse-connect',
+            base + (base.indexOf('?') === -1 ? '?' : '&') + 'client=' + encodeURIComponent(clientId)
+        );
+    } catch (e) {
+        if (window.console && console.error) console.error('sse client setup failed:', e);
+    }
+})();
+</script>
 {% block body %}{% endblock %}
 </body>
 </html>

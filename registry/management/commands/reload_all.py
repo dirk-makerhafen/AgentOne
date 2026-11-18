@@ -82,7 +82,8 @@ def run_reload_all(folder: str) -> ReloadResult:
             results = load_scripts_manifest(scripts_dir, install_repo=global_install, details=details)
             counts["scripts"] = len(results) if results else 0
         except Exception as e:
-            errors.append(f"Scripts: {e}")
+            print(f"Scripts dir {scripts_dir} failed to load: {e}")
+            errors.append(f"Scripts dir {scripts_dir} failed to load: {e}")
 
     global_skill_names: set[str] = set()
     global_agent_names: set[str] = set()

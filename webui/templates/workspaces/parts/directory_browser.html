@@ -1,0 +1,44 @@
+{% comment %}
+Shared workspace folder browser. The host wrapper supplies hx-target/hx-swap
+by inheritance; this partial only contains the browser itself so the chat
+rightbar and the workspace detail page render identical markup.
+{% endcomment %}
+<div class="dt-browser" data-dir-surface="{{ dir_surface }}">
+    <div class="dt-bar">
+        <nav class="dt-crumbs" aria-label="Workspace folder path">
+            {% for crumb in dir_breadcrumbs %}
+            {% if not forloop.first %}<span class="dt-crumb-sep" aria-hidden="true">/</span>{% endif %}
+            <a class="dt-crumb{% if forloop.last %} is-current{% endif %}"
+               href="{{ crumb.push_url|default:crumb.url }}"
+               hx-get="{{ crumb.url }}"
+               {% if crumb.push_url %}hx-push-url="{{ crumb.push_url }}"{% endif %}
+               {% if forloop.last %}aria-current="page"{% endif %}
+               title="{{ crumb.name }}">{{ crumb.name }}</a>
+            {% endfor %}
+        </nav>
+        <div class="dt-actions">
+            {% if dir_parent_url %}
+            <a class="dt-icon-btn" href="{{ dir_parent_push_url|default:dir_parent_url }}"
+               hx-get="{{ dir_parent_url }}"
+               {% if dir_parent_push_url %}hx-push-url="{{ dir_parent_push_url }}"{% endif %}
+               title="Parent folder" aria-label="Parent folder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"></path><polyline points="5 12 12 5 19 12"></polyline></svg>
+            </a>
+            {% endif %}
+            <button class="dt-icon-btn" type="button" title="Refresh folder" aria-label="Refresh folder"
+                    hx-get="{{ dir_refresh_url }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 11 20 4 13 4"></polyline><path d="M20.5 14a8.5 8.5 0 1 1-2.6-7.9L20 9"></path></svg>
+            </button>
+        </div>
+    </div>
+    <div class="dt-location" title="{{ workspace_root }}{% if workspace_relative_path %}/{{ workspace_relative_path }}{% endif %}">
+        <code>{{ workspace_root }}</code>{% if workspace_relative_path %}<span>/{{ workspace_relative_path }}</span>{% endif %}
+    </div>
+    {% if workspace_error %}
+    <div class="dt-error">{{ workspace_error }}</div>
+    {% else %}
+    <div class="dt-tree">
+        {% include "workspaces/parts/directory_nodes.html" with dir_entries=workspace_entries %}
+    </div>
+    {% endif %}
+</div>

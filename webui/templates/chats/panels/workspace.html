@@ -1,43 +1,12 @@
-    {% if not workspace %}
-    <div class="webui-empty-note">This chat has no workspace assigned.</div>
-    {% else %}
-    <div class="webui-panel-section">
-        <div class="webui-settings-head">
-            <span class="detail-card-title">Workspace</span>
-            <button class="webui-action-btn" type="button" title="Refresh"
-                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'workspace' %}{% if workspace_relative_path %}?path={{ workspace_relative_path|urlencode }}{% endif %}"
-                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
-        </div>
-        <div class="webui-muted-note">{{ workspace_root|default:workspace.path }}</div>
-        {% if workspace_relative_path %}
-        <a class="webui-action-btn"
-           hx-get="{% url 'webui:chat_panel_tab' session.pk 'workspace' %}"
-           hx-target="#chat-panel-body" hx-swap="innerHTML">Workspace root</a>
-        {% endif %}
-        {% if workspace_parent_path %}
-        <a class="webui-action-btn"
-           hx-get="{% url 'webui:chat_panel_tab' session.pk 'workspace' %}?path={{ workspace_parent_path|urlencode }}"
-           hx-target="#chat-panel-body" hx-swap="innerHTML">↑ Parent folder</a>
-        {% endif %}
-        {% if workspace_error %}<div class="webui-error">{{ workspace_error }}</div>{% endif %}
+{% if not workspace %}
+<div class="webui-empty-note">This chat has no workspace assigned.</div>
+{% else %}
+{# hx-target/hx-swap live on the host so the shared browser only carries URLs. #}
+<div class="dt-host dt-host-panel" hx-target="#chat-panel-body" hx-swap="innerHTML">
+    <div class="webui-settings-head dt-host-head">
+        <span class="detail-card-title">Workspace</span>
+        <a class="webui-action-btn" href="{% url 'webui:workspace' workspace.pk %}">Details</a>
     </div>
-    <div class="webui-panel-list">
-        {% for entry in workspace_entries %}
-        {% if entry.is_dir %}
-        <a class="webui-panel-row"
-           hx-get="{% url 'webui:chat_panel_tab' session.pk 'workspace' %}?path={{ entry.relative_path|urlencode }}"
-           hx-target="#chat-panel-body" hx-swap="innerHTML">
-            <span class="webui-panel-row-name">📁 {{ entry.name }}</span>
-            <span class="webui-panel-row-meta">Folder</span>
-        </a>
-        {% else %}
-        <div class="webui-panel-row">
-            <span class="webui-panel-row-name">▤ {{ entry.name }}</span>
-            <span class="webui-panel-row-meta">{{ entry.size_label }}</span>
-        </div>
-        {% endif %}
-        {% empty %}
-        {% if not workspace_error %}<div class="webui-empty-note">This folder is empty.</div>{% endif %}
-        {% endfor %}
-    </div>
-    {% endif %}
+    {% include "workspaces/parts/directory_browser.html" %}
+</div>
+{% endif %}

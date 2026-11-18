@@ -2554,3 +2554,138 @@ html.nav-pending::before {
 
 /* Independently cached htmx components: the wrapper must not affect layout. */
 .c { display: contents; }
+
+/* Shared workspace folder browser (chat panel + workspace detail) -------- */
+.dt-host { min-width: 0; }
+.dt-host-head { margin-bottom: 8px; }
+.dt-browser {
+    --dt-line: var(--border-subtle, var(--border));
+    border: 1px solid var(--dt-line);
+    border-radius: 10px;
+    background: var(--surface, var(--sidebar));
+    overflow: hidden;
+}
+.dt-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 7px;
+    border-bottom: 1px solid var(--dt-line);
+    background: var(--sidebar, var(--surface));
+}
+.dt-crumbs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+.dt-crumb {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+}
+.dt-crumb:hover { color: var(--text); background: var(--hover-bg, rgba(128,128,128,.12)); }
+.dt-crumb.is-current { color: var(--accent-text, var(--accent)); background: var(--accent-bg); }
+.dt-crumb-sep { color: var(--muted); font-size: 11px; opacity: .6; flex-shrink: 0; }
+.dt-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.dt-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: none;
+}
+.dt-icon-btn svg { width: 14px; height: 14px; }
+.dt-icon-btn:hover {
+    color: var(--text);
+    background: var(--hover-bg, rgba(128,128,128,.12));
+    border-color: var(--dt-line);
+}
+.dt-location {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 9px;
+    border-bottom: 1px solid var(--dt-line);
+    color: var(--muted);
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.dt-location code { font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-location span { color: var(--text); }
+.dt-tree { padding: 5px 5px 7px; max-height: 440px; overflow-y: auto; }
+.dt-host-panel .dt-tree { max-height: none; }
+.dt-node + .dt-node { margin-top: 1px; }
+.dt-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 26px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 12px;
+    min-width: 0;
+    list-style: none;
+}
+.dt-row::-webkit-details-marker { display: none; }
+summary.dt-row { cursor: pointer; }
+.dt-row:hover { background: var(--hover-bg, rgba(128,128,128,.12)); }
+.dt-folder > .dt-row { font-weight: 500; }
+.dt-folder.htmx-request > .dt-row .dt-caret { opacity: .35; }
+.dt-caret {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1;
+    transition: transform .12s ease;
+}
+.dt-folder[open] > .dt-row > .dt-caret { transform: rotate(90deg); }
+.dt-caret-spacer { visibility: hidden; }
+.dt-icon { width: 14px; height: 14px; flex-shrink: 0; }
+.dt-icon-folder { color: var(--gold, #d9a441); }
+.dt-icon-file { color: var(--muted); }
+.dt-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-meta {
+    flex-shrink: 0;
+    max-width: 66px;
+    color: var(--muted);
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dt-children { margin-left: 12px; padding-left: 7px; border-left: 1px solid var(--dt-line); }
+.dt-children:empty { display: none; }
+.dt-empty, .dt-error {
+    margin: 8px;
+    padding: 10px;
+    border: 1px dashed var(--dt-line);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+}
+.dt-error { color: var(--danger, #b91c1c); }

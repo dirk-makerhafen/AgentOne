@@ -6,8 +6,10 @@ import logging
 import os
 import re
 from pathlib import Path
+from urllib.parse import urlencode
 
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from server.models.agents.agent import AgentModel
@@ -134,6 +136,129 @@ def _format_file_size(size: int) -> str:
     return f"{size / (1024 * 1024):.1f} MB"
 
 
+# Shared folder browser ----------------------------------------------------
+#
+# The chat rightbar and the workspace detail page render the very same tree
+# partial.  Only the URLs differ, so host views pass URL builders here and the
+# partial stays free of any host-specific markup or logic.
+
+_TREE_SURFACES = ("panel", "page")
+
+
+def directory_url(url_name: str, args: list, path: str = "", *, param: str = "path",
+             surface: str | None = None) -> str:
+    """Build a directory URL with an optional path/surface query string."""
+    params = {param: path} if path else {}
+    if surface:
+        params["surface"] = surface
+    base = reverse(url_name, args=args)
+    return f"{base}?{urlencode(params, safe='/')}" if params else base
+
+
+def _directory_breadcrumbs(workspace, current: str, browse_url, push_url) -> list:
+    """Root-to-current crumbs for the folder the tree is rooted at."""
+    crumbs = [{
+        "name": workspace.name,
+        "url": browse_url(""),
+        "push_url": push_url("") if push_url else "",
+    }]
+    parts = [part for part in current.split("/") if part]
+    for index, part in enumerate(parts):
+        path = "/".join(parts[:index + 1])
+        crumbs.append({
+            "name": part,
+            "url": browse_url(path),
+            "push_url": push_url(path) if push_url else "",
+        })
+    return crumbs
+
+
+def workspace_tree_context(
+    workspace,
+    raw_path: str,
+    log_context: str,
+    *,
+    surface: str,
+    browse_url,
+    push_url=None,
+) -> dict:
+    """Build the context for the shared folder tree, with host-supplied URLs."""
+    context = workspace_directory_context(workspace, raw_path, log_context)
+    surface = surface if surface in _TREE_SURFACES else "page"
+    entries = []
+    for entry in context["workspace_entries"]:
+        entry = dict(entry)
+        entry["children_url"] = (
+            directory_url("webui:workspace_directory_children", [workspace.pk],
+                     entry["relative_path"], surface=surface)
+            if entry["is_dir"] else ""
+        )
+        entries.append(entry)
+    context["workspace_entries"] = entries
+    current = context["workspace_relative_path"]
+    parent = context["workspace_parent_path"]
+    context.update({
+        "dir_surface": surface,
+        "dir_breadcrumbs": _directory_breadcrumbs(workspace, current, browse_url, push_url),
+        "dir_root_url": browse_url(""),
+        "dir_parent_url": browse_url(parent) if parent is not None else "",
+        "dir_parent_push_url": push_url(parent) if push_url and parent is not None else "",
+        "dir_refresh_url": browse_url(current),
+        "dir_refresh_push_url": push_url(current) if push_url else "",
+    })
+    return context
+
+
+def workspace_directory(request, workspace_id: int):
+    """Folder-browser fragment for the workspace detail page."""
+    workspace = get_object_or_404(WorkspaceModel, pk=workspace_id)
+
+    def browse_url(path):
+        return directory_url("webui:workspace_directory", [workspace_id], path)
+
+    def push_url(path):
+        return directory_url("webui:workspace", [workspace_id], path, param="files")
+
+    context = workspace_tree_context(
+        workspace,
+        request.GET.get("files", ""),
+        f"{workspace_id} directory",
+        surface="page",
+        browse_url=browse_url,
+        push_url=push_url,
+    )
+    return render(request, "workspaces/parts/directory_browser.html", {
+        "workspace": workspace,
+        **context,
+    })
+
+
+def workspace_directory_children(request, workspace_id: int):
+    """Lazy-loaded children of one folder, shared by both host views."""
+    workspace = get_object_or_404(WorkspaceModel, pk=workspace_id)
+    context = workspace_directory_context(
+        workspace,
+        request.GET.get("path", ""),
+        f"{workspace_id} tree children",
+    )
+    surface = request.GET.get("surface", "page")
+    surface = surface if surface in _TREE_SURFACES else "page"
+    entries = []
+    for entry in context["workspace_entries"]:
+        entry = dict(entry)
+        entry["children_url"] = (
+            directory_url("webui:workspace_directory_children", [workspace_id],
+                     entry["relative_path"], surface=surface)
+            if entry["is_dir"] else ""
+        )
+        entries.append(entry)
+    return render(request, "workspaces/parts/directory_nodes.html", {
+        "dir_entries": entries,
+        "dir_surface": surface,
+        "dir_error": context["workspace_error"],
+    })
+
+
 def workspaces(request):
     rows = list(
         WorkspaceModel.objects.select_related("parent_project").order_by("name")
@@ -218,10 +343,20 @@ def workspace_detail(request, workspace_id: int):
         .order_by("-last_active_at")[:30]
     )
     storage = detect_storage(workspace)
-    files_context = workspace_directory_context(
+
+    def browse_url(path):
+        return directory_url("webui:workspace_directory", [workspace_id], path)
+
+    def push_url(path):
+        return directory_url("webui:workspace", [workspace_id], path, param="files")
+
+    files_context = workspace_tree_context(
         workspace,
         request.GET.get("files", ""),
         f"{workspace.pk} detail",
+        surface="page",
+        browse_url=browse_url,
+        push_url=push_url,
     )
     context = {
         "workspace": workspace,

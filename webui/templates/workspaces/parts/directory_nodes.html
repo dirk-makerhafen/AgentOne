@@ -1,0 +1,35 @@
+{% comment %}
+One level of the shared folder tree. Folder rows lazy-load their children over
+htmx on first expand; the same partial serves those child responses, so nested
+folders keep working without any host-specific markup.
+{% endcomment %}
+{% if dir_error %}<div class="dt-error">{{ dir_error }}</div>{% endif %}
+{% for entry in dir_entries %}
+{% if entry.is_dir %}
+<details class="dt-node dt-folder"
+         hx-get="{{ entry.children_url }}"
+         hx-trigger="toggle once"
+         hx-target="find .dt-children"
+         hx-swap="innerHTML"
+         hx-sync="this:replace">
+    <summary class="dt-row">
+        <span class="dt-caret" aria-hidden="true">›</span>
+        <svg class="dt-icon dt-icon-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+        <span class="dt-name" title="{{ entry.name }}">{{ entry.name }}/</span>
+        <span class="dt-meta">Folder</span>
+    </summary>
+    <div class="dt-children"></div>
+</details>
+{% else %}
+<div class="dt-node dt-file">
+    <div class="dt-row">
+        <span class="dt-caret dt-caret-spacer" aria-hidden="true"></span>
+        <svg class="dt-icon dt-icon-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><polyline points="14 3 14 8 19 8"></polyline></svg>
+        <span class="dt-name" title="{{ entry.name }}">{{ entry.name }}</span>
+        <span class="dt-meta">{{ entry.size_label }}</span>
+    </div>
+</div>
+{% endif %}
+{% empty %}
+<div class="dt-empty">This folder is empty.</div>
+{% endfor %}

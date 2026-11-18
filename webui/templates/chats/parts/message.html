@@ -34,7 +34,7 @@
 <div class="msg-row" data-role="assistant" data-pk="{{ row.obj.pk }}">
     <div class="assistant-turn-blocks">
         {% if row.reasoning %}
-        <details class="thinking-card" data-open-key="think-{{ row.obj.pk }}">
+        <details class="thinking-card" data-open-key="think-{{ row.obj.pk }}" open>
             <summary class="thinking-card-header">
                 <span class="thinking-card-icon">✦</span>
                 <span class="thinking-card-label">Thinking</span>

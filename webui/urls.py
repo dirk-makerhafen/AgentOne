@@ -102,6 +102,8 @@ urlpatterns = [
     path("workspaces/<int:workspace_id>/edit", workspaces_views.workspace_edit, name="workspace_edit"),
     path("workspaces/<int:workspace_id>/delete", workspaces_views.workspace_delete, name="workspace_delete"),
     path("workspaces/<int:workspace_id>/manager", workspaces_views.workspace_manager_open, name="workspace_manager_open"),
+    path("workspaces/<int:workspace_id>/directory", workspaces_views.workspace_directory, name="workspace_directory"),
+    path("workspaces/<int:workspace_id>/directory/children", workspaces_views.workspace_directory_children, name="workspace_directory_children"),
     path("workspaces/<int:workspace_id>", workspaces_views.workspace_detail, name="workspace"),
     # Skills --------------------------------------------------------------
     path("skills", skills_views.skills, name="skills"),

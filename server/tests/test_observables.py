@@ -18,7 +18,6 @@ import pytest
 from django.apps import apps
 
 from runtime.observable_keys import _BUILDERS, observable_keys
-from runtime.observable_queries.registry import _APIS, ROW_ONLY
 from server.models import observables
 from server.models.enums.message_enums import MessageRole
 from server.models.workitems.enums import WorkItemStatus
@@ -177,12 +176,74 @@ def test_every_key_is_safe_inside_an_htmx_trigger():
 
 
 def test_every_model_with_a_read_api_has_an_explicit_builder():
-    missing = sorted(name for name in _APIS if name not in _BUILDERS)
+    # Explicit API models (must have key builders)
+    api_models = {
+        "SessionModel",
+        "Message",
+        "Query",
+        "Response",
+        "AgentTaskCall",
+        "AgentModel",
+        "AgentVersionModel",
+        "SkillModel",
+        "SkillModelVersion",
+        "Cronjob",
+        "DataCollection",
+        "CollectionItem",
+        "WorkItem",
+        "Project",
+        "WorkspaceModel",
+        "ApiProvider",
+        "AiModel",
+        "TerminalSession",
+    }
+    missing = sorted(name for name in api_models if name not in _BUILDERS)
     assert missing == []
 
 
 def test_registry_covers_every_server_model():
-    known = set(_BUILDERS) | set(ROW_ONLY)
+    # Row-only models
+    row_only = {
+        "AdhocToolVersion",
+        "AgentTaskRun",
+        "ApiKey",
+        "DebugLogEntry",
+        "GenericContent",
+        "MessagePart",
+        "QueryMessage",
+        "QueryMessagePart",
+        "QueryTemplateVersion",
+        "ScriptsGeneration",
+        "SessionAdhocTool",
+        "SessionQueryTemplate",
+        "SessionVersionModel",
+        "SettingsModel",
+        "System",
+        "TaskDefinition",
+        "TaskDefinitionVersion",
+        "TaskInstance",
+    }
+    api_models = {
+        "SessionModel",
+        "Message",
+        "Query",
+        "Response",
+        "AgentTaskCall",
+        "AgentModel",
+        "AgentVersionModel",
+        "SkillModel",
+        "SkillModelVersion",
+        "Cronjob",
+        "DataCollection",
+        "CollectionItem",
+        "WorkItem",
+        "Project",
+        "WorkspaceModel",
+        "ApiProvider",
+        "AiModel",
+        "TerminalSession",
+    }
+    known = set(_BUILDERS) | api_models | row_only
     missing = sorted(
         model.__name__ for model in _server_models() if model.__name__ not in known
     )

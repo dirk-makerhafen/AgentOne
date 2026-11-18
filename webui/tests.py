@@ -965,6 +965,71 @@ def test_workspace_detail_browses_files_and_blocks_escape(client, tmp_path):
 
 
 @pytest.mark.django_db
+def test_workspace_folder_tree_is_shared_by_chat_panel_and_detail(client, tmp_path):
+    """Both surfaces render one tree partial; folders lazy-load their children."""
+    from bs4 import BeautifulSoup
+    from server.models.sessions.session_version import SessionVersionModel
+    from server.models.workspace import WorkspaceModel
+
+    session, _version = _session_with_version("shared-folder-tree")
+    workspace_path = tmp_path / "tree-workspace"
+    (workspace_path / "folder" / "nested").mkdir(parents=True)
+    (workspace_path / "folder" / "example.txt").write_text("contents")
+    workspace = WorkspaceModel.objects.create(
+        name="tree-workspace",
+        path=str(workspace_path),
+        agentone_dir=str(workspace_path / ".agentone"),
+    )
+    SessionVersionModel.objects.filter(pk=session.latest_session_version.pk).update(
+        workspace=workspace
+    )
+
+    panel = BeautifulSoup(
+        client.get(reverse("webui:chat_panel_tab", args=[session.pk, "workspace"])).content,
+        "html.parser",
+    )
+    detail = BeautifulSoup(
+        client.get(reverse("webui:workspace", args=[workspace.pk])).content,
+        "html.parser",
+    )
+    for soup, surface in ((panel, "panel"), (detail, "page")):
+        browser = soup.select_one(".dt-browser")
+        assert browser is not None
+        assert browser.select_one(".dt-crumbs .dt-crumb") is not None
+        folder = browser.select_one("details.dt-folder")
+        assert folder is not None
+        assert folder["hx-trigger"] == "toggle once"
+        assert folder["hx-target"] == "find .dt-children"
+        assert reverse("webui:workspace_directory_children", args=[workspace.pk]) in folder["hx-get"]
+        assert f"surface={surface}" in folder["hx-get"]
+        # Children are lazy: the file lives inside the collapsed folder.
+        assert "example.txt" not in str(browser)
+
+    assert panel.select_one(".dt-host-panel")["hx-target"] == "#chat-panel-body"
+    assert detail.select_one("#workspace-directory")["hx-target"] == "#workspace-directory"
+
+    children = client.get(
+        reverse("webui:workspace_directory_children", args=[workspace.pk]),
+        {"path": "folder", "surface": "panel"},
+    )
+    assert children.status_code == 200
+    assert b"example.txt" in children.content
+    child_soup = BeautifulSoup(children.content, "html.parser")
+    nested = child_soup.select_one("details.dt-folder")
+    assert nested is not None
+    assert "surface=panel" in nested["hx-get"]
+
+    outside = tmp_path / "outside.txt"
+    outside.write_text("must not be shown")
+    escaped = client.get(
+        reverse("webui:workspace_directory_children", args=[workspace.pk]),
+        {"path": "../outside.txt", "surface": "page"},
+    )
+    assert b"must not be shown" not in escaped.content
+    assert b"Directory is unavailable." in escaped.content
+
+
+@pytest.mark.django_db
 def test_workspace_manager_reports_missing_agent(client, tmp_path):
     from server.models.workspace import WorkspaceModel
 

@@ -55,9 +55,11 @@
 > `agentone:pubsub:<key>`. Fragments subscribe with `hx-trigger="sse:<key>"`.
 > Sending is a normal POST; persistence stays async, so the POST response shows
 > an optimistic bubble until the `Message.create` event refetches the thread.
-> `nh3` sanitises markdown server-side; htmx 2.0.4, htmx-ext-sse 2.2.2 and
-> Alpine 3.14.8 are vendored (Alpine not loaded yet). Deploy requires
-> `collectstatic` so whitenoise serves `webui/static`.
+> `nh3` sanitises markdown server-side; htmx 2.0.11 and htmx-ext-sse 2.2.4
+> (vendored with local listener/source lifecycle fixes for per-component SSE
+> usage: idempotent registration, cleanup on swap, safe source reuse/reconnect
+> rebinding) and Alpine 3.14.8 are vendored (Alpine not loaded yet). Deploy
+> requires `collectstatic` so whitenoise serves `webui/static`.
 >
 > Implemented beyond the original Phase 2/4 checklists: slash-command palette
 > (schema-driven form), inline message edit + rerun, clear conversation,

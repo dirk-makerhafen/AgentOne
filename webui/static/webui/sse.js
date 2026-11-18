@@ -1,8 +1,12 @@
 /*
 Server Sent Events Extension
 ============================
-This extension adds support for Server Sent Events to htmx.  See /www/extensions/sse.md for usage instructions.
-
+Vendored from htmx-ext-sse 2.2.4 (https://github.com/bigskysoftware/htmx-extensions)
+with local fixes for listener lifecycle in this app's per-component SSE usage:
+- dedupe listener registration per element/event (idempotent registerSSE)
+- remove element listeners on cleanup instead of leaking them on the shared source
+- reuse/close existing EventSource correctly on reprocess/reconnect
+- rebind registered listeners to a new EventSource after reconnect
 */
 
 (function() {
@@ -42,17 +46,7 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
       var parent = evt.target || evt.detail.elt
       switch (name) {
         case 'htmx:beforeCleanupElement':
-          var internalData = api.getInternalData(parent)
-          // Try to remove remove an EventSource when elements are removed
-          var source = internalData.sseEventSource
-          if (source) {
-            api.triggerEvent(parent, 'htmx:sseClose', {
-              source,
-              type: 'nodeReplaced',
-            })
-            internalData.sseEventSource.close()
-          }
-
+          cleanupElement(parent)
           return
 
         // Try to create EventSources when elements are processed
@@ -77,32 +71,109 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
     return new EventSource(url, { withCredentials: true })
   }
 
+  function getSourceData(sourceElement) {
+    var data = api.getInternalData(sourceElement)
+    if (!data.sseBoundElements) data.sseBoundElements = []
+    return data
+  }
+
+  function bindElementToSource(sourceElement, elt) {
+    var bound = getSourceData(sourceElement).sseBoundElements
+    if (bound.indexOf(elt) === -1) bound.push(elt)
+  }
+
+  function unbindElementFromSource(sourceElement, elt) {
+    if (!sourceElement) return
+    var data = api.getInternalData(sourceElement)
+    var bound = data.sseBoundElements
+    if (!bound) return
+    var idx = bound.indexOf(elt)
+    if (idx !== -1) bound.splice(idx, 1)
+  }
+
+  function removeElementListeners(elt) {
+    var data = api.getInternalData(elt)
+    var listeners = data.sseEventListeners
+    if (!listeners) return
+    var source = data.sseListenerSource
+    for (var eventName in listeners) {
+      if (Object.prototype.hasOwnProperty.call(listeners, eventName) && source) {
+        try { source.removeEventListener(eventName, listeners[eventName]) } catch (e) {}
+      }
+    }
+    data.sseEventListeners = null
+    unbindElementFromSource(data.sseListenerSourceElement, elt)
+    data.sseListenerSource = null
+    data.sseListenerSourceElement = null
+  }
+
+  function cleanupElement(elt) {
+    if (!elt || !elt.nodeType) return
+    var internalData = api.getInternalData(elt)
+    // Try to remove an EventSource when the source element is removed
+    var source = internalData.sseEventSource
+    if (source) {
+      api.triggerEvent(elt, 'htmx:sseClose', {
+        source,
+        type: 'nodeReplaced',
+      })
+      try { source.close() } catch (e) {}
+      internalData.sseEventSource = null
+      internalData.sseEventSourceURL = null
+      // listeners attached to this (now closed) source are inert; clear bookkeeping on bound elements
+      var bound = internalData.sseBoundElements || []
+      for (var i = 0; i < bound.length; i++) {
+        var child = bound[i]
+        if (!child) continue
+        var childData = api.getInternalData(child)
+        childData.sseEventListeners = null
+        childData.sseListenerSource = null
+        childData.sseListenerSourceElement = null
+      }
+      internalData.sseBoundElements = []
+    }
+
+    // Remove listeners registered by this element (if it's a swap/trigger element, not the source)
+    removeElementListeners(elt)
+  }
+
   /**
    * registerSSE looks for attributes that can contain sse events, right
    * now hx-trigger and sse-swap and adds listeners based on these attributes too
    * the closest event source
    *
    * @param {HTMLElement} elt
+   * @param {boolean} [force] rebind listeners even if already registered (used on reconnect)
    */
-  function registerSSE(elt) {
+  function registerSSE(elt, force) {
     // Add message handlers for every `sse-swap` attribute
     if (api.getAttributeValue(elt, 'sse-swap')) {
       // Find closest existing event source
       var sourceElement = api.getClosestMatch(elt, hasEventSource)
       if (sourceElement == null) {
-        // api.triggerErrorEvent(elt, "htmx:noSSESourceError")
         return null // no eventsource in parentage, orphaned element
       }
 
       // Set internalData and source
-      var internalData = api.getInternalData(sourceElement)
-      var source = internalData.sseEventSource
+      var source = api.getInternalData(sourceElement).sseEventSource
+      var eltData = api.getInternalData(elt)
+      if (force && eltData.sseEventListeners) {
+        // listeners were attached to a previous (closed) source; drop bookkeeping so we rebind
+        eltData.sseEventListeners = null
+        eltData.sseListenerSource = null
+        eltData.sseListenerSourceElement = null
+      }
+      if (!eltData.sseEventListeners) eltData.sseEventListeners = {}
+      eltData.sseListenerSource = source
+      eltData.sseListenerSourceElement = sourceElement
 
       var sseSwapAttr = api.getAttributeValue(elt, 'sse-swap')
       var sseEventNames = sseSwapAttr.split(',')
 
       for (var i = 0; i < sseEventNames.length; i++) {
         const sseEventName = sseEventNames[i].trim()
+        if (!sseEventName) continue
+        if (eltData.sseEventListeners[sseEventName]) continue
         const listener = function(event) {
           // If the source is missing then close SSE
           if (maybeCloseSSESource(sourceElement)) {
@@ -111,7 +182,7 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 
           // If the body no longer contains the element, remove the listener
           if (!api.bodyContains(elt)) {
-            source.removeEventListener(sseEventName, listener)
+            removeElementListeners(elt)
             return
           }
 
@@ -124,9 +195,10 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
         }
 
         // Register the new listener
-        api.getInternalData(elt).sseEventListener = listener
+        eltData.sseEventListeners[sseEventName] = listener
         source.addEventListener(sseEventName, listener)
       }
+      bindElementToSource(sourceElement, elt)
     }
 
     // Add message handlers for every `hx-trigger="sse:*"` attribute
@@ -134,17 +206,31 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
       // Find closest existing event source
       var sourceElement = api.getClosestMatch(elt, hasEventSource)
       if (sourceElement == null) {
-        // api.triggerErrorEvent(elt, "htmx:noSSESourceError")
         return null // no eventsource in parentage, orphaned element
       }
 
       // Set internalData and source
-      var internalData = api.getInternalData(sourceElement)
-      var source = internalData.sseEventSource
+      var source = api.getInternalData(sourceElement).sseEventSource
+      var eltData = api.getInternalData(elt)
+      if (force && eltData.sseEventListeners) {
+        eltData.sseEventListeners = null
+        eltData.sseListenerSource = null
+        eltData.sseListenerSourceElement = null
+      }
+      if (!eltData.sseEventListeners) eltData.sseEventListeners = {}
+      eltData.sseListenerSource = source
+      eltData.sseListenerSourceElement = sourceElement
 
       var triggerSpecs = api.getTriggerSpecs(elt)
+      var added = false
       triggerSpecs.forEach(function(ts) {
         if (ts.trigger.slice(0, 4) !== 'sse:') {
+          return
+        }
+        var eventName = ts.trigger.slice(4)
+        if (!eventName) return
+        if (eltData.sseEventListeners[eventName]) {
+          added = true
           return
         }
 
@@ -153,7 +239,8 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
             return
           }
           if (!api.bodyContains(elt)) {
-            source.removeEventListener(ts.trigger.slice(4), listener)
+            removeElementListeners(elt)
+            return
           }
           // Trigger events to be handled by the rest of htmx
           htmx.trigger(elt, ts.trigger, event)
@@ -161,9 +248,11 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
         }
 
         // Register the new listener
-        api.getInternalData(elt).sseEventListener = listener
-        source.addEventListener(ts.trigger.slice(4), listener)
+        eltData.sseEventListeners[eventName] = listener
+        source.addEventListener(eventName, listener)
+        added = true
       })
+      if (added) bindElementToSource(sourceElement, elt)
     }
   }
 
@@ -187,13 +276,43 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
         return
       }
 
-      ensureEventSource(elt, sseURL, retryCount)
+      var internalData = api.getInternalData(elt)
+      var existing = internalData.sseEventSource
+      if (existing) {
+        if (retryCount || existing.readyState === EventSource.CLOSED || internalData.sseEventSourceURL !== sseURL) {
+          // reconnect or URL changed: replace with a fresh source
+          try { existing.close() } catch (e) {}
+          internalData.sseEventSource = null
+        } else {
+          // already connected/connecting to the same URL
+        }
+      }
+      if (!internalData.sseEventSource) {
+        ensureEventSource(elt, sseURL, retryCount)
+      }
     }
 
     registerSSE(elt)
   }
 
+  function rebindBoundElements(sourceElement) {
+    var data = api.getInternalData(sourceElement)
+    var bound = (data.sseBoundElements || []).slice()
+    for (var i = 0; i < bound.length; i++) {
+      var child = bound[i]
+      if (child && api.bodyContains(child)) {
+        registerSSE(child, true)
+      }
+    }
+  }
+
   function ensureEventSource(elt, url, retryCount) {
+    var internalData = api.getInternalData(elt)
+    var previous = internalData.sseEventSource
+    if (previous) {
+      try { previous.close() } catch (e) {}
+    }
+
     var source = htmx.createEventSource(url)
 
     source.onerror = function(err) {
@@ -220,6 +339,9 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
       api.triggerEvent(elt, 'htmx:sseOpen', { source })
 
       if (retryCount && retryCount > 0) {
+        // New EventSource instance: rebind all previously registered listeners to it.
+        rebindBoundElements(elt)
+        // Also pick up any children that were not yet registered.
         const childrenToFix = elt.querySelectorAll("[sse-swap], [data-sse-swap], [hx-trigger], [data-hx-trigger]")
         for (let i = 0; i < childrenToFix.length; i++) {
           registerSSE(childrenToFix[i])
@@ -229,7 +351,8 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
       }
     }
 
-    api.getInternalData(elt).sseEventSource = source
+    internalData.sseEventSource = source
+    internalData.sseEventSourceURL = url
 
 
     var closeAttribute = api.getAttributeValue(elt, "sse-close");
@@ -240,7 +363,7 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
           source,
           type: 'message',
         })
-        source.close()
+        try { source.close() } catch (e) {}
       });
     }
   }
@@ -260,8 +383,8 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
           source,
           type: 'nodeMissing',
         })
-        source.close()
-        // source = null
+        try { source.close() } catch (e) {}
+        api.getInternalData(elt).sseEventSource = null
         return true
       }
     }
@@ -280,7 +403,7 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 
     var swapSpec = api.getSwapSpecification(elt)
     var target = api.getTarget(elt)
-    api.swap(target, content, swapSpec)
+    api.swap(target, content, swapSpec, { contextElement: elt })
   }
 
 

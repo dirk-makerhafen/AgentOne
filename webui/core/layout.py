@@ -189,10 +189,11 @@ def render_page(request, section: str, template: str, context: dict | None = Non
                 active_id=None) -> HttpResponse:
     """Render a page, or just the swappable shell for boosted navigation."""
     ctx = page_context(request, section, active_id)
-    ctx["layout_base"] = (
-        "layout/hx_base.html" if is_htmx_request(request) else "layout/base.html"
-    )
-    ctx["component_inline"] = True
+    htmx = is_htmx_request(request)
+    ctx["layout_base"] = "layout/hx_base.html" if htmx else "layout/base.html"
+    # Boosted/htmx shells emit component placeholders so children load and
+    # preserve themselves; full document loads inline for a complete first paint.
+    ctx["component_inline"] = not htmx
     ctx["disable_history"] = template.startswith("chats/")
     ctx.update(context or {})
     response = render(request, template, ctx)
