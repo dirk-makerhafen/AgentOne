@@ -41,8 +41,16 @@ def settings_page(request, tab: str = "appearance"):
     if tab not in ("appearance", "preferences", "providers", "system"):
         tab = "appearance"
     user_settings = UserSettings()
+    settings_tabs = [
+        ("appearance", "Appearance"),
+        ("preferences", "Preferences"),
+        ("providers", "Providers"),
+        ("system", "System"),
+    ]
     context = {
         "tab": tab,
+        "active_id": tab,
+        "settings_tabs": settings_tabs,
         "user_settings": user_settings,
         "themes": sorted(VALID_THEMES),
         "skins": sorted(VALID_SKINS),
@@ -64,7 +72,7 @@ def settings_page(request, tab: str = "appearance"):
             context["power"] = power_state_summary()
         except Exception:  # pylint: disable=broad-exception-caught
             context["power"] = {}
-    return render_page(request, "settings", "settings/single.html", context)
+    return render_page(request, "settings", "settings/single.html", context, active_id=tab)
 
 
 def _provider_probe(provider: ApiProvider) -> dict | None:

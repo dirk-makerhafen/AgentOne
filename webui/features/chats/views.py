@@ -1218,24 +1218,56 @@ def _answer_question(call: AgentTaskCall, post) -> None:
 
 @require_POST
 def queue_action(request, session_id: int):
-    """Cancel, clear or combine messages parked at ``WAITING_QUEUE``."""
+    """Cancel, clear or combine queued user messages."""
     session_model = get_object_or_404(SessionModel, pk=session_id)
     action = request.POST.get("action", "")
-    queued = AgentTaskCall.objects.filter(
-        session=session_model,
-        status_detail=TaskCallStatusDetail.WAITING_QUEUE,
-    ).order_by("created_at")
+    queued = (
+        AgentTaskCall.objects.filter(
+            session=session_model,
+            status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+        )
+        .select_related("task_definition", "task_definition_version__task_definition")
+        .order_by("created_at")
+    )
+    queued = [call for call in queued if queue_text(call) is not None and getattr(call, "task_definition", None) and getattr(call.task_definition, "name", "") == "ingest_user_message"]
+    # Fall back to versioned definition name for calls without direct definition name.
+    if not queued:
+        queued = [
+            call
+            for call in AgentTaskCall.objects.filter(
+                session=session_model,
+                status_detail=TaskCallStatusDetail.WAITING_QUEUE,
+            )
+            .select_related("task_definition", "task_definition_version__task_definition")
+            .order_by("created_at")
+            if (
+                (getattr(call, "task_definition", None) and call.task_definition.name == "ingest_user_message")
+                or (
+                    getattr(call, "task_definition_version", None)
+                    and call.task_definition_version.task_definition
+                    and call.task_definition_version.task_definition.name == "ingest_user_message"
+                )
+            )
+        ]
 
     try:
         if action == "cancel":
             raw_call = request.POST.get("call_id", "")
             if raw_call.isdigit():
-                queued.filter(pk=int(raw_call)).delete()
+                target = int(raw_call)
+                for call in queued:
+                    if call.pk == target:
+                        AgentTaskCall.objects.filter(pk=target).delete()
+                        break
         elif action == "clear":
-            queued.delete()
+            ids = [call.pk for call in queued]
+            if ids:
+                AgentTaskCall.objects.filter(pk__in=ids).delete()
         elif action == "combine":
             texts = [queue_text(call) for call in queued]
-            queued.delete()
+            ids = [call.pk for call in queued]
+            if ids:
+                AgentTaskCall.objects.filter(pk__in=ids).delete()
             combined = "\n\n".join(text for text in texts if text).strip()
             if combined:
                 session_model.get_runtime().add_user_message(combined)

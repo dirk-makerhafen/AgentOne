@@ -65,6 +65,13 @@ def _message_text(args: Any) -> str:
         return str(args)[:2000]
 
 
+_USER_QUEUE_TASK = "ingest_user_message"
+
+
+def _is_user_queue_call(call: AgentTaskCall) -> bool:
+    return _task_name(call) == _USER_QUEUE_TASK
+
+
 def queue_text(call: AgentTaskCall) -> str:
     """Readable text of a parked queue call (used by the combine action)."""
     return _message_text(call.carguments_json)
@@ -79,6 +86,7 @@ def _queue_rows(calls: list[AgentTaskCall], model_name: str) -> list[dict[str, A
                 "text": _message_text(call.carguments_json),
                 "model": model_name,
                 "created_at": call.created_at,
+                "is_user": True,
             }
         )
     return rows
@@ -321,7 +329,7 @@ def build_chat_cards(session_model) -> dict[str, Any]:
     )
     queued = [
         call for call in calls
-        if call.status_detail == TaskCallStatusDetail.WAITING_QUEUE
+        if call.status_detail == TaskCallStatusDetail.WAITING_QUEUE and _is_user_queue_call(call)
     ]
     halted = [
         call for call in calls

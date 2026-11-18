@@ -2,7 +2,6 @@
 <div class="side-list">
     {% for agent in sidebar_agents %}
     <a class="ws-row{% if agent.pk == active_id %} active{% endif %}" href="{% url 'webui:agent' agent.pk %}"
-       hx-get="{% url 'webui:agent' agent.pk %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
        data-sidebar-active-key="{{ agent.pk }}">
         <span class="ws-row-info">
             <span class="ws-row-name">

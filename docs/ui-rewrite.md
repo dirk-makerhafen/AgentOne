@@ -599,13 +599,13 @@ browser can answer most navigations and refetches from its own cache.
 * `render=full` (default) renders the component *and* its children inline.
   Used for document loads and no-JS clients, so the page is a real tree.
 * `render=htmx` renders the component with **placeholders** for its children.
-  Every placeholder carries `hx-trigger="load"` and `hx-preserve`. The client
-  loads it once; a later parent swap moves the live child into the new
+  Every placeholder self-loads (`hx-trigger="load, intersect once"`) and
+  every component wrapper carries `hx-preserve`. The client loads a
+  placeholder once; a later parent swap moves the live child into the new
   fragment by id (htmx's preserve pantry), so a parent refresh never destroys
   a child that is already loaded.
 
-The rendered root never carries `hx-preserve`; only placeholders do. A
-placeholder also keeps the landmark it replaces (`<aside id="sidebar">`) so
+A placeholder also keeps the landmark it replaces (`<aside id="sidebar">`) so
 selectors and CSS still work before the first swap.
 
 **Cache policy.**

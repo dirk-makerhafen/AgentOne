@@ -7,7 +7,7 @@ tests here pin the pieces that are easy to regress silently:
 * ``render=full`` emits a complete tree for no-JS clients;
 * live components revalidate with an ETag and answer ``204`` when unchanged;
 * immutable components get a long-lived cache header and no SSE trigger;
-* the shell only ever puts ``hx-preserve`` on placeholders.
+* component wrappers are preserved so parent swaps can keep loaded children.
 """
 from __future__ import annotations
 
@@ -122,8 +122,8 @@ def test_live_component_carries_sse_triggers_on_the_wrapper(client):
     assert f"sse:SessionModel:{session.pk}" in body
     assert f"sse:Query.session:{session.pk}" in body
     assert "sse:reset" in body
-    # The rendered root itself is never preserved; only placeholders are.
-    assert "hx-preserve" not in body
+    # Wrappers are preserved so a loaded component survives parent swaps.
+    assert "hx-preserve" in body
     assert 'hx-swap="outerHTML"' in body
 
 
@@ -153,8 +153,8 @@ def test_htmx_render_emits_placeholders_for_children(client):
 
     assert 'data-component="chat-thread"' in body
     assert f'data-component="chat-message"' in body
-    # Placeholder: loads itself, preserved across the parent swap, no content.
-    assert 'hx-trigger="load"' in body
+    # Placeholder: loads itself and can be preserved across a parent swap.
+    assert 'hx-trigger="load' in body
     assert "hx-preserve" in body
     assert "msg-row" not in body
 
@@ -167,8 +167,9 @@ def test_full_render_inlines_children_without_preserve(client):
     assert 'data-component="chat-thread"' in body
     assert 'data-component="chat-message"' in body
     assert f"sse:Message:{message.pk}" in body
-    assert "hx-preserve" not in body
-    assert 'hx-trigger="load"' not in body
+    # Loaded wrappers are preserved; they must not behave as placeholders.
+    assert "hx-preserve" in body
+    assert 'hx-trigger="load' not in body
 
 
 def test_full_document_has_no_component_placeholders(client):
@@ -177,7 +178,8 @@ def test_full_document_has_no_component_placeholders(client):
     body = response.content.decode()
 
     assert response.status_code == 200
-    assert "hx-preserve" not in body
+    # Full document loads inline components (no placeholder load triggers).
+    assert 'hx-trigger="load' not in body
     assert 'data-component="chat-thread"' in body
     assert f"sse:Message:{message.pk}" in body
 
@@ -189,9 +191,10 @@ def test_boosted_shell_only_preserves_placeholders(client):
 
     assert response.status_code == 200
     assert 'data-component="chat-thread"' in body
-    # Every hx-preserve sits on a placeholder that also loads itself.
-    for tag in re.findall(r"<div[^>]*hx-preserve[^>]*>", body):
-        assert 'hx-trigger="load"' in tag
+    # Boosted shells emit placeholders: preserved wrappers that self-load and
+    # carry no ETag until the component has rendered.
+    for tag in re.findall(r"<div[^>]*hx-trigger=\"load[^\"]*\"[^>]*>", body):
+        assert "hx-preserve" in tag
         assert "data-component-etag" not in tag
     # A placeholder never embeds its children; the thread loads them itself.
     assert 'data-component="chat-message"' not in body
@@ -219,7 +222,7 @@ def test_sidebar_component_placeholder_keeps_the_landmark(client):
     )
     assert 'id="sidebar"' in html
     assert "hx-preserve" in html
-    assert 'hx-trigger="load"' in html
+    assert 'hx-trigger="load' in html
 
 
 def test_sidebar_full_render_contains_the_panel(client):

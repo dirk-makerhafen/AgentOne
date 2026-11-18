@@ -15,8 +15,8 @@ Two render modes
 ``render=htmx``
     Render the component with placeholders for its children.  Used by every
     htmx request.  A parent swap therefore never destroys a child that is
-    already loaded: the child placeholder carries ``hx-preserve`` and htmx
-    moves the live element into the new fragment by id.
+    already loaded: component wrappers carry ``hx-preserve`` and htmx moves the
+    live element into the new fragment by id.
 
 Cache policy
 ------------
@@ -178,9 +178,13 @@ def _open_tag(
     ]
     if etag and not placeholder:
         attrs.append(f'data-component-etag="{escape(etag)}"')
+    # hx-preserve keeps an already-loaded component alive when a parent swap
+    # re-renders and emits a placeholder for it (htmx 2 moves the preserved old
+    # element into the new fragment by id).  It does not block a self-targeted
+    # outerHTML swap, so SSE/self refreshes still replace the component.
+    attrs.append("hx-preserve")
     if placeholder:
-        attrs.append('hx-trigger="load"')
-        attrs.append("hx-preserve")
+        attrs.append('hx-trigger="load, intersect once"')
     else:
         trigger = _trigger(keys, reset=reset)
         if trigger:

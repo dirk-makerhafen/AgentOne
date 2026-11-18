@@ -61,6 +61,9 @@ def logs(request):
     context = {
         "error": request.GET.get("error", ""),
         "selected_file": selected,
+        "selected_log": selected,
+        "log_files": files,
+        "log_dir": str(_log_dir() or ""),
         "content": content,
     }
     return render_page(request, "logs", "logs/single.html", context)

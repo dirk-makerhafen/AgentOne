@@ -2,7 +2,6 @@
 <div class="side-list">
     {% for skill in sidebar_skills %}
     <a class="ws-row{% if skill.pk == active_id %} active{% endif %}" href="{% url 'webui:skill' skill.pk %}"
-       hx-get="{% url 'webui:skill' skill.pk %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
        data-sidebar-active-key="{{ skill.pk }}">
         <span class="ws-row-info">
             <span class="ws-row-name">{{ skill.name }}</span>

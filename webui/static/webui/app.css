@@ -630,6 +630,9 @@ a.insights-stat:hover { border-color: var(--accent); }
     border-radius: 7px;
     animation: webui-pulse 1.5s ease-in-out infinite;
 }
+.webui-download-hint[hidden] {
+    display: none;
+}
 @keyframes webui-pulse {
     0%, 100% { opacity: 0.6; }
     50% { opacity: 1; }

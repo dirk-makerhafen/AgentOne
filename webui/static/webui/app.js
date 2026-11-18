@@ -150,12 +150,26 @@
         return el ? el.closest('[data-component="chat-thread"]') : null;
     }
 
+    function chatThreadComponent(el) {
+        if (!el || !el.closest) return null;
+        return el.closest('[data-component="chat-thread"]');
+    }
+
     function isThreadSwap(evt) {
         if (!evt || !evt.detail) return false;
-        var el = threadEl();
-        if (!el) return false;
         var target = evt.detail.target;
-        return target === el || target === threadWrapper();
+        if (!target) return false;
+        if (target.matches && target.matches('[data-component="chat-thread"]')) return true;
+        var el = threadEl();
+        if (target === el) return true;
+        var wrapper = threadWrapper();
+        return !!(wrapper && target === wrapper);
+    }
+
+    function isThreadAreaSwap(evt) {
+        if (!evt || !evt.detail || !evt.detail.target) return false;
+        var target = evt.detail.target;
+        return isThreadSwap(evt) || !!chatThreadComponent(target);
     }
 
     function nearBottom(el) {
@@ -165,6 +179,12 @@
 
     function scrollToBottom(el) {
         if (el) el.scrollTop = el.scrollHeight;
+    }
+
+    function scheduleScrollToBottom() {
+        requestAnimationFrame(function () {
+            scrollToBottom(threadEl());
+        });
     }
 
     document.addEventListener('input', function (evt) {
@@ -283,11 +303,13 @@
     document.addEventListener('htmx:beforeRequest', function (evt) {
         var el = threadEl();
         if (!el) return;
-        var wrapper = threadWrapper();
         var trigger = evt.detail && evt.detail.elt;
-        if (trigger === el || trigger === wrapper
+        var wrapper = threadWrapper();
+        var inThread = trigger === el || trigger === wrapper
             || (trigger && el.contains(trigger))
-            || (wrapper && trigger && wrapper.contains(trigger))) {
+            || (wrapper && trigger && wrapper.contains(trigger))
+            || !!(trigger && chatThreadComponent(trigger));
+        if (inThread) {
             // Never yank a reader who is selecting text or has scrolled up.
             var selection = window.getSelection ? String(window.getSelection()) : '';
             wasNearBottom = !selection && nearBottom(el);
@@ -295,19 +317,39 @@
     });
 
     document.addEventListener('htmx:afterSwap', function (evt) {
-        if (!isThreadSwap(evt)) return;
+        if (!isThreadAreaSwap(evt)) return;
         var el = threadEl();
         if (el && wasNearBottom) {
-            scrollToBottom(el);
+            scheduleScrollToBottom();
         }
     });
 
     // Restore only after htmx finished settling: requests triggered from
     // inside the afterSwap stack are ignored by htmx's own event listeners.
+    function ensureComponentPlaceholders(root) {
+        try {
+            var scope = root && root.querySelectorAll ? root : document;
+            var nodes = scope.querySelectorAll('[data-component][hx-get]');
+            nodes.forEach(function (el) {
+                var trigger = el.getAttribute('hx-trigger') || '';
+                if (trigger.indexOf('load') === -1) return;
+                if (window.htmx) {
+                    try { htmx.process(el); } catch (err) { /* already processed */ }
+                    try { htmx.trigger(el, 'load'); } catch (err) { /* ignore */ }
+                }
+            });
+        } catch (e) {
+            if (window.console && console.error) console.error('ensureComponentPlaceholders failed:', e);
+        }
+    }
+
     document.addEventListener('htmx:afterSettle', function (evt) {
         if (isThreadSwap(evt)) {
             var el = threadEl();
             if (el) restoreOpenCards(el);
+            // Placeholder-loaded thread (e.g. boosted nav) appears after settle;
+            // ensure we land at the bottom on first render when appropriate.
+            if (el && wasNearBottom) scheduleScrollToBottom();
         }
         var pc = providersCardEl();
         if (pc && evt.target === pc) {
@@ -315,6 +357,7 @@
         }
         markActiveRows();
         scheduleWatch();
+        ensureComponentPlaceholders(evt && evt.target ? evt.target : document);
     });
 
     document.addEventListener('htmx:sseError', function () {
@@ -331,6 +374,7 @@
         scrollToBottom(threadEl());
         markActiveRows();
         scheduleWatch();
+        ensureComponentPlaceholders(document);
         var ta = document.querySelector('.composer-chat-message');
         if (ta) {
             restoreDraft(ta);
@@ -1170,7 +1214,10 @@
         restoreProviderOpenState();
     });
     // Initial run in case DOM already ready.
-    if (document.readyState !== 'loading') restoreProviderOpenState();
+    if (document.readyState !== 'loading') {
+        restoreProviderOpenState();
+        ensureComponentPlaceholders(document);
+    }
 
     // ── Partial navigation (hx-boost) ────────────────────────────────────
     // A boosted click swaps <body> with the server's shell fragment.  Re-bind

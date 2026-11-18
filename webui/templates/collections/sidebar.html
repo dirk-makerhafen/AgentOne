@@ -2,7 +2,6 @@
 <div class="side-list">
     {% for collection in sidebar_collections %}
     <a class="ws-row{% if collection.pk == active_id %} active{% endif %}" href="{% url 'webui:collection' collection.pk %}"
-       hx-get="{% url 'webui:collection' collection.pk %}" hx-target="main" hx-select="main" hx-swap="outerHTML" hx-push-url="true"
        data-sidebar-active-key="{{ collection.pk }}">
         <span class="ws-row-info">
             <span class="ws-row-name">

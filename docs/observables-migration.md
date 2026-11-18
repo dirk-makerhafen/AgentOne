@@ -150,7 +150,7 @@ triggers on (`sse:reset`).
 | `server/tests/test_observables.py` | key builders, bare keys, old+new transitions, `on_commit`, client registry, fan-out isolation, dead-client pruning, `save/delete/atomic_update/publish_by_pk`, FSM helpers |
 | `server/tests/test_observable_queries.py` | registry coverage, no queryset escape, every read key is published by the writer |
 | `server/tests/test_events.py` | frame format, event-name parsing, client-id validation, `/app/sse/watch` payloads and auth |
-| `server/tests/test_webui_components.py` | ETag/204, cache headers, immutable components, `render=full` vs `render=htmx`, `hx-preserve` only on placeholders, section sidebar routes |
+| `server/tests/test_webui_components.py` | ETag/204, cache headers, immutable components, `render=full` vs `render=htmx`, preserved component wrappers/placeholders, section sidebar routes |
 | `webui/tests.py` | full page/boosted shell contracts, fragment routes, chat rendering |
 
 ## Known limitations
