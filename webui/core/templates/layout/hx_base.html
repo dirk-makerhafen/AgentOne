@@ -1,11 +1,10 @@
 {% comment %}
-Fragment shell for htmx-boosted navigation.
+Document shell for htmx-boosted navigation.
 
 Boosted links keep their real href (new tabs, bookmarks, ctrl/cmd-click and
 no-JS all get the full base.html document), while a normal click swaps
-<body> with this response. The leading <title> is picked up by htmx and
-applied to document.title; the head block renders page-specific scripts as
-part of the swap so they still load.
-{% endcomment %}<title>{% block title %}AgentOne{% endblock %}</title>
-{% block body %}{% endblock %}
-{% block head %}{% endblock %}
+<body> innerHTML with the <body> content from this response. htmx also
+updates document.title from <title> and merges <head> elements (so
+page-specific scripts/styles in the head block still load) per boosted
+request handling.
+{% endcomment %}<html><head><title>{% block title %}AgentOne{% endblock %}</title>{% block head %}{% endblock %}</head><body>{% block body %}{% endblock %}</body></html>

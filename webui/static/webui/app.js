@@ -219,6 +219,40 @@
     // re-apply the state afterwards.
     var openCards = null;
 
+    // Component wrappers are hx-preserve so a parent swap can keep an
+    // already-loaded child.  htmx's preserve implementation (Re/He) also pantries
+    // the swap target itself when the response carries the same preserved id,
+    // which breaks a self-targeted outerHTML refresh (placeholder load, SSE/reset
+    // refetch) and can drop the element or discard the response.  Hide the
+    // target's id from the preserve lookup for the duration of the swap;
+    // descendants keep their ids so parent swaps can still preserve loaded
+    // children inside the replaced region.
+    document.addEventListener('htmx:beforeSwap', function (evt) {
+        var detail = evt.detail || {};
+        var target = detail.target;
+        if (!target || !target.id || !target.getAttribute) return;
+        var swap = detail.swapOverride
+            || (target.getAttribute('hx-swap') || target.getAttribute('data-hx-swap'))
+            || (window.htmx && htmx.config && htmx.config.defaultSwapStyle)
+            || 'innerHTML';
+        swap = String(swap).split(/\s+/)[0].toLowerCase();
+        if (swap.indexOf('outer') === -1) return;
+        // Only relevant when the response is expected to preserve this element's id.
+        if (!target.hasAttribute('hx-preserve') && !target.hasAttribute('data-hx-preserve')) return;
+        target._hxOrigId = target.id;
+        target.removeAttribute('id');
+    });
+
+    document.addEventListener('htmx:afterSwap', function (evt) {
+        var target = evt.detail && evt.detail.target;
+        // If the swap failed to replace the target, restore its id so future
+        // requests/preserves still work.  After a successful outerHTML swap the
+        // original node is detached and this is harmless.
+        if (target && target._hxOrigId && !target.id && target.isConnected) {
+            target.id = target._hxOrigId;
+        }
+    });
+
     // ── Providers settings: keep <details> open across HTMX swaps/reloads ──
     function providersCardEl() {
         return document.getElementById('providers-card');
@@ -261,6 +295,7 @@
 
     function captureOpenCards(el) {
         openCards = new Set();
+        if (!el) return;
         try {
             el.querySelectorAll('details[data-open-key]').forEach(function (card) {
                 var key = card.getAttribute('data-open-key');
@@ -328,15 +363,52 @@
     // inside the afterSwap stack are ignored by htmx's own event listeners.
     function ensureComponentPlaceholders(root) {
         try {
+            if (!window.htmx) return;
             var scope = root && root.querySelectorAll ? root : document;
-            var nodes = scope.querySelectorAll('[data-component][hx-get]');
+            var nodes = scope.querySelectorAll('[data-component][hx-get][hx-trigger]');
             nodes.forEach(function (el) {
                 var trigger = el.getAttribute('hx-trigger') || '';
+                // Only placeholders self-load on insertion; loaded components use SSE triggers.
                 if (trigger.indexOf('load') === -1) return;
-                if (window.htmx) {
-                    try { htmx.process(el); } catch (err) { /* already processed */ }
-                    try { htmx.trigger(el, 'load'); } catch (err) { /* ignore */ }
-                }
+                if (el.dataset.phRequested) return;
+                el.dataset.phRequested = '1';
+                try { htmx.process(el); } catch (err) { /* already processed */ }
+                try { htmx.trigger(el, 'load'); } catch (err) { /* ignore */ }
+                // htmx 2 handles `load` as a special trigger during processing; if that
+                // did not result in a swap (missed wiring/timing), force the request.
+                // If the element is still an unloaded placeholder after the delay, allow
+                // future ensure passes to retry (e.g. transient failures).
+                setTimeout(function () {
+                    if (!el.isConnected) {
+                        return;
+                    }
+                    var t = el.getAttribute('hx-trigger') || '';
+                    if (t.indexOf('load') === -1) {
+                        return;
+                    }
+                    // Avoid duplicating an in-flight natural load request.
+                    if (el.classList.contains('htmx-request') || el.classList.contains('htmx-swapping')) {
+                        setTimeout(function () {
+                            if (el.isConnected && (el.getAttribute('hx-trigger') || '').indexOf('load') !== -1) {
+                                delete el.dataset.phRequested;
+                            }
+                        }, 4000);
+                        return;
+                    }
+                    try {
+                        htmx.ajax('GET', el.getAttribute('hx-get'), {
+                            source: el,
+                            target: el,
+                            swap: 'outerHTML'
+                        });
+                    } catch (err) { /* ignore */ }
+                    // Permit another ensure pass later if this attempt did not complete.
+                    setTimeout(function () {
+                        if (el.isConnected && (el.getAttribute('hx-trigger') || '').indexOf('load') !== -1) {
+                            delete el.dataset.phRequested;
+                        }
+                    }, 4000);
+                }, 120);
             });
         } catch (e) {
             if (window.console && console.error) console.error('ensureComponentPlaceholders failed:', e);
@@ -1269,16 +1341,24 @@
         }
     });
 
-    // Back/forward restores a cloned copy of the page: data attributes survive
-    // the clone but DOM listeners do not, so drop our bound markers and wire
-    // the restored shell up again.
+    // Back/forward restores a cached copy of the page: data attributes survive
+    // the clone but DOM listeners / htmx processing state do not, so drop our
+    // bound markers, reprocess, and make sure any unloaded placeholders load.
     document.addEventListener('htmx:historyRestore', function () {
         document.querySelectorAll('[data-bound]').forEach(function (el) {
             el.removeAttribute('data-bound');
         });
+        document.querySelectorAll('[data-ph-requested]').forEach(function (el) {
+            delete el.dataset.phRequested;
+        });
         navSettled = false;
+        if (window.htmx) {
+            try { htmx.process(document.body); } catch (err) { /* ignore */ }
+        }
         initContent(document);
         initEntry();
+        ensureComponentPlaceholders(document);
+        scheduleWatch();
     });
 
     document.addEventListener('htmx:beforeRequest', function (evt) {

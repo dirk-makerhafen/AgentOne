@@ -270,16 +270,19 @@ def _layout_routes() -> list[str]:
 
 @pytest.mark.django_db
 def test_boosted_layout_routes_render_fragments(client):
-    """Every page must be swappable into <body> without a document shell."""
+    """Boosted page requests return a swappable shell (not a full document load)."""
     for route in _layout_routes():
         response = client.get(route, HTTP_HX_REQUEST="true")
         assert response.status_code == 200, route
         content = response.content
         assert b"<!DOCTYPE" not in content, route
-        assert b"</html>" not in content, route
-        assert b"</head>" not in content, route
+        assert b"<html" in content, route
+        assert b"<head>" in content, route
         assert b"<title>" in content, route
+        assert b"<body>" in content, route
         assert b'id="sidebar"' in content, route
+        # Full base shell assets/SSE wiring must not be re-sent on boosted nav.
+        assert b'hx-ext="sse"' not in content, route
 
 
 @pytest.mark.django_db
@@ -312,11 +315,11 @@ def test_pages_are_gzipped_when_the_client_accepts_it(client):
 
 @pytest.mark.django_db
 def test_boosted_navigation_returns_body_fragment(client):
-    """hx-boost swaps ``<body>``, so boosted responses must be fragments.
+    """hx-boost swaps ``<body>`` innerHTML; boosted responses provide a shell.
 
     Normal clicks must not re-download or re-execute the whole document, but
-    the payload still has to carry the shell (rail + sidebar + SSE wiring) and
-    a ``<title>`` for htmx to apply to ``document.title``.
+    the payload still has to carry the shell (rail + sidebar) and a ``<title>``
+    (and ``<head>`` for page-specific assets) for htmx to apply.
     """
     response = client.get(
         reverse("webui:dashboard"),
@@ -327,15 +330,16 @@ def test_boosted_navigation_returns_body_fragment(client):
     assert "HX-Request" in response["Vary"]
     content = response.content
     assert b"<!DOCTYPE" not in content
-    assert b"<html" not in content
-    assert b"<head>" not in content
-    assert b"</head>" not in content
-    assert b"<body" not in content
-    assert b"</html>" not in content
-    assert content.lstrip().startswith(b"<title>")
+    assert b"<html" in content
+    assert b"<head><title>" in content
+    assert b"<body>" in content
     assert b"Dashboard" in content
     assert b'id="sidebar"' in content
+    # Persistent body/SSE wiring lives on the existing document body element.
     assert b'hx-boost="true"' not in content
+    assert b'hx-ext="sse"' not in content
+    assert b"htmx.min.js" not in content
+    assert b"app.css" not in content
 
 
 @pytest.mark.django_db
