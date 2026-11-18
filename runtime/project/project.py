@@ -11,7 +11,7 @@ class Project(AssistantScopeMixin):
     """Runtime wrapper around a Project model instance."""
 
     #: Singular internal assistant managing ONE project.
-    ASSISTANT = "project_assistant"
+    ASSISTANT = "AgentOne"
 
     def __init__(self, project_model: ProjectModel) -> None:
         self.model = project_model

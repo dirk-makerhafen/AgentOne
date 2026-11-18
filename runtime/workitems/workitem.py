@@ -15,7 +15,7 @@ class WorkItem(AssistantScopeMixin):
     """
 
     #: Singular internal assistant working on ONE work item.
-    ASSISTANT = "workitem_assistant"
+    ASSISTANT = "AgentOne"
 
     def __init__(self, work_item_model: WorkItemModel) -> None:
         self.model = work_item_model

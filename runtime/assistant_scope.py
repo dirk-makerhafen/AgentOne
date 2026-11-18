@@ -27,10 +27,10 @@ class AssistantScopeMixin:
     The mixin supplies ``assistant_name``, ``project``,
     ``assistant_scope_label`` and ``get_assistant_session`` on top of those.
     Singular wrappers override :meth:`assistant_scope_label` to name their
-    item (e.g. ``agent_assistant - Alpha``).
+    item (e.g. ``AgentOne - Alpha``).
     """
 
-    #: ``(singular, plural)`` assistant pair for plural collections.
+    #: ``(singular, plural)`` assistant names for plural collections.
     ASSISTANT_NAMES: tuple[str, str] = ("", "")
     #: Single assistant name for singular wrappers.
     ASSISTANT: str = ""

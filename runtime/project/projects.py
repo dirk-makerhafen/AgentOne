@@ -19,8 +19,8 @@ class Projects(AssistantScopeMixin):
 
     #: Collection domain label.
     DOMAIN = "projects"
-    #: Internal assistant pair managing projects (singular, plural).
-    ASSISTANT_NAMES = ("project_assistant", "projects_assistant")
+    #: Unified assistant name for singular/plural project wrappers.
+    ASSISTANT_NAMES = ("AgentOne", "AgentOne")
 
     def __init__(self, **kwargs: Any) -> None:
         if kwargs:

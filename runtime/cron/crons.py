@@ -23,8 +23,8 @@ class Cronjobs(AssistantScopeMixin):
 
     #: Collection domain label (used for the global system workspace name).
     DOMAIN = "cronjobs"
-    #: Internal assistant pair managing cronjobs (singular, plural).
-    ASSISTANT_NAMES = ("cronjob_assistant", "cronjobs_assistant")
+    #: Unified assistant name for singular/plural cronjob wrappers.
+    ASSISTANT_NAMES = ("AgentOne", "AgentOne")
 
     def __init__(
         self,

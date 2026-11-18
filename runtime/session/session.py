@@ -1013,8 +1013,8 @@ class Session:
 
         ``project`` (a ``Project`` row, optional) binds the child session to
         that project scope (``SessionModel.parent_project``) so project-scoped
-        tools — e.g. the internal ``*_assistant`` collection tools — resolve
-        the right collection. The runtime collection classes pass this
+        tools — e.g. ``admin_tool`` or the collection helpers — resolve
+        the right scope. The runtime collection classes pass this
         automatically (e.g. via ``get_assistant_session()``).
 
         ``group_key`` is a non-unique grouping key (``domain:task``) stored on

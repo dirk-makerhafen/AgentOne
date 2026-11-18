@@ -208,9 +208,9 @@ the only durable reminder.
 - **Directive:** does the failure signature recur in later reflections? If
   yes with the rule active, the rule is not working — rewrite or route it
   higher.
-- **Skill:** `skill_assistant.skill_usage()` scans recent `load_skill` calls.
-  A skill with no loads is dead weight; merge it back into a directive or
-  retire it.
+- **Skill:** `admin_tool(scope="skills", action="details", name=...)`
+  reports recent `load_skill` counts. A skill with no loads is dead weight;
+  merge it back into a directive or retire it.
 - **Tool/script:** the acceptance check in its proposal must be testable in
   the repository.
 - **Harness:** the fix lands as code, with tests, and the workaround directive

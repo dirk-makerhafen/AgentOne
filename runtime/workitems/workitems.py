@@ -22,8 +22,8 @@ class Workitems(AssistantScopeMixin):
 
     #: Collection domain label.
     DOMAIN = "workitems"
-    #: Internal assistant pair managing work items (singular, plural).
-    ASSISTANT_NAMES = ("workitem_assistant", "workitems_assistant")
+    #: Unified assistant name for singular/plural work-item wrappers.
+    ASSISTANT_NAMES = ("AgentOne", "AgentOne")
 
     def __init__(
         self,

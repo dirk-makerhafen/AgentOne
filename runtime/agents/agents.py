@@ -21,8 +21,8 @@ class Agents(AssistantScopeMixin):
 
     #: Collection domain label (used for the global system workspace name).
     DOMAIN = "agents"
-    #: Internal assistant pair managing agents (singular, plural).
-    ASSISTANT_NAMES = ("agent_assistant", "agents_assistant")
+    #: Unified assistant name for singular/plural agent wrappers.
+    ASSISTANT_NAMES = ("AgentOne", "AgentOne")
 
     def __init__(
         self,

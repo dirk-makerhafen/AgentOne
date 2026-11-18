@@ -537,7 +537,7 @@ class Agent(AssistantScopeMixin):
     # ------------------------------------------------------------------
 
     #: Singular internal assistant working on ONE agent.
-    ASSISTANT = "agent_assistant"
+    ASSISTANT = "AgentOne"
 
     @property
     def pk(self) -> Any:

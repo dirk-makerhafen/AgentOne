@@ -1087,13 +1087,13 @@ def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
     from webui.core import assistants
 
     subject = AgentModel.objects.create(name="assistant-target")
-    assistant = AgentModel.objects.create(name="agent_assistant")
+    assistant = AgentModel.objects.create(name="AgentOne")
     version = AgentVersionModel.objects.create(agent=assistant, version_number=1)
     AgentModel.objects.filter(pk=assistant.pk).update(latest_agent_version=version)
     monkeypatch.setattr(
         assistants,
         "_assistant_scope",
-        lambda kind, item: ("agent_assistant", None, None),
+        lambda kind, item: ("AgentOne", None, None),
     )
 
     response = client.post(
@@ -1103,7 +1103,7 @@ def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
     assert response["Location"].startswith("/app/chat/")
     assert SessionModel.objects.filter(
         latest_session_version__agent=assistant,
-        name__startswith="agent_assistant - assistant-target",
+        name__startswith="AgentOne - assistant-target",
     ).exists()
 
     embedded = client.post(
@@ -1120,14 +1120,9 @@ def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
 def test_overview_pages_render_embedded_assistant_panels(client, monkeypatch):
     from webui.core import assistants
 
-    assistant_names = {
-        "dashboard": "AgentOne",
-        "agents": "agents_assistant",
-        "projects": "projects_assistant",
-        "workspaces": "workspaces_assistant",
-        "cronjobs": "cronjobs_assistant",
-        "workitems": "workitems_assistant",
-    }
+    assistant_names = {kind: "AgentOne" for kind in (
+        "dashboard", "agents", "projects", "workspaces", "cronjobs", "workitems",
+    )}
     monkeypatch.setattr(
         assistants,
         "_overview_scope",
@@ -1159,7 +1154,7 @@ def test_workitems_overview_assistant_preserves_project_scope(client, monkeypatc
         assistants,
         "_overview_scope",
         lambda _kind, requested_project: (
-            "workitems_assistant",
+            "AgentOne",
             requested_project,
             None,
         ),

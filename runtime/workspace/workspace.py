@@ -11,7 +11,7 @@ class Workspace(AssistantScopeMixin):
     """Runtime wrapper around a WorkspaceModel instance."""
 
     #: Singular internal assistant managing ONE workspace.
-    ASSISTANT = "workspace_assistant"
+    ASSISTANT = "AgentOne"
 
     def __init__(self, workspace_model: WorkspaceModel) -> None:
         self.model = workspace_model

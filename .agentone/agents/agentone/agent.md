@@ -81,8 +81,7 @@ report back.
    when missing info materially affects quality.
 2. **Route** — pick the right specialist(s) from the catalog below.
 3. **Delegate** — send crisp plain-language tasks via `delegate_task`
-   (one-off), `start_subsession` (reusable background session), or
-   `call_assistant` (framework-internal specialists).
+   (one-off) or `start_subsession` (reusable background session).
 4. **Synthesize** — combine subagent results into one clear answer.
 5. **Track** — use `todo.*` for multi-step work; file durable cross-turn work
    via `workitems.*` (see below), never for work happening right now.
@@ -99,14 +98,11 @@ User-facing specialists (also openable as their own chat sessions):
 | `researcher` | Read-only investigation (codebase, docs, web) before acting. |
 | `planner` | Structured plans, architecture, tradeoff analysis before implementing. |
 
-Framework-internal assistants (never user-facing — reach them via
-`call_assistant(name, task)`; discover them with `list_assistants`):
-
-| Assistant | Scope |
-|---|---|
-| `approval_decider` | Approval/guardrail decisions |
-| `work_verifier` | Work verification judgments |
-| `memory-manage` | Memory/playbook management |
+Framework-internal specialists (`approval_decider`, `work_verifier`,
+`memory-manage`) are invoked by the framework itself — you do not delegate to
+them. The former per-domain collection assistants were consolidated into
+AgentOne: inspect their state with `admin_tool` and use `workitems.*` for
+durable work.
 
 Framework administration is one tool, `admin_tool(scope, action, **kwargs)`:
 

@@ -1,10 +1,9 @@
 """Send a task message to a framework-internal assistant session (blocking).
 
-Thin tool wrapper: the ``*_assistant`` / ``*s_assistant`` pairs are owned
-by the runtime collection classes (``Skills`` → ``skill(s)_assistant``,
-``Agents`` → ``agent(s)_assistant``, …), which resolve the scope
-(global vs project) and the bound workspace. ``Sessions.assistant_session``
-is the spawn choke point. Run ``list_assistants`` first to see valid names.
+The former per-domain ``*_assistant`` pairs were consolidated into AgentOne.
+The runtime collection wrappers resolve the scope (global vs project) and the
+bound workspace; ``Sessions.assistant_session`` is the spawn choke point. Run
+``list_assistants`` to see the available name.
 """
 
 from __future__ import annotations
@@ -24,12 +23,9 @@ def call_assistant(
     """
     Send a task to a framework-internal assistant session (blocking).
 
-    Creates or reuses a shared session per (assistant, scope), named
-    ``<assistant> - <scope-label>`` — e.g. ``skills_assistant - global``
-    (working in ``~/.agentone/skills/``) or ``skills_assistant - MyProject``
-    (the same assistant seeing the global collection plus that project's own
-    items). The assistant processes the message and its response is returned
-    via the auto-awaited TaskCall.
+    Creates or reuses a shared AgentOne session per scope, named
+    ``AgentOne - <scope-label>``. The assistant processes the message and its
+    response is returned via the auto-awaited TaskCall.
 
     Scope resolution (first match wins):
 
@@ -42,8 +38,7 @@ def call_assistant(
 
     Args:
         _session: The calling agent's session (bound automatically).
-        name: Internal assistant name, e.g. ``project_assistant``,
-            ``skills_assistant``, ``cronjobs_assistant``.
+        name: Internal assistant name — ``AgentOne`` (see ``list_assistants``).
         task: The task description or message to send to the assistant.
         context_path: Optional absolute directory the assistant session is
             bound to (a workspace record is created when missing).
@@ -63,8 +58,7 @@ def call_assistant(
     if not (task or "").strip():
         return {"error": "You must provide a task to send to the assistant"}
 
-    cls = _class_for(assistant)
-    if cls is None:
+    if assistant != "AgentOne":
         return {
             "error": (
                 f"Assistant '{assistant}' is not a registered internal assistant "
@@ -74,26 +68,18 @@ def call_assistant(
 
     project: Any = None
     override: str | None = None
-    explicit_scope = bool(project_path or context_path)
     if project_path:
         found = _resolve_project(project_path)
         if found is not None:
             project = found
         else:
-            # Legacy fallback: global scope bound to a workspace at the path.
+            # Unregistered path: global scope bound to a workspace there.
             override = project_path
     else:
         project = _session.get_project()
     if context_path:
         override = context_path
 
-    try:
-        collection = cls(parent_project=project)
-    except TypeError:
-        collection = cls()  # top-level collections (Projects) take no parent
-    project = collection.project
-
-    child = None
     workspace = None
     if override:
         target = override.strip().rstrip("/")
@@ -102,31 +88,19 @@ def call_assistant(
             "assistant scope override",
             parent_project=project,
         )
-        child = Sessions().assistant_session(
-            assistant, project=project, workspace=workspace, caller=_session,
-            scope_label=target.rsplit("/", 1)[-1] or "global",
-        )
+        scope_label = target.rsplit("/", 1)[-1] or "global"
     else:
-        if assistant == "workspace_assistant" and not explicit_scope:
-            # The singular workspace assistant manages the workspace its
-            # caller is working in, not the project root.
-            caller_workspace = _caller_workspace(_session)
-            if caller_workspace is not None and _workspace_in_project(
-                caller_workspace, project
-            ):
-                workspace = caller_workspace
-                child = Sessions().assistant_session(
-                    assistant,
-                    project=project,
-                    workspace=workspace,
-                    caller=_session,
-                    scope_label=_workspace_label(workspace),
-                )
-        if child is None:
-            child = collection.get_assistant_session(caller=_session, name=assistant)
-            workspace = child.get_version_model().workspace if child is not None else None
+        workspace = _caller_workspace(_session)
+        if not _workspace_in_project(workspace, project):
+            workspace = None
+        scope_label = getattr(project, "name", "") or _workspace_label(workspace)
+
+    child = Sessions().assistant_session(
+        "AgentOne", project=project, workspace=workspace, caller=_session,
+        scope_label=scope_label,
+    )
     if child is None:
-        return {"error": f"Assistant '{assistant}' could not be resolved or spawned"}
+        return {"error": "AgentOne could not be resolved or spawned"}
     return _send(child, assistant, task, project, workspace)
 
 
@@ -195,21 +169,6 @@ def _send(child: Any, assistant: str, task: str, project: Any, workspace: Any) -
             "workspace": ws_path,
         },
     }
-
-
-def _class_for(assistant: str) -> Any | None:
-    """Return the collection class owning *assistant*, or *None*."""
-    from runtime.agents.agents import Agents
-    from runtime.cron.crons import Cronjobs
-    from runtime.project.projects import Projects
-    from runtime.skill.skills import Skills
-    from runtime.workitems.workitems import Workitems
-    from runtime.workspace.workspaces import Workspaces
-
-    for cls in (Skills, Agents, Projects, Workspaces, Workitems, Cronjobs):
-        if assistant in cls.ASSISTANT_NAMES:
-            return cls
-    return None
 
 
 def _resolve_project(project_path: str) -> Any | None:

@@ -20,21 +20,23 @@ from webui.core.layout import unique_session_name
 
 log = logging.getLogger(__name__)
 
+_AGENTONE = "AgentOne"
+
 _ASSISTANTS = {
-    "agent": ("agent_assistant", AgentModel),
-    "skill": ("skill_assistant", SkillModel),
-    "cron": ("cronjob_assistant", Cronjob),
-    "project": ("project_assistant", Project),
-    "workspace": ("workspace_assistant", WorkspaceModel),
+    "agent": (_AGENTONE, AgentModel),
+    "skill": (_AGENTONE, SkillModel),
+    "cron": (_AGENTONE, Cronjob),
+    "project": (_AGENTONE, Project),
+    "workspace": (_AGENTONE, WorkspaceModel),
 }
 
 _OVERVIEW_ASSISTANTS = {
-    "dashboard": ("AgentOne", "AgentOne"),
-    "agents": ("agents_assistant", "Agents assistant"),
-    "projects": ("projects_assistant", "Projects assistant"),
-    "workspaces": ("workspaces_assistant", "Workspaces assistant"),
-    "cronjobs": ("cronjobs_assistant", "Cron assistant"),
-    "workitems": ("workitems_assistant", "Work items assistant"),
+    "dashboard": (_AGENTONE, _AGENTONE),
+    "agents": (_AGENTONE, _AGENTONE),
+    "projects": (_AGENTONE, _AGENTONE),
+    "workspaces": (_AGENTONE, _AGENTONE),
+    "cronjobs": (_AGENTONE, _AGENTONE),
+    "workitems": (_AGENTONE, _AGENTONE),
 }
 
 
@@ -130,7 +132,7 @@ def assistant_panel_context(kind: str, item, selected_id: str | None = None) -> 
     )
     context = {
         "assistant_kind": kind,
-        "assistant_title": f"{kind.title()} assistant",
+        "assistant_title": _AGENTONE,
         "assistant_item": item,
         "assistant_sessions": sessions,
         "assistant_session": selected,
@@ -230,7 +232,7 @@ def entity_assistant_open(request, kind: str, item_id: int):
         if request.headers.get("HX-Request") == "true":
             return render(request, "shared/_assistant_panel.html", {
                 "assistant_kind": kind,
-                "assistant_title": f"{kind.title()} assistant",
+                "assistant_title": _AGENTONE,
                 "assistant_item": item,
                 "assistant_sessions": [],
                 "assistant_panel_url": reverse(

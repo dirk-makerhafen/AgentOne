@@ -38,7 +38,7 @@ from webui.core.layout import render_page, unique_session_name
 
 log = logging.getLogger(__name__)
 _COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
-_MANAGER_AGENT_NAME = "workspace_assistant"
+_MANAGER_AGENT_NAME = "AgentOne"
 
 
 def _access_from_post(request) -> dict:

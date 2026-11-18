@@ -20,8 +20,8 @@ class Skills(AssistantScopeMixin):
 
     #: Collection domain label (used for the global system workspace name).
     DOMAIN = "skills"
-    #: Internal assistant pair managing skills (singular, plural).
-    ASSISTANT_NAMES = ("skill_assistant", "skills_assistant")
+    #: Unified assistant name for singular/plural skill wrappers.
+    ASSISTANT_NAMES = ("AgentOne", "AgentOne")
 
     def __init__(
         self,

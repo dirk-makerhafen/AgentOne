@@ -71,7 +71,7 @@ class Sessions:
         ]
 
     # ------------------------------------------------------------------
-    # Assistant sessions (choke point for the *_assistant/*s_assistant pairs)
+    # Assistant sessions (shared choke point for scoped assistant chats)
     # ------------------------------------------------------------------
 
     def assistant_session(
@@ -89,15 +89,15 @@ class Sessions:
 
         The session is named ``<assistant> - <scope-label>`` so every caller
         shares one conversation per scope and the name reads (and sorts)
-        well — e.g. ``skills_assistant - global``, ``agent_assistant - Alpha``
-        or ``skills_assistant - MyProject``. ``scope_label`` names the subject
+        well — e.g. ``AgentOne - global``, ``AgentOne - Alpha``
+        or ``AgentOne - MyProject``. ``scope_label`` names the subject
         explicitly (item name, ``agent X``, project name); without it the
         label falls back to the scope project's name (``global`` when none).
         The scope's project is stamped on ``SessionModel.parent_project`` so
         the assistant's own scoped tools resolve the right collection.
 
         Args:
-            name: Internal assistant agent name (e.g. ``skills_assistant``).
+            name: Internal assistant agent name (``AgentOne``).
             project: Scope project (a ``Project`` row) or *None* for global.
             workspace: Bound workspace row (or *None* to inherit/no-bind).
             caller: Calling runtime ``Session`` — parents the new session

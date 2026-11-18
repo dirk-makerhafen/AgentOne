@@ -60,7 +60,7 @@ class Skill(AssistantScopeMixin):
     # ------------------------------------------------------------------
 
     #: Singular internal assistant working on ONE skill.
-    ASSISTANT = "skill_assistant"
+    ASSISTANT = "AgentOne"
 
     @property
     def pk(self) -> Any:

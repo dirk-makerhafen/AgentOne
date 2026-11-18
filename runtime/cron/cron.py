@@ -11,7 +11,7 @@ class Cron(AssistantScopeMixin):
     """Runtime wrapper around a Cronjob model instance."""
 
     #: Singular internal assistant working on ONE cron job.
-    ASSISTANT = "cronjob_assistant"
+    ASSISTANT = "AgentOne"
 
     def __init__(self, cronjob_model: Cronjob) -> None:
         self.model = cronjob_model
