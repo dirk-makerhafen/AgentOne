@@ -30,7 +30,7 @@ Quick reference for developers working on AgentOne. See also:
 ## Agent hierarchy
 
 - **baseagent** (`.agentone/agents/baseagent/agent.md`): core tasks + `ping` command, queue strategy, medium reasoning
-- **AgentOne** (`.agentone/agents/agentone/agent.md`): delegate-only master, workspace `~/.agentone`; tools `core/subagents/history/todo/workitems` only; subagents `general-chat`, `coding`, `researcher`, `planner`, `wiki`
+- **AgentOne** (`.agentone/agents/agentone/agent.md`): delegate-only master, workspace `~/.agentone`; tools `core/subagents/history/todo/workitems` plus its own agent-local `admin_tool` (single dispatcher: `scope`/`action` + `help`); subagents `general-chat`, `coding`, `researcher`, `planner`, `wiki`
 - **general-chat** (`.agentone/agents/general-chat/agent.md`): conversational assistant, no writes/execution; delegates to `coding`/`researcher`/`planner`
 - **coding** (`.agentone/agents/coding/agent.md`): implementation specialist (filesystem + execution + web); delegates to `researcher`/`planner`
 - **internal/*_assistant** (`.agentone/agents/internal/`): framework-only specialists, reachable via `list_assistants` / `call_assistant` (subagents group)
