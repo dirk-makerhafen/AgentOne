@@ -550,7 +550,22 @@ The Logs panel provides a log viewer:
 
 ## Memory
 
-The Memory panel (if available) provides a view into the agent's personal memory storage.
+The Memory section is a read-only browser of the synthesized memory tree. Its
+sidebar has three links:
+
+- **Overview** — a compact status strip and one row per memory node. Filter the
+  tree by *Needs attention* (the default), *All nodes*, or *Has proposals*.
+- **Playbook** — the effective rules a session sees, deduplicated across layers
+  (task → agent → workspace → project → global). Candidates and retired rules
+  are kept separate; `harness`/`memory` routings are not injected.
+- **Improvements** — proposals waiting for a decision, filterable by kind,
+  status, scope and text.
+
+Open a node from the Overview table to inspect it in tabs: **Overview** (paths
+and counts), **Facts** (`memory.md`), **Rules** (`reflection.md`), **Proposals**
+(`improvements.md`) and **Sources** (freshness snapshot plus raw files). Filing
+a proposal creates a *backlog* work item; it does not implement anything and
+the UI never runs the memory walker.
 
 ---
 

@@ -153,6 +153,7 @@ urlpatterns = [
     path("settings/providers/<int:provider_id>/probe", settings_views.settings_provider_probe, name="settings_provider_probe"),
 
     path("memory", memory_views.memory, name="memory"),
+    path("memory/playbook", memory_views.memory_playbook, name="memory_playbook"),
     path("memory/improvements", memory_views.memory_improvements, name="memory_improvements"),
     path("memory/improvements/queue", memory_views.memory_improvements_queue, name="memory_improvements_queue"),
     path("memory/node/<path:node_id>/queue", memory_views.memory_node_queue, name="memory_node_queue"),

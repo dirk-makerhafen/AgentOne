@@ -5,7 +5,15 @@
        data-sidebar-active-key="overview">
         <span class="ws-row-info">
             <span class="ws-row-name">Overview</span>
-            <span class="ws-row-path">{{ memory_totals.nodes|default:0 }} node(s) · {{ memory_totals.pending|default:0 }} needs walk</span>
+            <span class="ws-row-path">{% if memory_totals.attention %}{{ memory_totals.attention }} need attention{% else %}{{ memory_totals.nodes|default:0 }} node(s){% endif %}</span>
+        </span>
+    </a>
+    <a class="ws-row{% if active_id == 'playbook' %} active{% endif %}"
+       href="{% url 'webui:memory_playbook' %}{% if sidebar_project_id %}?project={{ sidebar_project_id }}{% endif %}"
+       data-sidebar-active-key="playbook">
+        <span class="ws-row-info">
+            <span class="ws-row-name">Playbook</span>
+            <span class="ws-row-path">{{ memory_active_directives|default:0 }} active rule(s)</span>
         </span>
     </a>
     <a class="ws-row{% if active_id == 'improvements' %} active{% endif %}"
@@ -17,31 +25,3 @@
         </span>
     </a>
 </div>
-
-{% for scope in memory_scopes %}
-{% if scope.nodes %}
-<div class="sidebar-section"><span>{{ scope.label }}</span></div>
-<div class="side-list">
-    {% for node in scope.nodes %}
-    <a class="ws-row{% if node.id == active_id %} active{% endif %}"
-       href="{% url 'webui:memory_node' node.id %}{% if sidebar_project_id %}?project={{ sidebar_project_id }}{% endif %}"
-       data-sidebar-active-key="{{ node.id }}"
-       title="{{ node.relative_path }}">
-        <span class="ws-row-info">
-            <span class="ws-row-name">{{ node.label }}</span>
-            <span class="ws-row-path">
-                {{ node.kind_label }}
-                {% if node.pending_count %} · {{ node.pending_count }} changed{% endif %}
-                {% if node.missing_count %} · {{ node.missing_count }} missing{% endif %}
-                {% if node.proposal_count %} · {{ node.proposal_count }} proposals{% endif %}
-            </span>
-        </span>
-    </a>
-    {% endfor %}
-</div>
-{% endif %}
-{% endfor %}
-
-{% if not memory_totals.nodes %}
-<div class="webui-empty-note">No memory nodes yet. Synthesized scopes and tasks will appear here.</div>
-{% endif %}

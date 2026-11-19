@@ -55,6 +55,13 @@ EXCERPT_CHARS = 220
 #: Most specific first.  Used to decide which layer owns a duplicate proposal.
 SCOPE_SPECIFICITY = {"workspace": 0, "project": 1, "global": 2}
 
+#: Most specific first *inside* a scope.  Mirrors the injection resolution
+#: order documented in ``docs/self-improvement.md`` (task → agent → scope).
+DIRECTIVE_LAYER = {"task": 0, "agent": 1, "scope": 2}
+
+#: Routings the session bootstrap never injects (see ``memory_playbook.py``).
+NON_INJECTABLE_ROUTING = {"harness", "memory"}
+
 #: Proposal ordering in the improvements list.
 PROPOSAL_RANK = {
     "specified": 0,
@@ -760,6 +767,51 @@ def find_node(inventory: MemoryInventory, node_id: str) -> MemoryNode | None:
         if node.id == node_id:
             return node
     return None
+
+
+def effective_directives(
+    nodes: Iterable[MemoryNode], status: str = "active", injectable_only: bool = False
+) -> list[dict[str, Any]]:
+    """Return directives from *nodes* once each, most specific source first.
+
+    The playbook is resolved task → agent → workspace → project → global and
+    identical fingerprints dedupe with the most specific source winning.  This
+    helper applies the same rule so the UI shows what a session would actually
+    be told, not four copies of the same lesson from four layers.  With
+    ``injectable_only``, ``harness`` and ``memory`` routings are skipped too,
+    matching the session bootstrap filter.
+    """
+    ordered = sorted(
+        nodes,
+        key=lambda node: (
+            SCOPE_SPECIFICITY.get(node.scope.kind, 9),
+            DIRECTIVE_LAYER.get(node.kind, 9),
+            node.path.as_posix(),
+        ),
+    )
+    seen: set[str] = set()
+    out: list[dict[str, Any]] = []
+    for node in ordered:
+        for item in node.directives:
+            if status and str(item.get("status") or "") != status:
+                continue
+            if injectable_only and str(item.get("routing") or "").strip().lower() in NON_INJECTABLE_ROUTING:
+                continue
+            key = str(item.get("fingerprint") or item.get("id") or "").strip()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            out.append(
+                {
+                    **item,
+                    "source": node.scope.label,
+                    "source_kind": node.scope.kind,
+                    "layer": node.kind_label,
+                    "node_id": node.id,
+                    "node_label": node.label,
+                }
+            )
+    return out
 
 
 def reload_node(node: MemoryNode) -> MemoryNode:

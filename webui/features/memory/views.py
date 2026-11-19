@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from urllib.parse import urlencode
 
 from django.shortcuts import redirect
@@ -12,6 +13,7 @@ from webui.core.layout import render_page
 
 from webui.features.memory.data import (
     build_inventory,
+    effective_directives,
     find_node,
     unique_proposals,
 )
@@ -46,27 +48,74 @@ def _proposal_rows(inventory, queued):
     return rows
 
 
+MEMORY_FILTERS = (
+    ("attention", "Needs attention"),
+    ("all", "All nodes"),
+    ("proposals", "Has proposals"),
+)
+
+
+def _filter_options(inventory):
+    counts = {
+        "all": len(inventory.nodes),
+        "attention": sum(1 for node in inventory.nodes if _node_needs_attention(node)),
+        "proposals": sum(1 for node in inventory.nodes if node.open_proposals),
+    }
+    return tuple((key, label, counts[key]) for key, label in MEMORY_FILTERS)
+
+
+def _node_needs_attention(node) -> bool:
+    return bool(node.stale or node.errors or node.open_proposals)
+
+
 def memory(request):
     project_id = _project_id(request)
     inventory = _inventory(project_id)
     proposals = unique_proposals(inventory.nodes)
     queued = _queued()
     queued_count = sum(1 for p in proposals if str(p.get("fingerprint")) in queued)
-    errors = []
-    for node in inventory.nodes:
-        for error in node.errors:
-            errors.append(f"{node.id}: {error}")
+    errors = [f"{node.id}: {error}" for node in inventory.nodes for error in node.errors]
+
+    node_filter = (request.GET.get("filter") or "attention").strip()
+    if node_filter not in {key for key, _ in MEMORY_FILTERS}:
+        node_filter = "attention"
+
+    # One compact tree table instead of a separate "needs attention" list +
+    # a second full tree.  The filter just decides which rows to show.
+    scopes = []
+    for scope in inventory.scopes:
+        nodes = [
+            node
+            for node in scope.nodes
+            if (
+                node_filter == "all"
+                or (node_filter == "attention" and _node_needs_attention(node))
+                or (node_filter == "proposals" and node.open_proposals)
+            )
+        ]
+        if nodes:
+            scopes.append(replace(scope, nodes=nodes))
+
+    filter_options = _filter_options(inventory)
+    attention_count = dict((key, count) for key, _label, count in filter_options)[
+        "attention"
+    ]
     queued_param = request.GET.get("queued", "")
     message = f"Filed {queued_param} proposal(s) as backlog work items." if queued_param else ""
     context = {
         "inventory": inventory,
-        "scopes": inventory.scopes,
+        "scopes": scopes,
         "totals": inventory.totals,
-        "stale_nodes": inventory.stale_nodes,
         "warnings": inventory.warnings,
         "errors": errors,
         "proposals_count": len(proposals),
         "queued_count": queued_count,
+        "active_directives": len(
+            effective_directives(inventory.nodes, "active", injectable_only=True)
+        ),
+        "attention_count": attention_count,
+        "node_filter": node_filter,
+        "node_filters": filter_options,
         "project_id": project_id,
         "projects": list(Project.objects.order_by("name")),
         "queued_param": queued_param,
@@ -74,6 +123,55 @@ def memory(request):
         "message_ok": True,
     }
     return render_page(request, "memory", "memory/list.html", context, active_id="overview")
+
+
+def memory_playbook(request):
+    """The effective playbook: active directives, deduped across layers."""
+    project_id = _project_id(request)
+    inventory = _inventory(project_id)
+    search = (request.GET.get("search") or "").strip().lower()
+
+    def _filter(rows):
+        if not search:
+            return rows
+        return [
+            row
+            for row in rows
+            if search
+            in " ".join(
+                str(row.get(key) or "")
+                for key in ("rule", "trigger", "id", "fingerprint", "routing", "source", "layer")
+            ).lower()
+        ]
+
+    active_all = effective_directives(inventory.nodes, "active", injectable_only=True)
+    candidates_all = effective_directives(
+        inventory.nodes, "candidate", injectable_only=True
+    )
+    active = _filter(active_all)
+    candidates = _filter(candidates_all)
+    retired_count = sum(
+        1
+        for node in inventory.nodes
+        for item in node.directives
+        if str(item.get("status") or "") == "retired"
+    )
+    context = {
+        "inventory": inventory,
+        "totals": inventory.totals,
+        "active": active,
+        "candidates": candidates,
+        "active_count": len(active_all),
+        "candidate_count": len(candidates_all),
+        "retired_count": retired_count,
+        "search": request.GET.get("search") or "",
+        "filtering": bool(search),
+        "project_id": project_id,
+        "projects": list(Project.objects.order_by("name")),
+    }
+    return render_page(
+        request, "memory", "memory/playbook.html", context, active_id="playbook"
+    )
 
 
 def memory_node(request, node_id):
@@ -114,9 +212,21 @@ def memory_node(request, node_id):
     except Exception:
         improvements_raw = ""
     qp = request.GET.get("queued", "")
+    tabs = (
+        ("overview", "Overview"),
+        ("facts", "Facts"),
+        ("rules", "Rules"),
+        ("proposals", "Proposals"),
+        ("sources", "Sources"),
+    )
+    tab = (request.GET.get("tab") or "overview").strip()
+    if tab not in {key for key, _ in tabs}:
+        tab = "overview"
     context = {
         "node": node,
         "inventory": inventory,
+        "tab": tab,
+        "tabs": tabs,
         "proposal_rows": proposal_rows,
         "open_proposal_count": open_proposal_count,
         "queueable_count": queueable_count,
@@ -129,7 +239,9 @@ def memory_node(request, node_id):
         "message": f"Filed {qp} proposal(s) as backlog work items." if qp else "",
         "message_ok": True,
     }
-    return render_page(request, "memory", "memory/detail.html", context, active_id=node_id)
+    return render_page(
+        request, "memory", "memory/detail.html", context, active_id="overview"
+    )
 
 
 @require_POST
@@ -163,6 +275,9 @@ def memory_node_queue(request, node_id):
     params = {"queued": len(created)}
     if skipped and not created:
         params["error"] = skipped[0].get("reason", "nothing")
+    tab = (request.POST.get("tab") or "").strip()
+    if tab:
+        params["tab"] = tab
     url = reverse_url("webui:memory_node", node_id)
     return redirect(f"{url}?{urlencode(params)}")
 

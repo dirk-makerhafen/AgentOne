@@ -5,11 +5,7 @@
 {% block main %}
 <div class="main-view">
     <header class="main-view-header">
-        <div class="main-view-title-row">
-            <a href="{% url 'webui:memory' %}{% if project_id %}?project={{ project_id }}{% endif %}" class="mem-muted" style="text-decoration:none">Memory</a>
-            <span class="mem-muted">/</span>
-            <div class="main-view-title">Improvements</div>
-        </div>
+        <div class="main-view-title">Improvements</div>
         <div class="main-view-actions">
             {% if counts.queueable %}
             <form method="post" action="{% url 'webui:memory_improvements_queue' %}{% if project_id %}?project={{ project_id }}{% endif %}" style="display:inline">
@@ -31,110 +27,86 @@
             <div class="mem-message {% if message_ok %}ok{% else %}err{% endif %}">{{ message }}</div>
             {% endif %}
 
-            <div class="mem-hero">
-                <div class="mem-stat">
-                    <div class="mem-stat-label">Visible proposals</div>
-                    <div class="mem-stat-value">{{ counts.total }}</div>
-                    <div class="mem-stat-sub">deduplicated across scopes</div>
-                </div>
-                <div class="mem-stat {% if counts.queueable %}warn{% endif %}">
-                    <div class="mem-stat-label">Waiting</div>
-                    <div class="mem-stat-value">{{ counts.queueable }}</div>
-                    <div class="mem-stat-sub">not filed yet</div>
-                </div>
-                <div class="mem-stat ok">
-                    <div class="mem-stat-label">Filed</div>
-                    <div class="mem-stat-value">{{ counts.queued }}</div>
-                    <div class="mem-stat-sub">backlog work items</div>
-                </div>
+            <div class="mem-strip">
+                <div class="mem-strip-item"><span class="mem-strip-value">{{ counts.total }}</span><span class="mem-strip-label">Visible</span></div>
+                <div class="mem-strip-item{% if counts.queueable %} warn{% endif %}"><span class="mem-strip-value">{{ counts.queueable }}</span><span class="mem-strip-label">Awaiting decision</span></div>
+                <div class="mem-strip-item ok"><span class="mem-strip-value">{{ counts.queued }}</span><span class="mem-strip-label">Filed</span></div>
             </div>
 
-            <form method="get" class="mem-filter-bar"
-                  action="{% url 'webui:memory_improvements' %}"
+            <form method="get" class="mem-filter-bar" action="{% url 'webui:memory_improvements' %}"
                   hx-get="{% url 'webui:memory_improvements' %}"
                   hx-target="closest .main-view" hx-swap="outerHTML"
                   hx-select=".main-view" hx-push-url="true" {% hx_disinherit %}
                   hx-trigger="change">
                 {% if project_id %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}
-                <select name="kind">
+                <select name="kind" aria-label="Kind">
                     <option value="">All kinds</option>
-                    {% for kind in kind_options %}
-                    <option value="{{ kind }}" {% if kind == kind_filter %}selected{% endif %}>{{ kind }}</option>
-                    {% endfor %}
+                    {% for kind in kind_options %}<option value="{{ kind }}" {% if kind == kind_filter %}selected{% endif %}>{{ kind }}</option>{% endfor %}
                 </select>
-                <select name="status">
+                <select name="status" aria-label="Status">
                     <option value="">All statuses</option>
-                    {% for status in status_options %}
-                    <option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>{{ status }}</option>
-                    {% endfor %}
+                    {% for status in status_options %}<option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>{{ status }}</option>{% endfor %}
                 </select>
-                <select name="scope">
+                <select name="scope" aria-label="Scope">
                     <option value="">All scopes</option>
-                    {% for scope in scope_options %}
-                    <option value="{{ scope }}" {% if scope == scope_filter %}selected{% endif %}>{{ scope }}</option>
-                    {% endfor %}
+                    {% for scope in scope_options %}<option value="{{ scope }}" {% if scope == scope_filter %}selected{% endif %}>{{ scope }}</option>{% endfor %}
                 </select>
-                <input type="text" name="search" placeholder="Search proposals..." value="{{ search }}">
-                <label class="mem-filter-check">
-                    <input type="checkbox" name="hide_queued" value="1" {% if hide_queued %}checked{% endif %}>
-                    Hide filed
-                </label>
+                <input type="text" name="search" placeholder="Search proposals..." value="{{ search }}" aria-label="Search proposals">
+                <label class="mem-filter-check"><input type="checkbox" name="hide_queued" value="1" {% if hide_queued %}checked{% endif %}> Hide filed</label>
                 <button class="btn" type="submit">Apply</button>
             </form>
 
-            {% if not proposals %}
-                <div class="mem-empty">
-                    No proposals match these filters.
-                    {% if not all_proposals %}
-                        Improvement proposals appear after a node is synthesized with something bigger than a directive.
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            {% for proposal in proposals %}
-            <div class="mem-proposal">
-                <div class="mem-proposal-head">
-                    <span class="mem-badge kind">{{ proposal.kind }}</span>
-                    {% if proposal.status == 'candidate' %}<span class="mem-badge warn">{{ proposal.status }}</span>{% else %}<span class="mem-badge">{{ proposal.status }}</span>{% endif %}
-                    <span class="mem-badge">{{ proposal.source }}</span>
-                    <code class="mem-mono">{{ proposal.id }}</code>
-                    {% if proposal.queued %}<span class="mem-badge ok">filed #{{ proposal.queued.id }}</span>{% endif %}
-                </div>
-                <div class="mem-proposal-summary">{{ proposal.summary }}</div>
-                {% if proposal.detail %}<div class="mem-proposal-detail">{{ proposal.detail }}</div>{% endif %}
-                {% if proposal.trigger %}<div class="mem-proposal-meta">Trigger: {{ proposal.trigger }}</div>{% endif %}
-                {% if proposal.acceptance %}<div class="mem-proposal-meta">Acceptance: {{ proposal.acceptance }}</div>{% endif %}
-                {% if proposal.evidence %}<div class="mem-proposal-meta">Evidence: {{ proposal.evidence|join:", " }}</div>{% endif %}
-                <div class="mem-proposal-meta">From <span class="mem-mono">{{ proposal.node_label }}</span> · {{ proposal.path }}</div>
-                <div class="mem-proposal-actions">
-                    <a class="btn" href="{% url 'webui:memory_node' proposal.node_id %}{% if project_id %}?project={{ project_id }}{% endif %}">Open node</a>
-                    {% if proposal.queued %}
-                        <span class="mem-muted">Already filed as #{{ proposal.queued.id }} ({{ proposal.queued.status }}).</span>
-                    {% elif proposal.queueable %}
-                        <form method="post" action="{% url 'webui:memory_improvements_queue' %}{% if project_id %}?project={{ project_id }}{% endif %}" style="display:inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="fingerprint" value="{{ proposal.fingerprint }}">
-                            <button class="btn primary" type="submit">File as backlog</button>
-                        </form>
-                    {% else %}
-                        <span class="mem-muted">Not queueable.</span>
-                    {% endif %}
-                </div>
+            <div class="mem-card">
+                {% if not proposals %}
+                    <div class="mem-empty">
+                        No proposals match these filters.
+                        {% if not all_proposals %}Improvement proposals appear after a node is synthesized with something bigger than a directive.{% endif %}
+                    </div>
+                {% endif %}
+                {% for proposal in proposals %}
+                <details class="mem-rule">
+                    <summary>
+                        <span class="mem-badge kind">{{ proposal.kind }}</span>
+                        {% if proposal.status == 'candidate' %}<span class="mem-badge warn">{{ proposal.status }}</span>{% else %}<span class="mem-badge">{{ proposal.status }}</span>{% endif %}
+                        <span class="mem-badge">{{ proposal.source }}</span>
+                        <span class="mem-rule-text">{{ proposal.summary }}</span>
+                        {% if proposal.queued %}<span class="mem-badge ok">filed #{{ proposal.queued.id }}</span>{% endif %}
+                    </summary>
+                    <div class="mem-rule-detail">
+                        {% if proposal.detail %}<div><span class="mem-detail-key">Detail</span> {{ proposal.detail }}</div>{% endif %}
+                        {% if proposal.trigger %}<div><span class="mem-detail-key">Trigger</span> {{ proposal.trigger }}</div>{% endif %}
+                        {% if proposal.acceptance %}<div><span class="mem-detail-key">Acceptance</span> {{ proposal.acceptance }}</div>{% endif %}
+                        {% if proposal.evidence %}<div><span class="mem-detail-key">Evidence</span> {{ proposal.evidence|join:", " }}</div>{% endif %}
+                        <div><span class="mem-detail-key">ID</span> <code class="mem-mono">{{ proposal.id }}</code> · <span class="mem-detail-key">From</span> <span class="mem-mono">{{ proposal.node_label }}</span></div>
+                        <div class="mem-rule-actions">
+                            <a class="btn" href="{% url 'webui:memory_node' proposal.node_id %}?{% if project_id %}project={{ project_id }}&amp;{% endif %}tab=proposals">Open node</a>
+                            {% if proposal.queued %}
+                                <span class="mem-muted">Already filed as #{{ proposal.queued.id }} ({{ proposal.queued.status }}).</span>
+                            {% elif proposal.queueable %}
+                            <form method="post" action="{% url 'webui:memory_improvements_queue' %}{% if project_id %}?project={{ project_id }}{% endif %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="fingerprint" value="{{ proposal.fingerprint }}">
+                                <button class="btn primary" type="submit">File as backlog</button>
+                            </form>
+                            {% else %}
+                                <span class="mem-muted">Not queueable.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </details>
+                {% endfor %}
             </div>
-            {% endfor %}
 
-            <div class="detail-card mem-card">
-                <div class="detail-card-title">What filing does</div>
-                <div class="mem-ladder">
+            <details class="mem-tip">
+                <summary>What filing does</summary>
+                <div class="mem-tip-body">
                     A filed proposal becomes a <strong>backlog</strong> work item with the full
-                    spec, acceptance check and evidence. Backlog items do not dispatch. A
-                    human promotes one to <em>ready</em> after reviewing it, and implementation
-                    still goes through the normal coding/verification path.
-                    <br><br>
-                    This page never applies a proposal, edits a manifest, or runs the memory
-                    walker. Duplicate fingerprints are shown once; the most specific scope wins.
+                    spec, acceptance check and evidence. Backlog items do not dispatch; a human
+                    promotes one to <em>ready</em> after reviewing it. Duplicate fingerprints
+                    are shown once, the most specific scope wins, and this page never applies a
+                    proposal, edits a manifest, or runs the walker.
                 </div>
-            </div>
+            </details>
 
         </div>
     </div>

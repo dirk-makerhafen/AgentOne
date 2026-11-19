@@ -7,8 +7,8 @@
     <header class="main-view-header">
         <div class="main-view-title">Memory</div>
         <div class="main-view-actions">
-            <a class="panel-head-btn" href="{% url 'webui:memory_improvements' %}{% if project_id %}?project={{ project_id }}{% endif %}" title="Improvement proposals" aria-label="Improvement proposals">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
+            <a class="panel-head-btn" href="{% url 'webui:memory_playbook' %}{% if project_id %}?project={{ project_id }}{% endif %}" title="Effective playbook" aria-label="Effective playbook">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             </a>
             <a class="panel-head-btn" href="{% url 'webui:memory' %}{% if project_id %}?project={{ project_id }}{% endif %}" title="Reload from disk" aria-label="Reload from disk">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -21,145 +21,112 @@
             {% if message %}
             <div class="mem-message {% if message_ok %}ok{% else %}err{% endif %}">{{ message }}</div>
             {% endif %}
-
-            <div class="mem-hero">
-                <div class="mem-stat">
-                    <div class="mem-stat-label">Nodes</div>
-                    <div class="mem-stat-value">{{ totals.nodes }}</div>
-                    <div class="mem-stat-sub">{{ totals.scopes }} scope(s) · {{ totals.agents }} agent(s) · {{ totals.tasks }} task(s)</div>
-                </div>
-                <div class="mem-stat {% if totals.pending %}warn{% endif %}">
-                    <div class="mem-stat-label">Needs a walk</div>
-                    <div class="mem-stat-value">{{ totals.pending }}</div>
-                    <div class="mem-stat-sub">changed source(s) not yet synthesized</div>
-                </div>
-                <div class="mem-stat {% if totals.missing %}err{% endif %}">
-                    <div class="mem-stat-label">Missing sources</div>
-                    <div class="mem-stat-value">{{ totals.missing }}</div>
-                    <div class="mem-stat-sub">path recorded but no longer present</div>
-                </div>
-                <div class="mem-stat">
-                    <div class="mem-stat-label">Directives</div>
-                    <div class="mem-stat-value">{{ totals.directives }}</div>
-                    <div class="mem-stat-sub">{{ totals.active_directives }} active · candidates opt-in</div>
-                </div>
-                <div class="mem-stat {% if totals.proposals %}warn{% endif %}">
-                    <div class="mem-stat-label">Proposals</div>
-                    <div class="mem-stat-value">{{ totals.proposals }}</div>
-                    <div class="mem-stat-sub">improvements waiting for a decision</div>
-                </div>
-                <div class="mem-stat">
-                    <div class="mem-stat-label">Legacy playbooks</div>
-                    <div class="mem-stat-value">{{ totals.legacy }}</div>
-                    <div class="mem-stat-sub">prose reflections inject nothing</div>
-                </div>
-            </div>
-
             {% if warnings %}
-            <div class="mem-message err">
-                {% for warning in warnings %}<div>{{ warning }}</div>{% endfor %}
-            </div>
+            <div class="mem-message err">{% for warning in warnings %}<div>{{ warning }}</div>{% endfor %}</div>
             {% endif %}
 
-            <div class="mem-section">
-                <div class="mem-section-head">
-                    <div>
-                        <div class="mem-section-title">Needs attention</div>
-                        <div class="mem-section-sub">Nodes whose sources changed since the last synthesize. This view is read-only and does not run the memory walker.</div>
-                    </div>
-                </div>
-                {% if stale_nodes %}
-                    {% for node in stale_nodes %}
-                    <a class="mem-row" href="{% url 'webui:memory_node' node.id %}{% if project_id %}?project={{ project_id }}{% endif %}" style="text-decoration:none;color:inherit">
-                        <span class="mem-row-kind">{{ node.kind_label }}</span>
-                        <div class="mem-row-main">
-                            <div class="mem-row-label">{{ node.label }}</div>
-                            <div class="mem-row-sub">{{ node.scope.label }} · {{ node.relative_path }}</div>
-                        </div>
-                        <div class="mem-row-badges">
-                            {% if node.pending_count %}<span class="mem-badge warn">{{ node.pending_count }} changed</span>{% endif %}
-                            {% if node.missing_count %}<span class="mem-badge err">{{ node.missing_count }} missing</span>{% endif %}
-                            {% if node.sources_as_of %}<span class="mem-badge">as of {{ node.sources_as_of }}</span>{% else %}<span class="mem-badge">no manifest</span>{% endif %}
-                        </div>
-                    </a>
-                    {% endfor %}
-                {% else %}
-                    <div class="mem-empty">Every node is current. Nothing is waiting for the memory walker.</div>
-                {% endif %}
+            <div class="mem-strip">
+                <a class="mem-strip-item" href="{% url 'webui:memory' %}?filter=all{% if project_id %}&amp;project={{ project_id }}{% endif %}">
+                    <span class="mem-strip-value">{{ totals.nodes }}</span>
+                    <span class="mem-strip-label">Nodes</span>
+                </a>
+                <a class="mem-strip-item{% if attention_count %} warn{% endif %}" href="{% url 'webui:memory' %}?filter=attention{% if project_id %}&amp;project={{ project_id }}{% endif %}">
+                    <span class="mem-strip-value">{{ attention_count }}</span>
+                    <span class="mem-strip-label">Need attention</span>
+                </a>
+                <a class="mem-strip-item" href="{% url 'webui:memory_playbook' %}{% if project_id %}?project={{ project_id }}{% endif %}">
+                    <span class="mem-strip-value">{{ active_directives }}</span>
+                    <span class="mem-strip-label">Active rules</span>
+                </a>
+                <a class="mem-strip-item{% if proposals_count %} warn{% endif %}" href="{% url 'webui:memory_improvements' %}{% if project_id %}?project={{ project_id }}{% endif %}">
+                    <span class="mem-strip-value">{{ proposals_count }}</span>
+                    <span class="mem-strip-label">Proposals</span>
+                </a>
             </div>
 
-            <div class="mem-section">
-                <div class="mem-section-head">
+            {% if errors %}
+            <details class="mem-tip err">
+                <summary>{{ errors|length }} parse error(s) — invalid files fail closed so the synthesizer can retry</summary>
+                {% for error in errors %}<div class="mem-mono">{{ error }}</div>{% endfor %}
+            </details>
+            {% endif %}
+
+            <div class="mem-card">
+                <div class="mem-card-head">
                     <div>
                         <div class="mem-section-title">Memory tree</div>
-                        <div class="mem-section-sub">Read from disk. Click a node to inspect its facts, playbook, proposals, and source freshness.</div>
+                        <div class="mem-section-sub">One row per node. Read from disk; freshness is as of the last memory walk.</div>
                     </div>
-                    <a class="btn" href="{% url 'webui:memory_improvements' %}{% if project_id %}?project={{ project_id }}{% endif %}">Open proposals</a>
+                    <nav class="webui-tab-strip" aria-label="Node filter">
+                        {% for key, label, count in node_filters %}
+                        <a class="webui-tab{% if key == node_filter %} active{% endif %}"
+                           href="{% url 'webui:memory' %}?filter={{ key }}{% if project_id %}&amp;project={{ project_id }}{% endif %}">{{ label }} ({{ count }})</a>
+                        {% endfor %}
+                    </nav>
                 </div>
 
                 {% if not totals.nodes %}
                     <div class="mem-empty">No memory has been written yet. A synthesized scope or task node will appear here.</div>
-                {% endif %}
-
-                {% for scope in scopes %}
-                    {% if scope.nodes %}
-                    <div class="mem-scope-group">
-                        <div class="mem-scope-head">
-                            <span>{{ scope.label }}</span>
-                            <span class="mem-badge">{{ scope.nodes|length }} node(s)</span>
-                            {% if scope.pending_count %}<span class="mem-badge warn">{{ scope.pending_count }} changed</span>{% endif %}
-                            {% if scope.missing_count %}<span class="mem-badge err">{{ scope.missing_count }} missing</span>{% endif %}
-                        </div>
-                        {% for node in scope.nodes %}
-                        <a class="mem-row" href="{% url 'webui:memory_node' node.id %}{% if project_id %}?project={{ project_id }}{% endif %}" style="text-decoration:none;color:inherit">
-                            <span class="mem-row-kind">{{ node.kind_label }}</span>
-                            <div class="mem-row-main">
-                                <div class="mem-row-label">{{ node.label }}</div>
-                                <div class="mem-row-sub">{{ node.relative_path }}{% if node.memory_excerpt %} · {{ node.memory_excerpt }}{% endif %}</div>
-                            </div>
-                            <div class="mem-row-badges">
-                                {% if node.directive_count %}<span class="mem-badge ok">{{ node.directive_count }} directive(s)</span>{% endif %}
-                                {% if node.proposal_count %}<span class="mem-badge warn">{{ node.proposal_count }} proposal(s)</span>{% endif %}
-                                {% if node.playbook_legacy %}<span class="mem-badge">legacy</span>{% endif %}
-                                {% if node.status == 'pending' %}<span class="mem-badge warn">needs walk</span>
-                                {% elif node.status == 'missing' %}<span class="mem-badge err">source missing</span>
-                                {% elif node.status == 'empty' %}<span class="mem-badge">empty</span>{% endif %}
-                            </div>
-                        </a>
-                        {% endfor %}
+                {% elif not scopes %}
+                    <div class="mem-empty">
+                        {% if node_filter == 'attention' %}Everything is current. Nothing needs a walk or a decision.
+                        {% elif node_filter == 'proposals' %}No node has open improvement proposals.
+                        {% else %}No nodes.{% endif %}
                     </div>
-                    {% endif %}
-                {% endfor %}
+                {% else %}
+                    <div class="mem-table-wrap">
+                        <table class="mem-table mem-node-table">
+                            <thead>
+                                <tr><th>Scope</th><th>Layer</th><th>Node</th><th>Status</th><th>Rules</th><th>Proposals</th><th>As of</th></tr>
+                            </thead>
+                            <tbody>
+                            {% for scope in scopes %}
+                                <tr class="mem-scope-row"><td colspan="7">
+                                    {{ scope.label }}
+                                    {% if scope.pending_count %}<span class="mem-badge warn">{{ scope.pending_count }} changed</span>{% endif %}
+                                    {% if scope.missing_count %}<span class="mem-badge err">{{ scope.missing_count }} missing</span>{% endif %}
+                                </td></tr>
+                                {% for node in scope.nodes %}
+                                <tr>
+                                    <td class="mem-muted">{{ scope.kind|capfirst }}</td>
+                                    <td><span class="mem-badge kind">{{ node.kind_label }}</span></td>
+                                    <td>
+                                        <a class="mem-link" href="{% url 'webui:memory_node' node.id %}?{% if project_id %}project={{ project_id }}&amp;{% endif %}tab=overview">{{ node.label }}</a>
+                                        <span class="mem-muted mem-path">{{ node.relative_path }}</span>
+                                    </td>
+                                    <td>
+                                        {% if node.pending_count %}<span class="mem-badge warn">{{ node.pending_count }} changed</span>{% endif %}
+                                        {% if node.missing_count %}<span class="mem-badge err">{{ node.missing_count }} missing</span>{% endif %}
+                                        {% if not node.pending_count and not node.missing_count %}
+                                            {% if node.status == 'empty' %}<span class="mem-badge">empty</span>{% else %}<span class="mem-badge ok">current</span>{% endif %}
+                                        {% endif %}
+                                        {% if node.playbook_legacy %}<span class="mem-badge">legacy</span>{% endif %}
+                                    </td>
+                                    <td>{{ node.directive_count|default:"—" }}</td>
+                                    <td>{% if node.proposal_count %}<a class="mem-link" href="{% url 'webui:memory_node' node.id %}?{% if project_id %}project={{ project_id }}&amp;{% endif %}tab=proposals">{{ node.proposal_count }}</a>{% else %}—{% endif %}</td>
+                                    <td class="mem-muted">{{ node.sources_as_of|default:"—" }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             </div>
 
-            {% if errors %}
-            <div class="mem-section">
-                <div class="mem-section-title">Parse errors</div>
-                <div class="mem-section-sub">Invalid files fail closed: the node stays pending so the synthesizer can retry.</div>
-                {% for error in errors %}
-                    <div class="mem-proposal"><span class="mem-badge err">error</span> <span class="mem-mono">{{ error }}</span></div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            <div class="detail-card mem-card">
-                <div class="detail-card-title">How memory works</div>
-                <div class="mem-ladder">
+            <details class="mem-tip">
+                <summary>What this page shows</summary>
+                <div class="mem-tip-body">
                     Memory is the durable result of the reflection loop. Each node keeps
                     <strong>facts</strong> (<code>memory.md</code>), a <strong>playbook</strong>
-                    (<code>reflection.md</code> directives, injected into sessions when enabled),
-                    and an <strong>improvement ledger</strong> (<code>improvements.md</code>).
-                    <br><br>
-                    Improvements climb a capability ladder — memory fact → directive → skill →
-                    tool/script → harness fix. This UI never applies one for you. Filing a
-                    proposal creates a <strong>backlog</strong> work item; promoting it to ready
-                    (and implementing it) stays a human decision.
-                    <br><br>
-                    Source freshness comes from <code>.memory_sources.md</code>, written by the
-                    memory walker. The values here are <em>as of the last walk</em>; this page
-                    does not run the walker.
+                    (<code>reflection.md</code>, injected into sessions when enabled), and an
+                    <strong>improvement ledger</strong> (<code>improvements.md</code>).
+                    The <a class="mem-link" href="{% url 'webui:memory_playbook' %}{% if project_id %}?project={{ project_id }}{% endif %}">Playbook</a>
+                    tab shows the rules a session actually sees. Filing a proposal creates a
+                    <strong>backlog</strong> work item; promoting it stays a human decision.
+                    This page never runs the walker or applies a change.
                 </div>
-            </div>
+            </details>
 
         </div>
     </div>

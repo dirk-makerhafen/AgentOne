@@ -256,6 +256,7 @@ def _layout_routes() -> list[str]:
         reverse("webui:collections"),
         reverse("webui:workitems"),
         reverse("webui:memory"),
+        reverse("webui:memory_playbook"),
         reverse("webui:memory_improvements"),
         reverse("webui:insights"),
         reverse("webui:insights_tab", args=["analytics"]),
