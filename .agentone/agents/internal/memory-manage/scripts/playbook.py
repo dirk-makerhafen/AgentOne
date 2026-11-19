@@ -22,13 +22,17 @@ Two artifacts live beside ``memory.md`` in every memory node:
 
 Legacy nodes have plain-markdown ``reflection.md`` without frontmatter.  They
 stay valid (nothing is injected from them) and are upgraded the next time the
-node is synthesized.  Malformed *new* frontmatter fails closed: the node stays
-pending so the synthesizer retries instead of silently installing junk.
+node is synthesized.  Malformed *new* frontmatter first goes through a narrow
+deterministic repair (unquoted plain scalars containing ``": "``), because a
+single bad colon should not wedge a node in ``needs_update`` forever; anything
+still unparseable is reported to :mod:`finalize`, which escalates to a repair
+subagent and finally to quarantine with the original content preserved.
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from datetime import datetime
 from pathlib import Path
@@ -372,13 +376,86 @@ def normalize_proposals(items: Any) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-def read_frontmatter(path: Path) -> tuple[dict[str, Any], str, bool]:
+_SCALAR_LINE_RE = re.compile(
+    r"^(?P<prefix>\s*(?:-\s+)?[A-Za-z_][\w.-]*:\s*)(?P<value>.*)$"
+)
+
+
+def _repair_frontmatter_text(text: str) -> str | None:
+    """Quote plain scalars that contain ``": "`` in a frontmatter block.
+
+    An LLM synthesizer occasionally writes ``rule: do X, then: do Y``.  YAML
+    reads the inner ``": "`` as a nested mapping and the whole file fails to
+    parse, which used to leave the memory node pending forever.  Wrap such
+    values in double quotes (a JSON string is a valid YAML double-quoted
+    scalar) and return the repaired text; ``normalize_reflection`` / 
+    ``normalize_improvements`` then rewrite the file with ``yaml.safe_dump``,
+    so the repair is permanent.  Returns ``None`` when nothing needed fixing.
+    """
+    lines = text.splitlines(keepends=True)
+    if not lines or not lines[0].lstrip().startswith("---"):
+        return None
+    end = None
+    for index, line in enumerate(lines[1:], 1):
+        if line.strip() == "---":
+            end = index
+            break
+    if end is None:
+        return None
+
+    output = list(lines)
+    block_indent: int | None = None
+    changed = False
+    for index in range(1, end):
+        line = lines[index].rstrip("\r\n")
+        newline = lines[index][len(line):]
+        stripped = line.strip()
+        indent = len(line) - len(line.lstrip())
+        if block_indent is not None:
+            if not stripped or indent > block_indent:
+                continue
+            block_indent = None
+        if not stripped or stripped.startswith("#"):
+            continue
+        match = _SCALAR_LINE_RE.match(line)
+        if not match:
+            continue
+        value = match.group("value")
+        if not value:
+            continue
+        # Already quoted, a flow collection, an anchor/alias/tag, or a block
+        # scalar.  Block-scalar continuation lines are skipped by block_indent.
+        if value[0] in "\"'[{\\&*!|>" or value.startswith("- "):
+            if value[0] in "|>":
+                block_indent = indent
+            continue
+        needs_quote = (
+            ": " in value
+            or value.endswith(":")
+            or " #" in value
+            or value[0] in "@`"
+        )
+        if not needs_quote:
+            continue
+        output[index] = match.group("prefix") + json.dumps(
+            value, ensure_ascii=False
+        ) + newline
+        changed = True
+    return "".join(output) if changed else None
+
+
+def read_frontmatter(
+    path: Path, _repair_info: dict[str, bool] | None = None
+) -> tuple[dict[str, Any], str, bool]:
     """Return ``(metadata, body, has_frontmatter)`` for a markdown file.
 
-    Missing files yield ``({}, "", False)``.  A file whose YAML is malformed
-    raises :class:`PlaybookError`; the caller decides whether that is fatal
-    (new-format file) or ignorable (legacy prose that merely starts with
-    ``---``).
+    Missing files yield ``({}, "", False)``.  Malformed YAML in a file that
+    looks like new-format frontmatter is repaired when the damage is a plain
+    scalar containing ``": "`` (see :func:`_repair_frontmatter_text`); when
+    the repair is used, ``_repair_info["repaired"]`` is set to ``True`` so the
+    finalize step can report it.  Unrepairable files raise
+    :class:`PlaybookError`.  Legacy prose merely starting with ``---`` stays
+    valid.
     """
     path = Path(path)
     try:
@@ -400,6 +477,16 @@ def read_frontmatter(path: Path) -> tuple[dict[str, Any], str, bool]:
         # actually looks like our schema; otherwise treat it as legacy prose.
         head = text[:2000]
         if any(marker in head for marker in ("schema:", "directives:", "proposals:")):
+            repaired = _repair_frontmatter_text(text)
+            if repaired is not None:
+                try:
+                    fixed = frontmatter.loads(repaired)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    fixed = None
+                if fixed is not None:
+                    if _repair_info is not None:
+                        _repair_info["repaired"] = True
+                    return dict(fixed.metadata or {}), fixed.content, True
             raise PlaybookError(
                 f"invalid YAML frontmatter in {path.as_posix()}: {exc}"
             ) from exc
@@ -419,13 +506,13 @@ def _render(metadata: dict[str, Any], body: str) -> str:
     return f"---\n{front}\n---\n" + (f"\n{body}\n" if body else "")
 
 
-def load_playbook(path: Path) -> dict[str, Any]:
+def load_playbook(path: Path, _repair_info: dict[str, bool] | None = None) -> dict[str, Any]:
     """Parse a ``reflection.md`` file into normalized directives.
 
     Returns ``{"present", "legacy", "directives", "metadata", "body"}``.
     A file with frontmatter but the wrong schema raises :class:`PlaybookError`.
     """
-    metadata, body, has_frontmatter = read_frontmatter(path)
+    metadata, body, has_frontmatter = read_frontmatter(path, _repair_info)
     present = Path(path).is_file()
     if not has_frontmatter:
         return {
@@ -455,9 +542,9 @@ def load_playbook(path: Path) -> dict[str, Any]:
     }
 
 
-def load_improvements(path: Path) -> dict[str, Any]:
+def load_improvements(path: Path, _repair_info: dict[str, bool] | None = None) -> dict[str, Any]:
     """Parse an ``improvements.md`` file into normalized proposals."""
-    metadata, body, has_frontmatter = read_frontmatter(path)
+    metadata, body, has_frontmatter = read_frontmatter(path, _repair_info)
     present = Path(path).is_file()
     if not has_frontmatter:
         return {"present": present, "proposals": [], "metadata": {}, "body": body}
@@ -500,12 +587,14 @@ def _improvements_metadata(proposals: list[dict[str, Any]], previous: dict[str, 
     return metadata
 
 
-def normalize_reflection(path: Path) -> dict[str, Any]:
+def normalize_reflection(
+    path: Path, _repair_info: dict[str, bool] | None = None
+) -> dict[str, Any]:
     """Validate and rewrite *path* with normalized directives.
 
     Legacy prose files are left untouched.  Returns a small report dict.
     """
-    loaded = load_playbook(path)
+    loaded = load_playbook(path, _repair_info)
     if not loaded["present"] or loaded["legacy"]:
         return {
             "present": loaded["present"],
@@ -533,9 +622,11 @@ def normalize_reflection(path: Path) -> dict[str, Any]:
     }
 
 
-def normalize_improvements(path: Path) -> dict[str, Any]:
+def normalize_improvements(
+    path: Path, _repair_info: dict[str, bool] | None = None
+) -> dict[str, Any]:
     """Validate and rewrite *path* with normalized proposals."""
-    loaded = load_improvements(path)
+    loaded = load_improvements(path, _repair_info)
     if not loaded["present"] or not loaded["proposals"]:
         return {
             "present": loaded["present"],
@@ -569,27 +660,37 @@ def normalize_node(target_dir: Any) -> tuple[bool, dict[str, Any]]:
     """
     path = Path(str(target_dir or "")).expanduser()
     report: dict[str, Any] = {"target_dir": path.as_posix()}
+    reflection_repair: dict[str, bool] = {}
+    improvements_repair: dict[str, bool] = {}
 
     try:
-        report["reflection"] = normalize_reflection(path / REFLECTION_FILENAME)
-    except (PlaybookError, OSError) as exc:
-        return False, {
-            **report,
-            "status": "error",
-            "message": f"invalid playbook: {exc}",
-        }
-
-    try:
-        report["improvements"] = normalize_improvements(
-            path / IMPROVEMENTS_FILENAME
+        report["reflection"] = normalize_reflection(
+            path / REFLECTION_FILENAME, reflection_repair
         )
     except (PlaybookError, OSError) as exc:
         return False, {
             **report,
             "status": "error",
+            "error_kind": "playbook_frontmatter",
+            "message": f"invalid playbook: {exc}",
+        }
+
+    try:
+        report["improvements"] = normalize_improvements(
+            path / IMPROVEMENTS_FILENAME, improvements_repair
+        )
+    except (PlaybookError, OSError) as exc:
+        return False, {
+            **report,
+            "status": "error",
+            "error_kind": "improvements_frontmatter",
             "message": f"invalid improvement ledger: {exc}",
         }
 
+    report["frontmatter_repaired"] = {
+        "reflection": reflection_repair.get("repaired", False),
+        "improvements": improvements_repair.get("repaired", False),
+    }
     report["status"] = "success"
     return True, report
 

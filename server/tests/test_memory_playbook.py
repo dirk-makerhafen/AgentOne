@@ -158,6 +158,54 @@ def test_malformed_yaml_is_rejected(tmp_path):
         memplaybook.load_playbook(path)
 
 
+def test_unquoted_colon_in_rule_is_repaired(tmp_path):
+    """The synthesizer's ``rule: text with: a colon`` must not wedge a node."""
+    path = _write(
+        tmp_path / "reflection.md",
+        "---\n"
+        "schema: agentone.playbook/1\n"
+        "directives:\n"
+        "- id: PB-test\n"
+        "  rule: After each batch (unless 'do not continue'): retry. Type: daily_summary first.\n"
+        "  trigger: batching\n"
+        "---\n",
+    )
+    info: dict[str, bool] = {}
+
+    loaded = memplaybook.load_playbook(path, info)
+
+    assert info == {"repaired": True}
+    assert len(loaded["directives"]) == 1
+    assert loaded["directives"][0]["rule"].startswith("After each batch")
+
+    report = memplaybook.normalize_reflection(path)
+    assert report["changed"] is True
+    # The rewrite by safe_dump makes the fix permanent, so a later read needs
+    # no repair at all.
+    reread_info: dict[str, bool] = {}
+    memplaybook.load_playbook(path, reread_info)
+    assert reread_info == {}
+
+
+def test_repair_info_is_absent_for_valid_yaml(tmp_path):
+    path = _write(
+        tmp_path / "reflection.md",
+        "---\nschema: agentone.playbook/1\ndirectives: []\n---\n",
+    )
+    info: dict[str, bool] = {}
+    memplaybook.load_playbook(path, info)
+    assert info == {}
+
+
+def test_unrepairable_yaml_still_rejected(tmp_path):
+    path = _write(
+        tmp_path / "reflection.md",
+        "---\nschema: [unclosed\ndirectives: []\n---\n",
+    )
+    with pytest.raises(memplaybook.PlaybookError):
+        memplaybook.load_playbook(path, {})
+
+
 def test_prose_starting_with_a_rule_is_still_legacy(tmp_path):
     path = _write(
         tmp_path / "reflection.md",

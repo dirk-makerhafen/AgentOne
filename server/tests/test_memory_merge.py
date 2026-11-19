@@ -16,6 +16,7 @@ import pytest
 from server.tests.memory_test_support import MEMORY_SCRIPTS
 from server.tests.memory_test_support import finalize as memfinalize
 from server.tests.memory_test_support import git as memgit
+from server.tests.memory_test_support import playbook as memplaybook
 from server.tests.memory_test_support import sources as memsources
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -678,3 +679,94 @@ def test_memory_finalize_task_requires_a_target():
 
     assert ok is False
     assert "target_dir is required" in result["message"]
+
+
+def test_finalize_repairs_unquoted_colon_then_advances(tmp_path):
+    item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
+    folder = Path(item["manifest_path"]).parent
+    (folder / "memory.md").write_text("facts", encoding="utf-8")
+    (folder / "reflection.md").write_text(
+        "---\n"
+        "schema: agentone.playbook/1\n"
+        "directives:\n"
+        "- id: PB-test\n"
+        "  rule: Do X (unless 'stop'): then do Y. Type: daily_summary first.\n"
+        "---\n",
+        encoding="utf-8",
+    )
+
+    with patch("tree.mark_processed", return_value=True) as mocked:
+        ok, result = memfinalize.finalize_memory(folder.as_posix())
+
+    assert ok is True
+    assert result["frontmatter_repaired"]["reflection"] is True
+    mocked.assert_called_once()
+    # The rewrite is permanent: the on-disk YAML now parses without repair.
+    assert ": then do Y" in (folder / "reflection.md").read_text(encoding="utf-8")
+    info: dict[str, bool] = {}
+    memplaybook.load_playbook(folder / "reflection.md", info)
+    assert info == {}
+
+
+def test_finalize_quarantines_unrepairable_frontmatter(tmp_path):
+    item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
+    folder = Path(item["manifest_path"]).parent
+    (folder / "memory.md").write_text("facts", encoding="utf-8")
+    (folder / "reflection.md").write_text(
+        "---\nschema: [unclosed\ndirectives: []\n---\n", encoding="utf-8"
+    )
+
+    with patch("tree.mark_processed", return_value=True) as mocked:
+        ok, result = memfinalize.finalize_memory(folder.as_posix(), allow_quarantine=True)
+
+    assert ok is True
+    assert result["quarantined"] == ["reflection.md"]
+    assert list(folder.glob("reflection.md.malformed-*.md"))
+    mocked.assert_called_once()
+
+
+def test_memory_finalize_task_escalates_malformed_frontmatter(tmp_path):
+    item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
+    folder = Path(item["manifest_path"]).parent
+    (folder / "memory.md").write_text("facts", encoding="utf-8")
+    (folder / "reflection.md").write_text(
+        "---\nschema: [unclosed\ndirectives: []\n---\n", encoding="utf-8"
+    )
+    session = _FakeSession()
+
+    ok, result = finalize.memory_finalize(
+        session, "synthesis done", target_dir=folder.as_posix()
+    )
+
+    assert ok is True
+    assert result["status"] == "escalated"
+    assert result["error_kind"] == "playbook_frontmatter"
+    assert len(session.children) == 1
+    assert "repair" in session.children[0].prompts[0]
+    retry_task = session.tasks["memory_finalize"]
+    assert len(retry_task.calls) == 1
+    args, kwargs = retry_task.calls[0]
+    assert args[0].pk == session.children[0].call.pk
+    assert kwargs["attempt"] == 1
+
+
+def test_memory_finalize_task_quarantines_after_repair_attempt(tmp_path):
+    item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
+    folder = Path(item["manifest_path"]).parent
+    (folder / "memory.md").write_text("facts", encoding="utf-8")
+    (folder / "reflection.md").write_text(
+        "---\nschema: [unclosed\ndirectives: []\n---\n", encoding="utf-8"
+    )
+    session = _FakeSession()
+
+    with patch("tree.mark_processed", return_value=True):
+        ok, result = finalize.memory_finalize(
+            session,
+            "repair done",
+            target_dir=folder.as_posix(),
+            attempt=1,
+        )
+
+    assert ok is True
+    assert result["repair"] == "quarantine"
+    assert session.children == []
