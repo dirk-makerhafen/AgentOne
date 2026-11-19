@@ -2246,21 +2246,163 @@ html.sse-down #connection-banner { display: block; }
     white-space: nowrap;
 }
 
-/* ── Compaction boundary bubble: neutral marker, distinct from accent user bubble ── */
-:root {
-  --compaction-bubble-bg: var(--surface, #f4f4f5);
-  --compaction-bubble-border: var(--border, #e4e4e7);
-  --compaction-bubble-text: var(--muted, #71717a);
+/* ── System cards: compaction boundaries + reflection reports ───────────
+   Native <details>, collapsed by default.  `data-open-key` lets app.js keep
+   them open across thread swaps, just like query / tool cards. */
+.webui-system-row { padding: 8px 0; }
+
+/* Compaction is a boundary in the timeline, so float it in the middle.
+   Reflection belongs with the agent's own output, on the usual left rail. */
+.msg-row.webui-compaction-row {
+    align-self: center;
+    width: min(760px, 94%);
+    max-width: min(760px, 94%);
+    margin-left: auto;
+    margin-right: auto;
 }
-.msg-row[data-role="user"][data-compaction="1"] .msg-body {
-  background: var(--compaction-bubble-bg);
-  border-color: var(--compaction-bubble-border);
-  color: var(--compaction-bubble-text);
-  font-size: 12.5px;
+.msg-row.webui-reflection-row {
+    width: min(760px, calc(100% - var(--msg-rail, 15px)));
+    max-width: min(760px, calc(100% - var(--msg-rail, 15px)));
+    margin-left: var(--msg-rail, 15px);
 }
-.msg-row[data-role="user"][data-compaction="1"] .msg-body code,
-.msg-row[data-role="user"][data-compaction="1"] .msg-body a {
-  color: var(--compaction-bubble-text);
+
+.system-card {
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--blue, var(--accent));
+    border-radius: var(--radius-md, 8px);
+    background: var(--surface-subtle);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .04);
+    overflow: hidden;
+}
+.system-card > summary { list-style: none; }
+.system-card > summary::-webkit-details-marker { display: none; }
+.system-card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    user-select: none;
+    background: linear-gradient(180deg, var(--surface-subtle-hover), var(--surface-subtle));
+}
+.system-card-head:hover { background: var(--surface-subtle-hover); }
+.system-card[open] > .system-card-head { border-bottom: 1px solid var(--border-subtle); }
+.system-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--accent-bg);
+    color: var(--blue, var(--accent-text));
+    font-size: 14px;
+    line-height: 1;
+}
+.system-card-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.system-card-title {
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: .01em;
+    color: var(--text);
+}
+.system-card-sub {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.system-card-path { font-family: var(--font-mono, ui-monospace, monospace); }
+.system-card-badge {
+    flex-shrink: 0;
+    padding: 2px 7px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.system-card-toggle {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform .18s ease;
+}
+.system-card[open] > .system-card-head .system-card-toggle { transform: rotate(90deg); }
+
+/* Keep the shared `.msg-body` look for markdown, but undo the user-bubble
+   treatment that the compaction marker inherits from its legacy role. */
+.system-card-body.msg-body,
+.msg-row.webui-compaction-row .system-card .msg-body {
+    padding: 12px 14px;
+    margin-left: 0;
+    max-width: none;
+    background: var(--surface);
+    border: 0;
+    border-radius: 0;
+    color: var(--text);
+    font-size: 12.5px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+.system-card-body.msg-body > :first-child { margin-top: 0; }
+.system-card-body.msg-body > :last-child { margin-bottom: 0; }
+.msg-row.webui-compaction-row .system-card .msg-body code {
+    color: var(--strong, var(--text));
+    background: var(--code-inline-bg);
+}
+.msg-row.webui-compaction-row .system-card .msg-body a { color: var(--accent-text); }
+.system-card-label {
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.reflection-card { border-left-color: var(--accent); }
+.reflection-card .system-card-icon { color: var(--accent-text); }
+
+.system-card-section {
+    margin-top: 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm, 4px);
+    background: var(--surface-subtle);
+}
+.system-card-section > summary {
+    padding: 6px 9px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    color: var(--muted);
+    font-size: 11px;
+}
+.system-card-section > summary::-webkit-details-marker { display: none; }
+.system-card-section[open] > summary { border-bottom: 1px solid var(--border-subtle); }
+.system-card-section-body pre {
+    margin: 0;
+    padding: 9px 11px;
+    max-height: 320px;
+    overflow: auto;
+    color: var(--muted);
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 /* Workspace sidebar tree */

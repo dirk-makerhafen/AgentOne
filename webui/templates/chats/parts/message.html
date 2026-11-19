@@ -1,6 +1,38 @@
 {% load webui %}
-{% if row.role == "user" %}
-<div class="msg-row" data-role="user" data-pk="{{ row.obj.pk }}"{% if row.obj.message_type == "compaction" %} data-compaction="1"{% endif %}>
+{% if row.obj.message_type == "compaction" %}
+<div class="msg-row webui-system-row webui-compaction-row" data-role="user" data-compaction="1" data-pk="{{ row.obj.pk }}">
+    <details class="system-card compaction-card" data-open-key="compaction-{{ row.obj.pk }}">
+        <summary class="system-card-head">
+            <span class="system-card-icon" aria-hidden="true">↻</span>
+            <span class="system-card-copy">
+                <span class="system-card-title">Context compacted</span>
+                <span class="system-card-sub">
+                    {% if row.compaction_when %}{{ row.compaction_when }}{% else %}{{ row.obj.created_at|clock }}{% endif %}
+                    {% if row.compaction_cwd %} · <span class="system-card-path" title="{{ row.compaction_cwd }}">{{ row.compaction_cwd }}</span>{% endif %}
+                    · {{ row.card_preview }}
+                </span>
+            </span>
+            <span class="system-card-badge" title="Generated automatically by AgentOne">auto</span>
+            <span class="system-card-toggle" aria-hidden="true">▸</span>
+        </summary>
+        <div class="system-card-body msg-body">
+            {% if row.card_html %}
+            <div class="system-card-label">Summary carried forward</div>
+            {{ row.card_html|safe }}
+            {% elif row.body_text %}
+            {{ row.body_text|linebreaksbr }}
+            {% endif %}
+            {% if row.compaction_bootstrap %}
+            <details class="system-card-section" data-open-key="compaction-bootstrap-{{ row.obj.pk }}">
+                <summary>Re-pinned bootstrap · {{ row.compaction_bootstrap|length }} part{{ row.compaction_bootstrap|length|pluralize }}</summary>
+                <div class="system-card-section-body"><pre>{{ row.compaction_bootstrap|join:"\n\n" }}</pre></div>
+            </details>
+            {% endif %}
+        </div>
+    </details>
+</div>
+{% elif row.role == "user" %}
+<div class="msg-row" data-role="user" data-pk="{{ row.obj.pk }}">
     <div class="msg-body">
         {% for image in row.images %}
             <img class="chat-image" src="{{ image }}" alt="attached image">
@@ -103,6 +135,23 @@
             {% endif %}
         </div>
     </div>
+</div>
+{% elif row.obj.message_type == "reflection" %}
+<div class="msg-row webui-system-row webui-reflection-row" data-role="{{ row.role }}" data-pk="{{ row.obj.pk }}">
+    <details class="system-card reflection-card" data-open-key="reflection-{{ row.obj.pk }}">
+        <summary class="system-card-head">
+            <span class="system-card-icon" aria-hidden="true">✧</span>
+            <span class="system-card-copy">
+                <span class="system-card-title">Reflection report</span>
+                <span class="system-card-sub">{% if row.card_preview %}{{ row.card_preview }}{% else %}{{ row.obj.created_at|clock }}{% endif %}</span>
+            </span>
+            <span class="system-card-badge" title="Generated automatically by AgentOne">auto</span>
+            <span class="system-card-toggle" aria-hidden="true">▸</span>
+        </summary>
+        <div class="system-card-body msg-body">
+            {% if row.card_html %}{{ row.card_html|safe }}{% elif row.body_text %}{{ row.body_text|linebreaksbr }}{% endif %}
+        </div>
+    </details>
 </div>
 {% else %}
 <div class="msg-row webui-notice" data-role="{{ row.role }}" data-pk="{{ row.obj.pk }}">

@@ -16,12 +16,14 @@ one refresh.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
 from django.db.models import Prefetch
 
-from server.models.enums.message_enums import MessagePartType, MessageRole
+from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
+from server.models.enums.message_enums import MessagePartType, MessageRole, MessageType
 from server.models.message import Message, MessagePart
 from server.models.queries.query import Query
 from server.models.queries.query_message_part import QueryMessagePart
@@ -43,6 +45,13 @@ class Row:
     reasoning: str = ""
     tools: list[Any] = field(default_factory=list)
     response: Any = None
+    # System cards (compaction / reflection) get a summary line for their
+    # collapsed header and pre-rendered HTML for the expanded body.
+    card_preview: str = ""
+    card_html: str = ""
+    compaction_when: str = ""
+    compaction_cwd: str = ""
+    compaction_bootstrap: list[str] = field(default_factory=list)
 
     @property
     def role(self) -> str:
@@ -65,6 +74,70 @@ def _content_of(part: MessagePart) -> Any:
         return part.content.get() if part.content_id else ""
     except Exception:  # pylint: disable=broad-exception-caught
         return ""
+
+
+_COMPACTION_WHEN_RE = re.compile(
+    r"^\s*It is now\s+(?P<when>.+?),\s+your working dir is ['\"](?P<cwd>.*?)['\"]\.?\s*$"
+)
+_COMPACTION_PREAMBLE = "Old messages before this summary"
+_REFLECTION_PREFIX = "Reflection report:"
+
+
+def _card_preview(text: str, limit: int = 110) -> str:
+    """One short, markup-free line for a collapsed card's subtitle."""
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith(("#", "```")):
+            continue
+        line = re.sub(r"^\s*(?:[-*+]|\d+\.)\s+", "", line)
+        line = re.sub(r"[*_`>#]+", "", line).strip()
+        if not line:
+            continue
+        if len(line) > limit:
+            return line[: limit - 1].rstrip() + "…"
+        return line
+    return ""
+
+
+def _parse_compaction(parts: list[str]) -> dict[str, Any]:
+    """Split a compaction marker into header metadata and display sections."""
+    when = cwd = ""
+    summary_lines: list[str] = []
+    bootstrap: list[str] = []
+    in_bootstrap = False
+
+    for text in parts:
+        if COMPACTION_BOOTSTRAP_SENTINEL in text or text.lstrip().startswith("[Session bootstrap"):
+            in_bootstrap = True
+        if in_bootstrap:
+            if text.strip():
+                bootstrap.append(text.strip())
+            continue
+        match = _COMPACTION_WHEN_RE.match(text)
+        if match and not when:
+            when = match.group("when").strip()
+            cwd = match.group("cwd").strip()
+            continue
+        if text.strip().startswith(_COMPACTION_PREAMBLE):
+            continue
+        summary_lines.append(text)
+
+    summary = "\n".join(summary_lines).strip()
+    return {
+        "preview": _card_preview(summary) or "Earlier messages folded into this summary",
+        "html": render_markdown(summary),
+        "when": when,
+        "cwd": cwd,
+        "bootstrap": bootstrap,
+    }
+
+
+def _parse_reflection(text: str) -> tuple[str, str]:
+    """Strip the storage preamble and render the report for the chat card."""
+    body = text.lstrip()
+    if body.startswith(_REFLECTION_PREFIX):
+        body = body[len(_REFLECTION_PREFIX):].lstrip("\r\n")
+    return _card_preview(body), render_markdown(body)
 
 
 def _status_class(call: Any) -> str:
@@ -328,7 +401,18 @@ def _message_row(message: Message) -> Row:
     elif reasoning:
         row.reasoning = "\n\n".join(reasoning)
 
-    if message.role == MessageRole.ASSISTANT:
+    if message.message_type == MessageType.COMPACTION:
+        row.body_text = "\n".join(body)
+        details = _parse_compaction(body)
+        row.card_preview = details["preview"]
+        row.card_html = details["html"]
+        row.compaction_when = details["when"]
+        row.compaction_cwd = details["cwd"]
+        row.compaction_bootstrap = details["bootstrap"]
+    elif message.message_type == MessageType.REFLECTION:
+        row.body_text = "\n".join(body)
+        row.card_preview, row.card_html = _parse_reflection(row.body_text)
+    elif message.role == MessageRole.ASSISTANT:
         row.body_text = "\n\n".join(body)
         row.body_html = render_markdown(row.body_text)
     else:

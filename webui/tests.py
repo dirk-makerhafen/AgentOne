@@ -1904,6 +1904,105 @@ def test_compaction_segments_and_around_window():
     assert first.pk in pks
 
 
+def _system_message(session, version, role, message_type, texts, part_type):
+    from server.models.content import GenericContent
+    from server.models.enums.message_enums import MessageContentType
+    from server.models.message import Message, MessagePart
+
+    message = Message.objects.create(
+        session=session, session_version=version, role=role, message_type=message_type
+    )
+    for text in texts:
+        MessagePart.objects.create(
+            message=message,
+            type=part_type,
+            content=GenericContent.from_text(text),
+            content_type=MessageContentType.TEXT,
+        )
+    return message
+
+
+@pytest.mark.django_db
+def test_compaction_renders_as_collapsed_system_card(client):
+    from bs4 import BeautifulSoup
+    from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
+    from server.models.enums.message_enums import (
+        MessagePartType,
+        MessageRole,
+        MessageType,
+    )
+
+    session, version = _session_with_version("compaction-card")
+    boundary = _system_message(
+        session,
+        version,
+        MessageRole.USER,
+        MessageType.COMPACTION,
+        [
+            "It is now 2026-11-19 10:00, your working dir is '/work/repo'.\n",
+            "Old messages before this summary have been compacted to save context tokens. Summary:\n",
+            "## Handoff\nKeep the tests green.",
+            COMPACTION_BOOTSTRAP_SENTINEL + " frozen]",
+            "agent instructions here",
+        ],
+        MessagePartType.COMPACTION,
+    )
+    body = client.get(reverse("webui:component", args=["chat-message", boundary.pk])).content.decode()
+    soup = BeautifulSoup(body, "html.parser")
+
+    row = soup.select_one(".msg-row.webui-compaction-row")
+    assert row is not None
+    card = row.select_one("details.system-card.compaction-card")
+    assert card is not None
+    assert not card.has_attr("open"), "compaction card must start collapsed"
+    assert card.get("data-open-key") == f"compaction-{boundary.pk}"
+    assert "Context compacted" in card.select_one(".system-card-title").get_text()
+    sub = card.select_one(".system-card-sub").get_text(" ")
+    assert "2026-11-19 10:00" in sub
+    assert "/work/repo" in sub
+    assert "Keep the tests green" in sub  # preview comes from the summary
+    # Markdown summary is rendered, not shown as raw text.
+    assert "Keep the tests green" in card.select_one(".system-card-body").get_text()
+    assert card.select_one(".system-card-body h2") is not None
+    assert "Re-pinned bootstrap" in card.select_one(".system-card-section summary").get_text()
+
+
+@pytest.mark.django_db
+def test_reflection_renders_as_collapsed_system_card(client):
+    from bs4 import BeautifulSoup
+    from server.models.enums.message_enums import (
+        MessagePartType,
+        MessageRole,
+        MessageType,
+    )
+
+    session, version = _session_with_version("reflection-card")
+    report = _system_message(
+        session,
+        version,
+        MessageRole.INFO,
+        MessageType.REFLECTION,
+        ["Reflection report:\n\n## WHAT\nThe agent retried twice.\n\n## WHY\nUnclear instruction."],
+        MessagePartType.MESSAGE,
+    )
+    body = client.get(reverse("webui:component", args=["chat-message", report.pk])).content.decode()
+    soup = BeautifulSoup(body, "html.parser")
+
+    row = soup.select_one(".msg-row.webui-reflection-row")
+    assert row is not None
+    assert "webui-notice" not in (row.get("class") or [])
+    card = row.select_one("details.system-card.reflection-card")
+    assert card is not None
+    assert not card.has_attr("open"), "reflection card must start collapsed"
+    assert card.get("data-open-key") == f"reflection-{report.pk}"
+    assert "Reflection report" in card.select_one(".system-card-title").get_text()
+    assert "The agent retried twice" in card.select_one(".system-card-sub").get_text()
+    rendered = card.select_one(".system-card-body")
+    assert "The agent retried twice" in rendered.get_text()
+    assert rendered.select_one("h2") is not None
+    assert "Reflection report:" not in rendered.get_text()
+
+
 @pytest.mark.django_db
 def test_edit_message_rewrites_and_truncates(client, monkeypatch):
     from server.models.enums.message_enums import MessagePartType
