@@ -127,6 +127,27 @@ def test_live_component_carries_sse_triggers_on_the_wrapper(client):
     assert 'hx-swap="outerHTML"' in body
 
 
+def test_component_wrapper_disinherits_layout_attrs_but_not_boost(client):
+    """Children must not inherit the wrapper's swap target/sync.
+
+    A boosted link inside a wrapper used to inherit ``hx-sync="this:replace"``,
+    so the wrapper's SSE refetch aborted the link request.  ``hx-boost`` must
+    keep inheriting from ``<body>``.
+    """
+    _agent, _version, session, _sv, _message = _chat_session("disinherit")
+    body = _get(client, "chat-header", session.pk, render="htmx").content.decode()
+    tag = re.search(r'<div[^>]*data-component="chat-header"[^>]*>', body)
+    assert tag is not None
+    value = re.search(r'hx-disinherit="([^"]*)"', tag.group(0))
+    assert value is not None
+    disinherit = value.group(1).split()
+    for attr in ("hx-target", "hx-swap", "hx-sync", "hx-push-url",
+                 "hx-select", "hx-confirm", "hx-params"):
+        assert attr in disinherit
+    assert "hx-boost" not in disinherit
+    assert "*" not in disinherit
+
+
 def test_immutable_component_gets_a_long_cache_and_no_trigger(client):
     _agent, _version, session, _sv, message = _chat_session("immutable")
 
@@ -140,6 +161,21 @@ def test_immutable_component_gets_a_long_cache_and_no_trigger(client):
     ended = _get(client, "chat-message", message.pk, render="htmx")
     assert ended["Cache-Control"] == "private, max-age=31536000, immutable"
     assert "sse:" not in ended.content.decode()
+
+
+def test_keyless_component_does_not_refetch_on_bubbled_clicks(client):
+    """A keyless wrapper must not fall back to htmx's default `click` trigger.
+
+    ``chat-panel`` has no SSE keys.  With no explicit trigger, htmx wires its
+    hx-get to `click`, so clicking a panel tab bubbled to the wrapper and the
+    stale component response replaced the panel the tab had just switched.
+    """
+    _agent, _version, session, _sv, _message = _chat_session("keyless")
+    body = _get(client, "chat-panel", session.pk, render="htmx").content.decode()
+    wrapper = re.search(r'<div[^>]*data-component="chat-panel"[^>]*>', body)
+    assert wrapper is not None
+    assert 'hx-trigger="agentone:none"' in wrapper.group(0)
+    assert "click" not in wrapper.group(0)
 
 
 # ---------------------------------------------------------------------------

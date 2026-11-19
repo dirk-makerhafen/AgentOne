@@ -12,7 +12,8 @@
         <div class="main-view-actions">
             <form class="webui-inline-form" method="get" action="{% url 'webui:workitems' %}"
                   hx-get="{% url 'webui:workitems' %}"
-                  hx-target="closest .main-view" hx-swap="outerHTML" hx-push-url="true"
+                  hx-target="closest .main-view" hx-swap="outerHTML"
+                  hx-select=".main-view" hx-push-url="true" {% hx_disinherit %}
                   hx-trigger="change">
                 <select name="project" aria-label="Filter by project">
                     <option value="">All projects</option>

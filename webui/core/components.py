@@ -47,11 +47,39 @@ from django.views.decorators.http import require_GET
 
 __all__ = [
     "ComponentData",
+    "HX_DISINHERIT",
     "component_url",
     "render_component",
     "render_component_ref",
     "section_sidebar",
 ]
+
+
+#: Attributes htmx inherits from an ancestor when the element itself does not
+#: define them.  A component wrapper owns ``hx-swap``/``hx-sync`` for its *own*
+#: request; without ``hx-disinherit`` every link and form inside the wrapper
+#: also inherits them.  That is how a boosted child link ended up sharing the
+#: wrapper's ``hx-sync`` and being aborted by the wrapper's SSE refetch, and
+#: how a nested form could swap into the wrapper's target.
+#:
+#: ``hx-boost`` is deliberately absent: links inside components must keep
+#: inheriting boost from ``<body>``.  Never use ``hx-disinherit="*"`` for the
+#: same reason.
+INHERITED_ATTRIBUTES = (
+    "hx-confirm",
+    "hx-encoding",
+    "hx-params",
+    "hx-prompt",
+    "hx-push-url",
+    "hx-replace-url",
+    "hx-select",
+    "hx-select-oob",
+    "hx-swap",
+    "hx-sync",
+    "hx-target",
+)
+
+HX_DISINHERIT = " ".join(INHERITED_ATTRIBUTES)
 
 
 @dataclass
@@ -175,6 +203,7 @@ def _open_tag(
         f'hx-get="{escape(url)}"',
         'hx-swap="outerHTML"',
         'hx-sync="this:replace"',
+        f'hx-disinherit="{HX_DISINHERIT}"',
     ]
     if etag and not placeholder:
         attrs.append(f'data-component-etag="{escape(etag)}"')
@@ -189,6 +218,12 @@ def _open_tag(
         trigger = _trigger(keys, reset=reset)
         if trigger:
             attrs.append(f'hx-trigger="{escape(trigger)}"')
+        else:
+            # htmx defaults to `click` for an hx-get element with no explicit
+            # trigger.  Keyless/immutable wrappers would then refetch on every
+            # bubbled click from a child (e.g. a panel tab button), replacing
+            # the subtree with stale server state.  Use an event we never send.
+            attrs.append('hx-trigger="agentone:none"')
     return "<div " + " ".join(attrs) + ">"
 
 

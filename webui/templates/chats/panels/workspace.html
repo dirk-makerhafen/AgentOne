@@ -1,8 +1,8 @@
 {% if not workspace %}
 <div class="webui-empty-note">This chat has no workspace assigned.</div>
 {% else %}
-{# hx-target/hx-swap live on the host so the shared browser only carries URLs. #}
-<div class="dt-host dt-host-panel" hx-target="#chat-panel-body" hx-swap="innerHTML">
+{# Directory controls carry their own hx-target/hx-swap (see directory_browser). #}
+<div class="dt-host dt-host-panel">
     <div class="webui-settings-head dt-host-head">
         <span class="detail-card-title">Workspace</span>
         <a class="webui-action-btn" href="{% url 'webui:workspace' workspace.pk %}">Details</a>

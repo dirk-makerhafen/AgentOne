@@ -73,11 +73,13 @@
 
     <div class="rp-actions">
         <form method="post" action="{% url 'webui:settings_provider_test' provider.pk %}"
-              hx-post="{% url 'webui:settings_provider_test' provider.pk %}">
+              hx-post="{% url 'webui:settings_provider_test' provider.pk %}"
+              hx-target="#provider-probe-slot-{{ provider.pk }}" hx-swap="outerHTML">
             {% csrf_token %}
             <input type="hidden" name="next" value="{% url 'webui:insights_tab' 'providers' %}#provider-{{ provider.pk }}">
             <button class="webui-action-btn" type="submit">Test provider</button>
         </form>
+        <div id="provider-probe-slot-{{ provider.pk }}"></div>
         <a class="webui-link" href="{% url 'webui:settings_tab' 'providers' %}">Manage in settings</a>
     </div>
 </div>

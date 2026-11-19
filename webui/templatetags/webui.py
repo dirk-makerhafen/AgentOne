@@ -28,6 +28,20 @@ def component_tag(context, name, pk=None, **params):
     return render_component_ref(context, name, pk, params)
 
 
+@register.simple_tag(name="hx_disinherit")
+def hx_disinherit() -> str:
+    """Emit ``hx-disinherit`` for a container that sets inheritable htmx attrs.
+
+    Containers other than component wrappers (panel bodies, boards, filter
+    forms) also carry ``hx-target``/``hx-swap`` for their own refreshes.  They
+    must stop descendants from inheriting those attributes, or a boosted link
+    inside them would be swapped into the container instead of navigating.
+    """
+    from webui.core.components import HX_DISINHERIT
+
+    return mark_safe(f'hx-disinherit="{HX_DISINHERIT}"')
+
+
 @register.simple_tag(name="static_v")
 def static_v(path: str) -> str:
     """Static URL with an mtime cache-buster.

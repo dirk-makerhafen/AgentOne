@@ -9,7 +9,8 @@
         <div class="main-view-actions">
             <form class="webui-page-search" method="get" action="{% url 'webui:chats' %}"
                   hx-get="{% url 'webui:chats' %}"
-                  hx-target="closest .main-view" hx-swap="outerHTML" hx-push-url="true"
+                  hx-target="closest .main-view" hx-swap="outerHTML"
+                  hx-select=".main-view" hx-push-url="true" {% hx_disinherit %}
                   hx-trigger="submit">
                 {% if show_archived %}<input type="hidden" name="archived" value="1">{% endif %}
                 <input type="search" name="q" value="{{ q|default:'' }}" placeholder="Search chats…"

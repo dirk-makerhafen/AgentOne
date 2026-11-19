@@ -1083,6 +1083,22 @@ def _search_history(session_model: SessionModel, request=None) -> dict:
         "date_from": date_from,
         "date_to": date_to,
     }
+    # Paging URL for "Load more": rebuild it from the current filters instead of
+    # appending to request.GET, whose old ``offset`` would win over the new one.
+    next_offset = result.get("next_offset") or 0
+    if request is not None:
+        params = request.GET.copy()
+        params.pop("offset", None)
+        params["offset"] = str(next_offset)
+        result["next_query"] = params.urlencode()
+    else:
+        result["next_query"] = f"offset={next_offset}"
+    try:
+        result["remaining"] = max(
+            int(result.get("total_count") or 0) - int(next_offset), 0
+        )
+    except (TypeError, ValueError):
+        result["remaining"] = 0
     return result
 
 

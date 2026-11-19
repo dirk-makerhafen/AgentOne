@@ -8,6 +8,13 @@ htmx navigation is a special case: returning a 302 would make the XHR follow
 the redirect and swap the login page into ``<body>``.  Instead, htmx requests
 get a tiny ``HX-Redirect`` response, which makes the browser perform a real
 navigation to the login page.
+
+Boosted navigation also gets an explicit ``HX-Push-Url``.  htmx normally
+pushes the URL for boosted links from the clicked element's internal state, but
+component/SSE swaps can replace that element while the boosted request is in
+flight (cleanup drops the ``boosted`` flag), leaving the content swapped to the
+new page with the old URL still in the address bar.  The response header wins
+over DOM state, so the history update is stable.
 """
 
 from __future__ import annotations
@@ -36,4 +43,12 @@ class WebuiLoginRequiredMiddleware:
                 response["HX-Redirect"] = redirect.url
                 return response
             return redirect
-        return self.get_response(request)
+        response = self.get_response(request)
+        if (
+            request.headers.get("HX-Boosted") == "true"
+            and 200 <= response.status_code < 400
+            and not response.has_header("HX-Push-Url")
+            and not response.has_header("HX-Replace-Url")
+        ):
+            response["HX-Push-Url"] = request.get_full_path()
+        return response

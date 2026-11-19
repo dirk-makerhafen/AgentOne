@@ -56,7 +56,8 @@
                     <div class="insights-card-title">Inspect task calls</div>
                     <form class="webui-inline-form" method="get" action="{% url 'webui:insights_tab' 'dashboard' %}"
                           hx-get="{% url 'webui:insights_tab' 'dashboard' %}"
-                          hx-target="closest .main-view" hx-swap="outerHTML" hx-push-url="true"
+                          hx-target="closest .main-view" hx-swap="outerHTML"
+                          hx-select=".main-view" hx-push-url="true" {% hx_disinherit %}
                           hx-trigger="change, submit">
                         <input type="search" name="agent" value="{{ inspect.agent }}" placeholder="Filter by agent…" aria-label="Filter by agent">
                         <select name="status" aria-label="Filter by status">
@@ -93,7 +94,8 @@
             {% elif tab == "analytics" %}
                 <form class="webui-inline-form insights-filters" method="get" action="{% url 'webui:insights_tab' 'analytics' %}"
                       hx-get="{% url 'webui:insights_tab' 'analytics' %}"
-                      hx-target="closest .main-view" hx-swap="outerHTML" hx-push-url="true"
+                      hx-target="closest .main-view" hx-swap="outerHTML"
+                      hx-select=".main-view" hx-push-url="true" {% hx_disinherit %}
                       hx-trigger="change, submit">
                     <select name="range" aria-label="Time range">
                         {% for value, label in range_options %}

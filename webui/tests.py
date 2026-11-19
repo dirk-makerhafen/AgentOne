@@ -340,6 +340,20 @@ def test_boosted_navigation_returns_body_fragment(client):
     assert b'hx-ext="sse"' not in content
     assert b"htmx.min.js" not in content
     assert b"app.css" not in content
+    # htmx pushes from this header instead of the clicked element's internal
+    # state, which an SSE/component swap can clear mid-flight.
+    assert response["HX-Push-Url"] == "/app/"
+
+
+@pytest.mark.django_db
+def test_boosted_navigation_pushes_full_request_path(client):
+    response = client.get(
+        reverse("webui:dashboard") + "?panel=subagents",
+        HTTP_HX_REQUEST="true",
+        HTTP_HX_BOOSTED="true",
+    )
+    assert response.status_code == 200
+    assert response["HX-Push-Url"] == "/app/?panel=subagents"
 
 
 @pytest.mark.django_db
@@ -665,6 +679,15 @@ def test_queue_card_renders_and_cancel_removes_call(client):
     assert b"1 queued" in page.content
     assert b"queued hello" in page.content
 
+    from bs4 import BeautifulSoup
+
+    card = BeautifulSoup(page.content, "html.parser").find(id="queue-card")
+    assert card is not None
+    cancel_form = card.select_one("form.webui-queue-row")
+    # The view returns the whole card, so the cancel form replaces the card.
+    assert cancel_form["hx-target"] == "#queue-card"
+    assert cancel_form["hx-swap"] == "outerHTML"
+
     response = client.post(
         reverse("webui:queue_action", args=[session.pk]),
         {"action": "cancel", "call_id": call.pk},
@@ -873,7 +896,43 @@ def test_panel_body_carries_the_visible_tab_refresh_url(client):
     assert body is not None
     assert body.get("hx-get") == expected
     assert "AgentTaskCall.session" in (body.get("hx-trigger") or "")
+    disinherit = (body.get("hx-disinherit") or "").split()
+    assert {"hx-target", "hx-swap", "hx-sync"} <= set(disinherit)
+    assert "hx-boost" not in disinherit
     assert b'id="settings-name"' in response.content
+
+
+@pytest.mark.django_db
+def test_history_filters_are_one_form_and_can_clear_resolved_view(client):
+    """All history controls belong to one form so a toggle keeps every filter.
+
+    ``resolved_view`` defaults to true server-side, so the form sends an
+    explicit false (hidden input) for the unchecked case; the checkbox follows
+    it because QueryDict.get() returns the last value.
+    """
+    from bs4 import BeautifulSoup
+
+    session, _version = _session_with_version("history-filters")
+    response = client.get(reverse("webui:chat_panel_tab", args=[session.pk, "history"]))
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.content, "html.parser")
+    form = soup.find(id="history-filters")
+    assert form is not None
+    assert form.get("hx-get") == reverse(
+        "webui:chat_panel_tab", args=[session.pk, "history"]
+    )
+    assert form.get("hx-target") == "#chat-panel-body"
+    assert form.get("hx-swap") == "innerHTML"
+    assert form.get("hx-trigger") == "submit, change"
+    # No duplicate q field and no CSRF token on a GET form.
+    assert len(form.select('input[name="q"]')) == 1
+    assert not form.select('input[name="csrfmiddlewaretoken"]')
+    hidden = form.select_one('input[type="hidden"][name="resolved_view"]')
+    assert hidden is not None and hidden["value"] == "false"
+    for name in ("resolved_view", "include_hidden", "include_subsessions"):
+        boxes = form.select(f'input[type="checkbox"][name="{name}"]')
+        assert len(boxes) == 1
+        assert not boxes[0].get("hx-include")
 
 
 @pytest.mark.django_db
@@ -996,10 +1055,17 @@ def test_workspace_folder_tree_is_shared_by_chat_panel_and_detail(client, tmp_pa
         client.get(reverse("webui:workspace", args=[workspace.pk])).content,
         "html.parser",
     )
+    expected_target = {"panel": "#chat-panel-body", "page": "#workspace-directory"}
     for soup, surface in ((panel, "panel"), (detail, "page")):
         browser = soup.select_one(".dt-browser")
         assert browser is not None
-        assert browser.select_one(".dt-crumbs .dt-crumb") is not None
+        crumb = browser.select_one(".dt-crumbs .dt-crumb")
+        assert crumb is not None
+        # Controls name their own target; hosts no longer leak hx-target/hx-swap.
+        assert crumb["hx-target"] == expected_target[surface]
+        assert crumb["hx-swap"] == "innerHTML"
+        refresh = browser.select_one(".dt-actions button")
+        assert refresh["hx-target"] == expected_target[surface]
         folder = browser.select_one("details.dt-folder")
         assert folder is not None
         assert folder["hx-trigger"] == "toggle once"
@@ -1009,8 +1075,8 @@ def test_workspace_folder_tree_is_shared_by_chat_panel_and_detail(client, tmp_pa
         # Children are lazy: the file lives inside the collapsed folder.
         assert "example.txt" not in str(browser)
 
-    assert panel.select_one(".dt-host-panel")["hx-target"] == "#chat-panel-body"
-    assert detail.select_one("#workspace-directory")["hx-target"] == "#workspace-directory"
+    assert "hx-target" not in panel.select_one(".dt-host-panel").attrs
+    assert "hx-target" not in detail.select_one("#workspace-directory").attrs
 
     children = client.get(
         reverse("webui:workspace_directory_children", args=[workspace.pk]),
@@ -2309,6 +2375,15 @@ def test_insights_analytics_filters_and_dashboard_inspect(client):
     assert page.context["provider_filter"] == "provA"
     assert page.context["range_key"] == "7d"
     assert [row["provider_name"] for row in page.context["providers"]] == ["provA"]
+
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(page.content, "html.parser")
+    form = soup.select_one("form.insights-filters")
+    # Filter responses are full shells; select just the main view and stop the
+    # form's swap attrs leaking onto its Reset link.
+    assert form.get("hx-select") == ".main-view"
+    assert "hx-target" in (form.get("hx-disinherit") or "")
     assert {row["model_name"] for row in page.context["models"]} == {"modelA"}
     assert page.context["analytics_stats"][0]["label"] == "Requests"
 

@@ -52,7 +52,8 @@
             <form method="get" class="mem-filter-bar"
                   action="{% url 'webui:memory_improvements' %}"
                   hx-get="{% url 'webui:memory_improvements' %}"
-                  hx-target="closest .main-view" hx-swap="outerHTML" hx-push-url="true"
+                  hx-target="closest .main-view" hx-swap="outerHTML"
+                  hx-select=".main-view" hx-push-url="true" {% hx_disinherit %}
                   hx-trigger="change">
                 {% if project_id %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}
                 <select name="kind">

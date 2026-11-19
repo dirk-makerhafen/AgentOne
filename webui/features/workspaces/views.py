@@ -199,6 +199,10 @@ def workspace_tree_context(
     parent = context["workspace_parent_path"]
     context.update({
         "dir_surface": surface,
+        # The shared browser carries only URLs; every link/button names the
+        # element its fragment replaces so no host-level hx-target/hx-swap can
+        # leak onto boosted links (e.g. the panel's "Details" link).
+        "dir_target": "#chat-panel-body" if surface == "panel" else "#workspace-directory",
         "dir_breadcrumbs": _directory_breadcrumbs(workspace, current, browse_url, push_url),
         "dir_root_url": browse_url(""),
         "dir_parent_url": browse_url(parent) if parent is not None else "",

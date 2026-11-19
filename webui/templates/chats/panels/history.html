@@ -3,10 +3,10 @@
         <div class="webui-settings-head">
             <span class="detail-card-title">Search History</span>
         </div>
-        <form class="webui-form-row" hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
-              hx-target="#chat-panel-body" hx-swap="innerHTML" hx-trigger="submit, change from:select">
-            {% csrf_token %}
-            <input type="hidden" name="q" value="{{ h.query.q }}">
+        <form id="history-filters" class="webui-form-row"
+              hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
+              hx-target="#chat-panel-body" hx-swap="innerHTML"
+              hx-trigger="submit, change">
             <input type="text" name="q" placeholder="Search messages..." value="{{ h.query.q }}"
                    class="webui-search-input" style="flex:1" aria-label="Search history">
             <select name="role" class="webui-filter-select">
@@ -27,27 +27,23 @@
             </select>
             <input type="text" name="tool_call_name" placeholder="Tool name..." value="{{ h.query.tool_call_name }}"
                    class="webui-filter-input" aria-label="Filter by tool name">
+            <div class="webui-form-row" style="margin-top:8px; gap:8px; flex-wrap:wrap; width:100%;">
+                {# Hidden false first, checkbox true second: QueryDict.get() takes the last value, so an unchecked box still submits resolved_view=false. #}
+                <input type="hidden" name="resolved_view" value="false">
+                <label class="webui-checkbox-inline">
+                    <input type="checkbox" name="resolved_view" value="true"{% if h.query.resolved_view %} checked{% endif %}>
+                    Resolved view (default)
+                </label>
+                <label class="webui-checkbox-inline">
+                    <input type="checkbox" name="include_hidden" value="true"{% if h.query.include_hidden %} checked{% endif %}>
+                    Include hidden/INFO
+                </label>
+                <label class="webui-checkbox-inline">
+                    <input type="checkbox" name="include_subsessions" value="true"{% if h.query.include_subsessions %} checked{% endif %}>
+                    Include sub-sessions
+                </label>
+            </div>
         </form>
-        <div class="webui-form-row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
-            <label class="webui-checkbox-inline">
-                <input type="checkbox" name="resolved_view" value="true"{% if h.query.resolved_view %} checked{% endif %}
-                       hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
-                       hx-target="#chat-panel-body" hx-swap="innerHTML" hx-include="closest form">
-                Resolved view (default)
-            </label>
-            <label class="webui-checkbox-inline">
-                <input type="checkbox" name="include_hidden" value="true"{% if h.query.include_hidden %} checked{% endif %}
-                       hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
-                       hx-target="#chat-panel-body" hx-swap="innerHTML" hx-include="closest form">
-                Include hidden/INFO
-            </label>
-            <label class="webui-checkbox-inline">
-                <input type="checkbox" name="include_subsessions" value="true"{% if h.query.include_subsessions %} checked{% endif %}
-                       hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}"
-                       hx-target="#chat-panel-body" hx-swap="innerHTML" hx-include="closest form">
-                Include sub-sessions
-            </label>
-        </div>
         {% if h.error %}
         <div class="webui-error" style="margin-top:8px">{{ h.error }}</div>
         {% else %}
@@ -96,8 +92,8 @@
         {% if h.has_more %}
         <div style="text-align:center; margin-top:8px;">
             <button class="webui-action-btn"
-                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}?{{ request.GET.urlencode }}&offset={{ h.next_offset }}"
-                    hx-target="#chat-panel-body" hx-swap="innerHTML">Load more ({{ h.total_count|add:"-"|add:h.next_offset }} remaining)</button>
+                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'history' %}?{{ h.next_query }}"
+                    hx-target="#chat-panel-body" hx-swap="innerHTML">Load more{% if h.remaining %} ({{ h.remaining }} remaining){% endif %}</button>
         </div>
         {% endif %}
         {% endif %}

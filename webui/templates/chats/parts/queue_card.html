@@ -11,7 +11,7 @@
           id="queue-row-{{ row.pk }}"
           method="post"
           hx-post="{% url 'webui:queue_action' session.pk %}"
-          hx-target="#queue-row-{{ row.pk }}"
+          hx-target="#queue-card"
           hx-swap="outerHTML"
           hx-sync="this:replace">
         {% csrf_token %}
