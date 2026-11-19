@@ -6,11 +6,15 @@ chains into process_turn.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from runtime.session.messages import default_type_for_role, normalize_messages
 from runtime.session.session import Session
+from server.models.enums.message_enums import MessageType
 from server.models.message import Message
+
+log = logging.getLogger(__name__)
 
 
 def ingest_user_message(_session: Session, message: Any = None, execute_turn: bool = True) -> Any:
@@ -33,10 +37,21 @@ def ingest_user_message(_session: Session, message: Any = None, execute_turn: bo
         execute_turn: Whether to start a turn for the last message.
     """
     messages = normalize_messages(message)
+    auto_title = False
+    if execute_turn:
+        try:
+            # Sibling script, importable when BoundTask puts the scripts dir on
+            # sys.path.  Auto-titling is best-effort: never fail message ingest.
+            from auto_title_session import is_auto_title_candidate
+
+            auto_title = is_auto_title_candidate(_session, messages)
+        except Exception:  # pylint: disable=broad-exception-caught
+            log.exception("auto-title guard unavailable; skipping")
 
     session_version = _session.get_version_model()
     prev_message = _session.get_last_message()
     created: Message | None = None
+    created_messages: list[Message] = []
 
     for spec in messages:
         created = Message.objects.create(
@@ -56,7 +71,21 @@ def ingest_user_message(_session: Session, message: Any = None, execute_turn: bo
             )
         # Two-phase write (see Message.save): publish only now parts exist.
         created.publish("create")
+        created_messages.append(created)
         prev_message = created
+
+    if auto_title:
+        anchor = next(
+            (msg for msg in created_messages if msg.message_type == MessageType.USER_CHAT),
+            None,
+        )
+        if anchor is not None:
+            try:
+                _session.get_task("auto_title_session").delay(
+                    anchor_message=anchor, expected_name=_session.model.name
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                log.exception("failed to enqueue auto-title for session %s", _session.model.pk)
 
     if not execute_turn:
         return created

@@ -1407,6 +1407,7 @@ def test_chat_settings_panel_is_grouped_and_autosaves(client):
     assert renamed.status_code == 200
     session.refresh_from_db()
     assert session.name == "renamed-session"
+    assert session.name_is_auto is False
 
 
 @pytest.mark.django_db
@@ -2692,6 +2693,7 @@ def test_new_chat_honours_agent_workspace_name_and_description(client, tmp_path)
     assert version.description == "Talk about the audit"
     assert version.workspace_id == workspace.pk
     assert version.agent_id == agent.pk
+    assert session.name_is_auto is False
 
 
 @pytest.mark.django_db

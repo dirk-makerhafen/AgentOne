@@ -19,6 +19,9 @@ class SessionModel(BaseModel):
 
 
     name = models.CharField(max_length=255)
+    #: False once the user has explicitly named/renamed the session.  Auto-title
+    #: generation only touches sessions whose name is still system-generated.
+    name_is_auto = models.BooleanField(default=True, db_index=True)
     #: Non-unique grouping key for sessions that do the same kind of work.
     #: Unlike ``name`` it is not part of any uniqueness constraint, so many
     #: baseagent/wiki/etc. sessions can share e.g. ``wiki:timeline-daily``.

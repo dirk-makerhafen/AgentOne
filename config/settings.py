@@ -55,6 +55,13 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 14*24*3600
 
+# Auto-title: name a fresh chat from its first user message, using a forked
+# copy of the session so the parent's model and cacheable prompt prefix are
+# reused.  Set to False in settings_local.py to disable globally.
+AGENTONE_AUTO_TITLE_ENABLED = True
+AGENTONE_AUTO_TITLE_MIN_CHARS = 15
+AGENTONE_AUTO_TITLE_MAX_CHARS = 60
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',

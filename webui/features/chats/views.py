@@ -1366,6 +1366,7 @@ def chat_config(request, session_id: int):
             if name and name != session_model.name:
                 session_model.name = name
                 session_model.save(update_fields=["name"])
+                SessionModel.objects.filter(pk=session_model.pk).update(name_is_auto=False)
                 version = session_model.latest_session_version
                 if version is not None:
                     version.display_name = name
@@ -1843,6 +1844,9 @@ def new_chat(request):
         log.exception("could not create chat for agent %s", agent.name)
         return redirect("/app/?error=create-failed")
 
+    if requested_name:
+        SessionModel.objects.filter(pk=session_version.session_id).update(name_is_auto=False)
+
     return redirect("webui:chat", session_id=session_version.session_id)
 
 
@@ -1884,6 +1888,7 @@ def chat_action(request, session_id: int):
             if name:
                 session_model.name = name
                 session_model.save(update_fields=["name"])
+                SessionModel.objects.filter(pk=session_model.pk).update(name_is_auto=False)
                 version = session_model.latest_session_version
                 if version is not None:
                     version.display_name = name

@@ -316,6 +316,11 @@ AgentTaskCall("ingest_user_message") ──→ AgentTaskRun
 
 When `decide_next_step` returns an `AgentTaskCall` for `process_turn`, the framework chains back into the loop. When it returns a bare `Message`, the loop terminates and the `Message` propagates up through every `get_result(recursive=True)` call.
 
+A second, side-effect-free use of the same fork + auto-await pattern is
+[automatic chat titling](auto-title.md): the first user message forks a
+same-model copy of the session, a `final_result` title is captured, and a
+parent-side task renames the chat unless the user has already named it.
+
 ---
 
 ## Auto-Await / Result Resolution

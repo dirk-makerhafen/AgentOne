@@ -50,6 +50,7 @@ class TestSessions:
         resp2 = auth_client.patch(f'/api/v1/sessions/{session_id}/', {'name': 'renamed'})
         assert resp2.status_code == 200
         assert resp2.data['name'] == 'renamed'
+        assert SessionModel.objects.get(pk=session_id).name_is_auto is False
 
     def test_patch_session_with_aimodel(self, auth_client):
         from server.models.providers.api_provider import ApiProvider

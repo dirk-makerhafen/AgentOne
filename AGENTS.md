@@ -6,6 +6,7 @@ Quick reference for developers working on AgentOne. See also:
 - [docs/architecture.md](docs/architecture.md) — system architecture, data flow, component interactions
 - [docs/development.md](docs/development.md) — setup, coding conventions, how-to guides
 - [docs/core-mechanisms.md](docs/core-mechanisms.md) — task dispatch pipeline, auto-await, renderer internals
+- [docs/auto-title.md](docs/auto-title.md) — automatic chat naming, fork design, comparison with other harnesses
 - [docs/deployment.md](docs/deployment.md) — production deployment, supervisor, nginx
 - [docs/folders.md](docs/folders.md) — canonical filesystem layout (scopes, `var/`, install repos)
 - [docs/manifest-format.md](docs/manifest-format.md) — YAML manifest format (agents, scripts, cron, streams, sets)

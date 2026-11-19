@@ -23,6 +23,18 @@ tasks:
     file: ingest_user_message.py
     function: ingest_user_message
     bound: True
+  # Best-effort chat naming: fork the session on its first user message, then
+  # apply the fork's final_result as SessionModel.name.
+  - name: auto_title_session
+    file: auto_title_session.py
+    function: auto_title_session
+    bound: True
+    max_retries: 0
+  - name: ingest_auto_title
+    file: ingest_auto_title.py
+    function: ingest_auto_title
+    bound: True
+    max_retries: 0
   - name: build_llm_context
     file: build_llm_context.py
     function: build_llm_context

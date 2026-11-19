@@ -42,7 +42,10 @@ class SessionViewSet(viewsets.ModelViewSet):
         except AgentModel.DoesNotExist:
             return Response({'error': 'Agent not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        session = SessionModel.objects.create(name=name or f'session-{agent_model.name}')
+        session = SessionModel.objects.create(
+            name=name or f'session-{agent_model.name}',
+            name_is_auto=not bool(name),
+        )
         SessionVersionModel.objects.create(
             session=session,
             agent=agent_model,
@@ -80,6 +83,7 @@ class SessionViewSet(viewsets.ModelViewSet):
                 if 'name' in data:
                     session_model.name = data['name']
                     session_model.save(update_fields=['name'])
+                    SessionModel.objects.filter(pk=session_model.pk).update(name_is_auto=False)
                 for field, method_name in settings_map.items():
                     if field not in data or data[field] is None:
                         continue
