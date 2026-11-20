@@ -30,6 +30,11 @@ providers:
     model_id: minimax/minimax-m3:free
     conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
     verified: "2026-09-05"
+  - name: Inferbase
+    file: inferbase
+    model_id: minimax-m3
+    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
+    verified: "2026-11-20"
 ---
 
 MiniMax M3 is MiniMax's multimodal long-context flagship (released 2026-06-01): a ~428B-total / ~23B-active MoE with 1M context, native text+image+video input, and open weights under the MiniMax Community License (not MIT/Apache — verify before commercial use).
@@ -47,6 +52,7 @@ MiniMax M3 is MiniMax's multimodal long-context flagship (released 2026-06-01): 
 | [AIHubMix](../providers/aihubmix.md) | `minimax-m3-free` | Free-model lane; account + key, no card | None published; free versions are trial-use (limited resources, 429s possible under load) | 2026-09-05 |
 | [Kilo Code](../providers/kilo-code.md) | `minimax/minimax-m3:free` | Standing `:free` lane; anonymous keyless access allowed | 200 req/hour per IP anonymous; authenticated free-model limits unpublished | 2026-09-05 |
 | [OpenRouter](../providers/openrouter.md) | `minimax/minimax-m3:free` | Permanent `:free` variant; account + key, no card | None published combo-specific; provider-wide free-model caps apply (see provider file); roster rotates | 2026-09-05 |
+| [Inferbase](../providers/inferbase.md) | `minimax-m3` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

@@ -25,6 +25,11 @@ providers:
     model_id: cohere/north-mini-code:free
     conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
     verified: "2026-09-05"
+  - name: xKiro
+    file: xkiro
+    model_id: cohere/north-mini-code
+    conditions: "Permanent Free plan; account + key, no credit card; 500,000 free tokens/day shared account-wide; keep the `vendor/` prefix (bare ids 404); free models only on Free plan"
+    verified: "2026-11-20"
 ---
 
 North Mini Code is Cohere's open-weights agentic coding model: a 30B-total / 3B-active sparse MoE (128 experts, 8 active per token) trained for code generation, agentic software engineering, and terminal tasks, released under Apache 2.0.
@@ -45,6 +50,7 @@ North Mini Code is Cohere's open-weights agentic coding model: a 30B-total / 3B-
 |---|---|---|---|---|
 | [Kilo Code](../providers/kilo-code.md) | `cohere/north-mini-code:free` | Standing `:free` lane; anonymous keyless access allowed, no account/key/card | None published combo-specific; provider-wide anonymous `:free` quota applies (see provider file); roster rotates | 2026-09-05 |
 | [OpenRouter](../providers/openrouter.md) | `cohere/north-mini-code:free` | Permanent `:free` variant; account + key, no card | None published combo-specific; provider-wide free-model caps apply (see provider file); roster rotates | 2026-09-05 |
+| [xKiro](../providers/xkiro.md) | `cohere/north-mini-code` | Permanent Free plan; account + key, no credit card; 500,000 free tokens/day shared account-wide; keep the `vendor/` prefix (bare ids 404); free models only on Free plan | None documented for this provider+model combo; provider-wide 500K tokens/day applies (see provider file) | 2026-11-20 |
 
 **Notes:**
 

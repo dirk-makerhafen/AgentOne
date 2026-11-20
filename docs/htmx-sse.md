@@ -1,6 +1,6 @@
 # htmx + SSE UI: component rules and pitfalls
 
-This is the practical contract for `webui/` (Django templates + htmx 2.0.11 + vendored htmx-ext-sse 2.2.4). Read [ui-rewrite.md](ui-rewrite.md) for architecture/rationale and [observables-migration.md](observables-migration.md) for observable keys.
+This is the practical contract for `webui/` (Django templates + htmx 2.0.11 + vendored htmx-ext-sse 2.2.4). Read [ui-rewrite.md](ui-rewrite.md) for architecture/rationale and [observables-migration.md](observables-migration.md) for observable keys. For a prescriptive how-to and the agent review checklist, use [ui-implementation-guide.md](ui-implementation-guide.md).
 
 ## Core model
 

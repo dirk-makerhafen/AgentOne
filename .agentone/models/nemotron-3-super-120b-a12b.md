@@ -46,6 +46,11 @@ providers:
       requests:
         day: 10
     verified: "2026-09-05"
+  - name: Waterfall
+    file: waterfall
+    model_id: nemotron-3-super-120b-a12b-free
+    conditions: "Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid)"
+    verified: "2026-11-20"
 ---
 
 Nemotron 3 Super 120B A12B is Nvidia's large hybrid MoE (120B total / 12B active) for agentic workflows, long-context reasoning, and high-volume workloads. It is the Super sibling of the Nemotron 3 family — not the Nano model ([Nemotron 3 Nano 30B A3B](nemotron-3-nano-30b-a3b.md)).
@@ -68,6 +73,7 @@ Nemotron 3 Super 120B A12B is Nvidia's large hybrid MoE (120B total / 12B active
 | [Kenari](../providers/kenari.md) | `nemotron-3-super-120b-a12b:free` | `:free` lane billed Rp 0 (live-catalog-observed 2026-09-05); account + key (`kn-...`), no top-up | None published combo-specific; per-minute caps + tiered daily quotas apply (see provider file); confirm via `GET /v1/models` before use | 2026-09-05 |
 | [Requesty](../providers/requesty.md) | `nvidia/nemotron-3-super-120b-a12b` | Free-models tier ("free for now"); account + key, no card | New orgs: 200 req/day + 20 req/min shared across all free models combined | 2026-09-05 |
 | [FastRouter](../providers/fastrouter.md) | `nvidia/nemotron-3-super:free` | ⚠ `:free` lane; org must hold a paid credit balance above $1 or free calls 402 | 10 req/day per org per model, UTC-midnight reset | 2026-09-05 |
+| [Waterfall](../providers/waterfall.md) | `nemotron-3-super-120b-a12b-free` | Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid) | None documented for this provider+model combo; no published numeric free-pool limits (see provider file) | 2026-11-20 |
 
 **Notes:**
 

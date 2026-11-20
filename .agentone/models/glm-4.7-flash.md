@@ -30,6 +30,11 @@ providers:
     model_id: z-ai/glm-4.7-flash-free
     conditions: "Free lane billed $0/token (in, out); account + key, no card; rate-limited; roster rotates"
     verified: "2026-09-06"
+  - name: Inferbase
+    file: inferbase
+    model_id: zai-glm-4-7-flash
+    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
+    verified: "2026-11-20"
 ---
 
 GLM-4.7-Flash is Z.AI's efficient reasoning/coding model with a permanent zero-price API tier (context ≈200K per secondary data; verify live).
@@ -47,6 +52,7 @@ GLM-4.7-Flash is Z.AI's efficient reasoning/coding model with a permanent zero-p
 | [Z.AI](../providers/z-ai.md) | `glm-4.7-flash` | Permanent zero-price (in, cache, out all Free); account + key, no card | Official numeric limits unpublished; account- and model-specific rate-limit view | 2026-09-05 |
 | [AIHubMix](../providers/aihubmix.md) | `glm-4.7-flash-free` | Free-model lane; account + key, no card for 10 trial calls; daily quotas need one-time $1+ top-up | None published combo-specific; free versions are trial-use (limited resources, 429s possible under load) | 2026-09-05 |
 | [ZenMux](../providers/zenmux.md) | `z-ai/glm-4.7-flash-free` | Free lane billed $0/token (in, out); account + key, no card | Rate-limited; exact limits unpublished; roster rotates | 2026-09-06 |
+| [Inferbase](../providers/inferbase.md) | `zai-glm-4-7-flash` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

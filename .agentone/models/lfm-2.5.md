@@ -24,6 +24,11 @@ providers:
     model_id: liquid/lfm-2.5-2.6b:free
     conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
     verified: "2026-09-05"
+  - name: Waterfall
+    file: waterfall
+    model_id: lfm-2.5-2.6b-free
+    conditions: "Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid)"
+    verified: "2026-11-20"
 ---
 
 LFM 2.5 2.6B is Liquid AI's dense 2.6B-parameter (2.69B total, 30-layer hybrid: 22 double-gated short-convolution blocks + 8 grouped-query-attention layers) on-device agentic model, released Aug 4 2026. It is trained for planning, tool calling, and multi-step agent tasks inside real harnesses (Hermes Agent, OpenClaw, Pi) and runs in under 2.5 GB of memory.
@@ -42,6 +47,7 @@ LFM 2.5 2.6B is Liquid AI's dense 2.6B-parameter (2.69B total, 30-layer hybrid: 
 |---|---|---|---|---|
 | [Kilo Code](../providers/kilo-code.md) | `liquid/lfm-2.5-2.6b:free` | Standing `:free` lane; anonymous keyless access allowed | 200 req/hour per IP anonymous; authenticated free-model limits unpublished; Kilo serves a 64K-context variant (see override) | 2026-09-05 |
 | [OpenRouter](../providers/openrouter.md) | `liquid/lfm-2.5-2.6b:free` | Free `:free` variant; account + key, no card | None combo-specific; provider-wide free-variant caps apply (see provider file) | 2026-09-05 |
+| [Waterfall](../providers/waterfall.md) | `lfm-2.5-2.6b-free` | Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid) | None documented for this provider+model combo; no published numeric free-pool limits (see provider file) | 2026-11-20 |
 
 **Notes:**
 

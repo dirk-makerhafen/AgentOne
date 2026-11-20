@@ -41,6 +41,11 @@ providers:
     model_id: nemotron-3-nano-30b-a3b-free
     conditions: "Free-model lane; account + key, no card; trial-use, 429s possible under load"
     verified: "2026-09-05"
+  - name: Inferbase
+    file: inferbase
+    model_id: nvidia-nemotron-3-nano-30b-a3b
+    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
+    verified: "2026-11-20"
 ---
 
 Nemotron 3 Nano 30B A3B is Nvidia's small MoE for efficient coding, math, and long-context agents (fixture-reported facts; verify live).
@@ -59,6 +64,7 @@ Nemotron 3 Nano 30B A3B is Nvidia's small MoE for efficient coding, math, and lo
 | [NVIDIA NIM](../providers/nvidia-nim.md) | `nvidia/nemotron-3-nano-30b-a3b` | Free tier ($0 fixture rows) | See provider file (catalog slugs churn) | 2026-09-05 |
 | [FastRouter](../providers/fastrouter.md) | `nvidia/nemotron-3-nano-30b:free` | ⚠ `:free` lane (provider ID differs from card default); org must hold a paid credit balance above $1 or free calls 402 | 10 req/day per org per model, UTC-midnight reset | 2026-09-05 |
 | [AIHubMix](../providers/aihubmix.md) | `nemotron-3-nano-30b-a3b-free` | Free-model lane; account + key, no card | None published combo-specific; 10 trial calls total before top-up, then topped-up daily quotas apply (see provider file); trial-use 429s possible | 2026-09-05 |
+| [Inferbase](../providers/inferbase.md) | `nvidia-nemotron-3-nano-30b-a3b` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

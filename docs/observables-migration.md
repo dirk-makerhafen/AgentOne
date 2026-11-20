@@ -7,7 +7,9 @@
 > no client-side invalidation logic.
 
 The legacy pyHtmlGui app (`ui/`) is gone; `webui/` is the only UI. See
-[`ui-rewrite.md`](ui-rewrite.md) for the rendering/component side.
+[`ui-rewrite.md`](ui-rewrite.md) for the rendering/component side and
+[`ui-implementation-guide.md`](ui-implementation-guide.md) for the normative
+rules and agent checklist.
 
 ## Stages
 

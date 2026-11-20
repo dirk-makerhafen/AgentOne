@@ -76,6 +76,41 @@ def _content_of(part: MessagePart) -> Any:
         return ""
 
 
+def _query_part_text(part: QueryMessagePart) -> str:
+    """Readable text for one query part, including source-backed parts.
+
+    Query parts normally point at a ``MessagePart`` instead of storing their
+    own content.  Reusing the model's renderer keeps the expanded query card
+    in sync with what was actually sent to the model (templates, JSON, tool
+    calls) instead of only looking at the part's (usually empty) own content.
+    """
+    try:
+        blocks = part.to_content_blocks(fail_on_error=False)
+    except Exception:  # pylint: disable=broad-exception-caught
+        source = getattr(part, "source_message_part", None) or part
+        return _as_text(_content_of(source))
+
+    texts: list[str] = []
+    for block in blocks:
+        if not isinstance(block, dict):
+            texts.append(_as_text(block))
+            continue
+        kind = block.get("type")
+        if kind == "text":
+            text = block.get("text", "")
+        elif kind == "image_url":
+            text = "[image]"
+        elif kind == "reasoning":
+            text = "[reasoning]\n" + str(block.get("text", ""))
+        elif kind == "function":
+            text = json.dumps(block, indent=2, ensure_ascii=False, default=str)
+        else:
+            text = _as_text(block)
+        if text and str(text).strip():
+            texts.append(str(text).rstrip())
+    return "\n\n".join(texts)
+
+
 _COMPACTION_WHEN_RE = re.compile(
     r"^\s*It is now\s+(?P<when>.+?),\s+your working dir is ['\"](?P<cwd>.*?)['\"]\.?\s*$"
 )
@@ -522,7 +557,13 @@ def build_query_detail(query: Query) -> list[dict[str, Any]]:
         .prefetch_related(
             Prefetch(
                 "query_message_parts",
-                queryset=QueryMessagePart.objects.select_related("content").order_by("pk"),
+                queryset=QueryMessagePart.objects.select_related(
+                    "content",
+                    "template_data",
+                    "source_message_part__content",
+                    "source_message_part__template_data",
+                    "source_message_part__tool_call__task_definition",
+                ).order_by("pk"),
             )
         )
     )
@@ -530,10 +571,7 @@ def build_query_detail(query: Query) -> list[dict[str, Any]]:
     for query_message in query_messages:
         texts: list[str] = []
         for part in query_message.query_message_parts.all():
-            if part.content_type == "IMAGE":
-                texts.append("[image]")
-                continue
-            text = _as_text(_content_of(part))
+            text = _query_part_text(part)
             if text:
                 texts.append(text)
         items.append(

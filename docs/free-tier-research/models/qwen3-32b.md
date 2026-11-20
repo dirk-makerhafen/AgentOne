@@ -28,6 +28,11 @@ providers:
     model_id: Qwen3-32B
     conditions: "Currently free per rate-limit page; account + key; roster may change"
     verified: "2026-09-05"
+  - name: Inferbase
+    file: inferbase
+    model_id: qwen3-32b:fp8
+    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
+    verified: "2026-11-20"
 ---
 
 Qwen3-32B is Alibaba Qwen team's 32.8B dense reasoning model (thinking/non-thinking modes, Apache 2.0 open weights): 32,768 tokens native context, validated to 131,072 via YaRN.
@@ -44,6 +49,7 @@ Qwen3-32B is Alibaba Qwen team's 32.8B dense reasoning model (thinking/non-think
 |---|---|---|---|---|
 | [OVHcloud AI Endpoints](../providers/ovhcloud-ai-endpoints.md) | `Qwen3-32B` | Anonymous tier; no account, key, or card | 2 req/min per IP per model; roster rotates | 2026-09-05 |
 | [Xinliu (iFlow / 心流)](../providers/xinliu.md) | `Qwen3-32B` | Currently free per rate-limit page; account + key | 1 concurrent request per user (provider-wide); Xinliu docs report 128K context / 32K max output for its deployment | 2026-09-05 |
+| [Inferbase](../providers/inferbase.md) | `qwen3-32b:fp8` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

@@ -44,6 +44,11 @@ providers:
     model_id: poolside/laguna-s-2.1
     conditions: "Standing $0 Free plan (Portal price FREE); account + key; paid duplicate routes exist — send the FREE-priced route"
     verified: "2026-09-05"
+  - name: Waterfall
+    file: waterfall
+    model_id: laguna-s-2.1-free
+    conditions: "Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid)"
+    verified: "2026-11-20"
 ---
 
 Laguna S 2.1 is Poolside's frontier-class agentic-coding MoE model (118B total / 8B active). Weights are openly available under the permissive OpenMDW-1.1 license (commercial use allowed) for self-hosting. S 2.1 is text-to-text only (no vision inputs) with off/max thinking settings. Sibling size: [Laguna XS 2.1](laguna-xs-2.1.md).
@@ -65,6 +70,7 @@ Laguna S 2.1 is Poolside's frontier-class agentic-coding MoE model (118B total /
 | [AIHubMix](../providers/aihubmix.md) | `laguna-s-2.1-free` | Free-model lane; account + key, no card | None published; free versions are trial-use (limited resources, 429s possible under load) | 2026-09-05 |
 | [OpenRouter](../providers/openrouter.md) | `poolside/laguna-s-2.1:free` | Permanent `:free` variant; account + key, no card | None published combo-specific; provider-wide free-model caps apply (see provider file); roster rotates | 2026-09-05 |
 | [Nous Portal](../providers/nous-portal.md) | `poolside/laguna-s-2.1` | Standing $0 Free plan (Portal price FREE); account + key | None published combo-specific; provider-wide Free limits apply (see provider file); send the FREE-priced route, not the paid duplicate | 2026-09-05 |
+| [Waterfall](../providers/waterfall.md) | `laguna-s-2.1-free` | Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid) | None documented for this provider+model combo; no published numeric free-pool limits (see provider file) | 2026-11-20 |
 
 **Notes:**
 

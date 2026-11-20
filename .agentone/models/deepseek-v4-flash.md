@@ -35,6 +35,11 @@ providers:
     model_id: deepseek/deepseek-v4-flash-free
     conditions: "Hacker tier free forever, no card; `-free` IDs never touch the wallet; free set rotates, catalog is source of truth"
     verified: "2026-09-05"
+  - name: Inferbase
+    file: inferbase
+    model_id: deepseek-v4-flash:fp8
+    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
+    verified: "2026-11-20"
 ---
 
 DeepSeek V4 Flash is DeepSeek's cost-optimized open-weight reasoning lane (released 2026-04-24; 0731 checkpoint 2026-07-31): a 284B-total / 13B-active MoE with 1M context and up to 384K output, MIT-licensed weights, for coding and long-context work.
@@ -52,6 +57,7 @@ DeepSeek V4 Flash is DeepSeek's cost-optimized open-weight reasoning lane (relea
 | [UnoRouter](../providers/unorouter.md) | `deepseek-v4-flash:free` | `:free` lane; account + key, no card | ~1 req/min per user + upstream caps | 2026-09-05 |
 | [DeepSeek Platform](../providers/deepseek.md) | `deepseek-v4-flash` | No standing free tier; new-user API grant applies generally | Grant terms (one-time, not a quota) | 2026-09-05 |
 | [OrcaRouter](../providers/orcarouter.md) | `deepseek/deepseek-v4-flash-free` | Hacker tier free forever, no card; `-free` IDs never touch the wallet | No published numbers — per-workspace per-minute + per-day buckets, tiered by lifetime spend, plus a per-request prompt cap on the lower tier; build for the `429` | 2026-09-05 |
+| [Inferbase](../providers/inferbase.md) | `deepseek-v4-flash:fp8` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

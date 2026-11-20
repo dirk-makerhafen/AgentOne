@@ -73,6 +73,39 @@ class QueryMessagePart(BaseModel):
             return True
         return False
 
+    def _resolved_content(self) -> tuple[Any, Any, Any, Any]:
+        """Return the content fields this part actually renders from.
+
+        Most query parts are built with ``source_message_part`` only and do
+        not own a copy of the content (see ``build_llm_context``).  Every
+        reader must follow the source or it will see an empty part.
+        """
+        if self.source_message_part:
+            source = self.source_message_part
+            return source.content, source.template_data, source.content_type, source.type
+        return self.content, self.template_data, self.content_type, None
+
+    def _has_tool_call(self, part_type: Any) -> bool:
+        return bool(
+            part_type == MessagePartType.TOOLCALL
+            and self.source_message_part
+            and self.source_message_part.tool_call
+        )
+
+    def to_content_blocks(self, fail_on_error: bool = True) -> list[dict[str, Any]]:
+        """Render this part as OpenAI content blocks without any DB writes.
+
+        ``to_openai_message`` additionally estimates tokens and caches the
+        result.  Read-only callers (e.g. the chat query detail) only need the
+        blocks, and must not trigger observable updates by merely viewing them.
+        """
+        content, template_data, content_type, part_type = self._resolved_content()
+        if not content and not self._has_tool_call(part_type):
+            return []
+        return self._build_message_contents(
+            content, content_type, template_data, part_type, fail_on_error
+        )
+
     def to_openai_message(self, fail_on_error: bool = True) -> list[dict[str, Any]]:
         """Convert this part to the OpenAI content-part format.
 
@@ -81,22 +114,12 @@ class QueryMessagePart(BaseModel):
         cache_key = f"qmp{self.pk}"
         if item := cache.get(cache_key):
             return item
-        
-        if self.source_message_part:
-            content = self.source_message_part.content
-            template_data = self.source_message_part.template_data
-            content_type = self.source_message_part.content_type
-            part_type = self.source_message_part.type
-        else:
-            content = self.content
-            template_data = self.template_data
-            content_type = self.content_type
-            part_type = None
 
-        if not content:
+        content, _template_data, _content_type, part_type = self._resolved_content()
+        if not content and not self._has_tool_call(part_type):
             raise ValueError("No content set")
 
-        message_contents = self._build_message_contents(content, content_type, template_data, part_type, fail_on_error)
+        message_contents = self.to_content_blocks(fail_on_error=fail_on_error)
 
         if not self.tokens:
             tokens = estimate_openai_tokens(message_contents)

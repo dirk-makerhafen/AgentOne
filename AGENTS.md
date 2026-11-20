@@ -9,6 +9,7 @@ Quick reference for developers working on AgentOne. See also:
 - [docs/auto-title.md](docs/auto-title.md) — automatic chat naming, fork design, comparison with other harnesses
 - [docs/ui-rewrite.md](docs/ui-rewrite.md) — server-rendered UI architecture (htmx, SSE, components), rationale and shipped design
 - [docs/htmx-sse.md](docs/htmx-sse.md) — practical htmx/SSE component contract, pitfalls, and chat/UI rules
+- [docs/ui-implementation-guide.md](docs/ui-implementation-guide.md) — normative how-to + agent checklist for htmx/SSE/observables elements
 - [docs/deployment.md](docs/deployment.md) — production deployment, supervisor, nginx
 - [docs/folders.md](docs/folders.md) — canonical filesystem layout (scopes, `var/`, install repos)
 - [docs/manifest-format.md](docs/manifest-format.md) — YAML manifest format (agents, scripts, cron, streams, sets)

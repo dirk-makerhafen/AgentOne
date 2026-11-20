@@ -65,6 +65,16 @@ providers:
     model_id: gemma-4-31b-it-free
     conditions: "Free-model lane; account + key, no card; trial-use, 429s possible under load"
     verified: "2026-09-05"
+  - name: Septor Labs
+    file: septor-labs
+    model_id: gemma-4-31b-it-free
+    conditions: "Recurring `-free` lane; account + API key required, no card; confirm the responding model id (some Septor `-free` aliases silently resolve to minimax-m2.5-free)"
+    verified: "2026-11-20"
+  - name: Inferbase
+    file: inferbase
+    model_id: google-gemma-4-31b-it
+    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
+    verified: "2026-11-20"
 ---
 
 Gemma 4 31B IT is Google DeepMind's 30.7B dense multimodal instruction model (released 2026-04-02): text + image in / text out, 256K official context (262144 served on API routes), configurable thinking mode, native function calling, 140+ languages, Apache 2.0.
@@ -86,6 +96,8 @@ Gemma 4 31B IT is Google DeepMind's 30.7B dense multimodal instruction model (re
 | [SambaNova Cloud](../providers/sambanova.md) | `gemma-4-31B-it` | Free tier (preview); account + key, no card | Provider-wide free tier: 20 RPM / 20 RPD / 200K TPD; preview models may be removed at short notice | 2026-09-05 |
 | [OpenRouter](../providers/openrouter.md) | `google/gemma-4-31b-it:free` | Permanent `:free` variant; account + key, no card | None published combo-specific; provider-wide free-model caps apply (see provider file); roster rotates | 2026-09-05 |
 | [AIHubMix](../providers/aihubmix.md) | `gemma-4-31b-it-free` | Free-model lane; account + key, no card | None published; free versions are trial-use (limited resources, 429s possible under load) | 2026-09-05 |
+| [Septor Labs](../providers/septor-labs.md) | `gemma-4-31b-it-free` | Recurring `-free` lane; account + API key required, no card; confirm the responding model id (some Septor `-free` aliases silently resolve to minimax-m2.5-free) | None documented for this provider+model combo; provider-wide free allowance applies (see provider file) | 2026-11-20 |
+| [Inferbase](../providers/inferbase.md) | `google-gemma-4-31b-it` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

@@ -268,3 +268,55 @@ def test_sidebar_full_render_contains_the_panel(client):
     assert response.status_code == 200
     assert b"webui-brand" in response.content
     assert b"New chat" in response.content
+
+
+# ---------------------------------------------------------------------------
+# query detail (lazily loaded chat query card)
+# ---------------------------------------------------------------------------
+
+def _source_backed_query(session, sv, user_text, assistant_text):
+    """Build the query shape produced by ``build_llm_context``.
+
+    Query parts normally reference a ``MessagePart`` and own no content of
+    their own.  The expanded card must still show the text that was sent.
+    """
+    from server.models.enums.message_enums import MessageRole
+    from server.models.message import Message
+    from server.models.queries.query import Query
+
+    user_message = Message.objects.create(
+        role=MessageRole.USER, session=session, session_version=sv
+    )
+    user_message.add_part("message", "text", user_text)
+    assistant_message = Message.objects.create(
+        role=MessageRole.ASSISTANT, session=session, session_version=sv
+    )
+    assistant_message.add_part("message", "text", assistant_text)
+
+    query = Query.objects.create(session=session, session_version=sv)
+    query.add_message(role=MessageRole.USER, source_message=user_message)
+    query.add_message(role=MessageRole.ASSISTANT, source_message=assistant_message)
+    return query
+
+
+def test_query_detail_uses_source_part_content(client):
+    from webui.features.chats.parts.thread import build_query_detail
+
+    _agent, _version, session, sv, _message = _chat_session("query-detail")
+    query = _source_backed_query(session, sv, "question text", "answer text")
+
+    detail = build_query_detail(query)
+
+    assert [item["text"] for item in detail] == ["question text", "answer text"]
+
+
+def test_query_detail_endpoint_renders_source_part_content(client):
+    _agent, _version, session, sv, _message = _chat_session("query-detail-view")
+    query = _source_backed_query(session, sv, "question text", "answer text")
+
+    response = client.get(reverse("webui:query_detail", args=[query.pk]))
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "question text" in body
+    assert "answer text" in body

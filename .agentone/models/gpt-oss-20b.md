@@ -42,6 +42,11 @@ providers:
     model_id: gpt-oss-20b-free
     conditions: "Free-model lane; account + key, no card; trial-use, 429s possible under load"
     verified: "2026-09-05"
+  - name: Inferbase
+    file: inferbase
+    model_id: openai-gpt-oss-20b
+    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
+    verified: "2026-11-20"
 ---
 
 GPT-OSS 20B is OpenAI's smaller open-weight reasoning model (MoE, ~21B total / 3.6B active) for low-latency, local, or specialized agentic use. Official context window is 131072; InferX serves a capped 20K variant (see provider override).
@@ -60,6 +65,7 @@ GPT-OSS 20B is OpenAI's smaller open-weight reasoning model (MoE, ~21B total / 3
 | [OVHcloud AI Endpoints](../providers/ovhcloud-ai-endpoints.md) | `gpt-oss-20b` | Anonymous, no key, no card | 2 RPM anonymous per IP per model; roster rotates | 2026-09-05 |
 | [FastRouter](../providers/fastrouter.md) | `openai/gpt-oss-20b:free` | ⚠ `:free` lane; org must hold a paid credit balance above $1 or free calls 402 | 10 req/day per org per model, UTC-midnight reset | 2026-09-05 |
 | [AIHubMix](../providers/aihubmix.md) | `gpt-oss-20b-free` | Free-model lane; account + key, no card | None published; free versions are trial-use (limited resources, 429s possible under load) | 2026-09-05 |
+| [Inferbase](../providers/inferbase.md) | `openai-gpt-oss-20b` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

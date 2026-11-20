@@ -88,6 +88,11 @@ providers:
     gate: "Paid billing (Workers Paid or prepaid AI Gateway credits) required to call it"
     notes: "Neuron budgets: ~31,818 in / 68,182 out neurons per M tokens"
     verified: "2026-09-05"
+  - name: Inferbase
+    file: inferbase
+    model_id: openai-gpt-oss-120b
+    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
+    verified: "2026-11-20"
 ---
 
 GPT-OSS 120B is OpenAI's flagship open-weight reasoning model and the most widely free-served model in this catalog (8 verified free routes). Max output varies by host (65K on Groq; up to 131K elsewhere).
@@ -110,6 +115,7 @@ GPT-OSS 120B is OpenAI's flagship open-weight reasoning model and the most widel
 | [NVIDIA NIM](../providers/nvidia-nim.md) | `openai/gpt-oss-120b` | Free tier ($0 fixture rows) | See provider file (catalog slugs churn) | 2026-09-05 |
 | [OVHcloud AI Endpoints](../providers/ovhcloud-ai-endpoints.md) | `gpt-oss-120b` | Anonymous, no key, no card | 2 RPM provider-wide (representative snapshot; roster rotates) | 2026-09-05 |
 | [Cloudflare Workers AI](../providers/cloudflare-workers-ai.md) | `@cf/openai/gpt-oss-120b` | ⚠ GATED — free lane exists but paid billing (Workers Paid or prepaid AI Gateway credits) is required to call it; not usable without payment | Neuron budgets: ~31,818 in / 68,182 out neurons per M tokens | 2026-09-05 |
+| [Inferbase](../providers/inferbase.md) | `openai-gpt-oss-120b` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

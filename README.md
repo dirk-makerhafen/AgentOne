@@ -84,6 +84,7 @@ AgentOne ships with comprehensive documentation organized by audience. Below is 
 | `docs/development.md` | Developer's guide: setup, adding models/tools/agents/UI, testing, REST API |
 | `docs/core-mechanisms.md` | Deep-dive: task dispatch pipeline, auto-await, renderer internals (legacy pyHtmlGui section) |
 | `docs/ui-rewrite.md` | UI rewrite plan/status: htmx + Django templates + SSE, route map, deferred items |
+| `docs/ui-implementation-guide.md` | Normative htmx/SSE/observables rules + agent review checklist for `webui/` changes |
 | `docs/deployment.md` | Production deployment: prerequisites, services, nginx, TLS |
 | `docs/folders.md` | Canonical filesystem layout: scopes, `var/` subtrees, install repos, backup |
 | `docs/manifest-format.md` | YAML manifest format reference (agents, scripts, cron, streams, sets) |
