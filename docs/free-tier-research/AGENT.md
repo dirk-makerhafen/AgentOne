@@ -5,6 +5,7 @@ Your task is to research these discovery sources:
 * https://github.com/nejib1/Free-LLM
 * https://github.com/CYBIRD-D/FREE-LLM-API-Provider
 * https://freellms.org/providers/
+* https://github.com/tashfeenahmed/freellmapi — public signed monthly catalog at https://api.freellmapi.co/v1/latest (structured platform/model leads, ~30 days behind the live feed)
 
 Opencode (popular agent harness) also often has for a short time very good models for free via opencode zen, using their api_key "public" , easy extractable via https://raw.githubusercontent.com/anomalyco/opencode/refs/heads/dev/packages/web/src/content/docs/zen.mdx
 
@@ -43,7 +44,7 @@ For every provider:
 5. If sources disagree, investigate and use the most recent/reliable information.
 6. Do not infer or guess limits.
 
-A provider discovered outside the three lists may also be added if it has a verifiable free API.
+A provider discovered outside the four lists may also be added if it has a verifiable free API.
 
 ## Data Extraction Scripts
 
@@ -60,7 +61,31 @@ python3 scripts/generate_from_opencode_fixtures.py
 
 # Source 3: Leaderboard generation. do not edit. creates raw/leaderboard.csv
 python3 scripts/generate_leaderboard.py
+
+# Source 4: FreeLLMAPI public monthly catalog (signed JSON, no key, ~30-day lag)
+#   - Feed: https://api.freellmapi.co/v1/latest
+#   - Writes raw/freellmapi-catalog/ plus candidates.md (diff vs existing cards)
+python3 scripts/generate_from_freellmapi_catalog.py
 ```
+
+### FreeLLMAPI catalog handling
+
+The FreeLLMAPI feed is a **discovery source, not an authoritative source**. Use
+`platforms[]`, `models[]`, and `quirks[]` to find provider/model leads, then verify
+each one against official provider docs before changing `providers/` or `models/`.
+
+Mapping rules:
+
+* Catalog `limits` are **per platform+model**; put them in a model card's
+  `providers[].limits`, never in provider frontmatter.
+* `monthlyTokenBudget` is a display label, not a numeric quota. Do not convert it
+  into `limits.tokens.month`.
+* `intelligenceRank` / `speedRank` are FreeLLMAPI's own ranks; they are not our
+  `leaderboard_rank`.
+* `supportsTools` / `supportsVision` and catalog quirks are leads to verify, not
+  automatic capability flags.
+* The public feed is the `monthly` tier. Do not ingest a `live`/Premium feed into
+  research data.
 
 ## What counts as free
 
@@ -594,7 +619,7 @@ Prefer:
 2. Official pricing/free-tier documentation
 3. Official model documentation
 4. Official announcements
-5. The three discovery sources
+5. The four discovery sources
 6. Other reputable sources when necessary
 
 Use specific documentation URLs where possible rather than only the provider homepage.
