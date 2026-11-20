@@ -12,11 +12,11 @@
         return meta ? meta.getAttribute('content') : '';
     }
 
-    // ── Per-document SSE client ──────────────────────────────────────────
+    // ── Per-document event client (WebSocket transport) ──────────────────
     // The id is unique per loaded document, so duplicated tabs cannot share a
     // Redis channel/watch set (closing one would unsubscribe the other).  A
-    // boosted navigation keeps the same document and therefore the same
-    // id/EventSource; reconnects of that source reuse the id on purpose.
+    // boosted navigation keeps the same document and therefore the same id and
+    // socket; reconnects reuse the id on purpose so the server sends `reset`.
     // An inline bootstrap in base.html sets it and sse-connect before htmx
     // processes; this is a resilient fallback for non-standard loads.
     var clientId = window.agentoneClientId || '';
@@ -28,10 +28,10 @@
             window.agentoneClientId = clientId;
         }
         if (document.body && !document.body.getAttribute('sse-connect')) {
-            var sseUrl = document.body.getAttribute('data-sse-url') || '/app/sse/';
+            var eventUrl = document.body.getAttribute('data-ws-url') || '/app/ws/events/';
             document.body.setAttribute(
                 'sse-connect',
-                sseUrl + (sseUrl.indexOf('?') === -1 ? '?' : '&') + 'client=' + encodeURIComponent(clientId)
+                eventUrl + (eventUrl.indexOf('?') === -1 ? '?' : '&') + 'client=' + encodeURIComponent(clientId)
             );
             if (window.htmx && typeof htmx.process === 'function') {
                 htmx.process(document.body);

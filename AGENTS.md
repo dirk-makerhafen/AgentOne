@@ -113,6 +113,15 @@ tabs that registered one of those keys. Keys look like `Model:<pk>`,
 publisher also emits the bare model key (`Model`) for all-row lists, and a
 filter transition publishes both the old and the new value.
 
+Each tab receives those keys over **one WebSocket** (`/app/ws/events/`,
+`EventsConsumer` in `webui/core/events.py`, routed in `config/asgi.py`).
+`webui/static/webui/ws-events.js` supplies an EventSource-shaped
+`htmx.createEventSource` so htmx's `sse:` triggers stay unchanged; watch sets
+are still POSTed to `/app/sse/watch`. Do not switch this back to `EventSource`:
+Chrome counts SSE streams against the six-per-origin HTTP/1.1 pool, which
+starves new tabs once five or six are open. The legacy HTTP `/app/sse/` view is
+kept only as a fallback.
+
 Client registry (Redis): `agentone:sse:watch:<client>` (JSON key list, TTL 60s),
 `agentone:sse:keys:<key>` (SET of client ids), `agentone:sse:<client>`
 (channel), `agentone:sse:seen:<client>` (reconnect marker). Each browser tab
@@ -140,6 +149,7 @@ destroys an already-loaded child. See `docs/observables-migration.md` and
 | `webui/events.py` | per-tab SSE stream + `/app/sse/watch` |
 | `webui/components.py` | component registry, ETag/cache policy, placeholders |
 | `webui/static/webui/app.js` | client id, watch-set sync, `If-None-Match`, thread swaps |
+| `webui/static/webui/ws-events.js` | EventSource-shaped WebSocket shim used by htmx's `sse` extension |
 
 Skills provide specialized instructions and workflows for specific tasks.
 Use the skill tool to load a skill when a task matches its description.

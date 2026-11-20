@@ -5,6 +5,11 @@ commands:
     file: ping.py
     function: ping
     bound: True
+  - name: auto_title_session
+    file: auto_title_session.py
+    function: auto_title_session
+    bound: True
+    max_retries: 0
 tools:
   # Have the subagent return a result to the caller
   - name: final_result
@@ -29,7 +34,7 @@ tasks:
     file: auto_title_session.py
     function: auto_title_session
     bound: True
-    max_retries: 0
+    max_retries: 3
   - name: ingest_auto_title
     file: ingest_auto_title.py
     function: ingest_auto_title

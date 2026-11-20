@@ -17,28 +17,29 @@
     <link rel="stylesheet" href="{% static_v 'css/main.css' %}">
     <link rel="stylesheet" href="{% static_v 'webui/app.css' %}">
     <script src="{% static_v 'webui/htmx.min.js' %}" defer></script>
+    <script src="{% static_v 'webui/ws-events.js' %}" defer></script>
     <script src="{% static_v 'webui/sse.js' %}" defer></script>
     <script src="{% static_v 'webui/app.js' %}" defer></script>
     {% block head %}{% endblock %}
 </head>
-<body hx-boost="true" hx-ext="sse" data-sse-url="{% url 'webui:sse' %}" data-sse-watch-url="{% url 'webui:sse_watch' %}">
+<body hx-boost="true" hx-ext="sse" data-ws-url="{% url 'webui:events_ws' %}" data-sse-watch-url="{% url 'webui:sse_watch' %}">
 <script>
 (function () {
     try {
-        // One EventSource per document, not per stored id: duplicated tabs
+        // One event socket per document, not per stored id: duplicated tabs
         // copy sessionStorage and would otherwise share a channel/watch set.
         var clientId = (window.crypto && crypto.randomUUID)
             ? crypto.randomUUID()
             : 'c' + Date.now() + Math.random().toString(36).slice(2);
         window.agentoneClientId = clientId;
         var body = document.body;
-        var base = body.getAttribute('data-sse-url') || '/app/sse/';
+        var base = body.getAttribute('data-ws-url') || '/app/ws/events/';
         body.setAttribute(
             'sse-connect',
             base + (base.indexOf('?') === -1 ? '?' : '&') + 'client=' + encodeURIComponent(clientId)
         );
     } catch (e) {
-        if (window.console && console.error) console.error('sse client setup failed:', e);
+        if (window.console && console.error) console.error('event client setup failed:', e);
     }
 })();
 </script>

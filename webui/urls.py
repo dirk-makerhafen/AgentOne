@@ -25,6 +25,7 @@ urlpatterns = [
     path("chats", dashboard_views.chats, name="chats"),
     path("sse/", events.sse_stream, name="sse"),
     path("sse/watch", events.sse_watch, name="sse_watch"),
+    path("ws/events/", events.events_ws_url, name="events_ws"),
     # Components ----------------------------------------------------------
     path("c/<str:name>", components.render_component, name="component_root"),
     path("c/<str:name>/<int:pk>", components.render_component, name="component"),

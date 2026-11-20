@@ -453,8 +453,12 @@ calls.
 detected. Bound the per-connection queue; on overflow, drop events rather than
 grow memory — the client self-heals on the next event.
 
-**Connection budget.** One stream per tab, which stays well under the HTTP/1.1
-six-connection limit; use HTTP/2 in nginx anyway.
+**Connection budget.** One WebSocket per tab. An `EventSource` counted against
+Chrome's six-per-origin HTTP/1.1 pool, so five or six open tabs left no socket
+for a new tab's document/component loads (Firefox uses a larger pool, hence the
+browser difference). WebSockets use a separate per-host pool (255 Chromium, 200
+Firefox); the server-side fan-out and `sse:` triggers are unchanged. The legacy
+HTTP `/app/sse/` view remains as a fallback but the UI does not connect to it.
 
 **Verified in Phase 0:** htmx's `sse:` trigger parser accepts event names
 containing dots, colons and `@` (`Message.session:42`,

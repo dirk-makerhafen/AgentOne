@@ -130,10 +130,13 @@ triggers on (`sse:reset`).
 
 ## Browser side
 
-`webui/static/webui/app.js`:
+`webui/static/webui/app.js` (with the WebSocket shim in `webui/static/webui/ws-events.js`
+and the event socket consumer in `webui/core/events.py`):
 
 1. Creates an id per loaded document and injects
    `sse-connect="…?client=<id>"` into `<body>` before htmx processes the page.
+   That URL is `/app/ws/events/`; the shim turns it into a WebSocket while
+   keeping htmx's `sse:` event names, so no component trigger changes.
    `sessionStorage` is deliberately not used: duplicated tabs copy it and would
    share one channel/watch set (closing one would unsubscribe the other).
    `hx-ext="sse"` lives on `<body>` too, so a boosted navigation (which only
