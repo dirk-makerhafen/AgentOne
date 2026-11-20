@@ -21,6 +21,7 @@ from webui.features.workitems.board import (
     status_label,
 )
 from webui.core.assistants import assistant_overview_context
+from webui.core.components import render_fragment
 from webui.core.layout import render_page
 
 _ACTIONABLE_STATUSES = ("in_review", "blocked", "ready")
@@ -127,7 +128,9 @@ def workitems_board(request):
     """
     if request.headers.get("HX-Request") != "true":
         return workitems(request)
-    return render(request, "workitems/parts/board.html", _board_context(request))
+    return render_fragment(
+        request, "workitems/parts/board.html", _board_context(request)
+    )
 
 
 def workitem_detail(request, workitem_id: int):

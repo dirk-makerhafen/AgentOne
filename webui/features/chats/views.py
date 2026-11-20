@@ -37,6 +37,7 @@ from webui.features.chats.parts.thread import (
     build_thread,
 )
 from webui.core.layout import default_agent, panel_open_default, render_page, send_key, unique_session_name
+from webui.core.components import render_fragment
 from webui.features.chats.session_ui import (
     command_options,
     compaction_segments,
@@ -119,19 +120,17 @@ def chat_page(request, session_id: int):
         ),
         pk=session_id,
     )
-    context = session_context(session_model, around=_int_param(request.GET.get("around")))
-    context["is_busy"] = is_busy(session_model)
-    context["send_key"] = send_key()
-    context["usage"] = usage_summary(session_model)
-    context["commands"] = command_options(session_model)
-    context.update(composer_config(session_model))
-    context.update(composer_state(session_model))
+    # The page shell only needs the session id and the panel state.  Header,
+    # thread, composer and panel are components and build their own context;
+    # computing them here too made every full chat load render the whole
+    # conversation twice (and run the panel queries twice).
     panel_tab = request.GET.get("panel", "")
     if not panel_tab and panel_open_default():
         panel_tab = "details"
-    panel_context = _panel_context(session_model, panel_tab or "details", request)
-    panel_context["panel_tab"] = panel_tab
-    context.update(panel_context)
+    context = {
+        "session": session_model,
+        "panel_tab": panel_tab,
+    }
     return render_page(request, "chats", "chats/detail.html", context,
                        active_id=session_model.pk)
 
@@ -163,7 +162,7 @@ def query_detail(request, query_id: int):
             error_message = response.error_message or ""
     except Exception:  # pylint: disable=broad-exception-caught
         response = None
-    return render(
+    return render_fragment(
         request,
         "chats/parts/query_detail.html",
         {
@@ -187,7 +186,7 @@ def call_detail(request, call_id: int):
     session_id = request.GET.get("session", "")
     if request.GET.get("back") == "1" and session_id.isdigit():
         context["back_session"] = int(session_id)
-    return render(request, "chats/parts/tool_detail.html", context)
+    return render_fragment(request, "chats/parts/tool_detail.html", context)
 
 
 def inspect_history_item(request, session_id: int):
@@ -240,7 +239,7 @@ def inspect_history_item(request, session_id: int):
 def response_detail(request, response_id: int):
     """Lazily render a response card's body (for streaming tokens)."""
     response = get_object_or_404(Response, pk=response_id)
-    return render(
+    return render_fragment(
         request,
         "chats/parts/response_detail.html",
         {"response": response},
@@ -275,7 +274,7 @@ def terminal_output(request, session_id: int, name: str):
         output = result.get("output", "") or ""
     except Exception as exc:  # pylint: disable=broad-exception-caught
         error = str(exc)
-    return render(
+    return render_fragment(
         request,
         "chats/parts/terminal_output.html",
         {"terminal": row, "output": output, "error": error},
@@ -325,7 +324,7 @@ def _composer_footer_response(request, session_model: SessionModel):
         "send_key": send_key(),
     }
     context.update(composer_state(session_model))
-    return render(request, "chats/parts/composer_footer.html", context)
+    return render_fragment(request, "chats/parts/composer_footer.html", context)
 
 
 def chat_composer_footer(request, session_id: int):
@@ -365,7 +364,7 @@ def chat_panel(request, session_id: int):
 
 def chat_panel_tab(request, session_id: int, tab: str):
     session_model = get_object_or_404(SessionModel, pk=session_id)
-    return render(
+    return render_fragment(
         request,
         "chats/panels/inner.html",
         _panel_context(session_model, tab, request),
@@ -381,7 +380,7 @@ def chat_panel_body(request, session_id: int, tab: str):
     old JS did) left SSE refreshes pointed at the tab rendered on page load.
     """
     session_model = get_object_or_404(SessionModel, pk=session_id)
-    return render(
+    return render_fragment(
         request,
         "chats/rightbar_body.html",
         _panel_context(session_model, tab, request),

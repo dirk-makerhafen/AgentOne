@@ -8,6 +8,7 @@ from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 
+from webui.core.components import render_fragment
 from webui.core.layout import render_page
 
 
@@ -78,10 +79,12 @@ def logs_tail(request):
     if not name:
         files = log_files()
         if not files:
-            return render(request, "logs/parts/tail.html", {"content": "", "file": ""})
+            return render_fragment(
+                request, "logs/parts/tail.html", {"content": "", "file": ""}
+            )
         name = files[0]
     path = _resolve(name)
-    return render(
+    return render_fragment(
         request,
         "logs/parts/tail.html",
         {"content": tail(path, lines), "file": name},

@@ -137,17 +137,68 @@
 
     // htmx form posts carry the hidden input, but non-form requests (fragment
     // refetches that ever become POSTs) need the header.
+    //
+    // Component wrappers advertise their ETag in ``data-component-etag``.
+    // Ad-hoc live fragments (composer footer, panel body, polling output) use a
+    // per-request-path ETag cache instead: their root element is often replaced
+    // by the response, so the attribute cannot survive the swap.  Revalidating
+    // them is what stops an SSE refresh from replacing unchanged buttons.
+    var fragmentEtags = Object.create(null);
+
+    function normalizePath(raw) {
+        if (!raw) return '';
+        try {
+            var url = new URL(raw, window.location.origin);
+            return url.pathname + url.search;
+        } catch (err) {
+            return String(raw);
+        }
+    }
+
+    function requestPath(evt) {
+        var detail = evt && evt.detail;
+        if (!detail) return '';
+        // ``configRequest`` exposes the resolved URL as ``path``; ``afterRequest``
+        // exposes it as ``requestConfig.path`` and also carries ``pathInfo``.
+        if (detail.requestConfig && detail.requestConfig.path) {
+            return normalizePath(detail.requestConfig.path);
+        }
+        if (detail.path) return normalizePath(detail.path);
+        var pathInfo = detail.pathInfo;
+        return pathInfo && pathInfo.requestPath
+            ? normalizePath(pathInfo.requestPath)
+            : '';
+    }
+
     document.addEventListener('htmx:configRequest', function (evt) {
         var token = csrfToken();
         if (token && evt.detail && evt.detail.headers) {
             evt.detail.headers['X-CSRFToken'] = token;
         }
-        var etag = evt.detail && evt.detail.elt && evt.detail.elt.getAttribute
-            ? evt.detail.elt.getAttribute('data-component-etag')
+        var elt = evt.detail && evt.detail.elt;
+        var etag = elt && elt.getAttribute
+            ? elt.getAttribute('data-component-etag')
             : '';
+        if (!etag) {
+            var path = requestPath(evt);
+            if (path) etag = fragmentEtags[path] || '';
+        }
         if (etag && evt.detail && evt.detail.headers) {
             evt.detail.headers['If-None-Match'] = etag;
         }
+    });
+
+    document.addEventListener('htmx:afterRequest', function (evt) {
+        var detail = evt.detail || {};
+        var xhr = detail.xhr;
+        if (!xhr) return;
+        var verb = (detail.requestConfig && detail.requestConfig.verb) || 'get';
+        if (String(verb).toLowerCase() !== 'get') return;
+        var path = requestPath(evt);
+        if (!path) return;
+        var etag = xhr.getResponseHeader('ETag');
+        if (etag) fragmentEtags[path] = etag;
+        else delete fragmentEtags[path];
     });
 
     function autoGrow(el) {

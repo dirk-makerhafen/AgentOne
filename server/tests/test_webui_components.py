@@ -249,6 +249,79 @@ def test_htmx_render_inlines_chat_thread_children(client):
     assert "hx-preserve" in body
 
 
+def test_thread_does_not_reload_for_task_call_status_changes(client):
+    """Status cards are their own component, not a reason to swap the thread.
+
+    ``AgentTaskCall.session`` fires for every tool status change.  Keeping it on
+    ``chat-thread`` replaced the whole conversation (scroll, open cards, focus)
+    just to refresh the queue/approval card.
+    """
+    _agent, _version, session, _sv, _message = _chat_session("thread-task-keys")
+    body = _get(client, "chat-thread", session.pk, render="htmx").content.decode()
+
+    thread = re.search(r'<div[^>]*data-component="chat-thread"[^>]*>', body)
+    assert thread is not None
+    assert f"sse:AgentTaskCall.session:{session.pk}" not in thread.group(0)
+    assert 'data-component="chat-cards"' in body
+    cards = re.search(r'<div[^>]*data-component="chat-cards"[^>]*>', body)
+    assert cards is not None
+    assert f"sse:AgentTaskCall.session:{session.pk}" in cards.group(0)
+
+
+# ---------------------------------------------------------------------------
+# ad-hoc live fragments
+# ---------------------------------------------------------------------------
+
+def test_live_fragment_revalidates_with_etag(client):
+    """The composer footer must not be swapped when its HTML did not change."""
+    _agent, _version, session, _sv, _message = _chat_session("fragment-etag")
+
+    first = client.get(reverse("webui:chat_composer_footer", args=[session.pk]))
+    assert first.status_code == 200
+    assert first["Cache-Control"] == "private, no-cache"
+    assert "Cookie" in first["Vary"]
+    etag = first["ETag"]
+    assert etag
+
+    unchanged = client.get(
+        reverse("webui:chat_composer_footer", args=[session.pk]),
+        HTTP_IF_NONE_MATCH=etag,
+    )
+    assert unchanged.status_code == 204
+    assert unchanged.content == b""
+    assert unchanged["ETag"] == etag
+
+
+def test_live_fragment_etag_changes_with_state(client):
+    _agent, _version, session, _sv, _message = _chat_session("fragment-etag-change")
+
+    first = client.get(reverse("webui:chat_composer_footer", args=[session.pk]))
+    etag = first["ETag"]
+
+    from server.models.sessions.session import SessionModel
+
+    SessionModel.objects.filter(pk=session.pk).update(is_paused=True)
+    changed = client.get(
+        reverse("webui:chat_composer_footer", args=[session.pk]),
+        HTTP_IF_NONE_MATCH=etag,
+    )
+    assert changed.status_code == 200
+    assert changed["ETag"] != etag
+    assert b"Paused" in changed.content
+
+
+def test_panel_body_fragment_revalidates_with_etag(client):
+    _agent, _version, session, _sv, _message = _chat_session("panel-etag")
+
+    url = reverse("webui:chat_panel_tab", args=[session.pk, "details"])
+    first = client.get(url)
+    assert first.status_code == 200
+    etag = first["ETag"]
+
+    unchanged = client.get(url, HTTP_IF_NONE_MATCH=etag)
+    assert unchanged.status_code == 204
+
+
 def test_full_render_inlines_children_without_preserve(client):
     _agent, _version, session, _sv, message = _chat_session("inline")
     response = _get(client, "chat-thread", session.pk)  # render defaults to full

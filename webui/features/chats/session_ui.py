@@ -9,7 +9,6 @@ from django.urls import reverse
 from server.models.message import Message
 from server.models.sessions.session import SessionModel
 from server.models.settings import ReasoningEffort
-from webui.features.chats.parts.cards import build_chat_cards
 from webui.features.chats.parts.thread import DEFAULT_LIMIT, build_thread
 
 log = logging.getLogger(__name__)
@@ -45,7 +44,6 @@ def session_context(
         "thread_around": around,
         "thread_has_older": total_messages > limit,
         "thread_older_limit": min(limit + DEFAULT_LIMIT, 2000),
-        "cards": build_chat_cards(session_model),
         "toc_segments": compaction_segments(session_model),
         "sse_url": f"{reverse('webui:sse')}?scope=session:{session_model.pk}",
         # Thread fragments rendered directly (send, actions, legacy endpoints) should

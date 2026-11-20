@@ -28,6 +28,7 @@ from server.models.queries.response import Response, ResponseStatus
 from server.models.sessions.session import SessionModel
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.workitems.work_item import WorkItem
+from webui.core.components import render_fragment
 from webui.core.layout import render_page
 
 log = logging.getLogger(__name__)
@@ -838,7 +839,7 @@ def model_probe_status(request, model_id: int):
     requested = bool(cache.get(requested_key))
     if probe is not None:
         cache.delete(requested_key)
-    return render(
+    return render_fragment(
         request,
         "insights/parts/model_probe.html",
         {

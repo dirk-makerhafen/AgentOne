@@ -41,7 +41,7 @@ memoryPlaybook: true
 commands: [+, ping, todo.* ]
 disallowedCommands: []
 
-tools: [+, core.*, subagents.*, history.*, skills.*, todo.*, workitems.*, admin_tool]
+tools: [+, core.*, subagents.*, history.*, skills.*, todo.*, workitems.*, admin_tool, interaction.*]
 disallowedTools: []
 
 skills: []

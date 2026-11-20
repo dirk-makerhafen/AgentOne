@@ -56,6 +56,7 @@ __all__ = [
     "component_url",
     "render_component",
     "render_component_ref",
+    "render_fragment",
     "section_sidebar",
 ]
 
@@ -179,6 +180,43 @@ def _etag(html: str) -> str:
         r'(name="csrfmiddlewaretoken" value=")[^"]*(")', r"\1\2", html
     )
     return '"' + hashlib.sha256(canonical.encode()).hexdigest()[:32] + '"'
+
+
+def render_fragment(
+    request,
+    template_name: str,
+    context: dict[str, Any] | None = None,
+    *,
+    status: int = 200,
+) -> HttpResponse:
+    """Render a small live fragment with the same ETag contract as components.
+
+    Ad-hoc fragments (composer footer, panel body, polling output, kanban board)
+    sit inside an element that owns its own ``hx-get``/``hx-trigger``.  They
+    cannot use the component wrapper, but they still must not be swapped when
+    their HTML did not change: an SSE refresh that replaces a button row on
+    every task-call event makes the controls flicker.
+
+    ``app.js`` remembers the ETag of every GET response by request path and
+    sends it back as ``If-None-Match``.  An unchanged fragment therefore answers
+    ``204`` and htmx leaves the live DOM (and focus) alone.
+    """
+    html = render_to_string(template_name, context or {}, request=request)
+    etag = _etag(html)
+
+    response = HttpResponse()
+    response["Vary"] = "Cookie"
+    response["Cache-Control"] = "private, no-cache"
+    response["ETag"] = etag
+    if request.headers.get("If-None-Match") == etag:
+        response.status_code = 204
+        response["Content-Length"] = "0"
+        return response
+
+    response.status_code = status
+    response.content = html
+    response["Content-Length"] = str(len(response.content))
+    return response
 
 
 def _trigger(keys: tuple[str, ...], *, reset: bool = True) -> str:

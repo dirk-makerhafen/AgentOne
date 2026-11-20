@@ -22,6 +22,7 @@ from runtime.settings.settings import (
 from server.models.providers.ai_model import AiModel
 from server.models.providers.api_key import ApiKey
 from server.models.providers.api_provider import ApiProvider
+from webui.core.components import render_fragment
 from webui.core.layout import render_page
 
 #: How long a provider→model mapping survives between the Test click and the
@@ -104,7 +105,7 @@ def _provider_probe_context(provider: ApiProvider) -> dict:
 def settings_provider_probe(request, provider_id: int):
     """Return just the probe row so polling never replaces the whole card."""
     provider = get_object_or_404(ApiProvider, pk=provider_id)
-    return render(
+    return render_fragment(
         request,
         "settings/parts/provider_probe.html",
         _provider_probe_context(provider),
@@ -225,7 +226,7 @@ def settings_provider_test(request, provider_id: int):
     if next_url.startswith("/app/"):
         redirect_to = next_url
     if request.headers.get("HX-Request") == "true":
-        return render(
+        return render_fragment(
             request,
             "settings/parts/provider_probe.html",
             _provider_probe_context(provider),

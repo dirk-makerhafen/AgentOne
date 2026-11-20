@@ -90,7 +90,6 @@ def _build_chat_header(request, pk, params):
 
 
 def _build_chat_thread(request, pk, params):
-    from webui.features.chats.parts.cards import build_chat_cards
     from webui.features.chats.parts.thread import DEFAULT_LIMIT, build_thread
 
     session = _session(pk)
@@ -116,7 +115,6 @@ def _build_chat_thread(request, pk, params):
         "thread_around": around,
         "thread_has_older": total_messages > limit,
         "thread_older_limit": min(limit + DEFAULT_LIMIT, 2000),
-        "cards": build_chat_cards(session),
         # Inline child message/query/response components so a thread refetch (e.g.
         # SSE reset on reload) returns a complete thread in one response instead of
         # fanning out placeholders that must each load separately.
@@ -128,8 +126,26 @@ def _build_chat_thread(request, pk, params):
             f"Message.session:{pk}",
             f"Query.session:{pk}",
             f"Response.session:{pk}",
-            f"AgentTaskCall.session:{pk}",
             f"SessionModel:{pk}",
+        ),
+    )
+
+
+def _build_chat_cards(request, pk, params):
+    """The status cards under the thread.
+
+    Kept separate from ``chat-thread`` so a task-call status update only swaps
+    the cards instead of re-rendering (and potentially replacing) the whole
+    conversation.  Message rows update their own tool cards from
+    ``AgentTaskCall:<pk>`` keys.
+    """
+    from webui.features.chats.parts.cards import build_chat_cards
+
+    session = _session(pk)
+    return ComponentData(
+        {"session": session, "cards": build_chat_cards(session)},
+        (
+            f"AgentTaskCall.session:{pk}",
             # build_chat_cards() renders provider/key/model details for parked
             # calls, including their rate-limit state.
             "ApiProvider",
@@ -297,6 +313,7 @@ def _build_chat_sidebar_session(request, pk, params):
 def register_chat_components():
     register(ComponentSpec("chat-header", "chats/parts/header.html", _build_chat_header))
     register(ComponentSpec("chat-thread", "chats/parts/thread.html", _build_chat_thread))
+    register(ComponentSpec("chat-cards", "chats/parts/cards.html", _build_chat_cards))
     register(ComponentSpec("chat-message", "chats/parts/message.html", _build_chat_message))
     register(ComponentSpec("chat-query", "chats/parts/query.html", _build_chat_query))
     register(ComponentSpec("chat-response", "chats/parts/response.html", _build_chat_response))
