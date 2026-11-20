@@ -182,17 +182,19 @@ def test_keyless_component_does_not_refetch_on_bubbled_clicks(client):
 # render modes
 # ---------------------------------------------------------------------------
 
-def test_htmx_render_emits_placeholders_for_children(client):
-    _agent, _version, session, _sv, message = _chat_session("placeholders")
+def test_htmx_render_inlines_chat_thread_children(client):
+    """Chat thread inlines children on htmx renders to avoid N+1 placeholder fan-out."""
+    _agent, _version, session, _sv, message = _chat_session("inline-thread")
     response = _get(client, "chat-thread", session.pk, render="htmx")
     body = response.content.decode()
 
     assert 'data-component="chat-thread"' in body
-    assert f'data-component="chat-message"' in body
-    # Placeholder: loads itself and can be preserved across a parent swap.
-    assert 'hx-trigger="load' in body
+    assert 'data-component="chat-message"' in body
+    # Children are rendered inline as live components, not self-loading placeholders.
+    assert "msg-row" in body
+    assert f"sse:Message:{message.pk}" in body
+    assert 'hx-trigger="load, intersect once"' not in body
     assert "hx-preserve" in body
-    assert "msg-row" not in body
 
 
 def test_full_render_inlines_children_without_preserve(client):

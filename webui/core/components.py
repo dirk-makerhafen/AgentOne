@@ -18,6 +18,11 @@ Two render modes
     already loaded: component wrappers carry ``hx-preserve`` and htmx moves the
     live element into the new fragment by id.
 
+    Container builders may set ``inline_children=True`` in their context to
+    render children inline even for ``render=htmx`` responses.  Use this for
+    list/thread containers that would otherwise fan out many placeholder loads
+    on a full container refetch (e.g. SSE reset/reconnect).
+
 Cache policy
 ------------
 
@@ -209,8 +214,11 @@ def _open_tag(
         attrs.append(f'data-component-etag="{escape(etag)}"')
     # hx-preserve keeps an already-loaded component alive when a parent swap
     # re-renders and emits a placeholder for it (htmx 2 moves the preserved old
-    # element into the new fragment by id).  It does not block a self-targeted
-    # outerHTML swap, so SSE/self refreshes still replace the component.
+    # element into the new fragment by id).  htmx 2's preserve pass would also
+    # pantry a self-targeted outerHTML swap when the response carries the same
+    # preserved id (placeholder load, SSE/reset refetch), which drops the element
+    # or discards the response; webui/static/webui/app.js removes the target id
+    # in htmx:beforeSwap to prevent that.  Do not remove that workaround.
     attrs.append("hx-preserve")
     if placeholder:
         attrs.append('hx-trigger="load, intersect once"')
@@ -272,7 +280,11 @@ def _render_request(request, name: str, pk: int | None, params: dict[str, Any]) 
     spec = get_spec(name)
     data = spec.build(request, pk, params)
     context = dict(data.context)
-    context["component_inline"] = full
+    # ``render=full`` always inlines children.  ``render=htmx`` emits child
+    # placeholders unless the builder opts into inline children (useful for
+    # list/thread containers that would otherwise fan out many placeholder loads).
+    inline_children = data.context.get("inline_children")
+    context["component_inline"] = full or bool(inline_children)
     html = render_to_string(spec.template, context, request=request)
     keys = () if data.immutable else _collect_keys(data)
 

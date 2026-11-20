@@ -56,7 +56,15 @@ def _build_chat_header(request, pk, params):
 
     session = _session(pk)
     context = _header_context(session)
-    return ComponentData(context, (f"SessionModel:{pk}", f"Query.session:{pk}"))
+    return ComponentData(
+        context,
+        (
+            f"SessionModel:{pk}",
+            f"Query.session:{pk}",
+            f"Response.session:{pk}",
+            f"AgentTaskCall.session:{pk}",
+        ),
+    )
 
 
 def _build_chat_thread(request, pk, params):
@@ -87,6 +95,10 @@ def _build_chat_thread(request, pk, params):
         "thread_has_older": total_messages > limit,
         "thread_older_limit": min(limit + DEFAULT_LIMIT, 2000),
         "cards": build_chat_cards(session),
+        # Inline child message/query/response components so a thread refetch (e.g.
+        # SSE reset on reload) returns a complete thread in one response instead of
+        # fanning out placeholders that must each load separately.
+        "inline_children": True,
     }
     return ComponentData(
         context,
@@ -94,6 +106,8 @@ def _build_chat_thread(request, pk, params):
             f"Message.session:{pk}",
             f"Query.session:{pk}",
             f"Response.session:{pk}",
+            f"AgentTaskCall.session:{pk}",
+            f"SessionModel:{pk}",
         ),
     )
 

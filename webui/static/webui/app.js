@@ -422,6 +422,9 @@
             // Placeholder-loaded thread (e.g. boosted nav) appears after settle;
             // ensure we land at the bottom on first render when appropriate.
             if (el && wasNearBottom) scheduleScrollToBottom();
+            // After a self-swap (incl. outerHTML), evt.target can be the detached
+            // node; scan the live thread/wrapper too so placeholders actually load.
+            ensureComponentPlaceholders(el || threadWrapper() || document);
         }
         var pc = providersCardEl();
         if (pc && evt.target === pc) {
@@ -429,7 +432,10 @@
         }
         markActiveRows();
         scheduleWatch();
-        ensureComponentPlaceholders(evt && evt.target ? evt.target : document);
+        // evt.target can be a detached node after outerHTML swaps; always scan the
+        // live document so newly inserted placeholders (e.g. thread children after a
+        // reset/refetch) get their load requests.
+        ensureComponentPlaceholders(document);
     });
 
     document.addEventListener('htmx:sseError', function () {

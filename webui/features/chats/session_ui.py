@@ -60,6 +60,9 @@ def session_context(
         "thread_triggers": thread_triggers(session_model.pk),
         "toc_segments": compaction_segments(session_model),
         "sse_url": f"{reverse('webui:sse')}?scope=session:{session_model.pk}",
+        # Thread fragments rendered directly (send, actions, legacy endpoints) should
+        # return complete message content, not placeholders that fan out per child.
+        "component_inline": True,
     }
 
 

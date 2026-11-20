@@ -604,6 +604,21 @@ browser can answer most navigations and refetches from its own cache.
   placeholder once; a later parent swap moves the live child into the new
   fragment by id (htmx's preserve pantry), so a parent refresh never destroys
   a child that is already loaded.
+* Container builders may set `inline_children=True` in context to inline
+  children even for `render=htmx` (e.g. `chat-thread`), avoiding N child
+  placeholder loads on whole-container refetches such as SSE reset/reconnect.
+
+**htmx 2 preserve/self-swap pitfall.** htmx 2.0.11's preserve pass pantries any
+existing element whose id matches a preserved element in the incoming fragment.
+For a *self-targeted* outerHTML swap the target itself matches, so the target
+gets pantried and the response is discarded or the element disappears. This
+breaks placeholder→loaded transitions and SSE/reset self-refetches of loaded
+components. `webui/static/webui/app.js` works around it in `htmx:beforeSwap` by
+temporarily removing the target id for outerHTML swaps of preserved targets
+(descendant ids remain, so parent-swap preservation still works) and restoring
+it in `htmx:afterSwap` only if the swap did not replace the node. **Do not
+remove this workaround or reintroduce patterns that depend on native preserve
+behavior for self-swaps.** See `webui/core/components.py` and `app.js`.
 
 A placeholder also keeps the landmark it replaces (`<aside id="sidebar">`) so
 selectors and CSS still work before the first swap.
