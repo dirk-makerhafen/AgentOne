@@ -8,7 +8,8 @@ def build_sidebar_context(request, project_id, ctx):
 
 
 def sidebar_keys(context):
-    return ("DataCollection",)
+    # Rows render the parent project name.
+    return ("DataCollection", "Project")
 
 
 def register_sidebar_component():

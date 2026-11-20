@@ -29,7 +29,8 @@ def build_sidebar_context(request, project_id, ctx):
 
 
 def sidebar_keys(context):
-    return ("WorkItem", "Project")
+    # Rows render the assigned agent's name.
+    return ("WorkItem", "Project", "AgentModel")
 
 
 def register_sidebar_component():

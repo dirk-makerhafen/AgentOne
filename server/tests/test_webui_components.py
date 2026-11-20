@@ -163,6 +163,58 @@ def test_immutable_component_gets_a_long_cache_and_no_trigger(client):
     assert "sse:" not in ended.content.decode()
 
 
+@pytest.mark.parametrize(
+    "status,immutable",
+    [
+        ("WAITING", False),
+        ("ACTIVE", False),
+        ("SUCCESS", True),
+        ("FAILURE", True),
+        ("RATE_LIMITED", True),
+    ],
+)
+def test_query_card_is_immutable_only_after_a_terminal_status(client, status, immutable):
+    """WAITING is a queued state: call_llm moves it to ACTIVE before a result."""
+    from server.models.queries.query import Query
+
+    _agent, _version, session, sv, _message = _chat_session(f"query-{status}")
+    query = Query.objects.create(session=session, session_version=sv, status=status)
+
+    response = _get(client, "chat-query", query.pk, render="htmx")
+    body = response.content.decode()
+    if immutable:
+        assert response["Cache-Control"] == "private, max-age=31536000, immutable"
+        assert "sse:" not in body
+    else:
+        assert response["Cache-Control"] == "private, no-cache"
+        assert f"sse:Query:{query.pk}" in body
+
+
+@pytest.mark.parametrize(
+    "status,immutable",
+    [
+        ("WAITING", False),
+        ("ACTIVE", False),
+        ("SUCCESS", True),
+        ("FAILURE", True),
+    ],
+)
+def test_response_card_is_immutable_only_after_a_terminal_status(client, status, immutable):
+    from server.models.queries.response import Response
+
+    _agent, _version, session, sv, _message = _chat_session(f"response-{status}")
+    row = Response.objects.create(session=session, session_version=sv, status=status)
+
+    response = _get(client, "chat-response", row.pk, render="htmx")
+    body = response.content.decode()
+    if immutable:
+        assert response["Cache-Control"] == "private, max-age=31536000, immutable"
+        assert "sse:" not in body
+    else:
+        assert response["Cache-Control"] == "private, no-cache"
+        assert f"sse:Response:{row.pk}" in body
+
+
 def test_keyless_component_does_not_refetch_on_bubbled_clicks(client):
     """A keyless wrapper must not fall back to htmx's default `click` trigger.
 
@@ -268,6 +320,17 @@ def test_sidebar_full_render_contains_the_panel(client):
     assert response.status_code == 200
     assert b"webui-brand" in response.content
     assert b"New chat" in response.content
+
+
+def test_sidebar_htmx_render_inlines_its_rows(client):
+    """A list container must not fan out N child loads on an SSE reset."""
+    _agent, _version, session, _sv, _message = _chat_session("sidebar-inline")
+    response = client.get(reverse("webui:chats_sidebar"), {"render": "htmx"})
+    body = response.content.decode()
+
+    assert 'data-component="chat-sidebar-session"' in body
+    assert "session-item" in body
+    assert 'hx-trigger="load, intersect once"' not in body
 
 
 # ---------------------------------------------------------------------------

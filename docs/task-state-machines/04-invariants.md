@@ -91,6 +91,8 @@ For each session, the `prev_message` chain forms a single linked list from root 
 
 **Historic violation:** A historic compaction bug caused chain forks (see `.agentone/scripts/core/repair_message_chain.py`). The repair script self-references orphan messages so they are excluded from `filter(next_messages=None)`. The bug is fixed in the current `ingest_compaction`; the repair script remains for pre-existing corrupted sessions.
 
+**Session fence:** while compaction runs, `SessionModel.is_compacting` blocks ordinary message inserts from *any* root in that session (not just the triggering turn). The flag is atomically acquired by `compact_if_needed`, `compact_command`, and idle compaction so only one fork can own a session; competing sibling roots are stopped at acquisition time. The live `compact_turn` call id is stored so `CallScheduler._on_taskcall_ended` can clear it on success/failure/cancel/retry. `Message.save()` is the choke point and only admits compaction/reflection-owned writes. Regression coverage: `server/tests/test_compaction_message_guard.py`.
+
 ## I8: Self-referencing prev_message excludes from filter(next_messages=None)
 
 When `msg.prev_message = msg.id`, the message appears in its own `next_messages` queryset via the reverse FK `related_name="next_messages"`. Since `next_messages` is not null, `filter(next_messages=None)` correctly excludes it.

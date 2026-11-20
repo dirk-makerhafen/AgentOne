@@ -276,6 +276,11 @@ def ingest_compaction(
                 prompt_tokens=kwargs.get("prompt_tokens"),
                 auto_limit=kwargs.get("auto_limit"),
             )
+            # The fence is still held, but now belongs to the retry call —
+            # release must wait for the last fork in this chain, not the first.
+            from runtime.session.compaction_guard import set_compaction_call
+
+            set_compaction_call(_session, retry_call)
             return _session.get_task("ingest_compaction_response").delay(
                 compaction_result=retry_call,
                 response=response,

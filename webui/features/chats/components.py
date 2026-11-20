@@ -14,6 +14,24 @@ def _int(raw, default):
         return default
 
 
+def _terminal_query(query) -> bool:
+    """WAITING is non-terminal: queued calls move WAITING -> ACTIVE -> result."""
+    from server.models.queries.query import QueryStatus
+
+    return query.status in (
+        QueryStatus.SUCCESS,
+        QueryStatus.FAILURE,
+        QueryStatus.RATE_LIMITED,
+    )
+
+
+def _terminal_response(response) -> bool:
+    """WAITING is non-terminal for responses as well (recovery resumes them)."""
+    from server.models.queries.response import ResponseStatus
+
+    return response.status in (ResponseStatus.SUCCESS, ResponseStatus.FAILURE)
+
+
 def _session(pk: int):
     from server.models.sessions.session import SessionModel
 
@@ -56,15 +74,19 @@ def _build_chat_header(request, pk, params):
 
     session = _session(pk)
     context = _header_context(session)
-    return ComponentData(
-        context,
-        (
-            f"SessionModel:{pk}",
-            f"Query.session:{pk}",
-            f"Response.session:{pk}",
-            f"AgentTaskCall.session:{pk}",
-        ),
-    )
+    keys = [
+        f"SessionModel:{pk}",
+        f"Query.session:{pk}",
+        f"Response.session:{pk}",
+        f"AgentTaskCall.session:{pk}",
+    ]
+    # The header also renders the agent and project names.
+    version = getattr(session, "latest_session_version", None)
+    if version is not None and version.agent_id:
+        keys.append(f"AgentModel:{version.agent_id}")
+    if session.parent_project_id:
+        keys.append(f"Project:{session.parent_project_id}")
+    return ComponentData(context, tuple(keys))
 
 
 def _build_chat_thread(request, pk, params):
@@ -108,6 +130,11 @@ def _build_chat_thread(request, pk, params):
             f"Response.session:{pk}",
             f"AgentTaskCall.session:{pk}",
             f"SessionModel:{pk}",
+            # build_chat_cards() renders provider/key/model details for parked
+            # calls, including their rate-limit state.
+            "ApiProvider",
+            "ApiKey",
+            "AiModel",
         ),
     )
 
@@ -119,6 +146,9 @@ def _build_chat_message(request, pk, params):
     row = _message_row(message)
     session = message.session
     keys = [f"Message:{pk}", f"MessagePart.message:{pk}"]
+    # The message footer renders the linked response's status and token count.
+    if message.response_id:
+        keys.append(f"Response:{message.response_id}")
     for part in message.parts.all():
         call_id = getattr(part, "tool_call_id", None)
         if call_id:
@@ -134,7 +164,7 @@ def _build_chat_message(request, pk, params):
 
 
 def _build_chat_query(request, pk, params):
-    from server.models.queries.query import Query, QueryStatus
+    from server.models.queries.query import Query
     from webui.features.chats.parts.thread import Row
 
     query = Query.objects.select_related("session").get(pk=pk)
@@ -143,13 +173,13 @@ def _build_chat_query(request, pk, params):
     return ComponentData(
         {"row": row, "session": query.session},
         (f"Query:{pk}", f"Query.session:{query.session_id}", f"Response.query:{pk}"),
-        immutable=query.status != QueryStatus.ACTIVE,
+        immutable=_terminal_query(query),
         reset=False,
     )
 
 
 def _build_chat_response(request, pk, params):
-    from server.models.queries.response import Response, ResponseStatus
+    from server.models.queries.response import Response
     from webui.core.markdown import render_markdown
     from webui.features.chats.parts.thread import Row
 
@@ -163,7 +193,7 @@ def _build_chat_response(request, pk, params):
     return ComponentData(
         {"row": row, "session": response.session},
         (f"Response:{pk}", f"Response.session:{response.session_id}"),
-        immutable=response.status != ResponseStatus.ACTIVE,
+        immutable=_terminal_response(response),
         reset=False,
     )
 
@@ -256,6 +286,10 @@ def _build_chat_sidebar_session(request, pk, params):
         f"Query.session:{pk}",
         f"AgentTaskCall.session:{pk}",
         f"SessionModel.parent_session:{pk}@is_archived:{'true' if archived else 'false'}",
+        # The row also renders workspace/agent names and the project list.
+        "WorkspaceModel",
+        "AgentModel",
+        "Project",
     )
     return ComponentData(context, keys, reset=False)
 

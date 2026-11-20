@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any
 
 import redis
@@ -93,8 +94,14 @@ def register_client(client_id: str, keys: list[str]) -> list[str]:
     """Replace one tab's watch set and update the reverse index.
 
     Returns the keys that were actually stored (deduplicated, whitespace-free).
+    Keys containing whitespace, commas or brackets cannot be SSE event names
+    inside an ``hx-trigger`` token, so they are dropped at this boundary.
     """
-    keys = [key for key in dict.fromkeys(keys) if key and len(key) <= 200]
+    safe_key = re.compile(r"^[^\s,\[\]]+$")
+    keys = [
+        key for key in dict.fromkeys(keys)
+        if key and len(key) <= 200 and safe_key.match(key)
+    ]
     r = get_redis()
     previous = set(watch_keys(client_id))
     current = set(keys)

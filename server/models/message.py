@@ -96,6 +96,14 @@ class Message(BaseModel):
         if self.hide_from_context is True and self.pin_to_context is True:
             self.pin_to_context = False
         if self._state.adding:
+            # Session-level compaction fence: no ordinary chat message may be
+            # appended while a compaction fork owns the session.  Check before
+            # the insert so no part-less row is left behind; the guard itself
+            # allows the compaction/reflection machinery through.
+            if self.session_id:
+                from runtime.session.compaction_guard import check_message_write
+
+                check_message_write(self.session_id, self.message_type)
             # Two-phase write: the row is created first, parts are attached
             # right after via add_part().  The chat view renders parts
             # synchronously on "create", so an auto-published create could

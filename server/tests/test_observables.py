@@ -273,6 +273,15 @@ def test_register_client_deduplicates_and_rejects_oversized_keys(fake_redis):
     assert stored == ["A:1"]
 
 
+def test_register_client_drops_keys_that_cannot_be_sse_event_names(fake_redis):
+    """Keys are used verbatim in hx-trigger tokens; no whitespace/comma/brackets."""
+    stored = observables.register_client(
+        "client-safe", ["A:1", "A:2 with space", "A:3,extra", "A:[4]", "B.root"]
+    )
+    assert stored == ["A:1", "B.root"]
+    assert fake_redis.smembers("agentone:sse:keys:A:2 with space") == set()
+
+
 def test_watch_ttl_and_heartbeat(fake_redis):
     observables.register_client("client-cccc", ["A:1"])
     assert 0 < fake_redis.ttl("agentone:sse:watch:client-cccc") <= observables.WATCH_TTL

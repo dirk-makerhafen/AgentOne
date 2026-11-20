@@ -181,6 +181,9 @@ def build_sidebar_context(request, project_id, ctx):
         qs.order_by("-is_pinned", "-last_active_at", "-created_at")[:SIDEBAR_LIMIT]
     )
     ctx["sidebar_sessions"] = sessions
+    # Like chat-thread, the sidebar is a list container: inlining its rows on a
+    # whole-container refetch (SSE reset/reconnect) avoids N placeholder loads.
+    ctx["inline_children"] = True
     ctx["show_archived"] = show_archived
     ctx["archived_flag"] = "true" if show_archived else "false"
     ctx["q"] = query

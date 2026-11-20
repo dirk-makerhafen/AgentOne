@@ -31,6 +31,16 @@ class SessionModel(BaseModel):
     unattended_turn_count = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True, db_index=True)
     is_paused = models.BooleanField(default=False, db_index=True)
+    #: Set while a ``compact_turn`` chain owns this session.  While true,
+    #: ordinary chat messages are fenced out; only the compaction machinery's
+    #: own INFO/COMPACTION/REFLECTION writes are allowed.
+    is_compacting = models.BooleanField(default=False, db_index=True)
+    #: PK of the live ``compact_turn`` call (updated on retries).  The flag is
+    #: cleared centrally when this call ends; the id makes that check exact.
+    compacting_call_id = models.BigIntegerField(null=True, blank=True, db_index=True)
+    #: Session root shared by the triggering turn and its compaction fork.
+    #: Used to tell compaction-owned writes from sibling turns.
+    compacting_root_task_id = models.BigIntegerField(null=True, blank=True, db_index=True)
     last_active_at = models.DateTimeField(null=True, blank=True)
     is_pinned = models.BooleanField(default=False, db_index=True)
     is_archived = models.BooleanField(default=False, db_index=True)

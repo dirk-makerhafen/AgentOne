@@ -1257,7 +1257,24 @@ def _compact_idle_sessions() -> None:
             compact_task = session.get_task("compact_turn")
             if compact_task is None:
                 continue
-            compact_task.delay(message=last_message, idle_trigger=True, trigger="idle")
+            # Fence before dispatch so a turn arriving in the dispatch window
+            # cannot insert a message ahead of the boundary.
+            from runtime.session.compaction_guard import (
+                end_compaction,
+                set_compaction_call,
+                try_begin_compaction,
+            )
+
+            if not try_begin_compaction(session):
+                continue  # another compaction already owns this session
+            try:
+                compact_call = compact_task.delay(
+                    message=last_message, idle_trigger=True, trigger="idle"
+                )
+            except Exception:
+                end_compaction(session.model.pk)
+                raise
+            set_compaction_call(session, compact_call)
             session.set_is_active(False)
             dispatched += 1
         except Exception as e:  # pylint: disable=broad-exception-caught

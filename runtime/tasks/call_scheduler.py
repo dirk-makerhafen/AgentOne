@@ -1502,8 +1502,24 @@ class CallScheduler:
         3. Notify parent calls that listed this as an after-run hook.
         4. Dispatch success/error callbacks.
         """
+        from server.models.tasks.agent_task_call import AgentTaskCall
         from server.models.tasks.agent_task_run import AgentTaskRun
         from runtime.tasks.run_scheduler import RunScheduler
+
+        call = AgentTaskCall.objects.get(pk=task_call_id)
+
+        # Last compact_turn call (including retries) has resolved: reopen the
+        # session *before* notifying waiting runs, so the resumed turn can
+        # append its messages immediately.  Doing this here covers success,
+        # failure, cancel, hook failure and recovery force-fail paths in one
+        # place.  The call-id guard makes retry chains exact: an older attempt
+        # ending after a retry was dispatched does not release the fence.
+        try:
+            from runtime.session.compaction_guard import end_compaction
+
+            end_compaction(call.session_id, call_id=task_call_id)
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
         # I4 invariant: the call is ending — any run still non-terminal is
         # stranded.  A force-cancel (UI cancel, duplicate-query dedup, bulk
@@ -1566,7 +1582,7 @@ class CallScheduler:
             run = AgentTaskRun.objects.get(pk=last_taskrun_id)
         except AgentTaskRun.DoesNotExist:
             run = None
-        call = AgentTaskCall.objects.get(pk=task_call_id)
+
         if not run:
             pass  # no run to dispatch callbacks from
         elif taskcall_status_detail == TaskCallStatusDetail.ENDED_SUCCESS:

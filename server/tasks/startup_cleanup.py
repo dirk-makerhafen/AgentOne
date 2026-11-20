@@ -39,6 +39,7 @@ def startup_cleanup() -> None:
         _ensure_system_workspaces,
         _timeout_active_runs,
         _cancel_duplicate_queries,
+        _clear_stale_compaction_flags,
         _fail_ancient_parked_calls,
         _recover_stuck_calls,
         _resolve_stuck_waiting_runs,
@@ -50,6 +51,24 @@ def startup_cleanup() -> None:
             pass_()
         except Exception as e:
             print(f"[startup-cleanup] error in {pass_.__name__}: {e}")
+
+
+def _clear_stale_compaction_flags() -> None:
+    """Close compaction fences left behind by a worker crash/restart.
+
+    The normal release happens in ``CallScheduler._on_taskcall_ended``.  A
+    process that died mid-compaction cannot run that hook; here we drop any
+    flag whose owning ``compact_turn`` call no longer exists or has ended.
+    """
+    from runtime.session.compaction_guard import compaction_state
+    from server.models.sessions.session import SessionModel
+
+    session_ids = SessionModel.objects.filter(is_compacting=True).values_list("pk", flat=True)
+    for session_id in session_ids:
+        try:
+            compaction_state(session_id)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"[startup-cleanup] error clearing compaction flag for {session_id}: {e}")
 
 
 def _ensure_system_workspaces() -> None:

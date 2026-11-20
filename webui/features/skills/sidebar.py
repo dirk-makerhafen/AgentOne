@@ -15,7 +15,8 @@ def build_sidebar_context(request, project_id, ctx):
 
 
 def sidebar_keys(context):
-    return ("SkillModel",)
+    # Rows render the parent agent/skill/project names.
+    return ("SkillModel", "AgentModel", "Project")
 
 
 def register_sidebar_component():
