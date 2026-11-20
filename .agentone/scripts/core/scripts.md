@@ -5,11 +5,11 @@ commands:
     file: ping.py
     function: ping
     bound: True
-  - name: auto_title_session
+  # User-triggered retitle: same fork pipeline as automatic chat naming.
+  - name: auto_title
     file: auto_title_session.py
-    function: auto_title_session
+    function: auto_title_command
     bound: True
-    max_retries: 0
 tools:
   # Have the subagent return a result to the caller
   - name: final_result

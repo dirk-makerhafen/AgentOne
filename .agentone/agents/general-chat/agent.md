@@ -28,7 +28,7 @@ autoCompactMinTokens: 30000
 autoCompactIdleSeconds: 300
 autoCompactKeepPercent: 5
 
-commands: [+, ping, todo.* ]
+commands: [+, ping, auto_title, todo.* ]
 disallowedCommands: []
 tools: [+, core.*, subagents.*, history.*, web.*, skills.*, todo.*]
 disallowedTools: []

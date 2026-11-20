@@ -2,16 +2,21 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from croniter import croniter
 from django.test import TestCase
 from django.utils import timezone
 
+from runtime.tasks.bound_task import BoundTask
 from server.models.cron import Cronjob
 from server.models.content import GenericContent
+from server.models.enums.message_enums import MessageContentType
+from server.models.enums.task_enums import TaskType
+from server.models.sessions.session import SessionModel
+from server.tests.dc_test_helpers import create_agent, create_task
 from runtime.cron.crons import Cronjobs
 from runtime.cron.execute import compute_next_run, execute_cron_job
-from server.models.enums.message_enums import MessageContentType
 
 
 class CronjobModelTest(TestCase):
@@ -285,3 +290,34 @@ class CronExecuteTest(TestCase):
         self.assertEqual(job.last_status, "error")
         self.assertIsNotNone(job.next_run_at)
         self.assertGreater(job.next_run_at, timezone.now())
+
+
+class CronSessionReactivationTest(TestCase):
+    """A reused cron session must be re-enabled on every tick."""
+
+    def test_existing_session_is_reactivated_after_it_ended(self):
+        agent, av = create_agent("cron-reuse-agent")
+        task_def = create_task("ingest_user_message", agent=agent, task_type=TaskType.TASK)
+        av.task_versions.add(task_def.latest_task_version)
+        job = Cronjob.objects.create(
+            name="reuse",
+            schedule="*/5 * * * *",
+            agent=agent,
+            session_mode="existing",
+        )
+
+        with patch.object(BoundTask, "apply_async"):
+            execute_cron_job(job.pk)
+
+            session = SessionModel.objects.get(name=f"cron:{agent.name}:reuse")
+            self.assertTrue(session.is_active)
+
+            # Simulate the previous run ending via session_end.
+            session.atomic_update(is_active=False)
+            session.refresh_from_db()
+            self.assertFalse(session.is_active)
+
+            execute_cron_job(job.pk)
+
+        session.refresh_from_db()
+        self.assertTrue(session.is_active)

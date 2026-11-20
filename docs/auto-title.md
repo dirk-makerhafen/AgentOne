@@ -43,6 +43,17 @@ Short greetings and acknowledgements (under `AGENTONE_AUTO_TITLE_MIN_CHARS`,
 default 15, or in a small denylist such as `hi`, `ok`, `test`) are skipped:
 they carry no topic worth naming. The first message is bounded to 2000 chars.
 
+### Manual trigger
+
+The `/auto_title` command runs the same fork pipeline on demand. It is
+registered in `.agentone/scripts/core/scripts.md` and is available to the
+user-facing agents (`AgentOne`, `general-chat`, `coding`, `wiki`). It uses the
+first substantive user message as the topic (or the latest one if none is long
+enough) and passes `force=True` through both tasks, so it still works when
+`AGENTONE_AUTO_TITLE_ENABLED=False` or the chat has a manually chosen name. The
+generated name becomes the new auto-managed name; a later manual rename still
+clears `name_is_auto` as usual.
+
 ### Fork and prompt
 
 `.agentone/scripts/core/auto_title_session.py` calls `Session.fork()` with:
@@ -111,10 +122,10 @@ AGENTONE_AUTO_TITLE_MAX_CHARS = 60   # clamped title length
 
 | File | Role |
 |---|---|
-| `.agentone/scripts/core/auto_title_session.py` | Fork guard, prompt injection, fork configuration |
+| `.agentone/scripts/core/auto_title_session.py` | Fork guard, prompt injection, fork configuration, `/auto_title` command |
 | `.agentone/scripts/core/ingest_auto_title.py` | Sanitise result, guarded rename, close fork |
 | `.agentone/scripts/core/ingest_user_message.py` | First-message trigger after persistence |
-| `.agentone/scripts/core/scripts.md` | Registers both bound tasks |
+| `.agentone/scripts/core/scripts.md` | Registers both bound tasks and the command |
 | `server/models/sessions/session.py` | `name_is_auto` field |
 | `server/migrations/0178_sessionmodel_name_is_auto.py` | Schema migration |
 | `config/settings.py` | Feature flags/limits |

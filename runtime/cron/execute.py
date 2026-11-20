@@ -33,6 +33,13 @@ def execute_cron_job(cronjob_id: int) -> None:
         )
         session = Session(session_model=session_version.session, pinned_session_version=session_version)
 
+        # A cron tick is an inbound message, just like a UI/API message or a
+        # subagent result. Those paths go through Session.add_user_message(),
+        # which reactivates the session; cron dispatches its bound task directly
+        # and would otherwise leave a reused (session_mode="existing") session
+        # inactive after a previous run ended it via session_end.
+        session.set_is_active(True)
+
         # 2. Dispatch
         message_data = cronjob.message.get() if cronjob.message else ""
 

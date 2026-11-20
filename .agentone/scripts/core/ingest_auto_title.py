@@ -56,10 +56,15 @@ def ingest_auto_title(
     title_result: Any = None,
     expected_name: str = "",
     child_session_pk: Any = None,
+    force: bool = False,
     **kwargs: Any,
 ) -> SessionModel | None:
-    """Write the generated title, unless the user renamed the session meanwhile."""
-    if not getattr(settings, "AGENTONE_AUTO_TITLE_ENABLED", True):
+    """Write the generated title, unless the user renamed the session meanwhile.
+
+    ``force`` is set by the manual ``/auto_title`` command: a user-requested
+    retitle may override a manual name and run even with the feature disabled.
+    """
+    if not force and not getattr(settings, "AGENTONE_AUTO_TITLE_ENABLED", True):
         return None
 
     title = sanitize_title(extract_final_result_text(title_result))
@@ -68,18 +73,24 @@ def ingest_auto_title(
 
     session_pk = _session.model.pk
     current = SessionModel.objects.filter(pk=session_pk).first()
-    if current is None or not current.name_is_auto:
+    if current is None:
+        return None
+    if not force and not current.name_is_auto:
         return None
 
-    # Atomic guard: a manual rename between enqueue and ingest wins.
-    expect: dict[str, Any] = {"name_is_auto": True}
-    if expected_name:
+    # Atomic guard for automatic titles: a manual rename between enqueue and
+    # ingest wins.  A forced (user-triggered) retitle intentionally replaces it.
+    expect: dict[str, Any] = {} if force else {"name_is_auto": True}
+    if expected_name and not force:
         expect["name"] = expected_name
+    fields: dict[str, Any] = {"name": _unique_title(title, session_pk)}
+    if force:
+        fields["name_is_auto"] = True
     updated = SessionModel.atomic_update_by_pk(
         session_pk,
         action="update",
         expect=expect,
-        name=_unique_title(title, session_pk),
+        **fields,
     )
     if not updated:
         return None

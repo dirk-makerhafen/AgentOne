@@ -125,6 +125,44 @@ class AutoTitleForkTest(TestCase):
         self.assertEqual(ingest.delay.call_args.kwargs["expected_name"], "AgentOne-chat")
         self.assertEqual(ingest.delay.call_args.kwargs["child_session_pk"], 99)
 
+    @override_settings(AGENTONE_AUTO_TITLE_ENABLED=False)
+    def test_force_bypasses_kill_switch(self):
+        mod = _load("auto_title_session")
+        anchor = self._anchor("Refactor the billing webhook retry logic")
+        child = MagicMock()
+        child.model.pk = 99
+        child.add_user_message.return_value = "child-call"
+        parent = MagicMock()
+        parent.model.pk = self.session.pk
+        parent.name = "AgentOne-chat"
+        parent.fork.return_value = child
+        ingest = MagicMock()
+        parent.get_task.return_value = ingest
+
+        result = mod.auto_title_session(parent, anchor_message=anchor, force=True)
+
+        self.assertEqual(result, ingest.delay.return_value)
+        self.assertTrue(ingest.delay.call_args.kwargs["force"])
+        parent.fork.assert_called_once()
+
+    def test_manual_command_uses_first_substantive_message(self):
+        mod = _load("auto_title_session")
+        self._anchor("hi")
+        anchor = self._anchor("Refactor the billing webhook retry logic")
+        self._anchor("And update its tests")
+
+        with patch.object(mod, "auto_title_session", return_value="call") as title:
+            result = mod.auto_title_command(MagicMock(model=self.session))
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(title.call_args.kwargs["anchor_message"].pk, anchor.pk)
+        self.assertTrue(title.call_args.kwargs["force"])
+
+    def test_manual_command_without_user_message(self):
+        mod = _load("auto_title_session")
+        result = mod.auto_title_command(MagicMock(model=self.session))
+        self.assertEqual(result["status"], "error")
+
     def test_sanitize_title(self):
         mod = _load("ingest_auto_title")
         self.assertEqual(mod.sanitize_title('  Title: "Fix login bug."  \nmore'), "Fix login bug")
@@ -174,6 +212,22 @@ class IngestAutoTitleTest(TestCase):
         self.session.refresh_from_db()
         self.assertEqual(self.session.name, "Chosen by user")
         self.assertFalse(self.session.name_is_auto)
+
+    def test_force_replaces_manual_name(self):
+        mod = _load("ingest_auto_title")
+        SessionModel.objects.filter(pk=self.session.pk).update(
+            name="Chosen by user", name_is_auto=False
+        )
+        out = mod.ingest_auto_title(
+            self._runtime(),
+            title_result="Fix login bug",
+            expected_name="AgentOne-chat",
+            force=True,
+        )
+        self.assertIsNotNone(out)
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.name, "Fix login bug")
+        self.assertTrue(self.session.name_is_auto)
 
     def test_empty_result_is_noop(self):
         mod = _load("ingest_auto_title")

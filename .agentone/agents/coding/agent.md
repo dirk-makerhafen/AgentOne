@@ -29,7 +29,7 @@ sessionBootstrap: |
   Workspace directory: {{workspace_dir}}
   Private session folder: {{session_dir}}
 
-commands: [+, ping, todo.* ]
+commands: [+, ping, auto_title, todo.* ]
 disallowedCommands: []
 tools: [+, core.*, subagents.*, history.*, filesystem-read.*, filesystem-write.*, execution.*, web.*, skills.*, todo.*]
 disallowedTools: []

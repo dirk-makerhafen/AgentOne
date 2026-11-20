@@ -38,7 +38,7 @@ loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
 memoryPlaybook: true
 
-commands: [+, ping, todo.* ]
+commands: [+, ping, auto_title, todo.* ]
 disallowedCommands: []
 
 tools: [+, core.*, subagents.*, history.*, skills.*, todo.*, workitems.*, admin_tool, interaction.*]

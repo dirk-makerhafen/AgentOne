@@ -86,10 +86,15 @@ def auto_title_session(
     _session: Session,
     anchor_message: Any = None,
     expected_name: str = "",
+    force: bool = False,
     **kwargs: Any,
 ) -> Any:
-    """Fork the session, ask for a short title, and chain the parent-side ingest."""
-    if not getattr(settings, "AGENTONE_AUTO_TITLE_ENABLED", True):
+    """Fork the session, ask for a short title, and chain the parent-side ingest.
+
+    ``force`` marks a user-triggered retitle: it bypasses the global kill switch,
+    the short-message filter and the auto-name guard in the ingest task.
+    """
+    if not force and not getattr(settings, "AGENTONE_AUTO_TITLE_ENABLED", True):
         return None
     if not isinstance(anchor_message, Message):
         pk = getattr(anchor_message, "pk", anchor_message)
@@ -99,7 +104,9 @@ def auto_title_session(
 
     source = first_message_text(anchor_message)
     min_chars = int(getattr(settings, "AGENTONE_AUTO_TITLE_MIN_CHARS", 15))
-    if len(source) < min_chars or source.lower().strip(" .,!?") in TOO_SHORT:
+    if not force and (len(source) < min_chars or source.lower().strip(" .,!?") in TOO_SHORT):
+        return None
+    if not source:
         return None
     source = source[:2000]
 
@@ -149,4 +156,52 @@ def auto_title_session(
         title_result=title_result,
         expected_name=expected_name or _session.model.name,
         child_session_pk=child.model.pk,
+        force=force,
     )
+
+
+def _manual_anchor(session: Session) -> Message | None:
+    """Pick the message a manual retitle should be based on."""
+    messages = list(
+        Message.objects.filter(
+            session=session.model, message_type=MessageType.USER_CHAT
+        ).order_by("pk")
+    )
+    min_chars = int(getattr(settings, "AGENTONE_AUTO_TITLE_MIN_CHARS", 15))
+    for message in messages:
+        text = first_message_text(message)
+        if len(text) >= min_chars and text.lower().strip(" .,!?") not in TOO_SHORT:
+            return message
+    # A short greeting (or a tiny test chat) still deserves a manual title.
+    for message in reversed(messages):
+        if first_message_text(message):
+            return message
+    return None
+
+
+def auto_title_command(_session: Session) -> dict[str, Any]:
+    """Generate a new title for this chat now (/auto_title).
+
+    Uses the first substantive user message as the topic (or the latest one if
+    none is long enough). Unlike automatic titling, this works when the feature
+    is disabled or the chat has a manual name, because the user asked for it.
+    """
+    anchor = _manual_anchor(_session)
+    if anchor is None:
+        return {"status": "error", "message": "No user message to title from."}
+    try:
+        call = auto_title_session(
+            _session,
+            anchor_message=anchor,
+            expected_name=_session.model.name,
+            force=True,
+        )
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        return {"status": "error", "message": str(exc)}
+    if call is None:
+        return {"status": "error", "message": "Could not start title generation."}
+    return {
+        "status": "ok",
+        "message": "Generating a new chat title.",
+        "anchor_message_id": anchor.pk,
+    }
