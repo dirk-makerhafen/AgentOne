@@ -130,10 +130,12 @@ triggers on (`sse:reset`).
 
 `webui/static/webui/app.js`:
 
-1. Reads/creates a per-tab id in `sessionStorage` and injects
+1. Creates an id per loaded document and injects
    `sse-connect="…?client=<id>"` into `<body>` before htmx processes the page.
+   `sessionStorage` is deliberately not used: duplicated tabs copy it and would
+   share one channel/watch set (closing one would unsubscribe the other).
    `hx-ext="sse"` lives on `<body>` too, so a boosted navigation (which only
-   swaps `<body>`'s contents) keeps the same `EventSource`.
+   swaps `<body>`'s contents) keeps the same id and `EventSource`.
 2. Collects the `sse:` tokens from every rendered `hx-trigger`/`sse-swap`,
    debounces a `POST /app/sse/watch`, and skips the request when the set has
    not changed.
@@ -141,7 +143,14 @@ triggers on (`sse:reset`).
    request, so unchanged components answer `204` and htmx keeps the DOM (and
    with it focus, scroll and open `<details>`).
 4. Re-derives the watch set after every `htmx:afterSettle` and on
-   `htmx:sseOpen`.
+   `htmx:sseOpen`. A failed/rejected POST is never cached as synced (the server
+   still holds the previous set); a periodic forced re-post (30 s and on tab
+   visibility) heals registrations lost to a reconnect/cleanup race.
+5. There is **no** "unsubscribe when an unmatched event arrives" fallback. The
+   server fans out from its registry; a stale entry only costs a refetch until
+   the next re-post prunes it. Clean stream shutdown removes the tab in
+   `reset_client()` (skipped if a newer stream owns the channel); a hard-killed
+   tab expires after `WATCH_TTL` and is pruned on the next fan-out.
 
 ## Tests
 

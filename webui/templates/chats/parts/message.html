@@ -86,7 +86,7 @@
         <details class="tool-card webui-tool-card{% if part.halted %} approval-pending{% endif %}"
                  data-open-key="tool-{{ part.pk }}"
                  {% if part.pk %}hx-get="{% url 'webui:call_detail' part.pk %}"{% endif %}
-                 hx-trigger="toggle once{% if part.pk %}, sse:AgentTaskCall:{{ part.pk }} delay:300ms{% endif %}"
+                 hx-trigger="toggle once{% if part.pk and live %}, sse:AgentTaskCall:{{ part.pk }} delay:300ms{% endif %}"
                  hx-target="find .webui-tool-detail"
                  hx-swap="innerHTML"
                  hx-sync="this:replace">

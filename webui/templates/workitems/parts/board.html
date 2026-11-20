@@ -1,7 +1,7 @@
 {% load webui %}
 <div id="workitems-board" class="kanban-board-wrap"
      hx-get="{% url 'webui:workitems_board' %}{% if board_qs %}?{{ board_qs }}{% endif %}"
-     hx-trigger="sse:WorkItem delay:400ms"
+     hx-trigger="sse:WorkItem delay:400ms, sse:reset delay:400ms"
      hx-swap="outerHTML" {% hx_disinherit %}>
     <div class="kanban-board">
         {% for column in columns %}

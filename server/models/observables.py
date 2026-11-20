@@ -119,9 +119,20 @@ def touch_client(client_id: str) -> None:
 
 
 def reset_client(client_id: str) -> None:
-    """Forget a tab (called when the stream ends cleanly)."""
+    """Forget a tab (called when the stream ends cleanly).
+
+    A reconnect may start before the dying stream's ``finally`` runs.  In that
+    case the registration belongs to the *new* stream now: deleting it here
+    would leave a live EventSource subscribed to nothing until its next DOM
+    swap.  The caller unsubscribes its own pubsub first, so any remaining
+    subscribers on this channel are the newer connection.
+    """
     try:
         r = get_redis()
+        channel = CLIENT_PREFIX + client_id
+        subscribers = dict(r.pubsub_numsub(channel)).get(channel, 0)
+        if subscribers:
+            return
         for key in watch_keys(client_id):
             r.srem(KEYS_PREFIX + key, client_id)
         r.delete(_watch_key(client_id))

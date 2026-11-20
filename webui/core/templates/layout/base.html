@@ -25,13 +25,11 @@
 <script>
 (function () {
     try {
-        var clientId = sessionStorage.getItem('agentone:client') || '';
-        if (!clientId) {
-            clientId = (window.crypto && crypto.randomUUID)
-                ? crypto.randomUUID()
-                : 'c' + Date.now() + Math.random().toString(36).slice(2);
-            sessionStorage.setItem('agentone:client', clientId);
-        }
+        // One EventSource per document, not per stored id: duplicated tabs
+        // copy sessionStorage and would otherwise share a channel/watch set.
+        var clientId = (window.crypto && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : 'c' + Date.now() + Math.random().toString(36).slice(2);
         window.agentoneClientId = clientId;
         var body = document.body;
         var base = body.getAttribute('data-sse-url') || '/app/sse/';

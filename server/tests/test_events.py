@@ -74,12 +74,23 @@ def test_watch_registers_the_keys(auth_client):
         {},
         {"client": "bad id!"},
         {"client": "client-1234", "keys": "A:1"},
-        {"client": "client-1234", "keys": ["x"] * 501},
+        {"client": "client-1234", "keys": ["x"] * (events.MAX_WATCH_KEYS + 1)},
     ],
 )
 @pytest.mark.django_db
 def test_watch_rejects_malformed_payloads(auth_client, payload):
     assert _watch(auth_client, payload).status_code == 400
+
+
+@pytest.mark.django_db
+def test_watch_accepts_a_page_with_many_observable_keys(auth_client):
+    # 80 sidebar rows (4 keys each) plus a 120-message thread (2 keys each)
+    # already exceeds the old 500-key cap and silently lost the whole sync.
+    keys = [f"A:{i}" for i in range(600)]
+    with patch.object(events, "register_client") as register:
+        response = _watch(auth_client, {"client": "client-1234", "keys": keys})
+    assert response.status_code == 200
+    register.assert_called_once_with("client-1234", keys)
 
 
 @pytest.mark.django_db

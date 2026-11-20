@@ -257,12 +257,13 @@ def _tool_entry(part: MessagePart) -> dict[str, Any]:
             "status_class": _status_class(call),
             "duration": _call_duration(call),
             "halted": str(getattr(call, "status_detail", "") or "") == "HALTED_APPROVAL",
-            # Subcall counts are expensive (recursive BFS + many queries); load
-            # them lazily via the expanded detail endpoint instead of on every
-            # page render, mirroring the heavy argument/result payloads.
-            "subcalls": {"active": 0, "finished": 0, "executing": 0, "waiting": 0, "truncated": False},
         }
     )
+    # The collapsed card shows a "↳ N running/queued/subtasks" chip.  Only
+    # non-ended calls can change, so they are the only ones worth walking
+    # (a finished tree is static and its full list lives in the detail pane).
+    if entry["status"] != "ENDED":
+        entry["subcalls"] = _subcall_counts(call)
     return entry
 
 

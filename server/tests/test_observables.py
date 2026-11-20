@@ -289,6 +289,22 @@ def test_reset_client_clears_the_reverse_index(fake_redis):
     assert fake_redis.smembers("agentone:sse:keys:A:1") == set()
 
 
+def test_reset_client_keeps_a_live_reconnects_registration(fake_redis):
+    """Cleanup must not unsubscribe a replacement stream that already owns the key set."""
+    observables.register_client("client-reconnect", ["A:1"])
+    pubsub = fake_redis.pubsub()
+    pubsub.subscribe("agentone:sse:client-reconnect")
+    pubsub.get_message(ignore_subscribe_messages=True, timeout=0.1)
+
+    observables.reset_client("client-reconnect")
+    assert observables.watch_keys("client-reconnect") == ["A:1"]
+
+    pubsub.unsubscribe("agentone:sse:client-reconnect")
+    observables.reset_client("client-reconnect")
+    assert observables.watch_keys("client-reconnect") == []
+    assert fake_redis.smembers("agentone:sse:keys:A:1") == set()
+
+
 def test_mark_seen_returns_true_only_on_reconnect(fake_redis):
     assert observables.mark_seen("client-eeee") is False
     assert observables.mark_seen("client-eeee") is True
@@ -516,3 +532,115 @@ def test_task_call_keys_are_published_by_the_fsm_helpers(monkeypatch):
         )
         helper(42, "update", data={"status": "x"})
         assert captured == {"pk": 42, "action": "update", "data": {"status": "x"}}
+
+
+def _task_call(session, sv, **overrides):
+    from server.models.tasks.agent_task_call import AgentTaskCall
+
+    fields = {
+        "session": session,
+        "session_version": sv,
+        "requires_approval": False,
+        "max_subtask_errors": 0,
+        "max_subtask_error_rate": 0,
+        "limit_subtask_parallel_runs": 0,
+        "limit_per_instance_parallel_runs": 1,
+        "max_retries": 0,
+        "retry_delay": 10,
+        "retry_requires_approval": True,
+    }
+    fields.update(overrides)
+    return AgentTaskCall.objects.create(**fields)
+
+
+@pytest.mark.django_db
+def test_subcall_publishes_every_ancestor_call_key():
+    """A descendant update must invalidate the parent's rendered sub-call tree.
+
+    Delegated sub-calls can live in another session, so the descendant's
+    ``AgentTaskCall.session`` key never reaches the parent chat.  Every
+    ancestor call key is published instead, which is what the expanded tool
+    card subscribes to.
+    """
+    from server.models.tasks.agent_task_run import AgentTaskRun
+
+    agent, version = create_agent("ancestor-agent")
+    session, sv = create_session(agent, version)
+
+    parent = _task_call(session, sv)
+    parent_run = AgentTaskRun.objects.create(
+        agent_task_call=parent,
+        session=session,
+        session_version=sv,
+        requires_approval=False,
+        max_subtask_errors=0,
+        max_subtask_error_rate=0,
+        limit_subtask_parallel_runs=0,
+        limit_per_instance_parallel_runs=1,
+    )
+    child = _task_call(session, sv, parent_taskrun=parent_run)
+    grandchild = _task_call(session, sv, parent_taskrun=AgentTaskRun.objects.create(
+        agent_task_call=child,
+        session=session,
+        session_version=sv,
+        requires_approval=False,
+        max_subtask_errors=0,
+        max_subtask_error_rate=0,
+        limit_subtask_parallel_runs=0,
+        limit_per_instance_parallel_runs=1,
+    ))
+
+    child_keys = observable_keys(child)
+    assert f"AgentTaskCall:{child.pk}" in child_keys
+    assert f"AgentTaskCall:{parent.pk}" in child_keys
+    assert f"AgentTaskCall.parent_taskrun:{parent_run.pk}" in child_keys
+
+    grandchild_keys = observable_keys(grandchild)
+    assert f"AgentTaskCall:{grandchild.pk}" in grandchild_keys
+    assert f"AgentTaskCall:{child.pk}" in grandchild_keys
+    assert f"AgentTaskCall:{parent.pk}" in grandchild_keys
+
+
+@pytest.mark.django_db
+def test_root_call_does_not_publish_ancestor_keys():
+    agent, version = create_agent("root-call-agent")
+    session, sv = create_session(agent, version)
+    call = _task_call(session, sv)
+
+    keys = observable_keys(call)
+    assert f"AgentTaskCall:{call.pk}" in keys
+    assert not any(
+        key.startswith("AgentTaskCall:") and key != f"AgentTaskCall:{call.pk}"
+        for key in keys
+    )
+
+
+@pytest.mark.django_db
+def test_atomic_update_on_subcall_publishes_the_parent_call_key(monkeypatch):
+    """The write path (not just the key builder) must reach ancestor cards."""
+    from server.models.tasks.agent_task_run import AgentTaskRun
+
+    agent, version = create_agent("ancestor-write-agent")
+    session, sv = create_session(agent, version)
+    parent = _task_call(session, sv)
+    run = AgentTaskRun.objects.create(
+        agent_task_call=parent,
+        session=session,
+        session_version=sv,
+        requires_approval=False,
+        max_subtask_errors=0,
+        max_subtask_error_rate=0,
+        limit_subtask_parallel_runs=0,
+        limit_per_instance_parallel_runs=1,
+    )
+    child = _task_call(session, sv, parent_taskrun=run)
+
+    published = {}
+    monkeypatch.setattr(
+        observables,
+        "publish_model_event",
+        lambda keys, instance, action="update", data=None: published.update(keys=list(keys)),
+    )
+    child.atomic_update(status="ACTIVE")
+    assert f"AgentTaskCall:{child.pk}" in published["keys"]
+    assert f"AgentTaskCall:{parent.pk}" in published["keys"]

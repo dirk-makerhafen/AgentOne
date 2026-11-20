@@ -31,6 +31,8 @@ htmx 2.0.11’s preserve pass pantries any existing element whose id matches a p
 
 - Keys come from `runtime/observable_keys.py` and are published by `server/models/observables.py` / `publish_model_event`; `webui/core/events.py` fans out to watched clients.
 - A component’s keys must cover **everything that affects its rendered content**. If a component renders state driven by task calls, session state, or responses (e.g. chat thread/cards, chat header busy/usage), include `AgentTaskCall.session:<pk>`, `SessionModel:<pk>`, `Response.session:<pk>` etc. as appropriate — missing keys mean the UI will not live-update.
+- Sub-call trees cross sessions (a delegated sub-task lives in its own session). An `AgentTaskCall` write therefore publishes every ancestor call key (`AgentTaskCall:<ancestor_pk>`) as well as its own; a tool card subscribed to `AgentTaskCall:<pk>` refreshes when any descendant changes. Never rely on `AgentTaskCall.session:<pk>` alone for nested calls.
+- The watch set is derived from the DOM and replaced on every sync (debounced after swaps, forced on reconnect/visibility/every 30 s). A failed POST must not be cached as synced, and `reset_client()` must not delete a registration that a replacement stream has already taken over — either case leaves a live tab subscribed to its previous view with no event-based fallback.
 - `ComponentData.reset=False` is for leaf items fully rebuilt by a parent container’s reset; otherwise reset refetch is usually desired.
 
 ## Patterns and anti-patterns

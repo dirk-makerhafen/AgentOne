@@ -225,10 +225,21 @@ def _session_query_template_keys(obj, previous=None):
 # ---------------------------------------------------------------------------
 
 def _task_call_keys(obj, previous=None):
-    return _base("AgentTaskCall", obj.pk) + _relation_keys(
+    keys = _base("AgentTaskCall", obj.pk) + _relation_keys(
         "AgentTaskCall", obj, previous,
         ("session", "session_version", "task_instance", "task_definition",
          "cronjob", "parent_taskrun"))
+    # A descendant's change must invalidate every ancestor's rendered sub-call
+    # tree.  Cards subscribe to their own ``AgentTaskCall:<pk>`` trigger, and
+    # delegated sub-calls can live in another session, so publishing only the
+    # descendant's own keys never reaches the parent chat.
+    if getattr(obj, "parent_taskrun_id", None):
+        try:
+            ancestors = obj.get_ancestor_call_pks()
+        except Exception:  # pylint: disable=broad-exception-caught
+            ancestors = []
+        keys.extend(f"AgentTaskCall:{pk}" for pk in ancestors)
+    return keys
 
 
 def _task_run_keys(obj, previous=None):

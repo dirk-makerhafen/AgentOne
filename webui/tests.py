@@ -192,6 +192,42 @@ def test_get_item_filter_looks_up_dict_keys():
     assert get_item(None, "ready") is None
 
 
+def test_collapsed_tool_card_reports_active_subcalls():
+    """The collapsed summary chip must reflect a live sub-call tree.
+
+    ``_tool_entry`` used to hardcode zero counts "for lazy loading", but the
+    detail pane is only fetched on expand, so the chips never rendered.  Ended
+    calls stay cheap (no tree walk); running ones carry the counts.
+    """
+    from webui.features.chats.parts.thread import _tool_entry
+
+    class _Call:
+        pk = 7
+        status = "ACTIVE"
+        status_detail = "ACTIVE_RUNNING"
+        task_definition = None
+        task_definition_version = None
+        created_at = None
+        ended_at = None
+        updated_at = None
+
+        def count_subcalls(self, **_kwargs):
+            return {"active": 2, "finished": 1, "executing": [(8, 1)], "truncated": False}
+
+    class _Part:
+        tool_call = _Call()
+        content_id = None
+
+    entry = _tool_entry(_Part())
+    assert entry["subcalls"] == {
+        "active": 2,
+        "finished": 1,
+        "executing": 1,
+        "waiting": 1,
+        "truncated": False,
+    }
+
+
 def test_every_nav_section_has_a_sidebar_component():
     from webui.core.components import get_spec
 

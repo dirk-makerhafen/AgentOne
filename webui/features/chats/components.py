@@ -124,7 +124,9 @@ def _build_chat_message(request, pk, params):
         if call_id:
             keys.append(f"AgentTaskCall:{call_id}")
     return ComponentData(
-        {"row": row, "session": session},
+        # ``live`` gates the raw tool-card SSE trigger: an immutable message
+        # must not keep observing its call after the session has ended.
+        {"row": row, "session": session, "live": session.is_active},
         tuple(keys),
         immutable=not session.is_active,
         reset=False,

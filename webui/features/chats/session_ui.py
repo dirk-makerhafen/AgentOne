@@ -24,17 +24,6 @@ def is_busy(session_model: SessionModel) -> bool:
         return False
 
 
-def thread_triggers(session_pk: int) -> str:
-    keys = [
-        f"Message.session:{session_pk}",
-        f"Query.session:{session_pk}",
-        f"Response.session:{session_pk}",
-        f"AgentTaskCall.session:{session_pk}",
-        f"SessionModel:{session_pk}",
-    ]
-    return ", ".join(f"sse:{key} delay:150ms" for key in keys)
-
-
 def session_context(
     session_model: SessionModel,
     limit: int = DEFAULT_LIMIT,
@@ -57,7 +46,6 @@ def session_context(
         "thread_has_older": total_messages > limit,
         "thread_older_limit": min(limit + DEFAULT_LIMIT, 2000),
         "cards": build_chat_cards(session_model),
-        "thread_triggers": thread_triggers(session_model.pk),
         "toc_segments": compaction_segments(session_model),
         "sse_url": f"{reverse('webui:sse')}?scope=session:{session_model.pk}",
         # Thread fragments rendered directly (send, actions, legacy endpoints) should

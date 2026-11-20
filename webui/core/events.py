@@ -36,6 +36,11 @@ log = logging.getLogger(__name__)
 
 HEARTBEAT_SECONDS = 15.0
 CLIENT_RE = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
+# A chat page can legitimately render hundreds of keys (80 sidebar session
+# rows plus a 120-message thread already exceeds 500).  Reject only clearly
+# abusive payloads; a rejection here leaves the tab subscribed to its *old*
+# view, because heartbeats keep that registration's TTL alive.
+MAX_WATCH_KEYS = 5000
 
 
 def _frame(event: str, data: str) -> str:
@@ -185,7 +190,7 @@ def sse_watch(request):
         return JsonResponse({"error": "invalid client id"}, status=400)
 
     keys = payload.get("keys") or []
-    if not isinstance(keys, list) or len(keys) > 500:
+    if not isinstance(keys, list) or len(keys) > MAX_WATCH_KEYS:
         return JsonResponse({"error": "invalid keys"}, status=400)
     keys = [key for key in keys if isinstance(key, str)]
 

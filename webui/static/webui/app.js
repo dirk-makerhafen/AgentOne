@@ -12,21 +12,19 @@
         return meta ? meta.getAttribute('content') : '';
     }
 
-    // ── Per-tab SSE client ───────────────────────────────────────────────
-    // The client id lives in sessionStorage: stable across reloads, distinct
-    // per tab.  The server uses it to fan out only the keys this tab renders.
+    // ── Per-document SSE client ──────────────────────────────────────────
+    // The id is unique per loaded document, so duplicated tabs cannot share a
+    // Redis channel/watch set (closing one would unsubscribe the other).  A
+    // boosted navigation keeps the same document and therefore the same
+    // id/EventSource; reconnects of that source reuse the id on purpose.
     // An inline bootstrap in base.html sets it and sse-connect before htmx
     // processes; this is a resilient fallback for non-standard loads.
     var clientId = window.agentoneClientId || '';
     try {
         if (!clientId) {
-            clientId = sessionStorage.getItem('agentone:client') || '';
-            if (!clientId) {
-                clientId = (window.crypto && crypto.randomUUID)
-                    ? crypto.randomUUID()
-                    : 'c' + Date.now() + Math.random().toString(36).slice(2);
-                sessionStorage.setItem('agentone:client', clientId);
-            }
+            clientId = (window.crypto && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : 'c' + Date.now() + Math.random().toString(36).slice(2);
             window.agentoneClientId = clientId;
         }
         if (document.body && !document.body.getAttribute('sse-connect')) {
@@ -76,21 +74,39 @@
         return Object.keys(keys).sort();
     }
 
-    var lastWatchPayload = '';
+    var lastWatchPayload = '';   // last attempt, for debounce dedupe
+    var lastSyncedPayload = '';  // last payload the server actually accepted
     var watchTimer = null;
+    var watchRetryTimer = null;
 
-    function syncWatch() {
+    function syncWatch(force) {
         if (!clientId) return;
         var payload = JSON.stringify({ client: clientId, keys: collectWatchKeys() });
-        if (payload === lastWatchPayload) return;
+        if (!force && payload === lastWatchPayload) return;
         lastWatchPayload = payload;
+        clearTimeout(watchRetryTimer);
         fetch(watchUrl(), {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
             body: payload
+        }).then(function (response) {
+            if (!response.ok) {
+                var error = new Error('watch sync rejected: HTTP ' + response.status);
+                error.status = response.status;
+                throw error;
+            }
+            lastSyncedPayload = payload;
         }).catch(function (err) {
+            // The server still holds the previous watch set, and heartbeats
+            // keep its TTL alive.  Caching the failed payload would leave this
+            // tab subscribed to the old view indefinitely.
+            lastWatchPayload = lastSyncedPayload;
             if (window.console && console.error) console.error('watch sync failed:', err);
+            // A 4xx means these bytes were rejected; retrying them verbatim
+            // cannot help.  The next DOM change will build a fresh payload.
+            if (err && err.status && err.status < 500) return;
+            watchRetryTimer = setTimeout(function () { syncWatch(true); }, 5000);
         });
     }
 
@@ -214,11 +230,6 @@
     // an SSE refresh never yanks them away from history they scrolled back to.
     var wasNearBottom = true;
 
-    // A full innerHTML swap replaces the disclosure cards, which would reset
-    // every expanded <details>.  Record the open ones before the swap and
-    // re-apply the state afterwards.
-    var openCards = null;
-
     // Component wrappers are hx-preserve so a parent swap can keep an
     // already-loaded child.  htmx's preserve implementation (Re/He) also pantries
     // the swap target itself when the response carries the same preserved id,
@@ -293,25 +304,41 @@
         }
     }
 
-    function captureOpenCards(el) {
-        openCards = new Set();
+    // <details> open state is DOM-only, so any swap inside the thread (a
+    // message refetch as well as a whole-thread refresh) would collapse every
+    // card.  Track explicit user toggles instead of snapshotting around each
+    // request: thread-area swaps overlap while a turn streams, and a snapshot
+    // made by one request can be cleared by another before it is restored.
+    // Cards the user never touched keep the server-rendered default.
+    var openedThreadCards = new Set();
+    var closedThreadCards = new Set();
+
+    document.addEventListener('toggle', function (evt) {
+        var card = evt.target;
+        if (!card || !card.matches || !card.matches('details[data-open-key]')) return;
+        var thread = threadEl();
+        if (!thread || !thread.contains(card)) return;
+        var key = card.getAttribute('data-open-key');
+        if (!key) return;
+        if (card.open) {
+            openedThreadCards.add(key);
+            closedThreadCards.delete(key);
+        } else {
+            closedThreadCards.add(key);
+            openedThreadCards.delete(key);
+        }
+    }, true);
+
+    function restoreOpenCards(el) {
         if (!el) return;
         try {
             el.querySelectorAll('details[data-open-key]').forEach(function (card) {
                 var key = card.getAttribute('data-open-key');
-                if (card.open && key) openCards.add(key);
-            });
-        } catch (e) {
-            if (window.console && console.error) console.error('captureOpenCards failed:', e);
-        }
-    }
-
-    function restoreOpenCards(el) {
-        if (!openCards) return;
-        try {
-            el.querySelectorAll('details[data-open-key]').forEach(function (card) {
-                var key = card.getAttribute('data-open-key');
-                var shouldOpen = !!key && openCards.has(key);
+                if (!key) return;
+                var shouldOpen;
+                if (openedThreadCards.has(key)) shouldOpen = true;
+                else if (closedThreadCards.has(key)) shouldOpen = false;
+                else return;  // server-rendered default wins
                 if (card.open === shouldOpen) return;
                 card.open = shouldOpen;
                 if (shouldOpen && card.hasAttribute('hx-get')) {
@@ -322,13 +349,9 @@
             // Never let a card-restore failure take down the thread swap.
             if (window.console && console.error) console.error('restoreOpenCards failed:', e);
         }
-        openCards = null;
     }
 
     document.addEventListener('htmx:beforeSwap', function (evt) {
-        if (isThreadSwap(evt)) {
-            captureOpenCards(threadEl());
-        }
         var pc = providersCardEl();
         if (pc && evt.detail && evt.detail.target === pc) {
             captureProviderOpenState();
@@ -416,7 +439,7 @@
     }
 
     document.addEventListener('htmx:afterSettle', function (evt) {
-        if (isThreadSwap(evt)) {
+        if (isThreadAreaSwap(evt)) {
             var el = threadEl();
             if (el) restoreOpenCards(el);
             // Placeholder-loaded thread (e.g. boosted nav) appears after settle;
@@ -452,6 +475,16 @@
         scrollToBottom(threadEl());
         markActiveRows();
         scheduleWatch();
+        // Re-post even when nothing changed.  There is no "unsubscribe on an
+        // event I no longer render" fallback: a stream that died while a
+        // replacement was registering, or a watch set lost to a racing
+        // cleanup, would otherwise leave this tab silently unsubscribed.
+        window.setInterval(function () {
+            if (!document.hidden) syncWatch(true);
+        }, 30000);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) syncWatch(true);
+        });
         ensureComponentPlaceholders(document);
         var ta = document.querySelector('.composer-chat-message');
         if (ta) {
@@ -1322,6 +1355,10 @@
     }
 
     function initEntry() {
+        // A navigation starts a different conversation; card state must not
+        // leak into it.
+        openedThreadCards.clear();
+        closedThreadCards.clear();
         scrollToBottom(threadEl());
         restoreAroundScroll();
         var ta = document.querySelector('.composer-chat-message');
