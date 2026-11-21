@@ -137,8 +137,8 @@
                 <div class="detail-card">
                     <div class="detail-card-title">Schedule</div>
                     <div class="detail-row"><span class="detail-row-label">Expression</span><span class="detail-row-value"><code>{{ cron.schedule }}</code></span></div>
-                    <div class="detail-row"><span class="detail-row-label">Next run</span><span class="detail-row-value">{{ cron.next_run_at|default:"—" }}</span></div>
-                    <div class="detail-row"><span class="detail-row-label">Last run</span><span class="detail-row-value">{{ cron.last_run_at|default:"—" }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Next run</span><span class="detail-row-value">{{ cron.next_run_at|date:'Y-m-d H:i'|default:"—" }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Last run</span><span class="detail-row-value">{{ cron.last_run_at|date:'Y-m-d H:i'|default:"—" }}</span></div>
                     <div class="detail-row"><span class="detail-row-label">Last status</span><span class="detail-row-value">{{ cron.last_status|default:"—" }}</span></div>
                     <div class="detail-row"><span class="detail-row-label">Total runs</span><span class="detail-row-value">{{ cron.total_runs }}</span></div>
                     <div class="detail-row"><span class="detail-row-label">Session mode</span><span class="detail-row-value">{{ cron.get_session_mode_display }}</span></div>

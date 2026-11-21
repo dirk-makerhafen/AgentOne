@@ -247,6 +247,7 @@ def _system_info() -> dict:
         "redis": getattr(django_settings, "REDIS_URL", ""),
         "debug": bool(django_settings.DEBUG),
         "timezone": django_settings.TIME_ZONE,
+        "display_timezone": str(timezone.get_current_timezone()),
     }
 
 

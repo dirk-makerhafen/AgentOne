@@ -40,7 +40,7 @@
         {% if row.body_text %}{{ row.body_text|linebreaksbr }}{% endif %}
     </div>
     <div class="msg-foot">
-        <span class="msg-time" title="{{ row.obj.created_at }}">{{ row.obj.created_at|clock }}</span>
+        <span class="msg-time" title="{{ row.obj.created_at|date:'Y-m-d H:i:s T' }}">{{ row.obj.created_at|clock }}</span>
         <span class="msg-actions">
             <button class="msg-action-btn" type="button" data-copy title="Copy message" aria-label="Copy message">⧉</button>
             <button class="msg-action-btn" type="button" data-tts title="Listen" aria-label="Listen">🔊</button>
@@ -110,7 +110,7 @@
         {% endfor %}
 
         <div class="msg-foot">
-            <span class="msg-time" title="{{ row.obj.created_at }}">{{ row.obj.created_at|clock }}</span>
+            <span class="msg-time" title="{{ row.obj.created_at|date:'Y-m-d H:i:s T' }}">{{ row.obj.created_at|clock }}</span>
             <span class="msg-actions">
                 <button class="msg-action-btn" type="button" data-copy title="Copy message" aria-label="Copy message">⧉</button>
                 <button class="msg-action-btn" type="button" data-tts title="Listen" aria-label="Listen">🔊</button>

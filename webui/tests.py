@@ -7,12 +7,17 @@ string, the URL contract, the sidebar wiring, and the log tail helper.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone as dt_timezone
+
 import pytest
-from django.test import override_settings
+from django.http import HttpResponse
+from django.test import RequestFactory, override_settings
 from django.urls import reverse
+from django.utils import timezone as dj_timezone
 
 from webui.core.markdown import render_markdown
-from webui.templatetags.webui import get_item, static_v
+from webui.middleware import TIMEZONE_COOKIE, UserTimezoneMiddleware
+from webui.templatetags.webui import clock, get_item, static_v
 from webui.core.layout import NAV_SECTIONS, SIDEBAR_TEMPLATES
 from webui.features.logs.views import _resolve, log_files, tail
 
@@ -2903,3 +2908,55 @@ def test_chats_page_offers_new_chat_form(client):
     assert response.status_code == 200
     assert b'id="new-chat"' in response.content
     assert b"form-workspace" in response.content
+
+
+# ── Local-time display ──────────────────────────────────────────────────────
+
+
+def _seen_timezone(cookie: str) -> str:
+    """Run one request through the timezone middleware and report what it saw."""
+    seen = {}
+
+    def view(request):
+        seen["zone"] = str(dj_timezone.get_current_timezone())
+        return HttpResponse("ok")
+
+    request = RequestFactory().get("/app/")
+    if cookie is not None:
+        request.COOKIES[TIMEZONE_COOKIE] = cookie
+    UserTimezoneMiddleware(view)(request)
+    # The override is scoped to the request, never leaked to later work.
+    assert str(dj_timezone.get_current_timezone()) == "UTC"
+    return seen["zone"]
+
+
+def test_browser_timezone_cookie_is_activated_for_the_request():
+    assert _seen_timezone("America/New_York") == "America/New_York"
+
+
+def test_browser_timezone_cookie_accepts_common_zone_name_shapes():
+    assert _seen_timezone("Etc/GMT+5") == "Etc/GMT+5"
+    assert _seen_timezone("Europe/Berlin") == "Europe/Berlin"
+
+
+@pytest.mark.parametrize("cookie", [None, "", "Mars/Olympus", "../etc/passwd", "x" * 200])
+def test_invalid_or_missing_timezone_cookie_falls_back_to_utc(cookie):
+    assert _seen_timezone(cookie) == "UTC"
+
+
+def test_clock_filter_renders_in_the_active_timezone():
+    value = datetime(2026, 1, 1, 12, 0, tzinfo=dt_timezone.utc)
+    assert clock(value) == "12:00"
+    with dj_timezone.override("America/New_York"):
+        assert clock(value) == "07:00"
+
+
+@pytest.mark.django_db
+def test_full_request_renders_with_the_browser_timezone(client):
+    response = client.get(
+        reverse("webui:settings_tab", args=["system"]),
+        HTTP_COOKIE=f"{TIMEZONE_COOKIE}=America/New_York",
+    )
+    assert response.status_code == 200
+    assert b"Display timezone" in response.content
+    assert b"America/New_York" in response.content

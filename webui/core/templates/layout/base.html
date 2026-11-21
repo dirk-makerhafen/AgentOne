@@ -14,6 +14,38 @@
             if (dark) document.documentElement.classList.add("dark");
         })();
     </script>
+    <script>
+        // Times are stored in UTC but rendered in the browser's IANA zone.
+        // Set the cookie in <head> so one early reload replaces the first UTC
+        // render with a local one; later component/SSE requests already carry it.
+        (function () {
+            try {
+                if (!window.Intl || !Intl.DateTimeFormat) return;
+                var zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (!zone || !/^[A-Za-z0-9_+./-]+$/.test(zone)) return;
+                // Keep in sync with webui.middleware.TIMEZONE_COOKIE.
+                var cookieName = "agentone_timezone";
+                function readCookie() {
+                    var found = "";
+                    document.cookie.split(";").forEach(function (part) {
+                        var pair = part.trim().split("=");
+                        if (pair[0] === cookieName) found = pair[1] || "";
+                    });
+                    return found;
+                }
+                // IANA names only contain cookie-safe characters (/ + _ - .).
+                var wanted = zone;
+                if (readCookie() === wanted) return;
+                var attrs = "; path=/; max-age=31536000; SameSite=Lax";
+                if (location.protocol === "https:") attrs += "; Secure";
+                document.cookie = cookieName + "=" + wanted + attrs;
+                // Read back: browsers that block cookies must not get a reload loop.
+                if (readCookie() === wanted) location.reload();
+            } catch (e) {
+                if (window.console && console.error) console.error('timezone setup failed:', e);
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="{% static_v 'css/main.css' %}">
     <link rel="stylesheet" href="{% static_v 'webui/app.css' %}">
     <script src="{% static_v 'webui/htmx.min.js' %}" defer></script>

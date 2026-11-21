@@ -113,7 +113,7 @@
                             <td><a class="webui-link" href="{% url 'webui:cronjob' cron.pk %}">{{ cron.name }}</a></td>
                             <td>{{ cron.agent.name|default:"—" }}</td>
                             <td><code>{{ cron.schedule }}</code></td>
-                            <td>{{ cron.next_run_at|default:"—" }}</td>
+                            <td>{{ cron.next_run_at|date:'Y-m-d H:i'|default:"—" }}</td>
                             <td>{% if cron.is_active %}<span class="detail-badge ok">active</span>{% else %}<span class="detail-badge">paused</span>{% endif %}</td>
                         </tr>
                         {% empty %}

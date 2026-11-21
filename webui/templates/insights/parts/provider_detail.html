@@ -35,7 +35,7 @@
     <div class="rp-section-title">Health</div>
     <div class="rp-kv"><span>Status</span><span>{{ health.label|default:provider.status|lower }}</span></div>
     {% if provider.status_reason %}<div class="rp-kv"><span>Reason</span><span>{{ provider.status_reason }}</span></div>{% endif %}
-    {% if provider.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ provider.status_retry_at }}</span></div>{% endif %}
+    {% if provider.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ provider.status_retry_at|date:'Y-m-d H:i:s' }}</span></div>{% endif %}
     {% if provider.consecutive_failures %}<div class="rp-kv"><span>Failures</span><span>{{ provider.consecutive_failures }}</span></div>{% endif %}
 
     {% if limit_rows %}

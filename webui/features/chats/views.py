@@ -571,7 +571,7 @@ def _terminal_rows(session_model: SessionModel) -> list[dict]:
                 "tmux": row.tmux_session_name,
                 "alive": False,
                 "cwd": row.cwd,
-                "last_active_at": str(row.last_active_at) if row.last_active_at else None,
+                "last_active_at": row.last_active_at,
             }
             for row in session_model.terminals.order_by("name")
         ]

@@ -83,7 +83,7 @@ class RightPanelProvider:
     @property
     def last_usage(self) -> str:
         if self.subject.last_usage:
-            return self.subject.last_usage.strftime("%Y-%m-%d %H:%M:%S")
+            return timezone.localtime(self.subject.last_usage).strftime("%Y-%m-%d %H:%M:%S")
         return "—"
 
     @property

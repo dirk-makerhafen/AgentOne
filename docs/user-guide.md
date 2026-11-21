@@ -518,6 +518,8 @@ Configure:
 - Password/authentication settings
 - System-level preferences
 
+Times are stored in UTC (shown as **Storage timezone**) but the webui renders every timestamp in your browser's local timezone (shown as **Display timezone**). The timezone is detected automatically on first load and remembered in a cookie; no configuration is needed. Relative times ("4m", "2h") are unaffected.
+
 ### Plugins
 
 Manage plugin integrations (if any are installed).

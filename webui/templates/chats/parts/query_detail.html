@@ -18,6 +18,6 @@
 <div class="query-card-foot">
     <span class="query-tokens">{{ query.tokens|default:0 }} tokens</span>
     {% if query.created_at %}
-        <span class="query-time" title="{{ query.created_at }}">{{ query.created_at|clock }}</span>
+        <span class="query-time" title="{{ query.created_at|date:'Y-m-d H:i:s T' }}">{{ query.created_at|clock }}</span>
     {% endif %}
 </div>

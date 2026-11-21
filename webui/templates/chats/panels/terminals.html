@@ -20,7 +20,7 @@
                         <span class="webui-muted-note">{{ terminal.status }}{% if terminal.cwd %} · {{ terminal.cwd }}{% endif %}</span>
                     </span>
                 </span>
-                <span class="webui-muted-note">{{ terminal.last_active_at|default:"" }}</span>
+                <span class="webui-muted-note">{{ terminal.last_active_at|date:'Y-m-d H:i:s'|default:"" }}</span>
             </summary>
             <div class="webui-terminal-live"
                  hx-get="{% url 'webui:terminal_output' session.pk terminal.name %}"

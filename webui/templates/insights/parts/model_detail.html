@@ -20,7 +20,7 @@
     {% if model.quantization %}<div class="rp-kv"><span>Quantization</span><span>{{ model.quantization }}</span></div>{% endif %}
     <div class="rp-kv"><span>Last used</span><span>{{ last_usage }}</span></div>
     {% if health.label and model.status_reason %}<div class="rp-kv"><span>Reason</span><span>{{ model.status_reason }}</span></div>{% endif %}
-    {% if model.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ model.status_retry_at }}</span></div>{% endif %}
+    {% if model.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ model.status_retry_at|date:'Y-m-d H:i:s' }}</span></div>{% endif %}
 
     {% if model.description %}<div class="rp-desc">{{ model.description }}</div>{% endif %}
     {% if model.conditions %}<div class="rp-conditions">{{ model.conditions }}</div>{% endif %}

@@ -183,7 +183,8 @@
                 <div class="detail-row"><span class="detail-row-label">Log dir</span><span class="detail-row-value"><code>{{ system.log_dir }}</code></span></div>
                 <div class="detail-row"><span class="detail-row-label">Database</span><span class="detail-row-value"><code>{{ system.database }}</code></span></div>
                 <div class="detail-row"><span class="detail-row-label">Redis</span><span class="detail-row-value"><code>{{ system.redis|default:"—" }}</code></span></div>
-                <div class="detail-row"><span class="detail-row-label">Timezone</span><span class="detail-row-value">{{ system.timezone }}</span></div>
+                <div class="detail-row"><span class="detail-row-label">Storage timezone</span><span class="detail-row-value">{{ system.timezone }}</span></div>
+                <div class="detail-row"><span class="detail-row-label">Display timezone</span><span class="detail-row-value">{{ system.display_timezone }}</span></div>
                 <div class="detail-row"><span class="detail-row-label">Debug</span><span class="detail-row-value">{% if system.debug %}on{% else %}off{% endif %}</span></div>
             </div>
             {% endif %}

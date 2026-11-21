@@ -9,6 +9,7 @@ canonical identity (``canonical_id`` → ``leaderboard_id`` → ``name``) across
 """
 from __future__ import annotations
 
+from django.utils import timezone
 from server.models.providers.ai_model import AiModel
 from webui.features.insights.models import MODE_LABELS, _params_str, _rank_str
 
@@ -82,7 +83,7 @@ class RightPanelModel:
             if member.last_usage and (last is None or member.last_usage > last):
                 last = member.last_usage
         if last:
-            return last.strftime("%Y-%m-%d %H:%M:%S")
+            return timezone.localtime(last).strftime("%Y-%m-%d %H:%M:%S")
         return "—"
 
     @property
