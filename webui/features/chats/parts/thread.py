@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from django.db.models import Prefetch
+from django.utils import timezone
 
 from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
 from server.models.enums.message_enums import MessagePartType, MessageRole, MessageType
@@ -247,6 +248,49 @@ def _status_label(call: Any) -> str:
         return str(getattr(call, "status", "") or "")
 
 
+#: Compact labels for a sub-call's flow row.  The raw detail ("Completed
+#: Successfully") is too long for the timeline and repeats the status color.
+_SHORT_STATUS = {
+    "NEW": "new",
+    "WAITING_QUEUE": "queued",
+    "WAITING_RETRY": "retry",
+    "WAITING_DEPENDENCY": "waiting",
+    "WAITING_SUBTASKS_OR_HOOKS": "waiting",
+    "WAITING_RATELIMIT": "rate-limited",
+    "ACTIVE_QUEUED": "queued",
+    "ACTIVE_RUNNING": "running",
+    "HALTED_INPUT": "needs input",
+    "HALTED_APPROVAL": "approval",
+    "HALTED_STAGNATED": "step limit",
+    "HALTED_PAUSED": "paused",
+    "ENDED_SUCCESS": "done",
+    "ENDED_FAILURE_EXCEPTION": "error",
+    "ENDED_FAILURE_LOGIC": "failed",
+    "ENDED_CANCELLED": "cancelled",
+    "ENDED_STOPPED": "stopped",
+}
+
+
+def _status_text(call: Any) -> str:
+    """Short human label for a call's flow row / status pill."""
+    detail = str(getattr(call, "status_detail", "") or "").upper()
+    if detail in _SHORT_STATUS:
+        return _SHORT_STATUS[detail]
+    status = str(getattr(call, "status", "") or "").lower()
+    return {"new": "new", "waiting": "waiting", "active": "running",
+            "halted": "paused", "ended": "done"}.get(status, status or "pending")
+
+
+def _clock(value: Any) -> str:
+    """Wall-clock ``HH:MM`` for a datetime (empty when absent/invalid)."""
+    if value is None:
+        return ""
+    try:
+        return timezone.localtime(value).strftime("%H:%M")
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
+
+
 def _subcall_counts(call: Any) -> dict[str, Any]:
     """Cheap descendant counts for the collapsed tool card."""
     try:
@@ -265,17 +309,22 @@ def _subcall_counts(call: Any) -> dict[str, Any]:
     }
 
 
-def _tool_entry(part: MessagePart) -> dict[str, Any]:
-    """Flatten a TOOLCALL part into the fields the tool card renders."""
-    call = getattr(part, "tool_call", None)
+def _tool_entry_for_call(call: Any, body: str = "") -> dict[str, Any]:
+    """Fields the live tool summary renders for one call.
+
+    Kept separate from :func:`_tool_entry` so the ``chat-tool-summary``
+    component can refresh just the summary row without re-rendering (and
+    therefore replacing) the whole message.
+    """
     entry: dict[str, Any] = {
-        "pk": None,
+        "pk": getattr(call, "pk", None),
         "name": "tool call",
         "status": "",
         "status_detail": "",
         "status_label": "",
+        "status_text": "",
         "status_class": "waiting",
-        "body": _as_text(_content_of(part)),
+        "body": body,
         "duration": "",
         "halted": False,
         "subcalls": {"active": 0, "finished": 0, "executing": 0, "waiting": 0, "truncated": False},
@@ -284,22 +333,27 @@ def _tool_entry(part: MessagePart) -> dict[str, Any]:
         return entry
     entry.update(
         {
-            "pk": getattr(call, "pk", None),
             "name": _call_name(call),
             "status": str(getattr(call, "status", "") or ""),
             "status_detail": str(getattr(call, "status_detail", "") or ""),
             "status_label": _status_label(call),
+            "status_text": _status_text(call),
             "status_class": _status_class(call),
             "duration": _call_duration(call),
             "halted": str(getattr(call, "status_detail", "") or "") == "HALTED_APPROVAL",
         }
     )
-    # The collapsed card shows a "↳ N running/queued/subtasks" chip.  Only
+    # The collapsed summary shows a "N running/queued/subtasks" chip.  Only
     # non-ended calls can change, so they are the only ones worth walking
     # (a finished tree is static and its full list lives in the detail pane).
     if entry["status"] != "ENDED":
         entry["subcalls"] = _subcall_counts(call)
     return entry
+
+
+def _tool_entry(part: MessagePart) -> dict[str, Any]:
+    """Flatten a TOOLCALL part into the fields the tool card renders."""
+    return _tool_entry_for_call(getattr(part, "tool_call", None), _as_text(_content_of(part)))
 
 
 def _subcall_node(call: Any, depth: int) -> dict[str, Any] | None:
@@ -314,12 +368,127 @@ def _subcall_node(call: Any, depth: int) -> dict[str, Any] | None:
             "status": str(getattr(call, "status", "") or ""),
             "status_detail": str(getattr(call, "status_detail", "") or ""),
             "status_class": _status_class(call),
-            "indent": (depth - 1) * 14,
+            "status_text": _status_text(call),
+            "depth": depth,
+            "prefix": "├─ ",
+            "started": _clock(getattr(call, "created_at", None)),
             "duration": _call_duration(call),
             "executing": str(getattr(call, "status", "") or "") == "ACTIVE",
         }
     except Exception:  # pylint: disable=broad-exception-caught
         return None
+
+
+def _subcall_parent_pk(call: Any) -> Any:
+    """The call pk that directly launched *call* (None for unattached rows)."""
+    run = getattr(call, "parent_taskrun", None)
+    if run is None:
+        return None
+    return getattr(run, "agent_task_call_id", None)
+
+
+def _created_sort_key(call: Any) -> tuple[bool, Any, int]:
+    created = getattr(call, "created_at", None)
+    return (created is None, created, int(getattr(call, "pk", 0) or 0))
+
+
+def _ordered_subcall_rows(root_pk: Any, tree: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Turn the model's BFS tree into a chronological depth-first flow.
+
+    The BFS list interleaves siblings' subtrees (all depth-1 rows, then all
+    depth-2 rows), which reads as a flat list rather than a sequence.  Group by
+    the launching call, sort siblings by creation time, then walk depth-first so
+    each row gets a ``├─``/``└─`` prefix that mirrors the actual call flow.
+    """
+    children: dict[Any, list[Any]] = {}
+    for entry in tree:
+        call = entry.get("call") if isinstance(entry, dict) else None
+        if call is None or getattr(call, "pk", None) is None:
+            continue
+        children.setdefault(_subcall_parent_pk(call), []).append(call)
+    for kids in children.values():
+        kids.sort(key=_created_sort_key)
+
+    rows: list[dict[str, Any]] = []
+    seen: set[Any] = set()
+
+    def walk(parent_pk: Any, ancestor_last: list[bool]) -> None:
+        siblings = children.get(parent_pk, [])
+        for index, child in enumerate(siblings):
+            child_pk = getattr(child, "pk", None)
+            if child_pk in seen:
+                continue
+            seen.add(child_pk)
+            is_last = index == len(siblings) - 1
+            prefix = "".join("   " if last else "│  " for last in ancestor_last)
+            prefix += "└─ " if is_last else "├─ "
+            node = _subcall_node(child, len(ancestor_last) + 1)
+            if node is None:
+                continue
+            node["prefix"] = prefix
+            rows.append(node)
+            walk(child_pk, ancestor_last + [is_last])
+
+    walk(root_pk, [])
+
+    # Defensive: a row whose ancestor was pruned by the walk cap is still worth
+    # showing rather than silently dropping it.
+    for kids in children.values():
+        for child in kids:
+            child_pk = getattr(child, "pk", None)
+            if child_pk in seen:
+                continue
+            seen.add(child_pk)
+            node = _subcall_node(child, 1)
+            if node is not None:
+                rows.append(node)
+    return rows
+
+
+def build_call_subcalls(call: Any, full: bool = False) -> dict[str, Any]:
+    """The live sub-task flow for one tool card.
+
+    Split out of :func:`build_call_detail` so a descendant status change
+    refreshes only this list (plus the summary chip) instead of swapping the
+    whole arguments/result pane.  ``full`` also loads finished branches; the
+    default walk keeps only unfinished calls, which is what a running tool
+    needs.
+    """
+    counts = _subcall_counts(call)
+    try:
+        tree = call.get_subcall_tree(
+            max_depth=6,
+            max_nodes=400 if full else 150,
+            active_only=not full,
+        )
+    except Exception:  # pylint: disable=broad-exception-caught
+        tree = []
+
+    nodes = _ordered_subcall_rows(getattr(call, "pk", None), tree)
+    included = {node["pk"] for node in nodes}
+
+    # Currently-executing descendants are discovered by reverse lookup, so a
+    # long-finished ancestor chain or a truncated walk cannot hide them.
+    running: list[dict[str, Any]] = []
+    try:
+        pins = call.get_executing_subcalls() or []
+    except Exception:  # pylint: disable=broad-exception-caught
+        pins = []
+    for pin in pins:
+        node = _subcall_node(pin.get("call"), pin.get("depth", 1))
+        if node is None or node["pk"] in included:
+            continue
+        included.add(node["pk"])
+        running.append(node)
+
+    return {
+        "call": call,
+        "nodes": nodes,
+        "running": running,
+        "counts": counts,
+        "full": bool(full),
+        "has_content": bool(nodes or running or counts.get("finished") or counts.get("active")),
+    }
 
 
 def _resolved_arguments(call: Any) -> list[dict[str, str]]:
@@ -352,49 +521,17 @@ def _call_result(call: Any) -> str:
 
 
 def build_call_detail(call: Any, full: bool = False) -> dict[str, Any]:
-    """Everything the expanded tool card shows.
+    """The input/output panes of an expanded tool card.
 
     Only fetched when the user opens a card (``toggle once``), so the heavy
-    argument/result payloads never enter the initial page.  ``full`` loads the
-    finished branches of the sub-call tree on demand.
+    argument/result payloads never enter the initial page.  The sub-task flow is
+    a separate live component (:func:`build_call_subcalls`); ``full`` is passed
+    through so that component also expands finished branches.
     """
-    counts = _subcall_counts(call)
-    nodes: list[dict[str, Any]] = []
-    seen: set[Any] = set()
-
-    # Currently-executing descendants are pinned first, even past walk caps.
-    try:
-        pins = call.get_executing_subcalls() or []
-    except Exception:  # pylint: disable=broad-exception-caught
-        pins = []
-    for pin in pins:
-        node = _subcall_node(pin.get("call"), pin.get("depth", 1))
-        if node is None:
-            continue
-        seen.add(node["pk"])
-        nodes.append(node)
-
-    try:
-        tree = call.get_subcall_tree(
-            max_depth=6,
-            max_nodes=400 if full else 150,
-            active_only=not full,
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-        tree = []
-    for entry in tree:
-        node = _subcall_node(entry.get("call"), entry.get("depth", 1))
-        if node is None or node["pk"] in seen:
-            continue
-        seen.add(node["pk"])
-        nodes.append(node)
-
     return {
         "call": call,
         "arguments": _resolved_arguments(call),
         "result": _call_result(call),
-        "subcalls": nodes,
-        "counts": counts,
         "halted": str(getattr(call, "status_detail", "") or "") == "HALTED_APPROVAL",
         "full": full,
     }

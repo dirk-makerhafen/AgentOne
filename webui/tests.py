@@ -697,6 +697,115 @@ def _task_call(session, session_version, *, detail, name="some_task", args=None)
     )
 
 
+def test_subcall_flow_is_depth_first_and_chronological():
+    """The expanded tool card shows a sequence, not BFS-flattened siblings."""
+    from datetime import datetime, timedelta, timezone as dt_timezone
+
+    from webui.features.chats.parts.thread import _ordered_subcall_rows
+
+    class _Run:
+        def __init__(self, parent_pk):
+            self.agent_task_call_id = parent_pk
+
+    class _Call:
+        def __init__(self, pk, parent_pk, created_at):
+            self.pk = pk
+            self.parent_taskrun = _Run(parent_pk) if parent_pk else None
+            self.created_at = created_at
+            self.status = "ACTIVE"
+            self.status_detail = "ACTIVE_RUNNING"
+            self.task_definition = None
+            self.task_definition_version = None
+            self.ended_at = None
+            self.updated_at = None
+
+    base = datetime(2026, 1, 1, tzinfo=dt_timezone.utc)
+    first = _Call(11, 7, base)
+    first_child = _Call(13, 11, base + timedelta(minutes=2))
+    second = _Call(12, 7, base + timedelta(minutes=1))
+
+    tree = [
+        {"call": second, "depth": 1},
+        {"call": first, "depth": 1},
+        {"call": first_child, "depth": 2},
+    ]
+    rows = _ordered_subcall_rows(7, tree)
+    assert [row["pk"] for row in rows] == [11, 13, 12]
+    assert [row["prefix"] for row in rows] == ["├─ ", "│  └─ ", "└─ "]
+    assert [row["status_text"] for row in rows] == ["running"] * 3
+
+
+@pytest.mark.django_db
+def test_tool_live_regions_do_not_swap_the_whole_message():
+    from server.models.enums.message_enums import MessagePartType, MessageRole
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from server.models.message import Message, MessagePart
+    from webui.features.chats.components import (
+        _build_chat_message,
+        _build_chat_tool_subcalls,
+        _build_chat_tool_summary,
+    )
+
+    session, version = _session_with_version("tool-live")
+    call = _task_call(
+        session, version, detail=TaskCallStatusDetail.ACTIVE_RUNNING, name="delegate_task"
+    )
+    message = Message.objects.create(
+        role=MessageRole.ASSISTANT, session=session, session_version=version
+    )
+    MessagePart.objects.create(
+        message=message, type=MessagePartType.TOOLCALL, tool_call=call
+    )
+
+    # A descendant write publishes AgentTaskCall:<call.pk>.  The message must
+    # not subscribe to it, or every sub-task tick replaces the whole message.
+    assert f"AgentTaskCall:{call.pk}" not in _build_chat_message(None, message.pk, {}).keys
+    assert f"AgentTaskCall:{call.pk}" in _build_chat_tool_summary(None, call.pk, {}).keys
+    assert f"AgentTaskCall:{call.pk}" in _build_chat_tool_subcalls(None, call.pk, {}).keys
+
+
+@pytest.mark.django_db
+def test_tool_detail_delegates_the_subcall_flow_to_a_live_component(client):
+    from webui.core.components import component_url
+
+    session, version = _session_with_version("tool-detail-flow")
+    call = _task_call(session, version, detail="ACTIVE_RUNNING", name="delegate_task")
+
+    detail = client.get(f"/app/call/{call.pk}/detail?render=htmx")
+    assert detail.status_code == 200
+    body = detail.content.decode()
+    assert 'data-component="chat-tool-subcalls"' in body
+    assert component_url("chat-tool-subcalls", call.pk) in body
+    # The placeholder self-loads, but it must not carry the ETag of an earlier
+    # loaded wrapper: app.js uses the path cache for a 204 on unchanged
+    # fragments, which would leave a re-opened detail pane with no flow at all.
+    assert 'hx-trigger="load, intersect once"' in body
+    assert "data-component-etag" not in body
+    # The heavy tree used to be inlined in the detail pane; now only the small
+    # live component refetches when a sub-task changes.
+    assert "Sub-calls" not in body
+    assert "webui-flow" not in body
+
+
+def test_placeholder_client_contract_avoids_duplicate_load_and_stale_etag():
+    """Guard the JS side of the lazy component path with a source contract.
+
+    There is no JS unit-test runner in this repo, so assert the two invariants
+    that repeatedly regressed: only htmx-driven placeholders are processed,
+    and path-keyed ETags are not reused for a not-yet-rendered placeholder.
+    """
+    from pathlib import Path
+
+    from django.contrib.staticfiles import finders
+
+    js = Path(finders.find("webui/app.js")).read_text(encoding="utf-8")
+    assert "var initialized = !!(el['htmx-internal-data'] && el['htmx-internal-data'].firstInitCompleted)" in js
+    assert "if (!initialized) {" in js
+    assert "var isComponentPlaceholder" in js
+    assert "if (!etag && !isComponentPlaceholder) {" in js
+    assert "evt.detail.headers['X-AgentOne-ETag'] = '1'" in js
+
+
 @pytest.mark.django_db
 def test_queue_card_renders_and_cancel_removes_call(client):
     from server.models.enums.task_enums import TaskCallStatusDetail

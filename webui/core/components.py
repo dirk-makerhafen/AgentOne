@@ -27,9 +27,11 @@ Cache policy
 ------------
 
 * Live components (they have observable keys) are ``private, no-cache`` with
-  an ETag.  The client sends ``If-None-Match``; an unchanged component answers
-  ``204`` so htmx skips the swap and the browser keeps focus and open
-  ``<details>``.
+  an ETag.  ``app.js`` sends ``If-None-Match`` together with
+  ``X-AgentOne-ETag: 1``; an unchanged component answers ``204`` so htmx skips
+  the swap and the browser keeps focus and open ``<details>``.  A browser's own
+  cache revalidation has no marker and always gets a full ``200`` body — a lazy
+  fragment must never answer ``204`` on its first load and stay empty.
 * Immutable components (finished messages, terminal responses) are
   ``private, max-age=31536000, immutable`` and carry no SSE trigger.
 """
@@ -182,6 +184,21 @@ def _etag(html: str) -> str:
     return '"' + hashlib.sha256(canonical.encode()).hexdigest()[:32] + '"'
 
 
+def _is_client_revalidation(request, etag: str) -> bool:
+    """Only honour ETags sent by our own htmx client, not browser cache probes.
+
+    Live fragments use ``private, no-cache``, so a browser may revalidate them
+    itself on a later page load.  A bare ``204`` would make htmx skip the first
+    swap of a lazily loaded fragment (the detail pane would stay "Loading…").
+    ``app.js`` marks its conditional GETs with ``X-AgentOne-ETag``; only those
+    revalidations may skip the swap.
+    """
+    return (
+        request.headers.get("If-None-Match") == etag
+        and request.headers.get("X-AgentOne-ETag") == "1"
+    )
+
+
 def render_fragment(
     request,
     template_name: str,
@@ -198,17 +215,18 @@ def render_fragment(
     every task-call event makes the controls flicker.
 
     ``app.js`` remembers the ETag of every GET response by request path and
-    sends it back as ``If-None-Match``.  An unchanged fragment therefore answers
-    ``204`` and htmx leaves the live DOM (and focus) alone.
+    sends it back as ``If-None-Match`` with ``X-AgentOne-ETag: 1``.  An unchanged
+    fragment therefore answers ``204`` and htmx leaves the live DOM (and focus)
+    alone; browser-native revalidation still gets the full body.
     """
     html = render_to_string(template_name, context or {}, request=request)
     etag = _etag(html)
 
     response = HttpResponse()
-    response["Vary"] = "Cookie"
+    response["Vary"] = "Cookie, X-AgentOne-ETag"
     response["Cache-Control"] = "private, no-cache"
     response["ETag"] = etag
-    if request.headers.get("If-None-Match") == etag:
+    if _is_client_revalidation(request, etag):
         response.status_code = 204
         response["Content-Length"] = "0"
         return response
@@ -246,6 +264,11 @@ def _open_tag(
         f'hx-get="{escape(url)}"',
         'hx-swap="outerHTML"',
         'hx-sync="this:replace"',
+        # htmx checks ``hx-disinherit`` on the element that *owns* the inherited
+        # attribute, not on this wrapper.  An ancestor with ``hx-target`` (the
+        # tool card's detail pane, a composer form, ...) would otherwise capture
+        # this wrapper's SSE refetch and replace that ancestor instead of itself.
+        'hx-target="this"',
         f'hx-disinherit="{HX_DISINHERIT}"',
     ]
     if etag and not placeholder:
@@ -327,7 +350,7 @@ def _render_request(request, name: str, pk: int | None, params: dict[str, Any]) 
     keys = () if data.immutable else _collect_keys(data)
 
     response = HttpResponse()
-    response["Vary"] = "Cookie"
+    response["Vary"] = "Cookie, X-AgentOne-ETag"
     if data.immutable:
         response["Cache-Control"] = "private, max-age=31536000, immutable"
     else:
@@ -335,7 +358,7 @@ def _render_request(request, name: str, pk: int | None, params: dict[str, Any]) 
 
     etag = _etag(html)
     response["ETag"] = etag
-    if not data.immutable and request.headers.get("If-None-Match") == etag:
+    if not data.immutable and _is_client_revalidation(request, etag):
         response.status_code = 204
         return response
 

@@ -165,10 +165,10 @@ def _build_chat_message(request, pk, params):
     # The message footer renders the linked response's status and token count.
     if message.response_id:
         keys.append(f"Response:{message.response_id}")
-    for part in message.parts.all():
-        call_id = getattr(part, "tool_call_id", None)
-        if call_id:
-            keys.append(f"AgentTaskCall:{call_id}")
+    # Tool-call state is deliberately NOT a dependency here: a running tool's
+    # sub-task events would otherwise replace the entire message row (body,
+    # thinking, every card).  The live parts own their keys instead:
+    # ``chat-tool-summary`` (status chip) and ``chat-tool-subcalls`` (flow).
     return ComponentData(
         # ``live`` gates the raw tool-card SSE trigger: an immutable message
         # must not keep observing its call after the session has ended.
@@ -310,11 +310,58 @@ def _build_chat_sidebar_session(request, pk, params):
     return ComponentData(context, keys, reset=False)
 
 
+def _card_call(pk: int):
+    """Load one call with everything the tool card renders.
+
+    ``parent_taskrun`` is needed so the sub-call flow can walk the tree in
+    depth-first order without an N+1 query per row.
+    """
+    from server.models.tasks.agent_task_call import AgentTaskCall
+
+    return AgentTaskCall.objects.select_related(
+        "session",
+        "task_definition",
+        "task_definition_version__task_definition",
+        "parent_taskrun",
+    ).get(pk=pk)
+
+
+def _call_is_live(call) -> bool:
+    return bool(getattr(getattr(call, "session", None), "is_active", False))
+
+
+def _build_chat_tool_summary(request, pk, params):
+    """The tool card's summary row (name, status, sub-task chip, duration)."""
+    from webui.features.chats.parts.thread import _tool_entry_for_call
+
+    call = _card_call(pk)
+    return ComponentData(
+        {"part": _tool_entry_for_call(call)},
+        (f"AgentTaskCall:{pk}",),
+        immutable=not _call_is_live(call),
+    )
+
+
+def _build_chat_tool_subcalls(request, pk, params):
+    """The live sub-task flow inside an expanded tool card."""
+    from webui.features.chats.parts.thread import build_call_subcalls
+
+    call = _card_call(pk)
+    full = str(params.get("full", "")).lower() in ("1", "true", "yes")
+    return ComponentData(
+        build_call_subcalls(call, full=full),
+        (f"AgentTaskCall:{pk}",),
+        immutable=not _call_is_live(call),
+    )
+
+
 def register_chat_components():
     register(ComponentSpec("chat-header", "chats/parts/header.html", _build_chat_header))
     register(ComponentSpec("chat-thread", "chats/parts/thread.html", _build_chat_thread))
     register(ComponentSpec("chat-cards", "chats/parts/cards.html", _build_chat_cards))
     register(ComponentSpec("chat-message", "chats/parts/message.html", _build_chat_message))
+    register(ComponentSpec("chat-tool-summary", "chats/parts/tool_summary.html", _build_chat_tool_summary))
+    register(ComponentSpec("chat-tool-subcalls", "chats/parts/tool_subcalls.html", _build_chat_tool_subcalls))
     register(ComponentSpec("chat-query", "chats/parts/query.html", _build_chat_query))
     register(ComponentSpec("chat-response", "chats/parts/response.html", _build_chat_response))
     register(ComponentSpec("chat-toc", "chats/parts/toc.html", _build_chat_toc))

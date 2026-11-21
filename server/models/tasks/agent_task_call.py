@@ -470,9 +470,8 @@ class AgentTaskCall(BaseModel):
                 if active_only:
                     qs = qs.exclude(status=TaskCallStatus.ENDED)
                 children = list(
-                    qs.select_related("task_definition").order_by("pk")[
-                        : max_nodes - len(tree)
-                    ]
+                    qs.select_related("task_definition", "parent_taskrun")
+                    .order_by("created_at", "pk")[: max_nodes - len(tree)]
                 )
             except Exception:
                 return tree

@@ -207,7 +207,9 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR + "/webui/static",]
+# Static sources live in webui/static, which Django's AppDirectoriesFinder
+# already discovers because `webui` is an installed app.  Declaring them again
+# in STATICFILES_DIRS makes collectstatic report each file as a conflict.
 STATIC_ROOT = os.path.join(BASE_DIR, '_staticfiles')
 
 # Django 6 removed the standalone STATICFILES_STORAGE setting: static files

@@ -83,6 +83,9 @@
         {% endif %}
 
         {% for part in row.tools %}
+        {% comment %} The <details> shell stays put; only the summary and the
+        sub-task flow are live components, so a running sub-call never replaces
+        the arguments/result pane or the rest of the message. {% endcomment %}
         <details class="tool-card webui-tool-card{% if part.halted %} approval-pending{% endif %}"
                  data-open-key="tool-{{ part.pk }}"
                  {% if part.pk %}hx-get="{% url 'webui:call_detail' part.pk %}"{% endif %}
@@ -91,23 +94,12 @@
                  hx-swap="innerHTML"
                  hx-sync="this:replace">
             <summary class="webui-tool-summary">
-                <span class="webui-tool-icon">⚙</span>
-                <span class="webui-tool-name" title="{{ part.name }}">{{ part.name }}</span>
-                {% if part.halted %}
-                    <span class="webui-tool-approval">approval needed</span>
-                {% elif part.status_label %}
-                    <span class="card-status {{ part.status_class }}">{{ part.status_label }}</span>
-                {% endif %}
-                {% if part.subcalls.executing %}
-                    <span class="card-meta" title="{{ part.subcalls.executing }} sub-task call(s) currently executing{% if part.subcalls.truncated %} (counts capped — tree is bigger){% endif %}">↳ {{ part.subcalls.executing }} running</span>
-                {% elif part.subcalls.waiting %}
-                    <span class="card-meta" title="{{ part.subcalls.waiting }} sub-task call(s) queued">↳ {{ part.subcalls.waiting }} queued</span>
-                {% elif part.subcalls.finished %}
-                    <span class="card-meta" title="{{ part.subcalls.finished }} finished sub-task call(s)">↳ {{ part.subcalls.finished }} subtasks</span>
-                {% endif %}
-                {% if part.duration %}<span class="card-meta" title="Time the tool took so far / in total">{{ part.duration }}</span>{% endif %}
                 {% if part.pk %}
-                    <span class="webui-tool-toggle">▸</span>
+                    {% component "chat-tool-summary" part.pk %}
+                {% else %}
+                    <span class="webui-tool-icon">⚙</span>
+                    <span class="webui-tool-name" title="{{ part.name }}">{{ part.name }}</span>
+                    {% if part.status_text %}<span class="card-status {{ part.status_class }}">{{ part.status_text }}</span>{% endif %}
                 {% endif %}
             </summary>
             <div class="webui-tool-detail">

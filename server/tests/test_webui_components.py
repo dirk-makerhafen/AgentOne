@@ -89,10 +89,26 @@ def test_live_component_revalidates_with_etag(client):
         reverse("webui:component", args=["chat-header", session.pk]),
         {"render": "htmx"},
         HTTP_IF_NONE_MATCH=etag,
+        HTTP_X_AGENTONE_ETAG="1",
     )
     assert unchanged.status_code == 204
     assert unchanged.content == b""
     assert unchanged["ETag"] == etag
+
+
+def test_browser_native_etag_revalidation_never_skips_a_lazy_component(client):
+    """A bare If-None-Match must return 200 so a placeholder can populate."""
+    _agent, _version, session, _sv, _message = _chat_session("native-etag")
+
+    first = _get(client, "chat-header", session.pk, render="htmx")
+    browser_revalidation = client.get(
+        reverse("webui:component", args=["chat-header", session.pk]),
+        {"render": "htmx"},
+        HTTP_IF_NONE_MATCH=first["ETag"],
+    )
+    assert browser_revalidation.status_code == 200
+    assert browser_revalidation["ETag"] == first["ETag"]
+    assert b'data-component="chat-header"' in browser_revalidation.content
 
 
 def test_changed_component_returns_a_new_etag(client):
@@ -107,6 +123,7 @@ def test_changed_component_returns_a_new_etag(client):
         reverse("webui:component", args=["chat-header", session.pk]),
         {"render": "htmx"},
         HTTP_IF_NONE_MATCH=first["ETag"],
+        HTTP_X_AGENTONE_ETAG="1",
     )
     assert second.status_code == 200
     assert second["ETag"] != first["ETag"]
@@ -146,6 +163,9 @@ def test_component_wrapper_disinherits_layout_attrs_but_not_boost(client):
         assert attr in disinherit
     assert "hx-boost" not in disinherit
     assert "*" not in disinherit
+    # ``hx-disinherit`` is checked on the ancestor that owns the attribute, so
+    # it cannot stop a parent target from capturing this wrapper's own request.
+    assert 'hx-target="this"' in tag.group(0)
 
 
 def test_immutable_component_gets_a_long_cache_and_no_trigger(client):
@@ -286,10 +306,22 @@ def test_live_fragment_revalidates_with_etag(client):
     unchanged = client.get(
         reverse("webui:chat_composer_footer", args=[session.pk]),
         HTTP_IF_NONE_MATCH=etag,
+        HTTP_X_AGENTONE_ETAG="1",
     )
     assert unchanged.status_code == 204
     assert unchanged.content == b""
     assert unchanged["ETag"] == etag
+
+
+def test_browser_native_etag_revalidation_never_skips_a_lazy_fragment(client):
+    """The detail pane stays "Loading…" if its first GET answers 204."""
+    _agent, _version, session, _sv, _message = _chat_session("fragment-native-etag")
+
+    url = reverse("webui:chat_composer_footer", args=[session.pk])
+    first = client.get(url)
+    browser_revalidation = client.get(url, HTTP_IF_NONE_MATCH=first["ETag"])
+    assert browser_revalidation.status_code == 200
+    assert browser_revalidation.content == first.content
 
 
 def test_live_fragment_etag_changes_with_state(client):
@@ -304,6 +336,7 @@ def test_live_fragment_etag_changes_with_state(client):
     changed = client.get(
         reverse("webui:chat_composer_footer", args=[session.pk]),
         HTTP_IF_NONE_MATCH=etag,
+        HTTP_X_AGENTONE_ETAG="1",
     )
     assert changed.status_code == 200
     assert changed["ETag"] != etag
@@ -318,7 +351,7 @@ def test_panel_body_fragment_revalidates_with_etag(client):
     assert first.status_code == 200
     etag = first["ETag"]
 
-    unchanged = client.get(url, HTTP_IF_NONE_MATCH=etag)
+    unchanged = client.get(url, HTTP_IF_NONE_MATCH=etag, HTTP_X_AGENTONE_ETAG="1")
     assert unchanged.status_code == 204
 
 

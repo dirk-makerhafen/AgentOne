@@ -233,6 +233,9 @@ def inspect_history_item(request, session_id: int):
         )
         context = build_call_detail(call, full=True)
         context["back_session"] = session_id
+        # A history item is a one-shot fragment, not a live component: render
+        # its sub-task flow inline instead of emitting a self-loading placeholder.
+        context["component_inline"] = True
         return render(request, "chats/parts/tool_detail.html", context)
 
 

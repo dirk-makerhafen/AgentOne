@@ -363,6 +363,137 @@ a.session-item:hover { color: var(--text); }
 }
 .webui-tool-approval-box form { display: flex; align-items: center; gap: 6px; }
 
+/* The live summary/sub-flow are component wrappers (<div class="c">).  Let the
+   wrapper vanish in layout so the flex row and the section padding stay intact. */
+.webui-tool-summary > [data-component="chat-tool-summary"] { display: contents; }
+.webui-tool-icon.is-running { color: var(--accent); }
+.webui-tool-flowchip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--surface-subtle-hover, var(--surface-subtle));
+    white-space: nowrap;
+}
+.webui-tool-flowchip.is-running {
+    color: var(--accent-text, var(--accent));
+    background: var(--accent-bg);
+}
+.webui-tool-duration { font-variant-numeric: tabular-nums; }
+.webui-flow-pulse {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: webui-flow-pulse 1.4s ease-in-out infinite;
+}
+@keyframes webui-flow-pulse {
+    0%, 100% { opacity: .35; }
+    50% { opacity: 1; }
+}
+
+/* Sub-task flow ---------------------------------------------------------- */
+.webui-tool-flow-section { border-top: 1px solid var(--border-subtle); padding: 6px 12px 8px; }
+.webui-flow-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+.webui-flow-counts {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+.webui-flow-count { color: var(--muted); white-space: nowrap; }
+.webui-flow-count.is-running { color: var(--accent-text, var(--accent)); }
+.webui-flow {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.webui-flow-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 3px 4px;
+    border-radius: 5px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+.webui-flow-step:hover { background: var(--surface-subtle-hover, var(--surface-subtle)); }
+.webui-flow-step.is-executing { background: var(--accent-bg); }
+.webui-flow-prefix {
+    flex: none;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    color: var(--border-muted, var(--muted));
+    white-space: pre;
+}
+.webui-flow-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+}
+.webui-flow-step.is-active .webui-flow-dot { background: var(--accent); }
+.webui-flow-step.is-success .webui-flow-dot { background: var(--success, #3D8B40); }
+.webui-flow-step.is-failure .webui-flow-dot { background: var(--error, #C62828); }
+.webui-flow-name {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.webui-flow-status {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    white-space: nowrap;
+}
+.webui-flow-step.is-active .webui-flow-status { color: var(--accent-text, var(--accent)); }
+.webui-flow-step.is-failure .webui-flow-status { color: var(--error, #C62828); }
+.webui-flow-meta {
+    margin-left: auto;
+    display: inline-flex;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    white-space: nowrap;
+}
+.webui-flow-now {
+    margin-bottom: 6px;
+    padding: 4px 6px;
+    border-left: 2px solid var(--accent);
+    background: var(--accent-bg);
+}
+.webui-flow-now-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--accent-text, var(--accent));
+}
+.webui-flow-empty { padding: 2px 0 4px; font-size: 11px; color: var(--muted); }
+.webui-flow-truncated { margin-top: 6px; font-size: 10px; color: var(--muted); }
+
 /* Composer --------------------------------------------------------------- */
 .webui-composer { position: relative; }
 .webui-composer-hint {

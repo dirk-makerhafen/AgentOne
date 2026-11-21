@@ -1,0 +1,22 @@
+{% load webui %}
+{% comment %} Live summary row of a tool card.  Rendered inside the card's
+<summary>; the component wrapper uses display:contents so layout is unchanged. {% endcomment %}
+<span class="webui-tool-icon{% if part.subcalls.executing %} is-running{% endif %}" aria-hidden="true">⚙</span>
+<span class="webui-tool-name" title="{{ part.name }}">{{ part.name }}</span>
+{% if part.halted %}
+    <span class="webui-tool-approval">approval needed</span>
+{% elif part.status_text %}
+    <span class="card-status {{ part.status_class }}">{{ part.status_text }}</span>
+{% endif %}
+{% if part.subcalls.executing %}
+    <span class="webui-tool-flowchip is-running"
+          title="{{ part.subcalls.executing }} sub-task call(s) currently executing{% if part.subcalls.truncated %} (counts capped — the tree is bigger){% endif %}">
+        <span class="webui-flow-pulse" aria-hidden="true"></span>{{ part.subcalls.executing }} running
+    </span>
+{% elif part.subcalls.waiting %}
+    <span class="webui-tool-flowchip" title="{{ part.subcalls.waiting }} sub-task call(s) queued">{{ part.subcalls.waiting }} queued</span>
+{% elif part.subcalls.finished %}
+    <span class="webui-tool-flowchip" title="{{ part.subcalls.finished }} finished sub-task call(s)">{{ part.subcalls.finished }} done</span>
+{% endif %}
+{% if part.duration %}<span class="card-meta webui-tool-duration" title="Elapsed time so far / in total">{{ part.duration }}</span>{% endif %}
+{% if part.pk %}<span class="webui-tool-toggle" aria-hidden="true">▸</span>{% endif %}

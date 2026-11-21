@@ -1,0 +1,68 @@
+{% load webui %}
+{% comment %} Live sub-task flow. Rows are depth-first and chronological, with a
+box-drawing prefix showing which call launched which, so the sequence of work
+is readable instead of a flat list of indented names. {% endcomment %}
+{% if has_content %}
+<div class="webui-tool-section webui-tool-flow-section">
+    <div class="webui-tool-section-title webui-flow-head">
+        <span>Sub-tasks</span>
+        <span class="webui-flow-counts">
+            {% if running or counts.executing %}<span class="webui-flow-count is-running"><span class="webui-flow-pulse" aria-hidden="true"></span>{{ counts.executing }} running</span>{% endif %}
+            {% if counts.waiting %}<span class="webui-flow-count">{{ counts.waiting }} queued</span>{% endif %}
+            {% if counts.finished %}<span class="webui-flow-count">{{ counts.finished }} done</span>{% endif %}
+        </span>
+    </div>
+
+    {% if running %}
+    <div class="webui-flow-now">
+        <div class="webui-flow-now-title">Running now</div>
+        {% for node in running %}
+        <div class="webui-flow-step is-{{ node.status_class }} is-executing"
+             title="#{{ node.pk }} · {{ node.status_detail }}{% if node.duration %} · {{ node.duration }}{% endif %}">
+            <span class="webui-flow-dot" aria-hidden="true"></span>
+            <span class="webui-flow-name">{{ node.name }}</span>
+            <span class="webui-flow-status">{{ node.status_text }}</span>
+            <span class="webui-flow-meta">
+                {% if node.started %}<span class="webui-flow-clock">{{ node.started }}</span>{% endif %}
+                {% if node.duration %}<span class="webui-flow-time">{{ node.duration }}</span>{% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if nodes %}
+    <ol class="webui-flow">
+        {% for node in nodes %}
+        <li class="webui-flow-step is-{{ node.status_class }}{% if node.executing %} is-executing{% endif %}"
+            title="#{{ node.pk }} · {{ node.status_detail }}{% if node.duration %} · {{ node.duration }}{% endif %}">
+            <span class="webui-flow-prefix" aria-hidden="true">{{ node.prefix }}</span>
+            <span class="webui-flow-dot" aria-hidden="true"></span>
+            <span class="webui-flow-name">{{ node.name }}</span>
+            <span class="webui-flow-status">{{ node.status_text }}</span>
+            <span class="webui-flow-meta">
+                {% if node.started %}<span class="webui-flow-clock">{{ node.started }}</span>{% endif %}
+                {% if node.duration %}<span class="webui-flow-time">{{ node.duration }}</span>{% endif %}
+            </span>
+        </li>
+        {% endfor %}
+    </ol>
+    {% elif not running %}
+    <div class="webui-flow-empty">{% if counts.finished or counts.active %}Only unfinished sub-tasks are shown — use “Show finished” below for the full flow.{% else %}No sub-tasks yet.{% endif %}</div>
+    {% endif %}
+
+    {% if not full and counts.finished %}
+    <button class="webui-tool-more" type="button"
+            hx-get="{% url 'webui:component' 'chat-tool-subcalls' call.pk %}?full=1&render=htmx"
+            hx-target="closest [data-component='chat-tool-subcalls']"
+            hx-swap="outerHTML">
+        Show {{ counts.finished }}{% if counts.truncated %}+{% endif %} finished
+    </button>
+    {% endif %}
+    {% if counts.truncated %}
+    <div class="webui-flow-truncated">Tree capped for display — open the “Calls” panel for the full list.</div>
+    {% endif %}
+</div>
+{% else %}
+<div class="webui-flow-empty" hidden></div>
+{% endif %}

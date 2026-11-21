@@ -179,12 +179,24 @@
         var etag = elt && elt.getAttribute
             ? elt.getAttribute('data-component-etag')
             : '';
-        if (!etag) {
+        // A self-loading component placeholder has no rendered HTML yet, so the
+        // ETag cached for its URL belongs to a *different*, already-loaded DOM
+        // node.  Reusing it makes the placeholder answer 204 and stay empty
+        // when the parent fragment is re-opened.  Loaded components carry
+        // their own ETag attribute; ad-hoc fragments keep the path cache.
+        var isComponentPlaceholder = !!(elt && elt.getAttribute
+            && (elt.getAttribute('hx-trigger') || '').indexOf('load') !== -1
+            && elt.hasAttribute('data-component'));
+        if (!etag && !isComponentPlaceholder) {
             var path = requestPath(evt);
             if (path) etag = fragmentEtags[path] || '';
         }
         if (etag && evt.detail && evt.detail.headers) {
             evt.detail.headers['If-None-Match'] = etag;
+            // Mark client-side revalidations: the server must ignore a bare
+            // If-None-Match from the browser's own cache so a lazy fragment's
+            // first load can never be skipped with a 204.
+            evt.detail.headers['X-AgentOne-ETag'] = '1';
         }
     });
 
@@ -446,12 +458,20 @@
                 if (trigger.indexOf('load') === -1) return;
                 if (el.dataset.phRequested) return;
                 el.dataset.phRequested = '1';
-                try { htmx.process(el); } catch (err) { /* already processed */ }
-                try { htmx.trigger(el, 'load'); } catch (err) { /* ignore */ }
-                // htmx 2 handles `load` as a special trigger during processing; if that
-                // did not result in a swap (missed wiring/timing), force the request.
-                // If the element is still an unloaded placeholder after the delay, allow
-                // future ensure passes to retry (e.g. transient failures).
+                // htmx already processes elements it inserts itself and fires `load`
+                // on them.  Triggering a second load here races that request: when both
+                // responses succeed, the later outerHTML swap sees the first (already
+                // loaded) component by id, moves it into htmx's preserve pantry, and
+                // `He()` then removes it because no other node carries the id.  The
+                // component disappears instead of rendering.  Only drive placeholders
+                // that htmx did not initialize (inserted by plain JS/markup).
+                var initialized = !!(el['htmx-internal-data'] && el['htmx-internal-data'].firstInitCompleted);
+                if (!initialized) {
+                    try { htmx.process(el); } catch (err) { /* already processed */ }
+                    try { htmx.trigger(el, 'load'); } catch (err) { /* ignore */ }
+                }
+                // Keep the delayed safety net below: if the natural load was aborted
+                // or failed, it re-issues the request once nothing is in flight.
                 setTimeout(function () {
                     if (!el.isConnected) {
                         return;
