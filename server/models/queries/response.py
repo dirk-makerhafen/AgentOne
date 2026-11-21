@@ -62,6 +62,9 @@ class Response(BaseModel):
         proportionally and ``query.tokens`` is set to the authoritative
         backend-reported ``prompt_tokens``.
         """
+        from runtime.observable_keys import partial_row_keys
+        from server.models.observables import publish_model_event
+
         super().save(*args, **kwargs)
         if self.status == ResponseStatus.SUCCESS and self.query:
             query = self.query
@@ -77,8 +80,7 @@ class Response(BaseModel):
                         if query_message.tokens != corrected_tokens:
                             query_message.tokens = corrected_tokens
                             query_message.save(update_fields=["tokens"], publish=False)
-                            from server.models.observables import publish_model_event
-                            publish_model_event([f"QueryMessage:{query_message.pk}"], query_message, "update")
+                            publish_model_event(partial_row_keys(query_message), query_message, "update")
 
                         for part in query_message.query_message_parts.all():
                             if not part.tokens:
@@ -87,13 +89,11 @@ class Response(BaseModel):
                             if part.tokens != corrected_tokens:
                                 part.tokens = corrected_tokens
                                 part.save(update_fields=["tokens"], publish=False)
-                                from server.models.observables import publish_model_event
-                                publish_model_event([f"QueryMessagePart:{part.pk}"], part, "update")
+                                publish_model_event(partial_row_keys(part), part, "update")
                                 
                     # ``query.tokens`` is the authoritative backend count, not
                     # the (rounded) scaled estimate.
                     if query.tokens != actual_total:
                         query.tokens = actual_total
                         query.save(update_fields=["tokens"], publish=False)
-                        from server.models.observables import publish_model_event
-                        publish_model_event([f"Query:{query.pk}"], query, "update")
+                        publish_model_event(partial_row_keys(query), query, "update")

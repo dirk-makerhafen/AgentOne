@@ -44,7 +44,6 @@ urlpatterns = [
     path("logs/sidebar", section_sidebar, {"section": "logs"}, name="logs_sidebar"),
     path("settings/sidebar", section_sidebar, {"section": "settings"}, name="settings_sidebar"),
     # Chat ----------------------------------------------------------------
-    path("chats/<int:session_id>", chats_views.chat_page, name="chat_by_id"),
     path("chat/new", chats_views.new_chat, name="new_chat"),
     path("chat/<int:session_id>", chats_views.chat_page, name="chat"),
     path("chat/<int:session_id>/thread", chats_views.thread_fragment, name="thread"),

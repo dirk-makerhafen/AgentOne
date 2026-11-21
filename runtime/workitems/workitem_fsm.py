@@ -11,6 +11,7 @@ The work layer deliberately does **not** reuse ``call_fsm`` or
 """
 from __future__ import annotations
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -72,18 +73,42 @@ class InvalidTransition(Exception):
     """Raised when a transition pair is not in ``_VALID_TRANSITIONS``."""
 
 
+def _snapshot_fields(item_id: int, fields: dict) -> dict:
+    """Read the values a transitioning update is about to overwrite.
+
+    The FSM uses raw ``QuerySet.update()`` calls for their atomic
+    ``WHERE status = ...`` guards, so unlike ``atomic_update()`` it must capture
+    the old side itself.  Without it a terminal transition publishes only the
+    new filter value and terminal-list subscribers can never drop the row.
+    """
+    attnames = []
+    known_attnames = {field.attname for field in WorkItem._meta.concrete_fields}
+    for name in fields:
+        try:
+            attnames.append(WorkItem._meta.get_field(name).attname)
+        except FieldDoesNotExist:
+            # Some callers pass an attname (``root_task_id``) directly.
+            if name in known_attnames:
+                attnames.append(name)
+    if not attnames:
+        return {}
+    return WorkItem.objects.filter(pk=item_id).values(*attnames).first() or {}
+
+
 def _publish_item_event(
     item_id: int,
     action: str = "update",
     data: dict | None = None,
+    previous: dict | None = None,
 ) -> None:
     """Publish a model event for a WorkItem after a transition.
 
     ``data`` carries the fields written by the transition (for updates) or
     the full row (for creates) so subscribers can react without re-reading.
+    ``previous`` carries the pre-update values so old-side filter keys fire.
     """
     try:
-        WorkItem.publish_by_pk(item_id, action, data=data)
+        WorkItem.publish_by_pk(item_id, action, data=data, previous=previous)
     except Exception as e:  # pylint: disable=broad-exception-caught
         # A failed UI push must never fail the state transition itself.
         print(f"[workitems] model event publish failed for item {item_id}: {e}")
@@ -154,9 +179,10 @@ class WorkItemStateMachine:
         if extra:
             fields.update(extra)
 
+        previous = _snapshot_fields(item_id, fields)
         updated = query.update(**fields) > 0
         if updated:
-            _publish_item_event(item_id, "update", data=fields)
+            _publish_item_event(item_id, "update", data=fields, previous=previous)
         return updated
 
     # ------------------------------------------------------------------
@@ -192,6 +218,7 @@ class WorkItemStateMachine:
             "completed_at": None,
             "updated_at": timezone.now(),
         }
+        previous = _snapshot_fields(item_id, fields)
         updated = WorkItem.objects.filter(
             pk=item_id,
             status__in=[
@@ -203,7 +230,7 @@ class WorkItemStateMachine:
             ],
         ).update(**fields) > 0
         if updated:
-            _publish_item_event(item_id, "update", data=fields)
+            _publish_item_event(item_id, "update", data=fields, previous=previous)
         return updated
 
     @staticmethod
@@ -223,12 +250,13 @@ class WorkItemStateMachine:
             "last_outcome": reason or "",
             "updated_at": timezone.now(),
         }
+        previous = _snapshot_fields(item_id, fields)
         updated = WorkItem.objects.filter(
             pk=item_id,
             status__in=[WorkItemStatus.READY, WorkItemStatus.IN_PROGRESS],
         ).update(**fields) > 0
         if updated:
-            _publish_item_event(item_id, "update", data=fields)
+            _publish_item_event(item_id, "update", data=fields, previous=previous)
         return updated
 
     # ------------------------------------------------------------------
@@ -258,13 +286,14 @@ class WorkItemStateMachine:
         a status change, so it is safe to retry on the next tick.
         """
         fields = {"root_task_id": root_task_id, "updated_at": timezone.now()}
+        previous = _snapshot_fields(item_id, fields)
         updated = (
             WorkItem.objects.filter(pk=item_id, root_task__isnull=True)
             .update(**fields)
             > 0
         )
         if updated:
-            _publish_item_event(item_id, "update", data=fields)
+            _publish_item_event(item_id, "update", data=fields, previous=previous)
         return updated
 
     @staticmethod
@@ -420,6 +449,7 @@ class WorkItemStateMachine:
             "completed_at": timezone.now(),
             "updated_at": timezone.now(),
         }
+        previous = _snapshot_fields(item_id, fields)
         updated = (
             WorkItem.objects.filter(
                 pk=item_id,
@@ -435,7 +465,7 @@ class WorkItemStateMachine:
             > 0
         )
         if updated:
-            _publish_item_event(item_id, "update", data=fields)
+            _publish_item_event(item_id, "update", data=fields, previous=previous)
         return updated
 
     @staticmethod

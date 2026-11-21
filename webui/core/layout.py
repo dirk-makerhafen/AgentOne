@@ -148,7 +148,12 @@ def unique_session_name(base: str) -> str:
 # ---------------------------------------------------------------------------
 
 def _sidebar_project_id(request):
-    """Resolve and persist the sidebar's project filter."""
+    """Resolve and persist the sidebar's project filter.
+
+    Intentional GET side effect: the filter is browser-session state shared by
+    every tab (see ``webui/tests.py``).  It writes only ``request.session``,
+    never the database or an observable event.
+    """
     if "project" in request.GET:
         raw = request.GET.get("project") or ""
         project_id = int(raw) if raw.isdigit() else None
@@ -195,7 +200,9 @@ def render_page(request, section: str, template: str, context: dict | None = Non
     # Boosted/htmx shells emit component placeholders so children load and
     # preserve themselves; full document loads inline for a complete first paint.
     ctx["component_inline"] = not htmx
-    ctx["disable_history"] = template.startswith("chats/")
+    # Only the live conversation is volatile.  The Chats list must keep its
+    # htmx history snapshot so back/forward restores the list, not a refetch.
+    ctx["disable_history"] = template == "chats/detail.html"
     response = render(request, template, ctx)
     patch_vary_headers(response, ("HX-Request",))
     response["Cache-Control"] = "private, no-cache"

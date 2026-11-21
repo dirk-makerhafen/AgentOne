@@ -419,6 +419,22 @@ def poll_output(
     return {"status": "success", "terminal": row.name, "output": clean_terminal_output(tail)}
 
 
+def capture_output(row: Any, lines: int = 200) -> dict[str, Any]:
+    """Read one terminal's visible buffer without any writes.
+
+    Read-only counterpart of :func:`poll_output` for the polling GET view: no
+    get-or-create, no dead-session repair, no ``last_active_at`` touch and no
+    observable publish.  A missing tmux session simply yields an empty buffer.
+    """
+    server = _server()
+    tmux_session = _find_tmux_session(server, row.tmux_session_name)
+    if tmux_session is None:
+        return {"status": "missing", "terminal": row.name, "output": ""}
+    text = _capture(_active_pane(tmux_session))
+    tail = "\n".join(text.splitlines()[-max(1, min(int(lines or 200), 2000)):])
+    return {"status": "success", "terminal": row.name, "output": clean_terminal_output(tail)}
+
+
 def list_terminals(session_model: Any) -> list[dict[str, Any]]:
     """List this session's terminal rows with liveness info."""
     from server.models.terminal import TerminalSession

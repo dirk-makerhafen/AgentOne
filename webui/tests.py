@@ -2395,12 +2395,12 @@ def test_terminal_output_renders_polled_buffer(client, monkeypatch):
         cwd="/tmp",
     )
 
-    def fake_poll(session_model, name="default", lines=200):
-        assert session_model.pk == session.pk
-        assert name == "default"
-        return {"status": "success", "terminal": name, "output": "$ echo hi\nhi"}
+    def fake_capture(row, lines=200):
+        assert row.session_id == session.pk
+        assert row.name == "default"
+        return {"status": "success", "terminal": row.name, "output": "$ echo hi\nhi"}
 
-    monkeypatch.setattr(terminal_module, "poll_output", fake_poll)
+    monkeypatch.setattr(terminal_module, "capture_output", fake_capture)
     response = client.get(
         reverse("webui:terminal_output", args=[session.pk, "default"])
     )
@@ -2417,6 +2417,113 @@ def test_terminal_output_ignores_unknown_terminal(client):
     )
     assert response.status_code == 200
     assert response.content == b""
+
+
+@pytest.mark.django_db
+def test_terminal_output_get_does_not_write(client, monkeypatch):
+    from server.models.terminal import TerminalSession
+    import runtime.terminal as terminal_module
+
+    session, _version = _session_with_version("terminal-readonly")
+    TerminalSession.objects.create(
+        session=session,
+        name="default",
+        tmux_session_name=f"agentone-test-{session.pk}-default",
+        status="running",
+        cwd="/tmp",
+    )
+
+    def fail_write(*args, **kwargs):
+        raise AssertionError("a polling GET must not update the terminal row")
+
+    monkeypatch.setattr(TerminalSession, "atomic_update", fail_write)
+    monkeypatch.setattr(
+        terminal_module,
+        "capture_output",
+        lambda row, lines=200: {"status": "success", "output": "ok"},
+    )
+    response = client.get(
+        reverse("webui:terminal_output", args=[session.pk, "default"])
+    )
+    assert response.status_code == 200
+    assert b"ok" in response.content
+
+
+@pytest.mark.django_db
+def test_live_chat_component_keys_cover_rendered_state():
+    from webui.features.chats.components import _build_chat_cards, _build_chat_header
+
+    session, _version = _session_with_version("component-keys")
+    header = _build_chat_header(None, session.pk, {})
+    cards = _build_chat_cards(None, session.pk, {})
+
+    # The context ring reads the active model's context window.
+    assert "AiModel" in header.keys
+    # The turn-limit card reads SessionModel.unattended_turn_count.
+    assert f"SessionModel:{session.pk}" in cards.keys
+
+
+@pytest.mark.django_db
+def test_chat_toc_renders_a_root_even_when_empty(client):
+    session, _version = _session_with_version("toc-root")
+    response = client.get(reverse("webui:component", args=["chat-toc", session.pk]))
+    assert response.status_code == 200
+    assert b'id="chat-toc"' in response.content
+
+
+@pytest.mark.django_db
+def test_memory_node_does_not_fall_back_to_the_global_inventory(client, monkeypatch):
+    import webui.features.memory.views as memory_views
+
+    seen = []
+
+    def fake_inventory(project_id):
+        seen.append(project_id)
+        return "scoped"
+
+    monkeypatch.setattr(memory_views, "_inventory", fake_inventory)
+    monkeypatch.setattr(
+        memory_views, "find_node", lambda inventory, node_id: None
+    )
+    response = client.get(
+        reverse("webui:memory_node", args=["some-node"]) + "?project=7"
+    )
+    assert response.status_code == 302
+    assert seen == [7]  # no second, unscoped lookup
+
+
+@pytest.mark.django_db
+def test_memory_node_queue_preserves_project_scope(client, monkeypatch):
+    from pathlib import Path
+    from types import SimpleNamespace
+    import webui.features.memory.views as memory_views
+
+    node = SimpleNamespace(
+        proposals=[],
+        improvements_path=Path("/tmp/improvements.md"),
+        scope=SimpleNamespace(project_id=None),
+    )
+    seen = []
+
+    def fake_inventory(project_id):
+        seen.append(project_id)
+        return "scoped"
+
+    monkeypatch.setattr(memory_views, "_inventory", fake_inventory)
+    monkeypatch.setattr(memory_views, "find_node", lambda inventory, node_id: node)
+    monkeypatch.setattr(memory_views, "_queued", lambda: {})
+    monkeypatch.setattr(
+        memory_views,
+        "queue_proposals",
+        lambda proposals, project, fingerprints=None, existing=None: ([], []),
+    )
+
+    response = client.post(
+        reverse("webui:memory_node_queue", args=["some-node"]) + "?project=7"
+    )
+    assert seen == [7]
+    assert response.status_code == 302
+    assert "project=7" in response["Location"]
 
 
 @pytest.mark.django_db

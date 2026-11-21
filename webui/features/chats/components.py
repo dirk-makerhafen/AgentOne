@@ -79,6 +79,8 @@ def _build_chat_header(request, pk, params):
         f"Query.session:{pk}",
         f"Response.session:{pk}",
         f"AgentTaskCall.session:{pk}",
+        # The context ring is sized from the active model's context window.
+        "AiModel",
     ]
     # The header also renders the agent and project names.
     version = getattr(session, "latest_session_version", None)
@@ -146,6 +148,9 @@ def _build_chat_cards(request, pk, params):
         {"session": session, "cards": build_chat_cards(session)},
         (
             f"AgentTaskCall.session:{pk}",
+            # The turn-limit card reads SessionModel.unattended_turn_count,
+            # which is bumped/reset with no matching call event.
+            f"SessionModel:{pk}",
             # build_chat_cards() renders provider/key/model details for parked
             # calls, including their rate-limit state.
             "ApiProvider",

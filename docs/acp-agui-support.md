@@ -1,6 +1,6 @@
 # ACP and AG-UI Support — Feasibility Report
 
-**Date:** 2026-09-09 · **Status:** report only, no code changed ·
+**Originally written:** 2026-09-09 · **Updated:** 2026-11-21 · **Status:** report only, no code changed ·
 **Scope:** feasibility + implementation plan · **ACP target:** v1 stable
 
 Two open protocols could connect AgentOne to outside clients:
@@ -13,35 +13,51 @@ Two open protocols could connect AgentOne to outside clients:
 | Our role | **Agent side** (editors drive us) | **Agent backend** (`HttpAgent` clients drive us) |
 | Spec | `agentclientprotocol.com`, stable v1 (v2 draft Jul 2026) | `docs.ag-ui.com`, Apache 2.0, Python/TS SDKs |
 
-Both are feasible. Neither is free: they share one prerequisite —
-**per-token streaming events** — that does not exist in the codebase today.
-This report maps the fit, names the gaps, and sketches phased plans for each
-track. It makes no priority recommendation; §7 lists the decision factors.
+Both remain feasible. The main shared prerequisite is still **fine-grained live
+turn events** (token/tool-call deltas) that external protocol adapters can
+consume. Since 2026-09-09, the internal UI event system changed substantially,
+but not in a way that removes that prerequisite. This update refreshes code
+references, architecture assumptions, and gaps against the current codebase. It
+makes no priority recommendation; §7 lists the decision factors.
 
 ---
 
 ## 1. How AgentOne works today (relevant subset)
 
 - **Server:** Django monolith + Celery (worker + beat) + Redis (channels, cache,
-  broker). ASGI router exposes a single WebSocket route `ws`
-  (`config/asgi.py:14-18`); REST lives at `api/v1/` (`config/urls.py:90`).
-- **UI:** one global pyHtmlGui instance over that socket. The Redis→UI pump
-  (per-instance drain threads in `ui/consumer.py`, coalescing in
-  `process_queue_messages`) delivers `server/models/observables.py` registry
-  messages to subscribed views (see `docs/observables-migration.md`).
-  The old channel-group + `ModelObserver` fan-out is removed.
+  broker). ASGI serves HTTP through Django and one UI WebSocket route:
+  `^app/ws/events/$` (`config/asgi.py:18-23`). REST lives at `api/v1/`
+  (`config/urls.py:20-26`).
+- **UI:** the old pyHtmlGui global-instance UI has been replaced by the
+  server-rendered htmx/SSE-style component UI. `webui/core/events.py`
+  implements a WebSocket transport with an EventSource-shaped payload
+  (`{"event": ..., "data": ...}`) so htmx `sse:` triggers still work. The
+  legacy HTTP `/app/sse/` view remains only as fallback; the UI connects to the
+  WebSocket. See `docs/ui-rewrite.md`, `docs/htmx-sse.md`, and
+  `docs/observables-migration.md`.
+- **Observable events:** `server/models/observables.py` is a Redis-backed
+  per-tab watch registry. Models publish explicit keys via
+  `publish_model_event(...)` on commit; `_fan_out()` delivers only to tabs
+  watching those keys. Events carry key/action/data hints, not rendered HTML.
+  This is a UI invalidation bus, not a generic per-token protocol stream.
 - **Sessions:** `SessionModel` (identity) + `SessionVersion` (copy-on-write state);
-  runtime facade `runtime/session/session.py` (`Session.add_user_message(message, ...)`,
-  `get_task/get_tool/get_command`, allowlists, `set_is_active`).
+  runtime facade `runtime/session/session.py` (`Session.add_user_message(...)`,
+  `get_task/get_tool/get_command`, allowlists, `set_is_active`, `fork`,
+  `spawn_subagent`). Slash commands are routed by `add_user_message` when the
+  first part starts with `/`.
 - **LLM turn pipeline** (`.agentone/scripts/core/`): `ingest_user_message` →
   `build_llm_context` → `call_llm` (LiteLLM `stream=True`) →
   `parse_llm_response` → `ingest_assistant_message` (dispatches tool/task calls).
+  `call_llm.py` accumulates chunks in memory, checkpoints `Response.save(...)`
+  roughly every second, and publishes a throttled partial row-key update for the
+  active response component. It does **not** publish per-token protocol events.
   Full flow: `docs/core-mechanisms.md`.
-- **External API:** DRF `api/` with 13 resources, JWT (`Session + Bearer`,
-  `config/settings.py:157-177`), OpenAPI docs. `sessions/{id}/message/` accepts
-  parts and returns the created query (201); `sessions/{id}/call/<task_name>/`
-  dispatches a task and returns `{call_id, url}` for **polling**. There is no
-  SSE or streaming endpoint today.
+- **External API:** DRF under `api/v1/` with JWT auth (`TokenObtainPairView`,
+  `TokenRefreshView`, DRF spectacular docs). Sessions expose
+  `POST /api/v1/sessions/{id}/message/` (accepts `content` or `parts`, returns
+  query data, 201), `GET /messages/`, `GET /tasks/`, and session settings
+  patching. Task calls expose `POST /task-calls/{id}/approve|deny|answer`.
+  There is still no ACP JSON-RPC adapter and no AG-UI SSE run endpoint.
 - **Launcher:** remote *tool executor* (FastAPI, `POST /shell|/python|/direct`,
   `X-API-Key`), not an agent runner — ACP remote-agent hosting would be new.
 
@@ -65,46 +81,50 @@ is still maturing upstream.
 | ACP concept | AgentOne counterpart |
 |---|---|
 | Session | `SessionModel` + `SessionVersion`; resume ≈ pin existing session/version (`session/load`) |
-| `session/prompt` | `Session.add_user_message(message)` (`runtime/session/session.py:990`) → existing `process_turn` chain |
-| `session/cancel` | Query cancel path (`api/views/queries.py`) / `interrupt` strategy (`runtime/session/session.py:815-842`) |
-| `session/request_permission` | Approval cards + allowlist gate (`tool_allowlist_violated`, session abort); `AUTO_REVIEW_TOOL_NAMES` in `runtime/tasks/call_scheduler.py:25` |
-| Tool calls in `session/update` | `AgentTaskCall`/`AgentTaskRun` lifecycle (`task-calls/`, `task-runs/` API already read-only) |
-| `initialize` capabilities | Resolved agent caps (`latest_agent_version`, allowlists via `runtime/agents/agent.py`) |
-| Absolute-path rule | Matches our workspace realpath handling |
+| `session/prompt` | `Session.add_user_message(message, execute_turn=...)` (`runtime/session/session.py`) → existing `process_turn` chain; also handles slash-command routing and scheduler strategies |
+| `session/cancel` | Session/query cancel path (`runtime/session/session.py:stop_generation`, Query/TaskCall cancellation APIs) plus scheduler `interrupt` strategy |
+| `session/request_permission` | Approval-gated task calls. Current paths: guardrail/allowlist decisions in `runtime/tasks/call_scheduler.py`, FSM transitions in `runtime/tasks/call_fsm.py` (`HALTED_APPROVAL`), REST approve/deny/answer in `api/views/tasks.py` |
+| Tool calls in `session/update` | `AgentTaskCall`/`AgentTaskRun` lifecycle; read APIs exist under `api/v1/task-calls/` and `task-runs/` |
+| `initialize` capabilities | Resolved agent caps (`latest_agent_version`, allowlists, tool availability via runtime agent/session facades) |
+| Absolute-path rule | Matches workspace realpath handling and filesystem guardrails |
 
 ### 2.3 Gaps
 
-1. **No JSON-RPC layer.** No stdio adapter, no `acp/` route, no method dispatcher.
-   A Python SDK exists (`agentclientprotocol/python-sdk`) — use it, don't hand-roll.
-2. **No streaming notifications.** `session/update` text/tool-call chunks need the
-   shared streaming-event prerequisite (§4).
-3. **Permission round-trips.** Today's approvals render as cards in our UI and
-   resolve in-process. Over ACP, `session/request_permission` is a blocking
-   bidirectional JSON-RPC call to the *client*; the tick/task FSMs
-   (`runtime/tasks/call_fsm.py`, `run_fsm.py`) currently assume local resolution.
-   Needs a pending-permission state that parks the call without failing the tick.
-4. **Auth mapping.** `authenticate` must map to a Django user / token scope so
-   sessions, workspaces, and keys stay isolated. JWT machinery exists but ACP
-   clients won't speak it over stdio — likely API-key-per-client like the
-   launcher's `X-API-Key` pattern.
-5. **Client FS/terminal removal (v2 note).** v2 draft drops `fs/*` in favour of
-   MCP. Targeting v1 avoids this; a v2 migration would need an MCP bridge for
-   file access instead.
+1. **No JSON-RPC layer.** No stdio adapter, no ACP route/dispatcher, no ACP SDK
+   integration. A Python SDK exists (`agentclientprotocol/python-sdk`) — use it,
+   don't hand-roll framing/method dispatch.
+2. **No external streaming notifications.** `session/update` text/tool-call
+   chunks need the shared live-event prerequisite (§4). Current
+   `publish_model_event`/WebSocket UI events are keyed invalidations for the
+   htmx UI, not an ACP event protocol.
+3. **Permission round-trips.** Approvals are currently resolved inside AgentOne:
+   UI cards and REST endpoints call `TaskCallStateMachine.approve()` /
+   `CallScheduler.deny_taskcall()` / `answer_question_call()`. Over ACP,
+   `session/request_permission` is a blocking bidirectional client request;
+   parked calls must wait without wedging scheduler ticks, retries, or timeouts.
+4. **Auth mapping.** `authenticate` must map to a Django user/token scope so
+   sessions, workspaces, and keys stay isolated. JWT exists for REST, but stdio
+   ACP clients will not naturally speak it; likely a local stdio trust model plus
+   optional API-key/client binding for remote modes.
+5. **v1/v2 drift.** ACP v2 draft changes prompt lifecycle semantics and removes
+   client FS/terminal in favour of MCP. Build v1 first, but keep the protocol
+   mapping layer thin and isolate ACP method translation from core runtime logic.
 
 ### 2.4 Implementation sketch (Phase A)
 
-- **A0 (shared):** streaming-event prerequisite (§4).
+- **A0 (shared):** live turn-event prerequisite (§4).
 - **A1 — stdio adapter (new package, e.g. `acp/`):** process entrypoint using the
-  Python SDK; method handlers: `initialize` → caps from agent version;
+  Python SDK; method handlers: `initialize` → caps from agent/version;
   `session/new` → create `SessionModel` (+ version); `session/prompt` →
-  `add_user_message(message, execute_turn=...)` and stream back `session/update` from the event bus;
-  `session/cancel` → cancel path; `session/load` → rebind existing session.
+  `add_user_message(...)` and stream back `session/update` from a protocol event
+  source; `session/cancel` → existing cancellation path; `session/load` →
+  rebind existing session.
 - **A2 — permissions:** park-and-resume in the call FSM wiring
-  `session/request_permission` to the existing approval data (title, subject,
-  allow/deny options).
-- **A3 — packaging:** manifest/skill entry so an agent definition can advertise
-  ACP; document editor setup (boot command, env keys); tests with a fake client
-  speaking JSON-RPC over stdio.
+  `session/request_permission` to existing approval data (task call, args,
+  guardrail reason, allow/deny/answer options as applicable).
+- **A3 — packaging:** manifest/agent config/docs for editor setup (boot command,
+  env keys, auth model); tests with a fake JSON-RPC stdio client covering prompt,
+  cancel, permission, and reconnect/load behavior.
 
 ## 3. AG-UI — what it would take
 
@@ -123,111 +143,137 @@ cover anything proprietary.
 
 | AG-UI concept | AgentOne counterpart |
 |---|---|
-| Thread / run | `SessionModel` / `Query`+`Response` turn (`RUN_STARTED` ≈ `Query ACTIVE`, close ≈ terminal status) |
-| `TEXT_MESSAGE_*` | Assistant message parts (`ingest_assistant_message.py`) |
-| `TOOL_CALL_START/ARGS/END` | `AgentTaskCall` create → arg normalize → terminal (`call_llm.py:292-297`, `parse_llm_response.py:138`) |
-| `STATE_SNAPSHOT/DELTA` | Session state / `set_is_active`, context usage (`runtime/session/session.py:863-926`) |
-| `MESSAGES_SNAPSHOT` | `sessions/{id}/messages/` (already paginated) |
-| Frontend tools / HITL | Approval cards; user interrupt (`interrupt` strategy) |
-| Auth | Existing DRF JWT — `HttpAgent` can already send `Authorization: Bearer` |
+| Thread / run | `SessionModel` / `Query`+`Response` turn (`RUN_STARTED` ≈ `Query ACTIVE`/turn accepted, close ≈ terminal query/response state) |
+| `TEXT_MESSAGE_*` | Assistant message parts produced by `call_llm.py` / `ingest_assistant_message.py` |
+| `TOOL_CALL_START/ARGS/END` | `AgentTaskCall` creation/arg normalization/terminal lifecycle in task FSM + ingestion pipeline |
+| `STATE_SNAPSHOT/DELTA` | Session state (`is_active`, context usage, scheduler/tool state), task-call status; current system exposes reads, not protocol deltas |
+| `MESSAGES_SNAPSHOT` | `GET /api/v1/sessions/{id}/messages/` (paginated DRF endpoint) |
+| Frontend tools / HITL | Approval cards / `ask_user` answer flow (`task-calls/{id}/approve|deny|answer`) and user interrupt strategies |
+| Auth | Existing DRF JWT — `HttpAgent` can send `Authorization: Bearer` |
 
 ### 3.3 Gaps
 
-1. **No SSE endpoint.** New view (e.g. `POST /api/v1/ag-ui/runs`) with
-   `StreamingHttpResponse`, SSE framing, heartbeat, and run→`Query` bookkeeping.
-2. **No streaming events** (§4) — same prerequisite as ACP.
+1. **No AG-UI SSE endpoint.** New view (e.g. `POST /api/v1/ag-ui/runs`) with
+   `StreamingHttpResponse` or ASGI streaming, SSE framing, heartbeat, and
+   run→`Query` bookkeeping. Current WebSocket UI events are not AG-UI-compatible.
+2. **No external streaming events** (§4) — same prerequisite as ACP. Chunked
+   response checkpoints exist, but they are row updates, not AG-UI event frames.
 3. **Run/thread bookkeeping.** `threadId`↔session and `runId`↔query mapping,
-   sequential-run enforcement per thread, and `TOOL_CALL_RESULT` re-entry
-   (client returns tool results; agent continues) — the closest existing shape
-   is the `call_id` + `result_url` polling pair in the legacy web API
-   (`config/urls.py:17-83`), which can inform the design but isn't reusable as-is.
+   sequential-run enforcement per thread, reconnect/replay policy, and
+   `TOOL_CALL_RESULT` re-entry (client returns tool results; agent continues).
 4. **State deltas.** We have full-state reads everywhere; emitting minimal
-   RFC 6902 patches needs a differ at the chosen state root (session header?
-   context usage? task list?). Start with `STATE_SNAPSHOT` + deltas only for a
-   small, well-defined slice.
+   RFC 6902 patches needs a differ at a deliberately small state root. Start
+   with `STATE_SNAPSHOT` and only add deltas for stable, high-value slices.
 
 ### 3.4 Implementation sketch (Phase B)
 
-- **B0 (shared):** streaming-event prerequisite (§4).
-- **B1 — SSE endpoint:** DRF view + `EventEncoder`-compatible framing
-  (dependency or vendored 50-line encoder), JWT auth, `threadId`→session
-  resolution (create-or-bind), emitting `RUN_STARTED` on `Query ACTIVE`.
-- **B2 — event mapping:** chunk→`TEXT_MESSAGE_CONTENT`, tool-call lifecycle →
+- **B0 (shared):** live turn-event prerequisite (§4).
+- **B1 — SSE endpoint:** DRF/ASGI endpoint + AG-UI encoder-compatible framing
+  (dependency or small vendored encoder), JWT auth, `threadId`→session
+  resolution (create-or-bind), emit `RUN_STARTED` on accepted turn/query.
+- **B2 — event mapping:** chunk→`TEXT_MESSAGE_*`, tool-call lifecycle →
   `TOOL_CALL_*`, terminal→`RUN_FINISHED`/`RUN_ERROR`, `MESSAGES_SNAPSHOT` from
-  existing history serializer.
-- **B3 — state + re-entry:** `STATE_SNAPSHOT` on open, deltas for the chosen
-  slice, `TOOL_CALL_RESULT` ingestion continuing the turn, cancel via existing
-  query cancel.
-- **B4 — client validation:** test against `HttpAgent` (TS) and/or Python client;
-  log-and-replay a run from the event stream (AG-UI's debuggability is a
-  selling point — keep raw event logs).
+  existing history/message serialization.
+- **B3 — state + re-entry:** `STATE_SNAPSHOT` on open, deltas for a small chosen
+  slice, `TOOL_CALL_RESULT` ingestion continuing the turn, cancel mapped to
+  existing query/session cancellation.
+- **B4 — client validation:** test against `HttpAgent` (TS) and/or Python
+  client; keep raw event logs for replay/debugging.
 
-## 4. Shared prerequisite: streaming events (Phase 0, do first)
+## 4. Shared prerequisite: live turn events (Phase 0, do first)
 
-**Problem.** The LiteLLM stream loop accumulates deltas in the Celery worker and
-checkpoint-saves `Response` ~1×/sec *silently* (`call_llm.py:169-173, 207-273`).
-The UI learns about turns only at coarse boundaries (`Query create` in
-`build_llm_context.py:140-141`, `Query update` on terminal states in
-`call_llm.py:448-459`). Both protocols need per-chunk visibility.
+**Problem.** `call_llm.py` streams LiteLLM deltas in a Celery worker, accumulates
+`response.content`/`reasoning`/`tool_calls`, and checkpoint-saves the `Response`
+about every second. During that checkpoint it also publishes a throttled
+row-key update for the response component:
+
+```py
+response.save(publish=False)
+publish_model_event(partial_row_keys(response), response, "update")
+```
+
+That is useful for the current htmx UI, but it is not enough for ACP or AG-UI:
+both need ordered, fine-grained turn events (text deltas, thought/reasoning
+deltas where exposed, tool-call arg/start/end, terminal status). The UI event
+system also intentionally carries invalidation hints, not rendered payloads and
+not protocol-specific event envelopes.
+
+**What changed since the original report.** The old pyHtmlGui `ui/consumer.py`
+pump and `CHANNEL_GROUP` model-observer fan-out are gone. The current system is
+`server/models/observables.py` + `webui/core/events.py` (WebSocket transport for
+htmx `sse:` triggers) + component refetches. This simplifies UI delivery, but it
+does not remove the need for a protocol event source.
 
 **Plan.**
 
-1. Add `publish_token_event()` / `publish_agui_event()` beside
-   `publish_model_event()` in `server/models/observables.py`, publishing through
-   `server.models.observables.notify()` on dedicated stream keys (the retired
-   `CHANNEL_GROUP` broadcast no longer exists). The registry is already
-   gated on active subscriptions, which satisfies step 4's near-zero
-   overhead requirement by construction.
-2. Hook the chunk loop (`call_llm.py:207-273`): emit text deltas + tool-call-arg
-   deltas; throttle to ~10–20 Hz or N characters to bound Redis traffic.
-   Alternative hook: `Response.save()` throttled path — coarser, less code.
-3. Consume: ACP adapter subscribes for `session/update`; AG-UI endpoint
-   subscribes per-run for event translation. The existing consumer pump
-   (`ui/consumer.py:23-71`) is pyHtmlGui-internal and should **not** be reused
-   for wire serialization — new serializers per protocol.
-4. Measure: chunk→client latency, Redis volume under a long stream, behaviour
-   when no external client is attached (must be near-zero overhead — gate on
-   active subscriptions).
+1. **Define a protocol-neutral turn-event shape.** Do not overload
+   `publish_model_event` key invalidations with token streams. Add a dedicated
+   event path (e.g. Redis pub/sub channel per session/run/query, or a small
+   append/read stream abstraction) carrying ordered events with sequence ids,
+   run/session/query ids, timestamps, and typed payloads.
+2. **Emit from the chunk loop in `call_llm.py`.** Hook the existing stream loop
+   where content/reasoning/tool-call chunks are accumulated. Throttle/coalesce
+   text deltas (e.g. 10–20 Hz or N chars) to bound Redis traffic; preserve order.
+   Emit lifecycle events for response start, tool-call argument growth/start/end
+   as available, terminal success/failure/cancel, and optionally usage/context.
+3. **Keep UI invalidations separate by default.** The existing response row-key
+   invalidation can remain for the htmx UI. Protocol adapters should consume the
+   dedicated turn-event stream, not scrape component refetches. Reusing the same
+   source events for UI live rendering is possible later, but should be a
+   deliberate follow-up, not an accidental coupling.
+4. **Measure overhead and delivery semantics.** Check chunk→client latency,
+   Redis volume under long streams, ordering under concurrent sessions, and idle
+   cost when no ACP/AG-UI consumer is attached. Gate emission/publish work on
+   active subscribers where possible.
 
-Phase 0 is independently shippable and also unlocks live token rendering in our
-own UI later.
+Phase 0 is independently valuable: it can also enable live token rendering in
+AgentOne's own UI later, but the primary deliverable is a clean event source for
+protocol adapters.
 
 ## 5. Effort estimate (rough, backend-dev days)
 
 | Phase | Work | Size |
 |---|---|---|
-| 0 | Streaming-event bus + chunk hook + load check | 3–5 |
-| A1 | ACP stdio adapter, 4 baseline methods | 5–8 |
-| A2 | Permission park-and-resume in FSMs | 3–5 |
-| A3 | Packaging, docs, fake-client tests | 2–3 |
-| B1 | SSE endpoint + auth + thread/run bookkeeping | 3–5 |
-| B2 | Event mapping (text/tool/lifecycle/history) | 3–5 |
-| B3 | State snapshots/deltas + `TOOL_CALL_RESULT` re-entry + cancel | 4–6 |
-| B4 | `HttpAgent` validation + replay logs | 2–3 |
+| 0 | Live turn-event source + chunk hook + overhead/load check | 4–6 |
+| A1 | ACP stdio adapter, baseline methods | 5–8 |
+| A2 | ACP permission park-and-resume in FSM/call scheduler | 3–5 |
+| A3 | ACP packaging, docs, fake-client tests | 2–3 |
+| B1 | AG-UI SSE endpoint + auth + thread/run bookkeeping | 3–5 |
+| B2 | AG-UI event mapping (text/tool/lifecycle/history) | 3–5 |
+| B3 | AG-UI state snapshots/deltas + `TOOL_CALL_RESULT` re-entry + cancel | 4–6 |
+| B4 | AG-UI client validation + replay logs | 2–3 |
 
-Totals: ACP ≈ 13–21 d (after Phase 0); AG-UI ≈ 12–19 d (after Phase 0).
-Phase 0 de-risks both; A and B tracks are independent after it.
+Totals: ACP ≈ 14–22 d (after Phase 0); AG-UI ≈ 12–19 d (after Phase 0).
+Phase 0 de-risks both; A and B tracks are independent after it. The Phase 0
+range increased slightly because the old report assumed adding onto a now-removed
+consumer/broadcast model; the new work should create a clean protocol event path
+instead of piggybacking on UI invalidations.
 
 ## 6. Risks and open questions
 
-1. **Worker→client fan-out latency.** Chunks originate in Celery workers; SSE/stdio
-   sinks live in web/adapter processes. Redis pub/sub bridges them, but ordering
-   and backpressure under concurrent sessions need testing.
-2. **Permission round-trips (ACP).** Blocking the agent on an editor user's click
-   interacts badly with the 10s tick and task timeouts — needs explicit design
-   (park state, tick exemption, timeout surfacing as `session/update`).
-3. **ACP remote mode is immature upstream.** stdio-first is safe; HTTP/WS hosting
+1. **Worker→client fan-out latency.** Chunks originate in Celery workers;
+   SSE/stdio sinks live in web/adapter processes. Redis pub/sub or an equivalent
+   stream bridge is the likely path, but ordering, reconnect semantics, and
+   backpressure under concurrent sessions need testing.
+2. **Permission round-trips (ACP).** Blocking on an editor user's click interacts
+   with scheduler ticks, task timeouts, and cancellation semantics. Needs an
+   explicit parked-approval design (FSM detail/state, timeout behavior, cancel
+   behavior, and visible `session/update` or equivalent status).
+3. **UI event bus is not a protocol bus.** The current observables/WebSocket
+   system is optimized for keyed UI invalidation. Reusing it directly for ACP or
+   AG-UI would couple protocol correctness to UI watch keys and component
+   refetch behavior. Keep protocol event streams separate.
+4. **ACP remote mode is immature upstream.** stdio-first is safe; HTTP/WS hosting
    may chase a moving spec. Prefer stdio + document remote as experimental.
-4. **Key scoping for external clients.** Which providers/keys may an ACP editor
-   session or AG-UI thread spend? Needs a scope model (per-client key set or
-   spend caps) before exposing either beyond localhost.
-5. **v1 vs v2 (ACP).** v2 draft changes the prompt lifecycle (ack + async
-   `session/update`), unifies tool-call upserts, and removes client FS/terminal.
-   Building v1 now is fine, but keep the adapter's method layer thin so v2 is a
-   mapping change, not a rewrite.
-6. **Test doubles.** Both tracks need a fake counterparty (JSON-RPC stdio client;
-   SSE event consumer) in `server/tests/` or `api/tests/` — plan for them, not
-   manual-only verification.
+5. **Key/model scoping for external clients.** Which providers/keys/models may an
+   ACP editor session or AG-UI thread spend? Needs a scope model (per-client key
+   set, allowed models, or spend caps) before exposing either beyond localhost.
+6. **v1 vs v2 (ACP).** v2 draft changes prompt lifecycle behavior and removes
+   client FS/terminal in favor of MCP. Build v1 now if needed, but keep the
+   adapter's method layer thin so v2 is a mapping change, not a rewrite.
+7. **Test doubles.** Both tracks need fake counterparties (JSON-RPC stdio client;
+   SSE event consumer) in `server/tests/` or `api/tests/`, plus ordering/replay
+   tests for chunked tool-call and terminal events.
 
 ## 7. Decision factors (no recommendation)
 
@@ -235,8 +281,34 @@ Phase 0 de-risks both; A and B tracks are independent after it.
   strategic goal; stdio distribution fits (no inbound ports, per-connection
   isolation); permission-gated coding tasks are the flagship flow.
 - **Choose AG-UI first if:** web/mobile/chat frontends matter more; the existing
-  DRF+JWT stack makes an SSE endpoint cheap; CopilotKit/`HttpAgent` ecosystem
-  reach is attractive; generative-UI ambitions (A2UI/MCP-Apps ride on AG-UI as
-  the runtime layer) are on the roadmap.
-- **Either way:** do Phase 0 first — it pays off for both tracks and for our own
-  UI's future live rendering.
+  DRF+JWT stack makes an HTTP SSE endpoint a natural fit; CopilotKit/`HttpAgent`
+  ecosystem reach is attractive; generative-UI ambitions (A2UI/MCP-Apps riding on
+  AG-UI as the runtime layer) are on the roadmap.
+- **Either way:** do Phase 0 first — it pays off for both tracks and for
+  AgentOne's own future live rendering, but it should be implemented as a clean
+  protocol event source, not by overloading the htmx/UI invalidation bus.
+
+## 8. Update notes (2026-11-21)
+
+Key codebase changes reflected in this revision:
+
+- **UI transport changed:** old pyHtmlGui/global `ui/consumer.py` assumptions are
+  obsolete. The UI now uses htmx components with a per-tab WebSocket event stream
+  (`webui/core/events.py`, `/app/ws/events/`, fallback `/app/sse/` view exists).
+- **Observable model changed:** `server/models/observables.py` is now a
+  Redis-backed key watch registry with explicit `publish_model_event` keys and
+  commit-time fan-out; there is no `CHANNEL_GROUP` broadcast.
+- **Session/runtime API evolved:** `Session.add_user_message(...)` remains the
+  main ingress, but it now normalizes flexible message specs, routes slash
+  commands, supports scheduler strategies, and has `fork`/`spawn_subagent`
+  workflows. Old line-number references in this doc were stale.
+- **LLM streaming still accumulates in worker:** `call_llm.py` still streams via
+  LiteLLM and checkpoint-saves responses every ~1s. It now also publishes a
+  throttled partial row-key invalidation for the response component; that helps
+  the UI but is not a protocol-grade token/event stream.
+- **API surface moved:** DRF is mounted at `api/v1/` (`config/urls.py`), not the
+  old `/api/v0.1/` shape implied by stale references. There is still no ACP or
+  AG-UI endpoint.
+- **Approval flow is explicit:** task-call approval/deny/answer endpoints exist in
+  `api/views/tasks.py`; ACP permission bridging would still need parked
+  bidirectional request handling.

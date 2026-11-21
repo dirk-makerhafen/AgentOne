@@ -110,6 +110,34 @@ def test_child_session_never_publishes_root():
 
 
 @pytest.mark.django_db
+def test_reparent_from_root_publishes_the_old_root_keys():
+    agent, version = create_agent("reparent-agent")
+    parent, _pv = create_session(agent, version)
+    root, _rv = create_session(agent, version)
+
+    # The row is now a child, but a sidebar showing it as a root must still be
+    # told to remove it.
+    root.parent_session = parent
+    keys = observable_keys(root, {"parent_session_id": None})
+
+    assert "SessionModel.root@is_archived:false" in keys
+    assert f"SessionModel.parent_session:{parent.pk}@is_archived:false" in keys
+
+
+@pytest.mark.django_db
+def test_no_key_repeats_a_filter_dimension():
+    from server.models.cron import Cronjob
+
+    agent, _version = create_agent("filter-agent")
+    session, _sv = create_session(agent, _version)
+    cron = Cronjob.objects.create(name="filter-cron", schedule="* * * * *")
+
+    for instance in (agent, session, cron):
+        for key in observable_keys(instance):
+            assert key.count("@is_archived:") <= 1, key
+
+
+@pytest.mark.django_db
 def test_archive_transition_publishes_both_values():
     agent, version = create_agent("archive-agent")
     session, _sv = create_session(agent, version)

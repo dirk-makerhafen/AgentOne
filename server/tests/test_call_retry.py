@@ -14,6 +14,8 @@ though retries were conceptually available:
 """
 from __future__ import annotations
 
+from unittest import mock
+
 from django.test import TestCase
 
 from runtime.tasks.call_fsm import TaskCallStateMachine
@@ -198,6 +200,20 @@ class WaitingRetryTest(RetryFixture):
 
 
 class ScheduleRetryFsmTest(RetryFixture):
+    def test_transition_publishes_the_previous_status(self):
+        """Raw FSM updates must carry pre-update values for old-side keys."""
+        call = self._call(
+            TaskCallStatusDetail.WAITING_QUEUE, TaskCallStatus.WAITING
+        )
+        with mock.patch.object(AgentTaskCall, "publish_by_pk") as publish:
+            self.assertTrue(TaskCallStateMachine.pick_up(call.pk))
+
+        self.assertTrue(publish.called)
+        self.assertEqual(
+            publish.call_args.kwargs["previous"]["status_detail"],
+            TaskCallStatusDetail.WAITING_QUEUE,
+        )
+
     def test_schedule_retry_from_waiting_subtasks(self):
         """FSM accepts WAITING_SUBTASKS_OR_HOOKS → WAITING_RETRY."""
         call = self._call(

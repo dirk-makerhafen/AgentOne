@@ -6,11 +6,9 @@
                     hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
         </div>
         {% for terminal in terminals %}
-        <details class="webui-item webui-terminal"
-                 hx-get="{% url 'webui:terminal_output' session.pk terminal.name %}"
-                 hx-trigger="toggle"
-                 hx-target="find .webui-terminal-live"
-                 hx-swap="innerHTML">
+        {# The inner .webui-terminal-live is the single lazy loader (load, every 2s); #}
+        {# re-fetching on every open/close was redundant and non-idempotent. #}
+        <details class="webui-item webui-terminal">
             <summary class="webui-item-summary">
                 <span class="webui-line">
                     <span class="webui-session-dot{% if terminal.alive %} is-streaming{% endif %}"

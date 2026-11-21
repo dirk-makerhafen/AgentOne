@@ -49,6 +49,21 @@ class WorkItemFsmTest(TestCase):
         self.assertFalse(self.item.requires_verification)
         self.assertIsNone(self.item.verify_status)
 
+    def test_transition_publishes_the_previous_status(self):
+        """Old-side filter keys need the value the row had before the update."""
+        self.assertTrue(WorkItemStateMachine.mark_ready(self.item.pk))
+        self.item.refresh_from_db()
+
+        with mock.patch.object(WorkItem, "publish_by_pk") as publish:
+            self.assertTrue(
+                WorkItemStateMachine.start_dispatch(self.item.pk, dispatch_count=1)
+            )
+
+        self.assertTrue(publish.called)
+        self.assertEqual(
+            publish.call_args.kwargs["previous"]["status"], WorkItemStatus.READY
+        )
+
     def test_every_valid_transition_is_accepted(self):
         """Walk every reachable state once; all must apply cleanly."""
         self.assertTrue(WorkItemStateMachine.mark_ready(self.item.pk))

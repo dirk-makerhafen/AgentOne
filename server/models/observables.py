@@ -41,6 +41,9 @@ SEEN_PREFIX = "agentone:sse:seen:"
 WATCH_TTL = 60
 #: Seconds after which a reconnect is treated as a fresh connection again.
 SEEN_TTL = 300
+#: Reverse-index sets expire too; every heartbeat refreshes them alongside the
+#: watch string, so a live tab can never be dropped by the TTL.
+KEYS_TTL = 300
 
 #: Fields that lists may filter on; their previous value is captured on save so
 #: a transition publishes both sides (e.g. archived true *and* false).
@@ -111,6 +114,7 @@ def register_client(client_id: str, keys: list[str]) -> list[str]:
             pipe.srem(KEYS_PREFIX + key, client_id)
         for key in current - previous:
             pipe.sadd(KEYS_PREFIX + key, client_id)
+            pipe.expire(KEYS_PREFIX + key, KEYS_TTL)
         pipe.set(_watch_key(client_id), json.dumps(sorted(current)), ex=WATCH_TTL)
         pipe.set(SEEN_PREFIX + client_id, "1", ex=SEEN_TTL)
         pipe.execute()
@@ -118,9 +122,14 @@ def register_client(client_id: str, keys: list[str]) -> list[str]:
 
 
 def touch_client(client_id: str) -> None:
-    """Refresh the watch TTL from the SSE heartbeat."""
+    """Refresh the watch and reverse-index TTLs from the heartbeat."""
     try:
-        get_redis().expire(_watch_key(client_id), WATCH_TTL)
+        r = get_redis()
+        r.expire(_watch_key(client_id), WATCH_TTL)
+        with r.pipeline() as pipe:
+            for key in watch_keys(client_id):
+                pipe.expire(KEYS_PREFIX + key, KEYS_TTL)
+            pipe.execute()
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("Failed to refresh watch TTL for %s", client_id)
 
@@ -261,14 +270,15 @@ class ObservableMixin:
         self,
         action: str = "update",
         previous: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
     ) -> None:
         from runtime.observable_keys import observable_keys  # keep imports flat
 
-        publish_model_event(observable_keys(self, previous), self, action)
+        publish_model_event(observable_keys(self, previous), self, action, data=data)
 
     def publish(self, action: str = "update", data: dict[str, Any] | None = None) -> None:
-        """Compatibility shim for ``Model.publish("update")`` call sites."""
-        self.notify_observers(action)
+        """Compatibility shim for ``Model.publish("update", data=...)`` call sites."""
+        self.notify_observers(action, data=data)
 
     def save(self, *args: Any, publish: bool = True, **kwargs: Any) -> Any:
         is_new = self._state.adding or self.pk is None

@@ -1,8 +1,31 @@
 from __future__ import annotations
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import Q, F
 from django.utils import timezone
 from datetime import timedelta
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
+
+
+def _snapshot_fields(call_id: int, fields: dict) -> dict:
+    """Capture the pre-update values a raw ``QuerySet.update()`` overwrites.
+
+    The FSM uses guarded bulk updates for atomicity, so the normal
+    ``atomic_update()`` previous-value capture does not run.  Passing these
+    values to the publisher keeps old-side filter keys correct.
+    """
+    from server.models.tasks.agent_task_call import AgentTaskCall
+
+    attnames = []
+    known_attnames = {field.attname for field in AgentTaskCall._meta.concrete_fields}
+    for name in fields:
+        try:
+            attnames.append(AgentTaskCall._meta.get_field(name).attname)
+        except FieldDoesNotExist:
+            if name in known_attnames:
+                attnames.append(name)
+    if not attnames:
+        return {}
+    return AgentTaskCall.objects.filter(pk=call_id).values(*attnames).first() or {}
 
 
 # ---------------------------------------------------------------------------
@@ -109,15 +132,17 @@ def _publish_call_event(
     call_id: int,
     action: str = "update",
     data: dict | None = None,
+    previous: dict | None = None,
 ) -> None:
     """Publish a model event for an AgentTaskCall after a transition.
 
     ``data`` carries the fields written by the transition (for updates) or
     the full row (for creates) so subscribers can react without re-reading.
+    ``previous`` carries the pre-update values so old-side filter keys fire.
     """
     try:
         from server.models.tasks.agent_task_call import AgentTaskCall
-        AgentTaskCall.publish_by_pk(call_id, action, data=data)
+        AgentTaskCall.publish_by_pk(call_id, action, data=data, previous=previous)
     except Exception:
         pass
 
@@ -189,9 +214,10 @@ class TaskCallStateMachine:
         if extra:
             fields.update(extra)
 
+        previous = _snapshot_fields(call_id, fields)
         updated = query.update(**fields) > 0
         if updated:
-            _publish_call_event(call_id, "update", data=fields)
+            _publish_call_event(call_id, "update", data=fields, previous=previous)
         return updated
 
     # ------------------------------------------------------------------
@@ -213,6 +239,7 @@ class TaskCallStateMachine:
             "status_detail": TaskCallStatusDetail.WAITING_DEPENDENCY,
             "updated_at": timezone.now(),
         }
+        previous = _snapshot_fields(call_id, fields)
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
@@ -221,7 +248,7 @@ class TaskCallStateMachine:
             ],
         ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id, "update", data=fields)
+            _publish_call_event(call_id, "update", data=fields, previous=previous)
         return updated
 
     @staticmethod
@@ -331,6 +358,7 @@ class TaskCallStateMachine:
             "taskcall_result_run_id": result_run_id,
             "updated_at": timezone.now(),
         }
+        previous = _snapshot_fields(call_id, fields)
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
@@ -339,7 +367,7 @@ class TaskCallStateMachine:
             ],
         ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id, "update", data=fields)
+            _publish_call_event(call_id, "update", data=fields, previous=previous)
         return updated
 
     @staticmethod
@@ -359,6 +387,7 @@ class TaskCallStateMachine:
             "ended_at": timezone.now(),
             "updated_at": timezone.now(),
         }
+        previous = _snapshot_fields(call_id, fields)
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
@@ -367,7 +396,7 @@ class TaskCallStateMachine:
             ],
         ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id, "update", data=fields)
+            _publish_call_event(call_id, "update", data=fields, previous=previous)
         return updated
 
     @staticmethod
@@ -394,6 +423,7 @@ class TaskCallStateMachine:
             "dont_start_before": timezone.now() + timedelta(seconds=retry_delay_seconds),
             "updated_at": timezone.now(),
         }
+        previous = _snapshot_fields(call_id, fields)
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
@@ -411,7 +441,7 @@ class TaskCallStateMachine:
                 .values_list("retry_count", flat=True)
                 .first()
             )
-            _publish_call_event(call_id, "update", data=data)
+            _publish_call_event(call_id, "update", data=data, previous=previous)
         return updated
 
     @staticmethod
@@ -425,6 +455,7 @@ class TaskCallStateMachine:
             "ended_at": timezone.now(),
             "updated_at": timezone.now(),
         }
+        previous = _snapshot_fields(call_id, fields)
         updated = AgentTaskCall.objects.filter(
             pk=call_id,
             status_detail__in=[
@@ -433,7 +464,7 @@ class TaskCallStateMachine:
             ],
         ).update(**fields) > 0
         if updated:
-            _publish_call_event(call_id, "update", data=fields)
+            _publish_call_event(call_id, "update", data=fields, previous=previous)
         return updated
 
     @staticmethod

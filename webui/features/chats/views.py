@@ -271,9 +271,11 @@ def terminal_output(request, session_id: int, name: str):
     output = ""
     error = ""
     try:
-        from runtime.terminal import poll_output
+        from runtime.terminal import capture_output
 
-        result = poll_output(session_model, name=row.name, lines=400)
+        # Read-only capture: a polling GET must not create rows, repair tmux,
+        # touch last_active_at or publish observable events.
+        result = capture_output(row, lines=400)
         output = result.get("output", "") or ""
     except Exception as exc:  # pylint: disable=broad-exception-caught
         error = str(exc)

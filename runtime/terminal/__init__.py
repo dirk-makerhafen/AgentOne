@@ -6,6 +6,7 @@ from runtime.terminal.allowlist import (
     unapproved_agent_cli,
 )
 from runtime.terminal.manager import (
+    capture_output,
     cleanup_orphans,
     ensure_terminal,
     exec_command,
@@ -20,6 +21,7 @@ from runtime.terminal.manager import (
 __all__ = [
     "EXTERNAL_CLI_ALLOWLIST",
     "KNOWN_AGENT_CLIS",
+    "capture_output",
     "cleanup_orphans",
     "ensure_terminal",
     "exec_command",

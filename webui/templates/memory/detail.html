@@ -19,6 +19,7 @@
             {% if tab == 'proposals' and queueable_count %}
             <form method="post" action="{% url 'webui:memory_node_queue' node.id %}" style="display:inline">
                 {% csrf_token %}
+                {% if project_id %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}
                 <input type="hidden" name="all" value="1">
                 <button class="btn primary" type="submit">File all ({{ queueable_count }})</button>
             </form>
@@ -195,6 +196,7 @@
                             {% elif proposal.queueable and proposal.status != 'retired' %}
                             <form method="post" action="{% url 'webui:memory_node_queue' node.id %}">
                                 {% csrf_token %}
+                                {% if project_id %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}
                                 <input type="hidden" name="fingerprint" value="{{ proposal.fingerprint }}">
                                 <input type="hidden" name="tab" value="proposals">
                                 <button class="btn primary" type="submit">File as backlog</button>

@@ -362,8 +362,9 @@ def run_streaming_query(
                 # the whole thread for every 1 Hz token flush.  Publish only the
                 # row key so the response component still tracks the tokens.
                 response.save(publish=False)
+                from runtime.observable_keys import partial_row_keys
                 from server.models.observables import publish_model_event
-                publish_model_event([f"Response:{response.pk}"], response, "update")
+                publish_model_event(partial_row_keys(response), response, "update")
                 last_save_time = time.time()
     except Exception as exc:
         # Provider hard-failure (connection, 5xx, auth, 404, ...).  Classify

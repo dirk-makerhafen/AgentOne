@@ -187,11 +187,11 @@ def memory_playbook(request):
 
 def memory_node(request, node_id):
     project_id = _project_id(request)
+    # Never fall back to the all-project inventory: that would render another
+    # project's memory while breadcrumbs, links and the assistant stay scoped
+    # to the requested project.
     inventory = _inventory(project_id)
     node = find_node(inventory, node_id)
-    if node is None:
-        inventory = _inventory(None)
-        node = find_node(inventory, node_id)
     if node is None:
         return redirect("webui:memory")
     queued = _queued()
@@ -258,7 +258,8 @@ def memory_node(request, node_id):
 
 @require_POST
 def memory_node_queue(request, node_id):
-    inventory = _inventory(None)
+    project_id = _project_id(request)
+    inventory = _inventory(project_id)
     node = find_node(inventory, node_id)
     if node is None:
         return redirect("webui:memory")
@@ -290,6 +291,8 @@ def memory_node_queue(request, node_id):
     tab = (request.POST.get("tab") or "").strip()
     if tab:
         params["tab"] = tab
+    if project_id is not None:
+        params["project"] = project_id
     url = reverse_url("webui:memory_node", node_id)
     return redirect(f"{url}?{urlencode(params)}")
 

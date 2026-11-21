@@ -305,5 +305,6 @@ def sse_watch(request):
         return JsonResponse({"error": "invalid keys"}, status=400)
     keys = [key for key in keys if isinstance(key, str)]
 
-    register_client(client_id, keys)
-    return JsonResponse({"keys": keys})
+    # Echo what was actually stored: register_client drops malformed keys.
+    stored = register_client(client_id, keys)
+    return JsonResponse({"keys": stored})

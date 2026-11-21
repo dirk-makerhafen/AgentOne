@@ -75,11 +75,26 @@ def test_stream_accepts_a_uuid_client_id(auth_client):
 
 @pytest.mark.django_db
 def test_watch_registers_the_keys(auth_client):
-    with patch.object(events, "register_client") as register:
+    with patch.object(events, "register_client", return_value=["A:1", "B:2"]) as register:
         response = _watch(auth_client, {"client": "client-1234", "keys": ["A:1", "B:2"]})
     assert response.status_code == 200
     assert response.json() == {"keys": ["A:1", "B:2"]}
     register.assert_called_once_with("client-1234", ["A:1", "B:2"])
+
+
+@pytest.mark.django_db
+def test_watch_echoes_only_the_keys_that_were_stored(auth_client):
+    import fakeredis
+    from server.models import observables
+
+    redis = fakeredis.FakeStrictRedis(decode_responses=True)
+    with patch.object(observables, "get_redis", return_value=redis):
+        response = _watch(
+            auth_client,
+            {"client": "client-1234", "keys": ["A:1", "has space", "A:1"]},
+        )
+    assert response.status_code == 200
+    assert response.json() == {"keys": ["A:1"]}
 
 
 @pytest.mark.parametrize(
@@ -101,7 +116,7 @@ def test_watch_accepts_a_page_with_many_observable_keys(auth_client):
     # 80 sidebar rows (4 keys each) plus a 120-message thread (2 keys each)
     # already exceeds the old 500-key cap and silently lost the whole sync.
     keys = [f"A:{i}" for i in range(600)]
-    with patch.object(events, "register_client") as register:
+    with patch.object(events, "register_client", return_value=keys) as register:
         response = _watch(auth_client, {"client": "client-1234", "keys": keys})
     assert response.status_code == 200
     register.assert_called_once_with("client-1234", keys)
@@ -117,7 +132,7 @@ def test_watch_rejects_invalid_json(auth_client):
 
 @pytest.mark.django_db
 def test_watch_drops_non_string_keys(auth_client):
-    with patch.object(events, "register_client") as register:
+    with patch.object(events, "register_client", return_value=["A:1"]) as register:
         response = _watch(auth_client, {"client": "client-1234", "keys": ["A:1", 5, None]})
     assert response.status_code == 200
     register.assert_called_once_with("client-1234", ["A:1"])

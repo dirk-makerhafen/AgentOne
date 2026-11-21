@@ -24,9 +24,12 @@ The keys never contain ``[``, ``,`` or whitespace: htmx tokenises
 from __future__ import annotations
 
 import itertools
+import logging
 from typing import Any
 
-__all__ = ["observable_keys"]
+__all__ = ["observable_keys", "partial_row_keys"]
+
+log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +116,9 @@ def _agent_keys(obj, previous=None):
                                filters={"is_archived": archived}))
     if not (obj.parent_skill_id or obj.parent_agent_id or obj.parent_project_id):
         keys.extend(_filtered([f"{model}.root"], is_archived=archived))
-    return _filtered(keys, is_archived=archived)
+    # _relation_keys already applied every filter dimension; wrapping the whole
+    # list here would emit junk like AgentModel.root@is_archived:false@is_archived:false.
+    return keys
 
 
 def _agent_version_keys(obj, previous=None):
@@ -130,7 +135,9 @@ def _skill_keys(obj, previous=None):
                                filters={"is_archived": archived}))
     if not (obj.parent_agent_id or obj.parent_project_id or obj.parent_skill_id):
         keys.extend(_filtered([f"{model}.root"], is_archived=archived))
-    return _filtered(keys, is_archived=archived)
+    # _relation_keys already applied every filter dimension; wrapping the whole
+    # list here would emit junk like AgentModel.root@is_archived:false@is_archived:false.
+    return keys
 
 
 def _skill_version_keys(obj, previous=None):
@@ -164,7 +171,10 @@ def _session_keys(obj, previous=None):
     keys.extend(_relation_keys(model, obj, previous, ("parent_project",),
                                filters={"is_archived": archived}))
 
-    if obj.parent_session_id is None:
+    # Emit root keys for both sides of a reparent: moving a root under a parent
+    # must remove it from the root sidebar, not just add it to the child list.
+    was_root = (previous or {}).get("parent_session_id", obj.parent_session_id) is None
+    if obj.parent_session_id is None or was_root:
         keys.extend(_filtered([f"{model}.root"], is_archived=archived))
         for project in _ids(obj, previous, "parent_project"):
             keys.extend(_filtered([f"{model}.root@project:{project}"],
@@ -237,6 +247,9 @@ def _task_call_keys(obj, previous=None):
         try:
             ancestors = obj.get_ancestor_call_pks()
         except Exception:  # pylint: disable=broad-exception-caught
+            # A transient DB error must not fail the write, but silently
+            # dropping these keys leaves tool cards stale, so log it.
+            log.exception("Could not resolve ancestor call keys for AgentTaskCall %s", obj.pk)
             ancestors = []
         keys.extend(f"AgentTaskCall:{pk}" for pk in ancestors)
     return keys
@@ -280,7 +293,9 @@ def _cron_keys(obj, previous=None):
                                filters={"is_archived": archived}))
     if obj.parent_project_id is None:
         keys.extend(_filtered([f"{model}.root"], is_archived=archived))
-    return _filtered(keys, is_archived=archived)
+    # _relation_keys already applied every filter dimension; wrapping the whole
+    # list here would emit junk like AgentModel.root@is_archived:false@is_archived:false.
+    return keys
 
 
 def _collection_keys(obj, previous=None):
@@ -370,6 +385,17 @@ def _system_keys(obj, previous=None):
 
 def _bare_pk(obj, previous=None):
     return _base(type(obj).__name__, obj.pk)
+
+
+def partial_row_keys(instance) -> list[str]:
+    """Keys for a deliberate partial publish of one row.
+
+    Callers that suppress the normal ``save()`` publish (streaming token
+    flushes, token-count corrections) use this instead of an inline
+    ``f"Model:{pk}"`` string.  The model-wide key is intentionally omitted so a
+    1 Hz token update cannot refetch every list that watches the bare model.
+    """
+    return _base(type(instance).__name__, instance.pk)
 
 
 _BUILDERS = {
