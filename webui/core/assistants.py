@@ -37,6 +37,8 @@ _OVERVIEW_ASSISTANTS = {
     "workspaces": (_AGENTONE, _AGENTONE),
     "cronjobs": (_AGENTONE, _AGENTONE),
     "workitems": (_AGENTONE, _AGENTONE),
+    # The Memory page talks to the memory specialist itself, not AgentOne.
+    "memory": ("memory-manage", "Memory agent"),
 }
 
 
@@ -78,6 +80,15 @@ def _overview_scope(kind: str, project: Project | None):
         from runtime.workspace.workspaces import Workspaces
 
         return assistant_name, None, Workspaces().get_assistant_workspace()
+
+    if kind == "memory":
+        # Memory is a scope, not an entity: bind the panel to the selected
+        # project's workspace (or the global system workspace) so the agent
+        # sees the same memory layers the Memory page does.
+        from runtime.workspace.workspaces import Workspaces
+
+        workspace = Workspaces(parent_project=project).get_assistant_workspace()
+        return assistant_name, project, workspace
 
     from runtime.agents.agents import Agents
     from runtime.cron.crons import Cronjobs
@@ -190,10 +201,17 @@ def assistant_overview_context(
     panel_url = reverse("webui:assistant_overview_panel", args=[kind])
     if project is not None:
         panel_url = f"{panel_url}?{urlencode({'project': project.pk})}"
+    if kind == "memory":
+        item_name = f"Memory · {project.name}" if project else "Memory · all scopes"
+        noun = "memory agent"
+    else:
+        item_name = project.name if project else "All scopes"
+        noun = kind
     context = {
         "assistant_kind": kind,
         "assistant_title": title,
-        "assistant_item": {"name": project.name if project else "All scopes"},
+        "assistant_noun": noun,
+        "assistant_item": {"name": item_name},
         "assistant_sessions": sessions,
         "assistant_session": selected,
         "assistant_error": "",

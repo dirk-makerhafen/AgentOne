@@ -208,3 +208,87 @@ def test_node_detail_renders_only_the_selected_tab(client, memory_tree):
     sources = client.get(url, {"tab": "sources"})
     assert b"Stale sources" not in sources.content  # that tile is overview-only
     assert b"raw files" in sources.content.lower()
+
+
+@pytest.mark.django_db
+def test_memory_agent_is_the_memory_page_assistant(monkeypatch):
+    """The memory rightbar is scoped to memory-manage, not AgentOne."""
+    from server.models.project import Project
+    from webui.core import assistants
+
+    assert assistants._OVERVIEW_ASSISTANTS["memory"][0] == "memory-manage"
+
+    project = Project.objects.create(name="Memory agent project")
+    monkeypatch.setattr(assistants, "_sessions_for_scope", lambda *_args: [])
+    context = assistants.assistant_overview_context("memory", project)
+    assert context["assistant_title"] == "Memory agent"
+    assert context["assistant_noun"] == "memory agent"
+    assert context["assistant_item"]["name"] == "Memory · Memory agent project"
+    assert context["assistant_open_url"] == reverse(
+        "webui:assistant_overview_open", args=["memory"]
+    )
+
+
+@pytest.mark.django_db
+def test_memory_pages_render_memory_agent_rightbar(client, memory_tree, monkeypatch):
+    """All four Memory views dock the memory agent beside the content column."""
+    from bs4 import BeautifulSoup
+    from webui.core import assistants
+
+    monkeypatch.setattr(
+        assistants,
+        "_overview_scope",
+        lambda kind, project: ("memory-manage", project, None),
+    )
+    monkeypatch.setattr(assistants, "_sessions_for_scope", lambda *_args: [])
+
+    urls = [
+        reverse("webui:memory"),
+        reverse("webui:memory_playbook"),
+        reverse("webui:memory_improvements"),
+        reverse("webui:memory_node", args=[memory_tree.nodes[0].id]),
+    ]
+    for url in urls:
+        response = client.get(url)
+        assert response.status_code == 200, url
+        soup = BeautifulSoup(response.content, "html.parser")
+        panel = soup.find(id="entity-assistant-panel")
+        assert panel is not None, url
+        layout = panel.parent
+        assert layout is not None and "webui-entity-layout" in (
+            layout.get("class") or []
+        ), url
+        content_column = layout.find(class_="webui-entity-content")
+        assert content_column is not None, url
+        assert panel not in content_column.descendants, url
+        assert "Memory agent" in panel.get_text(), url
+
+
+@pytest.mark.django_db
+def test_memory_assistant_open_creates_memory_manage_chat(client, monkeypatch):
+    """The panel's New chat button starts a memory-manage session in place."""
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.sessions.session import SessionModel
+    from webui.core import assistants
+
+    assistant = AgentModel.objects.create(name="memory-manage")
+    version = AgentVersionModel.objects.create(agent=assistant, version_number=1)
+    AgentModel.objects.filter(pk=assistant.pk).update(latest_agent_version=version)
+    monkeypatch.setattr(
+        assistants,
+        "_overview_scope",
+        lambda kind, project: ("memory-manage", project, None),
+    )
+
+    panel = client.get(reverse("webui:assistant_overview_panel", args=["memory"]))
+    assert panel.status_code == 200
+    assert b'id="entity-assistant-panel"' in panel.content
+
+    opened = client.post(reverse("webui:assistant_overview_open", args=["memory"]))
+    assert opened.status_code == 200
+    assert b'id="entity-assistant-panel"' in opened.content
+    assert SessionModel.objects.filter(
+        latest_session_version__agent=assistant,
+        name__startswith="memory-manage -",
+    ).exists()

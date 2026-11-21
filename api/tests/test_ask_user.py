@@ -117,7 +117,7 @@ def _halt(call):
 @pytest.mark.django_db
 class TestAskUserScript:
     def test_success(self):
-        module = _load_script(".agentone/scripts/core/ask_user.py")
+        module = _load_script(".agentone/scripts/interaction/ask_user.py")
         ok, result = module.ask_user(None, QUESTIONS, answers={
             "How should I format the output?": "Detailed",
             "Which sections should I include?": ["Introduction"],
@@ -128,14 +128,14 @@ class TestAskUserScript:
         assert "Detailed" in result["summary"]
 
     def test_no_answers_errors(self):
-        module = _load_script(".agentone/scripts/core/ask_user.py")
+        module = _load_script(".agentone/scripts/interaction/ask_user.py")
         ok, result = module.ask_user(None, QUESTIONS)
         assert ok is False
         assert result["status"] == "error"
         assert "No user answers" in result["message"]
 
     def test_invalid_questions_error(self):
-        module = _load_script(".agentone/scripts/core/ask_user.py")
+        module = _load_script(".agentone/scripts/interaction/ask_user.py")
         ok, result = module.ask_user(
             None, [{"question": "X?"}], answers={"X?": "y"})
         assert ok is False

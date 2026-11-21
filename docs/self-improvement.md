@@ -192,6 +192,11 @@ memory_improvements(action="list")
 memory_improvements(action="queue", kinds=["harness", "skill"])
 ```
 
+`memory-manage` is also the assistant in the Memory page rightbar. In a user
+chat it explains the tree, the playbook and its tools from the files on disk;
+it only walks, merges or queues when the user asks, and never promotes or
+implements a proposal on its own.
+
 When a full cycle is driven through `memory-manage` (walk → merge until nothing
 remains), the agent is instructed to end it with one
 `memory_improvements(action="queue")` call, so proposals do not sit unread in

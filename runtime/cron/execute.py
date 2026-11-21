@@ -60,11 +60,15 @@ def execute_cron_job(cronjob_id: int) -> None:
             if not task:
                 raise ValueError(f"Unknown {cronjob.function_type} : {cronjob.function_name}")
             if isinstance(message_data, str):
-                # Legacy manifests stored the kwargs as a JSON string.
-                try:
-                    message_data = json.loads(message_data)
-                except (TypeError, ValueError) as exc:
-                    raise ValueError("Message must be a JSON object for function dispatch") from exc
+                # Legacy manifests stored the kwargs as a JSON string.  A job
+                # with no message is a no-argument dispatch, not invalid JSON.
+                if not message_data.strip():
+                    message_data = {}
+                else:
+                    try:
+                        message_data = json.loads(message_data)
+                    except (TypeError, ValueError) as exc:
+                        raise ValueError("Message must be a JSON object for function dispatch") from exc
             if not isinstance(message_data, dict):
                 raise ValueError("Message must be a JSON object for function dispatch")
             task.apply_async(kwargs=message_data, cronjob=cronjob)

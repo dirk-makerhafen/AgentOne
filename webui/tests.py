@@ -2951,6 +2951,15 @@ def test_clock_filter_renders_in_the_active_timezone():
         assert clock(value) == "07:00"
 
 
+def test_base_template_uses_the_same_timezone_cookie_name():
+    from pathlib import Path
+
+    from django.conf import settings
+
+    base = Path(settings.BASE_DIR) / "webui/core/templates/layout/base.html"
+    assert f'cookieName = "{TIMEZONE_COOKIE}"' in base.read_text(encoding="utf-8")
+
+
 @pytest.mark.django_db
 def test_full_request_renders_with_the_browser_timezone(client):
     response = client.get(

@@ -29,8 +29,9 @@
         </div>
     </header>
 
-    <div class="main-view-body">
-        <div class="main-view-content mem-page">
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content mem-page">
 
             {% if message %}
             <div class="mem-message {% if message_ok %}ok{% else %}err{% endif %}">{{ message }}</div>
@@ -251,6 +252,8 @@
             </div>
             {% endif %}
 
+        </div></div>
+        {% include "shared/_assistant_panel.html" %}
         </div>
     </div>
 </div>

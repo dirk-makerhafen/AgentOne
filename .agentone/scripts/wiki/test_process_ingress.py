@@ -50,7 +50,7 @@ def test_build_item_brief():
     brief = _build_item_brief("calendar", "timeline/x.md", "mail text", False, "## Rules\nDo stuff.")
     assert "calendar/AGENTS.md" in brief and "Do stuff." in brief
     assert "timeline/x.md" in brief and "mail text" in brief and "ingress-result" in brief
-    assert "never edit `calendar/ingress.md`" in brief
+    assert "never edit or read `calendar/ingress.md`" in brief
     assert "re-read any shared index file" in brief  # concurrent siblings
     brief = _build_item_brief("calendar", "timeline/gone.md", None, True, None)
     assert "No AGENTS.md" in brief and "source vanished" in brief
@@ -86,7 +86,7 @@ def test_dispatch_items_fans_out_without_waiting(tmp_path):
     assert [item for _i, item, _s, _r in calls["schedule"]] == ["timeline/a.md", "timeline/b.md", "timeline/c.md"]
     assert [s for _i, _t, s, _r in calls["schedule"]] == [1001, 1002, 1003]
     assert len(info["spawned"]) == 3 and info["spawn_failed"] == []
-    assert info["remaining"] == 3  # flips happen later, in finalize tasks
+    assert info["remaining"] == 0  # active lines are owned, not awaiting dispatch
     assert all("Record bookings." in b for b in calls["spawn"])
     # Lines are marked active (owned), not done.
     body = (tmp_path / "cal/ingress.md").read_text(encoding="utf-8")
@@ -115,7 +115,7 @@ def test_dispatch_items_limit_spawn_failure_and_stale_active(tmp_path):
     queue = tmp_path / "cal/ingress.md"
     assert _set_line_state(queue, "timeline/c.md", False, int(time.time()), "2026-10-11")
     ok, info = dispatch_items(tmp_path, "cal/ingress.md", 10, flaky_spawn, schedule_fn)
-    assert ok and info["spawned"] == [] and info["remaining"] == 3  # b retried + failed again
+    assert ok and info["spawned"] == [] and info["remaining"] == 1  # b retried + failed again
 
     # Stale active marker = crashed pass: reclaimed and dispatched.
     assert _set_line_state(queue, "timeline/c.md", False, 1000000000, "2026-10-11")

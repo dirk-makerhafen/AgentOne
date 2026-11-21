@@ -9,6 +9,7 @@ from django.shortcuts import redirect
 from django.views.decorators.http import require_POST
 
 from server.models.project import Project
+from webui.core.assistants import assistant_overview_context
 from webui.core.layout import render_page
 
 from webui.features.memory.data import (
@@ -34,6 +35,14 @@ def _inventory(project_id):
 
 def _queued():
     return queued_work_items()
+
+
+def _memory_assistant(request, project_id: int | None) -> dict:
+    """Memory pages share one scoped chat with the memory agent."""
+    project = Project.objects.filter(pk=project_id).first() if project_id else None
+    return assistant_overview_context(
+        "memory", project, request.GET.get("assistant_session")
+    )
 
 
 def _proposal_rows(inventory, queued):
@@ -122,6 +131,7 @@ def memory(request):
         "message": message,
         "message_ok": True,
     }
+    context.update(_memory_assistant(request, project_id))
     return render_page(request, "memory", "memory/list.html", context, active_id="overview")
 
 
@@ -169,6 +179,7 @@ def memory_playbook(request):
         "project_id": project_id,
         "projects": list(Project.objects.order_by("name")),
     }
+    context.update(_memory_assistant(request, project_id))
     return render_page(
         request, "memory", "memory/playbook.html", context, active_id="playbook"
     )
@@ -239,6 +250,7 @@ def memory_node(request, node_id):
         "message": f"Filed {qp} proposal(s) as backlog work items." if qp else "",
         "message_ok": True,
     }
+    context.update(_memory_assistant(request, project_id))
     return render_page(
         request, "memory", "memory/detail.html", context, active_id="overview"
     )
@@ -360,6 +372,7 @@ def memory_improvements(request):
     qp = request.GET.get("queued", "")
     context["message"] = f"Filed {qp} proposal(s) as backlog work items." if qp else ""
     context["message_ok"] = True
+    context.update(_memory_assistant(request, project_id))
     return render_page(request, "memory", "memory/improvements.html", context, active_id="improvements")
 
 

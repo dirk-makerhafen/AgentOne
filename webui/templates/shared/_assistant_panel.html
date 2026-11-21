@@ -61,7 +61,7 @@
     {% else %}
     <div class="webui-entity-assistant-empty">
         <div>No assistant conversations yet.</div>
-        <div>Start a new chat to work with this {{ assistant_kind }}.</div>
+        <div>Start a new chat to work with this {{ assistant_noun|default:assistant_kind }}.</div>
     </div>
     {% endif %}
 </aside>

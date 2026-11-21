@@ -71,6 +71,18 @@ class _StubSession:
         self.aimodel = model
 
 
+class _StubQuery(SimpleNamespace):
+    """Query stand-in supporting the instance-level ``atomic_update`` path."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.updates: list[dict] = []
+
+    def atomic_update(self, **fields):
+        self.updates.append(fields)
+        return 1
+
+
 class LLMErrorClassificationTest(TestCase):
     def test_model_not_found_is_sticky_model_scope(self):
         from litellm.exceptions import NotFoundError
@@ -502,7 +514,7 @@ class FallbackDemotionTest(TestCase):
 
     def test_blocked_pinned_model_is_demoted_to_sibling(self):
         response = SimpleNamespace(status=ResponseStatus.SUCCESS)
-        query = SimpleNamespace(
+        query = _StubQuery(
             pk=1,
             apikey=ApiKey.objects.get(api_provider=self.p1),
             status=QueryStatus.WAITING,

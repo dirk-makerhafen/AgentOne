@@ -110,9 +110,9 @@ def browser(
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return _error(f"could not resolve browser scope: {exc}")
 
-    # Screenshot/download outputs and upload inputs are workspace files: the
-    # workspace (cwd here) is the only root the daemon will write under or
-    # read from, and the filesystem guardrail gates the call separately.
+    # Screenshot/download outputs and upload inputs are workspace files. The
+    # daemon resolves the session's filesystem root from the DB and refuses
+    # paths outside it; the filesystem guardrail gates the call separately.
     params = {
         'url': _normalize_url(url) if url else '',
         'page_id': page_id or '',

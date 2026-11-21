@@ -12,8 +12,9 @@
             </a>
         </div>
     </header>
-    <div class="main-view-body">
-        <div class="main-view-content mem-page">
+    <div class="main-view-body webui-entity-body">
+        <div class="webui-entity-layout">
+        <div class="webui-entity-content"><div class="main-view-content mem-page">
 
             <div class="mem-strip">
                 <div class="mem-strip-item"><span class="mem-strip-value">{{ active_count }}</span><span class="mem-strip-label">Active rules</span></div>
@@ -99,6 +100,8 @@
                 </div>
             </details>
 
+        </div></div>
+        {% include "shared/_assistant_panel.html" %}
         </div>
     </div>
 </div>

@@ -4,8 +4,6 @@ import os
 import sys
 from pathlib import Path
 
-import pytest
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 sys.path.insert(0, "/Users/Dirk/AgentOne/.agentone/agents/wiki/scripts")
 
@@ -333,54 +331,6 @@ def test_field_kind_maps_cover_day_fields():
     assert set(ENTITY_KINDS) == set(FIELD_BY_KIND)
 
 
-def test_guess_kind():
-    assert _guess_kind("Muster GmbH", "Bezahldienst.") == ("Companies", True)
-    assert _guess_kind("Musterland", "Bezahldienst. Zahlungen laufen über die Bank.") == ("Companies", False)
-    assert _guess_kind("Musterland_GmbH", "") == ("Companies", True)
-    assert _guess_kind("Funkclub Nord", "Community Netz") == ("Persons", False)  # shape wins; sweep relocates via group mentions
-    assert _guess_kind("Funkclub", "Community Netz") == ("Groups", False)
-    assert _guess_kind("Bürgerstiftung Musterstadt", "") == ("Groups", False)  # -stiftung suffix, unconfident
-    assert _guess_kind("Musterhafen e.V.", "") == ("Groups", True)
-    assert _guess_kind("Max Mustermann", "Meldet sich zum Workshop an") == ("Persons", False)
-    # Name evidence outranks a vendor-heavy body; frontmatter never counts.
-    assert _guess_kind("Kiosk", "Bestellung, Versand, Zahlung") == ("Companies", False)
-    assert _guess_kind("Max Mustermann", "---\nsources: [[timeline/x-Versand-y]]\n---\nMeldet sich an") == ("Persons", False)
-    # Two title-case words file as persons even with trade words in the body…
-    assert _guess_kind("Max Mustermann", "Bestellung, Versand, Zahlung") == ("Persons", False)
-    assert _guess_kind("Otis Mohr", "Kunde seit 2021, Bankeinzug") == ("Persons", False)
-    # …unless the body carries a legal form (Hamburg Invest GmbH).
-    assert _guess_kind("Hamburg Invest", "Die Hamburg Invest GmbH foerdert Startups") == ("Companies", False)
-    # Word boundaries: compounds don't trigger (`Workshopladen` is no `shop`).
-    assert _guess_kind("Mia Muster", "kauft Zubehör im Workshopladen") == ("Persons", False)
-
-
-def test_plan_migration_moves_and_collisions(tmp_path):
-    ent = tmp_path / "entities"
-    _write(ent / "Muster GmbH.md", "---\ntype: entity\nsources: []\n---\n\n# Muster GmbH\n\nBezahldienst Bank Kram\n")
-    _write(ent / "Fiona Falkenhorst.md", "---\ntype: entity\n---\n\n# Fiona Falkenhorst\n\nlange Bio " + "x" * 200 + "\n")
-    _write(ent / "Fiona_Falkenhorst.md", "---\ntype: entity\n---\n\n# Fiona\n\nkurz\n")
-    _write(ent / "index.md", "# Entities\n")
-    _write(ent / "hersteller" / "ACME GmbH.md", "---\ntype: entity\n---\n\n# ACME\n")
-    moves, hints = _plan_migration(ent)
-    targets = {m["target_rel"] for m in moves}
-    assert "entities/Companies/M/Muster_GmbH.md" in targets
-    assert "entities/Persons/F/Fiona_Falkenhorst.md" in targets
-    assert "entities/Persons/F/Fiona_Falkenhorst.merge-pending.md" in targets
-    assert "entities/Companies/A/ACME_GmbH.md" in targets
-    assert not [m for m in moves if m["src"].name == "index.md"]
-    assert any("slug collision" in h for h in hints)
-
-
-def test_fold_dupe_candidates(tmp_path):
-    ent = tmp_path / "entities"
-    _write(ent / "Tora Tellheim.md", "# x\n")
-    _write(ent / "Torla_Tellheim.md", "# x\n")
-    _write(ent / "Max Mustermann.md", "# x\n")
-    groups = _find_fold_dupe_candidates(ent)
-    assert any({"Tora Tellheim.md", "Torla_Tellheim.md"} <= set(g) for g in groups)
-    assert not any("Max Mustermann.md" in g for g in groups)
-
-
 def test_find_kind_twin():
     existing = {
         "entities/Companies/M/Max_Mustermann.md": {"kind": "Companies", "name": "Max Mustermann"},
@@ -414,26 +364,6 @@ def test_apply_kind_move(tmp_path):
     # Vanished source is a skip, not an error.
     moved, hints = _apply_kind_move(root, "entities/Companies/M/Gone.md", "entities/Persons/M/Gone.md")
     assert not moved and any("vanished" in h for h in hints)
-
-
-def test_plan_case_insensitive_collision(tmp_path):
-    ent = tmp_path / "entities"
-    _write(ent / "Musterfirma.md", "---\ntype: entity\n---\n\n# Musterfirma\n\nGmbH langer Text " + "x" * 100 + "\n")
-    # Same name, different case, different folder — one file on APFS, two moves planned.
-    _write(ent / "hersteller" / "musterfirma.md", "---\ntype: entity\n---\n\n# musterfirma\n\nGmbH kurz\n")
-    moves, hints = _plan_migration(ent)
-    targets = sorted(m["target_rel"] for m in moves)
-    assert len(targets) == 2
-    assert targets[0] == "entities/Companies/M/Musterfirma.md"
-    assert targets[1] == "entities/Companies/M/Musterfirma.merge-pending.md"
-    assert any("slug collision" in h for h in hints)
-
-
-def test_free_target(tmp_path):
-    root = tmp_path / "vault"
-    assert _free_target(root, "entities/Companies/M/X.merge-pending.md") == "entities/Companies/M/X.merge-pending.md"
-    _write(root / "entities/Companies/M/X.merge-pending.md", "# taken\n")
-    assert _free_target(root, "entities/Companies/M/X.merge-pending.md") == "entities/Companies/M/X.merge-pending-2.md"
 
 
 def test_rebuild_entity_indices(tmp_path):

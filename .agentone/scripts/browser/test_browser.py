@@ -83,12 +83,13 @@ class BrowserToolTests(unittest.TestCase):
         _, _, params = self.calls[-1]
         self.assertEqual(params["url"], "https://example.com/x")
 
-    def test_workspace_root_is_always_sent(self):
+    def test_workspace_root_is_resolved_by_the_daemon(self):
+        """The daemon derives the filesystem root from the session itself."""
         with self._fake_call({}):
             browser(_Session(), action="snapshot")
         _, _, params = self.calls[-1]
-        self.assertEqual(params["write_root"], os.getcwd())
-        self.assertEqual(params["read_root"], os.getcwd())
+        self.assertNotIn("write_root", params)
+        self.assertNotIn("read_root", params)
 
     def test_empty_params_are_dropped(self):
         with self._fake_call({}):

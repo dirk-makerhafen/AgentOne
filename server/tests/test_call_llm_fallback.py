@@ -49,6 +49,18 @@ class _StubSession:
         self.aimodel = model
 
 
+class _StubQuery(SimpleNamespace):
+    """Query stand-in supporting the instance-level ``atomic_update`` path."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.updates: list[dict] = []
+
+    def atomic_update(self, **fields):
+        self.updates.append(fields)
+        return 1
+
+
 class SiblingAimodelsTest(TestCase):
     def setUp(self):
         self.p1 = ApiProvider.objects.create(name="p1")
@@ -153,7 +165,7 @@ class FallbackLoopTest(TestCase):
         self.alpha_p2 = AiModel.objects.create(api_provider=self.p2, name="Alpha", provider_model_id="apisql-alpha")
 
     def _stub_query(self, apikey=None):
-        return SimpleNamespace(
+        return _StubQuery(
             pk=1,
             apikey=apikey,
             status=QueryStatus.WAITING,
@@ -267,8 +279,9 @@ class FallbackLoopTest(TestCase):
             module = self.call_llm
             with mock.patch.object(module, "run_streaming_query", side_effect=[RuntimeError("boom"), response]) as stream:
                 session = _StubSession(aimodel=self.alpha_p1)
+                query = self._stub_query()
                 result = module._call_with_fallback(
-                    session=session, query=self._stub_query(), messages=[], tools=[]
+                    session=session, query=query, messages=[], tools=[]
                 )
         self.assertIs(result, response)
         self.assertEqual(stream.call_count, 2)
@@ -277,8 +290,10 @@ class FallbackLoopTest(TestCase):
         # Session re-pinned to the working provider.
         self.assertEqual(session.aimodel, self.alpha_p2)
         self.assertEqual(session.repinned, [self.alpha_p2])
-        # Query rows got the ACTIVE + ACTIVE(force) + SUCCESS transitions.
-        self.assertEqual(query_model.objects.filter.return_value.update.call_count, 3)
+        # The claim goes through the patched Query class; the in-flight key
+        # refresh and terminal status use the instance so observables publish.
+        self.assertEqual(query_model.atomic_update_by_pk.call_count, 1)
+        self.assertEqual(query.updates, [{"apikey": None}, {"status": QueryStatus.SUCCESS}])
 
     def test_rate_limited_query_is_reclaimed_on_redispatch(self):
         """A parked (RATE_LIMITED) query must be claimable by its owning call.

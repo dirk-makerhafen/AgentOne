@@ -1,222 +1,234 @@
+"""Tests for the session todo tool (``todolist.py``).
+
+State is event-sourced from the ``todolist_action`` anchor history: each
+action replays against the previous payload and stores the full item list.
+These tests pin that replay contract, the ``[True, payload]`` envelope
+unwrap, and the read-only/paginated behaviour of ``todo_list``.
+"""
 import os
 import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from todolist import (
-    apply_todo_action,
-    coerce_items,
-    is_todo_auto,
-    load_todo_items,
-    set_todo_auto,
+from todolist import (  # pylint: disable=wrong-import-position
+    _coerce_task_id,
+    _coerce_task_ids,
+    _load_todolist_items,
+    todolist_action,
+    todolist_action_response,
     todo_append,
     todo_clear,
     todo_command,
-    todo_done,
+    todo_delete,
     todo_list,
-    todo_peek,
-    todo_pop,
-    todo_remove,
+    todo_update,
 )
 
 
-class FakeAnchor:
-    """Simulates the todolist_action history: delay() replays synchronously.
+class _ActionSession:
+    """Minimal session view used while replaying an anchor action."""
 
-    lastest_result() returns the enveloped ``[True, payload]`` pair, exactly
-    like AgentTaskCall.get_result() in production — this guards the unwrap
-    path (an unwrapped fake once hid a real empty-list bug).
-    """
-
-    def __init__(self):
-        self.history: list[dict] = []
-
-    def lastest_result(self):
-        return [True, self.history[-1]] if self.history else None
-
-    def delay(self, action="list", **params):
-        prev = self.history[-1]["items"] if self.history else []
-        items, extra = apply_todo_action(prev, action, **params)
-        result = {"status": "success", "action": action, "items": items}
-        result.update(extra)
-        self.history.append(result)
-        return result
-    
-class StubSession:
-    """Minimal stand-in for Session (anchor history + settings flag)."""
-
-    def __init__(self):
-        self.anchor = FakeAnchor()
-        self.settings = {}
+    def __init__(self, anchor):
+        self.anchor = anchor
 
     def get_task(self, name):
         return self.anchor if name == "todolist_action" else None
 
+
+class FakeAnchor:
+    """Simulates the ``todolist_action`` history: delay() replays synchronously.
+
+    lastest_result() returns the enveloped ``[True, payload]`` pair, exactly
+    like AgentTaskCall.get_result() in production — an unwrapped fake once
+    hid a real empty-list bug.
+    """
+
+    def __init__(self):
+        self.history: list[dict] = []
+        self.session = _ActionSession(self)
+
+    def lastest_result(self):
+        return [True, self.history[-1]] if self.history else None
+
+    def delay(self, action, **params):
+        result = todolist_action(self.session, action, **params)
+        self.history.append(result)
+        return result
+
+
+class FakeResolver:
+    """Slim anchor resolver: drops the full item list from the tool result."""
+
+    def delay(self, store_function_response):
+        return True, todolist_action_response(None, store_function_response)
+
+
+class StubSession:
+    """Minimal stand-in for Session (anchor history + slim resolver)."""
+
+    def __init__(self):
+        self.anchor = FakeAnchor()
+        self.resolver = FakeResolver()
+
+    def get_task(self, name):
+        if name == "todolist_action":
+            return self.anchor
+        if name == "todolist_action_response":
+            return self.resolver
+        return None
+
     def get_tool(self, name):
         return None
 
-    def _get_session_setting(self, name):
-        return self.settings.get(name)
 
-    def _set_session_setting(self, name, value):
-        self.settings[name] = value
+def apply_action(session, action, **params):
+    """Replay one anchor action and return the raw store-call payload."""
+    return session.anchor.delay(action, **params)
 
 
 class TestTodoActions(unittest.TestCase):
-    """Tests for the pure todo state transitions (no DB needed)."""
+    """Tests for the pure anchor state transitions (no DB needed)."""
 
-    def test_append_single_and_multiple(self) -> None:
-        items, extra = apply_todo_action([], "append", text="first")
-        self.assertEqual(len(extra["added"]), 1)
-        self.assertEqual(extra["added"][0]["id"], 1)
-        items, extra = apply_todo_action(items, "append", texts=["second", "third"])
-        self.assertEqual([i["id"] for i in items], [1, 2, 3])
-        self.assertEqual(extra["pending"], 3)
+    def test_append_assigns_sequential_task_ids(self) -> None:
+        session = StubSession()
+        result = apply_action(session, "append", text="first")
+        self.assertEqual(result["message"], "task 1 created")
+        self.assertEqual(result["items"][0]["text"], "first")
+        self.assertEqual(result["items"][0]["status"], "pending")
+        result = apply_action(session, "append", text="second", depends_on=1)
+        self.assertEqual(result["items"][1]["task_id"], 2)
+        self.assertEqual(result["items"][1]["depends_on"], 1)
 
-    def test_append_requires_text(self) -> None:
-        with self.assertRaises(ValueError):
-            apply_todo_action([], "append")
+    def test_append_without_text_still_creates_an_item(self) -> None:
+        result = apply_action(StubSession(), "append")
+        self.assertEqual(len(result["items"]), 1)
+        self.assertNotIn("text", result["items"][0])
 
-    def test_pop_marks_done_fifo(self) -> None:
-        items, _ = apply_todo_action([], "append", texts=["a", "b", "c"])
-        items, extra = apply_todo_action(items, "pop", count=2)
-        self.assertEqual([i["text"] for i in extra["popped"]], ["a", "b"])
-        self.assertEqual(extra["pending"], 1)
-        self.assertEqual(items[0]["status"], "done")
+    def test_update_changes_only_requested_fields(self) -> None:
+        session = StubSession()
+        apply_action(session, "append", text="a", depends_on=1)
+        result = apply_action(session, "update", task_id=1, status="in_progress")
+        self.assertEqual(result["items"][0]["text"], "a")
+        self.assertEqual(result["items"][0]["depends_on"], 1)
+        self.assertEqual(result["items"][0]["status"], "in_progress")
 
-    def test_pop_empty_succeeds(self) -> None:
-        items, extra = apply_todo_action([], "pop")
-        self.assertEqual(extra["popped"], [])
-        self.assertEqual(extra["pending"], 0)
+    def test_update_missing_id_is_reported(self) -> None:
+        result = apply_action(StubSession(), "update", task_id=99, status="completed")
+        self.assertIn("no task with task_id", result["message"])
+        self.assertEqual(result["items"], [])
 
-    def test_peek_does_not_mutate(self) -> None:
-        items, _ = apply_todo_action([], "append", texts=["a", "b"])
-        before = [dict(i) for i in items]
-        items, extra = apply_todo_action(items, "peek", count=2)
-        self.assertEqual([i["text"] for i in extra["selection"]], ["a", "b"])
-        self.assertEqual(items, before)
+    def test_delete_accepts_one_id_a_list_or_csv(self) -> None:
+        for selector in (1, [1], "1"):
+            session = StubSession()
+            apply_action(session, "append", text="a")
+            result = apply_action(session, "delete", task_ids=selector)
+            self.assertEqual(result["items"], [])
+            self.assertIn("1 of 1 tasks deleted", result["message"])
 
-    def test_done_and_remove_by_id(self) -> None:
-        items, _ = apply_todo_action([], "append", texts=["a", "b"])
-        items, extra = apply_todo_action(items, "done", ids=[1])
-        self.assertEqual(len(extra["updated"]), 1)
-        self.assertEqual(extra["pending"], 1)
-        items, extra = apply_todo_action(items, "remove", ids=2)
-        self.assertEqual(extra["removed"], 1)
-        self.assertEqual(len(items), 1)
+    def test_delete_without_selector_removes_nothing(self) -> None:
+        session = StubSession()
+        apply_action(session, "append", text="a")
+        result = apply_action(session, "delete")
+        self.assertEqual([i["text"] for i in result["items"]], ["a"])
 
-    def test_clear_pending_keeps_done(self) -> None:
-        items, _ = apply_todo_action([], "append", texts=["a", "b"])
-        items, _ = apply_todo_action(items, "pop", count=1)
-        items, extra = apply_todo_action(items, "clear")
-        self.assertEqual(extra["cleared"], 1)
-        self.assertEqual(len(items), 1)
-        items, _ = apply_todo_action(items, "clear", include_done=True)
-        self.assertEqual(items, [])
+    def test_clear_drops_every_item(self) -> None:
+        session = StubSession()
+        apply_action(session, "append", text="a")
+        result = apply_action(session, "clear")
+        self.assertEqual(result["items"], [])
+        self.assertEqual(result["message"], "1 tasks deleted")
 
-    def test_list_pagination(self) -> None:
-        items, _ = apply_todo_action([], "append", texts=["a", "b", "c"])
-        _, extra = apply_todo_action(items, "list", limit=2, offset=1)
-        self.assertEqual([i["text"] for i in extra["selection"]], ["b", "c"])
-        self.assertEqual(extra["total"], 3)
+    def test_unknown_action_is_reported(self) -> None:
+        result = apply_action(StubSession(), "explode")
+        self.assertIn("Unknown action", result["message"])
+        self.assertEqual(result["items"], [])
 
-    def test_unknown_action(self) -> None:
-        with self.assertRaises(ValueError):
-            apply_todo_action([], "explode")
+    def test_id_coercion_helpers(self) -> None:
+        self.assertEqual(_coerce_task_id("3"), 3)
+        self.assertIsNone(_coerce_task_id("nope"))
+        self.assertEqual(_coerce_task_ids([1, "2", "x", None]), {1, 2})
+        self.assertEqual(_coerce_task_ids("1,2"), {1, 2})
+        self.assertEqual(_coerce_task_ids(None), set())
 
-    def test_coerce_malformed(self) -> None:
-        self.assertEqual(coerce_items(None), [])
-        self.assertEqual(coerce_items("nope"), [])
-        self.assertEqual(coerce_items([{"id": 1, "text": "x"}])[0]["status"], "pending")
-        self.assertEqual(coerce_items([{"id": 1, "text": "  "}]), [])
+    def test_envelope_unwrap(self) -> None:
+        session = StubSession()
+        self.assertEqual(_load_todolist_items(session), [])
+        apply_action(session, "append", text="a")
+        self.assertEqual(
+            [item["text"] for item in _load_todolist_items(session)], ["a"]
+        )
 
 
 class TestTodoTools(unittest.TestCase):
     """Tests for the tool functions against a stub session."""
 
-    def test_append_list_pop_flow(self) -> None:
-        s = StubSession()
-        ok, res = todo_append(s, texts=["a", "b"])
+    def test_append_list_update_delete_clear_flow(self) -> None:
+        session = StubSession()
+        ok, result = todo_append(session, "a")
         self.assertTrue(ok)
-        self.assertEqual(len(res["added"]), 2)
-        ok, res = todo_list(s)
-        self.assertTrue(ok)
-        self.assertEqual(res["total"], 2)
-        self.assertFalse(res["auto"])
-        ok, res = todo_pop(s)
-        self.assertTrue(ok)
-        self.assertEqual([i["text"] for i in res["popped"]], ["a"])
-        self.assertEqual(res["pending"], 1)
+        self.assertEqual(result["action"], "append")
+        self.assertIn("task 1 created", result["message"])
+        todo_append(session, "b")
 
-    def test_peek_done_remove_clear(self) -> None:
-        s = StubSession()
-        todo_append(s, texts=["a", "b", "c"])
-        ok, res = todo_peek(s, count=2)
+        ok, result = todo_list(session, limit=10)
         self.assertTrue(ok)
-        self.assertEqual(len(res["selection"]), 2)
-        self.assertEqual(len(res["items"]), 3)  # full list untouched
-        self.assertEqual(res["pending"], 3)
-        ok, res = todo_done(s, ids=1)
+        self.assertEqual(len(result["items"]), 2)
+        self.assertEqual(result["message"], "Matched 2 of 2 items, 2 shown")
+
+        ok, _ = todo_update(session, 1, status="in_progress")
         self.assertTrue(ok)
-        self.assertEqual(res["pending"], 2)
-        ok, res = todo_remove(s, ids=2)
+        ok, _ = todo_update(session, 1, status="completed")
         self.assertTrue(ok)
-        self.assertEqual(res["removed"], 1)
-        ok, res = todo_clear(s)
+        self.assertEqual(_load_todolist_items(session)[0]["status"], "completed")
+
+        ok, result = todo_delete(session, task_ids=2)
         self.assertTrue(ok)
-        self.assertEqual(res["cleared"], 1)
-        # clear keeps done items unless include_done=True.
-        self.assertEqual(len(load_todo_items(s)), 1)
-        ok, res = todo_clear(s, include_done=True)
+        self.assertIn("1 of 2 tasks deleted", result["message"])
+
+        ok, result = todo_clear(session)
         self.assertTrue(ok)
-        self.assertEqual(load_todo_items(s), [])
+        self.assertEqual(result["action"], "clear")
+        self.assertEqual(_load_todolist_items(session), [])
+
+    def test_list_filters_and_pagination(self) -> None:
+        session = StubSession()
+        for text in ("alpha", "beta", "gamma"):
+            todo_append(session, text)
+        todo_update(session, 2, status="completed")
+
+        _, result = todo_list(session, status="completed", limit=10)
+        self.assertEqual([i["text"] for i in result["items"]], ["beta"])
+        _, result = todo_list(session, search_text="a", limit=2, offset=1)
+        self.assertEqual([i["text"] for i in result["items"]], ["beta", "gamma"])
+        self.assertEqual(result["message"], "Matched 3 of 3 items, 2 shown")
+
+    def test_list_is_read_only(self) -> None:
+        session = StubSession()
+        todo_append(session, "a")
+        recorded = len(session.anchor.history)
+        todo_list(session)
+        todo_list(session, limit=10)
+        self.assertEqual(len(session.anchor.history), recorded)
+
+    def test_resolver_drops_the_full_item_list(self) -> None:
+        session = StubSession()
+        _, result = todo_append(session, "a")
+        self.assertNotIn("items", result)
+        self.assertEqual(set(result), {"action", "message"})
 
     def test_state_survives_across_tool_calls(self) -> None:
-        s = StubSession()
-        todo_append(s, text="x")
-        # A fresh read sees what the previous tool recorded.
-        self.assertEqual(len(load_todo_items(s)), 1)
-
-    def test_recorded_history_converges(self) -> None:
-        # Rapid successive tools each record on the anchor; the stored
-        # truth contains every action in order.
-        s = StubSession()
-        todo_append(s, text="a")
-        todo_append(s, text="b")
-        todo_pop(s)
-        stored = load_todo_items(s)  # must unwrap the [True, payload] envelope
+        session = StubSession()
+        todo_append(session, "a")
+        todo_append(session, "b")
+        stored = _load_todolist_items(session)
         self.assertEqual([i["text"] for i in stored], ["a", "b"])
-        self.assertEqual(stored[0]["status"], "done")
-        self.assertEqual(load_todo_items(s), stored)
+        self.assertEqual(_load_todolist_items(session), stored)
 
-    def test_list_peek_do_not_record(self) -> None:
-        # Read-only actions must not append history: a recorded prediction
-        # could otherwise shadow newer state (latest record wins).
-        s = StubSession()
-        todo_append(s, text="a")
-        recorded = len(s.anchor.history)
-        todo_list(s)
-        todo_peek(s)
-        self.assertEqual(len(s.anchor.history), recorded)
-        self.assertEqual(len(load_todo_items(s)), 1)
-
-    def test_command_controls_auto(self) -> None:
-        s = StubSession()
-        self.assertFalse(is_todo_auto(s))
-        res = todo_command(s, action="auto-on")
-        self.assertTrue(res["auto"])
-        self.assertTrue(is_todo_auto(s))
-        res = todo_command(s, action="auto-off")
-        self.assertFalse(res["auto"])
-        res = todo_command(s, action="bogus")
-        self.assertEqual(res["status"], "error")
-        res = todo_command(s, action="clear")
-        self.assertEqual(res["status"], "success")
-
-    def test_set_todo_auto_helper(self) -> None:
-        s = StubSession()
-        set_todo_auto(s, True)
-        self.assertTrue(is_todo_auto(s))
+    def test_command_is_a_user_only_noop(self) -> None:
+        session = StubSession()
+        self.assertIsNone(todo_command(session))
+        self.assertIsNone(todo_command(session, action="clear"))
+        self.assertEqual(_load_todolist_items(session), [])
 
 
 if __name__ == "__main__":

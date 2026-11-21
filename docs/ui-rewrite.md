@@ -42,7 +42,9 @@
 > and provider/model facts, limits, and usage. Agent, project, workspace, skill,
 > and cron details embed their scoped assistant chat in a right-side panel. The
 > dashboard and Agents, Projects, Workspaces, Cron, and Work Items overviews
-> also embed their corresponding collection assistant. The panel can switch
+> also embed their corresponding collection assistant. The Memory pages (tree,
+> Playbook, Improvements, node detail) dock the `memory-manage` agent in the same
+> rightbar so users can ask about the memory system and its tools. The panel can switch
 > among prior conversations, create a new scoped session, send messages, and
 > open the selected thread in the full chat view. Work Items assistant chats
 > retain the selected project scope (board and detail pages). The panel is a

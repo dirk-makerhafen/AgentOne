@@ -190,7 +190,8 @@ any browser.
   read.
 - **Filesystem paths are double-gated.** The manifest declares `access: write`,
   so the workspace policy applies; and the daemon independently refuses any
-  path escaping the workspace root the tool passed in (defence in depth).
+  path escaping the workspace root it resolves from the session (defence in
+  depth).
 - **`file:` and `data:` URLs are not navigable** (`runtime/browser/policy.py`,
   `check_navigation`). Only `http:`, `https:`, and `about:` are allowed. The
   browser runs as the user, so a `file:` page would render arbitrary local files
