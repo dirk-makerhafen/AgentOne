@@ -30,7 +30,7 @@ autoCompactKeepPercent: 5
 
 commands: [+, ping, auto_title, todo.* ]
 disallowedCommands: []
-tools: [+, core.*, subagents.*, history.*, web.*, skills.*, todo.*]
+tools: [+, core.*, subagents.*, history.*, web.*, todo.*]
 disallowedTools: []
 skills: []
 disallowedSkills: []

@@ -106,11 +106,25 @@ def _overview_scope(kind: str, project: Project | None):
 def _sessions_for_scope(
     assistant_name: str, project: Project | None, workspace
 ) -> list[SessionModel]:
+    from server.models.enums.session_enums import SessionType
+
+    # One-off forks (auto-title, reflection, compaction, delegates) inherit the
+    # assistant's agent/workspace/project, so without this filter they show up
+    # in the panel's history and can even be auto-selected as the "latest" chat.
+    # Real assistant chats stay visible even when they are `subsession` children.
     return list(
         SessionModel.objects.filter(
             latest_session_version__agent__name=assistant_name,
             latest_session_version__workspace=workspace,
             parent_project=project,
+        ).exclude(
+            session_type__in=(
+                SessionType.SUBTASK_DELEGATE,
+                SessionType.SUBTASK_FORK,
+                SessionType.SUBTASK_COMPACT,
+                SessionType.SUBTASK_HOOK,
+                SessionType.TEST,
+            )
         )
         .select_related("latest_session_version__agent")
         .order_by("-created_at")[:20]
@@ -145,9 +159,11 @@ def assistant_panel_context(kind: str, item, selected_id: str | None = None) -> 
         ),
     }
     if selected is not None:
-        from webui.features.chats.session_ui import session_context
-
-        context.update(session_context(selected, limit=40))
+        # The panel renders chat-thread/chat-composer components; inline them
+        # for panel fragment responses so they don't fan out placeholder loads.
+        # Their builders own the message query, so no thread context is built
+        # here (that was the second source of truth for the chat rendering).
+        context["component_inline"] = True
     return context
 
 
@@ -186,9 +202,11 @@ def assistant_overview_context(
         "assistant_project_id": project.pk if project else "",
     }
     if selected is not None:
-        from webui.features.chats.session_ui import session_context
-
-        context.update(session_context(selected, limit=40))
+        # The panel renders chat-thread/chat-composer components; inline them
+        # for panel fragment responses so they don't fan out placeholder loads.
+        # Their builders own the message query, so no thread context is built
+        # here (that was the second source of truth for the chat rendering).
+        context["component_inline"] = True
     return context
 
 

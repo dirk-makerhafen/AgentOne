@@ -1051,27 +1051,11 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     padding: 12px 10px;
 }
 .webui-entity-assistant-chat .messages-inner { max-width: 100%; }
-.webui-entity-assistant-composer {
-    display: flex;
-    align-items: flex-end;
-    gap: 8px;
-    padding: 10px;
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-}
-.webui-entity-assistant-composer textarea {
-    flex: 1;
-    min-width: 0;
-    max-height: 160px;
-    resize: vertical;
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--input-bg);
-    color: var(--text);
-    font: inherit;
-    font-size: 12px;
-}
+/* The shared chat-composer component is used here too; only tighten its
+   spacing for the narrow panel, never re-implement the form. */
+.webui-entity-assistant-chat .composer-wrap { padding: 8px 10px 10px; }
+.webui-entity-assistant-chat .composer-wrap::before { display: none; }
+.webui-entity-assistant-chat .composer-box { max-width: 100%; }
 .webui-entity-assistant-empty {
     flex: 1;
     display: flex;

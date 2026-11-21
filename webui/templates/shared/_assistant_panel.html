@@ -53,18 +53,10 @@
     {% endif %}
     {% if assistant_session %}
     <div class="webui-entity-assistant-chat">
-        {% with session=assistant_session %}
-        {% include "chats/parts/thread.html" %}
-        {% endwith %}
-        <form class="webui-entity-assistant-composer" method="post"
-              hx-post="{% url 'webui:send' assistant_session.pk %}"
-              hx-target="#thread" hx-swap="innerHTML" hx-sync="this:replace"
-              hx-on::after-request="if (event.detail.successful) { this.reset(); this.querySelector('textarea').focus(); }">
-            {% csrf_token %}
-            <textarea class="composer-chat-message" name="text" rows="2"
-                      placeholder="Message the assistant…" aria-label="Message the assistant"></textarea>
-            <button class="webui-primary-btn" type="submit">Send</button>
-        </form>
+        {# The same components the full chat view uses: one rendering path and #}
+        {# one SSE refresh contract (Message/Query/Response.session) here too. #}
+        {% component "chat-thread" assistant_session.pk %}
+        {% component "chat-composer" assistant_session.pk %}
     </div>
     {% else %}
     <div class="webui-entity-assistant-empty">

@@ -1219,8 +1219,59 @@ def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
     )
     assert embedded.status_code == 200
     assert b'id="entity-assistant-panel"' in embedded.content
-    assert b'class="webui-entity-assistant-composer"' in embedded.content
+    # The panel uses the same chat components as the main chat view.
+    assert b'data-component="chat-thread"' in embedded.content
+    assert b'data-component="chat-composer"' in embedded.content
     assert b'hx-target="#thread"' in embedded.content
+    assert b"sse:Message.session:" in embedded.content
+
+
+@pytest.mark.django_db
+def test_assistant_sessions_exclude_forks(monkeypatch):
+    """Forks inherit the assistant scope but are not assistant conversations."""
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.enums.session_enums import SessionType
+    from server.models.sessions.session import SessionModel
+    from server.models.sessions.session_version import SessionVersionModel
+    from webui.core import assistants
+
+    assistant = AgentModel.objects.create(name="fork-scope-agent")
+    version = AgentVersionModel.objects.create(agent=assistant, version_number=1)
+    AgentModel.objects.filter(pk=assistant.pk).update(latest_agent_version=version)
+
+    root = SessionModel.objects.create(name="fork-scope-chat")
+    fork = SessionModel.objects.create(
+        name="fork-scope-chat:auto-title",
+        parent_session=root,
+        session_type=SessionType.SUBTASK_HOOK,
+    )
+    # A scoped assistant chat may itself be a subsession child — keep it.
+    child_chat = SessionModel.objects.create(
+        name="fork-scope-subsession-chat",
+        parent_session=root,
+        session_type=SessionType.SUBSESSION,
+    )
+    for session in (root, fork, child_chat):
+        sv = SessionVersionModel.objects.create(
+            session=session, agent=assistant, pinned_agent_version=version, version_number=1
+        )
+        SessionModel.objects.filter(pk=session.pk).update(latest_session_version=sv)
+
+    sessions = assistants._sessions_for_scope("fork-scope-agent", None, None)
+    assert {session.pk for session in sessions} == {root.pk, child_chat.pk}
+
+    monkeypatch.setattr(
+        assistants,
+        "_assistant_scope",
+        lambda kind, item: ("fork-scope-agent", None, None),
+    )
+    context = assistants.assistant_panel_context("agent", assistant)
+    assert context["assistant_session"].pk == child_chat.pk
+    assert {session.pk for session in context["assistant_sessions"]} == {
+        root.pk,
+        child_chat.pk,
+    }
 
 
 @pytest.mark.django_db

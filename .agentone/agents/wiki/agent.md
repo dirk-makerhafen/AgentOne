@@ -10,7 +10,7 @@ toolCallSyntax: default
 schedulerStrategy: queue
 subagentResultDelivery: immediate
 priority: 99
-tools: [+, core.*, filesystem-read.*, filesystem-write.*, todo.*, subagents.*, web.*, execution.*, skills.*,  workitems.*, update_timeline, update_timeline_daily, update_timeline_monthly, update_entities, update_ingress, process_ingress]
+tools: [+, core.*, filesystem-read.*, filesystem-write.*, todo.*, subagents.*, web.*, execution.*, workitems.*, update_timeline, update_timeline_daily, update_timeline_monthly, update_entities, update_ingress, process_ingress]
 commands: [+, ping, auto_title, todo.*, ingest_next, sync_applemail, wiki_lint]
 tasks: [+, core.*, compact.*, find_unlinked_raw, update_timeline_item, process_summary, double_check_summary, write_day_index, write_month_index, write_entity, finalize_ingress_item]
 

@@ -873,8 +873,11 @@ Highest value and highest risk, so do it first and completely:
   `sidebar_skills`, …) so page context cannot overwrite the sidebar's lists.
 - Legacy contextual panel content and controls are exposed in detail screens.
   Entity assistant chats are embedded panels in the detail right column (the
-  `webui/entities/_assistant_panel.html` shared partial), not separate chat
-  pages, and the same collection assistant is docked on Work Item detail.
+  `webui/templates/shared/_assistant_panel.html` shared partial), not separate
+  chat pages, and the same collection assistant is docked on Work Item detail.
+  The panel renders the very same `chat-thread` and `chat-composer` components
+  as the full chat view (including their SSE refresh keys) — it must not include
+  `chats/parts/thread.html` directly or build thread context of its own.
   Final audit pass added agent Extends/session count, project
   primary-workspace/session count, the workspace Manager-chat header action,
   the dashboard Projects card, and fixed the agent-detail panel being nested

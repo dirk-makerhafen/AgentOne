@@ -31,7 +31,7 @@ sessionBootstrap: |
 
 commands: [+, ping, auto_title, todo.* ]
 disallowedCommands: []
-tools: [+, core.*, subagents.*, history.*, filesystem-read.*, filesystem-write.*, execution.*, web.*, skills.*, todo.*]
+tools: [+, core.*, subagents.*, history.*, filesystem-read.*, filesystem-write.*, execution.*, web.*, todo.*]
 disallowedTools: []
 disallowedSkills: []
 tasks: [+, core.*, compact.*, ]

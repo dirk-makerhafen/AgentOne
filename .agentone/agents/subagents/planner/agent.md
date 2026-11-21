@@ -32,7 +32,7 @@ autoload:
 loadGuidanceFileIndex: true
 guidanceFileIndexLimit: 10
 memoryPlaybook: true
-tools: [+, core.*, filesystem-read.*, web.*, subagents.*, skills.*, execution.python]
+tools: [+, core.*, filesystem-read.*, web.*, subagents.*, execution.python]
 tasks: [ +,core.*, compact.*,  ]
 subagents:
     - name: researcher
