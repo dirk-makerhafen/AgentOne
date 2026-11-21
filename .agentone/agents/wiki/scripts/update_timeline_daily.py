@@ -771,76 +771,171 @@ def _spawn_day_check(_session, day_rel: str, day_str: str, brief: str | list[str
     return True, {"status": "dispatched", "day": day_rel, "session_pk": session_pk, "message": ref}
 
 
+def _parse_day_arg(day: str) -> tuple[str, str, str]:
+    y, mo, d = day.split("-")
+    datetime.date(int(y), int(mo), int(d))
+    return y, mo, d
+
+
+def _minimal_day_index(day_str: str, head_hash: str | None) -> str:
+    today_str = datetime.datetime.now().date().isoformat()
+    lines = ["---", "type: daily_summary", f"updated: {today_str}"]
+    if head_hash is not None:
+        lines.append(f"last_checked_at: {head_hash}")
+    lines.append(f"sources_fingerprint: {_sources_fingerprint([])}")
+    for field in DAY_FIELDS:
+        lines.append(f"{field}: []")
+    lines.append("---")
+    return "\n".join(lines) + f"\n\n# Summary for {day_str}\n\nNo entries for this day.\n"
+
+
+def update_timeline_day(_session: Session, day: str, reason: str = "explicitly requested", head_hash: str | None = None):
+    """Dispatch (or directly write) one timeline day's index.
+
+    Per-item worker used by ``update_timeline_daily`` via ``map``. Returns a
+    ``(ok, result)`` tuple; when LLM work is needed, ``result["write"]`` carries
+    the ``write_day_index`` ref so the scheduler waits for the full subgraph.
+    """
+    root = _workspace_root(_session)
+    if root is None:
+        return False, {"status": "error", "day": day, "message": "cannot resolve workspace root"}
+    llm_query_tool = _session.get_tool("llm_query")
+    if llm_query_tool is None:
+        return False, {"status": "error", "day": day, "message": "tool 'llm_query' is not available"}
+    write_task = _session.get_task("write_day_index")
+    if write_task is None:
+        return False, {"status": "error", "day": day, "message": "task 'write_day_index' is not available"}
+
+    try:
+        y, mo, d = _parse_day_arg(day)
+    except Exception:
+        return False, {"status": "error", "day": day, "message": f"bad day '{day}' — want YYYY-MM-DD"}
+
+    day_dir = root / "timeline" / y / mo / d
+    rel = _vault_rel(_session, day_dir)
+    day_str = f"{y}-{mo}-{d}"
+    if not day_dir.is_dir():
+        return False, {"status": "error", "day": rel, "message": f"day folder not found: {rel}"}
+
+    index_exists, fm_type, stored_hash, _stored_fp = _read_index_facts(day_dir)
+    if head_hash is None:
+        head_hash = _git_head(root)
+
+    summary_files = [p.name for p in sorted(day_dir.glob("*.md")) if p.name != "index.md"]
+    if not summary_files:
+        try:
+            (day_dir / "index.md").write_text(_minimal_day_index(day_str, head_hash), encoding="utf-8")
+            return True, {"day": rel, "status": "success", "message": f"wrote minimal index.md ({reason}; no summaries, no session)"}
+        except Exception as e:
+            return False, {"day": rel, "status": "error", "message": f"cannot write index.md: {e}"}
+
+    summaries, collect_hints = _collect_day_summaries(day_dir)
+    aggregate = _aggregate_day_lists(summaries)
+    summary_files = sorted(s["path"].name for s in summaries)
+    if index_exists and fm_type == "daily_summary":
+        changed_files, removed_files = _day_changed_files(day_dir, root, stored_hash)
+    else:
+        changed_files, removed_files = None, []
+
+    if changed_files:
+        all_files = [p.name for p in sorted(day_dir.glob("*.md")) if p.name != "index.md"]
+        brief_parts = _build_day_update_parts(rel, day_str, all_files, set(changed_files), removed_files)
+        collect_hints.append(
+            f"day update: {len(changed_files)} file(s) changed since last build"
+            f" ({', '.join(sorted(changed_files)[:5])}{' …' if len(changed_files) > 5 else ''})"
+            + (f"; removed: {', '.join(sorted(removed_files))}" if removed_files else "")
+        )
+    else:
+        brief_parts = _build_day_session_parts(rel, day_str, summary_files)
+
+    ok, session_pk, body_ref = _spawn_day_session(_session, rel, day_str, brief_parts)
+    if not ok:
+        return False, {"day": rel, "status": "error", "reason": reason, "message": f"prose session not spawned: {body_ref}"}
+
+    field_refs = {
+        field: llm_query_tool.delay(messages=[
+        {"role": "system", "content": DEDUP_SYSTEM},
+        {"role": "user", "content": DEDUP_INSTRUCTIONS},
+        {"role": "user", "content": f"Field: {field} ({_FIELD_SINGULAR[field]})"},
+        {"role": "user", "content": f"Day: {day_str}"},
+        {"role": "user", "content": f"Item count: {len(items)}"},
+        {"role": "user", "content": "Items:\n" + "\n".join(f"- {item}" for item in items)},
+    ])
+        for field in DAY_FIELDS
+        for items in [aggregate.get(field, [])]
+        if len(set(items)) >= 2
+    }
+
+    write_ref = write_task.delay(
+        day_path=rel,
+        day_str=day_str,
+        body_result=body_ref,
+        session_pk=session_pk,
+        aggregate=aggregate,
+        collect_hints=collect_hints,
+        head_hash=head_hash,
+        **{f"{field}_result": ref for field, ref in field_refs.items()},
+    )
+    return True, {
+        "day": rel,
+        "status": "dispatched",
+        "session_pk": session_pk,
+        "reason": reason,
+        "dedup_fields": sorted(field_refs),
+        "write": write_ref,
+    }
+
+
 def update_timeline_daily(_session: Session, limit: int = 3, day: str | None = None):
-    """Rebuild stale day indexes (``timeline/YYYY/MM/DD/index.md``).
+    """Find stale day indexes and dispatch per-day workers through ``map``.
 
     Staleness comes from a content fingerprint: a day needs work when its
-    ``index.md`` is missing, is a legacy non-``daily_summary`` file, has no
-    ``sources_fingerprint``, or the day's current sources differ from the
-    recorded fingerprint (new/edited/removed summaries, committed or not —
-    e.g. a late scanned paper mail). The index commit itself never changes
-    the fingerprint, so rebuilding can never retrigger itself. ``git`` is
-    only used for the ``last_checked_at`` provenance hash (no git needed
-    for the decision itself).
-    Each stale day (up to *limit*, oldest first — or just *day* as
-    ``YYYY-MM-DD``, which is always rebuilt) gets one baseagent prose
-    session (body via final_result, no file writes) plus one dedup query
-    per non-trivial metadata field; days that already have a
-    ``daily_summary`` index get a focused update brief (only the
-    git-changed files since the last build, via ``git status`` plus
-    ``git diff`` against the recorded ``last_checked_at`` hash) instead of
-    a full re-synthesis. All result-refs converge in
-    ``write_day_index``, which writes ``index.md`` in code and spawns a
-    double-check session. Days without summaries get a minimal code-written
-    index (no session). Returns (True, {status, results}).
+    ``index.md`` is missing, legacy, unfingerprinted, or its current sources
+    differ from the recorded fingerprint. The index commit itself never changes
+    the fingerprint, so rebuilding is self-terminating.
+
+    Each selected day is dispatched as one ``update_timeline_day`` task item via
+    ``map`` (sequential, in list order), so the caller waits for the whole batch
+    including downstream ``write_day_index`` / double-check work. Days without
+    summaries are completed directly by the per-day worker.
+    Returns (True, {status, results}).
     """
     root = _workspace_root(_session)
     if root is None:
         return False, {"status": "error", "message": "cannot resolve workspace root"}
-    llm_query_tool = _session.get_tool("llm_query")
-    if llm_query_tool is None:
-        return False, {"status": "error", "message": "tool 'llm_query' is not available"}
-    write_task = _session.get_task("write_day_index")
-    if write_task is None:
-        return False, {"status": "error", "message": "task 'write_day_index' is not available"}
+    map_task = _session.get_task("map")
+    if map_task is None:
+        return False, {"status": "error", "message": "task 'map' is not available"}
+    if _session.get_task("update_timeline_day") is None:
+        return False, {"status": "error", "message": "task 'update_timeline_day' is not available"}
 
     if day is not None:
         try:
-            y, mo, d = day.split("-")
-            datetime.date(int(y), int(mo), int(d))
+            y, mo, d = _parse_day_arg(day)
         except Exception:
             return False, {"status": "error", "message": f"bad day '{day}' — want YYYY-MM-DD"}
-        day_dirs = [root / "timeline" / y / mo / d]
-        if not day_dirs[0].is_dir():
+        day_dir = root / "timeline" / y / mo / d
+        if not day_dir.is_dir():
             return False, {"status": "error", "message": f"day folder not found: timeline/{y}/{mo}/{d}"}
+        day_dirs = [day_dir]
         explicit_day = True
     else:
         day_dirs = list(_iter_day_dirs(root))
         explicit_day = False
 
-    # Read index facts for every candidate day; the vault HEAD is only
-    # provenance for `last_checked_at` (one cheap rev-parse, optional).
-    facts: dict[str, tuple[bool, object, str | None, str | None]] = {}
+    head_hash = _git_head(root)
+    items: list[dict[str, object]] = []
     for day_dir in day_dirs:
+        if not explicit_day and len(items) >= limit:
+            break
+        rel = _vault_rel(_session, day_dir)
         try:
-            day_str = f"{day_dir.parent.parent.name}-{day_dir.parent.name}-{day_dir.name}"
+            day_str = rel.split("timeline/")[-1].replace("/", "-")
             datetime.date(*map(int, day_str.split("-")))
         except Exception:
             continue
-        facts[_vault_rel(_session, day_dir)] = _read_index_facts(day_dir)
-    head_hash = _git_head(root)
 
-    results = []
-    spawned = 0
-    for day_dir in day_dirs:
-        if spawned >= limit and not explicit_day:
-            break
-        rel = _vault_rel(_session, day_dir)
-        if rel not in facts:
-            continue  # not a real YYYY/MM/DD date
-        index_exists, fm_type, stored_hash, stored_fp = facts[rel]
-        day_str = rel.split("timeline/")[-1].replace("/", "-")
-
+        index_exists, fm_type, _stored_hash, stored_fp = _read_index_facts(day_dir)
         if explicit_day:
             needs, reason = True, "explicitly requested"
         else:
@@ -850,77 +945,13 @@ def update_timeline_daily(_session: Session, limit: int = 3, day: str | None = N
                 stored_fp=stored_fp, current_fp=current_fp,
             )
         if not needs:
-            if explicit_day:
-                results.append({"day": rel, "status": "skipped", "message": f"up to date ({reason})"})
             continue
+        items.append({"day": day_str, "reason": reason, "head_hash": head_hash})
 
-        summary_files = [p.name for p in sorted(day_dir.glob("*.md")) if p.name != "index.md"]
-        if not summary_files:
-            # Nothing to synthesize — code-generate a minimal index, no session.
-            today_str = datetime.datetime.now().date().isoformat()
-            lines = ["---", "type: daily_summary", f"updated: {today_str}"]
-            if head_hash is not None:
-                lines.append(f"last_checked_at: {head_hash}")
-            lines.append(f"sources_fingerprint: {_sources_fingerprint([])}")
-            for field in DAY_FIELDS:
-                lines.append(f"{field}: []")
-            lines.append("---")
-            index_text = "\n".join(lines) + f"\n\n# Summary for {day_str}\n\nNo entries for this day.\n"
-            try:
-                (day_dir / "index.md").write_text(index_text, encoding="utf-8")
-                results.append({"day": rel, "status": "success", "message": f"wrote minimal index.md ({reason}; no summaries, no session)"})
-            except Exception as e:
-                results.append({"day": rel, "status": "error", "message": f"cannot write index.md: {e}"})
-            continue
+    if not items:
+        return True, {"status": "success", "results": []}
 
-        summaries, collect_hints = _collect_day_summaries(day_dir)
-        aggregate = _aggregate_day_lists(summaries)
-        summary_files = sorted(s["path"].name for s in summaries)
-        if index_exists and fm_type == "daily_summary":
-            changed_files, removed_files = _day_changed_files(day_dir, root, stored_hash)
-        else:
-            changed_files, removed_files = None, []
-
-        if changed_files:
-            all_files = [p.name for p in sorted(day_dir.glob("*.md")) if p.name != "index.md"]
-            brief_parts = _build_day_update_parts(rel, day_str, all_files, set(changed_files), removed_files)
-            collect_hints.append(
-                f"day update: {len(changed_files)} file(s) changed since last build"
-                f" ({', '.join(sorted(changed_files)[:5])}{' …' if len(changed_files) > 5 else ''})"
-                + (f"; removed: {', '.join(sorted(removed_files))}" if removed_files else "")
-            )
-        else:
-            brief_parts = _build_day_session_parts(rel, day_str, summary_files)
-
-        ok, session_pk, body_ref = _spawn_day_session(_session, rel, day_str, brief_parts)
-        if not ok:
-            results.append({"day": rel, "status": "error", "reason": reason, "message": f"prose session not spawned: {body_ref}"})
-            continue
-        # Fan out one tiny dedup query per field (list-only input, no bodies).
-        # Prompt, metadata, and item content are separate message parts so
-        # content deduplication can work and prompt/data never mix in one string.
-        field_refs: dict[str, object] = {}
-        for field in DAY_FIELDS:
-            items = aggregate.get(field, [])
-            if len(set(items)) < 2:
-                continue
-            field_refs[field] = llm_query_tool.delay(messages=[
-                {"role": "system", "content": DEDUP_SYSTEM},
-                {"role": "user", "content": DEDUP_INSTRUCTIONS},
-                {"role": "user", "content": f"Field: {field} ({_FIELD_SINGULAR[field]})"},
-                {"role": "user", "content": f"Day: {day_str}"},
-                {"role": "user", "content": f"Item count: {len(items)}"},
-                {"role": "user", "content": "Items:\n" + "\n".join(f"- {item}" for item in items)},
-            ])
-        kwargs: dict[str, object] = {
-            "day_path": rel, "day_str": day_str, "body_result": body_ref, "session_pk": session_pk,
-            "aggregate": aggregate, "collect_hints": collect_hints, "head_hash": head_hash,
-        }
-        kwargs.update({f"{field}_result": ref for field, ref in field_refs.items()})
-        write_ref = write_task.delay(**kwargs)
-        results.append({"day": rel, "status": "dispatched", "session_pk": session_pk,
-                        "reason": reason, "dedup_fields": sorted(field_refs), "write": write_ref})
-        spawned += 1
+    results = map_task.delay(target="update_timeline_day", list_of_kwargs=items, concurrency=1)
     return True, {"status": "success", "results": results}
 
 

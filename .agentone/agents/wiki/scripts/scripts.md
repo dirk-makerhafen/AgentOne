@@ -73,10 +73,22 @@ tasks:
     bound: True
     max_retries: 3
     retry_delay: 30
+  - name: update_timeline_day
+    file: update_timeline_daily.py
+    function: update_timeline_day
+    bound: True
+    max_retries: 3
+    retry_delay: 30
   - name: write_day_index
     file: update_timeline_daily.py
     function: write_day_index
     bound: True
+  - name: update_timeline_month_item
+    file: update_timeline_monthly.py
+    function: update_timeline_month_item
+    bound: True
+    max_retries: 3
+    retry_delay: 30
   - name: write_month_index
     file: update_timeline_monthly.py
     function: write_month_index

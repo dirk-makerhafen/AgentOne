@@ -546,160 +546,191 @@ def _spawn_month_check(_session, month_rel: str, month_str: str, brief: str):
     return True, {"status": "dispatched", "month": month_rel, "session_pk": session_pk, "message": ref}
 
 
+def _parse_month_arg(month: str) -> tuple[str, str]:
+    y, mo = month.split("-")
+    if len(y) != 4 or len(mo) != 2:
+        raise ValueError("bad month")
+    datetime.date(int(y), int(mo), 1)
+    return y, mo
+
+
+def _minimal_month_index(month_str: str, head_hash: str | None, fingerprint: str) -> str:
+    today_str = datetime.datetime.now().date().isoformat()
+    return _build_monthly_index(
+        month_str,
+        {f: [] for f in DAY_FIELDS},
+        f"# Summary for {month_str}\n\nNo entries for this month.\n",
+        [],
+        today_str,
+        head_hash,
+        fingerprint,
+    )
+
+
+
+def update_timeline_month_item(_session: Session, month: str, reason: str = "explicitly requested", head_hash: str | None = None):
+    """Dispatch (or directly write) one timeline month's index.
+
+    Per-item worker used by ``update_timeline_monthly`` via ``map``. Returns a
+    ``(ok, result)`` tuple; when LLM work is needed, ``result["write"]`` carries
+    the ``write_month_index`` ref so the scheduler waits for the full subgraph.
+    """
+    root = _workspace_root(_session)
+    if root is None:
+        return False, {"status": "error", "month": month, "message": "cannot resolve workspace root"}
+    llm_query_tool = _session.get_tool("llm_query")
+    if llm_query_tool is None:
+        return False, {"status": "error", "month": month, "message": "tool 'llm_query' is not available"}
+    write_task = _session.get_task("write_month_index")
+    if write_task is None:
+        return False, {"status": "error", "month": month, "message": "task 'write_month_index' is not available"}
+
+    try:
+        y, mo = _parse_month_arg(month)
+    except Exception:
+        return False, {"status": "error", "month": month, "message": f"bad month '{month}' — want YYYY-MM"}
+
+    month_dir = root / "timeline" / y / mo
+    rel = _vault_rel(_session, month_dir)
+    month_str = f"{y}-{mo}"
+    if not month_dir.is_dir():
+        return False, {"status": "error", "month": rel, "message": f"month folder not found: {rel}"}
+
+    index_exists, fm_type, stored_hash, _stored_fp = _read_index_facts(month_dir)
+    if head_hash is None:
+        head_hash = _git_head(root)
+
+    days, day_dirnames, strays, collect_hints = _collect_month_days(month_dir)
+    current_fp = _month_sources_fingerprint(days, strays)
+    if not days:
+        if not day_dirnames and not strays:
+            try:
+                (month_dir / "index.md").write_text(_minimal_month_index(month_str, head_hash, current_fp), encoding="utf-8")
+                return True, {"month": rel, "status": "success", "message": f"wrote minimal index.md ({reason}; no days, no session)"}
+            except Exception as e:
+                return False, {"month": rel, "status": "error", "message": f"cannot write index.md: {e}"}
+        return True, {
+            "month": rel,
+            "status": "pending",
+            "message": f"no usable daily_summary day indices ({len(day_dirnames)} day folders, {len(strays)} stray files) — run update_timeline_daily for {month_str} first",
+        }
+
+    aggregate = {f: list(_aggregate_day_lists(days).get(f, [])) for f in DAY_FIELDS}
+    day_files = sorted(f"{d['dirname']}/index.md" for d in days)
+    if index_exists and fm_type == "monthly_summary":
+        m_changed, m_removed, m_notes = _month_changed_days(month_dir, root, stored_hash)
+    else:
+        m_changed, m_removed, m_notes = None, [], []
+
+    if m_changed is not None and (m_changed or m_notes):
+        tage, _missing = _tage_entries(_session, month_dir, days, day_dirnames, set(m_changed))
+        brief = _build_month_update_brief(rel, month_str, tage, m_removed, m_notes)
+        provenance = f"month update: {len(m_changed)} day(s) changed since last build"
+        if m_changed:
+            provenance += f" ({', '.join(m_changed[:6])}{' …' if len(m_changed) > 6 else ''})"
+        collect_hints.append(provenance)
+        collect_hints.extend(m_notes)
+    else:
+        brief = _build_month_session_brief(rel, month_str, day_files)
+
+    ok, session_pk, body_ref = _spawn_month_session(_session, rel, month_str, brief)
+    if not ok:
+        return False, {"month": rel, "status": "error", "reason": reason, "message": f"prose session not spawned: {body_ref}"}
+
+    field_refs = {
+        field: llm_query_tool.delay(messages=[
+        {"role": "system", "content": DEDUP_SYSTEM},
+        {"role": "user", "content": DEDUP_INSTRUCTIONS},
+        {"role": "user", "content": f"Field: {field} ({_FIELD_SINGULAR[field]})"},
+        {"role": "user", "content": f"Month: {month_str}"},
+        {"role": "user", "content": f"Item count: {len(items)}"},
+        {"role": "user", "content": "Items:\n" + "\n".join(f"- {item}" for item in items)},
+    ])
+        for field in DAY_FIELDS
+        for items in [aggregate.get(field, [])]
+        if len(set(items)) >= 2
+    }
+    write_ref = write_task.delay(
+        month_path=rel,
+        month_str=month_str,
+        body_result=body_ref,
+        session_pk=session_pk,
+        aggregate=aggregate,
+        collect_hints=collect_hints,
+        head_hash=head_hash,
+        **{f"{field}_result": ref for field, ref in field_refs.items()},
+    )
+    return True, {
+        "month": rel,
+        "status": "dispatched",
+        "session_pk": session_pk,
+        "reason": reason,
+        "dedup_fields": sorted(field_refs),
+        "write": write_ref,
+    }
+
+
 def update_timeline_monthly(_session: Session, limit: int = 2, month: str | None = None):
-    """Rebuild stale month indexes (``timeline/YYYY/MM/index.md``).
-    
-    Sources are the month's day indices (``type: daily_summary``) — never
-    raw mail or per-mail summaries. Staleness comes from a content
-    fingerprint: a month needs work when its ``index.md`` is missing, is a
-    legacy non-``monthly_summary`` file (e.g. the old ``type: index``
-    catalogs), has no ``sources_fingerprint``, or the live day-index set
-    differs from the recorded fingerprint (added/removed/rebuilt days —
-    rebuilding a day automatically stales its month). The index commit
-    itself never changes the fingerprint, so rebuilding can never retrigger
-    itself. ``git`` is only used for the ``last_checked_at`` provenance hash.
-    Each stale month (up to *limit*, oldest first — or just *month* as
-    ``YYYY-MM``, which is always rebuilt) gets one baseagent prose session
-    (body as last message, no file writes) plus one dedup query per
-    non-trivial metadata field; months that already have a
-    ``monthly_summary`` index get a focused update brief (only the changed
-    days since the last build) instead of a full re-synthesis. All
-    result-refs converge in
-    ``write_month_index``, which propagates month dedup pairs into day
-    indices and per-mail summaries, writes ``index.md`` in code, and spawns
-    a double-check session. Months without usable day indices get no index
-    (status ``pending`` — run ``update_timeline_daily`` first); truly empty
-    month folders get a minimal code-written index (no session).
+    """Find stale month indexes and dispatch per-month workers through ``map``.
+
+    Staleness comes from a content fingerprint over day indices. Each selected
+    month is dispatched as one ``update_timeline_month_item`` via ``map``
+    (sequential, in list order), so the caller waits for the full subgraph.
     Returns (True, {status, results}).
     """
     root = _workspace_root(_session)
     if root is None:
         return False, {"status": "error", "message": "cannot resolve workspace root"}
-    llm_query_tool = _session.get_tool("llm_query")
-    if llm_query_tool is None:
-        return False, {"status": "error", "message": "tool 'llm_query' is not available"}
-    write_task = _session.get_task("write_month_index")
-    if write_task is None:
-        return False, {"status": "error", "message": "task 'write_month_index' is not available"}
+    map_task = _session.get_task("map")
+    if map_task is None:
+        return False, {"status": "error", "message": "task 'map' is not available"}
+    if _session.get_task("update_timeline_month_item") is None:
+        return False, {"status": "error", "message": "task 'update_timeline_month_item' is not available"}
 
     if month is not None:
         try:
-            y, mo = month.split("-")
-            if len(y) != 4 or len(mo) != 2:
-                raise ValueError
-            datetime.date(int(y), int(mo), 1)
+            y, mo = _parse_month_arg(month)
         except Exception:
             return False, {"status": "error", "message": f"bad month '{month}' — want YYYY-MM"}
-        month_dirs = [root / "timeline" / y / mo]
-        if not month_dirs[0].is_dir():
+        month_dir = root / "timeline" / y / mo
+        if not month_dir.is_dir():
             return False, {"status": "error", "message": f"month folder not found: timeline/{y}/{mo}"}
+        month_dirs = [month_dir]
         explicit_month = True
     else:
         month_dirs = list(_iter_month_dirs(root))
         explicit_month = False
 
-    # Read index facts for every candidate month; the vault HEAD is only
-    # provenance for `last_checked_at` (one cheap rev-parse, optional).
-    facts: dict[str, tuple[bool, object, str | None, str | None]] = {}
-    for month_dir in month_dirs:
-        try:
-            datetime.date(int(month_dir.parent.name), int(month_dir.name), 1)
-        except Exception:
-            continue
-        facts[_vault_rel(_session, month_dir)] = _read_index_facts(month_dir)
     head_hash = _git_head(root)
-
-    results = []
-    spawned = 0
+    items: list[dict[str, object]] = []
     for month_dir in month_dirs:
-        if spawned >= limit and not explicit_month:
+        if not explicit_month and len(items) >= limit:
             break
         rel = _vault_rel(_session, month_dir)
-        if rel not in facts:
-            continue  # not a real YYYY/MM month
-        index_exists, fm_type, stored_hash, stored_fp = facts[rel]
-        month_str = rel.split("timeline/")[-1].replace("/", "-")
+        try:
+            month_str = rel.split("timeline/")[-1].replace("/", "-")
+            datetime.date(int(month_str.split("-")[0]), int(month_str.split("-")[1]), 1)
+        except Exception:
+            continue
 
-        days, day_dirnames, strays, collect_hints = _collect_month_days(month_dir)
-        current_fp = _month_sources_fingerprint(days, strays)
+        index_exists, fm_type, _stored_hash, stored_fp = _read_index_facts(month_dir)
         if explicit_month:
             needs, reason = True, "explicitly requested"
         else:
+            days, _day_dirnames, strays, _hints = _collect_month_days(month_dir)
+            current_fp = _month_sources_fingerprint(days, strays)
             needs, reason = _decide_month_stale(
                 index_exists=index_exists, fm_type=fm_type,
                 stored_fp=stored_fp, current_fp=current_fp,
             )
         if not needs:
-            if explicit_month:
-                results.append({"month": rel, "status": "skipped", "message": f"up to date ({reason})"})
             continue
+        items.append({"month": month_str, "reason": reason, "head_hash": head_hash})
 
-        if not days:
-            if not day_dirnames and not strays:
-                # Truly empty month folder — code-generate a minimal index, no session.
-                today_str = datetime.datetime.now().date().isoformat()
-                index_text = _build_monthly_index(
-                    month_str, {f: [] for f in DAY_FIELDS},
-                    f"# Summary for {month_str}\n\nNo entries for this month.\n",
-                    [], today_str, head_hash, current_fp)
-                try:
-                    (month_dir / "index.md").write_text(index_text, encoding="utf-8")
-                    results.append({"month": rel, "status": "success", "message": f"wrote minimal index.md ({reason}; no days, no session)"})
-                except Exception as e:
-                    results.append({"month": rel, "status": "error", "message": f"cannot write index.md: {e}"})
-            else:
-                results.append({"month": rel, "status": "pending",
-                                "message": f"no usable daily_summary day indices ({len(day_dirnames)} day folders, {len(strays)} stray files) — run update_timeline_daily for {month_str} first"})
-            continue
+    if not items:
+        return True, {"status": "success", "results": []}
 
-        aggregate = {f: list(_aggregate_day_lists(days).get(f, [])) for f in DAY_FIELDS}
-        day_files = sorted(f"{d['dirname']}/index.md" for d in days)
-        if index_exists and fm_type == "monthly_summary":
-            m_changed, m_removed, m_notes = _month_changed_days(month_dir, root, stored_hash)
-        else:
-            m_changed, m_removed, m_notes = None, [], []
-        if m_changed is not None and (m_changed or m_notes):
-            # Update, not a fresh build: the session revises the existing
-            # synthesis from the changed days only.
-            tage, _missing = _tage_entries(_session, month_dir, days, day_dirnames, set(m_changed))
-            brief = _build_month_update_brief(rel, month_str, tage, m_removed, m_notes)
-            provenance = f"month update: {len(m_changed)} day(s) changed since last build"
-            if m_changed:
-                provenance += f" ({', '.join(m_changed[:6])}{' …' if len(m_changed) > 6 else ''})"
-            collect_hints.append(provenance)
-            collect_hints.extend(m_notes)
-        else:
-            brief = _build_month_session_brief(rel, month_str, day_files)
-        ok, session_pk, body_ref = _spawn_month_session(_session, rel, month_str, brief)
-        if not ok:
-            results.append({"month": rel, "status": "error", "reason": reason, "message": f"prose session not spawned: {body_ref}"})
-            continue
-        # Fan out one tiny dedup query per field (list-only input, no
-        # bodies). The prose ref and all dedup refs converge in
-        # write_month_index, which the scheduler delivers once every ref
-        # resolves — the same single-ref passing the daily pipeline relies on.
-        field_refs: dict[str, object] = {}
-        for field in DAY_FIELDS:
-            items = aggregate.get(field, [])
-            if len(set(items)) < 2:
-                continue
-            field_refs[field] = llm_query_tool.delay(messages=[
-                {"role": "system", "content": DEDUP_SYSTEM},
-                {"role": "user", "content": DEDUP_INSTRUCTIONS},
-                {"role": "user", "content": f"Field: {field} ({_FIELD_SINGULAR[field]})"},
-                {"role": "user", "content": f"Month: {month_str}"},
-                {"role": "user", "content": f"Item count: {len(items)}"},
-                {"role": "user", "content": "Items:\n" + "\n".join(f"- {item}" for item in items)},
-            ])
-        kwargs: dict[str, object] = {
-            "month_path": rel, "month_str": month_str, "body_result": body_ref, "session_pk": session_pk,
-            "aggregate": aggregate, "collect_hints": collect_hints, "head_hash": head_hash,
-        }
-        kwargs.update({f"{field}_result": ref for field, ref in field_refs.items()})
-        write_ref = write_task.delay(**kwargs)
-        results.append({"month": rel, "status": "dispatched", "session_pk": session_pk,
-                        "reason": reason, "dedup_fields": sorted(field_refs), "write": write_ref})
-        spawned += 1
+    results = map_task.delay(target="update_timeline_month_item", list_of_kwargs=items, concurrency=1)
     return True, {"status": "success", "results": results}
 
 
