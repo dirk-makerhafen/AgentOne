@@ -1398,26 +1398,24 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     color: var(--muted);
     white-space: nowrap;
 }
+/* Insights/settings list pages dock their detail panel exactly like the
+   chat and entity pages: a full-height column flush with the right edge. */
+.insights-page-body {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    min-height: 0;
+}
 .insights-page-body .main-view-content.insights-wide {
     max-width: none;
     margin: 0;
-    padding: 0;
-    /* The page body is a fixed-height flex column.  Without this the content
-       wrapper stays a block, so `.insights-split` (flex:1) grows to its
-       intrinsic table height and gets clipped by the body's overflow:hidden. */
+    padding: 24px 32px;
     flex: 1;
+    min-width: 0;
     min-height: 0;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-}
-.insights-page-body {
-    padding: 16px 24px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-height: 0;
 }
 .insights-split {
     flex: 1;
@@ -1430,8 +1428,7 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     flex: 1;
     min-width: 0;
     border: 1px solid var(--border);
-    border-right: 0;
-    border-radius: 10px 0 0 10px;
+    border-radius: 10px;
     background: var(--surface);
     overflow: auto;
 }
@@ -1463,26 +1460,25 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
 
 .insights-rightbar {
     width: 360px;
-    flex-shrink: 0;
-    border: 1px solid var(--border);
-    border-radius: 0 10px 10px 0;
-    background: var(--surface);
+    flex: 0 0 360px;
+    min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
+    border-left: 1px solid var(--border);
+    background: var(--sidebar);
     overflow: hidden;
-    min-height: 0;
 }
 .insights-rightbar-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     padding: 10px 12px;
     border-bottom: 1px solid var(--border);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    color: var(--muted);
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--text);
     flex-shrink: 0;
 }
 .insights-rightbar-body {
@@ -1528,21 +1524,18 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
 .key-badge.key-warn { color: var(--warning); background: color-mix(in srgb, var(--warning) 14%, transparent); }
 .key-badge.key-err { color: var(--error); background: color-mix(in srgb, var(--error) 12%, transparent); }
 
-@media (max-width: 1100px) {
-    .insights-page-body { padding: 12px 16px; }
-    .insights-split { flex-direction: column; }
+@media (max-width: 900px) {
+    .insights-page-body { flex-direction: column; }
+    .insights-page-body .main-view-content.insights-wide { padding: 16px; }
+    .insights-split { min-height: 320px; }
     .insights-rightbar {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: min(420px, 92vw);
-        z-index: 60;
-        transform: translateX(105%);
-        transition: transform .2s ease;
-        box-shadow: -12px 0 32px rgba(0, 0, 0, .3);
+        display: none;
+        width: auto;
+        flex: 0 0 48%;
+        border-left: 0;
+        border-top: 1px solid var(--border);
     }
-    .insights-rightbar.open { transform: translateX(0); }
+    .insights-rightbar.open { display: flex; }
 }
 
 /* Logs ------------------------------------------------------------------- */
@@ -2548,7 +2541,6 @@ html.sse-down #connection-banner { display: block; }
 .insights-rightbar .resize-handle { left: 0; }
 .rightbar .resize-handle { left: 0; }
 .resize-handle:hover, .resize-handle.dragging { background: var(--accent, #4f8cff); }
-.insights-rightbar > .resize-handle { background: transparent; }
 body.resizing { user-select: none; cursor: col-resize; }
 
 /* Partial navigation ------------------------------------------------------ */

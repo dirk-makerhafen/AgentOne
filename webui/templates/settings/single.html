@@ -18,7 +18,7 @@
             </nav>
         </div>
     </header>
-    <div class="main-view-body insights-page-body">
+    <div class="main-view-body webui-entity-body insights-page-body">
         <div class="main-view-content insights-wide">
             {% if saved %}<div class="webui-saved-note">Settings saved.</div>{% endif %}
 
@@ -170,7 +170,6 @@
                     <div class="insights-empty">No providers configured.</div>
                     {% endif %}
                 </div>
-                {% include "shared/_detail_pane.html" with detail_aria_label="Provider details" detail_empty="Select a provider to see keys, limits, usage and models." %}
             </div>
 
             {% elif tab == "system" %}
@@ -189,6 +188,9 @@
             </div>
             {% endif %}
         </div>
+        {% if tab == "providers" %}
+        {% include "shared/_detail_pane.html" with detail_aria_label="Provider details" detail_empty="Select a provider to see keys, limits, usage and models." %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}

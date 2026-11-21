@@ -15,7 +15,7 @@
             </nav>
         </div>
     </header>
-    <div class="main-view-body{% if tab == 'providers' or tab == 'models' %} insights-page-body{% endif %}">
+    <div class="main-view-body{% if tab == 'providers' or tab == 'models' %} webui-entity-body insights-page-body{% endif %}">
         <div class="main-view-content{% if tab == 'providers' or tab == 'models' %} insights-wide{% endif %}">
             {% if tab == "dashboard" %}
                 <div class="insights-grid">
@@ -241,7 +241,6 @@
                         <div class="insights-empty">No providers configured.</div>
                         {% endif %}
                     </div>
-                    {% include "shared/_detail_pane.html" with detail_aria_label="Provider details" detail_empty="Select a provider to see keys, limits, usage and models." %}
                 </div>
 
             {% else %}
@@ -305,12 +304,16 @@
                         <div class="insights-empty">No models configured.</div>
                         {% endif %}
                     </div>
-                    {% include "shared/_detail_pane.html" with detail_aria_label="Model details" detail_empty="Select a model to see facts, limits, provider coverage and usage." %}
                 </div>
 
             {% endif %}
 
         </div>
+        {% if tab == 'providers' %}
+            {% include "shared/_detail_pane.html" with detail_aria_label="Provider details" detail_empty="Select a provider to see keys, limits, usage and models." %}
+        {% elif tab == 'models' %}
+            {% include "shared/_detail_pane.html" with detail_aria_label="Model details" detail_empty="Select a model to see facts, limits, provider coverage and usage." %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}

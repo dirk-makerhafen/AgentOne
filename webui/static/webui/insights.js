@@ -29,7 +29,7 @@
         var count = split.querySelector('[data-insights-count]');
         var panel = document.getElementById('insights-detail');
         var panelBody = document.getElementById('insights-detail-body');
-        var closeBtn = split.querySelector('[data-insights-close]');
+        var closeBtn = document.querySelector('[data-insights-close]');
         var total = rows.length;
 
         var state = { col: null, dir: 'asc', query: '' };
@@ -133,7 +133,7 @@
                 try { row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
             }
             loadDetail(row.getAttribute('data-detail-url'), row.id);
-            if (panel && window.innerWidth <= 1100) panel.classList.add('open');
+            if (panel && window.innerWidth <= 900) panel.classList.add('open');
             if (opts.updateHash !== false) {
                 try { history.replaceState(null, '', '#' + row.id); } catch (e) {}
             }

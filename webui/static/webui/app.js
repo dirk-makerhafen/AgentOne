@@ -1587,12 +1587,11 @@
     // desktop drag would override those media-query rules, so only restore a
     // saved width while the panel is actually resizable.
     var desktopMQ = window.matchMedia('(min-width: 901px)');
-    var wideMQ = window.matchMedia('(min-width: 1101px)');
     function loadWidth(key, fallback) {
         try { var v = parseInt(localStorage.getItem(key), 10); return (v && v >= MIN_W && v <= MAX_W) ? v : fallback; } catch (e) { return fallback; }
     }
     function canResize(panel) {
-        return panel.classList.contains('insights-rightbar') ? wideMQ.matches : desktopMQ.matches;
+        return desktopMQ.matches;
     }
     function applyPanelWidth(panel, w) {
         panel.style.width = w + 'px';
@@ -1648,7 +1647,6 @@
     refreshLayoutState();
     document.addEventListener('htmx:afterSettle', refreshLayoutState);
     desktopMQ.addEventListener('change', refreshLayoutState);
-    wideMQ.addEventListener('change', refreshLayoutState);
 
     var handle = null, startX = 0, startW = 0;
     document.addEventListener('mousedown', function (e) {
