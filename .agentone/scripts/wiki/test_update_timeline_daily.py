@@ -13,9 +13,9 @@ sys.path.insert(0, "/Users/Dirk/AgentOne/.agentone/agents/wiki/scripts")
 
 from update_timeline_daily import (  # noqa: E402
     _aggregate_day_lists,
-    _build_day_check_brief,
-    _build_day_session_brief,
-    _build_day_update_brief,
+    _build_day_check_parts,
+    _build_day_session_parts,
+    _build_day_update_parts,
     _canonicalize_list,
     _collect_day_summaries,
     _day_changed_files,
@@ -225,9 +225,10 @@ def test_day_changed_files_git_status_and_diff(tmp_path):
 
 
 def test_day_update_brief_marks_changed():
-    brief = _build_day_update_brief(
+    parts = _build_day_update_parts(
         "timeline/2022/10/04", "2022-10-04",
         ["a.md", "b.md"], {"b.md"}, ["gone.md"])
+    brief = "\n\n".join(parts)
     assert "timeline/2022/10/04" in brief
     assert "# Summary for 2022-10-04" in brief
     assert "- b.md (CHANGED since last build — re-read fully)" in brief
@@ -242,7 +243,7 @@ def test_day_update_brief_marks_changed():
 
 
 def test_session_brief_returns_body_only():
-    brief = _build_day_session_brief("timeline/2022/10/04", "2022-10-04", ["a.md"])
+    brief = "\n\n".join(_build_day_session_parts("timeline/2022/10/04", "2022-10-04", ["a.md"]))
     assert "timeline/2022/10/04" in brief
     assert "# Summary for 2022-10-04" in brief
     assert "write NO files" in brief
@@ -279,7 +280,7 @@ def test_extract_message_ref_unknown_pk_is_none():
 
 
 def test_check_brief_targets_index_only():
-    brief = _build_day_check_brief("timeline/2022/10/04", "2022-10-04", ["a.md"], ["some hint"])
+    brief = "\n\n".join(_build_day_check_parts("timeline/2022/10/04", "2022-10-04", ["a.md"], ["some hint"]))
     assert "timeline/2022/10/04/index.md" in brief
     assert "some hint" in brief
     assert "only `index.md` is yours to fix" in brief
@@ -287,7 +288,7 @@ def test_check_brief_targets_index_only():
 
 
 def test_check_brief_embeds_index_format():
-    brief = _build_day_check_brief("timeline/2022/10/04", "2022-10-04", ["a.md"], [])
+    brief = "\n\n".join(_build_day_check_parts("timeline/2022/10/04", "2022-10-04", ["a.md"], []))
     assert "authoritative" in brief  # no need to infer from other files
     assert "type: daily_summary" in brief
     assert "# Summary for 2022-10-04" in brief

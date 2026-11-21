@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
 import re
 import subprocess
 from pathlib import Path
@@ -10,38 +11,59 @@ from pathlib import Path
 from runtime.session.session import Session
 
 
-# Pipeline: update_timeline_daily finds stale day folders via git history, then
-# per stale day fans out reads that converge in write_day_index (code owns
-# the file — the scheduler delivers it once every result-ref resolves):
-# - one baseagent prose session (same spawn mechanics as double_check_summary
-#   in update_timeline.py) that reads the folder itself — frontmatter lists
-#   are cheap, marketing bodies can be skipped — and returns ONLY the body
-#   markdown via final_result. It writes nothing.
-# - one tiny llm_query per metadata field (tags/persons/companies/groups/products)
-#   whose input is ONLY that field's code-collected item list.
-# write_day_index validates the body, applies the dedup pairs to the day's
-# summary files in code, assembles frontmatter + body + code-built catalog
-# into timeline/YYYY/MM/DD/index.md, and spawns a fire-and-forget
-# double-check session on the result. Code owns metadata and the file, the
-# sessions own prose judgment.
+# Pipeline: update_timeline_daily finds stale day folders by content
+# fingerprint, then dispatches each stale day through a small pipeline:
 #
-# Staleness: index.md carries ``sources_fingerprint`` (sha1 over the day's
-# summary names + full texts) plus ``last_checked_at`` (vault HEAD at
-# dispatch, provenance only). A day is stale when its index is missing,
-# legacy, unfingerprinted, or the live sources differ from the recorded
-# fingerprint — new/edited/removed summaries, committed or not. Committing
-# the index itself never changes the fingerprint, so rebuilding is
-# self-terminating by construction (the old commit-time comparison looped:
-# every rebuild recorded a hash that the subsequent index commit postdated).
+#   collect day summaries
+#     -> build prose brief (fresh build or focused update)
+#     -> spawn baseagent prose session        (body via final_result, no writes)
+#     -> fan out one llm_query per metadata field with non-trivial items
+#          (dedup prompt and item list are separate message parts)
+#     -> converge all result refs in write_day_index
+#          (code owns frontmatter/catalog/file; spawns double-check)
+#
+# Staleness is fingerprint-based: index.md stores `sources_fingerprint`
+# (sha1 over summary names + full texts). A day is stale when its index is
+# missing, legacy, unfingerprinted, or sources differ from the fingerprint.
+# Committing the index never changes the fingerprint, so rebuilds are
+# self-terminating. `last_checked_at` records vault HEAD for provenance only.
 
 DAY_FIELDS = ("tags", "persons", "companies", "groups", "products")
 FRONTMATTER_RE = re.compile(r"\A\s*(?:\ufeff)?---\s*\n(.*?)\n---\s*\n?", re.DOTALL)
 
-DEDUP_FIELD_PROMPT = '''Deduplicate a list of {field} if needed, otherwise output exactly `none`. The items in the list below were created
+_FIELD_SINGULAR = {"tags": "tag", "persons": "person", "companies": "company", "groups": "group", "products": "product"}
+_FIELD_PLURAL = {"tags": "tags", "persons": "persons", "companies": "companies", "groups": "groups", "products": "products"}
+
+DEDUP_SYSTEM = (
+    "You are a list deduplication expert. "
+    "You immediately see whether a list contains duplicates or not."
+)
+
+# Static instruction text — intentionally no placeholders so identical prompts
+# deduplicate across fields/days. Variable context (field, day, items) is sent
+# as separate message parts by the dispatch code.
+DEDUP_INSTRUCTIONS = """\
+Deduplicate the provided list if needed, otherwise output exactly `none`.
+The items were created independently by different language models, so the same item may appear under different names or spellings (e.g. `Luna Jeschke` vs `L. Jeschke`, `Müller` vs `Mueller`, `PayPal` vs `paypal`, `3D-Druck` vs `3d-druck`).
+
+This is a simple task with no tricks or hidden meaning. If you see no duplications, output exactly `none`.
+
+If duplications exist, output ONLY deduplication lines, one per duplicate variant — no bullets, no code fences, no explanations:
+<canonical item>, <duplicate variant>
+
+`<canonical item>` is the form to keep — prefer the most complete and most common spelling.
+`<duplicate variant>` is ONE other spelling from the provided list that means the SAME item (repeat the line per variant).
+Only list variants that actually occur in the provided list. Never invent items, never merge two genuinely different items.
+A lone `none` line means no duplicates — output it (and nothing else) instead of an empty response.
+Lines are parsed by code (first comma separates), so be precise."""
+
+# Backward-compatible formatable prompt. Runtime dispatch uses the static
+# DEDUP_INSTRUCTIONS + separate metadata/content parts for deduplication.
+DEDUP_FIELD_PROMPT = """Deduplicate a list of {field} if needed, otherwise output exactly `none`. The items in the list below were created
 independently by different language models, so the same {field_singular} may appear under different names
 or spellings (e.g. `Luna Jeschke` vs `L. Jeschke`, `Müller` vs `Mueller`,
-`PayPal` vs `paypal`, `3D-Druck` vs `3d-druck`). 
-This is a simple task, and has no tricks or hidden meaning, no need to think about that for long, if you see no duplications, its good, output exactly `none`. 
+`PayPal` vs `paypal`, `3D-Druck` vs `3d-druck`).
+This is a simple task, and has no tricks or hidden meaning, no need to think about that for long, if you see no duplications, its good, output exactly `none`.
 
 The complete `{field}` list for {day_str} ({count} items):
 
@@ -62,123 +84,81 @@ Only list variants that actually occur in the list above. Never invent items,
 never merge two genuinely different {field_plural}. A lone `none` line means
 no duplicates — output it (and nothing else) instead of an empty response.
 Lines are parsed by code (first comma separates), so be precise.
-'''
-
-_FIELD_SINGULAR = {"tags": "tag", "persons": "person", "companies": "company", "groups": "group", "products": "product"}
-_FIELD_PLURAL = {"tags": "tags", "persons": "persons", "companies": "companies", "groups": "groups", "products": "products"}
-
-
-def _build_day_session_brief(day_rel: str, day_str: str, summary_files: list[str]) -> str:
-    """Assemble the work order for a day-summary subagent session.
-
-    The session returns ONLY the body markdown via final_result and writes
-    nothing — frontmatter, catalog, and the index file itself are built by
-    code. Metadata lists and spelling variants are handled by a separate
-    code pass, so the session ignores them beyond reading.
-    """
-    listing = "\n".join(f"- {name}" for name in summary_files) if summary_files else "- (no summary files yet)"
-    return f"""Synthesize the timeline day {day_str} from its per-mail summaries.
-
-Your working dir is the vault root; all paths below are vault-relative.
-The day folder is `{day_rel}` and currently holds:
-
-{listing}
-
-Read the day's summaries — frontmatter lists are cheap, read them all, and
-read the bodies you need for a good synthesis. Skip marketing / `werbung`
-bodies (one glance at the title usually suffices for those).
-
-Synthesize, don't concatenate: key events of the day, important numbers
-(amounts, donations, totals, deadlines), decisions and outcomes, short quotes
-when the exact wording matters. Bullets by default. If there is nothing
-substantial, say so in one line instead of inventing importance.
-
-Return EXACTLY the body markdown below as your LAST message — no frontmatter
-(it is built by code), no code fences, no explanations, write NO files, and
-output NOTHING after it (a separate code pass reads your last message and
-stores it as the day's summary; it cannot see anything else you write):
-
-```markdown
-# Summary for {day_str}
-
-<Key events, important numbers, decisions, quotes for the day.>
-```
-
-The heading MUST be exactly `# Summary for {day_str}`.
 """
 
 
-def _build_day_update_brief(day_rel: str, day_str: str, all_files: list[str], changed: set[str], removed: list[str]) -> str:
-    """Assemble the work order for revising an existing day index.
-
-    The day already has a ``daily_summary`` index: the session reads its
-    current body plus ONLY the changed files (not the whole folder) and
-    returns the full revised synthesis. Frontmatter, catalog, and the file
-    itself stay code-built, exactly like the fresh-build brief.
-    """
+def _render_file_listing(summary_files: list[str], changed: set[str] | None = None) -> str:
+    changed = changed or set()
+    if not summary_files:
+        return "- (no summary files)"
     lines = []
-    for name in all_files:
-        if name in changed:
-            lines.append(f"- {name} (CHANGED since last build — re-read fully)")
-        else:
-            lines.append(f"- {name}")
-    listing = "\n".join(lines) if lines else "- (no summary files)"
-    removed_block = "\n".join(f"- {name}" for name in removed) if removed else "- (none)"
-    return f"""Revise the timeline day {day_str} index from its changed files.
-
-Your working dir is the vault root; all paths below are vault-relative.
-The day folder is `{day_rel}`. An `index.md` with a previous synthesis
-already exists — this is an UPDATE, not a fresh build.
-
-Start by reading the current `{day_rel}/index.md` body and keep whatever
-still holds. Then read the changed files below in full (frontmatter lists
-are cheap; bodies in full unless obviously marketing / `werbung`, which
-needs only a glance at the title). The unchanged files are already
-reflected in the current body — do NOT re-read their bodies unless a
-changed file references them. Changes may be frontmatter-only spelling
-normalizations (unified tags/persons) — where the substance is unchanged,
-keep the existing text as is.
-
-Changed files:
-
-{listing}
-
-Removed since the last build (their content must no longer appear in the synthesis):
-
-{removed_block}
-
-Return EXACTLY the full revised body markdown below as your LAST message —
-no frontmatter (it is built by code), no code fences, no explanations,
-write NO files, and output NOTHING after it (a separate code pass reads
-your last message and stores it as the day's summary; it cannot see
-anything else you write):
-
-```markdown
-# Summary for {day_str}
-
-<Key events, important numbers, decisions, quotes for the day.>
-```
-
-The heading MUST be exactly `# Summary for {day_str}`.
-"""
+    for name in summary_files:
+        suffix = " (CHANGED since last build — re-read fully)" if name in changed else ""
+        lines.append(f"- {name}{suffix}")
+    return "\n".join(lines)
 
 
-def _build_day_check_brief(day_rel: str, day_str: str, summary_files: list[str], lint_hints: list[str]) -> str:
-    """Assemble the work order for a day-index double-check session."""
-    listing = "\n".join(f"- {name}" for name in summary_files) if summary_files else "- (no summary files)"
-    hints_block = "\n".join(f"- {hint}" for hint in lint_hints) if lint_hints else "- (no code hints — still verify facts, numbers, and cross-references)"
-    return f"""Double-check the daily index file `{day_rel}/index.md` for {day_str}.
+def _day_body_contract(day_str: str) -> list[str]:
+    """Prompt parts describing the required body-only result contract."""
+    return [
+        (
+            "Return EXACTLY the body markdown below as your LAST message — no frontmatter "
+            "(it is built by code), no code fences, no explanations, write NO files, and "
+            "output NOTHING after it (a separate code pass reads your last message and "
+            "stores it as the day's summary; it cannot see anything else you write):"
+        ),
+        f"# Summary for {day_str}\n\n<Key events, important numbers, decisions, quotes for the day.>",
+        f"The heading MUST be exactly `# Summary for {day_str}`.",
+    ]
 
-Your working dir is the vault root; all paths below are vault-relative.
-The day folder holds:
 
-{listing}
+def _build_day_session_parts(day_rel: str, day_str: str, summary_files: list[str]) -> list[str]:
+    """Prompt parts for a fresh day-summary session (body only, no writes)."""
+    return [
+        f"Synthesize the timeline day {day_str} from its per-mail summaries.",
+        "Your working dir is the vault root; all paths below are vault-relative.",
+        f"The day folder is `{day_rel}` and currently holds:",
+        _render_file_listing(summary_files),
+        (
+            "Read the day's summaries — frontmatter lists are cheap, read them all, and "
+            "read the bodies you need for a good synthesis. Skip marketing / `werbung` "
+            "bodies (one glance at the title usually suffices for those)."
+        ),
+        (
+            "Synthesize, don't concatenate: key events of the day, important numbers "
+            "(amounts, donations, totals, deadlines), decisions and outcomes, short quotes "
+            "when the exact wording matters. Bullets by default. If there is nothing "
+            "substantial, say so in one line instead of inventing importance."
+        ),
+        *_day_body_contract(day_str),
+    ]
 
-## Expected file format (authoritative — do NOT read other index files for reference)
 
-`{day_rel}/index.md` MUST have exactly this shape:
+def _build_day_update_parts(day_rel: str, day_str: str, all_files: list[str], changed: set[str], removed: list[str]) -> list[str]:
+    """Prompt parts for revising an existing day index from changed files."""
+    return [
+        f"Revise the timeline day {day_str} index from its changed files.",
+        "Your working dir is the vault root; all paths below are vault-relative.",
+        f"The day folder is `{day_rel}`. An `index.md` with a previous synthesis already exists — this is an UPDATE, not a fresh build.",
+        (
+            f"Start by reading the current `{day_rel}/index.md` body and keep whatever still holds. "
+            "Then read the changed files below in full (frontmatter lists are cheap; bodies in full "
+            "unless obviously marketing / `werbung`, which needs only a glance at the title). "
+            "The unchanged files are already reflected in the current body — do NOT re-read their bodies "
+            "unless a changed file references them. Changes may be frontmatter-only spelling normalizations "
+            "(unified tags/persons) — where the substance is unchanged, keep the existing text as is."
+        ),
+        "Changed files:",
+        _render_file_listing(all_files, changed=changed),
+        "Removed since the last build (their content must no longer appear in the synthesis):",
+        _render_file_listing(removed),
+        *_day_body_contract(day_str),
+    ]
 
-```markdown
+
+def _day_index_format_reference(day_rel: str, day_str: str) -> str:
+    return f"""`{day_rel}/index.md` MUST have exactly this shape:
+
 ---
 type: daily_summary
 updated: YYYY-MM-DD                # today's date
@@ -198,24 +178,33 @@ products: []
 ## Einträge                        # one bullet per summary file in the folder
 
 - [[{day_rel}/<summary-file>.md|<summary-file>.md]]
-```
 
-Catalog entries are exactly `[[vault-rel-path|filename]]`, one per `*.md`
-file in the folder (except `index.md` itself), label is the bare filename.
-The lists cover the day's files; the body distills them with bullets.
+Catalog entries are exactly `[[vault-rel-path|filename]]`, one per `*.md` file in the folder (except `index.md` itself), label is the bare filename.
+The lists cover the day's files; the body distills them with bullets."""
 
-## Hints from deterministic code checks
-{hints_block}
 
-Read `index.md` and the day's summaries. Verify against the format above:
-the body faithfully synthesizes the day (events, numbers, decisions,
-quotes — no invented facts); the `## Einträge` catalog is complete and
-correctly linked; frontmatter is valid with `type: daily_summary`, today's
-`updated`, a `last_checked_at` hash, and tags/persons/companies/groups/products
-covering the day's files. Fix the index file in place wherever a hint (or
-anything else you spot) is valid. Never modify anything under `raw/` or
-the day's summary files — only `index.md` is yours to fix.
-"""
+def _build_day_check_parts(day_rel: str, day_str: str, summary_files: list[str], lint_hints: list[str]) -> list[str]:
+    """Prompt parts for the double-check session."""
+    hints_block = _render_file_listing(lint_hints) if lint_hints else "- (no code hints — still verify facts, numbers, and cross-references)"
+    return [
+        f"Double-check the daily index file `{day_rel}/index.md` for {day_str}.",
+        "Your working dir is the vault root; all paths below are vault-relative.",
+        "The day folder holds:",
+        _render_file_listing(summary_files),
+        "## Expected file format (authoritative — do NOT read other index files for reference)",
+        _day_index_format_reference(day_rel, day_str),
+        "## Hints from deterministic code checks",
+        hints_block,
+        (
+            "Read `index.md` and the day's summaries. Verify against the format above: "
+            "the body faithfully synthesizes the day (events, numbers, decisions, quotes — no invented facts); "
+            "the `## Einträge` catalog is complete and correctly linked; frontmatter is valid with "
+            "`type: daily_summary`, today's `updated`, a `last_checked_at` hash, and "
+            "tags/persons/companies/groups/products covering the day's files. "
+            "Fix the index file in place wherever a hint (or anything else you spot) is valid. "
+            "Never modify anything under `raw/` or the day's summary files — only `index.md` is yours to fix."
+        ),
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -683,17 +672,32 @@ def _read_index_facts(day_dir: Path) -> tuple[bool, object, str | None, str | No
     )
 
 
-def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_parts: list | None = None, group_key: str = ""):
-    """Spawn a baseagent SUBTASK_DELEGATE session with *brief* and return (ok, child_session, session_pk, ref_or_error).
+def _as_parts(brief: str | list[str] | list[dict], content_type: str) -> list[dict]:
+    from server.models.enums.message_enums import MessagePartType
 
-    Mirrors double_check_summary: baseagent is visibility: internal, so it
-    is resolved directly by name, and narrowing overlays inherited from the
-    parent session are reset so the child gets the full baseagent envelope.
-    The returned ref is the add_user_message taskcall — resolvable by the
-    scheduler exactly like an llm_query result ref. Optional *extra_parts*
-    (timeline-style label/content evidence parts) are delivered after the
-    brief and before the timestamp part. *group_key* labels the child for
-    later grouping (e.g. ``wiki:timeline-daily``).
+    if isinstance(brief, str):
+        chunks = [brief]
+    elif brief and isinstance(brief[0], dict):
+        return list(brief)  # already part dicts
+    else:
+        chunks = [c for c in brief if isinstance(c, str) and c]
+
+    parts = []
+    for chunk in chunks:
+        parts.append({
+            "type": MessagePartType.MESSAGE,
+            "content_type": content_type,
+            "content": chunk,
+        })
+    return parts
+
+
+def _spawn_baseagent(_session, name: str, description: str, brief: str | list[str] | list[dict], extra_parts: list | None = None, group_key: str = ""):
+    """Spawn a baseagent SUBTASK_DELEGATE session and return (ok, child_session, session_pk, ref_or_error).
+
+    ``brief`` may be a string, a list of prompt/content strings, or prebuilt
+    message-part dicts. String parts are sent as separate TEXT message parts to
+    keep prompt instructions and content/data dedup-friendly.
     """
     from server.models.enums.message_enums import MessageContentType, MessagePartType
     from server.models.enums.session_enums import SessionType
@@ -718,15 +722,14 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
         {
             "type": MessagePartType.MESSAGE,
             "content_type": MessageContentType.TEXT,
-            "content": "You are running as a subtask for another agent. "
-                "When your work is complete, finish by invoking the final_result tool directly with your result as its content argument. "
-                "Do not return your result as plain text only. Your task:\n",
+            "content": (
+                "You are running as a subtask for another agent. "
+                "When your work is complete, finish by invoking the final_result tool directly "
+                "with your result as its content argument. Do not return your result as plain text only. "
+                "Your task:\n"
+            ),
         },
-        {
-            "type": MessagePartType.MESSAGE,
-            "content_type": MessageContentType.TEXT,
-            "content": brief,
-        },
+        *_as_parts(brief, MessageContentType.TEXT),
         *(extra_parts or []),
         {
             "type": MessagePartType.MESSAGE,
@@ -738,9 +741,8 @@ def _spawn_baseagent(_session, name: str, description: str, brief: str, extra_pa
     return True, child_session, child_session.model.pk, ref
 
 
-def _spawn_day_session(_session, day_rel: str, day_str: str, brief: str):
+def _spawn_day_session(_session, day_rel: str, day_str: str, brief: str | list[str]):
     """Spawn the prose session for one day; returns (ok, session_pk_or_None, body_ref_or_error)."""
-
     stamp = day_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
         _session,
@@ -754,9 +756,8 @@ def _spawn_day_session(_session, day_rel: str, day_str: str, brief: str):
     return True, session_pk, ref
 
 
-def _spawn_day_check(_session, day_rel: str, day_str: str, brief: str):
+def _spawn_day_check(_session, day_rel: str, day_str: str, brief: str | list[str]):
     """Spawn the fire-and-forget double-check session for a written index.md."""
-
     stamp = day_str.replace("-", "")
     ok, _, session_pk, ref = _spawn_baseagent(
         _session,
@@ -879,43 +880,37 @@ def update_timeline_daily(_session: Session, limit: int = 3, day: str | None = N
             changed_files, removed_files = _day_changed_files(day_dir, root, stored_hash)
         else:
             changed_files, removed_files = None, []
+
         if changed_files:
-            # Update, not a fresh build: the session revises the existing
-            # synthesis from the changed files only. The listing covers
-            # every worktree file (so new-but-unparseable files are seen
-            # too), with git-changed ones marked.
             all_files = [p.name for p in sorted(day_dir.glob("*.md")) if p.name != "index.md"]
-            brief = _build_day_update_brief(rel, day_str, all_files, set(changed_files), removed_files)
+            brief_parts = _build_day_update_parts(rel, day_str, all_files, set(changed_files), removed_files)
             collect_hints.append(
                 f"day update: {len(changed_files)} file(s) changed since last build"
                 f" ({', '.join(sorted(changed_files)[:5])}{' …' if len(changed_files) > 5 else ''})"
-                + (f"; removed: {', '.join(sorted(removed_files))}" if removed_files else ""))
+                + (f"; removed: {', '.join(sorted(removed_files))}" if removed_files else "")
+            )
         else:
-            brief = _build_day_session_brief(rel, day_str, summary_files)
-        ok, session_pk, body_ref = _spawn_day_session(
-            _session, rel, day_str, brief)
+            brief_parts = _build_day_session_parts(rel, day_str, summary_files)
+
+        ok, session_pk, body_ref = _spawn_day_session(_session, rel, day_str, brief_parts)
         if not ok:
             results.append({"day": rel, "status": "error", "reason": reason, "message": f"prose session not spawned: {body_ref}"})
             continue
-        # Fan out one tiny dedup query per field (list-only input, no
-        # bodies). The prose ref and all dedup refs converge in
-        # write_day_index, which the scheduler delivers once every ref
-        # resolves — the same single-ref passing process_summary relies on.
+        # Fan out one tiny dedup query per field (list-only input, no bodies).
+        # Prompt, metadata, and item content are separate message parts so
+        # content deduplication can work and prompt/data never mix in one string.
         field_refs: dict[str, object] = {}
         for field in DAY_FIELDS:
             items = aggregate.get(field, [])
             if len(set(items)) < 2:
                 continue
             field_refs[field] = llm_query_tool.delay(messages=[
-                {"role": "system", "content": "You are a list deduplication expect, you immediately see if a list contains duplicates or not" },
-                {"role": "user", "content": DEDUP_FIELD_PROMPT.format(
-                    field=field,
-                    field_singular=_FIELD_SINGULAR[field],
-                    field_plural=_FIELD_PLURAL[field],
-                    day_str=day_str,
-                    count=len(items),
-                    items="\n".join(f"- {item}" for item in items),
-                )},
+                {"role": "system", "content": DEDUP_SYSTEM},
+                {"role": "user", "content": DEDUP_INSTRUCTIONS},
+                {"role": "user", "content": f"Field: {field} ({_FIELD_SINGULAR[field]})"},
+                {"role": "user", "content": f"Day: {day_str}"},
+                {"role": "user", "content": f"Item count: {len(items)}"},
+                {"role": "user", "content": "Items:\n" + "\n".join(f"- {item}" for item in items)},
             ])
         kwargs: dict[str, object] = {
             "day_path": rel, "day_str": day_str, "body_result": body_ref, "session_pk": session_pk,
@@ -1142,10 +1137,11 @@ def write_day_index(_session, day_path, day_str=None, body_result=None, session_
             "message": f"write_day_index: cannot write index.md: {e}",
         }
 
+    day_rel = _vault_rel(_session, day_dir)
     check_ok, check_info = _spawn_day_check(
-        _session, _vault_rel(_session, day_dir), day_str,
-        _build_day_check_brief(_vault_rel(_session, day_dir), day_str,
-                               [s["path"].name for s in summaries], lint_results))
+        _session, day_rel, day_str,
+        _build_day_check_parts(day_rel, day_str, [s["path"].name for s in summaries], lint_results),
+    )
 
     return True, {
         "status": "success",

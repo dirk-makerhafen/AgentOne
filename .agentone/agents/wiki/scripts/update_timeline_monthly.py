@@ -9,7 +9,8 @@ from runtime.session.session import Session
 sys.path.insert(0, Path(__file__).resolve().parent.as_posix())
 from update_timeline_daily import (  # noqa: E402
     DAY_FIELDS,
-    DEDUP_FIELD_PROMPT,
+    DEDUP_INSTRUCTIONS,
+    DEDUP_SYSTEM,
     FRONTMATTER_RE,
     _FIELD_PLURAL,
     _FIELD_SINGULAR,
@@ -683,15 +684,12 @@ def update_timeline_monthly(_session: Session, limit: int = 2, month: str | None
             if len(set(items)) < 2:
                 continue
             field_refs[field] = llm_query_tool.delay(messages=[
-                {"role": "system", "content": "You are a list deduplication expect, you immediately see if a list contains duplicates or not"},
-                {"role": "user", "content": DEDUP_FIELD_PROMPT, "template_data": dict(
-                    field=field,
-                    field_singular=_FIELD_SINGULAR[field],
-                    field_plural=_FIELD_PLURAL[field],
-                    day_str=month_str,
-                    count=len(items),
-                    items="\n".join(f"- {item}" for item in items),
-                )},
+                {"role": "system", "content": DEDUP_SYSTEM},
+                {"role": "user", "content": DEDUP_INSTRUCTIONS},
+                {"role": "user", "content": f"Field: {field} ({_FIELD_SINGULAR[field]})"},
+                {"role": "user", "content": f"Month: {month_str}"},
+                {"role": "user", "content": f"Item count: {len(items)}"},
+                {"role": "user", "content": "Items:\n" + "\n".join(f"- {item}" for item in items)},
             ])
         kwargs: dict[str, object] = {
             "month_path": rel, "month_str": month_str, "body_result": body_ref, "session_pk": session_pk,

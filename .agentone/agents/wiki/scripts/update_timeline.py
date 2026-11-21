@@ -673,7 +673,7 @@ def validate_summary(summary_text: str, raw_text: str, raw_path: str, today_str:
     return hints, fm, body
 
 
-def sanitize_title_filename(title: str, max_len: int = 120) -> str:
+def _sanitize_title_filename(title: str, max_len: int = 120) -> str:
     """Map a summary title to a filesystem-safe ``.md`` stem."""
     name = (title or "").strip()
     for src, dst in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"),
@@ -938,7 +938,7 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
         }
     y, mo, d = date_part.split("-")
     hhmm = time_part.replace(":", "") if time_part else _fallback_receive_hhmm(raw_path, raw_abs)
-    stem = sanitize_title_filename(title)
+    stem = _sanitize_title_filename(title)
     prefix = f"{y}{mo}{d}-{hhmm}"
     target_dir = root / "timeline" / y / mo / d
     try:
@@ -987,7 +987,6 @@ def process_summary(_session, raw_path, summary_result, write: bool = True):
         "double_check_result": check_task_result,
         "message": f"process_summary: wrote {summary_path} ({len(lint_results)} lint hints, double-check {double_check})",
     }
-
 
 
 def double_check_summary(_session, raw_path, summary_path, lint_results=None):
