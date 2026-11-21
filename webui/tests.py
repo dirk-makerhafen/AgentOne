@@ -807,7 +807,8 @@ def test_placeholder_client_contract_avoids_duplicate_load_and_stale_etag():
     assert "var initialized = !!(el['htmx-internal-data'] && el['htmx-internal-data'].firstInitCompleted)" in js
     assert "if (!initialized) {" in js
     assert "var isComponentPlaceholder" in js
-    assert "if (!etag && !isComponentPlaceholder) {" in js
+    assert "var isUnrenderedDetailPlaceholder" in js
+    assert "if (!etag && !isComponentPlaceholder && !isUnrenderedDetailPlaceholder) {" in js
     assert "evt.detail.headers['X-AgentOne-ETag'] = '1'" in js
 
 

@@ -187,7 +187,20 @@
         var isComponentPlaceholder = !!(elt && elt.getAttribute
             && (elt.getAttribute('hx-trigger') || '').indexOf('load') !== -1
             && elt.hasAttribute('data-component'));
-        if (!etag && !isComponentPlaceholder) {
+        // A tool card whose detail pane still contains the loading marker is
+        // also a first render.  Its URL can be cached from an earlier load or
+        // SSE refresh; reusing that ETag answers 204 and leaves "Loading…".
+        // Once the pane has rendered, this marker is gone and normal ETag
+        // revalidation still prevents needless full-detail swaps.
+        var target = evt.detail && evt.detail.target;
+        var detailTarget = target && target.classList && target.classList.contains('webui-tool-detail')
+            ? target
+            : (elt && elt.querySelector ? elt.querySelector('.webui-tool-detail') : null);
+        var isUnrenderedDetailPlaceholder = !!(
+            detailTarget && detailTarget.querySelector &&
+            detailTarget.querySelector('.webui-detail-loading')
+        );
+        if (!etag && !isComponentPlaceholder && !isUnrenderedDetailPlaceholder) {
             var path = requestPath(evt);
             if (path) etag = fragmentEtags[path] || '';
         }
