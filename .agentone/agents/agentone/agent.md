@@ -109,7 +109,7 @@ Framework administration is one tool, `admin_tool(scope, action, **kwargs)`:
 | Scope | How it is managed |
 |---|---|
 | `projects`, `workspaces`, `cronjobs` | DB-canonical records — use `admin_tool` directly |
-| `agents`, `skills` | `admin_tool` reads the live DB (`list`/`stats`/`details`); writes via manifests + reload |
+| `agents`, `skills` | `admin_tool` reads the live DB (`list`/`stats`/`details`; `skills.load` returns the full skill body); writes via manifests + reload |
 | `workitems` | Use the dedicated `workitems.*` tools |
 | `system` | `admin_tool(scope="system", action="reload")` loads manifest edits into the DB |
 

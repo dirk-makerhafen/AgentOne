@@ -6,6 +6,15 @@ from typing import Any
 from admin_common import _err, _ok, _scope_project, _project_for
 
 
+def _as_bool(value: Any, default: bool = True) -> bool:
+    """LLM calls may send booleans as strings; treat them consistently."""
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() not in ("", "0", "false", "no", "off", "none")
+    return bool(value)
+
+
 def _project_info(project: Any, current: Any = None) -> dict[str, Any]:
     return {
         "pk": project.pk,
@@ -97,6 +106,7 @@ def _projects(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool,
     if action == "create":
         from pathlib import Path
 
+        from runtime.paths import central_project_dir, ensure_private_dir
         from server.models.project import Project
         from server.models.workspace import WorkspaceModel
 
@@ -105,31 +115,48 @@ def _projects(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool,
             return _err("Project name is required")
         if Project.objects.filter(name=name).exists():
             return _err(f"Project '{name}' already exists")
-        path = kwargs.get("path")
+        # ``path`` is the canonical kwarg; ``project_path`` is accepted for
+        # callers porting from the old global scripts/projects tool.
+        raw_path = str(kwargs.get("path") or kwargs.get("project_path") or "").strip()
+        path_obj = Path(raw_path).expanduser().resolve() if raw_path else None
+        details: list = []
         try:
-            values: dict[str, Any] = {"name": name, "description": kwargs.get("description") or ""}
-            path_obj = None
-            if path:
-                path_obj = Path(path).resolve()
-                if not path_obj.exists():
-                    return _err(f"Path does not exist: {path}")
-                values["path"] = path_obj.as_posix()
-            project = Project.objects.create(**values)
+            if path_obj is not None:
+                path_obj.mkdir(parents=True, exist_ok=True)
 
-            if path_obj and kwargs.get("manifest_in_workspace"):
-                workspace = WorkspaceModel.objects.filter(path=path_obj.as_posix()).first()
-                if workspace:
-                    workspace.parent_project = project
-                    workspace.save(update_fields=["parent_project"])
-
-            agentone_dir = project.get_agentone_dir()
-            agentone_dir.mkdir(parents=True, exist_ok=True)
+            project = Project.objects.create(
+                name=name, description=str(kwargs.get("description") or "").strip(),
+            )
+            # Place the manifest tree before creating the workspace: its default
+            # agentone_dir is derived from the owning project.
+            manifest = (
+                path_obj / ".agentone"
+                if path_obj is not None and _as_bool(kwargs.get("manifest_in_workspace"), True)
+                else central_project_dir(name)
+            )
+            ensure_private_dir(manifest)
             for sub in ("agents", "scripts", "skills", "streams", "sets", "dashboard"):
-                (agentone_dir / sub).mkdir(exist_ok=True)
-            project.refresh_from_disk()
+                (manifest / sub).mkdir(exist_ok=True)
+            project.atomic_update(agentone_dir=manifest.as_posix())
+
+            if path_obj is not None:
+                workspace = WorkspaceModel.objects.filter(path=path_obj.as_posix()).first()
+                if workspace is None:
+                    workspace = WorkspaceModel.objects.create(
+                        name=str(kwargs.get("workspace_name") or f"{name} project root"),
+                        path=path_obj.as_posix(),
+                        description="project root directory",
+                        parent_project=project,
+                    )
+                elif workspace.parent_project_id is None:
+                    workspace.atomic_update(parent_project=project)
+                project.atomic_update(main_workspace=workspace)
+
+            project.refresh_from_disk(details=details)
+            project.refresh_from_db()
         except Exception as e:  # pylint: disable=broad-exception-caught
             return _err(f"Failed to create project: {e}")
-        return _ok(project=_project_info(project))
+        return _ok(project=_project_info(project), details=details)
 
     if action == "reload":
         project, error = _project_for(_session, kwargs.get("project_pk"))

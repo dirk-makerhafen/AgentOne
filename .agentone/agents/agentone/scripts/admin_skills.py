@@ -81,6 +81,11 @@ def _skills(session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool, di
             project_count=sum(1 for s in skills if getattr(s, "parent_project_id", None) is not None),
         )
 
+    if action == "load":
+        from runtime.skill.load_content import load_skill_content
+
+        return load_skill_content(session, kwargs.get("name") or kwargs.get("skill_name"))
+
     if action == "details":
         skill, error = _resolve_skill(session, kwargs.get("name"))
         if error:
@@ -92,15 +97,22 @@ def _skills(session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool, di
 
         info = _skill_info(skill)
         try:
-            td = TaskDefinition.objects.filter(name="load_skill").first()
-            calls = (
-                list(AgentTaskCall.objects.filter(task_definition=td)
-                     .values_list("carguments_json", flat=True)[:200])
-                if td is not None else []
-            )
+            call_args = []
+            for td_name in ("load_skill", "admin_tool"):
+                td = TaskDefinition.objects.filter(name=td_name).first()
+                if td is None:
+                    continue
+                call_args.extend(
+                    AgentTaskCall.objects.filter(task_definition=td)
+                    .values_list("carguments_json", flat=True)[:200]
+                )
             total_loads = sum(
-                1 for args in calls
-                if isinstance(args, dict) and args.get("skill_name") == skill.name
+                1 for args in call_args
+                if isinstance(args, dict) and (
+                    args.get("skill_name") == skill.name
+                    or (args.get("scope") == "skills" and args.get("action") == "load"
+                        and (args.get("name") or args.get("skill_name")) == skill.name)
+                )
             )
         except Exception:  # pylint: disable=broad-exception-caught
             total_loads = 0

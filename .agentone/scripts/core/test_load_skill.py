@@ -1,6 +1,4 @@
-"""
-Tests for the ``load_skill`` tool.
-"""
+"""Tests for the ``load_skill`` tool (``.agentone/scripts/core/load_skill.py``)."""
 
 from __future__ import annotations
 
@@ -10,8 +8,8 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from skills.load_skill import load_skill
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from load_skill import load_skill  # noqa: E402
 
 
 class TestLoadSkill(unittest.TestCase):

@@ -16,6 +16,11 @@ tools:
     file: final_result.py
     function: final_result
     bound: True
+  # Read an assigned skill's versioned skill.md (frontmatter + body).
+  - name: load_skill
+    file: load_skill.py
+    function: load_skill
+    bound: True
 
 tasks:
   - name: ingest_user_message

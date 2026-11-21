@@ -2,8 +2,9 @@
 
 Projects, workspaces and cron jobs are DB-canonical and are managed here
 directly. Agents and skills are manifest-defined, but their live DB state is
-readable here (list/stats/details); writes go through manifest files edited by
-``coding``, followed by ``admin_tool(scope="system", action="reload")``.
+readable here (list/stats/details; skills also supports ``load`` for the full
+skill body); writes go through manifest files edited by ``coding``, followed by
+``admin_tool(scope="system", action="reload")``.
 Everything the model needs at call time is reachable through
 ``admin_tool(scope=..., action="help")`` so no per-action tool descriptions
 have to be preloaded into the context.
@@ -41,8 +42,9 @@ def admin_tool(_session: Any, scope: str, action: str, **kwargs: Any) -> tuple[b
     One tool for framework administration. Projects, workspaces and cron jobs
     are DB-canonical and are managed directly here. Agents and skills are
     manifest-defined, but their live state lives in the DB and can be
-    *inspected* here (list/stats/details). To create or edit an agent, its
-    tools, or a skill: delegate the filesystem manifest edit to `coding` in
+    *inspected* here (list/stats/details; `skills.load` also returns the skill's
+    full markdown body). To create or edit an agent, its tools, or a skill:
+    delegate the filesystem manifest edit to `coding` in
     the right `.agentone/` tree, then call
     `admin_tool(scope="system", action="reload")` so the framework projects
     the files into the live DB. Never edit the DB copies directly.
@@ -53,7 +55,7 @@ def admin_tool(_session: Any, scope: str, action: str, **kwargs: Any) -> tuple[b
       workspaces help, list, stats, details, create, rename, update, dashboard, create_chat
       cronjobs   help, list, stats, details, create, update, set_active, set_archived, runs
       agents     help, list, stats, details — reads of the live DB; writes via manifests + reload
-      skills     help, list, stats, details — reads of the live DB; writes via manifests + reload
+      skills     help, list, stats, load, details — reads of the live DB; writes via manifests + reload
       workitems  help only — use the dedicated `workitems.*` tools
       system     help, reload — reload manifests into the DB after file edits
       help       index of all scopes

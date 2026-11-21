@@ -65,6 +65,24 @@ class TestAdminTool(unittest.TestCase):
                 self.assertFalse(ok)
                 self.assertIn("Unknown action", result["message"])
 
+    def test_new_actions_are_discoverable(self):
+        from admin_help import HELP
+
+        self.assertIn("load", HELP["skills"]["actions"])
+        self.assertIn("project_path", HELP["projects"]["actions"]["create"])
+        ok, result = module.admin_tool(self.session, "skills", "help")
+        self.assertTrue(ok)
+        self.assertIn("load", result["actions"])
+
+    def test_skills_load_routes_to_content_loader(self):
+        # No name → the shared loader rejects it before touching any skill.
+        ok, result = module.admin_tool(self.session, "skills", "load", skill_name="")
+        self.assertFalse(ok)
+        self.assertIn("required", result["message"])
+        ok, result = module.admin_tool(self.session, "skills", "load")
+        self.assertFalse(ok)
+        self.assertIn("required", result["message"])
+
     def test_system_reload_is_registered(self):
         from admin_help import HELP
 

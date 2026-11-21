@@ -21,7 +21,7 @@ subagentResultDelivery: immediate
 toolCallSyntax: default
 skills: []
 disallowedSkills: []
-tools: [filesystem-read.*, filesystem-write.*, skills.load_skill]
+tools: [filesystem-read.*, filesystem-write.*, core.load_skill]
 disallowedTools: []
 tasks: [core.*, compact.*]
 disallowedTasks: []

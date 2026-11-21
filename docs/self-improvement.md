@@ -176,7 +176,7 @@ Caps (`maxDirectives`, `maxChars`, `includeCandidates`, `includeSkills`,
 synthesis is not biased by the playbook it is rewriting.
 
 The skill half fixes an old discoverability gap: a generated skill is inert
-unless the agent (a) has it in `skills:`, (b) has `skills.load_skill`, and
+unless the agent (a) has it in `skills:`, (b) has `core.load_skill` (or AgentOne's `admin_tool(scope="skills", action="load")`), and
 (c) is told it exists. The bootstrap message supplies (c); the manifest
 supplies (a) and (b).
 
