@@ -110,14 +110,32 @@ class QueryMessage(BaseModel):
             else:
                 content_parts.extend(part_contents)
 
+        # Last line of defence: build_llm_context drops cancelled / unresolved
+        # tool calls when it assembles the Query, but other construction paths
+        # exist.  Filter the assistant `tool_calls` entries and their tool
+        # responses together so the pair stays valid.  Never fall back to a
+        # partial result — the model must not act on a call that never finished.
+        ready_tool_ids = {
+            f"tc-{tc.pk}" for tc in tool_call_objects if tc.is_prompt_ready()
+        }
+
         if self.role == "tool" and tool_call_objects:
+            tool_messages: list[dict[str, Any]] = []
             for tc in tool_call_objects:
+                tool_id = f"tc-{tc.pk}"
+                if tool_id not in ready_tool_ids:
+                    continue
                 tool_content = self._build_tool_message_content(tc.get_result())
-                message: dict[str, Any] = {
+                tool_messages.append({
                     "role": "tool",
-                    "tool_call_id": f"tc-{tc.pk}",
+                    "tool_call_id": tool_id,
                     "content": tool_content,
-                }
+                })
+            if not tool_messages:
+                return None
+            message: dict[str, Any] | list[dict[str, Any]] = (
+                tool_messages[0] if len(tool_messages) == 1 else tool_messages
+            )
 
         elif self.role == "tool":
             merged = self._merge_text_parts(content_parts)
@@ -137,7 +155,12 @@ class QueryMessage(BaseModel):
                 elif isinstance(merged, list):
                     message["content"] = [{"type": "text", "text": "USER TOOLCALL: "}] + merged
             if tool_call_dicts:
-                message["tool_calls"] = tool_call_dicts
+                ready_tool_calls = [
+                    tool_call for tool_call in tool_call_dicts
+                    if tool_call.get("id") in ready_tool_ids
+                ]
+                if ready_tool_calls:
+                    message["tool_calls"] = ready_tool_calls
         # DeepSeek requires reasoning_content to be echoed back in subsequent
         # assistant messages when thinking mode is active.
         # Only include when the model requires this (requires_reasoning_echo

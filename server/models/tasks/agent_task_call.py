@@ -416,6 +416,28 @@ class AgentTaskCall(BaseModel):
                     subtimeout -= 1
             time.sleep(1)
 
+    def is_prompt_ready(self) -> bool:
+        """Whether this call may be sent to the LLM as a tool call/response pair.
+
+        Only successfully ended calls whose *entire* result chain has resolved
+        qualify.  Cancelled, stopped, failed and still-running calls must be
+        omitted from the prompt: :meth:`get_result` defaults to ``timeout=0``
+        and no partial results, so a live cross-session result reference (e.g.
+        a blocking ``delegate_task`` whose child outlives a cancelled parent
+        turn) would raise ``TimeoutError`` during prompt serialisation.
+        Substituting a partial result is not an option — the model would act
+        on state that never completed.
+        """
+        if self.status != TaskCallStatus.ENDED:
+            return False
+        if self.status_detail != TaskCallStatusDetail.ENDED_SUCCESS:
+            return False
+        try:
+            self.get_result(timeout=0, recursive=True, allow_partial_results=False)
+        except TimeoutError:
+            return False
+        return True
+
     def get_direct_subcalls(self) -> models.QuerySet:
         """Return the task calls directly launched by this call's runs.
 

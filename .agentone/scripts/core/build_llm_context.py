@@ -11,7 +11,6 @@ from typing import Any
 import datetime
 from runtime.session.session import Session
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
-from server.models.enums.task_enums import TaskCallStatus
 from server.models.settings import AgentToolCallSyntax
 from server.models.message import Message, MessagePart
 from server.models.queries.query import Query, QueryStatus
@@ -159,6 +158,7 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         
         cmessages: list[Any] = []
         fmessages = []
+        skipped_tool_calls: list[int] = []
         for message in messages:
             query_message_parts: list[QueryMessagePart] = []
             tool_call_parts = []
@@ -168,18 +168,39 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                 part: MessagePart
                 if (_session.aimodel and not _session.aimodel.requires_reasoning_echo) and part.type == MessagePartType.REASONING:
                     continue
-                query_message_parts.append(QueryMessagePart(source_message_part=part))
+                tool_call = part.tool_call if part.type == MessagePartType.TOOLCALL else None
                 # A user slash command's call backs the chat card only; it is
                 # serialised as command text, not as a tool/response pair.
-                if (message.role != MessageRole.USER and part.tool_call
-                        and part.tool_call.status == TaskCallStatus.ENDED):
+                if message.role != MessageRole.USER and tool_call is not None:
+                    # Drop the whole pair — both the assistant `tool_calls`
+                    # entry and the `role="tool"` response — when the call was
+                    # cancelled/stopped/failed or its result chain is still
+                    # live.  Keeping either half produces an invalid prompt;
+                    # faking a result would feed the model a partial outcome.
+                    if not tool_call.is_prompt_ready():
+                        skipped_tool_calls.append(tool_call.pk)
+                        continue
                     tool_call_parts.append(part)
+                query_message_parts.append(QueryMessagePart(source_message_part=part))
             fmessages.append((message, query_message_parts,tool_call_parts))
+
+        if skipped_tool_calls:
+            try:
+                from server.models.debug_log_entry import DebugLogEntry
+
+                DebugLogEntry.objects.create(
+                    session=_session.model,
+                    event="tool_call_not_prompt_ready",
+                    data={"taskcall_ids": skipped_tool_calls},
+                )
+            except Exception:
+                # Observability must never turn a safe skip into a failed turn.
+                pass
 
         # undo reverse order and assemble
         for fmessage in reversed(fmessages):
             message, query_message_parts, tool_call_parts = fmessage
-            if query_message_parts or query_message_parts:
+            if query_message_parts:
                 query_message = QueryMessage.objects.create(role=message.role, query=query, source_message=message)
                 for i, query_message_part in enumerate(query_message_parts):
                     query_message_part.query_message = query_message
