@@ -8,9 +8,10 @@ from django.conf import settings as django_settings
 from django.core.cache import cache
 from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render, redirect
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from runtime.settings import UserSettings
 from runtime.settings.settings import (
@@ -66,6 +67,9 @@ def settings_page(request, tab: str = "appearance"):
         context["providers_summary"] = _providers_summary(rows)
     elif tab == "system":
         context["system"] = _system_info()
+        context["update"] = _update_context(request)
+        context["system"]["version"] = context["update"]["version"]
+        context["system"]["commit"] = context["update"]["short_commit"]
     elif tab == "preferences":
         try:
             from runtime.power import power_state_summary
@@ -259,6 +263,102 @@ def _system_info() -> dict:
         "timezone": django_settings.TIME_ZONE,
         "display_timezone": str(timezone.get_current_timezone()),
     }
+
+
+def _is_staff(request) -> bool:
+    return bool(getattr(request.user, "is_staff", False))
+
+
+def _forbidden() -> HttpResponse:
+    return HttpResponse("Only staff members can update AgentOne.", status=403)
+
+
+def _update_context(request) -> dict:
+    """Context for the Settings → System update card and its htmx fragment."""
+    from launcher.update_state import current_run, reconcile_stale_run
+    from runtime.version import update_status
+
+    try:
+        status = update_status()
+    except Exception:  # pylint: disable=broad-exception-caught
+        status = {
+            "version": "unknown", "release": "", "short_commit": "", "branch": "",
+            "dirty": False, "is_git": False, "remote_short_commit": "",
+            "available": False, "commit": "", "remote_commit": "",
+        }
+
+    reconcile_stale_run()
+    run = current_run()
+    running = bool(run and run.get("status") == "running")
+    return {
+        "version": status["version"],
+        "release": status["release"],
+        "short_commit": status["short_commit"],
+        "branch": status["branch"],
+        "dirty": status["dirty"],
+        "is_git": status["is_git"],
+        "remote_short_commit": status["remote_short_commit"],
+        "update_available": status["available"],
+        "run": run,
+        "is_running": running,
+        "is_staff": _is_staff(request),
+        "can_update": bool(
+            _is_staff(request) and status["is_git"] and not status["dirty"] and not running
+        ),
+        "status_url": reverse("webui:settings_update_status"),
+        "check_url": reverse("webui:settings_update_check"),
+        "run_url": reverse("webui:settings_update_run"),
+    }
+
+
+def _update_panel(request) -> HttpResponse:
+    response = render(request, "settings/update_panel.html", {"update": _update_context(request)})
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@require_GET
+def settings_update_status(request):
+    """Poll target while an update is running (the panel drops itself when done)."""
+    if not _is_staff(request):
+        return _forbidden()
+    return _update_panel(request)
+
+
+@require_POST
+def settings_update_check(request):
+    """Discard the cached remote check and re-query GitHub (POST = CSRF-safe)."""
+    if not _is_staff(request):
+        return _forbidden()
+    from runtime.version import update_status
+
+    update_status(refresh=True)
+    return _update_panel(request)
+
+
+@require_POST
+def settings_update_run(request):
+    """Queue the full update pipeline as a background Celery task."""
+    if not _is_staff(request):
+        return _forbidden()
+
+    from launcher import update_state
+    from launcher.tasks import update_agentone
+    from runtime.version import get_version_info
+
+    active = update_state.current_run()
+    if active and active.get("status") == "running":
+        return _update_panel(request)
+    if not update_state.reserve_queue():
+        return _update_panel(request)
+
+    record = update_state.start_run(get_version_info()["version"])
+    try:
+        update_agentone.delay(record["id"])
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        update_state.finish_run(record["id"], "failed", error=f"Could not queue update: {exc}")
+        update_state.release_queue()
+    return _update_panel(request)
 
 
 @require_POST

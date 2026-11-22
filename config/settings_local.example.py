@@ -63,3 +63,12 @@ Uncomment and change only what you need.
 # ---------------------------------------------------------------------------
 # LISTEN_ADDRESS = '0.0.0.0'
 # LISTEN_PORT = '7999'
+
+# ---------------------------------------------------------------------------
+# Self-update — restart command used after `manage.py server update`
+# ---------------------------------------------------------------------------
+# Leave empty for best-effort supervisor/systemd/launchd detection.
+# AGENTONE_RESTART_COMMAND = ["sudo", "-n", "supervisorctl", "restart", "agentone-server"]
+# AGENTONE_SERVICE_MANAGER = 'auto'  # auto | supervisor | systemd | launchd
+# AGENTONE_SERVICE_NAME = ''
+# AGENTONE_UPDATE_CHECK_ENABLED = True

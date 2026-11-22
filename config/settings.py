@@ -244,6 +244,15 @@ CACHES = {
     }
 }
 
+# Self-update ---------------------------------------------------------------
+# Set this when the web/Celery user cannot restart the service directly, e.g.
+# ["sudo", "-n", "supervisorctl", "restart", "agentone-server"].  When empty,
+# supervisor/systemd/launchd are auto-detected on a best-effort basis.
+AGENTONE_RESTART_COMMAND = []
+AGENTONE_SERVICE_MANAGER = 'auto'  # auto | supervisor | systemd | launchd
+AGENTONE_SERVICE_NAME = ''
+AGENTONE_UPDATE_CHECK_ENABLED = True
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',

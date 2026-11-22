@@ -168,6 +168,9 @@ def test_url_names_reverse():
     assert reverse("webui:logs") == "/app/logs"
     assert reverse("webui:logs_tail") == "/app/logs/tail"
     assert reverse("webui:settings") == "/app/settings"
+    assert reverse("webui:settings_update_status") == "/app/settings/update/status"
+    assert reverse("webui:settings_update_check") == "/app/settings/update/check"
+    assert reverse("webui:settings_update_run") == "/app/settings/update/run"
     assert reverse("webui:settings_tab", args=["system"]) == "/app/settings/system"
     assert reverse("webui:settings_save", args=["system"]) == "/app/settings/system/save"
     assert reverse("webui:settings_provider_key", args=[7]) == "/app/settings/providers/7/key"
@@ -3381,3 +3384,151 @@ def test_calls_panel_tab_renders_grouped_calls(client):
     assert "webui-calls-panel" in body
     assert "webui-call-row" in body
     assert "README.md" in body
+
+
+# ---------------------------------------------------------------------------
+# Settings → System self-update card
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def update_panel(monkeypatch):
+    """Stable context so these tests never touch git, Redis or GitHub."""
+    from webui.features.settings import views as settings_views
+
+    context = {
+        "version": "0.1.0+abc1234",
+        "release": "0.1.0",
+        "short_commit": "abc1234",
+        "branch": "main",
+        "dirty": False,
+        "is_git": True,
+        "remote_short_commit": "def5678",
+        "update_available": True,
+        "run": None,
+        "is_running": False,
+        "is_staff": False,
+        "can_update": False,
+        "status_url": reverse("webui:settings_update_status"),
+        "check_url": reverse("webui:settings_update_check"),
+        "run_url": reverse("webui:settings_update_run"),
+    }
+    monkeypatch.setattr(settings_views, "_update_context", lambda request: dict(context))
+    return context
+
+
+@pytest.mark.django_db
+def test_system_tab_renders_update_card(client, update_panel):
+    response = client.get(reverse("webui:settings_tab", args=["system"]))
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert 'id="agentone-update-panel"' in body
+    assert "0.1.0+abc1234" in body
+    assert "update available" in body
+
+
+@pytest.mark.django_db
+def test_update_status_fragment(client, update_panel):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+    response = client.get(reverse("webui:settings_update_status"))
+
+    assert response.status_code == 200
+    assert response["Cache-Control"] == "private, no-store"
+    assert b"<!DOCTYPE" not in response.content
+    assert b"agentone-update-panel" in response.content
+
+
+@pytest.mark.django_db
+def test_update_actions_are_staff_only(client, update_panel):
+    from django.contrib.auth.models import User
+
+    check_url = reverse("webui:settings_update_check")
+    run_url = reverse("webui:settings_update_run")
+    status_url = reverse("webui:settings_update_status")
+
+    assert client.post(check_url).status_code == 403
+    assert client.post(run_url).status_code == 403
+    assert client.get(status_url).status_code == 403
+    assert client.get(check_url).status_code == 405  # state-changing action requires POST
+
+    user = User.objects.create_user(username="regular", password="pw")
+    client.force_login(user)
+    assert client.post(check_url).status_code == 403
+    assert client.post(run_url).status_code == 403
+    assert client.get(status_url).status_code == 403
+
+
+@pytest.mark.django_db
+def test_staff_can_check_and_queue_update(client, update_panel, monkeypatch):
+    from django.contrib.auth.models import User
+
+    from launcher import tasks, update_state
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+
+    queued = {}
+    monkeypatch.setattr(update_state, "current_run", lambda: None)
+    monkeypatch.setattr(update_state, "reserve_queue", lambda: True)
+    monkeypatch.setattr(update_state, "release_queue", lambda: None)
+    monkeypatch.setattr(update_state, "start_run", lambda version: {"id": "run123", "status": "running"})
+    monkeypatch.setattr(update_state, "finish_run", lambda *args, **kwargs: None)
+    monkeypatch.setattr(tasks.update_agentone, "delay", lambda run_id: queued.setdefault("id", run_id))
+    monkeypatch.setattr(
+        "runtime.version.get_version_info",
+        lambda *args, **kwargs: {"version": "0.1.0+abc1234"},
+    )
+    monkeypatch.setattr("runtime.version.update_status", lambda *args, **kwargs: {})
+
+    check = client.post(reverse("webui:settings_update_check"))
+    run = client.post(reverse("webui:settings_update_run"))
+
+    assert check.status_code == 200
+    assert run.status_code == 200
+    assert queued["id"] == "run123"
+
+
+@pytest.mark.django_db
+def test_running_update_shows_logs_and_polling(client, update_panel):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+    update_panel["is_staff"] = True
+    update_panel["is_running"] = True
+    update_panel["can_update"] = False
+    update_panel["run"] = {
+        "status": "running",
+        "started_at": "2026-11-22T10:00:00+00:00",
+        "finished_at": "",
+        "error": "",
+        "logs": [{"time": "2026-11-22T10:00:01+00:00", "level": "info", "message": "Fetching remote"}],
+    }
+
+    response = client.get(reverse("webui:settings_update_status"))
+    body = response.content.decode()
+
+    assert "Fetching remote" in body
+    assert 'hx-trigger="every 2s"' in body
+
+
+@pytest.mark.django_db
+def test_non_staff_cannot_see_update_logs(client, update_panel):
+    update_panel["run"] = {
+        "status": "failed",
+        "started_at": "2026-11-22T10:00:00+00:00",
+        "finished_at": "",
+        "error": "sudo -n supervisorctl restart agentone-server",
+        "logs": [{"time": "2026-11-22T10:00:01+00:00", "level": "info", "message": "secret log line"}],
+    }
+
+    response = client.get(reverse("webui:settings_tab", args=["system"]))
+    body = response.content.decode()
+
+    assert response.status_code == 200
+    assert "secret log line" not in body
+    assert "sudo -n supervisorctl" not in body

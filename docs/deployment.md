@@ -106,6 +106,38 @@ sudo supervisorctl update
 sudo supervisorctl start agentone-server
 ```
 
+### 4a. Updates and service restarts
+
+`python3 manage.py server update` performs the full pipeline: fast-forward pull,
+`pip install -r requirements.txt`, `migrate`, `collectstatic`, and `reload_all`.
+It refuses a dirty worktree (use `--allow-dirty` only if you know what you are
+doing) and only runs the pipeline when the remote actually moved ahead, unless
+`--force` is given.
+
+Running Python code is cached by the web/Celery processes, so a restart is
+required after an update. The updater auto-detects supervisor, systemd or
+launchd and spawns a detached helper that restarts the service a few seconds
+later. When the service user lacks permission (common with `sudo`), set an
+explicit command in `config/settings_local.py`:
+
+```python
+AGENTONE_RESTART_COMMAND = ["sudo", "-n", "supervisorctl", "restart", "agentone-server"]
+# or: ["sudo", "-n", "systemctl", "restart", "agentone_server.service"]
+```
+
+Use `AGENTONE_SERVICE_MANAGER` (`auto`/`supervisor`/`systemd`/`launchd`) and
+`AGENTONE_SERVICE_NAME` to pin auto-detection. Pass `--no-restart` to skip the
+restart entirely (for example when doing a rolling deploy yourself). Set
+`AGENTONE_UPDATE_CHECK_ENABLED = False` to disable the remote "Check for
+updates" lookup entirely (useful on air-gapped installs). `collectstatic` is
+skipped when `DEBUG` is on, since static files are served from source then.
+
+Staff users can trigger the same pipeline from **Settings → System → Update
+AgentOne**; it queues `agentone.update` on Celery and streams logs into the
+panel. The panel also reports the installed version (git describe with the
+`VERSION` file as fallback), commit and branch; **Check for updates** refreshes
+the cached remote commit.
+
 ### 5. Nginx reverse proxy
 
 ```nginx

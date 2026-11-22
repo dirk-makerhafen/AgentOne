@@ -174,8 +174,11 @@
             </div>
 
             {% elif tab == "system" %}
+            {% include "settings/update_panel.html" %}
             <div class="detail-card">
                 <div class="detail-card-title">System</div>
+                <div class="detail-row"><span class="detail-row-label">AgentOne version</span><span class="detail-row-value">{{ system.version }}</span></div>
+                <div class="detail-row"><span class="detail-row-label">Commit</span><span class="detail-row-value"><code>{{ system.commit|default:"—" }}</code></span></div>
                 <div class="detail-row"><span class="detail-row-label">Python</span><span class="detail-row-value">{{ system.python }}</span></div>
                 <div class="detail-row"><span class="detail-row-label">Platform</span><span class="detail-row-value">{{ system.platform }}</span></div>
                 <div class="detail-row"><span class="detail-row-label">AgentOne home</span><span class="detail-row-value"><code>{{ system.agentone_home }}</code></span></div>

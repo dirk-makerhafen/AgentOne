@@ -1,0 +1,56 @@
+<div id="agentone-update-panel" class="detail-card">
+    <div class="detail-card-title">Update</div>
+    <div class="detail-row"><span class="detail-row-label">Installed version</span><span class="detail-row-value">{{ update.version }}</span></div>
+    <div class="detail-row"><span class="detail-row-label">Release</span><span class="detail-row-value">{{ update.release|default:"—" }}</span></div>
+    <div class="detail-row"><span class="detail-row-label">Commit</span><span class="detail-row-value"><code>{{ update.short_commit|default:"—" }}</code>{% if update.branch %} on {{ update.branch }}{% endif %}</span></div>
+    <div class="detail-row"><span class="detail-row-label">Remote</span><span class="detail-row-value">{% if update.remote_short_commit %}<code>{{ update.remote_short_commit }}</code> — {% if update.update_available %}<span class="key-badge key-warn">update available</span>{% else %}up to date{% endif %}{% else %}unknown{% endif %}</span></div>
+
+    {% if not update.is_git %}
+    <p class="insights-empty">Updates require a git checkout. Reinstall with the installer to enable them.</p>
+    {% elif update.dirty %}
+    <p class="insights-empty">Commit or stash local changes before updating.</p>
+    {% endif %}
+
+    {% if update.is_staff %}
+    <div class="update-actions">
+        <button type="button" class="webui-action-btn" hx-post="{{ update.check_url }}"
+                hx-target="#agentone-update-panel" hx-swap="outerHTML">
+            Check for updates
+        </button>
+        {% if update.can_update %}
+        <button type="button" class="webui-primary-btn" hx-post="{{ update.run_url }}"
+                hx-target="#agentone-update-panel" hx-swap="outerHTML"
+                hx-confirm="Update AgentOne now? This pulls new code, installs dependencies, runs migrations and collectstatic, then restarts the service.">
+            Update AgentOne
+        </button>
+        {% elif update.is_running %}
+        <span class="key-badge key-warn">update running…</span>
+        {% elif not update.is_git %}
+        <span class="key-badge key-err">not a git install</span>
+        {% elif update.dirty %}
+        <span class="key-badge key-err">uncommitted changes</span>
+        {% endif %}
+    </div>
+
+    {% if update.run %}
+    <div class="update-run">
+        <div class="detail-row"><span class="detail-row-label">Last update</span><span class="detail-row-value">
+            {% if update.run.status == 'success' or update.run.status == 'updated' or update.run.status == 'up_to_date' %}completed
+            {% elif update.run.status == 'failed' %}failed
+            {% else %}running{% endif %}
+            · {{ update.run.started_at }}{% if update.run.finished_at %} → {{ update.run.finished_at }}{% endif %}
+        </span></div>
+        {% if update.run.error %}<pre class="update-log update-log-error">{{ update.run.error }}</pre>{% endif %}
+        {% if update.run.logs %}
+        <pre class="update-log">{% for line in update.run.logs %}{{ line.time }} [{{ line.level }}] {{ line.message }}
+{% endfor %}</pre>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if update.is_running %}
+    <div class="update-polling" hx-get="{{ update.status_url }}" hx-trigger="every 2s"
+         hx-target="#agentone-update-panel" hx-swap="outerHTML">Waiting for update to finish…</div>
+    {% endif %}
+    {% endif %}
+</div>

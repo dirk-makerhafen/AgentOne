@@ -24,6 +24,11 @@ class Command(BaseCommand):
         parser_setup = subparsers.add_parser("setup", help="Guides through the initial server setup.")
         parser_run = subparsers.add_parser("run", help="Runs the server components (Daphne, Celery).")
         parser_update = subparsers.add_parser("update", help="Update AgentOne to the latest version.")
+        parser_update.add_argument("--check", action="store_true", help="Show version and remote status only, without updating.")
+        parser_update.add_argument("--branch", help="Remote branch to update from (defaults to the current branch).")
+        parser_update.add_argument("--allow-dirty", action="store_true", help="Allow updating with uncommitted changes.")
+        parser_update.add_argument("--force", action="store_true", help="Run all update steps even when already up to date.")
+        parser_update.add_argument("--no-restart", action="store_true", help="Do not schedule a service restart after updating.")
         parser_service = subparsers.add_parser("service", help="Manages the server system service.")
         parser_service.add_argument("action", choices=["install", "start", "stop", "status", "uninstall"], help="Service action to perform.")
         parser_browser = subparsers.add_parser("browser", help="Manages the Camoufox browser daemon.")
@@ -525,113 +530,64 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("All server components shut down."))
 
     def handle_update(self, **options):
-        from pathlib import Path
-        from django.conf import settings
+        """Delegate to the shared pipeline used by the UI update task."""
+        from django.core.management.base import CommandError
 
-        repo_path = Path(settings.BASE_DIR)
+        from launcher.updates import UpdateError, run_update
+        from runtime.version import get_version_info, update_status
+
         self.stdout.write(self.style.SUCCESS("--- AgentOne Update ---\n"))
-
-        # 1. Verify we are in a git repo
-        if not (repo_path / ".git").is_dir():
-            self.stdout.write(self.style.ERROR(
-                "Not a git repository. AgentOne must be installed via git for updates."
-            ))
-            return
-
-        # 2. Check for uncommitted changes
-        result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=repo_path, capture_output=True, text=True,
-        )
-        if result.stdout.strip():
-            self.stdout.write(self.style.WARNING(
-                "You have uncommitted changes. Stash or commit them first, "
-                "then retry."
-            ))
-            self.stdout.write(result.stdout)
-            return
-
-        # 3. Fetch remote tags
-        self.stdout.write("Fetching remote...")
-        subprocess.run(
-            ["git", "fetch", "--tags", "--quiet", "origin"],
-            cwd=repo_path, check=True, capture_output=True, text=True,
-        )
-
-        # 4. Check current vs latest
-        current = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=repo_path, capture_output=True, text=True,
-        ).stdout.strip()
-
-        behind = subprocess.run(
-            ["git", "rev-list", "--count", "HEAD..origin/HEAD"],
-            cwd=repo_path, capture_output=True, text=True,
-        ).stdout.strip()
-
-        self.stdout.write(f"  Current commit: {self.style.SUCCESS(current)}")
-        if behind and behind != "0":
-            self.stdout.write(f"  Behind remote: {self.style.WARNING(behind + ' commits')}")
-        else:
-            self.stdout.write("  Already up to date with remote.")
-            return
-
-        # 5. Pull latest
-        self.stdout.write("Pulling latest code...")
-        subprocess.run(
-            ["git", "pull", "--quiet", "--ff-only", "origin"],
-            cwd=repo_path, check=True, capture_output=True, text=True,
-        )
-
-        new_current = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=repo_path, capture_output=True, text=True,
-        ).stdout.strip()
-        self.stdout.write(f"  Updated to: {self.style.SUCCESS(new_current)}")
-
-        # 6. Install / update dependencies
-        self.stdout.write("Updating Python dependencies...")
-        req_path = repo_path / "requirements.txt"
-        if req_path.exists():
-            result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-r", str(req_path)],
-                capture_output=True, text=True,
+        status = update_status(refresh=options.get("check"))
+        self.stdout.write(f"  Version:  {self.style.SUCCESS(status['version'])}")
+        self.stdout.write(f"  Commit:   {status['short_commit'] or 'unknown'}  ({status['branch'] or 'unknown'})")
+        if status["dirty"]:
+            self.stdout.write(self.style.WARNING("  Worktree has uncommitted changes."))
+        if status["remote_short_commit"]:
+            self.stdout.write(f"  Remote:   {status['remote_short_commit']}")
+            self.stdout.write(
+                "  Update:   "
+                + (self.style.WARNING("available") if status["available"] else "up to date")
             )
-            if result.returncode == 0:
-                self.stdout.write(self.style.SUCCESS("  Dependencies updated."))
-            else:
-                self.stdout.write(self.style.WARNING(
-                    f"  pip install had issues:\n{result.stderr[:500]}"
-                ))
 
-        # 7. Run migrations
-        self.stdout.write("Applying database migrations...")
+        if options.get("check"):
+            return
+
+        def log(message, level="info"):
+            style = {
+                "error": self.style.ERROR,
+                "warning": self.style.WARNING,
+                "success": self.style.SUCCESS,
+            }.get(level, lambda text: text)
+            self.stdout.write(style(message))
+
         try:
-            from django.core.management import call_command
-            call_command("migrate", interactive=False, verbosity=0)
-            self.stdout.write(self.style.SUCCESS("  Migrations applied."))
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"  Migration failed: {e}"))
+            result = run_update(
+                allow_dirty=bool(options.get("allow_dirty")),
+                force=bool(options.get("force")),
+                restart=not options.get("no_restart"),
+                branch=options.get("branch"),
+                log=log,
+            )
+        except UpdateError as exc:
+            raise CommandError(str(exc)) from exc
+
+        if result["status"] == "up_to_date":
+            return
+        if result["restart"] == "scheduled":
+            self.stdout.write("AgentOne will restart in a few seconds to load the new code.")
+        elif result["restart"] == "not_configured":
             self.stdout.write(self.style.WARNING(
-                "You can retry with 'python3 manage.py migrate'."
+                "No service manager detected. Start with "
+                "'python3 manage.py server service install' and restart AgentOne manually."
             ))
-
-        # 8. Publish static assets
-        self._collectstatic()
-
-        # 9. Reload manifests
-        self.stdout.write("Reloading manifests...")
-        try:
-            from registry.management.commands.reload_all import run_reload_all
-            result = run_reload_all(str(repo_path))
-            self.stdout.write(result["summary"])
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"  Reload failed: {e}"))
-
-        self.stdout.write(self.style.SUCCESS("\nUpdate complete!"))
+        self.stdout.write(self.style.SUCCESS(f"Now running {get_version_info(refresh=True)['version']}."))
 
     def handle_service(self, **options):
+        import getpass
         import platform
+        from pathlib import Path
+
+        from django.conf import settings
         from launcher.services.linux import LinuxService
         from launcher.services.macos import MacOSService
         from launcher.services.windows import WindowsService
@@ -639,24 +595,26 @@ class Command(BaseCommand):
         action = options["action"]
         service_name = "agentone_server"
         display_name = "AgentOne Server"
+        config_dir = str(Path(settings.BASE_DIR).resolve())
 
         system = platform.system()
         service_manager = None
 
         if system == "Linux":
-            service_manager = LinuxService(service_name, display_name, self)
+            service_manager = LinuxService(service_name, display_name, self, config_dir, getpass.getuser())
         elif system == "Darwin":
-            service_manager = MacOSService(service_name, display_name, self)
+            service_manager = MacOSService(service_name, display_name, self, config_dir, getpass.getuser())
         elif system == "Windows":
-            service_manager = WindowsService(service_name, display_name, self)
+            service_manager = WindowsService(service_name, display_name, self, config_dir, getpass.getuser())
         else:
             self.stdout.write(self.style.ERROR(f"Unsupported operating system for service management: {system}"))
             return
 
         try:
-            # We can pass the command's stdout/style directly if needed by the methods
             if action == "install":
-                service_manager.install()
+                # LinuxService defaults to `client run`; the server is what a
+                # real AgentOne installation needs.
+                service_manager.install(["server", "run"])
             elif action == "uninstall":
                 service_manager.uninstall()
             elif action == "start":

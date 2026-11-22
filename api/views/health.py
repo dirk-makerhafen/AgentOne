@@ -28,10 +28,23 @@ class HealthView(APIView):
         except Exception:
             pass
 
+        try:
+            from runtime.version import get_version_info
+
+            version = get_version_info()
+            version_fields = {
+                "version": version["version"],
+                "commit": version["short_commit"],
+                "branch": version["branch"],
+            }
+        except Exception:  # pylint: disable=broad-exception-caught
+            version_fields = {"version": "unknown", "commit": "", "branch": ""}
+
         data = {
             "status": "ok" if db_ok else "degraded",
             "database": "connected" if db_ok else "unavailable",
             "redis": "connected" if redis_ok else "unavailable",
+            **version_fields,
         }
         code = status.HTTP_200_OK if db_ok else status.HTTP_503_SERVICE_UNAVAILABLE
         return Response(data, status=code)

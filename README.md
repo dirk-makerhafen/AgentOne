@@ -20,27 +20,57 @@ AgentOne is a Django-based autonomous agent framework with real-time Web UI, sch
 
 ## Quick start
 
+One-line installer (clones the repo, creates `venv/`, installs dependencies,
+runs the interactive setup, migrates, collects static files and reloads
+manifests):
+
 ```bash
-# Prerequisites: Python 3.10+, Redis
+curl -fsSL https://raw.githubusercontent.com/dirk-makerhafen/AgentOne/main/install.sh | bash
+# or: bash install.sh --dir /srv/AgentOne --branch main
+```
+
+Manual install:
+
+```bash
+# Prerequisites: Python 3.10+, git, Redis
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
 # Interactive setup — database, Redis, TLS certificate
 python3 manage.py server setup
 
-# Run (starts Daphne + Celery worker + Celery beat)
+python3 manage.py migrate
+python3 manage.py collectstatic
+python3 manage.py reload_all
+
+# Run (starts Daphne + Celery worker + Celery beat + browser daemon)
 python3 manage.py server run
 ```
 
-Open http://localhost:8000 to see the UI.
+Open the address printed by setup (default `https://localhost:7999`).
 
 ### Updating
 
 ```bash
-python3 manage.py server update
+python3 manage.py server update --check   # show versions / update availability
+python3 manage.py server update           # full update
+python3 manage.py server update --no-restart
 ```
 
-Runs `git pull`, `pip install -r requirements.txt`, `migrate`, and `reload_all` in sequence.
+The full update pulls with `--ff-only`, installs dependencies, runs `migrate`
+and `collectstatic`, reloads manifests, and schedules a service restart. It
+refuses to run on a dirty worktree unless `--allow-dirty` is passed.
+
+Staff users can also use **Settings → System → Update AgentOne** in the UI.
+It queues the same pipeline as a Celery task and streams its log into the panel.
+The running version/commit is shown there and in `GET /api/v1/health/`.
+
+If the web/Celery user cannot restart the service directly, set
+`AGENTONE_RESTART_COMMAND` in `config/settings_local.py`, for example:
+
+```python
+AGENTONE_RESTART_COMMAND = ["sudo", "-n", "supervisorctl", "restart", "agentone-server"]
+```
 
 ## Architecture overview
 

@@ -1,0 +1,45 @@
+/* Settings → System self-update card ------------------------------------- */
+.settings-version {
+    margin-top: 10px;
+    padding: 6px 10px;
+    font-size: 10px;
+    color: var(--muted);
+    opacity: .8;
+}
+
+#agentone-update-panel .update-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+#agentone-update-panel .update-run { margin-top: 12px; }
+
+#agentone-update-panel .update-log {
+    margin: 8px 0 0;
+    padding: 10px 12px;
+    max-height: 240px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--code-bg);
+    color: var(--pre-text, var(--text));
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#agentone-update-panel .update-log-error {
+    color: var(--error, #ef4444);
+    white-space: normal;
+}
+
+#agentone-update-panel .update-polling {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--muted);
+}

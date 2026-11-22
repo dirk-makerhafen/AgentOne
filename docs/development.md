@@ -573,7 +573,7 @@ sources:
 python3 manage.py server update
 ```
 
-This runs `git fetch`, `git pull --ff-only`, `pip install -r requirements.txt`, `migrate`, and `reload_all` — safe to run while the server is down.
+This runs `git fetch`, `git pull --ff-only`, `pip install -r requirements.txt`, `migrate`, `collectstatic` (unless `DEBUG` is on), `reload_all`, and schedules a service restart — safe to run while the server is down. Add `--check` to only print version/remote status, `--force` to rerun the pipeline when already current, `--allow-dirty` to update over local edits, or `--no-restart` to skip the restart. The same code is used by the staff-only **Settings → System → Update AgentOne** button in the UI; set `AGENTONE_UPDATE_CHECK_ENABLED = False` to disable its remote lookup.
 
 ---
 
