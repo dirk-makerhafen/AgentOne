@@ -1,18 +1,14 @@
 # UI data requirements — components, data needs, and subscriptions
 
 > **Historical (pre-rewrite).** This is the 2026-10-12 inventory of the
-> pyHtmlGui UI (`ui/`), which has since been deleted. It is kept as the
-> scoping record for the htmx rewrite; the shipped live-update model is
-> documented in [`observables-migration.md`](observables-migration.md).
-> Mechanism reference then: `ui/consumer.py`, `ui/lib/model_view.py` — both
-> gone.
+> former pyHtmlGui UI (`ui/`, removed). It is kept as scoping context for the
+> htmx rewrite; the shipped live-update model is documented in
+> [`observables-migration.md`](observables-migration.md),
+> [`htmx-sse.md`](htmx-sse.md), and [`ui-implementation-guide.md`](ui-implementation-guide.md).
 
-> Purpose: inventory of what the pyHtmlGui UI (`ui/`) needed
-> (initial data + live updates) so a UI migration can be scoped against the
-> REST API surface (`api/`). Generated 2026-10-12 from source audit.
-> Mechanism reference: `docs/observables-migration.md`,
-> `server/models/observables.py`, `ui/consumer.py`,
-> `ui/lib/model_view.py`.
+> Purpose: inventory of what that UI needed (initial data + live updates) so
+> a UI migration could be scoped against the REST API surface (`api/`).
+> Generated 2026-10-12 from source audit.
 
 ## 0. How live updates work (1 paragraph)
 
@@ -22,10 +18,9 @@ which calls `instance.notify_observers(action)`. `ObservableMixin.observable_key
 (`<Model>.pk:<pk>`), plus one key per set FK (e.g. `Message.session:7`).
 `server/models/observables.py notify()` RPUSHes one message per subscribed UI
 instance to `agentone:uiq:<instance_key>`. Each websocket instance runs one
-drain thread (`ui/consumer.py:55 loop`, `BLPOP timeout=5`, coalesce
+drain thread (legacy; historical, removed)
 last-message-wins per `function_id`). Views subscribe via
-`orm_subscribe(view, key, callback)` (`ui/lib/model_view.py:17`) and
-unsubscribe via `orm_unsubscribe_view`. Only **12 call-sites** subscribe
+`orm_subscribe`/`orm_unsubscribe_view` style hooks (legacy pyHtmlGui; removed). Only **12 call-sites** subscribe
 (see §1); everything else renders once and re-renders on user action,
 `refresh_from_db()`, or JS polling.
 
@@ -159,12 +154,12 @@ on mutation. Grouped by area.
 | Todos (event-sourced `todolist_action`) | Session-todos tab | New `GET sessions/{id}/todos` (wraps the anchor's `latest_result()`) |
 | User settings (theme/skin/send_key/…) | Composer box, settings panels | New `GET/PATCH /me/settings` or settings viewset |
 | `ask_user` pending-question shaping | Question card | Could stay client-side over `GET task-calls?` once `status_detail` filter exists |
-| Push channel | All §1 rows | Either poll (intervals: 2s rate-limit, ~5s chat, ~10s board/sidebar) or add websocket/SSE emitting `(key, model, pk, action)` like `process_queue_messages` does today (`ui/consumer.py:25`). Without it, every §1 row becomes a poller |
+| Push channel | All §1 rows | Either poll (intervals: 2s rate-limit, ~5s chat, ~10s board/sidebar) or add websocket/SSE emitting `(key, model, pk, action)` like the old legacy queue pump did (historical). Without it, every §1 row becomes a poller |
 
 ## 5. File index (where to look when building the new UI)
 
 - Transport: `server/models/observables.py` defines `subscribe`, `notify`, `publish_model_event`, and `ObservableMixin`; `server/models/base_model.py` defines the abstract base model.
-- Consumer: `ui/consumer.py:25 process_queue_messages`, `:55 loop`, `:91 _ensure_loop_thread`; `ui/lib/model_view.py:17 orm_subscribe`, `:40 orm_unsubscribe_view`.
+- Consumer: (legacy file references removed; see git history for the old pyHtmlGui implementation.)
 - Live views: `ui/main/chat/messages/messages.py`, `ui/main/chat/composer/footer.py`, `ui/main/chat/composer/wrap/ctxindicator.py`, `ui/main/chat/toc.py`, `ui/main/chat/cards/{approval,queue,question,guardrail_approval,rate_limit}.py`, `ui/main/workitems/board.py`, `ui/sidebar/panels/workspaces.py`, `ui/main/rightpanel/session/rightpanel_session_templates.py`.
 - API: `api/urls.py`, `api/views/{sessions,queries,tasks,agents,workspaces,collections,cron,providers,skills,projects,systems}.py`, `api/serializers/`.
 - Tests pinning behavior: `server/tests/test_observables.py`, `test_messages_ui.py`, `test_workitem_ui.py`, `test_rate_limit_card.py`, `test_workspaces_ui.py`, `api/tests/test_{workspaces,tasks,ask_user,deny_feedback}.py`.

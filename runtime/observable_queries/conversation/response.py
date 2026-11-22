@@ -33,3 +33,29 @@ class ResponseObservables(ObservableBase):
     def by_pk(self, pk: int) -> ObservableList:
         model = self._model()
         return self._list(model.objects.filter(pk=pk), pk_key(model, pk))
+
+    def unfinished(self) -> ObservableList:
+        """Responses still in flight (queued or streaming), newest first.
+
+        The bare ``Response`` key covers status transitions; individual row keys
+        are added by the consumer for 1 Hz token flushes, which deliberately
+        publish only ``Response:<pk>``.
+        """
+        from server.models.queries.response import ResponseStatus
+
+        model = self._model()
+        return self._list(
+            model.objects.filter(
+                status__in=(ResponseStatus.WAITING, ResponseStatus.ACTIVE)
+            )
+            .select_related(
+                "query",
+                "session",
+                "session__parent_project",
+                "session__parent_session",
+                "session_version__agent",
+                "session_version__workspace",
+            )
+            .order_by("-created_at", "-pk"),
+            "Response",
+        )

@@ -26,3 +26,28 @@ class QueryObservables(ObservableBase):
     def by_pk(self, pk: int) -> ObservableList:
         model = self._model()
         return self._list(model.objects.filter(pk=pk), pk_key(model, pk))
+
+    def unfinished(self) -> ObservableList:
+        """Queries still in flight (queued or streaming), newest first.
+
+        Uses the bare ``Query`` key: every query write publishes it, including
+        status transitions that move a row into or out of this list.
+        """
+        from server.models.queries.query import QueryStatus
+
+        model = self._model()
+        return self._list(
+            model.objects.filter(
+                status__in=(QueryStatus.WAITING, QueryStatus.ACTIVE)
+            )
+            .select_related(
+                "session",
+                "session__parent_project",
+                "session__parent_session",
+                "session_version__agent",
+                "session_version__workspace",
+                "trigger_message",
+            )
+            .order_by("-created_at", "-pk"),
+            "Query",
+        )

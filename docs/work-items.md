@@ -1,9 +1,9 @@
 # Work Items — long-term task layer
 
 **Status:** implemented (increment 1) — model, FSM, tick dispatch, agent
-verification, agent-facing tool. No UI. See §12 for what was deferred.
+verification, agent-facing tool, and a web UI (webui workitems views). See §12 for what was deferred.
 **Scope:** increment 1 — model, FSM, tick dispatch, agent verification,
-agent-facing tool. No UI.
+agent-facing tool, plus web UI in `webui/features/workitems`.
 
 ---
 

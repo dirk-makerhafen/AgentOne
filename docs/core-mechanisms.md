@@ -525,224 +525,12 @@ delegate_task(blocking=False)  (or start_subsession / spawn_subtask / message_su
 
 
 
-## pyHtmlGui Renderer (legacy)
+## UI rendering (webui, current)
 
-> **Legacy UI only.** The primary UI no longer uses pyHtmlGui; `webui/` renders
-> Django templates and refreshes fragments with htmx + SSE (see
-> [`ui-rewrite.md`](ui-rewrite.md)). The old UI remains mounted at `/legacy/`
-> until the soak period ends, so this section is kept for reference.
+The primary UI is `webui/` (Django templates + htmx + SSE), with per-tab events over `/app/ws/events/` and component refetching driven by observable keys. The legacy pyHtmlGui/WebSocket UI has been removed.
 
-pyHtmlGui is a custom WebSocket-based UI framework built on Jinja2 templates and Django Channels. It maintains an in-memory view tree on the server, renders it to HTML, and sends surgical DOM updates (not full pages) over the WebSocket.
+See: [`ui-rewrite.md`](ui-rewrite.md), [`observables-migration.md`](observables-migration.md), [`htmx-sse.md`](htmx-sse.md), [`ui-implementation-guide.md`](ui-implementation-guide.md).
 
-### Architecture Overview
-
-```
-Browser                          Django Channels                    Python Runtime
-───────                          ───────────────                    ──────────────
-pyHtmlGuiBase.html               ASGI: ws → PyHtmlGuiConsumer       UiApp (Observable)
-  └─ pyhtmlgui.js                      └─ PyHtmlGuiInstance              └─ projects, agents,
-       │                                    └─ UiAppView                       sessions, messages
-       │                                          ├─ AppTitlebar
-       │                                          ├─ RailView
-       │                                          ├─ SidebarView
-       │                                          ├─ MainView
-       │                                          │     └─ open_tabs dict
-       │                                          │           ├─ AgentView
-       │                                          │           └─ Chat
-       │                                          └─ RightPanel
-       │                                                ├─ Workspace
-       │                                                ├─ Session
-       │                                                ├─ Tasks
-       │                                                └─ Subagents
-       │
-pyview.method() ────── WebSocket JSON ──────►  _on_subject_updated()
-       ▲                                           │
-       │                                      self.update()
-       │                                           │
-       │                                     render() → HTML
-       │                                           │
-       pyhtmlgui. ◄────── WebSocket JSON ──────────┘
-       replace_element(uid, html)
-```
-
-### View Hierarchy
-
-**Base class:** `PyHtmlView` (`ui/lib/pyHtmlGui/pyhtmlgui/view/pyhtml_view.py`)
-
-Every UI component extends `PyHtmlView`. Key class attributes:
-
-| Attribute | Default | Purpose |
-|---|---|---|
-| `TEMPLATE_STR` | `None` | Inline Jinja2 template string |
-| `TEMPLATE_FILE` | `None` | Path to Jinja2 template file |
-| `DOM_ELEMENT` | `"div"` | HTML element tag name |
-| `DOM_ELEMENT_CLASS` | `None` | CSS class for the element |
-| `CSS_STR` | `None` | Inline CSS added to the page |
-
-**Constructor** (line 26): Generates a random 16-char `uid`. Registers as child of parent. Creates weak references to subject and parent. Resolves `_instance` to the `PyHtmlGuiInstance`. Auto-observes subject if `_on_subject_updated` is defined (calls `add_observable(self.subject)`).
-
-**Convenience base:** `ModelView` (`ui/lib/model_view.py`): Stores subject and parent as direct attributes (not weak refs). Provides `_on_subject_updated() → self.update()` and `_on_subject_died()`.
-
-### Render Pipeline
-
-1. **Trigger:** Something calls `view.update()` — typically from `_on_subject_updated()` (called when an observable subject changes) or from a JS click handler.
-
-2. **`render()`** (line 64):
-   - Gets a hard reference to subject (preventing GC during render).
-   - Calls `self.set_visible(True)` if not visible.
-   - Marks all children `_was_rendered = False`.
-   - Gets the cached Jinja2 template via `self._instance.get_template(self)`.
-   - Renders template with `{"pyview": self}` — **this is the only variable injected**.
-   - Hides children that were NOT rendered (disappeared from template).
-   - Wraps output in DOM element tags: `<div class="ClassName" id="pv_xxx">...</div>`.
-
-3. **`update()`** calls `pyhtmlgui.replace_element` via WebSocket, passing the new HTML for this view's `uid`. JS replaces the existing element in-place.
-
-4. **Template resolution** (`pyhtmlgui_instance.py:187`):
-   - If `view.TEMPLATE_FILE` is set → loads from file via `jinja2.FileSystemLoader`.
-   - Otherwise uses `view.TEMPLATE_STR`.
-   - A regex preprocessor (`_prepare_template`, line 253) rewrites `onclick="pyview.method(args)"` → `onclick="pyhtmlgui.call(functioncall_id, args)"`. This is what enables Python methods to be called from browser click handlers.
-
-5. **Update modes:**
-   - `update()` — full re-render of the view and its children, replaces the DOM element.
-   - `insert_element(index, html)` — surgical insertion at a specific position (used by `ObservableListView` for single-item insertions).
-   - `delete()` — removes from DOM and detaches from parent.
-
-### Observable Data Structures
-
-**File:** `ui/lib/pyHtmlGui/pyhtmlgui/lib/`
-
-- **`Observable`** (`observable.py:5`): Base mixin with `_observers` (WeakFunctionReferences). `attach_observer()`, `detach_observer()`, `notify_observers(**kwargs)`.
-
-- **`ObservableList(list, Observable)`** (`observableList.py:4`): Inherits from both `list` and `Observable`. Overrides every mutating method to call `notify_observers()` with a payload describing the action:
-  - `append` → `{"action": "append", "index": N, "item": ...}`
-  - `insert` → `{"action": "insert", "index": N, "item": ...}`
-  - `__setitem__` → `{"action": "setitem", "index": N, "old_item": ..., "new_item": ...}`
-  - `__delitem__` → `{"action": "delitem", "index": N, "item": ...}`
-  - And so on for `extend`, `pop`, `remove`, `sort`, `reverse`, `clear`.
-
-- **`ObservableDict(dict, Observable)`** (`observableDict.py:4`): Same pattern for dict mutations.
-
-### Observable Views
-
-**`ObservableListView`** (`view/observable_list_view.py:11`): Renders items from an `ObservableList`. Constructor takes `item_class` (a `PyHtmlView` subclass for wrapping each item). The `_on_subject_updated()` method handles each mutation type:
-
-- `append`/`insert`: Creates a wrapper view, calls `insert_element(index, obj)` for surgical DOM insertion.
-- `setitem`: Deletes old wrapper, creates new one, inserts at index.
-- `extend`: Inserts multiple items sequentially.
-- `remove`/`pop`/`delitem`: Deletes wrapper from DOM and list.
-- `sort`/`reverse`/`clear`: Full re-render.
-
-**`ObservableDictView`** (`view/observable_dict_view.py:15`): Same concept for `ObservableDict`. Each wrapper gets an `element_key` method returning its dict key (used for sorted iteration).
-
-**`QuerySetView`** (`ui/lib/queryset_view.py:10`): Lazily renders Django QuerySet results. `_recreate()` destroys old wrappers and builds new ones from the queryset. Uses `first_or_create_view` helper to avoid building views for items outside the visible range.
-
-### Right Panel Architecture
-
-**File:** `ui/main/rightpanel/rightpanel.py`
-
-The `RightPanel` (line 19) manages four tab sub-views via a `switchPanel(name)` method:
-
-| Tab | View class | Purpose |
-|---|---|---|
-| Workspace | `RightPanelWorkspace` | Filesystem tree for the current session's workspace |
-| Session | `RightPanelSession` | Session detail with settings overrides + reset buttons |
-| Tasks | `RightPanelTasks` | Capability tables (allowed/disallowed tools/tasks/commands/skills/subagents) |
-| Sub-agents | `RightPanelSubagents` | Available subagents + active child sessions |
-
-The `current_session` property (line 61) resolves to the active chat session by inspecting `self.parent.main_panel.selected_tab_view.session`:
-
-```python
-@property
-def current_session(self):
-    mtv = getattr(self.parent, 'main_panel', None)
-    mtv = getattr(mtv, 'selected_tab_view', None) if mtv else None
-    if mtv and hasattr(mtv, 'session') and isinstance(mtv.session, Session):
-        return mtv.session
-    return None
-```
-
-Each tab view accesses `self.parent.current_session` to get the active runtime `Session`. This is the standard pattern — views never directly query the database for session state; they go through the parent's `current_session` property.
-
-### Template Patterns
-
-Templates receive only `{"pyview": self}` as context. Common patterns:
-
-**Rendering child views:**
-```jinja
-{{ pyview.sidebar.render() }}
-{{ pyview.main_panel.render() }}
-```
-
-**Iterating items:**
-```jinja
-{% for item in pyview.get_items() %}
-  {{ item.render() }}
-{% endfor %}
-```
-
-**Conditional rendering:**
-```jinja
-{% if pyview.subject.is_active %}
-  <span class="status active">Active</span>
-{% else %}
-  <span class="status inactive">Inactive</span>
-{% endif %}
-```
-
-**JS callbacks via pyview:**
-```html
-<button onclick="pyview.toggle('{{ name }}')">Toggle</button>
-```
-
-The `_prepare_template()` preprocessor rewrites these to `pyhtmlgui.call(N, 'name')` at compile time, where `N` is an auto-generated function reference ID.
-
-### CSS Scoping
-
-The framework supports inline CSS per view class via `CSS_STR`. When a view is first rendered, its `CSS_STR` is injected into the page. CSS rules are scoped by the view's class name, so they don't leak:
-
-```python
-class DirectoryView(ModelView):
-    CSS_STR = """
-    .DirectoryView { font-family: monospace; }
-    .DirectoryView .folder { font-weight: bold; }
-    """
-```
-
-### Event Flow Summary
-
-```
-User clicks button in browser
-  │
-  ▼
-preprocessed onclick="pyhtmlgui.call(42, 'toggle', 'src')"
-  │
-  ▼
-WebSocket message: {"call_id": 42, "args": ["toggle", "src"]}
-  │
-  ▼
-PyHtmlGuiConsumer.receive() → pyhtmlgui_instance.process_received_message()
-  │
-  ▼
-Resolves call_id 42 → PyHtmlView.fn_refs[42] → BoundMethod(instance.toggle)
-  │
-  ▼
-toggle('src') runs Python code (e.g., toggles a directory in workspace tree)
-  │
-  ▼
-toggle() calls self.update()
-  │
-  ▼
-update() → render() → HTML → ws.send({"name": "pyhtmlgui.replace_element",
-                                        "args": ["pv_abc123", "<div>...</div>"]})
-  │
-  ▼
-Browser JS: document.getElementById("pv_abc123").outerHTML = newHTML
-```
-
-No page reloads. No full re-renders. Only the specific view that called `update()` gets its DOM replaced.
-
----
 
 ## File Reference
 
@@ -790,28 +578,16 @@ No page reloads. No full re-renders. Only the specific view that called `update(
 | `.agentone/agents/baseagent/scripts/decide_next_step.py` | 19–62 | `decide_next_step()` |
 | `.agentone/agents/baseagent/scripts/scripts.md` | 35–42 | `process_turn` CHAIN definition |
 
-### pyHtmlGui Renderer
+### UI (webui)
 
-| File | Lines | Content |
-|---|---|---|
-| `ui/lib/pyHtmlGui/pyhtmlgui/pyhtmlgui.py` | 18–180 | Top-level framework |
-| `ui/lib/pyHtmlGui/pyhtmlgui/pyhtmlgui_instance.py` | 38–281 | Instance, template cache, `_prepare_template()` |
-| `ui/lib/pyHtmlGui/pyhtmlgui/view/pyhtml_view.py` | 18–242 | Base `PyHtmlView` class |
-| `ui/lib/pyHtmlGui/pyhtmlgui/view/observable_list_view.py` | 11–147 | ObservableListView |
-| `ui/lib/pyHtmlGui/pyhtmlgui/view/observable_dict_view.py` | 15–99 | ObservableDictView |
-| `ui/lib/pyHtmlGui/pyhtmlgui/lib/observable.py` | 5–20 | Observable base |
-| `ui/lib/pyHtmlGui/pyhtmlgui/lib/observableList.py` | 4–72 | ObservableList |
-| `ui/lib/pyHtmlGui/pyhtmlgui/lib/observableDict.py` | 4–38 | ObservableDict |
-| `ui/consumer.py` | 16–44 | WebSocket consumer |
-| `ui/app_view.py` | 37–78 | Root UiAppView |
-| `ui/lib/model_view.py` | 13–31 | ModelView convenience base |
-| `ui/lib/queryset_view.py` | 10–107 | QuerySetView |
-| `ui/main/rightpanel/rightpanel.py` | 19–78 | RightPanel with tab switching |
-| `ui/main/rightpanel/workspace.py` | 51–189 | Workspace tab with DirectoryView |
-| `ui/main/rightpanel/session.py` | 11–161 | Session detail tab |
-| `ui/main/rightpanel/tasks.py` | 36–125 | Capability tables tab |
-| `ui/main/rightpanel/subagents.py` | 28–154 | Subagents tab |
-| `ui/main/agent/agent_view.py` | 55–437 | Agent detail view |
+| File | Content |
+|---|---|
+| `webui/core/components.py` | Component registry, render modes, ETag/cache, placeholders |
+| `webui/core/events.py` | Per-tab event socket (`/app/ws/events/`) and watch handling |
+| `webui/core/layout.py` | Page shell/layout helpers |
+| `webui/features/chats/*` | Chat page, components, sidebar integration |
+| `webui/static/webui/ws-events.js` | WebSocket/EventSource shim for htmx SSE triggers |
+| `webui/static/webui/app.js` | Client watch-set sync, component fetch behavior |
 
 ---
 

@@ -118,19 +118,12 @@ runtime/            Execution runtime
   workspace/        Workspace runtime wrapper
   cron/             Cron runtime wrapper
 
-ui/                 Web UI (pyHtmlGui)
-  app.py            UiApp (Observable data model root)
-  app_view.py       UiAppView (root view, mounts full layout)
-  consumer.py       WebSocket consumer (Django Channels)
-  lib/              Reusable base classes (ModelView, QuerySetView, etc.)
-  lib/pyHtmlGui/    Custom UI framework vendor
-  sidebar/          Sidebar panels + rail + project selector
-  main/             Main panel: chat, settings, agents, projects, etc.
-  overlay/          Overlays: onboarding, dialog, mobile
-  static/css/       Main stylesheet (3800+ lines), third-party CSS
-  static/js/        Custom JS (resizable, split panel, tabs)
-  static/js3party/  Vendored JS (jQuery, Bootstrap, D3, Split.js, etc.)
-  templates/        Jinja2 base templates
+webui/              Server-rendered UI (Django templates + htmx + SSE)
+  core/             Layout, components registry, events bridge, shared utilities
+  features/         Feature apps (chats, projects, agents, settings, ...)
+  static/           CSS/JS assets (including ws-events + app JS)
+  templates/        Django templates (base, feature pages/fragments)
+  urls.py           /app routes (mounted via config.urls -> webui.urls)
 
 .agentone/          Active configuration (global scope; see docs/folders.md)
   agents/           Agent definitions (agent.md files with YAML frontmatter)
@@ -315,89 +308,16 @@ commands:
 ---
 ```
 
-## How to add a new UI panel
+## How to add a new UI surface (webui)
 
-### Sidebar panel
+The UI is server-rendered in `webui/` (Django templates + htmx + SSE). Follow current patterns:
 
-1. Create the panel file at `ui/sidebar/panels/<name>.py`:
+- Feature code lives under `webui/features/<name>/` (views, components, templates).
+- Register independently cacheable fragments/components via `webui/core/components.py` (`register_component`) and wire URLs in `webui/urls.py`.
+- Use observable keys + SSE triggers per [`docs/htmx-sse.md`](htmx-sse.md) and [`docs/ui-implementation-guide.md`](ui-implementation-guide.md).
+- For sidebar sections, follow existing section/sidebar patterns in `webui/core/components.py` and feature templates.
 
-```python
-from ui.lib.model_view import ModelView
-from ui.lib.queryset_view import QuerySetView
-
-class SidebarPanelMyItems(ModelView):
-    DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "panel-view"
-    TEMPLATE_STR = """
-        <div class="panel-head">
-            <span>My Items</span>
-            <button onclick="pyview.addItem()">+</button>
-        </div>
-        {{ pyview.list_view.render() }}
-    """
-
-    def __init__(self, subject, parent, **kwargs):
-        super().__init__(subject, parent, **kwargs)
-        self.list_view = QuerySetView(
-            subject=self.subject,
-            parent=self,
-            queryset=MyModel.objects.all(),
-            item_view_class=SidebarPanelMyItem,
-        )
-
-    def set_project_filter(self, project_id: int | None) -> None:
-        qs = MyModel.objects.all()
-        if project_id:
-            qs = qs.filter(parent_project_id=project_id)
-        self.list_view.queryset = qs
-        self.list_view.recreate()
-
-class SidebarPanelMyItem(ModelView):
-    DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "session-item"
-    TEMPLATE_STR = """<div>{{ pyview.subject.name }}</div>"""
-```
-
-2. Register in `ui/sidebar/sidebar.py`:
-
-```python
-from ui.sidebar.panels.my_items import SidebarPanelMyItems
-
-# In SidebarView.__init__:
-self.panels["my_items"] = SidebarPanelMyItems(
-    subject=self.subject, parent=self
-)
-```
-
-3. Add a rail button in `ui/sidebar/rail.py`:
-
-```python
-<button class="nav-tab" data-panel="my_items" onclick="pyview.parent.sidebar.switchPanel('my_items')">
-    ...
-</button>
-```
-
-### Main panel tab
-
-1. Create the view at `ui/main/<domain>/<name>.py`:
-
-```python
-from ui.lib.model_view import ModelView
-
-class MyDetailView(ModelView):
-    DOM_ELEMENT = "div"
-    DOM_ELEMENT_CLASS = "my-detail"
-    TEMPLATE_STR = """
-        <h2>{{ pyview.subject.name }}</h2>
-        <p>{{ pyview.subject.description }}</p>
-    """
-```
-
-2. Open from sidebar with:
-
-```python
-self.root_view.main.create_and_open_tab(MyDetailView, subject=my_model_instance)
-```
+Do not add new `ui/` pyHtmlGui (`PyHtmlView`/`pyview.*`) code; that stack was removed.
 
 ## REST API
 

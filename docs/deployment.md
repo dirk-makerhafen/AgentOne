@@ -230,7 +230,6 @@ cp config/settings_local.py config/settings_local.py.backup
 
 ## Scaling notes
 
-- The `PyHtmlGuiConsumer` uses a **single shared instance** — all WebSocket connections share one `UiApp` data model. For multi-user scenarios, this would need architectural changes.
 - Celery workers can be scaled horizontally by running additional worker processes (or on separate machines sharing the same Redis and MySQL).
 - Rate limiting uses Redis — ensure Redis availability under load.
 - The 5s tick scheduler is the heartbeat of the task system. If the beat process is down, no task state transitions will occur.

@@ -48,13 +48,13 @@ Runs `git pull`, `pip install -r requirements.txt`, `migrate`, and `reload_all` 
 ┌────────────────────────────────────────────────────────────┐
 │                 Browser (HTML + htmx + SSE)                 │
 └──────────────────────┬──────────────────────────────────────┘
-                       │ HTTP fragments / EventSource /app/sse
+                       │ HTTP (pages/fragments) + WebSocket /app/ws/events/
 ┌──────────────────────▼──────────────────────────────────────┐
 │  Django ASGI (Daphne) — webui/ + server/                     │
 │  ┌─────────────────┐  ┌───────────────┐  ┌────────────────┐ │
-│  │ webui views      │  │ Django        │  │ SSE bridge     │ │
+│  │ webui views      │  │ Django        │  │ Events WS +    │ │
 │  │ (templates +     │◄─┤ ORM / runtime │◄─┤ Redis pub/sub  │ │
-│  │  fragment GETs)  │  │               │  │                │ │
+│  │  components)     │  │               │  │ (observables)  │ │
 │  └─────────────────┘  └───────────────┘  └────────────────┘ │
 └─────────┼────────────────────────────────────────────────────┘
           │
@@ -92,7 +92,7 @@ AgentOne ships with comprehensive documentation organized by audience. Below is 
 | `docs/skills.yaml.md` | Skill directory structure and manifest format |
 | `docs/tool.md` | Tool system quick reference |
 | `docs/providers/README.md` | Provider & model research directory (99 providers, 1998 model cards) |
-| `ui/README.md` | UI directory structure and component reference |
+
 
 ### Documentation map
 
@@ -105,7 +105,7 @@ New to AgentOne?
 
 Building on the platform?
 
-5. **`docs/core-mechanisms.md`** — understand task dispatch and auto-await (the pyHtmlGui section is legacy)
+5. **`docs/core-mechanisms.md`** — understand task dispatch and auto-await
 6. **`docs/manifest-format.md`** — master YAML manifests for agents, scripts, cron, and data flows
 7. **`docs/models.md`** — model reference for all ~30 Django models
 8. **`docs/deployment.md`** — deploy to production with Supervisor + Nginx
@@ -126,8 +126,7 @@ server/         Core Django app: models (~30), admin, Celery tasks, tests
 registry/       YAML manifest loader pipeline, install repo management
 runtime/        Agent/session wrappers, task dispatch state machines, rate limiter
 launcher/       Launcher service for remote agent management
-webui/          Primary UI: Django templates + htmx + SSE (mounted at /app/)
-ui/             Legacy pyHtmlGui UI, frozen at /legacy/ until the soak period ends
+webui/          Server-rendered UI: Django templates + htmx + SSE (mounted at /app/)
 .agentone/      Active tool/agent configuration: YAML manifests, scripts, skills
 docs/           All documentation
 ```

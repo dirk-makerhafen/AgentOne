@@ -448,6 +448,7 @@ def register_feature_components():
     """Import feature modules so they register their components/sidebars."""
     from webui.features.chats.components import register_chat_components
     from webui.features.chats import sidebar as chats_sidebar
+    from webui.features.dashboard.components import register_dashboard_components
     from webui.features.dashboard import sidebar as dashboard_sidebar
     from webui.features.agents import sidebar as agents_sidebar
     from webui.features.projects import sidebar as projects_sidebar
@@ -463,6 +464,7 @@ def register_feature_components():
 
     register_chat_components()
     chats_sidebar.register_sidebar_component("chats")
+    register_dashboard_components()
     dashboard_sidebar.register_sidebar_component()
     agents_sidebar.register_sidebar_component()
     projects_sidebar.register_sidebar_component()

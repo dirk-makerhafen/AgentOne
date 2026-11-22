@@ -1,173 +1,20 @@
 # Architecture
 
-> **UI status (2026-11):** the only UI is `webui/` — Django templates + htmx
-> + SSE, mounted at `/app/` (and `/` redirects there). The pyHtmlGui/WebSocket
-> sections below are historical: `ui/` and the `/legacy/` + `/ws` routes have
-> been deleted. See [`ui-rewrite.md`](ui-rewrite.md) §5.6.1 and
-> [`observables-migration.md`](observables-migration.md) for the shipped design.
+> **UI status (2026-11):** the only UI is `webui/` — Django templates + htmx + SSE, mounted at `/app/` (and `/` redirects to it). See [`ui-rewrite.md`](ui-rewrite.md) and [`observables-migration.md`](observables-migration.md).
 
 ## System overview
 
-AgentOne is structured as a Django monolith with Celery for async task execution. The UI is server-rendered: `webui/` renders Django templates, htmx fetches independently cached fragments over HTTP, and a per-tab SSE bridge forwards Redis pub/sub events so only the fragments that rendered a key refetch.
+AgentOne is structured as a Django monolith with Celery for async task execution. The UI is server-rendered: `webui/` renders Django templates, htmx fetches independently cached components/fragments over HTTP, and a per-tab event socket (`/app/ws/events/`, watch registration via `POST /app/sse/watch`) forwards Redis pub/sub events so only components that rendered a key refetch.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                          BROWSER / HTTP CLIENT                 │
-│  Browser (primary UI) ──── HTTP + SSE ──────► Django ASGI      │
-│  (Django templates + htmx,     /app/*, /app/sse               │
-│   plain links, EventSource)                                    │
-│                                                               │
-│  Legacy UI (frozen) ──────── WebSocket ─────► Django ASGI      │
-│  pyhtmlgui JS client            /legacy/, /ws                  │
+│  Browser (webui) ─────────── HTTP + WS ─────► Django ASGI      │
+│  (Django templates + htmx,  /app/*, /app/ws/events/)           │
 │                                                               │
 │  REST API client ──────────── HTTP ────────► Django WSGI     │
 │  (curl, scripts, CI)            /api/v1/*                     │
 └──────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────▼───────────────────────────────────┐
-│  API LAYER (api/)                           WSGI thread        │
-│                                                                 │
-│  DRF ViewSets + Serializers per domain:                        │
-│  ├── auth/token/             JWT obtain + refresh               │
-│  ├── health/                 DB + Redis check (no auth)         │
-│  ├── me/                    Current user info                   │
-│  ├── agents/                CRUD + resolved capabilities        │
-│  │   └─ /{id}/commands/, /tasks/, /tools/, /skills/,           │
-│  │      /subagents/, /versions/                                 │
-│  ├── sessions/              CRUD + message + call + reset       │
-│  ├── queries/               Read-only + cancel                  │
-│  ├── collections/           CRUD + items + reprocess            │
-│  ├── cron/                  CRUD + run                          │
-│  ├── providers/             Read-only provider + model detail   │
-│  ├── skills/                Read-only + versions                │
-│  ├── projects/              CRUD                                │
-│  ├── systems/               CRUD                                │
-│  ├── workspaces/            CRUD                                │
-│  ├── task-calls/            Read-only with nested runs          │
-│  └── task-runs/             Read-only                           │
-│                                                                 │
-│  OpenAPI docs: /api/v1/schema/, /api/v1/docs/, /api/v1/redoc/  │
-│  Auth: JWT (Bearer) + Session, stacked                          │
-│  Search/filter/ordering across all viewsets                     │
-└────────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────▼───────────────────────────────────┐
-│  UI LAYER (ui/)                             WebSocket thread  │
-│                                                                 │
-│  UiApp (Observable data model)                                  │
-│    ├── Agents, Sessions, Skills, DataCollections, Projects,     │
-│    │   Workspaces (runtime wrapper collections)                  │
-│    └── attach_observer/detach_observer                          │
-│                                                                 │
-│  UiAppView (root view)                                          │
-│    ├── AppTitlebar                                              │
-│    ├── RailView (desktop nav strip)                             │
-│    ├── SidebarView (project selector + panel)                   │
-│    │   └── SidebarPanel* (Chats, Agents, Skills, Cron, etc.)   │
-│    ├── MainView (tab container)                                 │
-│    │   ├── Chat (message list + composer + cards)               │
-│    │   ├── SettingsView, AgentView, SkillView, ...              │
-│    │   └── RightPanel (session/task/workspace/subagent detail)  │
-│    └── Overlays (onboarding, mobile, dialog)                    │
-│                                                                 │
-│  pyHtmlGui framework (ui/lib/pyHtmlGui/)                        │
-│    └── PyHtmlView.render() → Jinja2 → HTML → WebSocket         │
-│    └── update() → replace_element(uid) → DOM patch             │
-└────────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────▼───────────────────────────────────┐
-│  DJANGO APP (server/)                       Main / WSGI thread │
-│                                                                 │
-│  Models (~30)                                                   │
-│  ├── Agents: AgentModel → AgentVersionModel (immutable)        │
-│  ├── Sessions: SessionModel → SessionVersionModel (immutable)  │
-│  ├── Tasks: TaskDefinition → TaskDefinitionVersion              │
-│  │   ├── TaskInstance (bound to session)                        │
-│  │   ├── AgentTaskCall (the "promise")                          │
-│  │   └── AgentTaskRun (the execution)                           │
-│  ├── DataCollections: DataCollection → CollectionItem           │
-│  ├── Messages: Message → MessagePart → GenericContent          │
-│  ├── Skills: SkillModel → SkillModelVersion                     │
-│  ├── Queries: Query → Response (LLM interaction)                │
-│  ├── Providers: ApiProvider → AiModel → ApiKey                  │
-│  ├── SettingsModel, Project, WorkspaceModel, Cronjob,           │
-│  │   TerminalSession (persistent tmux terminals)                │
-│  └── BaseModel (abstract: created_at, updated_at,              │
-│                  dirty-tracking, immutable save)       │
-│                                                                 │
-│  Admin: all models registered with django admin                 │
-│  Prompts: system prompt template for agents                     │
-│  Signals: auto-reload agent manifests on AgentModel save        │
-└────────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────▼───────────────────────────────────┐
-│  REGISTRY / LOADER (registry/)               On save / startup │
-│                                                                 │
-│  Loads YAML manifest files (.agentone/):                         │
-│  ├── load_agent_manifest()    → agent.md fields                 │
-│  ├── load_scripts_manifest() → scripts.md tool/group lists      │
-│  ├── load_skill_manifest()   → skill.md definition              │
-│  ├── (cron manifests removed; cron jobs are DB-canonical)       │
-│  ├── load_chain_entry()      → multi-step chain definitions     │
-│  ├── load_python_entry()     → Python function introspection    │
-│  └── load_project_folder()   → auto-discover from directories   │
-│                                                                 │
-│  install_repo.py: git-based runtime folder extraction           │
-│  task_decorators.py: legacy @task/@tool/@command (dead)        │
-└────────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────▼───────────────────────────────────┐
-│  RUNTIME (runtime/)                         Celery workers      │
-│                                                                 │
-│  Wrapper collections (lazy-load + cache):                       │
-│  ├── Agents   → Agent runtime (name resolution, allow/deny)    │
-│  ├── Sessions → Session runtime (copy-on-write property access) │
-│  ├── DataCollections → runtime query interface                   │
-│  ├── Tasks    → BoundTask (session-bound task dispatch)         │
-│  ├── Skills, Projects, Workspaces, Crons                         │
-│                                                                 │
-│  State machines (atomic SQL updates):                            │
-│  ├── call_fsm.py → TaskCallStateMachine:                        │
-│  │   NEW→WAITING_DEPENDENCY→WAITING_QUEUE→                      │
-│  │   ACTIVE_QUEUED→ACTIVE_RUNNING→ENDED_SUCCESS                 │
-│  │   →HALTED_APPROVAL (guardrail) →WAITING_QUEUE (approve)      │
-│  │                              →ENDED_CANCELLED (deny)         │
-│  └── run_fsm.py → TaskRunStateMachine:                          │
-│      NEW→QUEUED→ACTIVE→SUCCESS/FAILURE                          │
-│                                                                 │
-│  Guardrails (runtime/guardrails.py):                             │
-│  ├── check_shell_command() → sh-guard AST classifier            │
-│  ├── check_python_command() → bandit + supplementary AST checks │
-│  └── lint_shell_command() → pureshellcheck linting              │
-│  All return GuardrailVerdict(action=allow/ask/deny, score, ...)  │
-│                                                                 │
-│  Rate limiter: 3-tier (provider→model→apikey) fail-fast         │
-│  Runtime folder manager: versioned file extraction from git     │
-└────────────────────────────────────────────────────────────────┘
-                            │
-┌───────────────────────────▼───────────────────────────────────┐
-│  CELERY TASKS (server/tasks/)                 Celery workers   │
-│                                                                 │
-│  tick_scheduler: runs every 10s via celery beat                  │
-│    ├── _dispatch_data_flows → match completed calls to          │
-│    │   DataCollection sources & dispatch processor tasks         │
-│    ├── _propagate_from_collections → cascade new items to       │
-│    │   derived flows; detect removals & fire on_removed         │
-│    ├── _release_scheduled_calls / _release_rate_limited_calls / │
-│    │   _release_retry_calls → WAITING→QUEUED transitions        │
-│    └── _process_cron_jobs → scheduled agent dispatch            │
-│                                                                 │
-│  tick_scheduler_recovery: runs every 60s via celery beat        │
-│    └── Error recovery: lost messages, orphaned runs, stale      │
-│        queries, stuck WAITING_RESULTTASKS (deadlock breaking)   │
-│                                                                 │
-│  startup_cleanup: one-time, dispatched by `server run`          │
-│    └── Clean leftover state + run release/recover passes        │
-│        immediately (no 60s wait for beat)                       │
-│                                                                 │
-│  heartbeat: runs every 2min, polls remote executors             │
-│  task_dispatcher: AgentTaskCall → AgentTaskRun dispatch logic   │
-└────────────────────────────────────────────────────────────────┘
 ```
 
 ## Core data flow
@@ -237,41 +84,12 @@ Most models follow a **definition/version split**:
 - Version records override `save()` to raise `ValidationError` on update
 - Creating a new version increments `version_number` and updates the definition's `latest_*` pointer
 
-## pyHtmlGui render pipeline
+## UI rendering (webui)
 
-```python
-# In any view:
-self.update()                              # → triggers re-render
-  → self.render()                          # → generates new HTML
-    → Jinja2(TEMPLATE_STR, {"pyview": self})  # → server-side render
-      → wraps in <DOM_ELEMENT id="uid">       # → scoped wrapper
-        → pyhtmlgui.replace_element(uid, html) # → WebSocket call
-          → document.getElementById(uid).outerHTML = html  # → DOM patch
-```
-
-- Views observe `Observable` subjects via `attach_observer()`
-- On `notify_observers()`, all attached views call `update()`
-- `QuerySetView` is lazy: children created only when visible, destroyed on hide
-- `MultiQuerySetView` merges multiple querysets into one sorted list (e.g., chat timeline)
-
-## WebSocket protocol
-
-The browser establishes a single WebSocket connection at `/ws`.
-
-**Client → Server:**
-```json
-{"call": true, "name": "pyview.methodName", "args": [...]}
-```
-
-**Server → Client (DOM updates):**
-```json
-{"call": true, "name": "pyhtmlgui.replace_element", "args": [uid, html]}
-```
-
-**Server → Client (response):**
-```json
-{"return": true, "value": ...}
-```
+- Server-rendered Django templates with htmx component/fragment requests (`GET /app/c/...`, section sidebars, and feature fragments).
+- Components carry observable keys and ETags; unchanged responses can return `204` so the client preserves DOM state.
+- Live updates: per-tab WebSocket at `ws(/wss) /app/ws/events/` (see `webui/core/events.py`, `webui/static/webui/ws-events.js`) delivers event names from Redis pub/sub; the client syncs watched keys via `POST /app/sse/watch`.
+- For details, see [`ui-rewrite.md`](ui-rewrite.md), [`observables-migration.md`](observables-migration.md), and [`htmx-sse.md`](htmx-sse.md).
 
 ## Rate limiting
 

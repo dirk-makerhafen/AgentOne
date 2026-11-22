@@ -307,6 +307,42 @@ def test_conversation_lists_subscribe_to_their_rows():
 
 
 @pytest.mark.django_db
+def test_unfinished_queries_and_responses_subscribe_to_bare_model_keys():
+    from server.models.queries.query import Query, QueryStatus
+    from server.models.queries.response import Response, ResponseStatus
+
+    agent, version = create_agent("query-unfinished-agent")
+    session, sv = create_session(agent, version)
+    live = Query.objects.create(
+        session=session, session_version=sv, status=QueryStatus.ACTIVE
+    )
+    queued = Query.objects.create(
+        session=session, session_version=sv, status=QueryStatus.WAITING
+    )
+    done = Query.objects.create(
+        session=session, session_version=sv, status=QueryStatus.SUCCESS
+    )
+    response = Response.objects.create(
+        query=live, session=session, session_version=sv,
+        status=ResponseStatus.ACTIVE,
+    )
+    Response.objects.create(
+        query=done, session=session, session_version=sv,
+        status=ResponseStatus.SUCCESS,
+    )
+
+    queries = QueryObservables().unfinished()
+    assert {row.pk for row in queries.rows} == {live.pk, queued.pk}
+    assert queries.keys == ("Query",)
+    _assert_subscribed(queries, live)
+
+    responses = ResponseObservables().unfinished()
+    assert [row.pk for row in responses.rows] == [response.pk]
+    assert responses.keys == ("Response",)
+    _assert_subscribed(responses, response)
+
+
+@pytest.mark.django_db
 def test_responses_by_query_are_subscribed():
     from server.models.queries.query import Query
 

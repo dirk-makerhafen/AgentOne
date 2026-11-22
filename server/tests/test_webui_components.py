@@ -489,3 +489,88 @@ def test_query_detail_endpoint_renders_source_part_content(client):
     body = response.content.decode()
     assert "question text" in body
     assert "answer text" in body
+
+
+# ---------------------------------------------------------------------------
+# dashboard live activity
+# ---------------------------------------------------------------------------
+
+def _active_query(session, sv, message, *, status="ACTIVE", response_status="ACTIVE"):
+    from server.models.queries.query import Query
+    from server.models.queries.response import Response
+
+    query = Query.objects.create(
+        session=session, session_version=sv, trigger_message=message, status=status
+    )
+    response = Response.objects.create(
+        query=query,
+        session=session,
+        session_version=sv,
+        status=response_status,
+        model_name="test-model",
+        prompt_tokens=1200,
+        completion_tokens=340,
+        content="Working on the answer right now",
+    )
+    return query, response
+
+
+def test_dashboard_activity_shows_running_query_with_session_details(client):
+    from server.models.enums.message_enums import MessageRole
+    from server.models.message import Message
+    from server.models.project import Project
+
+    agent, _version, session, sv, _message = _chat_session("dash-activity")
+    session.name = "research run"
+    session.parent_project = Project.objects.create(name="Atlas")
+    session.save()
+    trigger = Message.objects.create(
+        role=MessageRole.USER, session=session, session_version=sv
+    )
+    trigger.add_part("message", "text", "What is the deployment status?")
+    query, response = _active_query(session, sv, trigger)
+
+    result = _get(client, "dashboard-activity", render="htmx")
+    body = result.content.decode()
+
+    assert result.status_code == 200
+    assert 'data-component="dashboard-activity"' in body
+    assert f'sse:Query:{query.pk}' in body
+    assert f'sse:Response:{response.pk}' in body
+    assert "sse:SessionModel" in body
+    assert "research run" in body
+    assert "Atlas" in body
+    assert agent.name in body
+    assert "What is the deployment status?" in body
+    assert "Working on the answer right now" in body
+    assert "test-model" in body
+    assert "1,540" in body  # prompt + completion tokens
+    assert "Streaming" in body
+    assert reverse("webui:chat", args=[session.pk]) in body
+    assert reverse("webui:query_detail", args=[query.pk]) not in body
+    assert reverse("webui:response_detail", args=[response.pk]) not in body
+    assert "started" in body and "updated" in body
+
+
+def test_dashboard_activity_terminal_query_is_hidden_and_etag_is_stable(client):
+    from server.models.queries.response import ResponseStatus
+
+    _agent, _version, session, sv, message = _chat_session("dash-quiet")
+    query, response = _active_query(
+        session, sv, message, status="SUCCESS", response_status=ResponseStatus.SUCCESS
+    )
+
+    first = _get(client, "dashboard-activity", render="htmx")
+    body = first.content.decode()
+    assert b"All quiet" in first.content
+    assert f"Query:{query.pk}" not in body
+    assert f"Response:{response.pk}" not in body
+    assert first["Cache-Control"] == "private, no-cache"
+
+    unchanged = client.get(
+        reverse("webui:component_root", args=["dashboard-activity"]),
+        {"render": "htmx"},
+        HTTP_IF_NONE_MATCH=first["ETag"],
+        HTTP_X_AGENTONE_ETAG="1",
+    )
+    assert unchanged.status_code == 204

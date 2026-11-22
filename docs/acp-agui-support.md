@@ -198,8 +198,8 @@ deltas where exposed, tool-call arg/start/end, terminal status). The UI event
 system also intentionally carries invalidation hints, not rendered payloads and
 not protocol-specific event envelopes.
 
-**What changed since the original report.** The old pyHtmlGui `ui/consumer.py`
-pump and `CHANNEL_GROUP` model-observer fan-out are gone. The current system is
+**What changed since the original report.** The old pyHtmlGui WebSocket consumer/pump
+and `CHANNEL_GROUP` model-observer fan-out are gone. The current system is
 `server/models/observables.py` + `webui/core/events.py` (WebSocket transport for
 htmx `sse:` triggers) + component refetches. This simplifies UI delivery, but it
 does not remove the need for a protocol event source.
@@ -292,7 +292,7 @@ instead of piggybacking on UI invalidations.
 
 Key codebase changes reflected in this revision:
 
-- **UI transport changed:** old pyHtmlGui/global `ui/consumer.py` assumptions are
+- **UI transport changed:** old pyHtmlGui/global WebSocket/view-tree assumptions are
   obsolete. The UI now uses htmx components with a per-tab WebSocket event stream
   (`webui/core/events.py`, `/app/ws/events/`, fallback `/app/sse/` view exists).
 - **Observable model changed:** `server/models/observables.py` is now a

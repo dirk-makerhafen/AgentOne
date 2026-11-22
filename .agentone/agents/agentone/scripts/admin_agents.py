@@ -15,7 +15,6 @@ from admin_common import _err, _ok, _scope_project
 def _scoped_agents(session: Any):
     """Global agents plus the session project's own agents, ordered by name."""
     from runtime.agents.agents import Agents
-
     return Agents(parent_project=session.get_project()).all()
 
 

@@ -24,6 +24,8 @@
             </div>
             {% endif %}
 
+            {% component "dashboard-activity" %}
+
             <div class="insights-grid">
                 <a class="insights-stat" href="{% url 'webui:chats' %}">
                     <div class="insights-stat-value">{{ stats.chats }}</div>
