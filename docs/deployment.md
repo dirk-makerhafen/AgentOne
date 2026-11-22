@@ -141,10 +141,11 @@ AGENTONE_RESTART_COMMAND = ["sudo", "-n", "supervisorctl", "restart", "agentone-
 # or: ["sudo", "-n", "systemctl", "restart", "agentone_server.service"]
 ```
 
-Use `AGENTONE_SERVICE_MANAGER` (`auto`/`supervisor`/`systemd`/`launchd`) and
-`AGENTONE_SERVICE_NAME` to pin auto-detection. Windows services are not
-auto-detected yet; set `AGENTONE_RESTART_COMMAND` explicitly (and run with
-admin rights). Pass `--no-restart` to skip the
+Use `AGENTONE_SERVICE_MANAGER` (`auto`/`supervisor`/`systemd`/`launchd`/`windows`)
+and `AGENTONE_SERVICE_NAME` to pin auto-detection. On Windows the default
+service name is `agentone_server`; the updater spawns a detached PowerShell
+helper that stops it, waits for `STOPPED` and starts it again (the service
+account needs permission to do so). Pass `--no-restart` to skip the
 restart entirely (for example when doing a rolling deploy yourself). Set
 `AGENTONE_UPDATE_CHECK_ENABLED = False` to disable the remote "Check for
 updates" lookup entirely (useful on air-gapped installs). `collectstatic` is

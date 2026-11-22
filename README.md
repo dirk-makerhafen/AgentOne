@@ -83,11 +83,10 @@ If the web/Celery user cannot restart the service directly, set
 AGENTONE_RESTART_COMMAND = ["sudo", "-n", "supervisorctl", "restart", "agentone-server"]
 ```
 
-On Windows, service-manager auto-detection is not available yet: the update
-still applies, but you must restart the AgentOne service yourself (or set
-`AGENTONE_RESTART_COMMAND` to a PowerShell command such as
-`["powershell", "-NoProfile", "-Command", "Restart-Service -Name AgentOne"]`
-run with admin rights).
+On Windows, an `agentone_server` service installed by `server service install`
+is detected automatically and restarted with a detached PowerShell helper
+(stop → wait for `STOPPED` → start). The service account needs rights to stop
+and start services; otherwise set `AGENTONE_RESTART_COMMAND` explicitly.
 
 ## Architecture overview
 

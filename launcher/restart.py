@@ -21,6 +21,7 @@ _SERVICE_NAMES = {
     "supervisor": "agentone-server",
     "systemd": "agentone_server.service",
     "launchd": "com.agentone.agentone_server",
+    "windows": "agentone_server",
 }
 
 
@@ -39,6 +40,40 @@ def _command_ok(command: list[str]) -> bool:
     return proc.returncode == 0
 
 
+def _windows_service_exists(name: str) -> bool:
+    """``sc query`` exits 0 even for missing services, so check its output."""
+    try:
+        proc = subprocess.run(
+            ["sc", "query", name], capture_output=True, text=True, timeout=5, check=False
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if proc.returncode != 0:
+        return False
+    output = (proc.stdout or "").lower()
+    return "service_name" in output and "state" in output
+
+
+def _windows_restart_command(name: str) -> list[str] | None:
+    """Build a PowerShell stop/wait/start command (``sc`` has no restart verb)."""
+    powershell = shutil.which("powershell") or shutil.which("pwsh")
+    if not powershell:
+        return None
+    script = (
+        "$ErrorActionPreference='Stop';"
+        f"$n='{name}';"
+        "for($i=0;$i -lt 40;$i++){"
+        "try{Stop-Service -Name $n -Force -ErrorAction Stop}catch{};"
+        "if((Get-Service -Name $n).Status -eq 'Stopped'){break};"
+        "Start-Sleep -Milliseconds 500};"
+        "Start-Service -Name $n"
+    )
+    return [
+        powershell, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+        "-Command", script,
+    ]
+
+
 def detect_restart_command(root=None) -> list[str] | None:
     """Return the restart command for the detected service manager, if any."""
     configured = _configured()
@@ -47,6 +82,13 @@ def detect_restart_command(root=None) -> list[str] | None:
 
     manager = str(getattr(settings, "AGENTONE_SERVICE_MANAGER", "auto") or "auto").lower()
     name = str(getattr(settings, "AGENTONE_SERVICE_NAME", "") or "")
+
+    # On Windows, check this first: supervisorctl/systemctl can be present via
+    # WSL or Git Bash but are almost never the manager running AgentOne.
+    if sys.platform == "win32" and manager in ("auto", "windows"):
+        service = name or _SERVICE_NAMES["windows"]
+        if _windows_service_exists(service):
+            return _windows_restart_command(service)
 
     if manager in ("auto", "supervisor") and shutil.which("supervisorctl"):
         program = name or _SERVICE_NAMES["supervisor"]
@@ -89,15 +131,24 @@ def request_restart(command: list[str], root=None, delay: int = 3) -> bool:
     # -m resolves packages relative to cwd; without this the helper fails
     # silently when the CLI is invoked by absolute path from another folder.
     cwd = str(Path(root).resolve()) if root else str(Path(settings.BASE_DIR).resolve())
-    try:
-        subprocess.Popen(
-            args,
-            cwd=cwd,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
+    kwargs = {
+        "cwd": cwd,
+        "stdin": subprocess.DEVNULL,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+    }
+    if sys.platform == "win32":
+        # start_new_session is POSIX-only and silently ignored on Windows.
+        # Without these flags the helper dies with the service it restarts.
+        kwargs["creationflags"] = (
+            getattr(subprocess, "DETACHED_PROCESS", 0)
+            | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+            | getattr(subprocess, "CREATE_NO_WINDOW", 0)
         )
-    except OSError:
+    else:
+        kwargs["start_new_session"] = True
+    try:
+        subprocess.Popen(args, **kwargs)
+    except (OSError, ValueError):
         return False
     return True
