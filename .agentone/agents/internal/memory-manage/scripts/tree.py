@@ -840,11 +840,7 @@ def walk_memory(write: bool = True, refresh: bool = True) -> dict[str, Any]:
     # Build all payloads first so upstream flags describe this entire walk,
     # regardless of the order in which nodes are visited.
     payloads = {id(node): _build_manifest(node, tree) for node in tree.nodes}
-    pending_dirs = {
-        node.path.resolve()
-        for node in tree.nodes
-        if _node_is_pending(payloads[id(node)])
-    }
+    pending_dirs = { node.path.resolve() for node in tree.nodes if _node_is_pending(payloads[id(node)]) }
 
     # Group changed sources by the manifest node that owns them.
     # Each entry: {"manifest_path": str, "node_kind": str, "node_key": str,
