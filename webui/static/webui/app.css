@@ -3228,10 +3228,10 @@ summary.dt-row { cursor: pointer; }
 
 .dash-live-list { padding: 4px 0; }
 .dash-run {
-    display: grid;
-    grid-template-columns: 34px minmax(0, 1fr) 152px;
+    display: flex;
+    flex-direction: row;
     gap: 10px;
-    padding: 12px 16px 12px 10px;
+    padding: 5px 5px 5px 5px;
     border-bottom: 1px solid var(--border);
 }
 .dash-run:last-child { border-bottom: none; }

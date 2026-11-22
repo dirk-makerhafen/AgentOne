@@ -11,7 +11,7 @@ from jinja2 import BaseLoader, Environment
 
 from server.models.base_model import BaseModel
 from server.models.content import GenericContent, IMAGE_TOKEN_ESTIMATE, resolve_generic_content_refs
-from server.models.enums.message_enums import MessageContentType, MessagePartType
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 
 _JINJA_ENV = Environment(loader=BaseLoader())
 cache = LRUCache(maxsize=100000)
@@ -85,11 +85,26 @@ class QueryMessagePart(BaseModel):
             return source.content, source.template_data, source.content_type, source.type
         return self.content, self.template_data, self.content_type, None
 
+    def _is_user_toolcall(self, part_type: Any) -> bool:
+        """A user TOOLCALL part is a slash command.
+
+        It carries an ``AgentTaskCall`` for the live chat card, but the LLM
+        must still see the original command text: ``tool_calls`` is only valid
+        on assistant messages.
+        """
+        if part_type != MessagePartType.TOOLCALL or not self.source_message_part:
+            return False
+        try:
+            return self.query_message.role == MessageRole.USER
+        except Exception:  # pylint: disable=broad-exception-caught
+            return False
+
     def _has_tool_call(self, part_type: Any) -> bool:
         return bool(
             part_type == MessagePartType.TOOLCALL
             and self.source_message_part
             and self.source_message_part.tool_call
+            and not self._is_user_toolcall(part_type)
         )
 
     def to_content_blocks(self, fail_on_error: bool = True) -> list[dict[str, Any]]:
@@ -141,7 +156,7 @@ class QueryMessagePart(BaseModel):
         if part_type == MessagePartType.REASONING and self.source_message_part and self.source_message_part.content:
             return [{"type": "reasoning", "text": self.source_message_part.content.get()}]
 
-        if self.source_message_part and part_type == MessagePartType.TOOLCALL:
+        if self.source_message_part and part_type == MessagePartType.TOOLCALL and not self._is_user_toolcall(part_type):
             tc = self.source_message_part.tool_call
             if tc:
                 # carguments_json stores large strings content-addressed as

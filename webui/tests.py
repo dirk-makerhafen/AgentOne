@@ -770,6 +770,39 @@ def test_tool_live_regions_do_not_swap_the_whole_message():
 
 
 @pytest.mark.django_db
+def test_user_slash_command_renders_as_a_live_tool_card(client):
+    """A user TOOLCALL part backed by a call gets the same card as agent tools."""
+    from bs4 import BeautifulSoup
+    from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from server.models.message import Message
+
+    session, version = _session_with_version("slash-card")
+    call = _task_call(
+        session, version, detail=TaskCallStatusDetail.ENDED_SUCCESS, name="ping", args={}
+    )
+    message = Message.objects.create(role=MessageRole.USER, session=session, session_version=version)
+    message.add_part(
+        type=MessagePartType.TOOLCALL,
+        content_type=MessageContentType.JSON,
+        content="/ping {}",
+        tool_call=call,
+    )
+
+    body = client.get(reverse("webui:component", args=["chat-message", message.pk])).content.decode()
+    soup = BeautifulSoup(body, "html.parser")
+    row = soup.select_one('.msg-row[data-role="user"]')
+    assert row is not None
+    card = row.select_one("details.webui-tool-card")
+    assert card is not None
+    assert card.get("hx-get") == reverse("webui:call_detail", args=[call.pk])
+    assert f"sse:AgentTaskCall:{call.pk}" in card.get("hx-trigger", "")
+    body_el = row.select_one(".msg-body")
+    body_text = body_el.get_text(" ") if body_el else row.get_text(" ")
+    assert "/ping {}" not in body_text, "raw command must not be shown twice"
+
+
+@pytest.mark.django_db
 def test_tool_detail_delegates_the_subcall_flow_to_a_live_component(client):
     from webui.core.components import component_url
 

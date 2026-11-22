@@ -27,7 +27,8 @@ def estimate_message_tokens(message: Message) -> int:
     # Same iteration order as build_llm_context so estimates match payload.
     for part in message.parts.order_by("pk"):
         if part.type == MessagePartType.TOOLCALL:
-            tc = part.tool_call
+            # User slash commands are prompt text, not assistant tool_calls.
+            tc = part.tool_call if message.role != MessageRole.USER else None
             if tc:
                 tool_calls.append(
                     {

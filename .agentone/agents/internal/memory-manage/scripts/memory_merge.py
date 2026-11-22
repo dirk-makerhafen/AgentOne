@@ -544,24 +544,55 @@ def build_prompt(item: dict[str, Any]) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _item_target_dir(item: dict[str, Any]) -> Path:
+    """Return the resolved target directory for a walker item."""
+    manifest_path = Path(str(item.get("manifest_path") or ""))
+    return manifest_path.parent.resolve()
+
+
+def _is_descendant(child_dir: Path, parent_dir: Path) -> bool:
+    """Return True when *child_dir* is inside *parent_dir*."""
+    if child_dir == parent_dir:
+        return False
+    try:
+        child_dir.relative_to(parent_dir)
+        return True
+    except ValueError:
+        return False
+
+
 def _select_batch(items: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
-    """Return the deepest layer's pending items (parents run on a later pass)."""
+    """Return pending nodes ready to synthesize, across levels.
+
+    A node is ready when no other pending node is its descendant (children must
+    be synthesized before parents consume them). Ready nodes are prioritized
+    deepest-first so we unblock parents quickly, then fill remaining capacity
+    with ready higher-level nodes.
+    """
     if not items:
         return []
 
-    if all(isinstance(item.get("depth"), int) for item in items):
-        top_depth = max(int(item["depth"]) for item in items)
-        batch = [item for item in items if int(item["depth"]) == top_depth]
-    else:
-        top_rank = min(_LAYER_ORDER[_layer_hint(item)] for item in items)
-        batch = [
-            item for item in items
-            if _LAYER_ORDER[_layer_hint(item)] == top_rank
-        ]
+    pending_dirs = [_item_target_dir(item) for item in items]
+    ready: list[dict[str, Any]] = []
+    for item, item_dir in zip(items, pending_dirs):
+        blocked = any(
+            _is_descendant(other_dir, item_dir)
+            for other_dir in pending_dirs
+            if other_dir != item_dir
+        )
+        if not blocked:
+            ready.append(item)
+
+    # Deepest-first, stable within same depth/layer.
+    ready.sort(
+        key=lambda item: (
+            -int(item["depth"]) if isinstance(item.get("depth"), int) else -_LAYER_ORDER.get(_layer_hint(item), 0),
+        )
+    )
 
     if limit and limit > 0:
-        batch = batch[:limit]
-    return batch
+        ready = ready[:limit]
+    return ready
 
 
 def _display_target(path: Path) -> str:
@@ -727,12 +758,6 @@ def _spawn_synthesizer(
     ``WAITING_DEPENDENCY``: the framework auto-awaits the synthesizer and then
     invokes ``memory_finalize`` with its ``final_result`` message.  Neither this
     tool nor the LLM advances the manifest.
-
-    The target directory and dispatch time are passed as explicit arguments,
-    never through the child's prompt, so completion stays harness-owned.  The
-    child also carries a session-level ``access`` override: memory nodes live
-    outside the spawning workspace, so without it the filesystem guardrail
-    would silently redirect the synthesizer into its own tree.
     """
     from server.models.enums.session_enums import SessionType
 
@@ -751,9 +776,6 @@ def _spawn_synthesizer(
         session_type=SessionType.SUBTASK_DELEGATE,
         group_key=f"memory:{layer}",
         allow_internal=True,
-        # ``spawn_subagent``'s trailing ``**settings_overrides`` are settings
-        # fields: pass the block as ``access=``, not ``settings_overrides=``
-        # (that would nest it and blow up ``SettingsModel(**...)``).
         access=_access_overrides(_session, target_dir),
     )
     if child is None:
@@ -775,7 +797,42 @@ def _spawn_synthesizer(
         "status": "dispatched",
         "session_pk": child.model.pk,
         "finalize_call_pk": getattr(finalize_call, "pk", None),
+        "finalize": finalize_call,
     }
+
+
+def memory_merge_item(_session: Any, item: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+    """Synthesize one pending memory node (map worker).
+
+    Dispatches one synthesizer subtask and chains ``memory_finalize``. The
+    returned ``finalize`` ref lets the scheduler wait for the full subgraph.
+    """
+    manifest_path = Path(str(item.get("manifest_path") or ""))
+    target_dir = _item_target_dir(item)
+    layer = _layer_hint(item)
+    outcome: dict[str, Any] = {
+        "manifest": manifest_path.as_posix(),
+        "target_dir": target_dir.as_posix(),
+        "layer": layer,
+    }
+
+    if _inflight_active(target_dir):
+        return True, {
+            **outcome,
+            "status": "skipped",
+            "reason": "synthesis already running",
+        }
+
+    try:
+        prompt = build_prompt(item)
+        spawn = _spawn_synthesizer(_session, layer, target_dir, prompt)
+        outcome.update(spawn)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        return False, {**outcome, "status": "error", "error": str(exc)}
+
+    if outcome.get("status") == "dispatched":
+        return True, outcome
+    return False, outcome
 
 
 def merge_items(
@@ -783,82 +840,98 @@ def merge_items(
     items: list[dict[str, Any]],
     limit: int = 0,
 ) -> tuple[bool, dict[str, Any]]:
-    """Dispatch prompts for the given ``walk_memory`` items (internal core).
+    """Dispatch ready pending nodes via ``map`` (pipeline).
 
-    Args:
-        _session: The calling session (bound automatically).
-        items: Entries from ``walk_memory()["needs_update"]``.
-        limit: Maximum number of nodes to dispatch. ``0`` means every node at
-            the deepest pending layer.
-
-    Returns:
-        ``(True, {...})`` when at least one node was dispatched (or every node
-        was already in flight), otherwise ``(False, {...})`` with the per-node
-        failures.  ``skipped`` lists nodes another synthesizer is already
-        working on.
+    Selects nodes whose descendants are not pending, deepest-first, then
+    dispatches them as ``memory_merge_item`` map tasks. Ready nodes can span
+    levels, so higher-level nodes may be synthesized in the same batch when
+    their children are not pending.
     """
     try:
         batch = _select_batch(list(items), int(limit or 0))
     except Exception as exc:  # pylint: disable=broad-exception-caught
         return False, {"status": "error", "message": str(exc)}
 
+    layers = sorted({_layer_hint(item) for item in batch}, key=lambda l: _LAYER_ORDER.get(l, 99))
+    layer = layers[0] if len(layers) == 1 else ("mixed" if layers else None)
+
     if not batch:
         return True, {
             "status": "success",
             "layer": None,
             "dispatched": [],
+            "skipped": [],
             "failed": [],
+            "items": [],
+            "results": [],
             "remaining": 0,
             "message": "Nothing to synthesize.",
         }
 
-    dispatched: list[dict[str, Any]] = []
-    failed: list[dict[str, Any]] = []
-    skipped: list[dict[str, Any]] = []
-    layer = _layer_hint(batch[0])
+    map_task = _session.get_task("map")
+    try:
+        from runtime.tasks.bound_task import BoundTask
 
-    for item in batch:
-        manifest_path = Path(str(item.get("manifest_path") or ""))
-        target_dir = manifest_path.parent
-        outcome: dict[str, Any] = {
-            "manifest": manifest_path.as_posix(),
-            "target_dir": target_dir.as_posix(),
+        has_map = isinstance(map_task, BoundTask)
+    except Exception:  # pylint: disable=broad-exception-caught
+        has_map = map_task is not None and hasattr(map_task, "delay")
+    if not has_map:
+        # Fallback: direct dispatch (keeps behavior in restricted sessions/tests).
+        dispatched: list[dict[str, Any]] = []
+        failed: list[dict[str, Any]] = []
+        skipped: list[dict[str, Any]] = []
+        for item in batch:
+            _ok, outcome = memory_merge_item(_session, item)
+            status = outcome.get("status")
+            if status == "dispatched":
+                dispatched.append(outcome)
+            elif status == "skipped":
+                skipped.append(outcome)
+            else:
+                failed.append(outcome)
+        success = bool(dispatched) or (bool(skipped) and not failed)
+        if dispatched:
+            status = "success"
+        elif skipped and not failed:
+            status = "busy"
+        else:
+            status = "error"
+        return success, {
+            "status": status,
+            "layer": layer,
+            "dispatched": dispatched,
+            "skipped": skipped,
+            "failed": failed,
+            "items": [str(it.get("manifest_path") or "") for it in batch],
+            "results": [],
+            "remaining": max(0, len(items) - len(dispatched) - len(skipped)),
         }
 
-        if _inflight_active(target_dir):
-            skipped.append({
-                **outcome,
-                "status": "skipped",
-                "reason": "synthesis already running",
-            })
-            continue
-
-        try:
-            prompt = build_prompt(item)
-            spawn = _spawn_synthesizer(_session, layer, target_dir, prompt)
-            outcome.update(spawn)
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            outcome.update({"status": "error", "error": str(exc)})
-
-        if outcome.get("status") == "dispatched":
-            dispatched.append(outcome)
-        else:
-            failed.append(outcome)
-
-    success = bool(dispatched) or (bool(skipped) and not failed)
-    if dispatched:
-        status = "success"
-    elif skipped and not failed:
-        status = "busy"
-    else:
-        status = "error"
-    return success, {
-        "status": status,
+    # Ready nodes are independent (no pending descendant). Keep map
+    # concurrency sequential by default because each item spawns a synthesizer
+    # subtask and a finalize chain.
+    results = map_task.delay(
+        target="memory_merge_item",
+        list_of_kwargs=[{"item": item} for item in batch],
+        concurrency=1,
+    )
+    return True, {
+        "status": "success",
         "layer": layer,
-        "dispatched": dispatched,
-        "skipped": skipped,
-        "failed": failed,
-        "remaining": max(0, len(items) - len(dispatched)),
+        "dispatched": [
+            {
+                "manifest": str(it.get("manifest_path") or ""),
+                "target_dir": _item_target_dir(it).as_posix(),
+                "status": "dispatched",
+                "layer": _layer_hint(it),
+            }
+            for it in batch
+        ],
+        "skipped": [],
+        "failed": [],
+        "items": [str(it.get("manifest_path") or "") for it in batch],
+        "results": results,
+        "remaining": max(0, len(items) - len(batch)),
     }
 
 
@@ -866,29 +939,23 @@ def memory_merge(
     _session: Any,
     limit: int = 1,
 ) -> tuple[bool, dict[str, Any]]:
-    """Delegate pending memory nodes to layer-specific synthesizer sessions.
+    """Delegate pending memory nodes to synthesizer sessions via a pipeline.
 
-    Walk the memory tree, then hand every stale node at the deepest layer to a
-    fresh ``memory-manage`` subsession with a prompt written for that layer
-    (task, agent, or scope). Only one depth level is dispatched per call, so
-    task memories are refreshed before agent memories consume them, and agent
-    memories before their scope. Run ``memory_merge`` again while
-    ``remaining`` is non-zero; run ``memory_walk(refresh=True)`` first when
-    reports may not have been persisted yet. The synthesizer writes
-    ``memory.md``/``reflection.md``; a delayed ``memory_finalize`` call awaits
-    it and advances the manifest programmatically. This tool never edits
-    manifests or memory files.
+    Walks the memory tree, selects ready nodes (no pending descendant), and
+    dispatches them as ``memory_merge_item`` map tasks. Ready nodes can span
+    levels, so a higher-level node may be synthesized in the same batch when
+    its children are not pending. Each item spawns a synthesizer subtask and
+    chains ``memory_finalize``; returning map results makes the caller wait for
+    the full subgraph.
 
     Args:
         _session: The calling session (bound automatically).
-        limit: Maximum number of nodes to dispatch in this call. ``0`` (the
-            default) dispatches every node at the deepest pending layer.
+        limit: Maximum number of ready nodes to dispatch in this call. ``0``
+            dispatches all ready nodes.
 
     Returns:
-        ``(True, {"status": ..., "layer": ..., "dispatched": [...],
-        "skipped": [...], "failed": [...], "remaining": int})``;
-        ``(False, {...})`` when every dispatch failed or the memory tree could
-        not be walked.
+        ``(True, {"status": "success", "dispatched": int, "items": [...],
+        "results": [...], "remaining": int})`` or ``(False, {...})`` on error.
     """
     try:
         items = _walk_pending()

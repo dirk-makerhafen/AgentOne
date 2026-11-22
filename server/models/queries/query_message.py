@@ -96,7 +96,9 @@ class QueryMessage(BaseModel):
         for part in self.query_message_parts.order_by("pk"):
             part_contents = part.to_openai_message(fail_on_error=fail_on_error)
             if part.source_message_part and part.source_message_part.type == MessagePartType.TOOLCALL:
-                if part.source_message_part.tool_call:
+                # User slash commands carry a call for the live chat card, but
+                # stay text in the prompt (tool_calls is assistant-only).
+                if self.role != MessageRole.USER and part.source_message_part.tool_call:
                     tool_call_dicts.extend(part_contents)
                     tool_call_objects.append(part.source_message_part.tool_call)
                 else:

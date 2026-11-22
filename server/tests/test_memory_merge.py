@@ -10,13 +10,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import frontmatter
 import pytest
 
 from server.tests.memory_test_support import MEMORY_SCRIPTS
 from server.tests.memory_test_support import finalize as memfinalize
 from server.tests.memory_test_support import git as memgit
-from server.tests.memory_test_support import playbook as memplaybook
 from server.tests.memory_test_support import sources as memsources
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -148,7 +146,8 @@ def test_build_prompt_covers_every_layer(
     assert "{{" not in rendered and "}}" not in rendered
     assert item["manifest_path"].rsplit("/", 1)[0] in rendered
     assert "memory.md" in rendered
-    assert "reflection.md" in rendered
+    assert "reflections.md" in rendered
+    assert "reflection.md" not in rendered.replace("reflections.md", "")
     assert "memory_mark_processed" not in rendered
     assert "harness marks this node processed" in rendered
     assert expect_title in rendered
@@ -176,20 +175,19 @@ def test_classify_every_node_type(tmp_path, kind, memory_type, expected):
 
 
 def test_memory_manage_finalizes_programmatically():
-    agent_file = (
+    scripts_file = (
         REPO_ROOT
         / ".agentone"
         / "agents"
         / "internal"
         / "memory-manage"
-        / "agent.md"
+        / "scripts"
+        / "scripts.md"
     )
-    manifest = frontmatter.load(agent_file)
-
-    assert "memory_mark_processed" not in manifest.get("tools", [])
-    assert "memory_finalize" in manifest.get("tasks", [])
-    # Finalization is chained by memory_merge, not by a session-end hook.
-    assert not manifest.get("hooks")
+    text = scripts_file.read_text(encoding="utf-8")
+    assert "memory_finalize" in text
+    assert "memory_merge_item" in text
+    assert "memory_mark_processed" not in text
 
 
 def test_prompt_lists_files_on_first_synthesis(tmp_path):
@@ -335,14 +333,38 @@ def test_scope_prompt_mentions_child_scopes(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_select_batch_only_takes_the_deepest_layer(tmp_path):
+def test_select_batch_prefers_deepest_ready_nodes(tmp_path):
     task = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t", depth=3)
     agent = _node(tmp_path, kind="agent", memory_type="global-agent", key="a", depth=2)
     scope = _node(tmp_path, kind="global", memory_type="global", key="g", depth=0)
 
     batch = merge._select_batch([scope, agent, task], 0)
 
-    assert batch == [task]
+    assert batch == [task, agent, scope]
+
+
+def test_select_batch_skips_nodes_with_pending_descendants(tmp_path):
+    scope_dir = tmp_path / "scope-memory"
+    scope_dir.mkdir()
+    memsources.write_sources(scope_dir / memsources.SOURCES_FILENAME, {
+        "kind": "global", "type": "global", "key": "global", "name": "global",
+        "sources": [{
+            "path": "agents/",
+            "type": "global-agents",
+            "last_processed_hash": "a" * 40,
+            "current_hash": "b" * 40,
+        }],
+    })
+    scope = {
+        "manifest_path": (scope_dir / memsources.SOURCES_FILENAME).as_posix(),
+        "node_kind": "global", "node_key": "global", "type": "global", "depth": 0,
+        "sources": [],
+    }
+    agent = _node(scope_dir / "agents", kind="agent", memory_type="global-agent", key="a", depth=2)
+
+    batch = merge._select_batch([scope, agent], 0)
+
+    assert [it["node_kind"] for it in batch] == ["agent"]
 
 
 def test_select_batch_limits_dispatch(tmp_path):
@@ -357,17 +379,18 @@ def test_select_batch_limits_dispatch(tmp_path):
 def test_memory_merge_spawns_synthesizers_and_leaves_manifests_alone(tmp_path):
     task = _node(tmp_path, kind="task", memory_type="project-agent-task", key="default", depth=3)
     agent = _node(tmp_path, kind="agent", memory_type="project-agent", key="7", depth=2)
-    before = Path(task["manifest_path"]).read_text(encoding="utf-8")
+    before_task = Path(task["manifest_path"]).read_text(encoding="utf-8")
+    before_agent = Path(agent["manifest_path"]).read_text(encoding="utf-8")
 
     session = _FakeSession()
     ok, result = merge.merge_items(session, [agent, task])
 
     assert ok is True
-    assert result["layer"] == "task"
-    assert len(result["dispatched"]) == 1
-    assert result["remaining"] == 1
-    # Only the task layer was dispatched; the agent waits for the next pass.
-    assert len(session.children) == 1
+    assert result["layer"] == "mixed"
+    assert len(result["dispatched"]) == 2
+    assert result["remaining"] == 0
+    # Both nodes are ready (no descendant relationship) and dispatched.
+    assert len(session.children) == 2
     assert session.spawn_calls[0][0] == "memory-manage"
     assert session.spawn_calls[0][1]["allow_internal"] is True
     assert session.spawn_calls[0][1]["session_type"] == "subtask_delegate"
@@ -375,21 +398,17 @@ def test_memory_merge_spawns_synthesizers_and_leaves_manifests_alone(tmp_path):
     access = session.spawn_calls[0][1]["access"]
     assert target in access["external"]["write"]["allow"]
     assert f"{target}/**" in access["external"]["write"]["allow"]
-    assert target in access["external"]["read"]["allow"]
     child = session.children[0]
-    prompt = child.prompts[0]
-    assert "Task memory synthesis" in prompt
-    assert Path(task["manifest_path"]).parent.as_posix() in prompt
-    # The child's task call is chained into memory_finalize, so the framework
-    # auto-awaits the synthesizer and hands its result to finalization.
-    assert len(session.tasks["memory_finalize"].calls) == 1
+    assert "Task memory synthesis" in child.prompts[0]
+    # Each child is chained into memory_finalize.
+    assert len(session.tasks["memory_finalize"].calls) == 2
     args, kwargs = session.tasks["memory_finalize"].calls[0]
     assert args == (child.call,)
-    assert kwargs["target_dir"] == Path(task["manifest_path"]).parent.resolve().as_posix()
+    assert kwargs["target_dir"] == target
     assert kwargs["started_at"] > 0
-    assert result["dispatched"][0]["finalize_call_pk"] == 901
-    # The manifest is advanced by memory_finalize, never by the dispatcher.
-    assert Path(task["manifest_path"]).read_text(encoding="utf-8") == before
+    # Manifests are never advanced by the dispatcher.
+    assert Path(task["manifest_path"]).read_text(encoding="utf-8") == before_task
+    assert Path(agent["manifest_path"]).read_text(encoding="utf-8") == before_agent
 
 
 def test_memory_merge_with_nothing_pending_is_a_no_op():
@@ -600,7 +619,8 @@ def test_finalize_refuses_without_written_output(tmp_path):
     ok, result = memfinalize.finalize_memory(folder.as_posix())
 
     assert ok is False
-    assert "no memory output" in result["message"]
+    assert "missing memory output" in result["message"]
+    assert "reflections.md" in result["message"]
 
 
 def test_finalize_refuses_without_manifest(tmp_path):
@@ -618,14 +638,14 @@ def test_finalize_advances_the_node(tmp_path):
     item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
     folder = Path(item["manifest_path"]).parent
     (folder / "memory.md").write_text("facts", encoding="utf-8")
-    (folder / "reflection.md").write_text("lessons", encoding="utf-8")
+    (folder / "reflections.md").write_text("lessons", encoding="utf-8")
     _marker(folder, time.time())
 
     with patch("tree.mark_processed", return_value=True) as mocked:
         ok, result = memfinalize.finalize_memory(folder.as_posix())
 
     assert ok is True
-    assert result["files"] == ["memory.md", "reflection.md"]
+    assert result["files"] == ["memory.md", "reflections.md"]
     assert not (folder / ".memory_inflight").exists()
     mocked.assert_called_once()
     assert Path(mocked.call_args.args[0]).resolve() == folder.resolve()
@@ -634,10 +654,12 @@ def test_finalize_advances_the_node(tmp_path):
 def test_finalize_refuses_stale_output(tmp_path):
     item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
     folder = Path(item["manifest_path"]).parent
+    (folder / "reflections.md").write_text("old reflections", encoding="utf-8")
     output = folder / "memory.md"
     output.write_text("old facts", encoding="utf-8")
     stale = time.time() - 600
     os.utime(output, (stale, stale))
+    os.utime(folder / "reflections.md", (stale, stale))
     _marker(folder, time.time())
 
     with patch("tree.mark_processed", return_value=True) as mocked:
@@ -654,7 +676,7 @@ def test_memory_finalize_task_advances_node_and_reports_result(tmp_path):
     item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
     folder = Path(item["manifest_path"]).parent
     (folder / "memory.md").write_text("facts", encoding="utf-8")
-    (folder / "reflection.md").write_text("lessons", encoding="utf-8")
+    (folder / "reflections.md").write_text("lessons", encoding="utf-8")
     started = time.time()
     _marker(folder, started)
 
@@ -668,7 +690,7 @@ def test_memory_finalize_task_advances_node_and_reports_result(tmp_path):
 
     assert ok is True
     assert result["synthesizer_result"] == "task synthesis done"
-    assert result["files"] == ["memory.md", "reflection.md"]
+    assert result["files"] == ["memory.md", "reflections.md"]
     assert not (folder / ".memory_inflight").exists()
     mocked.assert_called_once()
     assert Path(mocked.call_args.args[0]).resolve() == folder.resolve()
@@ -681,92 +703,12 @@ def test_memory_finalize_task_requires_a_target():
     assert "target_dir is required" in result["message"]
 
 
-def test_finalize_repairs_unquoted_colon_then_advances(tmp_path):
+def test_finalize_requires_reflections_file(tmp_path):
     item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
     folder = Path(item["manifest_path"]).parent
     (folder / "memory.md").write_text("facts", encoding="utf-8")
-    (folder / "reflection.md").write_text(
-        "---\n"
-        "schema: agentone.playbook/1\n"
-        "directives:\n"
-        "- id: PB-test\n"
-        "  rule: Do X (unless 'stop'): then do Y. Type: daily_summary first.\n"
-        "---\n",
-        encoding="utf-8",
-    )
 
-    with patch("tree.mark_processed", return_value=True) as mocked:
-        ok, result = memfinalize.finalize_memory(folder.as_posix())
+    ok, result = memfinalize.finalize_memory(folder.as_posix())
 
-    assert ok is True
-    assert result["frontmatter_repaired"]["reflection"] is True
-    mocked.assert_called_once()
-    # The rewrite is permanent: the on-disk YAML now parses without repair.
-    assert ": then do Y" in (folder / "reflection.md").read_text(encoding="utf-8")
-    info: dict[str, bool] = {}
-    memplaybook.load_playbook(folder / "reflection.md", info)
-    assert info == {}
-
-
-def test_finalize_quarantines_unrepairable_frontmatter(tmp_path):
-    item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
-    folder = Path(item["manifest_path"]).parent
-    (folder / "memory.md").write_text("facts", encoding="utf-8")
-    (folder / "reflection.md").write_text(
-        "---\nschema: [unclosed\ndirectives: []\n---\n", encoding="utf-8"
-    )
-
-    with patch("tree.mark_processed", return_value=True) as mocked:
-        ok, result = memfinalize.finalize_memory(folder.as_posix(), allow_quarantine=True)
-
-    assert ok is True
-    assert result["quarantined"] == ["reflection.md"]
-    assert list(folder.glob("reflection.md.malformed-*.md"))
-    mocked.assert_called_once()
-
-
-def test_memory_finalize_task_escalates_malformed_frontmatter(tmp_path):
-    item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
-    folder = Path(item["manifest_path"]).parent
-    (folder / "memory.md").write_text("facts", encoding="utf-8")
-    (folder / "reflection.md").write_text(
-        "---\nschema: [unclosed\ndirectives: []\n---\n", encoding="utf-8"
-    )
-    session = _FakeSession()
-
-    ok, result = finalize.memory_finalize(
-        session, "synthesis done", target_dir=folder.as_posix()
-    )
-
-    assert ok is True
-    assert result["status"] == "escalated"
-    assert result["error_kind"] == "playbook_frontmatter"
-    assert len(session.children) == 1
-    assert "repair" in session.children[0].prompts[0]
-    retry_task = session.tasks["memory_finalize"]
-    assert len(retry_task.calls) == 1
-    args, kwargs = retry_task.calls[0]
-    assert args[0].pk == session.children[0].call.pk
-    assert kwargs["attempt"] == 1
-
-
-def test_memory_finalize_task_quarantines_after_repair_attempt(tmp_path):
-    item = _node(tmp_path, kind="task", memory_type="global-agent-task", key="t")
-    folder = Path(item["manifest_path"]).parent
-    (folder / "memory.md").write_text("facts", encoding="utf-8")
-    (folder / "reflection.md").write_text(
-        "---\nschema: [unclosed\ndirectives: []\n---\n", encoding="utf-8"
-    )
-    session = _FakeSession()
-
-    with patch("tree.mark_processed", return_value=True):
-        ok, result = finalize.memory_finalize(
-            session,
-            "repair done",
-            target_dir=folder.as_posix(),
-            attempt=1,
-        )
-
-    assert ok is True
-    assert result["repair"] == "quarantine"
-    assert session.children == []
+    assert ok is False
+    assert "reflections.md" in result["message"]

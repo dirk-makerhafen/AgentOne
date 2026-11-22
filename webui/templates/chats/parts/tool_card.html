@@ -1,0 +1,25 @@
+{% load webui %}
+{% comment %} The <details> shell stays put; only the summary and the
+sub-task flow are live components, so a running sub-call never replaces
+the arguments/result pane or the rest of the message. {% endcomment %}
+<details class="tool-card webui-tool-card{% if part.halted %} approval-pending{% endif %}"
+         data-open-key="tool-{{ part.pk }}"
+         {% if part.pk %}hx-get="{% url 'webui:call_detail' part.pk %}"{% endif %}
+         hx-trigger="toggle once{% if part.pk and live %}, sse:AgentTaskCall:{{ part.pk }} delay:150ms, sse:reset delay:150ms{% endif %}"
+         hx-target="find .webui-tool-detail"
+         hx-swap="innerHTML"
+         hx-sync="this:replace">
+    <summary class="webui-tool-summary">
+        {% if part.pk %}
+            {% component "chat-tool-summary" part.pk %}
+        {% else %}
+            <span class="webui-tool-icon">⚙</span>
+            <span class="webui-tool-name" title="{{ part.name }}">{{ part.name }}</span>
+            {% if part.status_text %}<span class="card-status {{ part.status_class }}">{{ part.status_text }}</span>{% endif %}
+        {% endif %}
+    </summary>
+    <div class="webui-tool-detail">
+        {% if part.pk %}<span class="webui-detail-loading">Loading…</span>
+        {% elif part.body %}<pre class="webui-tool-body">{{ part.body }}</pre>{% endif %}
+    </div>
+</details>

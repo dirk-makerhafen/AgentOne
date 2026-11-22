@@ -69,15 +69,16 @@ def finalize_memory(
             ),
         }
 
-    written = [name for name in OUTPUT_FILES if (path / name).is_file()]
-    if not written:
+    missing = [name for name in OUTPUT_FILES if not (path / name).is_file()]
+    if missing:
         return False, {
             "status": "error",
             "message": (
-                f"no memory output found in {path}; write memory.md and "
-                "reflections.md before marking the node processed"
+                f"missing memory output in {path}: {', '.join(missing)}; "
+                "write memory.md and reflections.md before marking the node processed"
             ),
         }
+    written = list(OUTPUT_FILES)
 
     if started_at is not None:
         try:

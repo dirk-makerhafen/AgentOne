@@ -3253,6 +3253,16 @@ main.main.showing-logs > #mainLogs{display:flex;}
 .msg-row[data-role="user"] .msg-body code { color: var(--user-bubble-text); background: rgba(0,0,0,.1); }
 .msg-row[data-role="user"] .msg-body a { color: var(--user-bubble-text); text-decoration: underline; }
 .msg-row[data-role="user"] .msg-files { padding-left: 0; margin-left: 0; justify-content: flex-end; }
+/* Slash commands reuse the assistant tool-card UI; let them span like normal cards. */
+.msg-row[data-role="user"]:has(.tool-card) {
+  align-self: stretch;
+  max-width: none;
+}
+.msg-row[data-role="user"] .tool-card {
+  margin-left: var(--msg-rail);
+  max-width: var(--msg-max);
+  width: auto;
+}
 .msg-row[data-role="user"][data-editing="1"] .msg-edit-area { background: var(--user-bubble-bg); border-color: var(--user-bubble-border); color: var(--user-bubble-text); box-shadow: 0 0 0 3px var(--focus-ring); }
 .msg-row[data-role="user"][data-editing="1"] .msg-edit-area::placeholder { color: var(--user-bubble-placeholder); }
 

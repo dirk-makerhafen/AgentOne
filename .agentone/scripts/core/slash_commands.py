@@ -12,6 +12,7 @@ from runtime.session.session import Session
 from server.models.content import GenericContent
 from server.models.message import Message, MessagePart
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole, MessageType
+from server.models.tasks.agent_task_call import AgentTaskCall
 
 
 def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) -> dict[str, Any]:
@@ -45,10 +46,15 @@ def process_slashcommand(_session: Session, command_name: str, **kwargs: Any) ->
     except Exception as e:
         result = {"exception": str(e), "traceback": traceback.format_exc()}
 
+    # Link the dispatched command call so the chat renders it like a tool call:
+    # status, sub-calls and result stay live.  A dispatch error leaves `result`
+    # as a plain dict, in which case the part keeps its legacy text-only form.
+    command_call = result if isinstance(result, AgentTaskCall) else None
     message.add_part(
         type=MessagePartType.TOOLCALL,
         content_type=MessageContentType.JSON,
         content=f"/{command_name} {json.dumps(kwargs) if kwargs else ''}",
+        tool_call=command_call,
     )
 
     # Two-phase write (see Message.save): publish only now parts exist.

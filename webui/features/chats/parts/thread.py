@@ -414,12 +414,8 @@ def _message_row(message: Message) -> Row:
                 reasoning.append(text)
         elif part.type == MessagePartType.TOOLCALL:
             tools.append(_tool_entry(part))
-            # For user messages, TOOLCALL parts represent slash commands (e.g. /help, /compact)
-            # Include them in the body so they render in the chat
-            if message.role == MessageRole.USER:
-                text = _as_text(content)
-                if text:
-                    body.append(text)
+            # User slash commands are rendered as tool cards; avoid duplicating
+            # raw command text in the message body.
         else:
             text = _as_text(content)
             if text:

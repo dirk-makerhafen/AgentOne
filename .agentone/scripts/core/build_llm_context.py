@@ -169,7 +169,10 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                 if (_session.aimodel and not _session.aimodel.requires_reasoning_echo) and part.type == MessagePartType.REASONING:
                     continue
                 query_message_parts.append(QueryMessagePart(source_message_part=part))
-                if part.tool_call and part.tool_call.status == TaskCallStatus.ENDED:
+                # A user slash command's call backs the chat card only; it is
+                # serialised as command text, not as a tool/response pair.
+                if (message.role != MessageRole.USER and part.tool_call
+                        and part.tool_call.status == TaskCallStatus.ENDED):
                     tool_call_parts.append(part)
             fmessages.append((message, query_message_parts,tool_call_parts))
 

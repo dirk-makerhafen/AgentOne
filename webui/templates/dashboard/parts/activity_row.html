@@ -31,10 +31,10 @@
         </div>
 
         {% if item.prompt %}
-        <div class="dash-run-prompt" title="{{ item.prompt }}"><span class="dash-run-prefix">›</span>{{ item.prompt }}</div>
+        <div style="display:none; /*hide for now*/"class="dash-run-prompt" title="{{ item.prompt }}"><span class="dash-run-prefix">›</span>{{ item.prompt }}</div>
         {% endif %}
         {% if item.output %}
-        <div class="dash-run-output" title="{{ item.output }}"><span class="dash-run-prefix"></span>{{ item.output }}</div>
+        <div class="dash-run-output" title="{{ item.output }}"><span class="dash-run-prefix">◎</span>{{ item.output }}</div>
         {% endif %}
         {% if item.tools %}
         <div class="dash-run-tools">
