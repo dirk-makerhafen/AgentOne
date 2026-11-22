@@ -552,6 +552,29 @@ def test_dashboard_activity_shows_running_query_with_session_details(client):
     assert "started" in body and "updated" in body
 
 
+def test_dashboard_activity_shows_tail_of_streaming_response(client):
+    """The overview shows the newest lines, not the first line of the answer."""
+    _agent, _version, session, sv, message = _chat_session("dash-tail")
+    _query, response = _active_query(session, sv, message)
+    response.content = "\n".join(
+        [
+            "Intro paragraph that was written first",
+            "Some middle detail about the deployment",
+            "Still waiting on the staging results",
+            "Checking the second cluster now",
+            "All three nodes are healthy and the rollout is done",
+        ]
+    )
+    response.save()
+
+    body = _get(client, "dashboard-activity", render="htmx").content.decode()
+
+    assert "All three nodes are healthy" in body
+    assert "Checking the second cluster now" in body
+    assert "Intro paragraph that was written first" not in body
+    assert "Some middle detail" not in body
+
+
 def test_dashboard_activity_terminal_query_is_hidden_and_etag_is_stable(client):
     from server.models.queries.response import ResponseStatus
 

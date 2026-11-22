@@ -3055,7 +3055,14 @@ a.dash-run-session:hover { color: var(--accent-text); text-decoration: underline
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .dash-run-prompt { color: var(--text); }
-.dash-run-output { color: var(--muted); }
+.dash-run-output {
+    color: var(--muted);
+    white-space: pre-line;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 .dash-run-prefix { margin-right: 6px; color: var(--accent-text); font-weight: 700; }
 .dash-run-tools { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
 .dash-run-tool {

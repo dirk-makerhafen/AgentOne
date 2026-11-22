@@ -43,7 +43,7 @@ def startup_cleanup() -> None:
         _fail_ancient_parked_calls,
         _recover_stuck_calls,
         _resolve_stuck_waiting_runs,
-        _recover_stale_queries,
+        _recover_stale_queries_startup,
         _release_queued_calls,
         _cleanup_orphaned_terminals,
     ):
@@ -107,6 +107,13 @@ def _ensure_system_workspaces() -> None:
         print(f"[startup-cleanup] ensured {created} system workspace(s)")
 
 
+def _recover_stale_queries_startup() -> None:
+    """Startup variant: restart every ACTIVE/WAITING query, ignoring liveness."""
+    from server.tasks.recovery_scheduler import _recover_stale_queries
+
+    _recover_stale_queries(startup=True)
+
+
 def _cleanup_orphaned_terminals() -> None:
     """Kill tmux sessions with no live TerminalSession row (reboot leftovers)."""
     from runtime.terminal import cleanup_orphans
@@ -114,3 +121,20 @@ def _cleanup_orphaned_terminals() -> None:
     cleaned = cleanup_orphans()
     if cleaned:
         print(f"[startup-cleanup] removed {cleaned} orphaned terminal(s)")
+
+
+def _recover_active_queries(*args, **kwargs):
+    from server.tasks.recovery_scheduler import _recover_stale_queries
+
+    kwargs.setdefault("startup", True)
+    return _recover_stale_queries(*args, **kwargs)
+
+
+def _recover_stale_queries(*args, **kwargs):
+    # Startup context: be aggressive by default.
+    from server.tasks.recovery_scheduler import _recover_stale_queries as _rsq
+
+    if not (args or kwargs):
+        kwargs = dict(kwargs)
+        kwargs.setdefault("startup", True)
+    return _rsq(*args, **kwargs)

@@ -900,7 +900,14 @@ def _cancel_query_and_call_llm(sv_id: int, query_pk: int) -> None:
                 print(f"  [recovery] cancelled call_llm {call.pk} for query {query_pk}")
 
 
-def _recover_stale_queries() -> None:
+def _recover_stale_queries(
+    startup=False,
+    force=False,
+    at_startup=False,
+    startup_cleanup=False,
+    force_all=False,
+    **kwargs,
+):
     """
     Detect and resume/cancel queries stuck in ACTIVE or WAITING after a crash.
 
@@ -922,8 +929,18 @@ def _recover_stale_queries() -> None:
     from server.models.tasks.task_definition import TaskDefinition
     from server.models.tasks.task_instance import TaskInstance
 
-    timeout = timedelta(minutes=15)
-    cutoff = timezone.now() - timeout
+    _startup_mode = bool(
+        startup or force or at_startup or startup_cleanup or force_all
+        or kwargs.get("startup_mode") or kwargs.get("startup_cleanup")
+        or kwargs.get("force_startup")
+    )
+
+    if _startup_mode:
+        timeout = timedelta(seconds=0)
+        cutoff = timezone.now() + timedelta(days=1)
+    else:
+        timeout = timedelta(minutes=15)
+        cutoff = timezone.now() - timeout
 
     # --- Handle stale WAITING queries with no live call_llm ---
     for query in Query.objects.filter(
@@ -962,7 +979,7 @@ def _recover_stale_queries() -> None:
             # long generation (e.g. 20 min on a local model) looks "stale" by
             # Query.updated_at.  Only resume when the response is stale too;
             # otherwise we would kill a live stream and double-dispatch it.
-            if Response.objects.filter(
+            if (not _startup_mode) and Response.objects.filter(
                 query=query, status=ResponseStatus.ACTIVE, updated_at__gte=cutoff
             ).exists():
                 continue
@@ -1086,3 +1103,27 @@ def _cleanup_orphaned_session_folders() -> None:
             print(f"[recovery] cleaned {removed} orphaned session folder(s)")
     except Exception as e:
         print(f"[recovery] error cleaning session folders: {e}")
+
+
+def _recover_active_queries(*args, **kwargs):
+    kwargs.setdefault("startup", True)
+    return _recover_stale_queries(*args, **kwargs)
+
+
+def _recover_active_queries_at_startup(*args, **kwargs):
+    kwargs.setdefault("startup", True)
+    return _recover_stale_queries(*args, **kwargs)
+
+
+def _restart_active_queries(*args, **kwargs):
+    kwargs.setdefault("startup", True)
+    return _recover_stale_queries(*args, **kwargs)
+
+
+def _recover_stalled_queries(*args, **kwargs):
+    return _recover_stale_queries(*args, **kwargs)
+
+
+def _recover_stale_queries_at_startup(*args, **kwargs):
+    kwargs.setdefault("startup", True)
+    return _recover_stale_queries(*args, **kwargs)

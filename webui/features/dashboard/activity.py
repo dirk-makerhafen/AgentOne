@@ -21,6 +21,8 @@ from runtime.observable_queries.conversation import QueryObservables, ResponseOb
 #: recovery scheduler is disabled on some installs).  Surface it, don't hide it.
 STALE_AFTER = timedelta(minutes=10)
 PREVIEW_LIMIT = 150
+#: How many trailing lines of a streamed response to keep in the overview.
+OUTPUT_LINES = 3
 
 
 def _text(value: Any) -> str:
@@ -47,6 +49,31 @@ def _preview(value: Any, limit: int = PREVIEW_LIMIT) -> str:
             continue
         return line[: limit - 1].rstrip() + "…" if len(line) > limit else line
     return ""
+
+
+def _tail_preview(value: Any, limit: int = PREVIEW_LIMIT, lines: int = OUTPUT_LINES) -> str:
+    """The last few readable lines, so newly streamed tokens stay visible.
+
+    Response content grows at the end as tokens arrive.  Keeping the *tail*
+    (rather than the first line) means an SSE refresh shows the newest text.
+    """
+    cleaned: list[str] = []
+    for raw_line in _text(value).splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith(("```", "#", "---")):
+            continue
+        line = re.sub(r"^\s*(?:[-*+]|\d+\.)\s+", "", line)
+        line = re.sub(r"[*_`>#]+", "", line).strip()
+        line = " ".join(line.split())
+        if line:
+            cleaned.append(line)
+    if not cleaned:
+        return ""
+    result = "\n".join(cleaned[-lines:])
+    if len(result) > limit:
+        # Keep the very end (the freshest tokens), not the beginning.
+        result = "…" + result[-(limit - 1) :]
+    return result
 
 
 def _prompt_preview(query) -> str:
@@ -175,8 +202,8 @@ def _build_item(query, response, running, approval) -> ActivityItem:
 
     output = ""
     if response is not None:
-        output = _preview(response.content or "") or (
-            "Thinking… " + _preview(response.reasoning or "", 110)
+        output = _tail_preview(response.content or "") or (
+            "Thinking… " + _tail_preview(response.reasoning or "", 110, lines=2)
             if response.reasoning
             else ""
         )
