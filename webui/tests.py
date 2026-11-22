@@ -1378,7 +1378,45 @@ def test_assistant_chat_gets_one_time_context_notice(client, monkeypatch):
     text = notices.first().parts.first().content.get()
     assert "Agent detail" in text
     assert f"/app/agents/{subject.pk}" in text
+    assert f"Record in focus: notice-target (agent id={subject.pk})" in text
+    assert 'admin_tool(scope="agents", action="help")' in text
+    assert "not a permission boundary" in text
+    assert "Prefer read-only inspection" in text
     assert "project_pk" in text
+
+
+@pytest.mark.django_db
+def test_overview_notice_gives_collection_level_instructions(client, monkeypatch):
+    """Dashboard notices describe how to resolve targets, not raw metadata."""
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.enums.message_enums import MessageType
+    from server.models.message import Message
+    from webui.core import assistants
+
+    assistant = AgentModel.objects.create(name="AgentOne")
+    version = AgentVersionModel.objects.create(agent=assistant, version_number=1)
+    AgentModel.objects.filter(pk=assistant.pk).update(latest_agent_version=version)
+    monkeypatch.setattr(
+        assistants,
+        "_overview_scope",
+        lambda kind, project: ("AgentOne", None, None),
+    )
+
+    response = client.post(reverse("webui:assistant_overview_open", args=["cronjobs"]))
+    assert response.status_code == 200
+
+    notice = Message.objects.filter(
+        message_type=MessageType.SYSTEM_NOTICE,
+        parts__content__content__contains="Cron dashboard",
+    ).first()
+    assert notice is not None
+    text = notice.parts.first().content.get()
+    assert "No single record is selected" in text
+    assert "collection-level view" in text
+    assert 'admin_tool(scope="cronjobs", action="help")' in text
+    assert "Subject: global" not in text
+    assert "not a permission boundary" in text
 
 
 @pytest.mark.django_db

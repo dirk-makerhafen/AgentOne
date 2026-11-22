@@ -47,23 +47,84 @@ _OVERVIEW_ASSISTANTS = {kind: (_AGENTONE, _AGENTONE) for kind in _OVERVIEW_KINDS
 # The Memory page talks to the memory specialist itself, not AgentOne.
 _OVERVIEW_ASSISTANTS["memory"] = (_MEMORY_AGENT, "Memory agent")
 
-# (page label, URL, what the chat is expected to help with). Used for the
-# one-time context notice written into each new assistant session.
+# Page briefs for the one-time context notice. `focus` is written as a direct
+# instruction to the model; `admin_scope` is the admin_tool scope that owns
+# this page's records (None for pages that use dedicated tools instead).
 _OVERVIEW_PAGES = {
-    "dashboard": ("Main dashboard", "/app/", "give the user a whole-system overview"),
-    "agents": ("Agents dashboard", "/app/agents", "inspect and manage agents"),
-    "projects": ("Projects dashboard", "/app/projects", "inspect and manage projects"),
-    "workspaces": ("Workspaces dashboard", "/app/workspaces", "inspect and manage workspaces"),
-    "cronjobs": ("Cron dashboard", "/app/cron", "inspect and manage cron jobs"),
-    "workitems": ("Work items dashboard", "/app/workitems", "inspect and manage work items"),
-    "memory": ("Memory page", "/app/memory", "explain and maintain the memory tree"),
+    "dashboard": {
+        "label": "Main dashboard",
+        "url": "/app/",
+        "focus": "Give a whole-system overview by combining the relevant scopes; nothing is selected here.",
+        "admin_scope": None,
+    },
+    "agents": {
+        "label": "Agents dashboard",
+        "url": "/app/agents",
+        "focus": "Inspect the agent catalogue, versions, visibility and ownership. Manifest edits go through coding, not the DB.",
+        "admin_scope": "agents",
+    },
+    "projects": {
+        "label": "Projects dashboard",
+        "url": "/app/projects",
+        "focus": "Inspect registered projects and the resources they own.",
+        "admin_scope": "projects",
+    },
+    "workspaces": {
+        "label": "Workspaces dashboard",
+        "url": "/app/workspaces",
+        "focus": "Inspect registered workspaces and their path nesting.",
+        "admin_scope": "workspaces",
+    },
+    "cronjobs": {
+        "label": "Cron dashboard",
+        "url": "/app/cron",
+        "focus": "Inspect job schedules, agents and dispatch history across the visible scope.",
+        "admin_scope": "cronjobs",
+    },
+    "workitems": {
+        "label": "Work items dashboard",
+        "url": "/app/workitems",
+        "focus": "Inspect the durable work queue. Use the dedicated workitems tools rather than admin_tool mutations.",
+        "admin_scope": "workitems",
+    },
+    "memory": {
+        "label": "Memory page",
+        "url": "/app/memory",
+        "focus": "Use the memory tools to explain the memory tree and help maintain it. Ground answers in stored memories and say when information is missing.",
+        "admin_scope": None,
+    },
 }
 _ENTITY_PAGES = {
-    "agent": ("Agent detail", "agents", "inspect this agent"),
-    "skill": ("Skill detail", "skills", "inspect this skill"),
-    "cron": ("Cron job detail", "cron", "inspect this cron job"),
-    "project": ("Project detail", "projects", "work on this project"),
-    "workspace": ("Workspace detail", "workspaces", "work in this workspace"),
+    "agent": {
+        "label": "Agent detail",
+        "path": "agents",
+        "focus": "Inspect this agent's live state and manifest location. Edits require a manifest change plus system.reload, not a DB write.",
+        "admin_scope": "agents",
+    },
+    "skill": {
+        "label": "Skill detail",
+        "path": "skills",
+        "focus": "Inspect this skill's version, usage and assigned agents. Use skills.load when the full instructions are needed.",
+        "admin_scope": "skills",
+    },
+    "cron": {
+        "label": "Cron job detail",
+        "path": "cron",
+        "focus": "Inspect this job's schedule, agent and message before advising on changes.",
+        "admin_scope": "cronjobs",
+    },
+    "project": {
+        "label": "Project detail",
+        "path": "projects",
+        "focus": "Inspect this project and the resources it owns.",
+        "admin_scope": "projects",
+    },
+    "workspace": {
+        "label": "Workspace detail",
+        "path": "workspaces",
+        "focus": "Inspect this workspace and its path-nested children.",
+        "admin_scope": "workspaces",
+    },
 }
 
 _SESSION_HINT_MARKER = "[Assistant session context]"
@@ -249,24 +310,88 @@ def _open_assistant_chat(
     return session, session_version
 
 
+def _context_notice_text(
+    *,
+    assistant_name: str,
+    page: dict,
+    subject: str,
+    subject_ref: str,
+    project: Project | None,
+    workspace,
+) -> str:
+    """Build the pinned operating brief for a new rightbar chat."""
+    if workspace is not None:
+        label = workspace.name or workspace.path or "unnamed"
+        anchor = f'workspace "{label}" (id={workspace.pk})'
+    else:
+        anchor = "AgentOne home"
+    anchor += (
+        f', project "{project.name}" (id={project.pk})'
+        if project is not None
+        else ", global (no project selected)"
+    )
+
+    lines = [
+        _SESSION_HINT_MARKER,
+        f"You are the rightbar assistant on the {page['label']} ({page['url']}).",
+    ]
+    if subject_ref:
+        lines.append(
+            f"Record in focus: {subject} ({subject_ref}). Resolve unqualified references like 'this' or 'it' to this record unless the user says otherwise."
+        )
+    else:
+        lines.append(
+            "No single record is selected. This is a collection-level view; ask which record to act on when the request is ambiguous."
+        )
+    lines.extend([
+        f"Your job here: {page['focus']}",
+        f"Scope anchor: {anchor}. This anchor selects which chats appear here; it is not a permission boundary for admin_tool.",
+        "",
+        "Operating rules:",
+    ])
+    if assistant_name != _AGENTONE:
+        lines.extend([
+            "- Ground answers in the memory tree and say when information is missing.",
+            "- Confirm before changing or deleting memories.",
+        ])
+    else:
+        admin_scope = page.get("admin_scope")
+        if admin_scope == "workitems":
+            lines.append(
+                "- Use the dedicated workitems tools for work-item actions; check their help before mutating."
+            )
+        elif admin_scope:
+            lines.append(
+                f'- For work on this page, call admin_tool(scope="{admin_scope}", action="help") first to discover the exact arguments for the action you need.'
+            )
+        else:
+            lines.append(
+                '- Call admin_tool(scope="help") to find the right scope, then admin_tool(scope=..., action="help") before using a specific action.'
+            )
+        lines.extend([
+            "- Prefer read-only inspection. Ask before creating, updating, archiving or otherwise changing state.",
+            "- If the target is outside the page in focus or this anchor, pass it explicitly with project_pk/project_name or workspace_pk/workspace_name. IDs are safest; names may be partial only if unambiguous.",
+            "- Do not claim a change succeeded unless the tool returned success.",
+        ])
+    return "\n".join(lines)
+
+
 def _ensure_session_context_notice(
     session_version,
     *,
     assistant_name: str,
     kind: str,
-    page_label: str,
-    page_url: str,
+    page: dict,
     subject: str,
-    expectation: str,
+    subject_ref: str = "",
     project: Project | None,
     workspace,
 ):
-    """Pin a one-time notice describing the page this chat came from.
+    """Pin a one-time operating brief describing the page this chat came from.
 
-    The admin tool can infer a project from the session binding, but the page
-    and the intended subject cannot be recovered from a workspace row alone —
-    especially now that most pages share AgentOne home. The notice gives the
-    model an explicit hint and points it at explicit admin_tool identifiers.
+    Most rightbar chats share the AgentOne home workspace, so a workspace row
+    alone cannot tell the model which page it is serving or what "this job"
+    refers to. This notice gives it that context plus concrete tool-use rules.
     """
     from runtime.session.session import Session as SessionRuntime
     from server.models.enums.message_enums import (
@@ -286,27 +411,14 @@ def _ensure_session_context_notice(
     ).exists():
         return None
 
-    if workspace is not None:
-        binding = f"workspace {workspace.name or workspace.path} (id={workspace.pk})"
-    elif project is not None:
-        binding = f"project {project.name} (id={project.pk})"
-    else:
-        binding = "global — AgentOne home workspace"
-    lines = [
-        _SESSION_HINT_MARKER,
-        f"Opened from: {page_label} ({page_url}).",
-        f"Expected work: {expectation}.",
-        f"Subject: {subject}.",
-        f"Session binding: {binding}.",
-    ]
-    if assistant_name == _AGENTONE:
-        lines.append(
-            "Use admin_tool(scope=..., action='help') to discover arguments. "
-            "If the intended target is outside this binding, pass its id or "
-            "exact name explicitly (project_pk / workspace_pk / name) — do not "
-            "infer it from the session workspace alone."
-        )
-    text = "\n".join(lines)
+    text = _context_notice_text(
+        assistant_name=assistant_name,
+        page=page,
+        subject=subject,
+        subject_ref=subject_ref,
+        project=project,
+        workspace=workspace,
+    )
 
     try:
         last = SessionRuntime(
@@ -398,15 +510,15 @@ def entity_assistant_open(request, kind: str, item_id: int):
             return render(request, "shared/_assistant_panel.html", context)
         return redirect(f"/app/{_detail_path(kind)}/{item.pk}?error=assistant-unavailable")
 
-    page_label, path, expectation = _ENTITY_PAGES[kind]
+    page = dict(_ENTITY_PAGES[kind])
+    page["url"] = f"/app/{page.pop('path')}/{item.pk}"
     _ensure_session_context_notice(
         session_version,
         assistant_name=assistant_name,
         kind=kind,
-        page_label=page_label,
-        page_url=f"/app/{path}/{item.pk}",
+        page=page,
         subject=getattr(item, "name", str(item.pk)),
-        expectation=expectation,
+        subject_ref=f"{kind} id={item.pk}",
         project=project,
         workspace=workspace,
     )
@@ -441,15 +553,12 @@ def assistant_overview_open(request, kind: str):
         context["assistant_error"] = "This assistant is unavailable."
         return render(request, "shared/_assistant_panel.html", context)
 
-    page_label, page_url, expectation = _OVERVIEW_PAGES[kind]
     _ensure_session_context_notice(
         session_version,
         assistant_name=assistant_name,
         kind=kind,
-        page_label=page_label,
-        page_url=page_url,
+        page=_OVERVIEW_PAGES[kind],
         subject=scope_label,
-        expectation=expectation,
         project=project,
         workspace=workspace,
     )
