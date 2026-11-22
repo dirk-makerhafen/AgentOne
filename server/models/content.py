@@ -25,9 +25,8 @@ IMAGE_TOKEN_ESTIMATE = 1500
 # GenericContent row, referenced as {"_type": "GenericContent", "pk": ...})
 # instead of inline in AgentTaskCall/AgentTaskRun JSON columns.  Keeps
 # result_json / carguments_json / arguments_json small when LLM outputs or
-# tool payloads carry KBs/MBs of text.  Below the threshold the inline form
-# is cheaper than an extra row + fetch.
-GENERIC_CONTENT_DEDUP_THRESHOLD = 512
+# tool payloads carry KBs/MBs of text, and makes content trackable.
+GENERIC_CONTENT_DEDUP_THRESHOLD = 256
 
 
 class ContentType(models.TextChoices):

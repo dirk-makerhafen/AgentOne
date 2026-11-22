@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from django.db.models import Prefetch
-from django.utils import timezone
 
 from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
 from server.models.enums.message_enums import MessagePartType, MessageRole, MessageType
@@ -30,6 +29,21 @@ from server.models.queries.query import Query
 from server.models.queries.query_message_part import QueryMessagePart
 from server.models.queries.response import Response
 from webui.core.markdown import render_markdown
+from webui.features.chats.parts.calls import (
+    build_call_references,
+    build_payload,
+    build_subcall_flow,
+    call_duration as _call_duration,
+    call_hint,
+    call_icon,
+    call_kind,
+    call_name as _call_name,
+    clock as _clock,
+    status_class as _status_class,
+    status_label as _status_label,
+    status_text as _status_text,
+    subcall_counts as _subcall_counts,
+)
 
 DEFAULT_LIMIT = 120
 
@@ -176,139 +190,6 @@ def _parse_reflection(text: str) -> tuple[str, str]:
     return _card_preview(body), render_markdown(body)
 
 
-def _status_class(call: Any) -> str:
-    """Map a tool-call status to the legacy card-status modifier."""
-    detail = str(getattr(call, "status_detail", "") or "").upper()
-    if "SUCCESS" in detail:
-        return "success"
-    if "FAILURE" in detail or "CANCELLED" in detail or "STOPPED" in detail:
-        return "failure"
-    status = str(getattr(call, "status", "") or "").lower()
-    if status in ("success", "failure", "active", "waiting"):
-        return status
-    if status in ("halted", "ended"):
-        return "waiting"
-    return status or "waiting"
-
-
-def _fmt_duration(seconds: float | None) -> str:
-    """Format a duration in seconds as a compact human string."""
-    if seconds is None:
-        return ""
-    try:
-        seconds = float(seconds)
-    except (TypeError, ValueError):
-        return ""
-    seconds = max(seconds, 0)
-    if seconds < 60:
-        return f"{seconds:.1f}s"
-    minutes = int(seconds // 60)
-    if minutes < 60:
-        return f"{minutes}m {int(seconds % 60):02d}s"
-    hours = minutes // 60
-    return f"{hours}h {minutes % 60:02d}m"
-
-
-def _call_duration(call: Any) -> str:
-    """Elapsed/total duration of a call (empty when it never started)."""
-    try:
-        start = getattr(call, "created_at", None)
-        end = getattr(call, "ended_at", None) or getattr(call, "updated_at", None)
-        if start is None or end is None:
-            return ""
-        return _fmt_duration((end - start).total_seconds())
-    except Exception:  # pylint: disable=broad-exception-caught
-        return ""
-
-
-def _call_name(call: Any) -> str:
-    """Display name of an ``AgentTaskCall`` (never raises)."""
-    try:
-        definition = getattr(call, "task_definition", None)
-        if definition is not None and definition.name:
-            return definition.name
-        version = getattr(call, "task_definition_version", None)
-        definition = getattr(version, "task_definition", None) if version else None
-        if definition is not None and definition.name:
-            return definition.name
-    except Exception:  # pylint: disable=broad-exception-caught
-        pass
-    pk = getattr(call, "pk", None)
-    return f"call #{pk}" if pk is not None else "tool call"
-
-
-def _status_label(call: Any) -> str:
-    """Human-readable status-detail label (falls back to the raw status)."""
-    try:
-        from server.models.enums.task_enums import TaskCallStatusDetail
-
-        detail = str(getattr(call, "status_detail", "") or "")
-        return str(dict(TaskCallStatusDetail.choices).get(detail, detail))
-    except Exception:  # pylint: disable=broad-exception-caught
-        return str(getattr(call, "status", "") or "")
-
-
-#: Compact labels for a sub-call's flow row.  The raw detail ("Completed
-#: Successfully") is too long for the timeline and repeats the status color.
-_SHORT_STATUS = {
-    "NEW": "new",
-    "WAITING_QUEUE": "queued",
-    "WAITING_RETRY": "retry",
-    "WAITING_DEPENDENCY": "waiting",
-    "WAITING_SUBTASKS_OR_HOOKS": "waiting",
-    "WAITING_RATELIMIT": "rate-limited",
-    "ACTIVE_QUEUED": "queued",
-    "ACTIVE_RUNNING": "running",
-    "HALTED_INPUT": "needs input",
-    "HALTED_APPROVAL": "approval",
-    "HALTED_STAGNATED": "step limit",
-    "HALTED_PAUSED": "paused",
-    "ENDED_SUCCESS": "done",
-    "ENDED_FAILURE_EXCEPTION": "error",
-    "ENDED_FAILURE_LOGIC": "failed",
-    "ENDED_CANCELLED": "cancelled",
-    "ENDED_STOPPED": "stopped",
-}
-
-
-def _status_text(call: Any) -> str:
-    """Short human label for a call's flow row / status pill."""
-    detail = str(getattr(call, "status_detail", "") or "").upper()
-    if detail in _SHORT_STATUS:
-        return _SHORT_STATUS[detail]
-    status = str(getattr(call, "status", "") or "").lower()
-    return {"new": "new", "waiting": "waiting", "active": "running",
-            "halted": "paused", "ended": "done"}.get(status, status or "pending")
-
-
-def _clock(value: Any) -> str:
-    """Wall-clock ``HH:MM`` for a datetime (empty when absent/invalid)."""
-    if value is None:
-        return ""
-    try:
-        return timezone.localtime(value).strftime("%H:%M")
-    except Exception:  # pylint: disable=broad-exception-caught
-        return ""
-
-
-def _subcall_counts(call: Any) -> dict[str, Any]:
-    """Cheap descendant counts for the collapsed tool card."""
-    try:
-        counts = call.count_subcalls(max_depth=6, max_nodes=500) or {}
-    except Exception:  # pylint: disable=broad-exception-caught
-        counts = {}
-    active = int(counts.get("active", 0) or 0)
-    finished = int(counts.get("finished", 0) or 0)
-    executing = len(counts.get("executing") or [])
-    return {
-        "active": active,
-        "finished": finished,
-        "executing": executing,
-        "waiting": max(active - executing, 0),
-        "truncated": bool(counts.get("truncated", False)),
-    }
-
-
 def _tool_entry_for_call(call: Any, body: str = "") -> dict[str, Any]:
     """Fields the live tool summary renders for one call.
 
@@ -319,6 +200,9 @@ def _tool_entry_for_call(call: Any, body: str = "") -> dict[str, Any]:
     entry: dict[str, Any] = {
         "pk": getattr(call, "pk", None),
         "name": "tool call",
+        "icon": "⚙",
+        "kind": "tool",
+        "hint": "",
         "status": "",
         "status_detail": "",
         "status_label": "",
@@ -334,6 +218,9 @@ def _tool_entry_for_call(call: Any, body: str = "") -> dict[str, Any]:
     entry.update(
         {
             "name": _call_name(call),
+            "icon": call_icon(call),
+            "kind": call_kind(call),
+            "hint": call_hint(call),
             "status": str(getattr(call, "status", "") or ""),
             "status_detail": str(getattr(call, "status_detail", "") or ""),
             "status_label": _status_label(call),
@@ -450,49 +337,14 @@ def build_call_subcalls(call: Any, full: bool = False) -> dict[str, Any]:
 
     Split out of :func:`build_call_detail` so a descendant status change
     refreshes only this list (plus the summary chip) instead of swapping the
-    whole arguments/result pane.  ``full`` also loads finished branches; the
-    default walk keeps only unfinished calls, which is what a running tool
-    needs.
+    whole arguments/result pane.  ``full`` also loads finished branches and
+    framework plumbing; the default walk keeps the meaningful, unfinished work.
     """
-    counts = _subcall_counts(call)
-    try:
-        tree = call.get_subcall_tree(
-            max_depth=6,
-            max_nodes=400 if full else 150,
-            active_only=not full,
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-        tree = []
-
-    nodes = _ordered_subcall_rows(getattr(call, "pk", None), tree)
-    included = {node["pk"] for node in nodes}
-
-    # Currently-executing descendants are discovered by reverse lookup, so a
-    # long-finished ancestor chain or a truncated walk cannot hide them.
-    running: list[dict[str, Any]] = []
-    try:
-        pins = call.get_executing_subcalls() or []
-    except Exception:  # pylint: disable=broad-exception-caught
-        pins = []
-    for pin in pins:
-        node = _subcall_node(pin.get("call"), pin.get("depth", 1))
-        if node is None or node["pk"] in included:
-            continue
-        included.add(node["pk"])
-        running.append(node)
-
-    return {
-        "call": call,
-        "nodes": nodes,
-        "running": running,
-        "counts": counts,
-        "full": bool(full),
-        "has_content": bool(nodes or running or counts.get("finished") or counts.get("active")),
-    }
+    return build_subcall_flow(call, full=full)
 
 
-def _resolved_arguments(call: Any) -> list[dict[str, str]]:
-    """Flatten the call's stored arguments into key/value rows."""
+def _resolved_arguments(call: Any) -> list[dict[str, Any]]:
+    """Flatten the call's stored arguments into key/payload rows."""
     try:
         args = call._resolve_call_arguments(  # pylint: disable=protected-access
             timeout=0, allow_partial_results=True
@@ -501,23 +353,28 @@ def _resolved_arguments(call: Any) -> list[dict[str, str]]:
         args = None
     if not isinstance(args, dict):
         return []
-    rows: list[dict[str, str]] = []
+    cache: dict[Any, Any] = {}
+    rows: list[dict[str, Any]] = []
     for key, value in args.items():
         if key in ("guardrail_reason", "*"):
             continue
-        rows.append({"key": str(key), "value": _as_text(value)})
+        rows.append(
+            {"key": str(key), "payload": build_payload(value, cache=cache)}
+        )
     return rows
 
 
-def _call_result(call: Any) -> str:
-    """Result payload of a call (empty while it is still running)."""
+def _call_result(call: Any) -> dict[str, Any] | None:
+    """Structured result payload (empty while the call is still running)."""
     try:
-        result = call.get_result(timeout=0, allow_partial_results=True)
+        result = call.get_result(
+            timeout=0, recursive=False, allow_partial_results=True
+        )
     except Exception:  # pylint: disable=broad-exception-caught
-        return ""
+        return None
     if result is None:
-        return ""
-    return _as_text(result)
+        return None
+    return build_payload(result)
 
 
 def build_call_detail(call: Any, full: bool = False) -> dict[str, Any]:
@@ -532,6 +389,8 @@ def build_call_detail(call: Any, full: bool = False) -> dict[str, Any]:
         "call": call,
         "arguments": _resolved_arguments(call),
         "result": _call_result(call),
+        "references": build_call_references(call),
+        "session": getattr(call, "session", None),
         "halted": str(getattr(call, "status_detail", "") or "") == "HALTED_APPROVAL",
         "full": full,
     }

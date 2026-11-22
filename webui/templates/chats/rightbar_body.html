@@ -1,6 +1,6 @@
 {% load webui %}{% firstof panel_tab "details" as active_panel_tab %}
 <div id="chat-panel-body" class="rightbar-body webui-panel-body"
-     hx-get="{% url 'webui:chat_panel_tab' session.pk active_panel_tab %}{% if active_panel_tab == 'workspace' and workspace_relative_path %}?path={{ workspace_relative_path|urlencode }}{% endif %}"
+     hx-get="{% url 'webui:chat_panel_tab' session.pk active_panel_tab %}{% if active_panel_tab == 'workspace' and workspace_relative_path %}?path={{ workspace_relative_path|urlencode }}{% elif active_panel_tab == 'calls' and show_framework %}?show_framework=1{% endif %}"
      hx-trigger="sse:SessionModel:{{ session.pk }} delay:150ms, sse:AgentTaskCall.session:{{ session.pk }} delay:150ms, sse:reset delay:150ms"
      hx-swap="innerHTML" hx-sync="this:replace" {% hx_disinherit %}>
     {% include "chats/panels/inner.html" with panel_tab=active_panel_tab %}

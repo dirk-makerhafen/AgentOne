@@ -1,0 +1,38 @@
+{% comment %} Recursive renderer for ``build_payload`` trees.
+
+Model references stay chips instead of expanding into their own result payload,
+so an async-returned task call reads as one linkable row rather than a wall of
+nested JSON. {% endcomment %}
+{% if node.kind == "ref" %}
+<a class="webui-ref-chip is-{{ node.status_class }}"
+   href="{% if node.session and node.session.pk and node.session.pk != session.pk %}{{ node.session.href }}{% else %}{% url 'webui:chat' session.pk %}?panel=calls{% endif %}"
+   {% if node.href %}{% if not node.session or not node.session.pk or node.session.pk == session.pk %}hx-get="{{ node.href }}?full=1&amp;back=1&amp;session={{ session.pk }}"
+   hx-target="#chat-panel-body" hx-swap="innerHTML"{% endif %}{% endif %}
+   title="{{ node.type }} #{{ node.pk }}{% if node.hint %} · {{ node.hint }}{% endif %}">
+    <span class="webui-ref-icon" aria-hidden="true">{{ node.icon }}</span>
+    <span class="webui-ref-name">{{ node.name }}</span>
+    {% if node.hint %}<span class="webui-ref-hint">{{ node.hint }}</span>{% endif %}
+    {% if node.status_text %}<span class="webui-ref-status">{{ node.status_text }}</span>{% endif %}
+</a>
+{% elif node.kind == "dict" %}
+<div class="webui-payload-dict">
+    {% for row in node.rows %}
+    <div class="webui-payload-row">
+        <span class="webui-payload-key">{{ row.key }}</span>
+        <span class="webui-payload-value">{% include "chats/parts/payload.html" with node=row.value %}</span>
+    </div>
+    {% endfor %}
+</div>
+{% elif node.kind == "list" %}
+<ol class="webui-payload-list">
+    {% for item in node.items %}
+    <li>{% include "chats/parts/payload.html" with node=item %}</li>
+    {% endfor %}
+</ol>
+{% elif node.kind == "json" %}
+<pre class="webui-payload-json">{{ node.text }}</pre>
+{% elif node.kind == "empty" %}
+<span class="webui-payload-empty">{{ node.text }}</span>
+{% else %}
+<span class="webui-payload-text">{{ node.text }}</span>
+{% endif %}

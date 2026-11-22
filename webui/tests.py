@@ -3077,3 +3077,120 @@ def test_full_request_renders_with_the_browser_timezone(client):
     assert response.status_code == 200
     assert b"Display timezone" in response.content
     assert b"America/New_York" in response.content
+
+
+# ---------------------------------------------------------------------------
+# Call graph presentation: tools vs framework plumbing vs subsessions
+# ---------------------------------------------------------------------------
+
+def test_framework_pipeline_calls_are_classified_as_plumbing():
+    from types import SimpleNamespace
+
+    from server.models.enums.task_enums import TaskType
+    from webui.features.chats.parts.calls import call_kind, is_framework_call
+
+    def fake(name, group, task_type):
+        definition = SimpleNamespace(name=name, group_name=group)
+        version = SimpleNamespace(task_type=task_type)
+        return SimpleNamespace(
+            task_definition=definition,
+            task_definition_version=version,
+            carguments_json={},
+            status="ENDED",
+            status_detail="ENDED_SUCCESS",
+        )
+
+    # Multiple definitions share a name ("call_llm_direct" is core in one
+    # scope and subagents in another) — the name still marks plumbing.
+    assert is_framework_call(fake("call_llm_direct", "subagents", TaskType.TASK))
+    assert is_framework_call(fake("process_turn", "", TaskType.TASK))
+    assert is_framework_call(fake("other_task", "core", TaskType.TASK))
+    assert not is_framework_call(fake("read", "filesystem-read", TaskType.TOOL))
+    assert not is_framework_call(fake("map", "core", TaskType.TASK))
+    assert call_kind(fake("grep", "filesystem-read", TaskType.TOOL)) == "tool"
+
+
+@pytest.mark.django_db
+def test_calls_panel_lists_message_tools_not_every_session_call(client):
+    from server.models.enums.message_enums import MessagePartType, MessageRole
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from server.models.message import Message, MessagePart
+    from server.models.tasks.agent_task_call import AgentTaskCall
+    from webui.features.chats.parts.calls import build_calls_panel
+
+    session, version = _session_with_version("calls-panel-sources")
+    tool = _task_call(
+        session,
+        version,
+        detail=TaskCallStatusDetail.ENDED_SUCCESS,
+        name="grep",
+        args={"path": "docs/guide.md"},
+    )
+    _task_call(
+        session, version, detail=TaskCallStatusDetail.ENDED_SUCCESS, name="build_llm_context"
+    )
+    from server.models.enums.task_enums import TaskCallStatus
+
+    AgentTaskCall.objects.filter(pk=tool.pk).update(status=TaskCallStatus.ENDED)
+    tool.refresh_from_db()
+    message = Message.objects.create(
+        role=MessageRole.ASSISTANT, session=session, session_version=version
+    )
+    MessagePart.objects.create(
+        message=message,
+        type=MessagePartType.TOOLCALL,
+        tool_call=tool,
+    )
+
+    panel = build_calls_panel(session)
+    assert [row["name"] for row in panel["call_rows"]] == ["grep"]
+    assert panel["call_rows"][0]["hint"] == "docs/guide.md"
+    assert panel["call_counts"]["finished"] == 1
+
+
+@pytest.mark.django_db
+def test_returned_call_reference_is_a_linkable_chip():
+    from webui.features.chats.parts.calls import build_payload, payload_refs
+
+    session, version = _session_with_version("call-ref-chip")
+    call = _task_call(session, version, detail="ENDED_SUCCESS", name="delegate_task")
+
+    payload = build_payload(
+        {"result": {"_type": "AgentTaskCall", "pk": call.pk}}, max_text=100
+    )
+    chip = payload["rows"][0]["value"]
+    assert chip["kind"] == "ref"
+    assert chip["name"] == "delegate_task"
+    assert chip["href"].endswith(f"/call/{call.pk}/detail")
+    assert payload_refs({"_type": "AgentTaskCall", "pk": call.pk})
+
+
+@pytest.mark.django_db
+def test_calls_panel_tab_renders_grouped_calls(client):
+    from server.models.enums.message_enums import MessagePartType, MessageRole
+    from server.models.enums.task_enums import TaskCallStatusDetail
+    from server.models.message import Message, MessagePart
+
+    session, version = _session_with_version("calls-panel-tab")
+    call = _task_call(
+        session,
+        version,
+        detail=TaskCallStatusDetail.ENDED_SUCCESS,
+        name="read",
+        args={"path": "README.md"},
+    )
+    message = Message.objects.create(
+        role=MessageRole.ASSISTANT, session=session, session_version=version
+    )
+    MessagePart.objects.create(
+        message=message,
+        type=MessagePartType.TOOLCALL,
+        tool_call=call,
+    )
+
+    response = client.get(reverse("webui:chat_panel_tab", args=[session.pk, "calls"]))
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "webui-calls-panel" in body
+    assert "webui-call-row" in body
+    assert "README.md" in body

@@ -7,6 +7,7 @@
 {% endif %}
 <div class="webui-tool-meta">
     <span class="webui-tool-meta-item" title="Call ID">#{{ call.pk }}</span>
+    <span class="webui-tool-meta-item webui-tool-kind is-{{ call.task_definition.group_name|default:'' }}">{{ call.task_definition.name|default:"call" }}</span>
     {% if call.created_at %}<span class="webui-tool-meta-item">{{ call.created_at|clock }}</span>{% endif %}
 </div>
 
@@ -14,11 +15,11 @@
 {% if arguments %}
 <div class="webui-tool-section">
     <div class="webui-tool-section-title">Input</div>
-    <div class="webui-tool-args">
+    <div class="webui-payload-dict webui-tool-args">
         {% for arg in arguments %}
-        <div class="webui-tool-arg">
-            <span class="webui-tool-arg-key">{{ arg.key }}</span>
-            <span class="webui-tool-arg-val">{{ arg.value }}</span>
+        <div class="webui-payload-row">
+            <span class="webui-payload-key">{{ arg.key }}</span>
+            <span class="webui-payload-value">{% include "chats/parts/payload.html" with node=arg.payload %}</span>
         </div>
         {% endfor %}
     </div>
@@ -27,10 +28,66 @@
 
 {% if full %}{% component "chat-tool-subcalls" call.pk full=1 %}{% else %}{% component "chat-tool-subcalls" call.pk %}{% endif %}
 
+{% if references.depends_on or references.returned or references.launched or references.subsessions %}
+<div class="webui-tool-section webui-tool-refs">
+    <div class="webui-tool-section-title">Links</div>
+    {% if references.depends_on %}
+    <div class="webui-ref-group">
+        <span class="webui-ref-group-label">Needs</span>
+        {% for ref in references.depends_on %}
+        <a class="webui-ref-chip is-{{ ref.status_class }}"
+           href="{% if ref.session and ref.session.pk and ref.session.pk != session.pk %}{{ ref.session.href }}{% else %}{% url 'webui:chat' session.pk %}?panel=calls{% endif %}"
+           {% if ref.session.pk == session.pk %}hx-get="{{ ref.href }}?full=1&amp;back=1&amp;session={{ session.pk }}" hx-target="#chat-panel-body" hx-swap="innerHTML"{% endif %}
+           title="{{ ref.name }} #{{ ref.pk }}{% if ref.hint %} · {{ ref.hint }}{% endif %}">
+            <span class="webui-ref-icon">{{ ref.icon }}</span>{{ ref.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if references.returned %}
+    <div class="webui-ref-group">
+        <span class="webui-ref-group-label">Returned</span>
+        {% for ref in references.returned %}
+        <a class="webui-ref-chip is-{{ ref.status_class }}"
+           href="{% if ref.session and ref.session.pk and ref.session.pk != session.pk %}{{ ref.session.href }}{% else %}{% url 'webui:chat' session.pk %}?panel=calls{% endif %}"
+           {% if ref.session.pk == session.pk %}hx-get="{{ ref.href }}?full=1&amp;back=1&amp;session={{ session.pk }}" hx-target="#chat-panel-body" hx-swap="innerHTML"{% endif %}
+           title="{{ ref.name }} #{{ ref.pk }}{% if ref.hint %} · {{ ref.hint }}{% endif %}">
+            <span class="webui-ref-icon">{{ ref.icon }}</span>{{ ref.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if references.subsessions %}
+    <div class="webui-ref-group">
+        <span class="webui-ref-group-label">Subsessions</span>
+        {% for sub in references.subsessions %}
+        <a class="webui-ref-chip is-subsession" href="{{ sub.href }}"
+           title="{{ sub.name }}{% if sub.session.agent_name %} · {{ sub.session.agent_name }}{% endif %}">
+            <span class="webui-ref-icon">⇢</span>{{ sub.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if references.launched %}
+    <div class="webui-ref-group">
+        <span class="webui-ref-group-label">Launched</span>
+        {% for ref in references.launched %}
+        <a class="webui-ref-chip is-{{ ref.status_class }}"
+           href="{% if ref.session and ref.session.pk and ref.session.pk != session.pk %}{{ ref.session.href }}{% else %}{% url 'webui:chat' session.pk %}?panel=calls{% endif %}"
+           {% if ref.session.pk == session.pk %}hx-get="{{ ref.href }}?full=1&amp;back=1&amp;session={{ session.pk }}" hx-target="#chat-panel-body" hx-swap="innerHTML"{% endif %}
+           title="{{ ref.name }} #{{ ref.pk }}{% if ref.hint %} · {{ ref.hint }}{% endif %}">
+            <span class="webui-ref-icon">{{ ref.icon }}</span>{{ ref.name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
 {% if result %}
 <div class="webui-tool-section">
     <div class="webui-tool-section-title">Output</div>
-    <pre class="webui-tool-body">{{ result }}</pre>
+    <div class="webui-tool-result">{% include "chats/parts/payload.html" with node=result %}</div>
 </div>
 {% endif %}
 

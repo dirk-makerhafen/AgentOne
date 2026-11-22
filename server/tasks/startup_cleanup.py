@@ -92,7 +92,7 @@ def _ensure_system_workspaces() -> None:
         ("AgentOne system", home, "Master workspace: whole framework home"),
         ("System agents", Agents().get_source_dir(), "User-scope agents manifests"),
         ("System skills", Skills().get_source_dir(), "User-scope skills manifests"),
-        #("System cronjobs", Cronjobs().get_source_dir(), "System cron jobs"),
+  
     ]
     created = 0
     for ws_name, path, description in specs:

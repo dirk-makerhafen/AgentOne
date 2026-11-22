@@ -9,7 +9,6 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 from django.core.cache import cache
-from django.db.models import F
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -29,6 +28,7 @@ from server.models.settings import AgentToolCallSyntax, ResponseTemperature, Sub
 from server.models.tasks.agent_task_call import AgentTaskCall
 from server.models.workspace import WorkspaceModel
 from webui.features.workspaces.views import directory_url, workspace_tree_context
+from webui.features.chats.parts.calls import build_calls_panel
 from webui.features.chats.parts.cards import queue_text
 from webui.features.chats.parts.thread import (
     DEFAULT_LIMIT,
@@ -68,27 +68,6 @@ PANEL_TABS = (
 #: fetches, so the preview text and the last dispatched run live in the cache.
 _TEMPLATE_PREVIEW_TTL = 600
 _TEMPLATE_RUN_TTL = 3600
-
-#: Colored badges for the Calls tab (mirrors the legacy right panel).
-_CALL_STATUS_COLORS = {
-    TaskCallStatusDetail.NEW: "var(--muted)",
-    TaskCallStatusDetail.WAITING_QUEUE: "var(--link)",
-    TaskCallStatusDetail.WAITING_RETRY: "var(--warning)",
-    TaskCallStatusDetail.WAITING_DEPENDENCY: "var(--link)",
-    TaskCallStatusDetail.WAITING_SUBTASKS_OR_HOOKS: "var(--link)",
-    TaskCallStatusDetail.WAITING_RATELIMIT: "var(--warning)",
-    TaskCallStatusDetail.ACTIVE_QUEUED: "var(--accent)",
-    TaskCallStatusDetail.ACTIVE_RUNNING: "var(--accent)",
-    TaskCallStatusDetail.HALTED_INPUT: "var(--warning)",
-    TaskCallStatusDetail.HALTED_APPROVAL: "#f59e0b",
-    TaskCallStatusDetail.HALTED_STAGNATED: "var(--danger)",
-    TaskCallStatusDetail.HALTED_PAUSED: "var(--muted)",
-    TaskCallStatusDetail.ENDED_SUCCESS: "var(--success)",
-    TaskCallStatusDetail.ENDED_FAILURE_EXCEPTION: "var(--danger)",
-    TaskCallStatusDetail.ENDED_FAILURE_LOGIC: "var(--danger)",
-    TaskCallStatusDetail.ENDED_CANCELLED: "var(--muted)",
-    TaskCallStatusDetail.ENDED_STOPPED: "var(--muted)",
-}
 
 
 def _template_preview_key(session_pk: int) -> str:
@@ -178,7 +157,9 @@ def call_detail(request, call_id: int):
     """Lazily render an expanded tool card (arguments, result, sub-calls)."""
     call = get_object_or_404(
         AgentTaskCall.objects.select_related(
-            "task_definition", "task_definition_version__task_definition"
+            "session__latest_session_version__agent",
+            "task_definition",
+            "task_definition_version__task_definition",
         ),
         pk=call_id,
     )
@@ -433,7 +414,12 @@ def _panel_context(session_model: SessionModel, tab: str, request=None) -> dict:
             ).order_by("-pk")[:60]
         )
         if tab == "calls":
-            context.update(_current_call_tree(session_model))
+            show_framework = bool(request is not None) and request.GET.get(
+                "show_framework"
+            ) in ("1", "true", "yes")
+            context.update(
+                build_calls_panel(session_model, show_framework=show_framework)
+            )
     elif tab == "subagents":
         context["children"] = _child_session_rows(session_model)
         context["available_subagents"] = _available_subagents(session_model)
@@ -800,47 +786,6 @@ def _workspace_context(session_model: SessionModel, request=None) -> dict:
         push_url=push_url,
     )
     return {"workspace": workspace, **context}
-
-
-def _current_call_tree(session_model: SessionModel) -> dict:
-    root = AgentTaskCall.objects.filter(
-        session=session_model, session_root_task=F("pk")
-    ).order_by("-created_at").first()
-    if root is None:
-        return {"current_calls": [], "active_call_count": 0}
-    calls = list(
-        AgentTaskCall.objects.filter(session_root_task=root)
-        .select_related("task_definition", "parent_taskrun__agent_task_call")
-        .order_by("created_at", "pk")[:500]
-    )
-    call_by_id = {call.pk: call for call in calls}
-    rows = []
-    for call in calls:
-        parent_run = getattr(call, "parent_taskrun", None)
-        parent_call = getattr(parent_run, "agent_task_call", None) if parent_run else None
-        depth = 0
-        seen = set()
-        while parent_call is not None and parent_call.pk in call_by_id and parent_call.pk not in seen:
-            depth += 1
-            seen.add(parent_call.pk)
-            parent_run = getattr(parent_call, "parent_taskrun", None)
-            parent_call = getattr(parent_run, "agent_task_call", None) if parent_run else None
-        rows.append({
-            "call": call,
-            "depth": min(depth, 12),
-            "name": call.task_definition.name if call.task_definition else f"Call #{call.pk}",
-            "status_label": dict(TaskCallStatusDetail.choices).get(
-                call.status_detail, str(call.status_detail)
-            ),
-            "status_color": _CALL_STATUS_COLORS.get(
-                call.status_detail, "var(--muted)"
-            ),
-            "active": call.status != TaskCallStatus.ENDED,
-        })
-    return {
-        "current_calls": rows,
-        "active_call_count": sum(1 for row in rows if row["active"]),
-    }
 
 
 def _available_subagents(session_model: SessionModel) -> list[dict]:

@@ -535,9 +535,15 @@ def test_dashboard_activity_shows_running_query_with_session_details(client):
 
     assert result.status_code == 200
     assert 'data-component="dashboard-activity"' in body
-    assert f'sse:Query:{query.pk}' in body
-    assert f'sse:Response:{response.pk}' in body
-    assert "sse:SessionModel" in body
+    # The container only watches model-level keys — per-row streaming keys
+    # belong to the child row component, not the whole overview.
+    container = body.split("<section", 1)[0]
+    assert f"sse:Query:{query.pk}" not in container
+    assert f"sse:Response:{response.pk}" not in container
+    assert 'data-component="dashboard-activity-row"' in body
+    assert f"sse:Query:{query.pk}" in body
+    assert f"sse:Response:{response.pk}" in body
+    assert "sse:AgentTaskCall" in body
     assert "research run" in body
     assert "Atlas" in body
     assert agent.name in body
@@ -554,6 +560,26 @@ def test_dashboard_activity_shows_running_query_with_session_details(client):
     assert "started" in body and "updated" in body
 
 
+def test_dashboard_activity_row_refreshes_independently(client):
+    """A row endpoint renders only its own card and watches only its own keys."""
+    _agent, _version, session, sv, _message = _chat_session("dash-row")
+    query, response = _active_query(session, sv, _message)
+
+    result = _get(client, "dashboard-activity-row", query.pk, kind="query", render="htmx")
+    body = result.content.decode()
+
+    assert result.status_code == 200
+    assert 'class="dash-run' in body
+    assert 'data-component="dashboard-activity-row"' in body
+    assert f"sse:Query:{query.pk}" in body
+    assert f"sse:Response:{response.pk}" in body
+    assert f"sse:SessionModel:{session.pk}" in body
+    assert f"sse:AgentTaskCall.session:{session.pk}" in body
+    assert "sse:reset" not in body  # leaf rows are rebuilt by the container
+    assert "dash-live-header" not in body  # no container chrome
+    assert "Active now" not in body
+
+
 def test_dashboard_activity_shows_tail_of_streaming_response(client):
     """The overview shows the newest lines, not the first line of the answer."""
     _agent, _version, session, sv, message = _chat_session("dash-tail")
@@ -562,6 +588,7 @@ def test_dashboard_activity_shows_tail_of_streaming_response(client):
         [
             "Intro paragraph that was written first",
             "Some middle detail about the deployment",
+            "An old planning note that is now stale",
             "Still waiting on the staging results",
             "Checking the second cluster now",
             "All three nodes are healthy and the rollout is done",
@@ -575,6 +602,36 @@ def test_dashboard_activity_shows_tail_of_streaming_response(client):
     assert "Checking the second cluster now" in body
     assert "Intro paragraph that was written first" not in body
     assert "Some middle detail" not in body
+
+
+def test_dashboard_activity_shows_tail_of_prompt(client):
+    """The prompt preview shows the end of the message, across several lines."""
+    from server.models.enums.message_enums import MessageRole
+    from server.models.message import Message
+
+    _agent, _version, session, sv, _message = _chat_session("dash-prompt-tail")
+    trigger = Message.objects.create(
+        role=MessageRole.USER, session=session, session_version=sv
+    )
+    trigger.add_part(
+        "message",
+        "text",
+        "\n".join(
+            [
+                "Please start by reading the old configuration file",
+                "and ignore the archived notes from last quarter",
+                "Then check the deployment status of the staging cluster",
+                "and report back with any errors you find",
+            ]
+        ),
+    )
+    _active_query(session, sv, trigger)
+
+    body = _get(client, "dashboard-activity", render="htmx").content.decode()
+
+    assert "report back with any errors you find" in body
+    assert "check the deployment status of the staging cluster" in body
+    assert "Please start by reading the old configuration file" not in body
 
 
 def test_dashboard_activity_shows_streaming_tool_calls(client):

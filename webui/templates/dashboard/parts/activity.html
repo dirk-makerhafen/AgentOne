@@ -16,60 +16,8 @@
 
     {% if items %}
     <div class="dash-live-list">
-        {% for item in items %}
-        <article class="dash-run dash-run-{{ item.state }}{% if item.needs_approval %} dash-run-approval{% endif %}">
-            <div class="dash-run-rail" aria-hidden="true">
-                <span class="dash-run-glyph">{% if item.needs_approval %}⚠{% elif item.is_streaming %}◉{% else %}◷{% endif %}</span>
-            </div>
-
-            <div class="dash-run-body">
-                <div class="dash-run-top">
-                    {% if item.session %}
-                    <a class="dash-run-session" href="{% url 'webui:chat' item.session.pk %}">{{ item.session.name }}</a>
-                    {% else %}
-                    <span class="dash-run-session">Session #{{ item.response.session_id }}</span>
-                    {% endif %}
-                    <span class="dash-run-state {{ item.state }}">{{ item.state_label }}</span>
-                    {% if item.stale %}<span class="dash-run-stale" title="No update for a while — this run may be stalled">no updates</span>{% endif %}
-                    {% if item.needs_approval %}<span class="dash-run-attention">needs approval</span>{% endif %}
-                </div>
-
-                <div class="dash-run-context">
-                    {% if item.parent_session %}<span class="dash-run-crumb" title="Sub-session">↳ {{ item.parent_session.name }}</span>{% endif %}
-                    {% if item.project %}<span class="dash-run-crumb">▦ {{ item.project.name }}</span>{% endif %}
-                    {% if item.workspace %}<span class="dash-run-crumb">◫ {{ item.workspace.name }}</span>{% endif %}
-                    {% if item.agent %}<span class="dash-run-crumb">◈ {{ item.agent.name }}</span>{% endif %}
-                    {% if item.current_call %}<span class="dash-run-crumb dash-run-step">{{ item.current_call }}</span>{% endif %}
-                </div>
-
-                {% if item.prompt %}
-                <div class="dash-run-prompt" title="{{ item.prompt }}"><span class="dash-run-prefix">›</span>{{ item.prompt }}</div>
-                {% endif %}
-                {% if item.output %}
-                <div class="dash-run-output" title="{{ item.output }}"><span class="dash-run-prefix">↳</span>{{ item.output }}</div>
-                {% endif %}
-                {% if item.tools %}
-                <div class="dash-run-tools">
-                    {% for tool in item.tools %}
-                    <span class="dash-run-tool{% if not tool.complete %} is-streaming{% endif %}" title="{{ tool.name }}{% if tool.args %}: {{ tool.args }}{% endif %}">
-                        <span class="dash-run-tool-name">{{ tool.name }}</span>{% if tool.args %}<span class="dash-run-tool-args">{{ tool.args }}</span>{% endif %}{% if not tool.complete %}<span class="dash-run-tool-caret">▌</span>{% endif %}
-                    </span>
-                    {% endfor %}
-                    {% if item.extra_tools %}<span class="dash-run-tool dash-run-tool-more">+{{ item.extra_tools }} more</span>{% endif %}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="dash-run-side">
-                <div class="dash-run-stats">
-                    <span class="dash-run-stat-value">{{ item.chars|intcomma }}</span>
-                    <span class="dash-run-stat-label">chars</span>
-                </div>
-                {% if item.model %}<div class="dash-run-model" title="{{ item.model }}">{{ item.model }}</div>{% endif %}
-                <div class="dash-run-times">started {{ item.started|reltime }} · updated {{ item.last_update|reltime }}</div>
-                {% if item.session %}<div class="dash-run-links"><a class="dash-run-open" href="{% url 'webui:chat' item.session.pk %}">open chat →</a></div>{% endif %}
-            </div>
-        </article>
+        {% for row in items %}
+        {% component "dashboard-activity-row" row.row_pk kind=row.row_kind %}
         {% endfor %}
     </div>
     {% else %}

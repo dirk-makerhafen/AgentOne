@@ -252,6 +252,27 @@ def _task_call_keys(obj, previous=None):
             log.exception("Could not resolve ancestor call keys for AgentTaskCall %s", obj.pk)
             ancestors = []
         keys.extend(f"AgentTaskCall:{pk}" for pk in ancestors)
+        # The right-bar Calls panel subscribes per session.  A delegated child
+        # session's calls must refresh the *parent* panel too, so publish the
+        # ancestor sessions' keys (the call's own session key is already in
+        # ``_relation_keys`` above).
+        if ancestors:
+            try:
+                from server.models.tasks.agent_task_call import AgentTaskCall
+
+                session_ids = (
+                    AgentTaskCall.objects.filter(pk__in=ancestors)
+                    .values_list("session_id", flat=True)
+                    .distinct()
+                )
+                keys.extend(
+                    f"AgentTaskCall.session:{sid}" for sid in session_ids if sid
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                log.exception(
+                    "Could not resolve ancestor session keys for AgentTaskCall %s",
+                    obj.pk,
+                )
     return keys
 
 

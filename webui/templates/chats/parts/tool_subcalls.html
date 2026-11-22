@@ -1,7 +1,12 @@
 {% load webui %}
 {% comment %} Live sub-task flow. Rows are depth-first and chronological, with a
 box-drawing prefix showing which call launched which, so the sequence of work
-is readable instead of a flat list of indented names. {% endcomment %}
+is readable instead of a flat list of indented names.
+
+A delegated child session is one ``subsession`` row that links to the child
+chat: its internal framework pipeline belongs there, not in the parent card.
+Framework plumbing in this session is counted (``counts.hidden_framework``) and
+hidden unless the user asks for the full flow. {% endcomment %}
 {% if has_content %}
 <div class="webui-tool-section webui-tool-flow-section">
     <div class="webui-tool-section-title webui-flow-head">
@@ -10,6 +15,7 @@ is readable instead of a flat list of indented names. {% endcomment %}
             {% if running or counts.executing %}<span class="webui-flow-count is-running"><span class="webui-flow-pulse" aria-hidden="true"></span>{{ counts.executing }} running</span>{% endif %}
             {% if counts.waiting %}<span class="webui-flow-count">{{ counts.waiting }} queued</span>{% endif %}
             {% if counts.finished %}<span class="webui-flow-count">{{ counts.finished }} done</span>{% endif %}
+            {% if counts.hidden_framework %}<span class="webui-flow-count" title="One-step LLM pipeline calls hidden from this view">{{ counts.hidden_framework }} framework</span>{% endif %}
         </span>
     </div>
 
@@ -17,9 +23,10 @@ is readable instead of a flat list of indented names. {% endcomment %}
     <div class="webui-flow-now">
         <div class="webui-flow-now-title">Running now</div>
         {% for node in running %}
-        <div class="webui-flow-step is-{{ node.status_class }} is-executing"
+        <div class="webui-flow-step is-{{ node.status_class }} is-executing is-{{ node.call_kind }}"
              title="#{{ node.pk }} · {{ node.status_detail }}{% if node.duration %} · {{ node.duration }}{% endif %}">
             <span class="webui-flow-dot" aria-hidden="true"></span>
+            <span class="webui-flow-icon" aria-hidden="true">{{ node.icon }}</span>
             <span class="webui-flow-name">{{ node.name }}</span>
             <span class="webui-flow-status">{{ node.status_text }}</span>
             <span class="webui-flow-meta">
@@ -34,11 +41,17 @@ is readable instead of a flat list of indented names. {% endcomment %}
     {% if nodes %}
     <ol class="webui-flow">
         {% for node in nodes %}
-        <li class="webui-flow-step is-{{ node.status_class }}{% if node.executing %} is-executing{% endif %}"
-            title="#{{ node.pk }} · {{ node.status_detail }}{% if node.duration %} · {{ node.duration }}{% endif %}">
+        <li class="webui-flow-step is-{{ node.status_class }}{% if node.executing %} is-executing{% endif %} is-{{ node.call_kind }}{% if node.returned %} is-returned{% endif %}">
             <span class="webui-flow-prefix" aria-hidden="true">{{ node.prefix }}</span>
             <span class="webui-flow-dot" aria-hidden="true"></span>
+            <span class="webui-flow-icon" aria-hidden="true">{{ node.icon }}</span>
+            {% if node.kind == "subsession" %}
+            <a class="webui-flow-name webui-flow-link" href="{{ node.href|default:'#' }}"
+               title="Open the subsession chat{% if node.hint %} · {{ node.hint }}{% endif %}">{{ node.name }}</a>
+            {% else %}
             <span class="webui-flow-name">{{ node.name }}</span>
+            {% endif %}
+            {% if node.hint %}<span class="webui-flow-hint" title="{{ node.hint }}">{{ node.hint }}</span>{% endif %}
             <span class="webui-flow-status">{{ node.status_text }}</span>
             <span class="webui-flow-meta">
                 {% if node.started %}<span class="webui-flow-clock">{{ node.started }}</span>{% endif %}
@@ -57,7 +70,7 @@ is readable instead of a flat list of indented names. {% endcomment %}
             hx-get="{% url 'webui:component' 'chat-tool-subcalls' call.pk %}?full=1&render=htmx"
             hx-target="closest [data-component='chat-tool-subcalls']"
             hx-swap="outerHTML">
-        Show {{ counts.finished }}{% if counts.truncated %}+{% endif %} finished
+        Show {{ counts.finished }}{% if counts.truncated %}+{% endif %} finished{% if counts.hidden_framework %} + framework{% endif %}
     </button>
     {% endif %}
     {% if counts.truncated %}

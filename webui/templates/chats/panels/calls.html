@@ -1,27 +1,61 @@
-    <div class="webui-panel-section">
-        <div class="webui-settings-head">
-            <span class="detail-card-title">Task calls</span>
-            <button class="webui-action-btn" type="button" title="Refresh"
-                    hx-get="{% url 'webui:chat_panel_tab' session.pk 'calls' %}"
-                    hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
-        </div>
-        {% if active_call_count %}<div class="webui-muted-note">{{ active_call_count }} active call{{ active_call_count|pluralize }}</div>{% endif %}
-        {% for row in current_calls %}
-        <div class="webui-line" style="padding-left:{{ row.depth|add:1 }}em">
-            <a class="webui-panel-row-name" href="{% url 'webui:chat' session.pk %}?panel=calls"
-               hx-get="{% url 'webui:call_detail' row.call.pk %}?full=1&back=1&session={{ session.pk }}"
-               hx-target="#chat-panel-body" hx-swap="innerHTML">{{ row.name }} #{{ row.call.pk }}</a>
-            <span class="webui-call-badge" style="background:{{ row.status_color }}">{{ row.status_label }}</span>
-            {% if row.active %}
-            <form method="post" action="{% url 'webui:call_cancel' session.pk row.call.pk %}"
-                  hx-post="{% url 'webui:call_cancel' session.pk row.call.pk %}"
-                  hx-target="#chat-panel-body" hx-swap="innerHTML">
-                {% csrf_token %}
-                <button class="webui-action-btn danger" type="submit">Cancel</button>
-            </form>
-            {% endif %}
-        </div>
-        {% empty %}
-        <div class="webui-empty-note">No task calls in the current turn.</div>
+{% comment %} Right-bar Calls panel.
+
+Default view: the user-facing calls of this session, grouped by day, with the
+meaningful work each one launched.  Framework plumbing is counted and hidden
+behind a toggle; a delegated child session is one subsession row that links to
+the child chat instead of another indentation level. {% endcomment %}
+<div class="webui-panel-section webui-calls-panel">
+    <div class="webui-settings-head webui-calls-head">
+        <span class="detail-card-title">Task calls</span>
+        <span class="webui-calls-counts">
+            {% if call_counts.active %}<span class="webui-calls-count is-active">{{ call_counts.active }} active</span>{% endif %}
+            {% if call_counts.failed %}<span class="webui-calls-count is-failure">{{ call_counts.failed }} failed</span>{% endif %}
+            {% if call_counts.finished %}<span class="webui-calls-count">{{ call_counts.finished }} done</span>{% endif %}
+        </span>
+        <button class="webui-action-btn" type="button" title="Refresh"
+                hx-get="{% url 'webui:chat_panel_tab' session.pk 'calls' %}{% if show_framework %}?show_framework=1{% endif %}"
+                hx-target="#chat-panel-body" hx-swap="innerHTML">Refresh</button>
+    </div>
+
+    {% if running_rows %}
+    <div class="webui-calls-group">
+        <div class="webui-calls-group-label">Running now</div>
+        {% for row in running_rows %}
+            {% include "chats/panels/call_row.html" with row=row %}
         {% endfor %}
     </div>
+    {% endif %}
+
+    {% for group in call_groups %}
+    <div class="webui-calls-group">
+        <div class="webui-calls-group-label">{{ group.label }}</div>
+        {% for row in group.rows %}
+            {% include "chats/panels/call_row.html" with row=row %}
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    {% if not call_rows %}
+    <div class="webui-empty-note">No task calls in this session yet.</div>
+    {% endif %}
+
+    {% if truncated %}
+    <div class="webui-flow-truncated">List capped for display — open a call to inspect its own sub-tasks.</div>
+    {% endif %}
+
+    {% if hidden_framework %}
+    <a class="webui-calls-more"
+       href="{% url 'webui:chat' session.pk %}?panel=calls&amp;show_framework=1"
+       hx-get="{% url 'webui:chat_panel_body' session.pk 'calls' %}?show_framework=1"
+       hx-target="#chat-panel-body" hx-swap="outerHTML">
+        Show {{ hidden_framework }} framework step{{ hidden_framework|pluralize }}
+    </a>
+    {% elif show_framework %}
+    <a class="webui-calls-more"
+       href="{% url 'webui:chat' session.pk %}?panel=calls"
+       hx-get="{% url 'webui:chat_panel_body' session.pk 'calls' %}"
+       hx-target="#chat-panel-body" hx-swap="outerHTML">
+        Hide framework steps
+    </a>
+    {% endif %}
+</div>

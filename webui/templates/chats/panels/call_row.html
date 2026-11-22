@@ -1,0 +1,47 @@
+{% comment %} One row in the Calls panel.
+
+``subsession`` rows are destinations (open the child chat); ``call`` rows open
+their detail in this panel.  Depth is capped and drawn with a guide instead of
+unbounded indentation, so a long turn cannot push rows off-screen. {% endcomment %}
+{% if row.kind == "subsession" %}
+<a class="webui-call-row is-subsession" href="{{ row.href|default:'#' }}"
+   title="Open the subsession chat{% if row.hint %} · {{ row.hint }}{% endif %}">
+    <span class="webui-call-icon" aria-hidden="true">{{ row.icon }}</span>
+    <span class="webui-call-main">
+        <span class="webui-call-name">{{ row.name }}</span>
+        {% if row.hint %}<span class="webui-call-hint">{{ row.hint }}</span>{% endif %}
+    </span>
+    <span class="webui-call-status is-{{ row.status_class }}">{{ row.status_text }}</span>
+</a>
+{% else %}
+<div class="webui-call-row is-{{ row.call_kind }}{% if row.depth > 1 %} is-nested{% endif %}"
+     style="--call-depth:{{ row.depth|default:0 }}">
+    <button class="webui-call-open" type="button"
+            title="#{{ row.pk }}{% if row.hint %} · {{ row.hint }}{% endif %}{% if row.duration %} · {{ row.duration }}{% endif %}"
+            hx-get="{% url 'webui:call_detail' row.pk %}?full=1&amp;back=1&amp;session={{ session.pk }}"
+            hx-target="#chat-panel-body" hx-swap="innerHTML">
+        <span class="webui-call-icon" aria-hidden="true">{{ row.icon }}</span>
+        <span class="webui-call-main">
+            <span class="webui-call-name">
+                {{ row.name }}
+                {% if row.returned %}<span class="webui-call-tag" title="Returned by this call and awaited by the framework">returned</span>{% endif %}
+                {% if row.depends_count %}<span class="webui-call-tag is-deps" title="Needs the result of {{ row.depends_count }} earlier call(s)">↳{{ row.depends_count }}</span>{% endif %}
+            </span>
+            {% if row.hint %}<span class="webui-call-hint">{{ row.hint }}</span>{% endif %}
+        </span>
+    </button>
+    <span class="webui-call-status is-{{ row.status_class }}">{{ row.status_text }}</span>
+    {% if row.duration %}<span class="webui-call-duration">{{ row.duration }}</span>{% endif %}
+    {% if row.approval %}
+    <span class="webui-call-approval" title="Waiting for approval">!</span>
+    {% endif %}
+    {% if row.active %}
+    <form method="post" action="{% url 'webui:call_cancel' session.pk row.pk %}"
+          hx-post="{% url 'webui:call_cancel' session.pk row.pk %}"
+          hx-target="#chat-panel-body" hx-swap="innerHTML">
+        {% csrf_token %}
+        <button class="webui-call-cancel" type="submit" title="Cancel this call">×</button>
+    </form>
+    {% endif %}
+</div>
+{% endif %}

@@ -19,10 +19,12 @@ from runtime.observable_queries.conversation import QueryObservables, ResponseOb
 
 #: After this long without a write, an "active" row is probably orphaned (the
 #: recovery scheduler is disabled on some installs).  Surface it, don't hide it.
-STALE_AFTER = timedelta(minutes=10)
-PREVIEW_LIMIT = 150
+STALE_AFTER = timedelta(minutes=15)
+PREVIEW_LIMIT = 400
 #: How many trailing lines of a streamed response to keep in the overview.
-OUTPUT_LINES = 3
+OUTPUT_LINES = 4
+#: Trailing lines of the triggering prompt to show (at least a couple).
+PROMPT_LINES = 3
 
 
 def _text(value: Any) -> str:
@@ -34,21 +36,6 @@ def _text(value: Any) -> str:
         return json.dumps(value, ensure_ascii=False, default=str)
     except (TypeError, ValueError):
         return str(value)
-
-
-def _preview(value: Any, limit: int = PREVIEW_LIMIT) -> str:
-    """One readable, markup-free line for a prompt or streamed answer."""
-    for raw_line in _text(value).splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith(("```", "#", "---")):
-            continue
-        line = re.sub(r"^\s*(?:[-*+]|\d+\.)\s+", "", line)
-        line = re.sub(r"[*_`>#]+", "", line).strip()
-        line = " ".join(line.split())
-        if not line:
-            continue
-        return line[: limit - 1].rstrip() + "…" if len(line) > limit else line
-    return ""
 
 
 def _tail_preview(value: Any, limit: int = PREVIEW_LIMIT, lines: int = OUTPUT_LINES) -> str:
@@ -92,7 +79,7 @@ def _prompt_preview(query) -> str:
         text = _text(value).strip()
         if text:
             texts.append(text)
-    return _preview("\n".join(texts))
+    return _tail_preview("\n".join(texts), lines=PROMPT_LINES)
 
 
 @dataclass
@@ -166,6 +153,8 @@ class ActivityItem:
     started: Any = None
     last_update: Any = None
     stale: bool = False
+    row_pk: int = 0
+    row_kind: str = "query"
 
     @property
     def is_streaming(self) -> bool:
@@ -238,7 +227,7 @@ def _build_item(query, response, running, approval) -> ActivityItem:
     output = ""
     if response is not None:
         output = _tail_preview(response.content or "") or (
-            "Thinking… " + _tail_preview(response.reasoning or "", 110, lines=2)
+            "Thinking… " + _tail_preview(response.reasoning or "", 400, lines=4)
             if response.reasoning
             else ""
         )
@@ -246,8 +235,7 @@ def _build_item(query, response, running, approval) -> ActivityItem:
     tools, extra_tools = _tool_calls(response) if response else ([], 0)
     # Tokens are only reported once the LLM call finishes; count streamed
     # characters instead so the number moves while new tokens arrive.
-    chars = len(response.content or "") + len(response.reasoning or "") if response else 0
-
+    chars = len(response.content or "") + len(response.reasoning or "") if response else 0 + len(json.dumps(response.tool_calls or [])) if response and response.tool_calls else 0
     return ActivityItem(
         query=query,
         response=response,
@@ -271,6 +259,8 @@ def _build_item(query, response, running, approval) -> ActivityItem:
         started=started,
         last_update=last_update,
         stale=bool(last_update and timezone.now() - last_update > STALE_AFTER),
+        row_pk=query.pk if query else response.pk,
+        row_kind="query" if query else "response",
     )
 
 
@@ -311,10 +301,10 @@ def build_activity() -> ActivityData:
     items = [_build_item(query, response, running, approval) for query, response in pairs]
     items.sort(key=lambda item: (item.query or item.response).pk, reverse=True)
 
-    keys = list(query_list.keys) + list(response_list.keys)
-    keys += ["SessionModel", "AgentModel", "Project", "WorkspaceModel", "AgentTaskCall"]
-    keys += [f"Query:{query.pk}" for query in query_list.rows]
-    keys += [f"Response:{response.pk}" for response in response_list.rows]
+    # The container only owns list membership and the summary counts.  Per-row
+    # streaming keys belong to the row components themselves — a 1 Hz token
+    # flush publishes just ``Response:<pk>`` and must not redraw this overview.
+    keys = list(query_list.keys) + list(response_list.keys) + ["AgentTaskCall"]
 
     return ActivityData(
         items=items,
@@ -323,3 +313,72 @@ def build_activity() -> ActivityData:
         waiting_count=sum(not item.is_streaming for item in items),
         approval_count=sum(item.needs_approval for item in items),
     )
+
+
+def build_activity_row(pk: int, kind: str) -> tuple[ActivityItem | None, tuple[str, ...]]:
+    """Rebuild one activity row and the SSE keys it alone should watch."""
+    from server.models.queries.query import Query
+    from server.models.queries.response import Response, ResponseStatus
+
+    query = response = None
+    if kind == "query":
+        query = (
+            Query.objects.select_related(
+                "session",
+                "session__parent_project",
+                "session__parent_session",
+                "session_version__agent",
+                "session_version__workspace",
+                "trigger_message",
+            )
+            .filter(pk=pk)
+            .first()
+        )
+        if query is None:
+            return None, ()
+        response = (
+            Response.objects.filter(
+                query_id=pk,
+                status__in=(ResponseStatus.WAITING, ResponseStatus.ACTIVE),
+            )
+            .select_related(
+                "session",
+                "session__parent_project",
+                "session__parent_session",
+                "session_version__agent",
+                "session_version__workspace",
+            )
+            .order_by("-created_at", "-pk")
+            .first()
+        )
+        if response is None:
+            response = query.related_response.order_by("-pk").first()
+    else:
+        response = (
+            Response.objects.select_related(
+                "query",
+                "session",
+                "session__parent_project",
+                "session__parent_session",
+                "session_version__agent",
+                "session_version__workspace",
+            )
+            .filter(pk=pk)
+            .first()
+        )
+        if response is None:
+            return None, ()
+
+    owner = query or response
+    session_pk = owner.session_id
+    running, approval = _call_context([session_pk] if session_pk else [])
+    item = _build_item(query, response, running, approval)
+
+    keys = []
+    if query is not None:
+        keys.append(f"Query:{query.pk}")
+    if response is not None:
+        keys.append(f"Response:{response.pk}")
+    if session_pk:
+        keys.extend((f"SessionModel:{session_pk}", f"AgentTaskCall.session:{session_pk}"))
+    return item, tuple(dict.fromkeys(keys))

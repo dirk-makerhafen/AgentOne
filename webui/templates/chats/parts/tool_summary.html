@@ -1,8 +1,9 @@
 {% load webui %}
 {% comment %} Live summary row of a tool card.  Rendered inside the card's
 <summary>; the component wrapper uses display:contents so layout is unchanged. {% endcomment %}
-<span class="webui-tool-icon{% if part.subcalls.executing %} is-running{% endif %}" aria-hidden="true">⚙</span>
-<span class="webui-tool-name" title="{{ part.name }}">{{ part.name }}</span>
+<span class="webui-tool-icon{% if part.subcalls.executing %} is-running{% endif %}" aria-hidden="true">{{ part.icon|default:"⚙" }}</span>
+<span class="webui-tool-name" title="{{ part.name }}{% if part.hint %} · {{ part.hint }}{% endif %}">{{ part.name }}</span>
+{% if part.hint %}<span class="webui-tool-hint" title="{{ part.hint }}">{{ part.hint }}</span>{% endif %}
 {% if part.halted %}
     <span class="webui-tool-approval">approval needed</span>
 {% elif part.status_text %}

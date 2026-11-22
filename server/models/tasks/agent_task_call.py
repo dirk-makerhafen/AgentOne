@@ -58,9 +58,6 @@ class AgentTaskCall(BaseModel):
     hook references, and lifecycle status.
     """
 
-        
-
-
     task_definition = models.ForeignKey( "server.TaskDefinition", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
     task_definition_version = models.ForeignKey( "TaskDefinitionVersion", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True, blank=True)
     task_instance = models.ForeignKey( "TaskInstance", on_delete=models.CASCADE, related_name="related_agent_task_calls", default=None, null=True)

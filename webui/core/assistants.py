@@ -289,7 +289,7 @@ def entity_assistant_open(request, kind: str, item_id: int):
             return render(request, "shared/_assistant_panel.html", context)
         return redirect(f"/app/{_detail_path(kind)}/{item.pk}?error=assistant-unavailable")
 
-    base_name = f"{assistant_name} - {item.name}"
+    base_name = f"{kind.capitalize()} Assistant - {item.name}"
     name = unique_session_name(base_name)
     try:
         session_version = assistant.latest_agent_version.get_or_create_session(
@@ -297,7 +297,7 @@ def entity_assistant_open(request, kind: str, item_id: int):
             display_name=name,
             description="",
             workspace=workspace,
-            group_key=f"assistant:{assistant_name}",
+            group_key=f"assistant:{kind}:{assistant_name}",
         )
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("could not create %s assistant chat for %s", kind, item_id)
