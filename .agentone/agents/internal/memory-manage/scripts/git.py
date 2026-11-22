@@ -102,26 +102,24 @@ def commit_time(repo: Path, sha: str) -> Optional[int]:
         return None
 
 
-def diff_stats(
+def changed_chars(
     path: Path,
     old_sha: Optional[str],
     new_sha: Optional[str],
     files: Optional[list[Path]] = None,
-):
-    """Return ``(hours, chars)`` between two commits for *path* or *files*.
+) -> Optional[int]:
+    """Return the total character count of files changed between two commits.
 
-    ``hours`` is the distance between the commit timestamps.  ``chars`` is
-    the sum of the current character counts of the changed files.
-    Returns ``None`` when the SHAs are not valid commits in the path's repo.
+    Counts the *current* contents of the changed files under *path* (or the
+    explicit *files*).  Returns ``None`` when the SHAs are not valid commits
+    in the path's repo.
     """
     if not old_sha or not new_sha:
         return None
     repo, rel = _repo_rel(path)
     if repo is None:
         return None
-    old_ts = commit_time(repo, old_sha)
-    new_ts = commit_time(repo, new_sha)
-    if old_ts is None or new_ts is None:
+    if commit_time(repo, old_sha) is None or commit_time(repo, new_sha) is None:
         return None
 
     rel_files = None
@@ -135,7 +133,6 @@ def diff_stats(
         if not rel_files:
             return None
 
-    hours = round(max(0.0, (new_ts - old_ts) / 3600.0), 2)
     chars = 0
     for rel_file in changed_paths(
         repo, old_sha, new_sha, rel_prefix=rel, rel_files=rel_files
@@ -154,7 +151,31 @@ def diff_stats(
                 chars += file_path.stat().st_size
             except OSError:
                 pass
-    return hours, chars
+    return chars
+
+
+def diff_file(
+    repo: Path,
+    old_sha: str,
+    new_sha: str,
+    rel_path: str,
+) -> Optional[str]:
+    """Return a short unified diff for one file between two commits.
+
+    Returns ``None`` when the commits are invalid or the file is unchanged.
+    The diff is deliberately inlined into synthesizer prompts instead of
+    letting the agent open source files.
+    """
+    if not is_git_hash(old_sha) or not is_git_hash(new_sha):
+        return None
+    result = _run(
+        ["git", "diff", "--unified=1", f"{old_sha}..{new_sha}", "--", rel_path],
+        cwd=Path(repo),
+    )
+    if result.returncode != 0:
+        return None
+    text = result.stdout.strip()
+    return text or None
 
 
 def ensure_repo(

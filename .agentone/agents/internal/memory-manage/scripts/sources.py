@@ -1,18 +1,18 @@
 """``.memory_sources.md`` manifest helpers.
 
 Each memory node (scope root, agent, task) gets a generated, gitignored
-manifest describing the files it consumes and the git commit seen at the
-last successful synthesis.  The walker in :mod:`memory_lib.tree` owns
-writing these files; synthesis agents never write them.
+manifest describing the files it consumes, the git commit seen at the last
+successful synthesis, and whether each source's own subtree has settled
+(``is_up_to_date``).  The walker in :mod:`memory_lib.tree` owns writing these
+files; synthesis agents never write them.
 """
 
 from __future__ import annotations
 
-import hashlib
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import frontmatter
 import yaml
@@ -59,8 +59,10 @@ def render_sources(payload: dict[str, Any]) -> str:
     if not sources:
         lines.append("_No sources._")
     else:
-        lines.append("| Path | Last processed | Current | Hours | Changed chars | Status |")
-        lines.append("|---|---|---|---|---|---|")
+        lines.append(
+            "| Path | Last processed | Current | Changed chars | Depth | Upstream | Status |"
+        )
+        lines.append("|---|---|---|---|---|---|---|")
         for source in sources:
             last = source.get("last_processed_hash")
             current = source.get("current_hash")
@@ -75,13 +77,14 @@ def render_sources(payload: dict[str, Any]) -> str:
             path = _cell(source.get("path", ""))
             last_cell = _cell(last) if last else "—"
             current_cell = _cell(current) if current else "—"
-            hours = source.get("hours_since_processed")
             changed = source.get("changed_chars")
-            hours_cell = _cell(hours) if hours is not None else "—"
             changed_cell = _cell(changed) if changed is not None else "—"
+            depth_cell = _cell(source.get("depth")) if "depth" in source else "—"
             lines.append(
                 f"| {path} | {last_cell} | {current_cell} | "
-                f"{hours_cell} | {changed_cell} | {status} |"
+                f"{changed_cell} | {depth_cell} | "
+                f"{'ready' if source.get('is_up_to_date', True) else 'waiting'} | "
+                f"{status} |"
             )
     lines.append("")
     return "\n".join(lines)

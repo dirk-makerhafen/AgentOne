@@ -1,21 +1,21 @@
 """Dispatch layer-aware memory synthesis for pending ``.memory_sources.md`` nodes.
 
-:func:`memory_lib.tree.walk_memory` decides *what* is stale and owns the
-manifest files.  This module decides *who* consolidates it and *what they are
-told*: every pending node gets a prompt tailored to its layer (task, agent, or
-scope), and that prompt is sent to a fresh ``memory-manage`` subtask session.
+``tree.walk_memory`` decides *what* is stale and owns the manifest files.  This
+module decides *who* consolidates it and *what they are told*.
 
-The prompts are inlined below as ``{{token}}`` templates so they stay readable
-without touching the dispatch code.  The synthesizer writes ``memory.md`` and
-``reflections.md``; each spawn is immediately followed by a delayed
-``memory_finalize`` call that references the child's task call, so the
-framework auto-awaits the synthesizer and then advances the manifest through
-:func:`memory_lib.finalize.finalize_memory`.  The LLM never edits or
-advances ``.memory_sources.md``.
+Every pending node gets **two** small, independent synthesizer sessions: one
+rewrites ``memory.md``, the other rewrites ``reflections.md``.  They run in
+parallel and the framework auto-awaits both task calls before ``memory_finalize``
+advances the manifest.  The LLM never edits or advances ``.memory_sources.md``.
+
+To keep those sessions short, source files are never listed for the agent to go
+read.  The changed material is inlined instead — a unified diff when that is
+shorter than the replacement text, otherwise the full text.  Tool access is
+narrowed to a single edit tool plus ``grep`` on the one output file.
 
 Layers are dispatched deepest-first: task memories before agent memories, and
-agent memories before their scope.  Parents consume their children's output,
-so a single pass advances one depth level; call walk + merge again until
+agent memories before their scope.  Parents consume their children's output, so
+a single pass advances one depth level; call walk + merge again until
 ``pending`` reaches zero.
 """
 
@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import json
 import re
-import sys
 import time
 import uuid
 from pathlib import Path
@@ -34,214 +33,152 @@ import paths as mempaths
 import sources as memsources
 
 
-#: Shared output contract for every layer.  Appended to each layer prompt so
-#: the three variants cannot drift apart on the reflections format.
-REFLECTIONS_OUTPUT = '''
-## Output format
+MEMORY_OUTPUT = "memory.md"
+REFLECTIONS_OUTPUT = "reflections.md"
+OUTPUT_FILES = (MEMORY_OUTPUT, REFLECTIONS_OUTPUT)
 
-Write two markdown files. No fixed schema, no YAML frontmatter, no rigid
-template — use the structure that makes the content easiest to scan. Keep it
-compact and factual.
+#: Which synthesizer owns which output, and which source filenames it consumes.
+KIND_OUTPUT = {
+    "memory": MEMORY_OUTPUT,
+    "reflections": REFLECTIONS_OUTPUT,
+}
+SOURCE_NAMES = {
+    "memory": frozenset({"compaction.md", MEMORY_OUTPUT}),
+    "reflections": frozenset({REFLECTIONS_OUTPUT}),
+}
 
-`memory.md` is durable knowledge: what is true, what was decided, what to know.
+#: Inlined-context budget.  Source material is truncated per file and in total
+#: so a synthesizer cannot be dragged into a long exploratory session.
+MAX_SOURCE_FILE_CHARS = 4000
+MAX_SOURCE_TOTAL_CHARS = 12000
 
-`reflections.md` is consolidated reflection: what was learned, what worked,
-what failed, what to do differently, and patterns worth carrying upstream.
-Merge lower-level reflections into higher-level signal; do not just
-concatenate. Prefer concrete observations over generic advice. When useful,
-include short evidence pointers (session/report names, dates, file paths), but
-do not pad the file with provenance.
+#: Above this size a size note (never a number) is injected into the prompt.
+LARGE_OUTPUT_CHARS = 8000
 
-Good reflections are specific and actionable, for example:
+#: Tools left available to a synthesizer.  Everything else is denied so the
+#: agent edits one file from the inlined context and finishes.
+SYNTHESIZER_DISALLOWED_TOOLS = [
+    "core.load_skill",
+    "memory.*",
+    "filesystem-read.read",
+    "filesystem-read.glob",
+    "filesystem-read.tree",
+    "filesystem-read.stat",
+    "filesystem-read.diff",
+    "filesystem-read.read_image",
+    "filesystem-write.append",
+    "filesystem-write.copy",
+    "filesystem-write.mkdir",
+    "filesystem-write.move",
+    "filesystem-write.rm",
+    "filesystem-write.write",
+]
+SYNTHESIZER_DISALLOWED_TASKS = ["compact.*", "memory_finalize"]
 
-- "Ran the same update 12+ times with identical prompt; this is expected batch
-  behavior, not a failure."
-- "git commit after a batch sometimes reports clean because the prior turn
-  already committed; check git status before committing."
-- "Legacy indexes often miss entity arrays; populate persons/companies/products
-  from source summaries instead of leaving them empty."
+#: Hard call-time gate.  The LLM only ever needs to edit one file, optionally
+#: grep it, and return a summary.  Any other tool attempt aborts the session
+#: instead of sending it into an exploratory loop.  ``final_result`` is a tool
+#: (not a task), so it must be listed here for the synthesizer to report back.
+SYNTHESIZER_TOOL_ALLOWLIST = ["edit", "multiedit", "grep", "final_result"]
+SYNTHESIZER_MAX_TURNS = 10
 
-Drop stale, duplicated, or superseded observations. The newest confirmed truth
-wins when sources conflict.
-'''
+_LAYER_TITLES = {
+    "task": "Task memory synthesis",
+    "agent": "Agent memory synthesis",
+    "scope": "Scope memory synthesis",
+}
 
+_LAYER_GUIDANCE = {
+    ("task", "memory"): """Durable knowledge about doing this task:
 
-AGENT_PROMPT = '''
-# Agent memory synthesis
+- what the task is for, its inputs and outputs, and its recurring constraints
+- decisions that were made and why, plus conventions that are now settled
+- environment specifics, gotchas, and approaches that failed
+- open threads and how they were resolved (or what is still pending)""",
+    ("task", "reflections"): """Consolidated reflection for this task:
 
-You are the memory synthesizer for agent **{{node_label}}**
-({{scope_description}}). Roll the task-level memories up into this agent's
-durable memory.
-
-Target directory: `{{target_dir}}`
-
-## Changed since the last synthesis
-
-{{changed_sources}}
-
-## Read
-
-Each direct sub-directory of `{{target_dir}}/tasks/` is one task this agent
-works on. Its `memory.md` holds task knowledge and its `reflections.md` holds
-consolidated lessons about doing that task.
-
-- Read the changed task memories first, then skim the rest for context.
-- Leave task-specific detail where it is; promote only what matters across
-  tasks or is useful upstream.
-- Treat this agent's existing `memory.md` and `reflections.md` as the baseline
-  you are updating, not as the only truth.
-
-## Write
-
-`{{target_dir}}/memory.md` — durable knowledge about this agent's domain:
+- recurring mistakes and the fix that worked
+- patterns and shortcuts worth reusing
+- user feedback and preferences that should shape future runs
+- ideas for skills, tools, scripts, or harness fixes, when evidence supports them""",
+    ("agent", "memory"): """Durable knowledge about this agent's domain:
 
 - what this agent is responsible for and the systems it touches
 - settled decisions, conventions, and boundaries that apply across its tasks
 - environment and tooling facts the next agent would otherwise rediscover
-- recurring traps and how to avoid them
-
-`{{target_dir}}/reflections.md` — consolidated reflection for this agent.
+- recurring traps and how to avoid them""",
+    ("agent", "reflections"): """Consolidated reflection for this agent:
 
 - patterns that repeatedly succeed
 - mistakes that keep recurring and their fix
 - delegation habits and sequencing that worked
 - user preferences that apply across its tasks
-- ideas for skills, tools, scripts, or harness fixes, when evidence supports them
-
-## Rules
-
-- Synthesize, do not concatenate. Merge new facts into the existing files and
-  drop stale or superseded detail; the newest truth wins.
-- A reader with no access to the task memories must understand the result.
-  Keep it self-contained.
-- Never invent information. If sources conflict, prefer the newer one and say
-  so when it matters.
-- Keep each file under ~8000 characters. If files get longer, compact them and
-  keep the most important content.
-- Only read and write inside `{{target_dir}}`. Never touch
-  `.memory_sources.md`, git metadata, or other memory levels.
-- The harness marks this node processed when your session ends. Do not advance
-  the manifest yourself: write both files, call `final_result` with a one-line
-  summary, and stop.
-''' + REFLECTIONS_OUTPUT
-SCOPE_PROMPT = '''
-# Scope memory synthesis
-
-You are the memory synthesizer for {{scope_description}}.
-
-Target directory: `{{target_dir}}`
-
-## Changed since the last synthesis
-
-{{changed_sources}}
-
-## Read
-
-- `{{target_dir}}/agents/*/memory.md` and `reflections.md` — what each agent in
-  this scope has learned.
-- Child scopes: {{child_scopes}}. Their own `memory.md` and `reflections.md`
-  already summarize everything below them — do not re-read their raw reports.
-
-Start with the changed material above, then read the rest to keep the summary
-coherent. Treat this scope's existing `memory.md` and `reflections.md` as the
-baseline you are updating, not as the only truth.
-
-## Write
-
-`{{target_dir}}/memory.md` — the shared picture for this scope:
+- ideas for skills, tools, scripts, or harness fixes, when evidence supports them""",
+    ("scope", "memory"): """The shared picture for this scope:
 
 - goals, architecture, and the parts of the system this scope owns
 - environment, tooling, and setup facts worth remembering
 - conventions and decisions that hold across agents and child scopes
-- relationships between child scopes and where responsibility sits
-
-`{{target_dir}}/reflections.md` — consolidated cross-agent reflection for this scope:
+- relationships between child scopes and where responsibility sits""",
+    ("scope", "reflections"): """Consolidated cross-agent reflection for this scope:
 
 - coordination patterns that work (and the ones that do not)
 - recurring failures and their fixes
 - preferences that should shape how work is done here
 - what to check first when something in this scope breaks
-- missing capabilities or harness issues worth surfacing upstream
+- missing capabilities or harness issues worth surfacing upstream""",
+}
 
-## Rules
+SYNTHESIS_PROMPT = '''# {{title}} — {{output_name}}
 
-- Synthesize, do not concatenate. Merge new facts into the existing files and
-  drop stale or superseded detail; the newest truth wins.
-- A reader new to this scope must understand the result without opening agent
-  or session memories. Keep it self-contained.
-- Never invent information. If sources conflict, prefer the newer one and say
-  so when it matters.
-- Keep each file under ~8000 characters. Prune rather than spill over.
-- Only read and write inside `{{target_dir}}` and its child scope directories.
-  Never touch `.memory_sources.md`, git metadata, or files above this scope.
-- The harness marks this node processed when your session ends. Do not advance
-  the manifest yourself: write both files, call `final_result` with a one-line
-  summary, and stop.
-''' + REFLECTIONS_OUTPUT
-TASK_PROMPT = '''
-# Task memory synthesis
-
-You are the memory synthesizer for one task. Consolidate the session reports of
-task **{{node_label}}** ({{scope_description}}) into memory that the next agent
-can act on.
-
+You are updating **{{output_name}}** for {{node_label}} ({{scope_description}}).
 Target directory: `{{target_dir}}`
 
-## Changed since the last synthesis
+## Current `{{output_name}}`
+
+{{current_content}}
+
+## Changed material
+
+Already inlined below: a short diff when that is smaller than the replacement
+text, otherwise the new content verbatim. Do not open or read any source file —
+everything you need is here.
 
 {{changed_sources}}
 
-## Read
+{{size_note}}## Write
 
-The task's reports live under `{{target_dir}}/sessions/`:
+Update **`{{target_dir}}/{{output_name}}`** only.
 
-- `reflections_*.md` — what the agent learned while doing this work: mistakes,
-  corrections, preferences, and shortcuts worth repeating.
-- `compaction_*.md` — what happened in each session: goals, decisions,
-  outcomes, dead ends, and open threads.
-
-Start with the changed material above, then read older reports only when you
-need context. Treat the existing `memory.md` and `reflections.md` as the
-baseline you are updating, not as the only truth.
-
-## Write
-
-`{{target_dir}}/memory.md` — what the next agent must know to work this task
-well:
-
-- what the task is for, its inputs and outputs, and its recurring constraints
-- decisions that were made and why, plus conventions that are now settled
-- environment specifics, gotchas, and approaches that failed
-- open threads and how they were resolved (or what is still pending)
-
-`{{target_dir}}/reflections.md` — consolidated reflection for this task.
-
-- recurring mistakes and the fix that worked
-- patterns and shortcuts worth reusing
-- user feedback and preferences that should shape future runs
-- ideas for skills, tools, scripts, or harness fixes, when evidence supports them
+{{guidance}}
 
 ## Rules
 
-- Synthesize, do not concatenate. Merge new facts into the existing files and
-  drop stale or superseded detail; the newest truth wins.
+- Synthesize, do not concatenate. Merge the new material into the existing
+  content and drop stale, duplicated, or superseded entries. The newest
+  confirmed truth wins.
 - A reader with no access to the reports must understand the result. Keep it
-  self-contained.
-- Never invent information. If reports conflict, prefer the newer one and say
-  so when it matters.
-- Keep each file under ~8000 characters. Prune rather than spill over.
-- Only read and write inside `{{target_dir}}`. Never touch
-  `.memory_sources.md`, git metadata, or other memory levels.
-- The harness marks this node processed when your session ends. Do not advance
-  the manifest yourself: write both files, call `final_result` with a one-line
-  summary, and stop.
-''' + REFLECTIONS_OUTPUT
+  self-contained, compact, and factual. No YAML frontmatter, no fixed schema.
+- Never invent information. If sources conflict, prefer the newer one.
+- Write the file even when you decide it needs no changes, then call
+  `final_result` with a one-line summary and stop. The harness finalizes the
+  node once both synthesizers finish; do not advance the manifest yourself or
+  touch git metadata.
+'''
 
-_PROMPTS = {
-    "task": TASK_PROMPT,
-    "agent": AGENT_PROMPT,
-    "scope": SCOPE_PROMPT,
-}
+SIZE_NOTE = '''## Size note
+
+This file is getting relatively large. Prune stale, duplicated, or superseded
+entries. If related material is not HOT — not needed in the next few steps but
+still worth remembering — move it into its own file in this directory and add a
+short relative link to it from `{{output_name}}`.
+
+'''
+
+# ---------------------------------------------------------------------------
+# Classification
+# ---------------------------------------------------------------------------
+
 _SCOPE_KINDS = ("global", "project", "workspace")
 _LAYER_ORDER = {"task": 0, "agent": 1, "scope": 2}
 _TOKEN_RE = re.compile(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}")
@@ -249,14 +186,6 @@ _TOKEN_RE = re.compile(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}")
 #: A node whose marker is newer than this is considered abandoned and may be
 #: dispatched again even if its synthesizer session still looks active.
 INFLIGHT_TTL_SECONDS = 60 * 60
-
-#: How many individual file names to list per source in the prompt.
-MAX_LISTED_FILES = 8
-
-
-# ---------------------------------------------------------------------------
-# Classification
-# ---------------------------------------------------------------------------
 
 
 def _layer_hint(item: dict[str, Any]) -> str:
@@ -322,8 +251,17 @@ def _node_label(
     return name or key or scope
 
 
-def _scope_description(scope: str, label: str) -> str:
-    """Describe the scope in the terms a synthesizer needs."""
+def _scope_description(scope: str, label: str, layer: str = "scope") -> str:
+    """Describe the node in terms a synthesizer needs.
+
+    Task and agent nodes have their own label; calling them a "project scope"
+    would be misleading because the label is a task key or agent name, not a
+    project name.  Scope nodes use the named scope description.
+    """
+    if layer == "task":
+        return f"task `{label}`"
+    if layer == "agent":
+        return f"agent `{label}`"
     if scope == "project":
         return (
             f"the **{label}** project scope "
@@ -338,25 +276,8 @@ def _scope_description(scope: str, label: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Prompt construction
+# Inlined source material
 # ---------------------------------------------------------------------------
-
-
-def _source_label(source: dict[str, Any]) -> str:
-    """Return a readable description of one changed source entry."""
-    node_type = str(source.get("type") or "").strip().lower()
-    path = str(source.get("path") or "").strip()
-    suffix = path.rstrip("/").rsplit("/", 1)[-1]
-
-    if node_type in _SCOPE_KINDS:
-        return f"child {node_type} memory"
-    if suffix == "agents":
-        return "agent memory in this scope"
-    if suffix == "tasks":
-        return "task memory for this agent"
-    if suffix == "sessions":
-        return "session reports (reflections and compactions)"
-    return node_type or "memory source"
 
 
 def _source_dir(source: dict[str, Any], target_dir: Path) -> Path | None:
@@ -414,74 +335,145 @@ def _walk_source_files(source_dir: Path) -> list[str]:
     return sorted(_relative_label(path, source_dir) for path in files)
 
 
-def _source_files(
-    source: dict[str, Any], target_dir: Path
-) -> tuple[bool, list[str], int]:
-    """Return ``(from_git_range, listed_files, total_files)`` for a source."""
-    source_dir = _source_dir(source, target_dir)
-    if source_dir is None:
-        return False, [], 0
-
-    changed = _git_changed_paths(source_dir, source)
-    if changed is not None:
-        names = [
-            name
-            for name in changed
-            if not memsources.is_metadata_path(source_dir / name)
-        ]
-        return True, names[:MAX_LISTED_FILES], len(names)
-
-    names = _walk_source_files(source_dir)
-    return False, names[:MAX_LISTED_FILES], len(names)
+def _repo_relative(repo: Path, source_dir: Path, rel_name: str) -> str:
+    """Return *rel_name* (relative to *source_dir*) relative to *repo*."""
+    try:
+        prefix = source_dir.resolve().relative_to(repo).as_posix()
+    except (OSError, ValueError):
+        prefix = ""
+    full = f"{prefix}/{rel_name}" if prefix and prefix != "." else rel_name
+    return full.lstrip("/")
 
 
-def _format_sources(sources: list[dict[str, Any]], target_dir: Path) -> str:
-    """Format the walker's changed-source entries as a short bullet list."""
-    if not sources:
-        return "_No source changes were reported._"
+def _recency_key(source_dir: Path, rel_name: str) -> tuple[int, float, str]:
+    """Order source files newest-first (session pk, then mtime, then name)."""
+    path = source_dir / rel_name
+    session_part = Path(rel_name).parts[0] if Path(rel_name).parts else ""
+    try:
+        session_pk = int(session_part)
+    except ValueError:
+        session_pk = 0
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        mtime = 0.0
+    return (session_pk, mtime, rel_name)
 
-    lines: list[str] = []
+
+def _truncate(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+    return text[:limit].rstrip() + "\n… [truncated]"
+
+
+def _source_payloads(
+    sources: list[dict[str, Any]], target_dir: Path, kind: str
+) -> list[dict[str, str]]:
+    """Collect the relevant changed files with short full-text or diff bodies."""
+    wanted = SOURCE_NAMES[kind]
+    payloads: list[dict[str, str]] = []
+
     for source in sources:
-        path = str(source.get("path") or "?")
-        parts = [f"- `{path}` — {_source_label(source)}"]
+        source_dir = _source_dir(source, target_dir)
+        if source_dir is None or not source_dir.is_dir():
+            continue
 
-        changed = source.get("changed_chars")
-        if changed:
-            parts.append(f"{int(changed):,} chars changed")
+        old = source.get("last_processed_hash")
+        new = source.get("current_hash")
+        valid_hashes = (
+            memgit.is_git_hash(old)
+            and memgit.is_git_hash(new)
+            and old != new
+        )
+        repo = memgit.repo_for(source_dir) if valid_hashes else None
+        changed = _git_changed_paths(source_dir, source) if repo else None
+        names = changed if changed is not None else _walk_source_files(source_dir)
 
-        hours = source.get("hours_since_processed")
-        if isinstance(hours, (int, float)) and hours > 0:
-            parts.append(f"last synthesized {hours:g}h ago")
+        for rel_name in names:
+            if Path(rel_name).name not in wanted:
+                continue
+            path = source_dir / rel_name
+            try:
+                body = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeError):
+                continue
 
-        last = str(source.get("last_processed_hash") or "")[:8] or "never"
-        current = str(source.get("current_hash") or "")[:8] or "missing"
-        parts.append(f"{last} → {current}")
+            repo_rel = _repo_relative(repo, source_dir, rel_name) if repo else ""
+            diff = (
+                memgit.diff_file(repo, str(old), str(new), repo_rel)
+                if repo and repo_rel
+                else None
+            )
+            if diff and len(diff) < len(body):
+                rendered = _truncate(diff, MAX_SOURCE_FILE_CHARS)
+                form = "diff since last synthesis"
+            else:
+                rendered = _truncate(body, MAX_SOURCE_FILE_CHARS)
+                form = "full content"
+            payloads.append({
+                "label": rel_name,
+                "form": form,
+                "body": rendered,
+                "sort": _recency_key(source_dir, rel_name),  # type: ignore[dict-item]
+            })
 
-        lines.append("  ".join(parts))
+    payloads.sort(key=lambda item: item["sort"], reverse=True)  # type: ignore[arg-type]
 
-        from_git_range, listed, total = _source_files(source, target_dir)
-        if listed:
-            label = "Changed files" if from_git_range else "Files"
-            rendered = ", ".join(f"`{name}`" for name in listed)
-            if total > len(listed):
-                rendered += f" (+{total - len(listed)} more)"
-            lines.append(f"  {label}: {rendered}")
+    selected: list[dict[str, str]] = []
+    used = 0
+    for payload in payloads:
+        body = payload["body"]
+        if used + len(body) > MAX_SOURCE_TOTAL_CHARS:
+            remaining = MAX_SOURCE_TOTAL_CHARS - used
+            if remaining <= 80:
+                break
+            body = _truncate(body, remaining)
+            used = MAX_SOURCE_TOTAL_CHARS
+        else:
+            used += len(body)
+        selected.append({**payload, "body": body})
+        if used >= MAX_SOURCE_TOTAL_CHARS:
+            break
+    return selected
 
-    return "\n".join(lines)
+
+def _format_sources(
+    sources: list[dict[str, Any]], target_dir: Path, kind: str
+) -> str:
+    """Render inlined source material for one synthesizer prompt."""
+    payloads = _source_payloads(sources, target_dir, kind)
+    if not payloads:
+        return "_No source changes to consolidate._"
+
+    blocks: list[str] = []
+    for payload in payloads:
+        blocks.append(
+            f"### `{payload['label']}` — {payload['form']}\n\n"
+            f"```text\n{payload['body']}\n```"
+        )
+    return "\n\n".join(blocks)
 
 
-def _child_scopes(sources: list[dict[str, Any]]) -> str:
-    """Return a readable list of child scope directories, if any."""
-    children = [
-        source
-        for source in sources
-        if str(source.get("type") or "").strip().lower() in _SCOPE_KINDS
-    ]
-    if not children:
-        return "none"
-    return ", ".join(
-        f"`{source.get('path')}` ({source.get('type')})" for source in children
-    )
+def _current_content(target_dir: Path, output_name: str) -> str:
+    """Return the existing output file verbatim, or a clear empty marker."""
+    try:
+        content = (target_dir / output_name).read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return "_This file does not exist yet. Create it with the material below._"
+    if not content.strip():
+        return "_This file is empty. Fill it with the material below._"
+    return content.rstrip()
+
+
+def _size_note(target_dir: Path, output_name: str) -> str:
+    """Return the soft size warning only when the file is genuinely large."""
+    try:
+        size = len((target_dir / output_name).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError):
+        return ""
+    if size < LARGE_OUTPUT_CHARS:
+        return ""
+    return SIZE_NOTE.replace("{{output_name}}", output_name)
 
 
 def _render(template: str, values: dict[str, Any]) -> str:
@@ -495,22 +487,25 @@ def _render(template: str, values: dict[str, Any]) -> str:
     return _TOKEN_RE.sub(substitute, template).strip() + "\n"
 
 
-def build_prompt(item: dict[str, Any]) -> str:
-    """Build the layer-specific synthesis prompt for one pending node.
+def build_prompt(item: dict[str, Any], kind: str = "memory") -> str:
+    """Build the synthesis prompt for one pending node and one output file.
 
     Args:
-        item: One entry from ``walk_memory()["needs_update"]``.  It must
-            contain ``manifest_path``, ``node_kind``, ``node_key``, ``type``,
-            and ``sources``.
+        item: One entry from ``walk_memory()["needs_update"]``.
+        kind: ``"memory"`` for ``memory.md``, ``"reflections"`` for
+            ``reflections.md``.
 
     Returns:
         The rendered prompt, ready to send to a ``memory-manage`` session.
 
     Raises:
-        ValueError: If the node cannot be classified or its manifest is
-            missing.
+        ValueError: If the node cannot be classified, its manifest is missing,
+            or *kind* is unknown.
         KeyError: If a template references an unknown placeholder.
     """
+    if kind not in KIND_OUTPUT:
+        raise ValueError(f"unknown synthesis kind: {kind!r}")
+
     manifest_path = str(item.get("manifest_path") or "")
     if not manifest_path:
         raise ValueError("memory item has no manifest_path")
@@ -521,20 +516,24 @@ def build_prompt(item: dict[str, Any]) -> str:
 
     manifest = memsources.read_sources(manifest_file)
     layer, scope = _classify(item, manifest)
-    sources = list(item.get("sources") or [])
-
+    target_dir = manifest_file.parent.resolve()
+    output_name = KIND_OUTPUT[kind]
     label = _node_label(item, manifest, layer, scope)
-    target_dir = manifest_file.parent.resolve().as_posix()
 
     return _render(
-        _PROMPTS[layer],
+        SYNTHESIS_PROMPT,
         {
-            "level": layer,
+            "title": _LAYER_TITLES[layer],
             "node_label": label,
-            "scope_description": _scope_description(scope, label),
-            "target_dir": target_dir,
-            "changed_sources": _format_sources(sources, manifest_file.parent),
-            "child_scopes": _child_scopes(sources),
+            "scope_description": _scope_description(scope, label, layer),
+            "target_dir": target_dir.as_posix(),
+            "output_name": output_name,
+            "current_content": _current_content(target_dir, output_name),
+            "changed_sources": _format_sources(
+                list(item.get("sources") or []), target_dir, kind
+            ),
+            "size_note": _size_note(target_dir, output_name),
+            "guidance": _LAYER_GUIDANCE[(layer, kind)],
         },
     )
 
@@ -550,40 +549,23 @@ def _item_target_dir(item: dict[str, Any]) -> Path:
     return manifest_path.parent.resolve()
 
 
-def _is_descendant(child_dir: Path, parent_dir: Path) -> bool:
-    """Return True when *child_dir* is inside *parent_dir*."""
-    if child_dir == parent_dir:
-        return False
-    try:
-        child_dir.relative_to(parent_dir)
-        return True
-    except ValueError:
-        return False
-
-
 def _select_batch(items: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
     """Return pending nodes ready to synthesize, across levels.
 
-    A node is ready when no other pending node is its descendant (children must
-    be synthesized before parents consume them). Ready nodes are prioritized
-    deepest-first so we unblock parents quickly, then fill remaining capacity
-    with ready higher-level nodes.
+    Readiness comes from ``is_up_to_date`` on the walker item: False means one
+    of the node's sources has pending synthesis of its own, so the parent must
+    wait.  That flag is computed from the memory tree rather than physical
+    path containment, so child scopes whose memory dirs are not nested still
+    block correctly.  Ready nodes are prioritized deepest-first to unblock
+    parents quickly.
     """
     if not items:
         return []
 
-    pending_dirs = [_item_target_dir(item) for item in items]
-    ready: list[dict[str, Any]] = []
-    for item, item_dir in zip(items, pending_dirs):
-        blocked = any(
-            _is_descendant(other_dir, item_dir)
-            for other_dir in pending_dirs
-            if other_dir != item_dir
-        )
-        if not blocked:
-            ready.append(item)
+    ready: list[dict[str, Any]] = [
+        item for item in items if item.get("is_up_to_date", True)
+    ]
 
-    # Deepest-first, stable within same depth/layer.
     ready.sort(
         key=lambda item: (
             -int(item["depth"]) if isinstance(item.get("depth"), int) else -_LAYER_ORDER.get(_layer_hint(item), 0),
@@ -660,24 +642,6 @@ def _clear_inflight(target_dir: Path) -> None:
         pass
 
 
-def _scope_source_dirs(target_dir: Path) -> list[Path]:
-    """Return child scope directories listed in the node's manifest."""
-    manifest = memsources.read_sources(target_dir / memsources.SOURCES_FILENAME)
-    found: list[Path] = []
-    for source in manifest.get("sources") or []:
-        kind = str(source.get("type") or "").strip().lower()
-        if kind not in _SCOPE_KINDS:
-            continue
-        raw = str(source.get("path") or "").strip()
-        if not raw:
-            continue
-        path = Path(raw)
-        if not path.is_absolute():
-            path = target_dir / path
-        found.append(path.resolve())
-    return found
-
-
 def _allow_patterns(roots: list[Path]) -> list[str]:
     """Return exact + recursive allow globs for *roots*."""
     patterns: list[str] = []
@@ -709,17 +673,16 @@ def _relative_allow_patterns(
     return patterns
 
 
-def _access_overrides(session: Any, target_dir: Path) -> dict[str, Any]:
-    """Return a session ``access`` block granting this synthesizer its node.
+def _access_overrides(session: Any, target_dir: Path, output_name: str) -> dict[str, Any]:
+    """Return a narrow session ``access`` block for one synthesizer.
 
-    Memory nodes live in their own scope's ``.agentone/memory`` tree, which is
-    usually outside the spawning session's workspace.  The child gets write
-    access to the node and read access to the node plus its child scopes (a
-    scope synthesizer consumes them).  Absolute globs cover external nodes;
-    workspace-relative copies cover nodes inside a read-only workspace.
+    Write access covers the node directory (so a size note may create a linked
+    spillover file).  Read access is limited to the *one* output file: source
+    material is inlined in the prompt, so no source file should be readable.
     """
-    write_roots = [target_dir.resolve()]
-    read_roots = write_roots + _scope_source_dirs(target_dir)
+    resolved = target_dir.resolve()
+    write_roots = [resolved]
+    read_roots = [resolved / output_name]
 
     workspace_path = getattr(getattr(session, "workspace", None), "path", None)
     workspace_root = Path(workspace_path).resolve() if workspace_path else None
@@ -733,10 +696,6 @@ def _access_overrides(session: Any, target_dir: Path) -> dict[str, Any]:
     rel_read = _relative_allow_patterns(read_roots, workspace_root)
     rel_write = _relative_allow_patterns(write_roots, workspace_root)
     if read_roots or write_roots:
-        # Absolute copies matter too: a memory node under the workspace's
-        # manifest dir (e.g. ``~/.agentone/workspaces/x/memory``) counts as
-        # "inside" the policy but is not under the workspace *path*, so no
-        # workspace-relative pattern can reach it.
         access["workspace"] = {
             "read": {
                 "allow": list(dict.fromkeys(rel_read + _allow_patterns(read_roots)))
@@ -749,63 +708,43 @@ def _access_overrides(session: Any, target_dir: Path) -> dict[str, Any]:
 
 
 def _spawn_synthesizer(
-    _session: Any, layer: str, target_dir: Path, prompt: str
+    _session: Any, layer: str, target_dir: Path, prompt: str, kind: str
 ) -> dict[str, Any]:
-    """Spawn one ``memory-manage`` subtask and chain finalization after it.
-
-    The child is a single-use ``SUBTASK_DELEGATE`` session.  Its task call is
-    handed to ``memory_finalize`` as an argument, which parks that call in
-    ``WAITING_DEPENDENCY``: the framework auto-awaits the synthesizer and then
-    invokes ``memory_finalize`` with its ``final_result`` message.  Neither this
-    tool nor the LLM advances the manifest.
-    """
+    """Spawn one restricted ``memory-manage`` subtask for one output file."""
     from server.models.enums.session_enums import SessionType
 
-    finalize_task = _session.get_task("memory_finalize")
-    if finalize_task is None:
-        return {
-            "status": "error",
-            "error": "task 'memory_finalize' is not available to this session",
-        }
-
-    started_at = time.time()
+    output_name = KIND_OUTPUT[kind]
     child = _session.spawn_subagent(
         "memory-manage",
-        name=f"memory:{layer}:{uuid.uuid4().hex[:12]}",
-        description=f"{layer} memory: {_display_target(target_dir)}",
+        name=f"memory:{layer}:{kind}:{uuid.uuid4().hex[:10]}",
+        description=f"{layer} {kind}: {_display_target(target_dir)}",
         session_type=SessionType.SUBTASK_DELEGATE,
         group_key=f"memory:{layer}",
         allow_internal=True,
-        access=_access_overrides(_session, target_dir),
+        access=_access_overrides(_session, target_dir, output_name),
+        disallowedToolNames=SYNTHESIZER_DISALLOWED_TOOLS,
+        disallowedTaskNames=SYNTHESIZER_DISALLOWED_TASKS,
+        tool_call_allowlist=SYNTHESIZER_TOOL_ALLOWLIST,
+        max_turns=SYNTHESIZER_MAX_TURNS,
     )
     if child is None:
         return {"status": "error", "error": "agent 'memory-manage' not found"}
 
-    _write_inflight(target_dir, child.model.pk, layer, started_at)
-    try:
-        synthesizer_call = child.add_user_message(prompt)
-        finalize_call = finalize_task.delay(
-            synthesizer_call,
-            target_dir=target_dir.resolve().as_posix(),
-            started_at=started_at,
-        )
-    except Exception:
-        _clear_inflight(target_dir)
-        raise
-
+    call = child.add_user_message(prompt)
     return {
         "status": "dispatched",
+        "kind": kind,
         "session_pk": child.model.pk,
-        "finalize_call_pk": getattr(finalize_call, "pk", None),
-        "finalize": finalize_call,
+        "call": call,
     }
 
 
 def memory_merge_item(_session: Any, item: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
-    """Synthesize one pending memory node (map worker).
+    """Synthesize one pending memory node with two parallel subtasks.
 
-    Dispatches one synthesizer subtask and chains ``memory_finalize``. The
-    returned ``finalize`` ref lets the scheduler wait for the full subgraph.
+    Both synthesizer task calls are handed to ``memory_finalize``.  The
+    framework waits for *all* argument references to end, then passes both
+    results to the finalize task, which advances the manifest once.
     """
     manifest_path = Path(str(item.get("manifest_path") or ""))
     target_dir = _item_target_dir(item)
@@ -823,16 +762,50 @@ def memory_merge_item(_session: Any, item: dict[str, Any]) -> tuple[bool, dict[s
             "reason": "synthesis already running",
         }
 
+    finalize_task = _session.get_task("memory_finalize")
+    if finalize_task is None:
+        return False, {
+            **outcome,
+            "status": "error",
+            "error": "task 'memory_finalize' is not available to this session",
+        }
+
+    started_at = time.time()
+    spawned: dict[str, dict[str, Any]] = {}
     try:
-        prompt = build_prompt(item)
-        spawn = _spawn_synthesizer(_session, layer, target_dir, prompt)
-        outcome.update(spawn)
+        for kind in ("memory", "reflections"):
+            spawn = _spawn_synthesizer(
+                _session, layer, target_dir, build_prompt(item, kind), kind
+            )
+            spawned[kind] = spawn
+            if spawn["status"] != "dispatched":
+                raise RuntimeError(spawn["error"])
     except Exception as exc:  # pylint: disable=broad-exception-caught
+        _clear_inflight(target_dir)
         return False, {**outcome, "status": "error", "error": str(exc)}
 
-    if outcome.get("status") == "dispatched":
-        return True, outcome
-    return False, outcome
+    first = next(iter(spawned.values()))
+    _write_inflight(target_dir, first["session_pk"], layer, started_at)
+    try:
+        finalize_call = finalize_task.delay(
+            spawned["memory"]["call"],
+            spawned["reflections"]["call"],
+            target_dir=target_dir.resolve().as_posix(),
+            started_at=started_at,
+        )
+    except Exception:
+        _clear_inflight(target_dir)
+        raise
+
+    outcome.update({
+        "status": "dispatched",
+        "sessions": {
+            kind: spawn["session_pk"] for kind, spawn in spawned.items()
+        },
+        "finalize_call_pk": getattr(finalize_call, "pk", None),
+        "finalize": finalize_call,
+    })
+    return True, outcome
 
 
 def merge_items(
@@ -907,9 +880,8 @@ def merge_items(
             "remaining": max(0, len(items) - len(dispatched) - len(skipped)),
         }
 
-    # Ready nodes are independent (no pending descendant). Keep map
-    # concurrency sequential by default because each item spawns a synthesizer
-    # subtask and a finalize chain.
+    # Ready nodes are independent (no pending descendant). Keep map concurrency
+    # sequential: each item already runs its two synthesizers in parallel.
     results = map_task.delay(
         target="memory_merge_item",
         list_of_kwargs=[{"item": item} for item in batch],
@@ -942,11 +914,9 @@ def memory_merge(
     """Delegate pending memory nodes to synthesizer sessions via a pipeline.
 
     Walks the memory tree, selects ready nodes (no pending descendant), and
-    dispatches them as ``memory_merge_item`` map tasks. Ready nodes can span
-    levels, so a higher-level node may be synthesized in the same batch when
-    its children are not pending. Each item spawns a synthesizer subtask and
-    chains ``memory_finalize``; returning map results makes the caller wait for
-    the full subgraph.
+    dispatches them as ``memory_merge_item`` map tasks. Each item spawns two
+    synthesizer subtasks (memory + reflections) and chains one finalize call
+    that waits for both.
 
     Args:
         _session: The calling session (bound automatically).

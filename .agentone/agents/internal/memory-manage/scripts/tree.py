@@ -7,9 +7,12 @@ the git commit seen at the last synthesis and the current commit::
     agent      -> tasks/
     task       -> sessions/
 
-Sessions have no manifest; their reports are covered by the task's
-``sessions/`` commit.  This module only writes that manifest; it never runs
-synthesis.
+Each source also carries ``depth`` (the layer it points at) and
+``is_up_to_date``: False when a node under that source is itself pending
+synthesis.  A parent can therefore tell from the manifest alone whether a
+lower layer still has to settle, without walking the tree again.  Sessions
+have no manifest; their reports are covered by the task's ``sessions/``
+commit.  This module only writes that manifest; it never runs synthesis.
 """
 
 from __future__ import annotations
@@ -398,6 +401,7 @@ def _source_entry(
     previous_by_identity: Optional[dict[int, Any]] = None,
     pk: Optional[int] = None,
     source_type: Optional[str] = None,
+    depth: int = 0,
 ) -> dict[str, Any]:
     has_content = _has_content(source)
     current = memgit.path_commit(source) if has_content else None
@@ -409,14 +413,11 @@ def _source_entry(
     if last is not None and not memgit.is_git_hash(last):
         last = None
 
-    hours = None
     changed = None
     if last and current:
-        stats = memgit.diff_stats(source, last, current)
-        if stats is None:
+        changed = memgit.changed_chars(source, last, current)
+        if changed is None:
             last = None
-        else:
-            hours, changed = stats
 
     entry: dict[str, Any] = {"path": label}
     if pk is not None:
@@ -426,10 +427,50 @@ def _source_entry(
     entry.update({
         "last_processed_hash": last,
         "current_hash": current,
-        "hours_since_processed": hours,
         "changed_chars": changed,
+        "depth": depth,
     })
     return entry
+
+
+def _source_dir(node: MemoryNode, source: dict[str, Any]) -> Path:
+    """Resolve a source row's path to an absolute directory."""
+    raw = Path(str(source.get("path") or ""))
+    try:
+        return (raw if raw.is_absolute() else node.path / raw).resolve()
+    except OSError:
+        return raw
+
+
+def _node_is_pending(payload: dict[str, Any]) -> bool:
+    """Return whether a node has material waiting to be synthesized."""
+    return any(
+        source.get("current_hash") is not None
+        and source.get("last_processed_hash") != source.get("current_hash")
+        for source in payload.get("sources") or []
+    )
+
+
+def _annotate_upstream(
+    node: MemoryNode,
+    payload: dict[str, Any],
+    pending_dirs: set[Path],
+) -> None:
+    """Set ``is_up_to_date`` on each source row.
+
+    The flag answers a different question from the hashes. Hashes say "this
+    node has new material"; the flag says "nothing *under* that material is
+    itself waiting for synthesis". Node-backed rows (child scopes) also count
+    the node at the source path, so a parent waits for the child itself.
+    """
+    for source in payload.get("sources") or []:
+        source_dir = _source_dir(node, source)
+        node_backed = source.get("pk") is not None
+        waiting = any(
+            (node_backed and pending == source_dir) or source_dir in pending.parents
+            for pending in pending_dirs
+        )
+        source["is_up_to_date"] = not waiting
 
 
 def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
@@ -438,6 +479,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
     previous = memsources.previous_hashes(previous_manifest)
     previous_by_identity = memsources.previous_by_identity(previous_manifest)
 
+    node_depth = tree.node_depth.get(id(node), 0)
     source_dir = _SOURCE_DIR[node.kind]
     dir_type = _source_type(node.scope, source_dir)
     sources = [
@@ -447,6 +489,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
             previous,
             previous_by_identity=previous_by_identity,
             source_type=dir_type,
+            depth=node_depth + 1,
         )
     ]
     for child in tree.scope_children.get(id(node), []):
@@ -465,6 +508,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
                 previous_by_identity=previous_by_identity,
                 pk=child_pk,
                 source_type=child_type,
+                depth=tree.node_depth.get(id(child), node_depth + 1),
             )
         )
 
@@ -473,6 +517,7 @@ def _build_manifest(node: MemoryNode, tree: MemoryTree) -> dict[str, Any]:
         "type": _compute_memory_type(node.kind, node.scope),
         "key": node.key,
         "name": node.name,
+        "depth": node_depth,
         "sources": sources,
     }
 
@@ -502,6 +547,7 @@ def mark_processed(target_dir: Path) -> bool:
     ``last_processed_hash``.
     """
     tree = discover_tree()
+    _compute_depths(tree)
     target = Path(target_dir).resolve()
     node = next((n for n in tree.nodes if n.path.resolve() == target), None)
     if node is None:
@@ -540,11 +586,17 @@ def mark_processed(target_dir: Path) -> bool:
         memgit.ensure_repo(child.path, preserve_repos=child_preserved)
         memgit.commit_all(child.path, message="memory: synthesized")
 
-    payload = _build_manifest(node, tree)
+    payloads = {id(item): _build_manifest(item, tree) for item in tree.nodes}
+    pending_dirs = {
+        item.path.resolve()
+        for item in tree.nodes
+        if _node_is_pending(payloads[id(item)])
+    }
+    payload = payloads[id(node)]
+    _annotate_upstream(node, payload, pending_dirs)
     for source in payload["sources"]:
         current = source.get("current_hash")
         source["last_processed_hash"] = current
-        source["hours_since_processed"] = 0.0 if current else None
         source["changed_chars"] = 0 if current else None
     memsources.write_sources(node.path / memsources.SOURCES_FILENAME, payload)
     return True
@@ -575,9 +627,10 @@ def _refresh_reports() -> dict[str, int]:
 
     Iterates all report messages in the database, resolves the task memory
     directory for the session version that produced each message, and writes
-    the message content to its timestamped report file if that file does not
-    exist yet.  Report filenames are derived from the message timestamp and
-    pk, so re-running is idempotent.
+    the message content to that session's canonical ``compaction.md`` or
+    ``reflections.md``.  Messages are processed oldest-first, so the newest
+    report wins.  Re-running is idempotent: unchanged content is not rewritten.
+    Legacy timestamped report files in the same directory are removed.
 
     Missing ``agents/<pk>/tasks/<task>/sessions/<pk>/`` directories are
     created as needed — a session does not have to have been synthesized
@@ -614,6 +667,7 @@ def _refresh_reports() -> dict[str, int]:
     # Report directory per (session, version, task group); sessions can change
     # agent/workspace over their lifetime, so each version is looked up once.
     report_dirs: dict[tuple[int, int, str], Optional[Path]] = {}
+    cleaned_dirs: set[Path] = set()
 
     # Walk in pk batches so a large history does not load everything at once.
     last_pk = 0
@@ -643,16 +697,25 @@ def _refresh_reports() -> dict[str, int]:
                 mempaths.session_memory_dir(task_dir, session.pk)
                 / mempaths.report_filename(msg)
             )
-            if report_path.exists():
-                continue
 
             try:
                 content = extract_report_text(msg)
                 if not content:
                     continue
+                if mempaths.read_text(report_path) == content:
+                    continue
                 mempaths.write_text(report_path, content)
             except OSError:
                 continue
+
+            # One canonical file per kind: drop the old timestamped artifacts.
+            if report_path.parent not in cleaned_dirs:
+                cleaned_dirs.add(report_path.parent)
+                for legacy in mempaths.legacy_report_files(report_path.parent):
+                    try:
+                        legacy.unlink()
+                    except OSError:
+                        pass
 
             if msg.message_type == MessageType.REFLECTION:
                 counts["reflections_written"] += 1
@@ -726,11 +789,10 @@ def walk_memory(write: bool = True, refresh: bool = True) -> dict[str, Any]:
             files on disk.  When ``False``, only computes what *would* be
             written — useful for dry-run inspection.
         refresh: When ``True``, queries the database for every REFLECTION
-            and COMPACTION message and saves any that are not already
-            present as report files in the corresponding task memory
-            directory (scoped to the workspace/project the message's
-            session version belongs to).  This backfills reports that were
-            never persisted to the filesystem.
+            and COMPACTION message and writes it to its session's canonical
+            ``reflections.md`` / ``compaction.md`` (newest message wins),
+            removing any legacy timestamped report files.  Scoped to the
+            workspace/project the message's session version belongs to.
 
     Returns:
         A summary dict with:
@@ -750,14 +812,16 @@ def walk_memory(write: bool = True, refresh: bool = True) -> dict[str, Any]:
           - ``node_kind`` – scope / agent / task.
           - ``node_key`` – primary-key or key string.
           - ``depth`` – distance from global root.
+          - ``is_up_to_date`` – False when any source's own subtree is
+            still pending; such a node should wait for the lower layer.
           - ``sources`` – list of changed sources with their
-            ``path``, ``type``, ``pk``, ``changed_chars``,
-            ``hours_since_processed``, ``last_processed_hash``,
-            and ``current_hash``.
+            ``path``, ``type``, ``pk``, ``depth``, ``is_up_to_date``,
+            ``changed_chars``, ``last_processed_hash``, and
+            ``current_hash``.
         - ``reflections_written`` – only present when ``refresh=True``;
-          count of new reflection report files saved.
+          count of canonical reflection files updated.
         - ``compactions_written`` – only present when ``refresh=True``;
-          count of new compaction report files saved.
+          count of canonical compaction files updated.
     """
     # Backfill report files first so their git commits and directories are
     # visible to discovery/commit/manifest generation in this same run.
@@ -773,13 +837,23 @@ def walk_memory(write: bool = True, refresh: bool = True) -> dict[str, Any]:
     manifests_written = 0
     pending = 0
     missing = 0
+    # Build all payloads first so upstream flags describe this entire walk,
+    # regardless of the order in which nodes are visited.
+    payloads = {id(node): _build_manifest(node, tree) for node in tree.nodes}
+    pending_dirs = {
+        node.path.resolve()
+        for node in tree.nodes
+        if _node_is_pending(payloads[id(node)])
+    }
+
     # Group changed sources by the manifest node that owns them.
     # Each entry: {"manifest_path": str, "node_kind": str, "node_key": str,
-    #              "depth": int, "sources": [{...}, ...]}
+    #              "depth": int, "is_up_to_date": bool, "sources": [...]}
     needs_update: dict[int, dict[str, Any]] = {}
 
     for node in tree.nodes:
-        payload = _build_manifest(node, tree)
+        payload = payloads[id(node)]
+        _annotate_upstream(node, payload, pending_dirs)
         node_depth = tree.node_depth.get(id(node), 0)
         node_needs_update: list[dict[str, Any]] = []
 
@@ -795,7 +869,8 @@ def walk_memory(write: bool = True, refresh: bool = True) -> dict[str, Any]:
                     "type": source.get("type"),
                     "pk": source.get("pk"),
                     "changed_chars": source.get("changed_chars"),
-                    "hours_since_processed": source.get("hours_since_processed"),
+                    "depth": source.get("depth"),
+                    "is_up_to_date": source.get("is_up_to_date"),
                     "last_processed_hash": last,
                     "current_hash": current,
                 })
@@ -808,6 +883,9 @@ def walk_memory(write: bool = True, refresh: bool = True) -> dict[str, Any]:
                 "node_key": node.key,
                 "type": _compute_memory_type(node.kind, node.scope),
                 "depth": node_depth,
+                "is_up_to_date": all(
+                    source.get("is_up_to_date", True) for source in payload["sources"]
+                ),
                 "sources": node_needs_update,
             }
 
@@ -829,12 +907,12 @@ def walk_memory(write: bool = True, refresh: bool = True) -> dict[str, Any]:
 
 
     return {
-        "nodes": len(tree.nodes),
-        "manifests_written": manifests_written,
-        "pending": pending,
-        "missing": missing,
+        #"nodes": len(tree.nodes),
+        #"manifests_written": manifests_written,
+        #"pending": pending,
+        #"missing": missing,
         "warnings": tree.warnings,
-        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        #"generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "needs_update": needs_update_list,
-        **refresh_counts,
+        #**refresh_counts,
     }

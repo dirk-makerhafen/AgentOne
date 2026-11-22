@@ -1,10 +1,10 @@
-"""Advance a memory node's manifest after its synthesizer session finished.
+"""Advance a memory node's manifest after both synthesizer sessions finish.
 
-``memory_merge`` spawns one ``memory-manage`` subtask per memory node and
-schedules this task with the child's task call as its first argument.  The
-framework auto-awaits that call, so this function only runs once the
-synthesizer is done and receives its ``final_result`` message.  The manifest is
-validated and advanced here — the LLM never touches ``.memory_sources.md``.
+``memory_merge`` spawns two ``memory-manage`` subtasks per memory node (one for
+``memory.md``, one for ``reflections.md``) and schedules this task with both
+task calls as its first arguments.  The framework auto-awaits them, so this
+function only runs once both synthesizers are done.  The manifest is validated
+and advanced here — the LLM never touches ``.memory_sources.md``.
 """
 
 from __future__ import annotations
@@ -35,7 +35,8 @@ def _result_text(result: Any) -> str:
 
 def memory_finalize(
     _session: Any,
-    result: Any = None,
+    memory_result: Any = None,
+    reflections_result: Any = None,
     target_dir: str = "",
     started_at: float | str | None = None,
     attempt: int = 0,
@@ -44,11 +45,11 @@ def memory_finalize(
 
     Args:
         _session: The calling session (bound automatically).
-        result: The synthesizer's final result message, resolved by the
-            framework from the awaited task call.
+        memory_result: The memory synthesizer's ``final_result`` message.
+        reflections_result: The reflections synthesizer's ``final_result``.
         target_dir: Absolute path of the node that was synthesized.
-        started_at: Unix timestamp when synthesis was dispatched; at least one
-            output file must be newer than this.
+        started_at: Unix timestamp when synthesis was dispatched; both output
+            files must be newer than this.
         attempt: Kept for backward-compatible task signatures; unused.
 
     Returns:
@@ -58,7 +59,17 @@ def memory_finalize(
     del _session, attempt
     ok, payload = finalize_memory(target_dir, started_at=started_at)
     if ok:
-        summary = _result_text(result)
-        if summary:
-            payload["synthesizer_result"] = summary
+        summaries = {
+            kind: text
+            for kind, result in (
+                ("memory", memory_result),
+                ("reflections", reflections_result),
+            )
+            if (text := _result_text(result))
+        }
+        if summaries:
+            payload["synthesizer_results"] = summaries
+            payload["synthesizer_result"] = "; ".join(
+                f"{kind}: {text}" for kind, text in summaries.items()
+            )
     return ok, payload

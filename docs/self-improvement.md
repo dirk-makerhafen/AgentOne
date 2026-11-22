@@ -33,14 +33,24 @@ to the codebase.
 
 ## 2. Playbook — behaviour
 
-The memory synthesizer (`memory-manage`) consolidates reports into three
-files per node. Two of them are structured:
+The memory synthesizer (`memory-manage`) consolidates reports into two
+free-form files per node. Each node is synthesized by two parallel short-lived
+sessions — one owns `memory.md`, the other `reflections.md` — so neither has to
+explore the memory tree. Changed source material (a short diff or the full new
+text, whichever is smaller) is inlined in the prompt and no source file may be
+read; tools are limited to editing the one target file. If a file grows large,
+the prompt adds a soft note to prune duplicates or move non-HOT material into a
+linked file.
 
 | File | Schema | Purpose |
 |---|---|---|
 | `memory.md` | free markdown | Durable facts: what is true here |
-| `reflection.md` | `agentone.playbook/1` | Behavioural rules: when X, do Y |
-| `improvements.md` | `agentone.improvements/1` | Proposals bigger than a rule |
+| `reflections.md` | free markdown | Consolidated lessons and patterns worth carrying up |
+
+The structured schemas below (`agentone.playbook/1` in `reflection.md` and
+`agentone.improvements/1` in `improvements.md`) describe **legacy** artifacts
+from earlier synthesis passes. Readers still accept them; new synthesis does
+not produce them.
 
 ### `reflection.md` — the playbook
 
@@ -228,8 +238,13 @@ the only durable reminder.
 - Memory nodes are synthesized deepest-first (task → agent → scope), so a
   single pass moves one level. Run `memory_walk` + `memory_merge` until
   `remaining` is zero.
+- A `memory_walk(write=True)` snapshot is enough to decide what to process:
+  `last_processed_hash != current_hash` means new material, `depth` names the
+  layer, and `is_up_to_date: false` means the source's own subtree still has
+  pending synthesis, so the parent waits. The dispatcher reads that flag
+  instead of relying on memory directories being physically nested.
 - `memory_finalize` (not the LLM) advances `.memory_sources.md`, and only
-  after `finalize.py` validates and normalizes both structured files.
+  after `finalize.py` validates that both output files were freshly written.
 - Existing memory trees contain legacy prose `reflection.md` files. They stay
   valid, inject nothing, and acquire a playbook the next time their node is
   synthesized. No bulk conversion is performed — prose is not evidence.

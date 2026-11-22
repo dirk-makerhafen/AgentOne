@@ -149,8 +149,8 @@ class MemoryWalkTest(TestCase):
         (task / "memory.md").write_text(f"task {agent_pk}", encoding="utf-8")
         session = task / "sessions" / str(session_pk)
         session.mkdir(parents=True)
-        (session / "reflections_20261023-120000_1.md").write_text("r", encoding="utf-8")
-        (session / "compaction_20261023-120000_2.md").write_text("c", encoding="utf-8")
+        (session / "reflections.md").write_text("r", encoding="utf-8")
+        (session / "compaction.md").write_text("c", encoding="utf-8")
 
     def _session_report_dir(
         self, root: Path, agent_pk: int, session_pk: int, group_key: str = "default"
@@ -301,7 +301,7 @@ class MemoryWalkTest(TestCase):
         self.assertEqual(moved_source["type"], "project")
         self.assertEqual(moved_source["last_processed_hash"], last)
         self.assertEqual(moved_source["current_hash"], last)
-        self.assertEqual(moved_source["hours_since_processed"], 0.0)
+        self.assertEqual(moved_source["depth"], 1)
         self.assertEqual(moved_source["changed_chars"], 0)
 
     def test_missing_child_outputs_stay_listed(self):
@@ -333,7 +333,7 @@ class MemoryWalkTest(TestCase):
             task_dir
             / "sessions"
             / str(self.global_session.pk)
-            / "reflections_20261024-120000_10.md"
+            / "reflections.md"
         )
         report.write_text("new report", encoding="utf-8")
         result = walk_memory(write=True)
@@ -413,8 +413,65 @@ class MemoryWalkTest(TestCase):
 
         updated = self._manifest(self.global_mem)["sources"][0]
         self.assertNotEqual(updated["current_hash"], last)
-        self.assertIsNotNone(updated["hours_since_processed"])
+        self.assertEqual(updated["depth"], 1)
         self.assertEqual(updated["changed_chars"], len(text))
+
+    def test_sources_carry_depth_and_upstream_settled_flag(self):
+        walk_memory(write=True)
+        # Establish a settled baseline: every node has consumed its sources.
+        for manifest_path in self.tmp.rglob(memsources.SOURCES_FILENAME):
+            manifest = memsources.read_sources(manifest_path)
+            for source in manifest.get("sources") or []:
+                source["last_processed_hash"] = source.get("current_hash")
+            memsources.write_sources(manifest_path, manifest)
+        walk_memory(write=True)
+
+        global_manifest = self._manifest(self.global_mem)
+        self.assertEqual(global_manifest["depth"], 0)
+        agents_source = next(
+            source
+            for source in global_manifest["sources"]
+            if source["path"] == "agents/"
+        )
+        self.assertEqual(agents_source["depth"], 1)
+        self.assertTrue(agents_source["is_up_to_date"])
+        project_source = next(
+            source
+            for source in global_manifest["sources"]
+            if source["path"] == self._abs(self.project_mem)
+        )
+        self.assertEqual(project_source["depth"], 1)
+        self.assertTrue(project_source["is_up_to_date"])
+
+        task_dir = (
+            self.global_mem
+            / "agents"
+            / str(self.global_agent.pk)
+            / "tasks"
+            / "task_default"
+        )
+        agent_dir = task_dir.parent.parent
+        session_dir = task_dir / "sessions" / str(self.global_session.pk)
+        (session_dir / "compaction.md").write_text("new report", encoding="utf-8")
+        summary = walk_memory(write=True)
+
+        task_manifest = self._manifest(task_dir)
+        self.assertEqual(task_manifest["depth"], self._manifest(agent_dir)["depth"] + 1)
+        self.assertTrue(task_manifest["sources"][0]["is_up_to_date"])
+        self.assertFalse(self._manifest(agent_dir)["sources"][0]["is_up_to_date"])
+        global_agents = next(
+            source
+            for source in self._manifest(self.global_mem)["sources"]
+            if source["path"] == "agents/"
+        )
+        self.assertFalse(global_agents["is_up_to_date"])
+
+        pending = next(
+            item
+            for item in summary["needs_update"]
+            if Path(item["manifest_path"]) == self.global_mem / memsources.SOURCES_FILENAME
+        )
+        self.assertFalse(pending["is_up_to_date"])
 
     def test_mark_processed_snapshots_current_hashes(self):
         walk_memory(write=True)
@@ -431,11 +488,10 @@ class MemoryWalkTest(TestCase):
                 source["last_processed_hash"], source["current_hash"]
             )
             if source["current_hash"] is None:
-                self.assertIsNone(source["hours_since_processed"])
                 self.assertIsNone(source["changed_chars"])
             else:
-                self.assertEqual(source["hours_since_processed"], 0.0)
                 self.assertEqual(source["changed_chars"], 0)
+            self.assertIsInstance(source["is_up_to_date"], bool)
 
     def test_dry_run_does_not_write_manifests(self):
         manifest_path = self.global_mem / memsources.SOURCES_FILENAME
@@ -483,13 +539,13 @@ class MemoryWalkTest(TestCase):
             / "sessions"
             / str(self.global_session.pk)
         )
-        for f in session_dir.glob("reflections_*.md"):
+        for f in session_dir.glob("reflections.md"):
             f.unlink()
 
         result = walk_memory(write=True, refresh=True)
 
         # Check that a reflection file was created
-        reflection_files = list(session_dir.glob("reflections_*.md"))
+        reflection_files = list(session_dir.glob("reflections.md"))
         self.assertGreater(len(reflection_files), 0)
 
         # Verify the content matches
@@ -530,21 +586,21 @@ class MemoryWalkTest(TestCase):
             / "sessions"
             / str(self.global_session.pk)
         )
-        for f in session_dir.glob("compaction_*.md"):
+        for f in session_dir.glob("compaction.md"):
             f.unlink()
 
         result = walk_memory(write=True, refresh=True)
 
         # Check that a compaction file was created
-        compaction_files = list(session_dir.glob("compaction_*.md"))
+        compaction_files = list(session_dir.glob("compaction.md"))
         self.assertGreater(len(compaction_files), 0)
 
         # Verify the content matches
         content = compaction_files[0].read_text(encoding="utf-8")
         self.assertIn("This is a new compaction report", content)
 
-    def test_refresh_skips_existing_report_files(self):
-        """walk_memory(refresh=True) does not overwrite existing report files."""
+    def test_refresh_overwrites_canonical_report_file(self):
+        """The newest message replaces the single canonical report file."""
         from server.models.message import Message
         from server.models.enums.message_enums import MessageType, MessageContentType
         from server.models.sessions.session_version import SessionVersionModel
@@ -577,14 +633,12 @@ class MemoryWalkTest(TestCase):
             / "sessions"
             / str(self.global_session.pk)
         )
-        existing_file = session_dir / "reflections_20261023-120000_1.md"
+        existing_file = session_dir / "reflections.md"
         existing_file.write_text("existing content", encoding="utf-8")
 
         walk_memory(write=True, refresh=True)
 
-        # The original file should be unchanged
-        content = existing_file.read_text(encoding="utf-8")
-        self.assertEqual(content, "existing content")
+        self.assertIn("New reflection content", existing_file.read_text(encoding="utf-8"))
 
     def test_refresh_writes_compaction_reports_from_compaction_parts(self):
         """COMPACTION parts are the report body (not just MESSAGE parts)."""
@@ -593,7 +647,7 @@ class MemoryWalkTest(TestCase):
         session_dir = self._session_report_dir(
             self.global_mem, self.global_agent.pk, self.global_session.pk
         )
-        self._clear_reports(session_dir, "compaction_*.md")
+        self._clear_reports(session_dir, "compaction.md")
         self._add_report(
             self.global_session,
             MessageType.COMPACTION,
@@ -605,20 +659,20 @@ class MemoryWalkTest(TestCase):
 
         result = walk_memory(write=True, refresh=True)
 
-        files = list(session_dir.glob("compaction_*.md"))
+        files = list(session_dir.glob("compaction.md"))
         self.assertEqual(len(files), 1)
         content = files[0].read_text(encoding="utf-8")
         self.assertIn("refactored the widget", content)
         self.assertEqual(result["compactions_written"], 1)
 
-    def test_refresh_writes_every_report_not_just_the_newest(self):
-        """Every reflection message gets a file, not only the latest one."""
+    def test_refresh_keeps_only_the_newest_report(self):
+        """All reflection messages collapse into one canonical file."""
         from server.models.enums.message_enums import MessagePartType, MessageType
 
         session_dir = self._session_report_dir(
             self.global_mem, self.global_agent.pk, self.global_session.pk
         )
-        self._clear_reports(session_dir, "reflections_*.md")
+        self._clear_reports(session_dir, "reflections.md")
         for index in range(3):
             self._add_report(
                 self.global_session,
@@ -628,8 +682,9 @@ class MemoryWalkTest(TestCase):
 
         result = walk_memory(write=True, refresh=True)
 
-        files = list(session_dir.glob("reflections_*.md"))
-        self.assertEqual(len(files), 3)
+        files = list(session_dir.glob("reflections.md"))
+        self.assertEqual(len(files), 1)
+        self.assertIn("reflection report 2", files[0].read_text(encoding="utf-8"))
         self.assertEqual(result["reflections_written"], 3)
 
     def test_refresh_creates_missing_task_directory(self):
@@ -652,7 +707,7 @@ class MemoryWalkTest(TestCase):
 
         walk_memory(write=True, refresh=True)
 
-        files = list(session_dir.glob("reflections_*.md"))
+        files = list(session_dir.glob("reflections.md"))
         self.assertEqual(len(files), 1)
         self.assertIn("report without prior memory", files[0].read_text(encoding="utf-8"))
 
@@ -666,7 +721,7 @@ class MemoryWalkTest(TestCase):
         project_dir = self._session_report_dir(
             self.project_mem, self.top_agent.pk, self.top_session.pk
         )
-        self._clear_reports(workspace_dir, "reflections_*.md")
+        self._clear_reports(workspace_dir, "reflections.md")
         self._add_report(
             self.top_session,
             MessageType.REFLECTION,
@@ -675,7 +730,7 @@ class MemoryWalkTest(TestCase):
 
         walk_memory(write=True, refresh=True)
 
-        self.assertEqual(len(list(workspace_dir.glob("reflections_*.md"))), 1)
+        self.assertEqual(len(list(workspace_dir.glob("reflections.md"))), 1)
         self.assertFalse(project_dir.exists())
 
     def test_refresh_excludes_compaction_bootstrap_parts(self):
@@ -686,7 +741,7 @@ class MemoryWalkTest(TestCase):
         session_dir = self._session_report_dir(
             self.global_mem, self.global_agent.pk, self.global_session.pk
         )
-        self._clear_reports(session_dir, "compaction_*.md")
+        self._clear_reports(session_dir, "compaction.md")
         self._add_report(
             self.global_session,
             MessageType.COMPACTION,
@@ -702,7 +757,7 @@ class MemoryWalkTest(TestCase):
 
         walk_memory(write=True, refresh=True)
 
-        content = list(session_dir.glob("compaction_*.md"))[0].read_text(
+        content = list(session_dir.glob("compaction.md"))[0].read_text(
             encoding="utf-8"
         )
         self.assertIn("SUMMARY: kept", content)
@@ -845,7 +900,7 @@ class MemorySourceTypeTest(TestCase):
         (task / "memory.md").write_text(f"task {agent_pk}", encoding="utf-8")
         session = task / "sessions" / str(session_pk)
         session.mkdir(parents=True)
-        (session / "reflections_20261023-120000_1.md").write_text("r", encoding="utf-8")
+        (session / "reflections.md").write_text("r", encoding="utf-8")
 
     def _manifest(self, root: Path) -> dict:
         return memsources.read_sources(root / memsources.SOURCES_FILENAME)

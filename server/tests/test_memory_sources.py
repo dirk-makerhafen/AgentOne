@@ -19,8 +19,9 @@ def _payload(**overrides):
                 "path": "sessions/",
                 "last_processed_hash": None,
                 "current_hash": "sha256:abc",
-                "hours_since_processed": 1.5,
                 "changed_chars": 12,
+                "depth": 3,
+                "is_up_to_date": False,
             }
         ],
     }
@@ -38,10 +39,14 @@ def test_write_sources_roundtrip_and_idempotent(tmp_path):
     assert loaded["kind"] == "task"
     assert loaded["sources"][0]["current_hash"] == "sha256:abc"
     assert loaded["sources"][0]["last_processed_hash"] is None
-    assert loaded["sources"][0]["hours_since_processed"] == 1.5
     assert loaded["sources"][0]["changed_chars"] == 12
+    assert loaded["sources"][0]["depth"] == 3
+    assert loaded["sources"][0]["is_up_to_date"] is False
+    assert "hours_since_processed" not in loaded["sources"][0]
     assert "generated_at" in loaded
     assert "| Path | Last processed |" in path.read_text()
+    assert "| Depth | Upstream |" in path.read_text()
+    assert "| waiting |" in path.read_text()
 
 
 def test_previous_hashes_matches_path():
@@ -54,7 +59,7 @@ def test_previous_hashes_matches_path():
     assert previous["sessions/"] == "sha256:old"
 
 
-def test_report_filename_uses_reflection_type_and_message_pk():
+def test_report_filename_uses_canonical_name():
     from server.models.enums.message_enums import MessageType
 
     message = SimpleNamespace(
@@ -62,11 +67,24 @@ def test_report_filename_uses_reflection_type_and_message_pk():
         message_type=MessageType.REFLECTION,
         created_at=datetime(2026, 10, 23, 14, 5, 6),
     )
-    assert mempaths.report_filename(message) == "reflections_20261023-140506_9.md"
-    assert mempaths.report_filename(message) == "reflections_20261023-140506_9.md"
+    assert mempaths.report_filename(message) == "reflections.md"
+    assert mempaths.report_filename(message) == "reflections.md"
 
     message.message_type = MessageType.COMPACTION
-    assert mempaths.report_filename(message) == "compaction_20261023-140506_9.md"
+    assert mempaths.report_filename(message) == "compaction.md"
+
+
+def test_legacy_report_files_only_matches_timestamped_names(tmp_path):
+    legacy = tmp_path / "compaction_20261031-103959_152472.md"
+    legacy.write_text("old", encoding="utf-8")
+    other_legacy = tmp_path / "reflections_20261031-103959_152472.md"
+    other_legacy.write_text("old", encoding="utf-8")
+    (tmp_path / "compaction.md").write_text("new", encoding="utf-8")
+    (tmp_path / "notes_20261031-103959_1.md").write_text("keep", encoding="utf-8")
+
+    found = {path.name for path in mempaths.legacy_report_files(tmp_path)}
+
+    assert found == {legacy.name, other_legacy.name}
 
 
 def test_previous_by_identity_tracks_child_scopes():

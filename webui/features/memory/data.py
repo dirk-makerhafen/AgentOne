@@ -148,13 +148,6 @@ def _format_timestamp(value: str) -> str:
     return parsed.strftime("%Y-%m-%d %H:%M")
 
 
-def _format_hours(value: Any) -> str:
-    try:
-        return f"{float(value):.1f}h"
-    except (TypeError, ValueError):
-        return "—"
-
-
 # ---------------------------------------------------------------------------
 # Scope references
 # ---------------------------------------------------------------------------
@@ -262,8 +255,9 @@ class MemorySource:
     type: str = ""
     last_processed_hash: str = ""
     current_hash: str = ""
-    hours_since_processed: Any = None
     changed_chars: int = 0
+    depth: int = 0
+    is_up_to_date: bool = True
 
     @property
     def status(self) -> str:
@@ -278,10 +272,6 @@ class MemorySource:
         return {"missing": "Missing", "pending": "Changed", "current": "Current"}[
             self.status
         ]
-
-    @property
-    def hours_label(self) -> str:
-        return _format_hours(self.hours_since_processed)
 
 
 @dataclass
@@ -576,8 +566,9 @@ def _load_sources(path: Path) -> tuple[list[MemorySource], str, str]:
                 type=str(raw.get("type") or ""),
                 last_processed_hash=str(raw.get("last_processed_hash") or ""),
                 current_hash=str(raw.get("current_hash") or ""),
-                hours_since_processed=raw.get("hours_since_processed"),
                 changed_chars=int(raw.get("changed_chars") or 0),
+                depth=int(raw.get("depth") or 0),
+                is_up_to_date=bool(raw.get("is_up_to_date", True)),
             )
         )
     return out, str(metadata.get("generated_at") or ""), ""

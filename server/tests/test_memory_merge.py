@@ -55,8 +55,9 @@ def _node(
                 "type": f"{memory_type}-sessions",
                 "last_processed_hash": "a" * 40,
                 "current_hash": "b" * 40,
-                "hours_since_processed": 3.5,
                 "changed_chars": 1204,
+                "depth": 3,
+                "is_up_to_date": True,
             }
         ],
     }
@@ -67,6 +68,9 @@ def _node(
         "node_key": key,
         "type": memory_type,
         "depth": depth,
+        "is_up_to_date": all(
+            source.get("is_up_to_date", True) for source in payload["sources"]
+        ),
         "sources": payload["sources"],
     }
 
@@ -141,17 +145,23 @@ def test_build_prompt_covers_every_layer(
         key=key,
         name=name,
     )
-    rendered = merge.build_prompt(item)
+    memory_prompt = merge.build_prompt(item, "memory")
+    reflections_prompt = merge.build_prompt(item, "reflections")
 
-    assert "{{" not in rendered and "}}" not in rendered
-    assert item["manifest_path"].rsplit("/", 1)[0] in rendered
-    assert "memory.md" in rendered
-    assert "reflections.md" in rendered
-    assert "reflection.md" not in rendered.replace("reflections.md", "")
-    assert "memory_mark_processed" not in rendered
-    assert "harness marks this node processed" in rendered
-    assert expect_title in rendered
-    assert expect_label in rendered
+    for rendered, output in (
+        (memory_prompt, "memory.md"),
+        (reflections_prompt, "reflections.md"),
+    ):
+        assert "{{" not in rendered and "}}" not in rendered
+        assert item["manifest_path"].rsplit("/", 1)[0] in rendered
+        assert f"Update **`{Path(item['manifest_path']).parent.resolve().as_posix()}/{output}`** only." in rendered
+        assert "harness finalizes" in rendered
+        assert expect_title in rendered
+        assert expect_label in rendered
+        assert "Do not open or read any source file" in rendered
+
+    assert "memory.md" not in reflections_prompt
+    assert "reflections.md" not in memory_prompt
 
 
 @pytest.mark.parametrize(
@@ -190,7 +200,7 @@ def test_memory_manage_finalizes_programmatically():
     assert "memory_mark_processed" not in text
 
 
-def test_prompt_lists_files_on_first_synthesis(tmp_path):
+def test_prompt_inlines_source_content_on_first_synthesis(tmp_path):
     item = _node(
         tmp_path,
         kind="task",
@@ -202,26 +212,29 @@ def test_prompt_lists_files_on_first_synthesis(tmp_path):
                 "type": "workspace-agent-task-sessions",
                 "last_processed_hash": None,
                 "current_hash": "b" * 40,
-                "hours_since_processed": None,
                 "changed_chars": None,
+                "is_up_to_date": True,
             }
         ],
     )
     folder = Path(item["manifest_path"]).parent
     session_dir = folder / "sessions" / "12"
     session_dir.mkdir(parents=True)
-    (session_dir / "compaction_2026.md").write_text("summary", encoding="utf-8")
-    (session_dir / "reflections_2026.md").write_text("lesson", encoding="utf-8")
-    (folder / "sessions" / ".memory_sources.md").write_text("meta", encoding="utf-8")
+    (session_dir / "compaction.md").write_text("COMPACTION_BODY_XYZ", encoding="utf-8")
+    (session_dir / "reflections.md").write_text("REFLECTION_BODY_XYZ", encoding="utf-8")
+    (folder / "sessions" / ".memory_sources.md").write_text("META_BODY_XYZ", encoding="utf-8")
 
-    rendered = merge.build_prompt(item)
+    memory_prompt = merge.build_prompt(item, "memory")
+    reflections_prompt = merge.build_prompt(item, "reflections")
 
-    assert (
-        "Files: `12/compaction_2026.md`, `12/reflections_2026.md`"
-        in rendered
-    )
-    files_line = next(line for line in rendered.splitlines() if "Files:" in line)
-    assert ".memory_sources.md" not in files_line
+    assert "`12/compaction.md` — full content" in memory_prompt
+    assert "COMPACTION_BODY_XYZ" in memory_prompt
+    assert "REFLECTION_BODY_XYZ" not in memory_prompt
+
+    assert "`12/reflections.md` — full content" in reflections_prompt
+    assert "REFLECTION_BODY_XYZ" in reflections_prompt
+    assert "COMPACTION_BODY_XYZ" not in reflections_prompt
+    assert "META_BODY_XYZ" not in reflections_prompt
 
 
 def test_prompt_lists_only_files_changed_between_hashes(tmp_path):
@@ -229,9 +242,10 @@ def test_prompt_lists_only_files_changed_between_hashes(tmp_path):
     memgit.ensure_repo(folder)
     sessions = folder / "sessions"
     sessions.mkdir()
-    (sessions / "old.md").write_text("old fact", encoding="utf-8")
+    (sessions / "compaction.md").write_text("OLD_COMPACTION_XYZ", encoding="utf-8")
+    (sessions / "reflections.md").write_text("STATIC_REFLECTION_XYZ", encoding="utf-8")
     old = memgit.commit_all(folder, message="old")
-    (sessions / "new.md").write_text("new fact", encoding="utf-8")
+    (sessions / "compaction.md").write_text("NEW_COMPACTION_XYZ", encoding="utf-8")
     new = memgit.commit_all(folder, message="new")
 
     item = {
@@ -246,7 +260,7 @@ def test_prompt_lists_only_files_changed_between_hashes(tmp_path):
                 "type": "workspace-agent-task-sessions",
                 "last_processed_hash": old,
                 "current_hash": new,
-                "hours_since_processed": 1.0,
+                "is_up_to_date": True,
                 "changed_chars": 8,
             }
         ],
@@ -262,39 +276,35 @@ def test_prompt_lists_only_files_changed_between_hashes(tmp_path):
         },
     )
 
-    rendered = merge.build_prompt(item)
+    rendered = merge.build_prompt(item, "memory")
 
-    assert "Changed files: `new.md`" in rendered
-    assert "old.md" not in rendered
-
-
-def test_prompt_lists_changed_sources_with_stats(tmp_path):
-    item = _node(
-        tmp_path,
-        kind="task",
-        memory_type="workspace-agent-task",
-        key="default",
-        sources=[
-            {
-                "path": "sessions/",
-                "type": "workspace-agent-task-sessions",
-                "last_processed_hash": "1234567890" + "a" * 30,
-                "current_hash": "abcdef1234" + "b" * 30,
-                "hours_since_processed": 2.5,
-                "changed_chars": 2500,
-            }
-        ],
-    )
-    rendered = merge.build_prompt(item)
-
-    assert "`sessions/`" in rendered
-    assert "session reports" in rendered
-    assert "2,500 chars changed" in rendered
-    assert "2.5h ago" in rendered
-    assert "12345678 → abcdef12" in rendered
+    assert "`compaction.md` — full content" in rendered
+    assert "NEW_COMPACTION_XYZ" in rendered
+    assert "OLD_COMPACTION_XYZ" not in rendered
+    assert "STATIC_REFLECTION_XYZ" not in rendered
+    assert "reflections.md" not in rendered
 
 
-def test_scope_prompt_mentions_child_scopes(tmp_path):
+def test_prompt_never_reports_exact_output_size(tmp_path):
+    item = _node(tmp_path, kind="task", memory_type="workspace-agent-task", key="default")
+    folder = Path(item["manifest_path"]).parent
+    (folder / "memory.md").write_text("x" * 9000, encoding="utf-8")
+
+    rendered = merge.build_prompt(item, "memory")
+
+    assert "## Size note" in rendered
+    assert "getting relatively large" in rendered
+    assert "9000" not in rendered
+    assert "chars changed" not in rendered
+    assert "→" not in rendered
+
+
+def test_scope_prompt_inlines_child_scope_memory(tmp_path):
+    child_memory = tmp_path / "atlas-workspace" / "memory"
+    child_memory.mkdir(parents=True)
+    (child_memory / "memory.md").write_text("child fact", encoding="utf-8")
+    (child_memory / "reflections.md").write_text("child lesson", encoding="utf-8")
+
     item = _node(
         tmp_path,
         kind="project",
@@ -307,25 +317,28 @@ def test_scope_prompt_mentions_child_scopes(tmp_path):
                 "type": "project-agents",
                 "last_processed_hash": "a" * 40,
                 "current_hash": "b" * 40,
-                "hours_since_processed": 1.0,
+                "is_up_to_date": True,
                 "changed_chars": 10,
             },
             {
-                "path": "/tmp/atlas-workspace/memory",
+                "path": child_memory.as_posix(),
                 "type": "workspace",
                 "pk": 4,
                 "last_processed_hash": "c" * 40,
                 "current_hash": "d" * 40,
-                "hours_since_processed": 1.0,
+                "is_up_to_date": True,
                 "changed_chars": 20,
             },
         ],
     )
-    rendered = merge.build_prompt(item)
+    memory_prompt = merge.build_prompt(item, "memory")
+    reflections_prompt = merge.build_prompt(item, "reflections")
 
-    assert "**Atlas** project scope" in rendered
-    assert "child workspace memory" in rendered
-    assert "/tmp/atlas-workspace/memory" in rendered
+    assert "**Atlas** project scope" in memory_prompt
+    assert "child fact" in memory_prompt
+    assert "child lesson" not in memory_prompt
+    assert "child lesson" in reflections_prompt
+    assert "child fact" not in reflections_prompt
 
 
 # ---------------------------------------------------------------------------
@@ -343,24 +356,12 @@ def test_select_batch_prefers_deepest_ready_nodes(tmp_path):
     assert batch == [task, agent, scope]
 
 
-def test_select_batch_skips_nodes_with_pending_descendants(tmp_path):
-    scope_dir = tmp_path / "scope-memory"
-    scope_dir.mkdir()
-    memsources.write_sources(scope_dir / memsources.SOURCES_FILENAME, {
-        "kind": "global", "type": "global", "key": "global", "name": "global",
-        "sources": [{
-            "path": "agents/",
-            "type": "global-agents",
-            "last_processed_hash": "a" * 40,
-            "current_hash": "b" * 40,
-        }],
-    })
-    scope = {
-        "manifest_path": (scope_dir / memsources.SOURCES_FILENAME).as_posix(),
-        "node_kind": "global", "node_key": "global", "type": "global", "depth": 0,
-        "sources": [],
-    }
-    agent = _node(scope_dir / "agents", kind="agent", memory_type="global-agent", key="a", depth=2)
+def test_select_batch_skips_nodes_waiting_on_lower_layer(tmp_path):
+    # Deliberately not nested: readiness must come from the flag, not paths.
+    scope = _node(tmp_path, kind="global", memory_type="global", key="g", depth=0)
+    agent = _node(tmp_path, kind="agent", memory_type="global-agent", key="a", depth=2)
+    scope["is_up_to_date"] = False
+    scope["sources"][0]["is_up_to_date"] = False
 
     batch = merge._select_batch([scope, agent], 0)
 
@@ -376,7 +377,7 @@ def test_select_batch_limits_dispatch(tmp_path):
     assert len(merge._select_batch(items, 2)) == 2
 
 
-def test_memory_merge_spawns_synthesizers_and_leaves_manifests_alone(tmp_path):
+def test_memory_merge_spawns_parallel_synthesizers_and_leaves_manifests_alone(tmp_path):
     task = _node(tmp_path, kind="task", memory_type="project-agent-task", key="default", depth=3)
     agent = _node(tmp_path, kind="agent", memory_type="project-agent", key="7", depth=2)
     before_task = Path(task["manifest_path"]).read_text(encoding="utf-8")
@@ -389,21 +390,33 @@ def test_memory_merge_spawns_synthesizers_and_leaves_manifests_alone(tmp_path):
     assert result["layer"] == "mixed"
     assert len(result["dispatched"]) == 2
     assert result["remaining"] == 0
-    # Both nodes are ready (no descendant relationship) and dispatched.
-    assert len(session.children) == 2
+    # Two nodes, each with a memory and a reflections synthesizer.
+    assert len(session.children) == 4
     assert session.spawn_calls[0][0] == "memory-manage"
     assert session.spawn_calls[0][1]["allow_internal"] is True
     assert session.spawn_calls[0][1]["session_type"] == "subtask_delegate"
+    assert "filesystem-read.read" in session.spawn_calls[0][1]["disallowedToolNames"]
+    assert "filesystem-write.edit" not in session.spawn_calls[0][1]["disallowedToolNames"]
+    assert session.spawn_calls[0][1]["tool_call_allowlist"] == [
+        "edit", "multiedit", "grep", "final_result"
+    ]
+    assert session.spawn_calls[0][1]["max_turns"] == 10
+
     target = Path(task["manifest_path"]).parent.resolve().as_posix()
     access = session.spawn_calls[0][1]["access"]
     assert target in access["external"]["write"]["allow"]
     assert f"{target}/**" in access["external"]["write"]["allow"]
-    child = session.children[0]
-    assert "Task memory synthesis" in child.prompts[0]
-    # Each child is chained into memory_finalize.
+    assert f"{target}/memory.md" in access["external"]["read"]["allow"]
+    assert f"{target}/reflections.md" not in access["external"]["read"]["allow"]
+
+    assert "Task memory synthesis — memory.md" in session.children[0].prompts[0]
+    assert "Task memory synthesis — reflections.md" in session.children[1].prompts[0]
+
+    # One finalize call per node, awaiting both synthesizer calls.
     assert len(session.tasks["memory_finalize"].calls) == 2
     args, kwargs = session.tasks["memory_finalize"].calls[0]
-    assert args == (child.call,)
+    assert len(args) == 2
+    assert args == (session.children[0].call, session.children[1].call)
     assert kwargs["target_dir"] == target
     assert kwargs["started_at"] > 0
     # Manifests are never advanced by the dispatcher.
@@ -429,7 +442,7 @@ def test_memory_merge_walks_then_dispatches(tmp_path, monkeypatch):
 
     assert ok is True
     assert result["layer"] == "task"
-    assert len(session.children) == 1
+    assert len(session.children) == 2
 
 
 def test_memory_merge_reports_walk_failure(monkeypatch):
@@ -483,39 +496,23 @@ def test_memory_merge_reports_unreadable_manifest(tmp_path):
     assert "manifest not found" in result["failed"][0]["error"]
 
 
-def test_access_overrides_grant_node_and_child_scopes(tmp_path):
+def test_access_overrides_grant_only_the_output_file_for_reads(tmp_path):
     child_scope = tmp_path / "child" / "memory" / "agents"
     child_scope.mkdir(parents=True)
-    item = _node(
-        tmp_path,
-        kind="global",
-        memory_type="global",
-        key="global",
-        sources=[
-            {
-                "path": "agents/",
-                "type": "global-agents",
-                "last_processed_hash": None,
-                "current_hash": "a" * 40,
-            },
-            {
-                "path": child_scope.as_posix(),
-                "type": "workspace",
-                "last_processed_hash": None,
-                "current_hash": "b" * 40,
-            },
-        ],
-    )
+    item = _node(tmp_path, kind="global", memory_type="global", key="global")
     target = Path(item["manifest_path"]).parent.resolve()
-    access = merge._access_overrides(SimpleNamespace(workspace=None), target)
+    access = merge._access_overrides(
+        SimpleNamespace(workspace=None), target, "memory.md"
+    )
 
     read_allow = access["external"]["read"]["allow"]
     write_allow = access["external"]["write"]["allow"]
-    assert target.as_posix() in read_allow
-    assert child_scope.resolve().as_posix() in read_allow
-    # Child scopes are readable context, never write targets.
+    assert f"{target.as_posix()}/memory.md" in read_allow
+    assert f"{target.as_posix()}/reflections.md" not in read_allow
+    assert child_scope.resolve().as_posix() not in read_allow
     assert child_scope.resolve().as_posix() not in write_allow
     assert target.as_posix() in write_allow
+    assert f"{target.as_posix()}/**" in write_allow
 
 
 def test_access_overrides_add_workspace_relative_grants(tmp_path):
@@ -524,11 +521,12 @@ def test_access_overrides_add_workspace_relative_grants(tmp_path):
     target = Path(item["manifest_path"]).parent.resolve()
     session = SimpleNamespace(workspace=SimpleNamespace(path=workspace.as_posix()))
 
-    access = merge._access_overrides(session, target)
+    access = merge._access_overrides(session, target, "reflections.md")
 
     rel = target.relative_to(workspace.resolve()).as_posix()
     assert rel in access["workspace"]["write"]["allow"]
     assert f"{rel}/**" in access["workspace"]["write"]["allow"]
+    assert f"{rel}/reflections.md" in access["workspace"]["read"]["allow"]
 
 
 def test_access_overrides_evaluate_as_allowed_for_external_node(tmp_path):
@@ -541,15 +539,20 @@ def test_access_overrides_evaluate_as_allowed_for_external_node(tmp_path):
     target = Path(item["manifest_path"]).parent.resolve()
     ws = SimpleNamespace(path=workspace.as_posix())
     session = SimpleNamespace(
-        workspace=ws, access=merge._access_overrides(SimpleNamespace(workspace=ws), target)
+        workspace=ws,
+        access=merge._access_overrides(SimpleNamespace(workspace=ws), target, "memory.md"),
     )
 
     policy = resolve_policy(session)
 
     assert evaluate(policy, (target / "memory.md").as_posix(), "write").action == "allow"
+    assert evaluate(policy, (target / "memory.md").as_posix(), "read").action == "allow"
+    # The framework grants read on everything writable ("write implies read"),
+    # so tool_call_allowlist — not the path policy — restricts reads.
     assert evaluate(policy, (target / "tasks").as_posix(), "read").action == "allow"
     other = (tmp_path / "elsewhere" / "note.md").as_posix()
     assert evaluate(policy, other, "write").action == "deny"
+    assert evaluate(policy, other, "read").action == "deny"
 
 
 def test_access_overrides_allow_node_inside_manifest_root(tmp_path):
@@ -567,7 +570,8 @@ def test_access_overrides_allow_node_inside_manifest_root(tmp_path):
         get_agentone_dir=lambda: manifest_root,
     )
     session = SimpleNamespace(
-        workspace=wsm, access=merge._access_overrides(SimpleNamespace(workspace=wsm), target)
+        workspace=wsm,
+        access=merge._access_overrides(SimpleNamespace(workspace=wsm), target, "memory.md"),
     )
 
     policy = resolve_policy(session)
@@ -604,7 +608,7 @@ def test_merge_retries_after_a_stale_marker(tmp_path):
 
     assert ok is True
     assert result["dispatched"]
-    assert len(session.children) == 1
+    assert len(session.children) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -668,7 +672,8 @@ def test_finalize_refuses_stale_output(tmp_path):
         )
 
     assert ok is False
-    assert "no output written since synthesis started" in result["message"]
+    assert "output not written since synthesis started" in result["message"]
+    assert result["stale"] == ["memory.md", "reflections.md"]
     mocked.assert_not_called()
 
 
@@ -683,13 +688,18 @@ def test_memory_finalize_task_advances_node_and_reports_result(tmp_path):
     with patch("tree.mark_processed", return_value=True) as mocked:
         ok, result = finalize.memory_finalize(
             None,
-            "task synthesis done",
+            "memory facts done",
+            "reflections lessons done",
             target_dir=folder.as_posix(),
             started_at=started,
         )
 
     assert ok is True
-    assert result["synthesizer_result"] == "task synthesis done"
+    assert result["synthesizer_results"] == {
+        "memory": "memory facts done",
+        "reflections": "reflections lessons done",
+    }
+    assert "memory: memory facts done" in result["synthesizer_result"]
     assert result["files"] == ["memory.md", "reflections.md"]
     assert not (folder / ".memory_inflight").exists()
     mocked.assert_called_once()

@@ -1,11 +1,12 @@
 """Programmatic completion for synthesized memory nodes.
 
-A synthesizer writes ``memory.md`` and ``reflections.md`` and then ends its turn.
-The harness — not the LLM — advances the node's manifest: ``memory_merge``
-schedules the ``memory_finalize`` task with the synthesizer's task call as its
-argument, so the framework auto-awaits the child session and hands its
-``final_result`` to this module.  Keeping the write and the manifest advance in
-separate, harness-owned steps means a failed run can never mark a node current.
+Two synthesizers — one per output file — write ``memory.md`` and
+``reflections.md`` and then end their turns. The harness — not the LLM —
+advances the node's manifest: ``memory_merge`` schedules the ``memory_finalize``
+task with both synthesizer task calls as arguments, so the framework auto-awaits
+both child sessions before this module validates and advances the manifest.
+Keeping the writes and the manifest advance in separate, harness-owned steps
+means a failed or half-finished run can never mark a node current.
 """
 
 from __future__ import annotations
@@ -34,8 +35,8 @@ def finalize_memory(
     Args:
         target_dir: Directory containing the node's manifest and output files.
         started_at: Unix timestamp when synthesis was dispatched.  When given,
-            at least one output file must have been written after that moment,
-            so a failed run cannot advance a manifest using stale output.
+            both output files must have been written after that moment, so a
+            failed or half-finished run cannot advance a manifest.
 
     Returns:
         ``(True, {...})`` when the manifest advanced, otherwise
@@ -93,14 +94,16 @@ def finalize_memory(
                         fresh.append(name)
                 except OSError:
                     continue
-            if not fresh:
+            if len(fresh) != len(written):
+                stale = [name for name in written if name not in fresh]
                 return False, {
                     "status": "error",
                     "message": (
-                        f"no output written since synthesis started in {path}; "
-                        "the node stays pending"
+                        f"output not written since synthesis started in {path}: "
+                        f"{', '.join(stale)}; the node stays pending"
                     ),
                     "files": written,
+                    "stale": stale,
                 }
 
     try:

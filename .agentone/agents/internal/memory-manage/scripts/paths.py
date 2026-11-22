@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import re
 from pathlib import Path
 from typing import Any
 
@@ -69,45 +69,43 @@ def ensure_dir(path: Any, mode: int = 0o700) -> Path:
     return ensure_private_dir(Path(path), mode)
 
 
-def timestamp() -> str:
-    return datetime.now().strftime("%Y%m%d-%H%M%S")
+#: Canonical report filenames.  A session keeps at most one of each: the
+#: newest message wins, so the synthesis prompt always sees a single, small
+#: artifact per session instead of an ever-growing pile of timestamped files.
+COMPACTION_REPORT = "compaction.md"
+REFLECTION_REPORT = "reflections.md"
+
+#: Legacy per-message report names (``compaction_20261031-103959_152472.md``).
+_LEGACY_REPORT_RE = re.compile(r"^(?:compaction|reflections)_\d{8}-\d{6}(?:_\d+)?\.md$")
 
 
 def report_filename(message: Any) -> str:
-    """Return the timestamped report filename for a reflection/compaction message.
-
-    Uses the message's creation time (local time) and primary key, so the
-    name is stable when the same message is ingested again.
-    """
-    kind = "compaction"
+    """Return the canonical report filename for a reflection/compaction message."""
     try:
         from server.models.enums.message_enums import MessageType
 
         if getattr(message, "message_type", None) == MessageType.REFLECTION:
-            kind = "reflections"
+            return REFLECTION_REPORT
     except Exception:  # pylint: disable=broad-exception-caught
         pass
+    return COMPACTION_REPORT
 
-    created_at = getattr(message, "created_at", None)
-    if created_at is None:
-        created_at = datetime.now()
-    else:
-        try:
-            from django.utils import timezone
 
-            if timezone.is_aware(created_at):
-                created_at = timezone.localtime(created_at)
-        except Exception:  # pylint: disable=broad-exception-caught
-            pass
+def legacy_report_files(session_dir: Any) -> list[Path]:
+    """Return timestamped report files left over in *session_dir*.
 
+    Only files with the old ``<kind>_<stamp>_<pk>.md`` shape are returned; the
+    canonical ``compaction.md`` / ``reflections.md`` names never match.
+    """
+    directory = Path(session_dir)
     try:
-        stamp = created_at.strftime("%Y%m%d-%H%M%S")
-    except (AttributeError, ValueError):
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-
-    pk = getattr(message, "pk", None)
-    suffix = f"_{pk}" if pk is not None else ""
-    return f"{kind}_{stamp}{suffix}.md"
+        return [
+            path
+            for path in directory.glob("*.md")
+            if _LEGACY_REPORT_RE.fullmatch(path.name)
+        ]
+    except OSError:
+        return []
 
 
 def write_text(path: Any, content: str) -> Path:
