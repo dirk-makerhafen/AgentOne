@@ -92,6 +92,7 @@ venv/bin/python .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 - `db.sqlite3` is gitignored and stale.
 - Celery beat must be running (5s tick, 2min heartbeat).
 - Redis must be running at `localhost:6379` (channels, cache, celery).
+- **Bump `VERSION`** on release commits (repo root, currently `0.1.0`); do not create git release tags unless explicitly asked. See [docs/development.md](docs/development.md).
 - `agentone_public.py` at repo root is a flat re-export — not a module.
 - `old/` is dead code; `registry/task_decorators.py` has commented-out sections.
 - UI tools in `.agentone/scripts/` must return `(bool, dict)` and be registered in a `scripts.md` manifest.
