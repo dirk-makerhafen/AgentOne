@@ -3066,10 +3066,21 @@ a.dash-run-session:hover { color: var(--accent-text); text-decoration: underline
 .dash-run-prefix { margin-right: 6px; color: var(--accent-text); font-weight: 700; }
 .dash-run-tools { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
 .dash-run-tool {
-    padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border);
+    display: inline-flex; align-items: center; gap: 5px; max-width: 100%;
+    padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border);
     background: var(--surface-subtle); color: var(--muted);
-    font-family: var(--mono-font, monospace); font-size: 10px;
+    font-family: var(--mono-font, monospace); font-size: 10px; line-height: 1.5;
 }
+.dash-run-tool-name { flex-shrink: 0; color: var(--accent-text); font-weight: 700; }
+.dash-run-tool-args {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dash-run-tool.is-streaming {
+    border-style: dashed; border-color: var(--accent, #98860B);
+    background: var(--accent-bg);
+}
+.dash-run-tool-caret { color: var(--accent-text); animation: dash-live-pulse 1s step-end infinite; }
+.dash-run-tool-more { color: var(--muted); font-style: italic; }
 .dash-run-side {
     display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
     padding-left: 12px; border-left: 1px solid var(--border); min-width: 0;

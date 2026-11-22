@@ -95,17 +95,51 @@ def _prompt_preview(query) -> str:
     return _preview("\n".join(texts))
 
 
-def _tool_names(response) -> list[str]:
-    names: list[str] = []
-    for call in response.tool_calls or []:
+@dataclass
+class ToolCallView:
+    """One tool call, rendered as a chip while its arguments stream in."""
+
+    name: str
+    args: str = ""
+    complete: bool = True
+
+
+def _tool_calls(response, limit: int = 4) -> tuple[list[ToolCallView], int]:
+    """Tool calls with a readable argument preview, newest last.
+
+    During streaming ``arguments`` is a growing JSON *string* (often truncated
+    mid-token); at the end it is parsed into a dict.  Both forms are shown, and
+    incomplete ones are flagged so the UI can mark them as still streaming.
+    """
+    calls = response.tool_calls or []
+    views: list[ToolCallView] = []
+    for call in calls:
         if not isinstance(call, dict):
             continue
-        name = str(call.get("name") or "").strip()
-        if name and name not in names:
-            names.append(name)
-        if len(names) == 3:
-            break
-    return names
+        name = str(call.get("name") or "").strip() or "tool"
+        raw = call.get("arguments")
+        complete = True
+        if isinstance(raw, str):
+            text = raw.strip()
+            try:
+                parsed = json.loads(text) if text else {}
+                raw = parsed
+            except (TypeError, ValueError):
+                complete = False
+        if isinstance(raw, dict):
+            parts = []
+            for key, value in list(raw.items())[:4]:
+                value_text = _text(value).strip()
+                if len(value_text) > 60:
+                    value_text = value_text[:59] + "…"
+                parts.append(f"{key}={value_text}" if value_text else key)
+            args = " ".join(parts)
+        else:
+            args = _text(raw).strip()
+        if len(args) > 120:
+            args = args[:119] + "…"
+        views.append(ToolCallView(name=name, args=args, complete=complete))
+    return views[:limit], max(0, len(views) - limit)
 
 
 @dataclass
@@ -123,11 +157,12 @@ class ActivityItem:
     state_label: str = "Working"
     prompt: str = ""
     output: str = ""
-    tools: list[str] = field(default_factory=list)
+    tools: list[ToolCallView] = field(default_factory=list)
+    extra_tools: int = 0
     current_call: str = ""
     needs_approval: bool = False
     model: str = ""
-    tokens: int = 0
+    chars: int = 0
     started: Any = None
     last_update: Any = None
     stale: bool = False
@@ -208,6 +243,11 @@ def _build_item(query, response, running, approval) -> ActivityItem:
             else ""
         )
 
+    tools, extra_tools = _tool_calls(response) if response else ([], 0)
+    # Tokens are only reported once the LLM call finishes; count streamed
+    # characters instead so the number moves while new tokens arrive.
+    chars = len(response.content or "") + len(response.reasoning or "") if response else 0
+
     return ActivityItem(
         query=query,
         response=response,
@@ -220,14 +260,14 @@ def _build_item(query, response, running, approval) -> ActivityItem:
         state_label=label,
         prompt=_prompt_preview(query) if query else "",
         output=output,
-        tools=_tool_names(response) if response else [],
+        tools=tools,
+        extra_tools=extra_tools,
         current_call=call_name,
         needs_approval=bool(session and session.pk in approval),
         model=(getattr(response, "model_name", "") or getattr(response, "provider_name", ""))
         if response
         else "",
-        tokens=int(getattr(response, "completion_tokens", 0) or 0)
-        + int(getattr(response, "prompt_tokens", 0) or 0),
+        chars=chars,
         started=started,
         last_update=last_update,
         stale=bool(last_update and timezone.now() - last_update > STALE_AFTER),

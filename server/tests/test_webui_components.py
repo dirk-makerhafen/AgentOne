@@ -544,7 +544,9 @@ def test_dashboard_activity_shows_running_query_with_session_details(client):
     assert "What is the deployment status?" in body
     assert "Working on the answer right now" in body
     assert "test-model" in body
-    assert "1,540" in body  # prompt + completion tokens
+    assert "31" in body  # chars in "Working on the answer right now"
+    assert "chars" in body
+    assert "tokens" not in body
     assert "Streaming" in body
     assert reverse("webui:chat", args=[session.pk]) in body
     assert reverse("webui:query_detail", args=[query.pk]) not in body
@@ -573,6 +575,37 @@ def test_dashboard_activity_shows_tail_of_streaming_response(client):
     assert "Checking the second cluster now" in body
     assert "Intro paragraph that was written first" not in body
     assert "Some middle detail" not in body
+
+
+def test_dashboard_activity_shows_streaming_tool_calls(client):
+    """Tool calls appear with name + args, including partially streamed ones."""
+    _agent, _version, session, sv, message = _chat_session("dash-tools")
+    _query, response = _active_query(session, sv, message)
+    response.tool_calls = [
+        {
+            "name": "filesystem.read",
+            "arguments": '{"path": "/tmp/report.txt", "offset": 0}',
+            "id": "call_1",
+            "index": 0,
+        },
+        {
+            "name": "call_llm",
+            "arguments": '{"model": "gpt-4o", "prompt": "Summ',  # mid-stream
+            "id": "call_2",
+            "index": 1,
+        },
+    ]
+    response.save()
+
+    body = _get(client, "dashboard-activity", render="htmx").content.decode()
+
+    assert "filesystem.read" in body
+    assert "path=/tmp/report.txt" in body
+    assert "call_llm" in body
+    assert "Summ" in body
+    assert "dash-run-tool is-streaming" in body  # partial args flagged
+    assert "▌" in body
+    assert "chars" in body
 
 
 def test_dashboard_activity_terminal_query_is_hidden_and_etag_is_stable(client):
