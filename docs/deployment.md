@@ -9,6 +9,22 @@
 - Supervisor (recommended) or systemd
 - Nginx (recommended as reverse proxy)
 
+## Bootstrap
+
+The cross-platform installer clones the repo, creates a virtual environment,
+installs dependencies, runs the setup wizard and the initial
+migrate/collectstatic/reload_all. It needs only Python 3.10+ and git:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dirk-makerhafen/AgentOne/main/install.py | python3 -
+# Windows PowerShell: irm .../install.py | python -
+```
+
+Run `python install.py --help` for `--dir`, `--branch`, `--skip-setup` and
+`--with-browser`. `install.sh` remains as a compatibility shim for existing
+links. The rest of this guide assumes you already have a checkout and a
+`config/settings_local.py`.
+
 ## Production setup
 
 ### 1. Database
@@ -126,7 +142,9 @@ AGENTONE_RESTART_COMMAND = ["sudo", "-n", "supervisorctl", "restart", "agentone-
 ```
 
 Use `AGENTONE_SERVICE_MANAGER` (`auto`/`supervisor`/`systemd`/`launchd`) and
-`AGENTONE_SERVICE_NAME` to pin auto-detection. Pass `--no-restart` to skip the
+`AGENTONE_SERVICE_NAME` to pin auto-detection. Windows services are not
+auto-detected yet; set `AGENTONE_RESTART_COMMAND` explicitly (and run with
+admin rights). Pass `--no-restart` to skip the
 restart entirely (for example when doing a rolling deploy yourself). Set
 `AGENTONE_UPDATE_CHECK_ENABLED = False` to disable the remote "Check for
 updates" lookup entirely (useful on air-gapped installs). `collectstatic` is

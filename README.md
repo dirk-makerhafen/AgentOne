@@ -22,12 +22,23 @@ AgentOne is a Django-based autonomous agent framework with real-time Web UI, sch
 
 One-line installer (clones the repo, creates `venv/`, installs dependencies,
 runs the interactive setup, migrates, collects static files and reloads
-manifests):
+manifests). It is a single standard-library Python script, so it works on
+Linux, macOS and Windows — no shell or extra packages needed:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dirk-makerhafen/AgentOne/main/install.sh | bash
-# or: bash install.sh --dir /srv/AgentOne --branch main
+# Linux / macOS
+curl -fsSL https://raw.githubusercontent.com/dirk-makerhafen/AgentOne/main/install.py | python3 -
 ```
+
+```powershell
+# Windows PowerShell
+irm https://raw.githubusercontent.com/dirk-makerhafen/AgentOne/main/install.py | python -
+```
+
+From an existing checkout: `python3 install.py --dir /srv/AgentOne --branch main`
+(or `python install.py ...` on Windows). Useful flags: `--skip-setup`,
+`--with-browser`. The old `install.sh` still works as a thin shim that downloads
+and runs `install.py`, so existing `curl … install.sh | bash` links keep working.
 
 Manual install:
 
@@ -71,6 +82,12 @@ If the web/Celery user cannot restart the service directly, set
 ```python
 AGENTONE_RESTART_COMMAND = ["sudo", "-n", "supervisorctl", "restart", "agentone-server"]
 ```
+
+On Windows, service-manager auto-detection is not available yet: the update
+still applies, but you must restart the AgentOne service yourself (or set
+`AGENTONE_RESTART_COMMAND` to a PowerShell command such as
+`["powershell", "-NoProfile", "-Command", "Restart-Service -Name AgentOne"]`
+run with admin rights).
 
 ## Architecture overview
 
