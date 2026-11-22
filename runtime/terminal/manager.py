@@ -11,8 +11,11 @@ import-time crash. Unit tests stub ``_server`` / pane objects.
 from __future__ import annotations
 
 import logging
+import os
 import re
-import shutil
+import shlex
+import subprocess
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -20,6 +23,8 @@ from typing import Any
 
 from django.conf import settings
 from django.utils import timezone
+
+from runtime.managed_binaries import resolve_bash, resolve_tmux_binary
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +73,8 @@ def clean_terminal_output(text: str) -> str:
 
 
 def tmux_available() -> bool:
-    """True when both the ``tmux`` binary and ``libtmux`` are importable."""
-    if shutil.which("tmux") is None:
+    """True when a tmux/psmux binary and ``libtmux`` are both available."""
+    if resolve_tmux_binary() is None:
         return False
     try:
         import libtmux  # noqa: F401
@@ -81,11 +86,13 @@ def tmux_available() -> bool:
 
 def _server() -> Any:
     """Return a live ``libtmux.Server`` or raise a helpful ``RuntimeError``."""
-    if shutil.which("tmux") is None:
-        raise RuntimeError(
-            "tmux binary not found. Install tmux (e.g. `brew install tmux`) "
-            "to use persistent terminals."
-        )
+    binary = resolve_tmux_binary()
+    if binary is None:
+        if sys.platform == "win32":
+            hint = "AgentOne downloads psmux into ~/.agentone/var/bin automatically; set AGENTONE_TMUX_BINARY to use a custom build."
+        else:
+            hint = "Install tmux (e.g. `brew install tmux` or your package manager)."
+        raise RuntimeError(f"tmux binary not found. {hint} Persistent terminals are unavailable.")
     try:
         from libtmux import Server
     except ImportError as exc:
@@ -93,7 +100,13 @@ def _server() -> Any:
             "libtmux is not installed. Add it (`pip install libtmux`) "
             "to use persistent terminals."
         ) from exc
-    server = Server()
+    try:
+        server = Server(tmux_bin=binary)
+    except TypeError as exc:
+        raise RuntimeError(
+            "The installed libtmux is too old to select a tmux binary. "
+            "Upgrade it (`pip install -U libtmux`) to use persistent terminals."
+        ) from exc
     _check_libtmux_api(server)
     return server
 
@@ -225,6 +238,27 @@ def _touch(row: Any) -> None:
         pass
 
 
+def _quote_shell(shell: str) -> str:
+    """Quote an executable path passed as tmux's ``shell-command``."""
+    if not shell:
+        return ""
+    path = Path(os.path.expanduser(shell))
+    if not path.is_file():
+        return shell  # Already a command line such as ``bash -l``.
+    if os.name == "nt":
+        return subprocess.list2cmdline([str(path)])
+    return shlex.quote(str(path))
+
+
+def _pipe_command(log_path: str) -> str:
+    """Build a ``pipe-pane`` command that works under cmd.exe on Windows."""
+    writer = Path(__file__).with_name("pipe_writer.py")
+    args = [sys.executable, str(writer), log_path]
+    if os.name == "nt":
+        return subprocess.list2cmdline(args)
+    return shlex.join(args)
+
+
 def ensure_terminal(
     session_model: Any,
     name: str = "default",
@@ -237,6 +271,9 @@ def ensure_terminal(
     slug = slugify(name)
     tmux_name = tmux_name_for(session_model.pk, slug)
     target_cwd = cwd or _default_cwd(session_model)
+    # psmux defaults to pwsh, but our sentinel and agent commands are POSIX.
+    # Git for Windows is already an installer prerequisite; prefer its bash.
+    effective_shell = shell or (resolve_bash() if sys.platform == "win32" else "")
     workspace = None
     try:
         workspace = getattr(session_model.latest_session_version, "workspace", None)
@@ -260,8 +297,8 @@ def ensure_terminal(
         updates["tmux_session_name"] = tmux_name
     if cwd:
         updates["cwd"] = target_cwd
-    if shell:
-        updates["shell"] = shell
+    if effective_shell and row.shell != effective_shell:
+        updates["shell"] = effective_shell
     if updates:
         row.atomic_update(**updates)
         row.refresh_from_db()
@@ -274,8 +311,18 @@ def ensure_terminal(
             "start_directory": target_cwd,
             "attach": False,
         }
-        if shell:
-            kwargs["default_command"] = shell
+        if effective_shell:
+            if sys.platform == "win32":
+                # psmux seeds the first pane's shell from `default-shell`,
+                # which must be set before the session is created. Its
+                # `new-session` raw-command form needs a different argv shape
+                # than libtmux emits for `window_command`.
+                try:
+                    server.cmd("set-option", "-g", "default-shell", effective_shell)
+                except Exception as exc:  # pylint: disable=broad-exception-caught
+                    logger.warning("could not set psmux default-shell: %s", exc)
+            else:
+                kwargs["window_command"] = _quote_shell(effective_shell)
         tmux_session = server.new_session(**kwargs)
         try:
             pane = _active_pane(tmux_session)
@@ -285,7 +332,7 @@ def ensure_terminal(
             Path(log_path).parent.mkdir(parents=True, exist_ok=True)
             try:
                 # pipe-pane targets the pane via Pane.cmd's -t binding.
-                pane.cmd("pipe-pane", "-o", f"cat >> {log_path}")
+                pane.cmd("pipe-pane", "-o", _pipe_command(log_path))
             except Exception as exc:  # pylint: disable=broad-exception-caught
                 logger.warning("pipe-pane for %s failed: %s", tmux_name, exc)
             row.atomic_update(log_path=log_path)

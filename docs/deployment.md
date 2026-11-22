@@ -5,7 +5,7 @@
 - Python 3.10+
 - MySQL 8+ (or MariaDB 10.5+) — optional, SQLite works for development
 - Redis 6+
-- tmux + `libtmux` (Python package, in `requirements.txt`) — required for persistent agent terminals; without the tmux binary the `terminal_*` tools return an error
+- tmux + `libtmux` (Python package, in `requirements.txt`) — required for persistent agent terminals. On Windows the installer downloads psmux (a native tmux-compatible binary) into `~/.agentone/var/bin/`; without any tmux binary the `terminal_*` tools return an error
 - Supervisor (recommended) or systemd; on Windows, the built-in `sc.exe`
   service backend (`python manage.py server service install`, run as admin)
 - Nginx (recommended as reverse proxy)
@@ -25,8 +25,8 @@ curl -fsSL https://raw.githubusercontent.com/dirk-makerhafen/AgentOne/main/insta
 # Windows PowerShell: irm .../install.py | python -
 ```
 
-Run `python install.py --help` for `--dir`, `--branch`, `--skip-setup` and
-`--with-browser`. `install.sh` remains as a compatibility shim for existing
+Run `python install.py --help` for `--dir`, `--branch`, `--skip-setup`,
+`--with-browser` and `--skip-terminal-binaries`. `install.sh` remains as a compatibility shim for existing
 links. The rest of this guide assumes you already have a checkout and a
 `config/settings_local.py`.
 
@@ -160,10 +160,14 @@ entirely (for example when doing a rolling deploy yourself). Set
 updates" lookup entirely (useful on air-gapped installs). `collectstatic` is
 skipped when `DEBUG` is on, since static files are served from source then.
 
-Native Windows still lacks **tmux**, so persistent `terminal_*` tools are
-unavailable (chat sessions and the terminal tab still work from the DB). The
-browser daemon, ad-hoc flow bridge and ingress locks use cross-platform
-sockets/locks; `mysqlclient` is skipped on Windows in favour of PyMySQL.
+Native Windows runs persistent `terminal_*` tools through **psmux**, which the
+installer downloads into `~/.agentone/var/bin/` as `tmux.exe` (pinned release,
+SHA-256 verified). No admin rights or PATH edits are needed; set
+`AGENTONE_TMUX_BINARY` to use a custom binary or `--skip-terminal-binaries` to
+skip the download. Git for Windows supplies the bash shell used by the
+terminal sentinel — `AGENTONE_BASH` overrides its location. The browser daemon,
+ad-hoc flow bridge and ingress locks use cross-platform sockets/locks;
+`mysqlclient` is skipped on Windows in favour of PyMySQL.
 
 Staff users can trigger the same pipeline from **Settings → System → Update
 AgentOne**; it queues `agentone.update` on Celery and streams logs into the

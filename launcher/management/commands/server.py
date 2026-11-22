@@ -14,6 +14,7 @@ from flask_sock import Sock
 from zeroconf import ServiceInfo, Zeroconf
 
 from launcher import runtime_env
+from runtime.paths import bin_dir
 
 NAME = "AgentOne"
 
@@ -447,8 +448,10 @@ class Command(BaseCommand):
 
         os.chdir(str(Path(settings.BASE_DIR).resolve()))
 
-        # Prefer the checkout's venv, then whatever interpreter is running us.
-        scripts = []
+        # Prefer the checkout's venv, then managed helpers, then whatever
+        # interpreter is running us. Managed psmux lives in ~/.agentone/var/bin
+        # so a `server update` cannot remove it.
+        scripts = [bin_dir()]
         venv_scripts = runtime_env.scripts_dir(settings.BASE_DIR)
         if venv_scripts is not None:
             scripts.append(venv_scripts)

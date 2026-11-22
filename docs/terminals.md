@@ -19,6 +19,20 @@ with refresh and kill actions, but no input.
 | tmux backend | Each row maps 1:1 to a tmux session `agentone-s<sid>-<name>` via **libtmux**. The PTY survives worker restarts; the row lets the server reattach, list, and reap it. |
 | External CLI | A CLI-based agent/tool (`claude`, `hermes`, …) executed *inside* a terminal. |
 
+## Backends
+
+| Platform | tmux binary | Shell |
+|---|---|---|
+| Linux / macOS | system `tmux` on `PATH` | user's POSIX shell |
+| Native Windows | psmux (`tmux.exe`) downloaded into `~/.agentone/var/bin/` by `install.py` | Git Bash (`bash.exe`), located via Git for Windows |
+
+libtmux is pointed at the resolved binary explicitly via `Server(tmux_bin=…)`,
+so a PATH edit is not required. `AGENTONE_TMUX_BINARY` overrides the binary and
+`AGENTONE_BASH` overrides the Windows shell. The psmux release is pinned and
+SHA-256 verified; `server update` never removes it because it lives outside
+the checkout. Terminal logs are written with the portable
+`runtime/terminal/pipe_writer.py` helper instead of `cat >>`.
+
 ## Tools (`execution` group)
 
 | Tool | Purpose |

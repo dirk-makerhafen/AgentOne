@@ -14,6 +14,7 @@ Inside every scope directory::
     var/sessions/<agent>/<pk>/    session scratch (0700, never versioned)
     var/log/                      scope logs (terminals, …)
     var/run/                      scope pids/locks
+    var/bin/                      managed helper binaries (psmux/tmux, …)
     var/cache/runtime/<ver>/      versioned extracts (1h GC, re-extractable)
     var/cache/upstream/           upstream clones (re-syncable)
     var/cache/staging/            merged staging (re-syncable)
@@ -31,6 +32,7 @@ content-addressed by tree SHA, and referenced by DB rows::
     └── var/
         ├── install/              global/, user/, projects/<pk>/, workspaces/<pk>/
         ├── browser/              Camoufox profiles, token, audit (DURABLE)
+        ├── bin/                  managed helper binaries (psmux/tmux, …)
         ├── sessions/             global/user-scope session scratch
         ├── log/                  global/user-scope + machine logs
         ├── run/                  global/user-scope + machine pids/locks
@@ -111,6 +113,15 @@ def log_base() -> Path:
 def run_base() -> Path:
     """Return the machine/global-scope pid/lock directory."""
     return var_base() / "run"
+
+
+def bin_dir() -> Path:
+    """Return ``~/.agentone/var/bin`` for managed helper binaries.
+
+    Kept outside the checkout so `server update` never removes downloaded
+    binaries, and on every host (not only Windows) for a single layout.
+    """
+    return var_base() / "bin"
 
 
 def cache_base() -> Path:

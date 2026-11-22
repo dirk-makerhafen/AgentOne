@@ -9,6 +9,7 @@ from django.conf import settings
 
 from launcher import runtime_env
 from launcher.management.commands import server as server_module
+from runtime.paths import bin_dir
 from launcher.management.commands.server import Command
 
 
@@ -39,15 +40,20 @@ def test_prepare_runtime_env_fixes_service_cwd_and_path(monkeypatch, tmp_path):
     fake_python = tmp_path / "venv" / "Scripts" / "python.exe"
     monkeypatch.setattr(settings, "BASE_DIR", str(tmp_path))
     monkeypatch.setattr(server_module.sys, "executable", str(fake_python))
+    monkeypatch.setenv("AGENTONE_HOME", str(tmp_path / "home"))
+    managed_bin = bin_dir()
     monkeypatch.setenv("PATH", "/usr/bin:/bin")
     try:
         Command._prepare_runtime_env()
         assert Path.cwd() == tmp_path
-        assert os.environ["PATH"] == f"{fake_python.parent}{os.pathsep}/usr/bin:/bin"
+        assert os.environ["PATH"] == (
+            f"{managed_bin}{os.pathsep}{fake_python.parent}{os.pathsep}/usr/bin:/bin"
+        )
 
         # Calling twice must not keep prepending the same directory.
         Command._prepare_runtime_env()
         assert os.environ["PATH"].count(str(fake_python.parent)) == 1
+        assert os.environ["PATH"].count(str(managed_bin)) == 1
     finally:
         os.chdir(original)
 

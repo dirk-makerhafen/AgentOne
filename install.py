@@ -19,6 +19,8 @@ Flags:
     --branch BRANCH     branch to check out
     --skip-setup        do not run `manage.py server setup`
     --with-browser      also download the Camoufox browser build
+    --skip-terminal-binaries
+                        do not download psmux (Windows) for terminal_* tools
 """
 
 from __future__ import annotations
@@ -138,6 +140,31 @@ def check_redis() -> None:
         note("Redis was not found. Install and start it before running AgentOne.")
 
 
+def prepare_terminal_bins(target: Path) -> None:
+    """Prefetch psmux and locate Git Bash on Windows (never fatal)."""
+    if sys.platform != "win32":
+        return
+    sys.path.insert(0, str(target))
+    try:
+        from runtime.managed_binaries import ensure_tmux, resolve_bash  # pylint: disable=import-outside-toplevel
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        note(f"Could not load the managed-binary helper: {exc}")
+        return
+    try:
+        path = ensure_tmux()
+        if path:
+            info(f"psmux installed at {path}")
+        else:
+            note("psmux was not downloaded; terminal_* tools will be unavailable until it is installed.")
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        note(f"Could not download psmux: {exc}")
+    bash = resolve_bash()
+    if bash:
+        info(f"Using Git Bash at {bash}")
+    else:
+        note("Git Bash was not found. Install Git for Windows to enable terminal_* tools.")
+
+
 def install(args: argparse.Namespace) -> None:
     target = Path(args.dir).expanduser().resolve() if args.dir else (Path.cwd() / "AgentOne").resolve()
 
@@ -155,6 +182,9 @@ def install(args: argparse.Namespace) -> None:
     if not requirements.exists():
         raise InstallError(f"requirements.txt is missing from {target}.")
     _run([python, "-m", "pip", "install", "-r", str(requirements)], cwd=target)
+
+    if not args.skip_terminal_binaries:
+        prepare_terminal_bins(target)
 
     if not args.skip_setup and not (target / "config" / "settings_local.py").exists():
         info("Interactive setup (database, Redis, listen address, TLS)")
@@ -202,6 +232,11 @@ def parse_args(argv=None) -> argparse.Namespace:
     parser.add_argument("--branch", default=DEFAULT_BRANCH, help="branch to check out (default: main)")
     parser.add_argument("--skip-setup", action="store_true", help="do not run the interactive setup wizard")
     parser.add_argument("--with-browser", action="store_true", help="also download the Camoufox browser build")
+    parser.add_argument(
+        "--skip-terminal-binaries",
+        action="store_true",
+        help="do not download psmux (Windows) for terminal_* tools",
+    )
     return parser.parse_args(argv)
 
 

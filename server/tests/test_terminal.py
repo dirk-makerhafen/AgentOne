@@ -105,6 +105,27 @@ class SlugTest(SimpleTestCase):
         self.assertEqual(tmux_name_for(12, "dev"), "agentone-s12-dev")
 
 
+class ManagedBinaryTest(SimpleTestCase):
+    def test_pipe_command_quotes_writer_for_windows(self) -> None:
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        from runtime.terminal import manager as mgr
+
+        log_path = "C:\\logs\\term log.log"
+        from types import SimpleNamespace
+
+        with mock.patch.object(mgr, "os", SimpleNamespace(name="nt")):
+            command = mgr._pipe_command(log_path)
+
+        expected = subprocess.list2cmdline(
+            [sys.executable, str(Path(mgr.__file__).with_name("pipe_writer.py")), log_path]
+        )
+        self.assertEqual(command, expected)
+        self.assertNotIn("cat >>", command)
+
+
 class FakePane:
     def __init__(self, lines=None):
         self.lines = list(lines or ["$ "])
@@ -160,6 +181,11 @@ class FakeSessionList:
 class FakeServer:
     def __init__(self):
         self._sessions: dict[str, FakeTmuxSession] = {}
+        self.cmds: list[tuple[str, tuple]] = []
+
+    def cmd(self, subcommand, *args, **kwargs):
+        self.cmds.append((subcommand, args))
+        return mock.Mock(stdout=[""], stderr=[""], returncode=0)
 
     @property
     def sessions(self):
@@ -334,6 +360,31 @@ class TerminalManagerTest(TestCase):
             any(call[0] == "pipe-pane" for call in pane.piped),
             f"expected a pipe-pane call, got: {pane.piped}",
         )
+        pipe_call = next(call for call in pane.piped if call[0] == "pipe-pane")
+        self.assertIn("pipe_writer.py", pipe_call[1][1])
+        self.assertNotIn("cat >>", pipe_call[1][1])
+
+    def test_server_passes_resolved_tmux_binary(self) -> None:
+        """libtmux must be pointed at the managed psmux binary explicitly."""
+        from runtime.terminal import manager as mgr
+
+        with mock.patch.object(mgr, "resolve_tmux_binary", return_value="/opt/bin/tmux"), mock.patch("libtmux.Server") as server_cls:
+            mgr._server()
+        server_cls.assert_called_once_with(tmux_bin="/opt/bin/tmux")
+
+    def test_windows_uses_git_bash_default_shell(self) -> None:
+        """psmux defaults to pwsh; configure Git Bash before session creation."""
+        from runtime.terminal import manager as mgr
+
+        bash = "C:\\Program Files\\Git\\bin\\bash.exe"
+        server = FakeServer()
+        with mock.patch.object(mgr.sys, "platform", "win32"), mock.patch.object(mgr, "resolve_bash", return_value=bash), mock.patch.object(mgr, "_server", return_value=server):
+            row = mgr.ensure_terminal(self.session_model(), name="win", cwd="/tmp")
+
+        row.refresh_from_db()
+        self.assertEqual(row.shell, bash)
+        self.assertIn(("set-option", ("-g", "default-shell", bash)), server.cmds)
+        self.assertNotIn(("set-option", ("-g", "default-command", bash)), server.cmds)
 
     def test_api_surface_check_rejects_old_libtmux(self) -> None:
         """A libtmux without ``Server.sessions.get`` fails fast with a clear

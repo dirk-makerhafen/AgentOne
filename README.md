@@ -99,8 +99,11 @@ ad-hoc flows, with these caveats:
 
 - **Redis is required** (Celery broker, Channels layer, cache). There is no
   fallback — install a native Windows Redis build or use WSL.
-- **Terminals need tmux**, which is POSIX-only. `terminal_*` tools are
-  unavailable; the UI still lists sessions from the database.
+- **Terminals use psmux** on Windows. The installer downloads a pinned,
+  checksum-verified psmux release into `~/.agentone/var/bin/` (no admin rights
+  or PATH edits); `AGENTONE_TMUX_BINARY` can point at a custom build. Git for
+  Windows provides the bash shell these terminals need. See
+  [docs/terminals.md](docs/terminals.md).
 - **Celery uses `--pool threads`** by default on Windows (prefork is not
   supported). Override with `AGENTONE_CELERY_POOL` and
   `AGENTONE_CELERY_CONCURRENCY` in `config/settings_local.py`.

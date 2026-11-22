@@ -110,6 +110,25 @@ def test_requirements_missing_is_an_error(monkeypatch, tmp_path):
     assert not any("manage.py" in cmd for cmd in _commands(calls))
 
 
+def test_windows_prepares_terminal_bins(monkeypatch, tmp_path):
+    _, target = fake_environment(monkeypatch, tmp_path)
+    prepared = []
+    monkeypatch.setattr(installer, "prepare_terminal_bins", lambda root: prepared.append(root))
+    monkeypatch.setattr(installer.sys, "platform", "win32")
+
+    assert installer.main(["--dir", str(target)]) == 0
+    assert prepared == [target]
+
+
+def test_skip_terminal_binaries(monkeypatch, tmp_path):
+    _, target = fake_environment(monkeypatch, tmp_path)
+    prepared = []
+    monkeypatch.setattr(installer, "prepare_terminal_bins", lambda root: prepared.append(root))
+
+    assert installer.main(["--dir", str(target), "--skip-terminal-binaries"]) == 0
+    assert prepared == []
+
+
 def test_windows_venv_layout(monkeypatch, tmp_path):
     monkeypatch.setattr(installer.sys, "platform", "win32")
 
