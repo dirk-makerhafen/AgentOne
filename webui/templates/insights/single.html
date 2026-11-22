@@ -191,7 +191,7 @@
                         <table class="insights-table" data-insights-table>
                             <thead><tr>
                                 <th data-sort="name">Provider</th>
-                                <th data-sort="key">API key</th>
+                                <th data-sort="key" data-sort-type="number">API keys</th>
                                 <th data-sort="limits">Limits</th>
                                 <th class="num" data-sort="requests_24h" data-sort-type="number">Req 24h</th>
                                 <th class="num" data-sort="tokens_24h" data-sort-type="number">Tok 24h</th>
@@ -210,10 +210,11 @@
                                         {% if row.is_local %}<span class="mode-badge">local</span>{% endif %}
                                         <div class="muted">{{ row.slug }}</div>
                                     </td>
-                                    <td>
+                                    <td data-sort-key="key" data-sort-value="{{ row.key_total }}">
+                                        <span class="key-count" title="Configured API keys">{{ row.key_total }}</span>
                                         {% if row.key_state == "built-in" %}<span class="key-badge key-builtin">built-in</span>
-                                        {% elif row.key_state == "keys" %}<span class="key-badge key-ok">✓ {{ row.key_count }}</span>
-                                        {% else %}<span class="key-badge key-missing">—</span>{% endif %}
+                                        {% elif row.key_state == "keys" %}<span class="key-badge key-ok">ok</span>
+                                        {% else %}<span class="key-badge key-missing">none</span>{% endif %}
                                     </td>
                                     <td class="muted">{{ row.limits }}</td>
                                     <td class="num" data-sort-key="requests_24h" data-sort-value="{{ row.requests_24h }}">{{ row.requests_24h|intcomma }}</td>

@@ -1746,8 +1746,35 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     gap: 6px;
     margin-top: 10px;
 }
+.rp-key-row { margin-bottom: 6px; }
+.rp-key-actions { margin: 4px 0 6px; }
+.rp-key-form { margin-top: 8px; }
+.rp-key-form input[type="text"],
+.rp-key-form input[type="password"] {
+    min-width: 0;
+    flex: 1 1 90px;
+    padding: 5px 7px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--input-bg, var(--sidebar));
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+}
+.rp-key-form input[type="password"] { flex-basis: 130px; }
+.rp-key-form input:focus { outline: none; border-color: var(--accent); }
 .insights-probe-out { margin-top: 4px; font-size: 11px; }
 
+.key-count {
+    display: inline-block;
+    min-width: 18px;
+    margin-right: 5px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text);
+    text-align: right;
+}
 .key-badge.key-warn { color: var(--warning); background: color-mix(in srgb, var(--warning) 14%, transparent); }
 .key-badge.key-err { color: var(--error); background: color-mix(in srgb, var(--error) 12%, transparent); }
 

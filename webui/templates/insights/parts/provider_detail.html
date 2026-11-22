@@ -19,18 +19,48 @@
 
     <div class="rp-section-title">API keys ({{ key_rows|length }})</div>
     {% for key in key_rows %}
-    <div class="rp-kv">
-        <span>{{ key.comment }}</span>
-        <span>
-            {% if key.enabled %}enabled{% else %}disabled{% endif %}
-            {% if key.cooling %} · cooling down{% endif %}
-            {% if key.health.label %} · {{ key.health.label }}{% endif %}
-        </span>
+    <div class="rp-key-row">
+        <div class="rp-kv">
+            <span>{{ key.comment }}</span>
+            <span>
+                {% if key.enabled %}enabled{% else %}disabled{% endif %}
+                {% if key.cooling %} · cooling down{% endif %}
+                {% if key.health.label %} · {{ key.health.label }}{% endif %}
+            </span>
+        </div>
+        <div class="webui-action-row rp-key-actions">
+            <form method="post" action="{% url 'webui:settings_provider_key' provider.pk %}"
+                  hx-post="{% url 'webui:settings_provider_key' provider.pk %}"
+                  hx-target="#insights-detail-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle">
+                <input type="hidden" name="key_id" value="{{ key.id }}">
+                <button class="webui-action-btn" type="submit">{% if key.enabled %}Disable{% else %}Enable{% endif %}</button>
+            </form>
+            <form method="post" action="{% url 'webui:settings_provider_key' provider.pk %}"
+                  hx-post="{% url 'webui:settings_provider_key' provider.pk %}"
+                  hx-target="#insights-detail-body" hx-swap="innerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="key_id" value="{{ key.id }}">
+                <button class="webui-action-btn danger" type="submit">Delete</button>
+            </form>
+        </div>
+        {% if key.limits %}{% for label, value in key.limits %}<div class="rp-kv"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}{% endif %}
     </div>
-    {% if key.limits %}{% for label, value in key.limits %}<div class="rp-kv"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}{% endif %}
     {% empty %}
     <div class="muted">No keys configured.</div>
     {% endfor %}
+
+    <form class="webui-action-row rp-key-form" method="post" action="{% url 'webui:settings_provider_key' provider.pk %}"
+          hx-post="{% url 'webui:settings_provider_key' provider.pk %}"
+          hx-target="#insights-detail-body" hx-swap="innerHTML">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="comment" placeholder="Name (optional)" autocomplete="off" aria-label="API key name">
+        <input type="password" name="key" placeholder="Paste API key" autocomplete="off" required aria-label="API key">
+        <button class="webui-action-btn" type="submit">Add key</button>
+    </form>
 
     <div class="rp-section-title">Health</div>
     <div class="rp-kv"><span>Status</span><span>{{ health.label|default:provider.status|lower }}</span></div>

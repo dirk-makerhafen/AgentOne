@@ -1753,9 +1753,9 @@ def test_settings_providers_tab_masks_keys(client):
     assert b"Test Provider" in response.content
     # Full key never appears in table
     assert b"sk-1234567890abcdef" not in response.content
-    # Table shows key badge with count (new UI: key-badge key-ok with ✓ 1)
+    # Table shows an explicit key count plus the key-state badge.
     assert b"key-badge key-ok" in response.content
-    assert b"\xe2\x9c\x93 1" in response.content  # ✓ 1
+    assert b'data-sort-key="key" data-sort-value="1"' in response.content
     # Masked key only appears in detail view
     detail = client.get(reverse("webui:provider_detail", args=[provider.pk]))
     assert detail.status_code == 200
@@ -1819,6 +1819,68 @@ def test_settings_provider_key_add_toggle_delete(client):
         {"action": "delete", "key_id": key.pk},
     )
     assert not ApiKey.objects.filter(pk=key.pk).exists()
+
+
+@pytest.mark.django_db
+def test_providers_tables_show_api_key_counts(client):
+    """Both providers tables show the configured key count for every row."""
+    from server.models.providers.api_key import ApiKey
+    from server.models.providers.api_provider import ApiProvider
+
+    builtin = ApiProvider.objects.create(
+        name="Builtin Count Provider", default_api_key="env-key"
+    )
+    ApiKey.objects.create(api_provider=builtin, key="sk-count-one", comment="one")
+    ApiKey.objects.create(api_provider=builtin, key="sk-count-two", comment="two")
+    ApiProvider.objects.create(name="Empty Count Provider")
+
+    for url in (
+        reverse("webui:settings_tab", args=["providers"]),
+        reverse("webui:insights_tab", args=["providers"]),
+    ):
+        response = client.get(url)
+        assert response.status_code == 200
+        content = response.content
+        assert b'<span class="key-count" title="Configured API keys">2</span>' in content
+        assert b'data-sort-key="key" data-sort-value="2"' in content
+        assert b'<span class="key-badge key-builtin">built-in</span>' in content
+        assert b'<span class="key-count" title="Configured API keys">0</span>' in content
+        assert b'<span class="key-badge key-missing">none</span>' in content
+
+
+@pytest.mark.django_db
+def test_provider_detail_exposes_key_editor(client):
+    """The read-only rewrite dropped the key editor; it must be reachable again."""
+    from server.models.providers.api_key import ApiKey
+    from server.models.providers.api_provider import ApiProvider
+
+    provider = ApiProvider.objects.create(name="Editor Provider")
+    detail_url = reverse("webui:provider_detail", args=[provider.pk])
+    key_url = reverse("webui:settings_provider_key", args=[provider.pk])
+
+    empty = client.get(detail_url)
+    assert empty.status_code == 200
+    assert b'name="action" value="add"' in empty.content
+    assert b"Paste API key" in empty.content
+    assert b"Add key" in empty.content
+
+    key = ApiKey.objects.create(
+        api_provider=provider, key="sk-editor-key", comment="editor"
+    )
+    detail = client.get(detail_url)
+    assert b'name="action" value="toggle"' in detail.content
+    assert b'name="action" value="delete"' in detail.content
+    assert b'name="key_id" value="%d"' % key.pk in detail.content
+
+    added = client.post(
+        key_url,
+        {"action": "add", "comment": "from-panel", "key": "sk-added-key"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert added.status_code == 200
+    assert b"from-panel" in added.content
+    assert b"Paste API key" in added.content
+    assert ApiKey.objects.filter(api_provider=provider, key="sk-added-key").exists()
 
 
 # ---------------------------------------------------------------------------

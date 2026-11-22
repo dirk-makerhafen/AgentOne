@@ -197,6 +197,16 @@ def settings_provider_key(request, provider_id: int):
             key.save(update_fields=["enabled"])
     elif action == "delete" and raw_key.isdigit():
         provider.api_keys.filter(pk=int(raw_key)).delete()
+    if request.headers.get("HX-Request") == "true":
+        # The key editor lives in the rightbar detail fragment; refresh that
+        # fragment in place instead of navigating away from the current page.
+        from webui.features.insights.views import _provider_detail_context
+
+        return render_fragment(
+            request,
+            "insights/parts/provider_detail.html",
+            _provider_detail_context(provider),
+        )
     return redirect("/app/settings/providers?saved=1")
 
 

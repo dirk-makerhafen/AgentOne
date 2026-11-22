@@ -46,6 +46,7 @@ class RightPanelProvider:
         now = timezone.now()
         return [
             {
+                "id": key.pk,
                 "comment": key.comment,
                 "enabled": key.enabled,
                 "cooling": bool(key.rate_limit_until and key.rate_limit_until > now),

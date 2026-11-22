@@ -136,7 +136,7 @@
                         <thead><tr>
                             <th data-sort="name">Provider</th>
                             <th data-sort="models">Models</th>
-                            <th data-sort="key">API key</th>
+                            <th data-sort="key" data-sort-type="number">API keys</th>
                             <th data-sort="status">Status</th>
                         </tr></thead>
                         <tbody>
@@ -150,10 +150,11 @@
                                     <div class="muted">{{ provider.model_count }} model{{ provider.model_count|pluralize }}</div>
                                 </td>
                                 <td class="muted">{{ provider.model_count }}</td>
-                                <td>
+                                <td data-sort-key="key" data-sort-value="{{ provider.keys|length }}">
+                                    <span class="key-count" title="Configured API keys">{{ provider.keys|length }}</span>
                                     {% if provider.has_default %}<span class="key-badge key-builtin">built-in</span>
-                                    {% elif provider.keys %}<span class="key-badge key-ok">✓ {{ provider.keys|length }}</span>
-                                    {% else %}<span class="key-badge key-missing">—</span>{% endif %}
+                                    {% elif provider.keys %}<span class="key-badge key-ok">ok</span>
+                                    {% else %}<span class="key-badge key-missing">none</span>{% endif %}
                                 </td>
                                 <td>
                                     {% if provider.probe and provider.probe.verdict == "healthy" %}<span class="key-badge key-ok">{{ provider.probe.verdict }}</span>

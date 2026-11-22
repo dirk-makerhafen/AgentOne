@@ -610,6 +610,9 @@ def _providers_context(request=None):
                 "is_local": provider.is_local,
                 "key_state": key_state,
                 "key_count": key_count,
+                # All configured keys, including disabled ones; the state badge
+                # above can say "built-in" or "none" while keys exist.
+                "key_total": provider.api_keys.all().count(),
                 "limits": limits,
                 "requests_24h": usage[provider.pk]["24h"]["requests"],
                 "tokens_24h": usage[provider.pk]["24h"]["tokens"],
@@ -777,6 +780,7 @@ def _provider_detail_context(provider: ApiProvider) -> dict:
         "health": {**_status_dict(provider.status), "reason": provider.status_reason},
         "key_rows": [
             {
+                "id": key.pk,
                 "comment": key.comment or "key",
                 "enabled": key.enabled,
                 "cooling": bool(key.rate_limit_until and key.rate_limit_until > now),
