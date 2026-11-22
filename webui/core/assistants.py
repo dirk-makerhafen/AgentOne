@@ -21,97 +21,85 @@ from webui.core.layout import unique_session_name
 log = logging.getLogger(__name__)
 
 _AGENTONE = "AgentOne"
+_MEMORY_AGENT = "memory-manage"
 
-_ASSISTANTS = {
-    "agent": (_AGENTONE, AgentModel),
-    "skill": (_AGENTONE, SkillModel),
-    "cron": (_AGENTONE, Cronjob),
-    "project": (_AGENTONE, Project),
-    "workspace": (_AGENTONE, WorkspaceModel),
+# Every rightbar panel is either AgentOne or (on the Memory page) the memory
+# specialist. Keep the model table separate from the assistant naming so a new
+# panel kind does not repeat the same agent name five times.
+_ENTITY_MODELS = {
+    "agent": AgentModel,
+    "skill": SkillModel,
+    "cron": Cronjob,
+    "project": Project,
+    "workspace": WorkspaceModel,
+}
+_ASSISTANTS = {kind: (_AGENTONE, model) for kind, model in _ENTITY_MODELS.items()}
+
+_OVERVIEW_KINDS = (
+    "dashboard",
+    "agents",
+    "projects",
+    "workspaces",
+    "cronjobs",
+    "workitems",
+)
+_OVERVIEW_ASSISTANTS = {kind: (_AGENTONE, _AGENTONE) for kind in _OVERVIEW_KINDS}
+# The Memory page talks to the memory specialist itself, not AgentOne.
+_OVERVIEW_ASSISTANTS["memory"] = (_MEMORY_AGENT, "Memory agent")
+
+# (page label, URL, what the chat is expected to help with). Used for the
+# one-time context notice written into each new assistant session.
+_OVERVIEW_PAGES = {
+    "dashboard": ("Main dashboard", "/app/", "give the user a whole-system overview"),
+    "agents": ("Agents dashboard", "/app/agents", "inspect and manage agents"),
+    "projects": ("Projects dashboard", "/app/projects", "inspect and manage projects"),
+    "workspaces": ("Workspaces dashboard", "/app/workspaces", "inspect and manage workspaces"),
+    "cronjobs": ("Cron dashboard", "/app/cron", "inspect and manage cron jobs"),
+    "workitems": ("Work items dashboard", "/app/workitems", "inspect and manage work items"),
+    "memory": ("Memory page", "/app/memory", "explain and maintain the memory tree"),
+}
+_ENTITY_PAGES = {
+    "agent": ("Agent detail", "agents", "inspect this agent"),
+    "skill": ("Skill detail", "skills", "inspect this skill"),
+    "cron": ("Cron job detail", "cron", "inspect this cron job"),
+    "project": ("Project detail", "projects", "work on this project"),
+    "workspace": ("Workspace detail", "workspaces", "work in this workspace"),
 }
 
-_OVERVIEW_ASSISTANTS = {
-    "dashboard": (_AGENTONE, _AGENTONE),
-    "agents": (_AGENTONE, _AGENTONE),
-    "projects": (_AGENTONE, _AGENTONE),
-    "workspaces": (_AGENTONE, _AGENTONE),
-    "cronjobs": (_AGENTONE, _AGENTONE),
-    "workitems": (_AGENTONE, _AGENTONE),
-    # The Memory page talks to the memory specialist itself, not AgentOne.
-    "memory": ("memory-manage", "Memory agent"),
-}
+_SESSION_HINT_MARKER = "[Assistant session context]"
 
 
 def _assistant_scope(kind: str, item):
-    assistant_name, _model = _ASSISTANTS[kind]
-    if kind == "agent":
-        from runtime.agents.agent import Agent
+    """Resolve ``(assistant, project, workspace)`` for an entity detail page.
 
-        runtime = Agent(agent_model=item)
-    elif kind == "skill":
-        from runtime.skill.skill import Skill
+    The workspace used to be minted per entity type (source scopes for
+    agents/skills, a separate cronjobs row, ...). All AgentOne chats now share
+    one rule — the workspace itself when the page is a workspace, else the
+    project's primary workspace, else AgentOne home.
+    """
+    from runtime.workspace.workspaces import Workspaces
 
-        runtime = Skill(skill_model=item)
-    elif kind == "cron":
-        from runtime.cron.cron import Cron
-
-        runtime = Cron(cronjob_model=item)
-    elif kind == "project":
-        from runtime.project.project import Project as ProjectRuntime
-
-        runtime = ProjectRuntime(project_model=item)
-    else:
-        from runtime.workspace.workspace import Workspace
-
-        runtime = Workspace(workspace_model=item)
+    if kind not in _ENTITY_MODELS:
+        raise KeyError(f"Unknown assistant kind: {kind}")
     project = item if kind == "project" else getattr(item, "parent_project", None)
-    if kind == "cron":
-        project = item.parent_project
-    workspace = runtime.get_assistant_workspace()
-    if project is None and workspace is not None:
-        project = getattr(workspace, "parent_project", None)
-    return assistant_name, project, workspace
+    workspace = item if kind == "workspace" else None
+    return _AGENTONE, project, Workspaces.assistant_workspace(
+        project=project, workspace=workspace
+    )
 
 
 def _overview_scope(kind: str, project: Project | None):
-    """Resolve the runtime workspace/project binding for a collection assistant."""
-    assistant_name, _title = _OVERVIEW_ASSISTANTS[kind]
-    if kind == "dashboard":
-        from runtime.workspace.workspaces import Workspaces
-
-        return assistant_name, None, Workspaces().get_assistant_workspace()
-
-    if kind == "memory":
-        # Memory is a scope, not an entity: bind the panel to the selected
-        # project's workspace (or the global system workspace) so the agent
-        # sees the same memory layers the Memory page does.
-        from runtime.workspace.workspaces import Workspaces
-
-        workspace = Workspaces(parent_project=project).get_assistant_workspace()
-        return assistant_name, project, workspace
-
-    from runtime.agents.agents import Agents
-    from runtime.cron.crons import Cronjobs
-    from runtime.project.projects import Projects
-    from runtime.workitems.workitems import Workitems
+    """Resolve the runtime workspace/project binding for an overview panel."""
     from runtime.workspace.workspaces import Workspaces
 
-    collections = {
-        "agents": Agents,
-        "projects": Projects,
-        "workspaces": Workspaces,
-        "cronjobs": Cronjobs,
-        "workitems": Workitems,
-    }
-    collection_type = collections[kind]
-    try:
-        collection = collection_type(parent_project=project)
-    except TypeError:
-        collection = collection_type()
-    workspace = collection.get_assistant_workspace()
-    if project is None and workspace is not None:
-        project = getattr(workspace, "parent_project", None)
-    return assistant_name, project, workspace
+    if kind not in _OVERVIEW_ASSISTANTS:
+        raise KeyError(f"Unknown assistant kind: {kind}")
+    assistant_name = _OVERVIEW_ASSISTANTS[kind][0]
+    # Collection panels stay in the caller's scope; the dashboard is global.
+    # Memory is a scope, not an entity, so it follows the selected project too.
+    if kind == "dashboard":
+        project = None
+    return assistant_name, project, Workspaces.assistant_workspace(project=project)
 
 
 def _sessions_for_scope(
@@ -190,7 +178,7 @@ def _requested_project(request):
 def assistant_overview_context(
     kind: str, project: Project | None = None, selected_id: str | None = None
 ) -> dict:
-    """Build the panel context for a legacy collection/dashboard assistant."""
+    """Build the panel context for a dashboard/collection assistant."""
     assistant_name, title = _OVERVIEW_ASSISTANTS[kind]
     assistant_name, project, workspace = _overview_scope(kind, project)
     sessions = _sessions_for_scope(assistant_name, project, workspace)
@@ -228,6 +216,122 @@ def assistant_overview_context(
     return context
 
 
+# ---------------------------------------------------------------------------
+# Session creation
+# ---------------------------------------------------------------------------
+
+def _open_assistant_chat(
+    assistant_name: str,
+    project: Project | None,
+    workspace,
+    name: str,
+    group_key: str,
+):
+    """Get or create the scoped assistant chat and stamp its project."""
+    assistant = AgentModel.objects.filter(name=assistant_name).first()
+    if assistant is None or assistant.latest_agent_version is None:
+        return None, None
+    try:
+        session_version = assistant.latest_agent_version.get_or_create_session(
+            name=name,
+            display_name=name,
+            description="",
+            workspace=workspace,
+            group_key=group_key,
+        )
+        session = session_version.session
+        if project is not None and session.parent_project_id != project.pk:
+            session.parent_project = project
+            session.save(update_fields=["parent_project_id"])
+    except Exception:  # pylint: disable=broad-exception-caught
+        log.exception("could not create %s assistant chat", assistant_name)
+        return None, None
+    return session, session_version
+
+
+def _ensure_session_context_notice(
+    session_version,
+    *,
+    assistant_name: str,
+    kind: str,
+    page_label: str,
+    page_url: str,
+    subject: str,
+    expectation: str,
+    project: Project | None,
+    workspace,
+):
+    """Pin a one-time notice describing the page this chat came from.
+
+    The admin tool can infer a project from the session binding, but the page
+    and the intended subject cannot be recovered from a workspace row alone —
+    especially now that most pages share AgentOne home. The notice gives the
+    model an explicit hint and points it at explicit admin_tool identifiers.
+    """
+    from runtime.session.session import Session as SessionRuntime
+    from server.models.enums.message_enums import (
+        MessageContentType,
+        MessagePartType,
+        MessageRole,
+        MessageType,
+    )
+    from server.models.message import Message
+
+    session_model = session_version.session
+    if Message.objects.filter(
+        session=session_model,
+        message_type=MessageType.SYSTEM_NOTICE,
+        parts__type=MessagePartType.MESSAGE,
+        parts__content__content__contains=_SESSION_HINT_MARKER,
+    ).exists():
+        return None
+
+    if workspace is not None:
+        binding = f"workspace {workspace.name or workspace.path} (id={workspace.pk})"
+    elif project is not None:
+        binding = f"project {project.name} (id={project.pk})"
+    else:
+        binding = "global — AgentOne home workspace"
+    lines = [
+        _SESSION_HINT_MARKER,
+        f"Opened from: {page_label} ({page_url}).",
+        f"Expected work: {expectation}.",
+        f"Subject: {subject}.",
+        f"Session binding: {binding}.",
+    ]
+    if assistant_name == _AGENTONE:
+        lines.append(
+            "Use admin_tool(scope=..., action='help') to discover arguments. "
+            "If the intended target is outside this binding, pass its id or "
+            "exact name explicitly (project_pk / workspace_pk / name) — do not "
+            "infer it from the session workspace alone."
+        )
+    text = "\n".join(lines)
+
+    try:
+        last = SessionRuntime(
+            session_model=session_model, pinned_session_version=session_version
+        ).get_last_message()
+        notice = Message.objects.create(
+            session=session_model,
+            session_version=session_version,
+            role=MessageRole.USER,
+            message_type=MessageType.SYSTEM_NOTICE,
+            pin_to_context=True,
+            prev_message=last,
+        )
+        notice.add_part(
+            type=MessagePartType.MESSAGE,
+            content_type=MessageContentType.TEXT,
+            content=text,
+        )
+        notice.publish("create")
+        return notice
+    except Exception:  # pylint: disable=broad-exception-caught
+        log.exception("could not write assistant context notice for %s", kind)
+        return None
+
+
 @require_GET
 def assistant_panel(request, kind: str, item_id: int):
     """Return the embedded assistant panel, optionally selecting a session."""
@@ -259,7 +363,7 @@ def entity_assistant_open(request, kind: str, item_id: int):
     """Create and open a fresh assistant session for an entity."""
     if kind not in _ASSISTANTS:
         return redirect("/app/")
-    assistant_name, model = _ASSISTANTS[kind]
+    _assistant_name, model = _ASSISTANTS[kind]
     item = get_object_or_404(model, pk=item_id)
     try:
         assistant_name, project, workspace = _assistant_scope(kind, item)
@@ -281,36 +385,31 @@ def entity_assistant_open(request, kind: str, item_id: int):
             })
         return redirect(f"/app/{_detail_path(kind)}/{item.pk}?error=assistant-scope")
 
-    assistant = AgentModel.objects.filter(name=assistant_name).first()
-    if assistant is None or assistant.latest_agent_version is None:
+    base_name = f"{kind.capitalize()} Assistant - {item.name}"
+    name = unique_session_name(base_name)
+    session, session_version = _open_assistant_chat(
+        assistant_name, project, workspace, name,
+        group_key=f"assistant:{kind}:{assistant_name}",
+    )
+    if session is None:
         if request.headers.get("HX-Request") == "true":
             context = assistant_panel_context(kind, item)
             context["assistant_error"] = "This assistant is unavailable."
             return render(request, "shared/_assistant_panel.html", context)
         return redirect(f"/app/{_detail_path(kind)}/{item.pk}?error=assistant-unavailable")
 
-    base_name = f"{kind.capitalize()} Assistant - {item.name}"
-    name = unique_session_name(base_name)
-    try:
-        session_version = assistant.latest_agent_version.get_or_create_session(
-            name=name,
-            display_name=name,
-            description="",
-            workspace=workspace,
-            group_key=f"assistant:{kind}:{assistant_name}",
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-        log.exception("could not create %s assistant chat for %s", kind, item_id)
-        if request.headers.get("HX-Request") == "true":
-            context = assistant_panel_context(kind, item)
-            context["assistant_error"] = "Could not create an assistant chat."
-            return render(request, "shared/_assistant_panel.html", context)
-        return redirect(f"/app/{_detail_path(kind)}/{item.pk}?error=assistant-create")
-
-    session = session_version.session
-    if project is not None and session.parent_project_id != project.pk:
-        session.parent_project = project
-        session.save(update_fields=["parent_project_id"])
+    page_label, path, expectation = _ENTITY_PAGES[kind]
+    _ensure_session_context_notice(
+        session_version,
+        assistant_name=assistant_name,
+        kind=kind,
+        page_label=page_label,
+        page_url=f"/app/{path}/{item.pk}",
+        subject=getattr(item, "name", str(item.pk)),
+        expectation=expectation,
+        project=project,
+        workspace=workspace,
+    )
     if request.headers.get("HX-Request") == "true":
         context = assistant_panel_context(kind, item, str(session.pk))
         return render(request, "shared/_assistant_panel.html", context)
@@ -331,32 +430,29 @@ def assistant_overview_open(request, kind: str):
         log.exception("could not resolve %s assistant scope", kind)
         return HttpResponse("Could not resolve this assistant scope.", status=500)
 
-    assistant = AgentModel.objects.filter(name=assistant_name).first()
-    if assistant is None or assistant.latest_agent_version is None:
+    scope_label = project.name if project is not None else "global"
+    name = unique_session_name(f"{assistant_name} - {scope_label}")
+    session, session_version = _open_assistant_chat(
+        assistant_name, project, workspace, name,
+        group_key=f"assistant:{kind}:{assistant_name}",
+    )
+    if session is None:
         context = assistant_overview_context(kind, project)
         context["assistant_error"] = "This assistant is unavailable."
         return render(request, "shared/_assistant_panel.html", context)
 
-    scope_label = project.name if project is not None else "global"
-    name = unique_session_name(f"{assistant_name} - {scope_label}")
-    try:
-        session_version = assistant.latest_agent_version.get_or_create_session(
-            name=name,
-            display_name=name,
-            description="",
-            workspace=workspace,
-            group_key=f"assistant:{assistant_name}",
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-        log.exception("could not create %s assistant chat", kind)
-        context = assistant_overview_context(kind, project)
-        context["assistant_error"] = "Could not create an assistant chat."
-        return render(request, "shared/_assistant_panel.html", context)
-
-    session = session_version.session
-    if project is not None and session.parent_project_id != project.pk:
-        session.parent_project = project
-        session.save(update_fields=["parent_project_id"])
+    page_label, page_url, expectation = _OVERVIEW_PAGES[kind]
+    _ensure_session_context_notice(
+        session_version,
+        assistant_name=assistant_name,
+        kind=kind,
+        page_label=page_label,
+        page_url=page_url,
+        subject=scope_label,
+        expectation=expectation,
+        project=project,
+        workspace=workspace,
+    )
     context = assistant_overview_context(kind, project, str(session.pk))
     return render(request, "shared/_assistant_panel.html", context)
 

@@ -68,7 +68,11 @@ def _projects(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool,
         from server.models.workitems.work_item import WorkItem
         from server.models.workspace import WorkspaceModel
 
-        project, error = _project_for(_session, kwargs.get("project_pk"))
+        project, error = _project_for(
+            _session,
+            kwargs.get("project_pk"),
+            kwargs.get("project_name") or kwargs.get("name"),
+        )
         if error:
             return _err(error)
         try:
@@ -159,7 +163,11 @@ def _projects(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool,
         return _ok(project=_project_info(project), details=details)
 
     if action == "reload":
-        project, error = _project_for(_session, kwargs.get("project_pk"))
+        project, error = _project_for(
+            _session,
+            kwargs.get("project_pk"),
+            kwargs.get("project_name") or kwargs.get("name"),
+        )
         if error:
             return _err(error)
         try:
@@ -171,7 +179,11 @@ def _projects(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool,
         return _ok(project=_project_info(project), details=details)
 
     if action == "dashboard":
-        project, error = _project_for(_session, kwargs.get("project_pk"))
+        project, error = _project_for(
+            _session,
+            kwargs.get("project_pk"),
+            kwargs.get("project_name") or kwargs.get("name"),
+        )
         if error:
             return _err(error)
         dashboard_path = project.get_agentone_dir() / "dashboard" / "index.md"

@@ -80,17 +80,9 @@ class Cron(AssistantScopeMixin):
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this job's assistant sessions.
 
-        The owning project's workspace, else the global cronjobs row.
-        Shared by ``get_assistant_session`` and UI panels so both bind
-        the same row.
+        Same rule as every AgentOne chat: the owning project's primary
+        workspace, else AgentOne home.
         """
         from runtime.workspace.workspaces import Workspaces
 
-        project = self.project
-        if project is not None:
-            return Workspaces.for_project(project)
-        return Workspaces.ensure_named(
-            "System cronjobs",
-            self.get_source_dir(),
-            "System cron jobs",
-        )
+        return Workspaces.assistant_workspace(project=self.project)

@@ -137,7 +137,8 @@ def test_live_component_carries_sse_triggers_on_the_wrapper(client):
 
     assert 'data-component="chat-header"' in body
     assert f"sse:SessionModel:{session.pk}" in body
-    assert f"sse:Query.session:{session.pk}" in body
+    assert f"sse:Response.session:{session.pk}" in body
+    assert f"sse:Query.session:{session.pk}" not in body
     assert "sse:reset" in body
     # Wrappers are preserved so a loaded component survives parent swaps.
     assert "hx-preserve" in body
@@ -687,3 +688,87 @@ def test_dashboard_activity_terminal_query_is_hidden_and_etag_is_stable(client):
         HTTP_X_AGENTONE_ETAG="1",
     )
     assert unchanged.status_code == 204
+
+
+# ---------------------------------------------------------------------------
+# observable-key minimisation
+# ---------------------------------------------------------------------------
+
+def _wrapper_keys(body: str) -> set[str]:
+    """Exact sse: keys on the root component wrapper of a rendered fragment."""
+    from bs4 import BeautifulSoup
+
+    wrapper = BeautifulSoup(body, "html.parser").select_one("[data-component]")
+    assert wrapper is not None
+    return {
+        token.strip().split()[0][len("sse:"):]
+        for token in (wrapper.get("hx-trigger") or "").split(",")
+        if token.strip().startswith("sse:")
+    }
+
+
+def test_section_sidebars_do_not_watch_unrendered_models(client):
+    """The chat/dashboard sidebar no longer watches per-turn models.
+
+    Activity dots are computed and observed per row (Query.session:<pk> and
+    AgentTaskCall.session:<pk>); the dead session_activity() helper that used
+    to motivate bare Query/AgentTaskCall here is gone. Insights renders only
+    static tab labels, so it should be keyless.
+    """
+    _chat_session("sidebar-keys")
+
+    for name in ("chats-sidebar", "dashboard-sidebar"):
+        keys = _wrapper_keys(_get(client, name, render="htmx").content.decode())
+        assert "SessionModel.root@is_archived:false" in keys
+        assert "Project.root" in keys
+        assert "Query" not in keys
+        assert "AgentTaskCall" not in keys
+
+    assert "sse:" not in _get(client, "insights-sidebar", render="htmx").content.decode()
+
+
+def test_chat_sidebar_row_watches_only_its_own_workspace_and_agent(client):
+    """A row renders one workspace/agent, not every row of either model."""
+    from server.models.workspace import WorkspaceModel
+
+    agent, _version, session, sv, _message = _chat_session("sidebar-row-keys")
+    workspace = WorkspaceModel.objects.create(
+        name="Atlas", path="/tmp/atlas", agentone_dir="/tmp/atlas/.agentone"
+    )
+    # SessionVersionModel rows are immutable; update via the queryset.
+    from server.models.sessions.session_version import SessionVersionModel
+
+    SessionVersionModel.objects.filter(pk=sv.pk).update(workspace=workspace)
+    session.refresh_from_db()
+
+    body = _get(
+        client, "chat-sidebar-session", session.pk,
+        section="chats", archived="false", depth=0, render="htmx",
+    ).content.decode()
+    keys = _wrapper_keys(body)
+
+    assert f"WorkspaceModel:{workspace.pk}" in keys
+    assert f"AgentModel:{agent.pk}" in keys
+    assert "WorkspaceModel" not in keys
+    assert "AgentModel" not in keys
+    assert "Project.root" in keys
+    assert "Project" not in keys
+    assert f"AgentTaskCall.session:{session.pk}" in keys
+
+
+def test_leaf_chat_components_watch_only_their_own_row(client):
+    """Query/Response leaves must not refetch on sibling writes."""
+    _agent, _version, session, sv, message = _chat_session("leaf-keys")
+    query, response = _active_query(session, sv, message)
+
+    query_keys = _wrapper_keys(
+        _get(client, "chat-query", query.pk, render="htmx").content.decode()
+    )
+    assert f"Query:{query.pk}" in query_keys
+    assert f"Query.session:{session.pk}" not in query_keys
+
+    response_keys = _wrapper_keys(
+        _get(client, "chat-response", response.pk, render="htmx").content.decode()
+    )
+    assert f"Response:{response.pk}" in response_keys
+    assert f"Response.session:{session.pk}" not in response_keys

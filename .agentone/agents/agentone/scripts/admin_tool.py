@@ -60,6 +60,11 @@ def admin_tool(_session: Any, scope: str, action: str, **kwargs: Any) -> tuple[b
       system     help, reload — reload manifests into the DB after file edits
       help       index of all scopes
 
+    Projects and workspaces can be targeted explicitly with `project_pk` /
+    `project_name` and `workspace_pk` / `workspace_name`. Prefer these when the
+    session's inferred page scope is not the target; an explicit id or name
+    wins over the session binding. Names may be partial if unambiguous.
+
     Every scope accepts `action="help"`: it returns that scope's valid
     actions and their keyword arguments. Use it to discover the exact
     arguments at the moment you need them instead of guessing, and instead

@@ -8,6 +8,12 @@ from django.db.models import QuerySet
 from runtime.assistant_scope import AssistantScopeMixin
 from server.models.workspace import WorkspaceModel
 
+#: The single workspace every global AgentOne assistant session binds to.
+AGENTONE_HOME_WORKSPACE = "AgentOne home"
+#: Pre-unification name; renamed in place so existing chats keep their binding.
+_LEGACY_AGENTONE_HOME_WORKSPACE = "AgentOne system"
+AGENTONE_HOME_DESCRIPTION = "AgentOne home: framework and user data"
+
 
 class Workspaces(AssistantScopeMixin):
     """Query interface for WorkspaceModel instances.
@@ -56,6 +62,62 @@ class Workspaces(AssistantScopeMixin):
         from runtime.workspace.workspace import Workspace
 
         return [Workspace(model) for model in self.all()]
+
+    @staticmethod
+    def agentone_home_workspace() -> WorkspaceModel:
+        """Return the one workspace bound to ``agentone_home()`` (idempotent).
+
+        Older installs named this row ``AgentOne system``. Rename that row in
+        place rather than creating a second one: assistant sessions are
+        filtered by their exact workspace, so replacing the row would hide
+        every existing rightbar chat.
+        """
+        from runtime.paths import agentone_home
+
+        home = agentone_home()
+        try:
+            home.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
+        wanted = home.as_posix()
+        row = WorkspaceModel.objects.filter(name=AGENTONE_HOME_WORKSPACE).first()
+        if row is None:
+            row = WorkspaceModel.objects.filter(
+                name=_LEGACY_AGENTONE_HOME_WORKSPACE
+            ).first()
+        if row is None:
+            return Workspaces.ensure_named(
+                AGENTONE_HOME_WORKSPACE, wanted, AGENTONE_HOME_DESCRIPTION
+            )
+        updates = {}
+        if row.name != AGENTONE_HOME_WORKSPACE:
+            updates["name"] = AGENTONE_HOME_WORKSPACE
+        if row.path != wanted:
+            updates["path"] = wanted
+        if row.description != AGENTONE_HOME_DESCRIPTION:
+            updates["description"] = AGENTONE_HOME_DESCRIPTION
+        if updates:
+            try:
+                row.atomic_update(**updates)
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
+        return row
+
+    @staticmethod
+    def assistant_workspace(project: Any = None, workspace: Any = None) -> Any:
+        """Return the workspace an AgentOne assistant session binds to.
+
+        The old design minted a synthetic workspace per collection/entity
+        type (``System agents``, ``System skills``, ``System cronjobs``,
+        ``*_assistant_scope``). There is now one rule: the explicit workspace
+        when the caller is workspace-scoped, else the project's primary
+        workspace, else AgentOne home.
+        """
+        if workspace is not None:
+            return workspace
+        if project is not None:
+            return Workspaces.for_project(project)
+        return Workspaces.agentone_home_workspace()
 
     @staticmethod
     def ensure_named(
@@ -223,18 +285,12 @@ class Workspaces(AssistantScopeMixin):
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this scope's assistant sessions.
 
-        Parent scope's own row when nested, else the project workspace,
-        else the global system row. Shared by ``get_assistant_session``
+        Parent workspace when path-nested, else the project's primary
+        workspace, else AgentOne home. Shared by ``get_assistant_session``
         and UI panels so both bind the same row.
         """
-        source = self.get_source_dir()
-        project = self.project
-        if self.parent_workspace is not None:
-            return self.parent_workspace
-        if project is not None:
-            return self.for_project(project)
-        return self.ensure_named(
-            "AgentOne system", source, "Master workspace: whole framework home"
+        return Workspaces.assistant_workspace(
+            project=self.project, workspace=self.parent_workspace
         )
 
 

@@ -108,39 +108,6 @@ def flatten_session_tree(sessions: list[SessionModel]):
         yield from flatten_session_tree(getattr(session, "children", []) or [])
 
 
-def session_activity(sessions: list[SessionModel]) -> dict:
-    ids = [session.pk for session in sessions]
-    if not ids:
-        return {"active_session_ids": set(), "approval_session_ids": set()}
-    from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
-    from server.models.queries.query import Query, QueryStatus
-    from server.models.tasks.agent_task_call import AgentTaskCall
-
-    try:
-        active = set(
-            Query.objects.filter(
-                session_version__session_id__in=ids,
-                status=QueryStatus.ACTIVE,
-            ).values_list("session_version__session_id", flat=True)
-        )
-        active |= set(
-            AgentTaskCall.objects.filter(session_id__in=ids)
-            .exclude(status=TaskCallStatus.ENDED)
-            .values_list("session_id", flat=True)
-            .distinct()
-        )
-        approval = set(
-            AgentTaskCall.objects.filter(
-                session_id__in=ids,
-                requires_approval=True,
-                status_detail=TaskCallStatusDetail.HALTED_APPROVAL,
-            ).values_list("session_id", flat=True)
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-        return {"active_session_ids": set(), "approval_session_ids": set()}
-    return {"active_session_ids": active, "approval_session_ids": approval}
-
-
 def visible_child_session_ids(parent_id: int, *, include_archived: bool) -> list[int]:
     cutoff = timezone.now() - RECENT_SUBSESSION_WINDOW
     query = SessionModel.objects.filter(
@@ -197,11 +164,13 @@ def build_sidebar_context(request, project_id, ctx):
 
 def sidebar_keys(context):
     archived = "true" if context.get("show_archived") else "false"
+    # The active/approval indicators are rendered and observed by each
+    # chat-sidebar-session row (Query.session:<pk> / AgentTaskCall.session:<pk>).
+    # Bare Query/AgentTaskCall here would refetch the whole sidebar for writes
+    # to unrelated sessions; the shared frame only needs Project.root.
     keys = [
         f"SessionModel.root@is_archived:{archived}",
         "SessionModel@is_active:true",
-        "Query",
-        "AgentTaskCall",
         "Project.root",
     ]
     project_id = context.get("sidebar_project_id")

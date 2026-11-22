@@ -71,7 +71,7 @@ install sync excludes it automatically.
 | `var/log/`, `var/run/` | Terminal logs (`var/log/terminals/`) and the sleep-guard pid (`var/run/`). Disposable. |
 | `var/cache/upstream/*`, `var/cache/staging/*` | Upstream clones + merged staging (upstream first, local overlays; `sources.yaml` + `skills.yaml` are config-only, excluded; staging uses `--delete`). Re-syncable. |
 | `memory/` | One local Git repo per global/project/workspace memory root. Legacy nested `.git` directories under that root are deleted during the next memory walk; memory files are retained, but their nested Git histories are discarded. |
-| `workspaces/_assistant_scopes/<source path>/assistant_scope/` | Central data for source-bound assistant workspaces. Source path components are preserved instead of flattened; existing scope data is moved on first access. |
+| `workspaces/_assistant_scopes/<source path>/assistant_scope/` | Central data for **explicit** source-bound chats (e.g. `call_assistant` with a `context_path`). Rightbar assistant panels no longer create these — they bind AgentOne home, the project's primary workspace, or the selected workspace. Existing scope data is preserved. |
 | `projects/<n>/`, `workspaces/<n>/` | Central manifest dirs (DB content). Back up with the DB. |
 | `secrets/` | `django_secret_key`, `agent_server_secret_key` (`0600`). Never synced or versioned. |
 

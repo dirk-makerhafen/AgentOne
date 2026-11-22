@@ -9,14 +9,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from admin_common import _err, _ok, _scope_project
+from admin_common import _err, _ok, _scope_project_for
 
 
-def _scoped_skills(session: Any):
-    """Global skills plus the session project's own skills, ordered by name."""
+def _scoped_skills(session: Any, project: Any = None):
+    """Global skills plus *project*'s own skills, ordered by name."""
     from runtime.skill.skills import Skills
 
-    return Skills(parent_project=session.get_project()).all()
+    return Skills(parent_project=project or session.get_project()).all()
 
 
 def _skill_info(skill: Any) -> dict[str, Any]:
@@ -39,15 +39,14 @@ def _skill_info(skill: Any) -> dict[str, Any]:
     }
 
 
-def _resolve_skill(session: Any, name: Any):
+def _resolve_skill(session: Any, name: Any, project: Any = None):
     """Find one skill by name in scope (project-local wins). Returns ``(skill, error)``."""
     name = str(name or "").strip()
     if not name:
         return None, "A skill name is required (kwargs: name)."
-    matches = list(_scoped_skills(session).filter(name=name))
+    matches = list(_scoped_skills(session, project).filter(name=name))
     if not matches:
         return None, f"No skill named '{name}' in this scope."
-    project = _scope_project(session)
     if len(matches) > 1 and project is not None:
         local = [s for s in matches if getattr(s, "parent_project_id", None) == project.pk]
         if local:
@@ -61,18 +60,21 @@ def _resolve_skill(session: Any, name: Any):
 
 
 def _skills(session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+    project, error = _scope_project_for(session, kwargs)
+    if error:
+        return _err(error)
+
     if action == "list":
         try:
-            skills = list(_scoped_skills(session))
+            skills = list(_scoped_skills(session, project))
         except Exception as e:  # pylint: disable=broad-exception-caught
             return _err(f"Could not list skills: {e}")
-        project = session.get_project()
         scope = f"global + project {project.name}" if project is not None else "global"
         return _ok(skills=[_skill_info(s) for s in skills], count=len(skills), scope=scope)
 
     if action == "stats":
         try:
-            skills = list(_scoped_skills(session))
+            skills = list(_scoped_skills(session, project))
         except Exception as e:  # pylint: disable=broad-exception-caught
             return _err(f"Could not list skills: {e}")
         return _ok(
@@ -87,7 +89,7 @@ def _skills(session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool, di
         return load_skill_content(session, kwargs.get("name") or kwargs.get("skill_name"))
 
     if action == "details":
-        skill, error = _resolve_skill(session, kwargs.get("name"))
+        skill, error = _resolve_skill(session, kwargs.get("name"), project)
         if error:
             return _err(error)
         from runtime.agents.agents import Agents

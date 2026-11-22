@@ -583,14 +583,10 @@ class Agent(AssistantScopeMixin):
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this agent's assistant sessions.
 
-        The agent's source directory (stored ``manifest_dir`` first). Shared
-        by ``get_assistant_session`` and UI panels so both bind the same row.
+        Same rule as every AgentOne chat: the owning project's primary
+        workspace, else AgentOne home. An agent's source directory is its
+        manifest location, not a separate assistant workspace.
         """
         from runtime.workspace.workspaces import Workspaces
 
-        source = self.get_source_dir()
-        return Workspaces.ensure_source_scope(
-            f"{source.as_posix()} assistant scope",
-            source,
-            f"source scope for agent {self.name}",
-        )
+        return Workspaces.assistant_workspace(project=self.project)

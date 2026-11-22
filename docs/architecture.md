@@ -91,6 +91,22 @@ Most models follow a **definition/version split**:
 - Live updates: per-tab WebSocket at `ws(/wss) /app/ws/events/` (see `webui/core/events.py`, `webui/static/webui/ws-events.js`) delivers event names from Redis pub/sub; the client syncs watched keys via `POST /app/sse/watch`.
 - For details, see [`ui-rewrite.md`](ui-rewrite.md), [`observables-migration.md`](observables-migration.md), and [`htmx-sse.md`](htmx-sse.md).
 
+### Rightbar assistant sessions
+
+Every management page's rightbar chat is an `AgentOne` session (the Memory page
+uses `memory-manage`). `webui/core/assistants.py` resolves one workspace per
+page kind: a workspace detail page binds that workspace, a project detail page
+binds the project's primary workspace, and everything else binds the single
+**AgentOne home** workspace at `agentone_home()` (`~/.agentone`). The old
+per-domain workspaces (`System agents`, `System skills`, `System cronjobs`,
+`*_assistant_scope`) are no longer created; the legacy `AgentOne system` row is
+renamed in place so existing chats keep their binding.
+
+New assistant chats pin a one-time `SYSTEM_NOTICE` naming the page, the
+subject and the expected work. `admin_tool` accepts explicit
+`project_pk`/`project_name` and `workspace_pk`/`workspace_name` when the
+session's inferred scope is not the intended target.
+
 ## Rate limiting
 
 Three tiers checked in order (fail-fast):

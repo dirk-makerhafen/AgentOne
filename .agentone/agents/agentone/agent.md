@@ -134,6 +134,12 @@ Scope invariant: a plural assistant always sees the caller's session scope
 project-scoped session. The workspace singular is the exception in shape,
 not scope: it sees the bound workspace and its path sub-workspaces.
 
+Rightbar chats pin a one-time context notice naming the page they came from
+and the work they are expected to do. When that binding is not the target,
+pass it explicitly: `admin_tool` accepts `project_pk` / `project_name` and
+`workspace_pk` / `workspace_name`, which override the inferred session scope.
+Check `admin_tool(scope=..., action="help")` for the exact arguments.
+
 ## Working with Work Items
 
 Use the `workitems.*` tools for work that must **outlive this turn** — a task

@@ -36,7 +36,7 @@ def startup_cleanup() -> None:
     for pass_ in (
         _cleanup_stale_runtime_folders,
         _cleanup_orphaned_session_folders,
-        _ensure_system_workspaces,
+        _ensure_agentone_home_workspace,
         _timeout_active_runs,
         _cancel_duplicate_queries,
         _clear_stale_compaction_flags,
@@ -71,40 +71,17 @@ def _clear_stale_compaction_flags() -> None:
             print(f"[startup-cleanup] error clearing compaction flag for {session_id}: {e}")
 
 
-def _ensure_system_workspaces() -> None:
-    """Ensure the AgentOne system workspaces exist (idempotent).
+def _ensure_agentone_home_workspace() -> None:
+    """Ensure the single AgentOne home workspace exists (idempotent).
 
-    Builds the specs from the runtime collection classes' global homes
-    (``Skills``/``Agents``) plus the framework home itself, so master
-    sessions and the internal collection assistants always have a bindable
-    workspace even on a fresh install.
+    Formerly this pass also minted a workspace per collection (agents,
+    skills, cronjobs). All assistant sessions now bind to AgentOne home,
+    the project's primary workspace, or an explicitly selected workspace —
+    so only the home row is needed.
     """
-    from runtime.agents.agents import Agents
-    from runtime.cron.crons import Cronjobs
-    from runtime.paths import agentone_home
-    from runtime.skill.skills import Skills
     from runtime.workspace.workspaces import Workspaces
-    from server.models.workspace import WorkspaceModel
 
-    home = agentone_home()
-    home.mkdir(parents=True, exist_ok=True)
-    specs = [
-        ("AgentOne system", home, "Master workspace: whole framework home"),
-        ("System agents", Agents().get_source_dir(), "User-scope agents manifests"),
-        ("System skills", Skills().get_source_dir(), "User-scope skills manifests"),
-  
-    ]
-    created = 0
-    for ws_name, path, description in specs:
-        try:
-            path.mkdir(parents=True, exist_ok=True)
-        except OSError:
-            pass
-        if not WorkspaceModel.objects.filter(name=ws_name).exists():
-            created += 1
-        Workspaces.ensure_named(ws_name, path, description)
-    if created:
-        print(f"[startup-cleanup] ensured {created} system workspace(s)")
+    Workspaces.agentone_home_workspace()
 
 
 def _recover_stale_queries_startup() -> None:

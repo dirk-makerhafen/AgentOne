@@ -100,19 +100,22 @@ class ProjectOfTest(TestCase):
 class AssistantWorkspaceTest(TestCase):
     """Singular get_assistant_workspace shares the session binding row."""
 
-    def test_agent_workspace_is_source_dir(self):
+    def test_global_agent_workspace_is_agentone_home(self):
         from runtime.agents.agent import Agent as AgentRt
+        from runtime.paths import agentone_home
 
         agent, _av = _make_agent("aw-a", manifest_dir="/tmp/aw-a")
         ws = AgentRt(agent_model=agent).get_assistant_workspace()
-        self.assertEqual(ws.path, "/tmp/aw-a")
+        self.assertEqual(ws.path, agentone_home().as_posix())
+        self.assertEqual(ws.name, "AgentOne home")
 
-    def test_skill_workspace_is_source_dir(self):
+    def test_global_skill_workspace_is_agentone_home(self):
+        from runtime.paths import agentone_home
         from runtime.skill.skill import Skill as SkillRt
 
         skill = _make_skill("aw-s", manifest_dir="/tmp/aw-s")
         ws = SkillRt(skill_model=skill).get_assistant_workspace()
-        self.assertEqual(ws.path, "/tmp/aw-s")
+        self.assertEqual(ws.path, agentone_home().as_posix())
 
     def test_cron_workspace_matches_binding(self):
         from runtime.cron.cron import Cron as CronRt
@@ -137,27 +140,34 @@ class AssistantWorkspaceTest(TestCase):
 class PluralAssistantWorkspaceTest(TestCase):
     """Plural get_assistant_workspace mirrors the session bindings."""
 
-    def test_global_system_rows(self):
+    def test_global_rows_all_share_agentone_home(self):
         from runtime.agents.agents import Agents
         from runtime.cron.crons import Cronjobs
+        from runtime.paths import agentone_home
         from runtime.project.projects import Projects
         from runtime.skill.skills import Skills
         from runtime.workitems.workitems import Workitems
         from runtime.workspace.workspaces import Workspaces
 
-        self.assertEqual(Agents().get_assistant_workspace().pk, Agents().get_assistant_workspace().pk)
-        self.assertTrue(Skills().get_assistant_workspace().path.endswith("skills"))
-        self.assertEqual(
-            Cronjobs().get_assistant_workspace().path,
-            Cronjobs().get_source_dir().as_posix(),
+        home = Workspaces.agentone_home_workspace()
+        self.assertEqual(home.path, agentone_home().as_posix())
+        self.assertEqual(home.name, "AgentOne home")
+        for collection in (Agents, Cronjobs, Projects, Skills, Workitems, Workspaces):
+            self.assertEqual(collection().get_assistant_workspace().pk, home.pk)
+
+    def test_legacy_system_row_is_renamed_in_place(self):
+        from runtime.paths import agentone_home
+        from runtime.workspace.workspaces import Workspaces
+        from server.models.workspace import WorkspaceModel
+
+        legacy = WorkspaceModel.objects.create(
+            name="AgentOne system", path="/tmp/legacy-home", description="old"
         )
-        self.assertTrue(Workspaces().get_assistant_workspace() is not None)
-        self.assertEqual(
-            Projects().get_assistant_workspace().name, "AgentOne system"
-        )
-        self.assertEqual(
-            Workitems().get_assistant_workspace().name, "AgentOne system"
-        )
+        home = Workspaces.agentone_home_workspace()
+        self.assertEqual(home.pk, legacy.pk)
+        legacy.refresh_from_db()
+        self.assertEqual(legacy.name, "AgentOne home")
+        self.assertEqual(legacy.path, agentone_home().as_posix())
 
     def test_project_scope_rows(self):
         from runtime.agents.agents import Agents

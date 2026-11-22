@@ -56,14 +56,12 @@ class Projects(AssistantScopeMixin):
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding the projects-assistant sessions.
 
-        Always the global system row (projects are global entities).
-        Shared by ``get_assistant_session`` and UI panels so both bind
-        the same row.
+        All AgentOne chats share the same rule: explicit workspace, else the
+        project's primary workspace, else AgentOne home.
         """
         from runtime.workspace.workspaces import Workspaces
 
-        return Workspaces.ensure_named(
-            "AgentOne system",
-            self.get_source_dir(),
-            "Master workspace: whole framework home",
+        return Workspaces.assistant_workspace(
+            project=self.project,
+            workspace=getattr(self, "parent_workspace", None),
         )

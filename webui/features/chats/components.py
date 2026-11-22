@@ -76,12 +76,19 @@ def _build_chat_header(request, pk, params):
     context = _header_context(session)
     keys = [
         f"SessionModel:{pk}",
-        f"Query.session:{pk}",
         f"Response.session:{pk}",
         f"AgentTaskCall.session:{pk}",
-        # The context ring is sized from the active model's context window.
-        "AiModel",
     ]
+    # The context ring is sized from the one resolved model's context window,
+    # not from every AiModel row.
+    try:
+        aimodel = session.get_runtime().aimodel
+    except Exception:  # pylint: disable=broad-exception-caught
+        # A session without a version has no model to observe; context_usage()
+        # already degrades the same way.
+        aimodel = None
+    if aimodel is not None and aimodel.pk:
+        keys.append(f"AiModel:{aimodel.pk}")
     # The header also renders the agent and project names.
     version = getattr(session, "latest_session_version", None)
     if version is not None and version.agent_id:
@@ -193,7 +200,7 @@ def _build_chat_query(request, pk, params):
     row = Row("query", query, response=response)
     return ComponentData(
         {"row": row, "session": query.session},
-        (f"Query:{pk}", f"Query.session:{query.session_id}", f"Response.query:{pk}"),
+        (f"Query:{pk}", f"Response.query:{pk}"),
         immutable=_terminal_query(query),
         reset=False,
     )
@@ -213,7 +220,7 @@ def _build_chat_response(request, pk, params):
     )
     return ComponentData(
         {"row": row, "session": response.session},
-        (f"Response:{pk}", f"Response.session:{response.session_id}"),
+        (f"Response:{pk}",),
         immutable=_terminal_response(response),
         reset=False,
     )
@@ -302,17 +309,25 @@ def _build_chat_sidebar_session(request, pk, params):
         "child_pks": child_pks,
         "child_depth": child_depth,
     }
-    keys = (
+    keys = [
         f"SessionModel:{pk}",
         f"Query.session:{pk}",
         f"AgentTaskCall.session:{pk}",
         f"SessionModel.parent_session:{pk}@is_archived:{'true' if archived else 'false'}",
-        # The row also renders workspace/agent names and the project list.
-        "WorkspaceModel",
-        "AgentModel",
-        "Project",
-    )
-    return ComponentData(context, keys, reset=False)
+        # The project dropdown lists every project; Project.root fires on any
+        # Project write, so one shared key covers all rows without the bare key.
+        "Project.root",
+    ]
+    # Only this row's workspace/agent are rendered (color, name). Watching the
+    # bare model keys made every row refetch on any workspace/agent write.
+    version = getattr(session, "latest_session_version", None)
+    workspace_id = getattr(version, "workspace_id", None)
+    agent_id = getattr(version, "agent_id", None)
+    if workspace_id:
+        keys.append(f"WorkspaceModel:{workspace_id}")
+    if agent_id:
+        keys.append(f"AgentModel:{agent_id}")
+    return ComponentData(context, tuple(keys), reset=False)
 
 
 def _card_call(pk: int):

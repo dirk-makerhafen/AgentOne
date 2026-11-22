@@ -9,13 +9,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from admin_common import _err, _ok, _scope_project
+from admin_common import _err, _ok, _scope_project_for
 
 
-def _scoped_agents(session: Any):
-    """Global agents plus the session project's own agents, ordered by name."""
+def _scoped_agents(session: Any, project: Any = None):
+    """Global agents plus *project*'s own agents, ordered by name."""
     from runtime.agents.agents import Agents
-    return Agents(parent_project=session.get_project()).all()
+
+    return Agents(parent_project=project or session.get_project()).all()
 
 
 def _agent_info(agent: Any) -> dict[str, Any]:
@@ -39,15 +40,14 @@ def _agent_info(agent: Any) -> dict[str, Any]:
     }
 
 
-def _resolve_agent(session: Any, name: Any):
+def _resolve_agent(session: Any, name: Any, project: Any = None):
     """Find one agent by name in scope. Returns ``(agent, error)``."""
     name = str(name or "").strip()
     if not name:
         return None, "An agent name is required (kwargs: name)."
-    matches = list(_scoped_agents(session).filter(name=name))
+    matches = list(_scoped_agents(session, project).filter(name=name))
     if not matches:
         return None, f"No agent named '{name}' in this scope."
-    project = _scope_project(session)
     if len(matches) > 1 and project is not None:
         local = [a for a in matches if getattr(a, "parent_project_id", None) == project.pk]
         if local:
@@ -56,18 +56,21 @@ def _resolve_agent(session: Any, name: Any):
 
 
 def _agents(session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+    project, error = _scope_project_for(session, kwargs)
+    if error:
+        return _err(error)
+
     if action == "list":
         try:
-            agents = list(_scoped_agents(session))
+            agents = list(_scoped_agents(session, project))
         except Exception as e:  # pylint: disable=broad-exception-caught
             return _err(f"Could not list agents: {e}")
-        project = session.get_project()
         scope = f"global + project {project.name}" if project is not None else "global"
         return _ok(agents=[_agent_info(a) for a in agents], count=len(agents), scope=scope)
 
     if action == "stats":
         try:
-            agents = list(_scoped_agents(session))
+            agents = list(_scoped_agents(session, project))
         except Exception as e:  # pylint: disable=broad-exception-caught
             return _err(f"Could not list agents: {e}")
         by_visibility: dict[str, int] = {}
@@ -84,7 +87,7 @@ def _agents(session: Any, action: str, kwargs: dict[str, Any]) -> tuple[bool, di
         )
 
     if action == "details":
-        agent, error = _resolve_agent(session, kwargs.get("name"))
+        agent, error = _resolve_agent(session, kwargs.get("name"), project)
         if error:
             return _err(error)
         from runtime.agents.agents import Agents

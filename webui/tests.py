@@ -1325,7 +1325,7 @@ def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
     assert response["Location"].startswith("/app/chat/")
     assert SessionModel.objects.filter(
         latest_session_version__agent=assistant,
-        name__startswith="AgentOne - assistant-target",
+        name__startswith="Agent Assistant - assistant-target",
     ).exists()
 
     embedded = client.post(
@@ -1339,6 +1339,46 @@ def test_entity_assistant_launch_creates_scoped_chat(client, monkeypatch):
     assert b'data-component="chat-composer"' in embedded.content
     assert b'hx-target="#thread"' in embedded.content
     assert b"sse:Message.session:" in embedded.content
+
+
+@pytest.mark.django_db
+def test_assistant_chat_gets_one_time_context_notice(client, monkeypatch):
+    """New rightbar chats pin a notice naming the page and expected scope."""
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.enums.message_enums import MessageType
+    from server.models.message import Message
+    from server.models.sessions.session import SessionModel
+    from webui.core import assistants
+
+    subject = AgentModel.objects.create(name="notice-target")
+    assistant = AgentModel.objects.create(name="AgentOne")
+    version = AgentVersionModel.objects.create(agent=assistant, version_number=1)
+    AgentModel.objects.filter(pk=assistant.pk).update(latest_agent_version=version)
+    monkeypatch.setattr(
+        assistants,
+        "_assistant_scope",
+        lambda kind, item: ("AgentOne", None, None),
+    )
+
+    for _ in range(2):
+        response = client.post(
+            reverse("webui:entity_assistant_open", args=["agent", subject.pk])
+        )
+        assert response.status_code == 302
+
+    session = SessionModel.objects.filter(
+        name__startswith="Agent Assistant - notice-target"
+    ).first()
+    assert session is not None
+    notices = Message.objects.filter(
+        session=session, message_type=MessageType.SYSTEM_NOTICE
+    )
+    assert notices.count() == 1
+    text = notices.first().parts.first().content.get()
+    assert "Agent detail" in text
+    assert f"/app/agents/{subject.pk}" in text
+    assert "project_pk" in text
 
 
 @pytest.mark.django_db
@@ -1988,8 +2028,12 @@ def test_chat_header_shows_context_usage(client, monkeypatch):
     )
     assert component.status_code == 200
     assert b"10%" in component.content
-    assert b"sse:Query.session:" in component.content
+    assert b"sse:Response.session:" in component.content
     assert b"sse:SessionModel:" in component.content
+    # The header never renders a query; Query.session would refetch it for
+    # unrelated query writes (the streaming/busy state comes from Response and
+    # AgentTaskCall).
+    assert b"sse:Query.session:" not in component.content
 
 
 # ---------------------------------------------------------------------------
@@ -2450,15 +2494,25 @@ def test_terminal_output_get_does_not_write(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_live_chat_component_keys_cover_rendered_state():
+def test_live_chat_component_keys_cover_rendered_state(monkeypatch):
+    from types import SimpleNamespace
+
+    from runtime.session.session import Session as SessionRuntime
     from webui.features.chats.components import _build_chat_cards, _build_chat_header
 
+    monkeypatch.setattr(
+        SessionRuntime,
+        "aimodel",
+        property(lambda self: SimpleNamespace(pk=4242, context_length=8192)),
+    )
     session, _version = _session_with_version("component-keys")
     header = _build_chat_header(None, session.pk, {})
     cards = _build_chat_cards(None, session.pk, {})
 
-    # The context ring reads the active model's context window.
-    assert "AiModel" in header.keys
+    # The context ring reads the single resolved model's context window, not
+    # every AiModel row.
+    assert "AiModel:4242" in header.keys
+    assert "AiModel" not in header.keys
     # The turn-limit card reads SessionModel.unattended_turn_count.
     assert f"SessionModel:{session.pk}" in cards.keys
 

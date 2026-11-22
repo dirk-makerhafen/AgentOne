@@ -8,7 +8,9 @@ def build_sidebar_context(request, project_id, ctx):
 
 
 def sidebar_keys(context):
-    return ("ApiProvider", "AiModel")
+    # This sidebar only renders static tab labels; neither providers nor models
+    # appear in it, so observing either model would refetch it for nothing.
+    return ()
 
 
 def register_sidebar_component():

@@ -106,7 +106,11 @@ def _workspaces(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[boo
     if action == "details":
         from pathlib import Path
 
-        workspace, error = _workspace_for(_session, kwargs.get("workspace_pk"))
+        workspace, error = _workspace_for(
+            _session,
+            kwargs.get("workspace_pk"),
+            kwargs.get("workspace_name") or kwargs.get("name"),
+        )
         if error:
             return _err(error)
         try:
@@ -212,7 +216,7 @@ def _workspaces(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[boo
         return _ok(workspace=info)
 
     if action == "rename":
-        workspace, error = _workspace_for(_session, kwargs.get("workspace_pk"))
+        workspace, error = _workspace_for(_session, kwargs.get("workspace_pk"), kwargs.get("workspace_name"))
         if error:
             return _err(error)
         name = str(kwargs.get("name") or "").strip()
@@ -226,7 +230,7 @@ def _workspaces(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[boo
         return _ok(workspace={"pk": workspace.pk, "name": workspace.name, "path": workspace.path})
 
     if action == "update":
-        workspace, error = _workspace_for(_session, kwargs.get("workspace_pk"))
+        workspace, error = _workspace_for(_session, kwargs.get("workspace_pk"), kwargs.get("workspace_name"))
         if error:
             return _err(error)
         description = kwargs.get("description")
@@ -241,7 +245,11 @@ def _workspaces(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[boo
                               "path": workspace.path, "description": workspace.description or ""})
 
     if action == "dashboard":
-        workspace, error = _workspace_for(_session, kwargs.get("workspace_pk"))
+        workspace, error = _workspace_for(
+            _session,
+            kwargs.get("workspace_pk"),
+            kwargs.get("workspace_name") or kwargs.get("name"),
+        )
         if error:
             return _err(error)
         dashboard_path = workspace.get_agentone_dir() / "dashboard" / "index.md"
@@ -264,7 +272,11 @@ def _workspaces(_session: Any, action: str, kwargs: dict[str, Any]) -> tuple[boo
         from server.models.sessions.session import SessionModel
         from server.models.sessions.session_version import SessionVersionModel
 
-        workspace, error = _workspace_for(_session, kwargs.get("workspace_pk"))
+        workspace, error = _workspace_for(
+            _session,
+            kwargs.get("workspace_pk"),
+            kwargs.get("workspace_name") or kwargs.get("name"),
+        )
         if error:
             return _err(error)
         agent_name = str(kwargs.get("agent_name") or "general-chat")

@@ -11,6 +11,7 @@ sys.path.insert(
 )
 
 from admin_projects import _projects  # noqa: E402
+from admin_workspaces import _workspaces  # noqa: E402
 from server.models.project import Project  # noqa: E402
 from server.models.workspace import WorkspaceModel  # noqa: E402
 
@@ -51,3 +52,25 @@ def test_create_without_path_uses_central_manifest(db, tmp_path, monkeypatch):
     project = Project.objects.get(name="central-demo")
     assert project.main_workspace is None
     assert project.agentone_dir == (tmp_path / "central" / "central-demo").as_posix()
+
+
+def test_details_accepts_explicit_project_name(db):
+    """A global session can target a named project without auto-scoping."""
+    project = Project.objects.create(name="explicit-demo")
+
+    ok, result = _projects(StubSession(), "details", {"project_name": "explicit-demo"})
+
+    assert ok, result
+    assert result["project"]["pk"] == project.pk
+
+
+def test_workspace_details_accepts_explicit_name_outside_scope(db, tmp_path):
+    """Explicit identifiers win over the session's inferred workspace."""
+    workspace = WorkspaceModel.objects.create(
+        name="explicit-ws", path=str(tmp_path / "explicit"),
+    )
+
+    ok, result = _workspaces(StubSession(), "details", {"workspace_name": "explicit-ws"})
+
+    assert ok, result
+    assert result["workspace"]["pk"] == workspace.pk

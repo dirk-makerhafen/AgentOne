@@ -102,22 +102,13 @@ class Skills(AssistantScopeMixin):
     def get_assistant_workspace(self) -> Any:
         """Return the workspace row binding this scope's assistant sessions.
 
-        Nested scope: per-directory row; project scope: project workspace;
-        global: system row. Shared by ``get_assistant_session`` and UI
-        panels so both bind the same row.
+        All AgentOne chats share the same rule: explicit workspace, else the
+        project's primary workspace, else AgentOne home. Shared by
+        ``get_assistant_session`` and UI panels so both bind the same row.
         """
         from runtime.workspace.workspaces import Workspaces
 
-        source = self.get_source_dir()
-        project = self.project
-        nested = self.parent_agent is not None or self.parent_skill is not None
-        if nested:
-            return Workspaces.ensure_source_scope(
-                f"{source.as_posix()} assistant scope", source,
-                "assistant scope for nested skills",
-            )
-        if project is not None:
-            return Workspaces.for_project(project)
-        return Workspaces.ensure_named(
-            "System skills", source, "User-scope skills manifests"
+        return Workspaces.assistant_workspace(
+            project=self.project,
+            workspace=getattr(self, "parent_workspace", None),
         )

@@ -38,8 +38,33 @@ def _scope_workspace(session: Any) -> Any | None:
         return None
 
 
-def _project_for(session: Any, pk: Any = None):
-    """Return ``(project, error)`` — pk overrides the session scope."""
+def _by_name(model: Any, value: Any) -> tuple[Any | None, str | None]:
+    """Resolve a row by id or exact (then unambiguous partial) name.
+
+    Used when the session binding cannot identify the intended target — e.g.
+    a rightbar chat bound to AgentOne home but asked about a named project.
+    """
+    text = str(value or "").strip()
+    if not text:
+        return None, None
+    if text.isdigit():
+        row = model.objects.filter(pk=int(text)).first()
+        if row is not None:
+            return row, None
+    row = model.objects.filter(name__iexact=text).first()
+    if row is not None:
+        return row, None
+    matches = list(model.objects.filter(name__icontains=text)[:5])
+    if len(matches) == 1:
+        return matches[0], None
+    if len(matches) > 1:
+        names = ", ".join(str(match.name) for match in matches)
+        return None, f"'{text}' is ambiguous; use an id. Matches: {names}"
+    return None, f"{model.__name__} '{text}' not found"
+
+
+def _project_for(session: Any, pk: Any = None, name: Any = None):
+    """Return ``(project, error)`` — explicit id/name beats session scope."""
     from server.models.project import Project
 
     if pk:
@@ -47,27 +72,54 @@ def _project_for(session: Any, pk: Any = None):
             return Project.objects.get(pk=pk), None
         except Project.DoesNotExist:
             return None, f"Project {pk} not found"
+    if name:
+        row, error = _by_name(Project, name)
+        if error:
+            return None, error
+        if row is not None:
+            return row, None
     project = _scope_project(session)
     if project is None:
-        return None, "No project in scope; pass project_pk"
+        return None, "No project in scope; pass project_pk or project_name"
     return project, None
 
 
-def _workspace_for(session: Any, pk: Any = None):
-    """Return ``(workspace, error)`` with a scope check for an explicit pk."""
+def _scope_project_for(session: Any, kwargs: dict[str, Any] | None = None):
+    """Return ``(project, error)`` for a read scope.
+
+    Read-only scopes (agents, skills) used to be able only to infer the
+    project from the session, which a rightbar chat bound to AgentOne home
+    cannot express. Explicit ``project_pk`` / ``project_name`` now win.
+    """
+    values = kwargs or {}
+    if values.get("project_pk") or values.get("project_name"):
+        return _project_for(session, values.get("project_pk"), values.get("project_name"))
+    return _scope_project(session), None
+
+
+def _workspace_for(session: Any, pk: Any = None, name: Any = None):
+    """Return ``(workspace, error)`` — explicit id/name beats session scope.
+
+    The session binding is a fallback, not a fence: an explicit id or name is
+    a deliberate target and may sit outside the inferred project scope. That
+    is exactly the case the one-time session context hint warns about.
+    """
     from server.models.workspace import WorkspaceModel
 
-    workspace = _scope_workspace(session)
     if pk:
         try:
-            workspace = WorkspaceModel.objects.get(pk=pk)
+            return WorkspaceModel.objects.get(pk=pk), None
         except WorkspaceModel.DoesNotExist:
             return None, f"Workspace {pk} not found"
+    if name:
+        row, error = _by_name(WorkspaceModel, name)
+        if error:
+            return None, error
+        if row is not None:
+            return row, None
+    workspace = _scope_workspace(session)
     if workspace is None:
-        return None, "No workspace in scope; pass workspace_pk"
-    project = _scope_project(session)
-    if project is not None and workspace.parent_project is not None and workspace.parent_project != project:
-        return None, "Workspace is outside the current project scope"
+        return None, "No workspace in scope; pass workspace_pk or workspace_name"
     return workspace, None
 
 
