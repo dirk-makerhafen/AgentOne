@@ -50,12 +50,12 @@ sidecars, no memory files. Pure code, no LLM sessions.
 from __future__ import annotations
 
 import datetime
-import fcntl
 import re
 import subprocess
 import sys
 from pathlib import Path
 
+from runtime.file_lock import file_lock
 from runtime.session.session import Session
 
 sys.path.insert(0, Path(__file__).resolve().parent.as_posix())
@@ -484,12 +484,12 @@ def refresh_ingress(root: Path, ingress_rel: str) -> tuple[bool, dict]:
     fm["updated"] = today
     try:
         # Exclusive lock: concurrent finalize tasks flip lines in this file.
-        with open(ingress_file, "r+", encoding="utf-8") as fh:
-            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-            fh.seek(0)
-            fh.write(_dump_frontmatter(fm) + "\n" + "\n".join(queue_lines)
-                     + ("\n" if queue_lines else ""))
-            fh.truncate()
+        with file_lock(ingress_file.with_name(ingress_file.name + ".lock")):
+            with open(ingress_file, "r+", encoding="utf-8") as fh:
+                fh.seek(0)
+                fh.write(_dump_frontmatter(fm) + "\n" + "\n".join(queue_lines)
+                         + ("\n" if queue_lines else ""))
+                fh.truncate()
     except Exception as e:
         return False, {"status": "error", "message": f"cannot write {ingress_rel}: {e}"}
     return True, {"status": "success", "ingress": ingress_rel,

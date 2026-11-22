@@ -25,6 +25,8 @@ import ast
 import json
 import os
 import re
+import secrets
+import socket
 import subprocess
 import sys
 import tempfile
@@ -733,7 +735,7 @@ def inherit_adhoc_tools(parent_session_pk: int | str, child_session_pk: int | st
 _RUNNER_SOURCE = '''\
 import importlib.util
 import json
-import os
+import socket
 import sys
 import traceback
 
@@ -747,16 +749,21 @@ class AdhocToolCallError(Exception):
 
 
 class _ToolBridge:
-    """Synchronous RPC client over the parent pump's pipes.
+    """Synchronous RPC client over a loopback socket to the parent pump.
 
-    The parent passes two fds on argv: ``req_w`` (we write requests) and
-    ``rep_r`` (we block reading the reply). One outstanding request at a
-    time — ``call_tool_async`` waits for its reply before returning.
+    The parent passes a port on argv. One outstanding request at a time —
+    ``call_tool_async`` waits for its reply before returning. Sockets replace
+    ``os.pipe()`` + ``pass_fds`` so the flow works on Windows too.
     """
 
-    def __init__(self, req_fd, rep_fd):
-        self._req = os.fdopen(req_fd, "w", buffering=1)
-        self._rep = os.fdopen(rep_fd, "r", buffering=1)
+    def __init__(self, port, token):
+        self._sock = socket.create_connection(("127.0.0.1", int(port)), timeout=10)
+        self._sock.settimeout(None)
+        self._req = self._sock.makefile("w", encoding="utf-8", buffering=1)
+        self._rep = self._sock.makefile("r", encoding="utf-8", buffering=1)
+        # Authenticate so another local process cannot hijack the bridge.
+        self._req.write(token + "\\n")
+        self._req.flush()
         self._next_id = 0
 
     def call(self, tool_name, **kwargs):
@@ -790,7 +797,7 @@ class _ToolBridge:
         return reply.get("result")
 
     def close(self):
-        for stream in (self._req, self._rep):
+        for stream in (self._req, self._rep, self._sock):
             try:
                 stream.close()
             except OSError:
@@ -808,7 +815,7 @@ def main():
     bridge = None
     if len(sys.argv) > 3:
         try:
-            bridge = _ToolBridge(int(sys.argv[2]), int(sys.argv[3]))
+            bridge = _ToolBridge(int(sys.argv[2]), sys.argv[3])
         except (ValueError, OSError):
             bridge = None
     payload = json.loads(sys.stdin.read() or "{}")
@@ -823,7 +830,7 @@ def main():
         print(json.dumps({"ok": False, "error": "No top-level run() defined."}))
         return 1
     # Names available inside run(): call_tool_async only works when the
-    # parent passed the flow pipes (always, from call_adhoc_tool);
+    # parent passed the flow socket (always, from call_adhoc_tool);
     # setdefault so agent-defined helpers of the same name still win.
     if bridge is not None:
         module.__dict__.setdefault("call_tool_async", bridge.call)
@@ -958,29 +965,28 @@ def _execute_isolated_source(source: str, params: Any, cwd: str,
         runner_path = runner_file.name
     out_file = tempfile.TemporaryFile(mode="w+", encoding="utf-8")
     err_file = tempfile.TemporaryFile(mode="w+", encoding="utf-8")
-    # Child ends: req_w (child writes requests), rep_r (child reads
-    # replies). Parent keeps req_r/rep_w; child ends are closed here so
-    # EOF reliably signals child exit. POSIX-only (os.pipe + pass_fds).
-    req_r, req_w = os.pipe()
-    rep_r, rep_w = os.pipe()
+    # Loopback socket instead of os.pipe()+pass_fds (POSIX-only). Works on
+    # Windows; a disconnect still gives EOF so child exit is detected.
+    listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    listener.bind(("127.0.0.1", 0))
+    listener.listen(1)
+    listener.settimeout(FLOW_TIMEOUT_SECONDS)
+    port = listener.getsockname()[1]
+    token = secrets.token_hex(16)
+    conn = None
     try:
         proc = subprocess.Popen(
-            [sys.executable, runner_path, tool_path, str(req_w), str(rep_r)],
+            [sys.executable, runner_path, tool_path, str(port), token],
             stdin=subprocess.PIPE,
             stdout=out_file,
             stderr=err_file,
             cwd=cwd,
             env={**os.environ},
-            pass_fds=(req_w, rep_r),
             text=True,
             bufsize=1,
         )
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        for fd in (req_r, req_w, rep_r, rep_w):
-            try:
-                os.close(fd)
-            except OSError:
-                pass
+        listener.close()
         for tmp in (tool_path, runner_path):
             try:
                 os.unlink(tmp)
@@ -992,15 +998,46 @@ def _execute_isolated_source(source: str, params: Any, cwd: str,
             "stderr": f"Tool failed to start: {exc}",
             "return_code": -1,
         })
-    os.close(req_w)
-    os.close(rep_r)
+    try:
+        conn, _ = listener.accept()
+    except (OSError, socket.timeout) as exc:
+        listener.close()
+        proc.kill()
+        proc.wait(timeout=5)
+        return (False, {
+            "status": "error",
+            "stdout": "",
+            "stderr": f"Tool failed to connect: {exc}",
+            "return_code": -1,
+        })
+    finally:
+        listener.close()
+    conn.settimeout(FLOW_TIMEOUT_SECONDS)
+    req = conn.makefile("r", encoding="utf-8", buffering=1)
+    rep = conn.makefile("w", encoding="utf-8", buffering=1)
+    try:
+        if req.readline().strip() != token:
+            raise ValueError("flow bridge authentication failed")
+        conn.settimeout(None)
+    except (OSError, socket.timeout, ValueError) as exc:
+        for stream in (req, rep, conn):
+            try:
+                stream.close()
+            except OSError:
+                pass
+        proc.kill()
+        proc.wait(timeout=5)
+        return (False, {
+            "status": "error",
+            "stdout": "",
+            "stderr": f"Tool failed to connect: {exc}",
+            "return_code": -1,
+        })
     try:
         proc.stdin.write(json.dumps({"params": params}))
         proc.stdin.close()
     except (BrokenPipeError, OSError):
         pass  # child died instantly; the envelope below reports it
-    req = os.fdopen(req_r, "r", buffering=1)
-    rep = os.fdopen(rep_w, "w", buffering=1)
     deadline = time.time() + FLOW_TIMEOUT_SECONDS
     timed_out = False
     try:
@@ -1034,7 +1071,7 @@ def _execute_isolated_source(source: str, params: Any, cwd: str,
             if proc.poll() is not None:
                 break  # child died around the reply; collect below
     finally:
-        for stream in (req, rep):
+        for stream in (req, rep, conn):
             try:
                 stream.close()
             except OSError:

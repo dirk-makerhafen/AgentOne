@@ -3,11 +3,16 @@ import time
 import threading
 import sys
 import os
-import watchdog.observers.fsevents as fsevents
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
-from watchdog.observers.fsevents import FSEventsEmitter
 from dataclasses import dataclass, field
+
+try:  # FSEvents is macOS-only; importing it on Windows raises ImportError.
+    import watchdog.observers.fsevents as fsevents
+    from watchdog.observers.fsevents import FSEventsEmitter
+except ImportError:  # pragma: no cover - non-macOS
+    fsevents = None
+    FSEventsEmitter = None
 
 DEBUG = False
 def noop(*args,**kwargs):pass
@@ -59,35 +64,36 @@ class GenericEvent(FileSystemEvent):
     is_renamed: bool = field(default=False)
     inode: int = field(default=0)
 
-class MyFSEventsEmitter(FSEventsEmitter):
-    def __init__(self, event_queue, watch, *, timeout = ..., event_filter = None, suppress_history = False):
-        super().__init__(event_queue, watch, timeout=timeout, event_filter=event_filter, suppress_history=suppress_history)
+if FSEventsEmitter is not None:  # pragma: no cover - macOS only
+    class MyFSEventsEmitter(FSEventsEmitter):
+        def __init__(self, event_queue, watch, *, timeout = ..., event_filter = None, suppress_history = False):
+            super().__init__(event_queue, watch, timeout=timeout, event_filter=event_filter, suppress_history=suppress_history)
 
-    def queue_events(self, timeout: float, events: list[fsevents._fsevents.NativeEvent]) -> None:
-        if fsevents.logger.getEffectiveLevel() <= logging.DEBUG:
+        def queue_events(self, timeout: float, events: list[fsevents._fsevents.NativeEvent]) -> None:
+            if fsevents.logger.getEffectiveLevel() <= logging.DEBUG:
+                for event in events:
+                    flags = ", ".join(attr for attr in dir(event) if getattr(event, attr) is True)
+                    fsevents.logger.debug("%s: %s", event, flags)
+
+            if self._starting_state is not None and time.monotonic() - self._start_time > 60:
+                self._starting_state = None  # Event history is no longer needed, let's free some memory.
+
             for event in events:
-                flags = ", ".join(attr for attr in dir(event) if getattr(event, attr) is True)
-                fsevents.logger.debug("%s: %s", event, flags)
+                src_path = self._encode_path(event.path)
+                if not(event.is_created or event.is_removed or event.is_modified or event.is_renamed):
+                    continue
+                if event.is_created and event.is_removed:
+                    continue
+                ge = GenericEvent(src_path)
+                ge.is_directory = event.is_directory
+                ge.is_created = event.is_created
+                ge.is_removed = event.is_removed
+                ge.is_modified = event.is_modified
+                ge.is_renamed = event.is_renamed
+                ge.inode = event.inode
+                self.queue_event(ge)
 
-        if self._starting_state is not None and time.monotonic() - self._start_time > 60:
-            self._starting_state = None  # Event history is no longer needed, let's free some memory.
-
-        for event in events:
-            src_path = self._encode_path(event.path)
-            if not(event.is_created or event.is_removed or event.is_modified or event.is_renamed):
-                continue
-            if event.is_created and event.is_removed:
-                continue
-            ge = GenericEvent(src_path)
-            ge.is_directory = event.is_directory
-            ge.is_created = event.is_created
-            ge.is_removed = event.is_removed
-            ge.is_modified = event.is_modified
-            ge.is_renamed = event.is_renamed
-            ge.inode = event.inode
-            self.queue_event(ge)
-
-fsevents.FSEventsEmitter = MyFSEventsEmitter
+    fsevents.FSEventsEmitter = MyFSEventsEmitter
 
 
 # Our Aggragation Logic

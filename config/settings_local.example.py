@@ -67,8 +67,15 @@ Uncomment and change only what you need.
 # ---------------------------------------------------------------------------
 # Self-update — restart command used after `manage.py server update`
 # ---------------------------------------------------------------------------
-# Leave empty for best-effort supervisor/systemd/launchd detection.
+# Leave empty for best-effort supervisor/systemd/launchd/windows detection.
 # AGENTONE_RESTART_COMMAND = ["sudo", "-n", "supervisorctl", "restart", "agentone-server"]
-# AGENTONE_SERVICE_MANAGER = 'auto'  # auto | supervisor | systemd | launchd
+# AGENTONE_SERVICE_MANAGER = 'auto'  # auto | supervisor | systemd | launchd | windows
 # AGENTONE_SERVICE_NAME = ''
 # AGENTONE_UPDATE_CHECK_ENABLED = True
+
+# ---------------------------------------------------------------------------
+# Server workers — Celery's prefork pool is unsupported on Windows, so
+# `server run` defaults to threads there and prefork elsewhere.
+# ---------------------------------------------------------------------------
+# AGENTONE_CELERY_POOL = 'threads'
+# AGENTONE_CELERY_CONCURRENCY = 32

@@ -344,13 +344,26 @@ class BoundTask:
         When the task is *bound*, session metadata is injected via environment
         variables (``AGENTONE_SESSION_ID``, ``AGENTONE_SESSION_DIR``).
         """
-        # Ensure the file is executable
-        st = file_path.stat()
-        if not st.st_mode & 0o111:
-            file_path.chmod(st.st_mode | 0o111)
+        if os.name == "nt":
+            # Windows has no executable bit or shebang handling. Dispatch
+            # script types explicitly instead of relying on file association.
+            suffix = file_path.suffix.lower()
+            if suffix == ".py":
+                cmd = [sys.executable, str(file_path)]
+            elif suffix == ".ps1":
+                cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                       "-File", str(file_path)]
+            elif suffix in (".cmd", ".bat"):
+                cmd = ["cmd", "/c", str(file_path)]
+            else:
+                cmd = [str(file_path)]
+        else:
+            st = file_path.stat()
+            if not st.st_mode & 0o111:
+                file_path.chmod(st.st_mode | 0o111)
+            cmd = [str(file_path)]
 
         script_dir = str(file_path.parent)
-        cmd = [str(file_path)]
         cmd.extend(str(a) for a in args)
 
         env = os.environ.copy()

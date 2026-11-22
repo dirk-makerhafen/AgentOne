@@ -23,6 +23,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from runtime.path_patterns import has_traversal, is_absolute
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -87,12 +89,12 @@ class GuidanceSection:
 
 
 def _reject_escape(pattern: str, source: str) -> None:
-    if pattern.startswith("/") or pattern.startswith("~"):
+    if is_absolute(pattern):
         raise ValueError(
             f"[{source}] autoload.files pattern {pattern!r} must be relative "
-            "to the workspace root (no leading '/', no '~')"
+            "to the workspace root (no absolute path, no '~')"
         )
-    if ".." in [seg for seg in pattern.strip().split("/") if seg]:
+    if has_traversal(pattern):
         raise ValueError(
             f"[{source}] autoload.files pattern {pattern!r} may not contain '..'"
         )

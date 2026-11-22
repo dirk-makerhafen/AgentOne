@@ -88,6 +88,27 @@ is detected automatically and restarted with a detached PowerShell helper
 (stop → wait for `STOPPED` → start). The service account needs rights to stop
 and start services; otherwise set `AGENTONE_RESTART_COMMAND` explicitly.
 
+### Windows support status
+
+Native Windows (not WSL) runs the server, UI, Celery tasks, browser tools and
+ad-hoc flows, with these caveats:
+
+- **Redis is required** (Celery broker, Channels layer, cache). There is no
+  fallback — install a native Windows Redis build or use WSL.
+- **Terminals need tmux**, which is POSIX-only. `terminal_*` tools are
+  unavailable; the UI still lists sessions from the database.
+- **Celery uses `--pool threads`** by default on Windows (prefork is not
+  supported). Override with `AGENTONE_CELERY_POOL` and
+  `AGENTONE_CELERY_CONCURRENCY` in `config/settings_local.py`.
+- **Service installs** use `sc.exe` (`server service install`, run as admin).
+  `server run` chdirs to the checkout and prepends the venv's `Scripts` folder
+  to `PATH`, so `key.pem`/`cert.pem` and the `daphne`/`celery` scripts resolve
+  even though Windows services start in `System32`.
+- **SCRIPT tasks** dispatch `.py` through the interpreter, `.ps1` through
+  PowerShell and `.cmd`/`.bat` through `cmd /c` — no shebang/executable bit.
+- **MySQL**: `mysqlclient` is skipped on Windows and PyMySQL is registered as
+  `MySQLdb` automatically. SQLite remains the default.
+
 ## Architecture overview
 
 ```

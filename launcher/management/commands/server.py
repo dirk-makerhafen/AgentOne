@@ -429,12 +429,42 @@ class Command(BaseCommand):
         except Exception as exc:  # pylint: disable=broad-exception-caught
             self.stdout.write(self.style.WARNING(f"  collectstatic failed: {exc}"))
 
+    @staticmethod
+    def _prepare_runtime_env():
+        """Make `server run` independent of the caller's cwd/PATH.
+
+        Windows services start in ``C:\\Windows\\System32`` with the system
+        PATH, so relative ``key.pem``/``cert.pem`` paths and the venv's
+        ``daphne``/``celery`` scripts would not be found.  Doing this in the
+        command fixes every launch path, not just the Windows service.
+        """
+        from pathlib import Path
+
+        from django.conf import settings
+
+        os.chdir(str(Path(settings.BASE_DIR).resolve()))
+        scripts = Path(sys.executable).resolve().parent
+        if scripts.name.lower() in ("scripts", "bin"):
+            current = os.environ.get("PATH", "")
+            if str(scripts) not in current.split(os.pathsep):
+                os.environ["PATH"] = f"{scripts}{os.pathsep}{current}" if current else str(scripts)
+
+    @staticmethod
+    def _celery_worker_command(log_level, settings):
+        """Build the worker command with an explicit, platform-safe pool."""
+        return [
+            'celery', '-A', 'config', 'worker', '-l', log_level, '-E',
+            '--pool', str(getattr(settings, 'AGENTONE_CELERY_POOL', 'prefork')),
+            '--concurrency', str(getattr(settings, 'AGENTONE_CELERY_CONCURRENCY', 32)),
+        ]
+
     def handle_run(self, **options):
         import select
         from django.conf import settings
 
         self.stdout.write(self.style.SUCCESS("--- AgentOne Server ---"))
 
+        self._prepare_runtime_env()
         self._collectstatic()
 
         listen_address = getattr(settings, 'LISTEN_ADDRESS', '0.0.0.0')
@@ -473,7 +503,7 @@ class Command(BaseCommand):
                               "-v", str(daphne_verbosity),
                               'config.asgi:application'],
 
-            "celery_worker": ['celery', '-A', 'config', 'worker', '-l', log_level, '-E', '--concurrency', '32'],
+            "celery_worker": self._celery_worker_command(log_level, settings),
             "celery_beat":   ['celery', '-A', 'config', 'beat',   '-l', log_level],
             # Browser daemon: one process owns every Camoufox instance so the
             # five prefork workers share them (and survive worker restarts).

@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import ast
 import shlex
+import sys
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from sh_guard import classify as sh_guard_classify
+
+from runtime.path_patterns import is_absolute as _path_is_absolute
+from runtime.path_patterns import is_device_node as _path_is_device_node
 
 
 @dataclass
@@ -360,17 +364,26 @@ _SHELL_WRITE_COMMANDS: set[str] = {
 
 
 def _is_absolute_path(token: str) -> bool:
-    """True if *token* looks like an absolute or ``~``-anchored path."""
-    if not token:
-        return False
-    if token.startswith("~") or token.startswith("/"):
-        return True
-    return token.startswith("$HOME") or token.startswith("${HOME}")
+    """True for POSIX/Windows absolute, home- or env-anchored paths."""
+    return _path_is_absolute(token)
 
 
 def _is_device_node(token: str) -> bool:
     """True if *token* is a ``/dev/`` device node (not a filesystem path)."""
-    return token.startswith("/dev/")
+    return _path_is_device_node(token)
+
+
+def _split_shell(source: str) -> list[str]:
+    """Tokenize a shell command without mangling Windows backslashes."""
+    posix = sys.platform != "win32"
+    tokens = shlex.split(source, posix=posix)
+    if posix:
+        return tokens
+    # posix=False keeps surrounding quotes; strip them so paths match scopes.
+    return [
+        token[1:-1] if len(token) > 1 and token[0] == token[-1] == '"' else token
+        for token in tokens
+    ]
 
 
 # pylint: disable=too-many-branches,too-many-statements
@@ -392,7 +405,7 @@ def _shell_targets(source: str) -> list[tuple[str, str]]:
     """
     targets: list[tuple[str, str]] = []
     try:
-        tokens = shlex.split(source, posix=True)
+        tokens = _split_shell(source)
     except ValueError:
         return targets
 
@@ -411,10 +424,7 @@ def _shell_targets(source: str) -> list[tuple[str, str]]:
             continue
         if token.startswith((">", "2>", "1>", "&>", ">>")):
             remainder = token.lstrip(">2&1")
-            if not _is_device_node(remainder) and (
-                remainder.startswith("/") or remainder.startswith("~")
-                or remainder.startswith("$HOME")
-            ):
+            if not _is_device_node(remainder) and _is_absolute_path(remainder):
                 targets.append((remainder, "write"))
             prev_was_redirect = True
             continue

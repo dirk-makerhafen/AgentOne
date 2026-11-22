@@ -6,6 +6,16 @@ import warnings
 from pathlib import Path
 
 
+# mysqlclient needs a C toolchain on Windows; PyMySQL is installed there and
+# registered as MySQLdb so Django's MySQL backend keeps working unchanged.
+if os.name == "nt":
+    try:
+        import pymysql
+
+        pymysql.install_as_MySQLdb()
+    except ImportError:  # pragma: no cover - Windows only
+        pass
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AGENTONE_ROOT = os.path.join(BASE_DIR, ".agentone")
 
@@ -200,6 +210,13 @@ WEBSOCKET_PING_TIMEOUT = 300
 # Twisted logs through the stdlib `daphne` logger, which LOGGING below sends to
 # a file. Use 3 only when hunting event-loop blocking (turns on asyncio debug).
 DAPHNE_VERBOSITY = int(os.environ.get("AGENTONE_DAPHNE_VERBOSITY", "2"))
+
+# Celery's prefork pool is not supported on Windows. `server run` passes this
+# pool explicitly so a Windows service starts workers that actually run.
+AGENTONE_CELERY_POOL = os.environ.get(
+    "AGENTONE_CELERY_POOL", "threads" if os.name == "nt" else "prefork"
+)
+AGENTONE_CELERY_CONCURRENCY = int(os.environ.get("AGENTONE_CELERY_CONCURRENCY", "32"))
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

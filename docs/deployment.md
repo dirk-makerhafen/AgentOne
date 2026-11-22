@@ -6,8 +6,13 @@
 - MySQL 8+ (or MariaDB 10.5+) — optional, SQLite works for development
 - Redis 6+
 - tmux + `libtmux` (Python package, in `requirements.txt`) — required for persistent agent terminals; without the tmux binary the `terminal_*` tools return an error
-- Supervisor (recommended) or systemd
+- Supervisor (recommended) or systemd; on Windows, the built-in `sc.exe`
+  service backend (`python manage.py server service install`, run as admin)
 - Nginx (recommended as reverse proxy)
+
+Redis has no fallback on any platform: the Celery broker/result backend,
+Channels layer and Django cache all require a running Redis server. A native
+Windows Redis build or WSL is fine; the rest of the app is native-Windows safe.
 
 ## Bootstrap
 
@@ -145,11 +150,20 @@ Use `AGENTONE_SERVICE_MANAGER` (`auto`/`supervisor`/`systemd`/`launchd`/`windows
 and `AGENTONE_SERVICE_NAME` to pin auto-detection. On Windows the default
 service name is `agentone_server`; the updater spawns a detached PowerShell
 helper that stops it, waits for `STOPPED` and starts it again (the service
-account needs permission to do so). Pass `--no-restart` to skip the
-restart entirely (for example when doing a rolling deploy yourself). Set
+account needs permission to do so). `server run` itself is platform-safe: it
+chdirs to the checkout and prepends the venv's `Scripts` folder to `PATH`, so
+TLS certs and console scripts work under `sc.exe`, and Celery starts with
+`--pool threads` (override via `AGENTONE_CELERY_POOL` /
+`AGENTONE_CELERY_CONCURRENCY`). Pass `--no-restart` to skip the restart
+entirely (for example when doing a rolling deploy yourself). Set
 `AGENTONE_UPDATE_CHECK_ENABLED = False` to disable the remote "Check for
 updates" lookup entirely (useful on air-gapped installs). `collectstatic` is
 skipped when `DEBUG` is on, since static files are served from source then.
+
+Native Windows still lacks **tmux**, so persistent `terminal_*` tools are
+unavailable (chat sessions and the terminal tab still work from the DB). The
+browser daemon, ad-hoc flow bridge and ingress locks use cross-platform
+sockets/locks; `mysqlclient` is skipped on Windows in favour of PyMySQL.
 
 Staff users can trigger the same pipeline from **Settings → System → Update
 AgentOne**; it queues `agentone.update` on Celery and streams logs into the

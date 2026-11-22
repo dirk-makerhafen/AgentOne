@@ -49,6 +49,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.guardrails import GuardrailVerdict
+from runtime.path_patterns import has_traversal, is_absolute
 
 ACCESS_ACTIONS = ("read", "write")
 ACCESS_POSTURES = ("allow", "ask", "deny")
@@ -576,13 +577,12 @@ def extract_path_args(
 
 
 def _is_external_scope(pattern: str) -> bool:
-    """True if *pattern* is absolute or ``~``-anchored (external scope)."""
-    pattern = pattern.strip()
-    return pattern.startswith("/") or pattern.startswith("~")
+    """True if *pattern* is absolute or home/env-anchored (external scope)."""
+    return is_absolute(pattern)
 
 
 def _has_path_escape(pattern: str) -> bool:
-    return ".." in [seg for seg in pattern.strip().split("/") if seg]
+    return has_traversal(pattern)
 
 
 def _validate_scope(

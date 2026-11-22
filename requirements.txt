@@ -34,7 +34,7 @@ django-redis
 django-cors-headers
 django-sortedm2m
 django-enum
-mysqlclient
+mysqlclient; sys_platform != 'win32'
 croniter
 cachetools
 flask

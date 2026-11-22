@@ -6,6 +6,27 @@ from typing import Optional
 import psutil
 
 
+_SIGNAL_NAMES = ('SIGTERM', 'SIGKILL', 'SIGHUP', 'SIGINT')
+
+
+def _send_signal(proc, signal_name: str) -> bool:
+    """Send a signal, falling back to TerminateProcess on Windows.
+
+    ``signal.SIGKILL`` and ``signal.SIGHUP`` do not exist on Windows, so
+    building a dict with them would raise ``AttributeError`` before any
+    process was touched.  Returns False when the requested signal cannot be
+    represented on this platform.
+    """
+    sig = getattr(signal, signal_name, None)
+    if sig is not None:
+        proc.send_signal(sig)
+        return True
+    if signal_name in ('SIGKILL', 'SIGTERM'):
+        proc.kill()
+        return True
+    return False
+
+
 def kill(
     pid: Optional[int] = None,
     name: Optional[str] = None,
@@ -23,7 +44,8 @@ def kill(
         pid: The process ID to terminate.
         name: Process name to match (kills all matching processes).
         signal_name: Signal to send. Options: "SIGTERM" (default),
-            "SIGKILL", "SIGHUP", "SIGINT".
+            "SIGKILL", "SIGHUP", "SIGINT". On Windows SIGKILL/SIGTERM use
+            TerminateProcess; SIGHUP/SIGINT are not available.
 
     Returns:
         A tuple of (success, result).
@@ -39,19 +61,15 @@ def kill(
         if pid is None and name is None:
             return (False, {'status': 'error', 'message': 'Either pid or name must be provided'})
 
-        sig_map = {
-            'SIGTERM': signal.SIGTERM,
-            'SIGKILL': signal.SIGKILL,
-            'SIGHUP': signal.SIGHUP,
-            'SIGINT': signal.SIGINT,
-        }
-        sig = sig_map.get(signal_name, signal.SIGTERM)
+        if signal_name not in _SIGNAL_NAMES:
+            signal_name = 'SIGTERM'
         killed = []
 
         if pid is not None:
             try:
                 proc = psutil.Process(pid)
-                proc.send_signal(sig)
+                if not _send_signal(proc, signal_name):
+                    return (False, {'status': 'error', 'message': f'{signal_name} is not supported on this platform'})
                 killed.append(pid)
             except psutil.NoSuchProcess:
                 return (False, {'status': 'error', 'message': f'Process {pid} not found'})
@@ -62,7 +80,8 @@ def kill(
             for proc in psutil.process_iter(['pid', 'name']):
                 try:
                     if proc.info['name'] and name.lower() in proc.info['name'].lower():
-                        proc.send_signal(sig)
+                        if not _send_signal(proc, signal_name):
+                            return (False, {'status': 'error', 'message': f'{signal_name} is not supported on this platform'})
                         killed.append(proc.info['pid'])
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue

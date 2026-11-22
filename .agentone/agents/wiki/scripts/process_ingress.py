@@ -21,12 +21,13 @@ exclusive file lock — concurrent finalizes cannot clobber each other.
 from __future__ import annotations
 
 import datetime
-import fcntl
 import re
 import sys
 import time
 from pathlib import Path
 from uuid import uuid4
+
+from runtime.file_lock import file_lock
 
 from runtime.session.session import Session
 
@@ -160,36 +161,36 @@ def _set_line_state(ingress_file: Path, rel: str, done: bool,
     cannot lose each other's flips.
     """
     try:
-        with open(ingress_file, "r+", encoding="utf-8") as fh:
-            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-            try:
-                text = fh.read()
-            except Exception:
-                return False
-            chunks = text.split("---", 2)
-            if len(chunks) < 3:
-                return False
-            found = False
-            out_lines = []
-            for raw in chunks[2].splitlines():
-                parsed_rel, _done, deleted, meta = _parse_queue_line(raw)
-                if parsed_rel == rel and not found:
-                    found = True
-                    meta = dict(meta)
-                    if active_ts is not None:
-                        meta["active"] = active_ts
+        with file_lock(ingress_file.with_name(ingress_file.name + ".lock")):
+            with open(ingress_file, "r+", encoding="utf-8") as fh:
+                try:
+                    text = fh.read()
+                except Exception:
+                    return False
+                chunks = text.split("---", 2)
+                if len(chunks) < 3:
+                    return False
+                found = False
+                out_lines = []
+                for raw in chunks[2].splitlines():
+                    parsed_rel, _done, deleted, meta = _parse_queue_line(raw)
+                    if parsed_rel == rel and not found:
+                        found = True
+                        meta = dict(meta)
+                        if active_ts is not None:
+                            meta["active"] = active_ts
+                        else:
+                            meta.pop("active", None)
+                        out_lines.append(_format_queue_line(rel, done, deleted, meta, today, None))
                     else:
-                        meta.pop("active", None)
-                    out_lines.append(_format_queue_line(rel, done, deleted, meta, today, None))
-                else:
-                    out_lines.append(raw)
-            if not found:
-                return False
-            fh.seek(0)
-            fh.write(chunks[0] + "---" + chunks[1] + "---" + "\n".join(out_lines)
-                     + ("\n" if out_lines else ""))
-            fh.truncate()
-            return True
+                        out_lines.append(raw)
+                if not found:
+                    return False
+                fh.seek(0)
+                fh.write(chunks[0] + "---" + chunks[1] + "---" + "\n".join(out_lines)
+                         + ("\n" if out_lines else ""))
+                fh.truncate()
+                return True
     except Exception:
         return False
 
